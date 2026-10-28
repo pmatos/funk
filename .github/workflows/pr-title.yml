@@ -1,0 +1,27 @@
+# The PR title becomes the squash commit on main, so it must be a Conventional
+# Commit header. Uses the same commit-msg hook that checks local commits.
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: Check the title is a Conventional Commit header
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/pr-title"
+          uvx pre-commit@4.6.2 run conventional-pre-commit \
+            --hook-stage commit-msg --commit-msg-filename "$RUNNER_TEMP/pr-title"

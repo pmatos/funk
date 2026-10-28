@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Let a release age a week before adopting it (supply-chain safety).
+    cooldown:
+      default-days: 7
+    # Keeps Dependabot PR titles valid Conventional Commits.
+    commit-message:
+      prefix: ci
+    open-pull-requests-limit: 5
