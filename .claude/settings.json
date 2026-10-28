@@ -1,5 +1,31 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "claude-opus-5-5",
   "effortLevel": "xhigh",
-  "advisorModel": "fable"
+  "advisorModel": "fable",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/ensure-hooks.sh\"",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/require-agent-hooks.sh\""
+          }
+        ]
+      }
+    ]
+  }
 }
