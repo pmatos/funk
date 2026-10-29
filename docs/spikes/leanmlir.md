@@ -144,8 +144,8 @@ options have it.
   `lean4-cli` at `d9fc8ae`, which is no longer on any branch. `lake update`
   fails (git exit 128). The workaround, in every fresh clone and in CI, is
   `git fetch origin d9fc8ae…` inside `.lake/packages/Cli`.
-- **No Mathlib cache.** `lake exe cache get` found none of 7675 files for
-  that nightly. About 920 Mathlib modules build from source: roughly three
+- **No Mathlib cache.** `lake exe cache get` downloaded none of the 7675
+  files it tried, from either Mathlib cache. About 920 Mathlib modules build from source: roughly three
   minutes for the library, and longer for an executable, which also compiles
   Mathlib to C. These are rough figures from a shared 24-core machine, not
   measurements.
@@ -194,6 +194,15 @@ calculus serves P1 better.
 - **A toolchain that moves:** port LeanMLIR and the Mathlib it needs to each
   Lean release, or vendor it and do so.
 - **A fir parser:** needed in any case.
+
+## What each answer means for #8, #10, #11 and #14
+
+| Issue | Own calculus | LeanMLIR |
+| --- | --- | --- |
+| #8 spec | A `lean/` package with no dependencies, on a Lean release that has a matching Verso release. Abstract syntax in the extrinsic shape of `spike/own`. `Prog` and its set semantics are the general part of execution. | Per-block `Com` terms plus fir's CFG layer, or a fork of LeanMLIR. Names and locations in side tables. The toolchain ADR pins `nightly-2025-12-01`, Mathlib `nightly-testing`, the `lean4-cli` fetch workaround and a Mathlib build in CI. Verso stays at its matching tag. |
+| #10 interpreter | A CFG walker generic over dialect and monad, as in `spike/own`. fir's own parser and printer. `fir-ref` is a plain Lean executable. | `Com.denote` inside blocks, plus the CFG layer. fir's own parser, which must type-check while it parses, and its own printer. `fir-ref` links Mathlib. |
+| #11 proofs | Print-then-parse over first-order syntax. A progress theorem: validated modules never get stuck. | Print-then-parse over dependent terms, with side tables for names and locations. Blocks are well typed by construction; the CFG layer still needs a proof. |
+| #14 `freeze` | The `Prog` handlers and both soundness proofs from the spike. | The same, unchanged. `freeze` is impure, so no `PeepholeRewrite` can involve it. |
 
 ## Recommendation
 
