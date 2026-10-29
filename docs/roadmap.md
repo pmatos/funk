@@ -76,31 +76,35 @@ canonical text format). The epic spells each one out; the first M0 task turns
 each into an ADR.
 
 **Order of work.** Each step is one or more PRs, and each ends with something
-we can run.
+we can run. We first build a thin path through every layer, then widen it one
+op family at a time. That way the harness exists before most of the backend,
+and every new piece is checked against the oracle as it lands.
 
 1. **Record the direction.** One ADR per decision above, and a small v0 spec in
    `docs/spec/fir/`: abstract syntax, validation, execution and text format,
    with the concrete grammar. Small enough to finish in days. The concrete
    syntax goes to the human for review before code depends on it.
-2. **Parser and printer, with round-trip tests.** The Rust IR crate
-   (`funk-ir`): in-memory IR, a builder that cannot make an op without a
-   location, a verifier, a parser and a printer. Round trips are checked in
-   both directions and fuzzed with generated modules.
-3. **Lean reference interpreter.** Abstract syntax, typing, and an interpreter
-   over `BitVec` with explicit poison and UB, plus a Lean `.fir` parser and
-   printer, built as a `fir-ref` executable that prints a JSON result. Then the
-   cross-language round trip: Rust prints, Lean reprints, bytes match.
-4. **Naive x86-64 backend.** System V AMD64 calling convention, simple
-   instruction selection, the simplest correct register allocation (spilling
-   every value is an acceptable baseline), `i128` as register pairs, division
-   through a runtime helper. Whether to emit assembly or ELF directly is an
-   ADR. A `funk` driver provides `fmt`, `verify` and `build`.
-5. **Differential test harness and corpus.** Every `.fir` test runs on
-   `fir-ref` and as native code, and the native result must refine the Lean
-   result. The corpus covers each op, flag and width, recursion and loops, and
-   can include LLVM tests ported to fir by hand.
-6. **CI** runs Rust and Lean builds, round-trip and differential tests on every
-   PR, through `.pre-commit-config.yaml`.
+2. **Tracer bullet through every layer.** One tiny program (parameters,
+   `const`, `add` and `ret`) goes through each layer in turn. First the Rust
+   IR crate (`funk-ir`), with `funk fmt`, `funk verify` and round trips that
+   are checked in both directions and fuzzed. Then the Lean reference
+   interpreter (`fir-ref`) and the cross-language round trip. Then the naive
+   x86-64 backend behind `funk build`, and finally the differential harness.
+   Whether to emit assembly or ELF directly is an ADR, and spilling every
+   value is the baseline register allocation.
+3. **Widen one op family at a time.** The families are arithmetic with poison
+   and `freeze`, bitwise ops and shifts, compares and `select`, width changes,
+   division, branches with block arguments, and calls. Each family goes
+   through every layer at once: the spec, the Lean semantics and round-trip
+   proof, the Rust IR and verifier, the backend, and corpus tests checked
+   against `fir-ref`.
+4. **`i128` in the backend.** Register pairs for every op, then division
+   through a runtime helper.
+5. **Audit.** Check that the corpus covers each op, flag and width, port LLVM
+   tests to fir by hand, and check the spec against the implementation.
+
+**CI** grows with each step. Every check lives in `.pre-commit-config.yaml`,
+and it lands in the same PR as the code it checks.
 
 **Done when** every M0 decision is an accepted ADR, the spec is complete enough
 to implement from, round trips hold in Rust and across Rust and Lean under
