@@ -1,0 +1,5 @@
+name = "FirOwn"
+defaultTargets = ["FirOwn"]
+
+[[lean_lib]]
+name = "FirOwn"

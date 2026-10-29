@@ -1,0 +1,19 @@
+name = "SpikeDoc"
+defaultTargets = ["spikedoc"]
+
+[[require]]
+name = "FirLeanMLIR"
+path = "../leanmlir"
+
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "nightly-2025-12-01"
+
+[[lean_lib]]
+name = "SpikeDoc"
+
+[[lean_exe]]
+name = "spikedoc"
+root = "SpikeDocMain"
+supportInterpreter = true

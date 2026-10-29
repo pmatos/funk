@@ -1,0 +1,15 @@
+name = "FirLeanMLIR"
+defaultTargets = ["FirLeanMLIR"]
+
+[[require]]
+name = "LeanMLIR"
+git = "https://github.com/opencompl/lean-mlir"
+rev = "b8c4a771319a044854a4bbb49b8821381ef86ff8"
+subDir = "LeanMLIR"
+
+[[require]]
+name = "FirOwn"
+path = "../own"
+
+[[lean_lib]]
+name = "FirLeanMLIR"
