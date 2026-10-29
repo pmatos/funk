@@ -214,6 +214,30 @@ on pure straight-line code, and can still be reached later by translating
 fir blocks into LeanMLIR terms, because the per-op semantics have nearly
 the same type on both sides (the ADR lists what a port changes).
 
+## Verification
+
+Four independent, read-only reviewers then checked this report and the
+prototypes; the
+[decision memo](https://github.com/pmatos/funk/issues/5#issuecomment-6508012315)
+on #5 sums up their results. They confirmed the facts above, with two
+nuances:
+
+- "A fork" is partly a judgement. Names and locations could live in the
+  dialect's ops or in side tables; only the CFG forces a change to `Com`.
+- `Classical.choice` in the LeanMLIR proofs also comes from LeanMLIR's own
+  auxiliary proofs (in `Ctxt`, for example), not only from Mathlib.
+
+They also noted that both prototypes share `Prog`, its handlers and
+near-copies of the op semantics, so matching results test only the term
+encoding and the CFG walker. And they found
+[VeIR](https://github.com/opencompl/veir), the same group's active successor
+framework, which this report does not cover. The ADR rejects it for now.
+
+The human accepted the ADR with edits. Whether `lean/` depends on Mathlib is
+left to #8's Lean toolchain ADR, and verified rewrites in M1 mean fir's own
+refinement-based framework or VeIR, not a translation to LeanMLIR. Where the
+Recommendation above differs, the ADR governs.
+
 ## How to reproduce
 
 From the prototype branch, with `elan` installed:
