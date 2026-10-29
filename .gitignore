@@ -3,3 +3,5 @@
 .claude/worktrees/
 __pycache__/
 .ruff_cache/
+.lake/
+_out/

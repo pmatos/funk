@@ -18,9 +18,28 @@ Funk's intermediate representation, written in lower case.
 _Avoid_: FIR
 
 **op**:
-One operation of fir: a name, operands, attributes, result types, regions and
-a location.
+One operation of fir: a name, operands, attributes, result types, successors,
+regions and a location. In Lean it is an `Operation`.
 _Avoid_: instruction, node
+
+**op instance**:
+What a dialect gives for one op: its name, its attributes and the types it is
+used at, such as `add` with `nsw` at `i32`. In Lean it is a value of the
+dialect's `Op` type, from which the op's operand and result types follow.
+
+**attribute**:
+A constant part of an op that is not a value, such as the flag `nsw`, the
+value of a `const` or the callee `@f` of a `call`. Attributes and types are
+written as generic terms, so a new dialect needs no new syntax.
+
+**successor**:
+A block that a terminator may jump to, together with the values it passes to
+that block's arguments, as in `br ^loop(%i1, %acc1)`.
+
+**terminator**:
+The op that ends a block and says where control goes next: to one of its
+successors, or back to the caller. In the core dialect: `br`, `cond_br` and
+`ret`.
 
 **region**:
 A body of blocks owned by a function or an op. In the core dialect a region is
@@ -31,6 +50,10 @@ in a block.
 A typed value that a block declares and that every branch to the block passes.
 fir uses block arguments where LLVM uses phis.
 _Avoid_: phi, phi node
+
+**entry block**:
+The first block of a region. A function's parameters are the arguments of its
+entry block, and no branch may jump to it.
 
 **isolated from above**:
 Said of a region whose ops use no value defined outside it. Every function
@@ -46,6 +69,11 @@ The required field on every op that says where the op came from: `unknown`, a
 source range, a name, a call site, a fusion of locations, or derived from
 another op.
 _Avoid_: debug info, source position
+
+**location reference**:
+The number that an op holds for its location, written `@N` at the end of the
+op. A symbol name starts with a letter or `_`, so `@1` is always a location
+reference and `@f` always a symbol reference.
 
 **location table**:
 The `locs { ... }` table that ends a module's text and gives the location that
@@ -89,8 +117,14 @@ dividing by zero. A source run with immediate UB allows any target behaviour.
 _Avoid_: deferred UB (that is poison)
 
 **outcome**:
-How one run of a function ends: a value, poison, UB with a reason, or fuel
-exhausted.
+How one run of a function ends: it returns an observation, hits UB with a
+reason, or runs out of fuel. For a function that returns one `iN`, the
+outcomes are a value, poison, UB with a reason, or fuel exhausted.
+
+**observation**:
+What an observer sees of a run that returns. Each dialect supplies its
+observations and how they refine. In M0 it is the list of returned values,
+each a value or poison.
 
 **observable behaviour**:
 What a run of a function shows to the outside. In M0 it is the return value,

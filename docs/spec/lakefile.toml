@@ -1,0 +1,19 @@
+name = "firspec"
+defaultTargets = ["firspec"]
+
+[[require]]
+name = "fir"
+path = "../../lean"
+
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "v4.35.0"
+
+[[lean_lib]]
+name = "FirSpec"
+
+[[lean_exe]]
+name = "firspec"
+root = "FirSpecMain"
+supportInterpreter = true

@@ -10,6 +10,12 @@ repos:
         types: [text]
         # Generated or vendored files only; never exclude authored code.
         exclude: (^|/)(package-lock\.json|[^/]*\.lock)$
+      - id: fir-spec
+        name: Build fir's Lean package and render the spec
+        entry: scripts/build-spec.sh
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|docs/spec/|scripts/build-spec\.sh$)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
