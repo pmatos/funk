@@ -227,7 +227,7 @@ nuances:
 - "A fork" is partly a judgement. Names and locations could live in the
   dialect's ops or in side tables; only the CFG forces a change to `Com`.
 - `Classical.choice` in the LeanMLIR proofs also comes from LeanMLIR's own
-  auxiliary proofs (in `Ctxt`, for example), not only from Mathlib.
+  auxiliary proofs, not only from Mathlib.
 
 They also noted that both prototypes share `Prog`, its handlers and
 near-copies of the op semantics, so matching results test only the term
