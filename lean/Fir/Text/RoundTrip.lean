@@ -26,36 +26,8 @@ open Text
 
 variable {d : Dialect}
 
-mutual
-/-- The blocks of a list of regions, at any depth. -/
-def Region.allBlocks : List (Region d) → List (Block d)
-  | [] => []
-  | ⟨bs⟩ :: rs => Block.allBlocks bs ++ Region.allBlocks rs
-
-/-- These blocks and the blocks of their ops' regions, at any depth. -/
-def Block.allBlocks : List (Block d) → List (Block d)
-  | [] => []
-  | ⟨l, ps, body⟩ :: bs => ⟨l, ps, body⟩ :: Operation.regionBlocks body ++ Block.allBlocks bs
-
-/-- The blocks of the regions of these ops, at any depth. -/
-def Operation.regionBlocks : List (Operation d) → List (Block d)
-  | [] => []
-  | ⟨_, _, _, _, regions, _⟩ :: os => Region.allBlocks regions ++ Operation.regionBlocks os
-end
-
-/-- Every block of a function, at any depth. -/
-def Func.allBlocks (f : Func d) : List (Block d) := Block.allBlocks f.body.blocks
-
 /-- Every op of a function, at any depth. -/
 def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
-
-/-- Every value a function defines, at any depth, with its type. -/
-def Func.allDefs (f : Func d) : List (Name × d.Ty) :=
-  f.params ++ f.allBlocks.flatMap Block.defs
-
-/-- The type of a value, looked up among every definition of the function. -/
-def Func.typeOfAny (f : Func d) (x : Name) : Option d.Ty :=
-  (f.allDefs.find? (·.1 == x)).map (·.2)
 
 mutual
 /-- An attribute can be written as a token. -/
@@ -72,8 +44,7 @@ end
 
 /-- A type is written as a word, or a word applied to attributes. -/
 def Attr.IsType : Attr → Prop
-  | .word w => isWord w
-  | .app h args => isWord h ∧ args ≠ [] ∧ Attr.AllWritable args
+  | a@(.word _) | a@(.app ..) => a.Writable
   | _ => False
 
 variable [DialectSignature d] [DialectText d]
@@ -81,7 +52,7 @@ variable [DialectSignature d] [DialectText d]
 /-- An op can be written, and read back from its context. -/
 def Func.OpWellFormed (f : Func d) (o : Operation d) : Prop :=
   isWord (opName o.op) ∧ Attr.AllWritable (opAttrs o.op) ∧
-  o.operands.map f.typeOfAny = (sig o.op).map some ∧
+  o.operands.map f.typeOf = (sig o.op).map some ∧
   o.results.map (·.2) = returnTypes o.op ∧
   ∀ s ∈ o.succs, isName s.label ∧ ∀ a ∈ s.args, isName a
 
@@ -92,10 +63,10 @@ written as types; and each of its ops can be written and read back.
 -/
 structure Func.WellFormed (f : Func d) : Prop where
   name : isWord f.name
-  namesUnique : (f.allDefs.map (·.1)).Nodup
-  names : ∀ x ∈ f.allDefs, isName x.1
+  namesUnique : (f.defs.map (·.1)).Nodup
+  names : ∀ x ∈ f.defs, isName x.1
   labels : ∀ b ∈ f.allBlocks, isName b.label
-  types : ∀ t ∈ f.results ++ f.allDefs.map (·.2), (tyAttr t).IsType
+  types : ∀ t ∈ f.results ++ f.defs.map (·.2), (tyAttr t).IsType
   ops : ∀ o ∈ f.allOps, f.OpWellFormed o
 
 /-- A module can be written and read back. Any location table can. -/

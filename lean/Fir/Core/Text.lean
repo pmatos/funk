@@ -86,6 +86,11 @@ def decodeCast (mk : Nat → Nat → Op) (as : List Attr) : List Ty → List Ty 
   | [.int m], [.int n] => bare as (some (mk m n))
   | _, _ => none
 
+/-- The ops that take two `iN`, give one `iN` and have no attributes. -/
+def plainBinOps : List (String × (Nat → Op)) :=
+  [("srem", .srem), ("urem", .urem), ("and", .and), ("or", .or), ("xor", .xor),
+   ("shl", .shl), ("lshr", .lshr), ("ashr", .ashr)]
+
 /-- The core op instance with this name and these attributes, at these
 operand and result types. -/
 def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
@@ -98,14 +103,6 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "mul" => do pure (.mul (← binWidth ts rs) (← decodeWrap as))
   | "sdiv" => do pure (.sdiv (← binWidth ts rs) (← decodeExact as))
   | "udiv" => do pure (.udiv (← binWidth ts rs) (← decodeExact as))
-  | "srem" => bare as ((binWidth ts rs).map .srem)
-  | "urem" => bare as ((binWidth ts rs).map .urem)
-  | "and" => bare as ((binWidth ts rs).map .and)
-  | "or" => bare as ((binWidth ts rs).map .or)
-  | "xor" => bare as ((binWidth ts rs).map .xor)
-  | "shl" => bare as ((binWidth ts rs).map .shl)
-  | "lshr" => bare as ((binWidth ts rs).map .lshr)
-  | "ashr" => bare as ((binWidth ts rs).map .ashr)
   | "select" => match ts, rs with
     | [.int 1, .int a, .int b], [.int c] => if a = b ∧ b = c then bare as (some (.select a)) else none
     | _, _ => none
@@ -121,9 +118,11 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "call" => match as with
     | [.sym f] => some (.call f ts rs)
     | _ => none
-  | _ => match Pred.all.find? (fun p => "icmp." ++ p.name == n), ts, rs with
-    | some p, [.int a, .int b], [.int 1] => if a = b then bare as (some (.icmp p a)) else none
-    | _, _, _ => none
+  | _ =>
+    if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk)
+    else match Pred.all.find? (fun p => "icmp." ++ p.name == n), ts, rs with
+      | some p, [.int a, .int b], [.int 1] => if a = b then bare as (some (.icmp p a)) else none
+      | _, _, _ => none
 
 /-- How a core type is written. -/
 def Ty.attr : Ty → Attr

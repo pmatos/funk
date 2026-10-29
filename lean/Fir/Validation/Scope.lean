@@ -21,7 +21,9 @@ runs (#10) is written against them.
 
 A function defines values in three ways: its parameters, the arguments of
 its blocks, and the results of its ops. Every definition names the value and
-gives its type, so the type of a value can be looked up by its name.
+gives its type, so the type of a value can be looked up by its name. The
+blocks of a function include, at any depth, the blocks of its ops' regions;
+no core op has one.
 -/
 
 namespace Fir
@@ -31,13 +33,33 @@ variable {d : Dialect}
 /-- The blocks of a function's body. Its entry block is the first. -/
 def Func.blocks (f : Func d) : List (Block d) := f.body.blocks
 
+mutual
+/-- The blocks of a list of regions, at any depth. -/
+def Region.allBlocks : List (Region d) → List (Block d)
+  | [] => []
+  | ⟨bs⟩ :: rs => Block.allBlocks bs ++ Region.allBlocks rs
+
+/-- These blocks and the blocks of their ops' regions, at any depth. -/
+def Block.allBlocks : List (Block d) → List (Block d)
+  | [] => []
+  | ⟨l, ps, body⟩ :: bs => ⟨l, ps, body⟩ :: Operation.regionBlocks body ++ Block.allBlocks bs
+
+/-- The blocks of the regions of these ops, at any depth. -/
+def Operation.regionBlocks : List (Operation d) → List (Block d)
+  | [] => []
+  | ⟨_, _, _, _, regions, _⟩ :: os => Region.allBlocks regions ++ Operation.regionBlocks os
+end
+
+/-- Every block of a function, at any depth. -/
+def Func.allBlocks (f : Func d) : List (Block d) := Block.allBlocks f.blocks
+
 /-- The values a block defines: its arguments, then its ops' results. -/
 def Block.defs (b : Block d) : List (Name × d.Ty) :=
   b.params ++ b.body.flatMap (·.results)
 
-/-- Every value a function defines, with its type. -/
+/-- Every value a function defines, at any depth, with its type. -/
 def Func.defs (f : Func d) : List (Name × d.Ty) :=
-  f.params ++ f.blocks.flatMap Block.defs
+  f.params ++ f.allBlocks.flatMap Block.defs
 
 /-- The type of the value named `x` in a function, if the function defines it. -/
 def Func.typeOf (f : Func d) (x : Name) : Option d.Ty :=
