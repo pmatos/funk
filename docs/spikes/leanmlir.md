@@ -74,10 +74,8 @@ with fuel. It works, but:
   without passing it, so fir's semantics would differ from the text.
 - LeanMLIR's rewriter, DCE and CSE see one block at a time.
 
-A real CFG in LeanMLIR means changing `Com`, the inductive that every
-framework lemma, the zipper, the rewriter and the tactics are built on
-(`Framework/Basic.lean` alone is 53 KB). That is a fork, not an extension.
-Names and locations need the same kind of change.
+A real CFG in LeanMLIR means changing `Com` itself: a fork, not an
+extension (see "What adding the missing features to LeanMLIR would take").
 
 ## Proof support
 
@@ -146,10 +144,10 @@ options have it.
   fails (git exit 128). The workaround, in every fresh clone and in CI, is
   `git fetch origin d9fc8ae…` inside `.lake/packages/Cli`.
 - **No Mathlib cache.** `lake exe cache get` downloaded none of the 7675
-  files it tried, from either Mathlib cache. About 920 Mathlib modules build from source: roughly three
-  minutes for the library, and longer for an executable, which also compiles
-  Mathlib to C. These are rough figures from a shared 24-core machine, not
-  measurements.
+  files it tried, from either Mathlib cache. About 920 Mathlib modules build
+  from source: roughly three minutes for the library, and longer for an
+  executable, which also compiles Mathlib to C. These are rough figures from
+  a shared 24-core machine, not measurements.
 - **Verso follows the pin.** Verso has a tag `nightly-2025-12-01`, so the
   page builds, but the spec's tooling stays on that Verso. Verso can show code
   from a project on another Lean version (its "example project" mode), but
@@ -167,7 +165,8 @@ each Lean release ourselves, which is a fork in all but name.
 The Verso page (`spike/doc/SpikeDoc.lean`) shows `freeze`, the op signature
 and the `@add3` sample from both prototypes, elaborated in one document. As
 the P1 spec would, it defines them in the document itself, against each
-prototype's framework, rather than quoting the prototype files. It builds and renders to HTML with Verso's `nightly-2025-12-01` tag. With both
+prototype's framework, rather than quoting the prototype files. It builds
+and renders to HTML with Verso's `nightly-2025-12-01` tag. With both
 frameworks loaded, `PoisonOr` is ambiguous, so the page qualifies the own
 calculus's name; a real spec loads only one.
 
@@ -189,8 +188,8 @@ calculus serves P1 better.
 - **CFGs with block arguments:** a new region form in `Com` (blocks,
   terminators with successors and typed successor arguments, dominance-based
   contexts), a fuel-based denotation, and new versions of every lemma, the
-  zipper, the rewriter, DCE and CSE. Upstream has not touched the framework
-  since 2025-12-03.
+  zipper, the rewriter, DCE and CSE (`Framework/Basic.lean` alone is 53 KB).
+  Upstream has not touched the framework since 2025-12-03.
 - **Names and locations:** fields on `Expr` (or `Com`), and changes to
   matching, equality, printing and the EDSL.
 - **A toolchain that moves:** port LeanMLIR and the Mathlib it needs to each
@@ -212,8 +211,8 @@ Define fir's own calculus, in the shape of LeanMLIR's typed SSA classes, with
 no dependency on LeanMLIR or Mathlib. The proposed ADR says how close to stay.
 LeanMLIR's real benefit, the verified rewriter, matters from M1 on, works only
 on pure straight-line code, and can still be reached later by translating
-fir blocks into LeanMLIR terms, because the per-op semantics have the same
-type on both sides.
+fir blocks into LeanMLIR terms, because the per-op semantics have nearly
+the same type on both sides (the ADR lists what a port changes).
 
 ## How to reproduce
 
