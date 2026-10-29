@@ -180,6 +180,13 @@ Calling conventions grow with the IR: aggregates, varargs and whatever the
 memory model brings in. As hand-written passes multiply, per-compile refinement
 checks (SMT, S8) start to matter here.
 
+**Optimizer track.** M1 also starts the mid-end, as a track that runs beside
+the backend work: rewrite rules proven in Lean and emitted as Rust matchers by
+a generator, a growing rule library, verified DCE and CSE, an aegraph view of
+pure ops (H7), and location propagation by the rewrite engine (H8). Each rule
+or pass is checked against the Lean semantics before it lands, and S8 and H7
+must be decided before the first pass that depends on them.
+
 ### M2: Vow frontend
 
 A frontend for [Vow](https://github.com/vow-lang/vow) that lowers to fir, so
@@ -251,13 +258,11 @@ not cover yet.
 - **arm64 backend.** M6 needs one, and no milestone covers it.
 - **Non-CPU targets.** G0 keeps the door open for GPUs, NPUs, TPUs and more,
   but no milestone targets one yet.
-- **Optimizer and verified rewrite rules.** Ground rules promise rewrite rules
-  proven in Lean and emitted as Rust, and the record plans verified DCE and
-  CSE, an aegraph view of pure ops (H7) and location propagation by the
-  rewrite engine (H8). No milestone owns this work yet.
 - **LeanMLIR: build on it or write our own.** The record suggests a spike of
   about a week to decide whether the Lean semantics builds on LeanMLIR's SSA
-  framework. No step of M0 runs it yet.
+  framework. Deferred on 2026-10-29 for a later discussion. Until then, the
+  M0 Lean code is our own, kept generic over the dialect (G0) and close in
+  shape to LeanMLIR's typed SSA terms, so a later port stays cheap.
 - **Wasm and LLVM IR frontends.** The record used a Wasm frontend as its first
   strawman and plans LLVM IR import. Neither has a milestone. M0 starts from
   fir text directly, so the Wasm strawman is not needed for M0.
