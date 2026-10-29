@@ -13,7 +13,10 @@ inside it is tracked as issues, starting from an epic.
 Funk is a reusable compiler toolchain in the spirit of LLVM: a library that
 production compilers are built on. Its intermediate representation is **fir**.
 Funk is verification-first: the meaning of fir is defined formally, and the
-toolchain is tested and, over time, proven against that definition.
+toolchain is tested and, over time, proven against that definition. Funk is
+also agent-native: agents build it and use it, so its core fits in an agent's
+context, its tools speak structured JSON as well as text, and every change an
+agent proposes is checked by refinement.
 
 ## Ground rules that shape every milestone
 
@@ -27,7 +30,9 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
   fir is a first-class deliverable, not an afterthought. Every chapter of the
   spec (abstract syntax, validation, execution, text format) is both formal
   and readable by a person, and both views come from one source so they cannot
-  drift. How we get there is decision P1, settled at the start of M0.
+  drift. Decision P1 settles how: the spec is literate Lean, rendered with
+  Verso. This holds in every milestone: no change to fir's semantics merges
+  without its spec section, formal and readable.
 - **The toolchain is Rust.** The IR library, verifier, passes, backends and
   driver are all Rust. There is no Rust interpreter in M0. A Rust evaluator may
   come later if fuzzing throughput or the JIT needs one, and then only as a copy
@@ -43,6 +48,8 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
 - **Correctness means refinement.** A target is correct if each of its
   observable behaviours is allowed by the source. Source UB allows anything; a
   poison result is refined by any value.
+- **Diagnostics are structured.** Every tool reports errors with IR locations,
+  as text for people and as JSON on request for agents.
 - **Each step leaves something runnable.** We grow funk one piece at a time and
   check every new piece against the oracle before building on it.
 
@@ -52,7 +59,7 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
 | --- | --- | --- |
 | M0 | fir compiler with a basic x86-64 backend | [milestone 1](https://github.com/pmatos/funk/milestone/1) |
 | M1 | Full x86-64 backend | [milestone 2](https://github.com/pmatos/funk/milestone/2) |
-| M2 | VAU frontend | [milestone 3](https://github.com/pmatos/funk/milestone/3) |
+| M2 | Vow frontend | [milestone 3](https://github.com/pmatos/funk/milestone/3) |
 | M3 | C and C++ frontend | [milestone 4](https://github.com/pmatos/funk/milestone/4) |
 | M4 | Compile the Linux kernel | [milestone 5](https://github.com/pmatos/funk/milestone/5) |
 | M5 | JIT compilation | [milestone 6](https://github.com/pmatos/funk/milestone/6) |
@@ -69,43 +76,49 @@ Lean interpreter on every test. Epic: [#5](https://github.com/pmatos/funk/issues
 and interpreter), arithmetic, bitwise ops and shifts, compares, `select`, width
 changes, `freeze`, branches with block arguments, calls (including recursion)
 and return. No memory: `ptr` is reserved as a type but has no ops. The full op
-set is in the epic.
+set is in the epic. A function's observable behaviour in M0 is its return
+value, UB, or fuel exhaustion. That is narrower than S4's full definition,
+which also counts calls to external symbols and reachable memory, because
+every M0 callee is inside the module. The `i128` division helper is the one
+exception, and it is tested on its own.
 
 **Decisions already made** for M0, recorded in the fir v0 decision record on
 2026-10-29: E0 (CFG with ordering by position), S1 (poison plus `freeze`, no
 `undef`), S2 (`iN` bitvectors, signedness on ops, `i128` in M0), S4
 (refinement), S7 (semantics in Lean, monadic interpreter with fuel), H1 (block
 arguments), H2 (functions isolated from above), H3 (globals by symbol), H8
-(required source locations, printed as `@N` with a `locs` table) and P3 (one
-canonical text format). The epic spells each one out; the first M0 task turns
-each into an ADR.
+(required source locations, printed as `@N` with a `locs` table), P3 (one
+canonical text format) and P1 (below). The epic spells each one out; the first
+M0 task turns each into an ADR.
 
-**Decision still open for M0: P1, how the spec is written.** It decides the
-form of `docs/spec/fir/`, so it comes before any spec text. Following the Wasm
-spec, the chapters are abstract syntax, validation, execution and text format.
-The open question is the source:
+**`freeze` in the oracle**, decided on 2026-10-29 and recorded in #7. `freeze`
+of poison makes a function's behaviour a set of outcomes. The interpreter has a
+choice effect, and `fir-ref` has an exhaustive mode (the whole set, within a
+budget) and a scripted mode (one outcome for a given choice sequence). A
+native result passes when it is in the set, and a test whose set contains UB
+is invalid. That is what "native results refine the Lean results" means below.
 
-- **Lean as the single source** (the decision record's recommendation). The
-  Lean definitions are the spec, and the readable document is generated from
-  them as literate Lean with Verso, Lean's documentation tool.
-- **A spec DSL in the style of Wasm's SpecTec.** One source generates the Lean
-  definitions, the Rust verifier and the readable document. It is more
-  machinery, but the Rust validator is generated rather than hand-written.
-
-Either way, the readable document is built by CI from the same source as the
-formal definitions, never maintained by hand beside them.
+**P1: the spec is literate Lean, rendered with Verso.** Decided on
+2026-10-29. The spec keeps the Wasm spec's chapters: abstract syntax,
+validation, execution and text format. Its formal content is the Lean
+definitions themselves, and its prose sits beside them as literate Lean.
+Verso, Lean's documentation tool, renders the two together as the readable
+document, and CI builds it on every PR. So the readable spec can never drift
+from the formal one. The Rust verifier stays hand-written and is tested
+against Lean. A spec DSL in the style of Wasm's SpecTec, generating Lean, the
+Rust verifier and the document from one source, was the alternative; it can
+still come later if the hand-written verifier starts to drift.
 
 **Order of work.** Each step is one or more PRs, and each ends with something
 we can run. We first build a thin path through every layer, then widen it one
 op family at a time. That way the harness exists before most of the backend,
 and every new piece is checked against the oracle as it lands.
 
-1. **Record the direction.** The P1 ADR comes first, since it fixes how the
-   spec is written. Then one ADR per decision above, and a small v0 spec in
-   `docs/spec/fir/`, in the form P1 picks: abstract syntax, validation,
-   execution and text format, with the concrete grammar. Small enough to
-   finish in days. The concrete syntax goes to the human for review before
-   code depends on it.
+1. **Record the direction.** One ADR per decision above. Then the v0 spec as
+   literate Lean with Verso: the full concrete grammar, the abstract syntax of
+   every M0 op, and the general definitions of execution (outcomes, observable
+   behaviour, refinement). The concrete syntax goes to the human for review
+   before code depends on it.
 2. **Tracer bullet through every layer.** One tiny program (parameters,
    `const`, `add` and `ret`) goes through each layer in turn. First the Rust
    IR crate (`funk-ir`), with `funk fmt`, `funk verify` and round trips that
@@ -119,9 +132,9 @@ and every new piece is checked against the oracle as it lands.
 3. **Widen one op family at a time.** The families are arithmetic with poison
    and `freeze`, bitwise ops and shifts, compares and `select`, width changes,
    division, branches with block arguments, and calls. Each family goes
-   through every layer at once: the spec, the Lean semantics and round-trip
-   proof, the Rust IR and verifier, the backend, and corpus tests checked
-   against `fir-ref`.
+   through every layer at once: its validation and execution rules in the
+   spec (which are the Lean semantics), the round-trip proof, the Rust IR and
+   verifier, the backend, and corpus tests checked against `fir-ref`.
 4. **`i128` in the backend.** Register pairs for every op, then division
    through a runtime helper.
 5. **Audit.** Check that the corpus covers each op, flag and width, port LLVM
@@ -132,9 +145,9 @@ and it lands in the same PR as the code it checks.
 
 **Done when** every M0 decision is an accepted ADR, the spec is complete enough
 to implement from, its readable document (formalization included) is
-generated from the same source as the formal definitions, round trips hold in Rust and across Rust and Lean under
-fuzzing, native results refine the Lean results on the whole corpus, and CI
-runs all of it.
+generated from the same source as the formal definitions, round trips hold in
+Rust and across Rust and Lean under fuzzing, native results refine the Lean
+results on the whole corpus, and CI runs all of it.
 
 ### M1: Full x86-64 backend
 
@@ -153,10 +166,11 @@ Calling conventions grow with the IR: aggregates, varargs and whatever the
 memory model brings in. As hand-written passes multiply, per-compile refinement
 checks (SMT, S8) start to matter here.
 
-### M2: VAU frontend
+### M2: Vow frontend
 
-A VAU frontend that lowers to fir, so VAU programs compile to x86-64 through
-funk.
+A frontend for [Vow](https://github.com/vow-lang/vow) that lowers to fir, so
+Vow programs compile to x86-64 through funk. Vow runs on Cranelift today, so
+moving it to funk is how we dogfood the toolchain.
 
 ### M3: C and C++ frontend
 
@@ -183,17 +197,51 @@ yet.
 Open in the fir v0 decision record, and out of M0 on purpose. Do not design
 around a guess for any of these. If work needs one, open a `human-ready` issue.
 
+S3, S8, H4 and H7 are marked Foundational in the record, which means decided
+before the code that depends on them. M0 has no memory, no optimization passes
+and no dialects, so none of its code depends on them. Each must be decided
+before the first step that does, as the table says.
+
 | ID | Decision | Likely needed by |
 | --- | --- | --- |
-| S3 | Memory model | M1 (memory, loads and stores) |
+| S3 | Memory model (Foundational) | Before M1's memory step |
 | S5 | Floating point | M1 or the first frontend that needs it |
 | S6 | Concurrency | M3 at the latest (C and C++ atomics) |
-| S8 | SMT equivalence checking | When hand-written passes need per-compile checks |
-| H4, H5 | Dialects and extensions | M2 (frontend-level ops) |
+| S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
+| H4, H5 | Dialects and extensions (H4 Foundational) | Before M2 adds frontend-level ops |
 | H6 | Structured control flow | When a frontend or pass needs it |
-| H7 | Effect classes beyond "pure" and "call" | M1 (memory) |
+| H7 | Effect classes beyond "pure" and "call" (Foundational) | Before M1's memory step |
 | P2 | Public API shape | Before external users build on funk |
+
+For S8 the record proposes three stages: a hand-written Rust SMT encoder,
+tested against `fir-ref`; then an encoder written in Lean and proven against
+the semantics; then `bv_decide` as the bar for admitting rewrite rules.
+
+The record also leaves these out of v0, each with a hook in the format so it
+can come back without a break:
+
+| Left out of v0 | Likely needed by |
+| --- | --- |
+| Exceptions and unwinding | M3 (C++) |
+| Vectors and SIMD | M1 or M4, and M6 (SSE and AVX) |
+| Contract ops (`assume`, `assert`, `requires`, `ensures`) | M2 (Vow) |
+| Garbage-collected or managed memory | A frontend that needs it |
+| Non-default FP rounding and FP exceptions | M3 or M4 |
+| A binary format | When text parsing becomes a bottleneck |
+
+M4 will also need inline assembly and volatile accesses, which the record does
+not cover yet.
 
 ## Open gaps
 
 - **arm64 backend.** M6 needs one, and no milestone covers it.
+- **Optimizer and verified rewrite rules.** Ground rules promise rewrite rules
+  proven in Lean and emitted as Rust, and the record plans verified DCE and
+  CSE, an aegraph view of pure ops (H7) and location propagation by the
+  rewrite engine (H8). No milestone owns this work yet.
+- **LeanMLIR: build on it or write our own.** The record suggests a spike of
+  about a week to decide whether the Lean semantics builds on LeanMLIR's SSA
+  framework. No step of M0 runs it yet.
+- **Wasm and LLVM IR frontends.** The record used a Wasm frontend as its first
+  strawman and plans LLVM IR import. Neither has a milestone. M0 starts from
+  fir text directly, so the Wasm strawman is not needed for M0.
