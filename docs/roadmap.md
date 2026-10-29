@@ -128,11 +128,15 @@ we can run. We first build a thin path through every layer, then widen it one
 op family at a time. That way the harness exists before most of the backend,
 and every new piece is checked against the oracle as it lands.
 
-1. **Record the direction.** One ADR per decision above. Then the v0 spec as
-   literate Lean with Verso: the full concrete grammar, the abstract syntax of
-   every M0 op, and the general definitions of execution (outcomes, observable
-   behaviour, refinement). The concrete syntax goes to the human for review
-   before code depends on it.
+1. **Record the direction.** One ADR per decision above. Alongside it, a spike
+   ([#24](https://github.com/pmatos/funk/issues/24)) decides whether the Lean
+   semantics builds on LeanMLIR's SSA framework or on our own calculus. It
+   prototypes a small piece of fir both ways, and its ADR goes to the human.
+   Then the v0 spec as literate Lean with Verso, built on the spike's
+   decision: the full concrete grammar, the abstract syntax of every M0 op,
+   and the general definitions of execution (outcomes, observable behaviour,
+   refinement). The concrete syntax goes to the human for review before code
+   depends on it.
 2. **Tracer bullet through every layer.** One tiny program (parameters,
    `const`, `add` and `ret`) goes through each layer in turn. First the Rust
    IR crate (`funk-ir`), with `funk fmt`, `funk verify` and round trips that
@@ -258,11 +262,6 @@ not cover yet.
 - **arm64 backend.** M6 needs one, and no milestone covers it.
 - **Non-CPU targets.** G0 keeps the door open for GPUs, NPUs, TPUs and more,
   but no milestone targets one yet.
-- **LeanMLIR: build on it or write our own.** The record suggests a spike of
-  about a week to decide whether the Lean semantics builds on LeanMLIR's SSA
-  framework. Deferred on 2026-10-29 for a later discussion. Until then, the
-  M0 Lean code is our own, kept generic over the dialect (G0) and close in
-  shape to LeanMLIR's typed SSA terms, so a later port stays cheap.
 - **Wasm and LLVM IR frontends.** The record used a Wasm frontend as its first
   strawman and plans LLVM IR import. Neither has a milestone. M0 starts from
   fir text directly, so the Wasm strawman is not needed for M0.
