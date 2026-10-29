@@ -76,11 +76,10 @@ to H4 and H5.
 
 - **Depend on LeanMLIR.** A CFG layer outside the framework, with block
   arguments typed at run time and no access to dominating values; names and
-  locations kept outside the terms; Lean frozen at `nightly-2025-12-01`; a
-  fir parser needed anyway.
+  locations in the ops or in side tables; Lean frozen at
+  `nightly-2025-12-01`; a fir parser needed anyway.
 - **Fork LeanMLIR.** Add CFGs, names and locations to its core term, and port
-  it and its Mathlib dependency to each Lean release ourselves. Its files
-  also exceed the 20,000-byte budget (ADR-2026-10-28-0724).
+  it and its Mathlib dependency to each Lean release ourselves.
 - **Build on VeIR** ([opencompl/veir](https://github.com/opencompl/veir), read
   at [`35114775`](https://github.com/opencompl/veir/tree/351147753c4240e07e738bd79f1974e3141aaa1a)),
   the same group's active successor framework. It is on Lean `v4.35.0-rc4`
@@ -91,7 +90,8 @@ to H4 and H5.
   says "not interaction trees". It stubs out locations (`Location := Unit`;
   H8). Its values have no names (P3). Its IR is a pointer graph, which fits
   neither the literate spec (P1, ADR-2026-10-29-2015) nor the round-trip
-  proof (#11). S7 is the row the human would have to reopen to choose it.
+  proof (#11). S7 is the row the human would have to reopen to choose it;
+  the H8, P3 and P1 gaps would then need work in VeIR or beside it.
 
 ## Consequences
 

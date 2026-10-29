@@ -13,7 +13,8 @@ intrinsically typed SSA framework, or define its own small calculus?
 
 Both prototypes are on branch
 [`vibe/24-leanmlir-spike-prototypes`](https://github.com/pmatos/funk/tree/e17e4dd4eb7184b7eed2f89301787df7cc763a21/spike)
-at commit `e17e4dd`. That code does not merge.
+at commit `e17e4dd`. That code does not merge. Keep the branch: it is the
+only ref that reaches `e17e4dd`, and every `spike/` path below is on it.
 
 | Package | What it is | Lean |
 | --- | --- | --- |
@@ -103,7 +104,7 @@ unchanged. The cost is the same on either side.
 followed by `b ^^^ b`, by `rfl`. The own prototype then proves every
 behaviour returns 0 (`frozen_xor_zero`). The own proofs use only `propext`
 and `Quot.sound`; the LeanMLIR ones also use `Classical.choice`, through
-Mathlib.
+Mathlib and LeanMLIR's own auxiliary proofs (in `Ctxt`, for example).
 
 **Type safety.** LeanMLIR's intrinsic typing makes ill-typed terms
 unrepresentable inside a block. The CFG layer is checked at run time, so a
@@ -200,7 +201,7 @@ calculus serves P1 better.
 
 | Issue | Own calculus | LeanMLIR |
 | --- | --- | --- |
-| #8 spec | A `lean/` package with no dependency on LeanMLIR or Mathlib, on a Lean release that has a matching Verso release. Abstract syntax in the extrinsic shape of `spike/own`. | Per-block `Com` terms plus fir's CFG layer, or a fork of LeanMLIR. Names and locations in side tables. The toolchain ADR pins `nightly-2025-12-01`, Mathlib `nightly-testing`, the `lean4-cli` fetch workaround and a Mathlib build in CI. Verso stays at its matching tag. |
+| #8 spec | A `lean/` package with no dependency on LeanMLIR (Mathlib is for #8's Lean toolchain ADR to decide), on a Lean release that has a matching Verso release. Abstract syntax in the extrinsic shape of `spike/own`. | Per-block `Com` terms plus fir's CFG layer, or a fork of LeanMLIR. Names and locations in side tables. The toolchain ADR pins `nightly-2025-12-01`, Mathlib `nightly-testing`, the `lean4-cli` fetch workaround and a Mathlib build in CI. Verso stays at its matching tag. |
 | #10 interpreter | A CFG walker generic over dialect and monad, as in `spike/own`. fir's own parser and printer. `fir-ref` is a plain Lean executable. | `Com.denote` inside blocks, plus the CFG layer. fir's own parser, which must type-check while it parses, and its own printer. `fir-ref` links Mathlib. |
 | #11 proofs | Print-then-parse over first-order syntax. A progress theorem: validated modules never get stuck. | Print-then-parse over dependent terms, with side tables for names and locations. Blocks are well typed by construction; the CFG layer still needs a proof. |
 | #14 `freeze` | The `Prog` handlers and both soundness proofs from the spike, if #14 keeps that design. #14 checks it against S7 ("not interaction trees"): `Prog` is a finite tree, and fuel bounds runs. | The same. `freeze` is impure, so no `PeepholeRewrite` can involve it. |
@@ -208,11 +209,12 @@ calculus serves P1 better.
 ## Recommendation
 
 Define fir's own calculus, in the shape of LeanMLIR's typed SSA classes, with
-no dependency on LeanMLIR or Mathlib. The proposed ADR says how close to stay.
-LeanMLIR's real benefit, the verified rewriter, matters from M1 on, works only
-on pure straight-line code, and can still be reached later by translating
-fir blocks into LeanMLIR terms, because the per-op semantics have nearly
-the same type on both sides (the ADR lists what a port changes).
+no dependency on LeanMLIR or Mathlib. The ADR, since accepted with the edits
+listed under Verification, says how close to stay. LeanMLIR's real benefit,
+the verified rewriter, matters from M1 on, works only on pure straight-line
+code, and can still be reached later by translating fir blocks into LeanMLIR
+terms, because the per-op semantics have nearly the same type on both sides
+(the ADR lists what a port changes).
 
 ## Verification
 
@@ -235,8 +237,8 @@ framework, which this report does not cover. The ADR rejects it for now.
 
 The human accepted the ADR with edits. Whether `lean/` depends on Mathlib is
 left to #8's Lean toolchain ADR, and verified rewrites in M1 mean fir's own
-refinement-based framework or VeIR, not a translation to LeanMLIR. Where the
-Recommendation above differs, the ADR governs.
+refinement-based framework or VeIR, not a translation to LeanMLIR. Where this
+report differs from the ADR, the ADR governs.
 
 ## How to reproduce
 
