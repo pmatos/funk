@@ -22,6 +22,13 @@ agent proposes is checked by refinement.
 
 These hold across the whole roadmap. Each is, or will be, an ADR.
 
+- **fir must be able to reach any kind of hardware (G0).** CPUs first, but
+  also GPUs, NPUs, TPUs and hardware we cannot predict yet, such as photonic or
+  quantum processors. The core stays a small CPU-shaped dialect, and other
+  targets come in as extension dialects, so the openness lives in how fir is
+  built, not in what the core contains. Every decision is checked against this
+  rule, and none may close that door. Set on 2026-10-29; the G0 section of the
+  fir v0 decision record checks each decided row against it.
 - **The semantics of fir lives in Lean, and only there.** Lean holds the
   definition of fir, a reference interpreter, its own `.fir` parser and
   printer, and later rule proofs and a proven SMT encoder. The interpreter is a
@@ -90,6 +97,13 @@ arguments), H2 (functions isolated from above), H3 (globals by symbol), H8
 (required source locations, printed as `@N` with a `locs` table), P3 (one
 canonical text format) and P1 (below). The epic spells each one out; the first
 M0 task turns each into an ADR.
+
+**What G0 asks of M0.** The core op set stays small, but the structures that
+hold it must not be closed. Following the G0 check in the decision record, the
+Rust IR represents ops generically (a name, operands, attributes, result types
+and regions, checked through a registry) rather than as a closed Rust enum,
+the Lean semantics is parameterized over the dialect, and the text format uses
+one grammar for every op, so a new dialect needs no parser change.
 
 **`freeze` in the oracle**, decided on 2026-10-29 and recorded in #7. `freeze`
 of poison makes a function's behaviour a set of outcomes. The interpreter has a
@@ -204,11 +218,11 @@ before the first step that does, as the table says.
 
 | ID | Decision | Likely needed by |
 | --- | --- | --- |
-| S3 | Memory model (Foundational) | Before M1's memory step |
+| S3 | Memory model (Foundational; G0: several memories and address spaces) | Before M1's memory step |
 | S5 | Floating point | M1 or the first frontend that needs it |
 | S6 | Concurrency | M3 at the latest (C and C++ atomics) |
 | S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
-| H4, H5 | Dialects and extensions (H4 Foundational) | Before M2 adds frontend-level ops |
+| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Before M2 adds frontend-level ops |
 | H6 | Structured control flow | When a frontend or pass needs it |
 | H7 | Effect classes beyond "pure" and "call" (Foundational) | Before M1's memory step |
 | P2 | Public API shape | Before external users build on funk |
@@ -235,6 +249,8 @@ not cover yet.
 ## Open gaps
 
 - **arm64 backend.** M6 needs one, and no milestone covers it.
+- **Non-CPU targets.** G0 keeps the door open for GPUs, NPUs, TPUs and more,
+  but no milestone targets one yet.
 - **Optimizer and verified rewrite rules.** Ground rules promise rewrite rules
   proven in Lean and emitted as Rust, and the record plans verified DCE and
   CSE, an aegraph view of pure ops (H7) and location propagation by the
