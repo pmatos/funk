@@ -55,11 +55,11 @@ Both prototypes give the same results, checked by `#guard` at build time:
 | Poison distinct from UB (S1) | Poison is a value (`PoisonOr`); UB is an effect. | The framework allows it: values can be `PoisonOr`, and UB can be an effect of the dialect monad. The prototype does this. The shipped LLVM dialect folds them: `udiv` by zero returns `.poison` (`Dialects/LLVM/Semantics.lean`, `udiv?`). |
 | `freeze` with a choice effect | `freeze` calls `choose`. | Works: `freeze` is an `impure` op in `Prog`. The shipped LLVM dialect makes `freeze poison` return `0` (`Semantics.lean`, `freeze`), the "one fixed value" option that #7 rejects. |
 | Refinement over sets of behaviours (S4) | To be defined; `Prog.sem` gives the sets. | Fits: `HRefinement` and `DialectHRefinement` define `⊑` on values and on the dialect monad, "every observable behaviour of b is allowed by a". |
-| CFG with block arguments (H1) | Built in: blocks, successors, fuel per block. | Missing. A region is one straight-line `Com` ending in `rets`. The prototype adds a CFG layer outside the framework (below). |
+| CFG with block arguments (H1) | Built in: blocks, successors, fuel per block. The prototype's walker keeps one environment across blocks; dominance is a validation rule, not built in the spike. | Missing. A region is one straight-line `Com` ending in `rets`. The prototype adds a CFG layer outside the framework (below). |
 | Isolated from above (H2) | By construction. | Fits: a region's body has its own context. |
 | Location on every op (H8) | A field of every op. | Missing. `Expr` has no location. It would go into the op (then rewrite matching and op equality see it) or into a side table keyed by position. |
 | Value names stored and printed (P3) | Names are part of the term. | Missing. Variables are de Bruijn indices, and the printer renumbers them (`%{index}`, `Framework/Print.lean`, `printVar`). |
-| Parameterized over the dialect (G0) | The same classes as LeanMLIR. | Fits: this is the model G0 names. One difference: a LeanMLIR dialect fixes one monad (`Dialect.m`), while the prototype's ops state the effects they need as class constraints. |
+| Parameterized over the dialect (G0) | The same classes as LeanMLIR. | Fits: LeanMLIR is parameterized over the dialect. One difference: a LeanMLIR dialect fixes one monad (`Dialect.m`), while the prototype's ops state the effects they need as class constraints. |
 
 ### The CFG layer on LeanMLIR
 
@@ -131,7 +131,8 @@ options have it.
 
 - **Pinned to an old nightly.** LeanMLIR pins `nightly-2025-12-01`. The
   stable Lean today is v4.35.0, with v4.36.0-rc2 out. LeanMLIR bumped its
-  toolchain 171 times in 2025, nearly daily, and not once since 2025-12-03.
+  toolchain 171 times in 2025, about every other day, and not once since
+  2025-12-03.
 - **Activity moved elsewhere.** The `LeanMLIR/` framework directory was
   split out on 2025-09-25 and last changed on 2025-12-03. Of the 70 commits
   in 2026, 56 touch `Blase`, a bit-vector decision procedure. The
@@ -164,8 +165,9 @@ each Lean release ourselves, which is a fork in all but name.
 ## Readability in Verso
 
 The Verso page (`spike/doc/SpikeDoc.lean`) shows `freeze`, the op signature
-and the `@add3` sample from both prototypes, elaborated in one document. It
-builds and renders to HTML with Verso's `nightly-2025-12-01` tag. With both
+and the `@add3` sample from both prototypes, elaborated in one document. As
+the P1 spec would, it defines them in the document itself, against each
+prototype's framework, rather than quoting the prototype files. It builds and renders to HTML with Verso's `nightly-2025-12-01` tag. With both
 frameworks loaded, `PoisonOr` is ambiguous, so the page qualifies the own
 calculus's name; a real spec loads only one.
 
@@ -199,15 +201,15 @@ calculus serves P1 better.
 
 | Issue | Own calculus | LeanMLIR |
 | --- | --- | --- |
-| #8 spec | A `lean/` package with no dependencies, on a Lean release that has a matching Verso release. Abstract syntax in the extrinsic shape of `spike/own`. `Prog` and its set semantics are the general part of execution. | Per-block `Com` terms plus fir's CFG layer, or a fork of LeanMLIR. Names and locations in side tables. The toolchain ADR pins `nightly-2025-12-01`, Mathlib `nightly-testing`, the `lean4-cli` fetch workaround and a Mathlib build in CI. Verso stays at its matching tag. |
+| #8 spec | A `lean/` package with no dependency on LeanMLIR or Mathlib, on a Lean release that has a matching Verso release. Abstract syntax in the extrinsic shape of `spike/own`. | Per-block `Com` terms plus fir's CFG layer, or a fork of LeanMLIR. Names and locations in side tables. The toolchain ADR pins `nightly-2025-12-01`, Mathlib `nightly-testing`, the `lean4-cli` fetch workaround and a Mathlib build in CI. Verso stays at its matching tag. |
 | #10 interpreter | A CFG walker generic over dialect and monad, as in `spike/own`. fir's own parser and printer. `fir-ref` is a plain Lean executable. | `Com.denote` inside blocks, plus the CFG layer. fir's own parser, which must type-check while it parses, and its own printer. `fir-ref` links Mathlib. |
 | #11 proofs | Print-then-parse over first-order syntax. A progress theorem: validated modules never get stuck. | Print-then-parse over dependent terms, with side tables for names and locations. Blocks are well typed by construction; the CFG layer still needs a proof. |
-| #14 `freeze` | The `Prog` handlers and both soundness proofs from the spike. | The same, unchanged. `freeze` is impure, so no `PeepholeRewrite` can involve it. |
+| #14 `freeze` | The `Prog` handlers and both soundness proofs from the spike, if #14 keeps that design. #14 checks it against S7 ("not interaction trees"): `Prog` is a finite tree, and fuel bounds runs. | The same. `freeze` is impure, so no `PeepholeRewrite` can involve it. |
 
 ## Recommendation
 
 Define fir's own calculus, in the shape of LeanMLIR's typed SSA classes, with
-no dependency beyond Lean itself. The proposed ADR says how close to stay.
+no dependency on LeanMLIR or Mathlib. The proposed ADR says how close to stay.
 LeanMLIR's real benefit, the verified rewriter, matters from M1 on, works only
 on pure straight-line code, and can still be reached later by translating
 fir blocks into LeanMLIR terms, because the per-op semantics have the same
@@ -221,7 +223,8 @@ From the prototype branch, with `elan` installed:
 cd spike/own && lake build           # samples, guards and proofs
 cd ../leanmlir && lake update        # fails on lean4-cli d9fc8ae; then:
 git -C .lake/packages/Cli fetch origin d9fc8ae23024be37424a189982c92356e37935c8
-lake build                           # builds Mathlib from source
-cd ../doc && lake update             # same lean4-cli workaround
-lake build && lake exe spikedoc --output _out
+lake update && lake build            # builds Mathlib from source
+cd ../doc && lake update             # fails the same way; same workaround:
+git -C .lake/packages/Cli fetch origin d9fc8ae23024be37424a189982c92356e37935c8
+lake update && lake build && lake exe spikedoc --output _out
 ```
