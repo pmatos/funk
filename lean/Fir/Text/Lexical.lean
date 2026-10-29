@@ -26,7 +26,9 @@ digit    ::= '0'..'9'
 nat      ::= '0' | ('1'..'9') digit*
 int      ::= nat | '-' ('1'..'9') digit*
 string   ::= '"' (strchar | escape)* '"'
+strchar  ::= any character except '"', '\', U+0000..U+001F and U+007F
 escape   ::= '\\' | '\"' | '\n' | '\t' | '\u{' hexdigit+ '}'
+hexdigit ::= digit | 'a'..'f'
 punct    ::= '(' | ')' | '{' | '}' | ',' | ':' | '=' | '-' | '->'
 ```
 
@@ -37,7 +39,10 @@ punct    ::= '(' | ')' | '{' | '}' | ',' | ':' | '=' | '-' | '->'
 * A word is an op name, a type, a flag or a keyword. Words may contain `.`,
   as in `icmp.slt`.
 * An integer has no leading zeros and no `+`. A negative integer starts with
-  `-`, and `-0` is not an integer.
+  `-`, and `-0` is not an integer. `-` followed by a digit starts an
+  integer only where the grammar expects an attribute. In a source range,
+  as in `2:3-2:14`, `-` is always the punctuation `-`, so the printer needs
+  no space before the end position.
 * A string holds any Unicode text. Inside it, `"` and `\` are written `\"`
   and `\\`, a line feed `\n` and a tab `\t`. Every other control character,
   below U+0020 or U+007F, is written `\u{h}` with lowercase hexadecimal

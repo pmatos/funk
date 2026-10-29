@@ -54,9 +54,12 @@ jobs:
           # Enables zizmor's online audits (e.g. known-vulnerable actions).
           GH_TOKEN: ${{ github.token }}
         run: uvx pre-commit@4.6.2 run --all-files --show-diff-on-failure --color always
-      # Saved even when a hook fails, so the next run need not rebuild Verso.
+      # Saved even when a hook fails, so the next run need not rebuild Verso,
+      # but only once Verso is built: a partial cache would take the key.
       - name: Save the Lean toolchain and Verso build
-        if: always() && steps.lean-cache.outputs.cache-hit != 'true'
+        if: >-
+          always() && steps.lean-cache.outputs.cache-hit != 'true' &&
+          hashFiles('docs/spec/.lake/packages/verso/.lake/build/lib/lean/VersoManual.olean') != ''
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |

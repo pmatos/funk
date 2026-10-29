@@ -4,8 +4,8 @@ import Fir.Text.Print
 /-!
 # An example
 
-The function `@sum` adds the integers from `0` up to `%n`, and `@sum10` calls
-it. In the canonical text:
+The function `@sum` adds the integers from `0` up to, but not including,
+`%n`, and `@sum10` calls it. In the canonical text:
 
 ```
 func @sum(%n: i32) -> i32 {

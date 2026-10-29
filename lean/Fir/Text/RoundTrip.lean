@@ -1,4 +1,5 @@
 import Fir.Text.Print
+import Fir.Validation.Scope
 
 /-!
 # Round trips
@@ -50,7 +51,7 @@ def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.bod
 
 /-- Every value a function defines, at any depth, with its type. -/
 def Func.allDefs (f : Func d) : List (Name × d.Ty) :=
-  f.params ++ f.allBlocks.flatMap fun b => b.params ++ b.body.flatMap (·.results)
+  f.params ++ f.allBlocks.flatMap Block.defs
 
 /-- The type of a value, looked up among every definition of the function. -/
 def Func.typeOfAny (f : Func d) (x : Name) : Option d.Ty :=
@@ -82,7 +83,7 @@ def Func.OpWellFormed (f : Func d) (o : Operation d) : Prop :=
   isWord (opName o.op) ∧ Attr.AllWritable (opAttrs o.op) ∧
   o.operands.map f.typeOfAny = (sig o.op).map some ∧
   o.results.map (·.2) = returnTypes o.op ∧
-  ∀ s ∈ o.succs, isName s.label
+  ∀ s ∈ o.succs, isName s.label ∧ ∀ a ∈ s.args, isName a
 
 /--
 A function can be written and read back: its symbol is a word; its value

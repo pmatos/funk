@@ -127,8 +127,8 @@ observations and how they refine. In M0 it is the list of returned values,
 each a value or poison.
 
 **observable behaviour**:
-What a run of a function shows to the outside. In M0 it is the return value,
-UB, or non-termination (fuel exhausted). Each dialect supplies its own
+What a run of a function shows to the outside. In M0 it is the returned
+values, UB, or non-termination (fuel exhausted). Each dialect supplies its own
 observations.
 _Avoid_: result (a behaviour also covers UB and non-termination)
 
