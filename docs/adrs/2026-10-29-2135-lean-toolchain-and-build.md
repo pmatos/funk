@@ -57,7 +57,15 @@ Facts, checked on 2026-10-29:
 - **CI.** The `pre-commit` job installs elan `v4.2.4` from its release
   tarball, checked against its SHA-256, then the pinned toolchain. It caches
   the toolchain and `docs/spec/.lake/packages`, keyed on the toolchain file
-  and the document's manifest, and saves the cache even when a hook fails.
+  and the document's manifest. It saves the cache once Verso is built, even
+  if a later hook fails.
+- **Hooks that run Lake clear git's variables first.** Git runs hooks with
+  `GIT_DIR`, `GIT_INDEX_FILE` and similar variables set. Lake runs git inside
+  its package clones, so with those variables set it acts on this repository
+  instead: in a test it rewrote `origin` and fetched Verso's tags into it.
+  Every hook that runs Lake goes through `scripts/build-spec.sh`, or first
+  unsets each variable that `git rev-parse --local-env-vars` lists, as the
+  script does.
 - [#10](https://github.com/pmatos/funk/issues/10) extends this build with the
   Lean tests and the `fir-ref` executable.
 
