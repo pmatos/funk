@@ -23,6 +23,11 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
   definition of fir, a reference interpreter, its own `.fir` parser and
   printer, and later rule proofs and a proven SMT encoder. The interpreter is a
   test oracle for development and CI. It never ships inside a compiler.
+- **The spec is formal and readable, from one source.** Great documentation of
+  fir is a first-class deliverable, not an afterthought. Every chapter of the
+  spec (abstract syntax, validation, execution, text format) is both formal
+  and readable by a person, and both views come from one source so they cannot
+  drift. How we get there is decision P1, settled at the start of M0.
 - **The toolchain is Rust.** The IR library, verifier, passes, backends and
   driver are all Rust. There is no Rust interpreter in M0. A Rust evaluator may
   come later if fuzzing throughput or the JIT needs one, and then only as a copy
@@ -75,15 +80,32 @@ arguments), H2 (functions isolated from above), H3 (globals by symbol), H8
 canonical text format). The epic spells each one out; the first M0 task turns
 each into an ADR.
 
+**Decision still open for M0: P1, how the spec is written.** It decides the
+form of `docs/spec/fir/`, so it comes before any spec text. Following the Wasm
+spec, the chapters are abstract syntax, validation, execution and text format.
+The open question is the source:
+
+- **Lean as the single source** (the decision record's recommendation). The
+  Lean definitions are the spec, and the readable document is generated from
+  them as literate Lean with Verso, Lean's documentation tool.
+- **A spec DSL in the style of Wasm's SpecTec.** One source generates the Lean
+  definitions, the Rust verifier and the readable document. It is more
+  machinery, but the Rust validator is generated rather than hand-written.
+
+Either way, the readable document is built by CI from the same source as the
+formal definitions, never maintained by hand beside them.
+
 **Order of work.** Each step is one or more PRs, and each ends with something
 we can run. We first build a thin path through every layer, then widen it one
 op family at a time. That way the harness exists before most of the backend,
 and every new piece is checked against the oracle as it lands.
 
-1. **Record the direction.** One ADR per decision above, and a small v0 spec in
-   `docs/spec/fir/`: abstract syntax, validation, execution and text format,
-   with the concrete grammar. Small enough to finish in days. The concrete
-   syntax goes to the human for review before code depends on it.
+1. **Record the direction.** The P1 ADR comes first, since it fixes how the
+   spec is written. Then one ADR per decision above, and a small v0 spec in
+   `docs/spec/fir/`, in the form P1 picks: abstract syntax, validation,
+   execution and text format, with the concrete grammar. Small enough to
+   finish in days. The concrete syntax goes to the human for review before
+   code depends on it.
 2. **Tracer bullet through every layer.** One tiny program (parameters,
    `const`, `add` and `ret`) goes through each layer in turn. First the Rust
    IR crate (`funk-ir`), with `funk fmt`, `funk verify` and round trips that
@@ -91,7 +113,9 @@ and every new piece is checked against the oracle as it lands.
    interpreter (`fir-ref`) and the cross-language round trip. Then the naive
    x86-64 backend behind `funk build`, and finally the differential harness.
    Whether to emit assembly or ELF directly is an ADR, and spilling every
-   value is the baseline register allocation.
+   value is the baseline register allocation. From this step on, CI builds
+   the readable spec from its source, so it always matches the formal
+   definitions.
 3. **Widen one op family at a time.** The families are arithmetic with poison
    and `freeze`, bitwise ops and shifts, compares and `select`, width changes,
    division, branches with block arguments, and calls. Each family goes
@@ -107,7 +131,8 @@ and every new piece is checked against the oracle as it lands.
 and it lands in the same PR as the code it checks.
 
 **Done when** every M0 decision is an accepted ADR, the spec is complete enough
-to implement from, round trips hold in Rust and across Rust and Lean under
+to implement from, its readable document (formalization included) is
+generated from the same source as the formal definitions, round trips hold in Rust and across Rust and Lean under
 fuzzing, native results refine the Lean results on the whole corpus, and CI
 runs all of it.
 
