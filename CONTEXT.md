@@ -24,7 +24,8 @@ _Avoid_: instruction, node
 
 **region**:
 A body of blocks owned by a function or an op. In the core dialect a region is
-a control-flow graph whose effectful ops run in block order.
+a control-flow graph whose effectful ops run in the order of their position
+in a block.
 
 **block argument**:
 A typed value that a block declares and that every branch to the block passes.
@@ -68,8 +69,7 @@ processor. Extension dialects are how fir reaches new hardware.
 
 **op registry**:
 The table through which `funk-ir` checks generic ops: each dialect registers
-its ops, and the verifier rejects an op that is unknown or does not match its
-registration.
+its ops, and the verifier checks every op against its registration.
 _Avoid_: op enum
 
 ### Semantics

@@ -15,7 +15,7 @@ drop by accident in a pass, and the loss shows up much later, if at all.
 
 - Every op has a location field. The field always exists; `unknown` is a valid
   value.
-- A location is one of these kinds: a source range
+- A location is `unknown` or one of these kinds: a source range
   (`file:line:col-line:col`), a name, `callsite(callee at caller)`,
   `fused(a, b)` or `derived(op)`.
 - Locations are erased before semantics: they never change what a program

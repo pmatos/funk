@@ -16,15 +16,14 @@ or compiled without looking at the others.
 - A function is a region **isolated from above**: nothing in one function
   references a value of another function.
 - Functions reach each other only by symbol (H3, ADR-2026-10-29-2012).
-- In Rust, ownership enforces it: a pass that holds `&mut Function` cannot
-  reach another function.
+- In Rust, ownership keeps functions apart: a pass that holds `&mut Function`
+  cannot touch another function. The verifier checks isolation itself.
 - Modules and symbol tables must be able to nest, for example a device module
   inside a host module (G0, ADR-2026-10-29-2016). M0 does not use nesting, but
   its data structures must not rule it out.
 
 ## Consequences
 
-- The verifier checks isolation.
 - Each function can be verified, transformed and compiled on its own, and
   functions can be processed in parallel.
 - Whatever a function needs from outside itself, it names by symbol.

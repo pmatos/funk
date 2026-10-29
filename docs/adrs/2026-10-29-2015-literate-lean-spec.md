@@ -60,5 +60,5 @@ they drift. The semantics of fir lives in Lean (S7, ADR-2026-10-29-2009).
 - CI needs the Lean toolchain and Verso, and builds the document through a
   hook in `.pre-commit-config.yaml`.
 - The Rust verifier can drift from the Lean validation rules. The differential
-  harness catches that: `funk verify` and `fir-ref validate` must agree on
-  every corpus module.
+  harness catches that: `funk verify` and the Lean validation rules must agree
+  on every corpus module.
