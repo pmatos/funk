@@ -197,13 +197,11 @@ case "$1" in
 add.fir ["6"] @add3 1 2 3
 add.fir ["-2147483648"] @add3 2147483647 1 0
 add.fir ["-10"] @double -5
-add.fir ["poison"] @double poison
 locations.fir ["15"] @f 1
 names.fir ["105"] @names 1 2 3
 results.fir [] @none
 results.fir ["-7"] @one -7
 results.fir ["2","2","1"] @several 1 2
-results.fir ["2","poison","poison"] @several poison 2
 results.fir [] @unused 3
 seven.fir ["7"] @seven
 symbols.fir [] @_start.v2
@@ -212,7 +210,6 @@ widths.fir ["-128","127","0","-1"] @bytes
 widths.fir ["-63","-4294967296"] @odd 1 1
 widths.fir ["-9223372036854775808","170141183460469231731687303715884105727","-170141183460469231731687303715884105728"] @wide
 widths.fir ["-1"] @widest 0
-widths.fir ["poison"] @widest poison
 END
         # shellcheck disable=SC2016 # The symbols are written as text writes them.
         for sym in '@"1"' '@"a b"' '@""' '@"_ZN3foo$LT$E"' '@"tab\tquote\"slash\\line\n"' \
@@ -232,6 +229,7 @@ END
         runs "$tmp/sub.fir" 2 'fir-ref: @f: sub has no execution rules yet' @f 1 || status=1
         runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
             @double 9223372036854775808 || status=1
+        runs $c/add.fir 2 'fir-ref: poison is not a value of type i64' @double poison || status=1
         runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
         runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
         rc=0

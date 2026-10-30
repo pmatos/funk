@@ -29,11 +29,23 @@ open Fir FirRef
     | .br, _ => pure (.goto 0)
     | op, args => DialectDenote.exit (m := Exec) op args
 
+/-- An argument of type `t` for these tests: `poison`, which `fir-ref run`
+does not take, or an argument that it reads. -/
+def testArg : (t : Core.Ty) → String → Except String ⟦t⟧
+  | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
+  | t, s => readArg t s
+
+/-- One test argument for each type of `ts`. -/
+def testArgs : (ts : List Core.Ty) → List String → Except String (HVector toType ts)
+  | [], [] => pure .nil
+  | t :: ts, a :: as => return .cons (← testArg t a) (← testArgs ts as)
+  | _, _ => .error "a number of arguments other than the parameters"
+
 /-- What `fir-ref run` would report on the function `f` with the semantics
-`s`. -/
+`s`, on arguments that may be `poison`. -/
 def runFuncIn (s : DialectDenote CoreDialect Exec) (f : Func CoreDialect)
     (args : List String := []) (fuel : Nat := defaultFuel) : Option RunReport :=
-  match readArgs (f.params.map (·.2)) args with
+  match testArgs (f.params.map (·.2)) args with
   | .error _ => none
   | .ok vs => letI := s; some (outcomeReport "@f" (f.run (m := Exec) vs fuel).run)
 

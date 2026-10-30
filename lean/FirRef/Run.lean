@@ -17,7 +17,8 @@ in the spec, so `fir-ref` reports it as an error, not as a result
 
 Arguments and values are spelled as constants are in text: `true` and
 `false` at `i1`, and signed decimal at every other width, read with the
-spec's lexer and checked with `Core.Op.decode`; and `poison`.
+spec's lexer and checked with `Core.Op.decode`. A value may also be
+`poison`; an argument may not.
 -/
 
 namespace FirRef
@@ -83,13 +84,11 @@ def constOf (w : Nat) (s : String) : Option (BitVec w) := do
   | some (.const w' v) => if h : w' = w then some (h ▸ v) else none
   | _ => none
 
-/-- An argument of type `t`: a constant of `t`, or `poison`. -/
+/-- An argument of type `t`: a constant of `t`. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
-  | .int w, s =>
-    if s = "poison" then pure (.poison : PoisonOr (BitVec w))
-    else match constOf w s with
-      | some v => pure (.value v : PoisonOr (BitVec w))
-      | none => .error s!"{shown s} is not a value of type {tyText (.int w)}"
+  | .int w, s => match constOf w s with
+    | some v => pure (.value v : PoisonOr (BitVec w))
+    | none => .error s!"{shown s} is not a value of type {tyText (.int w)}"
   | .ptr, s => .error s!"{shown s} is not a value of type ptr"
 
 /-- One argument for each type of `ts`. -/
@@ -155,7 +154,8 @@ structure RunArgs where
   args : List String
 
 /-- Reads the arguments of `run`. `--fuel N` may come anywhere before `--`,
-which ends the options; an argument such as `-5` is not an option. -/
+which ends the options, and N is ASCII decimal digits; an argument such as
+`-5` is not an option. -/
 def runArgs (args : List String) : Except String RunArgs := go true defaultFuel [] args
 where
   go (options : Bool) (fuel : Nat) (pos : List String) : List String → Except String RunArgs
@@ -168,7 +168,7 @@ where
       else if options && a == "--fuel" then
         match rest with
         | n :: rest' =>
-          match n.toNat? with
+          match if n.all Char.isDigit then n.toNat? else none with
           | some k => go options k pos rest'
           | none => .error s!"--fuel takes a number of steps, not {shown n}"
         | [] => .error "--fuel takes a number of steps"

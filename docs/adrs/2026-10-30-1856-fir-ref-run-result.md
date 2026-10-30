@@ -17,14 +17,12 @@ follows `funk`'s command line (ADR-2026-10-30-1425).
 Until #14 gives `freeze` its choice, a run has one path, so it has one
 result.
 
-Two parts of this decision go beyond #10's text, which has neither: the
-`--fuel N` option and `poison` as an argument. Both await the human's
-ruling, asked for on
-[#5](https://github.com/pmatos/funk/issues/5#issuecomment-6506908304).
-Without `--fuel`, a test could see fuel exhausted only with a run longer
-than the default budget. Without `poison` arguments, `fir-ref run` could
-not run a function on a poison argument, though `Core.FuncRuns` includes
-such runs.
+#10's text has no fuel option, and no `poison` among the arguments. #13
+gives each test a fuel budget, which the test's author raises when the
+test runs out of fuel, so `fir-ref run` must take one. The `--fuel N`
+option is a decision taken without the human's ruling (rulings comment on
+[#5](https://github.com/pmatos/funk/issues/5#issuecomment-6506908304)).
+`poison` arguments would widen #10, so `fir-ref run` does not take them.
 
 ## Decision
 
@@ -39,12 +37,14 @@ such runs.
   parameter's type is in text: `true` or `false` at `i1`, and signed
   decimal at every other width, with no leading zeros, no `+` and no `-0`,
   in the type's range. `fir-ref` reads each one with the spec's lexer and
-  `Core.Op.decode`. `poison` is a value of every `iN`, since the runs of a
-  function include poison arguments (`Core.FuncRuns`); this awaits the
-  human (see Context). `ptr` has no values.
+  `Core.Op.decode`. `poison` is not an argument, as #10 words arguments:
+  `fir-ref run` rejects it as it rejects any other text that is not a
+  value of its type. Adding `poison` arguments would need the human's
+  ruling. `ptr` has no values.
 - **Fuel.** N steps, one for each op the run runs, its terminators
-  included. N is decimal; its default is 1,000,000. The option awaits the
-  human (see Context).
+  included. N is ASCII decimal digits, and anything else is a usage error;
+  its default is 1,000,000. The option is kept because #13 gives each test
+  a fuel budget (see Context).
 - **Output.** One JSON object on one line of standard output, with a
   `kind`:
   - `{"kind":"return","values":["V1","V2"]}`: the returned values in order,
@@ -78,8 +78,12 @@ such runs.
   precision in many JSON readers (ADR-2026-10-30-1233).
 - **Exit status 0 for stuck.** Stuck shows that the module is not valid,
   which `funk`'s tools report with status 1.
-- **No fuel option, or no `poison` argument**, as #10's text has it. The
-  human decides (see Context).
+- **No fuel option**, as #10's text has it. Then a test could not set its
+  own budget, which #13 asks of it, and could see fuel exhausted only with
+  a run longer than the default budget.
+- **`poison` as an argument at every `iN`**, so that `fir-ref run` could
+  run a function on a poison argument, as the runs of `Core.FuncRuns` do.
+  That goes beyond #10's text; adding it would need the human's ruling.
 - **Validate first, with `Module.problems`**, and report a module that
   validation rejects as an error, as an earlier plan on #10 expected. Then
   `fir-ref run` could never report a run as stuck, which #10 asks of it,
@@ -94,7 +98,5 @@ such runs.
   every rule of validation, so a run of a module that validation rejects
   may end with a result. #13 runs only modules that `fir-ref validate`
   must accept.
-- A test with poison arguments is interpreter-only: a native executable
-  takes no `poison`.
 - #14's exhaustive mode prints a set of results; it extends this output in
   its own ADR.

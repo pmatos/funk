@@ -5,8 +5,9 @@ import FirRef.Run
 Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
-several results and none, poison arguments, fuel, each stuck case that a
-text reaches, ops without rules (ADR-2026-10-30-1855), and argument errors.
+several results and none, fuel, each stuck case that a text reaches, ops
+without rules (ADR-2026-10-30-1855), and argument errors, `poison` among
+them.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
@@ -62,16 +63,6 @@ def results : String := oneFunc
 #guard runText results "@none" == returns []
 #guard runText results "@swap" ["1", "-2"] == returns ["-2", "1"]
 #guard runText results "@three" ["true"] == returns ["true", "-5", "true"]
-
-/-! # Poison
-
-A poison argument is passed on as it is, and `add` gives poison when either
-operand is poison. -/
-
-#guard runText (addAt "i8") "@f" ["poison", "1"] == returns ["poison"]
-#guard runText (addAt "i1") "@f" ["true", "poison"] == returns ["poison"]
-#guard runText (addAt "i16777215") "@f" ["poison", "poison"] == returns ["poison"]
-#guard runText results "@swap" ["poison", "3"] == returns ["3", "poison"]
 
 /-! # Fuel
 
@@ -155,6 +146,12 @@ def addI8 (a : String) : RunReport := runText (addAt "i8") "@f" ["1", a]
 -- `true` and `false` at `i1`, and no number.
 #guard ["1", "0", "-1", "TRUE"].all fun a =>
   runText (addAt "i1") "@f" ["true", a] == fails 2 ("fir-ref: " ++ a ++ " is not a value of type i1")
+-- `poison` is not an argument: arguments are spelled as constants are.
+#guard addI8 "poison" == fails 2 "fir-ref: poison is not a value of type i8"
+#guard runText (addAt "i1") "@f" ["true", "poison"] ==
+  fails 2 "fir-ref: poison is not a value of type i1"
+#guard runText (addAt "i16777215") "@f" ["poison", "1"] ==
+  fails 2 "fir-ref: poison is not a value of type i16777215"
 #guard runText (body "func @p(%x: ptr)" ["^e:", "  ret @0"]) "@p" ["0"] ==
   fails 2 "fir-ref: 0 is not a value of type ptr"
 #guard (runText "func @f() {\n" "@f").out == "" && (runText "func @f() {\n" "@f").status == 1 &&
@@ -175,6 +172,10 @@ def runLine (args : List String) : String :=
 #guard runLine ["--", "--fuel", "@f"] == "1000000 --fuel @f []"
 #guard runLine ["f.fir", "@f", "--", "--fuel", "7"] == "1000000 f.fir @f [--fuel, 7]"
 #guard runLine ["--fuel", "x", "f.fir", "@f"] == "error: --fuel takes a number of steps, not x"
+-- N is ASCII decimal digits: no `_` separators, sign or space.
+#guard ["1_0", "+1", "-1", " 1", ""].all fun n =>
+  runLine ["--fuel", n, "f.fir", "@f"] == "error: --fuel takes a number of steps, not " ++ n
+#guard runLine ["--fuel", "010", "f.fir", "@f"] == "10 f.fir @f []"
 #guard runLine ["f.fir", "@f", "--fuel"] == "error: --fuel takes a number of steps"
 #guard runLine ["--check", "f.fir", "@f"] == "error: unknown option --check"
 #guard runLine [] == "error: no FILE given; use - for standard input"

@@ -43,8 +43,8 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             run its function @FUNC, named as fir's text writes it, with the
             spec's interpreter. Give one ARG per parameter, spelled as a
             constant of its type: true or false at i1, signed decimal at
-            every other width, or poison. Print one JSON object: the values
-            returned, UB, fuel exhausted, or stuck.
+            every other width. Print one JSON object: the values returned,
+            UB, fuel exhausted, or stuck.
               --fuel N  run at most N steps, one per op (default 1000000)
   -h, --help  Print this help.
 
