@@ -144,25 +144,30 @@ def lexEscape (cs : List Char) (p : TextPos) :
     | _ => errorAt p "\\u{ must be followed by lowercase hexadecimal digits and }"
   | _ => errorAt p "a string escape is \\\\, \\\", \\n, \\t or \\u{h}"
 
-/-- Reads the rest of a string that opened at `start`, from position `p`:
-the characters it holds, the characters after its closing quote, and the
-position there. `acc` holds the characters read so far, last first. -/
-def lexString (cs : List Char) (p start : TextPos) (acc : List Char) :
-    Except ParseError (String × Left cs × TextPos) :=
-  match cs with
-  | [] => errorAt start "the string is not closed"
-  | '"' :: rest => .ok (String.ofList acc.reverse, ⟨rest, by simp⟩, p.advance 1)
-  | '\\' :: rest => do
+/-- Reads the characters of a string from `cs` at `p`, for `lexString`.
+`cs` is what is left of `cs₀`, the characters after the opening quote, so
+what follows the closing quote is left of `cs₀` too. The result says so
+directly, so the recursive call is the last step: a string of any length
+takes no stack. `acc` holds the characters read so far, last first. -/
+def lexStringFrom (cs₀ cs : List Char) (h : cs.length ≤ cs₀.length) (p start : TextPos)
+    (acc : List Char) : Except ParseError (String × Left cs₀ × TextPos) :=
+  match cs, h with
+  | [], _ => errorAt start "the string is not closed"
+  | '"' :: rest, h => .ok (String.ofList acc.reverse, ⟨rest, by simp at h; omega⟩, p.advance 1)
+  | '\\' :: rest, h => do
     let (c, width, ⟨after, ha⟩) ← lexEscape rest p
-    let (s, ⟨r, hr⟩, q) ← lexString after (p.advance (1 + width)) start (c :: acc)
-    pure (s, ⟨r, by simp; omega⟩, q)
-  | c :: rest =>
+    lexStringFrom cs₀ after (by simp at h; omega) (p.advance (1 + width)) start (c :: acc)
+  | c :: rest, h =>
     if isEscaped c then errorAt p (codePoint c ++ " must be escaped in a string")
-    else do
-      let (s, ⟨r, hr⟩, q) ← lexString rest (p.advance c.utf8Size) start (c :: acc)
-      pure (s, ⟨r, by simp; omega⟩, q)
+    else lexStringFrom cs₀ rest (by simp at h; omega) (p.advance c.utf8Size) start (c :: acc)
 termination_by cs.length
 decreasing_by all_goals (simp_wf <;> omega)
+
+/-- Reads the rest of a string that opened at `start`, from position `p`:
+the characters it holds, the characters after its closing quote, and the
+position there. -/
+def lexString (cs : List Char) (p start : TextPos) : Except ParseError (String × Left cs × TextPos) :=
+  lexStringFrom cs cs (Nat.le_refl _) p start []
 
 /-!
 # Numbers, names and symbols
@@ -217,7 +222,7 @@ def lexAt (cs : List Char) (p : TextPos) : Except ParseError (Tok × Left cs × 
       .ok (.sym (String.ofList (c :: w)), ⟨rest.dropWhile isNameChar,
         by have := length_dropWhile_le isNameChar rest; simp; omega⟩, p.advance (2 + w.length))
     else if c = '"' then do
-      let (s, ⟨r, hr⟩, q) ← lexString rest (p.advance 2) (p.advance 1) []
+      let (s, ⟨r, hr⟩, q) ← lexString rest (p.advance 2) (p.advance 1)
       if isWord s then errorAt p ("the symbol @\"" ++ s ++ "\" is written @" ++ s)
       else pure (.sym s, ⟨r, by simp; omega⟩, q)
     else errorAt p "@ must be followed by a symbol or a location reference"
@@ -254,7 +259,7 @@ def lexToken (c : Char) (cs : List Char) (p : TextPos) : Except ParseError (Tok 
       .ok (if c = '%' then .value name else .label name, rest, p.advance (1 + n.length))
   else if c = '@' then lexAt cs p
   else if c = '"' then do
-    let (s, rest, q) ← lexString cs (p.advance 1) p []
+    let (s, rest, q) ← lexString cs (p.advance 1) p
     pure (.str s, rest, q)
   else if c = '-' then
     match cs with

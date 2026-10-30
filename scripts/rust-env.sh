@@ -8,6 +8,10 @@
 # a CI pass.
 unset RUSTUP_TOOLCHAIN
 
+# Build scripts, tests and the programs they build run arbitrary code; keep
+# CI tokens away from them, as build-spec.sh does for Lake.
+unset GH_TOKEN GITHUB_TOKEN
+
 if ! command -v cargo >/dev/null; then
     if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
         PATH="$HOME/.cargo/bin:$PATH"
