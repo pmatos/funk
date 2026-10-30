@@ -1,5 +1,5 @@
 name = "firspec"
-defaultTargets = ["firspec"]
+defaultTargets = ["firspec", "FirSpecSite"]
 
 [[require]]
 name = "fir"
@@ -20,6 +20,12 @@ text = true
 [[lean_lib]]
 name = "FirSpec"
 needs = ["firSources"]
+
+# The appendix of ADRs and the links of ADR citations, which firspec adds to the
+# document when it renders it (ADR-2026-10-30-1439). Its tests run when it builds.
+[[lean_lib]]
+name = "FirSpecSite"
+globs = ["FirSpecSite.*"]
 
 [[lean_exe]]
 name = "firspec"

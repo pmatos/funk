@@ -30,12 +30,15 @@ repos:
         language: python
         pass_filenames: false
         files: ^scripts/(test_)?check_adr_ids\.py$
+      # The spec renders the ADRs as its appendix and checks every ADR
+      # citation in lean/, the top-level files of docs/spec/ and docs/adrs/
+      # (ADR-2026-10-30-1439).
       - id: fir-spec
         name: Build fir's Lean package and render the spec
         entry: scripts/build-spec.sh
         language: unsupported_script
         pass_filenames: false
-        files: ^(lean/|docs/spec/|scripts/build-spec\.sh$)
+        files: ^(lean/|docs/spec/|docs/adrs/|scripts/build-spec\.sh$)
       # The Rust checks run over the whole workspace (ADR-2026-10-30-1030).
       # rust-test also builds and runs native code with funk build, which
       # needs GNU as and ld (ADR-2026-10-30-1229).

@@ -11,6 +11,13 @@ directory is the Verso document that renders them:
 [`FirSpec.lean`](FirSpec.lean) gives the order of the chapters and the prose
 that belongs to no definition.
 
+The document ends with an appendix that renders every ADR in
+[`docs/adrs/`](../adrs), and every ADR citation in the spec and the ADRs,
+such as ADR-2026-10-29-2015, links to the ADR's page. The library in
+[`FirSpecSite/`](FirSpecSite) adds both when `firspec` renders the
+document, and the build fails, naming the file and line, on a citation of
+an ADR that does not exist (ADR-2026-10-30-1439).
+
 Build the Lean code and render the document with:
 
 ```sh
