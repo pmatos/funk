@@ -19,8 +19,6 @@ toy op never has the name of a core op.
 
 namespace FirTest.Toy
 
-open Fir
-
 /-- An op instance of the toy dialect: `mask w k` keeps the low `k` bits of
 an `iN` with `N = w`. -/
 inductive Op where

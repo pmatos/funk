@@ -54,9 +54,10 @@ dialects name their ops and are combined is H4, which is not decided.
   core value, and the sum would also need the two sides' type names
   disjoint. A dialect's rules see the module's symbol table in their own
   types, which a sum of types cannot always give them.
-- **Trying the first side, then the second.** It routes by attributes and
-  types as well as by the name, so one name could reach both sides, and
-  disjoint names would not be enough for the sum to be lawful.
+- **Trying the first side, then the second.** A name would then reach a
+  side by its attributes and types as well, so two dialects could share an
+  op name and still read back. #10 asks that `decodeOp` send each name to
+  one side, and `funk-ir` routes by the name alone.
 - **The sum in the spec.** It would say how dialects combine, which is H4.
 
 ## Consequences
