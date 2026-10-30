@@ -105,6 +105,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.RoundTrip "Round trips" (level := 2)}
 
+{includeLiterate "." Fir.Core.TextLaws "The core dialect's text is lawful" (level := 2)}
+
 {includeLiterate "." Fir.Text.Lex "The parser" (level := 2)}
 
 {includeLiterate "." Fir.Text.Read "Reading the grammar" (level := 2)}
