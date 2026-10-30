@@ -81,9 +81,10 @@ Run `./scripts/ensure-hooks.sh` before anything else in a clone. Claude's
 commands until it succeeds. Start agents in another worktree with
 `./scripts/agent-session.sh --worktree <path> <agent-command> [args...]`.
 
-- Prerequisites: `pre-commit`, `elan` (the `fir-spec` hook) and `rustup`
+- Prerequisites: `pre-commit`, `elan` (the `fir-spec` hook), `rustup`
   (the `rust-fmt`, `rust-clippy` and `rust-test` hooks; it installs the
-  toolchain that `rust-toolchain.toml` pins).
+  toolchain that `rust-toolchain.toml` pins) and GNU binutils (`as` and
+  `ld`, which `funk build` runs in the `rust-test` hook).
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.

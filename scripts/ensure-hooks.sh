@@ -64,4 +64,14 @@ it installs the toolchain that rust-toolchain.toml pins on first use."
     echo "$warning"
     echo "$warning" >&2
 fi
+# The rust-test hook runs funk build, which needs GNU as and ld
+# (ADR-2026-10-30-1229).
+if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
+    warning="Warning: GNU as or ld, from binutils, is not installed.
+funk build and the rust-test hook, which runs on every
+'pre-commit run --all-files', need them. Install binutils with your
+system's package manager."
+    echo "$warning"
+    echo "$warning" >&2
+fi
 echo "Repository hooks and environments are installed and verified."

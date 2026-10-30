@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/funk-ir", "crates/funk"]
+members = ["crates/funk-ir", "crates/funk-x86-64", "crates/funk"]
 resolver = "3"
 
 [workspace.package]

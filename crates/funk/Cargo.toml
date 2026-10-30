@@ -1,6 +1,6 @@
 [package]
 name = "funk"
-description = "The funk driver: funk fmt and funk verify"
+description = "The funk driver: funk fmt, funk verify and funk build"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 funk-ir = { path = "../funk-ir" }
+funk-x86-64 = { path = "../funk-x86-64" }
 
 [lints]
 workspace = true
