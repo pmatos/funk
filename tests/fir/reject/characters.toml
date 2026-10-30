@@ -227,3 +227,8 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a text is UTF-8: the byte ff starts no character, even in a string"
+text = ["locs {\n  @0 = name(\"a", 0xff, "b\")\n}\n"]

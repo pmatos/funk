@@ -89,7 +89,9 @@ locs {
   is. Characters that the repository's hooks keep out of files, such as a
   carriage return, a bidirectional control or a NUL, and a text with no
   final line feed, are written in a basic string with escapes: `\r`,
-  `\u202e`, `\u0000`.
+  `\u202e`, `\u0000`. A text that is not UTF-8 is a list of strings and
+  bytes: `text = ["name(\"a", 0xff, "b\")"]` holds the byte `ff` between
+  two strings written in UTF-8.
 
 ## Who reads it
 

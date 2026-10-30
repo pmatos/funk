@@ -48,7 +48,10 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
   in words) and `text`. The text is a TOML string: a multi-line literal
   string (`'''`) shows it as it is, and a basic string writes the
   characters that the hooks keep out of files as escapes, such as `\r`,
-  `\u202e` or `\u0000`, and a text with no final line feed.
+  `\u202e` or `\u0000`, and a text with no final line feed. A text that
+  is not UTF-8 is a list of strings and bytes, such as
+  `["name(\"a", 0xff, "b\")"]`: each string is written in UTF-8, and each
+  number from 0 to 255 is one byte.
 - **Only ops that both tools have.** A text uses only the ops that `funk`
   registers. Until #14 to #20 land, `fir-ref` decodes ops and flags that
   `funk` does not (ADR-2026-10-30-1250), and those texts would fail for
@@ -74,7 +77,5 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
 - The existing hooks keep each canonical file canonical and valid, in
   Rust and in Lean. The harness fails on a file the layout has no place
   for and on a sidecar key it does not know (ADR-2026-10-30-2049).
-- A text that is not UTF-8 cannot be written as a TOML string; the Rust
-  and Lean unit tests cover those bytes.
 - [`tests/fir/README.md`](../../tests/fir/README.md) documents the format
   for authors.

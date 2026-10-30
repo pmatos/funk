@@ -71,6 +71,10 @@ class Rejects(unittest.TestCase):
             'verdict = "validation-error"\n'
             'rule = "symbols are unique"\n'
             "text = '''\nlocs {\n}\n'''\n"
+            "[[reject]]\n"
+            'verdict = "parse-error"\n'
+            'rule = "a text is UTF-8"\n'
+            'text = ["locs {\\n  @0 = name(\\"a", 0xff, "b\\")\\n}\\n"]\n'
         )
         rejects, problems = parse_rejects(data, "reject/r.toml")
         self.assertEqual(problems, [])
@@ -78,6 +82,7 @@ class Rejects(unittest.TestCase):
         self.assertEqual(rejects[0].text, b"locs {\r\n}\r\n")
         self.assertEqual(rejects[1].verdict, "validation-error")
         self.assertEqual(rejects[1].text, b"locs {\n}\n")
+        self.assertEqual(rejects[2].text, b'locs {\n  @0 = name("a\xffb")\n}\n')
 
     def test_format_errors(self):
         for toml, needle in [
@@ -87,6 +92,14 @@ class Rejects(unittest.TestCase):
             (
                 '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = ""\nx = 1',
                 "unknown key x",
+            ),
+            (
+                '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = ["a", 256]',
+                "text is a string, or a list",
+            ),
+            (
+                '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = [true]',
+                "text is a string, or a list",
             ),
             ("rejects = 1", "unknown key rejects"),
         ]:
@@ -150,6 +163,13 @@ class Layout(unittest.TestCase):
         ]:
             self.assertIn(needle, errors)
         self.assertEqual(len(c.errors), 5, errors)
+
+    def test_a_corpus_has_canonical_modules(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "README.md").write_text("")
+            c = load(Path(d))
+        self.assertEqual(len(c.errors), 1, c.errors)
+        self.assertIn("the corpus has no canonical modules", c.errors[0])
 
 
 if __name__ == "__main__":

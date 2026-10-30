@@ -94,6 +94,8 @@ def load(root: Path) -> Corpus:
     for p in canonical:
         if p.suffix == ".fir":
             c.modules.append(Module(f"canonical/{p.name}", p, tests.get(p.stem, [])))
+    if not c.modules:
+        c.errors.append(f"{root / 'canonical'}: the corpus has no canonical modules")
     for p in files(root / "noncanonical", (".fir",), c.errors):
         if p.stem not in firs:
             c.errors.append(f"{p}: there is no canonical/{p.name}")
@@ -208,7 +210,7 @@ def parse_rejects(data: dict, name: str) -> tuple[list[Reject], list[str]]:
             problems.append(f"text {i}: {why}")
             continue
         found.append(
-            Reject(f"{name} #{i}", r["verdict"], r["rule"], r["text"].encode())
+            Reject(f"{name} #{i}", r["verdict"], r["rule"], text_bytes(r["text"]))
         )
     return found, problems
 
@@ -223,9 +225,22 @@ def reject_problem(r) -> str | None:
         return f"verdict is {PARSE_ERROR} or {VALIDATION_ERROR}"
     if not isinstance(r.get("rule"), str) or not r["rule"]:
         return "rule says which rule the text breaks"
-    if not isinstance(r.get("text"), str):
-        return "text is the text, as a string"
+    text = r.get("text")
+    pieces = text if isinstance(text, list) else [text]
+    if not all(isinstance(p, str) or is_byte(p) for p in pieces):
+        return "text is a string, or a list of strings and bytes"
     return None
+
+
+def is_byte(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value < 256
+
+
+def text_bytes(text: str | list) -> bytes:
+    """The bytes of a text: a string in UTF-8, or a list of strings in UTF-8
+    and raw bytes, for a text that is not UTF-8."""
+    pieces = text if isinstance(text, list) else [text]
+    return b"".join(p.encode() if isinstance(p, str) else bytes([p]) for p in pieces)
 
 
 def result_types(text: str) -> dict[str, list[str]]:
