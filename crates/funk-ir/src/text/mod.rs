@@ -18,6 +18,7 @@ mod syntax;
 use std::fmt;
 
 pub use chars::{allowed_outside_strings, is_escaped, print_symbol, quote};
+pub(crate) use print::Commas;
 pub use print::{print, print_func, print_op};
 
 use crate::ir::Module;

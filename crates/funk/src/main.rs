@@ -25,7 +25,9 @@ usage: funk fmt [--check | --write] [--json] FILE...
   --json   Report one JSON object per FILE on stdout, with its verdict
            (accepted, parse-error, validation-error or io-error) and its
            diagnostics.
-  FILE     A path, or - for standard input.
+  FILE     A path, or - for standard input, at most once.
+  -h, --help     Print this help.
+  -V, --version  Print funk's version.
 
 Exit status: 0 when every FILE is accepted (and, with --check, canonical),
 1 when one is rejected or not canonical, 2 on a usage or I/O error.";
@@ -82,6 +84,9 @@ fn parse_args(args: &[String]) -> Result<Args, String> {
     if a.mode == FmtMode::Write && a.files.iter().any(|f| f == "-") {
         return Err("--write cannot rewrite standard input".into());
     }
+    if a.files.iter().filter(|f| *f == "-").count() > 1 {
+        return Err("- may be given once: standard input can be read only once".into());
+    }
     Ok(a)
 }
 
@@ -123,8 +128,15 @@ fn verify_file(file: &str, reg: &Registry) -> Report {
     }
 }
 
-/// Formats one file. Returns the report and the canonical text, if any.
-fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<String>) {
+/// The canonical text of a file that parsed, and whether the file holds it.
+struct Formatted {
+    text: String,
+    canonical: bool,
+}
+
+/// Formats one file. Returns the report and, if the file parsed, its
+/// canonical text.
+fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Formatted>) {
     let bytes = match read(file) {
         Ok(b) => b,
         Err(why) => {
@@ -149,14 +161,31 @@ fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<String
     report.extra.push(("canonical", Json::Bool(canonical)));
     if mode == FmtMode::Write
         && !canonical
-        && let Err(e) = std::fs::write(file, &text)
+        && let Err(e) = replace(file, &text)
     {
         report.verdict = Verdict::IoError;
         report
             .problems
             .push(Problem::Io(format!("cannot write {file}: {e}")));
     }
-    (report, Some(text))
+    (report, Some(Formatted { text, canonical }))
+}
+
+/// Replaces the contents of `file` with `text` all at once: writes a
+/// temporary file next to it, with its permissions, then renames it over
+/// the file, so a failed write leaves the file as it was.
+fn replace(file: &str, text: &str) -> std::io::Result<()> {
+    let target = std::fs::canonicalize(file)?;
+    let mut tmp = target.clone().into_os_string();
+    tmp.push(".funk-fmt.tmp");
+    let tmp = std::path::PathBuf::from(tmp);
+    let written = std::fs::write(&tmp, text)
+        .and_then(|()| std::fs::set_permissions(&tmp, std::fs::metadata(&target)?.permissions()))
+        .and_then(|()| std::fs::rename(&tmp, &target));
+    if written.is_err() {
+        let _ = std::fs::remove_file(&tmp);
+    }
+    written
 }
 
 fn run(args: &[String]) -> u8 {
@@ -171,12 +200,12 @@ fn run(args: &[String]) -> u8 {
     let mut status = 0;
     let mut stdout = std::io::stdout().lock();
     for file in &a.files {
-        let (mut report, text) = if a.command == "verify" {
+        let (mut report, formatted) = if a.command == "verify" {
             (verify_file(file, &reg), None)
         } else {
             fmt_file(file, a.mode, &reg)
         };
-        let not_canonical = report.extra.contains(&("canonical", Json::Bool(false)));
+        let not_canonical = formatted.as_ref().is_some_and(|f| !f.canonical);
         status = status.max(match report.verdict {
             Verdict::Accepted if a.mode == FmtMode::Check && not_canonical => 1,
             Verdict::Accepted => 0,
@@ -185,17 +214,17 @@ fn run(args: &[String]) -> u8 {
         });
         let out = if a.json {
             if a.mode == FmtMode::Print
-                && let Some(t) = &text
+                && let Some(f) = &formatted
             {
-                report.extra.push(("text", Json::str(t.clone())));
+                report.extra.push(("text", Json::str(f.text.clone())));
             }
             writeln!(stdout, "{}", report.json())
         } else {
             for p in &report.problems {
                 eprintln!("{}", p.text(file));
             }
-            match (a.mode, text) {
-                (FmtMode::Print, Some(t)) => stdout.write_all(t.as_bytes()),
+            match (a.mode, formatted) {
+                (FmtMode::Print, Some(f)) => stdout.write_all(f.text.as_bytes()),
                 (FmtMode::Check, Some(_)) if not_canonical => writeln!(stdout, "{file}"),
                 _ => Ok(()),
             }
@@ -208,17 +237,26 @@ fn run(args: &[String]) -> u8 {
 }
 
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    match args.first().map(String::as_str) {
-        Some("-h" | "--help" | "help") => {
-            println!("{USAGE}");
-            return ExitCode::SUCCESS;
+    let mut args = Vec::new();
+    for arg in std::env::args_os().skip(1) {
+        match arg.into_string() {
+            Ok(s) => args.push(s),
+            Err(bad) => {
+                eprintln!("funk: argument {bad:?} is not UTF-8\n\n{USAGE}");
+                return ExitCode::from(2);
+            }
         }
-        Some("-V" | "--version") => {
-            println!("funk {}", env!("CARGO_PKG_VERSION"));
-            return ExitCode::SUCCESS;
-        }
-        _ => {}
+    }
+    let options = args.iter().take_while(|a| *a != "--");
+    if args.first().is_some_and(|a| a == "help")
+        || options.clone().any(|a| a == "-h" || a == "--help")
+    {
+        println!("{USAGE}");
+        return ExitCode::SUCCESS;
+    }
+    if options.clone().any(|a| a == "-V" || a == "--version") {
+        println!("funk {}", env!("CARGO_PKG_VERSION"));
+        return ExitCode::SUCCESS;
     }
     // The parser, the printer and the verifier recurse once per level of
     // nesting of attributes, regions and items, so funk runs them on a

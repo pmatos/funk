@@ -66,7 +66,7 @@ impl Display for Def {
 }
 
 /// Items separated by `, `.
-struct Commas<'a, T>(&'a [T]);
+pub(crate) struct Commas<'a, T>(pub(crate) &'a [T]);
 
 impl<T: Display> Display for Commas<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

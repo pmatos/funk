@@ -44,10 +44,9 @@ impl Diagnostic {
             loc: None,
         }
     }
-}
 
-impl fmt::Display for Diagnostic {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    /// Where the rule broke, as `@f ^block op N`, with the parts that apply.
+    pub fn path(&self) -> Vec<String> {
         let mut path = Vec::new();
         if let Some(func) = &self.func {
             path.push(print_symbol(func));
@@ -58,6 +57,13 @@ impl fmt::Display for Diagnostic {
         if let Some(op) = self.op {
             path.push(format!("op {op}"));
         }
+        path
+    }
+}
+
+impl fmt::Display for Diagnostic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut path = self.path();
         if let Some(loc) = self.loc {
             path.push(format!("at {loc}"));
         }
@@ -84,9 +90,13 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
             out.push(d);
         }
     }
-    out.extend(locs::check(&m.locs).into_iter().map(Diagnostic::module));
-    let symbols = m.symbols();
     let keys: HashSet<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
+    out.extend(
+        locs::check(&m.locs, &keys)
+            .into_iter()
+            .map(Diagnostic::module),
+    );
+    let symbols = m.symbols();
     for f in m.funcs() {
         func::check(
             f,

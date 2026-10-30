@@ -166,6 +166,42 @@ fn usage_and_io_errors_exit_with_2() {
     let out = funk(&["verify", "--json", "/nonexistent/x.fir"], "");
     assert_eq!(out.status.code(), Some(2));
     assert!(text(&out.stdout).contains(r#""verdict":"io-error""#));
-    assert_eq!(funk(&["--help"], "").status.code(), Some(0));
+    assert_eq!(funk(&["verify", "-", "-"], "").status.code(), Some(2));
+    for help in [
+        &["--help"][..],
+        &["help"],
+        &["fmt", "--help"],
+        &["verify", "x.fir", "-h"],
+    ] {
+        let out = funk(help, "");
+        assert_eq!(out.status.code(), Some(0), "{help:?}");
+        assert!(text(&out.stdout).starts_with("usage: funk"), "{help:?}");
+    }
     assert!(text(&funk(&["--version"], "").stdout).starts_with("funk "));
+}
+
+#[cfg(unix)]
+#[test]
+fn an_argument_that_is_not_utf8_is_a_usage_error() {
+    use std::os::unix::ffi::OsStrExt;
+    let out = Command::new(env!("CARGO_BIN_EXE_funk"))
+        .arg("verify")
+        .arg(std::ffi::OsStr::from_bytes(b"bad\xff.fir"))
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    assert!(text(&out.stderr).contains("is not UTF-8"));
+}
+
+#[cfg(unix)]
+#[test]
+fn fmt_write_keeps_the_file_permissions() {
+    use std::os::unix::fs::PermissionsExt;
+    let path = file("perms.fir", &SEVEN.replace("  ret", "\tret"));
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o640)).unwrap();
+    assert_eq!(funk(&["fmt", "--write", &path], "").status.code(), Some(0));
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), SEVEN);
+    let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o640);
+    assert!(!std::path::Path::new(&format!("{path}.funk-fmt.tmp")).exists());
 }

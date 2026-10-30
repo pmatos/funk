@@ -29,6 +29,5 @@ pub fn dialect() -> Dialect {
 
 /// Writes a list of types as `(t1, t2)`, for messages.
 fn type_list(tys: &[crate::Type]) -> String {
-    let parts: Vec<String> = tys.iter().map(ToString::to_string).collect();
-    format!("({})", parts.join(", "))
+    format!("({})", crate::text::Commas(tys))
 }

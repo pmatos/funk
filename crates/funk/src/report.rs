@@ -60,16 +60,7 @@ impl Problem {
             ),
             Problem::Io(why) => format!("{file}: error: {why}"),
             Problem::Validation(d, shown) => {
-                let mut where_ = Vec::new();
-                if let Some(f) = &d.func {
-                    where_.push(funk_ir::text::print_symbol(f));
-                }
-                if let Some(b) = &d.block {
-                    where_.push(format!("^{b}"));
-                }
-                if let Some(i) = d.op {
-                    where_.push(format!("op {i}"));
-                }
+                let where_ = d.path();
                 let mut line = format!("{file}: validation error");
                 if !where_.is_empty() {
                     line.push_str(&format!(" in {}", where_.join(" ")));

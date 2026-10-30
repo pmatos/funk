@@ -11,8 +11,9 @@
 
 use super::Diagnostic;
 use super::func::{Context, Scope, Site};
-use crate::ir::{Block, Op, Succ, Type};
+use crate::ir::{Block, Item, Op, Succ, Type};
 use crate::registry::{OpContext, OpShape, OpTypes};
+use crate::text::Commas;
 
 struct At<'a> {
     func: &'a str,
@@ -103,7 +104,7 @@ pub(super) fn check(
     };
     check_shape(&at, &shape, out);
     for g in &shape.symbols {
-        if cx.symbols.func_type(g).is_none() {
+        if cx.symbols.get(g).and_then(Item::as_func).is_none() {
             let sym = crate::text::print_symbol(g);
             out.push(at.diag(format!(
                 "op {} refers to {sym}, which names no function",
@@ -171,22 +172,18 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
             )));
         }
     }
-    let passed: Vec<Option<&Type>> = su
+    let passed: Vec<&Type> = su
         .args
         .iter()
-        .map(|a| s.types.get(a.as_str()).copied())
+        .filter_map(|a| s.types.get(a.as_str()).copied())
         .collect();
-    let wanted: Vec<Option<&Type>> = target.params.iter().map(|d| Some(&d.ty)).collect();
-    if passed.iter().all(Option::is_some) && passed != wanted {
-        let show = |ts: &[Option<&Type>]| {
-            let parts: Vec<String> = ts.iter().flatten().map(ToString::to_string).collect();
-            format!("({})", parts.join(", "))
-        };
+    let wanted: Vec<&Type> = target.params.iter().map(|d| &d.ty).collect();
+    if passed.len() == su.args.len() && passed != wanted {
         out.push(at.diag(format!(
-            "successor ^{} passes {} but the block takes {}",
+            "successor ^{} passes ({}) but the block takes ({})",
             su.label,
-            show(&passed),
-            show(&wanted)
+            Commas(&passed),
+            Commas(&wanted)
         )));
     }
 }

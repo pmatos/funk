@@ -9,12 +9,11 @@
 
 use std::collections::HashSet;
 
-use crate::ir::{LocTable, Location};
+use crate::ir::{LocRef, LocTable, Location};
 
-/// The broken rules of the table.
-pub(super) fn check(t: &LocTable) -> Vec<String> {
+/// The broken rules of the table, whose references are `keys`.
+pub(super) fn check(t: &LocTable, keys: &HashSet<LocRef>) -> Vec<String> {
     let mut out = Vec::new();
-    let keys: HashSet<_> = t.entries.iter().map(|(r, _)| *r).collect();
     for pair in t.entries.windows(2) {
         let (a, b) = (pair[0].0, pair[1].0);
         if a >= b {
