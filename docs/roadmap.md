@@ -46,7 +46,11 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
   tested against Lean, never as the definition.
 - **The text format is the interface between Lean and Rust.** Rust prints a
   module, Lean parses and reprints it, and the bytes must match. Within each
-  side, `print(parse(t)) == t` and `parse(print(m)) == m`.
+  side, `parse(print(m)) == m` for every well-formed module `m`, and
+  `print(parse(t)) == t` for every text `t` printed from one. Every valid
+  module is well formed. A text that does not decode, such as one with an
+  undefined operand or a type mismatch, is a parse error with a location
+  (ADR-2026-10-30-0815).
 - **Every piece of Rust is either generated from Lean or checked against it.**
   Rewrite rules proven in Lean are emitted as Rust. Hand-written parts, such as
   backends, register allocation and scheduling, are checked by differential
@@ -79,15 +83,16 @@ in Lean, a Rust library that parses, verifies and prints it with byte-exact
 round trips, and a naive x86-64 backend whose output is checked against the
 Lean interpreter on every test. Epic: [#5](https://github.com/pmatos/funk/issues/5).
 
-**Scope.** Integers only (`i1` to `i128` in the backend; any width in the IR
-and interpreter), arithmetic, bitwise ops and shifts, compares, `select`, width
-changes, `freeze`, branches with block arguments, calls (including recursion)
-and return. No memory: `ptr` is reserved as a type but has no ops. The full op
-set is in the epic. A function's observable behaviour in M0 is its return
-value, UB, or fuel exhaustion. That is narrower than S4's full definition,
-which also counts calls to external symbols and reachable memory, because
-every M0 callee is inside the module. The `i128` division helper is the one
-exception, and it is tested on its own.
+**Scope.** Integers only (`i1` to `i128` in the backend; any width up to
+16,777,215 in the IR and interpreter), arithmetic, bitwise ops and shifts,
+compares, `select`, width changes, `freeze`, branches with block arguments,
+calls (including recursion) and return. No memory: `ptr` is reserved as a type
+but has no ops. The full op set is in the epic. A function's observable
+behaviour in M0 is its returned values, UB, or fuel exhaustion. A function may
+return any number of values, none included (ADR-2026-10-30-0816). That is
+narrower than S4's full definition, which also counts calls to external
+symbols and reachable memory, because every M0 callee is inside the module.
+The `i128` division helper is the one exception, and it is tested on its own.
 
 **Decisions already made** for M0, recorded in the fir v0 decision record on
 2026-10-29: E0 (CFG with ordering by position), S1 (poison plus `freeze`, no
@@ -151,8 +156,10 @@ and every new piece is checked against the oracle as it lands.
    and `freeze`, bitwise ops and shifts, compares and `select`, width changes,
    division, branches with block arguments, and calls. Each family goes
    through every layer at once: its validation and execution rules in the
-   spec (which are the Lean semantics), the round-trip proof, the Rust IR and
-   verifier, the backend, and corpus tests checked against `fir-ref`.
+   spec (which are the Lean semantics), the Rust IR and verifier, the
+   backend, and corpus tests checked against `fir-ref`. The Lean round-trip
+   proof does not grow with each family: it is proved once, for every core
+   op ([#11](https://github.com/pmatos/funk/issues/11)).
 4. **`i128` in the backend.** Register pairs for every op, then division
    through a runtime helper.
 5. **Audit.** Check that the corpus covers each op, flag and width, port LLVM
