@@ -64,11 +64,13 @@ jobs:
           "$RUNNER_TEMP/rustup-init" -y --no-modify-path --profile minimal --default-toolchain none
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
       # Only the pinned toolchain: the runner image ships its own stable one.
+      # The cache archives each matched directory whole, so the exclusion
+      # works on the toolchain directories, not on their parent.
       - name: Restore the Rust toolchain
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.rustup/toolchains
+            ~/.rustup/toolchains/*
             !~/.rustup/toolchains/stable-*
           key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}
       - name: Install the Rust toolchain
