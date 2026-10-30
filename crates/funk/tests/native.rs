@@ -7,11 +7,6 @@ mod common;
 use common::{boundaries, build, expect, func, module, spell, wrap};
 use funk_x86_64::width::SUPPORTED as WIDTHS;
 
-/// `a + b` wrapped to `w` bits, read as signed.
-fn wrapping_add(w: u32, a: i128, b: i128) -> i128 {
-    wrap(w, a + b)
-}
-
 #[test]
 fn parameters_constants_and_add_run_at_every_width() {
     for w in WIDTHS {
@@ -34,9 +29,9 @@ fn parameters_constants_and_add_run_at_every_width() {
             let s = spell(w, v);
             expect(&exe, &["@id", &s], &[&s]);
             expect(&exe, &[&format!("@c{k}")], &[&s]);
-            expect(&exe, &["@inc", &s], &[&spell(w, wrapping_add(w, v, 1))]);
+            expect(&exe, &["@inc", &s], &[&spell(w, wrap(w, v + 1))]);
             for &u in &vals {
-                let sum = spell(w, wrapping_add(w, v, u));
+                let sum = spell(w, wrap(w, v + u));
                 expect(&exe, &["@add", &s, &spell(w, u)], &[&sum]);
             }
         }

@@ -152,19 +152,24 @@ fn freeze_keeps_a_value_and_gives_poison_one_value_for_every_use() {
     for w in WIDTHS {
         let t = format!("i{w}");
         let params = format!("%a: {t}, %b: {t}");
-        let op = |s: &str| s.replace("T", &t);
+        let typed = |s: &str| s.replace("T", &t);
         let one = format!("%one: {t} = const {}", spell(w, 1));
         let funcs = [
-            func("keep", &params, &t, &[&op("%f: T = freeze %a"), "ret %f"]),
+            func(
+                "keep",
+                &params,
+                &t,
+                &[&typed("%f: T = freeze %a"), "ret %f"],
+            ),
             // `%p` is poison where `a + b` wraps, read as unsigned.
             func(
                 "same",
                 &params,
                 &t,
                 &[
-                    &op("%p: T = add nuw %a, %b"),
-                    &op("%f: T = freeze %p"),
-                    &op("%d: T = sub %f, %f"),
+                    &typed("%p: T = add nuw %a, %b"),
+                    &typed("%f: T = freeze %p"),
+                    &typed("%d: T = sub %f, %f"),
                     "ret %d",
                 ],
             ),
@@ -175,13 +180,13 @@ fn freeze_keeps_a_value_and_gives_poison_one_value_for_every_use() {
                 &params,
                 &t,
                 &[
-                    &op("%p: T = mul nsw %a, %b"),
-                    &op("%f: T = freeze %p"),
-                    &op("%s: T = add %f, %f"),
+                    &typed("%p: T = mul nsw %a, %b"),
+                    &typed("%f: T = freeze %p"),
+                    &typed("%s: T = add %f, %f"),
                     &one,
-                    &op("%two: T = add %one, %one"),
-                    &op("%m: T = mul %f, %two"),
-                    &op("%d: T = sub %s, %m"),
+                    &typed("%two: T = add %one, %one"),
+                    &typed("%m: T = mul %f, %two"),
+                    &typed("%d: T = sub %s, %m"),
                     "ret %d",
                 ],
             ),
@@ -190,8 +195,8 @@ fn freeze_keeps_a_value_and_gives_poison_one_value_for_every_use() {
                 &params,
                 &t,
                 &[
-                    &op("%p: T = add nsw %a, %b"),
-                    &op("%f: T = freeze %p"),
+                    &typed("%p: T = add nsw %a, %b"),
+                    &typed("%f: T = freeze %p"),
                     "ret %f",
                 ],
             ),
