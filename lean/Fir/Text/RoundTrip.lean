@@ -84,7 +84,7 @@ structure Func.WellFormed (f : Func d) : Prop where
 each number in its location table is in range. -/
 structure Module.WellFormed (m : Module d) : Prop where
   funcs : ∀ f ∈ m.funcs, f.WellFormed
-  locs : ∀ e ∈ m.locs, e.1 < Location.limit ∧ ∀ n ∈ e.2.numbers, n < Location.limit
+  locs : m.locs.InLimits
 
 /-- A position in a text: a line and a column, counted as in locations.
 Lines count from 1, and columns count UTF-8 bytes from 1. -/

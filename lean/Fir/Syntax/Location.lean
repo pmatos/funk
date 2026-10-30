@@ -74,4 +74,8 @@ larger one, and validation rejects a table that holds one.
 -/
 def Location.limit : Nat := 2 ^ 32
 
+/-- Every reference, line and column of the table is below `Location.limit`. -/
+def LocTable.InLimits (t : LocTable) : Prop :=
+  ∀ e ∈ t, e.1 < Location.limit ∧ ∀ n ∈ e.2.numbers, n < Location.limit
+
 end Fir

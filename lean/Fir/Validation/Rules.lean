@@ -118,9 +118,8 @@ def Location.WellFormed : Location → Prop
 
 /-- The location table is well formed. -/
 def LocTable.Valid (t : LocTable) : Prop :=
-  (t.map (·.1)).Pairwise (· < ·) ∧
-  ∀ e ∈ t, e.1 < Location.limit ∧ e.2.WellFormed ∧ (∀ n ∈ e.2.numbers, n < Location.limit) ∧
-    ∀ r ∈ e.2.refs, r < e.1 ∧ r ∈ t.map (·.1)
+  (t.map (·.1)).Pairwise (· < ·) ∧ t.InLimits ∧
+  ∀ e ∈ t, e.2.WellFormed ∧ ∀ r ∈ e.2.refs, r < e.1 ∧ r ∈ t.map (·.1)
 
 /-!
 # Modules

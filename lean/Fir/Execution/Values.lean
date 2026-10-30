@@ -72,6 +72,16 @@ instance instHRefinementDVal {d : Dialect} [TyDenote d.Ty] [TyRefinement d.Ty] :
     HRefinement (DVal d) (DVal d) where
   IsRefinedBy a b := ∃ h : a.1 = b.1, TyRefinement.IsRefinedBy (h ▸ a.2) b.2
 
+/-- Typed values refine transitively when the values of each type do. -/
+theorem DVal.isRefinedBy_trans {d : Dialect} [TyDenote d.Ty] [TyRefinement d.Ty]
+    (h : ∀ {t : d.Ty} {a b c : ⟦t⟧}, TyRefinement.IsRefinedBy a b →
+      TyRefinement.IsRefinedBy b c → TyRefinement.IsRefinedBy a c)
+    {x y z : DVal d} (hxy : x ⊑ y) (hyz : y ⊑ z) : x ⊑ z := by
+  obtain ⟨tx, vx⟩ := x; obtain ⟨ty, vy⟩ := y; obtain ⟨tz, vz⟩ := z
+  obtain ⟨h₁, hxy⟩ := hxy; obtain ⟨h₂, hyz⟩ := hyz
+  cases h₁; cases h₂
+  exact ⟨rfl, h hxy hyz⟩
+
 /-- Lists are refined element by element. -/
 def List.IsRefinedBy [HRefinement α β] : List α → List β → Prop
   | [], [] => True

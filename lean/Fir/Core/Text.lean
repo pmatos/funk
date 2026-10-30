@@ -117,10 +117,9 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
       if w ≠ 1 ∧ (BitVec.ofInt w v).toInt = v then some (.const w (.ofInt w v)) else none
     | _, _, _ => none
   | "icmp" => match as, ts, rs with
-    | [.word p], [.int a, .int b], [.int 1] =>
-      match Pred.all.find? (·.name == p) with
-      | some pr => if a = b then some (.icmp pr a) else none
-      | none => none
+    | [.word p], [.int a, .int b], [.int 1] => do
+      let pr ← Pred.all.find? (·.name == p)
+      if a = b then some (.icmp pr a) else none
     | _, _, _ => none
   | "add" => do pure (.add (← binWidth ts rs) (← decodeWrap as))
   | "sub" => do pure (.sub (← binWidth ts rs) (← decodeWrap as))

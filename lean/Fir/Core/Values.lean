@@ -65,11 +65,7 @@ theorem Core.Obs.isRefinedBy_refl : ∀ o : Core.Obs, o ⊑ o
 
 /-- Refinement of M0's observations is transitive. -/
 theorem Core.Obs.isRefinedBy_trans {a b c : Core.Obs} : a ⊑ b → b ⊑ c → a ⊑ c :=
-  List.isRefinedBy_trans (fun {x y z} hxy hyz => by
-    obtain ⟨tx, vx⟩ := x; obtain ⟨ty, vy⟩ := y; obtain ⟨tz, vz⟩ := z
-    obtain ⟨h₁, hxy⟩ := hxy; obtain ⟨h₂, hyz⟩ := hyz
-    cases h₁; cases h₂
-    exact ⟨rfl, Core.Ty.isRefinedBy_trans hxy hyz⟩)
+  List.isRefinedBy_trans (DVal.isRefinedBy_trans (d := CoreDialect) Core.Ty.isRefinedBy_trans)
 
 /-- Refinement of M0 behaviours is transitive. -/
 theorem Core.behaviour_isRefinedBy_trans {a b c : Behaviour Core.Obs} :
