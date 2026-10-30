@@ -1,4 +1,5 @@
 import Fir.Text.Decode
+import FirRef.Fast
 
 /-!
 A file is bytes, and a fir text is UTF-8. Bytes that are not UTF-8 are a
