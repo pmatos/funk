@@ -64,4 +64,26 @@ it installs the toolchain that rust-toolchain.toml pins on first use."
     echo "$warning"
     echo "$warning" >&2
 fi
+# The rust-test hook runs funk build, which needs GNU as and ld on an
+# x86-64 Linux host (ADR-2026-10-30-1229).
+host=$(uname -sm)
+as_version=$(as --version 2>/dev/null || true)
+ld_version=$(ld --version 2>/dev/null || true)
+binutils_problem=""
+if [[ "$host" != "Linux x86_64" ]]; then
+    binutils_problem="This host is $host."
+elif [[ "${as_version%%$'\n'*}" != "GNU assembler"* ]]; then
+    binutils_problem="as is missing or is not GNU as."
+elif [[ "${ld_version%%$'\n'*}" != "GNU ld"* ]]; then
+    binutils_problem="ld is missing or is not GNU ld."
+fi
+if [[ -n "$binutils_problem" ]]; then
+    warning="Warning: $binutils_problem
+funk build and the rust-test hook, which runs on every
+'pre-commit run --all-files', need GNU binutils (as and ld) on an x86-64
+Linux host. Install binutils with your system's package manager, or work
+on such a host."
+    echo "$warning"
+    echo "$warning" >&2
+fi
 echo "Repository hooks and environments are installed and verified."

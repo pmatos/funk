@@ -7,8 +7,16 @@ name = "funk"
 version = "0.1.0"
 dependencies = [
  "funk-ir",
+ "funk-x86-64",
 ]
 
 [[package]]
 name = "funk-ir"
 version = "0.1.0"
+
+[[package]]
+name = "funk-x86-64"
+version = "0.1.0"
+dependencies = [
+ "funk-ir",
+]

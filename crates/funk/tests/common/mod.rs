@@ -8,6 +8,10 @@ use std::process::{Command, Output, Stdio};
 
 pub const SEVEN: &str = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
 
+/// A module that parses, with a block that validation rejects as
+/// unreachable.
+pub const DEAD: &str = "func @f() -> i32 {\n^entry:\n  %c: i32 = const 0 @0\n  ret %c @0\n^dead:\n  %d: i32 = const 1 @1\n  ret %d @1\n}\n\nlocs {\n  @0 = unknown\n  @1 = \"f.c\":3:1 to 3:9\n}\n";
+
 /// A fresh, empty directory for one test.
 pub fn dir(name: &str) -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
@@ -63,4 +67,81 @@ pub fn funk_in(cwd: &Path, args: &[&str], stdin: &str) -> Output {
 
 pub fn text(bytes: &[u8]) -> String {
     String::from_utf8(bytes.to_vec()).unwrap()
+}
+
+/// A module whose functions are `funcs`, each with its ops at `@0`.
+pub fn module(funcs: &[String]) -> String {
+    let mut text = String::new();
+    for f in funcs {
+        text.push_str(f);
+        text.push('\n');
+    }
+    text + "locs {\n  @0 = unknown\n}\n"
+}
+
+/// The text of `func @name(params) -> results` with one block of `ops`.
+pub fn func(name: &str, params: &str, results: &str, ops: &[&str]) -> String {
+    let arrow = if results.is_empty() {
+        String::new()
+    } else {
+        format!(" -> {results}")
+    };
+    let mut text = format!("func @{name}({params}){arrow} {{\n^entry:\n");
+    for op in ops {
+        text.push_str(&format!("  {op} @0\n"));
+    }
+    text + "}\n"
+}
+
+/// Writes the module `fir` to a fresh directory named after `name` and
+/// runs `funk build` on it with the options `extra`. Returns the output,
+/// the executable's path and the source's.
+pub fn try_build(name: &str, fir: &str, extra: &[&str]) -> (Output, String, String) {
+    let dir = dir(&format!("build-{name}"));
+    let src = dir
+        .join(format!("{name}.fir"))
+        .to_string_lossy()
+        .into_owned();
+    std::fs::write(&src, fir).unwrap();
+    let exe = dir.join(name).to_string_lossy().into_owned();
+    let mut args = vec!["build"];
+    args.extend(extra);
+    args.extend(["-o", &exe, &src]);
+    (funk(&args, ""), exe, src)
+}
+
+/// Builds the module `fir` as [`try_build`] does, and returns the
+/// executable's path. Panics if the build fails.
+pub fn build(name: &str, fir: &str) -> PathBuf {
+    let (out, exe, _) = try_build(name, fir, &[]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}{}",
+        text(&out.stdout),
+        text(&out.stderr)
+    );
+    PathBuf::from(exe)
+}
+
+/// Runs a built executable with `args`.
+pub fn run(exe: &Path, args: &[&str]) -> Output {
+    Command::new(exe).args(args).output().unwrap()
+}
+
+/// The JSON line a built executable prints for `values`.
+pub fn values(values: &[&str]) -> String {
+    let quoted: Vec<String> = values.iter().map(|v| format!("\"{v}\"")).collect();
+    format!("{{\"values\":[{}]}}\n", quoted.join(","))
+}
+
+/// Runs `exe` with `args` and checks that it prints `expected`.
+pub fn expect(exe: &Path, args: &[&str], expected: &[&str]) {
+    let out = run(exe, args);
+    assert_eq!(
+        (out.status.code(), text(&out.stdout), text(&out.stderr)),
+        (Some(0), values(expected), String::new()),
+        "{} {args:?}",
+        exe.display()
+    );
 }

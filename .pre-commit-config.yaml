@@ -37,6 +37,8 @@ repos:
         pass_filenames: false
         files: ^(lean/|docs/spec/|scripts/build-spec\.sh$)
       # The Rust checks run over the whole workspace (ADR-2026-10-30-1030).
+      # rust-test also builds and runs native code with funk build, which
+      # needs GNU as and ld (ADR-2026-10-30-1229).
       - id: rust-fmt
         name: Rust code is formatted (cargo fmt)
         entry: scripts/check-rust.sh

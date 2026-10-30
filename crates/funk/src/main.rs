@@ -1,7 +1,9 @@
-//! `funk`, the driver: `funk fmt` prints fir in its canonical form, and
-//! `funk verify` checks it. Both report as text, or as JSON with `--json`
-//! (ADR-2026-10-30-1032).
+//! `funk`, the driver: `funk fmt` prints fir in its canonical form,
+//! `funk verify` checks it, and `funk build` compiles it to x86-64. Each
+//! reports as text, or as JSON with `--json` (ADR-2026-10-30-1032,
+//! ADR-2026-10-30-1326).
 
+mod build;
 mod json;
 mod report;
 
@@ -10,29 +12,35 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use funk_ir::{Registry, print, text::parse_bytes, verify};
+use funk_ir::{Module, Registry, print, text::parse_bytes, verify};
 use json::Json;
-use report::{Problem, Report, Verdict};
+use report::{Kind, Problem, Report, Verdict};
 
 const USAGE: &str = "\
 usage: funk fmt [--check | --write] [--json] FILE...
        funk verify [--json] FILE...
+       funk build [--json] -o OUTPUT FILE
 
   fmt      Parse each FILE and print it in canonical form. fmt does not
            validate: a module that parses has a canonical form.
              --check  print the name of each FILE that is not canonical
              --write  rewrite each FILE that is not canonical in place
   verify   Parse and validate each FILE. Print nothing when all are valid.
+  build    Parse, validate and compile FILE for x86-64 Linux. Write the
+           object file OUTPUT.o and the executable OUTPUT, which runs one
+           function: OUTPUT @FUNCTION ARG... prints {\"values\":[...]}.
+             -o OUTPUT  the executable to write
 
   --json   Report one JSON object per FILE on stdout, with its verdict
-           (accepted, parse-error, validation-error or io-error) and its
-           diagnostics.
+           (accepted, parse-error, validation-error, unsupported,
+           tool-error or io-error) and its diagnostics.
   FILE     A path, or - for standard input, at most once.
   -h, --help     Print this help.
   -V, --version  Print funk's version.
 
-Exit status: 0 when every FILE is accepted (and, with --check, canonical),
-1 when one is rejected or not canonical, 2 on a usage or I/O error.";
+Exit status: 0 when every FILE is accepted (and, with --check, canonical,
+or with build, built), 1 when one is rejected, not canonical or
+unsupported, 2 on a usage, I/O, assembler or linker error.";
 
 /// What `funk fmt` does with a canonical text.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -53,34 +61,61 @@ struct Args {
     command: String,
     mode: FmtMode,
     json: bool,
+    output: Option<String>,
     files: Vec<String>,
 }
 
+/// The arguments before `--` that may be flags: every one but the value of
+/// `build`'s `-o`, which is a path even when it reads as a flag.
+fn flags(args: &[String]) -> Vec<&str> {
+    let build = args.first().is_some_and(|a| a == "build");
+    let mut out = Vec::new();
+    let mut walk = args.iter();
+    while let Some(a) = walk.next() {
+        match a.as_str() {
+            "--" => break,
+            "-o" if build => {
+                walk.next();
+            }
+            a => out.push(a),
+        }
+    }
+    out
+}
+
 fn parse_args(args: &[String]) -> Result<Request, String> {
-    let mut options = args.iter().take_while(|a| *a != "--");
+    let flags = flags(args);
     if args.first().is_some_and(|a| a == "help")
-        || options.clone().any(|a| a == "-h" || a == "--help")
+        || flags.iter().any(|a| *a == "-h" || *a == "--help")
     {
         return Ok(Request::Help);
     }
-    if options.any(|a| a == "-V" || a == "--version") {
+    if flags.iter().any(|a| *a == "-V" || *a == "--version") {
         return Ok(Request::Version);
     }
     let (command, rest) = args.split_first().ok_or("missing command")?;
-    if command != "fmt" && command != "verify" {
+    if command != "fmt" && command != "verify" && command != "build" {
         return Err(format!("unknown command {command}"));
     }
     let mut a = Args {
         command: command.clone(),
         mode: FmtMode::Print,
         json: false,
+        output: None,
         files: Vec::new(),
     };
     let mut options = true;
-    for arg in rest {
+    let mut rest = rest.iter();
+    while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--" if options => options = false,
             "--json" if options => a.json = true,
+            "-o" if options && command == "build" => {
+                let out = rest.next().ok_or("-o needs the path of the executable")?;
+                if a.output.replace(out.clone()).is_some() {
+                    return Err("-o may be given once".into());
+                }
+            }
             "--check" | "--write" if options && command == "fmt" => {
                 let mode = if arg == "--check" {
                     FmtMode::Check
@@ -98,6 +133,14 @@ fn parse_args(args: &[String]) -> Result<Request, String> {
     }
     if a.files.is_empty() {
         return Err("no FILE given; use - for standard input".into());
+    }
+    if command == "build" {
+        if a.files.len() > 1 {
+            return Err("build takes one FILE".into());
+        }
+        if a.output.is_none() {
+            return Err("build needs -o OUTPUT, the executable to write".into());
+        }
     }
     if a.mode == FmtMode::Write && a.files.iter().any(|f| f == "-") {
         return Err("--write cannot rewrite standard input".into());
@@ -120,7 +163,7 @@ fn read(file: &str) -> Result<Vec<u8>, String> {
 }
 
 /// The report on `file`, with no fields beyond the common ones yet.
-fn file_report(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
+pub(crate) fn file_report(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
     Report {
         file: file.to_string(),
         verdict,
@@ -129,21 +172,27 @@ fn file_report(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
     }
 }
 
+/// Reads, parses and validates a file: its module, or the report that
+/// rejects it.
+pub(crate) fn load(file: &str, reg: &Registry) -> Result<Module, Report> {
+    let bytes =
+        read(file).map_err(|why| file_report(file, Verdict::IoError, vec![Problem::Io(why)]))?;
+    let m = parse_bytes(&bytes, reg)
+        .map_err(|e| file_report(file, Verdict::ParseError, vec![Problem::Parse(e)]))?;
+    match verify(&m, reg) {
+        ds if ds.is_empty() => Ok(m),
+        ds => Err(file_report(
+            file,
+            Verdict::ValidationError,
+            Problem::located(Kind::Validation, ds, &m.locs),
+        )),
+    }
+}
+
 fn verify_file(file: &str, reg: &Registry) -> Report {
-    let bytes = match read(file) {
-        Ok(b) => b,
-        Err(why) => return file_report(file, Verdict::IoError, vec![Problem::Io(why)]),
-    };
-    match parse_bytes(&bytes, reg) {
-        Err(e) => file_report(file, Verdict::ParseError, vec![Problem::Parse(e)]),
-        Ok(m) => match verify(&m, reg) {
-            ds if ds.is_empty() => file_report(file, Verdict::Accepted, Vec::new()),
-            ds => file_report(
-                file,
-                Verdict::ValidationError,
-                Problem::validation(ds, &m.locs),
-            ),
-        },
+    match load(file, reg) {
+        Ok(_) => file_report(file, Verdict::Accepted, Vec::new()),
+        Err(report) => report,
     }
 }
 
@@ -287,17 +336,17 @@ fn run_commands(args: &[String]) -> Result<u8, OutputError> {
     let reg = Registry::core();
     let mut status = 0;
     for file in &a.files {
-        let (mut report, formatted) = if a.command == "verify" {
-            (verify_file(file, &reg), None)
-        } else {
-            fmt_file(file, a.mode, &reg)
+        let (mut report, formatted) = match (a.command.as_str(), &a.output) {
+            ("verify", _) => (verify_file(file, &reg), None),
+            ("build", Some(out)) => (build::build_file(file, out, &reg), None),
+            _ => fmt_file(file, a.mode, &reg),
         };
         let not_canonical = formatted.as_ref().is_some_and(|f| !f.canonical);
         status = status.max(match report.verdict {
             Verdict::Accepted if a.mode == FmtMode::Check && not_canonical => 1,
             Verdict::Accepted => 0,
-            Verdict::ParseError | Verdict::ValidationError => 1,
-            Verdict::IoError => 2,
+            Verdict::ParseError | Verdict::ValidationError | Verdict::Unsupported => 1,
+            Verdict::IoError | Verdict::ToolError => 2,
         });
         if a.json {
             if a.mode == FmtMode::Print

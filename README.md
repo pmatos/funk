@@ -125,6 +125,12 @@ are on `main`:
   and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
   prints fir in its canonical form, and `funk verify` checks it. Both report
   as text, or as JSON with `--json`.
+- The naive x86-64 backend, `funk-x86-64`
+  ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
+  `const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an
+  object file and an executable for Linux. The executable runs one function
+  from the command line and prints its results as JSON
+  ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
 
 These parts of M0 do not exist yet:
 
@@ -135,8 +141,9 @@ These parts of M0 do not exist yet:
   [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
 - The Lean parser and the reference interpreter, `fir-ref`.
 - The proof that parsing a printed module gives the module back.
-- In Rust, the core ops other than `const`, `add` and `ret`, and the x86-64
-  backend.
+- In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
+  in the backend. The backend does not lower `i128` or return more than one
+  value yet.
 - The differential tests that compare native results with `fir-ref`.
 
 The epic's sub-issues list the open work in full.
@@ -151,7 +158,7 @@ The epic's sub-issues list the open work in full.
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
-| `crates/` | The Rust crates: `funk-ir`, the IR library, and `funk`, the driver |
+| `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, and `funk`, the driver |
 | `tests/fir/` | fir texts that the Rust and Lean sides share: canonical texts, and inputs that format to them |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
@@ -189,21 +196,29 @@ and each page names the commit it was built from.
 ## Build funk
 
 You need `rustup`, the Rust toolchain manager, to build funk. Install it as
-<https://rustup.rs> says. Then run, in a clone:
+<https://rustup.rs> says. `funk build` and the tests also need GNU binutils
+(`as` and `ld`) on an x86-64 Linux machine. Then run, in a clone:
 
 ```sh
-cargo build --release                          # build funk-ir and funk
+cargo build --release                          # build the crates and funk
 cargo test --workspace                         # run the tests
 ./target/release/funk verify tests/fir/canonical/add.fir
+./target/release/funk build -o target/add tests/fir/canonical/add.fir
+./target/add @add3 1 2 3                       # prints {"values":["6"]}
 ```
 
 rustup installs the Rust version that `rust-toolchain.toml` pins the first
 time cargo runs. `funk fmt FILE` prints a file in its canonical form;
 `--check` lists the files that are not canonical, and `--write` rewrites
 them. `funk verify FILE` checks a file, and prints nothing when it is valid.
-`--json` reports one JSON line per file. `funk --help` lists the options, and
-[ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) gives the
-reports and exit codes.
+`funk build -o OUTPUT FILE` compiles a file into the object file `OUTPUT.o`
+and the executable `OUTPUT`, which runs one function: `OUTPUT @FUNCTION ARG...`.
+`--json` reports one JSON line per file. `funk --help` lists the options.
+[ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) and
+[ADR-2026-10-30-1326](docs/adrs/2026-10-30-1326-funk-build-command.md)
+give the reports and exit codes, and
+[ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)
+how the executable is run.
 
 ## How to contribute
 
@@ -212,8 +227,9 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` too, because one of the checks builds the spec, and `rustup`, because
-three of them check the Rust code. Then install the git hooks:
+`elan` too, because one of the checks builds the spec, `rustup`, because
+three of them check the Rust code, and GNU binutils on an x86-64 Linux
+host, because the Rust tests build and run native code. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

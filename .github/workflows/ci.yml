@@ -77,6 +77,17 @@ jobs:
         run: |
           rustup toolchain install
           cargo --version
+      # funk build runs GNU as and ld, and the rust-test hook runs what it
+      # builds (ADR-2026-10-30-1229). The runner image ships binutils; this
+      # step installs it on an image that does not.
+      - name: Install the assembler and linker
+        run: |
+          if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends binutils
+          fi
+          as --version
+          ld --version
       - name: Run every hook on every file
         env:
           # Enables zizmor's online audits (e.g. known-vulnerable actions).

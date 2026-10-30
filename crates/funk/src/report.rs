@@ -1,10 +1,11 @@
 //! What funk reports for each file, as text for people and as JSON for
-//! agents (ADR-2026-10-30-1032).
+//! agents (ADR-2026-10-30-1032, ADR-2026-10-30-1326).
 //!
 //! The JSON report of a file says whether the parser rejected it
-//! (`parse-error`), validation rejected it (`validation-error`), or both
-//! accepted it (`accepted`). A parse error carries a text position; a
-//! validation error carries the IR location of the op or block it is about.
+//! (`parse-error`), validation rejected it (`validation-error`), the backend
+//! cannot lower it (`unsupported`), or all accepted it (`accepted`). A parse
+//! error carries a text position; a validation error and an unsupported part
+//! carry the IR location of the op or block they are about.
 
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -19,7 +20,9 @@ pub enum Verdict {
     Accepted,
     ParseError,
     ValidationError,
+    Unsupported,
     IoError,
+    ToolError,
 }
 
 impl Verdict {
@@ -28,7 +31,34 @@ impl Verdict {
             Verdict::Accepted => "accepted",
             Verdict::ParseError => "parse-error",
             Verdict::ValidationError => "validation-error",
+            Verdict::Unsupported => "unsupported",
             Verdict::IoError => "io-error",
+            Verdict::ToolError => "tool-error",
+        }
+    }
+}
+
+/// What a problem with an IR location is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Kind {
+    /// A broken rule of validation.
+    Validation,
+    /// A part of a valid module that the backend cannot lower.
+    Unsupported,
+}
+
+impl Kind {
+    fn name(self) -> &'static str {
+        match self {
+            Kind::Validation => "validation-error",
+            Kind::Unsupported => "unsupported",
+        }
+    }
+
+    fn text(self) -> &'static str {
+        match self {
+            Kind::Validation => "validation error",
+            Kind::Unsupported => "unsupported",
         }
     }
 }
@@ -37,15 +67,18 @@ impl Verdict {
 #[derive(Clone, Debug)]
 pub enum Problem {
     Parse(ParseError),
-    /// A broken rule, with the printed location its reference stands for.
-    Validation(Diagnostic, Option<String>),
+    /// A problem at an IR location, with the printed location its reference
+    /// stands for.
+    Located(Kind, Diagnostic, Option<String>),
     Io(String),
+    /// The assembler or the linker could not run, or failed.
+    Tool(String),
 }
 
 impl Problem {
-    /// The validation problems of a module, with their locations resolved
-    /// through its table.
-    pub fn validation(ds: Vec<Diagnostic>, locs: &LocTable) -> Vec<Problem> {
+    /// Problems of a module, with their locations resolved through its
+    /// table.
+    pub fn located(kind: Kind, ds: Vec<Diagnostic>, locs: &LocTable) -> Vec<Problem> {
         let mut table = HashMap::new();
         for (r, l) in &locs.entries {
             table.entry(*r).or_insert(l);
@@ -53,7 +86,7 @@ impl Problem {
         ds.into_iter()
             .map(|d| {
                 let shown = d.loc.and_then(|r| table.get(&r)).map(ToString::to_string);
-                Problem::Validation(d, shown)
+                Problem::Located(kind, d, shown)
             })
             .collect()
     }
@@ -65,10 +98,10 @@ impl Problem {
                 "{file}:{}:{}: parse error: {}",
                 e.pos.line, e.pos.col, e.reason
             ),
-            Problem::Io(why) => format!("{file}: error: {why}"),
-            Problem::Validation(d, shown) => {
+            Problem::Io(why) | Problem::Tool(why) => format!("{file}: error: {why}"),
+            Problem::Located(kind, d, shown) => {
                 let path = d.path();
-                let mut line = format!("{file}: validation error");
+                let mut line = format!("{file}: {}", kind.text());
                 if !path.is_empty() {
                     let _ = write!(line, " in {}", path.join(" "));
                 }
@@ -101,8 +134,12 @@ impl Problem {
                 ("kind", Json::str("io-error")),
                 ("message", Json::str(why.clone())),
             ]),
-            Problem::Validation(d, shown) => Json::Obj(vec![
-                ("kind", Json::str("validation-error")),
+            Problem::Tool(why) => Json::Obj(vec![
+                ("kind", Json::str("tool-error")),
+                ("message", Json::str(why.clone())),
+            ]),
+            Problem::Located(kind, d, shown) => Json::Obj(vec![
+                ("kind", Json::str(kind.name())),
                 ("message", Json::str(d.message.clone())),
                 ("func", opt(&d.func)),
                 ("block", opt(&d.block)),
@@ -170,10 +207,10 @@ mod tests {
         let mut ds: Vec<Diagnostic> = (0..n).map(|_| at(4_000_000_000)).collect();
         ds.push(at(7));
         let start = std::time::Instant::now();
-        let ps = Problem::validation(ds, &locs);
+        let ps = Problem::located(Kind::Validation, ds, &locs);
         let secs = start.elapsed().as_secs();
-        assert!(matches!(&ps[0], Problem::Validation(_, None)));
-        assert!(matches!(&ps[n], Problem::Validation(_, Some(l)) if l == "unknown"));
+        assert!(matches!(&ps[0], Problem::Located(_, _, None)));
+        assert!(matches!(&ps[n], Problem::Located(_, _, Some(l)) if l == "unknown"));
         assert!(secs < 5, "took {secs} s");
     }
 }
