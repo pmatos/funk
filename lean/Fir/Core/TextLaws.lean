@@ -13,8 +13,9 @@ written as a type, for every valid type, `i1` to `i16777215`, as the class
 asks; and every type that reads back is written as it was read.
 
 With the laws, `validIsWellFormed` gives `ValidIsWellFormed` for the core
-dialect: every valid core module can be written and read back, and two
-different valid core modules never print the same text.
+dialect: every valid core module is well formed, so it can be written and
+read back. Once #11 proves `PrintThenParse Fir.parse`, `print_injective` gives
+that two different valid core modules never print the same text.
 
 # How the round trip extends
 

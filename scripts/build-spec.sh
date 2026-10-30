@@ -71,8 +71,10 @@ if [[ "$update" == true ]]; then
     (cd "$repo_root/docs/spec" && lake update)
 fi
 
+# --wfail: a warning, such as a sorry in an example, fails the build
+# (ADR-2026-10-30-1452).
 cd "$repo_root/lean"
-lake build
+lake build --wfail
 if [[ "$lean_only" == true ]]; then
     exit 0
 fi
