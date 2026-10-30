@@ -1,0 +1,217 @@
+# Must-reject texts: tokens and numbers that do not lex, or that are out
+# of range.
+
+[[reject]]
+verdict = "parse-error"
+rule = "# is not a character of fir's tokens"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0 #
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a single / does not start a comment"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0 /
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "% is followed by a value name, with no space"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  % c: i32 = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "@ is followed by a symbol or a location reference, with no space"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @ 0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a location reference does not run into name characters"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @1x
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an integer does not run into name characters"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const 1abc @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a location reference has no leading zeros"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @01
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an integer has no leading zeros"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const 007 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fir has no floating-point numbers"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const 1.5 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "-0 is not an integer: zero is written 0"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const -0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a negative integer is written with no space after the minus"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const - 1 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a location reference is below 2^32"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @4294967296
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a reference in the location table is below 2^32"
+text = '''
+locs {
+  @4294967296 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a line number is below 2^32"
+text = '''
+locs {
+  @0 = "f":4294967296:1 to 1:1
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a column number is below 2^32"
+text = '''
+locs {
+  @0 = "f":1:1 to 1:99999999999999999999
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a width is at most 16,777,215: i16777216 is not a type"
+text = '''
+func @f(%a: i16777216) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -1,0 +1,146 @@
+# Must-reject texts that parse, and break a rule of validation for the
+# module: unique symbols and a well-formed location table.
+
+[[reject]]
+verdict = "validation-error"
+rule = "each symbol names one item: two functions are @f"
+text = '''
+func @f() {
+^e:
+  ret @0
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each symbol names one item, quoted or not: two functions are @\"a b\""
+text = '''
+func @"a b"() {
+^e:
+  ret @0
+}
+
+func @"a b"() {
+^e:
+  ret @0
+}
+
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the location table is in increasing order of reference"
+text = '''
+locs {
+  @1 = unknown
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each reference is in the location table once"
+text = '''
+locs {
+  @0 = unknown
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a source range starts at line 1 or later"
+text = '''
+locs {
+  @0 = "f":0:1 to 1:1
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a source range does not end on a line before its start"
+text = '''
+locs {
+  @0 = "f":2:1 to 1:1
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a source range on one line does not end at a column before its start"
+text = '''
+locs {
+  @0 = "f":2:5 to 2:4
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a fused location fuses at least two locations, not none"
+text = '''
+locs {
+  @0 = fused()
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a fused location fuses at least two locations, not one"
+text = '''
+locs {
+  @0 = unknown
+  @1 = fused(@0)
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a location refers only to entries before it: @0 refers to itself"
+text = '''
+locs {
+  @0 = derived(@0)
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a location refers only to entries before it: @0 refers to @1"
+text = '''
+locs {
+  @0 = derived(@1)
+  @1 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a location refers only to entries of the table: @9 is not one"
+text = '''
+locs {
+  @0 = callsite(@0 at @9)
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a location refers only to entries of the table: @2 is not one"
+text = '''
+locs {
+  @1 = unknown
+  @3 = fused(@1, @2)
+}
+'''

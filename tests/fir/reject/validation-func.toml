@@ -1,0 +1,451 @@
+# Must-reject texts that parse, and break a rule of validation for a
+# function, a block or an op of the tracer subset.
+
+[[reject]]
+verdict = "validation-error"
+rule = "a function's body has an entry block"
+text = '''
+func @f() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the entry block declares no arguments: its arguments are the function's parameters"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^dead is not (the spec's deadBlock)"
+text = '''
+func @f() -> i32 {
+^entry:
+  %c: i32 = const 0 @0
+  ret %c @0
+^dead:
+  %d: i32 = const 1 @0
+  ret %d @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each label names one block: two blocks are ^entry"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+^entry:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: i0, a parameter's type, is not"
+text = '''
+func @f(%x: i0) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: i0, a result type, is not"
+text = '''
+func @f() -> i0 {
+^e:
+  %c: i0 = const 0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: i0, an op's result type, is not"
+text = '''
+func @f() {
+^e:
+  %c: i0 = const 0 @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: ptr is reserved, and a parameter has no ptr type"
+text = '''
+func @f(%p: ptr) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: ptr is reserved, and a result has no ptr type"
+text = '''
+func @f(%p: ptr) -> ptr {
+^e:
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: ptr is reserved, and a block argument has no ptr type"
+text = '''
+func @f() {
+^e:
+  ret @0
+^b(%p: ptr):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block holds at least one op"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no op owns a region yet: ret owns an empty one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a {
+  } @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no op owns a region yet: add owns an empty one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = add %a, %a {
+    } @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a value is used only where it is in scope: %v is defined inside a region"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %v {
+  ^r:
+    %v: i32 = const 1 @0
+    ret %v @0
+  } @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the terminator is the last op of its block: ret comes before const"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+  %c: i32 = const 1 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a block ends with a terminator: const is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const 1 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "only terminators have successors: const has one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = const 1 ^b @0
+  ret %a @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an op has as many successors as its op instance: ret has none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no branch goes to the entry block"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^entry @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor names a block of the function: ^nowhere is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^nowhere @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes values that the function defines: %undefined is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^b(%undefined) @0
+^b(%x: i64):
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value of the right type for each block argument: an i32 for an i64"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^b(%a) @0
+^b(%x: i64):
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: none for one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a, ^b @0
+^b(%x: i64):
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use comes after its definition: %c is used before it is defined"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %b: i32 = add %c, %a @0
+  %c: i32 = const 1 @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use comes after its definition: %b is used by the op that defines it"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %b: i32 = add %b, %a @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: an i32 where it returns an i64"
+text = '''
+func @f(%a: i32) -> i64 {
+^e:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: one value where it returns none"
+text = '''
+func @f(%a: i32) {
+^e:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: one value where it returns two"
+text = '''
+func @f(%a: i32) -> i32, i32 {
+^e:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: none where it returns one"
+text = '''
+func @f(%a: i32) -> i32 {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an op's location reference is in the location table: @7 is not"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @7
+}
+
+locs {
+  @0 = unknown
+}
+'''

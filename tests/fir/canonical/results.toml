@@ -1,0 +1,12 @@
+# Tests of results.fir: functions with no result, one and several. The
+# backend returns at most one value until #31, and a module builds all or
+# nothing, so each test is interpreter-only and states fir-ref's result.
+tests = [
+  { func = "@none", expect = [] },
+  { func = "@one", args = ["-7"], expect = ["-7"] },
+  { func = "@one", args = ["127"], expect = ["127"] },
+  { func = "@several", args = ["1", "2"], expect = ["2", "2", "1"] },
+  { func = "@several", args = ["127", "-32768"], expect = ["-32768", "-128", "127"] },
+  { func = "@several", args = ["-1", "32767"], expect = ["32767", "0", "-1"] },
+  { func = "@unused", args = ["3"], expect = [] },
+]

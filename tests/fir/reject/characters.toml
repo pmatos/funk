@@ -1,0 +1,229 @@
+# Must-reject texts: characters that a text may not hold, and strings
+# not in their one spelling. Each breaks one rule of the lexical grammar.
+
+[[reject]]
+verdict = "parse-error"
+rule = "a carriage return is not allowed outside strings: fir text ends lines with a line feed only"
+text = "func @seven() -> i32 {\r\n^entry:\r\n  %c: i32 = const 7 @0\r\n  ret %c @0\r\n}\r\n\r\nlocs {\r\n  @0 = unknown\r\n}\r\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a byte-order mark is not allowed outside strings"
+text = "\ufefffunc @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a bidirectional control is not allowed outside strings, comments included"
+text = "// \u202e reversed\nfunc @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a bidirectional isolate is not allowed outside strings, comments included"
+text = "// \u2066\nfunc @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a directional mark is not allowed outside strings, comments included"
+text = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0 // \u200e\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a line separator is not allowed outside strings"
+text = "func @seven() -> i32 {\n^entry:\u2028\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a next-line control (U+0085) is not allowed outside strings"
+text = "func @seven() -> i32 {\n^entry:\u0085\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a vertical tab is not allowed outside strings"
+text = "func @seven() -> i32 {\n^entry:\u000b\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a NUL character is not allowed outside strings"
+text = "func @seven() -> i32 {\n^entry:\u0000\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a tab in a string is written \\t"
+text = "func @\"a\tb\"() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a bidirectional control in a string is written as an escape"
+text = "func @\"\u202e\"() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a next-line control (U+0085) in a string is written as an escape"
+text = "func @\"\u0085\"() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a line feed in a string is written \\n"
+text = '''
+locs {
+  @0 = name("open
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a string is closed before the text ends"
+text = "locs {\n  @0 = name(\"open"
+
+[[reject]]
+verdict = "parse-error"
+rule = "a symbol that is a word is written without quotes: @\"sum\" is written @sum"
+text = '''
+func @"sum"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a character that needs no escape is written as itself, not \\u{41}"
+text = '''
+func @"\u{41}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a tab is written \\t, not \\u{9}"
+text = '''
+func @"\u{9}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a line feed is written \\n, not \\u{a}"
+text = '''
+func @"\u{a}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a \\u escape has no leading zeros"
+text = '''
+func @"\u{001}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a \\u escape is in lowercase hexadecimal"
+text = '''
+func @"\u{1F}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a \\u escape has at least one digit"
+text = '''
+func @"\u{}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a \\u escape is a Unicode scalar value, not a surrogate"
+text = '''
+func @"\u{d800}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a \\u escape is a Unicode scalar value, at most 10ffff"
+text = '''
+func @"\u{110000}"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a string has no \\x escape"
+text = '''
+func @"\x41"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a string has no \\r escape: a carriage return is \\u{d}"
+text = '''
+func @"\r"() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

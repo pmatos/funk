@@ -1,0 +1,187 @@
+# Must-reject texts that break the grammar.
+
+[[reject]]
+verdict = "parse-error"
+rule = "a module ends with its location table"
+text = ""
+
+[[reject]]
+verdict = "parse-error"
+rule = "nothing follows the location table"
+text = '''
+locs {
+}
+func
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "every op ends with a location reference"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a block with no arguments has no parentheses"
+text = '''
+func @f() {
+^e():
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a successor that passes no values has no parentheses"
+text = '''
+func @f() {
+^e:
+  ret ^x() @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an op's operands come before its successors"
+text = '''
+func @f() {
+^e:
+  ret ^x, %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an item has a symbol"
+text = '''
+func f() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a value's definition states its type"
+text = '''
+func @f() {
+^e:
+  %x = const 1 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a location is unknown, a range, a name, a call site, a fusion or derived"
+text = '''
+locs {
+  @0 = somewhere
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a line number is not negative"
+text = '''
+locs {
+  @0 = "f":-1:1 to 1:1
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a name location holds a string"
+text = '''
+locs {
+  @0 = name(x)
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the locations that a fusion fuses are separated by commas"
+text = '''
+locs {
+  @0 = fused(@1 @2)
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "M0 has one item kind, func: global is not one"
+text = '''
+global @g() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "M0 has one item kind, func: module is not one"
+text = '''
+module @m() {
+  func @g() {
+  }
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function has no attributes"
+text = '''
+func @f() inline {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function's body holds blocks, not items"
+text = '''
+func @f() {
+  func @g() {
+  }
+}
+
+locs {
+  @0 = unknown
+}
+'''
