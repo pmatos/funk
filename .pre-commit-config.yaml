@@ -34,7 +34,7 @@ repos:
       # citation in lean/, the top-level files of docs/spec/ and docs/adrs/
       # (ADR-2026-10-30-1439).
       - id: fir-spec
-        name: Build fir's Lean package and render the spec
+        name: Build fir's Lean package, check its axioms and render the spec
         entry: scripts/build-spec.sh
         language: unsupported_script
         pass_filenames: false

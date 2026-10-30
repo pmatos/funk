@@ -7,12 +7,16 @@
 //! that follows the grammar but does not decode is not a module: it is a
 //! parse error with a position (ADR-2026-10-30-0815). Successor arguments are
 //! not decoded: one that the function does not define is a validation error.
+//!
+//! The blocks and ops of a body are walked in depth-first order, which is
+//! the order of the text and of their positions, so that regions nest to any
+//! depth (ADR-2026-10-30-1333).
 
 use std::collections::HashMap;
 
-use super::syntax::{SBlock, SBody, SDef, SItem, SModule, SOp, SType};
+use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
-use crate::ir::{Block, Def, Func, Item, Module, Op, Region, Type};
+use crate::ir::{Def, Func, Item, Module, Op, Part, Region, Type};
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
@@ -37,7 +41,7 @@ pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
 
 /// In M0 every item is a `func`, with no attributes and with blocks in its
 /// body. Every other item is of a kind the parser does not know.
-fn item(s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+fn item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     if s.kind != "func" {
         return err(
             s.kind_pos,
@@ -47,49 +51,63 @@ fn item(s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     if let Some((_, pos)) = s.attrs.first() {
         return err(*pos, "a func has no attributes");
     }
-    match s.body {
-        SBody::Items(items) => err(items[0].kind_pos, "a func's body holds blocks, not items"),
-        SBody::Blocks(blocks) => func(s.name, s.params, s.results, blocks, reg),
-    }
+    let (blocks, at) = match &mut s.body {
+        SBody::Items(items) => {
+            return err(items[0].kind_pos, "a func's body holds blocks, not items");
+        }
+        SBody::Blocks(blocks, at) => (std::mem::take(blocks), std::mem::take(at)),
+    };
+    let f = Func {
+        name: s.name,
+        params: Vec::new(),
+        results: Vec::new(),
+        body: Region { blocks },
+    };
+    func(f, s.params, s.results, &at, reg)
 }
 
+/// Decodes a function whose body the grammar read: `f` with these
+/// parameters and results.
 fn func(
-    name: String,
-    params: Vec<SDef>,
-    results: Vec<SType>,
-    blocks: Vec<SBlock>,
+    mut f: Func,
+    params: Vec<(Def, DefPos)>,
+    results: Vec<(Type, TextPos)>,
+    at: &BodyPos,
     reg: &Registry,
 ) -> Result<Item, ParseError> {
     let mut scope = Scope {
         types: HashMap::new(),
         reg,
-        func: &name,
+        func: &f.name,
     };
-    for t in &results {
-        scope.check_type(t)?;
+    for (t, pos) in &results {
+        scope.check_type(t, *pos)?;
     }
-    for d in &params {
-        scope.define(d)?;
+    for (d, pos) in &params {
+        scope.define(d, *pos)?;
     }
-    for b in &blocks {
-        scope.define_block(b)?;
+    let mut def_pos = at.defs.iter().copied();
+    for part in f.body.parts() {
+        let defs = match part {
+            Part::Block(b) => &b.params,
+            Part::Op(op) => &op.results,
+            Part::Region(_) => continue,
+        };
+        for d in defs {
+            scope.define(d, def_pos.next().expect("a position per definition"))?;
+        }
     }
-    let results = results.into_iter().map(|t| t.ty).collect();
-    let params = params.into_iter().map(def).collect();
-    let blocks = scope.blocks(blocks)?;
-    Ok(Item::Func(Func {
-        name,
-        params,
-        results,
-        body: Region { blocks },
-    }))
-}
-
-fn def(d: SDef) -> Def {
-    Def {
-        name: d.name,
-        ty: d.ty.ty,
+    let mut name_pos = at.ops.iter().copied();
+    let mut operand_pos = at.operands.iter().copied();
+    for part in f.body.parts() {
+        if let Part::Op(op) = part {
+            let name = name_pos.next().expect("a position per op");
+            scope.op(op, name, &mut operand_pos)?;
+        }
     }
+    f.params = params.into_iter().map(|(d, _)| d).collect();
+    f.results = results.into_iter().map(|(t, _)| t).collect();
+    Ok(Item::Func(f))
 }
 
 /// The values a function defines, at any depth, with their types.
@@ -100,101 +118,55 @@ struct Scope<'a> {
 }
 
 impl Scope<'_> {
-    fn check_type(&self, t: &SType) -> Result<(), ParseError> {
-        match self.reg.check_type(&t.ty) {
-            TypeCheck::Malformed(reason) => {
-                err(t.pos, format!("type {} does not decode: {reason}", t.ty))
-            }
+    fn check_type(&self, t: &Type, pos: TextPos) -> Result<(), ParseError> {
+        match self.reg.check_type(t) {
+            TypeCheck::Malformed(reason) => err(pos, format!("type {t} does not decode: {reason}")),
             TypeCheck::Valid | TypeCheck::Invalid(_) => Ok(()),
         }
     }
 
-    fn define(&mut self, d: &SDef) -> Result<(), ParseError> {
-        self.check_type(&d.ty)?;
-        if self.types.insert(d.name.clone(), d.ty.ty.clone()).is_some() {
-            return err(d.pos, format!("value %{} is defined twice", d.name));
+    fn define(&mut self, d: &Def, at: DefPos) -> Result<(), ParseError> {
+        self.check_type(&d.ty, at.ty)?;
+        if self.types.insert(d.name.clone(), d.ty.clone()).is_some() {
+            return err(at.name, format!("value %{} is defined twice", d.name));
         }
         Ok(())
     }
 
-    fn define_block(&mut self, b: &SBlock) -> Result<(), ParseError> {
-        for d in &b.params {
-            self.define(d)?;
-        }
-        for op in &b.ops {
-            for d in &op.results {
-                self.define(d)?;
-            }
-            for region in &op.regions {
-                for inner in region {
-                    self.define_block(inner)?;
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn blocks(&self, blocks: Vec<SBlock>) -> Result<Vec<Block>, ParseError> {
-        blocks.into_iter().map(|b| self.block(b)).collect()
-    }
-
-    fn block(&self, b: SBlock) -> Result<Block, ParseError> {
-        let ops = b
-            .ops
-            .into_iter()
-            .map(|o| self.op(o))
-            .collect::<Result<_, _>>()?;
-        Ok(Block {
-            label: b.label,
-            params: b.params.into_iter().map(def).collect(),
-            ops,
-        })
-    }
-
-    fn op(&self, s: SOp) -> Result<Op, ParseError> {
-        let Some(spec) = self.reg.op(&s.name) else {
-            return err(s.name_pos, format!("unknown op {}", s.name));
+    /// Decodes `op`, whose name stands at `name_pos`; its operands stand at
+    /// the next positions of `operand_pos`.
+    fn op(
+        &self,
+        op: &Op,
+        name_pos: TextPos,
+        operand_pos: &mut impl Iterator<Item = TextPos>,
+    ) -> Result<(), ParseError> {
+        let Some(spec) = self.reg.op(&op.name) else {
+            return err(name_pos, format!("unknown op {}", op.name));
         };
-        let mut operand_types = Vec::with_capacity(s.operands.len());
-        for (x, pos) in &s.operands {
+        let mut operand_types = Vec::with_capacity(op.operands.len());
+        for x in &op.operands {
+            let pos = operand_pos.next().expect("a position per operand");
             match self.types.get(x) {
                 Some(t) => operand_types.push(t.clone()),
                 None => {
                     let func = super::print_symbol(self.func);
-                    return err(*pos, format!("value %{x} is not defined in {func}"));
+                    return err(pos, format!("value %{x} is not defined in {func}"));
                 }
             }
         }
-        let results: Vec<Def> = s.results.into_iter().map(def).collect();
-        let result_types: Vec<Type> = results.iter().map(|d| d.ty.clone()).collect();
+        let result_types: Vec<Type> = op.results.iter().map(|d| d.ty.clone()).collect();
         let types = OpTypes {
-            attrs: &s.attrs,
+            attrs: &op.attrs,
             operands: &operand_types,
             results: &result_types,
         };
         if let Err(reason) = spec.decode(&types) {
             return err(
-                s.name_pos,
-                format!("op {} does not decode: {reason}", s.name),
+                name_pos,
+                format!("op {} does not decode: {reason}", op.name),
             );
         }
-        let regions = s
-            .regions
-            .into_iter()
-            .map(|r| {
-                Ok(Region {
-                    blocks: self.blocks(r)?,
-                })
-            })
-            .collect::<Result<_, ParseError>>()?;
-        Ok(Op {
-            results,
-            name: s.name,
-            attrs: s.attrs,
-            operands: s.operands.into_iter().map(|(x, _)| x).collect(),
-            succs: s.succs,
-            regions,
-            loc: s.loc,
-        })
+        Ok(())
     }
 }

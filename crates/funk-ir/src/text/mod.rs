@@ -65,8 +65,7 @@ impl std::error::Error for ParseError {}
 /// which checks each function's definitions before its ops
 /// (ADR-2026-10-30-1032).
 pub fn parse(text: &str, reg: &Registry) -> Result<Module, ParseError> {
-    let tokens = lexer::tokenize(text)?;
-    let syntax = grammar::module(tokens)?;
+    let syntax = grammar::module(text)?;
     decode::module(syntax, reg)
 }
 

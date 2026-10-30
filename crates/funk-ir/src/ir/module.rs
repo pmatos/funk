@@ -86,7 +86,12 @@ pub struct Block {
 }
 
 /// A region: a list of blocks, the first of which is its entry.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+///
+/// Regions nest to any depth, so `Region` writes its `Clone`, `PartialEq`,
+/// `Hash`, `Debug` and `Drop` without recursion (ADR-2026-10-30-1333).
+/// Because it implements `Drop`, its blocks cannot be moved out of an owned
+/// `Region`: take them with [`std::mem::take`].
+#[derive(Default)]
 pub struct Region {
     /// The region's blocks.
     pub blocks: Vec<Block>,

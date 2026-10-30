@@ -302,6 +302,32 @@ fn regions_round_trip_and_validation_rejects_them() {
     );
 }
 
+/// Decoding finds the position of each definition, op and operand by the
+/// order of the text, which must be the order in which it walks the blocks
+/// and ops of nested regions.
+#[test]
+fn errors_inside_regions_point_at_their_text() {
+    let reg = registry();
+    let at = |body: &str| {
+        let text = format!(
+            "func @f(%a: i32) {{\n^e:\n  %b: i32 = toy.mix 1 %a @0\n  toy.scope {{\n  ^r(%c: i32):\n    %d: i32 = toy.mix 2 %a, %c @0\n{body}  }} @0\n  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+        );
+        let e = parse(&text, &reg).expect_err("a text with an error");
+        (e.pos.line, e.pos.col, e.reason)
+    };
+    let (line, col, why) = at("    %e: i32 = toy.mix 3 %d, %zz @0\n");
+    assert_eq!((line, col), (7, 29), "{why}");
+    assert!(why.contains("%zz is not defined"), "{why}");
+    let (line, col, why) =
+        at("    toy.scope {\n    ^s:\n      %b: i32 = toy.mix 4 %a @0\n    } @0\n");
+    assert_eq!((line, col), (9, 7), "{why}");
+    assert!(why.contains("%b is defined twice"), "{why}");
+    let (line, col, why) =
+        at("    toy.scope {\n    ^s:\n      toy.mix 5 %c @0\n      toy.nope %d @0\n    } @0\n");
+    assert_eq!((line, col), (10, 7), "{why}");
+    assert!(why.contains("unknown op toy.nope"), "{why}");
+}
+
 #[test]
 fn types_are_extensible_and_checked() {
     let text = "func @f(%v: toy.vec(0)) {\n^entry:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";

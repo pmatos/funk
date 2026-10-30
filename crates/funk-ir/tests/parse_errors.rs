@@ -376,6 +376,18 @@ fn text_that_breaks_the_grammar_is_rejected() {
     rejected_at("locs {\n  @0 = fused(@1 @2)\n}\n", 2, 17, ")");
 }
 
+/// The parser reads tokens as the grammar needs them, and still reports the
+/// first error of the earliest phase: tokens, then the grammar, then
+/// decoding (ADR-2026-10-30-1032).
+#[test]
+fn an_error_of_an_earlier_phase_wins_wherever_it_stands() {
+    let tokens_after_grammar = "func {\n}\n\nlocs {\n}\n%";
+    rejected_at(tokens_after_grammar, 6, 1, "% must be followed");
+    rejected_at("locs {\n}\n%", 3, 1, "% must be followed");
+    let grammar_after_decoding = "func @f() {\n^e:\n  bogus @0\n}\n\nlocs {\n";
+    rejected_at(grammar_after_decoding, 7, 1, "an entry");
+}
+
 #[test]
 fn bytes_that_are_not_utf8_are_rejected_where_they_start() {
     let e = parse_bytes(b"locs {\n  @0 = name(\"a\xffb\")\n}\n", &Registry::core()).unwrap_err();
