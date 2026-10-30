@@ -5,8 +5,8 @@ import FirRef.Run
 Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
-several results and none, poison arguments, fuel, each stuck case, ops
-without rules (ADR-2026-10-30-1855), and argument errors.
+several results and none, poison arguments, fuel, each stuck case that a
+text reaches, ops without rules (ADR-2026-10-30-1855), and argument errors.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
@@ -98,6 +98,22 @@ def body (header : String) (lines : List String) : String :=
   stuckBy "%a is not defined"
 #guard runText (body "func @f()" ["^e:", "  ret {", "  ^b:", "    ret @0", "  } @0"]) "@f" ==
   stuckBy "an op owns a region, and no rule runs one"
+-- A function returns values of its result types, and no op follows a
+-- terminator.
+#guard runText (body "func @f() -> i32" ["^e:", "  %c: i8 = const 1 @0", "  ret %c @0"]) "@f" ==
+  stuckBy "the function returns values of types other than its result types"
+#guard runText (body "func @f() -> i32" ["^e:", "  ret @0"]) "@f" ==
+  stuckBy "the function returns values of types other than its result types"
+#guard runText (body "func @f()" ["^e:", "  %c: i8 = const 1 @0", "  ret %c @0"]) "@f" ==
+  stuckBy "the function returns values of types other than its result types"
+#guard runText (body "func @f() -> i8" ["^e:", "  %c: i8 = const 1 @0", "  ret %c @0", "  ret %c @0"])
+  "@f" == stuckBy "an op follows the terminator of its block"
+#guard runText (body "func @f() -> i8"
+    ["^e:", "  %c: i8 = const 1 @0", "  ret %c @0", "  %d: i8 = const 2 @0"]) "@f" ==
+  stuckBy "an op follows the terminator of its block"
+-- The entry block's arguments are the function's parameters.
+#guard runText (body "func @f(%x: i8) -> i8" ["^e(%y: i8):", "  ret %x @0"]) "@f" ["1"] ==
+  stuckBy "the entry block ^e declares arguments"
 -- The run stops at the first stuck op: what follows is not run.
 #guard runText (body "func @f() -> i32"
     ["^e:", "  %b: i32 = add %a, %a @0", "  %a: i32 = sub %b, %b @0", "  ret %b @0"]) "@f" ==

@@ -7,7 +7,8 @@ jumps. So two semantics written here for these tests, not fir's, give the
 interpreter what #18 and #19 will: `addIsUB`, in which `add` is UB, and
 `brJumps`, in which `br` goes to its successor. Every other op keeps the
 core dialect's rules. The runs are those of `fir-ref run`, in `Exec`, and
-are reported as it reports them.
+are reported as it reports them. Functions built here, not parsed, reach
+the stuck cases that no text that decodes can reach.
 -/
 
 namespace FirTest
@@ -28,17 +29,21 @@ open Fir FirRef
     | .br, _ => pure (.goto 0)
     | op, args => DialectDenote.exit (m := Exec) op args
 
+/-- What `fir-ref run` would report on the function `f` with the semantics
+`s`. -/
+def runFuncIn (s : DialectDenote CoreDialect Exec) (f : Func CoreDialect)
+    (args : List String := []) (fuel : Nat := defaultFuel) : Option RunReport :=
+  match readArgs (f.params.map (·.2)) args with
+  | .error _ => none
+  | .ok vs => letI := s; some (outcomeReport "@f" (f.run (m := Exec) vs fuel).run)
+
 /-- What `fir-ref run` would report on the first function of the text `t`
 with the semantics `s`. -/
 def runIn (s : DialectDenote CoreDialect Exec) (t : String) (args : List String := [])
     (fuel : Nat := defaultFuel) : Option RunReport :=
   match parseCore t with
   | .error _ => none
-  | .ok m => match m.funcs.head? with
-    | none => none
-    | some f => match readArgs (f.params.map (·.2)) args with
-      | .error _ => none
-      | .ok vs => letI := s; some (outcomeReport "@f" (f.run (m := Exec) vs fuel).run)
+  | .ok m => m.funcs.head?.bind (runFuncIn s · args fuel)
 
 /-! # UB
 
@@ -90,12 +95,36 @@ passes, and runs the target. -/
   some (stuckBy "^nope is not a block of the function")
 #guard runIn brJumps (body "func @f(%a: i8)" ["^e:", "  br ^n @0", "^n(%x: i8):", "  ret @0"]) ["1"] ==
   some (stuckBy "^n takes a number of arguments other than its successor passes")
+-- A block argument of another type is stuck at the jump, whether or not
+-- the block uses it.
 #guard runIn brJumps (body "func @f(%a: i8) -> i16"
     ["^e:", "  br ^n(%a) @0", "^n(%x: i16):", "  ret %x @0"]) ["1"] ==
-  some (stuckBy "%x does not have the operand's type")
+  some (stuckBy "^n takes arguments of types other than its successor passes")
+#guard runIn brJumps (body "func @f(%a: i8)" ["^e:", "  br ^n(%a) @0", "^n(%x: i16):", "  ret @0"])
+    ["1"] == some (stuckBy "^n takes arguments of types other than its successor passes")
 #guard runIn brJumps (body "func @f() -> i8"
     ["^e:", "  br ^n(%y) @0", "^n(%x: i8):", "  %y: i8 = const 1 @0", "  ret %x @0"]) ==
   some (stuckBy "%y is not defined")
+
+/-! # Stuck on an op that no text reaches
+
+`Core.Op.decode` builds each op instance from its operand and result types
+in text, so a text that decodes always gives an op as many operands and
+results as it takes, of its types. A function built here need not. -/
+
+/-- `@f(%a: t) -> i8`, whose one block runs `o`, then `ret %s`. -/
+def withOp (t : Core.Ty) (o : Operation CoreDialect) : Func CoreDialect :=
+  ⟨"f", [("a", t)], [.int 8], ⟨[⟨"e", [], [o, ⟨[], .ret [.int 8], ["s"], [], [], 0⟩]⟩]⟩⟩
+
+#guard runFuncIn inferInstance (withOp (.int 8) ⟨[("s", .int 8)], .add 8 {}, ["a", "a"], [], [], 0⟩)
+    ["1"] == some (returns ["2"])
+#guard runFuncIn inferInstance (withOp (.int 8) ⟨[("s", .int 8)], .add 8 {}, ["a"], [], [], 0⟩)
+    ["1"] == some (stuckBy "an op has a number of operands other than its op instance takes")
+#guard runFuncIn inferInstance
+    (withOp (.int 8) ⟨[("s", .int 8), ("t", .int 8)], .add 8 {}, ["a", "a"], [], [], 0⟩) ["1"] ==
+  some (stuckBy "an op names a number of results other than it gives")
+#guard runFuncIn inferInstance (withOp (.int 16) ⟨[("s", .int 8)], .add 8 {}, ["a", "a"], [], [], 0⟩)
+    ["1"] == some (stuckBy "%a does not have the operand's type")
 
 /-! # The obligations' axioms
 

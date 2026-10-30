@@ -25,7 +25,7 @@ Facts about the obligations of ADR-2026-10-30-0818:
   (`Core.Unlawful.alwaysUB_propagatesPoison`), and gives these ops a
   meaning they do not have.
 - Stuck is the interpreter's, for a case that validation rules out. A
-  valid function that uses `sub` is valid, and an op's `denote` in the set
+  function that uses `sub` can be valid, and an op's `denote` in the set
   monad cannot be stuck.
 
 ## Decision
@@ -59,12 +59,15 @@ Facts about the obligations of ADR-2026-10-30-0818:
 ## Consequences
 
 - `LawfulDialectPoison CoreDialect` cannot be proved while an op lacks its
-  rules, since totality fails for it. A missing rule cannot be mistaken
-  for a final one by any theorem.
-- `Progress` and `NeverStuck` hold for the tracer subset only, as
-  `Fuel.lean` says, until #14 to #20 extend them.
-- The behaviour of a function that reaches an op without rules is empty,
-  and an empty behaviour refines every source. No refinement is stated
-  about such functions before their ops have rules.
+  rules, since totality fails for it.
+- Only totality, `ReturnsOnDefined`, progress and the lawful class reject
+  a missing rule. `PropagatesPoison` and `OpMonotone` hold of an op
+  without rules, and `NeverStuck` and `FuelMonotone` of a function that
+  reaches one, since the empty set meets every bound on what may happen.
+  The behaviour of such a function is empty, and an empty behaviour
+  refines every source. So none of these statements is made of an op, or
+  of a function that reaches one, before the op has rules.
+- #10 proves `Progress` and `NeverStuck` for the tracer subset only, as
+  `Fuel.lean` says, and #14 to #20 extend them.
 - #13 sees exit status 2, a tool error, for a test that runs an op before
   its family lands, never a wrong result.

@@ -169,14 +169,22 @@ case "$1" in
         # fir-ref run runs the functions of the corpus and prints each
         # result as one JSON object (ADR-2026-10-30-1856). runs FILE STATUS
         # OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and
-        # prints OUTPUT, on standard output or standard error.
+        # prints OUTPUT, a JSON result on standard output or a message on
+        # standard error, and nothing on the other stream.
         runs() {
-            local file=$1 want_rc=$2 want=$3 rc=0 got
+            local file=$1 want_rc=$2 want=$3 rc=0 out err want_out want_err
             shift 3
-            got=$("$fir_ref" run "$file" "$@" 2>&1) || rc=$?
-            if [[ $rc -ne $want_rc || $got != "$want" ]]; then
-                echo "fir-ref run $file $* exits with $rc and prints $got;" \
-                    "expected $want_rc and $want" >&2
+            out=$("$fir_ref" run "$file" "$@" 2>"$tmp/run.err") || rc=$?
+            err=$(<"$tmp/run.err")
+            if [[ $want == "{"* ]]; then
+                want_out=$want want_err=''
+            else
+                want_out='' want_err=$want
+            fi
+            if [[ $rc -ne $want_rc || $out != "$want_out" || $err != "$want_err" ]]; then
+                echo "fir-ref run $file $* exits with $rc, prints '$out' and" \
+                    "'$err' on standard error; expected $want_rc, '$want_out'" \
+                    "and '$want_err'" >&2
                 return 1
             fi
         }

@@ -29,25 +29,37 @@ runs the entry block op by op.
 Every op takes one step of fuel, the terminator included. A run with no
 fuel left before an op ends with `fuelExhausted`, so every run ends.
 
-The interpreter checks only what it needs in order to compute, and a path
-that fails a check is stuck, with a reason for people. Each check is one
-that validation makes of a valid function:
+The interpreter checks what it needs in order to take each step, and a few
+more rules of validation. A path that fails a check is stuck, with a reason
+for people. Validation makes each of these checks of a valid function:
 
 * an operand is defined, and defined before the op runs, as the scope rule
   `Func.InScope` asks;
 * an operand's value has the op's operand type, as `Func.OpValid` asks of
   the operand types;
 * an op has as many operands as its op instance takes and as many results
-  as it gives, and a successor passes as many values as its target block
-  takes;
-* a block ends with a terminator, and a terminator's successor exists and
-  names a block of the function;
+  as it gives;
+* a block ends with a terminator, and nothing follows its terminator;
+* a successor names a block of the function, and passes one value of the
+  right type for each of that block's arguments;
 * an op owns no region: no op of M0 has one, and how regions run is left to
   H6, so validation rejects them;
-* the function has an entry block.
+* the function has an entry block, which declares no arguments.
 
-So no path of a valid function's run is stuck, which ticket #10 proves for
-its tracer subset (see "Fuel and progress").
+Two checks hold a dialect's `exit` to the rules that validation makes of
+its terminators. A terminator's `exit` may say `goto i` only for a
+successor `i` that the terminator has, and validation fixes only how many
+it has. A terminator may return only values of the function's result
+types, which the dialect's own rule must ask, as the core rule for `ret`
+does. So `NeverStuck` for `br` and `cond_br` (#19) needs their `exit` to
+name only successors they have.
+
+These checks are not all of validation. The interpreter checks that a value
+is defined, not that its definition dominates its use, and it checks no
+other rule of validation than those above. So a run of a function that
+validation rejects may end with an outcome, which means nothing: only a
+valid function's runs mean something (ADR-2026-10-30-1856). No path of a valid function's run is stuck, which
+ticket #10 proves for its tracer subset (see "Fuel and progress").
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; the only computations that branch are
@@ -60,8 +72,11 @@ dialect needs a new one. When #14 gives `freeze` its rule with `choose`,
 the core dialect's semantics asks for `MonadChoice m`, and `fir-ref`'s
 exhaustive and scripted modes run this interpreter in monads that have it.
 A call needs the module, which `denote` cannot reach, so #20 gives `call` a
-call effect: a monad whose call runs the callee with this interpreter, on
-fuel drawn from the caller's budget.
+call effect, and all calls share the run's fuel budget. That budget is an
+argument of this interpreter, which `denote` neither sees nor returns, so a
+call effect cannot yet charge its callee's steps to the caller's budget.
+Sharing it changes how the interpreter counts fuel; that design is open
+(#20).
 -/
 
 namespace Fir
@@ -110,8 +125,10 @@ def Func.jump (f : Func d) (env : Env d) (succs : List Succ) (i : Nat) :
   let some s := succs[i]? | stuck s!"the terminator has no successor {i}"
   let some b := f.block? s.label | stuck s!"^{s.label} is not a block of the function"
   let vs ← s.args.mapM env.value
-  pure (b, ← env.bind (b.params.map (·.1)) vs
-    s!"^{s.label} takes a number of arguments other than its successor passes")
+  let env' ← env.bind (b.params.map (·.1)) vs
+    s!"^{s.label} takes a number of arguments other than its successor passes"
+  if vs.map (·.1) = b.params.map (·.2) then pure (b, env')
+  else stuck s!"^{s.label} takes arguments of types other than its successor passes"
 
 variable [DialectSignature d] {m : Type → Type} [Monad m] [DialectDenote d m]
 
@@ -128,8 +145,11 @@ def Func.runOps (f : Func d) : Nat → Env d → List (Operation d) →
     if !o.regions.isEmpty then liftExcept (stuck "an op owns a region, and no rule runs one")
     let args ← liftExcept (env.operands (sig o.op) o.operands)
     if isTerminator o.op then
+      if !os.isEmpty then liftExcept (stuck "an op follows the terminator of its block")
       match ← ExceptT.lift (DialectDenote.exit o.op args) with
-      | .ret => pure (.ret args.toDVals)
+      | .ret =>
+        if sig o.op = f.results then pure (.ret args.toDVals)
+        else liftExcept (stuck "the function returns values of types other than its result types")
       | .goto i =>
         let (b, env') ← liftExcept (f.jump env o.succs i)
         f.runOps n env' b.body
@@ -142,14 +162,15 @@ def Func.runOps (f : Func d) : Nat → Env d → List (Operation d) →
 /--
 The run of the function `f` on arguments of its parameter types, with `fuel`
 steps of fuel: the entry block's ops, in an environment that holds the
-parameters.
+parameters. `args` has one value for each parameter, so each parameter is
+bound.
 -/
 def Func.run (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ExceptT Stuck m (Result (List (DVal d))) := do
   let some entry := f.blocks.head? | liftExcept (stuck "the function has no blocks")
-  let env ← liftExcept (Env.bind [] (f.params.map (·.1)) args.toDVals
-    "the function takes a number of arguments other than it is given")
-  f.runOps fuel env entry.body
+  if !entry.params.isEmpty then
+    liftExcept (stuck s!"the entry block ^{entry.label} declares arguments")
+  f.runOps fuel ((f.params.map (·.1)).zip args.toDVals) entry.body
 
 /-- In the set monad, the run of a function is the spec's `Run`, whose
 observation is the list of the values it returns. -/

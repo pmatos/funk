@@ -22,11 +22,16 @@ ADR-2026-10-30-1855 decides what such an op does until its family lands:
   its `exit` is the empty set. That is not a stand-in semantics. The
   totality obligation `OpTotal` rejects it, as it rejects
   `Core.Unlawful.noOutcome`, so `LawfulDialectPoison CoreDialect` cannot be
-  proved while any op lacks its rules, and no theorem can take a missing
-  rule for a final one.
-* A run that reaches such an op has no way to end on that path. So
-  `Progress` and `NeverStuck` hold for the tracer subset only, until #14 to
-  #20 extend them as they add their ops.
+  proved while any op lacks its rules.
+* Only totality, `ReturnsOnDefined`, progress and the lawful class reject
+  it. `PropagatesPoison` and `OpMonotone` hold of such an op, and
+  `NeverStuck` and `FuelMonotone` of a function that reaches one, since the
+  empty set meets every bound on what may happen; and such a function
+  refines every source. So no such statement is made of an op, or of a
+  function that reaches one, before the op has rules.
+* A run that reaches such an op has no way to end on that path; when
+  every path does, `Progress` fails. #10 proves `Progress` and `NeverStuck` for the
+  tracer subset only, and #14 to #20 extend them as they add their ops.
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules yet, as an error
   (ADR-2026-10-30-1856).
@@ -55,8 +60,10 @@ def Op.exit? : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) 
   | _ => none
 
 /-- The op has rules: as an op that is not a terminator, or as a
-terminator. -/
-def Op.hasRules (op : Op) : Bool := (op.denote? (m := Id)).isSome || (op.exit? (m := Id)).isSome
+terminator. It looks at the rules in the set monad, which has the effects
+of choice and UB that the rules of #14, #18 and #19 ask for. -/
+def Op.hasRules (op : Op) : Bool :=
+  (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
 -- Among one instance of every core op, the tracer subset has rules.
 #guard (samples.filter Op.hasRules).map Op.name ==
