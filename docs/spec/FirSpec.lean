@@ -117,29 +117,21 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.Example "Example" (level := 2)}
 
-## Lexing printed text
+{includeLiterate "." Fir.Text.Tokens "Lexing printed text" (level := 2)}
 
-The proof that parsing a printed module gives the module back (#11)
-follows the parser's steps. The sections below prove its first step: the
-lexer reads the printed text of a module as exactly the module's tokens,
-for every module whose tokens can be written, so for every well-formed and
-every valid module.
+{includeLiterate "." Fir.Text.LexNumbers "Digits and their values" (level := 2)}
 
-{includeLiterate "." Fir.Text.Tokens "The tokens of a printed module" (level := 3)}
+{includeLiterate "." Fir.Text.LexTokens "Maximal munch" (level := 2)}
 
-{includeLiterate "." Fir.Text.LexNumbers "Reading printed numbers" (level := 3)}
+{includeLiterate "." Fir.Text.LexStrings "Escapes and quoted symbols" (level := 2)}
 
-{includeLiterate "." Fir.Text.LexTokens "Reading one printed token" (level := 3)}
+{includeLiterate "." Fir.Text.LexLayout "Spaces, line feeds and lists" (level := 2)}
 
-{includeLiterate "." Fir.Text.LexStrings "Reading printed strings and symbols" (level := 3)}
+{includeLiterate "." Fir.Text.LexPrint "Attributes, locations and names" (level := 2)}
 
-{includeLiterate "." Fir.Text.LexLayout "Reading the printer's layout" (level := 3)}
+{includeLiterate "." Fir.Text.LexModule "Ops, functions and the module" (level := 2)}
 
-{includeLiterate "." Fir.Text.LexPrint "Reading printed attributes, locations and definitions" (level := 3)}
-
-{includeLiterate "." Fir.Text.LexModule "Lexing a printed module" (level := 3)}
-
-{includeLiterate "." Fir.Text.LexWellFormed "Well-formed modules lex" (level := 3)}
+{includeLiterate "." Fir.Text.LexWellFormed "Writable tokens" (level := 2)}
 
 # Architecture decision records
 %%%

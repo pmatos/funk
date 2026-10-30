@@ -6,9 +6,11 @@ import Fir.Text.Lex
 The proof that parsing a printed module gives the module back (#11) follows
 the parser's three steps. Its first step is about the lexer: the printer
 writes a module as a list of tokens, each in its one spelling, with
-whitespace between them, and the lexer reads exactly those tokens back
-(`lex_print`, below). This section gives that list. The grammar step reads
-it, and only it, into a syntax tree.
+whitespace between them, and the lexer reads exactly those tokens back.
+This section gives that list. The sections after it prove that the lexer
+reads it back (`lex_print`) for every module whose tokens can be written,
+so for every well-formed and every valid module. The grammar step reads the
+list, and only it, into a syntax tree.
 
 Each token has one spelling, `Tok.spell`, the one that the printer writes.
 A token can be written when its name or word is one (`Tok.Writable`): a
