@@ -50,7 +50,11 @@ def main (args : List String) : IO UInt32 := do
   match ← FirSpecSite.prepare "../.." (%doc FirSpec) with
   | .error errors => report errors
   | .ok (doc, ids) =>
-    let status ← manualMain doc (options := args) (config := { extraContents := ← builtFrom })
+    let config : RenderConfig := {
+      extraContents := ← builtFrom
+      extraCss := {CSS.mk FirSpecSite.adrIndexCss}
+    }
+    let status ← manualMain doc (options := args) (config := config)
     if status != 0 then return status
     let some dir := htmlMultiDir args | return 0
     let errors ← FirSpecSite.checkRendered dir ids

@@ -17,7 +17,7 @@ namespace FirSpecSite
 The document `doc` with its appendix of ADRs filled and every ADR citation
 linked, read from the repository at `root`, together with the ADRs' ids. Fails
 with one message per problem: an ADR that cannot be rendered, or a citation
-in the spec's sources or the document that names no ADR.
+in the spec's sources or the document that names no ADR or cannot be a link.
 -/
 def prepare (root : System.FilePath) (doc : Prt) : IO (Except (Array String) (Prt × Array String)) := do
   unless ← (root / adrDir).isDir do
@@ -30,6 +30,6 @@ def prepare (root : System.FilePath) (doc : Prt) : IO (Except (Array String) (Pr
     unless errors.isEmpty do return .error errors
     match addAppendix doc adrs with
     | .error e => return .error #[e]
-    | .ok doc => return (linkCitations ids doc).map (·, ids)
+    | .ok doc => return (linkCitations adrs doc).map (·, ids)
 
 end FirSpecSite

@@ -19,6 +19,8 @@ def appendixTag : String := "adrs"
 structure Adr where
   /-- The id, such as `2026-10-29-2015`. -/
   id : String
+  /-- The file, relative to the repository. -/
+  file : String
   /-- The decision: the ADR's title. -/
   title : Array Inl
   /-- What follows `Status:`. -/
@@ -42,11 +44,11 @@ private def stripStatus : Array Inl → Option (Array Inl)
     return (if rest.isEmpty then #[] else #[.text rest]) ++ xs.extract 1 xs.size
 
 /--
-The ADR with id `id` whose Markdown is `text`. Its first block is the title, a
-level-1 heading, and its second the `Status:` line. Returns the ADR and the
-repository files it links to.
+The ADR in `file` with id `id` whose Markdown is `text`. Its first block is
+the title, a level-1 heading, and its second the `Status:` line. Returns the
+ADR and the repository files it links to.
 -/
-def parseAdr (ctx : MdContext) (id text : String) : Except String (Adr × Array String) := do
+def parseAdr (ctx : MdContext) (file id text : String) : Except String (Adr × Array String) := do
   let some doc := MD4Lean.parse text markdownFlags
     | throw "MD4Lean could not parse it"
   let some (MD4Lean.Block.header 1 titleText) := doc.blocks[0]?
@@ -65,7 +67,7 @@ def parseAdr (ctx : MdContext) (id text : String) : Except String (Adr × Array 
     content
     subParts
   }
-  return ({ id, title, status, part }, links)
+  return ({ id, file, title, status, part }, links)
 
 /--
 Reads every ADR in `docs/adrs/` of the repository at `root`, in the order of
@@ -89,7 +91,7 @@ def loadAdrs (root : System.FilePath) : IO (Except (Array String) (Array Adr)) :
   let mut adrs := #[]
   for (name, id) in ids do
     let file := s!"{adrDir}/{name}"
-    match parseAdr ctx id (← IO.FS.readFile (root / file)) with
+    match parseAdr ctx file id (← IO.FS.readFile (root / file)) with
     | .error e => errors := errors.push s!"{file}: {e}"
     | .ok (adr, links) =>
       for target in links do
@@ -98,13 +100,20 @@ def loadAdrs (root : System.FilePath) : IO (Except (Array String) (Array Adr)) :
       adrs := adrs.push adr
   return if errors.isEmpty then .ok adrs else .error errors
 
+/-- The tag of the appendix's index table, which is also its HTML id. -/
+def adrIndexTag : String := "adr-index"
+
+/-- The style of the index: an id, or a citation in a status, never breaks at its hyphens. -/
+def adrIndexCss : String :=
+  s!"table#{adrIndexTag} td:first-child, table#{adrIndexTag} a \{ white-space: nowrap; }"
+
 /-- The index of the appendix: one row per ADR with its id, decision and status. -/
 def adrIndex (adrs : Array Adr) : Blk := Id.run do
   let cell (xs : Array Inl) : Verso.Doc.ListItem Blk := ⟨#[.para xs]⟩
   let mut items := #[cell #[.text "ADR"], cell #[.text "Decision"], cell #[.text "Status"]]
   for adr in adrs do
     items := items ++ #[cell #[.text s!"ADR-{adr.id}"], cell adr.title, cell adr.status]
-  return .other (Verso.Genre.Manual.Block.table 3 true none none) #[.ul items]
+  return .other (Verso.Genre.Manual.Block.table 3 true (some adrIndexTag) none) #[.ul items]
 
 /--
 Fills the appendix part of `doc`, the top-level part tagged `adrs`: its index

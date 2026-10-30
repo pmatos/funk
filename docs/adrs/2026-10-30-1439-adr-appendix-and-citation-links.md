@@ -43,18 +43,24 @@ Facts about Verso `v4.35.0`, the pinned version (ADR-2026-10-29-2135):
   the level-1 heading that starts the file. The next block must be the
   `Status:` line, and the index shows what follows `Status:`. Deeper headings
   become unnumbered sections on the same page. Lists, code, tables, emphasis
-  and links render as on GitHub. Markdown the document cannot show as GitHub
-  does (raw HTML, images, horizontal rules, strikethrough, task lists, hard
-  line breaks, an entity other than `&amp;`, `&lt;`, `&gt;`, `&quot;`,
-  `&apos;`, `&nbsp;` or a numeric one) fails the build with the file's name.
+  and links render as GitHub shows the file, where a bare `#5` is text, not
+  a link. Markdown the document cannot show as GitHub does (raw HTML,
+  images, horizontal rules, strikethrough, task lists, hard line breaks, an
+  entity other than `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;`
+  or a numeric one) fails the build with the file's name.
 - **Links in an ADR.** A URL stays as written. A relative path to another
   ADR links to its page. Any other relative path links to the file on
   GitHub at `main`, and the build fails if the file does not exist.
 - **Every citation links.** Once the appendix is in, `firspec` replaces each
   citation in the document's text with an `Inline.ref` to `ADR-<id>`: in
   `FirSpec.lean`, in the docs that `{includeLiterate}` renders, and in the
-  ADRs, their status lines and the index included. Titles, links and code
-  are left as they are.
+  ADRs, their status lines and the index included. Code is left as it is.
+- **A citation that cannot link fails the build.** The table of contents
+  shows each heading inside a link, and a link cannot hold another. So a
+  citation in a heading, or in the text of a link to anything but that ADR,
+  cannot become a link to it. `firspec` prints each one with its place, the
+  ADR's file for a citation in an ADR, and exits with status 1 before it
+  renders.
 - **Code is quoted, not cited.** A citation in a code span or a fenced code
   block, such as an example id, is neither linked nor checked. Lean code that
   the document shows as code keeps its comments as they are.
@@ -99,9 +105,12 @@ Facts about Verso `v4.35.0`, the pinned version (ADR-2026-10-29-2135):
   search finds the ADRs.
 - A typo in a citation, or an ADR renamed under its citations, fails every
   build of the spec, with the file and line.
-- Committing an ADR runs the `fir-spec` hook, which renders the spec.
+- Committing an ADR runs the `fir-spec` hook, which renders the spec. That
+  takes seconds with a warm build, but several minutes in a fresh clone or
+  worktree, which first builds Verso.
 - An ADR must start with its title and its `Status:` line, as the template
-  in `docs/adrs/README.md` does, and use only the Markdown above.
+  in `docs/adrs/README.md` does, use only the Markdown above, and cite ADRs
+  in its text, not in a heading or in a link's text.
 - Links to repository files point at `main`, so an old page links to the
   file as it is now.
 - This covers #44 for the spec and the ADRs only. Citations in other files,

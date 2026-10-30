@@ -35,6 +35,8 @@ the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
   the template does.
 - Cite an ADR as plain text, `ADR-` and its id. In backticks it is an
   example, not a citation, and is not linked.
+- Cite an ADR in the text, not in a heading or in a link's text: neither
+  can hold the link, and the build fails, naming where.
 - Link a file of the repository by its path relative to `docs/adrs/`.
 - The spec build fails on a citation of an ADR that does not exist, and on
   Markdown the appendix cannot show: raw HTML, images, horizontal rules,

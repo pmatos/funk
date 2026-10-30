@@ -73,12 +73,44 @@ private def linked (xs : Array Inl) : Except (Array String) (Array Inl) :=
   (·.flatMap refs)) == .ok #["ADR-2026-10-29-2015"]
 #guard ((linked #[.emph #[.text "ADR-2026-10-29-2015"]]).map (·.flatMap refs)) ==
   .ok #["ADR-2026-10-29-2015"]
-#guard ((linked #[.link #[.text "ADR-2026-10-29-2099"] "https://example.com"]).map (·.size)) ==
-  .ok 1
+
+/-! A citation in the text of a link, or in a heading, cannot link to its ADR, so it is an error. -/
+
+private def inLink (cited target : String) : String :=
+  s!"here: {cited} is the text of a link to {target}; cite the ADR as plain text outside the link"
+
+#guard ((linked #[.link #[.text "a ", .code "ADR-2026-10-29-2015"] "https://example.com"]).map
+  (·.size)) == .ok 1
+#guard linked #[.link #[.emph #[.text "ADR-2026-10-29-2015"]] "https://example.com"] ==
+  .error #[inLink "ADR-2026-10-29-2015" "https://example.com"]
+#guard ((linked #[adrRef "2026-10-29-2015" #[.text "ADR-2026-10-29-2015"]]).map (·.flatMap refs)) ==
+  .ok #["ADR-2026-10-29-2015"]
+#guard linked #[adrRef "2026-10-29-2016" #[.text "ADR-2026-10-29-2015"]] ==
+  .error #[inLink "ADR-2026-10-29-2015" "ADR-2026-10-29-2016"]
 #guard (linked #[.text "ADR-2026-10-29-2099"]).toOption.isNone
 #guard (match linked #[.text "ADR-2026-10-29-2099"] with
   | .error e => e == #["here: ADR-2026-10-29-2099 names no ADR in docs/adrs/"]
   | .ok _ => false)
+
+private def mkPart (title : String) (tag : Option String := none) (content : Array Blk := #[])
+    (subParts : Array Prt := #[]) : Prt :=
+  { title := #[.text title], titleString := title, metadata := some { tag }, content, subParts }
+
+private def partErrors (doc : Prt) : Array String :=
+  let fileOf (tag : String) := if tag == "ADR-2026-10-29-2015" then some "docs/adrs/a.md" else none
+  ((linkPart known fileOf {} doc).run #[]).2
+
+private def inHeading (place cited : String) : String :=
+  s!"{place}: {cited} is in a heading, where it cannot be a link; cite it in the text below"
+
+#guard partErrors (mkPart "Doc" none #[] #[mkPart "Sec ADR-2026-10-29-2015"]) ==
+  #[inHeading "in “Doc › Sec ADR-2026-10-29-2015”" "ADR-2026-10-29-2015"]
+#guard partErrors (mkPart "Doc" none #[] #[{ mkPart "Sec" with title := #[.code "ADR-2026-10-29-2099"] }]) ==
+  #[]
+#guard partErrors (mkPart "Doc" none #[] #[mkPart "ADR-2026-10-29-2015: x" "ADR-2026-10-29-2015"
+    #[.para #[.link #[.text "ADR-2026-10-29-2015"] "u"]] #[mkPart "On ADR-2026-10-29-2015"]]) ==
+  #["docs/adrs/a.md: ADR-2026-10-29-2015 is the text of a link to u; cite the ADR as plain text outside the link",
+    inHeading "docs/adrs/a.md, in “On ADR-2026-10-29-2015”" "ADR-2026-10-29-2015"]
 
 /-! An ADR's Markdown keeps its headings, lists, code, tables and links. -/
 
@@ -112,7 +144,7 @@ AT&T &amp; more.
 
 private def ctx : MdContext := { adrIds := #[("2026-10-29-2015-literate-lean-spec.md", "2026-10-29-2015")] }
 
-private def parsed := parseAdr ctx "2026-10-30-0000" fixture
+private def parsed := parseAdr ctx "a.md" "2026-10-30-0000" fixture
 
 private def kind : Blk → String
   | .para _ => "p" | .ul _ => "ul" | .ol .. => "ol" | .code _ => "code"
@@ -148,19 +180,19 @@ private partial def urls : Inl → Array String
 #guard (parsed.map fun (a, _) => a.part.subParts[0]!.subParts[0]!.content) ==
   .ok #[.para #[.text "AT&T & more."]]
 
-#guard (parseAdr ctx "x" "No heading\n").toOption.isNone
-#guard (parseAdr ctx "x" "# Title\n\nNo status\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n<div>raw</div>\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n![an image](a.png)\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n[up](../../../x)\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\na\\\nb\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n~~gone~~\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n- [x] done\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n---\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n&frac12;\n").toOption.isNone
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n&#x2192; &#8594;\n").map
+#guard (parseAdr ctx "a.md" "x" "No heading\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# Title\n\nNo status\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n<div>raw</div>\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n![an image](a.png)\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n[up](../../../x)\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\na\\\nb\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n~~gone~~\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n- [x] done\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n---\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n&frac12;\n").toOption.isNone
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\n&#x2192; &#8594;\n").map
   (·.1.part.content) == .ok #[.para #[.text "Status: accepted"], .para #[.text "\u2192 \u2192"]]
-#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\nsee www.example.com\n").map
+#guard (parseAdr ctx "a.md" "x" "# T\n\nStatus: accepted\n\nsee www.example.com\n").map
   (fun (a, _) => (a.part.content.flatMap inlinesOf).flatMap urls) == .ok #["http://www.example.com"]
 
 /-! The check of the rendered pages reads prose only. -/
