@@ -14,9 +14,11 @@ A target behaviour refines a source behaviour when every target outcome is
 allowed by some source outcome. So if the source can hit UB on some choice,
 every target behaviour refines it (S4, ADR-2026-10-29-2008).
 
-An empty target behaviour, with no outcome at all, refines every source.
-The progress obligation of the previous section rules it out: the behaviour
-of a valid function is never empty.
+An empty target behaviour, with no outcome at all, refines every source,
+and a target that loses some of its paths refines more sources than it
+should. The obligations of the previous section rule both out for a valid
+function: progress, so its behaviour is never empty, and no stuck path,
+which with every op total means that no path is lost.
 -/
 
 namespace Fir
@@ -86,8 +88,9 @@ since a value of `iN` may be poison, so may any argument.
 
 /-- The runs of a function: for each argument vector, its run at each fuel
 budget. #10 defines them for each function of a valid module, with `A` the
-argument vectors of its parameter types, `HVector toType ts`. -/
-def FuncRuns (A O : Type) : Type := A → Nat → SetM (Result O)
+argument vectors of its parameter types, `HVector toType ts`. For the core
+dialect, `Core.FuncRuns ts` fixes `A` so. -/
+def FuncRuns (A O : Type) : Type := A → Nat → Run O
 
 /-- The target function refines the source function: on every argument
 vector, poison included, its observable behaviour refines the source's. -/

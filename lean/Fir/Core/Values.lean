@@ -72,13 +72,21 @@ theorem Core.behaviour_isRefinedBy_trans {a b c : Behaviour Core.Obs} :
     a ⊑ b → b ⊑ c → a ⊑ c :=
   Behaviour.isRefinedBy_trans Core.Obs.isRefinedBy_trans
 
+/--
+The runs of a core function with parameter types `ts`: its run on each
+argument vector of those types. A value of `iN` may be poison, so poison
+arguments are part of the type, and function refinement covers them
+(choice 23).
+-/
+abbrev Core.FuncRuns (ts : List Core.Ty) : Type := Fir.FuncRuns (HVector toType ts) Core.Obs
+
 /-- Refinement of M0 functions is transitive. -/
-theorem Core.funcRuns_isRefinedBy_trans {f g h : FuncRuns A Core.Obs} :
+theorem Core.funcRuns_isRefinedBy_trans {f g h : Core.FuncRuns ts} :
     f ⊑ g → g ⊑ h → f ⊑ h :=
   FuncRuns.isRefinedBy_trans Core.Obs.isRefinedBy_trans
 
 /-- Refinement of M0 functions is reflexive. -/
-theorem Core.funcRuns_isRefinedBy_refl (f : FuncRuns A Core.Obs) : f ⊑ f :=
+theorem Core.funcRuns_isRefinedBy_refl (f : Core.FuncRuns ts) : f ⊑ f :=
   FuncRuns.isRefinedBy_refl Core.Obs.isRefinedBy_refl f
 
 end Fir

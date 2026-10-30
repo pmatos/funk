@@ -18,6 +18,7 @@ import Fir.Execution.Refinement
 import Fir.Execution.Propagation
 import Fir.Core.Values
 import Fir.Core.Poison
+import Fir.Core.Unlawful
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

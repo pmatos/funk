@@ -16,8 +16,9 @@ _Poison is a value._ Some failures do not stop the run. An `add nsw` that
 overflows produces poison, and the run goes on. Poison flows into the ops
 that use it and, by default, makes their results poison too. Nothing goes
 wrong unless poison reaches a place where a defined value is needed: a
-branch condition, or a divisor. Poison is deferred UB: a failure that is
-recorded in a value, and that becomes UB only if it is used in such a place.
+branch condition, a divisor, or the dividend of `sdiv` or `srem` by `-1`.
+Poison is deferred UB: a failure that is recorded in a value, and that
+becomes UB only if it is used in such a place.
 
 # Why defer at all
 
@@ -52,13 +53,19 @@ No, for the ops whose failure the hardware cannot defer.
   emits. As immediate UB, a division by zero allows the trap, and a
   division is never moved to where its divisor may be zero. The same holds
   for `INT_MIN / -1`, which traps too. A poison divisor is UB for the same
-  reason: it might be zero.
+  reason: it might be zero. And with a divisor of `-1`, a poison dividend
+  is UB: it might be `INT_MIN`. So a backend can emit a bare `idiv` for
+  `sdiv` and `srem`, with no guard. Both follow LLVM's principle: a poison
+  operand is immediate UB wherever some value it could take would be UB.
 * _A branch on poison._ A branch produces no value that could be poison. It
   only chooses which block runs next, and the run must go somewhere. So the
   choice is not between UB and poison: it is between UB and letting the
   branch go either way. The next section says why fir chooses UB.
 
-And poison cannot become UB either: that would undo the deferral above.
+Nor can an op that propagates poison turn a poison operand into UB unless
+some defined value in its place would be UB: that would undo the deferral
+above. Poison becomes UB only where a defined value is needed: a divisor, a
+dividend with divisor `-1`, or a branch condition.
 
 # Why a branch on poison is UB, not a free choice
 

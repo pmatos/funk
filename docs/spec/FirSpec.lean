@@ -89,6 +89,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Poison "Core poison classes" (level := 2)}
 
+{includeLiterate "." Fir.Core.Unlawful "Semantics the obligations reject" (level := 2)}
+
 # Text format
 
 {includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}

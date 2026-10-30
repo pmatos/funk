@@ -23,10 +23,16 @@ records them:
 * A broken flag (`nuw`, `nsw`, `exact`) gives poison.
 * A shift amount `≥ N` gives poison, and so does a poison shift amount.
 * A zero divisor is immediate UB, and so is a poison divisor, because it
-  might be zero. So is `sdiv` or `srem` of the signed minimum by `-1`.
-  Otherwise, a poison dividend gives poison.
+  might be zero. `sdiv` or `srem` by `-1` is immediate UB when the dividend
+  is the signed minimum, and when it is poison, because it might be the
+  signed minimum. Otherwise, a poison dividend gives poison.
 * `select` with a poison condition gives poison.
 * A branch on poison is immediate UB.
+
+The UB of a poison divisor, and of a poison dividend by `-1`, follows from
+one principle of LLVM's reference (LangRef, "Poison Values"; Alive2's
+`div_ub` agrees): a poison operand is immediate UB wherever some value it
+could take would be UB.
 -/
 
 namespace Fir.Core
@@ -70,11 +76,13 @@ Arithmetic. The result wraps modulo `2^N` unless a flag says otherwise:
   with the flags `f`.
 * `sdiv w exact`, `udiv w exact`: signed and unsigned division, rounding
   towards zero. With `exact`, a non-zero remainder gives poison. A zero or
-  poison divisor is immediate UB, and so is `sdiv` of the signed minimum by
-  `-1`. Otherwise a poison dividend gives poison.
+  poison divisor is immediate UB. `sdiv` by `-1` is immediate UB when the
+  dividend is the signed minimum or poison. Otherwise a poison dividend
+  gives poison.
 * `srem w`, `urem w`: the remainders of `sdiv` and `udiv`, with the sign of
   the dividend for `srem`. They have the same UB and poison as the
-  divisions.
+  divisions: `srem` by `-1` is immediate UB when the dividend is the signed
+  minimum or poison, and `urem` is UB only on a zero or poison divisor.
 
 Bitwise ops and shifts:
 

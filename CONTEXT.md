@@ -124,14 +124,17 @@ _Avoid_: op enum
 **poison**:
 fir's one deferred-UB value, produced for example when an `add nsw` overflows.
 A poison operand gives a poison result unless the op says otherwise. Using
-poison is not UB in itself, but some uses are, such as branching on it or
-dividing by it.
+poison is not UB in itself, but some uses are: those where some value it
+could take would be UB, such as branching on it, dividing by it, or dividing
+it by `-1` with `sdiv` or `srem`, since it could be the signed minimum.
 _Avoid_: undef (fir has none)
 
 **poison class**:
 How an op treats a poison operand. A propagating op returns only poison from
-it, which each such op proves in Lean; an exception, such as `select` or
-`freeze`, states its own rule. Every op of every dialect declares its class.
+it, and is UB on it only where a defined value in its place could be UB too;
+each such op proves both in Lean. An exception, such as `select` or `freeze`,
+states its own rule. Every op of every dialect declares its class, and every
+op is total and monotone: refining its operands refines what it does.
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed
@@ -149,9 +152,10 @@ outcomes are a value, poison, UB with a reason, or fuel exhausted. A function
 may return any number of values.
 
 **stuck run**:
-A run of the interpreter on an invalid module that reaches a case validation
-rules out, such as an undefined value. It ends with an error outside the
-semantics, never with UB or no outcome. A valid module never gets stuck.
+A run of the interpreter on an invalid module with a path that reaches a
+case validation rules out, such as an undefined value. That path ends stuck,
+an error outside the outcomes, never UB. Stuck is per path, since it can
+depend on choices. No path of a valid module's runs is ever stuck.
 
 **observation**:
 What an observer sees of a run that returns. Each dialect supplies its

@@ -33,7 +33,8 @@ inductive Outcome (O : Type) where
   | fuelExhausted
   deriving Repr, DecidableEq
 
-/-- How a run ends when it does not hit UB: it returns, or runs out of fuel. -/
+/-- How a run ends when it neither hits UB nor gets stuck: it returns, or runs
+out of fuel. -/
 inductive Result (O : Type) where
   | ret (o : O)
   | fuelExhausted
@@ -72,13 +73,29 @@ instance : MonadChoice SetM where
 instance : MonadUB SetM where
   ub r := fun e => e = .ub r
 
-/-- The outcomes of a run, as a set. -/
-def outcomes (s : SetM (Result O)) : Outcome O → Prop
-  | .ret o => s (.ok (.ret o))
-  | .ub r => s (.ub r)
-  | .fuelExhausted => s (.ok .fuelExhausted)
-
 end SetM
+
+/-- Why a path of a run is stuck: it reached a case that validation rules
+out. The reason is for people. -/
+structure Stuck where
+  reason : String
+  deriving Repr, DecidableEq
+
+/-- A run at one fuel budget: the set of the ways it may end. Each path ends
+with a result, with UB, or stuck. It is what the interpreter computes in
+`ExceptT Stuck SetM`. -/
+abbrev Run (O : Type) : Type := SetM (Except Stuck (Result O))
+
+example (O : Type) : ExceptT Stuck SetM (Result O) = Run O := rfl
+
+/-- The outcomes of a run, as a set. A stuck path is not an outcome. -/
+def Run.outcomes (s : Run O) : Outcome O → Prop
+  | .ret o => s (.ok (.ok (.ret o)))
+  | .ub r => s (.ub r)
+  | .fuelExhausted => s (.ok (.ok .fuelExhausted))
+
+/-- A path of the run is stuck. -/
+def Run.IsStuck (s : Run O) : Prop := ∃ st, s (.ok (.error st))
 
 /-!
 # Observable behaviour
@@ -102,15 +119,18 @@ never ends. The core dialect's one choice, `choose w`, has `2^w` options. An
 effect that a dialect adds must keep this assumption, or come with its own
 definition of divergence.
 
-Execution is defined for valid modules only: a run in `SetM` has no way to
-end other than a return, UB or fuel exhaustion. The executable interpreter
-of #10 also runs on modules that have not been validated. It wraps each run
-in an error layer outside `SetM`, such as `Except` with a reason. A run that
-reaches a case that validation rules out, such as an undefined value or an
-operand of the wrong type, ends in that layer: it is _stuck_, and `fir-ref`
-reports it as such. A stuck run is never an empty set of outcomes, and never
-UB. A valid module never gets stuck (ADR-2026-10-29-2030): its runs have an
-outcome at every budget, the progress obligation of the next section.
+Execution gives valid modules their meaning, but the executable interpreter
+of #10 also runs modules that have not been validated. So a run computes in
+`ExceptT Stuck SetM`: each of its paths ends with a result, with UB, or
+_stuck_, when it reaches a case that validation rules out, such as an
+undefined value or an operand of the wrong type. Stuck is part of each
+path, not a layer around the whole set, because which paths get stuck can
+depend on choices: in a module that has not been validated, `freeze` and
+then `cond_br` can lead to a block that uses an undefined value on one path
+only. A stuck path is not an outcome, and never UB; `fir-ref` reports it as
+stuck. A valid module never gets stuck (ADR-2026-10-29-2030): no path of
+its runs is stuck, and they have an outcome at every budget. These are the
+no-stuck and progress obligations of the next section.
 -/
 
 /-- A behaviour: a set of outcomes. -/
@@ -121,7 +141,7 @@ The observable behaviour of a run that takes fuel. `run n` is the run with
 budget `n`, in the set monad. #10 defines the run of a function on its
 arguments, and its observable behaviour is this set.
 -/
-def observable (run : Nat → SetM (Result O)) : Behaviour O
+def observable (run : Nat → Run O) : Behaviour O
   | .ret o => ∃ n, (run n).outcomes (.ret o)
   | .ub r => ∃ n, (run n).outcomes (.ub r)
   | .fuelExhausted => ∀ n, (run n).outcomes .fuelExhausted
