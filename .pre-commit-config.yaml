@@ -45,6 +45,22 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/check-rust\.sh$)
+      # fir-ref's checks build lean/ through build-spec.sh --lean, under its
+      # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
+      - id: fir-ref-test
+        name: The Lean tests pass, and fir-ref round-trips the corpus
+        entry: scripts/check-fir-ref.sh
+        args: [test]
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref)\.sh$)
+      - id: fir-round-trip
+        name: Lean reprints the texts that Rust prints, byte for byte
+        entry: scripts/check-fir-ref.sh
+        args: [round-trip]
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec|check-fir-ref)\.sh$)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -1,5 +1,6 @@
 import Fir.Core.Text
 import Fir.Text.Print
+import Fir.Text.Decode
 
 /-!
 # An example
@@ -154,5 +155,16 @@ items.
 
 #guard (Module.print (d := CoreDialect) ⟨[], []⟩) == "locs {\n}\n" &&
   sumModule.print.endsWith "\n"
+
+/-!
+# Reading it back
+
+The parser reads the text of the module, and printing what it reads gives
+the same text, byte for byte.
+-/
+
+#guard match parse (d := CoreDialect) sumModule.print with
+  | .ok m => m.print == sumModule.print
+  | .error _ => false
 
 end Fir.Example

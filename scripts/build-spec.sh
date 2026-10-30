@@ -1,19 +1,28 @@
 #!/usr/bin/env bash
 # Build fir's Lean package and render the spec document (ADR-2026-10-29-2135).
 # Usage: scripts/build-spec.sh [--update] [OUTPUT_DIR]
+#        scripts/build-spec.sh --lean
 # The rendered HTML goes to OUTPUT_DIR, by default docs/spec/_out. Every page
 # names the commit it was built from (ADR-2026-10-30-1046).
 # --update first runs `lake update` in docs/spec/, under the same guards, for
 # a toolchain bump. Never run a bare `lake update` there.
+# --lean builds only the Lean package in lean/: the spec's definitions, the
+# fir-ref executable and the Lean tests, without the document
+# (ADR-2026-10-30-1250).
 set -euo pipefail
 
 update=false
+lean_only=false
 if [[ "${1:-}" == --update ]]; then
     update=true
     shift
+elif [[ "${1:-}" == --lean ]]; then
+    lean_only=true
+    shift
 fi
-if [[ $# -gt 1 || "${1:-}" == -* ]]; then
+if [[ $# -gt 1 || "${1:-}" == -* || ( "$lean_only" == true && $# -gt 0 ) ]]; then
     echo "Usage: $0 [--update] [OUTPUT_DIR]" >&2
+    echo "       $0 --lean" >&2
     exit 2
 fi
 
@@ -62,6 +71,9 @@ fi
 
 cd "$repo_root/lean"
 lake build
+if [[ "$lean_only" == true ]]; then
+    exit 0
+fi
 
 cd "$repo_root/docs/spec"
 lake build

@@ -30,7 +30,8 @@ The chapters follow the WebAssembly specification:
   refinement relation that defines correctness, and how each op treats
   poison.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
-  the printer that fixes its layout, and the round-trip properties.
+  the printer that fixes its layout, the round-trip properties, and the
+  parser.
 
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every
@@ -102,5 +103,13 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Text.Print "The canonical printer" (level := 2)}
 
 {includeLiterate "." Fir.Text.RoundTrip "Round trips" (level := 2)}
+
+{includeLiterate "." Fir.Text.Lex "The parser" (level := 2)}
+
+{includeLiterate "." Fir.Text.Read "Reading the grammar" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadLocs "Reading the location table and the module" (level := 2)}
+
+{includeLiterate "." Fir.Text.Decode "Decoding" (level := 2)}
 
 {includeLiterate "." Fir.Text.Example "Example" (level := 2)}

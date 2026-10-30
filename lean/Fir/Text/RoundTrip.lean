@@ -26,9 +26,10 @@ is `ValidIsWellFormed`, an obligation of every dialect. Validation checks
 the names, labels, operand types, successors and location references of a
 module, and the writability laws of `LawfulDialectText` cover what the
 dialect writes, so the obligation holds for every lawful dialect: the
-theorem `validIsWellFormed`, below. The parser is written by #10. #11
-proves the first property, and the laws of `LawfulDialectText` for the
-core dialect, which give `ValidIsWellFormed` for it.
+theorem `validIsWellFormed`, below. The parser is `Fir.parse`, in the
+sections that follow. #11 proves the first property for it, and the laws
+of `LawfulDialectText` for the core dialect, which give `ValidIsWellFormed`
+for it.
 
 The conditions look at every block and op of a function, at any depth: the
 blocks of the regions of its ops too. A valid function's ops own no region,

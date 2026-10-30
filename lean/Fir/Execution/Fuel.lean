@@ -5,7 +5,8 @@ import Fir.Execution.Behaviour
 
 Three obligations tie the interpreter's runs to the behaviours above. #10
 defines the run of each function of a valid module on each argument vector
-of its parameter types, and proves all three for it.
+of its parameter types. It proves all three for every valid function whose
+ops are in its tracer subset: `const`, `add` without flags, and `ret`.
 
 * _Fuel monotonicity_ (`FuelMonotone`). More fuel never changes how a run
   that returns or hits UB ends. A return or UB that a run reaches at some
@@ -28,9 +29,10 @@ of its parameter types, and proves all three for it.
   function's run ends in an outcome.
 
 Ticket #10 proves progress and the no-stuck obligation for every valid
-function and every argument vector. Each ticket that adds core ops, from
-ticket #14 to #20, keeps both for the whole core dialect, and #14 keeps
-them when it adds the `fir-ref` modes.
+function whose ops are in its tracer subset, and every argument vector. Each ticket that
+adds core ops, from ticket #14 to #20, keeps both as it adds its ops, so
+that once the last of them lands they hold for every valid function of the
+core dialect. #14 keeps them when it adds the `fir-ref` modes.
 -/
 
 namespace Fir

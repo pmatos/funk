@@ -16,7 +16,12 @@ Build the Lean code and render the document with:
 ```sh
 scripts/build-spec.sh            # writes docs/spec/_out/html-multi/index.html
 scripts/build-spec.sh --update   # for a toolchain bump: lake update, then build
+scripts/build-spec.sh --lean     # only lean/: the spec's definitions, fir-ref and the Lean tests
 ```
+
+The last builds `lean/.lake/build/bin/fir-ref`, the reference interpreter's
+executable, and runs the Lean tests in `lean/FirTest/`
+(ADR-2026-10-30-1250).
 
 The toolchain, the dependencies and the build are recorded in
 ADR-2026-10-29-2135. The rendered document is a build output and is not

@@ -125,6 +125,11 @@ are on `main`:
   and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
   prints fir in its canonical form, and `funk verify` checks it. Both report
   as text, or as JSON with `--json`.
+- The Lean parser, a section of the spec, and the first command of the
+  reference interpreter's executable, `fir-ref fmt`
+  ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
+  op of every dialect. Lean reprints what Rust prints, byte for byte, on the
+  shared texts and on modules from the Rust generator.
 
 These parts of M0 do not exist yet:
 
@@ -133,7 +138,8 @@ These parts of M0 do not exist yet:
   `add` and `ret`. One issue for each group of related ops,
   [#14](https://github.com/pmatos/funk/issues/14) to
   [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
-- The Lean parser and the reference interpreter, `fir-ref`.
+- The validation check behind `fir-ref validate`, and the interpreter
+  behind `fir-ref run`.
 - The proof that parsing a printed module gives the module back.
 - In Rust, the core ops other than `const`, `add` and `ret`, and the x86-64
   backend.
@@ -145,7 +151,7 @@ The epic's sub-issues list the open work in full.
 
 | Path | Contents |
 | --- | --- |
-| `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose |
+| `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose, `fir-ref` and the Lean tests |
 | `docs/spec/` | The Lean package `firspec`: the Verso document that renders the spec |
 | `docs/roadmap.md` | The roadmap: milestones M0 to M6 |
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
@@ -176,6 +182,8 @@ cd funk
 ```
 
 Open `docs/spec/_out/html-multi/index.html` in a browser to read the spec.
+The build also makes `lean/.lake/build/bin/fir-ref` and runs the Lean tests;
+`./scripts/build-spec.sh --lean` does only that.
 elan uses the Lean version that `lean/lean-toolchain` pins. The first build in
 a clone also builds Verso, so it takes longer. The rendered spec is a build
 output, and git ignores it. [`docs/spec/README.md`](docs/spec/README.md) has
