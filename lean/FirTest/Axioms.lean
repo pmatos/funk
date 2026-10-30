@@ -4,7 +4,7 @@ import Lean.Util.CollectAxioms
 
 /-!
 The check that every declaration of `lean/` is trusted (ADR-2026-10-30-1452).
-`#check_axioms` names the root modules of the packages to check, and is run
+`#check_axioms` names the root modules of the libraries to check, and is run
 by `FirTest`'s root module, which imports every module that Lake builds. It
 fails the build when a declaration of one of their modules:
 
@@ -42,7 +42,7 @@ def untrusted (env : Environment) (n : Name) (info : ConstantInfo) :
 /-- `#check_axioms R₁ R₂ …` checks every declaration of every imported module
 whose name starts with one of the roots `Rᵢ`, and fails with each one that is
 not trusted. It also fails when a root has no declaration, so that a renamed
-package is not skipped in silence. -/
+library is not skipped in silence. -/
 syntax (name := checkAxioms) "#check_axioms " ident+ : command
 
 @[command_elab checkAxioms]

@@ -1,4 +1,4 @@
-# The Lean build fails on a declaration that uses a non-standard axiom, or is unsafe, partial or implemented by other code
+# The Lean build fails on sorry, non-standard axioms, unsafe, partial and implemented_by
 
 Status: accepted
 
@@ -33,13 +33,13 @@ Facts, checked on 2026-10-30 with Lean `v4.35.0`:
 - `FirTest/Axioms.lean` defines the command `#check_axioms`. The root of
   `FirTest` imports every module of `lean/` and runs
   `#check_axioms Fir FirRef FirTest`. It fails, naming each declaration,
-  when a declaration of those packages:
+  when a declaration of those libraries:
   - depends on an axiom other than `propext`, `Classical.choice` and
     `Quot.sound`;
   - is `unsafe`, or is an opaque constant with an `_unsafe_rec`, which is
     what `partial` makes;
   - has an `implemented_by` attribute.
-- It also fails when a root has no declaration, so that a renamed package
+- It also fails when a root has no declaration, so that a renamed library
   is not skipped in silence.
 - The check runs whenever Lake builds `FirTest`: in the `fir-spec` hook,
   through `scripts/build-spec.sh`, and in every script that calls
@@ -48,7 +48,7 @@ Facts, checked on 2026-10-30 with Lean `v4.35.0`:
 - `Attr`'s `Repr` instance is written by structural recursion, not derived.
 - `FirTest/Axioms.lean` imports Lean's own modules (`Lean.Util.CollectAxioms`
   and the elaborator). They are part of the toolchain, not a dependency of
-  the package.
+  the package `fir`.
 
 ## Alternatives
 
