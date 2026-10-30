@@ -47,7 +47,7 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " is not reachable from the entry"))) ++
   (repeats (f.blocks.map (·.label))).map (fun l =>
     { message := "label " ++ labelRef l ++ " names more than one block", func := f.name,
-      block := l }) ++
+      block := l, loc := (t.blocks[l]?.bind (·.body.head?)).map (·.loc) }) ++
   (repeats (defs.map (·.1))).map (fun x =>
     f.problem ("value " ++ valueRef x ++ " is defined more than once")) ++
   defs.filterMap (fun x => if isName x.1 then none else
@@ -61,7 +61,8 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
     some (f.problem ("the type of " ++ valueRef x.1 ++ " is not valid"))) ++
   f.blocks.filterMap (fun b => if b.body ≠ [] then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
-  f.blocks.flatMap (fun b => b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b i o)
+  f.blocks.flatMap (fun b => let n := b.body.length
+    b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b n i o)
 
 /-- The problems of a function, in the context of its module. -/
 def Func.problems (lk : Lookup d) (f : Func d) : List Problem :=
@@ -90,7 +91,8 @@ theorem Func.reached_all (f : Func d) :
   forall_congr' fun b => imp_congr_right fun hb => Func.reachedIn_iff ⟨b, hb, rfl⟩
 
 theorem Func.ops_all {lk : Lookup d} {ctx : ModuleContext d} (f : Func d) (h : lk.Agrees ctx) :
-    (∀ b ∈ f.blocks, ∀ p ∈ b.body.zipIdx, opProblems lk f (f.tables f.allBlocks) b p.2 p.1 = []) ↔
+    (∀ b ∈ f.blocks, ∀ p ∈ b.body.zipIdx,
+      opProblems lk f (f.tables f.allBlocks) b b.body.length p.2 p.1 = []) ↔
       ∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o := by
   refine forall_congr' fun b => imp_congr_right fun hb => ?_
   constructor

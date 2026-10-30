@@ -64,7 +64,8 @@ A broken rule: what is wrong, in words for people, and where it is. `func` is
 the symbol of the function, `block` the label of the block, `op` the index
 of the op in its block and `loc` the op's location reference, each when the
 rule is about one. A rule about a block has the location reference of its
-first op.
+first op; a rule about a label that names more than one block has that of
+the first such block.
 -/
 structure Problem where
   message : String

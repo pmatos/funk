@@ -209,12 +209,14 @@ variable [DialectSignature d] [DialectValidation d] [DecidableDialectValidation 
 The check of an op follows `Func.OpValid`, rule by rule, in its order.
 -/
 
-/-- The problems of the op `o` at index `i` of block `b` of function `f`. -/
-def opProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (i : Nat)
+/-- The problems of the op `o` at index `i` of block `b` of function `f`,
+given `n`, the number of ops of `b`, which the caller counts once per
+block. -/
+def opProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (n : Nat) (i : Nat)
     (o : Operation d) : List Problem :=
   let at_ (message : String) : Problem :=
     { message, func := f.name, block := b.label, op := i, loc := o.loc }
-  let last := i + 1 == b.body.length
+  let last := i + 1 == n
   (if o.regions.isEmpty then [] else [at_ "the op owns a region: no op may own one yet"]) ++
   (if sameLists (o.operands.map (t.scope[·]?)) ((sig o.op).map some) then [] else
     [at_ (if o.operands.length = (sig o.op).length then
@@ -258,7 +260,7 @@ theorem or_isEmpty_eq_true {a : Bool} {l : List Succ} :
 function. -/
 theorem opProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d} {b : Block d}
     {i : Nat} {o : Operation d} (h : lk.Agrees ctx) (hb : b ∈ f.blocks) :
-    opProblems lk f (f.tables f.allBlocks) b i o = [] ↔ f.OpValid ctx b i o := by
+    opProblems lk f (f.tables f.allBlocks) b b.body.length i o = [] ↔ f.OpValid ctx b i o := by
   have hl : ∃ b' ∈ f.blocks, b'.label = b.label := ⟨b, hb, rfl⟩
   simp only [opProblems, Func.OpValid, List.append_eq_nil_iff, ite_nil_eq_nil, sameLists_iff,
     Func.scope_fun, List.isEmpty_iff, beq_iff_eq, eq_beq_iff, or_isEmpty_eq_true,

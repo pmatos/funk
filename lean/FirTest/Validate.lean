@@ -102,6 +102,9 @@ def report (t : String) : String × UInt32 := FirRef.validateBytes "t.fir" t.toU
   ["label ^e names more than one block"]
 #guard messages (moduleOf [withBlocks [retBlock "e", retBlock "e"]]) ==
   ["label ^e names more than one block"]
+#guard (moduleOf [withBlocks [⟨"e", [], [op [] (.ret []) [] 3]⟩,
+    ⟨"e", [], [op [] (.ret []) [] 5]⟩]] [(3, .unknown), (5, .unknown)]).problems.map (·.loc)
+  == [some 3]
 #guard messages (moduleOf [withBlocks [retBlock "e", retBlock "b"]]) ==
   ["block ^b is not reachable from the entry"]
 #guard messages (moduleOf [withBlocks [⟨"e", [], [op [] .br [] 0 [⟨"b", []⟩]]⟩, retBlock "b"]])
