@@ -115,6 +115,16 @@ def expect (tok : Tok) (expected : String) : (ts : List Token) → Read Unit ts
 def keyword (kw : String) (ts : List Token) : Read Unit ts :=
   expect (.word kw) ("`" ++ kw ++ "`") ts
 
+/-- Reads `, x` with `item`, as long as a comma follows: the rest of a list
+whose first element is read. -/
+def readMore (item : (ts : List Token) → Read α ts) : (ts : List Token) → Read (List α) ts
+  | ⟨.comma, _⟩ :: rest => do
+    let (x, ⟨r, hr⟩) ← item rest
+    let (xs, ⟨r', hr'⟩) ← readMore item r
+    pure (x :: xs, ⟨r', by simp; omega⟩)
+  | ts => .ok ([], .here ts)
+termination_by ts => ts.length
+
 /-!
 # Attributes and types
 -/
@@ -162,15 +172,6 @@ def readType : (ts : List Token) → Read (Attr × TextPos) ts
   | ⟨.word w, p⟩ :: rest => .ok ((.word w, p), ⟨rest, Nat.le_succ _⟩)
   | ts => fail ts "a type"
 
-/-- Reads `, type` as long as a comma follows. -/
-def readMoreTypes : (ts : List Token) → Read (List (Attr × TextPos)) ts
-  | ⟨.comma, _⟩ :: rest => do
-    let (t, ⟨r, hr⟩) ← readType rest
-    let (ts', ⟨r', hr'⟩) ← readMoreTypes r
-    pure (t :: ts', ⟨r', by simp; omega⟩)
-  | ts => .ok ([], .here ts)
-termination_by ts => ts.length
-
 /-- Whether a token starts an attribute. -/
 def Tok.startsAttr : Tok → Bool
   | .word _ | .int _ | .str _ | .sym _ => true
@@ -198,23 +199,18 @@ def readDefType (n : Name) (p : TextPos) (ts : List Token) : Read SDef ts := do
   let ((ty, tp), b) ← readType a.1
   pure (⟨n, p, ty, tp⟩, a.then b)
 
-/-- Reads `, %x: T` as long as a comma follows. -/
-def readMoreDefs : (ts : List Token) → Read (List SDef) ts
-  | ⟨.comma, _⟩ :: ⟨.value n, p⟩ :: rest => do
-    let (d, ⟨r, hr⟩) ← readDefType n p rest
-    let (ds, ⟨r', hr'⟩) ← readMoreDefs r
-    pure (d :: ds, ⟨r', by simp; omega⟩)
-  | ⟨.comma, _⟩ :: rest => fail rest "a value definition, `%x: type`"
-  | ts => .ok ([], .here ts)
-termination_by ts => ts.length
-
-/-- Reads one or more definitions, separated by commas. -/
-def readDefs : (ts : List Token) → Read (List SDef) ts
+/-- Reads a definition, `%x: T`. -/
+def readDef : (ts : List Token) → Read SDef ts
   | ⟨.value n, p⟩ :: rest => do
     let (d, a) ← readDefType n p rest
-    let (ds, b) ← readMoreDefs a.1
-    pure (d :: ds, (a.then b).next)
+    pure (d, a.next)
   | ts => fail ts "a value definition, `%x: type`"
+
+/-- Reads one or more definitions, separated by commas. -/
+def readDefs (ts : List Token) : Read (List SDef) ts := do
+  let (d, a) ← readDef ts
+  let (ds, b) ← readMore readDef a.1
+  pure (d :: ds, a.then b)
 
 /-- Reads the values passed to a successor, after its `(`, through its
 `)`. -/
@@ -237,15 +233,6 @@ def readSucc : (ts : List Token) → Read Succ ts
   | ⟨.label l, _⟩ :: rest => .ok (⟨l, []⟩, ⟨rest, Nat.le_succ _⟩)
   | ts => fail ts "a successor, such as ^next"
 
-/-- Reads `, ^succ` as long as a comma follows. -/
-def readMoreSuccs : (ts : List Token) → Read (List Succ) ts
-  | ⟨.comma, _⟩ :: rest => do
-    let (s, ⟨r, hr⟩) ← readSucc rest
-    let (ss, ⟨r', hr'⟩) ← readMoreSuccs r
-    pure (s :: ss, ⟨r', by simp; omega⟩)
-  | ts => .ok ([], .here ts)
-termination_by ts => ts.length
-
 /-- Reads `, %x` as long as a comma and a value follow, then the
 successors. -/
 def readMoreOperands : (ts : List Token) → Read (List (Name × TextPos) × List Succ) ts
@@ -253,7 +240,7 @@ def readMoreOperands : (ts : List Token) → Read (List (Name × TextPos) × Lis
     let ((vs, ss), ⟨r, hr⟩) ← readMoreOperands rest
     pure (((v, p) :: vs, ss), ⟨r, by simp; omega⟩)
   | ts => do
-    let (ss, a) ← readMoreSuccs ts
+    let (ss, a) ← readMore readSucc ts
     pure (([], ss), a)
 termination_by ts => ts.length
 
@@ -265,7 +252,7 @@ def readOperands : (ts : List Token) → Read (List (Name × TextPos) × List Su
     pure (((v, p) :: vs, ss), a.next)
   | ⟨.label l, p⟩ :: rest => do
     let (s, a) ← readSucc (⟨.label l, p⟩ :: rest)
-    let (ss, b) ← readMoreSuccs a.1
+    let (ss, b) ← readMore readSucc a.1
     pure (([], s :: ss), a.then b)
   | ts => .ok (([], []), .here ts)
 
@@ -313,7 +300,7 @@ termination_by ts => 2 * ts.length
 value. -/
 def readOpWithResults (n : Name) (p : TextPos) (ts : List Token) : Read SOp ts := do
   let (d, ⟨r₁, h₁⟩) ← readDefType n p ts
-  let (ds, ⟨r₂, h₂⟩) ← readMoreDefs r₁
+  let (ds, ⟨r₂, h₂⟩) ← readMore readDef r₁
   match h : r₂ with
   | ⟨.eq, _⟩ :: ⟨.word w, wp⟩ :: rest => do
     let (o, ⟨r, hr⟩) ← readOpBody (d :: ds) w wp rest
@@ -374,7 +361,7 @@ def readItem (kind : String) (p : TextPos) (ts : List Token) : Read SItem ts :=
     let (results, ⟨r₄, h₄⟩) ← (match r₃ with
       | ⟨.arrow, _⟩ :: rest' => do
         let (t, a) ← readType rest'
-        let (more, b) ← readMoreTypes a.1
+        let (more, b) ← readMore readType a.1
         pure (t :: more, (a.then b).next)
       | ts' => pure ([], .here ts') : Read (List (Attr × TextPos)) r₃)
     let (attrs, ⟨r₅, h₅⟩) ← readAttrs r₄

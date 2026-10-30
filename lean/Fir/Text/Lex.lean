@@ -74,8 +74,8 @@ def utf8Len (cs : List Char) : Nat := (cs.map Char.utf8Size).sum
 
 /-- How a message names a character: `U+000D`. -/
 def codePoint (c : Char) : String :=
-  let digits := (Nat.toDigits 16 c.toNat).map Char.toUpper
-  "U+" ++ String.ofList (List.replicate (4 - digits.length) '0' ++ digits)
+  let digits := (hex c.toNat).toUpper
+  "U+" ++ "".pushn '0' (4 - digits.length) ++ digits
 
 /-- An error at a position. -/
 def errorAt (p : TextPos) (reason : String) : Except ParseError α := .error ⟨p, reason⟩
@@ -96,10 +96,6 @@ def isHexDigit (c : Char) : Bool := c.isDigit || ('a' ≤ c && c ≤ 'f')
 def hexValue (ds : List Char) : Nat :=
   ds.foldl (fun n c => 16 * n + if c.isDigit then c.toNat - '0'.toNat else c.toNat - 'a'.toNat + 10) 0
 
-/-- A number that is a Unicode scalar value: a code point that is not a
-surrogate. -/
-def isScalar (n : Nat) : Bool := n < 0xd800 || (0xdfff < n && n < 0x110000)
-
 /-!
 # Strings
 
@@ -115,9 +111,9 @@ def unicodeEscape (digits : List Char) (p : TextPos) : Except ParseError Char :=
   let n := hexValue digits
   let shown := "\\u{" ++ String.ofList digits ++ "}"
   if digits.isEmpty then errorAt p "\\u{ must be followed by lowercase hexadecimal digits and }"
-  else if !isScalar n then errorAt p (shown ++ " is not a Unicode scalar value")
+  else if h : ¬ n.isValidChar then errorAt p (shown ++ " is not a Unicode scalar value")
   else
-    let c := Char.ofNat n
+    let c := Char.ofNatAux n (Classical.not_not.mp h)
     if digits.length > 1 && digits.head? = some '0' then
       errorAt p (shown ++ " has a leading zero: write \\u{" ++ hex n ++ "}")
     else if c = '\n' then errorAt p (codePoint c ++ " is written \\n in a string")

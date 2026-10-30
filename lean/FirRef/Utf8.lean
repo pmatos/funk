@@ -52,7 +52,7 @@ def parseBytes {d : Dialect} [DialectText d] (b : ByteArray) : Except ParseError
   | some text => parse text
   | none =>
     let n := validUpTo b 0
-    let valid := (List.range n).map fun k => b[k]!
+    let valid := (b.extract 0 n).toList
     let line := (valid.filter (· = 10)).length + 1
     let lineStart := match valid.reverse.findIdx? (· = 10) with
       | some k => n - k

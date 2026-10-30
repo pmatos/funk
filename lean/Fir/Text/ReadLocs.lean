@@ -22,15 +22,6 @@ def readLocRef : (ts : List Token) → Read LocRef ts
   | ⟨.locRef r, _⟩ :: rest => .ok (r, ⟨rest, Nat.le_succ _⟩)
   | ts => fail ts "a location reference, such as @0"
 
-/-- Reads `, @N` as long as a comma follows. -/
-def readMoreLocRefs : (ts : List Token) → Read (List LocRef) ts
-  | ⟨.comma, _⟩ :: rest => do
-    let (r, ⟨a, ha⟩) ← readLocRef rest
-    let (rs, ⟨b, hb⟩) ← readMoreLocRefs a
-    pure (r :: rs, ⟨b, by simp; omega⟩)
-  | ts => .ok ([], .here ts)
-termination_by ts => ts.length
-
 /-- Reads a source range after its file: `:l:c to l:c`. -/
 def readRange (file : String) (ts : List Token) : Read Location ts := do
   let ((), a) ← expect .colon ": after the file" ts
@@ -59,7 +50,7 @@ def readLocArgs (kind : String) (ts : List Token) : Read Location ts := do
       | ⟨.rparen, p⟩ :: tl => pure (.fused [], .here (⟨.rparen, p⟩ :: tl))
       | ts' => do
         let (r, a) ← readLocRef ts'
-        let (rs, b) ← readMoreLocRefs a.1
+        let (rs, b) ← readMore readLocRef a.1
         pure (.fused (r :: rs), a.then b) : Read Location ts)
     | _ => do
       let (src, a) ← readLocRef ts
