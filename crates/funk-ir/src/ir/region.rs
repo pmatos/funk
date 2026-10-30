@@ -94,6 +94,34 @@ fn op_head(o: &Op) -> Op {
     }
 }
 
+/// Blocks built top down, as the parser reads them and `Region::clone`
+/// copies them: each op goes to the last block, and the regions of the last
+/// op are built in the nest's inner lists.
+impl Nest<Block> {
+    /// Adds `op` at the end of the last block.
+    pub(crate) fn push_op(&mut self, op: Op) {
+        let block = self.last_mut().expect("an op is in a block");
+        block.ops.push(op);
+    }
+
+    /// The last op of the last block, whose regions are built next.
+    pub(crate) fn last_op(&mut self) -> &mut Op {
+        let block = self.last_mut().expect("an op is in a block");
+        block.ops.last_mut().expect("the block holds an op")
+    }
+
+    /// Ends the region being built and adds it to the op that owns it.
+    /// Returns false, and does nothing, for the outermost blocks.
+    pub(crate) fn close_region(&mut self) -> bool {
+        let Some((blocks, owner)) = self.close() else {
+            return false;
+        };
+        let op = owner.ops.last_mut().expect("the block holds the op");
+        op.regions.push(Region { blocks });
+        true
+    }
+}
+
 impl Clone for Region {
     fn clone(&self) -> Region {
         let mut blocks = Nest::new(self.blocks.len());
@@ -101,15 +129,9 @@ impl Clone for Region {
             match step {
                 Step::Enter(Part::Region(r)) => blocks.open(r.blocks.len()),
                 Step::Enter(Part::Block(b)) => blocks.push(block_head(b)),
-                Step::Enter(Part::Op(o)) => {
-                    let block = blocks.last_mut().expect("an op is in a block");
-                    block.ops.push(op_head(o));
-                }
+                Step::Enter(Part::Op(o)) => blocks.push_op(op_head(o)),
                 Step::Leave(Part::Region(_)) => {
-                    if let Some((inner, owner)) = blocks.close() {
-                        let op = owner.ops.last_mut().expect("the block holds the op");
-                        op.regions.push(Region { blocks: inner });
-                    }
+                    blocks.close_region();
                 }
                 Step::Leave(_) => {}
             }

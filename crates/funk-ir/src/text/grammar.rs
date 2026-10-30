@@ -16,7 +16,7 @@ use super::lexer::{Lexer, Tok, Token};
 use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
 use crate::ir::tree::Nest;
-use crate::ir::{Attr, Block, Def, LocRef, Op, Region, Succ, Type};
+use crate::ir::{Attr, Block, Def, LocRef, Op, Succ, Type};
 
 /// Reads a module from its text.
 ///
@@ -310,11 +310,8 @@ impl<'t> Parser<'t> {
                     break;
                 }
                 self.expect(&Tok::RParen, ", or ) in the attribute's arguments")?;
-                let Some((inner, owner)) = args.close() else {
+                if !args.close_app() {
                     return Ok(args.finish());
-                };
-                if let Attr::App(_, owned) = owner {
-                    *owned = inner;
                 }
             }
         }
@@ -335,16 +332,13 @@ impl<'t> Parser<'t> {
                 }
                 Tok::Value(_) | Tok::Word(_) if !blocks.is_empty() => {
                     let op = self.op_head(at)?;
-                    let block = blocks.last_mut().expect("an op is in a block");
-                    block.ops.push(op);
+                    blocks.push_op(op);
                     self.op_tail(&mut blocks)?;
                 }
                 _ if blocks.is_outermost() => return Ok(blocks.finish()),
                 _ => {
                     self.expect(&Tok::RBrace, "a block or } to close the region")?;
-                    let (inner, owner) = blocks.close().expect("an inner region");
-                    let op = owner.ops.last_mut().expect("the block holds the op");
-                    op.regions.push(Region { blocks: inner });
+                    blocks.close_region();
                     self.op_tail(&mut blocks)?;
                 }
             }
@@ -425,8 +419,7 @@ impl<'t> Parser<'t> {
             _ => return self.fail("the op's location reference, such as @0"),
         };
         self.advance();
-        let block = blocks.last_mut().expect("an op is in a block");
-        block.ops.last_mut().expect("the block holds the op").loc = loc;
+        blocks.last_op().loc = loc;
         Ok(())
     }
 

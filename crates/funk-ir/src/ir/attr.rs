@@ -66,6 +66,23 @@ impl<'a> Node for &'a Attr {
     }
 }
 
+/// Arguments built top down, as the parser reads them and `Attr::clone`
+/// copies them.
+impl Nest<Attr> {
+    /// Ends the list of arguments being built and gives it to the applied
+    /// word that owns it. Returns false, and does nothing, for the outermost
+    /// list.
+    pub(crate) fn close_app(&mut self) -> bool {
+        let Some((args, owner)) = self.close() else {
+            return false;
+        };
+        if let Attr::App(_, owned) = owner {
+            *owned = args;
+        }
+        true
+    }
+}
+
 impl Attr {
     /// A copy of this attribute without its arguments.
     fn head(&self) -> Attr {
@@ -94,9 +111,7 @@ impl Clone for Attr {
                     }
                 }
                 Step::Leave(Attr::App(..)) => {
-                    if let Some((args, Attr::App(_, copied))) = nest.close() {
-                        *copied = args;
-                    }
+                    nest.close_app();
                 }
                 Step::Leave(_) => {}
             }
