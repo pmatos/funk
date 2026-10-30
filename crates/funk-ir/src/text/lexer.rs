@@ -63,32 +63,34 @@ pub(super) struct Token {
     pub pos: TextPos,
 }
 
-/// Reads all the tokens of a text, ending with [`Tok::Eof`].
-pub(super) fn tokenize(text: &str) -> Result<Vec<Token>, ParseError> {
-    let mut lx = Lexer {
-        text,
-        at: 0,
-        line: 1,
-        line_start: 0,
-    };
-    let mut out = Vec::new();
-    loop {
-        lx.skip_blanks()?;
-        let pos = lx.pos();
-        let tok = lx.token()?;
-        let end = tok == Tok::Eof;
-        out.push(Token { tok, pos });
-        if end {
-            return Ok(out);
-        }
-    }
-}
-
-struct Lexer<'t> {
+/// Reads the tokens of a text one at a time, so that no list of them takes
+/// memory (ADR-2026-10-30-1333).
+pub(super) struct Lexer<'t> {
     text: &'t str,
     at: usize,
     line: usize,
     line_start: usize,
+}
+
+impl<'t> Lexer<'t> {
+    /// A lexer at the start of `text`.
+    pub(super) fn new(text: &'t str) -> Lexer<'t> {
+        Lexer {
+            text,
+            at: 0,
+            line: 1,
+            line_start: 0,
+        }
+    }
+
+    /// The next token, after any whitespace and comments: [`Tok::Eof`] at
+    /// the end of the text.
+    pub(super) fn next_token(&mut self) -> Result<Token, ParseError> {
+        self.skip_blanks()?;
+        let pos = self.pos();
+        let tok = self.token()?;
+        Ok(Token { tok, pos })
+    }
 }
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {

@@ -7,9 +7,10 @@
 //! ADR-2026-10-29-2016; ADR-2026-10-30-1146), so an extension dialect adds
 //! ops and types without a change to the IR, the parser or the printer.
 //!
-//! The parser, the printer and the verifier recurse once per level of
-//! nesting of attributes, regions and items, so a deeply nested text needs a
-//! deep stack: the `funk` binary runs them on a 1 GiB stack (#36).
+//! fir has no limit on how deeply attributes, regions and items nest, so
+//! nothing here recurses once per level: every walk keeps its path on the
+//! heap, and any text or module parses, prints, verifies, compares and drops
+//! on a small stack (ADR-2026-10-30-1333).
 //!
 //! ```
 //! use funk_ir::{Registry, parse, print, verify};

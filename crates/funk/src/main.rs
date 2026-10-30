@@ -336,17 +336,5 @@ fn main() -> ExitCode {
             }
         }
     }
-    // The parser, the printer and the verifier recurse once per level of
-    // nesting of attributes, regions and items, so funk runs them on a
-    // large stack. The stack is reserved, not committed; where it cannot be
-    // reserved, funk runs on the main thread's stack.
-    let worker_args = args.clone();
-    let worker = std::thread::Builder::new()
-        .stack_size(1 << 30)
-        .spawn(move || run(&worker_args));
-    let status = match worker {
-        Ok(w) => w.join().unwrap_or(2),
-        Err(_) => run(&args),
-    };
-    ExitCode::from(status)
+    ExitCode::from(run(&args))
 }

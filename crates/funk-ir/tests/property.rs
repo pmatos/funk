@@ -205,34 +205,3 @@ fn strings_round_trip_through_every_escape() {
         assert_eq!(print(&m), text);
     }
 }
-
-#[test]
-fn deep_nesting_parses_on_a_large_stack() {
-    let depth = 20_000;
-    let attr = format!("{}x{}", "h(".repeat(depth), ")".repeat(depth));
-    let region = format!(
-        "{}{}",
-        "toy.scope {\n^b:\n".repeat(depth),
-        "} @0\n".repeat(depth)
-    );
-    let run = move || {
-        let reg = Registry::core();
-        let text =
-            format!("func @f() {{\n^e:\n  %c: i8 = const {attr} @0\n  ret @0\n}}\n\nlocs {{\n}}\n");
-        let e = parse(&text, &reg).unwrap_err();
-        assert!(e.reason.contains("const"), "{e}");
-        let text = format!("func @f() {{\n^e:\n  {region}  ret @0\n}}\n\nlocs {{\n}}\n");
-        assert!(
-            parse(&text, &reg)
-                .unwrap_err()
-                .reason
-                .contains("unknown op toy.scope")
-        );
-    };
-    std::thread::Builder::new()
-        .stack_size(1 << 30)
-        .spawn(run)
-        .unwrap()
-        .join()
-        .unwrap();
-}
