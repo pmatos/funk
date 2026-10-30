@@ -9,10 +9,8 @@ use funk_ir::generate::{self, Rng};
 use funk_ir::text::quote;
 use funk_ir::{Attr, Location, Module, Registry, parse, print, verify};
 
-const MODULES: u64 = 600;
-
 fn generated() -> impl Iterator<Item = (u64, Module)> {
-    (0..MODULES).map(|seed| (seed, generate::module(&mut Rng::new(seed))))
+    (0..generate::ROUND_TRIP_MODULES).map(|seed| (seed, generate::module(&mut Rng::new(seed))))
 }
 
 #[test]

@@ -36,16 +36,18 @@ done
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 out=$(realpath -m "${1:-$repo_root/docs/spec/_out}")
 
-# For the firspec executable. Changes not yet committed, untracked files
-# included, mark the build -dirty. No optional locks: a hook runs while git
-# holds the index.
-commit=$(git -C "$repo_root" rev-parse HEAD)
-export FIRSPEC_COMMIT=${commit:0:12}
-if [[ -n "$(git --no-optional-locks -C "$repo_root" status --porcelain)" ]]; then
-    FIRSPEC_COMMIT+=-dirty
-fi
-if [[ -n "${GITHUB_SERVER_URL:-}" && -n "${GITHUB_REPOSITORY:-}" ]]; then
-    export FIRSPEC_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$commit"
+# For the firspec executable, so not needed with --lean. Changes not yet
+# committed, untracked files included, mark the build -dirty. No optional
+# locks: a hook runs while git holds the index.
+if [[ "$lean_only" == false ]]; then
+    commit=$(git -C "$repo_root" rev-parse HEAD)
+    export FIRSPEC_COMMIT=${commit:0:12}
+    if [[ -n "$(git --no-optional-locks -C "$repo_root" status --porcelain)" ]]; then
+        FIRSPEC_COMMIT+=-dirty
+    fi
+    if [[ -n "${GITHUB_SERVER_URL:-}" && -n "${GITHUB_REPOSITORY:-}" ]]; then
+        export FIRSPEC_COMMIT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$commit"
+    fi
 fi
 
 # Lake treats a package as cloned when its `.git` exists. If that `.git` is

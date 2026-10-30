@@ -36,12 +36,8 @@ case "$1" in
         exit "$status"
         ;;
     round-trip)
-        # As in check-rust.sh: the pin, not the environment, picks the
-        # toolchain.
-        unset RUSTUP_TOOLCHAIN
-        if ! command -v cargo >/dev/null && [[ -x "$HOME/.cargo/bin/cargo" ]]; then
-            PATH="$HOME/.cargo/bin:$PATH"
-        fi
+        # shellcheck source=scripts/rust-env.sh
+        source scripts/rust-env.sh
         out=$(mktemp -d)
         trap 'rm -rf "$out"' EXIT
         cargo run --quiet --locked -p funk-ir --example fir_texts -- "$out"

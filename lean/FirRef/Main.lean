@@ -22,15 +22,23 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
              --check  print the name of each FILE that is not canonical
   -h, --help  Print this help.
 
+A FILE of - is standard input; -- ends the options.
+
 Exit status: 0 when every FILE parses (and, with --check, is canonical), 1
 when one does not parse or is not canonical, 2 on a usage or I/O error.
 "
 
+/-- The bytes of a file, or of standard input for `-`. -/
+def readInput (file : String) : IO ByteArray :=
+  if file == "-" then do (← IO.getStdin).readBinToEnd else IO.FS.readBinFile file
+
 /-- What `fmt` reports on one file, and its exit status. -/
 def fmtFile (check : Bool) (file : String) : IO UInt32 := do
-  match ← (IO.FS.readBinFile file).toBaseIO with
+  match ← (readInput file).toBaseIO with
   | .error e =>
-    IO.eprintln s!"fir-ref: cannot read {file}: {e}"
+    let why := ((toString e).splitOn "\n").headD ""
+    let what := if file == "-" then "standard input" else file
+    IO.eprintln s!"fir-ref: cannot read {what}: {why}"
     return 2
   | .ok bytes =>
     match parseBytes (d := CoreDialect) bytes with
@@ -47,28 +55,40 @@ def fmtFile (check : Bool) (file : String) : IO UInt32 := do
         IO.println file
         return 1
 
+/-- The arguments of `fmt`, as `funk` reads them: whether `--check` is
+given, and the files. `--` ends the options. -/
+def fmtArgs : Bool → List String → Except String (Bool × List String)
+  | _, [] => .ok (false, [])
+  | true, "--" :: rest => fmtArgs false rest
+  | true, "--check" :: rest => do
+    let (_, files) ← fmtArgs true rest
+    pure (true, files)
+  | options, a :: rest =>
+    if options && a.startsWith "--" then .error s!"unknown option {a}"
+    else do
+      let (check, files) ← fmtArgs options rest
+      pure (check, a :: files)
+
 /-- Runs `fir-ref` on its arguments and returns its exit status. -/
 def run (args : List String) : IO UInt32 := do
-  match args with
-  | ["-h"] | ["--help"] =>
+  let options := args.takeWhile (· != "--")
+  if args.head? == some "help" || options.any (fun a => a == "-h" || a == "--help") then
     IO.print usage
     return 0
-  | [] =>
-    IO.eprint usage
+  let fail (why : String) : IO UInt32 := do
+    IO.eprintln s!"fir-ref: {why}\n\n{usage}"
     return 2
+  match args with
+  | [] => fail "missing command"
   | "fmt" :: rest =>
-    let check := rest.contains "--check"
-    let files := rest.filter (· != "--check")
-    if let some bad := files.find? (·.startsWith "--") then
-      IO.eprintln s!"fir-ref: unknown option {bad}\n{usage}"
-      return 2
-    if files.isEmpty then
-      IO.eprintln s!"fir-ref: no FILE given\n{usage}"
-      return 2
-    files.foldlM (fun status file => return max status (← fmtFile check file)) 0
-  | cmd :: _ =>
-    IO.eprintln s!"fir-ref: unknown command {cmd}\n{usage}"
-    return 2
+    match fmtArgs true rest with
+    | .error why => fail why
+    | .ok (check, files) =>
+      if files.isEmpty then fail "no FILE given; use - for standard input"
+      else if (files.filter (· == "-")).length > 1 then
+        fail "- may be given once: standard input can be read only once"
+      else files.foldlM (fun status file => return max status (← fmtFile check file)) 0
+  | cmd :: _ => fail s!"unknown command {cmd}"
 
 end FirRef
 

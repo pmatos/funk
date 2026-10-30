@@ -12,9 +12,6 @@ use std::process::ExitCode;
 use funk_ir::generate::{self, Rng};
 use funk_ir::{Registry, parse, print};
 
-/// As many modules as the Rust round-trip tests check.
-const DEFAULT_COUNT: u64 = 600;
-
 fn write(out: &Path, name: &str, text: &str) -> Result<(), String> {
     let path = out.join(name);
     std::fs::write(&path, text).map_err(|e| format!("cannot write {}: {e}", path.display()))
@@ -48,7 +45,7 @@ fn run(args: &[String]) -> Result<(), String> {
         return Err("usage: fir_texts OUT_DIR [COUNT]".into());
     };
     let count = match rest {
-        [] => DEFAULT_COUNT,
+        [] => generate::ROUND_TRIP_MODULES,
         [n] => n
             .parse()
             .map_err(|_| format!("COUNT is a number, not {n}"))?,

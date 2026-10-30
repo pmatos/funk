@@ -7,10 +7,11 @@ tokens by the grammar of a module, which is the same for every dialect,
 into a syntax tree that leaves types, attributes and ops generic. Last, it
 decodes that tree through the dialect: each type with `decodeTy`, and each
 op with `decodeOp`, from its name, its attributes and the types of its
-operands and results. Each step stops at its first error, so a text with
-several errors is rejected at the first error of the earliest step, as
-`funk` rejects it (ADR-2026-10-30-1032), and the two parsers reject a text
-with one error at the same position.
+operands and results. Each step stops at its first error, and the steps
+run in the order of `funk`'s (ADR-2026-10-30-1032), so the two parsers
+reject a text with one error at the same position. A text with several
+errors is rejected at the first error of the earliest step; the two parsers
+may then report different errors, which ADR-2026-10-30-1032 allows.
 
 Each step is a total function: it never loops and never fails for want of
 fuel, and the proof that parsing a printed module gives the module back
@@ -125,14 +126,15 @@ def unicodeEscape (digits : List Char) (p : TextPos) : Except ParseError Char :=
     else errorAt p (codePoint c ++ " is written as itself, not as an escape")
 
 /-- Reads one escape after its backslash at `p`: the character it stands
-for, and the characters after it. -/
+for, its width after the backslash in bytes (an escape is ASCII), and the
+characters after it. -/
 def lexEscape (cs : List Char) (p : TextPos) :
-    Except ParseError (Char × { r : List Char // r.length < cs.length }) :=
+    Except ParseError (Char × Nat × { r : List Char // r.length < cs.length }) :=
   match cs with
-  | '\\' :: rest => .ok ('\\', ⟨rest, by simp⟩)
-  | '"' :: rest => .ok ('"', ⟨rest, by simp⟩)
-  | 'n' :: rest => .ok ('\n', ⟨rest, by simp⟩)
-  | 't' :: rest => .ok ('\t', ⟨rest, by simp⟩)
+  | '\\' :: rest => .ok ('\\', 1, ⟨rest, by simp⟩)
+  | '"' :: rest => .ok ('"', 1, ⟨rest, by simp⟩)
+  | 'n' :: rest => .ok ('\n', 1, ⟨rest, by simp⟩)
+  | 't' :: rest => .ok ('\t', 1, ⟨rest, by simp⟩)
   | 'u' :: '{' :: rest =>
     match h : rest.dropWhile isHexDigit with
     | '}' :: after =>
@@ -141,7 +143,8 @@ def lexEscape (cs : List Char) (p : TextPos) :
         rw [h] at h1
         simp at h1 ⊢
         omega
-      (unicodeEscape (rest.takeWhile isHexDigit) p).map (·, ⟨after, this⟩)
+      let digits := rest.takeWhile isHexDigit
+      (unicodeEscape digits p).map (·, 3 + digits.length, ⟨after, this⟩)
     | _ => errorAt p "\\u{ must be followed by lowercase hexadecimal digits and }"
   | _ => errorAt p "a string escape is \\\\, \\\", \\n, \\t or \\u{h}"
 
@@ -154,8 +157,8 @@ def lexString (cs : List Char) (p start : TextPos) (acc : List Char) :
   | [] => errorAt start "the string is not closed"
   | '"' :: rest => .ok (String.ofList acc.reverse, ⟨rest, by simp⟩, p.advance 1)
   | '\\' :: rest => do
-    let (c, ⟨after, ha⟩) ← lexEscape rest p
-    let (s, ⟨r, hr⟩, q) ← lexString after (p.advance (1 + rest.length - after.length)) start (c :: acc)
+    let (c, width, ⟨after, ha⟩) ← lexEscape rest p
+    let (s, ⟨r, hr⟩, q) ← lexString after (p.advance (1 + width)) start (c :: acc)
     pure (s, ⟨r, by simp; omega⟩, q)
   | c :: rest =>
     if isEscaped c then errorAt p (codePoint c ++ " must be escaped in a string")

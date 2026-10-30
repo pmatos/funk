@@ -29,7 +29,10 @@ to validation.
 The first pass checks the function's result types, then its parameters,
 then its blocks in order: each block's arguments, then each op's results and
 the blocks of its regions. So a text with several errors is rejected at the
-first of them in that order, as `funk` rejects it.
+first of them in that order. `funk` follows the same order, except that it
+rejects an op whose name no dialect has before it looks up the op's
+operands; `decodeOp` takes the name, the attributes and the types together,
+so this parser looks up the operands first.
 -/
 
 namespace Fir.Text
