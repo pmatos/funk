@@ -1,10 +1,10 @@
 //! Trees of any depth, walked and built with explicit stacks
 //! (ADR-2026-10-30-1333).
 //!
-//! fir has no limit on how deeply attributes, regions and items nest (#36),
-//! so no code here recurses once per level on the native stack: a text
-//! nested ten million levels deep parses, prints, verifies, compares and
-//! drops on a thread with a small stack. Every walk over attributes and
+//! fir has no limit on how deeply attributes, regions and items nest
+//! (ADR-2026-10-30-1549), so no code here recurses once per level on the
+//! native stack: a text nested to any depth parses, prints, verifies,
+//! compares and drops on a thread with a small stack. Every walk over attributes and
 //! regions is a [`walk`], which keeps the path from the root in a `Vec` on
 //! the heap; every tree that is built level by level is built in a [`Nest`];
 //! and [`drop_all`] frees a tree one node at a time. The traits that

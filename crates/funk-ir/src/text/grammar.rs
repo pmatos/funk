@@ -7,8 +7,9 @@
 //! Items, regions and the arguments of attributes nest to any depth
 //! (ADR-2026-10-30-1333), so none of them is read by a recursive call: the
 //! lists that enclose the one being read wait in a [`Nest`]. Lists that can
-//! nest start with room for one element, so that a deep nest of lists of one
-//! takes no spare room.
+//! nest start with room for one element, and an op makes room for a region
+//! only when one opens, so that neither a deep nest of lists of one nor a
+//! flat body takes spare room.
 
 mod locs;
 

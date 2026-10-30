@@ -1,4 +1,4 @@
-//! fir has no nesting limit (ADR-2026-10-30-1333). Texts and IR nested a
+//! fir has no nesting limit (ADR-2026-10-30-1549). Texts and IR nested a
 //! million levels deep, in attributes, regions and items, parse, print,
 //! verify, clone, compare, hash, debug-format and drop on a thread with a
 //! 256 KiB stack, where a walk that recursed once per level would overflow
