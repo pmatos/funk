@@ -8,16 +8,18 @@ Status: accepted
 `i1`, `i8`, `i16`, `i32` and `i64` from the start, so that later op
 families do not reinvent how widths are handled. `i128` comes with
 register pairs in #21. fir types have no sign: signedness lives on ops
-(S2, ADR-2026-10-29-2007). System V leaves the bits above a narrow argument
-or result unspecified.
+(S2, ADR-2026-10-29-2007). System V leaves the bits above a narrow result
+unspecified. C compilers expect more of a narrow argument than that
+(ADR-2026-10-30-1232).
 
 ## Decision
 
 - **The low bits are the value.** A value of `iN`, `N` at most 64, lives in
   one 64-bit register or slot. Its low `N` bits are its bits; the bits
   above them are unspecified. The same rule holds in slots, in scratch
-  registers, and for arguments and results at a call boundary
-  (ADR-2026-10-30-1232).
+  registers, for the arguments a funk function receives and for the
+  results it returns. What a caller extends before it calls code that funk
+  did not compile is in ADR-2026-10-30-1232.
 - **Extend where the high bits matter.** An op whose result's low `N` bits
   depend only on its operands' low `N` bits (`add`, `sub`, `mul`, `and`,
   `or`, `xor`, `trunc`, `select`, `freeze`) works on all 64 bits and needs

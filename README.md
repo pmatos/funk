@@ -203,8 +203,8 @@ You need `rustup`, the Rust toolchain manager, to build funk. Install it as
 cargo build --release                          # build the crates and funk
 cargo test --workspace                         # run the tests
 ./target/release/funk verify tests/fir/canonical/add.fir
-./target/release/funk build -o add tests/fir/canonical/add.fir
-./add @add3 1 2 3                              # prints {"values":["6"]}
+./target/release/funk build -o target/add tests/fir/canonical/add.fir
+./target/add @add3 1 2 3                       # prints {"values":["6"]}
 ```
 
 rustup installs the Rust version that `rust-toolchain.toml` pins the first
@@ -213,10 +213,12 @@ time cargo runs. `funk fmt FILE` prints a file in its canonical form;
 them. `funk verify FILE` checks a file, and prints nothing when it is valid.
 `funk build -o OUTPUT FILE` compiles a file into the object file `OUTPUT.o`
 and the executable `OUTPUT`, which runs one function: `OUTPUT @FUNCTION ARG...`.
-`--json` reports one JSON line per file. `funk --help` lists the options, and
+`--json` reports one JSON line per file. `funk --help` lists the options.
 [ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) and
+[ADR-2026-10-30-1326](docs/adrs/2026-10-30-1326-funk-build-command.md)
+give the reports and exit codes, and
 [ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)
-give the reports and exit codes.
+how the executable is run.
 
 ## How to contribute
 
@@ -226,8 +228,8 @@ requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
 `elan` too, because one of the checks builds the spec, `rustup`, because
-three of them check the Rust code, and GNU binutils, because the Rust tests
-build native code. Then install the git hooks:
+three of them check the Rust code, and GNU binutils on an x86-64 Linux
+host, because the Rust tests build and run native code. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

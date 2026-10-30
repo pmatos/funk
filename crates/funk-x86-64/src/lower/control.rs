@@ -1,10 +1,11 @@
 //! Control flow: `ret` (`dialects/core/control.rs` in `funk-ir`).
 //!
 //! `ret` puts its value, if it has one, in the result register, then
-//! returns (ADR-2026-10-30-1232). An `i1` result is returned as 0 or 1 in the whole
-//! register, as C's `_Bool` is. A function with more than one result needs
-//! a convention for the others, which #31 decides; until then the backend
-//! reports it at the `ret`.
+//! returns (ADR-2026-10-30-1232). An `i1` result is returned as 0 or 1 in
+//! all of `%rax`. That is more than C gives for a `_Bool` result, which
+//! defines only bits 0 to 7, so code that calls C may rely only on `%al`.
+//! A function with more than one result needs a convention for the others,
+//! which #31 decides; until then the backend reports it at the `ret`.
 
 use funk_ir::Op;
 
