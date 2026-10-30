@@ -1,0 +1,5 @@
+# The Rust toolchain for the whole workspace (ADR-2026-10-30-1030).
+[toolchain]
+channel = "1.99.1"
+profile = "minimal"
+components = ["rustfmt", "clippy"]

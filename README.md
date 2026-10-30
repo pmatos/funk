@@ -9,8 +9,10 @@ Two aims shape funk. First, funk's code will be checked against fir's formal
 definition. Second, agents build funk, and they are meant to use it.
 
 Funk is at an early stage. Today the repository holds fir's specification,
-written in Lean, and the decisions behind it. It holds no compiler yet. See
-[status](#status) for what exists and what does not. Agents should read
+written in Lean, and the decisions behind it. It also holds the first Rust
+code: a library that reads, prints and checks fir, and a driver, `funk`. It
+holds no compiler yet. See [status](#status) for what exists and what does
+not. Agents should read
 [`AGENTS.md`](AGENTS.md) before they start a task.
 
 ## Goals and direction
@@ -115,6 +117,14 @@ are on `main`:
   text format, with its grammar and printer. CI builds the spec on every pull
   request, and every push to `main` publishes it at
   <https://p.ocmatos.com/funk/>.
+- The Rust IR library `funk-ir` and the driver `funk`
+  ([#9](https://github.com/pmatos/funk/issues/9)). `funk-ir` holds fir in
+  memory, with a parser, a printer and a verifier that follow the spec. Its
+  ops and types are checked through a registry of dialects
+  ([ADR-2026-10-30-1146](docs/adrs/2026-10-30-1146-generic-ops-and-registry.md)),
+  and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
+  prints fir in its canonical form, and `funk verify` checks it. Both report
+  as text, or as JSON with `--json`.
 
 These parts of M0 do not exist yet:
 
@@ -125,7 +135,7 @@ These parts of M0 do not exist yet:
   [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
 - The Lean parser and the reference interpreter, `fir-ref`.
 - The proof that parsing a printed module gives the module back.
-- Any Rust code: the IR crate `funk-ir`, the `funk` driver and the x86-64
+- In Rust, the core ops other than `const`, `add` and `ret`, and the x86-64
   backend.
 - The differential tests that compare native results with `fir-ref`.
 
@@ -141,7 +151,11 @@ The epic's sub-issues list the open work in full.
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
-| `scripts/` | Scripts for the spec build, the hooks and agent sessions |
+| `crates/` | The Rust crates: `funk-ir`, the IR library, and `funk`, the driver |
+| `tests/fir/` | fir texts that the Rust and Lean sides share: canonical texts, and inputs that format to them |
+| `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
+| `rust-toolchain.toml` | The pinned Rust toolchain |
+| `scripts/` | Scripts for the spec build, the Rust checks, the hooks and agent sessions |
 | `.github/` | The CI and Pages workflows, the ruleset for `main` and the Dependabot settings |
 | `.pre-commit-config.yaml` | Every check, for the local hooks and for CI |
 | `.claude/settings.json` | Claude Code settings, which install the git hooks when a session starts |
@@ -172,6 +186,25 @@ rebuilt and deployed from every push to `main`
 ([ADR-2026-10-30-1031](docs/adrs/2026-10-30-1031-publish-spec-to-github-pages.md)),
 and each page names the commit it was built from.
 
+## Build funk
+
+You need `rustup`, the Rust toolchain manager, to build funk. Install it as
+<https://rustup.rs> says. Then run, in a clone:
+
+```sh
+cargo build --release                          # build funk-ir and funk
+cargo test --workspace                         # run the tests
+./target/release/funk verify tests/fir/canonical/add.fir
+```
+
+rustup installs the Rust version that `rust-toolchain.toml` pins the first
+time cargo runs. `funk fmt FILE` prints a file in its canonical form;
+`--check` lists the files that are not canonical, and `--write` rewrites
+them. `funk verify FILE` checks a file, and prints nothing when it is valid.
+`--json` reports one JSON line per file. `funk --help` lists the options, and
+[ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) gives the
+reports and exit codes.
+
 ## How to contribute
 
 A human sets the direction: the spec, the roadmap, and the calls only they can
@@ -179,8 +212,8 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` too, because one of the checks builds the spec. Then install the git
-hooks:
+`elan` too, because one of the checks builds the spec, and `rustup`, because
+three of them check the Rust code. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

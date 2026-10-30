@@ -1,0 +1,15 @@
+[package]
+name = "funk"
+description = "The funk driver: funk fmt and funk verify"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+funk-ir = { path = "../funk-ir" }
+
+[lints]
+workspace = true

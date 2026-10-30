@@ -55,4 +55,13 @@ Install it as https://github.com/leanprover/elan#installation says."
     echo "$warning"
     echo "$warning" >&2
 fi
+# The rust-* hooks build and test the Cargo workspace (ADR-2026-10-30-1030).
+if ! command -v cargo >/dev/null && [[ ! -x "$HOME/.cargo/bin/cargo" ]]; then
+    warning="Warning: cargo, from the Rust toolchain manager rustup, is not installed.
+The rust-fmt, rust-clippy and rust-test hooks, which run on every
+'pre-commit run --all-files', need it. Install rustup as https://rustup.rs says;
+it installs the toolchain that rust-toolchain.toml pins on first use."
+    echo "$warning"
+    echo "$warning" >&2
+fi
 echo "Repository hooks and environments are installed and verified."

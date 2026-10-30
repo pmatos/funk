@@ -23,6 +23,28 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(lean/|docs/spec/|scripts/build-spec\.sh$)
+      # The Rust checks run over the whole workspace (ADR-2026-10-30-1030).
+      - id: rust-fmt
+        name: Rust code is formatted (cargo fmt)
+        entry: scripts/check-rust.sh
+        args: [fmt]
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/check-rust\.sh$)
+      - id: rust-clippy
+        name: Rust code passes clippy with no warnings
+        entry: scripts/check-rust.sh
+        args: [clippy]
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/check-rust\.sh$)
+      - id: rust-test
+        name: Rust tests pass (cargo test)
+        entry: scripts/check-rust.sh
+        args: [test]
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/check-rust\.sh$)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
