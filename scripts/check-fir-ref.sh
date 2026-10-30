@@ -11,7 +11,9 @@
 #               nested 3,000 deep within 8 seconds of CPU time (#47).
 #               fir-ref validate accepts every text of tests/fir/, and
 #               gives a module with an unreachable block, a text that does
-#               not parse and a missing file their verdicts (#10).
+#               not parse and a missing file their verdicts (#10); it exits
+#               with 2 on an argument that is not UTF-8 and when it cannot
+#               write its output.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -89,6 +91,32 @@ case "$1" in
             status=1
         validates "$tmp/open.fir" 1 '"verdict":"parse-error".*"line":2,"column":1' || status=1
         validates "$tmp/missing.fir" 2 '"verdict":"io-error"' || status=1
+        # Errors that are not about a file exit with 2, as funk's do
+        # (ADR-2026-10-30-1032): an argument that is not UTF-8, a full disk,
+        # and a reader that stops reading, which gets no message. The pipe
+        # holds less than the reports of 4,000 files, so the write fails.
+        rc=0
+        "$fir_ref" validate $'bad\xff.fir' 2>"$tmp/err" || rc=$?
+        if [[ $rc -ne 2 ]] || ! grep -q 'is not UTF-8' "$tmp/err"; then
+            echo "fir-ref validate exits with $rc, not 2, on an argument that is not UTF-8" >&2
+            status=1
+        fi
+        if [[ -w /dev/full ]]; then
+            rc=0
+            "$fir_ref" validate "$tmp/dead.fir" >/dev/full 2>"$tmp/err" || rc=$?
+            if [[ $rc -ne 2 ]] || ! grep -q 'cannot write standard output' "$tmp/err"; then
+                echo "fir-ref validate exits with $rc, not 2, when it cannot write" >&2
+                status=1
+            fi
+        fi
+        many=()
+        for _ in {1..4000}; do many+=("$tmp/dead.fir"); done
+        rc=0
+        ("$fir_ref" validate "${many[@]}" 2>"$tmp/err" | true; exit "${PIPESTATUS[0]}") || rc=$?
+        if [[ $rc -ne 2 || -s "$tmp/err" ]]; then
+            echo "fir-ref validate exits with $rc, not 2 and silent, on a closed pipe" >&2
+            status=1
+        fi
         # Large canonical texts (#47). On a block of a million ops and on a
         # function of a million blocks, the spec's printer, quadratic in a
         # block's length, takes over 400 seconds: the wall-clock limit

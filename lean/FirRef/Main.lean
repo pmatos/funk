@@ -109,15 +109,21 @@ def fmtArgs : Bool → List String → Except String (Bool × List String)
       let (check, files) ← fmtArgs options rest
       pure (check, a :: files)
 
-/-- Runs `fir-ref` on its arguments and returns its exit status. -/
+/-- Runs `fir-ref` on its arguments and returns its exit status. Lean's
+runtime decodes an argument that is not UTF-8 with U+FFFD in place of each
+bad byte, so an argument that holds U+FFFD is refused, as `funk` refuses an
+argument that is not UTF-8. A file whose name holds U+FFFD can still be
+read as standard input, `-`. -/
 def run (args : List String) : IO UInt32 := do
+  let fail (why : String) : IO UInt32 := do
+    IO.eprintln s!"fir-ref: {why}\n\n{usage}"
+    return 2
+  if let some bad := args.find? (·.contains '\uFFFD') then
+    return ← fail s!"argument {bad.quote} is not UTF-8"
   let options := args.takeWhile (· != "--")
   if args.head? == some "help" || options.any (fun a => a == "-h" || a == "--help") then
     IO.print usage
     return 0
-  let fail (why : String) : IO UInt32 := do
-    IO.eprintln s!"fir-ref: {why}\n\n{usage}"
-    return 2
   match args with
   | [] => fail "missing command"
   | "fmt" :: rest =>
@@ -140,5 +146,18 @@ def run (args : List String) : IO UInt32 := do
 
 end FirRef
 
-/-- The entry point of `fir-ref`. -/
-def main (args : List String) : IO UInt32 := FirRef.run args
+/-- The entry point of `fir-ref`. When it cannot write its output, it says so
+on standard error if it can, and exits with 2, as `funk` does
+(ADR-2026-10-30-1032); a reader that stopped reading, as `head` does, gets no
+message. Read errors never reach here: each file's report carries them. -/
+def main (args : List String) : IO UInt32 := do
+  try
+    let status ← FirRef.run args
+    (← IO.getStdout).flush
+    return status
+  catch
+    | .resourceVanished .. => return 2
+    | e =>
+      let why := ((toString e).splitOn "\n").headD ""
+      try IO.eprintln s!"fir-ref: cannot write standard output: {why}" catch _ => pure ()
+      return 2
