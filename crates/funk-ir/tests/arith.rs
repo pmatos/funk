@@ -192,8 +192,15 @@ fn the_flags_have_one_spelling_and_one_order() {
 
 const L: LocRef = LocRef(5);
 
-/// The diagnostics of `@f(%a: i32, %b: i64) -> i32`, whose entry block
-/// holds a constant, `op` at index 1, and `ret %a`.
+/// Whether `d` is the diagnostic of the function that rejects a value of
+/// the reserved type `ptr` (`verify_text.rs`), such as `%p` below.
+fn rejects_ptr(d: &Diagnostic) -> bool {
+    d.op.is_none() && d.message.contains(", ptr, is not valid: ptr is reserved")
+}
+
+/// The diagnostics of `@f(%a: i32, %b: i64, %p: ptr) -> i32`, whose entry
+/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`, less
+/// those that reject a value of type `ptr`.
 fn verify_op(op: Op) -> Vec<Diagnostic> {
     let c = Op::new("const", LocRef(0))
         .attr(Attr::int(1))
@@ -201,6 +208,7 @@ fn verify_op(op: Op) -> Vec<Diagnostic> {
     let f = Func::new("f")
         .param("a", int_type(32))
         .param("b", int_type(64))
+        .param("p", Type::word("ptr"))
         .result(int_type(32))
         .block(
             Block::new("entry")
@@ -211,7 +219,9 @@ fn verify_op(op: Op) -> Vec<Diagnostic> {
     let mut m = Module::new();
     m.locs.push(Location::Unknown);
     m.locs.insert(L, Location::Name("here".into()));
-    verify(&m.func(f), &Registry::core())
+    let mut ds = verify(&m.func(f), &Registry::core());
+    ds.retain(|d| !rejects_ptr(d));
+    ds
 }
 
 /// Asserts that the verifier rejects `op` with one diagnostic at the op and
@@ -235,7 +245,7 @@ fn rejected_at_op(op: Op, needle: &str) {
     );
 }
 
-/// `op` with these flags, these operands and results of these types.
+/// `op` with these attributes, these operands and results of these types.
 fn built(op: &str, attrs: &[Attr], operands: &[&str], results: &[Type]) -> Op {
     let o = attrs.iter().fold(Op::new(op, L), |o, a| o.attr(a.clone()));
     let o = operands.iter().fold(o, |o, x| o.operand(*x));
@@ -245,14 +255,20 @@ fn built(op: &str, attrs: &[Attr], operands: &[&str], results: &[Type]) -> Op {
         .fold(o, |o, (k, t)| o.result(format!("r{k}"), t.clone()))
 }
 
+fn words(ws: &[&str]) -> Vec<Attr> {
+    ws.iter().map(|w| Attr::word(*w)).collect()
+}
+
+/// The uses that the parser rejects in
+/// `ill_typed_uses_of_add_sub_and_mul_are_rejected_at_the_name`, made with
+/// the builder.
 #[test]
-fn the_verifier_rejects_ill_typed_ops_that_a_builder_made_at_their_location() {
-    let (i32, i64) = (int_type(32), int_type(64));
-    let w = |s: &str| Attr::word(s);
+fn the_verifier_rejects_ill_typed_add_sub_and_mul_that_a_builder_made() {
+    let (i32, i64, ptr) = (int_type(32), int_type(64), Type::word("ptr"));
     let types = "takes two operands of one integer type";
     for op in OPS {
         for flags in WRAP_FLAG_SETS {
-            let attrs: Vec<Attr> = flags.iter().map(|f| w(f)).collect();
+            let attrs = words(flags);
             let ok = built(op, &attrs, &["a", "c"], std::slice::from_ref(&i32));
             assert_eq!(verify_op(ok), vec![], "{op} {flags:?}");
             rejected_at_op(
@@ -264,52 +280,57 @@ fn the_verifier_rejects_ill_typed_ops_that_a_builder_made_at_their_location() {
                 types,
             );
         }
-        rejected_at_op(built(op, &[], &["a"], std::slice::from_ref(&i32)), types);
-        rejected_at_op(built(op, &[], &["a", "c"], &[]), types);
-        let both = [w("nsw"), w("nuw")];
-        rejected_at_op(
-            built(op, &both, &["a", "c"], std::slice::from_ref(&i32)),
-            "nuw before nsw",
-        );
-        let twice = [w("nuw"), w("nuw")];
-        rejected_at_op(
-            built(op, &twice, &["a", "a"], std::slice::from_ref(&i32)),
-            "more than once",
-        );
-        let exact = [w("exact")];
-        rejected_at_op(
-            built(op, &exact, &["a", "a"], std::slice::from_ref(&i32)),
-            "not exact",
-        );
-        let int = [Attr::int(0)];
-        rejected_at_op(
-            built(op, &int, &["a", "a"], std::slice::from_ref(&i32)),
-            "its flags",
-        );
+        for (operands, results) in [
+            (&["b", "a"][..], std::slice::from_ref(&i64)),
+            (&["a"], std::slice::from_ref(&i32)),
+            (&["a", "a", "a"], std::slice::from_ref(&i32)),
+            (&["a", "c"], &[]),
+            (&["a", "a"], &[i32.clone(), i32.clone()]),
+            (&["p", "p"], std::slice::from_ref(&ptr)),
+        ] {
+            rejected_at_op(built(op, &[], operands, results), types);
+        }
+        let flag = "its flags nuw and nsw";
+        for (attrs, needle) in [
+            (words(&["nsw", "nuw"]), "nuw before nsw"),
+            (words(&["nuw", "nsw", "nuw"]), "nuw more than once"),
+            (words(&["nuw", "nuw"]), "nuw more than once"),
+            (words(&["nsw", "nsw"]), "nsw more than once"),
+            (words(&["exact"]), "not exact"),
+            (words(&["nuw", "exact"]), "not exact"),
+            (words(&["wrap"]), "not wrap"),
+            (vec![Attr::int(1)], flag),
+            (vec![Attr::Str("nsw".into())], flag),
+            (vec![Attr::Sym("nsw".into())], flag),
+        ] {
+            let o = built(op, &attrs, &["a", "a"], std::slice::from_ref(&i32));
+            rejected_at_op(o, needle);
+        }
     }
+}
+
+/// The uses that the parser rejects in
+/// `ill_typed_uses_of_freeze_are_rejected_at_the_name`, made with the
+/// builder.
+#[test]
+fn the_verifier_rejects_ill_typed_freezes_that_a_builder_made() {
+    let (i32, i64, ptr) = (int_type(32), int_type(64), Type::word("ptr"));
+    let ok = built("freeze", &[], &["c"], std::slice::from_ref(&i32));
+    assert_eq!(verify_op(ok), vec![]);
     let types = "freeze takes one operand of an integer type";
-    assert_eq!(
-        verify_op(built("freeze", &[], &["c"], std::slice::from_ref(&i32))),
-        vec![]
-    );
-    rejected_at_op(
-        built("freeze", &[], &["b"], std::slice::from_ref(&i32)),
-        types,
-    );
-    rejected_at_op(
-        built("freeze", &[], &["a"], std::slice::from_ref(&i64)),
-        types,
-    );
-    rejected_at_op(
-        built("freeze", &[], &["a", "a"], std::slice::from_ref(&i32)),
-        types,
-    );
-    rejected_at_op(
-        built("freeze", &[], &["a"], &[i32.clone(), i32.clone()]),
-        types,
-    );
-    rejected_at_op(
-        built("freeze", &[w("nsw")], &["a"], &[i32]),
-        "no attributes",
-    );
+    for (operands, results) in [
+        (&["a"][..], std::slice::from_ref(&i64)),
+        (&["b"], std::slice::from_ref(&i32)),
+        (&["a", "a"], std::slice::from_ref(&i32)),
+        (&[], std::slice::from_ref(&i32)),
+        (&["a"], &[]),
+        (&["a"], &[i32.clone(), i32.clone()]),
+        (&["p"], std::slice::from_ref(&ptr)),
+    ] {
+        rejected_at_op(built("freeze", &[], operands, results), types);
+    }
+    for attrs in [words(&["nsw"]), vec![Attr::int(0)]] {
+        let o = built("freeze", &attrs, &["a"], std::slice::from_ref(&i32));
+        rejected_at_op(o, "freeze takes no attributes");
+    }
 }
