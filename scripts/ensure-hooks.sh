@@ -44,4 +44,12 @@ else
     pre-commit install --install-hooks || fail "pre-commit could not install the hooks or their environments."
 fi
 hooks_installed || fail "pre-commit and commit-msg must both be executable pre-commit hooks."
+
+# The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
+# Checked after the hooks are in place, so the agent gate lets the install run.
+if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
+    echo "Setup incomplete: elan, the Lean toolchain manager, is not installed." >&2
+    echo "The fir-spec hook needs it. Install it as https://github.com/leanprover/elan#installation says, then run this script again." >&2
+    exit 1
+fi
 echo "Repository hooks and environments are installed and verified."

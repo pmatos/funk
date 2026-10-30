@@ -43,7 +43,10 @@ Facts, checked on 2026-10-29:
   and `verso` at the git tag named like the toolchain (`v4.35.0`). Its
   `FirSpec.lean` is the document: the order of the chapters, the prose that
   belongs to no definition, and one `{includeLiterate}` per module of `fir`.
-  Its `lake-manifest.json` is committed.
+  Its `lake-manifest.json` is committed. The `FirSpec` library `needs` an
+  `input_dir` target over `lean/Fir`, so any change to a source, even one
+  that leaves its compiled form unchanged, rebuilds the document:
+  `{includeLiterate}` reads the sources, not the compiled modules.
 - **A toolchain bump is one PR.** It changes `lean/lean-toolchain` and the
   `verso` rev to the same new stable tag, runs `lake update` in `docs/spec/`,
   and commits both files.
@@ -58,7 +61,13 @@ Facts, checked on 2026-10-29:
   tarball, checked against its SHA-256, then the pinned toolchain. It caches
   the toolchain and `docs/spec/.lake/packages`, keyed on the toolchain file
   and the document's manifest. It saves the cache once Verso is built, even
-  if a later hook fails.
+  if a later hook fails, but not when the run is cancelled. It never caches
+  `docs/spec/.lake/build`, so the document is always rebuilt from the
+  sources, and neither may a deployment
+  ([#28](https://github.com/pmatos/funk/issues/28)).
+- **Setup checks for elan.** `scripts/ensure-hooks.sh` fails, and says how
+  to install elan, when elan is neither on `PATH` nor in `~/.elan/bin`, so a
+  missing toolchain shows at setup, not inside a commit.
 - **Hooks that run Lake keep its git calls inside the package clones.** Lake
   runs git inside each package clone under `.lake/packages`. Two paths let
   those calls act on this repository instead; in tests they rewrote
