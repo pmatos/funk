@@ -6,6 +6,7 @@ import FirTest.Parse
 import FirTest.Print
 import FirTest.Run
 import FirTest.Interpreter
+import FirTest.Modes
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.ValidateOps

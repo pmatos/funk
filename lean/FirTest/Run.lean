@@ -1,5 +1,5 @@
 import FirTest.Parse
-import FirRef.Run
+import FirRef.RunArgs
 
 /-!
 Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
@@ -7,7 +7,8 @@ Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
 several results and none, fuel, each stuck case that a text reaches, ops
 without rules (ADR-2026-10-30-1855), and argument errors, `poison` among
-them.
+them. These runs make no choice, in scripted mode with no choices, the
+default; `FirTest.Modes` tests both modes on runs that choose.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
@@ -19,17 +20,24 @@ namespace FirTest
 open Fir FirRef
 
 /-- What `fir-ref run` reports on the text `t`. -/
-def runText (t func : String) (args : List String := []) (fuel : Nat := defaultFuel) : RunReport :=
-  runBytes "t.fir" t.toUTF8 fuel func args
+def runText (t func : String) (args : List String := []) (fuel : Nat := defaultFuel)
+    (mode : Mode := .scripted []) : RunReport :=
+  runBytes "t.fir" t.toUTF8 fuel func args mode
 
-/-- The report of a run that returns `vs`. -/
-def returns (vs : List String) : RunReport :=
-  { out := "{\"kind\":\"return\",\"values\":[" ++ ",".intercalate (vs.map ("\"" ++ · ++ "\"")) ++ "]}",
+/-- The JSON of a list of values. -/
+def valuesJson (vs : List String) : String := "[" ++ ",".intercalate (vs.map ("\"" ++ · ++ "\"")) ++ "]"
+
+/-- The report of a run that returns `vs` after `c` choices. -/
+def returns (vs : List String) (c : Nat := 0) : RunReport :=
+  { out := "{\"kind\":\"return\",\"values\":" ++ valuesJson vs ++ ",\"choices\":" ++ toString c ++ "}",
     status := 0 }
 
 /-- The report of a stuck run. -/
 def stuckBy (reason : String) : RunReport :=
-  { out := "{\"kind\":\"stuck\",\"reason\":\"" ++ reason ++ "\"}", status := 1 }
+  { out := "{\"kind\":\"stuck\",\"reason\":\"" ++ reason ++ "\",\"choices\":0}", status := 1 }
+
+/-- The report of a run that runs out of fuel. -/
+def exhausted : RunReport := { out := "{\"kind\":\"fuel-exhausted\",\"choices\":0}", status := 0 }
 
 /-- A report on standard error only. -/
 def fails (status : UInt32) (err : String) : RunReport := { err, status }
@@ -68,8 +76,8 @@ def results : String := oneFunc
 
 Each op takes a step, `ret` included: `@seven` runs two ops. -/
 
-#guard runText seven "@seven" (fuel := 0) == { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
-#guard runText seven "@seven" (fuel := 1) == { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+#guard runText seven "@seven" (fuel := 0) == exhausted
+#guard runText seven "@seven" (fuel := 1) == exhausted
 #guard runText seven "@seven" (fuel := 2) == returns ["7"]
 
 /-! # Stuck
@@ -112,13 +120,14 @@ def body (header : String) (lines : List String) : String :=
 
 /-! # Ops without rules
 
-Every core op but `const`, `add` without flags and `ret` has no rules yet,
-so `fir-ref` reports an error and no result (ADR-2026-10-30-1855). -/
+Every core op but `const`, `add`, `sub`, `mul`, `freeze` and `ret` has no
+rules yet, so `fir-ref` reports an error and no result
+(ADR-2026-10-30-1855), in either mode. -/
 
-#guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = sub %a, %a @0", "  ret %s @0"])
-    "@f" ["1"] == fails 2 "fir-ref: @f: sub has no execution rules yet"
-#guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = add nsw %a, %a @0", "  ret %s @0"])
-    "@f" ["1"] == fails 2 "fir-ref: @f: add nsw has no execution rules yet"
+#guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = and %a, %a @0", "  ret %s @0"])
+    "@f" ["1"] == fails 2 "fir-ref: @f: and has no execution rules yet"
+#guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = sdiv exact %a, %a @0", "  ret %s @0"])
+    "@f" ["1"] (mode := .exhaustive 16) == fails 2 "fir-ref: @f: sdiv exact has no execution rules yet"
 #guard runText (body "func @f()" ["^e:", "  br ^n @0", "^n:", "  ret @0"]) "@f" ==
   fails 2 "fir-ref: @f: br has no execution rules yet"
 
@@ -159,11 +168,22 @@ def addI8 (a : String) : RunReport := runText (addAt "i8") "@f" ["1", a]
 
 /-! # The command line of `run` -/
 
+/-- The mode that `run`'s command line gives, in words. -/
+def modeText : Mode → String
+  | .scripted cs => s!"scripted {cs}"
+  | .exhaustive b => s!"exhaustive {b}"
+
 /-- The fuel, file, function and arguments that `run`'s command line gives,
 or its error. -/
 def runLine (args : List String) : String :=
   match runArgs args with
   | .ok a => s!"{a.fuel} {a.file} {a.func} {a.args}"
+  | .error why => "error: " ++ why
+
+/-- The mode that `run`'s command line gives, or its error. -/
+def modeLine (args : List String) : String :=
+  match runArgs args with
+  | .ok a => modeText a.mode
   | .error why => "error: " ++ why
 
 #guard runLine ["f.fir", "@f", "-5", "true"] == "1000000 f.fir @f [-5, true]"
@@ -180,5 +200,22 @@ def runLine (args : List String) : String :=
 #guard runLine ["--check", "f.fir", "@f"] == "error: unknown option --check"
 #guard runLine [] == "error: no FILE given; use - for standard input"
 #guard runLine ["f.fir"] == "error: no @FUNC given"
+-- Scripted mode, with no choices, is the default.
+#guard modeLine ["f.fir", "@f"] == "scripted []"
+#guard modeLine ["--choices", "1,-2,true", "f.fir", "@f"] == "scripted [1, -2, true]"
+#guard modeLine ["--choices", "", "f.fir", "@f"] == "scripted []"
+#guard modeLine ["--choices", "-1", "f.fir", "@f", "-1"] == "scripted [-1]"
+#guard modeLine ["--choices", "1,,2", "f.fir", "@f"] == "scripted [1, , 2]"
+#guard modeLine ["--choices", "1", "--choices", "2", "f.fir", "@f"] == "scripted [2]"
+#guard modeLine ["f.fir", "@f", "--", "--choices", "1"] == "scripted []"
+#guard modeLine ["--exhaustive", "f.fir", "@f"] == "exhaustive 16"
+#guard modeLine ["--choice-bits", "3", "--exhaustive", "f.fir", "@f"] == "exhaustive 3"
+#guard modeLine ["--exhaustive", "--choices", "1", "f.fir", "@f"] ==
+  "error: --choices does not go with --exhaustive"
+#guard modeLine ["--choice-bits", "3", "f.fir", "@f"] == "error: --choice-bits needs --exhaustive"
+#guard modeLine ["--exhaustive", "--choice-bits", "x", "f.fir", "@f"] ==
+  "error: --choice-bits takes a number of bits, not x"
+#guard modeLine ["f.fir", "@f", "--choice-bits"] == "error: --choice-bits takes a number of bits"
+#guard modeLine ["f.fir", "@f", "--choices"] == "error: --choices takes a list of choices"
 
 end FirTest

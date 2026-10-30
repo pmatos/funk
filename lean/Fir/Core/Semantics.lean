@@ -1,4 +1,6 @@
 import Fir.Core.Arith
+import Fir.Core.Wrap
+import Fir.Core.Freeze
 import Fir.Core.Control
 import Fir.Core.Text
 
@@ -7,16 +9,19 @@ import Fir.Core.Text
 
 `DialectDenote CoreDialect SetM` gives every core op its meaning in the set
 monad. It is one instance over all 24 core ops, which sends each op to the
-rule of its family. The rules are written once, for any monad: `Op.denote?`
-for the ops that are not terminators, and `Op.exit?` for the terminators.
-So this instance and the monad that `fir-ref run` computes in share them.
+rule of its family. The rules are written once, for any monad that has
+the effects they ask for: `Op.denote?` for the ops that are not
+terminators, and `Op.exit?` for the terminators. `freeze` asks for the
+choice effect. So this instance and the tree of choices that `fir-ref run`
+computes in share them.
 
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. After #10, that is every core op but
-`const`, `add` without flags and `ret`; `add` with a flag is one of them.
-ADR-2026-10-30-1855 decides what such an op does until its family lands:
+`Op.exit?` gives `none` for it. After #14, that is every core op but
+`const`, `add`, `sub` and `mul`, with or without flags, `freeze` and
+`ret`. ADR-2026-10-30-1855 decides what such an op does until its family
+lands:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -44,13 +49,22 @@ namespace Fir.Core
 
 variable {m : Type → Type} [Monad m]
 
-/-- The rule of each core op that is not a terminator, in any monad, when
-its family has given it one. -/
-def Op.denote? : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
-    m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
+/-- The rule of each core op that is not a terminator, in any monad with
+the choice effect, when its family has given it one. -/
+def Op.denote? [MonadChoice m] : (op : Op) →
+    Option (HVector toType (Fir.sig (d := CoreDialect) op) →
+      m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
   | .const w v => some fun _ => pure (.cons (constValue w v) .nil)
-  | .add _ ⟨false, false⟩ => some fun
-    | .cons a (.cons b .nil) => pure (.cons (addValues a b) .nil)
+  | .add _ f => some fun
+    | .cons a (.cons b .nil) => pure (.cons (addWith f a b) .nil)
+  | .sub _ f => some fun
+    | .cons a (.cons b .nil) => pure (.cons (subWith f a b) .nil)
+  | .mul _ f => some fun
+    | .cons a (.cons b .nil) => pure (.cons (mulWith f a b) .nil)
+  | .freeze _ => some fun
+    | .cons a .nil => do
+      let v ← freezeValue a
+      pure (.cons v .nil)
   | _ => none
 
 /-- The rule of each core terminator, in any monad, when its family has
@@ -65,10 +79,12 @@ of choice and UB that the rules of #14, #18 and #19 ask for. -/
 def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
--- Among one instance of every core op, the tracer subset has rules.
+-- Among one instance of every core op, the tracer subset and #14's ops
+-- have rules, `add` with each of its flags among them.
 #guard (samples.filter Op.hasRules).map Op.name ==
-  ["const", "const", "const", "const", "add", "ret", "ret"]
-#guard !(Op.add 32 { nuw := true }).hasRules && !(Op.add 32 { nsw := true }).hasRules
+  ["const", "const", "const", "const", "add", "add", "sub", "mul", "freeze", "ret", "ret"]
+#guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
+#guard !(Op.sdiv 32 false).hasRules && !(Op.br).hasRules && !(Op.icmp .eq 8).hasRules
 
 end Fir.Core
 
