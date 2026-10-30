@@ -42,7 +42,8 @@ theorem freezeValue_toSet {ε : Type} {w : Nat} (a : PoisonOr (BitVec w)) :
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
     | .add _ _, .cons _ (.cons _ .nil) | .sub _ _, .cons _ (.cons _ .nil)
-    | .mul _ _, .cons _ (.cons _ .nil) => rfl
+    | .mul _ _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
+    | .trunc .., .cons _ .nil => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
@@ -50,8 +51,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
         (freezeValue_toSet (ε := Op) (w := w) a)
     | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .and _, _
     | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _ | .ashr _, _ | .icmp .., _
-    | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
-    | .ret _, _ | .call .., _ => rfl
+    | .select _, _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl
 
 /-- Exhaustive mode on the core function `f`: every path of its run on
