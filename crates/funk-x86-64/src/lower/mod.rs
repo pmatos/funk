@@ -10,6 +10,7 @@
 mod arith;
 mod constant;
 mod control;
+mod freeze;
 
 use std::collections::HashMap;
 
@@ -107,6 +108,7 @@ pub type Lower = fn(&mut Cx<'_>, &Op) -> Result<(), Unlowered>;
 fn lowering(name: &str) -> Option<Lower> {
     constant::lowering(name)
         .or_else(|| arith::lowering(name))
+        .or_else(|| freeze::lowering(name))
         .or_else(|| control::lowering(name))
 }
 

@@ -56,10 +56,10 @@ tests = [
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
-`const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most
-one result. Tests of other widths, or of several results, go in modules
-whose tests are all interpreter-only, such as `tracer-i7.fir` and
-`widths.fir`.
+`const`, `add`, `sub` and `mul` with any flags, `freeze` and `ret` at `i1`,
+`i8`, `i16`, `i32` and `i64`, with at most one result. Tests of other
+widths, or of several results, go in modules whose tests are all
+interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
