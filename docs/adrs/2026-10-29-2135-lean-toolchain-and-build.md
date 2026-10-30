@@ -59,13 +59,24 @@ Facts, checked on 2026-10-29:
   the toolchain and `docs/spec/.lake/packages`, keyed on the toolchain file
   and the document's manifest. It saves the cache once Verso is built, even
   if a later hook fails.
-- **Hooks that run Lake clear git's variables first.** Git runs hooks with
-  `GIT_DIR`, `GIT_INDEX_FILE` and similar variables set. Lake runs git inside
-  its package clones, so with those variables set it acts on this repository
-  instead: in a test it rewrote `origin` and fetched Verso's tags into it.
-  Every hook that runs Lake goes through `scripts/build-spec.sh`, or first
-  unsets each variable that `git rev-parse --local-env-vars` lists, as the
-  script does.
+- **Hooks that run Lake keep its git calls inside the package clones.** Lake
+  runs git inside each package clone under `.lake/packages`. Two paths let
+  those calls act on this repository instead; in tests they rewrote
+  `origin`, fetched Verso's tags, and moved `HEAD` with `checkout --detach`
+  and `clean -xf`.
+  - Git runs hooks with `GIT_DIR`, `GIT_INDEX_FILE` and similar variables
+    set, and those override the clone's own repository. Guard: unset each
+    variable that `git rev-parse --local-env-vars` lists.
+  - Lake treats a package as cloned when its `.git` exists. If that `.git`
+    is broken (an interrupted clone, a full disk), git skips it and climbs
+    to this repository, even with no variable set. Guard: set
+    `GIT_CEILING_DIRECTORIES` to `lean/.lake/packages` and
+    `docs/spec/.lake/packages`, so git stops there. Not the repository root,
+    which would also stop git from finding this repository from `docs/spec/`.
+
+  Every hook that runs Lake goes through `scripts/build-spec.sh`, or applies
+  both guards as the script does. The script also unsets `GH_TOKEN` and
+  `GITHUB_TOKEN`, because lakefiles and elaboration can run arbitrary code.
 - [#10](https://github.com/pmatos/funk/issues/10) extends this build with the
   Lean tests and the `fir-ref` executable.
 

@@ -19,6 +19,14 @@ done
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 out=$(realpath -m "${1:-$repo_root/docs/spec/_out}")
 
+# Lake treats a package as cloned when its `.git` exists. If that `.git` is
+# broken, git skips it and climbs to this repository. The ceiling stops git
+# at the package directories, so Lake's git calls fail instead.
+export GIT_CEILING_DIRECTORIES="$repo_root/lean/.lake/packages:$repo_root/docs/spec/.lake/packages"
+
+# Lakefiles and elaboration run arbitrary code; keep CI tokens away from them.
+unset GH_TOKEN GITHUB_TOKEN
+
 # Verso's includeLiterate runs `elan run`, so elan must be on PATH.
 if ! command -v elan >/dev/null && [[ -x "$HOME/.elan/bin/elan" ]]; then
     PATH="$HOME/.elan/bin:$PATH"
