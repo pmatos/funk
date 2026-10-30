@@ -22,32 +22,22 @@ const BASE_DIGITS: usize = 5;
 /// How the value of `digits`, a canonical decimal spelling, compares with
 /// `2^k`.
 pub(super) fn cmp_pow2(digits: &str, k: u64) -> Ordering {
-    let v = limbs(digits);
     LAST_POW2.with_borrow_mut(|last| {
-        if !matches!(last, Some((at, _)) if *at == k) {
-            *last = Some((k, pow2(k)));
-        }
-        let Some((_, p)) = last else {
-            unreachable!("the power was just built")
+        let p = match last.take() {
+            Some((at, p)) if at == k => p,
+            _ => pow2(k),
         };
-        v.len()
-            .cmp(&p.len())
-            .then_with(|| v.iter().rev().cmp(p.iter().rev()))
+        // With no leading zero, the top limb of `digits` is not zero, except
+        // in "0", which is below every power anyway.
+        let v = digits.as_bytes().rchunks(BASE_DIGITS);
+        let order = v.len().cmp(&p.len()).then_with(|| {
+            v.rev()
+                .map(|chunk| chunk.iter().fold(0, |a, d| a * 10 + u64::from(d - b'0')))
+                .cmp(p.iter().rev().copied())
+        });
+        *last = Some((k, p));
+        order
     })
-}
-
-/// The base-10^5 limbs of a string of decimal digits, lowest first, with no
-/// high zero limb.
-fn limbs(digits: &str) -> Vec<u64> {
-    let mut out: Vec<u64> = digits
-        .as_bytes()
-        .rchunks(BASE_DIGITS)
-        .map(|chunk| chunk.iter().fold(0, |a, d| a * 10 + u64::from(d - b'0')))
-        .collect();
-    while out.last() == Some(&0) {
-        out.pop();
-    }
-    out
 }
 
 /// `2^k` as base-10^5 limbs, lowest first, by squaring and doubling along
