@@ -14,7 +14,9 @@
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
 #               write its output. fir-ref run runs functions of tests/fir/
-#               and prints the result that each one should give (#10).
+#               and prints the result that each one should give (#10), and
+#               runs a function that freezes poison in scripted and
+#               exhaustive mode (#14).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -190,9 +192,11 @@ case "$1" in
         }
         c=tests/fir/canonical
         ret='{"kind":"return","values":'
+        # A run that makes no choice says so (ADR-2026-10-30-2218).
+        none=',"choices":0}'
         while read -r file want args; do
             # shellcheck disable=SC2086 # ARGS is a list of words.
-            runs "$c/$file" 0 "$ret$want}" $args || status=1
+            runs "$c/$file" 0 "$ret$want$none" $args || status=1
         done <<'END'
 add.fir ["6"] @add3 1 2 3
 add.fir ["-2147483648"] @add3 2147483647 1 0
@@ -214,19 +218,36 @@ END
         # shellcheck disable=SC2016 # The symbols are written as text writes them.
         for sym in '@"1"' '@"a b"' '@""' '@"_ZN3foo$LT$E"' '@"tab\tquote\"slash\\line\n"' \
             '@"\u{202e}hidden\u{85}\u{feff}\u{1}"' '@"résumé"'; do
-            runs $c/symbols.fir 0 "${ret}[]}" "$sym" || status=1
+            runs $c/symbols.fir 0 "${ret}[]$none" "$sym" || status=1
         done
-        runs tests/fir/noncanonical/add.fir 0 "${ret}[\"6\"]}" @add3 1 2 3 || status=1
-        runs $c/seven.fir 0 '{"kind":"fuel-exhausted"}' --fuel 1 @seven || status=1
-        runs - 0 "${ret}[\"7\"]}" @seven <$c/seven.fir || status=1
+        runs tests/fir/noncanonical/add.fir 0 "${ret}[\"6\"]$none" @add3 1 2 3 || status=1
+        runs $c/seven.fir 0 '{"kind":"fuel-exhausted","choices":0}' --fuel 1 @seven || status=1
+        runs - 0 "${ret}[\"7\"]$none" @seven <$c/seven.fir || status=1
         printf 'func @f() -> i32 {\n^e:\n  %%c: i32 = const 1 @0\n}\n\nlocs {\n  @0 = unknown\n}\n' \
             >"$tmp/open-block.fir"
-        runs "$tmp/open-block.fir" 1 '{"kind":"stuck","reason":"a block ends without a terminator"}' \
-            @f || status=1
-        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = sub %%a, %%a @0\n  ret %%s @0\n}\n' \
-            >"$tmp/sub.fir"
-        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/sub.fir"
-        runs "$tmp/sub.fir" 2 'fir-ref: @f: sub has no execution rules yet' @f 1 || status=1
+        runs "$tmp/open-block.fir" 1 \
+            '{"kind":"stuck","reason":"a block ends without a terminator","choices":0}' @f || status=1
+        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = and %%a, %%a @0\n  ret %%s @0\n}\n' \
+            >"$tmp/and.fir"
+        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/and.fir"
+        runs "$tmp/and.fir" 2 'fir-ref: @f: and has no execution rules yet' @f 1 || status=1
+        # freeze of poison makes a choice: %a + 1 overflows i2 at 1
+        # (ADR-2026-10-30-2218).
+        printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"
+        printf '  %%p: i2 = add nsw %%a, %%m @0\n  %%f: i2 = freeze %%p @0\n  ret %%f @0\n}\n' \
+            >>"$tmp/freeze.fir"
+        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/freeze.fir"
+        runs "$tmp/freeze.fir" 0 "${ret}[\"-1\"],\"choices\":1}" --choices -1 @f 1 || status=1
+        runs "$tmp/freeze.fir" 0 "${ret}[\"1\"]$none" @f 0 || status=1
+        runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: the run makes choice 1, of type i2, and --choices gives 0 choices' \
+            @f 1 || status=1
+        runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: choice 1, 2, is not a value of type i2' \
+            --choices 2 @f 1 || status=1
+        outcomes='{"kind":"outcomes","choices":1,"outcomes":['
+        for v in 0 1 -2 -1; do outcomes+="${ret}[\"$v\"]},"; done
+        runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f 1 || status=1
+        runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
+            --exhaustive --choice-bits 1 @f 1 || status=1
         runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
             @double 9223372036854775808 || status=1
         runs $c/add.fir 2 'fir-ref: poison is not a value of type i64' @double poison || status=1

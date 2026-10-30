@@ -52,39 +52,33 @@ theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) := validIsW
 /-! # Running a mixed module
 
 The spec's semantics of the sum is the set monad's: each side's instance,
-lifted. The tests run the same rules in `Mix`, a monad with one path that
-may end early, as `fir-ref run` runs the core dialect's in `Exec`. -/
+lifted. The tests run the same rules in `Mix`, a tree of choices whose
+paths with no outcome name the op without a rule, as `fir-ref run` runs
+the core dialect's, and walk it in scripted mode with no choices. -/
 
 example (f : Func CoreToy) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     Run (List (DVal CoreToy)) :=
   f.run (m := SetM) args fuel
 
-/-- What ends a run in `Mix` early: immediate UB, or an op that has no rule
-for what the interpreter asks of it. -/
-inductive MixHalt where
-  | ub (reason : String)
-  | noRule (op : String)
-
-/-- The monad that the tests run a mixed module in: one path, which may
-end early. -/
-abbrev Mix := Except MixHalt
-
-instance : MonadUB Mix := ⟨fun r => throw (.ub r)⟩
+/-- The tree of choices that the tests run a mixed module in. A path with
+no outcome names the op that has no rule for what the interpreter asks of
+it. -/
+abbrev Mix := ChoiceTree String
 
 /-- The core dialect's rules, in `Mix`. -/
 instance : DialectDenote CoreDialect Mix where
   denote op args := match op.denote? (m := Mix) with
     | some rule => rule args
-    | none => throw (.noRule op.name)
+    | none => .noOutcome op.name
   exit op args := match op.exit? (m := Mix) with
     | some rule => rule args
-    | none => throw (.noRule op.name)
+    | none => .noOutcome op.name
 
 /-- The toy dialect's rule, in `Mix`. A toy op is not a terminator, so it
 has no exit. -/
 instance : DialectDenote ToyDialect Mix where
   denote := Toy.Op.denote
-  exit op _ := throw (.noRule op.name)
+  exit op _ := .noOutcome op.name
 
 /-- Parses with the sum of the core and the toy dialect. -/
 def parseMixed (t : String) : Except ParseError (Module CoreToy) := Fir.parse t
@@ -98,10 +92,11 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
   | .ok m => m.funcs.head?.bind fun f =>
     match testArgs (f.params.map (·.2)) args with
     | .error _ => none
-    | .ok vs => some <| match (f.run (m := Mix) vs fuel).run with
-      | .ok r => outcomeReport "@f" (.ok r)
-      | .error (.ub r) => outcomeReport "@f" (.error (.ub r))
-      | .error (.noRule op) => { err := s!"{op} has no rule", status := 2 }
+    | .ok vs => some <| match (f.run (m := Mix) vs fuel).run.script constOf [] 0 with
+      | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok r, c))
+      | .ok (.ub r, c) => scriptedReport "@f" (.ok (.ub r, c))
+      | .ok (.noOutcome op, _) => { err := s!"{op} has no rule", status := 2 }
+      | .error _ => { err := "the run makes a choice", status := 2 }
 
 /-- `@f(%a: T) -> T, T` that masks `%a` to its low `k` bits, then adds
 `%a` to the mask: a toy op whose result a core op uses. -/
@@ -174,8 +169,7 @@ def mixedProblems (t : String) : Option (List Problem) :=
 #guard runMixed (maskAdd "i1" "1") ["true"] == some (returns ["true", "false"])
 #guard runMixed (maskAdd "i16777215" "1") ["-1"] == some (returns ["1", "0"])
 -- Each op takes a step of fuel, the toy op included.
-#guard runMixed mixed ["13"] (fuel := 2) ==
-  some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+#guard runMixed mixed ["13"] (fuel := 2) == some exhausted
 #guard runMixed mixed ["13"] (fuel := 3) == some (returns ["5", "18"])
 
 /-! # The theorems' axioms -/
