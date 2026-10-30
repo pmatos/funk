@@ -38,3 +38,11 @@ import Fir.Text.LexLayout
 import Fir.Text.LexPrint
 import Fir.Text.LexModule
 import Fir.Text.LexWellFormed
+import Fir.Text.Tree
+import Fir.Text.ReadAttrs
+import Fir.Text.ReadDefs
+import Fir.Text.ReadOps
+import Fir.Text.ReadBlocks
+import Fir.Text.ReadFunc
+import Fir.Text.ReadTable
+import Fir.Text.ReadModule
