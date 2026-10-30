@@ -1,5 +1,6 @@
 import Fir
 import FirRef.Utf8
+import FirRef.Report
 
 /-!
 `fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). It
@@ -24,17 +25,23 @@ open Fir
 
 /-- The command line help. -/
 def usage : String := "usage: fir-ref fmt [--check] FILE...
+       fir-ref validate FILE...
 
-  fmt      Parse each FILE with the core dialect and print it in canonical
-           form, as the spec's printer writes it. fmt does not validate: a
-           module that parses has a canonical form.
-             --check  print the name of each FILE that is not canonical
+  fmt       Parse each FILE with the core dialect and print it in canonical
+            form, as the spec's printer writes it. fmt does not validate: a
+            module that parses has a canonical form.
+              --check  print the name of each FILE that is not canonical
+  validate  Parse each FILE with the core dialect and run the spec's
+            validation check. Print one JSON object per FILE, on one line,
+            as funk verify --json does: the FILE, its verdict (accepted,
+            parse-error, validation-error or io-error) and its diagnostics.
   -h, --help  Print this help.
 
 A FILE of - is standard input; -- ends the options.
 
-Exit status: 0 when every FILE parses (and, with --check, is canonical), 1
-when one does not parse or is not canonical, 2 on a usage or I/O error.
+Exit status: 0 when every FILE parses (and, with fmt --check, is canonical,
+or with validate, is valid), 1 when one does not parse, is not canonical or
+is not valid, 2 on a usage or I/O error.
 "
 
 /-- The bytes of a file, or of standard input for `-`. -/
@@ -63,6 +70,28 @@ def fmtFile (check : Bool) (file : String) : IO UInt32 := do
       else
         IO.println file
         return 1
+
+/-- What `validate` reports on one file, and its exit status. -/
+def validateFile (file : String) : IO UInt32 := do
+  match ← (readInput file).toBaseIO with
+  | .error e =>
+    let why := ((toString e).splitOn "\n").headD ""
+    let what := if file == "-" then "standard input" else file
+    IO.println (ioErrorReport file s!"cannot read {what}: {why}")
+    return 2
+  | .ok bytes =>
+    let (line, status) := validateBytes file bytes
+    IO.println line
+    return status
+
+/-- The files that `validate` is given. `--` ends the options, and it has
+none. -/
+def validateArgs : Bool → List String → Except String (List String)
+  | _, [] => .ok []
+  | true, "--" :: rest => validateArgs false rest
+  | options, a :: rest =>
+    if options && a.startsWith "--" then .error s!"unknown option {a}"
+    else do pure (a :: (← validateArgs options rest))
 
 /-- The arguments of `fmt`, as `funk` reads them: whether `--check` is
 given, and the files. `--` ends the options. -/
@@ -97,6 +126,14 @@ def run (args : List String) : IO UInt32 := do
       else if (files.filter (· == "-")).length > 1 then
         fail "- may be given once: standard input can be read only once"
       else files.foldlM (fun status file => return max status (← fmtFile check file)) 0
+  | "validate" :: rest =>
+    match validateArgs true rest with
+    | .error why => fail why
+    | .ok files =>
+      if files.isEmpty then fail "no FILE given; use - for standard input"
+      else if (files.filter (· == "-")).length > 1 then
+        fail "- may be given once: standard input can be read only once"
+      else files.foldlM (fun status file => return max status (← validateFile file)) 0
   | cmd :: _ => fail s!"unknown command {cmd}"
 
 end FirRef

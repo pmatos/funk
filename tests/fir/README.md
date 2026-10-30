@@ -10,7 +10,8 @@ parser, `Fir.parse`, through `fir-ref` (#10).
   `canonical/NAME.fir`, which is its canonical form.
 
 The Rust tests check both directories (`crates/funk-ir/tests/corpus.rs`).
-`scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and
+`scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
+`fir-ref validate` accepts each one, as every text here is valid; and
 `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust prints from
 them, byte for byte (ADR-2026-10-30-1250).
 

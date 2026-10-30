@@ -9,9 +9,13 @@
 #               a block of a million ops and a function of a million
 #               blocks are reprinted within 120 seconds, and regions
 #               nested 3,000 deep within 8 seconds of CPU time (#47).
+#               fir-ref validate accepts every text of tests/fir/, and
+#               gives a module with an unreachable block, a text that does
+#               not parse and a missing file their verdicts (#10).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
-#               bytes must match.
+#               bytes must match. fir-ref validate accepts each one: the
+#               generator makes valid modules, which funk verify accepts.
 set -euo pipefail
 
 if [[ $# -ne 1 || ( "$1" != test && "$1" != round-trip ) ]]; then
@@ -57,6 +61,34 @@ case "$1" in
             echo "fir-ref does not reprint a string of ten million characters on a 256 KiB stack" >&2
             status=1
         fi
+        # fir-ref validate reports one JSON verdict per file (ADR-2026-10-30-1741).
+        corpus=(tests/fir/canonical/*.fir tests/fir/noncanonical/*.fir)
+        rc=0
+        "$fir_ref" validate "${corpus[@]}" >"$tmp/corpus.json" || rc=$?
+        accepted=$(grep -c '"verdict":"accepted"' "$tmp/corpus.json" || true)
+        if [[ $rc -ne 0 || $accepted -ne ${#corpus[@]} ]]; then
+            grep -v '"verdict":"accepted"' "$tmp/corpus.json" >&2 || true
+            echo "fir-ref validate does not accept every text of tests/fir/" >&2
+            status=1
+        fi
+        printf 'func @f() -> i32 {\n^entry:\n  %%c: i32 = const 0 @0\n  ret %%c @0\n' >"$tmp/dead.fir"
+        printf '^dead:\n  %%d: i32 = const 1 @0\n  ret %%d @0\n}\n\nlocs {\n  @0 = unknown\n}\n' \
+            >>"$tmp/dead.fir"
+        printf 'func @f() {\n' >"$tmp/open.fir"
+        # validates FILE STATUS PATTERN: fir-ref validate exits with STATUS on
+        # FILE, and its report matches PATTERN.
+        validates() {
+            local rc=0 report
+            report=$("$fir_ref" validate "$1") || rc=$?
+            if [[ $rc -ne $2 ]] || ! grep -q -- "$3" <<<"$report"; then
+                echo "fir-ref validate $1 exits with $rc, not $2, or its report lacks $3: $report" >&2
+                return 1
+            fi
+        }
+        validates "$tmp/dead.fir" 1 '"verdict":"validation-error".*block ^dead is not reachable' ||
+            status=1
+        validates "$tmp/open.fir" 1 '"verdict":"parse-error".*"line":2,"column":1' || status=1
+        validates "$tmp/missing.fir" 2 '"verdict":"io-error"' || status=1
         # Large canonical texts (#47). On a block of a million ops and on a
         # function of a million blocks, the spec's printer, quadratic in a
         # block's length, takes over 400 seconds: the wall-clock limit
@@ -113,6 +145,11 @@ case "$1" in
         cargo run --quiet --locked -p funk-ir --example fir_texts -- "$out"
         if ! "$fir_ref" fmt --check "$out"/*.fir; then
             echo "fir-ref does not print the texts above as Rust prints them" >&2
+            exit 1
+        fi
+        if ! verdicts=$("$fir_ref" validate "$out"/*.fir); then
+            grep -v '"verdict":"accepted"' <<<"$verdicts" >&2 || true
+            echo "fir-ref validate rejects the texts above, which funk verify accepts" >&2
             exit 1
         fi
         ;;

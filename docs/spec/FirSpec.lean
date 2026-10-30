@@ -24,7 +24,8 @@ The chapters follow the WebAssembly specification:
 
 * _Abstract syntax_ gives the terms of fir: dialects, types, ops, blocks,
   functions, modules and locations, and the ops of the core dialect.
-* _Validation_ gives the rules that decide which terms are fir programs.
+* _Validation_ gives the rules that decide which terms are fir programs,
+  and the check that decides them, which `fir-ref validate` runs.
 * _Execution_ explains poison and immediate UB in plain words, then gives
   what a run can end with, what a function shows to an observer, the
   refinement relation that defines correctness, and how each op treats
@@ -70,6 +71,22 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Core.Validation "Core rules" (level := 2)}
 
 {includeLiterate "." Fir.Core.Rejects "A rejected function" (level := 2)}
+
+{includeLiterate "." Fir.Validation.Check "The validation check" (level := 2)}
+
+{includeLiterate "." Fir.Validation.Tables "Tables" (level := 2)}
+
+{includeLiterate "." Fir.Validation.Search "Searching a graph" (level := 2)}
+
+{includeLiterate "." Fir.Validation.Graph "Reachability and dominance, decided" (level := 2)}
+
+{includeLiterate "." Fir.Validation.CheckOps "Checking ops" (level := 2)}
+
+{includeLiterate "." Fir.Validation.CheckFuncs "Checking functions" (level := 2)}
+
+{includeLiterate "." Fir.Validation.CheckModule "Checking modules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Check "The core dialect's rules, decided" (level := 2)}
 
 # Execution
 

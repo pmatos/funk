@@ -6,6 +6,8 @@ import FirTest.Parse
 import FirTest.Print
 import FirTest.Lex
 import FirTest.Decode
+import FirTest.ValidateOps
+import FirTest.Validate
 
 /-!
 The Lean tests. Building this library runs their checks. This root module
