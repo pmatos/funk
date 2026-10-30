@@ -59,7 +59,8 @@ terminator. -/
 def Op.hasRules (op : Op) : Bool := (op.denote? (m := Id)).isSome || (op.exit? (m := Id)).isSome
 
 -- Among one instance of every core op, the tracer subset has rules.
-#guard (samples.filter Op.hasRules).map Op.name == ["const", "const", "const", "const", "add", "ret", "ret"]
+#guard (samples.filter Op.hasRules).map Op.name ==
+  ["const", "const", "const", "const", "add", "ret", "ret"]
 #guard !(Op.add 32 { nuw := true }).hasRules && !(Op.add 32 { nsw := true }).hasRules
 
 end Fir.Core

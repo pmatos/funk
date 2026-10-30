@@ -42,7 +42,7 @@ theorem addValues_isRefinedBy {a b a' b' : PoisonOr (BitVec w)} (ha : a ⊑ a') 
   | poison => trivial
   | value x =>
     cases b with
-    | poison => cases x <;> trivial
+    | poison => trivial
     | value y =>
       cases a' with
       | poison => exact ha.elim
