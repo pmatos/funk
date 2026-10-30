@@ -34,16 +34,6 @@ impl Attr {
     pub fn int(v: i128) -> Attr {
         Attr::Int(Int::from(v))
     }
-
-    /// The type that this attribute writes, if it is a word or an applied
-    /// word.
-    pub fn as_type(&self) -> Option<Type> {
-        match self {
-            Attr::Word(w) => Some(Type::word(w.clone())),
-            Attr::App(h, args) => Some(Type::app(h.clone(), args.clone())),
-            _ => None,
-        }
-    }
 }
 
 /// A type, as written in text: a word such as `i32`, or a word applied to
@@ -72,14 +62,6 @@ impl Type {
         Type {
             name: h.into(),
             args: Some(args),
-        }
-    }
-
-    /// The type as an attribute term.
-    pub fn to_attr(&self) -> Attr {
-        match &self.args {
-            None => Attr::Word(self.name.clone()),
-            Some(args) => Attr::App(self.name.clone(), args.clone()),
         }
     }
 }

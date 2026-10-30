@@ -103,9 +103,4 @@ impl LocTable {
     pub fn get(&self, r: LocRef) -> Option<&Location> {
         self.entries.iter().find(|(k, _)| *k == r).map(|(_, l)| l)
     }
-
-    /// Whether the table has an entry for `r`.
-    pub fn contains(&self, r: LocRef) -> bool {
-        self.get(r).is_some()
-    }
 }

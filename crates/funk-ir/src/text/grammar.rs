@@ -40,12 +40,11 @@ impl Parser {
         self.tokens[self.at].pos
     }
 
-    fn next(&mut self) -> Token {
-        let t = self.tokens[self.at].clone();
-        if t.tok != Tok::Eof {
+    /// Moves past the current token; the end of the text stays current.
+    fn advance(&mut self) {
+        if self.tokens[self.at].tok != Tok::Eof {
             self.at += 1;
         }
-        t
     }
 
     fn fail<T>(&self, expected: &str) -> Result<T, ParseError> {
@@ -58,7 +57,7 @@ impl Parser {
     fn eat(&mut self, tok: &Tok) -> bool {
         let found = self.peek() == tok;
         if found {
-            self.next();
+            self.advance();
         }
         found
     }
@@ -76,7 +75,7 @@ impl Parser {
         match self.peek() {
             Tok::Word(w) => {
                 let w = w.clone();
-                self.next();
+                self.advance();
                 Ok((w, pos))
             }
             _ => self.fail(expected),
@@ -86,7 +85,7 @@ impl Parser {
     fn keyword(&mut self, kw: &str) -> Result<(), ParseError> {
         match self.peek() {
             Tok::Word(w) if w == kw => {
-                self.next();
+                self.advance();
                 Ok(())
             }
             _ => self.fail(&format!("`{kw}`")),
@@ -98,7 +97,7 @@ impl Parser {
         let Tok::Sym(name) = self.peek().clone() else {
             return self.fail("the item's symbol");
         };
-        self.next();
+        self.advance();
         self.expect(&Tok::LParen, "( and the item's parameters")?;
         let params = if self.peek() == &Tok::RParen {
             Vec::new()
@@ -154,7 +153,7 @@ impl Parser {
         let Tok::Value(name) = self.peek().clone() else {
             return self.fail("a value definition, `%x: type`");
         };
-        self.next();
+        self.advance();
         self.expect(&Tok::Colon, ": and the value's type")?;
         Ok(SDef {
             name,
@@ -183,7 +182,7 @@ impl Parser {
     fn attr(&mut self) -> Result<Attr, ParseError> {
         let attr = match self.peek().clone() {
             Tok::Word(w) => {
-                self.next();
+                self.advance();
                 if self.peek() == &Tok::LParen {
                     return Ok(Attr::App(w, self.attr_args()?));
                 }
@@ -195,7 +194,7 @@ impl Parser {
             _ => return self.fail("an attribute"),
         };
         if !matches!(attr, Attr::Word(_)) {
-            self.next();
+            self.advance();
         }
         Ok(attr)
     }
@@ -217,7 +216,7 @@ impl Parser {
     fn blocks(&mut self) -> Result<Vec<SBlock>, ParseError> {
         let mut blocks = Vec::new();
         while let Tok::Label(label) = self.peek().clone() {
-            self.next();
+            self.advance();
             let mut params = Vec::new();
             if self.eat(&Tok::LParen) {
                 params = self.defs()?;
@@ -248,12 +247,12 @@ impl Parser {
         let mut succs = Vec::new();
         if let Tok::Value(v) = self.peek().clone() {
             operands.push((v, self.pos()));
-            self.next();
+            self.advance();
             while self.eat(&Tok::Comma) {
                 match self.peek().clone() {
                     Tok::Value(v) if succs.is_empty() => {
                         operands.push((v, self.pos()));
-                        self.next();
+                        self.advance();
                     }
                     _ => succs.push(self.succ()?),
                 }
@@ -273,7 +272,7 @@ impl Parser {
             Tok::LocRef(r) => *r,
             _ => return self.fail("the op's location reference, such as @0"),
         };
-        self.next();
+        self.advance();
         Ok(SOp {
             results,
             name,
@@ -290,14 +289,14 @@ impl Parser {
         let Tok::Label(label) = self.peek().clone() else {
             return self.fail("a successor, such as ^next");
         };
-        self.next();
+        self.advance();
         let mut args = Vec::new();
         if self.eat(&Tok::LParen) {
             loop {
                 let Tok::Value(v) = self.peek().clone() else {
                     return self.fail("a value passed to the successor");
                 };
-                self.next();
+                self.advance();
                 args.push(v);
                 if !self.eat(&Tok::Comma) {
                     break;
@@ -314,7 +313,7 @@ impl Parser {
         let mut table = LocTable::new();
         while let Tok::LocRef(r) = self.peek() {
             let r = *r;
-            self.next();
+            self.advance();
             self.expect(&Tok::Eq, "= after the location reference")?;
             let loc = self.location()?;
             table.insert(r, loc);
@@ -325,7 +324,7 @@ impl Parser {
 
     fn location(&mut self) -> Result<Location, ParseError> {
         if let Tok::Str(file) = self.peek().clone() {
-            self.next();
+            self.advance();
             self.expect(&Tok::Colon, ": after the file")?;
             let start_line = self.nat("a line")?;
             self.expect(&Tok::Colon, ":")?;
@@ -359,7 +358,7 @@ impl Parser {
                 let Tok::Str(n) = self.peek().clone() else {
                     return self.fail("the name, as a string");
                 };
-                self.next();
+                self.advance();
                 Location::Name(n)
             }
             "callsite" => {
@@ -390,7 +389,7 @@ impl Parser {
         match self.peek() {
             Tok::LocRef(r) => {
                 let r = *r;
-                self.next();
+                self.advance();
                 Ok(r)
             }
             _ => self.fail("a location reference, such as @0"),
@@ -403,7 +402,7 @@ impl Parser {
         match self.peek() {
             Tok::Int(i) if !i.is_negative() => match i.as_str().parse::<u32>() {
                 Ok(n) => {
-                    self.next();
+                    self.advance();
                     Ok(n)
                 }
                 Err(_) => Err(ParseError {

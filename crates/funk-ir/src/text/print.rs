@@ -11,7 +11,7 @@
 use std::fmt::{self, Display, Write};
 
 use super::chars::{print_symbol, quote};
-use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Region, Type};
+use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Region, Succ, Type};
 
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,6 +65,19 @@ impl Display for Def {
     }
 }
 
+impl Display for Succ {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "^{}", self.label)?;
+        for (i, a) in self.args.iter().enumerate() {
+            write!(f, "{}%{a}", if i == 0 { "(" } else { ", " })?;
+        }
+        if !self.args.is_empty() {
+            f.write_str(")")?;
+        }
+        Ok(())
+    }
+}
+
 /// Items separated by `, `.
 pub(crate) struct Commas<'a, T>(pub(crate) &'a [T]);
 
@@ -94,21 +107,14 @@ fn write_op(out: &mut String, n: usize, op: &Op) {
     for a in &op.attrs {
         let _ = write!(out, " {a}");
     }
-    let uses = op
-        .operands
-        .iter()
-        .map(|x| format!("%{x}"))
-        .chain(op.succs.iter().map(|s| {
-            if s.args.is_empty() {
-                format!("^{}", s.label)
-            } else {
-                let args: Vec<String> = s.args.iter().map(|a| format!("%{a}")).collect();
-                format!("^{}({})", s.label, args.join(", "))
-            }
-        }));
-    for (i, u) in uses.enumerate() {
-        out.push_str(if i == 0 { " " } else { ", " });
-        out.push_str(&u);
+    let mut sep = " ";
+    for x in &op.operands {
+        let _ = write!(out, "{sep}%{x}");
+        sep = ", ";
+    }
+    for s in &op.succs {
+        let _ = write!(out, "{sep}{s}");
+        sep = ", ";
     }
     for r in &op.regions {
         write_region(out, n, r);

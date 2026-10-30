@@ -56,7 +56,12 @@ pub fn module(rng: &mut Rng) -> Module {
     };
     let mut symbols: Vec<String> = Vec::new();
     for _ in 0..rng.below(4) {
-        let name = fresh(rng, &symbols, symbol);
+        let name = loop {
+            let s = symbol(rng);
+            if !symbols.contains(&s) {
+                break s;
+            }
+        };
         symbols.push(name.clone());
         m = m.func(func(rng, name, &keys));
     }
@@ -170,16 +175,6 @@ fn name(rng: &mut Rng, word: bool) -> String {
     s
 }
 
-/// A value that `taken` does not hold.
-fn fresh(rng: &mut Rng, taken: &[String], make: fn(&mut Rng) -> String) -> String {
-    loop {
-        let s = make(rng);
-        if !taken.contains(&s) {
-            return s;
-        }
-    }
-}
-
 fn width(rng: &mut Rng) -> u32 {
     match rng.below(10) {
         0 | 1 => 1,
@@ -230,68 +225,84 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
     }
 }
 
+/// The values of a function so far, and the ops of its block that define
+/// them.
+struct Body<'k> {
+    keys: &'k [LocRef],
+    values: Vec<(String, Type)>,
+    ops: Vec<Op>,
+}
+
+impl Body<'_> {
+    /// The names of the values of type `t`.
+    fn of_type(&self, t: &Type) -> Vec<String> {
+        let same = self.values.iter().filter(|(_, u)| u == t);
+        same.map(|(v, _)| v.clone()).collect()
+    }
+
+    /// A value name that the function does not define yet.
+    fn fresh_name(&self, rng: &mut Rng) -> String {
+        loop {
+            let n = name(rng, false);
+            if self.values.iter().all(|(v, _)| *v != n) {
+                return n;
+            }
+        }
+    }
+
+    /// Defines a new value of type `t`, the sum of two earlier values of
+    /// that type or a constant, and returns its name.
+    fn define(&mut self, rng: &mut Rng, t: Type) -> String {
+        let same = self.of_type(&t);
+        let loc = *rng.pick(self.keys);
+        let op = if !same.is_empty() && rng.one_in(2) {
+            Op::new("add", loc)
+                .operand(rng.pick(&same).as_str())
+                .operand(rng.pick(&same).as_str())
+        } else {
+            let w = crate::dialects::core::int_width(&t).expect("an integer type");
+            Op::new("const", loc).attr(constant(rng, w))
+        };
+        let n = self.fresh_name(rng);
+        self.ops.push(op.result(n.clone(), t.clone()));
+        self.values.push((n.clone(), t));
+        n
+    }
+}
+
 fn func(rng: &mut Rng, sym: String, keys: &[LocRef]) -> Func {
     let mut f = Func::new(sym);
-    let mut values: Vec<(String, Type)> = Vec::new();
-    let mut names: Vec<String> = Vec::new();
+    let mut body = Body {
+        keys,
+        values: Vec::new(),
+        ops: Vec::new(),
+    };
     for _ in 0..rng.below(4) {
-        let n = fresh(rng, &names, |r| name(r, false));
-        let t = int_type(width(rng));
-        names.push(n.clone());
-        values.push((n.clone(), t.clone()));
+        let (n, t) = (body.fresh_name(rng), int_type(width(rng)));
+        body.values.push((n.clone(), t.clone()));
         f = f.param(n, t);
     }
-    let results: Vec<Type> = (0..rng.below(4)).map(|_| int_type(width(rng))).collect();
-    let mut block = Block::new(name(rng, false));
-    let mut define = |rng: &mut Rng, block: Block, values: &mut Vec<(String, Type)>, t: Type| {
-        let w = crate::dialects::core::int_width(&t).expect("an integer type");
-        let n = fresh(rng, &names, |r| name(r, false));
-        names.push(n.clone());
-        values.push((n.clone(), t.clone()));
-        let same: Vec<&String> = values
-            .iter()
-            .filter(|(_, u)| *u == t)
-            .map(|(v, _)| v)
-            .collect();
-        let op = if same.len() > 1 && rng.one_in(2) {
-            let (a, b) = (
-                rng.pick(&same[..same.len() - 1]),
-                rng.pick(&same[..same.len() - 1]),
-            );
-            Op::new("add", *rng.pick(keys))
-                .operand(a.as_str())
-                .operand(b.as_str())
-        } else {
-            Op::new("const", *rng.pick(keys)).attr(constant(rng, w))
-        };
-        (block.op(op.result(n.clone(), t)), n)
-    };
     for _ in 0..rng.below(5) {
-        let t = if !values.is_empty() && rng.one_in(2) {
-            rng.pick(&values).1.clone()
+        let t = if !body.values.is_empty() && rng.one_in(2) {
+            rng.pick(&body.values).1.clone()
         } else {
             int_type(width(rng))
         };
-        block = define(rng, block, &mut values, t).0;
+        body.define(rng, t);
     }
     let mut ret = Op::new("ret", *rng.pick(keys));
-    for t in &results {
-        let have: Vec<&String> = values
-            .iter()
-            .filter(|(_, u)| u == t)
-            .map(|(v, _)| v)
-            .collect();
+    for _ in 0..rng.below(4) {
+        let t = int_type(width(rng));
+        let have = body.of_type(&t);
         let v = if !have.is_empty() && rng.one_in(2) {
-            rng.pick(&have).to_string()
+            rng.pick(&have).clone()
         } else {
-            let (b, v) = define(rng, block, &mut values, t.clone());
-            block = b;
-            v
+            body.define(rng, t.clone())
         };
         ret = ret.operand(v);
-    }
-    for t in results {
         f = f.result(t);
     }
+    let mut block = Block::new(name(rng, false));
+    block.ops = body.ops;
     f.block(block.op(ret))
 }

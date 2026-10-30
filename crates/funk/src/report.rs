@@ -6,6 +6,8 @@
 //! accepted it (`accepted`). A parse error carries a text position; a
 //! validation error carries the IR location of the op or block it is about.
 
+use std::fmt::Write;
+
 use funk_ir::{Diagnostic, LocTable, ParseError};
 
 use crate::json::Json;
@@ -60,15 +62,19 @@ impl Problem {
             ),
             Problem::Io(why) => format!("{file}: error: {why}"),
             Problem::Validation(d, shown) => {
-                let where_ = d.path();
+                let path = d.path();
                 let mut line = format!("{file}: validation error");
-                if !where_.is_empty() {
-                    line.push_str(&format!(" in {}", where_.join(" ")));
+                if !path.is_empty() {
+                    let _ = write!(line, " in {}", path.join(" "));
                 }
-                line.push_str(&format!(": {}", d.message));
+                let _ = write!(line, ": {}", d.message);
                 match (d.loc, shown) {
-                    (Some(r), Some(l)) => line.push_str(&format!(" (at {r} = {l})")),
-                    (Some(r), None) => line.push_str(&format!(" (at {r})")),
+                    (Some(r), Some(l)) => {
+                        let _ = write!(line, " (at {r} = {l})");
+                    }
+                    (Some(r), None) => {
+                        let _ = write!(line, " (at {r})");
+                    }
                     _ => {}
                 }
                 line

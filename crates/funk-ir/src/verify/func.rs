@@ -8,6 +8,7 @@
 //! blocks of ops' regions too.
 
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 
 use super::Diagnostic;
 use super::cfg::Cfg;
@@ -106,10 +107,22 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
                 format!("value name {:?} is not one or more name characters", d.name),
             ));
         }
-        check_type(f, cx.reg, &d.ty, &format!("the type of %{}", d.name), out);
+        check_type(
+            f,
+            cx.reg,
+            &d.ty,
+            format_args!("the type of %{}", d.name),
+            out,
+        );
     }
     for t in &f.results {
-        check_type(f, cx.reg, t, "a result type of the function", out);
+        check_type(
+            f,
+            cx.reg,
+            t,
+            format_args!("a result type of the function"),
+            out,
+        );
     }
     for b in &all {
         if !is_name(&b.label) {
@@ -154,7 +167,14 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
     }
 }
 
-fn check_type(f: &Func, reg: &Registry, t: &Type, what: &str, out: &mut Vec<Diagnostic>) {
+/// Checks a stated type; `what` names it, and is formatted only on error.
+fn check_type(
+    f: &Func,
+    reg: &Registry,
+    t: &Type,
+    what: fmt::Arguments<'_>,
+    out: &mut Vec<Diagnostic>,
+) {
     match reg.check_type(t) {
         TypeCheck::Valid => {}
         TypeCheck::Invalid(why) => {

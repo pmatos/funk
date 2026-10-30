@@ -40,6 +40,13 @@ enum FmtMode {
     Write,
 }
 
+/// What the command line asks for.
+enum Request {
+    Help,
+    Version,
+    Run(Args),
+}
+
 struct Args {
     command: String,
     mode: FmtMode,
@@ -47,7 +54,16 @@ struct Args {
     files: Vec<String>,
 }
 
-fn parse_args(args: &[String]) -> Result<Args, String> {
+fn parse_args(args: &[String]) -> Result<Request, String> {
+    let mut options = args.iter().take_while(|a| *a != "--");
+    if args.first().is_some_and(|a| a == "help")
+        || options.clone().any(|a| a == "-h" || a == "--help")
+    {
+        return Ok(Request::Help);
+    }
+    if options.any(|a| a == "-V" || a == "--version") {
+        return Ok(Request::Version);
+    }
     let (command, rest) = args.split_first().ok_or("missing command")?;
     if command != "fmt" && command != "verify" {
         return Err(format!("unknown command {command}"));
@@ -87,7 +103,7 @@ fn parse_args(args: &[String]) -> Result<Args, String> {
     if a.files.iter().filter(|f| *f == "-").count() > 1 {
         return Err("- may be given once: standard input can be read only once".into());
     }
-    Ok(a)
+    Ok(Request::Run(a))
 }
 
 fn read(file: &str) -> Result<Vec<u8>, String> {
@@ -101,7 +117,8 @@ fn read(file: &str) -> Result<Vec<u8>, String> {
     std::fs::read(file).map_err(|e| format!("cannot read {file}: {e}"))
 }
 
-fn rejected(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
+/// The report on `file`, with no fields beyond the common ones yet.
+fn file_report(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
     Report {
         file: file.to_string(),
         verdict,
@@ -113,13 +130,13 @@ fn rejected(file: &str, verdict: Verdict, problems: Vec<Problem>) -> Report {
 fn verify_file(file: &str, reg: &Registry) -> Report {
     let bytes = match read(file) {
         Ok(b) => b,
-        Err(why) => return rejected(file, Verdict::IoError, vec![Problem::Io(why)]),
+        Err(why) => return file_report(file, Verdict::IoError, vec![Problem::Io(why)]),
     };
     match parse_bytes(&bytes, reg) {
-        Err(e) => rejected(file, Verdict::ParseError, vec![Problem::Parse(e)]),
+        Err(e) => file_report(file, Verdict::ParseError, vec![Problem::Parse(e)]),
         Ok(m) => match verify(&m, reg) {
-            ds if ds.is_empty() => rejected(file, Verdict::Accepted, Vec::new()),
-            ds => rejected(
+            ds if ds.is_empty() => file_report(file, Verdict::Accepted, Vec::new()),
+            ds => file_report(
                 file,
                 Verdict::ValidationError,
                 Problem::validation(ds, &m.locs),
@@ -141,7 +158,7 @@ fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Format
         Ok(b) => b,
         Err(why) => {
             return (
-                rejected(file, Verdict::IoError, vec![Problem::Io(why)]),
+                file_report(file, Verdict::IoError, vec![Problem::Io(why)]),
                 None,
             );
         }
@@ -150,14 +167,14 @@ fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Format
         Ok(m) => m,
         Err(e) => {
             return (
-                rejected(file, Verdict::ParseError, vec![Problem::Parse(e)]),
+                file_report(file, Verdict::ParseError, vec![Problem::Parse(e)]),
                 None,
             );
         }
     };
     let text = print(&m);
     let canonical = text.as_bytes() == bytes.as_slice();
-    let mut report = rejected(file, Verdict::Accepted, Vec::new());
+    let mut report = file_report(file, Verdict::Accepted, Vec::new());
     report.extra.push(("canonical", Json::Bool(canonical)));
     if mode == FmtMode::Write
         && !canonical
@@ -190,7 +207,15 @@ fn replace(file: &str, text: &str) -> std::io::Result<()> {
 
 fn run(args: &[String]) -> u8 {
     let a = match parse_args(args) {
-        Ok(a) => a,
+        Ok(Request::Run(a)) => a,
+        Ok(Request::Help) => {
+            println!("{USAGE}");
+            return 0;
+        }
+        Ok(Request::Version) => {
+            println!("funk {}", env!("CARGO_PKG_VERSION"));
+            return 0;
+        }
         Err(why) => {
             eprintln!("funk: {why}\n\n{USAGE}");
             return 2;
@@ -246,17 +271,6 @@ fn main() -> ExitCode {
                 return ExitCode::from(2);
             }
         }
-    }
-    let options = args.iter().take_while(|a| *a != "--");
-    if args.first().is_some_and(|a| a == "help")
-        || options.clone().any(|a| a == "-h" || a == "--help")
-    {
-        println!("{USAGE}");
-        return ExitCode::SUCCESS;
-    }
-    if options.clone().any(|a| a == "-V" || a == "--version") {
-        println!("funk {}", env!("CARGO_PKG_VERSION"));
-        return ExitCode::SUCCESS;
     }
     // The parser, the printer and the verifier recurse once per level of
     // nesting of attributes, regions and items, so funk runs them on a

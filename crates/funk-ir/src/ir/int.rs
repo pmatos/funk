@@ -80,12 +80,6 @@ impl From<i128> for Int {
     }
 }
 
-impl From<i64> for Int {
-    fn from(v: i64) -> Int {
-        Int(v.to_string())
-    }
-}
-
 impl fmt::Display for Int {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
