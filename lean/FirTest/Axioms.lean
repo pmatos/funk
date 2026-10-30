@@ -23,9 +23,10 @@ a root has no declaration, so that a renamed library is not skipped in
 silence; and when any text follows it, since the check would not see a
 command there.
 
-Lean does not keep an `example`, so the check cannot see one.
-`scripts/build-spec.sh` builds `lean/` with `--wfail`, so a `sorry` in an
-`example`, which Lean warns about, fails the build too.
+Lean does not keep an `example`, so the check cannot see one: a `sorry` or
+`native_decide` inside an example is not caught. Lean warns about the `sorry`,
+so failing the build on warnings would catch that case; whether to do so is
+pending the human's decision in issue #52.
 -/
 
 namespace FirTest

@@ -33,8 +33,10 @@ Facts, checked on 2026-10-30 with Lean `v4.35.0`:
 - The environment lists the declarations of each imported module, and
   separately those of the module being elaborated, up to the current
   command.
-- Lean does not keep an `example`. A `sorry` in one is a warning, and
-  `lake build --wfail` fails on any warning. `lean/` builds with none.
+- Lean does not keep an `example`, so an example is not a declaration and
+  the environment does not list it. A `sorry` in one is a warning, which
+  `lake build` reports without failing; `lake build --wfail` fails on any
+  warning. `native_decide` in one gives no warning.
 
 ## Decision
 
@@ -56,8 +58,6 @@ Facts, checked on 2026-10-30 with Lean `v4.35.0`:
     silence;
   - any text but white space follows it, since it would not see a command
     there.
-- `scripts/build-spec.sh` builds `lean/` with `lake build --wfail`, so a
-  warning, such as a `sorry` in an `example`, fails the build.
 - The check runs whenever Lake builds `FirTest`: in the `fir-spec` hook,
   through `scripts/build-spec.sh`, and in every script that calls
   `scripts/build-spec.sh --lean`. It needs no new Lake call. The hook's name
@@ -84,11 +84,13 @@ Facts, checked on 2026-10-30 with Lean `v4.35.0`:
   axiom, and `fir-ref` runs the definitions that the proofs are about.
   [#47](https://github.com/pmatos/funk/issues/47) proves its fast
   implementations equal with `@[csimp]`, which the check allows.
-- `native_decide` in an `example` is not caught: Lean drops the example and
-  its axiom, and gives no warning. No declaration can use an example, so no
-  theorem rests on it; a reviewer still rejects one.
-- Any warning in `lean/` fails the build, so a toolchain bump fixes its
-  deprecation warnings in the same change.
+- A `sorry` or `native_decide` inside an `example` is not caught: an
+  example is not a declaration, so the check never sees it. No declaration
+  can use an example, so no theorem rests on one; a reviewer still rejects
+  it. Failing the build on warnings (`lake build --wfail`) would catch the
+  `sorry` case, which Lean warns about, but not `native_decide`, which it
+  does not. That would make a gate stricter, so it is pending the human's
+  decision in [#52](https://github.com/pmatos/funk/issues/52).
 - A new module or library of `lean/` is imported by the root of `FirTest`,
   and a new library is named in its `#check_axioms`; a stray `.lean` file in
   `lean/`, tracked or not, fails the build.
