@@ -2,7 +2,7 @@
 
 The rendered spec is published at <https://p.ocmatos.com/funk/>. It is
 rebuilt and deployed from every push to `main`, and each page names the
-commit it was built from (ADR-2026-10-30-1031).
+commit it was built from (ADR-2026-10-30-1031, ADR-2026-10-30-1046).
 
 fir's specification is literate Lean, rendered with Verso
 (ADR-2026-10-29-2015). Its chapters are the Lean modules of the package `fir`

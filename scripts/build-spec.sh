@@ -2,7 +2,7 @@
 # Build fir's Lean package and render the spec document (ADR-2026-10-29-2135).
 # Usage: scripts/build-spec.sh [--update] [OUTPUT_DIR]
 # The rendered HTML goes to OUTPUT_DIR, by default docs/spec/_out. Every page
-# names the commit it was built from: GITHUB_SHA when set, else HEAD.
+# names the commit it was built from (ADR-2026-10-30-1046).
 # --update first runs `lake update` in docs/spec/, under the same guards, for
 # a toolchain bump. Never run a bare `lake update` there.
 set -euo pipefail
@@ -28,10 +28,11 @@ repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel
 out=$(realpath -m "${1:-$repo_root/docs/spec/_out}")
 
 # Read by the firspec executable when it renders, so a warm build never shows
-# a stale commit. A local build marks changes not yet committed as -dirty.
-commit=${GITHUB_SHA:-$(git -C "$repo_root" rev-parse HEAD)}
+# a stale commit. Changes not yet committed, untracked files included, mark
+# the build -dirty. No optional locks: a hook runs while git holds the index.
+commit=$(git -C "$repo_root" rev-parse HEAD)
 export FIRSPEC_COMMIT=${commit:0:12}
-if [[ -z "${GITHUB_SHA:-}" ]] && ! git -C "$repo_root" diff --quiet HEAD --; then
+if [[ -n "$(git --no-optional-locks -C "$repo_root" status --porcelain)" ]]; then
     FIRSPEC_COMMIT+=-dirty
 fi
 if [[ -n "${GITHUB_SERVER_URL:-}" && -n "${GITHUB_REPOSITORY:-}" ]]; then
