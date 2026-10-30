@@ -10,7 +10,8 @@ sum. An op of either side has the signature, the text, the rules, the poison
 class and the semantics that its own dialect gives it, and the types have the
 text and the validity that the first dialect gives them. The classes of the
 types themselves, such as `TyDenote`, are the shared types' own, so the sum
-needs no instance of them.
+needs no instance of them. Two dialects whose ops meet the poison
+obligations make a sum whose ops meet them (`SumDialect.lawfulPoison`).
 
 Reading an op sends its name to one side, by the name alone, and that side
 decodes it: `SumRoute` says which names go to the second dialect. Given two
@@ -93,6 +94,28 @@ instance [TyDenote Ty] [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨O
   exit
     | .inl o, args => DialectDenote.exit (d := ⟨Op₁, Ty⟩) o args
     | .inr o, args => DialectDenote.exit (d := ⟨Op₂, Ty⟩) o args
+
+/-- Two dialects whose ops meet the poison obligations make a sum whose ops
+meet them: each op meets them as its own dialect's op. -/
+instance lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
+    [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
+    [DialectPoison ⟨Op₁, Ty⟩] [DialectPoison ⟨Op₂, Ty⟩]
+    [DialectDenote ⟨Op₁, Ty⟩ SetM] [DialectDenote ⟨Op₂, Ty⟩ SetM]
+    [h₁ : LawfulDialectPoison ⟨Op₁, Ty⟩] [h₂ : LawfulDialectPoison ⟨Op₂, Ty⟩] :
+    LawfulDialectPoison (SumDialect Ty Op₁ Op₂) where
+  poison_isRefinedBy := h₁.poison_isRefinedBy
+  propagates
+    | .inl o, hc => ⟨(h₁.propagates o hc).1, (h₁.propagates o hc).2⟩
+    | .inr o, hc => ⟨(h₂.propagates o hc).1, (h₂.propagates o hc).2⟩
+  returnsOnDefined
+    | .inl o, hc => h₁.returnsOnDefined o hc
+    | .inr o, hc => h₂.returnsOnDefined o hc
+  total
+    | .inl o => h₁.total o
+    | .inr o => h₂.total o
+  monotone
+    | .inl o => h₁.monotone o
+    | .inr o => h₂.monotone o
 
 variable [SumRoute Op₁ Op₂] [DialectText ⟨Op₁, Ty⟩] [DialectText ⟨Op₂, Ty⟩]
 

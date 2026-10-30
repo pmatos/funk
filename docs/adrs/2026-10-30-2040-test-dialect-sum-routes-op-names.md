@@ -32,7 +32,10 @@ dialects name their ops and are combined is H4, which is not decided.
   `DialectSignature`, `DialectText`, `DialectValidation`,
   `DecidableDialectValidation`, `DialectPoison` and `DialectDenote`: each
   op has its own dialect's signature, text, rules, poison class and
-  semantics, and the types have the first dialect's text and validity.
+  semantics, and the types have the first dialect's text and validity. It
+  also lifts the two law classes: `LawfulDialectText` under the routing
+  rule below, and `LawfulDialectPoison` (`SumDialect.lawfulPoison`), which
+  holds for the sum when it holds for both sides.
 - **Routing by name alone.** `decodeOp` sends a name to the second dialect
   when the class `SumRoute Op₁ Op₂` says so, and every other name to the
   first, and only that side decodes it.
@@ -67,6 +70,12 @@ dialects name their ops and are combined is H4, which is not decided.
   validation check and interpreter, unchanged.
 - The sum of the core and the toy dialect gets the spec's round-trip
   results that rest on `LawfulDialectText`, such as `validIsWellFormed`.
+- The sum holds only dialects over the first dialect's types, with the
+  first dialect's type text and validity. So a Lean test dialect in it
+  cannot add types of its own, as `funk-ir`'s toy dialect does with
+  `toy.tok` and `toy.vec`. G0 (ADR-2026-10-29-2016) asks H4 to let
+  extensions add types. Showing that in Lean needs another construction,
+  which belongs to H4.
 - When H4 decides how real dialects name their ops and combine, it may
   move a sum into the spec, with its own routing rule. This rule stays the
   rule for test dialects.

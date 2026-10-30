@@ -45,6 +45,9 @@ theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) := validIsW
 #guard decodeOp (d := CoreToy) "toy.mask" [.int 3] [.int 8] [.int 8] == some (.inr (.mask 8 3))
 #guard decodeOp (d := CoreToy) "toy.add" [] [.int 8, .int 8] [.int 8] == none
 #guard decodeOp (d := CoreToy) "add" [] [.int 8, .int 8] [.int 8] == some (.inl (.add 8 {}))
+-- Each op of the sum has its own dialect's poison class.
+#guard Core.samples.all (fun o => poisonClass (d := CoreToy) (.inl o) == Core.Op.poisonClass o) &&
+  poisonClass (d := CoreToy) (.inr (.mask 8 3)) == .propagates
 
 /-! # Running a mixed module
 
@@ -182,6 +185,9 @@ def mixedProblems (t : String) : Option (List Problem) :=
 
 /-- info: 'FirTest.SumDialect.names_disjoint' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms SumDialect.names_disjoint
+
+/-- info: 'FirTest.SumDialect.lawfulPoison' does not depend on any axioms -/
+#guard_msgs in #print axioms SumDialect.lawfulPoison
 
 /-- info: 'FirTest.Toy.lawfulDialectText' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Toy.lawfulDialectText
