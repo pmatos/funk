@@ -87,10 +87,12 @@ Facts, checked on 2026-10-29:
     `docs/spec/.lake/packages`, so git stops there. Not the repository root,
     which would also stop git from finding this repository from `docs/spec/`.
 
-  Every documented or scripted Lake run goes through `scripts/build-spec.sh`,
-  or applies both guards as the script does: hooks, CI, the toolchain bump
-  and the deployment of #28. The script also unsets `GH_TOKEN` and
-  `GITHUB_TOKEN`, because lakefiles and elaboration can run arbitrary code.
+  Every documented or scripted Lake run in `lean/` or `docs/spec/` goes
+  through `scripts/build-spec.sh`, or applies both guards as the script
+  does: hooks, CI, the toolchain bump and the deployment of #28. The LeanMLIR
+  spike runs Lake outside both, and its report says how to guard those runs.
+  The script also unsets `GH_TOKEN` and `GITHUB_TOKEN`, because lakefiles and
+  elaboration can run arbitrary code.
   When Lake fails with "not a git repository", the guard has stopped git at
   a broken package clone: delete that package's directory under
   `.lake/packages` and rebuild.
