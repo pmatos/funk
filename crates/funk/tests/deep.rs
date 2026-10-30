@@ -23,6 +23,18 @@ fn funk_on_small_stack(args: &[&str]) -> Output {
         .expect("sh runs funk")
 }
 
+/// Removes the test's files when it ends, passed or failed: they take
+/// hundreds of megabytes.
+struct Files(Vec<String>);
+
+impl Drop for Files {
+    fn drop(&mut self) {
+        for path in &self.0 {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+}
+
 /// Asserts that each line of a JSON report is a parse error whose message
 /// holds the matching reason.
 fn parse_errors(out: &Output, reasons: &[&str]) {
@@ -54,11 +66,11 @@ fn texts_nested_ten_million_levels_deep_get_their_verdicts() {
         "func @f() {\n".repeat(DEPTH),
         "}\n".repeat(DEPTH)
     ));
-    let paths = [
+    let paths = Files(vec![
         file("deep-attrs.fir", &attrs),
         file("deep-regions.fir", &regions),
         file("deep-items.fir", &items),
-    ];
+    ]);
     let reasons = [
         "a func has no attributes",
         "unknown op toy.nest",
@@ -66,12 +78,9 @@ fn texts_nested_ten_million_levels_deep_get_their_verdicts() {
     ];
     let args: Vec<&str> = ["verify", "--json"]
         .into_iter()
-        .chain(paths.iter().map(String::as_str))
+        .chain(paths.0.iter().map(String::as_str))
         .collect();
     parse_errors(&funk_on_small_stack(&args), &reasons);
-    let out = funk_on_small_stack(&["fmt", "--json", &paths[0]]);
+    let out = funk_on_small_stack(&["fmt", "--json", &paths.0[0]]);
     parse_errors(&out, &reasons[..1]);
-    for path in &paths {
-        std::fs::remove_file(path).expect("the test's own file");
-    }
 }

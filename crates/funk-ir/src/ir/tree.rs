@@ -39,6 +39,12 @@ pub(crate) trait Node: Copy {
 
     /// The node's children, in order.
     fn children(self) -> Self::Children;
+
+    /// Whether the node has no children, so that a walk need not keep it
+    /// on its path: a walk of a single leaf allocates nothing.
+    fn is_leaf(self) -> bool {
+        false
+    }
 }
 
 /// The steps of a depth-first walk of the tree under `root`, children in
@@ -46,6 +52,7 @@ pub(crate) trait Node: Copy {
 pub(crate) fn walk<N: Node>(root: N) -> Walk<N> {
     Walk {
         root: Some(root),
+        leaf: None,
         path: Vec::new(),
     }
 }
@@ -54,6 +61,8 @@ pub(crate) fn walk<N: Node>(root: N) -> Walk<N> {
 /// the children it has left.
 pub(crate) struct Walk<N: Node> {
     root: Option<N>,
+    /// A leaf just entered, which the walk leaves next.
+    leaf: Option<N>,
     path: Vec<(N, N::Children)>,
 }
 
@@ -61,6 +70,9 @@ impl<N: Node> Iterator for Walk<N> {
     type Item = Step<N>;
 
     fn next(&mut self) -> Option<Step<N>> {
+        if let Some(leaf) = self.leaf.take() {
+            return Some(Step::Leave(leaf));
+        }
         let node = match self.root.take() {
             Some(root) => root,
             None => {
@@ -75,7 +87,11 @@ impl<N: Node> Iterator for Walk<N> {
                 }
             }
         };
-        self.path.push((node, node.children()));
+        if node.is_leaf() {
+            self.leaf = Some(node);
+        } else {
+            self.path.push((node, node.children()));
+        }
         Some(Step::Enter(node))
     }
 }

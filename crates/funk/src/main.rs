@@ -336,5 +336,8 @@ fn main() -> ExitCode {
             }
         }
     }
-    ExitCode::from(run(&args))
+    // A panic is an internal error: exit 2, as for any error that is not a
+    // verdict on a file.
+    let status = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(&args)));
+    ExitCode::from(status.unwrap_or(2))
 }

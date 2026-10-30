@@ -54,14 +54,16 @@ impl<'a, 'f> DebugTree<'a, 'f> {
     }
 
     /// Writes `value` with its own `Debug` as the next value, after
-    /// `name: ` when it is a field.
+    /// `name: ` when it is a field. The one-line form passes on the
+    /// formatter's flags, such as `{:x?}`; the `{:#?}` form writes through
+    /// an indenting writer, which only keeps the alternate flag.
     pub(crate) fn value(&mut self, name: Option<&str>, value: &dyn Debug) -> fmt::Result {
         self.begin(name)?;
         if self.pretty {
             let depth = self.open.len();
             write!(Indented { f: self.f, depth }, "{value:#?}")?;
         } else {
-            write!(self.f, "{value:?}")?;
+            value.fmt(self.f)?;
         }
         self.end()
     }
@@ -220,6 +222,7 @@ mod tests {
     fn same_debug(ours: &impl std::fmt::Debug, derived: &impl std::fmt::Debug) {
         assert_eq!(format!("{ours:?}"), format!("{derived:?}"));
         assert_eq!(format!("{ours:#?}"), format!("{derived:#?}"));
+        assert_eq!(format!("{ours:x?}"), format!("{derived:x?}"));
     }
 
     #[test]

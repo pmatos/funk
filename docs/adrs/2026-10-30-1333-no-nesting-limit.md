@@ -38,8 +38,10 @@ is out.
   write `Clone`, `PartialEq`, `Eq`, `Hash`, `Debug` and `Drop` with these
   helpers. `Type`, `Block`, `Op`, `Func`, `Item` and `Module` keep their
   derives, which reach the hand-written ones within one level. `Debug`
-  writes, byte for byte, what `#[derive(Debug)]` writes, `{:#?}` included; a
-  test checks it against a derived copy of the types.
+  writes, byte for byte, what `#[derive(Debug)]` writes, in the `{:?}`,
+  `{:x?}` and `{:#?}` forms; a test checks it against a derived copy of the
+  types. In the `{:#?}` form, the values inside get only the alternate flag,
+  as stable Rust gives no way to pass on the others.
 - **Walks over parts.** A `Part` is a region, a block or an op. The printer,
   the decoder and the traits of `Region` walk parts.
 - **The parser.** The lexer gives one token at a time, so no list of tokens
@@ -50,7 +52,8 @@ is out.
   ADR-2026-10-30-1032 holds: when the grammar fails, the rest of the text is
   still read, and an error in its characters or tokens wins.
 - **No large stack in `funk`.** It runs on its main thread; the 1 GiB worker
-  thread is gone. This replaces the last consequence of ADR-2026-10-30-1032.
+  thread is gone. As before, a panic exits with status 2. This replaces the
+  last consequence of ADR-2026-10-30-1032.
 - **Tests on small stacks.** On threads of 256 KiB, `tests/deep.rs` of
   `funk-ir` parses, prints, verifies, clones, compares, hashes, debug-formats
   and drops ten million levels of attributes; parses, verifies, hashes,

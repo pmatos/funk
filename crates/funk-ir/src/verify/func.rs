@@ -14,7 +14,7 @@ use super::Diagnostic;
 use super::cfg::Cfg;
 use super::ops;
 use crate::ir::names::is_name;
-use crate::ir::{Block, Func, LocRef, SymbolTable, Type};
+use crate::ir::{Block, Func, LocRef, Part, Region, SymbolTable, Type};
 use crate::registry::{Registry, TypeCheck};
 
 /// What a function is checked against: its module's symbols and location
@@ -48,20 +48,13 @@ pub(super) struct Scope<'f> {
 
 /// Every block of a function, at any depth, in the spec's order
 /// (`Func.allBlocks`): each block, then the blocks of its ops' regions.
-pub(super) fn all_blocks(blocks: &[Block]) -> Vec<&Block> {
-    let mut out = Vec::new();
-    let mut stack: Vec<&Block> = blocks.iter().rev().collect();
-    while let Some(b) = stack.pop() {
-        out.push(b);
-        let inner = b
-            .ops
-            .iter()
-            .flat_map(|o| &o.regions)
-            .flat_map(|r| &r.blocks);
-        let inner: Vec<&Block> = inner.collect();
-        stack.extend(inner.into_iter().rev());
-    }
-    out
+pub(super) fn all_blocks(body: &Region) -> Vec<&Block> {
+    body.parts()
+        .filter_map(|p| match p {
+            Part::Block(b) => Some(b),
+            Part::Region(_) | Part::Op(_) => None,
+        })
+        .collect()
 }
 
 /// A diagnostic about a function, or about one of its blocks.
@@ -86,7 +79,7 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
         )),
         Some(_) => {}
     }
-    let all = all_blocks(blocks);
+    let all = all_blocks(&f.body);
     let defs = f.params.iter().chain(
         all.iter()
             .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),

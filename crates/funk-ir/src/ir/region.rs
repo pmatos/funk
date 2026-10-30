@@ -53,6 +53,14 @@ impl<'a> Node for Part<'a> {
             Part::Op(o) => Parts::Regions(o.regions.iter()),
         }
     }
+
+    fn is_leaf(self) -> bool {
+        match self {
+            Part::Region(r) => r.blocks.is_empty(),
+            Part::Block(b) => b.ops.is_empty(),
+            Part::Op(o) => o.regions.is_empty(),
+        }
+    }
 }
 
 impl Region {

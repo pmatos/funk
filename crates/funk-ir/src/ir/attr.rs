@@ -57,21 +57,38 @@ impl<'a> Node for &'a Attr {
             _ => [].iter(),
         }
     }
+
+    fn is_leaf(self) -> bool {
+        match self {
+            Attr::App(_, args) => args.is_empty(),
+            _ => true,
+        }
+    }
+}
+
+impl Attr {
+    /// A copy of this attribute without its arguments.
+    fn head(&self) -> Attr {
+        match self {
+            Attr::Word(w) => Attr::Word(w.clone()),
+            Attr::Int(i) => Attr::Int(i.clone()),
+            Attr::Str(s) => Attr::Str(s.clone()),
+            Attr::Sym(s) => Attr::Sym(s.clone()),
+            Attr::App(h, _) => Attr::App(h.clone(), Vec::new()),
+        }
+    }
 }
 
 impl Clone for Attr {
     fn clone(&self) -> Attr {
+        if self.is_leaf() {
+            return self.head();
+        }
         let mut nest = Nest::new(1);
         for step in walk(self) {
             match step {
                 Step::Enter(a) => {
-                    nest.push(match a {
-                        Attr::Word(w) => Attr::Word(w.clone()),
-                        Attr::Int(i) => Attr::Int(i.clone()),
-                        Attr::Str(s) => Attr::Str(s.clone()),
-                        Attr::Sym(s) => Attr::Sym(s.clone()),
-                        Attr::App(h, _) => Attr::App(h.clone(), Vec::new()),
-                    });
+                    nest.push(a.head());
                     if let Attr::App(_, args) = a {
                         nest.open(args.len());
                     }
