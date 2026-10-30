@@ -194,6 +194,19 @@ stand for the function's observable behaviour.
 The interpreter's obligation that a run of a valid function has some outcome
 at every fuel budget. Without it, an empty behaviour would refine anything.
 
+**no-stuck obligation**:
+The interpreter's obligation that no path of a run of a valid function is
+stuck, at any fuel budget. With every op total, no path of the run is lost.
+
+**op totality**:
+Every op's obligation to have an outcome, a result or UB, on every operand
+vector, so that its semantics never drops a path of a run.
+
+**op monotonicity**:
+Every op's obligation that refining its operands refines what it does. It
+makes refinement compositional: a part replaced by one that refines it
+refines the whole function.
+
 ### The oracle
 
 **reference interpreter (`fir-ref`)**:
