@@ -1,5 +1,6 @@
 import FirRef.PrintAttr
 import FirRef.PrintModule
+import FirRef.Parse
 
 /-!
 The implementations that `fir-ref` runs in place of the spec's functions
