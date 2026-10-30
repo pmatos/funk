@@ -81,6 +81,7 @@ Run `./scripts/ensure-hooks.sh` before anything else in a clone. Claude's
 commands until it succeeds. Start agents in another worktree with
 `./scripts/agent-session.sh --worktree <path> <agent-command> [args...]`.
 
+- Prerequisites: `pre-commit` and `elan`, which the `fir-spec` hook needs.
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.

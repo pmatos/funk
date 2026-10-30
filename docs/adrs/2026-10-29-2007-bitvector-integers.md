@@ -15,8 +15,8 @@ widths natively.
 ## Decision
 
 - fir integer types are bitvectors `iN`, for any width `N >= 1`.
-- Signedness lives on ops, never on types: `sdiv` and `udiv`, `icmp.slt` and
-  `icmp.ult`, and so on.
+- Signedness lives on ops, never on types: `sdiv` and `udiv`, `icmp slt` and
+  `icmp ult`, and so on.
 - `ptr` is a separate type. M0 reserves it and gives it no ops.
 - The IR (`funk-ir`) and the Lean interpreter accept any `N >= 1`.
 - The M0 backend supports `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. `i128`

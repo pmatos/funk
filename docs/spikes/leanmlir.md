@@ -242,6 +242,11 @@ report differs from the ADR, the ADR governs.
 
 ## How to reproduce
 
+Run the spike's Lake commands in a fresh clone, not a worktree of this
+repository, after unsetting the variables `git rev-parse --local-env-vars`
+lists and setting `GIT_CEILING_DIRECTORIES` to the `.lake/packages` of each
+spike directory (ADR-2026-10-29-2135).
+
 From the prototype branch, with `elan` installed:
 
 ```sh

@@ -1,4 +1,6 @@
 default_install_hook_types: [pre-commit, commit-msg]
+# The fir-spec hook's `unsupported_script` language needs pre-commit 4.4.0.
+minimum_pre_commit_version: 4.4.0
 
 repos:
   - repo: local
@@ -10,6 +12,17 @@ repos:
         types: [text]
         # Generated or vendored files only; never exclude authored code.
         exclude: (^|/)(package-lock\.json|[^/]*\.lock)$
+      - id: hidden-chars
+        name: Text files hold no raw bidi controls, marks, BOM or separators
+        entry: python scripts/check_hidden_chars.py
+        language: python
+        types: [text]
+      - id: fir-spec
+        name: Build fir's Lean package and render the spec
+        entry: scripts/build-spec.sh
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|docs/spec/|scripts/build-spec\.sh$)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

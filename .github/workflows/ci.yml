@@ -27,8 +27,44 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      # The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
+      - name: Install elan
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/elan.tar.gz" \
+            "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
+          echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore the Lean toolchain and Verso build
+        id: lean-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.elan/toolchains
+            docs/spec/.lake/packages
+          key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
+      - name: Install the Lean toolchain
+        run: elan toolchain install "$(cat lean/lean-toolchain)"
       - name: Run every hook on every file
         env:
           # Enables zizmor's online audits (e.g. known-vulnerable actions).
           GH_TOKEN: ${{ github.token }}
         run: uvx pre-commit@4.6.2 run --all-files --show-diff-on-failure --color always
+      # Saved even when a hook fails, so the next run need not rebuild Verso,
+      # but only once Verso is built and never from a cancelled run: a partial
+      # cache would take the key. docs/spec/.lake/build is never cached, so
+      # the document is always rebuilt from its sources.
+      - name: Save the Lean toolchain and Verso build
+        if: >-
+          !cancelled() && steps.lean-cache.outputs.cache-hit != 'true' &&
+          hashFiles('docs/spec/.lake/packages/verso/.lake/build/lib/lean/VersoManual.olean') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.elan/toolchains
+            docs/spec/.lake/packages
+          key: ${{ steps.lean-cache.outputs.cache-primary-key }}

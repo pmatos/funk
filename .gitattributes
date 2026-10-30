@@ -1,0 +1,2 @@
+# fir text has LF line ends only: its parser rejects a carriage return.
+*.fir text eol=lf
