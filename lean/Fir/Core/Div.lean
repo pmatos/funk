@@ -7,8 +7,9 @@ Ticket #18 gives `sdiv`, `udiv`, `srem` and `urem` their rules. `sdiv` and
 `udiv` divide, rounding towards zero; `srem` and `urem` give the remainder
 of that division, which for `srem` has the sign of the dividend. The `s`
 ops read their operands as two's-complement signed integers, the `u` ops
-as unsigned ones. They are the ops whose failure the hardware cannot
-defer, so they are the core ops with immediate UB (ADR-2026-10-30-0818):
+as unsigned ones. They are ops whose failure the hardware cannot defer,
+so, with a branch on poison, they are the core ops with immediate UB
+(ADR-2026-10-30-0818):
 
 * A zero divisor is immediate UB, and so is a poison divisor, because it
   might be zero.
