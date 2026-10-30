@@ -4,6 +4,7 @@ import FirRef.Main
 import FirTest.Axioms
 import FirTest.Parse
 import FirTest.Print
+import FirTest.Lex
 import FirTest.Decode
 
 /-!

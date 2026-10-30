@@ -117,6 +117,22 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.Example "Example" (level := 2)}
 
+{includeLiterate "." Fir.Text.Tokens "Lexing printed text" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexNumbers "Digits and their values" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexTokens "Maximal munch" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexStrings "Escapes and quoted symbols" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexLayout "Spaces, line feeds and lists" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexPrint "Attributes, locations and names" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexModule "Ops, functions and the module" (level := 2)}
+
+{includeLiterate "." Fir.Text.LexWellFormed "Writable tokens" (level := 2)}
+
 # Architecture decision records
 %%%
 tag := "adrs"
