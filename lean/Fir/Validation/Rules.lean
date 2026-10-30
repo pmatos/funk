@@ -1,4 +1,5 @@
 import Fir.Validation.Dominance
+import Fir.Text.Lexical
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
@@ -67,18 +68,28 @@ A function is valid when:
 
 * its body has an entry block, and the entry block declares no arguments of
   its own: its arguments are the function's parameters;
+* every block is reachable from the entry (ADR-2026-10-30-0817);
 * the labels of its blocks are unique;
 * the names of its values are unique: each value has one definition, as SSA
   requires;
+* each value name and each label is one or more name characters, as the
+  text writes them (`isName`), so every valid module can be written;
 * every type it states is valid for its dialect;
 * every block holds at least one op, and every op is valid.
+
+A function's symbol may be any string: the text quotes it when it is not a
+word.
 -/
 
+open Text in
 /-- A function is valid in the context of its module. -/
 structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
   entry : ∃ e, f.blocks.head? = some e ∧ e.params = []
+  reachable : ∀ b ∈ f.blocks, f.Reachable b.label
   labelsUnique : (f.blocks.map (·.label)).Nodup
   namesUnique : (f.defs.map (·.1)).Nodup
+  names : ∀ x ∈ f.defs, isName x.1
+  labels : ∀ b ∈ f.allBlocks, isName b.label
   types : ∀ t ∈ f.types, validTy t
   blocksNonEmpty : ∀ b ∈ f.blocks, b.body ≠ []
   ops : ∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d),
@@ -90,21 +101,26 @@ structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
 Each entry of the table has a distinct reference, and the entries are in
 increasing order of reference, so one table has one spelling. A location
 that is built from others refers only to entries before it, so no location
-refers to itself, directly or not. A fused location fuses at least two. A
-source range starts at line 1 and column 1 or later, and does not end before
-it starts.
+refers to itself, directly or not. A fused location fuses at least two.
+Every reference, line and column is below `Location.limit`.
+
+A source range starts at line 1 or later, and does not end before it starts.
+When both of its columns are known (not 0) and it starts and ends on one
+line, its end column is at least its start column. An end equal to the
+start is an empty range.
 -/
 
 /-- A location is well formed. -/
 def Location.WellFormed : Location → Prop
-  | .range _ l₁ c₁ l₂ c₂ => 1 ≤ l₁ ∧ 1 ≤ c₁ ∧ 1 ≤ c₂ ∧ (l₁ < l₂ ∨ (l₁ = l₂ ∧ c₁ ≤ c₂))
+  | .range _ l₁ c₁ l₂ c₂ => 1 ≤ l₁ ∧ (l₁ < l₂ ∨ (l₁ = l₂ ∧ (c₁ = 0 ∨ c₂ = 0 ∨ c₁ ≤ c₂)))
   | .fused locs => 2 ≤ locs.length
   | _ => True
 
 /-- The location table is well formed. -/
 def LocTable.Valid (t : LocTable) : Prop :=
   (t.map (·.1)).Pairwise (· < ·) ∧
-  ∀ e ∈ t, e.2.WellFormed ∧ ∀ r ∈ e.2.refs, r < e.1 ∧ r ∈ t.map (·.1)
+  ∀ e ∈ t, e.1 < Location.limit ∧ e.2.WellFormed ∧ (∀ n ∈ e.2.numbers, n < Location.limit) ∧
+    ∀ r ∈ e.2.refs, r < e.1 ∧ r ∈ t.map (·.1)
 
 /-!
 # Modules

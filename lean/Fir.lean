@@ -8,6 +8,7 @@ import Fir.Validation.Scope
 import Fir.Validation.Dominance
 import Fir.Validation.Rules
 import Fir.Core.Validation
+import Fir.Core.Rejects
 import Fir.Execution.Values
 import Fir.Execution.Effects
 import Fir.Execution.Behaviour

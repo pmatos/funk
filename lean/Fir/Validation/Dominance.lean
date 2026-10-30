@@ -6,6 +6,13 @@ dominates each of its uses. Dominance is a property of the function's
 control-flow graph, whose nodes are the blocks and whose edges go from a
 block to the successors of its terminator.
 
+The graph, reachability and dominance below are over a function's top-level
+blocks. How values are scoped in the regions of an op, and how dominance
+reaches into them, is left to H6, with the first dialect whose ops have
+regions; no core op has one. H6 also reconciles the two views of a function
+that validation uses: the top-level blocks here, and every block at any
+depth for names and their types.
+
 # The control-flow graph
 -/
 
@@ -27,6 +34,14 @@ def Func.entryLabel? (f : Func d) : Option Name :=
   f.blocks.head?.map (·.label)
 
 /--
+`f.Reachable l` holds when some path through the graph goes from the entry
+block to the block labelled `l`. The entry is reachable.
+-/
+inductive Func.Reachable (f : Func d) : Name → Prop
+  | entry {e : Name} : f.entryLabel? = some e → f.Reachable e
+  | step {x y : Name} : f.Reachable x → f.Edge x y → f.Reachable y
+
+/--
 `f.ReachesAvoiding a l` holds when some path through the graph goes from the
 entry block to the block labelled `l` without passing through the block
 labelled `a`.
@@ -39,11 +54,17 @@ inductive Func.ReachesAvoiding (f : Func d) (a : Name) : Name → Prop
 /-!
 # Dominance
 
-A block `a` dominates a block `b` when every path from the entry to `b`
-passes through `a`. Equivalently, `b` cannot be reached once `a` is removed.
-Every block dominates itself, and the entry dominates every block. A block
-that the entry cannot reach is dominated by every block, so no use in it is
-ever rejected for want of dominance; it never runs.
+Every block of a valid function is reachable from its entry
+(ADR-2026-10-30-0817). This is stricter than LLVM, which accepts blocks that
+the entry cannot reach. Producers, frontends and passes alike, delete such
+blocks before validation.
+
+So dominance has its standard meaning everywhere. A block `a` dominates a
+block `b` when every path from the entry to `b` passes through `a`.
+Equivalently, `b` cannot be reached once `a` is removed. Every block
+dominates itself, and the entry dominates every block. Since every block is
+reachable, every use has a path from the entry through its definition, and
+no group of blocks can define values in a cycle, each using the other's.
 -/
 
 /-- Block `a` dominates block `b`. -/

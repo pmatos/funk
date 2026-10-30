@@ -65,6 +65,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Validation "Core rules" (level := 2)}
 
+{includeLiterate "." Fir.Core.Rejects "A rejected function" (level := 2)}
+
 # Execution
 
 {includeLiterate "." Fir.Execution.Values "Values and refinement" (level := 2)}

@@ -10,9 +10,9 @@ for valid modules only.
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types
-through the class `DialectValidation`, defined below. The rules of each core op
-family are written by the ticket that builds it: #10 for the tracer subset,
-then #14 to #20.
+through the class `DialectValidation`, defined below; the core dialect's
+rules have a section of their own. A text that does not decode is
+rejected before validation, by the parser (see the text format chapter).
 
 The rules are propositions. The executable check that `fir-ref validate`
 runs (#10) is written against them.
