@@ -17,6 +17,19 @@ repos:
         entry: python scripts/check_hidden_chars.py
         language: python
         types: [text]
+      # It reads every tracked ADR, so a new one is checked against main's.
+      - id: adr-ids
+        name: ADRs are well named and no two share a timestamp id
+        entry: python scripts/check_adr_ids.py
+        language: python
+        pass_filenames: false
+        files: ^(docs/adrs/|scripts/check_adr_ids\.py$)
+      - id: adr-ids-test
+        name: The adr-ids check passes its tests
+        entry: python scripts/test_check_adr_ids.py
+        language: python
+        pass_filenames: false
+        files: ^scripts/(test_)?check_adr_ids\.py$
       - id: fir-spec
         name: Build fir's Lean package and render the spec
         entry: scripts/build-spec.sh
