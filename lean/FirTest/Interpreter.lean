@@ -2,32 +2,36 @@ import FirTest.Run
 
 /-!
 Tests of the interpreter's paths that the core ops with rules do not reach.
-`const`, `add` without flags and `ret` are never UB, and none of them
-jumps. So two semantics written here for these tests, not fir's, give the
-interpreter what #18 and #19 will: `addIsUB`, in which `add` is UB, and
+`const`, `add`, `sub`, `mul`, `freeze` and `ret` are never UB, and none of
+them jumps. So two semantics written here for these tests, not fir's, give
+the interpreter what #18 and #19 will: `addIsUB`, in which `add` is UB, and
 `brJumps`, in which `br` goes to its successor. Every other op keeps the
-core dialect's rules. The runs are those of `fir-ref run`, in `Exec`, and
-are reported as it reports them. Functions built here, not parsed, reach
-the stuck cases that no text that decodes can reach.
+core dialect's rules. The runs are those of `fir-ref run`, in the tree of
+choices, and are reported as it reports them, in scripted mode with no
+choices. Functions built here, not parsed, reach the stuck cases that no
+text that decodes can reach.
 -/
 
 namespace FirTest
 
 open Fir FirRef
 
+/-- The tree of choices that `fir-ref run` runs the core dialect in. -/
+abbrev Tree := ChoiceTree Core.Op
+
 /-- A semantics, not fir's, in which `add` is UB. -/
-@[instance_reducible] def addIsUB : DialectDenote CoreDialect Exec where
+@[instance_reducible] def addIsUB : DialectDenote CoreDialect Tree where
   denote
     | .add .., _ => MonadUB.ub "add is \"UB\"\nhere"
-    | op, args => DialectDenote.denote (m := Exec) op args
-  exit := DialectDenote.exit (m := Exec)
+    | op, args => DialectDenote.denote (m := Tree) op args
+  exit := DialectDenote.exit (m := Tree)
 
 /-- A semantics, not fir's, in which `br` goes to its one successor. -/
-@[instance_reducible] def brJumps : DialectDenote CoreDialect Exec where
-  denote := DialectDenote.denote (m := Exec)
+@[instance_reducible] def brJumps : DialectDenote CoreDialect Tree where
+  denote := DialectDenote.denote (m := Tree)
   exit
     | .br, _ => pure (.goto 0)
-    | op, args => DialectDenote.exit (m := Exec) op args
+    | op, args => DialectDenote.exit (m := Tree) op args
 
 /-- An argument of type `t` for these tests: `poison`, which `fir-ref run`
 does not take, or an argument that it reads. -/
@@ -43,15 +47,16 @@ def testArgs : (ts : List Core.Ty) → List String → Except String (HVector to
 
 /-- What `fir-ref run` would report on the function `f` with the semantics
 `s`, on arguments that may be `poison`. -/
-def runFuncIn (s : DialectDenote CoreDialect Exec) (f : Func CoreDialect)
+def runFuncIn (s : DialectDenote CoreDialect Tree) (f : Func CoreDialect)
     (args : List String := []) (fuel : Nat := defaultFuel) : Option RunReport :=
   match testArgs (f.params.map (·.2)) args with
   | .error _ => none
-  | .ok vs => letI := s; some (outcomeReport "@f" (f.run (m := Exec) vs fuel).run)
+  | .ok vs => letI := s
+    some (scriptedReport "@f" ((f.run (m := Tree) vs fuel).run.script constOf [] 0))
 
 /-- What `fir-ref run` would report on the first function of the text `t`
 with the semantics `s`. -/
-def runIn (s : DialectDenote CoreDialect Exec) (t : String) (args : List String := [])
+def runIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List String := [])
     (fuel : Nat := defaultFuel) : Option RunReport :=
   match parseCore t with
   | .error _ => none
@@ -64,12 +69,12 @@ in the JSON. -/
 
 /-- The report of a run that hits UB because `add` is UB. -/
 def addUB : RunReport :=
-  { out := "{\"kind\":\"ub\",\"reason\":\"add is \\\"UB\\\"\\nhere\"}", status := 0 }
+  { out := "{\"kind\":\"ub\",\"reason\":\"add is \\\"UB\\\"\\nhere\",\"choices\":0}", status := 0 }
 
 #guard runIn addIsUB (addAt "i8") ["1", "2"] == some addUB
 #guard runIn addIsUB (addAt "i8") ["poison", "2"] (fuel := 1) == some addUB
 #guard runIn addIsUB (addAt "i8") ["1", "2"] (fuel := 0) ==
-  some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+  some exhausted
 #guard runIn addIsUB (body "func @f(%a: i8) -> i8"
     ["^e:", "  %s: i8 = add %a, %a @0", "  %t: i8 = sub %s, %s @0", "  ret %t @0"]) ["1"] ==
   some addUB
@@ -92,10 +97,10 @@ passes, and runs the target. -/
 -- below runs three.
 #guard runIn brJumps (body "func @f(%a: i8) -> i8"
     ["^e:", "  br ^l(%a) @0", "^l(%i: i8):", "  %j: i8 = add %i, %i @0", "  br ^l(%j) @0"])
-    ["1"] (fuel := 1000) == some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+    ["1"] (fuel := 1000) == some exhausted
 #guard runIn brJumps (body "func @f() -> i8"
     ["^e:", "  %c: i8 = const 1 @0", "  br ^n @0", "^n:", "  ret %c @0"]) (fuel := 2) ==
-  some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+  some exhausted
 #guard runIn brJumps (body "func @f() -> i8"
     ["^e:", "  %c: i8 = const 1 @0", "  br ^n @0", "^n:", "  ret %c @0"]) (fuel := 3) ==
   some (returns ["1"])
@@ -140,8 +145,8 @@ def withOp (t : Core.Ty) (o : Operation CoreDialect) : Func CoreDialect :=
 
 /-! # The obligations' axioms
 
-The obligations that #10 proves for `const`, `add` without flags and `ret`
-rest on `propext` alone. -/
+The obligations of `const`, `add` (with any flags) and `ret` rest on
+`propext` alone. -/
 
 /-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.Core.add_propagatesPoison

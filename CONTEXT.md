@@ -258,7 +258,19 @@ The `fir-ref` mode that tries every choice sequence, within a budget on the
 total number of choice bits, and prints the set of outcomes.
 
 **scripted mode**:
-The `fir-ref` mode that takes one choice sequence and prints one outcome.
+The `fir-ref` mode that takes one choice sequence and prints one outcome. A
+sequence that does not fit the run, with too few or too many values or a
+value that is not of its choice's type, is an error, never an outcome.
+
+**choice budget**:
+The most bits that one path may choose in exhaustive mode. A run that would
+choose more gives no set of outcomes: exhaustive mode says that the budget
+is exceeded.
+
+**choice tree**:
+The monad that `fir-ref` runs the interpreter in: a tree whose nodes are
+choices and whose leaves say how each path ends. It maps to the set monad
+of the spec, so its walks, exhaustive and scripted, are proved sound.
 
 **declared results**:
 The allowed results that a test lists, each with a witness choice sequence

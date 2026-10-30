@@ -49,7 +49,8 @@ run in many ways. Its behaviour is the set of outcomes over all choices
 in the set monad below. A computation in it is the set of the ways it may
 end: with a result, or with UB. `choose` may give any bits, and `ub` ends the
 computation. `fir-ref`'s exhaustive and scripted modes compute this set, or
-one member of it, and #14 proves that they do.
+one member of it, and the section on exhaustive and scripted runs proves
+that they do.
 -/
 
 /-- One way a computation may end: with a result, or with immediate UB. -/

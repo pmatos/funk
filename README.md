@@ -146,16 +146,19 @@ are on `main`:
   `fir-ref`'s
   ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
   [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
+- The execution rules of `const`, `add`, `sub`, `mul`, their flags, `freeze`
+  and `ret` in Lean ([#10](https://github.com/pmatos/funk/issues/10),
+  [#14](https://github.com/pmatos/funk/issues/14)). `fir-ref run` runs a
+  function in scripted mode, along the path that its choices name, or in
+  exhaustive mode, which lists every outcome; Lean proves both sound
+  ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
+  [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md)).
 
 These parts of M0 do not exist yet:
 
-- The execution rules of the ops. The Lean tracer,
-  [#10](https://github.com/pmatos/funk/issues/10), adds them for `const`,
-  `add` and `ret`. One issue for each group of related ops,
-  [#14](https://github.com/pmatos/funk/issues/14) to
-  [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
-- The validation check behind `fir-ref validate`, and the interpreter
-  behind `fir-ref run`.
+- The execution rules of the other ops. One issue for each group of
+  related ops, [#15](https://github.com/pmatos/funk/issues/15) to
+  [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).

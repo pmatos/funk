@@ -114,13 +114,29 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Arith "Arithmetic rules" (level := 2)}
 
+{includeLiterate "." Fir.Core.Wrap "Wrap flag rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Freeze "The freeze rule" (level := 2)}
+
 {includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
 
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
 
-{includeLiterate "." Fir.Core.ArithLaws "Arithmetic obligations" (level := 2)}
+{includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.WrapLaws "Arithmetic obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.FreezeLaws "Freeze obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
+
+{includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Modes "Exhaustive and scripted modes" (level := 2)}
+
+{includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
 
 # Text format
 
