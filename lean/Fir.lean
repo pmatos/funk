@@ -30,3 +30,11 @@ import Fir.Text.Decode
 import Fir.Core.Text
 import Fir.Core.TextLaws
 import Fir.Text.Example
+import Fir.Text.Tokens
+import Fir.Text.LexNumbers
+import Fir.Text.LexTokens
+import Fir.Text.LexStrings
+import Fir.Text.LexLayout
+import Fir.Text.LexPrint
+import Fir.Text.LexModule
+import Fir.Text.LexWellFormed

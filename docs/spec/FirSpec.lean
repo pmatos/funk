@@ -117,6 +117,30 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.Example "Example" (level := 2)}
 
+## Lexing printed text
+
+The proof that parsing a printed module gives the module back (#11)
+follows the parser's steps. The sections below prove its first step: the
+lexer reads the printed text of a module as exactly the module's tokens,
+for every module whose tokens can be written, so for every well-formed and
+every valid module.
+
+{includeLiterate "." Fir.Text.Tokens "The tokens of a printed module" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexNumbers "Reading printed numbers" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexTokens "Reading one printed token" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexStrings "Reading printed strings and symbols" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexLayout "Reading the printer's layout" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexPrint "Reading printed attributes, locations and definitions" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexModule "Lexing a printed module" (level := 3)}
+
+{includeLiterate "." Fir.Text.LexWellFormed "Well-formed modules lex" (level := 3)}
+
 # Architecture decision records
 %%%
 tag := "adrs"
