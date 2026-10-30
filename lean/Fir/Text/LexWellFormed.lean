@@ -37,7 +37,7 @@ theorem comma_writable : ∀ t ∈ [Tok.comma], t.Writable := by simp [Tok.Writa
 
 /-- Splits a goal that every token of a list can be written into a goal for
 each part of the list that is not punctuation. -/
-macro "split_writable" : tactic => `(tactic| (
+local macro "split_writable" : tactic => `(tactic| (
   try simp only [List.forall_mem_cons, List.forall_mem_append, List.forall_mem_flatMap,
     List.not_mem_nil, false_implies, forall_const, Tok.Writable, and_true, true_and]
   try and_intros))
