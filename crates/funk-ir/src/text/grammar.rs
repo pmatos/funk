@@ -235,10 +235,14 @@ impl<'t> Parser<'t> {
     }
 
     /// The definitions of a block's arguments or an op's results, whose
-    /// positions go to `at`.
+    /// positions go to `at`, in a list with no spare room.
     fn body_defs(&mut self, at: &mut BodyPos) -> Result<Vec<Def>, ParseError> {
-        let (defs, pos): (Vec<Def>, Vec<DefPos>) = self.defs()?.into_iter().unzip();
-        at.defs.extend(pos);
+        let pairs = self.defs()?;
+        let mut defs = Vec::with_capacity(pairs.len());
+        for (def, pos) in pairs {
+            defs.push(def);
+            at.defs.push(pos);
+        }
         Ok(defs)
     }
 
@@ -402,7 +406,7 @@ impl<'t> Parser<'t> {
             attrs,
             operands,
             succs,
-            regions: Vec::with_capacity(1),
+            regions: Vec::new(),
             loc: LocRef(0),
         })
     }
@@ -411,6 +415,7 @@ impl<'t> Parser<'t> {
     /// next region, or ends it with its location reference.
     fn op_tail(&mut self, blocks: &mut Nest<Block>) -> Result<(), ParseError> {
         if self.eat(&Tok::LBrace) {
+            blocks.last_op().regions.reserve_exact(1);
             blocks.open(1);
             return Ok(());
         }
@@ -458,5 +463,27 @@ fn read_token(lexer: &mut Lexer<'_>) -> (Token, Option<ParseError>) {
             },
             Some(e),
         ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Registry, parse};
+
+    /// The lists of results and regions that the parser fills hold no
+    /// spare room, as a module has one of each per op.
+    #[test]
+    fn parsed_lists_hold_no_spare_room() {
+        let text = "func @f() {\n^e:\n  %v: i8 = const 1 @0\n  ret {\n  ^r:\n    \
+                    ret %v @0\n  } @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).expect("the text parses");
+        let f = m.items[0].as_func().expect("a function");
+        let [def, owner] = &f.body.blocks[0].ops[..] else {
+            panic!("two ops");
+        };
+        assert_eq!((def.results.len(), def.results.capacity()), (1, 1));
+        assert_eq!(def.regions.capacity(), 0);
+        assert_eq!((owner.regions.len(), owner.regions.capacity()), (1, 1));
+        assert_eq!(owner.regions[0].blocks[0].ops[0].regions.capacity(), 0);
     }
 }
