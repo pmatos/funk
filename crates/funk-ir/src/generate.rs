@@ -5,10 +5,11 @@
 //! every number in them is within its limit. They cover quoted symbols,
 //! `true` and `false`, constants at the bounds of their widths, every kind
 //! of location, and functions with zero, one and several results. The ops
-//! are those of the core dialect that the registry has: `const`, `add` and
-//! `ret`. The generator is deterministic: one seed gives one module.
+//! are those of the core dialect that the registry has: `const`, `add`,
+//! `sub` and `mul` with each combination of their flags, `freeze` and `ret`.
+//! The generator is deterministic: one seed gives one module.
 
-use crate::dialects::core::{MAX_WIDTH, int_type};
+use crate::dialects::core::{MAX_WIDTH, WRAP_FLAG_SETS, int_type};
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
@@ -254,15 +255,25 @@ impl Body<'_> {
         }
     }
 
-    /// Defines a new value of type `t`, the sum of two earlier values of
-    /// that type or a constant, and returns its name.
+    /// Defines a new value of type `t` and returns its name: `add`, `sub`
+    /// or `mul` of two earlier values of that type, with any of their flags,
+    /// `freeze` of one, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
         let loc = *rng.pick(self.keys);
         let op = if !same.is_empty() && rng.one_in(2) {
-            Op::new("add", loc)
-                .operand(rng.pick(&same).as_str())
-                .operand(rng.pick(&same).as_str())
+            match rng.below(4) {
+                0 => Op::new("freeze", loc).operand(rng.pick(&same).as_str()),
+                k => {
+                    let name = ["add", "sub", "mul"][k as usize - 1];
+                    let flags = rng.pick(&WRAP_FLAG_SETS);
+                    let op = flags
+                        .iter()
+                        .fold(Op::new(name, loc), |op, f| op.attr(Attr::word(*f)));
+                    op.operand(rng.pick(&same).as_str())
+                        .operand(rng.pick(&same).as_str())
+                }
+            }
         } else {
             let w = crate::dialects::core::int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))

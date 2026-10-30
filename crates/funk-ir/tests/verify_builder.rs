@@ -78,19 +78,20 @@ fn operand_and_result_types_must_match_the_registration() {
     rejects(with_ops(vec![wide]), "the constant 300 does not fit i8");
     let flagged = Op::new("add", L)
         .attr(Attr::word("nsw"))
+        .attr(Attr::word("nuw"))
         .operand("a")
         .operand("a")
         .result("c", int_type(32));
-    rejects(with_ops(vec![flagged]), "takes no attributes");
+    rejects(with_ops(vec![flagged]), "nuw before nsw");
 }
 
 #[test]
 fn an_unknown_op_is_rejected() {
-    let sub = Op::new("sub", L)
+    let addi = Op::new("addi", L)
         .operand("a")
         .operand("a")
         .result("c", int_type(32));
-    let ds = rejects(with_ops(vec![sub]), "op sub is not registered");
+    let ds = rejects(with_ops(vec![addi]), "op addi is not registered");
     assert_eq!(ds[0].loc, Some(L));
 }
 

@@ -4,34 +4,8 @@
 
 mod common;
 
-use common::{build, expect, func, module};
+use common::{boundaries, build, expect, func, module, spell, wrap};
 use funk_x86_64::width::SUPPORTED as WIDTHS;
-
-/// The boundary values of `iW`, read as signed integers: 0, 1, -1, the
-/// minimum and the maximum, or at `i1` `false` (0) and `true` (-1).
-fn boundaries(w: u32) -> Vec<i128> {
-    if w == 1 {
-        return vec![0, -1];
-    }
-    let min = -(1i128 << (w - 1));
-    vec![0, 1, -1, min, -min - 1]
-}
-
-/// The spelling of a value of `iW` in fir and on the command line.
-fn spell(w: u32, v: i128) -> String {
-    match (w, v & 1) {
-        (1, 1) => "true".into(),
-        (1, _) => "false".into(),
-        _ => v.to_string(),
-    }
-}
-
-/// `a + b` wrapped to `w` bits, read as signed.
-fn wrapping_add(w: u32, a: i128, b: i128) -> i128 {
-    let m = 1i128 << w;
-    let s = (a + b).rem_euclid(m);
-    if s >= m / 2 { s - m } else { s }
-}
 
 #[test]
 fn parameters_constants_and_add_run_at_every_width() {
@@ -55,9 +29,9 @@ fn parameters_constants_and_add_run_at_every_width() {
             let s = spell(w, v);
             expect(&exe, &["@id", &s], &[&s]);
             expect(&exe, &[&format!("@c{k}")], &[&s]);
-            expect(&exe, &["@inc", &s], &[&spell(w, wrapping_add(w, v, 1))]);
+            expect(&exe, &["@inc", &s], &[&spell(w, wrap(w, v + 1))]);
             for &u in &vals {
-                let sum = spell(w, wrapping_add(w, v, u));
+                let sum = spell(w, wrap(w, v + u));
                 expect(&exe, &["@add", &s, &spell(w, u)], &[&sum]);
             }
         }

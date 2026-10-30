@@ -123,9 +123,11 @@ are on `main`:
   memory, with a parser, a printer and a verifier that follow the spec. Its
   ops and types are checked through a registry of dialects
   ([ADR-2026-10-30-1146](docs/adrs/2026-10-30-1146-generic-ops-and-registry.md)),
-  and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
-  prints fir in its canonical form, and `funk verify` checks it. Both report
-  as text, or as JSON with `--json`.
+  and the core dialect registers `const`, `add`, `sub`, `mul`, their flags
+  `nuw` and `nsw`, `freeze` and `ret` so far
+  ([#14](https://github.com/pmatos/funk/issues/14)). `funk fmt` prints fir
+  in its canonical form, and `funk verify` checks it. Both report as text,
+  or as JSON with `--json`.
 - The Lean parser, a section of the spec, and the first command of the
   reference interpreter's executable, `fir-ref fmt`
   ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
@@ -133,9 +135,13 @@ are on `main`:
   shared texts and on modules from the Rust generator.
 - The naive x86-64 backend, `funk-x86-64`
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
-  `const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an
-  object file and an executable for Linux. The executable runs one function
-  from the command line and prints its results as JSON
+  `const`, `add`, `sub` and `mul` with their flags, `freeze` and `ret` at
+  `i1`, `i8`, `i16`, `i32` and `i64` into an object file and an executable
+  for Linux. Native code holds no poison: a broken flag gives the wrapped
+  result, and `freeze` copies its operand
+  ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
+  The executable runs one function from the command line and prints its
+  results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
 - The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
   `./scripts/check-harness.sh` checks that `funk verify` and
@@ -161,12 +167,17 @@ These parts of M0 do not exist yet:
 - The execution rules of the other ops. One issue for each group of
   related ops, [#15](https://github.com/pmatos/funk/issues/15) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
+- The harness's rule for a set of outcomes: declared results with
+  witnesses that it checks through `fir-ref run --choices`, and seeded
+  sampling ([#14](https://github.com/pmatos/funk/issues/14)). Until then,
+  a test whose run makes a choice, such as `freeze` of poison, fails.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
-  in the backend. The backend does not lower `i128` or return more than one
+- In Rust, the core ops of [#15](https://github.com/pmatos/funk/issues/15)
+  to [#20](https://github.com/pmatos/funk/issues/20), in the IR and in the
+  backend. The backend does not lower `i128` or return more than one
   value yet.
 
 The epic's sub-issues list the open work in full.
