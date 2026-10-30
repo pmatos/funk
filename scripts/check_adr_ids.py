@@ -13,7 +13,7 @@ from datetime import datetime
 
 ADR_DIR = "docs/adrs/"
 NAME = re.compile(
-    r"(?P<id>(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})?)"
+    r"(?P<id>[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}(?P<seconds>[0-9]{2})?)"
     r"-[a-z0-9]+(?:-[a-z0-9]+)*\.md"
 )
 
@@ -23,11 +23,9 @@ def adr_id(name: str) -> str | None:
     match = NAME.fullmatch(name)
     if match is None:
         return None
-    year, month, day, hour, minute, second = match.groups()[1:]
+    form = "%Y-%m-%d-%H%M%S" if match["seconds"] else "%Y-%m-%d-%H%M"
     try:
-        datetime(
-            int(year), int(month), int(day), int(hour), int(minute), int(second or 0)
-        )
+        datetime.strptime(match["id"], form)
     except ValueError:
         return None
     return match["id"]
@@ -52,18 +50,22 @@ def problems(paths: list[str]) -> list[str]:
             by_id.setdefault(ident, []).append(path)
     for ident, clash in by_id.items():
         if len(clash) > 1:
+            fix = (
+                "Change the seconds of the newer one"
+                if len(ident.rsplit("-", 1)[1]) == len("HHMMSS")
+                else "Add the seconds to the newer one"
+            )
             found.append(
                 f"ADR-{ident} names {len(clash)} files: {', '.join(clash)}."
-                " Add the seconds to the newer one, YYYY-MM-DD-HHMMSS-slug.md,"
-                " at a second no other ADR uses, and update every reference"
-                " to it"
+                f" {fix}, YYYY-MM-DD-HHMMSS-slug.md, at a second no other ADR"
+                " uses, and update every reference to it"
             )
     return found
 
 
 def tracked_adrs() -> list[str]:
     out = subprocess.run(
-        ["git", "ls-files", "-z", "--", ADR_DIR],
+        ["git", "ls-files", "-z", "--full-name", "--", f":/{ADR_DIR}"],
         check=True,
         capture_output=True,
         text=True,

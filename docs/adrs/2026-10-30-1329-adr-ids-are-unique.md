@@ -22,10 +22,12 @@ that id ambiguous. #35 renamed its ADR by hand.
   `ADR-2026-10-30-103112` are two ids.
 - The `adr-ids` pre-commit hook (`scripts/check_adr_ids.py`) reads every file
   that git tracks under `docs/adrs/` except `README.md`. It fails when a name
-  does not have one of the two forms, with a real date and time and a slug of
-  lower-case words joined by hyphens, and when two files share an id. On a
-  clash it names every file with that id and says to add the seconds to the
-  newer one.
+  does not have one of the two forms, with ASCII digits, a real date and time
+  and a slug of lower-case words joined by hyphens, and when two files share
+  an id. On a clash it names every file with that id and says to give the
+  newer one a second no other ADR uses. It cannot tell which ADR is newer or
+  whether a minute was taken when an ADR was named, so it accepts either form
+  on its own; review keeps the seconds form for a taken minute.
 - The hook does not take pre-commit's file list: a commit that adds one ADR
   must still be checked against the ADRs already on `main`. It reads git's
   index, not the directory, so untracked files such as editor swap files do

@@ -45,6 +45,8 @@ class Names(unittest.TestCase):
             "26-10-30-1031-short-year.md",
             "2026-10-30-1031-slug.md~",
             "old/2026-10-30-1031-nested.md",
+            "\uff12026-10-30-1031-fullwidth-digit.md",
+            "2026-10-30-103\u0661-arabic-indic-digit.md",
         ]
         found = problems(adrs(*bad))
         self.assertEqual(len(found), len(bad))
@@ -81,6 +83,7 @@ class Ids(unittest.TestCase):
         found = problems(adrs("2026-10-30-103112-a.md", "2026-10-30-103112-b.md"))
         self.assertEqual(len(found), 1)
         self.assertIn("ADR-2026-10-30-103112 names 2 files", found[0])
+        self.assertIn("Change the seconds of the newer one", found[0])
 
     def test_seconds_resolve_a_clash(self):
         names = adrs(
@@ -142,6 +145,10 @@ class Repository(unittest.TestCase):
             self.assertIn("docs/adrs/2026-10-30-1031-a.md", result.stderr)
             self.assertIn("docs/adrs/2026-10-30-1031-b.md", result.stderr)
             self.assertIn("Add the seconds to the newer one", result.stderr)
+
+            nested = run_script(repo / "docs", outside_env())
+            self.assertEqual(nested.returncode, 1)
+            self.assertIn("docs/adrs/2026-10-30-1031-b.md", nested.stderr)
 
 
 if __name__ == "__main__":
