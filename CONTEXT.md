@@ -29,8 +29,9 @@ dialect's `Op` type, from which the op's operand and result types follow.
 
 **attribute**:
 A constant part of an op that is not a value, such as the flag `nsw`, the
-value of a `const` or the callee `@f` of a `call`. Attributes and types are
-written as generic terms, so a new dialect needs no new syntax.
+predicate `slt` of an `icmp`, the value of a `const` or the callee `@f` of a
+`call`. Attributes and types are written as generic terms, so a new dialect
+needs no new syntax.
 
 **successor**:
 A block that a terminator may jump to, together with the values it passes to
@@ -55,30 +56,48 @@ _Avoid_: phi, phi node
 The first block of a region. A function's parameters are the arguments of its
 entry block, and no branch may jump to it.
 
+**reachable block**:
+A block that some path of branches from the entry reaches. Every block of a
+valid function is reachable; producers delete the others before validation.
+_Avoid_: dead block (say unreachable block)
+
+**item**:
+A top-level entry of a module, such as a function. Every item is written
+`kind @sym(params) -> results attrs { body }`. M0 has one kind, `func`;
+nested modules and globals would be other kinds, with the same syntax.
+
 **isolated from above**:
 Said of a region whose ops use no value defined outside it. Every function
 body is isolated from above.
 
 **symbol reference**:
 A reference to a function or other global by name, such as `@f` in `call @f`.
-It is the only way to refer to a global.
+It is the only way to refer to a global. A name that is not a word is
+quoted, as in `@"1"`.
 _Avoid_: global value, use-list
 
 **location**:
 The required field on every op that says where the op came from: `unknown`, a
-source range, a name, a call site, a fusion of locations, or derived from
-another op.
+source range such as `"f.c":2:3 to 2:14` (end exclusive, columns in UTF-8
+bytes), a name, a call site, a fusion of locations, or derived from another
+op.
 _Avoid_: debug info, source position
 
 **location reference**:
 The number that an op holds for its location, written `@N` at the end of the
-op. A symbol name starts with a letter or `_`, so `@1` is always a location
-reference and `@f` always a symbol reference.
+op. `@1` is always a location reference: the symbol named `1` is written
+`@"1"`.
 
 **location table**:
 The `locs { ... }` table that ends a module's text and gives the location that
 each `@N` reference on an op stands for.
 _Avoid_: debug table
+
+**well-formed module**:
+A module whose printed text says everything it holds, so that parsing the
+text gives the module back. Every valid module is well formed. A text that
+follows the grammar but does not decode, such as one with a type mismatch,
+is a parse error with a located reason.
 
 ### Dialects
 
@@ -104,8 +123,15 @@ _Avoid_: op enum
 
 **poison**:
 fir's one deferred-UB value, produced for example when an `add nsw` overflows.
-Using poison is not UB in itself, but some uses are, such as branching on it.
+A poison operand gives a poison result unless the op says otherwise. Using
+poison is not UB in itself, but some uses are, such as branching on it or
+dividing by it.
 _Avoid_: undef (fir has none)
+
+**poison class**:
+How an op treats a poison operand. A propagating op returns only poison from
+it, which each such op proves in Lean; an exception, such as `select` or
+`freeze`, states its own rule. Every op of every dialect declares its class.
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed
@@ -119,7 +145,13 @@ _Avoid_: deferred UB (that is poison)
 **outcome**:
 How one run of a function ends: it returns an observation, hits UB with a
 reason, or runs out of fuel. For a function that returns one `iN`, the
-outcomes are a value, poison, UB with a reason, or fuel exhausted.
+outcomes are a value, poison, UB with a reason, or fuel exhausted. A function
+may return any number of values.
+
+**stuck run**:
+A run of the interpreter on an invalid module that reaches a case validation
+rules out, such as an undefined value. It ends with an error outside the
+semantics, never with UB or no outcome. A valid module never gets stuck.
 
 **observation**:
 What an observer sees of a run that returns. Each dialect supplies its
@@ -127,20 +159,36 @@ observations and how they refine. In M0 it is the list of returned values,
 each a value or poison.
 
 **observable behaviour**:
-What a run of a function shows to the outside. In M0 it is the returned
-values, UB, or non-termination (fuel exhausted). Each dialect supplies its own
-observations.
-_Avoid_: result (a behaviour also covers UB and non-termination)
+What the runs of a function show to the outside, over every fuel budget. In
+M0 it is the returned values, UB, or divergence. Each dialect supplies its
+own observations.
+_Avoid_: result (a behaviour also covers UB and divergence)
+
+**divergence**:
+A run that never ends: it runs out of fuel at every budget. Running out of
+fuel at one budget is not divergence.
+_Avoid_: fuel exhausted (for divergence)
 
 **refinement**:
 The correctness relation: a target refines a source when each of its
 observable behaviours is allowed by the source. Source UB allows anything, and
-a poison result is refined by any value.
+a poison result is refined by any value. A target function refines a source
+function when, on every argument vector, poison included, its behaviour
+refines the source's.
 _Avoid_: equivalence
 
 **fuel**:
 The budget that bounds a run of the reference interpreter, so that every run
-terminates. Running out of fuel stands for non-termination.
+terminates. A run that runs out of fuel at every budget diverges.
+
+**fuel monotonicity**:
+The interpreter's obligation that more fuel never changes how a run that
+returns or hits UB ends. It lets one run, at a budget that does not run out,
+stand for the function's observable behaviour.
+
+**progress**:
+The interpreter's obligation that a run of a valid function has some outcome
+at every fuel budget. Without it, an empty behaviour would refine anything.
 
 ### The oracle
 
