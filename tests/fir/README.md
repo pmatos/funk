@@ -11,9 +11,10 @@ parser, `Fir.parse`, through `fir-ref` (#10).
 
 The Rust tests check both directories (`crates/funk-ir/tests/corpus.rs`).
 `scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
-`fir-ref validate` accepts each one, as every text here is valid; and
-`scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust prints from
-them, byte for byte (ADR-2026-10-30-1250).
+`fir-ref validate` accepts each one, as every text here is valid; it also
+runs their functions with `fir-ref run` and checks each result
+(ADR-2026-10-30-1856). `scripts/check-fir-ref.sh round-trip` has Lean
+reprint what Rust prints from them, byte for byte (ADR-2026-10-30-1250).
 
 The files use only the ops that the registry has: `const`, `add` and `ret`.
 Texts that a parser must reject, and inputs that the repository's hooks

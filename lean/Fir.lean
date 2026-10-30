@@ -27,6 +27,12 @@ import Fir.Execution.Propagation
 import Fir.Core.Values
 import Fir.Core.Poison
 import Fir.Core.Unlawful
+import Fir.Execution.Interpreter
+import Fir.Core.Arith
+import Fir.Core.Control
+import Fir.Core.Semantics
+import Fir.Core.ArithLaws
+import Fir.Core.ControlLaws
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

@@ -13,7 +13,8 @@
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
-#               write its output.
+#               write its output. fir-ref run runs functions of tests/fir/
+#               and prints the result that each one should give (#10).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -165,6 +166,78 @@ case "$1" in
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
         done
+        # fir-ref run runs the functions of the corpus and prints each
+        # result as one JSON object (ADR-2026-10-30-1856). runs FILE STATUS
+        # OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and
+        # prints OUTPUT, a JSON result on standard output or a message on
+        # standard error, and nothing on the other stream.
+        runs() {
+            local file=$1 want_rc=$2 want=$3 rc=0 out err want_out want_err
+            shift 3
+            out=$("$fir_ref" run "$file" "$@" 2>"$tmp/run.err") || rc=$?
+            err=$(<"$tmp/run.err")
+            if [[ $want == "{"* ]]; then
+                want_out=$want want_err=''
+            else
+                want_out='' want_err=$want
+            fi
+            if [[ $rc -ne $want_rc || $out != "$want_out" || $err != "$want_err" ]]; then
+                echo "fir-ref run $file $* exits with $rc, prints '$out' and" \
+                    "'$err' on standard error; expected $want_rc, '$want_out'" \
+                    "and '$want_err'" >&2
+                return 1
+            fi
+        }
+        c=tests/fir/canonical
+        ret='{"kind":"return","values":'
+        while read -r file want args; do
+            # shellcheck disable=SC2086 # ARGS is a list of words.
+            runs "$c/$file" 0 "$ret$want}" $args || status=1
+        done <<'END'
+add.fir ["6"] @add3 1 2 3
+add.fir ["-2147483648"] @add3 2147483647 1 0
+add.fir ["-10"] @double -5
+locations.fir ["15"] @f 1
+names.fir ["105"] @names 1 2 3
+results.fir [] @none
+results.fir ["-7"] @one -7
+results.fir ["2","2","1"] @several 1 2
+results.fir [] @unused 3
+seven.fir ["7"] @seven
+symbols.fir [] @_start.v2
+widths.fir ["true","false"] @booleans
+widths.fir ["-128","127","0","-1"] @bytes
+widths.fir ["-63","-4294967296"] @odd 1 1
+widths.fir ["-9223372036854775808","170141183460469231731687303715884105727","-170141183460469231731687303715884105728"] @wide
+widths.fir ["-1"] @widest 0
+END
+        # shellcheck disable=SC2016 # The symbols are written as text writes them.
+        for sym in '@"1"' '@"a b"' '@""' '@"_ZN3foo$LT$E"' '@"tab\tquote\"slash\\line\n"' \
+            '@"\u{202e}hidden\u{85}\u{feff}\u{1}"' '@"résumé"'; do
+            runs $c/symbols.fir 0 "${ret}[]}" "$sym" || status=1
+        done
+        runs tests/fir/noncanonical/add.fir 0 "${ret}[\"6\"]}" @add3 1 2 3 || status=1
+        runs $c/seven.fir 0 '{"kind":"fuel-exhausted"}' --fuel 1 @seven || status=1
+        runs - 0 "${ret}[\"7\"]}" @seven <$c/seven.fir || status=1
+        printf 'func @f() -> i32 {\n^e:\n  %%c: i32 = const 1 @0\n}\n\nlocs {\n  @0 = unknown\n}\n' \
+            >"$tmp/open-block.fir"
+        runs "$tmp/open-block.fir" 1 '{"kind":"stuck","reason":"a block ends without a terminator"}' \
+            @f || status=1
+        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = sub %%a, %%a @0\n  ret %%s @0\n}\n' \
+            >"$tmp/sub.fir"
+        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/sub.fir"
+        runs "$tmp/sub.fir" 2 'fir-ref: @f: sub has no execution rules yet' @f 1 || status=1
+        runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
+            @double 9223372036854775808 || status=1
+        runs $c/add.fir 2 'fir-ref: poison is not a value of type i64' @double poison || status=1
+        runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
+        runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
+        rc=0
+        "$fir_ref" run "$tmp/missing.fir" @f 2>/dev/null || rc=$?
+        if [[ $rc -ne 2 ]]; then
+            echo "fir-ref run on a missing file exits with $rc, not 2" >&2
+            status=1
+        fi
         exit "$status"
         ;;
     round-trip)

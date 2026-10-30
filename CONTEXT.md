@@ -204,6 +204,12 @@ _Avoid_: equivalence
 The budget that bounds a run of the reference interpreter, so that every run
 terminates. A run that runs out of fuel at every budget diverges.
 
+**execution rules**:
+What an op does when it runs: the results it gives, the UB it hits, or where
+a terminator sends control. Each op family's ticket writes them in Lean.
+Until it does, the family's ops have none: the spec gives them no outcome,
+and `fir-ref run` reports such an op as an error, never as a result.
+
 **fuel monotonicity**:
 The interpreter's obligation that more fuel never changes how a run that
 returns or hits UB ends. It lets one run, at a budget that does not run out,
