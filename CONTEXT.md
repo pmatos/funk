@@ -93,6 +93,12 @@ The `locs { ... }` table that ends a module's text and gives the location that
 each `@N` reference on an op stands for.
 _Avoid_: debug table
 
+**verdict**:
+What a tool says about a text: accepted, rejected by the parser (a parse
+error, with a text position), or rejected by validation (a validation
+error, with an IR location). `funk verify` and `fir-ref validate` must give
+the same verdict on every text.
+
 **well-formed module**:
 A module whose printed text says everything it holds, so that parsing the
 text gives the module back. Every valid module is well formed. A text that
@@ -118,6 +124,11 @@ processor. Extension dialects are how fir reaches new hardware.
 The table through which `funk-ir` checks generic ops: each dialect registers
 its ops, and the verifier checks every op against its registration.
 _Avoid_: op enum
+
+**test dialect**:
+A dialect that only tests register, to show that a new dialect needs no
+change to the IR, the parser or the printer. Its ops and types are named
+`toy.` and a word, such as `toy.br`, so they never collide with core ops.
 
 ### Semantics
 
