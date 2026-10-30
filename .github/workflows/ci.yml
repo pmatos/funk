@@ -28,6 +28,7 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
       # The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
+      # pages.yml copies the next three steps; change both files together.
       - name: Install elan
         env:
           ELAN_VERSION: v4.2.4
