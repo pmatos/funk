@@ -11,6 +11,10 @@
 use crate::dialects::core::{MAX_WIDTH, int_type};
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
+/// How many modules, from seed 0, the round-trip checks generate: the Rust
+/// property tests and the cross-language round trip with Lean.
+pub const ROUND_TRIP_MODULES: u64 = 600;
+
 /// A small, fast pseudo-random generator (SplitMix64).
 #[derive(Clone, Debug)]
 pub struct Rng(u64);

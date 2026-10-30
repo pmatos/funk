@@ -23,5 +23,9 @@ import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
 import Fir.Text.RoundTrip
+import Fir.Text.Lex
+import Fir.Text.Read
+import Fir.Text.ReadLocs
+import Fir.Text.Decode
 import Fir.Core.Text
 import Fir.Text.Example

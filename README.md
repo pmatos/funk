@@ -125,6 +125,11 @@ are on `main`:
   and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
   prints fir in its canonical form, and `funk verify` checks it. Both report
   as text, or as JSON with `--json`.
+- The Lean parser, a section of the spec, and the first command of the
+  reference interpreter's executable, `fir-ref fmt`
+  ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
+  op of every dialect. Lean reprints what Rust prints, byte for byte, on the
+  shared texts and on modules from the Rust generator.
 - The naive x86-64 backend, `funk-x86-64`
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
   `const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an
@@ -139,7 +144,11 @@ These parts of M0 do not exist yet:
   `add` and `ret`. One issue for each group of related ops,
   [#14](https://github.com/pmatos/funk/issues/14) to
   [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
-- The Lean parser and the reference interpreter, `fir-ref`.
+- The validation check behind `fir-ref validate`, and the interpreter
+  behind `fir-ref run`.
+- A `fir-ref` that reads and prints texts nested to any depth: today it
+  overflows its stack on texts nested millions of levels deep
+  ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
 - In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
   in the backend. The backend does not lower `i128` or return more than one
@@ -152,7 +161,7 @@ The epic's sub-issues list the open work in full.
 
 | Path | Contents |
 | --- | --- |
-| `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose |
+| `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose, `fir-ref` and the Lean tests |
 | `docs/spec/` | The Lean package `firspec`: the Verso document that renders the spec |
 | `docs/roadmap.md` | The roadmap: milestones M0 to M6 |
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
@@ -183,6 +192,8 @@ cd funk
 ```
 
 Open `docs/spec/_out/html-multi/index.html` in a browser to read the spec.
+The build also makes `lean/.lake/build/bin/fir-ref` and runs the Lean tests;
+`./scripts/build-spec.sh --lean` does only that.
 elan uses the Lean version that `lean/lean-toolchain` pins. The first build in
 a clone also builds Verso, so it takes longer. The rendered spec is a build
 output, and git ignores it. [`docs/spec/README.md`](docs/spec/README.md) has
@@ -227,9 +238,12 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` too, because one of the checks builds the spec, `rustup`, because
-three of them check the Rust code, and GNU binutils on an x86-64 Linux
-host, because the Rust tests build and run native code. Then install the git hooks:
+`elan` and `rustup` too, and GNU binutils on an x86-64 Linux host. Three
+checks need elan: `fir-spec` builds the spec, `fir-ref-test` runs the Lean
+tests, and `fir-round-trip` has Lean reprint what Rust prints. Four need
+rustup: `rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and
+`fir-round-trip` runs it. `rust-test` builds and runs native code, so it
+needs binutils. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks
