@@ -28,4 +28,5 @@ import Fir.Text.Read
 import Fir.Text.ReadLocs
 import Fir.Text.Decode
 import Fir.Core.Text
+import Fir.Core.TextLaws
 import Fir.Text.Example

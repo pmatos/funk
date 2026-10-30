@@ -28,8 +28,8 @@ module, and the writability laws of `LawfulDialectText` cover what the
 dialect writes, so the obligation holds for every lawful dialect: the
 theorem `validIsWellFormed`, below. The parser is `Fir.parse`, in the
 sections that follow. #11 proves the first property for it, and the laws
-of `LawfulDialectText` for the core dialect, which give `ValidIsWellFormed`
-for it.
+of `LawfulDialectText` for the core dialect, `Core.lawfulDialectText`, which
+give `ValidIsWellFormed` for it, `Core.validIsWellFormed`.
 
 The conditions look at every block and op of a function, at any depth: the
 blocks of the regions of its ops too. A valid function's ops own no region,

@@ -31,7 +31,7 @@ repos:
         pass_filenames: false
         files: ^scripts/(test_)?check_adr_ids\.py$
       - id: fir-spec
-        name: Build fir's Lean package and render the spec
+        name: Build fir's Lean package, check its axioms and render the spec
         entry: scripts/build-spec.sh
         language: unsupported_script
         pass_filenames: false

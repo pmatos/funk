@@ -125,7 +125,27 @@ inductive Attr where
   | str (s : String)
   | sym (s : String)
   | app (head : String) (args : List Attr)
-  deriving Repr, Inhabited
+  deriving Inhabited
+
+mutual
+/-- How `#eval` shows an attribute: as the Lean term that builds it. It is
+written out because a derived instance would be `partial`, as `Attr` holds a
+list of itself, and no declaration of `lean/` is (ADR-2026-10-30-1452). -/
+def Attr.repr : Attr → Nat → Std.Format
+  | .word w, p => Repr.addAppParen ("Fir.Attr.word " ++ reprArg w) p
+  | .int i, p => Repr.addAppParen ("Fir.Attr.int " ++ reprArg i) p
+  | .str s, p => Repr.addAppParen ("Fir.Attr.str " ++ reprArg s) p
+  | .sym s, p => Repr.addAppParen ("Fir.Attr.sym " ++ reprArg s) p
+  | .app h args, p => Repr.addAppParen ("Fir.Attr.app " ++ reprArg h ++ " " ++
+      .bracket "[" (.joinSep (Attr.reprList args) ("," ++ .line)) "]") p
+
+/-- How `#eval` shows each attribute of a list. -/
+def Attr.reprList : List Attr → List Std.Format
+  | [] => []
+  | a :: as => a.repr 0 :: Attr.reprList as
+end
+
+instance : Repr Attr := ⟨Attr.repr⟩
 
 mutual
 /-- An attribute can be written as a token. Every symbol can: it is quoted
