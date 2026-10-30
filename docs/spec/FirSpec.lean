@@ -133,6 +133,22 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.LexWellFormed "Writable tokens" (level := 2)}
 
+{includeLiterate "." Fir.Text.Tree "The tree that the grammar reads" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadAttrs "The grammar step" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadDefs "Definitions and successors read back" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadOps "Ops read back" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadBlocks "Blocks and regions read back" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadFunc "A function read back" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadTable "The location table read back" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadModule "The module read back" (level := 2)}
+
 # Architecture decision records
 %%%
 tag := "adrs"
