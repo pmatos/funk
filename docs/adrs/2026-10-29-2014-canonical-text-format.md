@@ -1,6 +1,6 @@
 # fir has one canonical text format, and the printer is the formatter
 
-Status: accepted
+Status: accepted; refined by ADR-2026-10-30-0815
 
 ## Context
 
