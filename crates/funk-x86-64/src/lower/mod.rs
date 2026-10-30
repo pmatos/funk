@@ -110,20 +110,33 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| control::lowering(name))
 }
 
+/// A module's functions, lowered.
+pub struct Lowered {
+    /// The assembly of every function.
+    pub text: String,
+    /// The size of each function's frame below `%rbp`, in order.
+    pub frames: Vec<i32>,
+}
+
 /// The assembly of every function of `m`, or a diagnostic for each part
 /// that the backend cannot lower. `m` must be valid.
-pub fn module(m: &Module) -> Result<String, Vec<Diagnostic>> {
+pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     let mut out = Vec::new();
+    let mut frames = Vec::new();
     asm.directive(format_args!(".text"));
     for (i, f) in m.funcs().enumerate() {
-        if let Some(code) = func(i, f, &mut out) {
+        if let Some((code, size)) = func(i, f, &mut out) {
             asm.raw(&code);
+            frames.push(size);
         }
     }
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {
-        Ok(asm.finish())
+        Ok(Lowered {
+            text: asm.finish(),
+            frames,
+        })
     } else {
         Err(out)
     }
@@ -143,9 +156,10 @@ pub fn block_label(i: usize, label: &str) -> String {
     format!(".Lb{i}_{label}")
 }
 
-/// The code of the `i`-th function, `f`, or `None` when it has a part that
-/// the backend cannot lower, which goes to `out`.
-fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<String> {
+/// The code of the `i`-th function, `f`, and the size of its frame, or
+/// `None` when it has a part that the backend cannot lower, which goes to
+/// `out`.
+fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> {
     let entry = f.body.blocks.first();
     let before = out.len();
     let frame = Frame::new(f)
@@ -205,7 +219,8 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<String> {
         block(i, f, &mut cx, b, out);
     }
     cx.asm.directive(format_args!(".size\t{sym}, .-{sym}"));
-    (out.len() == before).then(|| cx.asm.finish())
+    let size = cx.frame.size();
+    (out.len() == before).then(|| (cx.asm.finish(), size))
 }
 
 fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnostic>) {

@@ -1,5 +1,9 @@
 //! Running GNU `as` and `ld` (ADR-2026-10-30-1229), and the temporary directory that
 //! holds what they read and write on the way to the outputs.
+//!
+//! `as` and `ld` are told the target, x86-64, on their command lines, so a
+//! default from their configuration or the environment, such as
+//! `LDEMULATION`, does not change what they build.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -14,11 +18,12 @@ pub fn assemble(source: &Path, object: &Path) -> Result<(), String> {
     run("the assembler, as", cmd)
 }
 
-/// Links `objects` into the static executable `exe`, whose entry point is
-/// the runtime's `__funk_start`.
+/// Links `objects` into the static x86-64 executable `exe`, whose entry
+/// point is the runtime's `__funk_start`.
 pub fn link(objects: &[&Path], exe: &Path) -> Result<(), String> {
     let mut cmd = Command::new("ld");
-    cmd.arg("-o")
+    cmd.args(["-m", "elf_x86_64", "-static"])
+        .arg("-o")
         .arg(operand(exe))
         .arg("-e")
         .arg("__funk_start");
@@ -64,16 +69,15 @@ fn run(what: &str, mut cmd: Command) -> Result<(), String> {
 pub struct TempDir(PathBuf);
 
 impl TempDir {
-    /// Creates a directory with a name that nothing uses yet, readable only
-    /// by its owner, in the system's temporary directory.
-    pub fn new() -> Result<TempDir, String> {
-        let base = std::env::temp_dir();
+    /// Creates a hidden directory in `base`, with a name that nothing uses
+    /// yet, readable only by its owner.
+    pub fn new_in(base: &Path) -> Result<TempDir, String> {
         let mut builder = std::fs::DirBuilder::new();
         #[cfg(unix)]
         std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
         let mut n = 0u32;
         loop {
-            let dir = base.join(format!("funk-build.{}.{n}", std::process::id()));
+            let dir = base.join(format!(".funk-build.{}.{n}", std::process::id()));
             match builder.create(&dir) {
                 Ok(()) => return Ok(TempDir(dir)),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists && n < 9999 => n += 1,
@@ -105,13 +109,18 @@ mod tests {
 
     #[test]
     fn temporary_directories_are_fresh_and_removed() {
-        let a = TempDir::new().unwrap();
-        let b = TempDir::new().unwrap();
+        let base = std::env::temp_dir();
+        let a = TempDir::new_in(&base).unwrap();
+        let b = TempDir::new_in(&base).unwrap();
         assert_ne!(a.0, b.0);
+        assert_eq!(a.0.parent(), Some(base.as_path()));
         std::fs::write(a.join("x"), "x").unwrap();
         let path = a.0.clone();
         drop(a);
         assert!(!path.exists());
+        let missing = base.join("funk-no-such-directory").join("x");
+        let err = TempDir::new_in(&missing).unwrap_err();
+        assert!(err.contains("cannot create a temporary directory"), "{err}");
     }
 
     #[test]

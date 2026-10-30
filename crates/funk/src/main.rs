@@ -1,7 +1,7 @@
 //! `funk`, the driver: `funk fmt` prints fir in its canonical form,
 //! `funk verify` checks it, and `funk build` compiles it to x86-64. Each
 //! reports as text, or as JSON with `--json` (ADR-2026-10-30-1032,
-//! ADR-2026-10-30-1233).
+//! ADR-2026-10-30-1326).
 
 mod build;
 mod json;
@@ -65,14 +65,32 @@ struct Args {
     files: Vec<String>,
 }
 
+/// The arguments before `--` that may be flags: every one but the value of
+/// `build`'s `-o`, which is a path even when it reads as a flag.
+fn flags(args: &[String]) -> Vec<&str> {
+    let build = args.first().is_some_and(|a| a == "build");
+    let mut out = Vec::new();
+    let mut walk = args.iter();
+    while let Some(a) = walk.next() {
+        match a.as_str() {
+            "--" => break,
+            "-o" if build => {
+                walk.next();
+            }
+            a => out.push(a),
+        }
+    }
+    out
+}
+
 fn parse_args(args: &[String]) -> Result<Request, String> {
-    let mut options = args.iter().take_while(|a| *a != "--");
+    let flags = flags(args);
     if args.first().is_some_and(|a| a == "help")
-        || options.clone().any(|a| a == "-h" || a == "--help")
+        || flags.iter().any(|a| *a == "-h" || *a == "--help")
     {
         return Ok(Request::Help);
     }
-    if options.any(|a| a == "-V" || a == "--version") {
+    if flags.iter().any(|a| *a == "-V" || *a == "--version") {
         return Ok(Request::Version);
     }
     let (command, rest) = args.split_first().ok_or("missing command")?;

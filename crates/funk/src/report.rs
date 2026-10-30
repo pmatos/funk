@@ -1,5 +1,5 @@
 //! What funk reports for each file, as text for people and as JSON for
-//! agents (ADR-2026-10-30-1032, ADR-2026-10-30-1233).
+//! agents (ADR-2026-10-30-1032, ADR-2026-10-30-1326).
 //!
 //! The JSON report of a file says whether the parser rejected it
 //! (`parse-error`), validation rejected it (`validation-error`), the backend

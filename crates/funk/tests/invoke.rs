@@ -1,10 +1,11 @@
 //! How a built executable is invoked: the function by its fir name, its
-//! arguments spelled as fir constants, and a bad command line reported on
-//! standard error with exit status 2 (ADR-2026-10-30-1233).
+//! arguments spelled as fir constants, and a bad command line reported in
+//! one line on standard error with exit status 2 (ADR-2026-10-30-1233).
 
 mod common;
 
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
 use common::{build, expect, func, module, run, text};
 
@@ -111,4 +112,39 @@ fn arguments_take_the_spelling_of_fir_constants() {
             );
         }
     }
+}
+
+#[test]
+fn control_characters_from_the_command_line_are_escaped() {
+    let exe = program("controls");
+    refused(&exe, &["@i8", "1\n2"], "1\\x0a2 is not a value of type i8");
+    refused(
+        &exe,
+        &["@no\r\u{7f}\tne"],
+        "no function @no\\x0d\\x7f\\x09ne in this program",
+    );
+    refused(
+        &exe,
+        &["@two", "1", "\u{1b}[31m"],
+        "\\x1b[31m is not a value of type i8",
+    );
+    refused(&exe, &["@i8", "é"], "é is not a value of type i8");
+    use std::os::unix::process::CommandExt;
+    let out = Command::new(&exe).arg0("a\nb").output().unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(text(&out.stderr), "usage: a\\x0ab @FUNCTION ARG...\n");
+}
+
+#[test]
+fn a_closed_pipe_ends_the_program_with_status_2() {
+    let exe = program("pipe");
+    let (reader, writer) = std::io::pipe().unwrap();
+    drop(reader);
+    let out = Command::new(&exe)
+        .args(["@i8", "5"])
+        .stdout(Stdio::from(writer))
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(2), "{out:?}");
+    assert_eq!(text(&out.stderr), "");
 }

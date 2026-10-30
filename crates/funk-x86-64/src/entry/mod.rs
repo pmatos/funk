@@ -5,15 +5,16 @@
 //! function, which parses the function's arguments, calls it by the System V
 //! convention and prints its result, and the table `__funk_functions`, which
 //! gives each function's name as fir writes it (`@f`, `@"a b"`), its number
-//! of parameters and its wrapper. The runtime finds a function in the table
-//! by the name on the command line.
+//! of parameters, its wrapper and the bytes of stack that the wrapper needs.
+//! The runtime finds a function in the table by the name on the command
+//! line, reserves that stack, and calls the wrapper on it.
 
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module};
 
 use crate::abi::{ARG_REGS, RESULT_REG, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
-use crate::frame::{self, displacement, size_for};
+use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
 use crate::width::{self, Ext};
 
@@ -21,17 +22,24 @@ use crate::width::{self, Ext};
 /// wrappers call.
 const RUNTIME: &str = include_str!("runtime.s");
 
-/// The entry point's assembly for `m`, which the backend has lowered. A
-/// function whose results the wrappers cannot print is reported.
-pub fn generate(m: &Module) -> Result<String, Vec<Diagnostic>> {
+/// The stack that the runtime's routines need below a wrapper, with room to
+/// spare: the deepest of them uses less than 256 bytes.
+const RUNTIME_STACK: u64 = 16 * 1024;
+
+/// The entry point's assembly for `m`, which the backend has lowered into
+/// functions with frames of `frames` bytes. A function whose results the
+/// wrappers cannot print is reported.
+pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     asm.raw(RUNTIME);
     asm.directive(format_args!(".text"));
     let mut out = Vec::new();
+    let mut stacks = Vec::new();
     let funcs: Vec<&Func> = m.funcs().collect();
-    for (i, f) in funcs.iter().enumerate() {
-        if let Err(d) = wrapper(&mut asm, i, f) {
-            out.push(d);
+    for (i, (f, &frame)) in funcs.iter().zip(frames).enumerate() {
+        match wrapper(&mut asm, i, f, frame) {
+            Ok(stack) => stacks.push(stack),
+            Err(d) => out.push(d),
         }
     }
     if !out.is_empty() {
@@ -42,9 +50,9 @@ pub fn generate(m: &Module) -> Result<String, Vec<Diagnostic>> {
     asm.label("__funk_functions");
     asm.directive(format_args!(".quad\t{}", funcs.len()));
     let names: Vec<String> = funcs.iter().map(|f| print_symbol(&f.name)).collect();
-    for (i, (f, name)) in funcs.iter().zip(&names).enumerate() {
+    for (i, ((f, name), stack)) in funcs.iter().zip(&names).zip(&stacks).enumerate() {
         asm.directive(format_args!(
-            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}",
+            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}, {stack}",
             name.len(),
             f.params.len()
         ));
@@ -60,13 +68,14 @@ pub fn generate(m: &Module) -> Result<String, Vec<Diagnostic>> {
     Ok(asm.finish())
 }
 
-/// The wrapper `__funk_entry_I` of the `i`-th function `f`.
+/// The wrapper `__funk_entry_I` of the `i`-th function `f`, whose frame is
+/// `frame` bytes, and the bytes of stack that the wrapper needs to run.
 ///
 /// Lowering has already reported each parameter whose width the backend
 /// does not lower, and each `ret` with more than one value. The wrapper
 /// checks the signature again because a function that never reaches a
 /// `ret`, which branches allow, must still have results it can print.
-fn wrapper(asm: &mut Asm, i: usize, f: &Func) -> Result<(), Diagnostic> {
+fn wrapper(asm: &mut Asm, i: usize, f: &Func, frame: i32) -> Result<u64, Diagnostic> {
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
     let params = f
         .params
@@ -119,5 +128,44 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func) -> Result<(), Diagnostic> {
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
-    Ok(())
+    Ok(stack_need(frame, size, on_stack.len()))
+}
+
+/// The bytes of stack that a wrapper with a frame of `wrapper` bytes and
+/// `on_stack` arguments on the stack needs to call a function with a frame
+/// of `frame` bytes, rounded up to a page. Each frame also holds a return
+/// address and a saved `%rbp`, and the arguments on the stack are padded to
+/// an even number.
+fn stack_need(frame: i32, wrapper: i32, on_stack: usize) -> u64 {
+    let on_stack = on_stack as u64;
+    let args = 8 * (on_stack + on_stack % 2);
+    let bytes = u64::from(frame.unsigned_abs())
+        + 16
+        + u64::from(wrapper.unsigned_abs())
+        + 16
+        + args
+        + RUNTIME_STACK;
+    let page = u64::from(PAGE.unsigned_abs());
+    bytes.div_ceil(page) * page
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_stack_holds_both_frames_and_the_runtime() {
+        assert_eq!(stack_need(0, 0, 0), 5 * 4096);
+        assert_eq!(stack_need(16, 0, 0), 5 * 4096);
+        let big = 1 << 24;
+        assert_eq!(
+            stack_need(big, 16, 0),
+            u64::from(big.unsigned_abs()) + 5 * 4096
+        );
+        let most = i32::MAX & !15;
+        assert_eq!(
+            stack_need(most, most, (1 << 20) - 1),
+            (1 << 32) + (8 << 20) + 4 * 4096
+        );
+    }
 }

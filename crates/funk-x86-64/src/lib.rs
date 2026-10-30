@@ -8,7 +8,7 @@
 //! entry file holds the entry point of an executable that runs one function
 //! from the command line and prints its results (ADR-2026-10-30-1233).
 //! [`build`] assembles both with `as` and links them with `ld` into an
-//! object file and an executable.
+//! object file and an executable (ADR-2026-10-30-1326).
 //!
 //! Register allocation is the baseline: every value has a stack slot, and
 //! each op loads its operands and stores its results (ADR-2026-10-30-1230).
@@ -45,9 +45,12 @@ pub struct Program {
 /// Lowers `m`, which must be valid, or reports every part of it that the
 /// backend cannot lower.
 pub fn compile(m: &Module) -> Result<Program, Vec<Diagnostic>> {
-    let module = lower::module(m)?;
-    let entry = entry::generate(m)?;
-    Ok(Program { module, entry })
+    let lowered = lower::module(m)?;
+    let entry = entry::generate(m, &lowered.frames)?;
+    Ok(Program {
+        module: lowered.text,
+        entry,
+    })
 }
 
 /// Why a module was not built.
@@ -55,8 +58,12 @@ pub fn compile(m: &Module) -> Result<Program, Vec<Diagnostic>> {
 pub enum BuildError {
     /// The backend cannot lower these parts of the module.
     Unsupported(Vec<Diagnostic>),
-    /// The assembler or the linker could not run, or failed.
+    /// The assembler or the linker could not run, failed or printed
+    /// something.
     Tool(String),
+    /// A file or directory could not be created, written or moved into
+    /// place.
+    Io(String),
 }
 
 /// The files that [`build`] writes.
@@ -78,29 +85,41 @@ pub fn object_path(exe: &Path) -> PathBuf {
 }
 
 /// Compiles `m`, which must be valid, then writes its object file and the
-/// executable `exe`, linked from that object file and the entry point. When
-/// the build fails, it leaves no object file behind.
+/// executable `exe`, linked from that object file and the entry point.
+///
+/// Every file is first written to a temporary directory next to `exe`. The
+/// object file and then the executable are moved into place only once both
+/// are built, so a build that fails leaves both paths as they were. The one
+/// exception: if the executable cannot be moved into place, the new object
+/// file is removed again.
 pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
     let program = compile(m).map_err(BuildError::Unsupported)?;
     let object = object_path(exe);
-    let tmp = tools::TempDir::new().map_err(BuildError::Tool)?;
-    let (module_s, entry_s, entry_o) = (
-        tmp.join("module.s"),
-        tmp.join("entry.s"),
-        tmp.join("entry.o"),
-    );
+    let parent = match exe.parent() {
+        Some(p) if !p.as_os_str().is_empty() => p,
+        _ => Path::new("."),
+    };
+    let tmp = tools::TempDir::new_in(parent).map_err(BuildError::Io)?;
+    let [module_s, entry_s, entry_o, built_o, built_exe] =
+        ["module.s", "entry.s", "entry.o", "out.o", "out"].map(|n| tmp.join(n));
     let write = |path: &Path, text: &str| {
         std::fs::write(path, text)
-            .map_err(|e| BuildError::Tool(format!("cannot write {}: {e}", path.display())))
+            .map_err(|e| BuildError::Io(format!("cannot write {}: {e}", path.display())))
     };
     write(&module_s, &program.module)?;
     write(&entry_s, &program.entry)?;
-    tools::assemble(&module_s, &object).map_err(BuildError::Tool)?;
-    let linked =
-        tools::assemble(&entry_s, &entry_o).and_then(|()| tools::link(&[&object, &entry_o], exe));
-    if let Err(why) = linked {
+    tools::assemble(&module_s, &built_o)
+        .and_then(|()| tools::assemble(&entry_s, &entry_o))
+        .and_then(|()| tools::link(&[&built_o, &entry_o], &built_exe))
+        .map_err(BuildError::Tool)?;
+    let place = |from: &Path, to: &Path| {
+        std::fs::rename(from, to)
+            .map_err(|e| BuildError::Io(format!("cannot write {}: {e}", to.display())))
+    };
+    place(&built_o, &object)?;
+    if let Err(e) = place(&built_exe, exe) {
         let _ = std::fs::remove_file(&object);
-        return Err(BuildError::Tool(why));
+        return Err(e);
     }
     Ok(Outputs {
         object,

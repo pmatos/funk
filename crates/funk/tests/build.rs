@@ -1,10 +1,10 @@
 //! `funk build`: its outputs, its reports and its exit status
-//! (ADR-2026-10-30-1233).
+//! (ADR-2026-10-30-1326).
 
 mod common;
 
-use std::path::Path;
-use std::process::Command;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 
 use common::{DEAD, SEVEN, dir, expect, funk, funk_in, text, try_build};
 
@@ -166,14 +166,26 @@ fn a_missing_assembler_is_a_tool_error() {
 fn an_output_that_starts_with_a_dash_is_a_path() {
     let dir = dir("build-dash");
     std::fs::write(dir.join("seven.fir"), SEVEN).unwrap();
-    let out = funk_in(&dir, &["build", "-o", "-x", "seven.fir"], "");
-    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    expect(&dir.join("-x"), &["@seven"], &["7"]);
-    assert!(dir.join("-x.o").exists());
+    for output in ["-x", "-h", "--help", "-V", "--version"] {
+        let out = funk_in(&dir, &["build", "--json", "-o", output, "seven.fir"], "");
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{output}: {}",
+            text(&out.stderr)
+        );
+        assert!(
+            text(&out.stdout).contains("\"verdict\":\"accepted\""),
+            "{output}: {}",
+            text(&out.stdout)
+        );
+        expect(&dir.join(output), &["@seven"], &["7"]);
+        assert!(dir.join(format!("{output}.o")).exists(), "{output}");
+    }
 }
 
 #[test]
-fn a_failed_link_leaves_no_object_file() {
+fn an_output_that_cannot_be_written_is_an_io_error_and_leaves_nothing() {
     let dir = dir("build-link-fails");
     let src = dir.join("seven.fir");
     std::fs::write(&src, SEVEN).unwrap();
@@ -182,8 +194,101 @@ fn a_failed_link_leaves_no_object_file() {
     let exe = exe.to_string_lossy().into_owned();
     let out = funk(&["build", "--json", "-o", &exe, src.to_str().unwrap()], "");
     assert_eq!(out.status.code(), Some(2));
-    assert!(text(&out.stdout).contains("\"verdict\":\"tool-error\""));
+    let json = text(&out.stdout);
+    assert!(json.contains("\"verdict\":\"io-error\""), "{json}");
+    assert!(json.contains(&format!("cannot write {exe}: ")), "{json}");
     assert!(!Path::new(&format!("{exe}.o")).exists());
+    let missing = dir
+        .join("missing")
+        .join("seven")
+        .to_string_lossy()
+        .into_owned();
+    let out = funk(
+        &["build", "--json", "-o", &missing, src.to_str().unwrap()],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(2));
+    let json = text(&out.stdout);
+    assert!(json.contains("\"verdict\":\"io-error\""), "{json}");
+    assert!(
+        json.contains("cannot create a temporary directory in "),
+        "{json}"
+    );
+    assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 2);
+}
+
+/// The path of the program `tool` on `PATH`.
+fn which(tool: &str) -> PathBuf {
+    let path = std::env::var_os("PATH").unwrap();
+    std::env::split_paths(&path)
+        .map(|d| d.join(tool))
+        .find(|p| p.is_file())
+        .unwrap()
+}
+
+/// Builds `SEVEN` with a `tool` on `PATH` that runs the real one, then
+/// prints a warning. An object file from an earlier build is already at the
+/// output's path.
+fn build_with_a_warning(tool: &str) -> (Output, PathBuf) {
+    let dir = dir(&format!("build-{tool}-warns"));
+    let bin = dir.join("bin");
+    std::fs::create_dir(&bin).unwrap();
+    let shim = bin.join(tool);
+    let real = which(tool);
+    let script = format!(
+        "#!/bin/sh\n'{}' \"$@\" || exit\necho '{tool}: warning: shim' >&2\n",
+        real.display()
+    );
+    std::fs::write(&shim, script).unwrap();
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(&shim, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let src = dir.join("seven.fir");
+    std::fs::write(&src, SEVEN).unwrap();
+    let exe = dir.join("seven");
+    std::fs::write(dir.join("seven.o"), "old").unwrap();
+    let mut path = std::ffi::OsString::from(&bin);
+    path.push(":");
+    path.push(std::env::var_os("PATH").unwrap());
+    let out = Command::new(env!("CARGO_BIN_EXE_funk"))
+        .env("PATH", path)
+        .args(["build", "--json", "-o"])
+        .args([&exe, &src])
+        .output()
+        .unwrap();
+    (out, exe)
+}
+
+#[test]
+fn a_tool_that_warns_fails_the_build_and_leaves_the_outputs_alone() {
+    for tool in ["as", "ld"] {
+        let (out, exe) = build_with_a_warning(tool);
+        let json = text(&out.stdout);
+        assert_eq!(out.status.code(), Some(2), "{tool}: {json}");
+        assert!(json.contains("\"verdict\":\"tool-error\""), "{json}");
+        assert!(
+            json.contains(&format!("warned: {tool}: warning: shim")),
+            "{json}"
+        );
+        assert!(!exe.exists(), "{tool}");
+        let object = std::fs::read_to_string(exe.with_extension("o")).unwrap();
+        assert_eq!(object, "old", "{tool}");
+    }
+}
+
+#[test]
+fn the_linker_ignores_its_default_target() {
+    let dir = dir("build-ldemulation");
+    let src = dir.join("seven.fir");
+    std::fs::write(&src, SEVEN).unwrap();
+    let exe = dir.join("seven");
+    let out = Command::new(env!("CARGO_BIN_EXE_funk"))
+        .env("LDEMULATION", "elf_i386")
+        .args(["build", "-o"])
+        .args([&exe, &src])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    expect(&exe, &["@seven"], &["7"]);
 }
 
 #[test]

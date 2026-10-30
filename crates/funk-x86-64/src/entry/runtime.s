@@ -2,24 +2,34 @@
 #
 # The executable runs one function of the module: `PROGRAM @FUNCTION ARG...`.
 # The runtime finds the function in the table `__funk_functions`, which the
-# entry generator writes after this file, checks the argument count, and
-# calls the function's wrapper. The wrapper parses each argument with
-# `__funk_rt_arg`, calls the function, and prints each result with
-# `__funk_rt_value`. The runtime then prints the line {"values":[...]} on
-# standard output and exits with 0. A bad command line is reported on
-# standard error, with exit status 2.
+# entry generator writes after this file, and checks the argument count. It
+# reserves the stack that the table gives for the function, with a guard
+# page below it, and calls the function's wrapper on that stack. The wrapper
+# parses each argument with `__funk_rt_arg`, calls the function, and prints
+# each result with `__funk_rt_value`. The runtime then prints the line
+# {"values":[...]} on standard output and exits with 0. A bad command line,
+# or a stack that cannot be reserved, is reported in one line on standard
+# error, with exit status 2.
 #
-# It uses no libc: only the Linux system calls write (1) and exit_group (231).
-# Every routine follows the System V AMD64 calling convention.
+# It uses no libc: only the Linux system calls write (1), mmap (9),
+# mprotect (10), rt_sigaction (13) and exit_group (231). Every routine
+# follows the System V AMD64 calling convention.
 
 	.text
 
 # The entry point. The kernel leaves argc at (%rsp), then argv, with %rsp
-# 16-byte aligned.
+# 16-byte aligned. SIGPIPE is ignored, so a write to a pipe that nobody
+# reads fails, and the program exits with 2 as on any failed write.
 	.globl	__funk_start
 	.type	__funk_start, @function
 __funk_start:
 	xorl	%ebp, %ebp
+	movl	$13, %edi		# SIGPIPE
+	leaq	.Lsig_ignore(%rip), %rsi
+	xorl	%edx, %edx
+	movl	$8, %r10d		# the size of a signal set
+	movl	$13, %eax		# rt_sigaction
+	syscall
 	movq	(%rsp), %rdi
 	leaq	8(%rsp), %rsi
 	call	__funk_rt_main
@@ -57,16 +67,39 @@ __funk_rt_main:
 	call	__funk_rt_equal
 	testl	%eax, %eax
 	jnz	.Lfound
-	addq	$32, %rbx
+	addq	$40, %rbx		# the next entry of the table
 	decq	%r14
 	jmp	.Lfind
 .Lfound:
 	cmpq	16(%rbx), %r12
 	jne	.Lcount
+	movq	32(%rbx), %rsi		# the stack the wrapper needs,
+	addq	$4096, %rsi		# and a guard page below it
+	xorl	%edi, %edi
+	movl	$3, %edx		# PROT_READ | PROT_WRITE
+	movl	$0x24022, %r10d		# MAP_PRIVATE | MAP_ANONYMOUS
+					# | MAP_NORESERVE | MAP_STACK
+	movq	$-1, %r8
+	xorl	%r9d, %r9d
+	movl	$9, %eax		# mmap
+	syscall
+	cmpq	$-4095, %rax
+	jae	.Lno_stack
+	movq	%rax, %r14
+	movq	%rax, %rdi
+	movl	$4096, %esi
+	xorl	%edx, %edx		# PROT_NONE
+	movl	$10, %eax		# mprotect
+	syscall
+	testq	%rax, %rax
+	jnz	.Lno_stack
 	leaq	.Lopen(%rip), %rdi
 	movl	$(.Lopen_end - .Lopen), %esi
 	call	__funk_rt_out
+	movq	32(%rbx), %rax
+	leaq	4096(%r14,%rax), %rsp	# the top of the reserved stack
 	call	*24(%rbx)
+	leaq	-32(%rbp), %rsp		# back on the process's stack
 	leaq	.Lclose(%rip), %rdi
 	movl	$(.Lclose_end - .Lclose), %esi
 	call	__funk_rt_out
@@ -77,7 +110,7 @@ __funk_rt_main:
 	leaq	.Lmsg_usage(%rip), %rdi
 	call	__funk_rt_err_cstr
 	movq	__funk_rt_program(%rip), %rdi
-	call	__funk_rt_err_cstr
+	call	__funk_rt_err_text
 	leaq	.Lmsg_usage_args(%rip), %rdi
 	jmp	.Ldie
 .Lunknown:
@@ -85,13 +118,25 @@ __funk_rt_main:
 	leaq	.Lmsg_no_function(%rip), %rdi
 	call	__funk_rt_err_cstr
 	movq	%r13, %rdi
-	call	__funk_rt_err_cstr
+	call	__funk_rt_err_text
 	leaq	.Lmsg_in_program(%rip), %rdi
+	jmp	.Ldie
+.Lno_stack:
+	call	__funk_rt_err_program
+	leaq	.Lmsg_no_stack(%rip), %rdi
+	call	__funk_rt_err_cstr
+	movq	32(%rbx), %rdi
+	call	__funk_rt_err_num
+	leaq	.Lmsg_stack_for(%rip), %rdi
+	call	__funk_rt_err_cstr
+	movq	%r13, %rdi
+	call	__funk_rt_err_text
+	leaq	.Lmsg_newline(%rip), %rdi
 	jmp	.Ldie
 .Lcount:
 	call	__funk_rt_err_program
 	movq	%r13, %rdi
-	call	__funk_rt_err_cstr
+	call	__funk_rt_err_text
 	leaq	.Lmsg_takes(%rip), %rdi
 	call	__funk_rt_err_cstr
 	movq	16(%rbx), %rdi
@@ -125,7 +170,7 @@ __funk_rt_arg:
 	ret
 1:	call	__funk_rt_err_program
 	movq	%rbx, %rdi
-	call	__funk_rt_err_cstr
+	call	__funk_rt_err_text
 	leaq	.Lmsg_not_value(%rip), %rdi
 	call	__funk_rt_err_cstr
 	movq	%r12, %rdi
@@ -352,10 +397,60 @@ __funk_rt_exit:
 __funk_rt_err_program:
 	subq	$8, %rsp
 	movq	__funk_rt_program(%rip), %rdi
-	call	__funk_rt_err_cstr
+	call	__funk_rt_err_text
 	leaq	.Lmsg_colon(%rip), %rdi
 	addq	$8, %rsp
 	jmp	__funk_rt_err_cstr
+
+# __funk_rt_err_text(cstr): writes a NUL-terminated string from the command
+# line to standard error, each control byte (below 0x20, or 0x7f) as \xHH,
+# so that the message stays on one line. Runs of other bytes are written
+# whole.
+__funk_rt_err_text:
+	pushq	%rbx
+	pushq	%r12
+	subq	$24, %rsp
+	movq	%rdi, %rbx		# the start of the run
+	xorl	%r12d, %r12d		# the length of the run
+1:	movzbl	(%rbx,%r12), %eax
+	testl	%eax, %eax
+	jz	3f
+	cmpl	$0x20, %eax
+	jb	2f
+	cmpl	$0x7f, %eax
+	je	2f
+	incq	%r12
+	jmp	1b
+2:	movq	%rbx, %rsi
+	movq	%r12, %rdx
+	movl	$2, %edi
+	call	__funk_rt_write
+	movzbl	(%rbx,%r12), %eax
+	leaq	.Lhex(%rip), %rdx
+	movb	$92, (%rsp)		# '\'
+	movb	$120, 1(%rsp)		# 'x'
+	movl	%eax, %ecx
+	shrl	$4, %ecx
+	movzbl	(%rdx,%rcx), %ecx
+	movb	%cl, 2(%rsp)
+	andl	$15, %eax
+	movzbl	(%rdx,%rax), %eax
+	movb	%al, 3(%rsp)
+	movq	%rsp, %rsi
+	movl	$4, %edx
+	movl	$2, %edi
+	call	__funk_rt_write
+	leaq	1(%rbx,%r12), %rbx
+	xorl	%r12d, %r12d
+	jmp	1b
+3:	movq	%rbx, %rsi
+	movq	%r12, %rdx
+	movl	$2, %edi
+	call	__funk_rt_write
+	addq	$24, %rsp
+	popq	%r12
+	popq	%rbx
+	ret
 
 # __funk_rt_err_cstr(cstr): writes a NUL-terminated string to standard
 # error.
@@ -383,6 +478,9 @@ __funk_rt_err_num:
 	ret
 
 	.section	.rodata
+	.p2align	3
+.Lsig_ignore:	.quad	1, 0, 0, 0	# struct sigaction: SIG_IGN, no flags
+.Lhex:	.ascii	"0123456789abcdef"
 .Ltrue:	.ascii	"true"
 .Ltrue_end:
 .Lfalse:	.ascii	"false"
@@ -402,6 +500,8 @@ __funk_rt_err_num:
 .Lmsg_takes:	.asciz	" takes "
 .Lmsg_arguments_not:	.asciz	" arguments, not "
 .Lmsg_not_value:	.asciz	" is not a value of type i"
+.Lmsg_no_stack:	.asciz	"cannot reserve "
+.Lmsg_stack_for:	.asciz	" bytes of stack for "
 .Lmsg_newline:	.asciz	"\n"
 
 	.bss

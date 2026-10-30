@@ -7,12 +7,20 @@
 //! loads its operands from their slots into scratch registers, computes, and
 //! stores each result into its slot. No value stays in a register from one
 //! op to the next.
+//!
+//! A frame larger than a page is probed a page at a time as the prologue
+//! makes room for it, so the stack grows one page after another and never
+//! jumps over a guard region into memory below it.
 
 use std::collections::HashMap;
 
 use funk_ir::Func;
 
-use crate::asm::{Asm, Mem};
+use crate::asm::{Asm, Mem, Reg};
+
+/// The size of a page: the stack grows, and a frame is probed, a page at a
+/// time.
+pub const PAGE: i32 = 4096;
 
 /// The slots of a function's values, and the frame's size.
 #[derive(Debug)]
@@ -70,11 +78,33 @@ pub fn size_for(n: usize) -> Option<i32> {
 
 /// The standard prologue: saves `%rbp`, points it at the frame, and makes
 /// room for `size` bytes of slots.
+///
+/// A frame larger than a page is probed: the prologue moves `%rsp` down a
+/// page at a time and touches each page as it goes, then makes room for the
+/// rest, which is less than a page. Every access to the stack is then at
+/// most a page below one already made, so the stack grows in order, and a
+/// frame too large for its stack faults on the guard page below it rather
+/// than writing past it. The probe loop counts in `%r11`, which carries no
+/// argument, so the parameters are still in their registers after it.
 pub fn prologue(asm: &mut Asm, size: i32) {
     asm.ins("pushq", format_args!("%rbp"));
     asm.ins("movq", format_args!("%rsp, %rbp"));
-    if size > 0 {
-        asm.ins("subq", format_args!("${size}, %rsp"));
+    let (pages, rest) = if size > PAGE {
+        (size / PAGE, size % PAGE)
+    } else {
+        (0, size)
+    };
+    if pages > 0 {
+        let count = Reg::R11.at(32);
+        asm.ins("movl", format_args!("${pages}, {count}"));
+        asm.label("1");
+        asm.ins("subq", format_args!("${PAGE}, %rsp"));
+        asm.ins("orq", format_args!("$0, (%rsp)"));
+        asm.ins("decl", format_args!("{count}"));
+        asm.ins("jnz", format_args!("1b"));
+    }
+    if rest > 0 {
+        asm.ins("subq", format_args!("${rest}, %rsp"));
     }
 }
 
@@ -101,6 +131,32 @@ mod tests {
         assert_eq!(frame.slot("c"), Some(Mem { disp: -24 }));
         assert_eq!(frame.slot("d"), None);
         assert_eq!(frame.size(), 32);
+    }
+
+    fn prologue_of(size: i32) -> String {
+        let mut asm = Asm::new();
+        prologue(&mut asm, size);
+        asm.finish()
+    }
+
+    #[test]
+    fn a_frame_of_up_to_a_page_is_not_probed() {
+        let start = "\tpushq\t%rbp\n\tmovq\t%rsp, %rbp\n";
+        assert_eq!(prologue_of(0), start);
+        assert_eq!(prologue_of(16), format!("{start}\tsubq\t$16, %rsp\n"));
+        assert_eq!(prologue_of(4096), format!("{start}\tsubq\t$4096, %rsp\n"));
+    }
+
+    #[test]
+    fn a_larger_frame_is_probed_a_page_at_a_time() {
+        let probe = "\tpushq\t%rbp\n\tmovq\t%rsp, %rbp\n\tmovl\t$2, %r11d\n1:\n\tsubq\t$4096, %rsp\n\torq\t$0, (%rsp)\n\tdecl\t%r11d\n\tjnz\t1b\n";
+        assert_eq!(prologue_of(8192), probe);
+        assert_eq!(
+            prologue_of(8192 + 48),
+            format!("{probe}\tsubq\t$48, %rsp\n")
+        );
+        let big = prologue_of(size_for(1 << 27).unwrap());
+        assert!(big.contains("\tmovl\t$262144, %r11d\n"), "{big}");
     }
 
     #[test]

@@ -1,5 +1,5 @@
 //! `funk build`: compiles one file with the x86-64 backend into an object
-//! file and an executable (ADR-2026-10-30-1233).
+//! file and an executable (ADR-2026-10-30-1326).
 
 use std::path::Path;
 
@@ -38,6 +38,7 @@ pub fn build_file(file: &str, output: &str, reg: &Registry) -> Report {
         Err(BuildError::Tool(why)) => {
             file_report(file, Verdict::ToolError, vec![Problem::Tool(why)])
         }
+        Err(BuildError::Io(why)) => file_report(file, Verdict::IoError, vec![Problem::Io(why)]),
     }
 }
 

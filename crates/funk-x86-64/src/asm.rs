@@ -17,6 +17,7 @@ pub enum Reg {
     Rdi,
     R8,
     R9,
+    R11,
 }
 
 impl Reg {
@@ -30,6 +31,7 @@ impl Reg {
             Reg::Rdi => ["%dil", "%di", "%edi", "%rdi"],
             Reg::R8 => ["%r8b", "%r8w", "%r8d", "%r8"],
             Reg::R9 => ["%r9b", "%r9w", "%r9d", "%r9"],
+            Reg::R11 => ["%r11b", "%r11w", "%r11d", "%r11"],
         };
         match bits {
             8 => names[0],
