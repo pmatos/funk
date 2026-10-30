@@ -209,7 +209,9 @@ impl fmt::Debug for Region {
                 }
                 Step::Leave(Part::Op(o)) => {
                     out.close()?;
-                    out.value(Some("loc"), &o.loc)?;
+                    out.open(Some("loc"), "LocRef", Bracket::Tuple)?;
+                    out.leaf(None, &o.loc.0)?;
+                    out.close()?;
                     out.close()?;
                 }
                 Step::Leave(_) => {

@@ -54,9 +54,9 @@ impl<'a, 'f> DebugTree<'a, 'f> {
     }
 
     /// Writes `value` with its own `Debug` as the next value, after
-    /// `name: ` when it is a field. The one-line form passes on the
-    /// formatter's flags, such as `{:x?}`; the `{:#?}` form writes through
-    /// an indenting writer, which only keeps the alternate flag.
+    /// `name: ` when it is a field. The `{:#?}` form writes it through an
+    /// indenting writer, which keeps only the alternate flag, so `value`
+    /// must print the same under every other flag: it holds no numbers.
     pub(crate) fn value(&mut self, name: Option<&str>, value: &dyn Debug) -> fmt::Result {
         self.begin(name)?;
         if self.pretty {
@@ -65,6 +65,15 @@ impl<'a, 'f> DebugTree<'a, 'f> {
         } else {
             value.fmt(self.f)?;
         }
+        self.end()
+    }
+
+    /// Writes `value`, whose `Debug` is one line in every form, such as a
+    /// number's, as the next value, with all the formatter's flags, such as
+    /// `{:#x?}` and widths.
+    pub(crate) fn leaf(&mut self, name: Option<&str>, value: &dyn Debug) -> fmt::Result {
+        self.begin(name)?;
+        value.fmt(self.f)?;
         self.end()
     }
 
@@ -223,6 +232,11 @@ mod tests {
         assert_eq!(format!("{ours:?}"), format!("{derived:?}"));
         assert_eq!(format!("{ours:#?}"), format!("{derived:#?}"));
         assert_eq!(format!("{ours:x?}"), format!("{derived:x?}"));
+        assert_eq!(format!("{ours:#x?}"), format!("{derived:#x?}"));
+        assert_eq!(format!("{ours:#X?}"), format!("{derived:#X?}"));
+        assert_eq!(format!("{ours:5?}"), format!("{derived:5?}"));
+        assert_eq!(format!("{ours:#5?}"), format!("{derived:#5?}"));
+        assert_eq!(format!("{ours:<+#06x?}"), format!("{derived:<+#06x?}"));
     }
 
     #[test]
@@ -249,9 +263,9 @@ mod tests {
     fn regions_debug_as_derive_writes_them() {
         let ty = Type::app("t", vec![Attr::App("h".into(), vec![Attr::int(1)])]);
         let inner = Region::new(vec![
-            Block::new("in").op(Op::new("toy.leaf", LocRef(2)).attr(Attr::word("w"))),
+            Block::new("in").op(Op::new("toy.leaf", LocRef(26)).attr(Attr::word("w"))),
         ]);
-        let outer = Op::new("toy.wrap", LocRef(1))
+        let outer = Op::new("toy.wrap", LocRef(10))
             .result("r", ty.clone())
             .attr(Attr::App("f".into(), vec![]))
             .operand("a")
