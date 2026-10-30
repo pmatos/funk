@@ -9,9 +9,15 @@
 #               a block of a million ops and a function of a million
 #               blocks are reprinted within 120 seconds, and regions
 #               nested 3,000 deep within 8 seconds of CPU time (#47).
+#               fir-ref validate accepts every text of tests/fir/, and
+#               gives a module with an unreachable block, a text that does
+#               not parse and a missing file their verdicts (#10); it exits
+#               with 2 on an argument that is not UTF-8 and when it cannot
+#               write its output.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
-#               bytes must match.
+#               bytes must match. fir-ref validate accepts each one: the
+#               generator makes valid modules, which funk verify accepts.
 set -euo pipefail
 
 if [[ $# -ne 1 || ( "$1" != test && "$1" != round-trip ) ]]; then
@@ -55,6 +61,60 @@ case "$1" in
         } >"$tmp/long.fir"
         if ! LEAN_STACK_SIZE_KB=256 "$fir_ref" fmt --check "$tmp/long.fir"; then
             echo "fir-ref does not reprint a string of ten million characters on a 256 KiB stack" >&2
+            status=1
+        fi
+        # fir-ref validate reports one JSON verdict per file (ADR-2026-10-30-1741).
+        corpus=(tests/fir/canonical/*.fir tests/fir/noncanonical/*.fir)
+        rc=0
+        "$fir_ref" validate "${corpus[@]}" >"$tmp/corpus.json" || rc=$?
+        accepted=$(grep -c '"verdict":"accepted"' "$tmp/corpus.json" || true)
+        if [[ $rc -ne 0 || $accepted -ne ${#corpus[@]} ]]; then
+            grep -v '"verdict":"accepted"' "$tmp/corpus.json" >&2 || true
+            echo "fir-ref validate does not accept every text of tests/fir/" >&2
+            status=1
+        fi
+        printf 'func @f() -> i32 {\n^entry:\n  %%c: i32 = const 0 @0\n  ret %%c @0\n' >"$tmp/dead.fir"
+        printf '^dead:\n  %%d: i32 = const 1 @0\n  ret %%d @0\n}\n\nlocs {\n  @0 = unknown\n}\n' \
+            >>"$tmp/dead.fir"
+        printf 'func @f() {\n' >"$tmp/open.fir"
+        # validates FILE STATUS PATTERN: fir-ref validate exits with STATUS on
+        # FILE, and its report matches PATTERN.
+        validates() {
+            local rc=0 report
+            report=$("$fir_ref" validate "$1") || rc=$?
+            if [[ $rc -ne $2 ]] || ! grep -q -- "$3" <<<"$report"; then
+                echo "fir-ref validate $1 exits with $rc, not $2, or its report lacks $3: $report" >&2
+                return 1
+            fi
+        }
+        validates "$tmp/dead.fir" 1 '"verdict":"validation-error".*block ^dead is not reachable' ||
+            status=1
+        validates "$tmp/open.fir" 1 '"verdict":"parse-error".*"line":2,"column":1' || status=1
+        validates "$tmp/missing.fir" 2 '"verdict":"io-error"' || status=1
+        # Errors that are not about a file exit with 2, as funk's do
+        # (ADR-2026-10-30-1032): an argument that is not UTF-8, a full disk,
+        # and a reader that stops reading, which gets no message. The pipe
+        # holds less than the reports of 4,000 files, so the write fails.
+        rc=0
+        "$fir_ref" validate $'bad\xff.fir' 2>"$tmp/err" || rc=$?
+        if [[ $rc -ne 2 ]] || ! grep -q 'is not UTF-8' "$tmp/err"; then
+            echo "fir-ref validate exits with $rc, not 2, on an argument that is not UTF-8" >&2
+            status=1
+        fi
+        if [[ -w /dev/full ]]; then
+            rc=0
+            "$fir_ref" validate "$tmp/dead.fir" >/dev/full 2>"$tmp/err" || rc=$?
+            if [[ $rc -ne 2 ]] || ! grep -q 'cannot write standard output' "$tmp/err"; then
+                echo "fir-ref validate exits with $rc, not 2, when it cannot write" >&2
+                status=1
+            fi
+        fi
+        many=()
+        for _ in {1..4000}; do many+=("$tmp/dead.fir"); done
+        rc=0
+        ("$fir_ref" validate "${many[@]}" 2>"$tmp/err" | true; exit "${PIPESTATUS[0]}") || rc=$?
+        if [[ $rc -ne 2 || -s "$tmp/err" ]]; then
+            echo "fir-ref validate exits with $rc, not 2 and silent, on a closed pipe" >&2
             status=1
         fi
         # Large canonical texts (#47). On a block of a million ops and on a
@@ -113,6 +173,11 @@ case "$1" in
         cargo run --quiet --locked -p funk-ir --example fir_texts -- "$out"
         if ! "$fir_ref" fmt --check "$out"/*.fir; then
             echo "fir-ref does not print the texts above as Rust prints them" >&2
+            exit 1
+        fi
+        if ! verdicts=$("$fir_ref" validate "$out"/*.fir); then
+            grep -v '"verdict":"accepted"' <<<"$verdicts" >&2 || true
+            echo "fir-ref validate rejects the texts above, which funk verify accepts" >&2
             exit 1
         fi
         ;;
