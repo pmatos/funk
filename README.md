@@ -17,8 +17,8 @@ The [ADRs](docs/adrs/) record what we decided, and why. The glossary,
 
 The roadmap sets these goals:
 
-- **Verification first.** We will test the toolchain against fir's semantics
-  in Lean and, over time, prove it correct against them.
+- **Verification first.** We will test the toolchain against fir's Lean
+  semantics and, over time, prove it correct.
 - **Agent native.** Agents build funk and are meant to use it. Its core should
   fit in an agent's context, and its tools should report in JSON as well as in
   text.
@@ -87,7 +87,7 @@ sub-issues. These parts of M0 are on `main`:
 - The decisions that M0 starts from, each recorded as an ADR.
 - A [spike report](docs/spikes/leanmlir.md) that compared two ways to write
   fir's Lean semantics: on top of LeanMLIR, or as fir's own calculus. The
-  human chose fir's own calculus
+  human who guides funk chose fir's own calculus
   ([ADR-2026-10-29-2030](docs/adrs/2026-10-29-2030-fir-lean-semantics-own-calculus.md)).
 - The fir v0 spec, as literate Lean in `lean/`, rendered with Verso from
   `docs/spec/`. It gives fir's abstract syntax and validation rules, the
