@@ -1,5 +1,5 @@
 //! The op registry: how `funk-ir` checks generic ops and types
-//! (G0, ADR-2026-10-29-2016; ADR-2026-10-30-1031).
+//! (G0, ADR-2026-10-29-2016; ADR-2026-10-30-1146).
 //!
 //! An op is data: a name, attributes, operands, successors, regions and a
 //! location. Each dialect registers its ops and its types here, and the

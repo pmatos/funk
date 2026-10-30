@@ -28,23 +28,24 @@ SHA-256 for each `rustup-init`.
   Lean side (#10) and the harness (#13) read the same files.
 - **`funk-ir` has a module per layer**: `ir`, `registry`, `dialects`, `text`,
   `verify` and `generate`. Each op family of the core dialect has its own
-  file in `dialects/core/` (ADR-2026-10-30-1031).
+  file in `dialects/core/` (ADR-2026-10-30-1146).
 - **No third-party crates yet.** JSON output, argument parsing, the big
   integers that check constants and the generator's random numbers are small
   modules of their own. The PR that adds the first dependency also adds the
   `cargo` ecosystem to `.github/dependabot.yml`.
 - **One pin.** `rust-toolchain.toml` pins an exact stable release, now
   `1.99.1`, with the `minimal` profile and the `rustfmt` and `clippy`
-  components. `rust-version` in the workspace matches it. No nightly and no
-  floating `stable`. A bump is one PR that changes the pin, fixes what the
-  new lints find, and passes every check.
+  components. `rust-version` in the workspace is the pin's minor release,
+  `1.99`. No nightly and no floating `stable`. A bump is one PR that changes
+  the pin, fixes what the new lints find, and passes every check.
 - **Three hooks run the checks**, as default-stage hooks in
   `.pre-commit-config.yaml`: `rust-fmt` (`cargo fmt --all --check`),
   `rust-clippy` (`cargo clippy --workspace --all-targets --locked -- -D
   warnings`) and `rust-test` (`cargo test --workspace --locked`). Each calls
   `scripts/check-rust.sh` as an `unsupported_script`, like `fir-spec`. They
-  run when a file under `crates/` or `tests/fir/`, a Cargo file, the pin or
-  the script changes, and on every CI run. rustfmt uses its default style.
+  run when a file under `crates/`, a Cargo file, the pin or the script
+  changes, and on every CI run; `rust-test` also runs when a file under
+  `tests/fir/` changes. rustfmt uses its default style.
 - **CI installs the pinned toolchain.** The `pre-commit` job downloads
   `rustup-init` 1.29.2 and checks it against the SHA-256 written in the
   workflow, installs rustup with no default toolchain, then runs `rustup

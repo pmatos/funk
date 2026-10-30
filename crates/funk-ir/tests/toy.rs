@@ -4,7 +4,7 @@
 //! Its ops are named `toy.` and a word, so they cannot collide with a core
 //! op: `.` is reserved for a dialect's name before its ops (H4), and no core
 //! op name contains one. That is the rule for test dialects
-//! (ADR-2026-10-30-1031), not a decision on H4.
+//! (ADR-2026-10-30-1146), not a decision on H4.
 
 mod common;
 

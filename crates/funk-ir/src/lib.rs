@@ -4,7 +4,7 @@
 //! The merged fir v0 spec in `lean/` is the reference for every rule here;
 //! each module names the part of the spec it follows. Ops and types are
 //! generic data checked through a [`Registry`] of dialects (G0,
-//! ADR-2026-10-29-2016; ADR-2026-10-30-1031), so an extension dialect adds
+//! ADR-2026-10-29-2016; ADR-2026-10-30-1146), so an extension dialect adds
 //! ops and types without a change to the IR, the parser or the printer.
 //!
 //! The parser, the printer and the verifier recurse once per level of

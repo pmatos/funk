@@ -4,7 +4,7 @@
 //! Every op has the same shape, whatever its dialect (G0): results, a name,
 //! attributes, operands, successors, regions and a location reference. Ops are
 //! data checked through the op registry, not a closed Rust `enum`
-//! (ADR-2026-10-30-1031). Values, labels and symbols are referred to by name,
+//! (ADR-2026-10-30-1146). Values, labels and symbols are referred to by name,
 //! stored without their sigils, exactly as the producer wrote them.
 
 use std::collections::HashMap;
