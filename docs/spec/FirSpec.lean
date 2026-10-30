@@ -37,8 +37,9 @@ fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every
 dialect, and the core dialect of M0 is its first instance. The rules of each
 op family, for validation and execution, are added by the tickets that build
-the family. The decisions behind the definitions are the ADRs in
-`docs/adrs/`, cited by their names, such as ADR-2026-10-29-2014.
+the family. The decisions behind the definitions are architecture decision
+records (ADRs), cited by their ids, such as ADR-2026-10-29-2014. Each
+citation links to the ADR in the appendix, which holds every ADR.
 
 # Abstract syntax
 
@@ -113,3 +114,23 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Text.Decode "Decoding" (level := 2)}
 
 {includeLiterate "." Fir.Text.Example "Example" (level := 2)}
+
+# Architecture decision records
+%%%
+tag := "adrs"
+file := "adrs"
+number := false
+htmlToc := false
+%%%
+
+An architecture decision record, or ADR, records one decision about fir or
+funk: what was decided, why, and what it costs. This appendix holds every
+ADR in the repository's `docs/adrs/` directory, one page each, rendered from
+its Markdown file when this document is built, so it matches the commit
+named at the foot of each page.
+
+An ADR's id is the UTC time it was written, and the spec and the ADRs cite
+it as `ADR-` followed by the id, such as ADR-2026-10-30-1329, which also says
+how ids stay unique. Every citation links to the ADR's page. An accepted
+ADR is not rewritten: a later ADR refines or supersedes it, and its status
+names the later one.

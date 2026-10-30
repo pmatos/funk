@@ -25,7 +25,8 @@ Three documents set funk's direction:
   [Build the spec](#build-the-spec) shows.
 - The [roadmap](docs/roadmap.md) says what we build next, and in what order.
 - The [architecture decision records (ADRs)](docs/adrs/) say what we decided,
-  and why.
+  and why. The spec's web page holds them too, as an appendix at
+  <https://p.ocmatos.com/funk/adrs/>, and every ADR it cites is a link.
 
 The glossary, [`CONTEXT.md`](CONTEXT.md), defines the terms they use.
 
