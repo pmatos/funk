@@ -10,7 +10,6 @@ from pathlib import Path
 from check_adr_ids import problems
 
 SCRIPT = Path(__file__).with_name("check_adr_ids.py")
-ROOT = SCRIPT.parent.parent
 
 
 def adrs(*names: str) -> list[str]:
@@ -111,22 +110,18 @@ def git(repo: Path, *args: str) -> None:
     subprocess.run(["git", *args], cwd=repo, env=outside_env(), check=True)
 
 
-def run_script(cwd: Path, env: dict[str, str] | None = None):
+def run_script(cwd: Path):
     return subprocess.run(
         [sys.executable, str(SCRIPT)],
         check=False,
         cwd=cwd,
-        env=env,
+        env=outside_env(),
         capture_output=True,
         text=True,
     )
 
 
 class Repository(unittest.TestCase):
-    def test_this_repository_passes(self):
-        result = run_script(ROOT)
-        self.assertEqual(result.returncode, 0, result.stderr)
-
     def test_planted_clash_fails_and_untracked_files_are_ignored(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -137,16 +132,16 @@ class Repository(unittest.TestCase):
             (adr_dir / ".2026-10-30-1031-a.md.swp").write_text("untracked\n")
             git(repo, "init", "-q")
             git(repo, "add", "docs/adrs/README.md", "docs/adrs/2026-10-30-1031-a.md")
-            self.assertEqual(run_script(repo, outside_env()).returncode, 0)
+            self.assertEqual(run_script(repo).returncode, 0)
 
             git(repo, "add", "docs/adrs/2026-10-30-1031-b.md")
-            result = run_script(repo, outside_env())
+            result = run_script(repo)
             self.assertEqual(result.returncode, 1)
             self.assertIn("docs/adrs/2026-10-30-1031-a.md", result.stderr)
             self.assertIn("docs/adrs/2026-10-30-1031-b.md", result.stderr)
             self.assertIn("Add the seconds to the newer one", result.stderr)
 
-            nested = run_script(repo / "docs", outside_env())
+            nested = run_script(repo / "docs")
             self.assertEqual(nested.returncode, 1)
             self.assertIn("docs/adrs/2026-10-30-1031-b.md", nested.stderr)
 

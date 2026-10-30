@@ -52,7 +52,7 @@ def problems(paths: list[str]) -> list[str]:
         if len(clash) > 1:
             fix = (
                 "Change the seconds of the newer one"
-                if len(ident.rsplit("-", 1)[1]) == len("HHMMSS")
+                if len(ident) > len("YYYY-MM-DD-HHMM")
                 else "Add the seconds to the newer one"
             )
             found.append(
