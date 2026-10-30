@@ -5,9 +5,10 @@
 #               checks print(parse(t)) == t on every canonical text of
 #               tests/fir/, that each non-canonical text prints as its
 #               canonical sibling, that a string of ten million
-#               characters is read and printed on a 256 KiB stack, and
-#               that long blocks and deep regions are reprinted in
-#               seconds (#47).
+#               characters is read and printed on a 256 KiB stack, that
+#               a block of a million ops and a function of a million
+#               blocks are reprinted within 120 seconds, and regions
+#               nested 3,000 deep within 8 seconds of CPU time (#47).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match.
@@ -56,10 +57,14 @@ case "$1" in
             echo "fir-ref does not reprint a string of ten million characters on a 256 KiB stack" >&2
             status=1
         fi
-        # Large canonical texts. The spec's printer takes time quadratic in
-        # the length of a block, over 400 seconds for each of the first two,
-        # and cubic in the depth of regions; fir-ref's printer takes time
-        # linear in the text it writes.
+        # Large canonical texts (#47). On a block of a million ops and on a
+        # function of a million blocks, the spec's printer, quadratic in a
+        # block's length, takes over 400 seconds: the wall-clock limit
+        # catches it. On regions nested 3,000 deep, cubic in the depth, it
+        # takes about 30 seconds of CPU time, and fir-ref 1 or 2: that case
+        # also runs under a soft limit on CPU time, which, unlike wall-clock
+        # time, the machine's load barely changes. Past the limit fir-ref
+        # ends with SIGXCPU, status 152, and writes no core file.
         ending='}\n\nlocs {\n  @0 = unknown\n}\n'
         awk -v end="$ending" 'BEGIN {
             printf "func @f() {\n^e:\n"
@@ -80,12 +85,25 @@ case "$1" in
             for (i = n - 1; i >= 0; i--) printf "%s} @0\n", pad(2 + 4 * i)
             printf "%s", end
         }' >"$tmp/regions.fir"
+        reprint() {
+            ulimit -c 0
+            if [[ $1 == regions ]]; then
+                ulimit -S -t 8
+            fi
+            exec timeout 120 "$fir_ref" fmt --check "$tmp/$1.fir"
+        }
         for check in "ops:a block of a million ops" "blocks:a function of a million blocks" \
             "regions:regions nested 3,000 deep"; do
-            if ! timeout 120 "$fir_ref" fmt --check "$tmp/${check%%:*}.fir"; then
-                echo "fir-ref does not reprint ${check#*:} within 120 seconds" >&2
-                status=1
-            fi
+            rc=0
+            (reprint "${check%%:*}") || rc=$?
+            case $rc in
+                0) continue ;;
+                124) why=" within 120 seconds" ;;
+                152) why=" within 8 seconds of CPU time" ;;
+                *) why="" ;;
+            esac
+            echo "fir-ref does not reprint ${check#*:}$why" >&2
+            status=1
         done
         exit "$status"
         ;;

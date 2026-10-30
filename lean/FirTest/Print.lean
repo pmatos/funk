@@ -5,10 +5,13 @@ Tests of the printer that `fir-ref` runs: `FirRef.printAttr` and
 `FirRef.printModule`, proved equal to the spec's `Attr.print` and
 `Module.print` and registered with `@[csimp]` (ADR-2026-10-30-1450).
 Through `FirTest.Parse`, this module imports `FirRef.Utf8`, as `fir-ref`
-does, so the checks below run those implementations: at depths for which
-the spec's printer would need a deep stack, against texts built here line
-by line. The last checks pin the axioms of the two proofs to Lean's
-standard ones.
+does, so the checks below run those implementations. The check on an
+attribute 1,000,000 levels deep needs `printAttr`: the spec's printer
+overflows the stack there. The checks on modules compare `printModule`'s
+output with texts built here line by line; the spec's printer passes them
+too. `scripts/check-fir-ref.sh test` is the check that `fir-ref` runs
+`printModule`, on texts that the spec's printer is too slow for.
+The last checks pin the axioms of the two proofs to Lean's standard ones.
 -/
 
 namespace FirTest

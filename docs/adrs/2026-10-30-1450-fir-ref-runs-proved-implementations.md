@@ -43,7 +43,7 @@ Facts about Lean:
   functional induction on the loop, one equation lemma of the spec function
   per case. No `sorry`, `partial`, `unsafe`, `implemented_by` or
   `native_decide`; the proofs use only `propext`, `Classical.choice` and
-  `Quot.sound`, which `FirTest` checks with `#print axioms`.
+  `Quot.sound`, which the Lean build checks.
 - **They live in `lean/FirRef/`**, which the document does not render. The
   spec in `lean/Fir/` does not change for them, so #11's theorems about the
   spec's functions hold for what `fir-ref` runs.
@@ -58,6 +58,15 @@ Facts about Lean:
 - **The first are the printer's:** `FirRef.printAttr` for `Attr.print`, and
   `FirRef.printModule` for `Module.print`. The decoder, then the readers,
   follow in later stages of #47.
+- **The parser is replaced at `Fir.parse`.** `FirRef.parseBytes` reaches
+  `Text.readModule` and `Text.decodeModule` only through `Fir.parse`, which
+  the spec compiles in `Fir/Text/Decode.lean`, before any theorem of
+  `FirRef`. Theorems on those two alone would change nothing that `fir-ref`
+  runs: its copy of `Fir.parse`, specialized to the core dialect, calls the
+  spec's `readModule` and a specialized copy of the spec's `decodeModule`.
+  So, after the theorems of the readers and the decoder, `FirRef.parse` is
+  the same `do` block (lex, read, decode) compiled after them, registered
+  with `@[csimp] theorem : @Fir.parse = @FirRef.parse` and proved by `rfl`.
 
 ## Alternatives
 
@@ -67,8 +76,9 @@ Facts about Lean:
   from the spec without any check failing.
 - **Put the implementations in `lean/Fir/`, so that the spec's own later
   code runs them.** `Fir` is the spec (ADR-2026-10-30-1250). The callers
-  that matter are replaced as a whole instead: the decoder's implementation
-  replaces every caller of `decodeType`, whose error message prints a type.
+  that matter are replaced as a whole instead: `FirRef.parse` replaces
+  `Fir.parse`, and the decoder's implementation calls its own copy of
+  `decodeType`, whose error message prints a type.
 - **A thread with a larger stack, or one sized from the input.** It moves
   the limit instead of removing it (ADR-2026-10-30-1250), and leaves the
   printer slow.
@@ -81,7 +91,17 @@ Facts about Lean:
   the compiler specializes it at a later call site: `decodeType`,
   specialized to the core dialect inside `FirRef.Main`, still calls the
   spec's `Attr.print`. Until the decoder's implementation lands, it prints a
-  type that does not decode with the spec's `Attr.print`.
+  type that does not decode with the spec's `Attr.print`. So each stage
+  checks, in the C that Lean emits for `FirRef.Main`
+  (`lean/.lake/build/ir/FirRef/Main.c`), that `fir-ref` calls the new
+  implementation and no copy of the spec function it replaces.
+- A theorem reaches an implementation only if the implementation's own
+  module imports it, since the implementation is compiled there; listing
+  the theorem's module in `FirRef.Fast` is not enough. For example,
+  `printAttrs` inlines the spec's `printInt` and calls core's `Int.repr`
+  directly, so a theorem on `Fir.Text.printInt` for
+  [#41](https://github.com/pmatos/funk/issues/41) must be in a module that
+  `FirRef.PrintAttr` imports.
 - A module of `FirRef` that calls the spec's parser or printer must import
   `FirRef.Fast`, directly or through `FirRef.Utf8`, or it runs the spec's
   code.
