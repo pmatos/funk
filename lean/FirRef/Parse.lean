@@ -11,9 +11,19 @@ is compiled here, after `decodeModule_eq_decodeModule`, so it decodes with
 `@[csimp]` makes Lean compile every later call of `Fir.parse` as a call of
 `FirRef.parse`.
 
-The readers are still the spec's. The next stage of #47 replaces them with
-implementations registered the same way; this module must import their
-theorem, so that `FirRef.parse` calls them.
+The lexer and the readers are still the spec's. The next stage of #47
+replaces them with implementations registered the same way; this module
+must import their theorems, so that `FirRef.parse` calls them.
+
+That stage must also fit a text of 10,000,000 ops in memory. Before it
+decodes, `fir-ref` holds the whole text as a `List Char`, then as a
+`List Token`, then as the read tree, and the first two each take tens of
+bytes per input byte (measured in #47). A lexer over `String` positions
+that still returns a `List Token` removes only the first. A reader that
+pulls each token from the text when it needs it keeps no token list, but
+it fuses lexing and reading: it is proved equal to the `do` block below,
+not to `lex` alone, and like `Fir.parse` it must report a lexer error
+anywhere in the text before any error of the readers.
 -/
 
 namespace FirRef
