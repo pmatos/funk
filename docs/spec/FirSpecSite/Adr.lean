@@ -19,8 +19,6 @@ def appendixTag : String := "adrs"
 structure Adr where
   /-- The id, such as `2026-10-29-2015`. -/
   id : String
-  /-- The file, relative to the repository. -/
-  file : String
   /-- The decision: the ADR's title. -/
   title : Array Inl
   /-- What follows `Status:`. -/
@@ -44,11 +42,11 @@ private def stripStatus : Array Inl → Option (Array Inl)
     return (if rest.isEmpty then #[] else #[.text rest]) ++ xs.extract 1 xs.size
 
 /--
-The ADR in `text`, the contents of `file`. Its first block is the title, a
+The ADR with id `id` whose Markdown is `text`. Its first block is the title, a
 level-1 heading, and its second the `Status:` line. Returns the ADR and the
 repository files it links to.
 -/
-def parseAdr (ctx : MdContext) (id file text : String) : Except String (Adr × Array String) := do
+def parseAdr (ctx : MdContext) (id text : String) : Except String (Adr × Array String) := do
   let some doc := MD4Lean.parse text markdownFlags
     | throw "MD4Lean could not parse it"
   let some (MD4Lean.Block.header 1 titleText) := doc.blocks[0]?
@@ -67,7 +65,7 @@ def parseAdr (ctx : MdContext) (id file text : String) : Except String (Adr × A
     content
     subParts
   }
-  return ({ id, file, title, status, part }, links)
+  return ({ id, title, status, part }, links)
 
 /--
 Reads every ADR in `docs/adrs/` of the repository at `root`, in the order of
@@ -91,7 +89,7 @@ def loadAdrs (root : System.FilePath) : IO (Except (Array String) (Array Adr)) :
   let mut adrs := #[]
   for (name, id) in ids do
     let file := s!"{adrDir}/{name}"
-    match parseAdr ctx id file (← IO.FS.readFile (root / file)) with
+    match parseAdr ctx id (← IO.FS.readFile (root / file)) with
     | .error e => errors := errors.push s!"{file}: {e}"
     | .ok (adr, links) =>
       for target in links do

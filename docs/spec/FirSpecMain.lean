@@ -19,14 +19,24 @@ def builtFrom : IO (Array Html) := do
     | none => name
   return #[{{<p class="fir-built-from"><small>"Built from commit " {{name}} "."</small></p>}}]
 
-/-- Where `manualMain` writes the multi-page site, given the same options. -/
-def htmlMultiDir (args : List String) : Option System.FilePath :=
-  if args.contains "--without-html-multi" then none else
-  let rec dest : List String → System.FilePath
-    | "--output" :: dir :: _ => dir
-    | _ :: more => dest more
-    | [] => "_out"
-  some (dest args / "html-multi")
+/--
+Where `manualMain` writes the multi-page site, given the same options: the
+last `--output`, and none when the last of `--with-html-multi` and
+`--without-html-multi` turns it off.
+-/
+def htmlMultiDir (args : List String) (dir : System.FilePath := "_out") (on : Bool := true) :
+    Option System.FilePath :=
+  match args with
+  | "--output" :: dir :: more => htmlMultiDir more dir on
+  | "--with-html-multi" :: more => htmlMultiDir more dir true
+  | "--without-html-multi" :: more => htmlMultiDir more dir false
+  | _ :: more => htmlMultiDir more dir on
+  | [] => if on then some (dir / "html-multi") else none
+
+#guard htmlMultiDir [] == some ("_out" / "html-multi" : System.FilePath)
+#guard htmlMultiDir ["--output", "a", "--verbose", "--output", "b"] == some ("b" / "html-multi" : System.FilePath)
+#guard htmlMultiDir ["--without-html-multi"] == none
+#guard htmlMultiDir ["--without-html-multi", "--with-html-multi"] == some ("_out" / "html-multi" : System.FilePath)
 
 /--
 Renders the document with its appendix of ADRs and its ADR citations linked

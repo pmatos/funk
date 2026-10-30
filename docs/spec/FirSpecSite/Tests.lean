@@ -112,7 +112,7 @@ AT&T &amp; more.
 
 private def ctx : MdContext := { adrIds := #[("2026-10-29-2015-literate-lean-spec.md", "2026-10-29-2015")] }
 
-private def parsed := parseAdr ctx "2026-10-30-0000" "docs/adrs/2026-10-30-0000-x.md" fixture
+private def parsed := parseAdr ctx "2026-10-30-0000" fixture
 
 private def kind : Blk → String
   | .para _ => "p" | .ul _ => "ul" | .ol .. => "ol" | .code _ => "code"
@@ -148,19 +148,19 @@ private partial def urls : Inl → Array String
 #guard (parsed.map fun (a, _) => a.part.subParts[0]!.subParts[0]!.content) ==
   .ok #[.para #[.text "AT&T & more."]]
 
-#guard (parseAdr ctx "x" "x.md" "No heading\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# Title\n\nNo status\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n<div>raw</div>\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n![an image](a.png)\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n[up](../../../x)\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\na\\\nb\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n~~gone~~\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n- [x] done\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n---\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n&frac12;\n").toOption.isNone
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\n&#x2192; &#8594;\n").map
+#guard (parseAdr ctx "x" "No heading\n").toOption.isNone
+#guard (parseAdr ctx "x" "# Title\n\nNo status\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n<div>raw</div>\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n![an image](a.png)\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n[up](../../../x)\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\na\\\nb\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n~~gone~~\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n- [x] done\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n---\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n&frac12;\n").toOption.isNone
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\n&#x2192; &#8594;\n").map
   (·.1.part.content) == .ok #[.para #[.text "Status: accepted"], .para #[.text "\u2192 \u2192"]]
-#guard (parseAdr ctx "x" "x.md" "# T\n\nStatus: accepted\n\nsee www.example.com\n").map
+#guard (parseAdr ctx "x" "# T\n\nStatus: accepted\n\nsee www.example.com\n").map
   (fun (a, _) => (a.part.content.flatMap inlinesOf).flatMap urls) == .ok #["http://www.example.com"]
 
 /-! The check of the rendered pages reads prose only. -/
