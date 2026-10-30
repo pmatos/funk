@@ -118,6 +118,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Freeze "The freeze rule" (level := 2)}
 
+{includeLiterate "." Fir.Core.Bitwise "Bitwise and shift rules" (level := 2)}
+
 {includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
 
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
@@ -127,6 +129,8 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Core.WrapLaws "Arithmetic obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.FreezeLaws "Freeze obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
 

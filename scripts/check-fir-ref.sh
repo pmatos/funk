@@ -14,9 +14,10 @@
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
 #               write its output. fir-ref run runs functions of tests/fir/
-#               and prints the result that each one should give (#10), and
+#               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
-#               exhaustive mode (#14).
+#               exhaustive mode (#14), and runs bitwise ops and shifts
+#               (#15).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -230,7 +231,17 @@ END
         printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = and %%a, %%a @0\n  ret %%s @0\n}\n' \
             >"$tmp/and.fir"
         printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/and.fir"
-        runs "$tmp/and.fir" 2 'fir-ref: @f: and has no execution rules yet' @f 1 || status=1
+        runs "$tmp/and.fir" 0 "${ret}[\"-3\"]$none" @f -3 || status=1
+        # A shift by N or more gives poison (#15).
+        printf 'func @f(%%a: i8, %%n: i8) -> i8 {\n^e:\n  %%s: i8 = ashr %%a, %%n @0\n' >"$tmp/ashr.fir"
+        printf '  ret %%s @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/ashr.fir"
+        runs "$tmp/ashr.fir" 0 "${ret}[\"-1\"]$none" @f -128 7 || status=1
+        runs "$tmp/ashr.fir" 0 "${ret}[\"poison\"]$none" @f -128 8 || status=1
+        # An op without rules is an error (ADR-2026-10-30-1855).
+        printf 'func @f(%%a: i8) -> i1 {\n^e:\n  %%s: i1 = icmp eq %%a, %%a @0\n  ret %%s @0\n}\n' \
+            >"$tmp/icmp.fir"
+        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/icmp.fir"
+        runs "$tmp/icmp.fir" 2 'fir-ref: @f: icmp eq has no execution rules yet' @f 1 || status=1
         # freeze of poison makes a choice: %a + 1 overflows i2 at 1
         # (ADR-2026-10-30-2218).
         printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"
