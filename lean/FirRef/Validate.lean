@@ -17,7 +17,10 @@ theorem exists, so their compiled code calls the spec's walk. `funcProblems`
 and `moduleProblems` are copies of them, compiled after it and proved equal
 by `rfl`, and two more `@[csimp]` theorems make `fir-ref` call the copies.
 The rest of the check, `Func.problemsIn`, takes the list of blocks as an
-argument, walks only lists, and keeps its own compiled code.
+argument, walks only lists, and keeps its own compiled code. The spec's
+instances `Decidable m.Valid` and `Decidable (f.Valid ctx)` are compiled
+before these theorems too, and `decide` inlines them, so `fir-ref` decides
+validity with `Module.problems`, never with `decide`.
 -/
 
 namespace FirRef

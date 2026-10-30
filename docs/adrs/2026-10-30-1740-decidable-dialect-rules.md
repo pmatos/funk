@@ -29,7 +29,7 @@ dialect states its rules plainly.
   `Module.problems_eq_nil_iff : m.problems = [] ↔ m.Valid`. It gives the
   instance `Decidable m.Valid`.
 - A dialect gives no reason when its own rule fails: the check says that
-  the op breaks its dialect's own rule, and names the op.
+  the op breaks its dialect's own rule, and gives the op's index and block.
 
 ## Alternatives
 
@@ -40,8 +40,9 @@ dialect states its rules plainly.
   String`.** More readable messages, but another field with a law tying it
   to `validOp`; tools compare verdicts, never messages
   (ADR-2026-10-30-1032).
-- **`DialectText` for messages that print types.** The check would depend on
-  the text format, which the validation chapter does not need.
+- **`DialectText` for messages that print types and op instances.** Every
+  dialect that wants the check would need a third instance, and its
+  printer, beyond `DecidableEq d.Ty` and `DecidableDialectValidation`.
 
 ## Consequences
 

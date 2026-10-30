@@ -53,5 +53,8 @@ verdicts, never messages. `fir-ref`'s command line follows `funk`'s
   translation, and on a text with one parse error, `line` and `column` too.
 - Messages, and the `func`, `block`, `op` and `loc` fields, are for people:
   the two tools may word or place a problem differently.
+- #13 does not compare the number of diagnostics either. The spec's check
+  reports each rule that a module breaks; `funk` reports one diagnostic for
+  two broken successor rules (#59).
 - A change to `funk`'s report schema needs the same change here, and a new
   ADR.
