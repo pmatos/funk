@@ -7,21 +7,44 @@
 //! function or op, their ops two spaces deeper; one op per line, ending with
 //! its location reference; one empty line after each item; then the location
 //! table; and a line feed at the end of every line.
+//!
+//! Attributes and regions nest to any depth, so they are printed from the
+//! steps of a walk, not by recursive calls (ADR-2026-10-30-1333).
 
 use std::fmt::{self, Display, Write};
 
 use super::chars::{print_symbol, quote};
-use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Region, Succ, Type};
+use crate::ir::tree::{Step, walk};
+use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type};
 
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Attr::Word(w) => f.write_str(w),
-            Attr::Int(i) => write!(f, "{i}"),
-            Attr::Str(s) => f.write_str(&quote(s)),
-            Attr::Sym(s) => f.write_str(&print_symbol(s)),
-            Attr::App(h, args) => write!(f, "{h}({})", Commas(args)),
+        // Whether the next attribute is the first of its list.
+        let mut first = true;
+        for step in walk(self) {
+            match step {
+                Step::Enter(a) => {
+                    if !first {
+                        f.write_str(", ")?;
+                    }
+                    match a {
+                        Attr::Word(w) => f.write_str(w)?,
+                        Attr::Int(i) => write!(f, "{i}")?,
+                        Attr::Str(s) => f.write_str(&quote(s))?,
+                        Attr::Sym(s) => f.write_str(&print_symbol(s))?,
+                        Attr::App(h, _) => write!(f, "{h}(")?,
+                    }
+                    first = matches!(a, Attr::App(..));
+                }
+                Step::Leave(a) => {
+                    if let Attr::App(..) = a {
+                        f.write_str(")")?;
+                    }
+                    first = false;
+                }
+            }
         }
+        Ok(())
     }
 }
 
@@ -97,8 +120,36 @@ fn indent(out: &mut String, n: usize) {
     out.extend(std::iter::repeat_n(' ', n));
 }
 
-/// An op at indentation `n`, with its line feed.
-fn write_op(out: &mut String, n: usize, op: &Op) {
+/// A block or an op at indentation `n`, with the blocks and ops of its
+/// regions at any depth: each region's blocks two spaces deeper than its op,
+/// and each block's ops two spaces deeper than the block.
+fn write_part(out: &mut String, root: Part<'_>, mut n: usize) {
+    for step in walk(root) {
+        match step {
+            Step::Enter(Part::Op(op)) => write_op_head(out, n, op),
+            Step::Enter(Part::Region(_)) => {
+                out.push_str(" {\n");
+                n += 2;
+            }
+            Step::Enter(Part::Block(b)) => {
+                write_block_head(out, n, b);
+                n += 2;
+            }
+            Step::Leave(Part::Op(op)) => {
+                let _ = writeln!(out, " {}", op.loc);
+            }
+            Step::Leave(Part::Region(_)) => {
+                n -= 2;
+                indent(out, n);
+                out.push('}');
+            }
+            Step::Leave(Part::Block(_)) => n -= 2,
+        }
+    }
+}
+
+/// An op up to its regions, at indentation `n`.
+fn write_op_head(out: &mut String, n: usize, op: &Op) {
     indent(out, n);
     if !op.results.is_empty() {
         let _ = write!(out, "{} = ", Commas(&op.results));
@@ -116,34 +167,17 @@ fn write_op(out: &mut String, n: usize, op: &Op) {
         let _ = write!(out, "{sep}{s}");
         sep = ", ";
     }
-    for r in &op.regions {
-        write_region(out, n, r);
-    }
-    let _ = writeln!(out, " {}", op.loc);
 }
 
-/// A region of an op at indentation `n`.
-fn write_region(out: &mut String, n: usize, r: &Region) {
-    out.push_str(" {\n");
-    write_blocks(out, n + 2, &r.blocks);
+/// A block's label and arguments, at indentation `n`.
+fn write_block_head(out: &mut String, n: usize, b: &Block) {
     indent(out, n);
-    out.push('}');
-}
-
-/// Blocks at indentation `n`, their ops two spaces deeper.
-fn write_blocks(out: &mut String, n: usize, blocks: &[Block]) {
-    for b in blocks {
-        indent(out, n);
-        out.push('^');
-        out.push_str(&b.label);
-        if !b.params.is_empty() {
-            let _ = write!(out, "({})", Commas(&b.params));
-        }
-        out.push_str(":\n");
-        for op in &b.ops {
-            write_op(out, n + 2, op);
-        }
+    out.push('^');
+    out.push_str(&b.label);
+    if !b.params.is_empty() {
+        let _ = write!(out, "({})", Commas(&b.params));
     }
+    out.push_str(":\n");
 }
 
 /// A function: an item of kind `func`, with no attributes.
@@ -153,7 +187,9 @@ fn write_func(out: &mut String, f: &Func) {
         let _ = write!(out, " -> {}", Commas(&f.results));
     }
     out.push_str(" {\n");
-    write_blocks(out, 0, &f.body.blocks);
+    for b in &f.body.blocks {
+        write_part(out, Part::Block(b), 0);
+    }
     out.push_str("}\n");
 }
 
@@ -181,7 +217,7 @@ pub fn print(m: &Module) -> String {
 /// The canonical text of one op at indentation `n`, with its line feed.
 pub fn print_op(op: &Op, n: usize) -> String {
     let mut out = String::new();
-    write_op(&mut out, n, op);
+    write_part(&mut out, Part::Op(op), n);
     out
 }
 
