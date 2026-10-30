@@ -50,7 +50,8 @@ that refines it refines the caller.
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its
-totality and its result on defined operands wait for its semantics, in #10.
+totality and its result on defined operands follow from its rule, with the
+obligations of `add` and `ret`, in the sections after the interpreter.
 -/
 
 namespace Fir.Core

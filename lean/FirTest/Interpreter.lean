@@ -1,0 +1,129 @@
+import FirTest.Run
+
+/-!
+Tests of the interpreter's paths that the core ops with rules do not reach.
+`const`, `add` without flags and `ret` are never UB, and none of them
+jumps. So two semantics written here for these tests, not fir's, give the
+interpreter what #18 and #19 will: `addIsUB`, in which `add` is UB, and
+`brJumps`, in which `br` goes to its successor. Every other op keeps the
+core dialect's rules. The runs are those of `fir-ref run`, in `Exec`, and
+are reported as it reports them.
+-/
+
+namespace FirTest
+
+open Fir FirRef
+
+/-- A semantics, not fir's, in which `add` is UB. -/
+@[instance_reducible] def addIsUB : DialectDenote CoreDialect Exec where
+  denote
+    | .add .., _ => MonadUB.ub "add is \"UB\"\nhere"
+    | op, args => DialectDenote.denote (m := Exec) op args
+  exit := DialectDenote.exit (m := Exec)
+
+/-- A semantics, not fir's, in which `br` goes to its one successor. -/
+@[instance_reducible] def brJumps : DialectDenote CoreDialect Exec where
+  denote := DialectDenote.denote (m := Exec)
+  exit
+    | .br, _ => pure (.goto 0)
+    | op, args => DialectDenote.exit (m := Exec) op args
+
+/-- What `fir-ref run` would report on the first function of the text `t`
+with the semantics `s`. -/
+def runIn (s : DialectDenote CoreDialect Exec) (t : String) (args : List String := [])
+    (fuel : Nat := defaultFuel) : Option RunReport :=
+  match parseCore t with
+  | .error _ => none
+  | .ok m => match m.funcs.head? with
+    | none => none
+    | some f => match readArgs (f.params.map (·.2)) args with
+      | .error _ => none
+      | .ok vs => letI := s; some (outcomeReport "@f" (f.run (m := Exec) vs fuel).run)
+
+/-! # UB
+
+An op's UB ends its path: what follows does not run. Its reason is escaped
+in the JSON. -/
+
+/-- The report of a run that hits UB because `add` is UB. -/
+def addUB : RunReport :=
+  { out := "{\"kind\":\"ub\",\"reason\":\"add is \\\"UB\\\"\\nhere\"}", status := 0 }
+
+#guard runIn addIsUB (addAt "i8") ["1", "2"] == some addUB
+#guard runIn addIsUB (addAt "i8") ["poison", "2"] (fuel := 1) == some addUB
+#guard runIn addIsUB (addAt "i8") ["1", "2"] (fuel := 0) ==
+  some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+#guard runIn addIsUB (body "func @f(%a: i8) -> i8"
+    ["^e:", "  %s: i8 = add %a, %a @0", "  %t: i8 = sub %s, %s @0", "  ret %t @0"]) ["1"] ==
+  some addUB
+-- Without the test's semantics, `add` gives a sum.
+#guard runIn inferInstance (addAt "i8") ["1", "2"] == some (returns ["3"])
+
+/-! # Jumps
+
+A jump binds the target block's arguments to the values that the successor
+passes, and runs the target. -/
+
+#guard runIn brJumps (body "func @f(%a: i8) -> i8"
+    ["^e:", "  br ^n(%a) @0", "^n(%x: i8):", "  %y: i8 = add %x, %x @0", "  ret %y @0"]) ["5"] ==
+  some (returns ["10"])
+-- A value defined before a jump is defined after it.
+#guard runIn brJumps (body "func @f(%a: i8) -> i8, i8"
+    ["^e:", "  %c: i8 = const 2 @0", "  br ^n @0", "^n:", "  ret %c, %a @0"]) ["poison"] ==
+  some (returns ["2", "poison"])
+-- A loop runs until its fuel is exhausted. Each op takes a step: the run
+-- below runs three.
+#guard runIn brJumps (body "func @f(%a: i8) -> i8"
+    ["^e:", "  br ^l(%a) @0", "^l(%i: i8):", "  %j: i8 = add %i, %i @0", "  br ^l(%j) @0"])
+    ["1"] (fuel := 1000) == some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+#guard runIn brJumps (body "func @f() -> i8"
+    ["^e:", "  %c: i8 = const 1 @0", "  br ^n @0", "^n:", "  ret %c @0"]) (fuel := 2) ==
+  some { out := "{\"kind\":\"fuel-exhausted\"}", status := 0 }
+#guard runIn brJumps (body "func @f() -> i8"
+    ["^e:", "  %c: i8 = const 1 @0", "  br ^n @0", "^n:", "  ret %c @0"]) (fuel := 3) ==
+  some (returns ["1"])
+
+/-! # Stuck on a jump -/
+
+#guard runIn brJumps (body "func @f()" ["^e:", "  br @0"]) == some (stuckBy "the terminator has no successor 0")
+#guard runIn brJumps (body "func @f()" ["^e:", "  br ^nope @0"]) ==
+  some (stuckBy "^nope is not a block of the function")
+#guard runIn brJumps (body "func @f(%a: i8)" ["^e:", "  br ^n @0", "^n(%x: i8):", "  ret @0"]) ["1"] ==
+  some (stuckBy "^n takes a number of arguments other than its successor passes")
+#guard runIn brJumps (body "func @f(%a: i8) -> i16"
+    ["^e:", "  br ^n(%a) @0", "^n(%x: i16):", "  ret %x @0"]) ["1"] ==
+  some (stuckBy "%x does not have the operand's type")
+#guard runIn brJumps (body "func @f() -> i8"
+    ["^e:", "  br ^n(%y) @0", "^n(%x: i8):", "  %y: i8 = const 1 @0", "  ret %x @0"]) ==
+  some (stuckBy "%y is not defined")
+
+/-! # The obligations' axioms
+
+The obligations that #10 proves for `const`, `add` without flags and `ret`
+rest on `propext` alone. -/
+
+/-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.add_propagatesPoison
+
+/-- info: 'Fir.Core.add_returnsOnDefined' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.add_returnsOnDefined
+
+/-- info: 'Fir.Core.add_total' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.add_total
+
+/-- info: 'Fir.Core.add_monotone' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.add_monotone
+
+/-- info: 'Fir.Core.const_returnsOnDefined' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.const_returnsOnDefined
+
+/-- info: 'Fir.Core.const_total' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.const_total
+
+/-- info: 'Fir.Core.ret_total' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.ret_total
+
+/-- info: 'Fir.Core.ret_monotone' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Core.ret_monotone
+
+end FirTest

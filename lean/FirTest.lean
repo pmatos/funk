@@ -4,6 +4,8 @@ import FirRef.Main
 import FirTest.Axioms
 import FirTest.Parse
 import FirTest.Print
+import FirTest.Run
+import FirTest.Interpreter
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.ValidateOps

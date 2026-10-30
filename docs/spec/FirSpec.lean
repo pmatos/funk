@@ -110,6 +110,18 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Unlawful "Semantics the obligations reject" (level := 2)}
 
+{includeLiterate "." Fir.Execution.Interpreter "The interpreter" (level := 2)}
+
+{includeLiterate "." Fir.Core.Arith "Arithmetic rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
+
+{includeLiterate "." Fir.Core.ArithLaws "Arithmetic obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+
 # Text format
 
 {includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}
