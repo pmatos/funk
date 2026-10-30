@@ -30,10 +30,12 @@ wider width and keeps the low bits at a narrower one, and
 `BitVec.signExtend`, which gives the operand's signed value modulo `2^N`.
 Validation admits `zext` and `sext` only when they widen, and `trunc` only
 when it narrows (the core rules of validation). Lean still needs a value
-at the other pairs of widths, which no valid module holds: there each rule
-gives what its definition gives, so `zext` and `trunc` to the same width
-give the operand. The three ops meet their obligations at every pair of
-widths, valid or not, as the section on width change obligations proves.
+at the other pairs of widths, which no valid module holds, and the
+definitions give one: `zext` and `trunc` are both `setWidth`, so to the
+same width they give the operand, and `sext` to a narrower width keeps
+the operand's low bits. The three ops meet their obligations at every
+pair of widths, valid or not, as the section on width change obligations
+proves.
 -/
 
 namespace Fir.Core
