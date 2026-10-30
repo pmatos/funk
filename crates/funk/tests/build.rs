@@ -6,7 +6,7 @@ mod common;
 use std::path::Path;
 use std::process::Command;
 
-use common::{SEVEN, dir, expect, funk, text};
+use common::{SEVEN, dir, expect, funk, funk_in, text};
 
 /// A function with a parameter of `i7`, a value of `i33` and one of `i128`.
 const ODD: &str = "func @odd(%a: i7) -> i7 {\n^entry:\n  %c: i33 = const 1 @1\n  %w: i128 = const 2 @2\n  ret %a @3\n}\n\nlocs {\n  @1 = \"w.c\":1:1 to 1:5\n  @2 = name(\"wide\")\n  @3 = unknown\n}\n";
@@ -180,4 +180,46 @@ fn a_missing_assembler_is_a_tool_error() {
         json.contains("cannot run the assembler, as: it is not installed"),
         "{json}"
     );
+}
+
+#[test]
+fn an_output_that_starts_with_a_dash_is_a_path() {
+    let dir = dir("build-dash");
+    std::fs::write(dir.join("seven.fir"), SEVEN).unwrap();
+    let out = funk_in(&dir, &["build", "-o", "-x", "seven.fir"], "");
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    expect(&dir.join("-x"), &["@seven"], &["7"]);
+    assert!(dir.join("-x.o").exists());
+}
+
+#[test]
+fn a_failed_link_leaves_no_object_file() {
+    let dir = dir("build-link-fails");
+    let src = dir.join("seven.fir");
+    std::fs::write(&src, SEVEN).unwrap();
+    let exe = dir.join("taken");
+    std::fs::create_dir(&exe).unwrap();
+    let exe = exe.to_string_lossy().into_owned();
+    let out = funk(&["build", "--json", "-o", &exe, src.to_str().unwrap()], "");
+    assert_eq!(out.status.code(), Some(2));
+    assert!(text(&out.stdout).contains("\"verdict\":\"tool-error\""));
+    assert!(!Path::new(&format!("{exe}.o")).exists());
+}
+
+#[test]
+fn build_does_not_overwrite_its_input() {
+    let dir = dir("build-onto-input");
+    let src = dir.join("seven.fir");
+    std::fs::write(&src, SEVEN).unwrap();
+    let src = src.to_string_lossy().into_owned();
+    let out = funk(&["build", "-o", &src, &src], "");
+    assert_eq!(out.status.code(), Some(2));
+    assert!(text(&out.stderr).contains("would overwrite the input"));
+    assert_eq!(std::fs::read_to_string(&src).unwrap(), SEVEN);
+    let exe = dir.join("seven").to_string_lossy().into_owned();
+    let input = format!("{exe}.o");
+    std::fs::write(&input, SEVEN).unwrap();
+    let out = funk(&["build", "-o", &exe, &input], "");
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(std::fs::read_to_string(&input).unwrap(), SEVEN);
 }

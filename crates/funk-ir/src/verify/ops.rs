@@ -24,13 +24,7 @@ struct At<'a> {
 
 impl At<'_> {
     fn diag(&self, message: String) -> Diagnostic {
-        Diagnostic {
-            message,
-            func: Some(self.func.to_string()),
-            block: Some(self.block.label.clone()),
-            op: Some(self.index),
-            loc: Some(self.op.loc),
-        }
+        Diagnostic::at_op(self.func, self.block, self.index, message)
     }
 }
 

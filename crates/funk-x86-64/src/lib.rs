@@ -78,7 +78,8 @@ pub fn object_path(exe: &Path) -> PathBuf {
 }
 
 /// Compiles `m`, which must be valid, then writes its object file and the
-/// executable `exe`, linked from that object file and the entry point.
+/// executable `exe`, linked from that object file and the entry point. When
+/// the build fails, it leaves no object file behind.
 pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
     let program = compile(m).map_err(BuildError::Unsupported)?;
     let object = object_path(exe);
@@ -95,8 +96,12 @@ pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
     write(&module_s, &program.module)?;
     write(&entry_s, &program.entry)?;
     tools::assemble(&module_s, &object).map_err(BuildError::Tool)?;
-    tools::assemble(&entry_s, &entry_o).map_err(BuildError::Tool)?;
-    tools::link(&[&object, &entry_o], exe).map_err(BuildError::Tool)?;
+    let linked =
+        tools::assemble(&entry_s, &entry_o).and_then(|()| tools::link(&[&object, &entry_o], exe));
+    if let Err(why) = linked {
+        let _ = std::fs::remove_file(&object);
+        return Err(BuildError::Tool(why));
+    }
     Ok(Outputs {
         object,
         executable: exe.to_path_buf(),

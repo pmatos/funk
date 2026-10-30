@@ -129,17 +129,12 @@ pub fn module(m: &Module) -> Result<String, Vec<Diagnostic>> {
     }
 }
 
-/// A diagnostic about `f`: at its block `block`, or at the op `op` of it, or
-/// at the function itself when it has no block. A block's location is that
-/// of its first op, as the verifier gives it.
+/// A diagnostic about `f`: at its block `block`, or at the op `op` of it,
+/// located as the verifier locates its own.
 pub fn at(f: &Func, block: Option<&Block>, op: Option<usize>, message: String) -> Diagnostic {
-    let loc = block.and_then(|b| b.ops.get(op.unwrap_or(0)));
-    Diagnostic {
-        message,
-        func: Some(f.name.clone()),
-        block: block.map(|b| b.label.clone()),
-        op,
-        loc: loc.map(|o| o.loc),
+    match (block, op) {
+        (Some(b), Some(i)) => Diagnostic::at_op(&f.name, b, i, message),
+        _ => Diagnostic::at_block(&f.name, block, message),
     }
 }
 
@@ -161,8 +156,20 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<String> {
         frame,
         widths: HashMap::new(),
     };
+    // Every width is known before any op is lowered, since a block may use a
+    // value that a block after it in the list defines.
     for why in cx.define(&f.params) {
         out.push(at(f, entry, None, format!("parameter {why}")));
+    }
+    for b in &f.body.blocks {
+        for why in cx.define(&b.params) {
+            out.push(at(f, Some(b), None, format!("block argument {why}")));
+        }
+        for (n, op) in b.ops.iter().enumerate() {
+            for why in cx.define(&op.results) {
+                out.push(at(f, Some(b), Some(n), why));
+            }
+        }
     }
     let sym = symbol(&f.name);
     cx.asm.comment(format_args!("{}", print_symbol(&f.name)));
@@ -172,14 +179,24 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<String> {
     cx.asm.label(&sym);
     frame::prologue(&mut cx.asm, cx.frame.size());
     for (n, d) in f.params.iter().enumerate() {
-        let slot = cx.slot(&d.name).ok()?;
+        let Some(slot) = cx.frame.slot(&d.name) else {
+            out.push(at(
+                f,
+                entry,
+                None,
+                format!("parameter %{} has no slot", d.name),
+            ));
+            return None;
+        };
         if let Some(reg) = ARG_REGS.get(n) {
             cx.asm.ins("movq", format_args!("{}, {slot}", reg.q()));
         } else {
-            // Frame::new has checked that every slot is within reach.
-            let from = Mem {
-                disp: stack_arg_offset(n)?,
+            let Some(disp) = stack_arg_offset(n) else {
+                let why = format!("parameter %{} is out of the reach of %rbp", d.name);
+                out.push(at(f, entry, None, why));
+                return None;
             };
+            let from = Mem { disp };
             cx.asm.ins("movq", format_args!("{from}, %rax"));
             cx.asm.ins("movq", format_args!("%rax, {slot}"));
         }
@@ -191,15 +208,9 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<String> {
     (out.len() == before).then(|| cx.asm.finish())
 }
 
-fn block<'f>(i: usize, f: &Func, cx: &mut Cx<'f>, b: &'f Block, out: &mut Vec<Diagnostic>) {
-    for why in cx.define(&b.params) {
-        out.push(at(f, Some(b), None, format!("block argument {why}")));
-    }
+fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnostic>) {
     cx.asm.label(&block_label(i, &b.label));
     for (n, op) in b.ops.iter().enumerate() {
-        for why in cx.define(&op.results) {
-            out.push(at(f, Some(b), Some(n), why));
-        }
         let Some(lower) = lowering(&op.name) else {
             let why = format!("the x86-64 backend cannot lower the op {} yet", op.name);
             out.push(at(f, Some(b), Some(n), why));

@@ -7,7 +7,10 @@ use std::process::Command;
 /// Assembles the file `source` into the object file `object`.
 pub fn assemble(source: &Path, object: &Path) -> Result<(), String> {
     let mut cmd = Command::new("as");
-    cmd.arg("--64").arg("-o").arg(object).arg(source);
+    cmd.arg("--64")
+        .arg("-o")
+        .arg(operand(object))
+        .arg(operand(source));
     run("the assembler, as", cmd)
 }
 
@@ -15,9 +18,22 @@ pub fn assemble(source: &Path, object: &Path) -> Result<(), String> {
 /// the runtime's `__funk_start`.
 pub fn link(objects: &[&Path], exe: &Path) -> Result<(), String> {
     let mut cmd = Command::new("ld");
-    cmd.arg("-o").arg(exe).arg("-e").arg("__funk_start");
-    cmd.args(objects);
+    cmd.arg("-o")
+        .arg(operand(exe))
+        .arg("-e")
+        .arg("__funk_start");
+    cmd.args(objects.iter().map(|o| operand(o)));
     run("the linker, ld", cmd)
+}
+
+/// `path` as a tool's operand: a relative path that starts with `-` gets
+/// `./` in front, so the tool does not read it as an option.
+fn operand(path: &Path) -> PathBuf {
+    if path.as_os_str().as_encoded_bytes().starts_with(b"-") {
+        Path::new(".").join(path)
+    } else {
+        path.to_path_buf()
+    }
 }
 
 /// Runs a tool. It fails when it cannot start, when it exits with an
@@ -96,6 +112,13 @@ mod tests {
         let path = a.0.clone();
         drop(a);
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn paths_that_start_with_a_dash_are_not_options() {
+        assert_eq!(operand(Path::new("-x")), Path::new("./-x"));
+        assert_eq!(operand(Path::new("out/-x")), Path::new("out/-x"));
+        assert_eq!(operand(Path::new("/tmp/-x")), Path::new("/tmp/-x"));
     }
 
     #[test]

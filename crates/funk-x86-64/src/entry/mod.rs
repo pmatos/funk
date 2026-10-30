@@ -61,6 +61,11 @@ pub fn generate(m: &Module) -> Result<String, Vec<Diagnostic>> {
 }
 
 /// The wrapper `__funk_entry_I` of the `i`-th function `f`.
+///
+/// Lowering has already reported each parameter whose width the backend
+/// does not lower, and each `ret` with more than one value. The wrapper
+/// checks the signature again because a function that never reaches a
+/// `ret`, which branches allow, must still have results it can print.
 fn wrapper(asm: &mut Asm, i: usize, f: &Func) -> Result<(), Diagnostic> {
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
     let params = f
@@ -80,29 +85,30 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func) -> Result<(), Diagnostic> {
             )));
         }
     };
-    let size = size_for(params.len()).ok_or_else(|| report("too many parameters".into()))?;
-    let slot = |j: usize| displacement(j + 1).map(|disp| Mem { disp });
+    let too_many = || report("the function has more parameters than a frame holds".into());
+    let size = size_for(params.len()).ok_or_else(too_many)?;
+    let slots = (1..=params.len())
+        .map(|k| displacement(k).map(|disp| Mem { disp }))
+        .collect::<Option<Vec<Mem>>>()
+        .ok_or_else(too_many)?;
     asm.directive(format_args!(".p2align\t4"));
     asm.label(&format!("__funk_entry_{i}"));
     asm.comment(format_args!("{}", print_symbol(&f.name)));
     frame::prologue(asm, size);
-    for (j, w) in params.iter().enumerate() {
-        let at = slot(j).ok_or_else(|| report("too many parameters".into()))?;
+    for (j, (w, at)) in params.iter().zip(&slots).enumerate() {
         asm.ins("movl", format_args!("${j}, %edi"));
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_arg"));
         asm.ins("movq", format_args!("%rax, {at}"));
     }
-    let on_stack = params.len().saturating_sub(ARG_REGS.len());
-    if on_stack % 2 == 1 {
+    let on_stack = slots.get(ARG_REGS.len()..).unwrap_or_default();
+    if on_stack.len() % 2 == 1 {
         asm.ins("subq", format_args!("$8, %rsp"));
     }
-    for j in (ARG_REGS.len()..params.len()).rev() {
-        let at = slot(j).ok_or_else(|| report("too many parameters".into()))?;
+    for at in on_stack.iter().rev() {
         asm.ins("pushq", format_args!("{at}"));
     }
-    for (j, reg) in ARG_REGS.iter().enumerate().take(params.len()) {
-        let at = slot(j).ok_or_else(|| report("too many parameters".into()))?;
+    for (reg, at) in ARG_REGS.iter().zip(&slots) {
         asm.ins("movq", format_args!("{at}, {}", reg.q()));
     }
     asm.ins("call", format_args!("{}", symbol(&f.name)));

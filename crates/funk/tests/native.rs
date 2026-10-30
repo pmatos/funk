@@ -5,9 +5,7 @@
 mod common;
 
 use common::{build, expect, func, module};
-
-/// The widths that the backend lowers.
-const WIDTHS: [u32; 5] = [1, 8, 16, 32, 64];
+use funk_x86_64::width::SUPPORTED as WIDTHS;
 
 /// The boundary values of `iW`, read as signed integers: 0, 1, -1, the
 /// minimum and the maximum, or at `i1` `false` (0) and `true` (-1).
