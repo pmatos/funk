@@ -58,8 +58,8 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
+    # Skipped with build off main, since it needs build.
     needs: build
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-26.04
     # Only this job, which runs no code from the repository, may deploy.
     permissions:

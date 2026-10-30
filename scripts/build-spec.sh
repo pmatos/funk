@@ -27,9 +27,9 @@ done
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 out=$(realpath -m "${1:-$repo_root/docs/spec/_out}")
 
-# Read by the firspec executable when it renders, so a warm build never shows
-# a stale commit. Changes not yet committed, untracked files included, mark
-# the build -dirty. No optional locks: a hook runs while git holds the index.
+# For the firspec executable. Changes not yet committed, untracked files
+# included, mark the build -dirty. No optional locks: a hook runs while git
+# holds the index.
 commit=$(git -C "$repo_root" rev-parse HEAD)
 export FIRSPEC_COMMIT=${commit:0:12}
 if [[ -n "$(git --no-optional-locks -C "$repo_root" status --porcelain)" ]]; then
