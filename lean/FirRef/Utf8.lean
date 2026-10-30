@@ -50,7 +50,7 @@ termination_by b.size - i
 /-- Parses the bytes of a file with the dialect `d`. -/
 def parseBytes {d : Dialect} [DialectText d] (b : ByteArray) : Except ParseError (Module d) :=
   match String.fromUTF8? b with
-  | some text => parse text
+  | some text => Fir.parse text
   | none =>
     let n := validUpTo b 0
     let valid := (b.extract 0 n).toList
