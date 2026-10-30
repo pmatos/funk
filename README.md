@@ -137,6 +137,15 @@ are on `main`:
   object file and an executable for Linux. The executable runs one function
   from the command line and prints its results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
+- The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
+  `./scripts/check-harness.sh` checks that `funk verify` and
+  `fir-ref validate` give the same verdict on every text of
+  [`tests/fir/`](tests/fir/) and on modules from the Rust generator. It
+  runs each test of the corpus on `fir-ref` and, where the backend can
+  build it, as native code, and checks that the native result refines
+  `fir-ref`'s
+  ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
+  [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
 
 These parts of M0 do not exist yet:
 
@@ -154,7 +163,6 @@ These parts of M0 do not exist yet:
 - In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
   in the backend. The backend does not lower `i128` or return more than one
   value yet.
-- The differential tests that compare native results with `fir-ref`.
 
 The epic's sub-issues list the open work in full.
 
@@ -169,10 +177,10 @@ The epic's sub-issues list the open work in full.
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
 | `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, and `funk`, the driver |
-| `tests/fir/` | fir texts that the Rust and Lean sides share: canonical texts, and inputs that format to them |
+| `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, and must-reject texts |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
-| `scripts/` | Scripts for the spec build, the Rust checks, the hooks and agent sessions |
+| `scripts/` | Scripts for the spec build, the Rust checks, the differential harness (`scripts/harness/`), the hooks and agent sessions |
 | `.github/` | The CI and Pages workflows, the ruleset for `main` and the Dependabot settings |
 | `.pre-commit-config.yaml` | Every check, for the local hooks and for CI |
 | `.claude/settings.json` | Claude Code settings, which install the git hooks when a session starts |
@@ -239,12 +247,14 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` and `rustup` too, and GNU binutils on an x86-64 Linux host. Three
-checks need elan: `fir-spec` builds the spec, `fir-ref-test` runs the Lean
-tests, and `fir-round-trip` has Lean reprint what Rust prints. Four need
+`elan` and `rustup` too, GNU binutils on an x86-64 Linux host, and Python
+3.11 or later. Four checks need elan: `fir-spec` builds the spec,
+`fir-ref-test` runs the Lean tests, `fir-round-trip` has Lean reprint what
+Rust prints, and `fir-harness` runs the differential harness. Five need
 rustup: `rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and
-`fir-round-trip` runs it. `rust-test` builds and runs native code, so it
-needs binutils. Then install the git hooks:
+`fir-round-trip` and `fir-harness` run it. `rust-test` and `fir-harness`
+build and run native code, so they need binutils. Then install the git
+hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

@@ -1,0 +1,8 @@
+# Tests of seven.fir. @seven runs two ops, const and ret, so it needs two
+# steps of fuel.
+tests = [
+  { func = "@seven" },
+  { func = "@seven", fuel = 2 },
+  { func = "@seven", fuel = 1, expect = "fuel-exhausted" },
+  { func = "@seven", fuel = 0, expect = "fuel-exhausted" },
+]

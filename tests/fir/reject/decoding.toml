@@ -1,0 +1,530 @@
+# Must-reject texts that follow the grammar but do not decode: types, value
+# definitions and uses, and the ops const, add and ret (ADR-2026-10-30-0815).
+
+[[reject]]
+verdict = "parse-error"
+rule = "a width has no leading zeros: i032 is not a type"
+text = '''
+func @f(%a: i032) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a width has no leading zeros: i00 is not a type"
+text = '''
+func @f(%a: i00) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: u8 is not one"
+text = '''
+func @f(%a: u8) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: index is not one"
+text = '''
+func @f(%a: index) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: i32(1) is not one"
+text = '''
+func @f(%a: i32(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: i is not one"
+text = '''
+func @f(%a: i) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: f32, a result type, is not one"
+text = '''
+func @f() -> f32 {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the core dialect has the types iN and ptr: i8x, an op's result type, is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i8x = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a value has one definition: %a is a parameter and an op's result"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %a: i32 = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a value has one definition: %b is the result of two ops"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %b: i32 = const 1 @0
+  %b: i32 = const 2 @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a value has one definition: two parameters are named %a"
+text = '''
+func @f(%a: i8, %a: i8) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a value has one definition: %a is a parameter and a block argument"
+text = '''
+func @f(%a: i8) {
+^e:
+  ret @0
+^b(%a: i8):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an operand is a value that the function defines: %nope is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %c: i32 = add %a, %nope @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function uses only its own values: %x belongs to @g, not @h"
+text = '''
+func @g(%x: i32) {
+^e:
+  ret @0
+}
+
+func @h() -> i32 {
+^e:
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %b: i64 = const 0 @0
+  %c: i32 = add %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes two operands, not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i32 = add %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes two operands, not three"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i32 = add %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i64 = add %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add's only attributes are its flags, nuw and nsw: foo is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i32 = add foo %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an i1 constant is written true or false, not 1"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i1 = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an i1 constant is written true or false, not -1"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i1 = const -1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a constant fits its type: 128 is not an i8"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const 128 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a constant fits its type: -129 is not an i8"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const -129 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a constant fits its type, however many digits it has"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const 99999999999999999999999999999999999999999 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "true is an i1 constant, not an i8"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const true @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "const has one attribute, its value: it has none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "const has one attribute, its value: it has two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const 1 2 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the value of a const is an integer, not a string"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const "1" @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "const takes no operands"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = const 1 %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "const defines an integer: ptr has no constants"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: ptr = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "const defines one value, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8, %d: i8 = const 1 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ret defines no values"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = ret @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ret takes no attributes"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  ret nsw %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an op is one that the dialect has: the core dialect has no toy.mix"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i8 = toy.mix %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

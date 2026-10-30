@@ -1,8 +1,8 @@
 # shellcheck shell=bash
 # Sourced, from the repository root, by the scripts that run cargo:
-# check-rust.sh and check-fir-ref.sh (ADR-2026-10-30-1030). It puts rustup's
-# cargo on PATH and checks that cargo and rustc are the version that
-# rust-toolchain.toml pins.
+# check-rust.sh, check-fir-ref.sh and check-harness.sh (ADR-2026-10-30-1030).
+# It puts rustup's cargo on PATH and checks that cargo and rustc are the
+# version that rust-toolchain.toml pins.
 
 # The pin, not the environment, picks the toolchain, so a local pass predicts
 # a CI pass.

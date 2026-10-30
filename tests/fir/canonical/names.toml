@@ -1,0 +1,6 @@
+# Tests of names.fir: value names and labels that are not words.
+tests = [
+  { func = "@names", args = ["1", "2", "3"] },
+  { func = "@names", args = ["127", "1", "0"] },
+  { func = "@names", args = ["-128", "-128", "-128"] },
+]

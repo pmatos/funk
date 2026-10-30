@@ -269,6 +269,17 @@ A test that runs a module on `fir-ref` and as native code, and checks that the
 native result refines the `fir-ref` result.
 
 **invalid test**:
-A differential test that can prove nothing: an outcome in its set is UB, or its
-choices exceed the budget and it declares no results. It never counts as a
-pass.
+A differential test that can prove nothing: an outcome in its set is UB or
+fuel exhausted, or its choices exceed the budget and it declares no results.
+It never counts as a pass.
+
+**interpreter-only test**:
+A test that runs on `fir-ref` only, and states the result it must give: the
+returned values, UB or fuel exhausted. It covers what native code cannot
+check, such as UB, fuel exhaustion and widths the backend does not lower.
+
+**must-reject text**:
+A text of the test corpus that breaks one rule, and that `funk verify` and
+`fir-ref validate` must both reject with the same verdict: rejected by the
+parser or by validation. When the tracer subset cannot break a rule alone,
+the text breaks a second rule too, and names both (ADR-2026-10-30-2050).
