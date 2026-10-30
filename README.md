@@ -1,19 +1,30 @@
 # Funk
 
 Funk is a compiler toolchain in the spirit of LLVM: a library to build
-production compilers on. Its intermediate representation (IR) is called fir,
-and fir has a formal semantics in Lean.
+production compilers on. Its intermediate representation (IR) is called fir.
+fir's meaning is being defined formally in [Lean](https://lean-lang.org), a
+proof assistant.
+
+Two aims shape funk. First, funk's code will be checked against fir's formal
+definition. Second, agents build funk, and they are meant to use it.
 
 Funk is at an early stage. Today the repository holds fir's specification,
 written in Lean, and the decisions behind it. It holds no compiler yet. See
-[status](#status) for what exists and what does not.
+[status](#status) for what exists and what does not. Agents should read
+[`AGENTS.md`](AGENTS.md) before they start a task.
 
 ## Goals and direction
 
-Three documents set funk's direction. The [spec](docs/spec/) says what fir
-is. The [roadmap](docs/roadmap.md) says what we build next, and in what order.
-The [ADRs](docs/adrs/) record what we decided, and why. The glossary,
-[`CONTEXT.md`](CONTEXT.md), defines the terms they use.
+Three documents set funk's direction:
+
+- The [spec](docs/spec/) says what fir is. It is written in Lean, and its
+  chapters are in [`lean/Fir/`](lean/Fir/). To read it as a web page, build it
+  as [Build the spec](#build-the-spec) shows.
+- The [roadmap](docs/roadmap.md) says what we build next, and in what order.
+- The [architecture decision records (ADRs)](docs/adrs/) say what we decided,
+  and why.
+
+The glossary, [`CONTEXT.md`](CONTEXT.md), defines the terms they use.
 
 The roadmap sets these goals:
 
@@ -25,7 +36,7 @@ The roadmap sets these goals:
 - **Any hardware.** fir must be able to reach any kind of hardware. CPUs come
   first. Other targets are meant to come in as extension dialects.
 
-Its ground rules also fix these points:
+The roadmap's ground rules also settle these points:
 
 - The semantics of fir lives in Lean, and only there. A Lean reference
   interpreter will serve as a test oracle. It never ships inside a compiler.
@@ -37,16 +48,18 @@ Its ground rules also fix these points:
   observable behaviours is one the source allows.
 
 Some decisions are still open, such as the memory model, floating point,
-concurrency and how dialects are defined. The roadmap lists them under
-[decisions deferred past M0](docs/roadmap.md#decisions-deferred-past-m0). No
-work should assume an answer to any of them.
+concurrency, and how dialects and extensions are defined. The roadmap lists
+them under [decisions deferred past M0](docs/roadmap.md#decisions-deferred-past-m0).
+M0 is funk's first milestone. No work should assume an answer to any of these
+decisions.
 
 ## What fir looks like
 
-This function comes from the example in the spec's text-format chapter. It
-adds the integers from 0 up to, but not including, `%n`. Each op ends with a
-location reference such as `@1`. A `locs` table at the end of the module,
-not shown here, gives the location that each reference stands for.
+This function comes from the spec's example,
+[`lean/Fir/Text/Example.lean`](lean/Fir/Text/Example.lean). It adds the
+integers from 0 up to, but not including, `%n`. Each op ends with a location
+reference such as `@1`. The full module ends with a `locs` table, not shown
+here. That table gives the source location that each reference stands for.
 
 ```
 func @sum(%n: i32) -> i32 {
@@ -68,50 +81,60 @@ func @sum(%n: i32) -> i32 {
 
 ## Status
 
-The roadmap plans seven milestones, and each one is a GitHub milestone. M0 is
-in progress. M1 to M6 have not started.
+The roadmap plans seven milestones, and each one is a
+[GitHub milestone](https://github.com/pmatos/funk/milestones). M0 is in
+progress. M1 to M6 have not started.
 
 | Milestone | Goal |
 | --- | --- |
 | M0 | fir compiler with a basic x86-64 backend |
 | M1 | Full x86-64 backend |
-| M2 | Vow frontend |
+| M2 | [Vow](https://github.com/vow-lang/vow) frontend |
 | M3 | C and C++ frontend |
 | M4 | Compile the Linux kernel |
 | M5 | JIT compilation |
 | M6 | x86 to arm64 binary translation |
 
-The M0 epic, [#5](https://github.com/pmatos/funk/issues/5), tracks M0 and its
-sub-issues. These parts of M0 are on `main`:
+Issue [#5](https://github.com/pmatos/funk/issues/5) is the M0 epic. Its
+sub-issues track the work of M0, one issue for each piece. These parts of M0
+are on `main`:
 
 - The decisions that M0 starts from, each recorded as an ADR.
 - A [spike report](docs/spikes/leanmlir.md) that compared two ways to write
-  fir's Lean semantics: on top of LeanMLIR, or as fir's own calculus. The
-  human who guides funk chose fir's own calculus
+  fir's Lean semantics. One builds on
+  [LeanMLIR](https://github.com/opencompl/lean-mlir), an SSA framework in
+  Lean. The other is fir's own calculus. The project's human lead chose fir's
+  own calculus
   ([ADR-2026-10-29-2030](docs/adrs/2026-10-29-2030-fir-lean-semantics-own-calculus.md)).
-- The fir v0 spec, as literate Lean in `lean/`, rendered with Verso from
-  `docs/spec/`. It gives fir's abstract syntax and validation rules, the
-  general definitions of execution (outcomes, observable behaviour and
-  refinement), and the text format with its grammar and printer. CI builds
-  it on every pull request.
+- The fir v0 spec. Its chapters are Lean modules in `lean/`, with prose beside
+  each definition. [Verso](https://github.com/leanprover/verso), Lean's
+  documentation tool, renders them as HTML from `docs/spec/`. The spec gives
+  fir's abstract syntax and its validation rules. It also gives the general
+  definitions of execution, such as outcomes and refinement. And it gives the
+  text format, with its grammar and printer. CI builds the spec on every pull
+  request.
 
 These parts of M0 do not exist yet:
 
-- The execution rules of the ops. The issue for each op family adds them.
+- The execution rules of the ops. The Lean tracer,
+  [#10](https://github.com/pmatos/funk/issues/10), adds them for `const`,
+  `add` and `ret`. One issue for each group of related ops,
+  [#14](https://github.com/pmatos/funk/issues/14) to
+  [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
 - The Lean parser and the reference interpreter, `fir-ref`.
 - The proof that parsing a printed module gives the module back.
 - Any Rust code: the IR crate `funk-ir`, the `funk` driver and the x86-64
   backend.
 - The differential tests that compare native results with `fir-ref`.
 
-The epic lists the open work in full.
+The epic's sub-issues list the open work in full.
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
-| `lean/` | The Lake package `fir`: the spec's chapters as literate Lean modules |
-| `docs/spec/` | The Lake package `firspec`: the Verso document that renders the spec |
+| `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose |
+| `docs/spec/` | The Lean package `firspec`: the Verso document that renders the spec |
 | `docs/roadmap.md` | The roadmap: milestones M0 to M6 |
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
@@ -127,48 +150,53 @@ The epic lists the open work in full.
 ## Build the spec
 
 You need `elan`, the Lean toolchain manager, to build the spec. Install it as
-the [elan README](https://github.com/leanprover/elan#installation) says. You
-also need `pre-commit` 4.4.0 or later for the hooks and checks.
+the [elan README](https://github.com/leanprover/elan#installation) says. Then
+run:
 
 ```sh
 git clone https://github.com/pmatos/funk.git
 cd funk
-./scripts/ensure-hooks.sh   # install the git hooks
-scripts/build-spec.sh       # build the Lean code and render the spec
+./scripts/build-spec.sh   # build the Lean code and render the spec
 ```
 
-Then open `docs/spec/_out/html-multi/index.html` in a browser. elan uses the
-Lean version that `lean/lean-toolchain` pins. The first build in a clone also
-builds Verso, so it takes longer. The rendered spec is a build output, and git
-ignores it. [`docs/spec/README.md`](docs/spec/README.md) has more detail.
+Open `docs/spec/_out/html-multi/index.html` in a browser to read the spec.
+elan uses the Lean version that `lean/lean-toolchain` pins. The first build in
+a clone also builds Verso, so it takes longer. The rendered spec is a build
+output, and git ignores it. [`docs/spec/README.md`](docs/spec/README.md) has
+more detail.
 
 Issue [#28](https://github.com/pmatos/funk/issues/28) tracks publishing the
 rendered spec on GitHub Pages. Until that is done, build the spec locally to
 read it.
 
-## How funk is built
+## How to contribute
 
 A human sets the direction: the spec, the roadmap, and the calls only they can
 make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
-requests. [`AGENTS.md`](AGENTS.md) gives the full rules. In short:
+requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
+
+Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
+`elan` too, because one of the checks builds the spec. Then install the git
+hooks:
+
+```sh
+./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks
+```
+
+The rules, in short:
 
 - Every change reaches `main` as a squash-merged pull request. A ruleset
   blocks direct pushes to `main`, for everyone.
 - A pull request merges only when the `pre-commit` and `PR title` checks pass.
-- Run `./scripts/ensure-hooks.sh` in each clone before you work in it. It
-  installs the `pre-commit` and `commit-msg` hooks. Never bypass them.
+- Never bypass the hooks.
 - Write commit messages and pull request titles as Conventional Commits, such
   as `docs: add a readme`. The title becomes the commit message on `main`.
 - Keep every text file at most 20,000 bytes, so that an agent can read any
   file whole. Split a file that grows past that by responsibility.
-- Run `pre-commit run --all-files` before you push. CI runs the same checks.
-- Record every significant decision as an ADR in `docs/adrs/`.
-- A change to the spec or the roadmap is a direction call. Propose it in its
-  own pull request, and flag it for the human.
 
 To report a bug or propose work, open a
-[GitHub issue](https://github.com/pmatos/funk/issues). The project triages
-issues, not pull requests.
+[GitHub issue](https://github.com/pmatos/funk/issues). Only issues are
+triaged: a pull request is not treated as a request for work.
 
 ## Licence
 
