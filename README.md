@@ -18,8 +18,9 @@ written in Lean, and the decisions behind it. It holds no compiler yet. See
 Three documents set funk's direction:
 
 - The [spec](docs/spec/) says what fir is. It is written in Lean, and its
-  chapters are in [`lean/Fir/`](lean/Fir/). To read it as a web page, build it
-  as [Build the spec](#build-the-spec) shows.
+  chapters are in [`lean/Fir/`](lean/Fir/). Read it as a web page at
+  <https://p.ocmatos.com/funk/>, or build it as
+  [Build the spec](#build-the-spec) shows.
 - The [roadmap](docs/roadmap.md) says what we build next, and in what order.
 - The [architecture decision records (ADRs)](docs/adrs/) say what we decided,
   and why.
@@ -112,7 +113,8 @@ are on `main`:
   fir's abstract syntax and its validation rules. It also gives the general
   definitions of execution, such as outcomes and refinement. And it gives the
   text format, with its grammar and printer. CI builds the spec on every pull
-  request.
+  request, and every push to `main` publishes it at
+  <https://p.ocmatos.com/funk/>.
 
 These parts of M0 do not exist yet:
 
@@ -140,7 +142,7 @@ The epic's sub-issues list the open work in full.
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
 | `scripts/` | Scripts for the spec build, the hooks and agent sessions |
-| `.github/` | The CI workflows, the ruleset for `main` and the Dependabot settings |
+| `.github/` | The CI and Pages workflows, the ruleset for `main` and the Dependabot settings |
 | `.pre-commit-config.yaml` | Every check, for the local hooks and for CI |
 | `.claude/settings.json` | Claude Code settings, which install the git hooks when a session starts |
 | `CONTEXT.md` | The glossary |
@@ -165,9 +167,10 @@ a clone also builds Verso, so it takes longer. The rendered spec is a build
 output, and git ignores it. [`docs/spec/README.md`](docs/spec/README.md) has
 more detail.
 
-Issue [#28](https://github.com/pmatos/funk/issues/28) tracks publishing the
-rendered spec on GitHub Pages. Until that is done, build the spec locally to
-read it.
+The rendered spec is also published at <https://p.ocmatos.com/funk/>. It is
+rebuilt and deployed from every push to `main`
+([ADR-2026-10-30-1031](docs/adrs/2026-10-30-1031-publish-spec-to-github-pages.md)),
+and each page names the commit it was built from.
 
 ## How to contribute
 

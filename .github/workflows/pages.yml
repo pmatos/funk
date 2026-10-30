@@ -1,0 +1,73 @@
+# Publishes the rendered fir spec to GitHub Pages from every push to main
+# (ADR-2026-10-30-1031). Pull requests never deploy; CI builds the document
+# through the fir-spec pre-commit hook instead.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One run per ref at a time, and none is cancelled half way. A newer run
+# replaces one still waiting, so main deploys its latest commit.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build the spec
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-26.04
+    # Lakefiles and elaboration run arbitrary code: this job may only read.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Copied from ci.yml, which saves the cache restored here; change both
+      # files together. docs/spec/.lake/build is never cached.
+      - name: Install elan
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/elan.tar.gz" \
+            "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
+          echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore the Lean toolchain and Verso build
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.elan/toolchains
+            docs/spec/.lake/packages
+          key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
+      - name: Install the Lean toolchain
+        run: elan toolchain install "$(cat lean/lean-toolchain)"
+      - name: Build and render the spec
+        run: scripts/build-spec.sh "$RUNNER_TEMP/spec"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/spec/html-multi
+
+  deploy:
+    name: Deploy to GitHub Pages
+    # Skipped with build off main, since it needs build.
+    needs: build
+    runs-on: ubuntu-26.04
+    # Only this job, which runs no code from the repository, may deploy.
+    permissions:
+      pages: write # deploy the artifact to Pages
+      id-token: write # prove to Pages that this run is the deployer
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
