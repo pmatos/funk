@@ -13,7 +13,7 @@ func @sum(%n: i32) -> i32 {
   %zero: i32 = const 0 @1
   br ^loop(%zero, %zero) @1
 ^loop(%i: i32, %acc: i32):
-  %done: i1 = icmp.sge %i, %n @2
+  %done: i1 = icmp sge %i, %n @2
   cond_br %done, ^exit(%acc), ^body @2
 ^body:
   %acc1: i32 = add nsw %acc, %i @3
@@ -33,19 +33,19 @@ func @sum10() -> i32 {
 
 locs {
   @0 = unknown
-  @1 = "sum.c":2:3-2:14
-  @2 = "sum.c":3:10-3:15
-  @3 = "sum.c":4:5-4:16
-  @4 = "sum.c":6:3-6:13
-  @5 = "main.c":2:19-2:20
-  @6 = "main.c":2:15-2:21
+  @1 = "sum.c":2:3 to 2:14
+  @2 = "sum.c":3:10 to 3:15
+  @3 = "sum.c":4:5 to 4:16
+  @4 = "sum.c":6:3 to 6:13
+  @5 = "main.c":2:19 to 2:20
+  @6 = "main.c":2:15 to 2:21
 }
 ```
 
 `%n` is a parameter, so it is the entry block's argument, and the entry block
 dominates every block: `^loop` uses `%n` without being passed it. The `ret` of
 `@sum10` has an unknown location, which is an entry of the table like any
-other.
+other. Each range ends just after its last byte.
 
 Below is the same module as abstract syntax, and a check, run on every build,
 that it prints as the text above.
@@ -109,7 +109,7 @@ def sumModule : Module CoreDialect where
   "  %zero: i32 = const 0 @1",
   "  br ^loop(%zero, %zero) @1",
   "^loop(%i: i32, %acc: i32):",
-  "  %done: i1 = icmp.sge %i, %n @2",
+  "  %done: i1 = icmp sge %i, %n @2",
   "  cond_br %done, ^exit(%acc), ^body @2",
   "^body:",
   "  %acc1: i32 = add nsw %acc, %i @3",
@@ -129,13 +129,30 @@ def sumModule : Module CoreDialect where
   "",
   "locs {",
   "  @0 = unknown",
-  "  @1 = \"sum.c\":2:3-2:14",
-  "  @2 = \"sum.c\":3:10-3:15",
-  "  @3 = \"sum.c\":4:5-4:16",
-  "  @4 = \"sum.c\":6:3-6:13",
-  "  @5 = \"main.c\":2:19-2:20",
-  "  @6 = \"main.c\":2:15-2:21",
+  "  @1 = \"sum.c\":2:3 to 2:14",
+  "  @2 = \"sum.c\":3:10 to 3:15",
+  "  @3 = \"sum.c\":4:5 to 4:16",
+  "  @4 = \"sum.c\":6:3 to 6:13",
+  "  @5 = \"main.c\":2:19 to 2:20",
+  "  @6 = \"main.c\":2:15 to 2:21",
   "}",
   ""]
+
+/-!
+# More printing checks
+
+An op with a region, a symbol that is not a word, and an applied attribute
+with no arguments. No core op has a region, so the region below is only
+there to check the printer's layout, which is the same for every dialect.
+-/
+
+#guard Operation.print 2 { op [] .br [] 7 with regions := [⟨[⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
+  "  br {\n    ^inner:\n      ret @0\n  } @7\n"
+
+#guard Func.print (d := CoreDialect)
+    ⟨"1", [], [], ⟨[⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
+  "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
+
+#guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"
 
 end Fir.Example

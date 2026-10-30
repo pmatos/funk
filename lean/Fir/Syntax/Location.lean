@@ -27,8 +27,10 @@ entries of the location table, by reference.
 
 * `unknown`: nothing is known about where the op came from.
 * `range file l₁ c₁ l₂ c₂`: a range of source text in `file`, from line `l₁`,
-  column `c₁` to line `l₂`, column `c₂`. Lines and columns count from 1, and
-  the end is the position of the range's last character.
+  column `c₁` to line `l₂`, column `c₂`, as MLIR writes it. Lines count from
+  1. Columns count UTF-8 bytes from 1, and column 0 means that the column is
+  unknown. The end is exclusive: it is the position just after the range's
+  last byte, so a range whose end equals its start is empty.
 * `name n`: a name, such as the source variable an op computes.
 * `callsite callee caller`: the op came from inlining. `callee` is its
   location in the inlined function, `caller` the location of the call.
@@ -58,5 +60,18 @@ def Location.refs : Location → List LocRef
   | .callsite callee caller => [callee, caller]
   | .fused locs => locs
   | .derived src => [src]
+
+/-- The numbers that a location holds: its lines and columns, or its
+references. -/
+def Location.numbers : Location → List Nat
+  | .range _ l₁ c₁ l₂ c₂ => [l₁, c₁, l₂, c₂]
+  | l => l.refs
+
+/--
+Location references, lines and columns are below `2^32`, so that every
+implementation can hold them in 32 bits (N3). The text format rejects a
+larger one, and validation rejects a table that holds one.
+-/
+def Location.limit : Nat := 2 ^ 32
 
 end Fir

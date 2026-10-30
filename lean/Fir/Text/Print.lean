@@ -4,17 +4,18 @@ import Fir.Text.Grammar
 # The canonical printer
 
 The printer fixes the one spelling of every module: `print(parse(t)) == t`
-holds for every printed `t`. Its layout is:
+holds for every text `t` that it prints from a well-formed module (see the
+next section). Its layout is:
 
 * single spaces between tokens, a space after each comma and colon, and none
-  inside parentheses;
+  inside parentheses or before an item's parameters;
 * a function's blocks at the indentation of the function, and its ops two
   spaces deeper. A region of an op opens with ` {` at the end of the op's
   line; its blocks are two spaces deeper than the op, and its closing `}` is
   at the op's indentation, followed by the next region or the location
   reference;
 * each op on its own line, ending with a space and its location reference;
-* one empty line after each function, then the location table, its entries
+* one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
   spaces.
@@ -29,7 +30,7 @@ def Attr.print : Attr → String
   | .word w => w
   | .int i => printInt i
   | .str s => quote s
-  | .sym s => "@" ++ s
+  | .sym s => printSymbol s
   | .app h args => h ++ "(" ++ ", ".intercalate (printList args) ++ ")"
 where
   printList : List Attr → List String
@@ -42,7 +43,7 @@ def printLocRef (r : LocRef) : String := "@" ++ toString r
 /-- A location, as it appears in the location table. -/
 def Location.print : Location → String
   | .unknown => "unknown"
-  | .range f l₁ c₁ l₂ c₂ => s!"{quote f}:{l₁}:{c₁}-{l₂}:{c₂}"
+  | .range f l₁ c₁ l₂ c₂ => s!"{quote f}:{l₁}:{c₁} to {l₂}:{c₂}"
   | .name n => s!"name({quote n})"
   | .callsite callee caller => s!"callsite({printLocRef callee} at {printLocRef caller})"
   | .fused locs => "fused(" ++ ", ".intercalate (locs.map printLocRef) ++ ")"
@@ -93,20 +94,25 @@ def Operation.printList (n : Nat) : List (Operation d) → String
   | o :: os => Operation.print n o ++ Operation.printList n os
 end
 
-/-- A function, with its line feed. -/
+/-- A function, with its line feed: an item of kind `func`, with no
+attributes. -/
 def Func.print (f : Func d) : String :=
   let results :=
     if f.results.isEmpty then "" else " -> " ++ ", ".intercalate (f.results.map (tyAttr · |>.print))
-  "func @" ++ f.name ++ "(" ++ printDefs f.params ++ ")" ++ results ++ " {\n" ++
+  "func " ++ printSymbol f.name ++ "(" ++ printDefs f.params ++ ")" ++ results ++ " {\n" ++
     Block.printList 0 f.body.blocks ++ "}\n"
+
+/-- An item, with its line feed. -/
+def Item.print : Item d → String
+  | .func f => f.print
 
 /-- The location table, which ends the module. -/
 def LocTable.print (t : LocTable) : String :=
   "locs {\n" ++ String.join (t.map fun (r, l) => "  " ++ printLocRef r ++ " = " ++ l.print ++ "\n") ++
     "}\n"
 
-/-- A module: its functions, each followed by an empty line, then its table. -/
+/-- A module: its items, each followed by an empty line, then its table. -/
 def Module.print (m : Module d) : String :=
-  String.join (m.funcs.map (·.print ++ "\n")) ++ m.locs.print
+  String.join (m.items.map (·.print ++ "\n")) ++ m.locs.print
 
 end Fir

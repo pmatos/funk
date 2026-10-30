@@ -79,7 +79,8 @@ symbol (H3, ADR-2026-10-29-2012).
 
 `params` are the function's parameters. They are the arguments of the
 entry block, the first block of `body`, which declares none of its own.
-`results` are the types the function returns.
+`results` are the types the function returns: any number of them, none
+included (ADR-2026-10-30-0816).
 -/
 structure Func (d : Dialect) where
   name : Name
@@ -91,9 +92,12 @@ structure Func (d : Dialect) where
 An item of a module. In M0 every item is a function.
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
-example a device module inside a host module. A nested module would be a new
-kind of item. How dialects and extensions add such items is H4 and H5, which
-are not decided, so M0 defines only functions.
+example a device module inside a host module. A nested module, a global or
+an external declaration would each be a new kind of item, and a new
+constructor here. The text format already writes every item with one
+generic production (N2), so a new kind needs no grammar change. How
+dialects and extensions add kinds of item is H4 and H5, which are not
+decided, so M0 defines only functions.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
@@ -106,7 +110,7 @@ structure Module (d : Dialect) where
   items : List (Item d)
   locs : LocTable
 
-/-- The functions of a module. -/
+/-- The functions of a module, in order. -/
 def Module.funcs (m : Module d) : List (Func d) :=
   m.items.map fun | .func f => f
 

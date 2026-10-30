@@ -8,27 +8,35 @@ How each core op instance and type is written. An op is written as its name
 and its attributes; its widths come from the types of its operands and
 results, which are written where those values are defined.
 
-* `const` has one attribute, its value: `%c: i32 = const -1 @1`.
+* `const` has one attribute, its value: `%c: i32 = const -1 @1`,
+  `%t: i1 = const true @1`.
 * `add`, `sub` and `mul` have their flags as attributes:
   `%s: i32 = add nuw nsw %a, %b @1`.
 * `sdiv` and `udiv` have `exact` when it is set: `%q: i32 = sdiv exact %a, %b @1`.
-* A comparison has its predicate in its name, from `icmp.eq` to `icmp.uge`,
-  and no attributes: `%lt: i1 = icmp.slt %a, %b @1`.
+* `icmp` has one attribute, its predicate, from `eq` to `uge`, as LLVM
+  writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
+  `.`, which is reserved for dialect names (H4).
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * `condBr` is written `cond_br`: `cond_br %c, ^then, ^else(%x) @1`.
 * Every other op is written with the name it has in the op set, and no
   attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`.
-* A constant is written as its bits read as a two's-complement signed
-  integer, in decimal. So `i8` constants run from `-128` to `127`, and the
-  `i1` constants are `0` and `-1`. Each bit pattern has one spelling.
+* An `i1` constant is written `true` or `false`, as in LLVM and MLIR.
+  Every other constant is written as its bits read as a two's-complement
+  signed integer, in decimal, so `i8` constants run from `-128` to `127`.
+  Each bit pattern has one spelling: `const 1` and `const -1` at `i1` are
+  errors.
+* The values of `fir-ref`'s arguments, the values in its JSON output and
+  the values of a scripted choice sequence are spelled the same way: `true`
+  and `false` at `i1`, and signed decimal at every other width.
 * Flags are written in a fixed order, `nuw` before `nsw`, each at most once.
 * `iN` is written `i` and `N` in decimal with no leading zeros, such as
-  `i32`, and `ptr` is written `ptr`.
+  `i32`, and `ptr` is written `ptr`. A width above `maxWidth` is a parse
+  error (N3).
 -/
 
 namespace Fir.Core
 
-/-- The name of a comparison predicate, as in `icmp.slt`. -/
+/-- The name of a comparison predicate, as in `icmp slt`. -/
 def Pred.name : Pred → String
   | .eq => "eq" | .ne => "ne" | .slt => "slt" | .sle => "sle" | .sgt => "sgt"
   | .sge => "sge" | .ult => "ult" | .ule => "ule" | .ugt => "ugt" | .uge => "uge"
@@ -42,7 +50,7 @@ def Op.name : Op → String
   | .sdiv .. => "sdiv" | .udiv .. => "udiv" | .srem _ => "srem" | .urem _ => "urem"
   | .and _ => "and" | .or _ => "or" | .xor _ => "xor"
   | .shl _ => "shl" | .lshr _ => "lshr" | .ashr _ => "ashr"
-  | .icmp p _ => "icmp." ++ p.name | .select _ => "select"
+  | .icmp .. => "icmp" | .select _ => "select"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .freeze _ => "freeze" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .call .. => "call"
@@ -51,9 +59,16 @@ def Op.name : Op → String
 def WrapFlags.attrs (f : WrapFlags) : List Attr :=
   (if f.nuw then [.word "nuw"] else []) ++ (if f.nsw then [.word "nsw"] else [])
 
+/-- The attribute of a constant: `true` or `false` at `i1`, and its bits
+read as a signed integer at every other width. -/
+def constAttr : (w : Nat) → BitVec w → Attr
+  | 1, v => .word (if v = 1 then "true" else "false")
+  | _, v => .int v.toInt
+
 /-- The attributes of a core op instance. -/
 def Op.attrs : Op → List Attr
-  | .const _ v => [.int v.toInt]
+  | .const w v => [constAttr w v]
+  | .icmp p _ => [.word p.name]
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -96,7 +111,16 @@ operand and result types. -/
 def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   match n with
   | "const" => match as, ts, rs with
-    | [.int v], [], [.int w] => if (BitVec.ofInt w v).toInt = v then some (.const w (.ofInt w v)) else none
+    | [.word "true"], [], [.int 1] => some (.const 1 1)
+    | [.word "false"], [], [.int 1] => some (.const 1 0)
+    | [.int v], [], [.int w] =>
+      if w ≠ 1 ∧ (BitVec.ofInt w v).toInt = v then some (.const w (.ofInt w v)) else none
+    | _, _, _ => none
+  | "icmp" => match as, ts, rs with
+    | [.word p], [.int a, .int b], [.int 1] =>
+      match Pred.all.find? (·.name == p) with
+      | some pr => if a = b then some (.icmp pr a) else none
+      | none => none
     | _, _, _ => none
   | "add" => do pure (.add (← binWidth ts rs) (← decodeWrap as))
   | "sub" => do pure (.sub (← binWidth ts rs) (← decodeWrap as))
@@ -118,24 +142,22 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "call" => match as with
     | [.sym f] => some (.call f ts rs)
     | _ => none
-  | _ =>
-    if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk)
-    else match Pred.all.find? (fun p => "icmp." ++ p.name == n), ts, rs with
-      | some p, [.int a, .int b], [.int 1] => if a = b then bare as (some (.icmp p a)) else none
-      | _, _, _ => none
+  | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- How a core type is written. -/
 def Ty.attr : Ty → Attr
   | .int w => .word ("i" ++ toString w)
   | .ptr => .word "ptr"
 
-/-- Reads a core type: `ptr`, or `i` and a width with no leading zeros. -/
+/-- Reads a core type: `ptr`, or `i` and a width of at most `maxWidth`, with
+no leading zeros. -/
 def Ty.decode : Attr → Option Ty
   | .word "ptr" => some .ptr
   | .word s => match s.toList with
     | 'i' :: ds =>
       let digits := String.ofList ds
-      (digits.toNat?).bind fun w => if toString w = digits then some (.int w) else none
+      (digits.toNat?).bind fun w =>
+        if toString w = digits ∧ w ≤ maxWidth then some (.int w) else none
     | _ => none
   | _ => none
 
@@ -156,7 +178,7 @@ namespace Fir.Core
 
 /-- One instance of every core op, used to check the encoding below. -/
 def samples : List Op :=
-  [.const 8 (-128), .const 1 1, .const 7 5, .add 32 {}, .add 32 { nuw := true },
+  [.const 8 (-128), .const 1 1, .const 1 0, .const 7 5, .add 32 {}, .add 32 { nuw := true },
    .sub 16 { nsw := true }, .mul 64 { nuw := true, nsw := true },
    .sdiv 32 true, .udiv 32 false, .srem 8, .urem 8, .and 1, .or 33, .xor 128,
    .shl 32, .lshr 32, .ashr 32, .select 8, .zext 8 32, .sext 1 64, .trunc 64 7,
@@ -171,5 +193,11 @@ def samples : List Op :=
 #guard Op.decode "const" [.int 128] [] [.int 8] == none
 #guard Op.decode "add" [.word "nsw", .word "nuw"] [.int 8, .int 8] [.int 8] == none
 #guard Op.decode "add" [] [.int 8, .int 16] [.int 8] == none
+#guard Op.decode "const" [.word "true"] [] [.int 1] == some (.const 1 1)
+#guard Op.decode "const" [.int 1] [] [.int 1] == none && Op.decode "const" [.int (-1)] [] [.int 1] == none
+#guard Op.decode "const" [.word "true"] [] [.int 8] == none
+#guard Op.decode "icmp" [.word "slt"] [.int 8, .int 8] [.int 1] == some (.icmp .slt 8)
+#guard Op.decode "icmp.slt" [] [.int 8, .int 8] [.int 1] == none
+#guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
 
 end Fir.Core
