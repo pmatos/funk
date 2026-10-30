@@ -129,8 +129,9 @@ def isEscaped (c : Char) : Bool :=
   n < 0x20 || (0x7f ≤ n && n ≤ 0x9f) || n == 0x2028 || n == 0x2029 ||
     formatChars.any fun (a, b) => a ≤ n && n ≤ b
 
-/-- A character that a text may hold outside strings, comments included:
-any character that strings do not escape, and the tab and the line feed. -/
+/-- A character that a text may hold outside strings, comments included: the
+tab, the line feed, and any character for which `isEscaped` is false (so `"`
+and `\` are allowed). -/
 def allowedOutsideStrings (c : Char) : Bool :=
   c = '\t' || c = '\n' || !isEscaped c
 
