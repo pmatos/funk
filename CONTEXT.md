@@ -275,4 +275,5 @@ check, such as UB, fuel exhaustion and widths the backend does not lower.
 **must-reject text**:
 A text of the test corpus that breaks one rule, and that `funk verify` and
 `fir-ref validate` must both reject with the same verdict: rejected by the
-parser or by validation.
+parser or by validation. When the tracer subset cannot break a rule alone,
+the text breaks a second rule too, and names both (ADR-2026-10-30-2050).
