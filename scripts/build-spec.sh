@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # Build fir's Lean package and render the spec document (ADR-2026-10-29-2135).
-# Usage: scripts/build-spec.sh [OUTPUT_DIR]
+# Usage: scripts/build-spec.sh [--update] [OUTPUT_DIR]
 # The rendered HTML goes to OUTPUT_DIR, by default docs/spec/_out.
+# --update first runs `lake update` in docs/spec/, under the same guards, for
+# a toolchain bump. Never run a bare `lake update` there.
 set -euo pipefail
 
-if [[ $# -gt 1 ]]; then
-    echo "Usage: $0 [OUTPUT_DIR]" >&2
+update=false
+if [[ "${1:-}" == --update ]]; then
+    update=true
+    shift
+fi
+if [[ $# -gt 1 || "${1:-}" == -* ]]; then
+    echo "Usage: $0 [--update] [OUTPUT_DIR]" >&2
     exit 2
 fi
 
@@ -34,6 +41,10 @@ fi
 if ! command -v elan >/dev/null; then
     echo "elan is not installed; see https://github.com/leanprover/elan" >&2
     exit 1
+fi
+
+if [[ "$update" == true ]]; then
+    (cd "$repo_root/docs/spec" && lake update)
 fi
 
 cd "$repo_root/lean"

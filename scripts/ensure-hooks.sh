@@ -46,10 +46,13 @@ fi
 hooks_installed || fail "pre-commit and commit-msg must both be executable pre-commit hooks."
 
 # The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
-# A warning, not a failure: work that touches no Lean file can go on.
+# A warning, not a failure: work that touches no Lean file can go on. It goes
+# to stdout too, because a SessionStart hook that exits 0 shows only stdout.
 if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
-    echo "Warning: elan, the Lean toolchain manager, is not installed." >&2
-    echo "The fir-spec hook, which runs on every 'pre-commit run --all-files', needs it." >&2
-    echo "Install it as https://github.com/leanprover/elan#installation says." >&2
+    warning="Warning: elan, the Lean toolchain manager, is not installed.
+The fir-spec hook, which runs on every 'pre-commit run --all-files', needs it.
+Install it as https://github.com/leanprover/elan#installation says."
+    echo "$warning"
+    echo "$warning" >&2
 fi
 echo "Repository hooks and environments are installed and verified."

@@ -11,6 +11,7 @@ Build the Lean code and render the document with:
 
 ```sh
 scripts/build-spec.sh            # writes docs/spec/_out/html-multi/index.html
+scripts/build-spec.sh --update   # for a toolchain bump: lake update, then build
 ```
 
 The toolchain, the dependencies and the build are recorded in

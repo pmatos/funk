@@ -48,9 +48,12 @@ Facts, checked on 2026-10-29:
   that leaves its compiled form unchanged, rebuilds the document:
   `{includeLiterate}` reads the sources, not the compiled modules.
 - **A toolchain bump is one PR.** It changes `lean/lean-toolchain` and the
-  `verso` rev to the same new stable tag, runs `lake update` in `docs/spec/`,
-  and commits both files.
-- **One build command.** `scripts/build-spec.sh [OUTPUT_DIR]` runs
+  `verso` rev to the same new stable tag, runs
+  `scripts/build-spec.sh --update`, and commits both files and the updated
+  `docs/spec/lake-manifest.json`. The `--update` mode runs `lake update` in
+  `docs/spec/` under the guards below, then builds as usual. Never run a
+  bare `lake update`.
+- **One build command.** `scripts/build-spec.sh [--update] [OUTPUT_DIR]` runs
   `lake build` in `lean/`, which also runs the `#guard` checks, then
   `lake build` and `lake exe firspec --output OUTPUT_DIR` in `docs/spec/`.
   The output defaults to `docs/spec/_out`, which is ignored by git. The
@@ -69,7 +72,7 @@ Facts, checked on 2026-10-29:
   to install elan, when elan is neither on `PATH` nor in `~/.elan/bin`, so a
   missing toolchain shows at setup, not first inside a commit. It does not
   fail, so work that touches no Lean file is not blocked.
-- **Hooks that run Lake keep its git calls inside the package clones.** Lake
+- **Every Lake run keeps its git calls inside the package clones.** Lake
   runs git inside each package clone under `.lake/packages`. Two paths let
   those calls act on this repository instead; in tests they rewrote
   `origin`, fetched Verso's tags, and moved `HEAD` with `checkout --detach`
@@ -84,9 +87,13 @@ Facts, checked on 2026-10-29:
     `docs/spec/.lake/packages`, so git stops there. Not the repository root,
     which would also stop git from finding this repository from `docs/spec/`.
 
-  Every hook that runs Lake goes through `scripts/build-spec.sh`, or applies
-  both guards as the script does. The script also unsets `GH_TOKEN` and
+  Every documented or scripted Lake run goes through `scripts/build-spec.sh`,
+  or applies both guards as the script does: hooks, CI, the toolchain bump
+  and the deployment of #28. The script also unsets `GH_TOKEN` and
   `GITHUB_TOKEN`, because lakefiles and elaboration can run arbitrary code.
+  When Lake fails with "not a git repository", the guard has stopped git at
+  a broken package clone: delete that package's directory under
+  `.lake/packages` and rebuild.
 - [#10](https://github.com/pmatos/funk/issues/10) extends this build with the
   Lean tests and the `fir-ref` executable.
 

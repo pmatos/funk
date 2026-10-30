@@ -31,8 +31,9 @@ part 1).
 ## Consequences
 
 - Where the epic, the roadmap and S4 say "return value", read "returned
-  values". The orchestrator updates the epic and the roadmap; S4 stands, as
-  its relation is already over a domain of observations.
+  values". The epic and the roadmap are updated separately (the roadmap in
+  a `human-ready` PR); S4 stands, as its relation is already over a domain
+  of observations.
 - The x86-64 backend needs a convention for returning several values.
   System V returns at most two integer registers, so more results need
   memory, which M0 otherwise does not have. That takes a backend ticket of
