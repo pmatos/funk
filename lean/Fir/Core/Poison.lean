@@ -29,18 +29,28 @@ The core dialect's execution rules land with its op families, so the
 obligations land with them too. Ticket #10 gives the semantics of the
 tracer subset, `const`, `add` and `ret`, with the instance of
 `DialectDenote CoreDialect SetM`, and proves the obligations of those three
-ops: `PropagatesPoison` for `add`, and totality and monotonicity for all
-three. Each family ticket then proves the obligations of its ops: #14 for
-`add` with its flags, `sub`, `mul` and `freeze`, #15 for the bitwise ops
-and shifts, #16 for `icmp` and `select`, #17 for the width changes, #18 for
-the divisions, #19 for the branches and #20 for `call`. The last of them
-gives `LawfulDialectPoison CoreDialect`. The exceptions' rules are tested
-by their tickets: `freeze` by #14, `select` by #16, the branches and block
-arguments by #19, `call` by #20.
+ops: `PropagatesPoison` for `add`, a result on defined operands for
+`const` and `add`, and totality and monotonicity for all three. Each family
+ticket then proves the obligations of its ops: #14 for `add` with its flags,
+`sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16 for
+`icmp` and `select`, #17 for the width changes, #18 for the divisions, #19
+for the branches and #20 for `call`. The last of them gives
+`LawfulDialectPoison CoreDialect`. The exceptions' rules are tested by their
+tickets: `freeze` by #14, `select` by #16, the branches and block arguments
+by #19, `call` by #20.
+
+`call` gets its meaning from the call effect that #20 adds, which shares
+the fuel budget with the caller's run. The set monad has no module and no
+such effect, so the `denote` of `call` in `SetM`, which the op-level
+obligations look at, is only a stand-in, and its totality and monotonicity
+say nothing about calls. #20 proves their real counterparts at function
+level: a call on arguments that refine others refines the call on those
+others, and congruence in the callee: replacing a callee with a function
+that refines it refines the caller.
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its
-totality waits for its semantics, in #10.
+totality and its result on defined operands wait for its semantics, in #10.
 -/
 
 namespace Fir.Core
@@ -85,7 +95,7 @@ theorem Core.const_monotone [DialectDenote CoreDialect SetM] (w : Nat) (v : BitV
     OpMonotone (d := CoreDialect) (.const w v) := by
   intro args args' _
   cases args; cases args'
-  exact ⟨SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _,
-    SetM.isRefinedBy_refl (fun _ => rfl) _⟩
+  exact ⟨fun _ => SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _,
+    fun _ => SetM.isRefinedBy_refl (fun _ => rfl) _⟩
 
 end Fir

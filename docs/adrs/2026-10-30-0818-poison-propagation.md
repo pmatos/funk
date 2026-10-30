@@ -46,10 +46,18 @@ must check.
 - Every op of every dialect, of either class, is also total and monotone.
   Total: it has an outcome on every operand vector, and a terminator's exit
   has one too. Monotone: refining its operands refines what it does, with a
-  poison value refined by every value of its type. `LawfulDialectPoison`
-  holds all of these obligations. Monotonicity makes refinement
-  compositional: replacing one part of a function with a part that refines
-  it refines the whole function.
+  poison value refined by every value of its type. Both look only at what
+  runs: the semantics of an op that is not a terminator, and the exit of a
+  terminator. Monotonicity makes refinement compositional: replacing one
+  part of a function with a part that refines it refines the whole
+  function. For `call`, whose meaning comes from #20's call effect, the
+  op-level obligations are a stand-in, and #20 proves their counterparts at
+  function level.
+- A propagating op also returns a result on some operand vector with no
+  poison. Without this, an op that is always UB would meet both poison
+  clauses, since UB would be its own rule. Exceptions are exempt, so an
+  exception that is always UB, such as a future `unreachable`, stays
+  allowed. `LawfulDialectPoison` holds all of these obligations.
 - In the core dialect, 18 ops propagate: `const` (it has no operands), the
   arithmetic, the four divisions, the bitwise ops and shifts, `icmp` and the
   width changes. A division is UB on a poison divisor, `sdiv` and `srem`
@@ -87,11 +95,13 @@ must check.
 - Each ticket that writes an op's execution rules proves its obligations:
   #10 for the tracer subset (`const`, `add`, `ret`), #14 to #20 for their
   families. The last of them gives `LawfulDialectPoison CoreDialect`. The
-  poison clauses and the monotonicity of `const` are already proved.
+  poison clauses and the monotonicity of `const` are already proved; its
+  totality and its result on defined operands wait for #10.
 - Theorems in `lean/Fir/Core/Unlawful.lean` check that the obligations
-  reject an op with no outcome, an `add` that is UB on a poison operand, and
-  the rejected `sdiv` rule. The obligations do not fix what an op computes:
-  each family's semantics does.
+  reject an op with no outcome, an `add` that is UB on a poison operand,
+  the rejected `sdiv` rule, and a semantics in which every op is always UB.
+  The obligations do not fix what an op computes: each family's semantics
+  does.
 - An extension dialect declares a class for each of its ops, and proves the
   obligation of each one that propagates.
 - Passes must not perform the forbidden rewrites, and the spec says why.

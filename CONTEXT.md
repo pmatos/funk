@@ -124,17 +124,19 @@ _Avoid_: op enum
 **poison**:
 fir's one deferred-UB value, produced for example when an `add nsw` overflows.
 A poison operand gives a poison result unless the op says otherwise. Using
-poison is not UB in itself, but some uses are: those where some value it
-could take would be UB, such as branching on it, dividing by it, or dividing
-it by `-1` with `sdiv` or `srem`, since it could be the signed minimum.
+poison is not UB in itself, but some uses are: branching on it (S1), and any
+use where some value it could take would be UB, such as dividing by it, or
+dividing it by `-1` with `sdiv` or `srem`, since it could be the signed
+minimum.
 _Avoid_: undef (fir has none)
 
 **poison class**:
 How an op treats a poison operand. A propagating op returns only poison from
 it, and is UB on it only where a defined value in its place could be UB too;
-each such op proves both in Lean. An exception, such as `select` or `freeze`,
-states its own rule. Every op of every dialect declares its class, and every
-op is total and monotone: refining its operands refines what it does.
+it also returns a result on some operands with no poison, and proves all
+three in Lean. An exception, such as `select` or `freeze`, states its own
+rule. Every op of every dialect declares its class, and every op is total
+and monotone: refining its operands refines what it does.
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed
@@ -196,11 +198,14 @@ at every fuel budget. Without it, an empty behaviour would refine anything.
 
 **no-stuck obligation**:
 The interpreter's obligation that no path of a run of a valid function is
-stuck, at any fuel budget. With every op total, no path of the run is lost.
+stuck, at any fuel budget. With every op total, and with an interpreter
+whose own steps never drop a path, which #10's definition must ensure, no
+path of the run is lost.
 
 **op totality**:
-Every op's obligation to have an outcome, a result or UB, on every operand
-vector, so that its semantics never drops a path of a run.
+Every op's obligation to have an outcome on every operand vector: a result
+or UB, or for a terminator, where control goes or UB. So its semantics never
+drops a path of a run.
 
 **op monotonicity**:
 Every op's obligation that refining its operands refines what it does. It

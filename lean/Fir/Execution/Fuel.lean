@@ -22,9 +22,10 @@ of its parameter types, and proves all three for it.
   Which paths get stuck can depend on choices, so a run could be stuck on
   some paths and have outcomes on others. Those paths would be missing from
   its behaviour, and a behaviour with fewer outcomes refines more sources.
-  With this obligation, and with every op total (`OpTotal`, in the poison
-  classes section), every path of a valid function's run ends in an
-  outcome.
+  With this obligation, with every op total (`OpTotal`, in the poison
+  classes section), and with an interpreter whose own steps never drop a
+  path, which #10's definition must ensure, every path of a valid
+  function's run ends in an outcome.
 
 Ticket #10 proves progress and the no-stuck obligation for every valid
 function and every argument vector. Each ticket that adds core ops, from

@@ -107,20 +107,31 @@ structure PropagatesPoison (op : d.Op) : Prop where
   ubByOwnRules : UBByOwnRules op
 
 /-!
-# Obligations of every op
+# More obligations
 
-Two more obligations hold for every op, whatever its poison class.
+Two more obligations hold for every op, whatever its poison class, and a
+third for every op that propagates poison.
 
-* _Totality_ (`OpTotal`). On every operand vector, the op has some outcome:
-  a result or UB. So does the exit of a terminator. An op whose semantics
-  maps a case to the empty set would drop that path from every run that
-  reaches it, and a run with fewer outcomes refines more sources.
+* _Totality_ (`OpTotal`). On every operand vector, an op that is not a
+  terminator has some outcome: a result or UB. So does the exit of a
+  terminator. An op whose semantics maps a case to the empty set would drop
+  that path from every run that reaches it, and a run with fewer outcomes
+  refines more sources.
 * _Monotonicity_ (`OpMonotone`). Refining the operands refines what the op
   does. If each operand of `args'` refines the one of `args`, a poison
   being refined by any value, then every way the op may end on `args'` is
   allowed by some way it may end on `args`. As for behaviours, UB allows
   anything, and a result vector is allowed by one that it refines position
   by position. Where a terminator goes refines only by being the same.
+* _A result on defined operands_ (`ReturnsOnDefined`). An op that
+  propagates poison returns a result on some operand vector with no poison.
+  Without it, an op that is UB on every operand vector, the defined ones
+  included, would meet the poison clauses: for it, UB is the op's own rule,
+  so UB on a poison operand is too. Exceptions are exempt, so an exception
+  that is always UB, such as a future `unreachable`, stays allowed.
+
+Totality and monotonicity look only at what runs: the `denote` of an op that
+is not a terminator, and the `exit` of a terminator.
 
 Monotonicity is what makes refinement compositional. A run only passes
 values from op to op, so when every op is monotone, a run on refined values
@@ -133,6 +144,11 @@ argument vector, poison included: a caller may pass poison. And it explains
 the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then
 refining that poison to the signed minimum would turn a result into UB,
 which is not a refinement.
+
+A call gets its meaning from the call effect that #20 adds, not from the
+set monad these obligations are stated in, so for `call` they are only a
+stand-in. #20 proves their counterparts at function level (see the poison
+classes of the core ops).
 
 Monotonicity uses the dialect's refinement of values, and the obligations
 tie it to poison: a poison value is refined by every value of its type.
@@ -160,29 +176,40 @@ theorem SetM.isRefinedBy_refl {r : α → α → Prop} (h : ∀ a, r a a) (s : S
     | .ok a => h a
     | .ub _ => trivial⟩
 
-/-- Totality: on every operand vector the op has an outcome, and so does the
-exit of a terminator. -/
+/-- Totality: on every operand vector, an op that is not a terminator has an
+outcome, and so does the exit of a terminator. -/
 def OpTotal (op : d.Op) : Prop :=
-  ∀ args : HVector toType (sig op), (∃ e, DialectDenote.denote (m := SetM) op args e) ∧
+  ∀ args : HVector toType (sig op),
+    (isTerminator op = false → ∃ e, DialectDenote.denote (m := SetM) op args e) ∧
     (isTerminator op = true → ∃ e, DialectDenote.exit (m := SetM) op args e)
+
+/-- A result on defined operands: on some operand vector with no poison, the
+op returns a result. -/
+def ReturnsOnDefined (op : d.Op) : Prop :=
+  ∃ args : HVector toType (sig op), ¬ args.Any TyPoison.IsPoison ∧
+    ∃ rs, DialectDenote.denote (m := SetM) op args (.ok rs)
 
 variable [TyRefinement d.Ty]
 
 /-- Monotonicity: on operands that refine `args` position by position, every
-way the op may end is allowed by a way it may end on `args`. -/
+way an op that is not a terminator may end is allowed by a way it may end on
+`args`, and so is every place a terminator may go. -/
 def OpMonotone (op : d.Op) : Prop :=
   ∀ args args' : HVector toType (sig op), args.Forall₂ TyRefinement.IsRefinedBy args' →
-    SetM.IsRefinedBy (HVector.Forall₂ TyRefinement.IsRefinedBy)
-        (DialectDenote.denote op args) (DialectDenote.denote op args') ∧
-      SetM.IsRefinedBy Eq (DialectDenote.exit op args) (DialectDenote.exit op args')
+    (isTerminator op = false → SetM.IsRefinedBy (HVector.Forall₂ TyRefinement.IsRefinedBy)
+        (DialectDenote.denote op args) (DialectDenote.denote op args')) ∧
+      (isTerminator op = true →
+        SetM.IsRefinedBy Eq (DialectDenote.exit op args) (DialectDenote.exit op args'))
 
 /-- A dialect whose ops meet the poison obligations: a poison value is
-refined by every value of its type, every propagating op propagates poison,
-and every op is total and monotone. -/
+refined by every value of its type, every propagating op propagates poison
+and returns a result on some defined operands, and every op is total and
+monotone. -/
 class LawfulDialectPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
     [DialectSignature d] [DialectPoison d] [DialectDenote d SetM] : Prop where
   poison_isRefinedBy : ∀ {t : d.Ty} (p v : ⟦t⟧), TyPoison.IsPoison p → TyRefinement.IsRefinedBy p v
   propagates : ∀ op : d.Op, poisonClass op = .propagates → PropagatesPoison op
+  returnsOnDefined : ∀ op : d.Op, poisonClass op = .propagates → ReturnsOnDefined op
   total : ∀ op : d.Op, OpTotal op
   monotone : ∀ op : d.Op, OpMonotone op
 

@@ -18,8 +18,9 @@ reject it.
 * `oldSDiv`: `sdiv` by the rule that the human rejected, under which a
   poison dividend by `-1` gives poison. Monotonicity rejects it: refining
   the poison to the signed minimum turns a result into UB.
-
-The last section shows what the obligations do not check.
+* `alwaysUB`: every op is UB on every operand vector. It meets the poison
+  clauses, and the obligation that a propagating op returns a result on
+  some defined operands rejects it.
 -/
 
 namespace Fir.Core.Unlawful
@@ -32,7 +33,7 @@ namespace Fir.Core.Unlawful
 /-- Totality rejects a semantics in which an op has no outcome. -/
 theorem noOutcome_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ noOutcome := by
   intro h
-  obtain ⟨⟨_, he⟩, _⟩ := h.total (.add 1 {}) (.cons .poison (.cons .poison .nil))
+  obtain ⟨_, he⟩ := (h.total (.add 1 {}) (.cons .poison (.cons .poison .nil))).1 rfl
   exact he
 
 /-- Every op is immediate UB when an operand is poison, and returns some
@@ -88,7 +89,7 @@ theorem oldSDiv_not_monotone : ¬ @OpMonotone CoreDialect _ _ oldSDiv _ (.sdiv 8
       (.cons (.value (BitVec.intMin 8)) (.cons (.value (-1)) .nil)) (.ub "INT_MIN / -1") := by
     show sdivOld 8 _ _ _
     simp [sdivOld]
-  obtain ⟨e, he, hr⟩ := (h _ _ hargs).1 _ hub
+  obtain ⟨e, he, hr⟩ := (h _ _ hargs).1 rfl _ hub
   match e, he, hr with
   | .ub r, he, _ =>
     have he : sdivOld 8 .poison (.value (-1)) (.ub r) := he
@@ -100,14 +101,18 @@ theorem oldSDiv_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ oldSDiv
   fun h => oldSDiv_not_monotone (h.monotone _)
 
 /-!
-# What the obligations do not check
+# A semantics that is always UB
 
-The obligations constrain what an op does with poison, not what it
-computes. A semantics in which every op is UB on every operand vector, the
-defined ones included, meets them all: for it, UB is the op's own rule, so
-UB on a poison operand is too. The semantics of each op family (#10, #14
-to #20) fixes what the op computes, such as `add` of two values giving
-their sum, and that rejects such a semantics.
+A semantics in which every op is UB on every operand vector, the defined
+ones included, meets the poison clauses: for it, UB is each op's own rule,
+so UB on a poison operand is too. The obligation that every propagating op
+returns a result on some operand vector with no poison rejects it.
+Exceptions are exempt from that obligation, so an exception that is always
+UB, such as a future `unreachable`, stays allowed.
+
+The obligations still do not fix what an op computes, such as `add` of two
+values giving their sum. The semantics of each op family (#10, #14 to #20)
+does.
 -/
 
 /-- Each poison replaced by the value `0`. -/
@@ -137,17 +142,18 @@ theorem fillZero_fills :
   denote _ _ := fun e => ∃ r, e = .ub r
   exit _ _ := fun e => ∃ r, e = .ub r
 
-/-- A semantics in which every op is always UB meets the obligations. -/
-theorem alwaysUB_lawful : @LawfulDialectPoison CoreDialect _ _ _ _ _ alwaysUB := by
+/-- The poison clauses accept a semantics in which every op is always UB. -/
+theorem alwaysUB_propagatesPoison (op : Op) :
+    @PropagatesPoison CoreDialect _ _ _ alwaysUB op := by
   letI := alwaysUB
   exact {
-    poison_isRefinedBy := Core.Ty.poison_isRefinedBy
-    propagates := fun _ _ => {
-      poisonOut := fun _ _ _ ⟨_, h⟩ => nomatch h
-      ubByOwnRules := fun args r _ _ => ⟨fillZero args, fillZero_fills args, r, r, rfl⟩ }
-    total := fun _ _ => ⟨⟨.ub "", "", rfl⟩, fun _ => ⟨.ub "", "", rfl⟩⟩
-    monotone := fun _ _ _ _ =>
-      ⟨fun _ ⟨r, he⟩ => ⟨.ub r, ⟨r, rfl⟩, by subst he; trivial⟩,
-        fun _ ⟨r, he⟩ => ⟨.ub r, ⟨r, rfl⟩, by subst he; trivial⟩⟩ }
+    poisonOut := fun _ _ _ ⟨_, h⟩ => nomatch h
+    ubByOwnRules := fun args r _ _ => ⟨fillZero args, fillZero_fills args, r, r, rfl⟩ }
+
+/-- But the obligations reject it: `add` returns no result on any operands. -/
+theorem alwaysUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ alwaysUB := by
+  intro h
+  obtain ⟨_, _, _, _, he⟩ := h.returnsOnDefined (.add 1 {}) rfl
+  cases he
 
 end Fir.Core.Unlawful
