@@ -1,6 +1,7 @@
 import Lean.Compiler.ExternAttr
 import Lean.Compiler.ImplementedByAttr
 import Lean.Elab.Command
+import Lean.Meta.Native
 import Lean.Util.CollectAxioms
 
 /-!
@@ -11,8 +12,8 @@ It fails the build when a declaration of one of their modules, or of the
 module that runs it:
 
 * depends on an axiom other than Lean's three standard ones, `propext`,
-  `Classical.choice` and `Quot.sound`. A `sorry` depends on `sorryAx`, and
-  `native_decide` on an axiom of its own, so both fail it;
+  `Classical.choice` and `Quot.sound`, and the axioms of native evaluation
+  below. A `sorry` depends on `sorryAx`, so it fails the check;
 * is `unsafe` or `partial`;
 * is `implemented_by` other code, or `extern`, so that a program would not
   run the definition that the proofs are about.
@@ -23,10 +24,19 @@ a root has no declaration, so that a renamed library is not skipped in
 silence; and when any text follows it, since the check would not see a
 command there.
 
-Lean does not keep an `example`, so the check cannot see one: a `sorry` or
-`native_decide` inside an example is not caught. Lean warns about the `sorry`,
-so failing the build on warnings would catch that case; whether to do so is
-pending the human's decision in issue #52.
+A proof by native evaluation (`native_decide`, `decide +native` or
+`bv_decide`) compiles a closed term `e : Bool`, runs it, and adds an axiom
+`e = true`, named after the declaration, `_native`, the tactic and `ax_…`.
+The check allows such an axiom only when it compiles and runs `e` again
+itself and gets `true`, so the proof trusts the compiler and nothing else
+(ADR-2026-10-30-1838). The bans on `unsafe`, `partial`, `implemented_by` and
+`extern` keep the compiled code equal to the definitions that the proofs are
+about. A `@[csimp]` swap is allowed, because it is proved.
+
+Lean does not keep an `example`, so the check cannot see one. A `sorry` in an
+example gives a warning, and `lean/` builds with `lake build --wfail`, so it
+fails the build (ADR-2026-10-30-1837). Native evaluation is allowed in an
+example, as it is anywhere.
 -/
 
 namespace FirTest
@@ -36,9 +46,27 @@ open Lean Elab Command
 /-- Lean's three standard axioms: the only ones a declaration may use. -/
 def standardAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
-/-- Why the declaration `n` is not trusted, if it is not. -/
-def untrusted (env : Environment) (n : Name) (info : ConstantInfo) :
-    CommandElabM (Option String) := do
+/-- Whether `n` is an axiom that Lean's native evaluation added
+(`Lean.Meta.nativeEqTrue`) and whose claim holds. Its name ends in `_native`,
+the tactic and `ax_…`; it states `e = true` for a closed term `e : Bool`; and
+`e` gives `true` when the check compiles and runs it again. -/
+def isNativeAxiom (env : Environment) (n : Name) : CommandElabM Bool := do
+  let some (.axiomInfo info) := env.find? n | return false
+  let named := match n.components.reverse with
+    | .str _ ax :: _ :: native :: _ => ax.startsWith "ax_" && native == `_native
+    | _ => false
+  let (``Eq, #[.const ``Bool [], e, .const ``Bool.true []]) :=
+      info.type.getAppFnArgs | return false
+  if info.isUnsafe || !named || e.hasLooseBVars || e.hasFVar || e.hasMVar then
+    return false
+  liftTermElabM <| withoutModifyingEnv do
+    try return (← Meta.nativeEqTrue `check_axioms e) matches .success _
+    catch _ => return false
+
+/-- Why the declaration `n` is not trusted, if it is not. `natives` holds the
+axioms of native evaluation already found to hold. -/
+def untrusted (env : Environment) (natives : IO.Ref NameSet) (n : Name)
+    (info : ConstantInfo) : CommandElabM (Option String) := do
   if info.isUnsafe then return some "is unsafe"
   -- A `partial` definition is an opaque constant whose code is its
   -- `_unsafe_rec`. Well-founded recursion makes an `_unsafe_rec` too, for
@@ -49,7 +77,11 @@ def untrusted (env : Environment) (n : Name) (info : ConstantInfo) :
   if let some impl := Compiler.getImplementedBy? env n then
     return some s!"is implemented by {impl}"
   if isExtern env n then return some "is extern"
-  let bad := (← liftCoreM (collectAxioms n)).filter (· ∉ standardAxioms)
+  let mut bad := #[]
+  for a in ← liftCoreM (collectAxioms n) do
+    if standardAxioms.contains a || (← natives.get).contains a then continue
+    if ← isNativeAxiom env a then natives.modify (·.insert a)
+    else bad := bad.push a
   if bad.isEmpty then return none
   return some s!"depends on the axioms {bad.toList}"
 
@@ -87,6 +119,7 @@ def elabCheckAxioms : CommandElab
     let env ← getEnv
     let main := env.mainModule
     let roots := roots.map (·.getId)
+    let natives ← IO.mkRef ({} : NameSet)
     let mut problems : Array String := #[]
     let mut checked : NameSet := {}
     for h : i in [0:env.header.moduleNames.size] do
@@ -95,12 +128,12 @@ def elabCheckAxioms : CommandElab
       for n in env.header.moduleData[i]!.constNames do
         checked := checked.insert mod.getRoot
         let some info := env.find? n | continue
-        if let some why ← untrusted env n info then
+        if let some why ← untrusted env natives n info then
           problems := problems.push s!"{n}, in {mod}, {why}"
     if roots.contains main.getRoot then
       for (n, info) in env.constants.map₂.toList do
         checked := checked.insert main.getRoot
-        if let some why ← untrusted env n info then
+        if let some why ← untrusted env natives n info then
           problems := problems.push s!"{n}, in {main}, {why}"
     for r in roots do
       unless checked.contains r do
