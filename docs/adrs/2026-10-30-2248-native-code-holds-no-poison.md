@@ -40,7 +40,9 @@ low `N` bits of 64 (ADR-2026-10-30-1231).
 
 - Tests of a broken flag accept any value of the type, and tests of
   `freeze` check that its uses agree, as `sub %f, %f` giving `0` does.
-- A later optimizer (M1) that uses a flag to rewrite code, as LLVM does,
-  makes poison real at compile time. It must then keep each `freeze` one
-  value that every use reads: it may not fold a `freeze` away, or copy it
-  into each use, where its operand may be poison.
+- A later optimizer (M1) that exploits poison makes poison real at compile
+  time, whether it comes from a flag, as LLVM does, or from any op whose
+  rule gives poison, such as a shift by `N` or more
+  ([#15](https://github.com/pmatos/funk/issues/15)). It must then keep
+  each `freeze` one value that every use reads: it may not fold a `freeze`
+  away, or copy it into each use, where its operand may be poison.

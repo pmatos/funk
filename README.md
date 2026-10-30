@@ -165,6 +165,10 @@ These parts of M0 do not exist yet:
 - The execution rules of the other ops. One issue for each group of
   related ops, [#15](https://github.com/pmatos/funk/issues/15) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
+- The harness's rule for a set of outcomes: declared results with
+  witnesses that it checks through `fir-ref run --choices`, and seeded
+  sampling ([#14](https://github.com/pmatos/funk/issues/14)). Until then,
+  a test whose run makes a choice, such as `freeze` of poison, fails.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
