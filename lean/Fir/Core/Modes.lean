@@ -38,6 +38,17 @@ theorem freezeValue_toSet {ε : Type} {w : Nat} (a : PoisonOr (BitVec w)) :
   | value _ => rfl
   | poison => exact ChoiceTree.toSet_bind _ _
 
+/-- A rule made by `ruleOfEv`, such as a division's, denotes in the tree of
+choices what it denotes in the set monad. -/
+theorem ruleOfEv_toSet {ε : Type} {w : Nat}
+    (g : PoisonOr (BitVec w) → PoisonOr (BitVec w) → Ev (PoisonOr (BitVec w)))
+    (args : HVector toType [i w, i w]) :
+    (ruleOfEv (m := ChoiceTree ε) g args).toSet = ruleOfEv g args := by
+  match args with
+  | .cons a (.cons b .nil) =>
+    simp only [ruleOfEv]
+    cases g a b <;> rfl
+
 /-- The tree's semantics of each core op denotes the set monad's. -/
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
@@ -48,7 +59,11 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
-    | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .and _, _
+    | .sdiv _ x, args => ruleOfEv_toSet (sdivWith x) args
+    | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
+    | .srem _, args => ruleOfEv_toSet sremValues args
+    | .urem _, args => ruleOfEv_toSet uremValues args
+    | .const .., _ | .and _, _
     | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _ | .ashr _, _ | .icmp .., _
     | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
     | .ret _, _ | .call .., _ => rfl
