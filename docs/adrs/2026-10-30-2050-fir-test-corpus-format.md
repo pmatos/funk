@@ -45,7 +45,8 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
   whose tests are all interpreter-only.
 - **A must-reject text** is a `[[reject]]` table with `verdict`
   (`parse-error` or `validation-error`), `rule` (the one rule it breaks,
-  in words) and `text`. The text is a TOML string: a multi-line literal
+  in words) and `text`. When the ops that both tools have cannot break a
+  rule alone, the text breaks a second rule too, and `rule` names both. The text is a TOML string: a multi-line literal
   string (`'''`) shows it as it is, and a basic string writes the
   characters that the hooks keep out of files as escapes, such as `\r`,
   `\u202e` or `\u0000`, and a text with no final line feed. A text that

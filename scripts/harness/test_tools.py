@@ -91,6 +91,39 @@ class Verdicts(unittest.TestCase):
         self.assertIsInstance(verdict(Ran(-6, "", "abort\n")), str)
         self.assertIsInstance(verdict(Ran(1, self.report("rejected"), "")), str)
 
+    def test_the_status_fits_the_verdict(self):
+        d = '[{"kind":"parse-error","message":"m","line":3,"column":7}]'
+        for status, report, want in [
+            (1, self.report("accepted"), "exits with 1 but reports accepted"),
+            (2, self.report("accepted"), "exits with 2 but reports accepted"),
+            (0, self.report("parse-error", d), "exits with 0 but reports parse-error"),
+            (
+                0,
+                self.report("validation-error"),
+                "exits with 0 but reports validation-error",
+            ),
+            (1, self.report("io-error"), "exits with 1 but reports io-error"),
+        ]:
+            self.assertEqual(verdict(Ran(status, report, "")), want)
+
+
+class NoReport(unittest.TestCase):
+    def test_the_failure_shows_what_the_tool_printed(self):
+        for out, shown in [
+            ("", "prints nothing"),
+            ("not json\n", "prints not json"),
+            ("{}\n{}\n", "prints 2 lines, the first {}"),
+        ]:
+            want = f"exits with 0 and {shown}, not one JSON report"
+            self.assertEqual(verdict(Ran(0, out, "")), want)
+            self.assertEqual(outcome(Ran(0, out, "")), want)
+            self.assertEqual(native_values(Ran(0, out, "")), want)
+            self.assertEqual(build_failure(Ran(0, out, "")), want)
+        self.assertEqual(
+            verdict(Ran(1, "", "f.fir: cannot read\n")),
+            "exits with 1 and prints nothing, not one JSON report: f.fir: cannot read",
+        )
+
 
 class Build(unittest.TestCase):
     def test_build(self):

@@ -102,6 +102,8 @@ def load(root: Path) -> Corpus:
         c.inputs.append((f"noncanonical/{p.name}", p))
     for p in files(root / "reject", (".toml",), c.errors):
         c.rejects += read_rejects(p, f"reject/{p.name}", c.errors)
+    if not c.rejects:
+        c.errors.append(f"{root / 'reject'}: the corpus has no must-reject texts")
     return c
 
 

@@ -4,11 +4,12 @@ of `tests/fir/` on `fir-ref` and as native code from `funk build`.
 Usage: main.py --funk FUNK --fir-ref FIR_REF --generated DIR CORPUS
 
 It checks that `funk verify` and `fir-ref validate` accept every module of
-the corpus and every module in DIR, which holds what the Rust generator
-printed, and that they reject every must-reject text with the same
-verdict. Then it runs each test of the corpus, and reports each check as
-passed, failed or invalid. It exits with 0 when every check passed, 1 when
-one failed or was invalid, and 2 on a usage error or a tool it cannot run.
+the corpus and every module in DIR, which holds what Rust printed (the
+`fir_texts` example): the corpus's texts and the generator's modules. It
+checks that they reject every must-reject text with the same verdict. Then
+it runs each test of the corpus, and reports each check as passed, failed
+or invalid. It exits with 0 when every check passed, 1 when one failed or
+was invalid, and 2 on a usage error or a tool it cannot run.
 `scripts/check-harness.sh` builds the tools and runs it.
 """
 
@@ -31,7 +32,7 @@ def arguments(argv: list[str]) -> argparse.Namespace:
         "--generated",
         required=True,
         type=Path,
-        help="a directory of .fir modules that the Rust generator printed",
+        help="a directory of .fir modules that Rust printed",
     )
     p.add_argument("corpus", type=Path, help="the corpus, tests/fir")
     return p.parse_args(argv)
@@ -49,9 +50,11 @@ def check(args: argparse.Namespace, work: Path, report: Report):
     if not generated:
         report.add(FAILED, "generated modules", f"{args.generated} holds none")
     passed = sum(h.accepted(f"generated/{p.name}", p, quiet=True) for p in generated)
+    made = sum(p.name.startswith("generated-") for p in generated)
     report.note(
         f"funk verify and fir-ref validate accept {passed} of the"
-        f" {len(generated)} modules from the Rust generator"
+        f" {len(generated)} modules that Rust printed: {made} from its"
+        f" generator and {len(generated) - made} from the corpus"
     )
     for i, r in enumerate(c.rejects):
         h.rejected(r, i)

@@ -128,10 +128,11 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a location refers only to entries of the table: @9 is not one"
+rule = "a location refers only to entries of the table: @1 is not one"
 text = '''
 locs {
-  @0 = callsite(@0 at @9)
+  @0 = unknown
+  @2 = callsite(@0 at @1)
 }
 '''
 

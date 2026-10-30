@@ -4,8 +4,10 @@ Texts that both fir parsers read, `funk-ir` in Rust (#9) and the Lean spec's
 parser through `fir-ref` (#10), and the tests that the differential harness
 runs on them (#13). The format is decided in
 [ADR-2026-10-30-2050](../../docs/adrs/2026-10-30-2050-fir-test-corpus-format.md),
-and the harness in
-[ADR-2026-10-30-2049](../../docs/adrs/2026-10-30-2049-differential-harness-in-python.md).
+the harness in
+[ADR-2026-10-30-2049](../../docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
+and how it judges a test in
+[ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md).
 
 ## Layout
 
@@ -62,7 +64,9 @@ whose tests are all interpreter-only, such as `tracer-i7.fir` and
 ## Must-reject texts
 
 Each `[[reject]]` table of a `reject/*.toml` file is one text that breaks
-one rule:
+one rule. When `const`, `add` and `ret` cannot break a rule alone, such as
+a rule of successors, the text breaks a second rule too, and `rule` names
+both.
 
 ```toml
 [[reject]]
@@ -101,9 +105,13 @@ locs {
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
   texts in Rust.
 - `scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
-  `fir-ref validate` accepts each one. `scripts/check-fir-ref.sh
-  round-trip` has Lean reprint what Rust prints from them, byte for byte
-  (ADR-2026-10-30-1250).
+  `fir-ref validate` accepts each one. It also runs functions of
+  `add.fir`, `locations.fir`, `names.fir`, `results.fir`, `seven.fir`,
+  `symbols.fir` and `widths.fir`, and of `noncanonical/add.fir`, with
+  `fir-ref run`, and checks each result against a table of its own
+  (ADR-2026-10-30-1856). Editing one of those files means updating that
+  table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
+  prints from them, byte for byte (ADR-2026-10-30-1250).
 
 Every text uses only the ops that both tools have: `const`, `add` without
 flags and `ret`, until #14 to #20 add the others to `funk`.

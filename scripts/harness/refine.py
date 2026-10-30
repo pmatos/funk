@@ -1,4 +1,4 @@
-"""How the harness judges a result (ADR-2026-10-29-2008, #13).
+"""How the harness judges a test (ADR-2026-10-30-2135, ADR-2026-10-29-2008).
 
 A differential test passes when the native result refines fir-ref's: the
 same number of values, each equal to fir-ref's, or anything of its type

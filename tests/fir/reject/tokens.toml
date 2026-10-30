@@ -46,6 +46,20 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
+rule = "^ is followed by a label, with no space"
+text = '''
+func @f(%a: i32) -> i32 {
+^ entry:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
 rule = "@ is followed by a symbol or a location reference, with no space"
 text = '''
 func @f(%a: i32) -> i32 {

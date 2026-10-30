@@ -1,5 +1,11 @@
 # Must-reject texts that parse, and break a rule of validation for a
 # function, a block or an op of the tracer subset.
+#
+# With only const, add and ret, a few rules cannot be broken alone: those
+# of successors and their block arguments, and the scope of a value defined
+# in a region. Their texts break a second rule too, and `rule` names both.
+# The ops that take successors (#19) or own regions add texts that break
+# these rules alone.
 
 [[reject]]
 verdict = "validation-error"
@@ -135,7 +141,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "every type is valid: ptr is reserved, and a block argument has no ptr type"
+rule = "every type is valid: ptr is reserved, and a block argument has no ptr type; ^b is also unreachable, as no tracer op branches"
 text = '''
 func @f() {
 ^e:
@@ -195,7 +201,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a value is used only where it is in scope: %v is defined inside a region"
+rule = "a value is used only where it is in scope: %v is defined inside a region; ret also owns a region, which no op may own yet"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -213,12 +219,12 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "the terminator is the last op of its block: ret comes before const"
+rule = "the terminator is the last op of its block: the first of two rets is not"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
   ret %a @0
-  %c: i32 = const 1 @0
+  ret %a @0
 }
 
 locs {
@@ -242,7 +248,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "only terminators have successors: const has one"
+rule = "only terminators have successors: const has one; const also breaks its successor count, as it takes none"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -275,7 +281,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "no branch goes to the entry block"
+rule = "no branch goes to the entry block; ret also breaks its successor count, as no tracer op takes a successor"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -289,7 +295,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor names a block of the function: ^nowhere is not one"
+rule = "a successor names a block of the function: ^nowhere is not one; ret also breaks its successor count, as no tracer op takes a successor"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -303,7 +309,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes values that the function defines: %undefined is not one"
+rule = "a successor passes values that the function defines: %undefined is not one; ret also breaks its successor count, as no tracer op takes a successor"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -319,7 +325,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes one value of the right type for each block argument: an i32 for an i64"
+rule = "a successor passes one value of the right type for each block argument: an i32 for an i64; ret also breaks its successor count, as no tracer op takes a successor"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -335,7 +341,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes one value for each block argument: none for one"
+rule = "a successor passes one value for each block argument: none for one; ret also breaks its successor count, as no tracer op takes a successor"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:

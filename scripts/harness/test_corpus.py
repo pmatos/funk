@@ -8,6 +8,7 @@ from pathlib import Path
 from corpus import DEFAULT_FUEL, Test, load, parse_rejects, parse_tests, result_types
 
 SEVEN = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n"
+REJECT = '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = "x"\n'
 
 
 class Tests(unittest.TestCase):
@@ -160,16 +161,31 @@ class Layout(unittest.TestCase):
             "orphan.fir: there is no canonical/orphan.fir",
             "r.fir: the corpus has no place",
             "other: the corpus has no place",
+            "reject: the corpus has no must-reject texts",
         ]:
             self.assertIn(needle, errors)
-        self.assertEqual(len(c.errors), 5, errors)
+        self.assertEqual(len(c.errors), 6, errors)
 
-    def test_a_corpus_has_canonical_modules(self):
+    def test_a_corpus_has_canonical_modules_and_must_reject_texts(self):
         with tempfile.TemporaryDirectory() as d:
             (Path(d) / "README.md").write_text("")
             c = load(Path(d))
-        self.assertEqual(len(c.errors), 1, c.errors)
+        self.assertEqual(len(c.errors), 2, c.errors)
         self.assertIn("the corpus has no canonical modules", c.errors[0])
+        self.assertIn("the corpus has no must-reject texts", c.errors[1])
+
+    def test_a_corpus_with_must_reject_texts(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            for name, text in [
+                ("canonical/seven.fir", SEVEN),
+                ("reject/r.toml", REJECT),
+            ]:
+                (root / name).parent.mkdir(exist_ok=True)
+                (root / name).write_text(text)
+            c = load(root)
+        self.assertEqual(c.errors, [])
+        self.assertEqual([r.name for r in c.rejects], ["reject/r.toml #1"])
 
 
 if __name__ == "__main__":

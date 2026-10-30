@@ -144,7 +144,8 @@ are on `main`:
   runs each test of the corpus on `fir-ref` and, where the backend can
   build it, as native code, and checks that the native result refines
   `fir-ref`'s
-  ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md)).
+  ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
+  [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
 
 These parts of M0 do not exist yet:
 

@@ -16,7 +16,9 @@ TIMEOUT = 120
 ACCEPTED = "accepted"
 PARSE_ERROR = "parse-error"
 VALIDATION_ERROR = "validation-error"
-VERDICTS = (ACCEPTED, PARSE_ERROR, VALIDATION_ERROR, "io-error")
+# The exit status that goes with each verdict on one file
+# (ADR-2026-10-30-1032, ADR-2026-10-30-1741).
+STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
 
 
 @dataclass(frozen=True)
@@ -62,16 +64,35 @@ def decode(b: bytes | None) -> str:
     return (b or b"").decode("utf-8", errors="backslashreplace")
 
 
+def ending(ran: Ran) -> str:
+    if ran.status is None:
+        return f"does not end within {TIMEOUT} seconds"
+    if ran.status < 0:
+        return f"is killed by signal {-ran.status}"
+    return f"exits with {ran.status}"
+
+
+def with_stderr(text: str, ran: Ran) -> str:
+    lines = ran.stderr.strip().splitlines()
+    return f"{text}: {lines[0]}" if lines else text
+
+
 def failure(ran: Ran) -> str:
     """How a process failed, in one line."""
-    if ran.status is None:
-        how = f"does not end within {TIMEOUT} seconds"
-    elif ran.status < 0:
-        how = f"is killed by signal {-ran.status}"
+    return with_stderr(ending(ran), ran)
+
+
+def no_report(ran: Ran) -> str:
+    """How a process failed that ends as it should, but does not print one
+    JSON object on one line: what it printed instead."""
+    lines = ran.stdout.strip().splitlines()
+    if not lines:
+        printed = "nothing"
+    elif len(lines) == 1:
+        printed = lines[0]
     else:
-        how = f"exits with {ran.status}"
-    lines = ran.stderr.strip().splitlines()
-    return f"{how}: {lines[0]}" if lines else how
+        printed = f"{len(lines)} lines, the first {lines[0]}"
+    return with_stderr(f"{ending(ran)} and prints {printed}, not one JSON report", ran)
 
 
 def one_json_line(text: str):
@@ -95,9 +116,11 @@ def strings(value) -> tuple[str, ...] | None:
 def outcome(ran: Ran) -> Outcome | str:
     """What `fir-ref run` reports (ADR-2026-10-30-1856): exit status 0 with
     `return`, `ub` or `fuel-exhausted`, or 1 with `stuck`."""
-    obj = one_json_line(ran.stdout)
-    if obj is None or ran.status not in (0, 1):
+    if ran.status not in (0, 1):
         return failure(ran)
+    obj = one_json_line(ran.stdout)
+    if obj is None:
+        return no_report(ran)
     kind = obj.get("kind")
     want_status = 1 if kind == STUCK else 0
     if kind == RETURN:
@@ -115,9 +138,11 @@ def outcome(ran: Ran) -> Outcome | str:
 def native_values(ran: Ran) -> tuple[str, ...] | str:
     """The values that a built executable prints (ADR-2026-10-30-1233):
     `{"values":[...]}` and exit status 0, and nothing on standard error."""
-    obj = one_json_line(ran.stdout)
-    if ran.status != 0 or obj is None:
+    if ran.status != 0:
         return failure(ran)
+    obj = one_json_line(ran.stdout)
+    if obj is None:
+        return no_report(ran)
     values = strings(obj.get("values"))
     if values is None or list(obj) != ["values"] or ran.stderr:
         return f"exits with 0 and prints {ran.stdout.strip()} {ran.stderr.strip()}"
@@ -127,13 +152,17 @@ def native_values(ran: Ran) -> tuple[str, ...] | str:
 def verdict(ran: Ran) -> Verdict | str:
     """The verdict on one file of `funk verify --json` or `fir-ref
     validate` (ADR-2026-10-30-1032, ADR-2026-10-30-1741)."""
-    obj = one_json_line(ran.stdout)
-    if obj is None or ran.status not in (0, 1, 2):
+    if ran.status not in (0, 1, 2):
         return failure(ran)
+    obj = one_json_line(ran.stdout)
+    if obj is None:
+        return no_report(ran)
     v = obj.get("verdict")
     diags = obj.get("diagnostics")
-    if v not in VERDICTS or not isinstance(diags, list):
+    if v not in STATUS or not isinstance(diags, list):
         return f"prints {ran.stdout.strip()}"
+    if ran.status != STATUS[v]:
+        return f"exits with {ran.status} but reports {v}"
     first = diags[0] if diags and isinstance(diags[0], dict) else {}
     message = first.get("message", "")
     if v != PARSE_ERROR:
@@ -149,7 +178,7 @@ def build_failure(ran: Ran) -> str | None:
     (ADR-2026-10-30-1326)."""
     obj = one_json_line(ran.stdout)
     if obj is None:
-        return failure(ran)
+        return no_report(ran) if ran.status in (0, 1, 2) else failure(ran)
     if obj.get("verdict") == ACCEPTED and ran.status == 0:
         return None
     diags = obj.get("diagnostics") or []

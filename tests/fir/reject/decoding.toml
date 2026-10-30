@@ -275,6 +275,22 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
+rule = "add's only attributes are its flags, nuw and nsw: foo is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %z: i1 = const true @0
+  %c: i32 = add foo %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
 rule = "an i1 constant is written true or false, not 1"
 text = '''
 func @f(%a: i32) -> i32 {
