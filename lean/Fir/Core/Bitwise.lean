@@ -34,14 +34,9 @@ instruction, which masks the amount and so gives some value. A shift by
 less than `N` must give exactly the value of its rule, at every width,
 `i1` included.
 
-The shifts are Lean's own operations on `BitVec N`: `<<<`, `>>>` and
-`BitVec.sshiftRight`. One rule, `shiftValues`, checks the amount for all
-three. The bitwise ops take the and, the or or the exclusive or of the two
-values read as natural numbers, which `andValues_value` and its siblings
-prove to be Lean's `&&&`, `|||` and `^^^` on `BitVec N`. They are written
-so because Lean's own operations carry a proof that rests on the axiom
-`Quot.sound`, and the semantics of every core op is one definition: the
-obligations of every op would then rest on it too.
+The bitwise ops are Lean's own `&&&`, `|||` and `^^^` on `BitVec N`. The
+shifts are Lean's `<<<`, `>>>` and `BitVec.sshiftRight`, and one rule,
+`shiftValues`, checks the amount for all three.
 -/
 
 namespace Fir.Core
@@ -49,32 +44,20 @@ namespace Fir.Core
 /-- `and`: the bitwise and of two values, and poison when either operand is
 poison. -/
 def andValues : PoisonOr (BitVec w) → PoisonOr (BitVec w) → PoisonOr (BitVec w)
-  | .value a, .value b => .value (.ofNat w (a.toNat &&& b.toNat))
+  | .value a, .value b => .value (a &&& b)
   | _, _ => .poison
 
 /-- `or`: the bitwise or of two values, and poison when either operand is
 poison. -/
 def orValues : PoisonOr (BitVec w) → PoisonOr (BitVec w) → PoisonOr (BitVec w)
-  | .value a, .value b => .value (.ofNat w (a.toNat ||| b.toNat))
+  | .value a, .value b => .value (a ||| b)
   | _, _ => .poison
 
 /-- `xor`: the bitwise exclusive or of two values, and poison when either
 operand is poison. -/
 def xorValues : PoisonOr (BitVec w) → PoisonOr (BitVec w) → PoisonOr (BitVec w)
-  | .value a, .value b => .value (.ofNat w (a.toNat ^^^ b.toNat))
+  | .value a, .value b => .value (a ^^^ b)
   | _, _ => .poison
-
-/-- On two values, `and` is Lean's `&&&` on `BitVec N`. -/
-theorem andValues_value (a b : BitVec w) : andValues (.value a) (.value b) = .value (a &&& b) :=
-  congrArg PoisonOr.value (BitVec.eq_of_toNat_eq (by simp))
-
-/-- On two values, `or` is Lean's `|||` on `BitVec N`. -/
-theorem orValues_value (a b : BitVec w) : orValues (.value a) (.value b) = .value (a ||| b) :=
-  congrArg PoisonOr.value (BitVec.eq_of_toNat_eq (by simp))
-
-/-- On two values, `xor` is Lean's `^^^` on `BitVec N`. -/
-theorem xorValues_value (a b : BitVec w) : xorValues (.value a) (.value b) = .value (a ^^^ b) :=
-  congrArg PoisonOr.value (BitVec.eq_of_toNat_eq (by simp))
 
 /-- A shift of a value by an amount, read as unsigned: `s a n` when the
 amount `n` is less than `N`, and poison when it is `N` or more, or when

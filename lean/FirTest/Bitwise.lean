@@ -40,8 +40,11 @@ open Fir FirRef
   returns ["170141183460469231731687303715884105727"]
 #guard bin "and" "i128" "-170141183460469231731687303715884105728" "-1" ==
   returns ["-170141183460469231731687303715884105728"]
+#guard bin "or" "i128" "-170141183460469231731687303715884105728"
+  "170141183460469231731687303715884105727" == returns ["-1"]
 #guard bin "or" "i16777215" "-1" "0" == returns ["-1"]
 #guard bin "and" "i16777215" "-1" "1" == returns ["1"]
+#guard bin "xor" "i16777215" "-1" "1" == returns ["-2"]
 
 /-! # Shifts
 
@@ -77,17 +80,21 @@ amount whose top bit is set, such as `-1`. -/
 #guard bin "shl" "i128" "1" "127" == returns ["-170141183460469231731687303715884105728"]
 #guard bin "lshr" "i128" "-1" "127" == returns ["1"]
 #guard bin "ashr" "i128" "-170141183460469231731687303715884105728" "127" == returns ["-1"]
+#guard bin "shl" "i16777215" "-1" "1" == returns ["-2"]
 #guard bin "lshr" "i16777215" "-1" "16777214" == returns ["1"]
 #guard bin "ashr" "i16777215" "-1" "16777214" == returns ["-1"]
 -- An amount of `N`, more than `N`, the signed minimum or `-1` gives
--- poison, at every width.
+-- poison, at every width. At `i16777215` the signed minimum has over five
+-- million decimal digits, so it is not spelled here: `shiftValues_msb`
+-- proves that it gives poison at every width.
 #guard ["shl", "lshr", "ashr"].all fun op =>
   ["7", "8", "-64", "-1"].all (bin op "i7" "1" · == returns ["poison"]) &&
     ["8", "9", "-128", "-1"].all (bin op "i8" "-1" · == returns ["poison"]) &&
     ["33", "34", "-4294967296", "-1"].all (bin op "i33" "1" · == returns ["poison"]) &&
     ["64", "65", "-9223372036854775808", "-1"].all (bin op "i64" "-1" · == returns ["poison"]) &&
-    ["128", "129", "-1"].all (bin op "i128" "1" · == returns ["poison"]) &&
-    bin op "i16777215" "1" "16777215" == returns ["poison"]
+    ["128", "129", "-170141183460469231731687303715884105728", "-1"].all
+      (bin op "i128" "1" · == returns ["poison"]) &&
+    ["16777215", "16777216", "-1"].all (bin op "i16777215" "1" · == returns ["poison"])
 
 /-! # Poison
 
@@ -144,76 +151,76 @@ The spec gives these ops no flags, so a flag on one does not decode. -/
 /-- info: 'Fir.Core.shiftValues_msb' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shiftValues_msb
 
-/-- info: 'Fir.Core.and_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.and_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_propagatesPoison
 
-/-- info: 'Fir.Core.and_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.and_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_returnsOnDefined
 
-/-- info: 'Fir.Core.and_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.and_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_total
 
-/-- info: 'Fir.Core.and_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.and_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_monotone
 
-/-- info: 'Fir.Core.or_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.or_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_propagatesPoison
 
-/-- info: 'Fir.Core.or_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.or_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_returnsOnDefined
 
-/-- info: 'Fir.Core.or_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.or_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_total
 
-/-- info: 'Fir.Core.or_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.or_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_monotone
 
-/-- info: 'Fir.Core.xor_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.xor_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_propagatesPoison
 
-/-- info: 'Fir.Core.xor_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.xor_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_returnsOnDefined
 
-/-- info: 'Fir.Core.xor_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.xor_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_total
 
-/-- info: 'Fir.Core.xor_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.xor_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_monotone
 
-/-- info: 'Fir.Core.shl_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.shl_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_propagatesPoison
 
-/-- info: 'Fir.Core.shl_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.shl_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_returnsOnDefined
 
-/-- info: 'Fir.Core.shl_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.shl_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_total
 
-/-- info: 'Fir.Core.shl_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.shl_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_monotone
 
-/-- info: 'Fir.Core.lshr_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.lshr_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_propagatesPoison
 
-/-- info: 'Fir.Core.lshr_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.lshr_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_returnsOnDefined
 
-/-- info: 'Fir.Core.lshr_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.lshr_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_total
 
-/-- info: 'Fir.Core.lshr_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.lshr_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_monotone
 
-/-- info: 'Fir.Core.ashr_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ashr_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_propagatesPoison
 
-/-- info: 'Fir.Core.ashr_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ashr_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_returnsOnDefined
 
-/-- info: 'Fir.Core.ashr_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ashr_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_total
 
-/-- info: 'Fir.Core.ashr_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ashr_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_monotone
 
 end FirTest
