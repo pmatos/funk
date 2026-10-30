@@ -5,8 +5,8 @@ Tests of the validation check (`Module.problems`) on the rules of ops, and
 on the core dialect's own rules: for each rule, a module that breaks it and
 one that keeps it. A module that the parser can read is written as text; one
 that no text can hold, such as an op whose operand types are not those of
-its op instance, is built in Lean. Each check compares the messages of the
-problems, so it also checks that the check names the right op.
+its op instance, is built in Lean. Each check compares the messages of all
+the problems, in order.
 -/
 
 namespace FirTest

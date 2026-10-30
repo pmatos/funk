@@ -12,8 +12,9 @@ the core dialect it covers every op. `fir-ref validate` runs it (#10), and
 A problem says what is wrong for people, and where: the function, the block,
 the index of the op in its block and the op's location reference, each when
 it applies. Tools compare whether a module is valid, never the words.
-Symbols, names and labels appear in their canonical spelling, as the text
-writes them, so a problem's message holds no line break and no hidden
+Symbols appear in their canonical spelling, as the text writes them, and a
+value name or label that is not a name appears between quotes, escaped as a
+string is. So a problem's message holds no line break and no hidden
 character, whatever the module.
 
 # Decidable dialect rules

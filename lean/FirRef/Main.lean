@@ -16,7 +16,9 @@ per level, each proved equal to its spec function and registered with
 `Fir.parse` as `FirRef.parse`, which decodes with `FirRef.decodeModule`. The
 spec's readers still recurse once per level on the main thread that Lean's
 runtime gives a program, so a text nested millions of levels deep overflows
-its stack until the next stage of #47 replaces them too.
+its stack until the next stage of #47 replaces them too. `validate` runs the
+spec's validation check, which walks nested blocks with `FirRef.allBlocks`
+(ADR-2026-10-30-1742).
 -/
 
 namespace FirRef

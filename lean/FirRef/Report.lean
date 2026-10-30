@@ -40,7 +40,9 @@ def jsonChar (c : Char) : String :=
   else if Text.isEscaped c then
     let n := c.toNat
     if n < 0x10000 then "\\u" ++ hex4 n
-    else "\\u" ++ hex4 (0xd800 + (n - 0x10000) / 0x400) ++ "\\u" ++ hex4 (0xdc00 + (n - 0x10000) % 0x400)
+    else
+      let m := n - 0x10000
+      "\\u" ++ hex4 (0xd800 + m / 0x400) ++ "\\u" ++ hex4 (0xdc00 + m % 0x400)
   else c.toString
 
 /-- A JSON string. -/
