@@ -33,12 +33,12 @@ func @sum10() -> i32 {
 
 locs {
   @0 = unknown
-  @1 = "sum.c":2:3 to 2:14
-  @2 = "sum.c":3:10 to 3:15
-  @3 = "sum.c":4:5 to 4:16
-  @4 = "sum.c":6:3 to 6:13
-  @5 = "main.c":2:19 to 2:20
-  @6 = "main.c":2:15 to 2:21
+  @1 = "sum.c":2:3 to 2:15
+  @2 = "sum.c":3:10 to 3:16
+  @3 = "sum.c":4:5 to 4:17
+  @4 = "sum.c":6:3 to 6:14
+  @5 = "main.c":2:19 to 2:21
+  @6 = "main.c":2:15 to 2:22
 }
 ```
 
@@ -54,11 +54,6 @@ that it prints as the text above.
 namespace Fir.Example
 
 open Core
-
-/-- An op of the core dialect, with no regions. -/
-def op (results : List (Name × Ty)) (o : Op) (operands : List Name) (loc : LocRef)
-    (succs : List Succ := []) : Operation CoreDialect :=
-  { results, op := o, operands, succs, regions := [], loc }
 
 /-- `@sum`. -/
 def sum : Func CoreDialect where
@@ -96,12 +91,12 @@ def sumModule : Module CoreDialect where
   items := [.func sum, .func sum10]
   locs := [
     (0, .unknown),
-    (1, .range "sum.c" 2 3 2 14),
-    (2, .range "sum.c" 3 10 3 15),
-    (3, .range "sum.c" 4 5 4 16),
-    (4, .range "sum.c" 6 3 6 13),
-    (5, .range "main.c" 2 19 2 20),
-    (6, .range "main.c" 2 15 2 21)]
+    (1, .range "sum.c" 2 3 2 15),
+    (2, .range "sum.c" 3 10 3 16),
+    (3, .range "sum.c" 4 5 4 17),
+    (4, .range "sum.c" 6 3 6 14),
+    (5, .range "main.c" 2 19 2 21),
+    (6, .range "main.c" 2 15 2 22)]
 
 #guard sumModule.print == "\n".intercalate [
   "func @sum(%n: i32) -> i32 {",
@@ -129,12 +124,12 @@ def sumModule : Module CoreDialect where
   "",
   "locs {",
   "  @0 = unknown",
-  "  @1 = \"sum.c\":2:3 to 2:14",
-  "  @2 = \"sum.c\":3:10 to 3:15",
-  "  @3 = \"sum.c\":4:5 to 4:16",
-  "  @4 = \"sum.c\":6:3 to 6:13",
-  "  @5 = \"main.c\":2:19 to 2:20",
-  "  @6 = \"main.c\":2:15 to 2:21",
+  "  @1 = \"sum.c\":2:3 to 2:15",
+  "  @2 = \"sum.c\":3:10 to 3:16",
+  "  @3 = \"sum.c\":4:5 to 4:17",
+  "  @4 = \"sum.c\":6:3 to 6:14",
+  "  @5 = \"main.c\":2:19 to 2:21",
+  "  @6 = \"main.c\":2:15 to 2:22",
   "}",
   ""]
 

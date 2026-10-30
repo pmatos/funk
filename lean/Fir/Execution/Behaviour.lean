@@ -102,14 +102,15 @@ never ends. The core dialect's one choice, `choose w`, has `2^w` options. An
 effect that a dialect adds must keep this assumption, or come with its own
 definition of divergence.
 
-Execution is defined for valid modules only. The interpreter (#10) also runs
-on modules that have not been validated. A run that reaches a case that
-validation rules out, such as an undefined value or an operand of the wrong
-type, is _stuck_: it ends with an error outside the semantics, which
-`fir-ref` reports as such. A stuck run is never an empty set of outcomes,
-and never UB. A valid module never gets stuck (ADR-2026-10-29-2030): its runs
-have an outcome at every budget, the progress obligation of the next
-section.
+Execution is defined for valid modules only: a run in `SetM` has no way to
+end other than a return, UB or fuel exhaustion. The executable interpreter
+of #10 also runs on modules that have not been validated. It wraps each run
+in an error layer outside `SetM`, such as `Except` with a reason. A run that
+reaches a case that validation rules out, such as an undefined value or an
+operand of the wrong type, ends in that layer: it is _stuck_, and `fir-ref`
+reports it as such. A stuck run is never an empty set of outcomes, and never
+UB. A valid module never gets stuck (ADR-2026-10-29-2030): its runs have an
+outcome at every budget, the progress obligation of the next section.
 -/
 
 /-- A behaviour: a set of outcomes. -/

@@ -22,6 +22,35 @@ A name, without its sigil: a value `%x`, a block label `^loop` or a symbol
 -/
 abbrev Name := String
 
+/-!
+# Names
+
+A value name or a block label is one or more _name characters_: ASCII
+letters, digits, `_` and `.`, so `0` and `acc.1` are names. A _word_ is a
+name that starts with a letter or `_`. Validation requires every value name
+and label of a function to be a name, so that the text can write it. A
+symbol may be any string: the text writes it bare when it is a word, and
+quoted otherwise.
+-/
+
+/-- An ASCII letter. -/
+def isLetter (c : Char) : Bool := ('A' ≤ c ∧ c ≤ 'Z') ∨ ('a' ≤ c ∧ c ≤ 'z')
+
+/-- A character that may start a word. -/
+def isWordStart (c : Char) : Bool := isLetter c ∨ c = '_'
+
+/-- A name character: a letter, a digit, `_` or `.`. -/
+def isNameChar (c : Char) : Bool := isWordStart c ∨ c.isDigit ∨ c = '.'
+
+/-- A valid value name or block label: one or more name characters. -/
+def isName (s : String) : Bool := !s.isEmpty && s.all isNameChar
+
+/-- A word: a name that starts with a letter or `_`. -/
+def isWord (s : String) : Bool :=
+  match s.toList with
+  | c :: cs => isWordStart c && cs.all isNameChar
+  | [] => false
+
 /--
 A successor of a terminator: the block that control may go to, and the
 values passed to that block's arguments (H1, ADR-2026-10-29-2010).

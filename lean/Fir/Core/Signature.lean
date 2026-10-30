@@ -1,4 +1,5 @@
 import Fir.Core.Ops
+import Fir.Syntax.Module
 
 /-!
 The core dialect is the first instance of the dialect classes. Its signature
@@ -48,6 +49,13 @@ def Op.succCount : Op → Nat
   | .br => 1
   | .condBr => 2
   | _ => 0
+
+/-- A core op with no regions: its results, op instance, operands, location
+reference and successors. The examples and checks of this spec build their
+ops with it. -/
+def op (results : List (Name × Ty)) (o : Op) (operands : List Name) (loc : LocRef := 0)
+    (succs : List Succ := []) : Operation CoreDialect :=
+  { results, op := o, operands, succs, regions := [], loc }
 
 end Core
 

@@ -1,5 +1,4 @@
 import Fir.Validation.Dominance
-import Fir.Text.Lexical
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
@@ -17,7 +16,8 @@ An op in block `b` at index `i` of function `f` is valid when:
   the op instance's operand types;
 * the result types are the op instance's result types;
 * it is a terminator exactly when it is the last op of its block, and it has
-  as many successors as its op instance says;
+  as many successors as its op instance says; an op that is not a terminator
+  has none, whatever its dialect says;
 * each value it uses is in scope: defined in the function and dominating the
   use;
 * each symbol it refers to names a function of the module;
@@ -55,6 +55,7 @@ def Func.OpValid (ctx : ModuleContext d) (f : Func d) (b : Block d) (i : Nat)
   o.results.map (·.2) = returnTypes o.op ∧
   (isTerminator o.op = true ↔ i + 1 = b.body.length) ∧
   o.succs.length = succCount o.op ∧
+  (isTerminator o.op = false → o.succs = []) ∧
   (∀ s ∈ o.succs, f.SuccValid s) ∧
   (∀ x ∈ o.uses, f.InScope x b.label i) ∧
   (∀ g ∈ symbolRefs o.op, (ctx.symbols g).isSome) ∧
@@ -81,7 +82,6 @@ A function's symbol may be any string: the text quotes it when it is not a
 word.
 -/
 
-open Text in
 /-- A function is valid in the context of its module. -/
 structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
   entry : ∃ e, f.blocks.head? = some e ∧ e.params = []

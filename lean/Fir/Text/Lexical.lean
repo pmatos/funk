@@ -1,3 +1,5 @@
+import Fir.Syntax.Module
+
 /-!
 fir has one text format, and it is canonical (P3, ADR-2026-10-29-2014): one
 spelling for every construct, no sugar, and a printer that is the formatter.
@@ -89,29 +91,12 @@ it bounds it, as a core constant must fit its type. The core dialect bounds
 its widths in its own section. A parser rejects a number out of its range,
 at the number.
 
-The definitions below give the canonical spelling of names, integers,
-strings and symbols, which the printer uses.
+Which strings are names and words is defined with the abstract syntax
+(`isName`, `isWord`). The definitions below give the canonical spelling of
+integers, strings and symbols, which the printer uses.
 -/
 
 namespace Fir.Text
-
-/-- An ASCII letter. -/
-def isLetter (c : Char) : Bool := ('A' ≤ c ∧ c ≤ 'Z') ∨ ('a' ≤ c ∧ c ≤ 'z')
-
-/-- A character that may start a word or a symbol. -/
-def isWordStart (c : Char) : Bool := isLetter c ∨ c = '_'
-
-/-- A character of a name: a letter, a digit, `_` or `.`. -/
-def isNameChar (c : Char) : Bool := isWordStart c ∨ c.isDigit ∨ c = '.'
-
-/-- A valid value name or block label, without its sigil. -/
-def isName (s : String) : Bool := !s.isEmpty && s.all isNameChar
-
-/-- A valid word. A symbol whose name is a word is written without quotes. -/
-def isWord (s : String) : Bool :=
-  match s.toList with
-  | c :: cs => isWordStart c && cs.all isNameChar
-  | [] => false
 
 /-- The lowercase hexadecimal digits of `n`, with no leading zeros. -/
 def hex (n : Nat) : String := String.ofList (Nat.toDigits 16 n)

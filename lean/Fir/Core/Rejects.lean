@@ -27,10 +27,6 @@ must reject it too, with the reason that `^dead` is unreachable.
 
 namespace Fir.Core.Rejects
 
-/-- An op of the core dialect with no successors and no regions. -/
-def op (results : List (Name × Ty)) (o : Op) (operands : List Name) : Operation CoreDialect :=
-  { results, op := o, operands, succs := [], regions := [], loc := 0 }
-
 /-- A function with a block that the entry does not reach. -/
 def deadBlock : Func CoreDialect where
   name := "f"

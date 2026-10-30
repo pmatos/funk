@@ -76,7 +76,7 @@ theorem Core.behaviour_isRefinedBy_trans {a b c : Behaviour Core.Obs} :
     a ⊑ b → b ⊑ c → a ⊑ c :=
   Behaviour.isRefinedBy_trans Core.Obs.isRefinedBy_trans
 
-/-- Refinement of M0 functions is reflexive and transitive. -/
+/-- Refinement of M0 functions is transitive. -/
 theorem Core.funcRuns_isRefinedBy_trans {f g h : FuncRuns A Core.Obs} :
     f ⊑ g → g ⊑ h → f ⊑ h :=
   FuncRuns.isRefinedBy_trans Core.Obs.isRefinedBy_trans

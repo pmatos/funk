@@ -65,9 +65,10 @@ Facts, checked on 2026-10-29:
   `docs/spec/.lake/build`, so the document is always rebuilt from the
   sources, and neither may a deployment
   ([#28](https://github.com/pmatos/funk/issues/28)).
-- **Setup checks for elan.** `scripts/ensure-hooks.sh` fails, and says how
+- **Setup checks for elan.** `scripts/ensure-hooks.sh` warns, and says how
   to install elan, when elan is neither on `PATH` nor in `~/.elan/bin`, so a
-  missing toolchain shows at setup, not inside a commit.
+  missing toolchain shows at setup, not first inside a commit. It does not
+  fail, so work that touches no Lean file is not blocked.
 - **Hooks that run Lake keep its git calls inside the package clones.** Lake
   runs git inside each package clone under `.lake/packages`. Two paths let
   those calls act on this repository instead; in tests they rewrote

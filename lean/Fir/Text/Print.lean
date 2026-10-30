@@ -7,8 +7,9 @@ The printer fixes the one spelling of every module: `print(parse(t)) == t`
 holds for every text `t` that it prints from a well-formed module (see the
 next section). Its layout is:
 
-* single spaces between tokens, a space after each comma and colon, and none
-  inside parentheses or before an item's parameters;
+* single spaces between tokens, a space after each comma and after the colon
+  of a definition (`%x: T`), and none inside parentheses, before an item's
+  parameters or around the colons of a source range (`"f":2:3 to 2:14`);
 * a function's blocks at the indentation of the function, and its ops two
   spaces deeper. A region of an op opens with ` {` at the end of the op's
   line; its blocks are two spaces deeper than the op, and its closing `}` is
