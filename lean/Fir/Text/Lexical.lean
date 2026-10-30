@@ -15,12 +15,18 @@ prints a module in that layout.
 
 # Characters
 
-A text is UTF-8, and its lines end with a line feed. Outside strings, a text
-holds none of the characters that strings escape (below) except the tab and
-the line feed: no carriage return, no byte-order mark and no bidirectional
-control, not even in a comment. A parser rejects a text that holds one. So a
-text has one kind of line end, and it cannot show a reader an order of
-characters other than the one a parser reads (the Trojan Source attack).
+A text is UTF-8, and a line feed ends each of its lines. The last line need
+not have one: a parser accepts a text that does not end with a line feed,
+and a comment may end at the end of the text. The printer always ends a
+text with a line feed.
+
+Outside strings, a text holds none of the characters that `isEscaped` holds
+for, except the tab and the line feed: no carriage return, no byte-order
+mark and no bidirectional control, not even in a comment. `"` and `\` are
+not among them, so a comment may hold them. A parser rejects a text that
+holds one of those characters (`allowedOutsideStrings`). So a text has one
+kind of line end, and it cannot show a reader an order of characters other
+than the one a parser reads (the Trojan Source attack).
 
 # Tokens
 
@@ -65,6 +71,10 @@ punct     ::= '(' | ')' | '{' | '}' | ',' | ':' | '=' | '->'
   reference, a word or an integer must not be followed directly by a name
   character, so `@1x` and `1abc` are errors, while `const-1` reads as
   `const -1`.
+* There is no float literal and no nested symbol reference, such as
+  `@a::@b`. Floats (S5) and nested symbol references will need new tokens,
+  and until they get them a dialect cannot write either. So `1.5` is an
+  error: an integer followed by a name character.
 
 # Strings
 
@@ -85,11 +95,13 @@ A string holds any Unicode text, and has one spelling:
 # Numbers
 
 Numbers have limits, so that every implementation can hold them in integers
-of a fixed width (N3). A location reference, a line and a column are below
-`2^32`. An integer attribute has no limit of its own: the dialect that reads
-it bounds it, as a core constant must fit its type. The core dialect bounds
-its widths in its own section. A parser rejects a number out of its range,
-at the number.
+of a fixed width (N3). N3's bound of `2^32` covers the numbers that give the
+text its structure, as the decision memo on #8 lists them: a location
+reference, a line and a column are below `2^32`. An integer attribute is a
+value of its dialect, not one of those numbers. It has no limit of its own:
+the dialect that reads it bounds it, as a core constant must fit its type.
+The core dialect bounds its widths in its own section. A parser rejects a
+number out of its range, at the number.
 
 Which strings are names and words is defined with the abstract syntax
 (`isName`, `isWord`). The definitions below give the canonical spelling of
@@ -117,6 +129,11 @@ def isEscaped (c : Char) : Bool :=
   n < 0x20 || (0x7f ≤ n && n ≤ 0x9f) || n == 0x2028 || n == 0x2029 ||
     formatChars.any fun (a, b) => a ≤ n && n ≤ b
 
+/-- A character that a text may hold outside strings, comments included:
+any character that strings do not escape, and the tab and the line feed. -/
+def allowedOutsideStrings (c : Char) : Bool :=
+  c = '\t' || c = '\n' || !isEscaped c
+
 /-- The canonical spelling of one character inside a string. -/
 def escapeChar (c : Char) : String :=
   if c = '"' then "\\\""
@@ -138,7 +155,9 @@ name is a word. -/
 def printSymbol (s : String) : String := "@" ++ if isWord s then s else quote s
 
 #guard quote "a\"b\\c\n\x01é" == "\"a\\\"b\\\\c\\n\\u{1}é\""
-#guard quote "‮⁦﻿\u0085 " == "\"\\u{202e}\\u{2066}\\u{feff}\\u{85}\\u{2028}\""
+#guard quote "\u202e\u2066\ufeff\u0085\u2028" == "\"\\u{202e}\\u{2066}\\u{feff}\\u{85}\\u{2028}\""
+#guard ['"', '\\', '\t', '\n', 'é'].all allowedOutsideStrings
+#guard ['\r', '\u0085', '\u200e', '\u202e', '\u2066', '\ufeff', '\u2028'].all (!allowedOutsideStrings ·)
 #guard printInt (-128) == "-128" && printInt 0 == "0"
 #guard isWord "icmp" && isWord "gpu.launch" && !isWord "1f" && isName "0" && !isName ""
 #guard printSymbol "sum" == "@sum" && printSymbol "1" == "@\"1\"" &&

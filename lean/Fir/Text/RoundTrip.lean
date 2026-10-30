@@ -21,9 +21,13 @@ the parser rejects its printed form with a located reason, as the grammar
 section says.
 
 Validation implies well-formedness: every valid module can be written and
-read back, so two different valid modules never print the same text. #10
-writes the parser. #11 proves the first property, and proves for the core
-dialect that every valid module is well formed.
+read back, so two different valid modules never print the same text. This
+is `ValidIsWellFormed`, an obligation of every dialect. Validation checks
+the names, labels, operand types, successors and location references of a
+module, and the writability laws of `LawfulDialectText` cover what the
+dialect writes, so the obligation holds for every lawful dialect. The
+parser is written by #10. #11 proves the first property, and proves
+`ValidIsWellFormed` for the core dialect.
 
 The conditions look at every block and op of a function, at any depth: the
 blocks of the regions of its ops too.
@@ -37,25 +41,6 @@ variable {d : Dialect}
 
 /-- Every op of a function, at any depth. -/
 def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
-
-mutual
-/-- An attribute can be written as a token. Every symbol can: it is quoted
-when its name is not a word. -/
-def Attr.Writable : Attr → Prop
-  | .word w => isWord w
-  | .int _ | .str _ | .sym _ => True
-  | .app h args => isWord h ∧ Attr.AllWritable args
-
-/-- Every attribute of a list can be written. -/
-def Attr.AllWritable : List Attr → Prop
-  | [] => True
-  | a :: as => a.Writable ∧ Attr.AllWritable as
-end
-
-/-- A type is written as a word, or a word applied to attributes. -/
-def Attr.IsType : Attr → Prop
-  | a@(.word _) | a@(.app ..) => a.Writable
-  | _ => False
 
 variable [DialectSignature d] [DialectText d]
 
@@ -129,8 +114,9 @@ theorem print_injective {parse : Parser d} (h : PrintThenParse parse)
   cases e₁
   rfl
 
-/-- Every valid module of the dialect is well formed. #11 proves it for the
-core dialect. -/
+/-- Every valid module of the dialect is well formed: an obligation of every
+dialect, which the writability laws of `LawfulDialectText` make hold. #11
+proves it for the core dialect. -/
 def ValidIsWellFormed [DialectValidation d] : Prop :=
   ∀ m : Module d, m.Valid → m.WellFormed
 

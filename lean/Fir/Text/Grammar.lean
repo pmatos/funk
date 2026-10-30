@@ -10,8 +10,11 @@ production for any particular op: an op is always its results, its name, its
 attributes, its operands, its successors, its regions and its location
 reference, in that order. An item is always its kind, its symbol, its
 parameters, its results, its attributes and its body. Types and attributes
-are written as generic terms. A new dialect, or a new kind of item, adds
-words, and needs no change to this grammar or to the parser.
+are written as generic terms. So a new dialect adds words, and needs no
+change to this grammar or to the parser. A new kind of item needs no change
+to the grammar, but the parser must learn to decode it, as H4 and H5 will
+define. A float or a nested symbol reference needs new tokens: a change to
+the lexical part (see the tokens section).
 
 ```
 module   ::= item* locs
@@ -55,9 +58,11 @@ location ::= 'unknown'
   its label and, when its block has arguments, the values it passes.
 * Empty lists are left out, never written empty: a block without arguments
   is `^body:`, not `^body():`, and a successor without arguments is `^body`.
-  Two lists are the exceptions, and always have their parentheses: an
-  item's parameters, and the arguments of an applied attribute or type. So
-  `h()` and `h` are different attributes.
+  Three lists are the exceptions, and always have their parentheses: an
+  item's parameters, the arguments of an applied attribute or type, and the
+  references of a `fused` location. So `h()` and `h` are different
+  attributes. Validation requires a `fused` location to fuse at least two,
+  but the printer writes an empty one as `fused()`.
 * A source range is written `"file":l₁:c₁ to l₂:c₂`, as MLIR writes it.
 
 The grammar accepts some modules that validation rejects, such as a function
@@ -122,6 +127,25 @@ inductive Attr where
   | app (head : String) (args : List Attr)
   deriving Repr, Inhabited
 
+mutual
+/-- An attribute can be written as a token. Every symbol can: it is quoted
+when its name is not a word. -/
+def Attr.Writable : Attr → Prop
+  | .word w => isWord w
+  | .int _ | .str _ | .sym _ => True
+  | .app h args => isWord h ∧ Attr.AllWritable args
+
+/-- Every attribute of a list can be written. -/
+def Attr.AllWritable : List Attr → Prop
+  | [] => True
+  | a :: as => a.Writable ∧ Attr.AllWritable as
+end
+
+/-- A type is written as a word, or a word applied to attributes. -/
+def Attr.IsType : Attr → Prop
+  | a@(.word _) | a@(.app ..) => a.Writable
+  | _ => False
+
 /--
 How a dialect writes its ops and types.
 
@@ -144,8 +168,13 @@ The laws that make a dialect's text round-trip. Decoding what was encoded
 gives back the op instance or the type, and decoding succeeds only on what
 encoding produces, so each op instance and each type has exactly one
 spelling. Every valid type can be read back; a type that is not valid, such
-as a width beyond the text's limit, may not be. The round-trip theorem of
-#11 rests on these laws, for every dialect.
+as a width beyond the text's limit, may not be.
+
+Three more laws say that what the dialect writes fits the grammar: each op
+name is a word, each op's attributes can be written, and each valid type is
+written as a type. With them, every valid module of the dialect is well
+formed (see the round-trip section). The round-trip theorem of #11 rests on
+these laws, for every dialect.
 -/
 class LawfulDialectText (d : Dialect) [DialectSignature d] [DialectValidation d]
     [DialectText d] : Prop where
@@ -155,5 +184,8 @@ class LawfulDialectText (d : Dialect) [DialectSignature d] [DialectValidation d]
     opName op = n ∧ opAttrs op = as ∧ sig op = ts ∧ returnTypes op = rs
   decodeTy_encode : ∀ t : d.Ty, validTy t → decodeTy (tyAttr t) = some t
   encode_decodeTy : ∀ a (t : d.Ty), decodeTy a = some t → tyAttr t = a
+  opName_isWord : ∀ op : d.Op, isWord (opName op)
+  opAttrs_writable : ∀ op : d.Op, Attr.AllWritable (opAttrs op)
+  tyAttr_isType : ∀ t : d.Ty, validTy t → (tyAttr t).IsType
 
 end Fir

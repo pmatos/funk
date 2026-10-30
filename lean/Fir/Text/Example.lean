@@ -139,6 +139,8 @@ def sumModule : Module CoreDialect where
 An op with a region, a symbol that is not a word, and an applied attribute
 with no arguments. No core op has a region, so the region below is only
 there to check the printer's layout, which is the same for every dialect.
+Every printed text ends with a line feed, even that of a module with no
+items.
 -/
 
 #guard Operation.print 2 { op [] .br [] 7 with regions := [⟨[⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
@@ -149,5 +151,8 @@ there to check the printer's layout, which is the same for every dialect.
   "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
 
 #guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"
+
+#guard (Module.print (d := CoreDialect) ⟨[], []⟩) == "locs {\n}\n" &&
+  sumModule.print.endsWith "\n"
 
 end Fir.Example

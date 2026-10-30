@@ -12,6 +12,11 @@ repos:
         types: [text]
         # Generated or vendored files only; never exclude authored code.
         exclude: (^|/)(package-lock\.json|[^/]*\.lock)$
+      - id: hidden-chars
+        name: Text files hold no raw bidi controls, marks, BOM or separators
+        entry: python scripts/check_hidden_chars.py
+        language: python
+        types: [text]
       - id: fir-spec
         name: Build fir's Lean package and render the spec
         entry: scripts/build-spec.sh
