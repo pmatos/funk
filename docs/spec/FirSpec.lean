@@ -25,8 +25,10 @@ The chapters follow the WebAssembly specification:
 * _Abstract syntax_ gives the terms of fir: dialects, types, ops, blocks,
   functions, modules and locations, and the ops of the core dialect.
 * _Validation_ gives the rules that decide which terms are fir programs.
-* _Execution_ gives what a run can end with, what a function shows to an
-  observer, and the refinement relation that defines correctness.
+* _Execution_ explains poison and immediate UB in plain words, then gives
+  what a run can end with, what a function shows to an observer, the
+  refinement relation that defines correctness, and how each op treats
+  poison.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, and the round-trip properties.
 
@@ -71,11 +73,21 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Execution.Values "Values and refinement" (level := 2)}
 
+{includeLiterate "." Fir.Execution.PoisonUB "Poison and immediate UB" (level := 2)}
+
 {includeLiterate "." Fir.Execution.Effects "Effects and op semantics" (level := 2)}
 
 {includeLiterate "." Fir.Execution.Behaviour "Outcomes and behaviours" (level := 2)}
 
+{includeLiterate "." Fir.Execution.Fuel "Fuel and progress" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Refinement "Refinement" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Propagation "Poison classes" (level := 2)}
+
 {includeLiterate "." Fir.Core.Values "Core values" (level := 2)}
+
+{includeLiterate "." Fir.Core.Poison "Core poison classes" (level := 2)}
 
 # Text format
 

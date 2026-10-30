@@ -13,7 +13,8 @@ itself, and the rules of each op, are written by #10 and #14 to #20.
 fir has one deferred-UB value, poison, and no `undef` (S1,
 ADR-2026-10-29-2006). Some failures, such as an `add nsw` that overflows, do
 not make the op undefined. They make its result poison instead. Using poison
-is not UB in itself, but some uses are, such as branching on it.
+is not UB in itself, but some uses are, such as branching on it. The next
+section explains poison and immediate UB in plain words.
 -/
 
 namespace Fir
@@ -35,8 +36,8 @@ Refinement is fir's correctness relation (S4, ADR-2026-10-29-2008): a target
 is correct for a source when each of its observable behaviours is allowed by
 the source. The relation is written `a ⊑ b`, read "`a` is refined by `b`":
 `b` does nothing that `a` does not allow. It is defined level by level, from
-values up to behaviours, through one class whose shape follows LeanMLIR's
-`HRefinement`.
+values up to behaviours and functions, through one class whose shape
+follows LeanMLIR's `HRefinement`.
 -/
 
 /-- Heterogeneous refinement: `a ⊑ b` says that `b` refines `a`. -/
@@ -64,8 +65,10 @@ class TyRefinement (Ty : Type) [TyDenote Ty] where
 /-- A value together with its type: what an op consumes or produces. -/
 abbrev DVal (d : Dialect) [TyDenote d.Ty] := (t : d.Ty) × ⟦t⟧
 
-/-- A typed value is refined by a value of the same type that refines it. -/
-instance {d : Dialect} [TyDenote d.Ty] [TyRefinement d.Ty] :
+/-- A typed value is refined by a value of the same type that refines it.
+A dialect whose `DVal` instance search cannot find this one names it, as the
+core dialect does. -/
+instance instHRefinementDVal {d : Dialect} [TyDenote d.Ty] [TyRefinement d.Ty] :
     HRefinement (DVal d) (DVal d) where
   IsRefinedBy a b := ∃ h : a.1 = b.1, TyRefinement.IsRefinedBy (h ▸ a.2) b.2
 
@@ -80,5 +83,26 @@ instance [HRefinement α β] : HRefinement (List α) (List β) := ⟨List.IsRefi
 /-- A poison value is refined by any value: S4's second rule, for values. -/
 theorem PoisonOr.poison_isRefinedBy (b : PoisonOr α) : (PoisonOr.poison : PoisonOr α) ⊑ b :=
   trivial
+
+/-- Refinement of values is reflexive. -/
+theorem PoisonOr.isRefinedBy_refl : ∀ a : PoisonOr α, a ⊑ a
+  | .poison => trivial
+  | .value _ => rfl
+
+/-- Refinement of values is transitive. -/
+theorem PoisonOr.isRefinedBy_trans : ∀ {a b c : PoisonOr α}, a ⊑ b → b ⊑ c → a ⊑ c
+  | .poison, _, _, _, _ => trivial
+  | .value _, .value _, .value _, hab, hbc => Eq.trans hab hbc
+  | .value _, .value _, .poison, _, hbc => hbc.elim
+  | .value _, .poison, _, hab, _ => hab.elim
+
+/-- Lists refine element by element, so refinement of lists is transitive
+when refinement of their elements is. -/
+theorem List.isRefinedBy_trans [HRefinement α α] (h : ∀ {a b c : α}, a ⊑ b → b ⊑ c → a ⊑ c) :
+    ∀ {as bs cs : List α}, as ⊑ bs → bs ⊑ cs → as ⊑ cs
+  | [], [], [], _, _ => trivial
+  | _ :: _, _ :: _, _ :: _, ⟨hab, habs⟩, ⟨hbc, hbcs⟩ => ⟨h hab hbc, List.isRefinedBy_trans h habs hbcs⟩
+  | [], _ :: _, _, hab, _ | _ :: _, [], _, hab, _ => hab.elim
+  | [], [], _ :: _, _, hbc | _ :: _, _ :: _, [], _, hbc => hbc.elim
 
 end Fir

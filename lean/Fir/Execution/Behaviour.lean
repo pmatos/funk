@@ -6,13 +6,22 @@ import Fir.Execution.Effects
 
 One run of a function ends in one of three ways. It returns, and an observer
 sees what it returned. It hits immediate UB, for a reason. Or it runs out of
-fuel, which stands for non-termination.
+fuel.
 
 What an observer sees of a return is the run's _observation_. Each dialect
 supplies its observations and how they refine (G0); refinement is not wired
 to integer return values. In M0 the observation is the list of returned
-values. A function that returns one `iN` therefore has the four outcomes of
-`fir-ref`: a value, poison, UB with a reason, and fuel exhausted.
+values, each a value or poison, since a function may return any number of
+values (ADR-2026-10-30-0816). A function that returns one `iN` therefore has
+the four outcomes of `fir-ref`: a value, poison, UB with a reason, and fuel
+exhausted. The reason that UB carries is for people: refinement ignores it.
+
+This outcome type is M0's. M0 has no I/O, so a run shows nothing to an
+observer until it ends. When the external calls of S4 (ADR-2026-10-29-2008)
+arrive, an observer also sees the calls a run makes, and an outcome becomes
+a trace of events that ends in a return, UB or divergence. Refinement keeps
+its idea, but UB in the source then allows only targets that first show the
+source's events before the UB.
 -/
 
 namespace Fir
@@ -75,14 +84,32 @@ end SetM
 # Observable behaviour
 
 A run of the interpreter takes fuel, so its set of outcomes depends on the
-budget. A function's observable behaviour does not. It is what the runs show
-over every budget: each return and each UB that some budget reaches, and
-non-termination when every budget can be exhausted.
+budget. In `(run n).outcomes`, `fuelExhausted` means only that the run ran out
+of fuel at budget `n`. A function's observable behaviour does not depend on
+the budget. It is what the runs show over every budget: each return and each
+UB that some budget reaches, and divergence when every budget can be
+exhausted. In a behaviour, `fuelExhausted` stands for divergence.
 
-The interpreter (#10) must not change how a run that returns or hits UB ends
-when it is given more fuel. Then the observable behaviour does not depend on
-how the interpreter counts fuel, and refinement between two functions does
-not depend on how many steps each takes.
+The two meet only through the bridge lemma `observable_eq_at` of the next
+section. #14's soundness theorems for `fir-ref`'s exhaustive and scripted
+modes are stated against `(run n).outcomes`, for the budget the mode runs
+with, and so is any rule that judges a run at one budget.
+
+Reading divergence as "every budget can be exhausted" assumes that every
+choice has finitely many options. Then, by König's lemma, a run that can
+exhaust every budget has one infinite sequence of choices along which it
+never ends. The core dialect's one choice, `choose w`, has `2^w` options. An
+effect that a dialect adds must keep this assumption, or come with its own
+definition of divergence.
+
+Execution is defined for valid modules only. The interpreter (#10) also runs
+on modules that have not been validated. A run that reaches a case that
+validation rules out, such as an undefined value or an operand of the wrong
+type, is _stuck_: it ends with an error outside the semantics, which
+`fir-ref` reports as such. A stuck run is never an empty set of outcomes,
+and never UB. A valid module never gets stuck (ADR-2026-10-29-2030): its runs
+have an outcome at every budget, the progress obligation of the next
+section.
 -/
 
 /-- A behaviour: a set of outcomes. -/
@@ -97,57 +124,5 @@ def observable (run : Nat → SetM (Result O)) : Behaviour O
   | .ret o => ∃ n, (run n).outcomes (.ret o)
   | .ub r => ∃ n, (run n).outcomes (.ub r)
   | .fuelExhausted => ∀ n, (run n).outcomes .fuelExhausted
-
-/-!
-# Refining behaviours
-
-An outcome of the source allows an outcome of the target when:
-
-* the source outcome is UB: UB allows anything;
-* both return, and the source's observation is refined by the target's. For
-  values, a poison result is refined by any value;
-* both do not terminate.
-
-A target behaviour refines a source behaviour when every target outcome is
-allowed by some source outcome. So if the source can hit UB on some choice,
-every target behaviour refines it (S4, ADR-2026-10-29-2008).
--/
-
-/-- An outcome of the source allows an outcome of the target. -/
-def Outcome.IsRefinedBy [HRefinement O O] : Outcome O → Outcome O → Prop
-  | .ub _, _ => True
-  | .ret a, .ret b => a ⊑ b
-  | .fuelExhausted, .fuelExhausted => True
-  | _, _ => False
-
-instance [HRefinement O O] : HRefinement (Outcome O) (Outcome O) := ⟨Outcome.IsRefinedBy⟩
-
-/-- Every outcome of the target behaviour is allowed by the source. -/
-def Behaviour.IsRefinedBy [HRefinement O O] (src tgt : Behaviour O) : Prop :=
-  ∀ t, tgt t → ∃ s, src s ∧ s ⊑ t
-
-instance [HRefinement O O] : HRefinement (Behaviour O) (Behaviour O) :=
-  ⟨Behaviour.IsRefinedBy⟩
-
-/-- Source UB allows anything: a source that may hit UB is refined by every
-target. -/
-theorem Behaviour.ub_isRefinedBy [HRefinement O O] {src : Behaviour O} {r : String}
-    (h : src (.ub r)) (tgt : Behaviour O) : src ⊑ tgt :=
-  fun _ _ => ⟨.ub r, h, trivial⟩
-
-/-- A returned poison is refined by any returned value. -/
-theorem Outcome.poison_isRefinedBy (b : PoisonOr α) :
-    (Outcome.ret (PoisonOr.poison : PoisonOr α)) ⊑ Outcome.ret b :=
-  trivial
-
-/-- Refinement of behaviours is reflexive when refinement of observations is. -/
-theorem Behaviour.isRefinedBy_refl [HRefinement O O] (hO : ∀ o : O, o ⊑ o)
-    (b : Behaviour O) : b ⊑ b := by
-  intro t ht
-  refine ⟨t, ht, ?_⟩
-  cases t with
-  | ret o => exact hO o
-  | ub _ => trivial
-  | fuelExhausted => trivial
 
 end Fir

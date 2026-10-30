@@ -9,10 +9,24 @@ used at, so that its operand and result types follow from it.
 
 This chapter gives the ops and their signatures. What each op computes, and
 when it yields poison or immediate UB, is stated in prose here and defined in
-Lean in the execution rules of its op family (#10 and #14 to #20). In short,
-following S1 (ADR-2026-10-29-2006): a flag violation yields poison, a shift
-amount `≥ N` yields poison, and division by zero and `INT_MIN / -1` are
-immediate UB.
+Lean in the execution rules of its op family (#10 and #14 to #20). The
+execution chapter explains poison and immediate UB in plain words.
+
+# Poison and UB in short
+
+These rules follow S1 (ADR-2026-10-29-2006) and LLVM, as ADR-2026-10-30-0818
+records them:
+
+* A poison operand gives a poison result, unless the op says otherwise. The
+  ops that say otherwise are `select`, `freeze`, the terminators and `call`;
+  the execution chapter lists each op's poison class.
+* A broken flag (`nuw`, `nsw`, `exact`) gives poison.
+* A shift amount `≥ N` gives poison, and so does a poison shift amount.
+* A zero divisor is immediate UB, and so is a poison divisor, because it
+  might be zero. So is `sdiv` or `srem` of the signed minimum by `-1`.
+  Otherwise, a poison dividend gives poison.
+* `select` with a poison condition gives poison.
+* A branch on poison is immediate UB.
 -/
 
 namespace Fir.Core
@@ -47,17 +61,20 @@ op works on.
 
 Constants:
 
-* `const w v`: the constant `v` of type `iN`.
+* `const w v`: the constant `v` of type `iN`. It has no operands, so it is
+  never poison.
 
 Arithmetic. The result wraps modulo `2^N` unless a flag says otherwise:
 
 * `add w f`, `sub w f`, `mul w f`: addition, subtraction and multiplication,
   with the flags `f`.
 * `sdiv w exact`, `udiv w exact`: signed and unsigned division, rounding
-  towards zero. With `exact`, a non-zero remainder gives poison. A zero
-  divisor is immediate UB, and so is `sdiv` of the signed minimum by `-1`.
+  towards zero. With `exact`, a non-zero remainder gives poison. A zero or
+  poison divisor is immediate UB, and so is `sdiv` of the signed minimum by
+  `-1`. Otherwise a poison dividend gives poison.
 * `srem w`, `urem w`: the remainders of `sdiv` and `udiv`, with the sign of
-  the dividend for `srem`. They have the same UB as the divisions.
+  the dividend for `srem`. They have the same UB and poison as the
+  divisions.
 
 Bitwise ops and shifts:
 
@@ -65,39 +82,45 @@ Bitwise ops and shifts:
 * `shl w`, `lshr w`, `ashr w`: shift left, logical shift right (filling with
   zeros) and arithmetic shift right (filling with the sign bit). The second
   operand is the shift amount, read as unsigned; an amount `≥ N` gives
-  poison.
+  poison, and so does a poison amount.
 
 Comparison and selection:
 
 * `icmp p w`: compares two `iN` values with predicate `p`, giving an `i1`:
-  `1` when the predicate holds, `0` when it does not.
+  `true` when the predicate holds, `false` when it does not.
 * `select w`: takes an `i1` condition and two `iN` values, and gives the
-  first value when the condition is `1`, the second when it is `0`.
+  first value when the condition is `true`, the second when it is `false`.
+  A poison condition gives poison. The value not chosen does not matter,
+  even when it is poison; the one chosen is given as it is, poison or not.
 
 Width changes:
 
-* `zext m n`: zero-extends an `iM` to an `iN`.
-* `sext m n`: sign-extends an `iM` to an `iN`.
-* `trunc m n`: keeps the low `N` bits of an `iM`.
+* `zext m n`: zero-extends an `iM` to an `iN`, where `M < N`.
+* `sext m n`: sign-extends an `iM` to an `iN`, where `M < N`.
+* `trunc m n`: keeps the low `N` bits of an `iM`, where `N < M`.
 
 Poison control:
 
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
   poison, gives an arbitrary but fixed value: every use of the result sees
-  the same bits (S1, ADR-2026-10-29-2017).
+  the same bits (S1, ADR-2026-10-29-2006; ADR-2026-10-29-2017).
 
 Control flow. These ops are the terminators:
 
-* `br`: jumps to its one successor, passing the successor's arguments.
+* `br`: jumps to its one successor, passing the successor's arguments. A
+  poison argument arrives as poison.
 * `condBr`: takes an `i1` condition and has two successors. It jumps to the
-  first when the condition is `1` and to the second when it is `0`.
+  first when the condition is `true` and to the second when it is `false`.
   Branching on poison is immediate UB.
-* `ret ts`: returns its operands, of types `ts`, from the function.
+* `ret ts`: returns its operands, of types `ts`, from the function: any
+  number of values, each a value or poison (ADR-2026-10-30-0816).
 
 Calls:
 
 * `call f ts rs`: calls the function with symbol `f` (H3), passing operands
-  of types `ts` and receiving results of types `rs`. Recursion is allowed.
+  of types `ts` and receiving results of types `rs`, any number of each.
+  Poison passes through: a poison operand is a poison argument, and a
+  poison that the callee returns is a poison result. Recursion is allowed.
 -/
 inductive Op where
   | const (w : Nat) (v : BitVec w)
