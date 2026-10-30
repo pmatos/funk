@@ -145,8 +145,8 @@ def withOp (t : Core.Ty) (o : Operation CoreDialect) : Func CoreDialect :=
 
 /-! # The obligations' axioms
 
-The obligations that #10 proves for `const`, `add` without flags and `ret`
-rest on `propext` alone. -/
+The obligations of `const`, `add` (with any flags) and `ret` rest on
+`propext` alone. -/
 
 /-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.Core.add_propagatesPoison

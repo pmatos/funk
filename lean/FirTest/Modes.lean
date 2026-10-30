@@ -169,6 +169,19 @@ def twoFreezes : String :=
 #guard explore (body "func @f(%a: i1) -> i1"
     ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0", "  %g: i1 = xor %f, %f @0",
      "  ret %g @0"]) ["true"] == fails 2 "fir-ref: @f: xor has no execution rules yet"
+-- The budget is checked first: past it, a path that would reach an op
+-- without rules is not run.
+/-- `@f(%a: i64) -> i64`, which freezes `add nsw %a, 1` and returns
+`and %f, %f`. -/
+def andSelf : String :=
+  body "func @f(%a: i64) -> i64"
+    ["^e:", "  %m: i64 = const 1 @0", "  %p: i64 = add nsw %a, %m @0", "  %f: i64 = freeze %p @0",
+     "  %d: i64 = and %f, %f @0", "  ret %d @0"]
+
+#guard explore andSelf ["9223372036854775807"] ==
+  { out := "{\"kind\":\"choice-budget-exceeded\",\"budget\":16}", status := 0 }
+#guard runText andSelf "@f" ["9223372036854775807"] (mode := .scripted ["5"]) ==
+  fails 2 "fir-ref: @f: and has no execution rules yet"
 
 /-! # UB in exhaustive mode
 
@@ -205,6 +218,9 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
 
 /-- info: 'Fir.Core.scripted_stuck' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.scripted_stuck
+
+/-- info: 'Fir.ChoiceTree.explore_isSome_iff' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.ChoiceTree.explore_isSome_iff
 
 /-- info: 'Fir.Core.sub_propagatesPoison' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.Core.sub_propagatesPoison

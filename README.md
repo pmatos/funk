@@ -159,8 +159,6 @@ These parts of M0 do not exist yet:
 - The execution rules of the other ops. One issue for each group of
   related ops, [#15](https://github.com/pmatos/funk/issues/15) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
-- The validation check behind `fir-ref validate`, and the interpreter
-  behind `fir-ref run`.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).

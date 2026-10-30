@@ -8,10 +8,10 @@ import Fir.Execution.ChoiceTree
 * _Exhaustive mode_ visits every path, so it finds every way the run may
   end. The number of paths doubles with each bit chosen, so it takes a
   budget on the total number of bits that one path may choose. When some
-  path would choose more, it says so and gives no set. Within its budget,
-  it gives exactly the run's set of outcomes: this is
-  `ChoiceTree.explore_toSet` for any tree, and `Func.explore_outcomes` for
-  a run of the interpreter.
+  path would choose more, it says so and gives no set, and only then:
+  this is `ChoiceTree.explore_isSome_iff`. Within its budget, it gives
+  exactly the run's set of outcomes: this is `ChoiceTree.explore_toSet`
+  for any tree, and `Func.explore_outcomes` for a run of the interpreter.
 * _Scripted mode_ follows one path: the one that a _choice sequence_ names,
   one value for each choice the run makes, in order. A sequence _fits_ the
   run when it gives exactly as many values as the run makes choices, and
@@ -147,6 +147,42 @@ theorem explore_toSet : ∀ {t : ChoiceTree ε α} {budget : Nat} {ls : List (Le
           obtain ⟨q, hq, rfl⟩ := List.mem_map.1 hpl
           exact ⟨b, (explore_toSet hlb e).2 ⟨q, hq, hpeq⟩⟩
     · cases h
+
+/-- No path of the tree chooses more than `budget` bits in all. -/
+def Within : ChoiceTree ε α → Nat → Prop
+  | .choose w k, budget => w ≤ budget ∧ ∀ b, (k b).Within (budget - w)
+  | _, _ => True
+
+theorem collect_isSome {g : β → Option (List γ)} :
+    ∀ {bs : List β} {acc : List γ}, (collect g bs acc).isSome ↔ ∀ b ∈ bs, (g b).isSome
+  | [], _ => by simp [collect]
+  | b :: bs, acc => by
+    simp only [collect]
+    split
+    · rename_i l hl
+      rw [collect_isSome]
+      simp [hl]
+    · rename_i hl
+      simp [hl]
+
+/-- Exhaustive mode gives a list exactly when no path of the tree chooses
+more than its budget. -/
+theorem explore_isSome_iff : ∀ {t : ChoiceTree ε α} {budget : Nat},
+    (t.explore budget).isSome ↔ t.Within budget
+  | .pure _, _ | .ub _, _ | .noOutcome _, _ => by simp [explore, Within]
+  | .choose w k, budget => by
+    simp only [explore, Within]
+    split
+    · rename_i hw
+      rw [collect_isSome]
+      simp only [Option.isSome_map]
+      constructor
+      · intro h
+        exact ⟨hw, fun b => explore_isSome_iff.1 (h b (mem_allBits b))⟩
+      · intro ⟨_, h⟩ b _
+        exact explore_isSome_iff.2 (h b)
+    · rename_i hw
+      simp [hw]
 
 /-- Why a choice sequence does not fit a run. Choices are counted from
 zero. -/

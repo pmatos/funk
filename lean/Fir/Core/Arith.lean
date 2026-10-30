@@ -20,8 +20,10 @@ from 1 to `maxWidth`.
   wraps, as two's complement does, and it is never UB. A poison operand
   gives poison: `add` propagates poison (ADR-2026-10-30-0818).
 
-What the dialect's semantics does with ops whose family has no rules yet,
-`add` with a flag among them, is the next section's.
+The flags of `add`, and `sub` and `mul`, are the next section's, the wrap
+flag rules. What the dialect's semantics does with an op whose family has
+no rules yet is in the section on the core dialect's semantics
+(ADR-2026-10-30-1855).
 -/
 
 namespace Fir.Core

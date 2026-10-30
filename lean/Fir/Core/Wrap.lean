@@ -107,6 +107,22 @@ def WrapFlags.all : List WrapFlags := [{}, { nuw := true }, { nsw := true }, { n
 #guard subWith { nuw := true } (.value (0 : BitVec 1)) (.value 1) == .poison
 #guard mulWith { nsw := true } (.value (1 : BitVec 1)) (.value 1) == .poison
 #guard mulWith { nuw := true } (.value (1 : BitVec 1)) (.value 1) == .value 1
+-- At `i7`, whose signed range is `-64` to `63`.
+#guard addWith { nsw := true } (.value (63 : BitVec 7)) (.value 1) == .poison
+#guard addWith { nuw := true } (.value (63 : BitVec 7)) (.value 1) == .value 64
+#guard subWith { nuw := true } (.value (0 : BitVec 7)) (.value 1) == .poison
+#guard subWith { nsw := true } (.value (-64 : BitVec 7)) (.value 1) == .poison
+#guard mulWith { nsw := true } (.value (-64 : BitVec 7)) (.value (-1)) == .poison
+#guard mulWith { nuw := true } (.value (64 : BitVec 7)) (.value 2) == .poison
+#guard mulWith { nuw := true, nsw := true } (.value (21 : BitVec 7)) (.value 3) == .value 63
+-- At `i33`, whose signed range is `-2^32` to `2^32 - 1`.
+#guard addWith { nuw := true } (.value (-1 : BitVec 33)) (.value 1) == .poison
+#guard addWith { nsw := true } (.value (-1 : BitVec 33)) (.value 1) == .value 0
+#guard subWith { nsw := true } (.value (BitVec.intMin 33)) (.value 1) == .poison
+#guard subWith { nuw := true } (.value (BitVec.intMin 33)) (.value 1) == .value (BitVec.intMax 33)
+#guard mulWith { nsw := true } (.value (-1 : BitVec 33)) (.value (-1)) == .value 1
+#guard mulWith { nuw := true } (.value (-1 : BitVec 33)) (.value (-1)) == .poison
+#guard mulWith { nsw := true } (.value (65536 : BitVec 33)) (.value 65536) == .poison
 -- At `i64`, the signed minimum and maximum.
 #guard subWith { nsw := true } (.value (0 : BitVec 64)) (.value (BitVec.intMin 64)) == .poison
 #guard mulWith { nsw := true } (.value (BitVec.intMin 64)) (.value (-1)) == .poison

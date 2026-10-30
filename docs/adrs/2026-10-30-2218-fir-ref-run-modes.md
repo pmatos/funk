@@ -65,11 +65,14 @@ values and its exit status. Every corpus run makes no choice.
   exhaustive mode prints `{"kind":"choice-budget-exceeded","budget":B}`
   and exits with 0: it is a result, which a tool tells apart from an
   error by its `kind`. A path that reaches an op without rules is
-  ADR-2026-10-30-1855's error, with exit status 2.
+  ADR-2026-10-30-1855's error, with exit status 2. The budget is checked
+  first: a run that exceeds it reports that, even when a path reaches an
+  op without rules.
 - **Proofs.** Within its budget, exhaustive mode lists exactly the run's
   outcomes, and scripted mode, on a sequence that fits, gives one of them
   (`Core.exhaustive_outcomes`, `Core.scripted_outcomes`,
-  ADR-2026-10-30-2217).
+  ADR-2026-10-30-2217). Exhaustive mode is within its budget exactly when
+  no path chooses more than B bits (`ChoiceTree.explore_isSome_iff`).
 
 ## Alternatives
 
