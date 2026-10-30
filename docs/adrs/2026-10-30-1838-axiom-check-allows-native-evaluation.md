@@ -33,8 +33,10 @@ banned `native_decide` was proposed and then dropped.
   - the check compiles and runs `e` again with `Lean.Meta.nativeEqTrue` and
     gets `true`.
 - Everything else stays banned in `lean/`: `sorry`, every other axiom,
-  `unsafe`, `partial`, `implemented_by` and `@[extern]`. A `@[csimp]` swap
-  stays allowed, because each one is proved.
+  `unsafe`, `partial`, `implemented_by` and `@[extern]`.
+- A `@[csimp]` swap stays allowed, because each one is proved, but it must
+  rest on `propext`, `Classical.choice` and `Quot.sound` alone. The check
+  rejects a swap that depends on an axiom of native evaluation.
 
 ## Consequences
 
@@ -48,6 +50,13 @@ banned `native_decide` was proposed and then dropped.
   kernel cannot see.
 - A hand-written axiom whose name only looks native still fails the check,
   unless its claim really evaluates to `true`.
+- The compiler applies every `@[csimp]` swap when the check runs a claim
+  again. A swap proved from a native axiom could therefore make that axiom's
+  false claim run as `true`, and so confirm itself; an independent review
+  built such a proof of `False` before this rule. A real `native_decide`
+  cannot do this, because its axiom exists only after it has run. Every swap
+  in `lean/FirRef/` uses the standard axioms only, so the rule costs nothing
+  today.
 - `#print axioms` lists one axiom per native proof, beside the standard
   three.
 - A toolchain that changes how native evaluation is recorded (for example

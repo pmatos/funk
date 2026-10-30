@@ -1,3 +1,4 @@
+import Lean.Compiler.CSimpAttr
 import Lean.Compiler.ExternAttr
 import Lean.Compiler.ImplementedByAttr
 import Lean.Elab.Command
@@ -31,7 +32,10 @@ The check allows such an axiom only when it compiles and runs `e` again
 itself and gets `true`, so the proof trusts the compiler and nothing else
 (ADR-2026-10-30-1838). The bans on `unsafe`, `partial`, `implemented_by` and
 `extern` keep the compiled code equal to the definitions that the proofs are
-about. A `@[csimp]` swap is allowed, because it is proved.
+about. A `@[csimp]` swap is allowed because it is proved, but only from the
+standard axioms: the compiler applies every swap when the check runs a claim
+again, so a swap proved from a native axiom could make a false claim run as
+true and so confirm that axiom.
 
 Lean does not keep an `example`, so the check cannot see one. A `sorry` in an
 example gives a warning, and `lean/` builds with `lake build --wfail`, so it
@@ -77,10 +81,14 @@ def untrusted (env : Environment) (natives : IO.Ref NameSet) (n : Name)
   if let some impl := Compiler.getImplementedBy? env n then
     return some s!"is implemented by {impl}"
   if isExtern env n then return some "is extern"
+  -- A `@[csimp]` swap changes the code that the check runs to confirm a native
+  -- claim, so a swap that rests on a native axiom could confirm itself.
+  let csimp := Compiler.hasCSimpAttribute env n
   let mut bad := #[]
   for a in ← liftCoreM (collectAxioms n) do
-    if standardAxioms.contains a || (← natives.get).contains a then continue
-    if ← isNativeAxiom env a then natives.modify (·.insert a)
+    if standardAxioms.contains a then continue
+    if !csimp && (← natives.get).contains a then continue
+    if !csimp && (← isNativeAxiom env a) then natives.modify (·.insert a)
     else bad := bad.push a
   if bad.isEmpty then return none
   return some s!"depends on the axioms {bad.toList}"
