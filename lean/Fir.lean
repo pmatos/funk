@@ -9,6 +9,14 @@ import Fir.Validation.Dominance
 import Fir.Validation.Rules
 import Fir.Core.Validation
 import Fir.Core.Rejects
+import Fir.Validation.Tables
+import Fir.Validation.Search
+import Fir.Validation.Graph
+import Fir.Validation.Check
+import Fir.Validation.CheckOps
+import Fir.Validation.CheckFuncs
+import Fir.Validation.CheckModule
+import Fir.Core.Check
 import Fir.Execution.Values
 import Fir.Execution.PoisonUB
 import Fir.Execution.Effects

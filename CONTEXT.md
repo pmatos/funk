@@ -99,6 +99,12 @@ error, with a text position), or rejected by validation (a validation
 error, with an IR location). `funk verify` and `fir-ref validate` must give
 the same verdict on every text.
 
+**validation check**:
+The executable check, in the spec, that decides validation: it lists a
+module's problems, each a broken rule said in words with where it is, and
+the list is empty exactly when the module is valid. `fir-ref validate` runs
+it; `funk verify` is the Rust verifier that must agree with it.
+
 **well-formed module**:
 A module whose printed text says everything it holds, so that parsing the
 text gives the module back. Every valid module is well formed. A text that
