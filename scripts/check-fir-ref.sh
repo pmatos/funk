@@ -4,8 +4,11 @@
 #   test        Builds the Lean package, which runs the Lean tests, then
 #               checks print(parse(t)) == t on every canonical text of
 #               tests/fir/, that each non-canonical text prints as its
-#               canonical sibling, and that a string of ten million
-#               characters is read and printed on a 256 KiB stack.
+#               canonical sibling, that a string of ten million
+#               characters is read and printed on a 256 KiB stack, that
+#               a block of a million ops and a function of a million
+#               blocks are reprinted within 120 seconds, and regions
+#               nested 3,000 deep within 8 seconds of CPU time (#47).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match.
@@ -43,17 +46,65 @@ case "$1" in
                 status=1
             fi
         done
-        long=$(mktemp)
-        trap 'rm -f "$long"' EXIT
+        tmp=$(mktemp -d)
+        trap 'rm -rf "$tmp"' EXIT
         {
             printf 'func @f() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = "'
             head -c 10000000 /dev/zero | tr '\0' f
             printf '":1:1 to 1:2\n}\n'
-        } >"$long"
-        if ! LEAN_STACK_SIZE_KB=256 "$fir_ref" fmt --check "$long"; then
+        } >"$tmp/long.fir"
+        if ! LEAN_STACK_SIZE_KB=256 "$fir_ref" fmt --check "$tmp/long.fir"; then
             echo "fir-ref does not reprint a string of ten million characters on a 256 KiB stack" >&2
             status=1
         fi
+        # Large canonical texts (#47). On a block of a million ops and on a
+        # function of a million blocks, the spec's printer, quadratic in a
+        # block's length, takes over 400 seconds: the wall-clock limit
+        # catches it. On regions nested 3,000 deep, cubic in the depth, it
+        # takes about 30 seconds of CPU time, and fir-ref 1 or 2: that case
+        # also runs under a soft limit on CPU time, which, unlike wall-clock
+        # time, the machine's load barely changes. Past the limit fir-ref
+        # ends with SIGXCPU, status 152, and writes no core file.
+        ending='}\n\nlocs {\n  @0 = unknown\n}\n'
+        awk -v end="$ending" 'BEGIN {
+            printf "func @f() {\n^e:\n"
+            for (i = 0; i < 1000000; i++) printf "  %%c%d: i32 = const %d @0\n", i, i
+            printf "  ret @0\n%s", end
+        }' >"$tmp/ops.fir"
+        awk -v end="$ending" 'BEGIN {
+            printf "func @f() {\n"
+            for (i = 0; i < 1000000; i++) printf "^b%d:\n  ret @0\n", i
+            printf "%s", end
+        }' >"$tmp/blocks.fir"
+        awk -v end="$ending" 'function pad(w) { return sprintf("%" w "s", "") }
+        BEGIN {
+            n = 3000
+            printf "func @f() {\n^e:\n"
+            for (i = 0; i < n; i++) printf "%sbr {\n%s^b:\n", pad(2 + 4 * i), pad(4 + 4 * i)
+            printf "%sret @0\n", pad(2 + 4 * n)
+            for (i = n - 1; i >= 0; i--) printf "%s} @0\n", pad(2 + 4 * i)
+            printf "%s", end
+        }' >"$tmp/regions.fir"
+        reprint() {
+            ulimit -c 0
+            if [[ $1 == regions ]]; then
+                ulimit -S -t 8
+            fi
+            exec timeout 120 "$fir_ref" fmt --check "$tmp/$1.fir"
+        }
+        for check in "ops:a block of a million ops" "blocks:a function of a million blocks" \
+            "regions:regions nested 3,000 deep"; do
+            rc=0
+            (reprint "${check%%:*}") || rc=$?
+            case $rc in
+                0) continue ;;
+                124) why=" within 120 seconds" ;;
+                152) why=" within 8 seconds of CPU time" ;;
+                *) why="" ;;
+            esac
+            echo "fir-ref does not reprint ${check#*:}$why" >&2
+            status=1
+        done
         exit "$status"
         ;;
     round-trip)

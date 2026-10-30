@@ -1,0 +1,3 @@
+# Follow the files that a script sources, such as scripts/rust-env.sh, also
+# when a commit checks the script alone; CI checks every file at once.
+external-sources=true

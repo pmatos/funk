@@ -3,6 +3,7 @@ import FirRef
 import FirRef.Main
 import FirTest.Axioms
 import FirTest.Parse
+import FirTest.Print
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

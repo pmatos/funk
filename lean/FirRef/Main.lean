@@ -8,11 +8,13 @@ with the spec's printer, `Module.print`. Its command line follows `funk`'s
 (ADR-2026-10-30-1425).
 
 fir has no nesting limit (#36), so `fir-ref` must give a verdict at any
-depth. The spec's readers, decoder and printer recurse once per level, and
-`fir-ref` runs them on the main thread that Lean's runtime gives a program,
-so a text nested millions of levels deep overflows its stack. #47 gives
-`fir-ref` implementations that take no stack per level, proved equal to the
-spec's.
+depth. It runs implementations of the spec's functions that take no stack
+per level, each proved equal to its spec function and registered with
+`@[csimp]` (ADR-2026-10-30-1450). The printer's are done: `Module.print`
+runs as `FirRef.printModule`, in time linear in the text. The spec's readers
+and decoder still recurse once per level on the main thread that Lean's
+runtime gives a program, so a text nested millions of levels deep overflows
+its stack until the later stages of #47 replace them too.
 -/
 
 namespace FirRef

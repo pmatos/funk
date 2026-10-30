@@ -26,6 +26,22 @@ it on each PR's merge with `main` (ADR-2026-10-30-1329).
 - **Immutable once accepted.** To change a decision, write a new ADR and set the
   old one's status to `superseded by ADR-…`. Fix typos freely.
 
+## Published with the spec
+
+The spec's appendix renders each ADR as a page, and every ADR citation in
+the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
+
+- Start with the decision as a level-1 heading, then the `Status:` line, as
+  the template does.
+- Cite an ADR as plain text, `ADR-` and its id. In backticks it is an
+  example, not a citation, and is not linked.
+- Cite an ADR in the text, not in a heading or in a link's text: neither
+  can hold the link, and the build fails, naming where.
+- Link a file of the repository by its path relative to `docs/adrs/`.
+- The spec build fails on a citation of an ADR that does not exist, and on
+  Markdown the appendix cannot show: raw HTML, images, horizontal rules,
+  strikethrough, task lists and hard line breaks.
+
 ## Template
 
 ```markdown
