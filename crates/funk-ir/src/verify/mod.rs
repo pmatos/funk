@@ -14,11 +14,13 @@ mod ops;
 use std::collections::HashSet;
 use std::fmt;
 
-use crate::ir::{LocRef, Module};
+use crate::ir::{Block, LocRef, Module};
 use crate::registry::Registry;
 use crate::text::print_symbol;
 
-/// A broken rule of validation, and where in the module it broke.
+/// A problem with a module, such as a broken rule of validation, and where
+/// in the module it is. A backend reports the parts it cannot lower with
+/// it too.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Diagnostic {
     /// What is wrong.
@@ -35,6 +37,30 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    /// A diagnostic about the function `func`, or about its block `block`.
+    /// A block's IR location is that of its first op.
+    pub fn at_block(func: &str, block: Option<&Block>, message: String) -> Diagnostic {
+        Diagnostic {
+            message,
+            func: Some(func.to_string()),
+            block: block.map(|b| b.label.clone()),
+            op: None,
+            loc: block.and_then(|b| b.ops.first()).map(|o| o.loc),
+        }
+    }
+
+    /// A diagnostic about the op at `index` in block `block` of the function
+    /// `func`, at the op's location.
+    pub fn at_op(func: &str, block: &Block, index: usize, message: String) -> Diagnostic {
+        Diagnostic {
+            message,
+            func: Some(func.to_string()),
+            block: Some(block.label.clone()),
+            op: Some(index),
+            loc: block.ops.get(index).map(|o| o.loc),
+        }
+    }
+
     fn module(message: String) -> Diagnostic {
         Diagnostic {
             message,

@@ -3,9 +3,15 @@
 //! An integer attribute is a value of its dialect: the dialect that reads it
 //! bounds it, as a core constant must fit its type (`lean/Fir/Text/Lexical.lean`,
 //! "Numbers"). A width goes up to 16,777,215 bits, so `Int` holds the canonical
-//! decimal spelling, and [`Nat`] is the small unsigned big integer that checks
-//! whether a value fits a width.
+//! decimal spelling. Whether a value fits a width is decided from its digit
+//! count or, near the width's limit, by comparing it with a power of two
+//! written in decimal, in time n log n (#37). [`Nat`] is a small unsigned big
+//! integer for building values.
 
+mod decimal;
+mod ntt;
+
+use std::cmp::Ordering;
 use std::fmt;
 
 /// Bounds on log2(10) = 3.32192809..., as multiples of 2^-15.
@@ -63,23 +69,34 @@ impl Int {
             return digits == "0";
         }
         let room = u64::from(width) - 1;
-        let len = digits.len() as u128;
-        // The magnitude v has len digits: 10^(len-1) <= v < 10^len. With
-        // LOG2_10_LOW < log2(10) < LOG2_10_HIGH, both over 2^15, these
-        // bounds decide every length except about 48 near the width's
-        // limit, without converting the digits.
-        if (len - 1) * LOG2_10_LOW > u128::from(room) << 15 {
-            // v >= 10^(len-1) > 2^room.
-            return false;
+        if let Some(fits) = below_pow2_by_length(digits.len(), room) {
+            return fits;
         }
-        if len * LOG2_10_HIGH <= u128::from(room) << 15 {
-            // v < 10^len < 2^room.
-            return true;
+        match decimal::cmp_pow2(digits, room) {
+            Ordering::Less => true,
+            Ordering::Equal => self.is_negative(),
+            Ordering::Greater => false,
         }
-        let magnitude = Nat::from_decimal(digits);
-        let bits = magnitude.bit_len();
-        bits <= room || (self.is_negative() && bits == room + 1 && magnitude.is_power_of_two())
     }
+}
+
+/// Whether every magnitude of `len` digits is below `2^room`, or none is,
+/// when the digit count alone decides it.
+fn below_pow2_by_length(len: usize, room: u64) -> Option<bool> {
+    let len = len as u128;
+    // The magnitude v has len digits: 10^(len-1) <= v < 10^len. With
+    // LOG2_10_LOW < log2(10) < LOG2_10_HIGH, both over 2^15, these bounds
+    // decide every length except about 48 near the width's limit, without
+    // reading the digits.
+    if (len - 1) * LOG2_10_LOW > u128::from(room) << 15 {
+        // v >= 10^(len-1) > 2^room.
+        return Some(false);
+    }
+    if len * LOG2_10_HIGH <= u128::from(room) << 15 {
+        // v < 10^len < 2^room.
+        return Some(true);
+    }
+    None
 }
 
 impl From<i128> for Int {
@@ -102,7 +119,8 @@ pub struct Nat(Vec<u32>);
 const CHUNK: u32 = 1_000_000_000;
 
 impl Nat {
-    /// The value of a string of decimal digits.
+    /// The value of a string of decimal digits, in time quadratic in their
+    /// number.
     pub fn from_decimal(digits: &str) -> Nat {
         let mut n = Nat(Vec::new());
         let bytes = digits.as_bytes();
@@ -203,6 +221,8 @@ impl Nat {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::generate::Rng;
+    use std::time::Instant;
 
     #[test]
     fn only_canonical_spellings_parse() {
@@ -280,12 +300,120 @@ mod tests {
 
     #[test]
     fn a_constant_of_millions_of_digits_is_decided_without_converting_it() {
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         let nines = Int::parse(&"9".repeat(5_000_000)).unwrap();
         assert!(nines.fits_signed(16_777_215));
         let big = Int::parse(&format!("1{}", "0".repeat(5_050_600))).unwrap();
         assert!(!big.fits_signed(16_777_215));
         let secs = start.elapsed().as_secs();
         assert!(secs < 20, "took {secs} s");
+    }
+
+    fn random_digits(rng: &mut Rng, len: usize) -> String {
+        let mut s: String = (0..len)
+            .map(|_| char::from(b'0' + rng.below(10) as u8))
+            .collect();
+        if s.starts_with('0') {
+            s.replace_range(..1, &(1 + rng.below(9)).to_string());
+        }
+        s
+    }
+
+    /// Magnitudes near 2^room: itself, 2^room - 1, its digits with a random
+    /// suffix or one digit changed, and random digits of about its length.
+    fn near_the_edge(rng: &mut Rng, room: u64) -> Vec<String> {
+        let edge = Nat::pow2(room).to_decimal();
+        let len = edge.len();
+        let mut out = vec![edge.clone(), Nat::ones(room).to_decimal()];
+        for _ in 0..3 {
+            let keep = rng.below(len as u64) as usize;
+            out.push(format!(
+                "{}{}",
+                &edge[..keep],
+                random_digits(rng, len - keep)
+            ));
+            let at = rng.below(len as u64) as usize;
+            let mut changed = edge.clone().into_bytes();
+            changed[at] = if changed[at] == b'9' || (changed[at] != b'0' && rng.one_in(2)) {
+                changed[at] - 1
+            } else {
+                changed[at] + 1
+            };
+            let changed = String::from_utf8(changed).unwrap();
+            out.push(changed.trim_start_matches('0').to_string());
+        }
+        for l in [len - 1, len, len + 1] {
+            out.push(random_digits(rng, l.max(1)));
+        }
+        out.retain(|s| !s.is_empty());
+        out
+    }
+
+    #[test]
+    fn the_check_agrees_with_the_exact_one_on_random_widths_and_values() {
+        let mut rng = Rng::new(37);
+        let mut widths: Vec<u64> = (0..300).map(|_| 1 + rng.below(2_000)).collect();
+        widths.extend((0..15).map(|_| 2_000 + rng.below(18_000)));
+        let mut in_band = 0;
+        for width in widths {
+            let room = width - 1;
+            for magnitude in near_the_edge(&mut rng, room) {
+                if below_pow2_by_length(magnitude.len(), room).is_none() {
+                    in_band += 1;
+                }
+                for negative in [false, true] {
+                    let v = Int::from_nat(negative, &Nat::from_decimal(&magnitude));
+                    let width = width as u32;
+                    assert_eq!(
+                        v.fits_signed(width),
+                        fits_exactly(&v, width),
+                        "{v} at {width}"
+                    );
+                }
+            }
+        }
+        assert!(in_band > 2_000, "only {in_band} values in the band");
+    }
+
+    fn pow_mod(mut base: u64, mut exp: u64, m: u64) -> u64 {
+        let mut acc = 1;
+        while exp > 0 {
+            if exp & 1 == 1 {
+                acc = acc * base % m;
+            }
+            base = base * base % m;
+            exp >>= 1;
+        }
+        acc
+    }
+
+    #[test]
+    fn constants_at_the_largest_width_s_limit_are_decided_in_n_log_n_time() {
+        let room = 16_777_214;
+        let edge = decimal::pow2_digits(room);
+        // Checks of 2^room that do not rely on how it was computed.
+        assert_eq!(edge.len(), 5_050_445);
+        assert!(edge.starts_with("454646324642434501973192831943"));
+        assert!(edge.ends_with("999950178145993391164971024384"));
+        for m in [1_000_000_007, 998_244_353] {
+            let rem = edge
+                .bytes()
+                .fold(0, |r, d| (r * 10 + u64::from(d - b'0')) % m);
+            assert_eq!(rem, pow_mod(2, room, m), "2^{room} mod {m}");
+        }
+        assert_eq!(below_pow2_by_length(edge.len(), room), None);
+        let head = &edge[..edge.len() - 1];
+        for (v, fits) in [
+            (format!("{head}3"), true),
+            (edge.clone(), false),
+            (format!("-{edge}"), true),
+            (format!("-{head}5"), false),
+        ] {
+            let v = Int::parse(&v).unwrap();
+            let start = Instant::now();
+            assert_eq!(v.fits_signed(16_777_215), fits);
+            let secs = start.elapsed().as_secs();
+            assert!(secs < 20, "took {secs} s");
+        }
     }
 }

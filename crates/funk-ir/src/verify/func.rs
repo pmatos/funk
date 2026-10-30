@@ -66,13 +66,7 @@ pub(super) fn all_blocks(blocks: &[Block]) -> Vec<&Block> {
 
 /// A diagnostic about a function, or about one of its blocks.
 fn at(f: &Func, block: Option<&Block>, message: String) -> Diagnostic {
-    Diagnostic {
-        message,
-        func: Some(f.name.clone()),
-        block: block.map(|b| b.label.clone()),
-        op: None,
-        loc: block.and_then(|b| b.ops.first()).map(|o| o.loc),
-    }
+    Diagnostic::at_block(&f.name, block, message)
 }
 
 pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {

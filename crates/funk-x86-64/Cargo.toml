@@ -1,0 +1,15 @@
+[package]
+name = "funk-x86-64"
+description = "funk's naive x86-64 backend: fir to System V assembly, an object file and an executable"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+funk-ir = { path = "../funk-ir" }
+
+[lints]
+workspace = true
