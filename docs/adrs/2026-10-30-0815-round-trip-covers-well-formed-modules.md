@@ -25,7 +25,9 @@ signature on every op (choice 1 in the
 - Every valid module is well formed. Validation checks the characters of
   value names and labels and the limits on numbers, and symbols that are not
   words are quoted, so two different valid modules never print the same
-  text. #11 proves this for the core dialect.
+  text. The spec proves this for every dialect whose text meets the laws of
+  `LawfulDialectText` (`validIsWellFormed`); #11 proves those laws for the
+  core dialect.
 - A text that follows the grammar but does not decode is not a module. The
   parser rejects it with a reason and a position: a number out of range, a
   string or symbol not in its one spelling, an item of an unknown kind, a

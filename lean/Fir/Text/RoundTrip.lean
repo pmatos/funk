@@ -25,12 +25,14 @@ read back, so two different valid modules never print the same text. This
 is `ValidIsWellFormed`, an obligation of every dialect. Validation checks
 the names, labels, operand types, successors and location references of a
 module, and the writability laws of `LawfulDialectText` cover what the
-dialect writes, so the obligation holds for every lawful dialect. The
-parser is written by #10. #11 proves the first property, and proves
-`ValidIsWellFormed` for the core dialect.
+dialect writes, so the obligation holds for every lawful dialect: the
+theorem `validIsWellFormed`, below. The parser is written by #10. #11
+proves the first property, and the laws of `LawfulDialectText` for the
+core dialect, which give `ValidIsWellFormed` for it.
 
 The conditions look at every block and op of a function, at any depth: the
-blocks of the regions of its ops too.
+blocks of the regions of its ops too. A valid function's ops own no region,
+so its blocks at any depth are its blocks.
 -/
 
 namespace Fir
@@ -41,6 +43,27 @@ variable {d : Dialect}
 
 /-- Every op of a function, at any depth. -/
 def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
+
+/-- Ops that own no region have no blocks below them. -/
+theorem Operation.regionBlocks_eq_nil :
+    ∀ {os : List (Operation d)}, (∀ o ∈ os, o.regions = []) → Operation.regionBlocks os = []
+  | [], _ => by simp [Operation.regionBlocks]
+  | ⟨_, _, _, _, regions, _⟩ :: _, h => by
+    have hr : regions = [] := h _ (List.mem_cons_self ..)
+    subst hr
+    rw [Operation.regionBlocks, Region.allBlocks,
+      Operation.regionBlocks_eq_nil fun o ho => h o (List.mem_cons_of_mem _ ho)]
+    rfl
+
+/-- When no op of these blocks owns a region, they are all the blocks, at
+any depth. -/
+theorem Block.allBlocks_eq_self :
+    ∀ {bs : List (Block d)}, (∀ b ∈ bs, ∀ o ∈ b.body, o.regions = []) → Block.allBlocks bs = bs
+  | [], _ => by simp [Block.allBlocks]
+  | ⟨_, _, _⟩ :: _, h => by
+    rw [Block.allBlocks, Operation.regionBlocks_eq_nil (h _ (List.mem_cons_self ..)),
+      Block.allBlocks_eq_self fun b hb => h b (List.mem_cons_of_mem _ hb)]
+    rfl
 
 variable [DialectSignature d] [DialectText d]
 
@@ -115,9 +138,52 @@ theorem print_injective {parse : Parser d} (h : PrintThenParse parse)
   rfl
 
 /-- Every valid module of the dialect is well formed: an obligation of every
-dialect, which the writability laws of `LawfulDialectText` make hold. #11
-proves it for the core dialect. -/
+dialect, which the writability laws of `LawfulDialectText` make hold
+(`validIsWellFormed`). -/
 def ValidIsWellFormed [DialectValidation d] : Prop :=
   ∀ m : Module d, m.Valid → m.WellFormed
+
+variable [DialectValidation d] [LawfulDialectText d]
+
+/-- A function valid in a module whose location table is valid is well
+formed. -/
+theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.context)
+    (hl : LocTable.Valid m.locs) : f.WellFormed := by
+  have hall : f.allBlocks = f.blocks := Block.allBlocks_eq_self fun b hb o ho => by
+    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
+    exact (hf.ops b hb i o hi).1
+  have hdef : ∀ x t, f.typeOf x = some t → isName x := by
+    intro x t ht
+    unfold Func.typeOf at ht
+    cases hp : f.defs.find? (·.1 == x) with
+    | none => simp [hp] at ht
+    | some p =>
+      have hx : (p.1 == x) = true := List.find?_some (p := fun y : Name × d.Ty => y.1 == x) hp
+      rw [← beq_iff_eq.mp hx]
+      exact hf.names p (List.mem_of_find?_eq_some hp)
+  refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_⟩
+  · exact ⟨LawfulDialectText.tyAttr_isType t (hf.types t ht),
+      LawfulDialectText.decodeTy_encode t (hf.types t ht)⟩
+  · simp only [Func.allOps, hall, List.mem_flatMap] at ho
+    obtain ⟨b, hb, ho⟩ := ho
+    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
+    obtain ⟨-, hops, hres, -, -, -, hsucc, -, -, -, hloc⟩ := hf.ops b hb i o hi
+    refine ⟨LawfulDialectText.opName_isWord _, LawfulDialectText.opAttrs_writable _, hops,
+      hres, fun s hs => ?_, ?_⟩
+    · obtain ⟨-, tgt, htgt, hargs⟩ := hsucc s hs
+      refine ⟨?_, fun a ha => ?_⟩
+      · have hl : (tgt.label == s.label) = true :=
+          List.find?_some (p := fun b : Block d => b.label == s.label) htgt
+        rw [← beq_iff_eq.mp hl]
+        exact hf.labels tgt (hall ▸ List.mem_of_find?_eq_some htgt)
+      · have hm : f.typeOf a ∈ tgt.params.map (some ·.2) := hargs ▸ List.mem_map_of_mem ha
+        obtain ⟨p, -, hp⟩ := List.mem_map.mp hm
+        exact hdef a p.2 hp.symm
+    · obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ m.locs.map (·.1) from hloc)
+      exact hloc ▸ (hl.2.1 e he).1
+
+/-- Every valid module of a dialect with lawful text is well formed. -/
+theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
+  fun _ hm => ⟨fun f hf => (hm.funcs f hf).wellFormed hm.locs, hm.locs.2.1⟩
 
 end Fir
