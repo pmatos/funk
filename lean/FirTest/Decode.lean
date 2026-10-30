@@ -3,7 +3,7 @@ import FirTest.Print
 /-!
 Tests of the decoder that `fir-ref` runs: `FirRef.decodeModule`, proved
 equal to the spec's `Text.decodeModule` and registered with `@[csimp]`, and
-`FirRef.parse`, which calls it in place of `Fir.parse`
+`FirRef.parse`, which runs in place of `Fir.parse` and calls it
 (ADR-2026-10-30-1450). Through `FirTest.Print`, this module imports
 `FirRef.Utf8`, as `fir-ref` does, so the checks below run those
 implementations, and so do the parser's checks in `FirTest.Parse`.
