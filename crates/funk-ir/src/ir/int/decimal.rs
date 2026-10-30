@@ -2,9 +2,16 @@
 //! millions of digits is checked against its width without converting it
 //! to binary (#37).
 
+use std::cell::RefCell;
 use std::cmp::Ordering;
 
 use super::ntt;
+
+thread_local! {
+    /// The last power of two built, with its exponent: a module's constants
+    /// near a limit mostly share a width, and `funk verify` checks each twice.
+    static LAST_POW2: RefCell<Option<(u64, Vec<u64>)>> = const { RefCell::new(None) };
+}
 
 /// The limbs are base-10^5 digits. A square of `n` limbs then has
 /// coefficients below `n 10^10`, under the transform's prime for every `n`
@@ -16,10 +23,17 @@ const BASE_DIGITS: usize = 5;
 /// `2^k`.
 pub(super) fn cmp_pow2(digits: &str, k: u64) -> Ordering {
     let v = limbs(digits);
-    let p = pow2(k);
-    v.len()
-        .cmp(&p.len())
-        .then_with(|| v.iter().rev().cmp(p.iter().rev()))
+    LAST_POW2.with_borrow_mut(|last| {
+        if !matches!(last, Some((at, _)) if *at == k) {
+            *last = Some((k, pow2(k)));
+        }
+        let Some((_, p)) = last else {
+            unreachable!("the power was just built")
+        };
+        v.len()
+            .cmp(&p.len())
+            .then_with(|| v.iter().rev().cmp(p.iter().rev()))
+    })
 }
 
 /// The base-10^5 limbs of a string of decimal digits, lowest first, with no
@@ -43,7 +57,8 @@ fn pow2(k: u64) -> Vec<u64> {
     for bit in (0..u64::BITS - k.leading_zeros()).rev() {
         x = square(&x);
         if (k >> bit) & 1 == 1 {
-            x = carry(x.iter().map(|l| 2 * l).collect());
+            x.iter_mut().for_each(|l| *l *= 2);
+            x = carry(x);
         }
     }
     x
@@ -80,11 +95,13 @@ fn carry(mut coefficients: Vec<u64>) -> Vec<u64> {
 /// The decimal digits of `2^k`.
 #[cfg(test)]
 pub(super) fn pow2_digits(k: u64) -> String {
+    use std::fmt::Write;
+
     let limbs = pow2(k);
     let (top, rest) = limbs.split_last().expect("2^k is not zero");
     let mut out = top.to_string();
     for limb in rest.iter().rev() {
-        out.push_str(&format!("{limb:05}"));
+        write!(out, "{limb:05}").expect("writing to a String does not fail");
     }
     out
 }

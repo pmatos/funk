@@ -300,7 +300,7 @@ mod tests {
 
     #[test]
     fn a_constant_of_millions_of_digits_is_decided_without_converting_it() {
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         let nines = Int::parse(&"9".repeat(5_000_000)).unwrap();
         assert!(nines.fits_signed(16_777_215));
         let big = Int::parse(&format!("1{}", "0".repeat(5_050_600))).unwrap();

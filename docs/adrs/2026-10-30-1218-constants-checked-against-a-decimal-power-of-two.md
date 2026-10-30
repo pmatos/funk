@@ -29,10 +29,14 @@ a debug build, which `cargo test` runs.
   The last squaring dominates, so the whole costs about two squarings of
   the result's size.
 - **Square by an NTT over `2^64 - 2^32 + 1`**
-  (`crates/funk-ir/src/ir/int/ntt.rs`). One prime, one forward and one
-  inverse transform per squaring, no `unsafe`. With base 10^5, every
-  coefficient of a square is below the prime for any `2^k` with
-  `k < 2^32`, so every `u32` width is exact; an `assert!` guards the bound.
+  (`crates/funk-ir/src/ir/int/ntt.rs`). One prime, two forward transforms
+  per squaring (the second, reversed, inverts the first), no `unsafe`.
+  With base 10^5, every coefficient of a square is below the prime for any
+  `2^k` with `k < 2^32`, so every `u32` width is exact; an `assert!` guards
+  the bound.
+- **Keep the last power.** Each thread keeps the last `2^k` it built, with
+  `k`, in `LAST_POW2` (`decimal.rs`). The constants near a limit in one
+  module mostly share a width, and `funk verify` checks each op twice.
 - **Tested against the quadratic code.** The NTT square is checked against
   the schoolbook product, `2^k` against `Nat::pow2(k).to_decimal()`, and
   `fits_signed` against the old binary conversion on random widths and
@@ -52,8 +56,12 @@ a debug build, which `cargo test` runs.
 ## Consequences
 
 - A constant in the band costs about a second in a debug build and about
-  0.2 s in a release build, against minutes before. `funk verify` still
-  decodes each op twice, so it pays this twice.
+  0.2 s in a release build, against minutes before. Further constants of
+  that width, and the second decode of each op in `funk verify`, pay only
+  the comparison.
+- A thread that checked such a constant keeps its power of two until it
+  checks another width or exits: about 8 MB at `i16777215`, where the
+  constant's text is 5 MB.
 - `funk-ir` carries its own NTT. Its correctness rests on the tests above
   and on the coefficient bound, which a change of base must recheck.
 - `Nat::from_decimal` stays quadratic; nothing in the check uses it any
