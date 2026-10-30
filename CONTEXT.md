@@ -136,6 +136,12 @@ A dialect that only tests register, to show that a new dialect needs no
 change to the IR, the parser or the printer. Its ops and types are named
 `toy.` and a word, such as `toy.br`, so they never collide with core ops.
 
+**sum dialect**:
+One dialect that holds the ops of two dialects over the same types, so that
+one module can mix them. It sends each op name to one of the two, so no op
+name may belong to both. Only the Lean tests build one, from the core
+dialect and a test dialect (ADR-2026-10-30-2040).
+
 ### Semantics
 
 **poison**:
