@@ -4,9 +4,15 @@ import FirRef.Utf8
 /-!
 `fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). It
 reads texts with the spec's parser and the core dialect, and prints them
-with the spec's printer, `Module.print`. It runs on the main thread that
-Lean's runtime gives a program, whose stack is large, so deeply nested
-texts parse and print as they do in `funk` (#36).
+with the spec's printer, `Module.print`. Its command line follows `funk`'s
+(ADR-2026-10-30-1425).
+
+fir has no nesting limit (#36), so `fir-ref` must give a verdict at any
+depth. The spec's readers, decoder and printer recurse once per level, and
+`fir-ref` runs them on the main thread that Lean's runtime gives a program,
+so a text nested millions of levels deep overflows its stack. #47 gives
+`fir-ref` implementations that take no stack per level, proved equal to the
+spec's.
 -/
 
 namespace FirRef

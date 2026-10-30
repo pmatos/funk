@@ -7,7 +7,8 @@ Status: accepted
 ADR-2026-10-29-2135 makes `lean/` the Lake package `fir`, with no
 dependencies, built by `scripts/build-spec.sh` under two git guards. It
 leaves to [#10](https://github.com/pmatos/funk/issues/10) how the Lean code
-is tested and how the `fir-ref` executable is built.
+is tested and how the `fir-ref` executable is built. ADR-2026-10-30-1425
+gives `fir-ref`'s command line.
 
 Facts:
 
@@ -20,11 +21,10 @@ Facts:
 - Every check lives in `.pre-commit-config.yaml`, and CI runs exactly that.
   The CI job already installs elan, the pinned Lean toolchain and the pinned
   Rust toolchain.
-- Lean's runtime runs a program's `main` on a thread with a large stack
-  (`LEAN_STACK_SIZE_KB` sets it). Measured on 2026-10-30, `fir-ref` parses
-  texts nested 3,000,000 levels deep in attributes, and 1,000,000 in regions,
-  where `funk` on its 1 GiB stack overflows
-  ([#36](https://github.com/pmatos/funk/issues/36)).
+- fir has no nesting limit. The human ruled so on
+  [#36](https://github.com/pmatos/funk/issues/36) on 2026-10-30: every
+  tool, `fir-ref` included, must give a verdict on a text nested to any
+  depth, without a stack overflow.
 
 ## Decision
 
@@ -44,8 +44,9 @@ Facts:
 - **Tests over files run the built `fir-ref`.** `scripts/check-fir-ref.sh`
   has one mode per check:
   - `test`: `fir-ref fmt --check` on every text of `tests/fir/canonical/`,
-    and each text of `tests/fir/noncanonical/` printed as its canonical
-    sibling.
+    each text of `tests/fir/noncanonical/` printed as its canonical
+    sibling, and a text with a string of ten million characters reprinted
+    on a 256 KiB stack.
   - `round-trip`: the cross-language round trip. The Cargo example
     `crates/funk-ir/examples/fir_texts.rs` prints every text of
     `tests/fir/` and the first 600 modules of the Rust generator into a
@@ -64,18 +65,11 @@ Facts:
   scripts change. `fir-round-trip` runs `scripts/check-fir-ref.sh
   round-trip` when those, the Rust crates or the Rust toolchain change. CI
   needs no new step.
-- **`fir-ref`'s command line follows `funk`'s.** `fir-ref COMMAND ...`,
-  with the exit status of ADR-2026-10-30-1032: 0 accepted, 1 rejected, 2 a
-  usage or I/O error. A parse error is reported as
-  `FILE:LINE:COL: parse error: REASON`. The first command is
-  `fmt [--check] FILE...`, which prints a text in canonical form with the
-  spec's printer, as `funk fmt` does; #13 uses it to check that both sides
-  print each non-canonical input as its canonical sibling. `validate` and
-  `run` follow, with the JSON output that #10 specifies.
-- **No stack of its own.** `fir-ref` runs on the main thread that Lean's
-  runtime gives it. When #36 is decided, `fir-ref` follows it: a nesting
-  limit in the spec becomes a parse error in the grammar step, and explicit
-  stacks replace the recursion of the readers.
+- **No reserved stack.** `fir-ref` runs on the main thread that Lean's
+  runtime gives it. Since fir has no nesting limit, depth must not cost
+  stack: [#47](https://github.com/pmatos/funk/issues/47), the next stage of
+  #10, gives `fir-ref` implementations of the spec's readers, decoder and
+  printer that take no stack per level, and its own ADR records how.
 
 ## Alternatives
 
@@ -85,9 +79,10 @@ Facts:
   on Lake's working directory, and would not run the `fir-ref` binary.
 - **A separate test executable for the shared texts.** #13 needs `fir-ref`
   to print non-canonical inputs anyway, so one binary serves both.
-- **A thread with a reserved stack**, as `funk` has. The runtime's main
-  thread already parses deeper texts than `funk`; a Lean thread's stack size
-  is set through an internal runtime function, not a stable API.
+- **A thread with a reserved stack, or a stack sized from the input.**
+  Either moves the depth at which `fir-ref` aborts instead of removing it,
+  which the ruling on #36 does not allow. A Lean thread's stack size is also
+  set through an internal runtime function, not a stable API.
 
 ## Consequences
 
@@ -102,3 +97,19 @@ Facts:
 - The cross-language round trip covers the ops the Rust registry has. As
   op families land in Rust, the generator and the corpus cover them, and so
   does this check.
+- `fir-ref` decodes every core op, while `funk` registers only `const`,
+  `add` without flags and `ret` until #14 to #20 land. Until then a text
+  with another op, or with flags on `add`, parses in `fir-ref` and is a
+  parse error in `funk`, so #13 compares their verdicts only on texts that
+  use `funk`'s ops.
+- `fir-round-trip` needs both toolchains. A commit that changes `crates/`,
+  `Cargo.toml`, `Cargo.lock` or `rust-toolchain.toml` builds `lean/`, so it
+  needs elan; one that changes `lean/` needs rustup. ADR-2026-10-29-2135
+  says that work which touches no Lean file is not blocked without elan;
+  that no longer holds for the Rust crates.
+- Until #47 lands, the spec's readers, decoder and printer recurse once per
+  level of nesting on the main thread. Measured on 2026-10-30, `fir-ref`
+  aborts with a stack overflow on attributes nested 7,000,000 levels deep,
+  and on regions and items nested 3,000,000 and 10,000,000 deep. Strings
+  take no stack: `check-fir-ref.sh test` reprints one of ten million
+  characters on a 256 KiB stack.

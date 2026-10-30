@@ -146,6 +146,9 @@ These parts of M0 do not exist yet:
   [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
 - The validation check behind `fir-ref validate`, and the interpreter
   behind `fir-ref run`.
+- A `fir-ref` that reads and prints texts nested to any depth: today it
+  overflows its stack on texts nested millions of levels deep
+  ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
 - In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
   in the backend. The backend does not lower `i128` or return more than one
@@ -235,9 +238,12 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` too, because one of the checks builds the spec, `rustup`, because
-three of them check the Rust code, and GNU binutils on an x86-64 Linux
-host, because the Rust tests build and run native code. Then install the git hooks:
+`elan` and `rustup` too, and GNU binutils on an x86-64 Linux host. Three
+checks need elan: `fir-spec` builds the spec, `fir-ref-test` runs the Lean
+tests, and `fir-round-trip` has Lean reprint what Rust prints. Four need
+rustup: `rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and
+`fir-round-trip` runs it. `rust-test` builds and runs native code, so it
+needs binutils. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

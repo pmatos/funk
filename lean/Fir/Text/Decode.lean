@@ -21,10 +21,11 @@ position of the part that does not decode (ADR-2026-10-30-0815):
 * an operand that its function does not define, at the operand;
 * an op that does not decode, at its name.
 
-A number out of range and a string or symbol not in its one spelling are
-rejected by the earlier steps, where they stand. A successor argument needs
-no type to decode its op, so one that the function does not define is left
-to validation.
+A location reference, line or column out of range, and a string or symbol
+not in its one spelling, are rejected by the earlier steps, where they
+stand. A width or a constant out of its range is a type or an op that does
+not decode. A successor argument needs no type to decode its op, so one
+that the function does not define is left to validation.
 
 The first pass checks the function's result types, then its parameters,
 then its blocks in order: each block's arguments, then each op's results and

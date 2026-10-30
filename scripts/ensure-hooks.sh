@@ -45,22 +45,28 @@ else
 fi
 hooks_installed || fail "pre-commit and commit-msg must both be executable pre-commit hooks."
 
-# The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
-# A warning, not a failure: work that touches no Lean file can go on. It goes
-# to stdout too, because a SessionStart hook that exits 0 shows only stdout.
+# The fir-spec, fir-ref-test and fir-round-trip hooks build the Lean code
+# (ADR-2026-10-29-2135, ADR-2026-10-30-1250). A warning, not a failure: a
+# commit that runs none of them can go on. It goes to stdout too, because a
+# SessionStart hook that exits 0 shows only stdout.
 if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
     warning="Warning: elan, the Lean toolchain manager, is not installed.
-The fir-spec hook, which runs on every 'pre-commit run --all-files', needs it.
+The fir-spec, fir-ref-test and fir-round-trip hooks need it. A commit that
+changes lean/, docs/spec/, tests/fir/, the Rust crates or the Rust toolchain
+runs one of them, and so does every 'pre-commit run --all-files'.
 Install it as https://github.com/leanprover/elan#installation says."
     echo "$warning"
     echo "$warning" >&2
 fi
-# The rust-* hooks build and test the Cargo workspace (ADR-2026-10-30-1030).
+# The rust-* hooks build and test the Cargo workspace (ADR-2026-10-30-1030),
+# and fir-round-trip runs it (ADR-2026-10-30-1250).
 if ! command -v cargo >/dev/null && [[ ! -x "$HOME/.cargo/bin/cargo" ]]; then
     warning="Warning: cargo, from the Rust toolchain manager rustup, is not installed.
-The rust-fmt, rust-clippy and rust-test hooks, which run on every
-'pre-commit run --all-files', need it. Install rustup as https://rustup.rs says;
-it installs the toolchain that rust-toolchain.toml pins on first use."
+The rust-fmt, rust-clippy, rust-test and fir-round-trip hooks need it. A
+commit that changes the Rust crates, the Rust toolchain, tests/fir/ or lean/
+runs one of them, and so does every 'pre-commit run --all-files'.
+Install rustup as https://rustup.rs says; it installs the toolchain that
+rust-toolchain.toml pins on first use."
     echo "$warning"
     echo "$warning" >&2
 fi
