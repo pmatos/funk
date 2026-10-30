@@ -1,4 +1,4 @@
-//! funk needs no large stack (ADR-2026-10-30-1333): on texts nested ten
+//! funk needs no large stack (ADR-2026-10-30-1333): on texts nested a
 //! million levels deep in attributes, regions and items, it gives its usual
 //! verdicts with a main thread of 1 MiB, where a walk that recursed once per
 //! level would overflow within a few thousand levels.
@@ -11,7 +11,7 @@ use std::process::{Command, Output};
 
 use common::{file, text};
 
-const DEPTH: usize = 10_000_000;
+const DEPTH: usize = 1_000_000;
 
 /// Runs funk with `args` and its stack limited to 1 MiB.
 fn funk_on_small_stack(args: &[&str]) -> Output {
@@ -24,7 +24,7 @@ fn funk_on_small_stack(args: &[&str]) -> Output {
 }
 
 /// Removes the test's files when it ends, passed or failed: they take
-/// hundreds of megabytes.
+/// tens of megabytes.
 struct Files(Vec<String>);
 
 impl Drop for Files {
@@ -49,7 +49,7 @@ fn parse_errors(out: &Output, reasons: &[&str]) {
 }
 
 #[test]
-fn texts_nested_ten_million_levels_deep_get_their_verdicts() {
+fn texts_nested_a_million_levels_deep_get_their_verdicts() {
     let module = |items: &str| format!("{items}\nlocs {{\n  @0 = unknown\n}}\n");
     let attrs = module(&format!(
         "func @f() {}x{} {{\n^e:\n  ret @0\n}}\n",

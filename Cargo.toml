@@ -17,9 +17,3 @@ unsafe_code = "forbid"
 dbg_macro = "deny"
 todo = "deny"
 unimplemented = "deny"
-
-# Tests walk texts nested ten million levels deep; optimized code runs them
-# in seconds (ADR-2026-10-30-1334). Debug assertions and overflow checks
-# stay on.
-[profile.dev]
-opt-level = 1

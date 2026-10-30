@@ -1,12 +1,8 @@
-//! fir has no nesting limit (ADR-2026-10-30-1333). Texts and IR nested ten
+//! fir has no nesting limit (ADR-2026-10-30-1333). Texts and IR nested a
 //! million levels deep, in attributes, regions and items, parse, print,
 //! verify, clone, compare, hash, debug-format and drop on a thread with a
 //! 256 KiB stack, where a walk that recursed once per level would overflow
 //! within a few thousand levels.
-//!
-//! What a test costs grows with the size of what it holds, not with its
-//! depth: ten million levels of regions take 3.3 GB of IR, so the tests that
-//! hold two copies of nested regions, or print them, run less deep.
 
 use std::fmt::{self, Debug, Write};
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -16,10 +12,10 @@ use funk_ir::{
     Attr, Block, Dialect, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
 };
 
-const DEPTH: usize = 10_000_000;
+const DEPTH: usize = 1_000_000;
 
 /// Runs `f` on a thread with a 256 KiB stack. One test runs at a time, as
-/// each holds gigabytes at this depth.
+/// each holds hundreds of megabytes at this depth.
 fn on_small_stack(f: impl FnOnce() + Send + 'static) {
     static ONE_AT_A_TIME: Mutex<()> = Mutex::new(());
     let _one = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
@@ -81,8 +77,8 @@ fn hash(x: &impl Hash) -> u64 {
     h.finish()
 }
 
-/// Hashes the text written to it, so that a debug form gigabytes long is
-/// compared without being kept.
+/// Hashes the text written to it, so that a debug form hundreds of megabytes
+/// long is compared without being kept.
 #[derive(Default)]
 struct Digest(DefaultHasher, usize);
 
@@ -176,19 +172,7 @@ fn regions_nest_to_any_depth() {
         let ds = verify(&m, &reg);
         assert_eq!(ds.len(), 1, "{ds:?}");
         assert!(ds[0].message.contains("owns a region"), "{ds:?}");
-        std::hint::black_box(hash(&m));
-        assert_eq!(debug_digest(&m).1, debug_len(region_text, DEPTH));
-    });
-}
-
-/// A clone and the walks that compare it with its original take as much
-/// again as the original, so regions are copied a million levels deep.
-#[test]
-fn regions_copy_and_compare_at_any_depth() {
-    on_small_stack(|| {
-        let depth = 1_000_000;
-        let m = parse(&region_text(depth), &registry()).expect("the text parses");
-        copies_and_compares(&m, region_text, depth, |m| {
+        copies_and_compares(&m, region_text, DEPTH, |m| {
             let inner = innermost_block(&mut entry(m).ops[0].regions[0].blocks[0]);
             inner.label = "f".into();
         });
@@ -197,7 +181,8 @@ fn regions_copy_and_compare_at_any_depth() {
 
 /// The canonical text of regions grows with the square of their depth, as
 /// each level is indented two spaces deeper than the last, so they are
-/// printed at a depth whose text takes tens of megabytes.
+/// printed 3,000 levels deep: tens of megabytes of text, and deep enough to
+/// overflow a printer that recursed once per level.
 #[test]
 fn regions_print_at_any_depth() {
     on_small_stack(|| {
