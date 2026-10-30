@@ -4,9 +4,11 @@
 //! The nodes are the labels of the function's top-level blocks, and an edge
 //! goes from a block to each successor of its ops. Block `a` dominates block
 //! `b` when every path from the entry to `b` passes through `a`. Dominators
-//! are computed with the algorithm of Cooper, Harvey and Kennedy; a block
-//! that the entry does not reach is dominated by every block, as the spec's
-//! definition (`¬ ReachesAvoiding a b`) gives.
+//! are computed with the algorithm of Cooper, Harvey and Kennedy, and the
+//! dominator tree is numbered in depth-first order, so that `a` dominates `b`
+//! when `b`'s interval lies inside `a`'s. A block that the entry does not
+//! reach is dominated by every block, as the spec's definition
+//! (`¬ ReachesAvoiding a b`) gives.
 
 use std::collections::HashMap;
 
@@ -17,8 +19,10 @@ pub(super) struct Cfg<'f> {
     index: HashMap<&'f str, usize>,
     /// The position of each reachable node in a postorder, if reachable.
     post: Vec<Option<usize>>,
-    /// The immediate dominator of each reachable node; the entry's is itself.
-    idom: Vec<usize>,
+    /// When the walk of the dominator tree enters and leaves each reachable
+    /// node.
+    enter: Vec<usize>,
+    leave: Vec<usize>,
 }
 
 impl<'f> Cfg<'f> {
@@ -40,7 +44,13 @@ impl<'f> Cfg<'f> {
         }
         let (post, order) = postorder(&succs, n);
         let idom = dominators(&succs, &post, &order, n);
-        Cfg { index, post, idom }
+        let (enter, leave) = number_tree(&idom, &post);
+        Cfg {
+            index,
+            post,
+            enter,
+            leave,
+        }
     }
 
     /// Whether the entry reaches the block labelled `l`.
@@ -62,15 +72,38 @@ impl<'f> Cfg<'f> {
         if self.post[a].is_none() {
             return false;
         }
-        let mut x = b;
-        while self.idom[x] != x {
-            x = self.idom[x];
-            if x == a {
-                return true;
-            }
-        }
-        false
+        self.enter[a] <= self.enter[b] && self.leave[b] <= self.leave[a]
     }
+}
+
+/// Numbers the dominator tree of the reachable nodes in depth-first order:
+/// when the walk enters each node, and when it leaves it.
+fn number_tree(idom: &[usize], post: &[Option<usize>]) -> (Vec<usize>, Vec<usize>) {
+    let n = idom.len();
+    let mut children = vec![Vec::new(); n];
+    for (x, &d) in idom.iter().enumerate() {
+        if x != d && post[x].is_some() {
+            children[d].push(x);
+        }
+    }
+    let (mut enter, mut leave) = (vec![0; n], vec![0; n]);
+    if n == 0 {
+        return (enter, leave);
+    }
+    let mut clock = 0;
+    let mut stack = vec![(0, 0)];
+    enter[0] = clock;
+    while let Some((node, next)) = stack.pop() {
+        clock += 1;
+        if let Some(&child) = children[node].get(next) {
+            stack.push((node, next + 1));
+            enter[child] = clock;
+            stack.push((child, 0));
+        } else {
+            leave[node] = clock;
+        }
+    }
+    (enter, leave)
 }
 
 /// The postorder position of each node the entry (node 0) reaches, and the

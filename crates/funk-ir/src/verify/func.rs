@@ -38,6 +38,8 @@ pub(super) enum Site<'f> {
 pub(super) struct Scope<'f> {
     pub func: &'f Func,
     pub cfg: Cfg<'f>,
+    /// The first top-level block with each label.
+    pub blocks: HashMap<&'f str, &'f Block>,
     /// The type of each value: its first definition, at any depth (`typeOf`).
     pub types: HashMap<&'f str, &'f Type>,
     /// Where each value is defined among the top-level blocks (`Defines`).
@@ -154,9 +156,14 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
             out.push(at(f, Some(b), format!("block ^{} holds no ops", b.label)));
         }
     }
+    let mut by_label = HashMap::new();
+    for b in blocks {
+        by_label.entry(b.label.as_str()).or_insert(b);
+    }
     let scope = Scope {
         func: f,
         cfg,
+        blocks: by_label,
         types,
         sites: sites(f),
     };

@@ -159,7 +159,10 @@ impl Scope<'_> {
         for (x, pos) in &s.operands {
             match self.types.get(x) {
                 Some(t) => operand_types.push(t.clone()),
-                None => return err(*pos, format!("value %{x} is not defined in @{}", self.func)),
+                None => {
+                    let func = super::print_symbol(self.func);
+                    return err(*pos, format!("value %{x} is not defined in {func}"));
+                }
             }
         }
         let results: Vec<Def> = s.results.into_iter().map(def).collect();

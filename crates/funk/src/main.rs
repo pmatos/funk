@@ -5,7 +5,9 @@
 mod json;
 mod report;
 
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use funk_ir::{Registry, print, text::parse_bytes, verify};
@@ -178,52 +180,112 @@ fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Format
     report.extra.push(("canonical", Json::Bool(canonical)));
     if mode == FmtMode::Write
         && !canonical
-        && let Err(e) = replace(file, &text)
+        && let Err(why) = replace(file, &text)
     {
         report.verdict = Verdict::IoError;
-        report
-            .problems
-            .push(Problem::Io(format!("cannot write {file}: {e}")));
+        report.problems.push(Problem::Io(why));
     }
     (report, Some(Formatted { text, canonical }))
 }
 
-/// Replaces the contents of `file` with `text` all at once: writes a
-/// temporary file next to it, with its permissions, then renames it over
-/// the file, so a failed write leaves the file as it was.
-fn replace(file: &str, text: &str) -> std::io::Result<()> {
-    let target = std::fs::canonicalize(file)?;
-    let mut tmp = target.clone().into_os_string();
-    tmp.push(".funk-fmt.tmp");
-    let tmp = std::path::PathBuf::from(tmp);
-    let written = std::fs::write(&tmp, text)
-        .and_then(|()| std::fs::set_permissions(&tmp, std::fs::metadata(&target)?.permissions()))
-        .and_then(|()| std::fs::rename(&tmp, &target));
+/// Replaces the contents of `file` with `text` all at once: writes a new
+/// temporary file next to it, gives it the file's permissions, then renames
+/// it over the file, so a failed write leaves the file as it was. A file
+/// that funk may not write is left alone, as is anything already at a
+/// temporary name.
+fn replace(file: &str, text: &str) -> Result<(), String> {
+    let cannot = |e: &dyn std::fmt::Display| format!("cannot write {file}: {e}");
+    let target = std::fs::canonicalize(file).map_err(|e| cannot(&e))?;
+    let meta = std::fs::metadata(&target).map_err(|e| cannot(&e))?;
+    if !meta.is_file() {
+        return Err(cannot(&"it is not a regular file"));
+    }
+    OpenOptions::new()
+        .write(true)
+        .open(&target)
+        .map_err(|e| cannot(&e))?;
+    let (tmp, mut out) = create_temp(&target).map_err(|e| cannot(&e))?;
+    let written = out
+        .write_all(text.as_bytes())
+        .and_then(|()| out.set_permissions(meta.permissions()))
+        .and_then(|()| out.sync_all())
+        .map_err(|e| format!("cannot write {}: {e}", tmp.display()))
+        .and_then(|()| std::fs::rename(&tmp, &target).map_err(|e| cannot(&e)));
     if written.is_err() {
         let _ = std::fs::remove_file(&tmp);
     }
     written
 }
 
+/// Creates a new file next to `target`, named after it, readable only by
+/// its owner. Never opens a path that exists, so a file or a link already
+/// there is not touched, and concurrent runs each get their own.
+fn create_temp(target: &Path) -> std::io::Result<(PathBuf, File)> {
+    let dir = target.parent().unwrap_or(Path::new("."));
+    let name = target.file_name().unwrap_or_default().to_string_lossy();
+    let mut open = OpenOptions::new();
+    open.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut open, 0o600);
+    let mut n = 0u32;
+    loop {
+        let tmp = dir.join(format!(".{name}.funk-fmt.{n}.tmp"));
+        match open.open(&tmp) {
+            Ok(f) => return Ok((tmp, f)),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists && n < 999 => n += 1,
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+/// A write to standard output or standard error that failed.
+struct OutputError(&'static str, std::io::Error);
+
+fn to_stdout(e: std::io::Error) -> OutputError {
+    OutputError("standard output", e)
+}
+
+fn to_stderr(e: std::io::Error) -> OutputError {
+    OutputError("standard error", e)
+}
+
+/// Runs funk and returns its exit status. When funk cannot write its
+/// output, it says so on standard error if it can, and exits with 2.
 fn run(args: &[String]) -> u8 {
+    match run_commands(args) {
+        Ok(status) => status,
+        // A reader that stopped reading, as `head` does, wants no more
+        // output and no message.
+        Err(OutputError(_, e)) if e.kind() == std::io::ErrorKind::BrokenPipe => 2,
+        Err(OutputError(what, e)) => {
+            let _ = writeln!(std::io::stderr(), "funk: cannot write {what}: {e}");
+            2
+        }
+    }
+}
+
+fn run_commands(args: &[String]) -> Result<u8, OutputError> {
+    let mut stdout = std::io::stdout().lock();
+    let mut stderr = std::io::stderr().lock();
     let a = match parse_args(args) {
         Ok(Request::Run(a)) => a,
         Ok(Request::Help) => {
-            println!("{USAGE}");
-            return 0;
+            writeln!(stdout, "{USAGE}").map_err(to_stdout)?;
+            stdout.flush().map_err(to_stdout)?;
+            return Ok(0);
         }
         Ok(Request::Version) => {
-            println!("funk {}", env!("CARGO_PKG_VERSION"));
-            return 0;
+            writeln!(stdout, "funk {}", env!("CARGO_PKG_VERSION")).map_err(to_stdout)?;
+            stdout.flush().map_err(to_stdout)?;
+            return Ok(0);
         }
         Err(why) => {
-            eprintln!("funk: {why}\n\n{USAGE}");
-            return 2;
+            writeln!(stderr, "funk: {why}\n\n{USAGE}").map_err(to_stderr)?;
+            return Ok(2);
         }
     };
     let reg = Registry::core();
     let mut status = 0;
-    let mut stdout = std::io::stdout().lock();
     for file in &a.files {
         let (mut report, formatted) = if a.command == "verify" {
             (verify_file(file, &reg), None)
@@ -237,28 +299,27 @@ fn run(args: &[String]) -> u8 {
             Verdict::ParseError | Verdict::ValidationError => 1,
             Verdict::IoError => 2,
         });
-        let out = if a.json {
+        if a.json {
             if a.mode == FmtMode::Print
                 && let Some(f) = &formatted
             {
                 report.extra.push(("text", Json::str(f.text.clone())));
             }
-            writeln!(stdout, "{}", report.json())
+            writeln!(stdout, "{}", report.json()).map_err(to_stdout)?;
         } else {
             for p in &report.problems {
-                eprintln!("{}", p.text(file));
+                writeln!(stderr, "{}", p.text(file)).map_err(to_stderr)?;
             }
             match (a.mode, formatted) {
                 (FmtMode::Print, Some(f)) => stdout.write_all(f.text.as_bytes()),
                 (FmtMode::Check, Some(_)) if not_canonical => writeln!(stdout, "{file}"),
                 _ => Ok(()),
             }
-        };
-        if out.is_err() {
-            return 2;
+            .map_err(to_stdout)?;
         }
     }
-    status
+    stdout.flush().map_err(to_stdout)?;
+    Ok(status)
 }
 
 fn main() -> ExitCode {
@@ -267,7 +328,10 @@ fn main() -> ExitCode {
         match arg.into_string() {
             Ok(s) => args.push(s),
             Err(bad) => {
-                eprintln!("funk: argument {bad:?} is not UTF-8\n\n{USAGE}");
+                let _ = writeln!(
+                    std::io::stderr(),
+                    "funk: argument {bad:?} is not UTF-8\n\n{USAGE}"
+                );
                 return ExitCode::from(2);
             }
         }

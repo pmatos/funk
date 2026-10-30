@@ -8,6 +8,10 @@
 
 use std::fmt;
 
+/// Bounds on log2(10) = 3.32192809..., as multiples of 2^-15.
+const LOG2_10_LOW: u128 = 108_852;
+const LOG2_10_HIGH: u128 = 108_853;
+
 /// An integer, held as its one spelling: no leading zeros, no `+`, no `-0`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Int(String);
@@ -59,13 +63,17 @@ impl Int {
             return digits == "0";
         }
         let room = u64::from(width) - 1;
-        let len = digits.len() as u64;
-        // 10^(len-1) > 2^(3(len-1)) and 10^len < 2^(4len) decide most cases
-        // without converting the digits.
-        if 3 * (len - 1) > room + 1 {
+        let len = digits.len() as u128;
+        // The magnitude v has len digits: 10^(len-1) <= v < 10^len. With
+        // LOG2_10_LOW < log2(10) < LOG2_10_HIGH, both over 2^15, these
+        // bounds decide every length except about 48 near the width's
+        // limit, without converting the digits.
+        if (len - 1) * LOG2_10_LOW > u128::from(room) << 15 {
+            // v >= 10^(len-1) > 2^room.
             return false;
         }
-        if 4 * len <= room {
+        if len * LOG2_10_HIGH <= u128::from(room) << 15 {
+            // v < 10^len < 2^room.
             return true;
         }
         let magnitude = Nat::from_decimal(digits);
@@ -236,5 +244,48 @@ mod tests {
         let big = Nat::pow2(299).to_decimal();
         assert!(!fits(&big, 300) && fits(&format!("-{big}"), 300));
         assert!(fits("-1", 16_777_215) && !fits(&"9".repeat(40), 100));
+    }
+
+    /// Whether the integer fits, by converting it in full.
+    fn fits_exactly(v: &Int, width: u32) -> bool {
+        let room = u64::from(width) - 1;
+        let magnitude = Nat::from_decimal(v.magnitude_digits());
+        let bits = magnitude.bit_len();
+        bits <= room || (v.is_negative() && bits == room + 1 && magnitude.is_power_of_two())
+    }
+
+    #[test]
+    fn the_digit_count_bounds_agree_with_the_exact_check() {
+        for width in 1..=700u32 {
+            let room = u64::from(width) - 1;
+            let edge = Nat::pow2(room);
+            let mut values = vec![edge.to_decimal(), Nat::ones(room).to_decimal()];
+            let digits = edge.to_decimal().len();
+            for len in digits.saturating_sub(2).max(1)..=digits + 2 {
+                values.push("9".repeat(len));
+                values.push(format!("1{}", "0".repeat(len - 1)));
+            }
+            for magnitude in values {
+                for negative in [false, true] {
+                    let v = Int::from_nat(negative, &Nat::from_decimal(&magnitude));
+                    assert_eq!(
+                        v.fits_signed(width),
+                        fits_exactly(&v, width),
+                        "{v} at {width}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_constant_of_millions_of_digits_is_decided_without_converting_it() {
+        let start = std::time::Instant::now();
+        let nines = Int::parse(&"9".repeat(5_000_000)).unwrap();
+        assert!(nines.fits_signed(16_777_215));
+        let big = Int::parse(&format!("1{}", "0".repeat(5_050_600))).unwrap();
+        assert!(!big.fits_signed(16_777_215));
+        let secs = start.elapsed().as_secs();
+        assert!(secs < 20, "took {secs} s");
     }
 }

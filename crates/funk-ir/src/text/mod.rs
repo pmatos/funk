@@ -59,6 +59,11 @@ impl fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 /// Parses a text into a module, decoding its ops and types through `reg`.
+///
+/// A text with several errors is rejected at the first error of the
+/// earliest phase: characters and tokens, then the grammar, then decoding,
+/// which checks each function's definitions before its ops
+/// (ADR-2026-10-30-1032).
 pub fn parse(text: &str, reg: &Registry) -> Result<Module, ParseError> {
     let tokens = lexer::tokenize(text)?;
     let syntax = grammar::module(tokens)?;

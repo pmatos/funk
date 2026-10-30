@@ -176,6 +176,24 @@ fn an_operand_that_the_function_does_not_define_is_rejected() {
 }
 
 #[test]
+fn a_symbol_in_a_parse_error_is_spelled_canonically() {
+    let symbol = r#"@"a\nb\u{1b}[31m\u{202e}x""#;
+    let text = one_func(&format!("func {symbol}() {{\n^e:\n  ret %x @0\n}}\n"));
+    let e = parse_err(&text);
+    assert!(
+        e.reason.ends_with(&format!("is not defined in {symbol}")),
+        "{e:?}"
+    );
+    assert!(!e.reason.chars().any(funk_ir::text::is_escaped), "{e:?}");
+    rejected_at(
+        &one_func("func @\"1\"() {\n^e:\n  ret %x @0\n}\n"),
+        3,
+        7,
+        "%x is not defined in @\"1\"",
+    );
+}
+
+#[test]
 fn an_op_that_does_not_decode_is_rejected_at_its_name() {
     for (op, needle) in [
         (

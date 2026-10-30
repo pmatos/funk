@@ -158,7 +158,7 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
     if blocks.first().is_some_and(|e| e.label == su.label) {
         out.push(at.diag(format!("no branch may go to the entry block ^{}", su.label)));
     }
-    let Some(target) = blocks.iter().find(|b| b.label == su.label) else {
+    let Some(target) = s.blocks.get(su.label.as_str()) else {
         out.push(at.diag(format!(
             "successor ^{} is not a block of the function",
             su.label
