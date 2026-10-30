@@ -45,12 +45,15 @@ SHA-256 for each `rustup-init`.
   `scripts/check-rust.sh` as an `unsupported_script`, like `fir-spec`. They
   run when a file under `crates/`, a Cargo file, the pin or the script
   changes, and on every CI run; `rust-test` also runs when a file under
-  `tests/fir/` changes. rustfmt uses its default style.
+  `tests/fir/` changes. The script ignores `RUSTUP_TOOLCHAIN` and fails when
+  the cargo or rustc on `PATH` is not the pinned release. rustfmt uses its
+  default style.
 - **CI installs the pinned toolchain.** The `pre-commit` job downloads
   `rustup-init` 1.29.2 and checks it against the SHA-256 written in the
   workflow, installs rustup with no default toolchain, then runs `rustup
   toolchain install`, which installs what `rust-toolchain.toml` names. It
-  caches `~/.rustup/toolchains`, keyed on `rust-toolchain.toml`.
+  caches `~/.rustup/toolchains`, keyed on `rust-toolchain.toml`, except the
+  `stable-*` toolchain that the runner image ships.
 - **Setup checks for cargo.** `scripts/ensure-hooks.sh` warns when cargo is
   neither on `PATH` nor in `~/.cargo/bin`, as it does for elan.
 

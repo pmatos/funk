@@ -63,10 +63,13 @@ jobs:
           chmod +x "$RUNNER_TEMP/rustup-init"
           "$RUNNER_TEMP/rustup-init" -y --no-modify-path --profile minimal --default-toolchain none
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      # Only the pinned toolchain: the runner image ships its own stable one.
       - name: Restore the Rust toolchain
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.rustup/toolchains
+          path: |
+            ~/.rustup/toolchains
+            !~/.rustup/toolchains/stable-*
           key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}
       - name: Install the Rust toolchain
         run: |
