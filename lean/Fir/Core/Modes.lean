@@ -42,14 +42,16 @@ theorem freezeValue_toSet {ε : Type} {w : Nat} (a : PoisonOr (BitVec w)) :
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
     | .add _ _, .cons _ (.cons _ .nil) | .sub _ _, .cons _ (.cons _ .nil)
-    | .mul _ _, .cons _ (.cons _ .nil) => rfl
+    | .mul _ _, .cons _ (.cons _ .nil) | .and _, .cons _ (.cons _ .nil)
+    | .or _, .cons _ (.cons _ .nil) | .xor _, .cons _ (.cons _ .nil)
+    | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
+    | .ashr _, .cons _ (.cons _ .nil) => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
-    | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .and _, _
-    | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _ | .ashr _, _ | .icmp .., _
+    | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .icmp .., _
     | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
     | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl

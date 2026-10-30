@@ -152,9 +152,11 @@ are on `main`:
   `fir-ref`'s
   ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
   [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
-- The execution rules of `const`, `add`, `sub`, `mul`, their flags, `freeze`
-  and `ret` in Lean ([#10](https://github.com/pmatos/funk/issues/10),
-  [#14](https://github.com/pmatos/funk/issues/14)). `fir-ref run` runs a
+- The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
+  bitwise ops and shifts, `freeze` and `ret` in Lean
+  ([#10](https://github.com/pmatos/funk/issues/10),
+  [#14](https://github.com/pmatos/funk/issues/14),
+  [#15](https://github.com/pmatos/funk/issues/15)). `fir-ref run` runs a
   function in scripted mode, along the path that its choices name, or in
   exhaustive mode, which lists every outcome; Lean proves both sound
   ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
@@ -163,7 +165,7 @@ are on `main`:
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#15](https://github.com/pmatos/funk/issues/15) to
+  related ops, [#16](https://github.com/pmatos/funk/issues/16) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - The harness's rule for a set of outcomes: declared results with
   witnesses that it checks through `fir-ref run --choices`, and seeded
