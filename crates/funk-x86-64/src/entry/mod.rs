@@ -41,17 +41,17 @@ pub fn generate(m: &Module) -> Result<String, Vec<Diagnostic>> {
     asm.directive(format_args!(".p2align\t3"));
     asm.label("__funk_functions");
     asm.directive(format_args!(".quad\t{}", funcs.len()));
-    for (i, f) in funcs.iter().enumerate() {
-        let name = print_symbol(&f.name);
+    let names: Vec<String> = funcs.iter().map(|f| print_symbol(&f.name)).collect();
+    for (i, (f, name)) in funcs.iter().zip(&names).enumerate() {
         asm.directive(format_args!(
             ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}",
             name.len(),
             f.params.len()
         ));
     }
-    for (i, f) in funcs.iter().enumerate() {
+    for (i, name) in names.iter().enumerate() {
         asm.label(&format!(".Lname{i}"));
-        for chunk in print_symbol(&f.name).as_bytes().chunks(16) {
+        for chunk in name.as_bytes().chunks(16) {
             let bytes: Vec<String> = chunk.iter().map(u8::to_string).collect();
             asm.directive(format_args!(".byte\t{}", bytes.join(", ")));
         }

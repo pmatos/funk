@@ -6,33 +6,13 @@ mod common;
 use std::path::Path;
 use std::process::Command;
 
-use common::{SEVEN, dir, expect, funk, funk_in, text};
+use common::{DEAD, SEVEN, dir, expect, funk, funk_in, text, try_build};
 
 /// A function with a parameter of `i7`, a value of `i33` and one of `i128`.
 const ODD: &str = "func @odd(%a: i7) -> i7 {\n^entry:\n  %c: i33 = const 1 @1\n  %w: i128 = const 2 @2\n  ret %a @3\n}\n\nlocs {\n  @1 = \"w.c\":1:1 to 1:5\n  @2 = name(\"wide\")\n  @3 = unknown\n}\n";
 
 /// A function with two results.
 const PAIR: &str = "func @pair(%x: i8) -> i8, i8 {\n^entry:\n  ret %x, %x @4\n}\n\nlocs {\n  @4 = \"p.c\":2:3 to 2:12\n}\n";
-
-/// A valid module with a block that validation rejects.
-const DEAD: &str = "func @f() -> i32 {\n^entry:\n  %c: i32 = const 0 @0\n  ret %c @0\n^dead:\n  %d: i32 = const 1 @1\n  ret %d @1\n}\n\nlocs {\n  @0 = unknown\n  @1 = \"f.c\":3:1 to 3:9\n}\n";
-
-/// Writes `fir` to a fresh directory and runs `funk build` on it with
-/// `extra` options. Returns the output, the executable's path and the
-/// source's.
-fn try_build(name: &str, fir: &str, extra: &[&str]) -> (std::process::Output, String, String) {
-    let dir = dir(&format!("try-{name}"));
-    let src = dir
-        .join(format!("{name}.fir"))
-        .to_string_lossy()
-        .into_owned();
-    std::fs::write(&src, fir).unwrap();
-    let exe = dir.join(name).to_string_lossy().into_owned();
-    let mut args = vec!["build"];
-    args.extend(extra);
-    args.extend(["-o", &exe, &src]);
-    (funk(&args, ""), exe, src)
-}
 
 /// Whether neither the executable nor the object file exists.
 fn nothing_written(exe: &str) -> bool {

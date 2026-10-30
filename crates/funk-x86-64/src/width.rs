@@ -16,16 +16,17 @@ use crate::asm::{Asm, Reg};
 /// The widths that the backend lowers: `i1`, `i8`, `i16`, `i32` and `i64`.
 pub const SUPPORTED: [u32; 5] = [1, 8, 16, 32, 64];
 
+/// [`SUPPORTED`], as the diagnostics name it.
+const NAMED: &str = "i1, i8, i16, i32 and i64";
+
 /// The width of `ty` if the backend lowers values of it, or why not.
 pub fn check(ty: &Type) -> Result<u32, String> {
     match core_type(ty) {
         Some(CoreType::Int(w)) if SUPPORTED.contains(&w) => Ok(w),
-        Some(CoreType::Int(128)) => Err(
-            "the x86-64 backend does not lower i128 yet: it lowers i1, i8, i16, i32 and i64".into(),
-        ),
-        _ => Err(format!(
-            "the x86-64 backend lowers i1, i8, i16, i32 and i64, not {ty}"
+        Some(CoreType::Int(128)) => Err(format!(
+            "the x86-64 backend does not lower i128 yet: it lowers {NAMED}"
         )),
+        _ => Err(format!("the x86-64 backend lowers {NAMED}, not {ty}")),
     }
 }
 

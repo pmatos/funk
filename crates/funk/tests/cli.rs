@@ -4,9 +4,8 @@ mod common;
 
 use std::process::Command;
 
-use common::{SEVEN, dir, file, funk, funk_in, text};
+use common::{DEAD, SEVEN, dir, file, funk, funk_in, text};
 
-const DEAD: &str = "func @f() -> i32 {\n^entry:\n  %c: i32 = const 0 @0\n  ret %c @0\n^dead:\n  %d: i32 = const 1 @1\n  ret %d @1\n}\n\nlocs {\n  @0 = unknown\n  @1 = \"f.c\":3:1 to 3:9\n}\n";
 const BAD_TYPES: &str = "func @f(%a: i32, %b: i64) -> i32 {\n^entry:\n  %c: i32 = add %a, %b @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
 
 #[test]

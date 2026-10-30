@@ -8,6 +8,10 @@ use std::process::{Command, Output, Stdio};
 
 pub const SEVEN: &str = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
 
+/// A module that parses, with a block that validation rejects as
+/// unreachable.
+pub const DEAD: &str = "func @f() -> i32 {\n^entry:\n  %c: i32 = const 0 @0\n  ret %c @0\n^dead:\n  %d: i32 = const 1 @1\n  ret %d @1\n}\n\nlocs {\n  @0 = unknown\n  @1 = \"f.c\":3:1 to 3:9\n}\n";
+
 /// A fresh, empty directory for one test.
 pub fn dir(name: &str) -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
@@ -89,18 +93,27 @@ pub fn func(name: &str, params: &str, results: &str, ops: &[&str]) -> String {
     text + "}\n"
 }
 
-/// Builds the module `fir` into a fresh directory named after `name` with
-/// `funk build`, and returns the executable's path. Panics if the build
-/// fails.
-pub fn build(name: &str, fir: &str) -> PathBuf {
+/// Writes the module `fir` to a fresh directory named after `name` and
+/// runs `funk build` on it with the options `extra`. Returns the output,
+/// the executable's path and the source's.
+pub fn try_build(name: &str, fir: &str, extra: &[&str]) -> (Output, String, String) {
     let dir = dir(&format!("build-{name}"));
-    let src = dir.join(format!("{name}.fir"));
+    let src = dir
+        .join(format!("{name}.fir"))
+        .to_string_lossy()
+        .into_owned();
     std::fs::write(&src, fir).unwrap();
-    let exe = dir.join(name);
-    let out = funk(
-        &["build", "-o", exe.to_str().unwrap(), src.to_str().unwrap()],
-        "",
-    );
+    let exe = dir.join(name).to_string_lossy().into_owned();
+    let mut args = vec!["build"];
+    args.extend(extra);
+    args.extend(["-o", &exe, &src]);
+    (funk(&args, ""), exe, src)
+}
+
+/// Builds the module `fir` as [`try_build`] does, and returns the
+/// executable's path. Panics if the build fails.
+pub fn build(name: &str, fir: &str) -> PathBuf {
+    let (out, exe, _) = try_build(name, fir, &[]);
     assert_eq!(
         out.status.code(),
         Some(0),
@@ -108,7 +121,7 @@ pub fn build(name: &str, fir: &str) -> PathBuf {
         text(&out.stdout),
         text(&out.stderr)
     );
-    exe
+    PathBuf::from(exe)
 }
 
 /// Runs a built executable with `args`.
