@@ -8,9 +8,15 @@
 //! are those of the core dialect that the registry has: `const`, `add`,
 //! `sub` and `mul` with each combination of their flags, `freeze`, the
 //! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
-//! and `ret`. The generator is deterministic: one seed gives one module.
+//! the width changes `zext`, `sext` and `trunc` between valid pairs of
+//! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem` and
+//! `ret`. A division may be by zero: that is UB when it runs, not invalid,
+//! and no check runs these modules. The generator is deterministic: one seed
+//! gives one module.
 
-use crate::dialects::core::{BITWISE_OPS, MAX_WIDTH, SHIFT_OPS, WRAP_FLAG_SETS, int_type};
+use crate::dialects::core::{
+    BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, SHIFT_OPS, WRAP_FLAG_SETS, int_type, int_width,
+};
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
@@ -246,6 +252,22 @@ impl Body<'_> {
         same.map(|(v, _)| v.clone()).collect()
     }
 
+    /// The width changes to type `t` of the values so far, each as the op's
+    /// name and its operand: `zext` and `sext` of a narrower integer, and
+    /// `trunc` of a wider one.
+    fn casts_to(&self, t: &Type) -> Vec<(&'static str, String)> {
+        let n = int_width(t).expect("an integer type");
+        let mut out = Vec::new();
+        for (v, u) in &self.values {
+            match int_width(u).expect("an integer type") {
+                m if m < n => out.extend([("zext", v.clone()), ("sext", v.clone())]),
+                m if m > n => out.push(("trunc", v.clone())),
+                _ => {}
+            }
+        }
+        out
+    }
+
     /// A value name that the function does not define yet.
     fn fresh_name(&self, rng: &mut Rng) -> String {
         loop {
@@ -256,13 +278,29 @@ impl Body<'_> {
         }
     }
 
-    /// Defines a new value of type `t` and returns its name: `add`, `sub`
-    /// or `mul` of two earlier values of that type, with any of their flags,
-    /// a bitwise op or a shift of two, `freeze` of one, or a constant.
+    /// Defines a new value of type `t` and returns its name: a width change
+    /// of an earlier value of another width, `add`, `sub` or `mul` of two
+    /// earlier values of type `t`, with any of their flags, a bitwise op or
+    /// a shift of two, a division or remainder of two, `freeze` of one, or a
+    /// constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
+        let casts = self.casts_to(&t);
         let loc = *rng.pick(self.keys);
-        let op = if !same.is_empty() && rng.one_in(2) {
+        let op = if !casts.is_empty() && rng.one_in(3) {
+            let (name, x) = rng.pick(&casts);
+            Op::new(*name, loc).operand(x.as_str())
+        } else if !same.is_empty() && rng.one_in(5) {
+            let (name, exact) = *rng.pick(&DIVISION_OPS);
+            let op = Op::new(name, loc);
+            let op = if exact && rng.one_in(2) {
+                op.attr(Attr::word("exact"))
+            } else {
+                op
+            };
+            op.operand(rng.pick(&same).as_str())
+                .operand(rng.pick(&same).as_str())
+        } else if !same.is_empty() && rng.one_in(2) {
             match rng.below(10) {
                 0 => Op::new("freeze", loc).operand(rng.pick(&same).as_str()),
                 k @ 4.. => {
@@ -282,7 +320,7 @@ impl Body<'_> {
                 }
             }
         } else {
-            let w = crate::dialects::core::int_width(&t).expect("an integer type");
+            let w = int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))
         };
         let n = self.fresh_name(rng);

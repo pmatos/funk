@@ -9,8 +9,10 @@
 
 mod arith;
 mod bitwise;
+mod cast;
 mod constant;
 mod control;
+mod div;
 mod freeze;
 
 use std::collections::HashMap;
@@ -111,6 +113,8 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| arith::lowering(name))
         .or_else(|| freeze::lowering(name))
         .or_else(|| bitwise::lowering(name))
+        .or_else(|| cast::lowering(name))
+        .or_else(|| div::lowering(name))
         .or_else(|| control::lowering(name))
 }
 
