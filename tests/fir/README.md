@@ -138,6 +138,14 @@ with each set of flags on every pair of boundary bit patterns,
 `poison-iN` how poison propagates through them, and `freeze-iN` `freeze`
 of values and of poison, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33` and
 `i64`; `reject/arith.toml` holds the texts of these ops that do not
-decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
-and `ashr` (#15); stage 3 of #15 adds texts for them. #16 to #20 add the
-other ops to `funk`.
+decode (#14).
+
+The texts of #15 also use `and`, `or`, `xor`, `shl`, `lshr` and `ashr`.
+`bitwise-iN` runs `and`, `or` and `xor` on every pair of boundary bit
+patterns; `shift-iN` shifts each boundary bit pattern with `shl`, `lshr`
+and `ashr` by 0, 1, `N - 1`, `N`, `N + 1` and the boundary bit patterns;
+and `poison-bitwise-iN` passes poison to each of the six ops as either
+operand; all at the same seven widths. `freeze-xor-i64` runs `xor %f, %f`
+on a frozen poison. `reject/bitwise.toml` and `reject/shift.toml` hold
+the texts of these ops that do not decode. #16 to #20 add the other ops
+to `funk`.
