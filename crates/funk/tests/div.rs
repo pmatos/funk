@@ -10,7 +10,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{boundaries, build, expect, func, module, run, spell, text, wrap};
+use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
 use funk_ir::dialects::core::DIVISION_OPS;
 use funk_x86_64::width::SUPPORTED as WIDTHS;
 
@@ -58,26 +58,6 @@ fn spellings() -> Vec<(String, String, &'static str, bool)> {
         }
     }
     out
-}
-
-/// Runs `exe` with `args` and checks that it prints one value of `iW`,
-/// whichever it is: the result where the source's is poison.
-fn expect_any(exe: &Path, args: &[&str], w: u32) {
-    let out = run(exe, args);
-    let stdout = text(&out.stdout);
-    let value = stdout
-        .strip_prefix("{\"values\":[\"")
-        .and_then(|s| s.strip_suffix("\"]}\n"));
-    let of_type = value.is_some_and(|v| match w {
-        1 => v == "true" || v == "false",
-        _ => v.parse::<i128>().is_ok_and(|x| wrap(w, x) == x),
-    });
-    assert!(
-        out.status.code() == Some(0) && out.stderr.is_empty() && of_type,
-        "{} {args:?}: {stdout}{}",
-        exe.display(),
-        text(&out.stderr)
-    );
 }
 
 /// Runs `@name` of `exe` on `args` and checks what it gives against

@@ -56,11 +56,11 @@ tests = [
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
-`const`, `add`, `sub` and `mul` with any flags, `freeze`, `sdiv` and `udiv`
-with or without `exact`, `srem`, `urem` and `ret` at `i1`, `i8`, `i16`,
-`i32` and `i64`, with at most one result. Tests of other
-widths, or of several results, go in modules whose tests are all
-interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+`const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
+and shifts, `sdiv` and `udiv` with or without `exact`, `srem`, `urem` and
+`ret` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most one result.
+Tests of other widths, or of several results, go in modules whose tests
+are all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -117,6 +117,6 @@ locs {
 Today the texts use only `const`, `add` without flags and `ret`, but for
 must-reject texts that name an op or a flag that fir does not have. Both
 tools now also have `sub`, `mul`, their flags `nuw` and `nsw`, and `freeze`
-(#14), and `sdiv`, `udiv`, `srem`, `urem` and `exact` (#18); stage 3 of
-each adds texts for them. #15 to #17, #19 and #20 add the other ops to
-`funk`.
+(#14), `and`, `or`, `xor`, `shl`, `lshr` and `ashr` (#15), and `sdiv`,
+`udiv`, `srem`, `urem` and `exact` (#18); stage 3 of each issue adds texts
+for them. #16, #17, #19 and #20 add the other ops to `funk`.

@@ -6,13 +6,16 @@
 //! `true` and `false`, constants at the bounds of their widths, every kind
 //! of location, and functions with zero, one and several results. The ops
 //! are those of the core dialect that the registry has: `const`, `add`,
-//! `sub` and `mul` with each combination of their flags, `freeze`, `sdiv`
-//! and `udiv` with and without `exact`, `srem`, `urem` and `ret`. A division
-//! may be by zero: that is UB when it runs, not invalid, and no check runs
-//! these modules.
-//! The generator is deterministic: one seed gives one module.
+//! `sub` and `mul` with each combination of their flags, `freeze`, the
+//! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
+//! `sdiv` and `udiv` with and without `exact`, `srem`, `urem` and `ret`. A
+//! division may be by zero: that is UB when it runs, not invalid, and no
+//! check runs these modules. The generator is deterministic: one seed gives
+//! one module.
 
-use crate::dialects::core::{DIVISION_OPS, MAX_WIDTH, WRAP_FLAG_SETS, int_type};
+use crate::dialects::core::{
+    BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
+};
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
@@ -260,7 +263,8 @@ impl Body<'_> {
 
     /// Defines a new value of type `t` and returns its name: `add`, `sub`
     /// or `mul` of two earlier values of that type, with any of their flags,
-    /// a division or remainder of two, `freeze` of one, or a constant.
+    /// a bitwise op or a shift of two, a division or remainder of two,
+    /// `freeze` of one, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
         let loc = *rng.pick(self.keys);
@@ -275,8 +279,14 @@ impl Body<'_> {
             op.operand(rng.pick(&same).as_str())
                 .operand(rng.pick(&same).as_str())
         } else if !same.is_empty() && rng.one_in(2) {
-            match rng.below(4) {
+            match rng.below(10) {
                 0 => Op::new("freeze", loc).operand(rng.pick(&same).as_str()),
+                k @ 4.. => {
+                    let name = [BITWISE_OPS, SHIFT_OPS].concat()[k as usize - 4];
+                    Op::new(name, loc)
+                        .operand(rng.pick(&same).as_str())
+                        .operand(rng.pick(&same).as_str())
+                }
                 k => {
                     let name = ["add", "sub", "mul"][k as usize - 1];
                     let flags = rng.pick(&WRAP_FLAG_SETS);

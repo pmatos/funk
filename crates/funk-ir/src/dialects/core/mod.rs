@@ -4,11 +4,13 @@
 //! Its types are the integers `iN` and the reserved `ptr`. Each op family
 //! lives in a file of its own and registers its ops in [`dialect`]: the
 //! tracer registers `const`, `add` and `ret`, the arithmetic family (#14)
-//! `sub`, `mul`, the flags of all three and `freeze`, the division family
+//! `sub`, `mul`, the flags of all three and `freeze`, the bitwise family
+//! (#15) `and`, `or`, `xor`, `shl`, `lshr` and `ashr`, the division family
 //! (#18) `sdiv`, `udiv`, `srem`, `urem` and the flag `exact`, and each later
 //! family adds a file and a line here.
 
 mod arith;
+mod bitwise;
 mod constant;
 mod control;
 mod div;
@@ -16,6 +18,7 @@ mod freeze;
 mod types;
 
 pub use arith::WRAP_FLAG_SETS;
+pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use div::DIVISION_OPS;
 pub use types::{CoreType, MAX_WIDTH, core_type, int_type, int_width};
 
@@ -33,6 +36,12 @@ pub fn dialect() -> Dialect {
         .op(arith::Wrap("sub"))
         .op(arith::Wrap("mul"))
         .op(freeze::Freeze)
+        .op(bitwise::Bitwise("and"))
+        .op(bitwise::Bitwise("or"))
+        .op(bitwise::Bitwise("xor"))
+        .op(bitwise::Bitwise("shl"))
+        .op(bitwise::Bitwise("lshr"))
+        .op(bitwise::Bitwise("ashr"))
         .op(div::Division("sdiv", true))
         .op(div::Division("udiv", true))
         .op(div::Division("srem", false))
