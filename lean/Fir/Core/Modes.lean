@@ -60,7 +60,8 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .or _, .cons _ (.cons _ .nil) | .xor _, .cons _ (.cons _ .nil)
     | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
     | .ashr _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
-    | .trunc .., .cons _ .nil => rfl
+    | .trunc .., .cons _ .nil | .icmp .., .cons _ (.cons _ .nil)
+    | .select _, .cons _ (.cons _ (.cons _ .nil)) => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
@@ -70,8 +71,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args
     | .urem _, args => ruleOfEv_toSet uremValues args
-    | .const .., _ | .icmp .., _
-    | .select _, _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
+    | .const .., _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl
 
 /-- Exhaustive mode on the core function `f`: every path of its run on
