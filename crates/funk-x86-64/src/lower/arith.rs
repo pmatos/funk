@@ -42,7 +42,7 @@ fn mul(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
 
 /// Loads `%a` into `%rax`, applies `mnemonic` with `%b`'s slot as its
 /// source, and stores `%rax` as the result.
-fn binary(cx: &mut Cx<'_>, op: &Op, mnemonic: &str) -> Result<(), Unlowered> {
+pub(super) fn binary(cx: &mut Cx<'_>, op: &Op, mnemonic: &str) -> Result<(), Unlowered> {
     let ([a, b], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err(format!("{} takes two operands and defines one value", op.name).into());
     };
