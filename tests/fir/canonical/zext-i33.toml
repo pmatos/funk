@@ -1,0 +1,32 @@
+# Tests of zext-i33.fir: zext to i33 from each of i1, i8, i16 and i32,
+# and from i33 to i64, on the boundary bit patterns of the operand's
+# type: 0, 1, -1, the signed minimum and the signed maximum, or false
+# and true at i1 (#17). zext-i7.toml holds zext from i7 to i33. zext
+# puts zeros above the operand's bits, so an operand with its top bit
+# set gives a nonnegative result.
+# The backend does not lower i33, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@zext_i1_to_i33", args = ["false"], expect = ["0"] },
+  { func = "@zext_i1_to_i33", args = ["true"], expect = ["1"] },
+  { func = "@zext_i8_to_i33", args = ["0"], expect = ["0"] },
+  { func = "@zext_i8_to_i33", args = ["1"], expect = ["1"] },
+  { func = "@zext_i8_to_i33", args = ["-1"], expect = ["255"] },
+  { func = "@zext_i8_to_i33", args = ["-128"], expect = ["128"] },
+  { func = "@zext_i8_to_i33", args = ["127"], expect = ["127"] },
+  { func = "@zext_i16_to_i33", args = ["0"], expect = ["0"] },
+  { func = "@zext_i16_to_i33", args = ["1"], expect = ["1"] },
+  { func = "@zext_i16_to_i33", args = ["-1"], expect = ["65535"] },
+  { func = "@zext_i16_to_i33", args = ["-32768"], expect = ["32768"] },
+  { func = "@zext_i16_to_i33", args = ["32767"], expect = ["32767"] },
+  { func = "@zext_i32_to_i33", args = ["0"], expect = ["0"] },
+  { func = "@zext_i32_to_i33", args = ["1"], expect = ["1"] },
+  { func = "@zext_i32_to_i33", args = ["-1"], expect = ["4294967295"] },
+  { func = "@zext_i32_to_i33", args = ["-2147483648"], expect = ["2147483648"] },
+  { func = "@zext_i32_to_i33", args = ["2147483647"], expect = ["2147483647"] },
+  { func = "@zext_i33_to_i64", args = ["0"], expect = ["0"] },
+  { func = "@zext_i33_to_i64", args = ["1"], expect = ["1"] },
+  { func = "@zext_i33_to_i64", args = ["-1"], expect = ["8589934591"] },
+  { func = "@zext_i33_to_i64", args = ["-4294967296"], expect = ["4294967296"] },
+  { func = "@zext_i33_to_i64", args = ["4294967295"], expect = ["4294967295"] },
+]

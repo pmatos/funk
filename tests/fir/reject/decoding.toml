@@ -1,8 +1,9 @@
 # Must-reject texts that follow the grammar but do not decode: types, value
 # definitions and uses, and the ops const, add and ret (ADR-2026-10-30-0815).
 # arith.toml holds those of sub and mul, the flags nuw and nsw of add, sub
-# and mul, and freeze; bitwise.toml those of and, or and xor; and
-# shift.toml those of shl, lshr and ashr.
+# and mul, and freeze; bitwise.toml those of and, or and xor;
+# shift.toml those of shl, lshr and ashr; and width.toml those of zext,
+# sext and trunc.
 
 [[reject]]
 verdict = "parse-error"

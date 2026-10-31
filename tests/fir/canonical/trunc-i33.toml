@@ -1,0 +1,36 @@
+# Tests of trunc-i33.fir: trunc from i33 to each of i1, i8, i16 and i32,
+# and from i64 to i33, on the boundary bit patterns of the operand's
+# type: 0, 1, -1, the signed minimum and the signed maximum, or false
+# and true at i1 (#17). trunc-i7.toml holds trunc from i33 to i7. trunc
+# keeps the operand's low bits and drops the bits above them, so -1
+# stays -1, the signed minimum gives 0, the signed maximum gives -1, and
+# trunc to i1 gives the operand's lowest bit.
+# The backend does not lower i33, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@trunc_i33_to_i1", args = ["0"], expect = ["false"] },
+  { func = "@trunc_i33_to_i1", args = ["1"], expect = ["true"] },
+  { func = "@trunc_i33_to_i1", args = ["-1"], expect = ["true"] },
+  { func = "@trunc_i33_to_i1", args = ["-4294967296"], expect = ["false"] },
+  { func = "@trunc_i33_to_i1", args = ["4294967295"], expect = ["true"] },
+  { func = "@trunc_i33_to_i8", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i33_to_i8", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i33_to_i8", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i8", args = ["-4294967296"], expect = ["0"] },
+  { func = "@trunc_i33_to_i8", args = ["4294967295"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i16", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i33_to_i16", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i33_to_i16", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i16", args = ["-4294967296"], expect = ["0"] },
+  { func = "@trunc_i33_to_i16", args = ["4294967295"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i32", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i33_to_i32", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i33_to_i32", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i32", args = ["-4294967296"], expect = ["0"] },
+  { func = "@trunc_i33_to_i32", args = ["4294967295"], expect = ["-1"] },
+  { func = "@trunc_i64_to_i33", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i64_to_i33", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i64_to_i33", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i64_to_i33", args = ["-9223372036854775808"], expect = ["0"] },
+  { func = "@trunc_i64_to_i33", args = ["9223372036854775807"], expect = ["-1"] },
+]

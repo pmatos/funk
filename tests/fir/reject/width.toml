@@ -1,0 +1,456 @@
+# Must-reject texts of #17's width changes: zext, sext and trunc. Each
+# decodes with no attributes, one iM operand and one iN result, at any
+# widths M and N; a text that does not decode is a parse error at the
+# op's name (ADR-2026-10-30-0815). A zext or sext that does not strictly
+# widen, or a trunc that does not strictly narrow, the same width
+# included, decodes, and validation rejects it (ADR-2026-10-30-0818).
+
+[[reject]]
+verdict = "validation-error"
+rule = "zext strictly widens: from i32 to i32 is the same width"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = zext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "zext strictly widens: from i32 to i8 narrows"
+text = '''
+func @f(%a: i32) -> i8 {
+^entry:
+  %r: i8 = zext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "sext strictly widens: from i32 to i32 is the same width"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = sext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "sext strictly widens: from i32 to i8 narrows"
+text = '''
+func @f(%a: i32) -> i8 {
+^entry:
+  %r: i8 = sext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "trunc strictly narrows: from i32 to i32 is the same width"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = trunc %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "trunc strictly narrows: from i8 to i32 widens"
+text = '''
+func @f(%a: i8) -> i32 {
+^entry:
+  %r: i32 = trunc %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext takes no attributes: nneg is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = zext nneg %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = zext 0 %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext takes one operand, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = zext @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext takes one operand, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = zext %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext defines one value, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  zext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext defines one value, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64, %s: i64 = zext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i64 = zext %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "zext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: ptr = zext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = sext nsw %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = sext 0 %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext takes one operand, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = sext @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext takes one operand, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64 = sext %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext defines one value, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  sext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext defines one value, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i64, %s: i64 = sext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i64 = sext %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: ptr = sext %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i8 = trunc nuw %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i8 = trunc 0 %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc takes one operand, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i8 = trunc @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc takes one operand, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i8 = trunc %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc defines one value, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  trunc %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc defines one value, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i8, %s: i8 = trunc %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i8 = trunc %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "trunc defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: ptr = trunc %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
