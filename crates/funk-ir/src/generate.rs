@@ -9,13 +9,15 @@
 //! `sub` and `mul` with each combination of their flags, `freeze`, the
 //! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
 //! the width changes `zext`, `sext` and `trunc` between valid pairs of
-//! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem` and
-//! `ret`. A division may be by zero: that is UB when it runs, not invalid,
-//! and no check runs these modules. The generator is deterministic: one seed
-//! gives one module.
+//! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem`,
+//! `icmp` with each predicate on two values of any one type, `select` at any
+//! type, and `ret`. A division may be by zero: that is UB when it runs, not
+//! invalid, and no check runs these modules. The generator is
+//! deterministic: one seed gives one module.
 
 use crate::dialects::core::{
-    BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, SHIFT_OPS, WRAP_FLAG_SETS, int_type, int_width,
+    BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
+    int_width,
 };
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
@@ -279,17 +281,32 @@ impl Body<'_> {
     }
 
     /// Defines a new value of type `t` and returns its name: a width change
-    /// of an earlier value of another width, `add`, `sub` or `mul` of two
-    /// earlier values of type `t`, with any of their flags, a bitwise op or
-    /// a shift of two, a division or remainder of two, `freeze` of one, or a
-    /// constant.
+    /// of an earlier value of another width, `icmp` of two earlier values
+    /// of one type when `t` is `i1`, `select` on an earlier `i1` of two
+    /// earlier values of type `t`, `add`, `sub` or `mul` of two, with any of
+    /// their flags, a bitwise op or a shift of two, a division or remainder
+    /// of two, `freeze` of one, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
         let casts = self.casts_to(&t);
+        let i1 = int_type(1);
+        let conds = self.of_type(&i1);
         let loc = *rng.pick(self.keys);
         let op = if !casts.is_empty() && rng.one_in(3) {
             let (name, x) = rng.pick(&casts);
             Op::new(*name, loc).operand(x.as_str())
+        } else if t == i1 && !self.values.is_empty() && rng.one_in(3) {
+            let (a, u) = rng.pick(&self.values).clone();
+            let b = rng.pick(&self.of_type(&u)).clone();
+            Op::new("icmp", loc)
+                .attr(Attr::word(*rng.pick(&PREDICATES)))
+                .operand(a)
+                .operand(b)
+        } else if !conds.is_empty() && !same.is_empty() && rng.one_in(4) {
+            Op::new("select", loc)
+                .operand(rng.pick(&conds).as_str())
+                .operand(rng.pick(&same).as_str())
+                .operand(rng.pick(&same).as_str())
         } else if !same.is_empty() && rng.one_in(5) {
             let (name, exact) = *rng.pick(&DIVISION_OPS);
             let op = Op::new(name, loc);

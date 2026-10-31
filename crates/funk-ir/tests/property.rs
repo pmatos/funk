@@ -5,7 +5,7 @@
 //! whatever text it accepts round-trips, and whatever it rejects, it rejects
 //! with an error.
 
-use funk_ir::dialects::core::{BITWISE_OPS, SHIFT_OPS};
+use funk_ir::dialects::core::{BITWISE_OPS, PREDICATES, SHIFT_OPS};
 use funk_ir::generate::{self, Rng};
 use funk_ir::text::quote;
 use funk_ir::{Attr, Location, Module, Registry, parse, print, verify};
@@ -83,7 +83,12 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             );
         }
     }
-    want.extend(["freeze".to_string(), "ret".to_string()]);
+    want.extend([
+        "freeze".to_string(),
+        "ret".to_string(),
+        "select".to_string(),
+    ]);
+    want.extend(PREDICATES.map(|p| format!("icmp {p}")));
     want.extend(
         BITWISE_OPS
             .iter()
@@ -143,6 +148,62 @@ fn the_generator_changes_widths_only_where_validation_allows() {
             "{op}"
         );
     }
+}
+
+/// Each op named `name` that the generator makes, as the widths of its
+/// operands and the widths of its results.
+fn generated_uses(name: &str) -> Vec<(Vec<u32>, Vec<u32>)> {
+    let int_width = funk_ir::dialects::core::int_width;
+    let width = |t: &funk_ir::Type| int_width(t).expect("an integer");
+    let mut out = Vec::new();
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let ops = || f.body.blocks.iter().flat_map(|b| &b.ops);
+            let defs = f.params.iter().chain(ops().flat_map(|o| &o.results));
+            let types: std::collections::HashMap<&str, u32> =
+                defs.map(|d| (d.name.as_str(), width(&d.ty))).collect();
+            for op in ops().filter(|o| o.name == name) {
+                let operands = op.operands.iter().map(|x| types[x.as_str()]).collect();
+                let results = op.results.iter().map(|d| width(&d.ty)).collect();
+                out.push((operands, results));
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn the_generator_compares_and_selects_at_every_kind_of_width() {
+    // `i1`, a width the backend lowers, another width up to `i64`, one
+    // above `i64`, and one above `i1024`, which `width` gives only near
+    // `MAX_WIDTH`.
+    let kind = |w: u32| match w {
+        1 => 0,
+        8 | 16 | 32 | 64 => 1,
+        2..=63 => 2,
+        65..=1024 => 3,
+        _ => 4,
+    };
+    let (mut compared, mut selected) = ([0; 5], [0; 5]);
+    for (operands, results) in generated_uses("icmp") {
+        let [a, b] = operands[..] else {
+            panic!("icmp of {operands:?}")
+        };
+        assert!(
+            a == b && results == [1],
+            "icmp of {operands:?} to {results:?}"
+        );
+        compared[kind(a)] += 1;
+    }
+    for (operands, results) in generated_uses("select") {
+        let [c, a, b] = operands[..] else {
+            panic!("select of {operands:?}")
+        };
+        assert!(c == 1 && a == b && results == [a], "select of {operands:?}");
+        selected[kind(a)] += 1;
+    }
+    assert!(compared.iter().all(|&n| n > 0), "icmp at {compared:?}");
+    assert!(selected.iter().all(|&n| n > 0), "select at {selected:?}");
 }
 
 /// Rewrites the layout of a text outside its strings: each space or line
@@ -235,7 +296,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 50] = [
+    const TOKENS: [&str; 55] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -272,6 +333,11 @@ fn the_parser_never_panics_on_random_token_soup() {
         "srem",
         "urem",
         "exact",
+        "icmp",
+        "slt",
+        "uge",
+        "select",
+        "icmp.slt",
         "ret",
         "true",
         "-1",

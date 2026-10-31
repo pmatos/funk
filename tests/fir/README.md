@@ -75,10 +75,10 @@ tests = [
 differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
-`exact`, `srem`, `urem` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`,
-with at most one result. Tests of other widths, or of several results, go
-in modules whose tests are all interpreter-only, such as `tracer-i7.fir`
-and `widths.fir`.
+`exact`, `srem`, `urem`, `icmp`, `select` and `ret` at `i1`, `i8`, `i16`,
+`i32` and `i64`, with at most one result. Tests of other widths, or of
+several results, go in modules whose tests are all interpreter-only, such
+as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -170,5 +170,7 @@ a frozen divisor that can be zero is invalid, so it is not in this
 corpus: it is in the fixture corpus `scripts/harness/fixtures/invalid/`,
 and `scripts/check-harness.sh` checks that the harness reports it
 invalid for `sdiv by zero` (ADR-2026-10-31-0208). `reject/div.toml`
-holds the texts of these ops that do not decode. #16, #19 and #20 add the
-other ops to `funk`.
+holds the texts of these ops that do not decode.
+
+Both tools now also have `icmp` and `select` (#16); stage 3 of #16 adds
+texts for them. #19 and #20 add the other ops to `funk`.
