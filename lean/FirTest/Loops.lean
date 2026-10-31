@@ -53,9 +53,11 @@ def sumAt (ty : String) : String :=
      "  br ^loop(%i1, %acc1) @0", "^exit(%r: " ++ ty ++ "):", "  ret %r @0"]
 
 /-- What `fir-ref run` reports on `@f` of `t` at each argument vector of
-`cases`, and the values it should return there. -/
+`cases`, and the values it should return there. The budget of `10000`
+steps is ample for every loop below, so a rule that broke one of them
+fails its guard here rather than running to the default budget. -/
 def loopRuns (t : String) (cases : List (List String × String)) : Bool :=
-  valid t && cases.all fun (args, v) => runText t "@f" args == returns [v]
+  valid t && cases.all fun (args, v) => runText t "@f" args (fuel := 10000) == returns [v]
 
 #guard runText (sumAt "i32") "@f" ["10"] == runText sumText "@sum" ["10"]
 -- At `i1`, `%i` starts at `0`, which is at least `false` and `true`.
@@ -115,6 +117,11 @@ def gcdAt (ty : String) : String :=
 #guard loopRuns (gcdAt "i33") [(["4294967295", "65535"], "65535"), (["-1", "21"], "7")]
 #guard loopRuns (gcdAt "i64") [(["-1", "65535"], "65535"), (["9223372036854775807", "49"], "49"),
   (["-9223372036854775808", "1024"], "1024"), (["0", "0"], "0")]
+-- Two consecutive Fibonacci numbers take the most trips for their size:
+-- `182` here.
+#guard loopRuns (gcdAt "i128") [(["-1", "3"], "3"),
+  (["-170141183460469231731687303715884105728", "1024"], "1024"),
+  (["127127879743834334146972278486287885163", "78569350599398894027251472817058687522"], "1")]
 
 /-! # Block arguments that swap and rotate
 
