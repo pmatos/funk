@@ -120,12 +120,13 @@ def body (header : String) (lines : List String) : String :=
 
 /-! # Ops without rules
 
-Every core op but `const`, `add`, `sub`, `mul`, `zext`, `sext`, `trunc`,
-`freeze` and `ret` has no rules yet, so `fir-ref` reports an error and no
-result (ADR-2026-10-30-1855), in either mode. -/
+Every core op but `const`, `add`, `sub`, `mul`, the bitwise ops and
+shifts, `zext`, `sext`, `trunc`, `freeze` and `ret` has no rules yet, so
+`fir-ref` reports an error and no result (ADR-2026-10-30-1855), in either
+mode. -/
 
-#guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = and %a, %a @0", "  ret %s @0"])
-    "@f" ["1"] == fails 2 "fir-ref: @f: and has no execution rules yet"
+#guard runText (body "func @f(%a: i8) -> i1" ["^e:", "  %s: i1 = icmp eq %a, %a @0", "  ret %s @0"])
+    "@f" ["1"] == fails 2 "fir-ref: @f: icmp eq has no execution rules yet"
 #guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = sdiv exact %a, %a @0", "  ret %s @0"])
     "@f" ["1"] (mode := .exhaustive 16) == fails 2 "fir-ref: @f: sdiv exact has no execution rules yet"
 #guard runText (body "func @f()" ["^e:", "  br ^n @0", "^n:", "  ret @0"]) "@f" ==

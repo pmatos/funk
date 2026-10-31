@@ -149,42 +149,45 @@ def frozenChange (op : String) (n : Nat) : String :=
 -- The width changes have rules at every pair of widths, valid or not.
 #guard [Core.Op.zext 1 2, .zext 8 8, .sext 64 1, .trunc 7 8, .trunc 16777215 1].all Core.Op.hasRules
 
-/-! # The obligations' axioms -/
+/-! # The obligations' axioms
 
-/-- info: 'Fir.Core.zext_propagatesPoison' depends on axioms: [propext] -/
+The obligations name `Op.denote?`, so their axioms are those of every core
+rule it dispatches to, not only of the width changes. -/
+
+/-- info: 'Fir.Core.zext_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.zext_propagatesPoison
 
-/-- info: 'Fir.Core.zext_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.zext_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.zext_returnsOnDefined
 
-/-- info: 'Fir.Core.zext_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.zext_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.zext_total
 
-/-- info: 'Fir.Core.zext_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.zext_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.zext_monotone
 
-/-- info: 'Fir.Core.sext_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sext_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sext_propagatesPoison
 
-/-- info: 'Fir.Core.sext_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sext_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sext_returnsOnDefined
 
-/-- info: 'Fir.Core.sext_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sext_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sext_total
 
-/-- info: 'Fir.Core.sext_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sext_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sext_monotone
 
-/-- info: 'Fir.Core.trunc_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.trunc_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trunc_propagatesPoison
 
-/-- info: 'Fir.Core.trunc_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.trunc_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trunc_returnsOnDefined
 
-/-- info: 'Fir.Core.trunc_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.trunc_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trunc_total
 
-/-- info: 'Fir.Core.trunc_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.trunc_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trunc_monotone
 
 end FirTest
