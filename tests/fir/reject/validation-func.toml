@@ -1,13 +1,22 @@
 # Must-reject texts that parse, and break a rule of validation for a
 # function, a block or an op: const, add, sub and mul with their flags,
 # freeze, the bitwise ops and shifts, and ret. width.toml holds the texts
-# that break the width rules of zext, sext and trunc.
+# that break the width rules of zext, sext and trunc, and
+# validation-branch.toml those that br and cond_br (#19) bring into play.
 #
-# With only these ops, a few rules cannot be broken alone: those of
-# successors and their block arguments, and the scope of a value defined
-# in a region. Their texts break a second rule too, and `rule` names both.
-# The ops that take successors (#19) or own regions add texts that break
-# these rules alone.
+# These texts came before br and cond_br. With only the ops above, a few
+# rules cannot be broken alone: those of successors and their block
+# arguments, and the scope of a value defined in a region. Their texts
+# break a second rule too, and `rule` names both: each text of a
+# successor rule gives ret a successor, so it also breaks ret's
+# successor count, and a "tracer op" is one of const, add and ret.
+# validation-branch.toml breaks each successor rule that can be broken
+# alone with br and cond_br. Three rules still cannot be broken alone:
+# only terminators have successors, as an op that is not one takes none;
+# a block argument has no ptr type, as no value has one; and a successor
+# passes values that the function defines, as an undefined value has no
+# type. The ops that own regions will add texts that break the scope
+# rule alone.
 
 [[reject]]
 verdict = "validation-error"

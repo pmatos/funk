@@ -1,0 +1,685 @@
+# Must-reject texts that decode, and break a rule of validation that br
+# and cond_br (#19) bring into play: the rules of successors and their
+# block arguments, of terminators, of dominance across blocks, and that
+# every block is reachable from the entry (Func.Valid and Func.SuccValid
+# in lean/Fir/Validation/Rules.lean, ADR-2026-10-30-0817). Each text
+# breaks one rule alone, but for two rules that cannot be broken alone,
+# whose texts break a second rule too, and `rule` names both. No value
+# has type ptr, so a branch that reaches a ptr block argument passes it
+# a value whose ptr type is also invalid. An undefined value has no
+# type, so a successor that passes one also does not pass a value of the
+# right type. validation-func.toml keeps the older texts that gave ret a
+# successor, and branch.toml holds the texts of br and cond_br that do
+# not decode.
+
+[[reject]]
+verdict = "validation-error"
+rule = "no branch goes to the entry block: br in a later block goes to ^entry"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b @0
+^b:
+  br ^entry @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no branch goes to the entry block: the entry's own br goes to it"
+text = '''
+func @f() {
+^entry:
+  br ^entry @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no branch goes to the entry block: cond_br's first successor is ^entry"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  br ^b @0
+^b:
+  cond_br %c, ^entry, ^x @0
+^x:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no branch goes to the entry block: cond_br's second successor is ^entry"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  br ^b @0
+^b:
+  cond_br %c, ^x, ^entry @0
+^x:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor names a block of the function: br's ^nowhere is not one"
+text = '''
+func @f() {
+^entry:
+  br ^nowhere @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor names a block of the function: cond_br's first, ^nowhere, is not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^nowhere, ^x @0
+^x:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor names a block of the function: cond_br's second, ^nowhere, is not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^nowhere @0
+^x:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes values that the function defines: br passes %undefined; it has no type, so the successor also does not pass a value of the right type for ^b's argument"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b(%undefined) @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes values that the function defines: cond_br's second successor passes %undefined; it has no type, so that successor also does not pass a value of the right type for ^b's argument"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^b(%a), ^b(%undefined) @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: br passes none for one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: br passes two for one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b(%a, %a) @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: br passes one where the block takes none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b(%a) @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: cond_br's first successor passes one for two"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^b(%a), ^b(%a, %a) @0
+^b(%x: i32, %y: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes one value for each block argument: cond_br's second successor passes three for two"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^b(%a, %a), ^b(%a, %a, %a) @0
+^b(%x: i32, %y: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes a value of the right type for each block argument: br passes an i32 for an i64"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b(%a) @0
+^b(%x: i64):
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes a value of the right type for each block argument: br passes them in the wrong order"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  br ^n(%b, %a) @0
+^n(%x: i32, %y: i64):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes a value of the right type for each block argument: cond_br's first successor passes an i1, its condition, for an i32"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^b(%c), ^b(%a) @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes a value of the right type for each block argument: cond_br's second successor passes an i8 for an i7"
+text = '''
+func @f(%c: i1, %a: i7, %b: i8) -> i7 {
+^entry:
+  cond_br %c, ^x(%a), ^x(%b) @0
+^x(%v: i7):
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a block argument has no ptr type: ^b's %x, which br reaches; no value has type ptr, so br passes it the parameter %p, whose ptr type is also invalid"
+text = '''
+func @f(%p: ptr) {
+^entry:
+  br ^b(%p) @0
+^b(%x: ptr):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "br has one successor, not none"
+text = '''
+func @f() {
+^entry:
+  br @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "br has one successor, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "cond_br has two successors, not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x @0
+^x:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "cond_br has two successors, not three"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y, ^z @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+^z:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "cond_br has two successors, not none"
+text = '''
+func @f(%c: i1) {
+^entry:
+  cond_br %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a block ends with a terminator: ^b, which br reaches, ends with add"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b @0
+^b:
+  %s: i32 = add %a, %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a block ends with a terminator: ^y, which cond_br reaches, ends with const"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  %k: i32 = const 1 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block holds at least one op, its terminator: ^b, which br reaches, holds none"
+text = '''
+func @f() {
+^entry:
+  br ^b @0
+^b:
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the terminator is the last op of its block: br is followed by ret"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^b @0
+  ret %a @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the terminator is the last op of its block: cond_br is followed by br"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+  br ^x @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use is dominated by its definition: ^join uses %v, which ^x defines, but ^join is also reached from ^y"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  %v: i32 = add %a, %a @0
+  br ^join @0
+^y:
+  br ^join @0
+^join:
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use is dominated by its definition: ^y passes %v, which ^x defines, to a successor"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  %v: i32 = add %a, %a @0
+  br ^join(%v) @0
+^y:
+  br ^join(%v) @0
+^join(%r: i32):
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use is dominated by its definition: ^join uses ^x's block argument %p, but ^join is also reached from ^y"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x(%a), ^y @0
+^x(%p: i32):
+  br ^join @0
+^y:
+  br ^join @0
+^join:
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use is dominated by its definition: the loop header ^loop uses %next, which its body ^body defines"
+text = '''
+func @f(%n: i32) -> i32 {
+^entry:
+  %zero: i32 = const 0 @0
+  br ^loop(%zero) @0
+^loop(%i: i32):
+  %done: i1 = icmp sge %next, %n @0
+  cond_br %done, ^exit(%i), ^body @0
+^body:
+  %one: i32 = const 1 @0
+  %next: i32 = add %i, %one @0
+  br ^loop(%next) @0
+^exit(%r: i32):
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a use is dominated by its definition: ^exit uses %acc1, which the loop's body defines, but ^exit is reached from ^loop"
+text = '''
+func @f(%n: i32) -> i32 {
+^entry:
+  %zero: i32 = const 0 @0
+  br ^loop(%zero) @0
+^loop(%i: i32):
+  %done: i1 = icmp sge %i, %n @0
+  cond_br %done, ^exit, ^body @0
+^body:
+  %acc1: i32 = add %i, %i @0
+  %one: i32 = const 1 @0
+  %next: i32 = add %i, %one @0
+  br ^loop(%next) @0
+^exit:
+  ret %acc1 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^dead, which no branch reaches, branches to ^exit, which the entry reaches"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br ^exit @0
+^dead:
+  br ^exit @0
+^exit:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^a and ^b branch to each other, and no block that the entry reaches branches to either"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+^a:
+  br ^b @0
+^b:
+  br ^a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^a and ^b pass a value to each other with cond_br and br, and only ^a branches to ^exit, which the entry reaches"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  br ^exit(%a) @0
+^a(%x: i32):
+  cond_br %c, ^b(%x), ^exit(%x) @0
+^b(%y: i32):
+  br ^a(%y) @0
+^exit(%r: i32):
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^spin branches only to itself"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+^spin:
+  br ^spin @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^second is reached only from ^first, which nothing reaches"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+^first:
+  br ^second @0
+^second:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

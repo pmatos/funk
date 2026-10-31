@@ -1,0 +1,19 @@
+# Tests of branch-i1.fir: br and cond_br at i1, passing the boundary bit
+# patterns, false and true, to block arguments (#19). br passes %a to
+# ^next, which returns it. cond_br goes to ^then with %a when %c is true
+# and to ^else with %b when it is false, on each condition and every
+# pair of boundary bit patterns; each block returns its argument.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@br", args = ["false"] },
+  { func = "@br", args = ["true"] },
+  { func = "@cond_br", args = ["false", "false", "false"] },
+  { func = "@cond_br", args = ["false", "false", "true"] },
+  { func = "@cond_br", args = ["false", "true", "false"] },
+  { func = "@cond_br", args = ["false", "true", "true"] },
+  { func = "@cond_br", args = ["true", "false", "false"] },
+  { func = "@cond_br", args = ["true", "false", "true"] },
+  { func = "@cond_br", args = ["true", "true", "false"] },
+  { func = "@cond_br", args = ["true", "true", "true"] },
+]

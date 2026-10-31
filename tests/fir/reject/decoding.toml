@@ -3,8 +3,9 @@
 # arith.toml holds those of sub and mul, the flags nuw and nsw of add, sub
 # and mul, and freeze; bitwise.toml those of and, or and xor;
 # shift.toml those of shl, lshr and ashr; width.toml those of zext, sext
-# and trunc; div.toml those of sdiv, udiv, srem and urem; and
-# compare.toml those of icmp and select.
+# and trunc; div.toml those of sdiv, udiv, srem and urem;
+# compare.toml those of icmp and select; and branch.toml those of br
+# and cond_br.
 
 [[reject]]
 verdict = "parse-error"
