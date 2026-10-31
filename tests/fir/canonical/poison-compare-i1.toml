@@ -1,0 +1,96 @@
+# Tests of poison-compare-i1.fir: the poison rules of icmp and select at
+# i1 (#16, ADR-2026-10-30-0818). Neither op is ever UB.
+# %p = add nsw %a, true is poison when %a is true, as -1 + -1 overflows
+# i1.
+# icmp propagates poison: P_left returns icmp P %p, %b and P_right
+# icmp P %b, %p, for each predicate P, with %b = false.
+# select is an exception. select_cond adds true to its condition %c the
+# same way, so the condition is poison when %c is true, and the result
+# is poison even when both values are the same. select_first returns
+# select %c, %p, %b and select_second select %c, %b, %p, with
+# %b = false: the value not chosen does not matter, even when it is
+# poison, and the value chosen is given as it is, poison included.
+# On the row false, %p is true.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does. Where fir-ref returns poison, an
+# interpreter-only test of the same run checks that it is exactly
+# poison; where select does not choose its poison value, one checks that
+# it gives the chosen value, which native code must give too.
+tests = [
+  { func = "@eq_left", args = ["true", "false"] },
+  { func = "@eq_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@eq_left", args = ["false", "false"] },
+  { func = "@eq_right", args = ["true", "false"] },
+  { func = "@eq_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@eq_right", args = ["false", "false"] },
+  { func = "@ne_left", args = ["true", "false"] },
+  { func = "@ne_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ne_left", args = ["false", "false"] },
+  { func = "@ne_right", args = ["true", "false"] },
+  { func = "@ne_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ne_right", args = ["false", "false"] },
+  { func = "@slt_left", args = ["true", "false"] },
+  { func = "@slt_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@slt_left", args = ["false", "false"] },
+  { func = "@slt_right", args = ["true", "false"] },
+  { func = "@slt_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@slt_right", args = ["false", "false"] },
+  { func = "@sle_left", args = ["true", "false"] },
+  { func = "@sle_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sle_left", args = ["false", "false"] },
+  { func = "@sle_right", args = ["true", "false"] },
+  { func = "@sle_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sle_right", args = ["false", "false"] },
+  { func = "@sgt_left", args = ["true", "false"] },
+  { func = "@sgt_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sgt_left", args = ["false", "false"] },
+  { func = "@sgt_right", args = ["true", "false"] },
+  { func = "@sgt_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sgt_right", args = ["false", "false"] },
+  { func = "@sge_left", args = ["true", "false"] },
+  { func = "@sge_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sge_left", args = ["false", "false"] },
+  { func = "@sge_right", args = ["true", "false"] },
+  { func = "@sge_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@sge_right", args = ["false", "false"] },
+  { func = "@ult_left", args = ["true", "false"] },
+  { func = "@ult_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ult_left", args = ["false", "false"] },
+  { func = "@ult_right", args = ["true", "false"] },
+  { func = "@ult_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ult_right", args = ["false", "false"] },
+  { func = "@ule_left", args = ["true", "false"] },
+  { func = "@ule_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ule_left", args = ["false", "false"] },
+  { func = "@ule_right", args = ["true", "false"] },
+  { func = "@ule_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ule_right", args = ["false", "false"] },
+  { func = "@ugt_left", args = ["true", "false"] },
+  { func = "@ugt_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ugt_left", args = ["false", "false"] },
+  { func = "@ugt_right", args = ["true", "false"] },
+  { func = "@ugt_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ugt_right", args = ["false", "false"] },
+  { func = "@uge_left", args = ["true", "false"] },
+  { func = "@uge_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@uge_left", args = ["false", "false"] },
+  { func = "@uge_right", args = ["true", "false"] },
+  { func = "@uge_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@uge_right", args = ["false", "false"] },
+  { func = "@select_cond", args = ["true", "true", "false"] },
+  { func = "@select_cond", args = ["true", "true", "false"], expect = ["poison"] },
+  { func = "@select_cond", args = ["true", "true", "true"] },
+  { func = "@select_cond", args = ["true", "true", "true"], expect = ["poison"] },
+  { func = "@select_cond", args = ["false", "true", "false"] },
+  { func = "@select_first", args = ["false", "true", "false"] },
+  { func = "@select_first", args = ["false", "true", "false"], expect = ["false"] },
+  { func = "@select_first", args = ["true", "true", "false"] },
+  { func = "@select_first", args = ["true", "true", "false"], expect = ["poison"] },
+  { func = "@select_first", args = ["true", "false", "false"] },
+  { func = "@select_second", args = ["true", "true", "false"] },
+  { func = "@select_second", args = ["true", "true", "false"], expect = ["false"] },
+  { func = "@select_second", args = ["false", "true", "false"] },
+  { func = "@select_second", args = ["false", "true", "false"], expect = ["poison"] },
+  { func = "@select_second", args = ["false", "false", "false"] },
+]

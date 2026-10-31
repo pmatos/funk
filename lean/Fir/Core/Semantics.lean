@@ -6,6 +6,7 @@ import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.Control
+import Fir.Core.Branch
 import Fir.Core.Text
 
 /-!
@@ -16,15 +17,16 @@ monad. It is one instance over all 24 core ops, which sends each op to the
 rule of its family. The rules are written once, for any monad that has
 the effects they ask for: `Op.denote?` for the ops that are not
 terminators, and `Op.exit?` for the terminators. `freeze` asks for the
-choice effect, and the divisions for the UB effect. So this instance and
-the tree of choices that `fir-ref run` computes in share them.
+choice effect, and the divisions and `cond_br` for the UB effect. So this
+instance and the tree of choices that `fir-ref run` computes in share
+them.
 
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. After #14 to #18, that is `br`, `cond_br`
-and `call`: every other core op has its rules. ADR-2026-10-30-1855
-decides what such an op does until its family lands:
+`Op.exit?` gives `none` for it. After #14 to #19, that is `call`: every
+other core op has its rules. ADR-2026-10-30-1855 decides what such an op
+does until its family lands:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -96,9 +98,13 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
   | _ => none
 
-/-- The rule of each core terminator, in any monad, when its family has
-given it one. -/
-def Op.exit? : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) → m Exit)
+/-- The rule of each core terminator, in any monad with the UB effect, when
+its family has given it one. -/
+def Op.exit? [MonadUB m] : (op : Op) →
+    Option (HVector toType (Fir.sig (d := CoreDialect) op) → m Exit)
+  | .br => some fun _ => pure brExit
+  | .condBr => some fun
+    | .cons c .nil => exitOfEv (condBrExit c)
   | .ret _ => some fun _ => pure retExit
   | _ => none
 
@@ -109,15 +115,15 @@ def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
 -- Among one instance of every core op, the tracer subset and the ops of
--- #14 to #18 have rules, `add` with each of its flags and `icmp` with each
+-- #14 to #19 have rules, `add` with each of its flags and `icmp` with each
 -- of its predicates among them.
 #guard (samples.filter Op.hasRules).map Op.name ==
   ["const", "const", "const", "const", "add", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem",
-   "and", "or", "xor", "shl", "lshr", "ashr", "select", "zext", "sext", "trunc", "freeze", "ret",
-   "ret"] ++ List.replicate 10 "icmp"
+   "and", "or", "xor", "shl", "lshr", "ashr", "select", "zext", "sext", "trunc", "freeze", "br",
+   "cond_br", "ret", "ret"] ++ List.replicate 10 "icmp"
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
-#guard !(Op.br).hasRules && !(Op.condBr).hasRules && !(Op.call "f" [.int 8] [.int 8]).hasRules
+#guard (Op.br).hasRules && (Op.condBr).hasRules && !(Op.call "f" [.int 8] [.int 8]).hasRules
 
 end Fir.Core
 

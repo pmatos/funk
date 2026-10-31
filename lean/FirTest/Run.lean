@@ -127,8 +127,8 @@ reports an error and no result (ADR-2026-10-30-1855), in either mode. -/
     "@f" ["1"] == fails 2 "fir-ref: @f: call @f has no execution rules yet"
 #guard runText (body "func @f(%a: i8) -> i1" ["^e:", "  %s: i1 = call @f %a @0", "  ret %s @0"])
     "@f" ["1"] (mode := .exhaustive 16) == fails 2 "fir-ref: @f: call @f has no execution rules yet"
-#guard runText (body "func @f()" ["^e:", "  br ^n @0", "^n:", "  ret @0"]) "@f" ==
-  fails 2 "fir-ref: @f: br has no execution rules yet"
+#guard runText (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) "@f" ==
+  fails 2 "fir-ref: @f: call @f has no execution rules yet"
 
 /-! # Arguments -/
 
