@@ -517,7 +517,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "srem takes no attributes: exact, a flag of sdiv and udiv, is not one of its"
+rule = "srem takes no attributes: exact is a flag of sdiv and udiv only"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -712,7 +712,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "urem takes no attributes: exact, a flag of sdiv and udiv, is not one of its"
+rule = "urem takes no attributes: exact is a flag of sdiv and udiv only"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
