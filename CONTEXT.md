@@ -290,9 +290,7 @@ native result refines the `fir-ref` result.
 **invalid test**:
 A differential test that can prove nothing: an outcome in its set is UB or
 fuel exhausted, or its choices exceed the budget and it declares no results.
-It never counts as a pass. A test that declares itself invalid because its
-set holds UB checks that rule instead: it passes only when it is invalid for
-that reason.
+It never counts as a pass.
 
 **interpreter-only test**:
 A test that runs on `fir-ref` only, and states the result it must give, on

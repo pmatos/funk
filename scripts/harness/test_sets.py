@@ -3,23 +3,11 @@ of outcomes and hand-built reports of `fir-ref run`."""
 
 import unittest
 
-from refine import (
-    FAILED,
-    FUEL_EXHAUSTED,
-    INVALID,
-    PASSED,
-    RETURN,
-    STUCK,
-    UB,
-    Judgement,
-    Outcome,
-)
+from refine import FAILED, FUEL_EXHAUSTED, INVALID, PASSED, RETURN, STUCK, UB, Outcome
 from sets import (
-    BudgetExceeded,
     Declared,
     Outcomes,
     Path,
-    declared_invalid,
     judge_declared,
     judge_set,
     problem,
@@ -94,44 +82,6 @@ class SetRule(unittest.TestCase):
 
     def test_a_set_with_no_problem(self):
         self.assertIsNone(problem((ret("1"), ret("poison"))))
-
-
-class DeclaredInvalid(unittest.TestCase):
-    """A test that declares that its set holds UB passes only when the
-    harness judges it invalid for that reason."""
-
-    def judge(self, ref, built=True):
-        return declared_invalid(judge_set(ref, ("7",), ["i8"]), ref, built)
-
-    def test_ub_in_the_set_passes(self):
-        s = Outcomes(1, (ret("7"), Outcome(UB, reason="sdiv by zero")))
-        j = self.judge(s)
-        self.assertEqual(j.status, PASSED)
-        self.assertIn("invalid, as the test declares", j.why)
-        self.assertIn("UB (sdiv by zero)", j.why)
-        one = Outcomes(0, (Outcome(UB, reason="sdiv by zero"),))
-        self.assertEqual(self.judge(one).status, PASSED)
-
-    def test_any_other_judgement_fails(self):
-        for s in [
-            Outcomes(1, (ret("7"), ret("8"))),
-            Outcomes(1, (ret("5"), ret("6"))),
-            Outcomes(1, (ret("7"), Outcome(FUEL_EXHAUSTED))),
-            Outcomes(1, (Outcome(UB, reason="u"), Outcome(STUCK, reason="r"))),
-        ]:
-            j = self.judge(s)
-            self.assertEqual(j.status, FAILED, s)
-            self.assertIn("declares that its set holds UB", j.why)
-        budget = BudgetExceeded(16)
-        j = declared_invalid(Judgement(INVALID, "no set"), budget, True)
-        self.assertEqual(j.status, FAILED)
-        self.assertEqual(
-            declared_invalid(Judgement(FAILED), "exits with 2", True).status, FAILED
-        )
-
-    def test_the_module_must_build(self):
-        s = Outcomes(1, (ret("7"), Outcome(UB, reason="sdiv by zero")))
-        self.assertEqual(self.judge(s, built=False).status, FAILED)
 
 
 ZERO = Declared(("0",), ("5",))

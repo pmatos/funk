@@ -1,4 +1,4 @@
-# A differential test may declare that its set holds UB, and then passes only when the harness judges it invalid for that reason
+# The frozen-divisor test lives in a fixture corpus outside `tests/fir/`, and `check-harness.sh` passes only when the harness reports it invalid for a zero divisor
 
 Status: accepted
 
@@ -8,65 +8,68 @@ ADR-2026-10-31-0003 makes a differential test invalid when UB is in its
 set of outcomes. ADR-2026-10-30-2135 says that an invalid test never
 counts as a pass, as [#13](https://github.com/pmatos/funk/issues/13)
 puts it: "An invalid test is reported as a failure, never as a pass."
-The run then exits with 1 (ADR-2026-10-30-2049). Until now only a unit
-test on a hand-built set, with stand-ins for the tools, checked that
+The run then exits with 1 (ADR-2026-10-30-2049). Until now only unit
+tests on hand-built sets, with stand-ins for the tools, checked that
 rule.
 
 [#18](https://github.com/pmatos/funk/issues/18) asks for a real test of
 it: "A differential test with a frozen divisor that can be zero is
-reported invalid". #18 also asks that `pre-commit run --all-files`
-passes. Put in the corpus as it is, that test fails every run of the
-harness, so CI stays red. Kept out, it shows nothing. So #13's rule and
-#18's two criteria cannot all hold literally for this test.
+reported invalid". In `tests/fir/`, that test fails every run of the
+harness, and CI stays red. The `fir-harness-test` hook runs the
+harness's unit tests and builds neither tool; only the `fir-harness`
+hook, `scripts/check-harness.sh`, builds `fir-ref` and `funk`.
 
 ## Decision
 
-- **The key.** A differential test may have `invalid = "ub"`: the test
-  declares that it is invalid because its set holds UB. `"ub"` is its
-  only value. It goes with neither `expect` nor `results`.
-- **The run.** The harness runs the test as every differential test:
-  `funk build` builds the module, exhaustive mode lists the set, native
-  code runs, and ADR-2026-10-31-0003 judges it. Native code's result
-  plays no part: UB in the set allows any result, a trap included.
-- **The judgement.** The test passes when `funk build` built the module,
-  exhaustive mode listed a set that holds UB, and that made the test
-  invalid. A set that holds UB passes even when a path also runs out of
-  fuel: the harness judges it invalid for the UB. Anything else fails
-  it: a pass, a failure, invalid for fuel exhausted alone or for a budget
-  exceeded, or a module that does not build.
-- **The report.** The test's status is `passed`, and the summary and the
-  exit status count it so. Its report line names the test with
-  `(declared invalid)`, as `(interpreter only)` marks an interpreter-only
-  test, and then says that the harness judges it invalid, with
-  `fir-ref`'s reason. This is the one exception to #13's "never as a
-  pass": the harness still judges the test invalid and says so, but the
-  run counts that expected judgement as a pass.
-- **Every other test** is judged as before. A test without the key that is
-  invalid still fails the run.
-- **The test.** `tests/fir/canonical/div-frozen.fir` holds #18's: `sdiv`
-  at `i8` of 7 by `freeze` of a poison, which may choose 0, so the set
-  holds `sdiv by zero`.
-- `corpus.py` reads the key and `sets.declared_invalid` judges it.
+- **The fixture.** `scripts/harness/fixtures/invalid/` is a corpus in
+  the format of ADR-2026-10-30-2050 that the main run over `tests/fir/`
+  does not read. `canonical/div-frozen.fir` holds #18's test: `sdiv` at
+  `i8` of 7 by `freeze` of `add nsw 127, 1`, which is poison, so the
+  divisor may be 0 and the set holds `sdiv by zero`. Its sidecar states
+  it as an ordinary differential test. `reject/div.toml` holds one
+  must-reject text, since a corpus must hold one, and `README.md` says
+  why the corpus exists.
+- **The check.** `scripts/harness/check_invalid.py` runs `main.py` on
+  the fixture with the real `funk` and `fir-ref`, as a process of its
+  own. The fixture's module stands in for the modules that Rust printed,
+  which the harness needs. The check passes only when the report has
+  one line for the test, which starts
+  `invalid canonical/div-frozen.fir @sdiv_frozen 7 127:` and names
+  `UB (sdiv by zero)`, every other check passed, and the harness exits
+  with 1. Anything else fails it: the test passed, failed or was invalid
+  for another reason, a tool error, another check that did not pass, or
+  another exit status.
+- **The run.** `scripts/check-harness.sh` runs the check after the main
+  run, with the same tools, and exits non-zero when either fails. The
+  `fir-harness` hook already runs it when `scripts/harness/` changes.
+- **The harness is unchanged.** It judges every test as before, and
+  reports an invalid test as a failure, never as a pass.
+  `test_check_invalid.py` tests the check's judgement on hand-written
+  reports.
 
 ## Alternatives
 
-- **A harness test on a fixture, run with the real tools.** It keeps
-  #13's wording literal. But the `fir-harness-test` hook runs the unit
-  tests without building `fir-ref` or `funk`, so the test would need a
-  second program that `scripts/check-harness.sh` runs, and a fixture
-  corpus of its own, must-reject texts included, to load.
-- **Run a fixture corpus and expect exit status 1.** The status says that
-  something failed, not which test or why.
+- **A declared-invalid key, `invalid = "ub"`, in a sidecar of
+  `tests/fir/`.** The test would pass when the harness judges it invalid
+  for UB. Rejected: the harness would report a test that it judges
+  invalid as passed, against #13's "never as a pass".
+- **Run the fixture and expect exit status 1 alone.** The status says
+  that something did not pass, not which test or why.
 - **Count every invalid test as a pass.** It weakens the gate for every
   test: an invalid test that no one expected would pass unseen.
 
 ## Consequences
 
-- The rule that UB in the set makes a test invalid is checked on the real
-  tools in every run of the harness. If `fir-ref` stops listing the UB, or
-  the harness stops judging it invalid, the run fails.
-- No existing test changes. No sidecar had the key, and what counts as a
-  pass for a test without it is the same.
-- The key could mark a test invalid that should be fixed instead. It is
-  for tests of this rule, such as #18's frozen divisor, and still fails a
-  test whose set holds no UB.
+- The rule that UB in the set makes a test invalid is checked on the
+  real tools in every run of `check-harness.sh`. If `fir-ref` stops
+  listing the UB, or the harness stops reporting the test invalid, the
+  hook fails.
+- The check reads the report's lines and `fir-ref`'s UB reason, which
+  the harness shows but never compares. A change to the report's layout
+  or to the reason `sdiv by zero` (`lean/Fir/Core/Div.lean`) must update
+  `check_invalid.py`.
+- The round-trip hooks and `crates/funk-ir/tests/corpus.rs` read
+  `tests/fir/` only, so they do not see the fixture's module. The
+  harness's run on the fixture checks that both tools accept it.
+- A change to the format of ADR-2026-10-30-2050 must keep the fixture
+  valid: a format error there fails the check.

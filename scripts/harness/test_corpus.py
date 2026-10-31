@@ -73,16 +73,6 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(tests[1].show(), "canonical/m.fir @g 1")
 
-    def test_a_test_that_declares_itself_invalid(self):
-        tests, problems = self.parse(
-            'tests = [{ func = "@f", args = ["7", "127"], invalid = "ub" }]\n'
-        )
-        self.assertEqual(problems, [])
-        self.assertEqual(
-            tests, [Test("canonical/m.fir", "@f", ("7", "127"), invalid="ub")]
-        )
-        self.assertEqual(tests[0].show(), "canonical/m.fir @f 7 127 (declared invalid)")
-
     def test_format_errors(self):
         for toml, needle in [
             ('test = [{ func = "@f" }]', "unknown key test"),
@@ -132,19 +122,6 @@ class Tests(unittest.TestCase):
                 ),
                 "result 2 declares the values of an earlier result",
             ),
-            (
-                'tests = [{ func = "@f", expect = "ub", invalid = "ub" }]',
-                "invalid goes with a differential test that declares no results",
-            ),
-            (
-                (
-                    'tests = [{ func = "@f", invalid = "ub",'
-                    ' results = [{ values = ["0"], witness = [] }] }]'
-                ),
-                "invalid goes with a differential test that declares no results",
-            ),
-            ('tests = [{ func = "@f", invalid = "fuel-exhausted" }]', "invalid is ub"),
-            ('tests = [{ func = "@f", invalid = true }]', "invalid is ub"),
             ('tests = [{ fun = "@f" }]', "test 1: unknown key fun"),
             ('tests = [{ func = "f" }]', "func is the function's symbol"),
             ('tests = [{ func = "@f", args = [1] }]', "args is a list of strings"),
