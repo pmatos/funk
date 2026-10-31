@@ -1,0 +1,57 @@
+# Tests of poison-bitwise-i1.fir: poison propagates through and, or,
+# xor, shl, lshr and ashr from either operand (ADR-2026-10-30-0818).
+# %p = add nsw %a, true is poison when %a is true, as -1 + -1 overflows
+# i1, and the function returns OP %p, %b or OP %b, %p. The right operand
+# of a shift is its amount, so OP %b, %p shifts by a poison amount.
+# %b is false for and, true for or and true for xor; it is false where a
+# shift shifts %p, and false where it shifts by %p. and %p, false,
+# or %p, true and a shift of false would each give one value whatever %p
+# is, but they give poison.
+# On the row false, %p is true, which as a shift amount is 1, that is N,
+# so OP %b, %p of a shift returns poison on both rows.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does.
+# Where fir-ref returns poison, an interpreter-only test of the same
+# run checks that it is exactly poison.
+tests = [
+  { func = "@and_left", args = ["true", "false"] },
+  { func = "@and_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@and_left", args = ["false", "false"] },
+  { func = "@and_right", args = ["true", "false"] },
+  { func = "@and_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@and_right", args = ["false", "false"] },
+  { func = "@or_left", args = ["true", "true"] },
+  { func = "@or_left", args = ["true", "true"], expect = ["poison"] },
+  { func = "@or_left", args = ["false", "true"] },
+  { func = "@or_right", args = ["true", "true"] },
+  { func = "@or_right", args = ["true", "true"], expect = ["poison"] },
+  { func = "@or_right", args = ["false", "true"] },
+  { func = "@xor_left", args = ["true", "true"] },
+  { func = "@xor_left", args = ["true", "true"], expect = ["poison"] },
+  { func = "@xor_left", args = ["false", "true"] },
+  { func = "@xor_right", args = ["true", "true"] },
+  { func = "@xor_right", args = ["true", "true"], expect = ["poison"] },
+  { func = "@xor_right", args = ["false", "true"] },
+  { func = "@shl_left", args = ["true", "false"] },
+  { func = "@shl_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@shl_left", args = ["false", "false"] },
+  { func = "@shl_right", args = ["true", "false"] },
+  { func = "@shl_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@shl_right", args = ["false", "false"] },
+  { func = "@shl_right", args = ["false", "false"], expect = ["poison"] },
+  { func = "@lshr_left", args = ["true", "false"] },
+  { func = "@lshr_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@lshr_left", args = ["false", "false"] },
+  { func = "@lshr_right", args = ["true", "false"] },
+  { func = "@lshr_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@lshr_right", args = ["false", "false"] },
+  { func = "@lshr_right", args = ["false", "false"], expect = ["poison"] },
+  { func = "@ashr_left", args = ["true", "false"] },
+  { func = "@ashr_left", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ashr_left", args = ["false", "false"] },
+  { func = "@ashr_right", args = ["true", "false"] },
+  { func = "@ashr_right", args = ["true", "false"], expect = ["poison"] },
+  { func = "@ashr_right", args = ["false", "false"] },
+  { func = "@ashr_right", args = ["false", "false"], expect = ["poison"] },
+]

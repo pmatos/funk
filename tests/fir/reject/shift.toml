@@ -1,0 +1,591 @@
+# Must-reject texts of #15's shifts: shl, lshr and ashr. The spec gives
+# the shifts no flags, so LLVM's nuw and nsw of shl, and exact of lshr
+# and ashr, do not decode, nor does any other attribute. These ops have
+# no validation rule beyond their signatures, so a text that breaks one
+# does not decode: each is a parse error at the op's name
+# (ADR-2026-10-30-0815). bitwise.toml holds those of and, or and xor.
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes a value and an amount of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = shl %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes two operands, a value and an amount, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes two operands, a value and an amount, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  shl %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = shl %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes no attributes: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = shl 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes a value and an amount of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = lshr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes two operands, a value and an amount, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes two operands, a value and an amount, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  lshr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = lshr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes no attributes: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = lshr 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes a value and an amount of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = ashr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes two operands, a value and an amount, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes two operands, a value and an amount, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  ashr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = ashr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes no attributes: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = ashr 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = shl %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = shl %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = shl %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = lshr %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = lshr %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = lshr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = ashr %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = ashr %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = ashr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

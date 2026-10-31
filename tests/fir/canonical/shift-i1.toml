@@ -1,0 +1,28 @@
+# Tests of shift-i1.fir: shl, lshr and ashr at i1. Each shifts false and
+# true by false, which is 0 and gives the value, and by true, which is
+# 1, that is N, and gives poison (#15).
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does.
+# Where fir-ref returns poison, an interpreter-only test of the same
+# run checks that it is exactly poison.
+tests = [
+  { func = "@shl", args = ["false", "false"] },
+  { func = "@shl", args = ["false", "true"] },
+  { func = "@shl", args = ["false", "true"], expect = ["poison"] },
+  { func = "@shl", args = ["true", "false"] },
+  { func = "@shl", args = ["true", "true"] },
+  { func = "@shl", args = ["true", "true"], expect = ["poison"] },
+  { func = "@lshr", args = ["false", "false"] },
+  { func = "@lshr", args = ["false", "true"] },
+  { func = "@lshr", args = ["false", "true"], expect = ["poison"] },
+  { func = "@lshr", args = ["true", "false"] },
+  { func = "@lshr", args = ["true", "true"] },
+  { func = "@lshr", args = ["true", "true"], expect = ["poison"] },
+  { func = "@ashr", args = ["false", "false"] },
+  { func = "@ashr", args = ["false", "true"] },
+  { func = "@ashr", args = ["false", "true"], expect = ["poison"] },
+  { func = "@ashr", args = ["true", "false"] },
+  { func = "@ashr", args = ["true", "true"] },
+  { func = "@ashr", args = ["true", "true"], expect = ["poison"] },
+]

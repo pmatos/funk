@@ -188,12 +188,13 @@ are on `main`:
   Lean ([#18](https://github.com/pmatos/funk/issues/18)). `fir-ref run`
   reports their immediate UB, a zero or poison divisor and the signed
   minimum or poison divided by `-1`, with a reason that names the case.
+- The execution rules of `icmp`, with its ten predicates, and `select` in
+  Lean ([#16](https://github.com/pmatos/funk/issues/16)).
 
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#16](https://github.com/pmatos/funk/issues/16),
-  [#19](https://github.com/pmatos/funk/issues/19) and
+  related ops, [#19](https://github.com/pmatos/funk/issues/19) and
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
