@@ -139,5 +139,13 @@ with each set of flags on every pair of boundary bit patterns,
 of values and of poison, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33` and
 `i64`; `reject/arith.toml` holds the texts of these ops that do not
 decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
-and `ashr` (#15); stage 3 of #15 adds texts for them. #16 to #20 add the
-other ops to `funk`.
+and `ashr` (#15); stage 3 of #15 adds texts for them. #16 and #18 to #20
+add the other ops to `funk`.
+
+The texts also use `zext`, `sext` and `trunc` (#17). `zext`, `sext` and
+`trunc` run each width change on the boundary bit patterns of its operand
+at every valid pair of `i1`, `i8`, `i16`, `i32` and `i64`; `zext-i7`,
+`zext-i33` and their `sext` and `trunc` twins run them to and from `i7`
+and `i33`, and `zext-poison`, `sext-poison` and `trunc-poison` on a
+poison operand. `reject/width.toml` holds their texts that do not decode
+or do not validate.
