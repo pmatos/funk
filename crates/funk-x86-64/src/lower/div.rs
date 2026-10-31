@@ -14,9 +14,9 @@
 //!
 //! No code tests the divisor. A zero divisor, and the signed minimum
 //! divided by `-1`, are immediate UB in the source, so whatever `idiv` or
-//! `div` does on them, a trap included, is correct. A broken `exact` gives poison, which any
-//! value refines (ADR-2026-10-29-2008), so `exact` lowers as the plain
-//! quotient (ADR-2026-10-30-2248).
+//! `div` does on them, a trap included, is correct. A broken `exact` gives
+//! poison, which any value refines (ADR-2026-10-29-2008), so `exact`
+//! lowers as the plain quotient (ADR-2026-10-30-2248).
 
 use funk_ir::Op;
 

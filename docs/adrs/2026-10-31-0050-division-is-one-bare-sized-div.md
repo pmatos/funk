@@ -58,8 +58,8 @@ at `i1`.
 
 ## Consequences
 
-- Native tests run only inputs whose result is not UB in the spec. A run
-  of one that is would trap.
+- Native tests run only inputs whose result is not UB in the spec: a run
+  of one that is may trap.
 - A division clobbers `%rax`, `%rcx` and `%rdx`. That is free while every
   value lives in a slot (ADR-2026-10-30-1230); a register allocator (M1)
   must treat them as clobbered.
