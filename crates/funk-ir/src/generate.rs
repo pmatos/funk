@@ -4,14 +4,16 @@
 //! The modules are valid, so they are well formed (ADR-2026-10-30-0815), and
 //! every number in them is within its limit. They cover quoted symbols,
 //! `true` and `false`, constants at the bounds of their widths, every kind
-//! of location, and functions with zero, one and several results. The ops
-//! are those of the core dialect that the registry has: `const`, `add`,
+//! of location, and functions with zero, one and several results, of one
+//! block or of several, with loops and block arguments (`blocks.rs`). The
+//! ops are those of the core dialect that the registry has: `const`, `add`,
 //! `sub` and `mul` with each combination of their flags, `freeze`, the
 //! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
 //! the width changes `zext`, `sext` and `trunc` between valid pairs of
 //! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem`,
 //! `icmp` with each predicate on two values of any one type, `select` at any
-//! type, and `ret`. A division may be by zero: that is UB when it runs, not
+//! type, the branches `br` and `cond_br`, and `ret`. A division may be by
+//! zero and a loop may never end: that is UB or a run out of fuel, not
 //! invalid, and no check runs these modules. The generator is
 //! deterministic: one seed gives one module.
 
@@ -19,7 +21,9 @@ use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
     int_width,
 };
-use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
+use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
+
+mod blocks;
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
 /// property tests and the cross-language round trip with Lean.
@@ -239,12 +243,13 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
     }
 }
 
-/// The values of a function so far, and the ops of its block that define
-/// them.
+/// The values in scope at the end of a block so far, the ops of the block
+/// that define them, and every value name the function has taken.
 struct Body<'k> {
     keys: &'k [LocRef],
     values: Vec<(String, Type)>,
     ops: Vec<Op>,
+    taken: Vec<String>,
 }
 
 impl Body<'_> {
@@ -270,11 +275,13 @@ impl Body<'_> {
         out
     }
 
-    /// A value name that the function does not define yet.
-    fn fresh_name(&self, rng: &mut Rng) -> String {
+    /// A value name that the function does not define yet, which it now
+    /// takes.
+    fn fresh_name(&mut self, rng: &mut Rng) -> String {
         loop {
             let n = name(rng, false);
-            if self.values.iter().all(|(v, _)| *v != n) {
+            if !self.taken.contains(&n) {
+                self.taken.push(n.clone());
                 return n;
             }
         }
@@ -353,33 +360,12 @@ fn func(rng: &mut Rng, sym: String, keys: &[LocRef]) -> Func {
         keys,
         values: Vec::new(),
         ops: Vec::new(),
+        taken: Vec::new(),
     };
     for _ in 0..rng.below(4) {
         let (n, t) = (body.fresh_name(rng), int_type(width(rng)));
         body.values.push((n.clone(), t.clone()));
         f = f.param(n, t);
     }
-    for _ in 0..rng.below(5) {
-        let t = if !body.values.is_empty() && rng.one_in(2) {
-            rng.pick(&body.values).1.clone()
-        } else {
-            int_type(width(rng))
-        };
-        body.define(rng, t);
-    }
-    let mut ret = Op::new("ret", *rng.pick(keys));
-    for _ in 0..rng.below(4) {
-        let t = int_type(width(rng));
-        let have = body.of_type(&t);
-        let v = if !have.is_empty() && rng.one_in(2) {
-            rng.pick(&have).clone()
-        } else {
-            body.define(rng, t.clone())
-        };
-        ret = ret.operand(v);
-        f = f.result(t);
-    }
-    let mut block = Block::new(name(rng, false));
-    block.ops = body.ops;
-    f.block(block.op(ret))
+    blocks::build(rng, &mut body, f)
 }

@@ -182,4 +182,5 @@ become `and %c, %x` where `%x` may be poison, and that
 `and %c, %g` with `%g = freeze %x` may. `reject/compare.toml` holds the
 texts of these ops that do not decode.
 
-#19 and #20 add the other ops to `funk`.
+Both tools now also have `br` and `cond_br` (#19); its stage 3 adds texts
+for them. #20 adds the other ops to `funk`.
