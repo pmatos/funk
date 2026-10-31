@@ -29,7 +29,7 @@ fn terminator(successors: usize) -> OpShape {
     }
 }
 
-/// Checks the parts that every terminator lacks: attributes and results.
+/// Checks that the branch `name` has no attributes and defines no values.
 fn bare(name: &str, op: &OpTypes<'_>) -> Result<(), String> {
     if !op.attrs.is_empty() {
         return Err(format!("{name} takes no attributes"));

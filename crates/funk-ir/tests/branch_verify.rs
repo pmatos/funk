@@ -92,7 +92,6 @@ fn a_use_must_be_dominated_by_its_definition() {
          ^exit:\n  ret %i @5\n",
         &[at_op("loop", 0, 1, back)],
     );
-    let before = "%y is used before it is defined";
     rejected(
         "^entry:\n  br ^b @0\n^b:\n  br ^c(%y) @1\n^c(%y: i32):\n  ret %y @2\n",
         &[at_op(
@@ -102,6 +101,7 @@ fn a_use_must_be_dominated_by_its_definition() {
             "%y is an argument of ^c, which does not dominate ^b",
         )],
     );
+    let before = "%y is used before it is defined";
     rejected(
         "^entry:\n  br ^b @0\n^b:\n  %x: i32 = add %y, %n @1\n  %y: i32 = const 2 @2\n  \
          ret %x @3\n",
