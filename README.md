@@ -156,10 +156,12 @@ are on `main`:
   [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
   [ADR-2026-10-31-0003](docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
-  bitwise ops and shifts, `freeze` and `ret` in Lean
+  bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
+  `freeze` and `ret` in Lean
   ([#10](https://github.com/pmatos/funk/issues/10),
   [#14](https://github.com/pmatos/funk/issues/14),
-  [#15](https://github.com/pmatos/funk/issues/15)). `fir-ref run` runs a
+  [#15](https://github.com/pmatos/funk/issues/15),
+  [#17](https://github.com/pmatos/funk/issues/17)). `fir-ref run` runs a
   function in scripted mode, along the path that its choices name, in
   exhaustive mode, which lists every outcome, or in sampled mode, which
   draws its choices from a seed; Lean proves all three sound
@@ -170,7 +172,8 @@ are on `main`:
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#16](https://github.com/pmatos/funk/issues/16) to
+  related ops, [#16](https://github.com/pmatos/funk/issues/16) and
+  [#18](https://github.com/pmatos/funk/issues/18) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep

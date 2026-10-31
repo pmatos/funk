@@ -47,15 +47,15 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .mul _ _, .cons _ (.cons _ .nil) | .and _, .cons _ (.cons _ .nil)
     | .or _, .cons _ (.cons _ .nil) | .xor _, .cons _ (.cons _ .nil)
     | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
-    | .ashr _, .cons _ (.cons _ .nil) => rfl
+    | .ashr _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
+    | .trunc .., .cons _ .nil => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
     | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .icmp .., _
-    | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
-    | .ret _, _ | .call .., _ => rfl
+    | .select _, _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl
 
 /-- Exhaustive mode on the core function `f`: every path of its run on
