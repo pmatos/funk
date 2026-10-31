@@ -1,6 +1,6 @@
 # The harness judges a differential test by its set of outcomes, and checks declared results by their witnesses and by seeded runs
 
-Status: accepted
+Status: accepted; extended by ADR-2026-10-31-0208
 
 ## Context
 
