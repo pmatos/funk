@@ -95,7 +95,9 @@ fn bitwise_runs_at_every_width(op: &str) {
 /// %u, %v)`, which shifts `x + y` by `u + v`. Runs `@OP` on each boundary
 /// value by each of [`amounts`], and `@sum` on every pair of boundary
 /// values by each of [`in_range`], made as `min + (min + k)`: a sum that
-/// wraps, so that below `i64` its bits above `N` are all ones.
+/// wraps, so that below `i64` its bits above `N` are not an extension of
+/// its value. They are all ones at `i8` to `i32`, where the runtime
+/// sign-extends arguments, and the sum is 2 at `i1`, where `true` is 1.
 fn shift_runs_at_every_width(op: &str) {
     let mut poison = 0;
     for w in WIDTHS {
