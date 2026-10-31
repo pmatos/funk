@@ -7,7 +7,9 @@ runs on them (#13). The format is decided in
 the harness in
 [ADR-2026-10-30-2049](../../docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
 and how it judges a test in
-[ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md).
+[ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)
+and, for a run that makes choices,
+[ADR-2026-10-31-0003](../../docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md).
 
 ## Layout
 
@@ -35,6 +37,10 @@ tests = [
   { func = '@"a b"' },
   { func = "@odd", args = ["1", "1"], expect = ["-63", "-4294967296"] },
   { func = "@seven", fuel = 1, expect = "fuel-exhausted" },
+  { func = "@freeze_sub", args = ["9223372036854775807"], results = [
+    { values = ["0"], witness = ["5"] },
+  ] },
+  { func = "@freeze_poison", args = ["63"], choices = ["-64"], expect = ["-64"] },
 ]
 ```
 
@@ -44,23 +50,35 @@ tests = [
   its type: `true` or `false` at `i1`, signed decimal at every other width.
   There are no `poison` arguments.
 - `fuel` is `fir-ref run`'s budget, one step per op; 1,000,000 by default.
-- Without `expect`, the test is differential. It runs on `fir-ref` and as
-  native code from `funk build`, and the native result must refine
-  `fir-ref`'s: the same number of values, each equal, or anything of its
-  type where `fir-ref` returns poison. A `fir-ref` result of UB or fuel
-  exhausted makes the test invalid, which counts as a failure: raise the
-  fuel budget, or make the test interpreter-only.
+- Without `expect`, the test is differential. It runs on `fir-ref`, in
+  exhaustive mode, and as native code from `funk build`, and the native
+  result must refine one of `fir-ref`'s outcomes: the same number of
+  values, each equal, or anything of its type where `fir-ref` returns
+  poison. A run that makes no choice has one outcome. UB or fuel exhausted
+  among the outcomes makes the test invalid, which counts as a failure:
+  raise the fuel budget, or make the test interpreter-only.
+- `results` declares a differential test's results, each a list of
+  `values` and a `witness`: the choices on which `fir-ref run --choices`
+  gives them. A test whose run chooses more than 16 bits on one path must
+  declare its results; the harness checks each witness, and 32 seeded runs
+  of `fir-ref run --seed` must each give a declared result. Within the
+  budget, the declared results must be exactly the run's outcomes. A
+  witness that no longer fits the run fails the test. Native code must
+  refine one declared result.
 - With `expect`, the test is interpreter-only: only `fir-ref` runs it, and
   it must give that result. `expect` is a list of values, each a value or
-  `"poison"`, or `"ub"` (any reason), or `"fuel-exhausted"`.
+  `"poison"`, or `"ub"` (any reason), or `"fuel-exhausted"`. `choices`
+  gives the path's choices, each spelled as a constant of its type; there
+  are none by default, so a run that chooses needs them.
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
-and shifts, `sdiv` and `udiv` with or without `exact`, `srem`, `urem` and
-`ret` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most one result.
-Tests of other widths, or of several results, go in modules whose tests
-are all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
+`exact`, `srem`, `urem` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`,
+with at most one result. Tests of other widths, or of several results, go
+in modules whose tests are all interpreter-only, such as `tracer-i7.fir`
+and `widths.fir`.
 
 ## Must-reject texts
 
@@ -114,9 +132,14 @@ locs {
   table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
   prints from them, byte for byte (ADR-2026-10-30-1250).
 
-Today the texts use only `const`, `add` without flags and `ret`, but for
-must-reject texts that name an op or a flag that fir does not have. Both
-tools now also have `sub`, `mul`, their flags `nuw` and `nsw`, and `freeze`
-(#14), `and`, `or`, `xor`, `shl`, `lshr` and `ashr` (#15), and `sdiv`,
-`udiv`, `srem`, `urem` and `exact` (#18); stage 3 of each issue adds texts
-for them. #16, #17, #19 and #20 add the other ops to `funk`.
+The texts use `const`, `add`, `sub` and `mul` with their flags `nuw` and
+`nsw`, `freeze` and `ret`, but for must-reject texts that name an op or a
+flag that fir does not have. `add-iN`, `sub-iN` and `mul-iN` run each op
+with each set of flags on every pair of boundary bit patterns,
+`poison-iN` how poison propagates through them, and `freeze-iN` `freeze`
+of values and of poison, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33` and
+`i64`; `reject/arith.toml` holds the texts of these ops that do not
+decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
+and `ashr` (#15), `zext`, `sext` and `trunc` (#17), and `sdiv`, `udiv`,
+`srem`, `urem` and `exact` (#18); stage 3 of each issue adds texts for
+them. #16, #19 and #20 add the other ops to `funk`.

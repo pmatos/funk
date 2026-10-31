@@ -146,7 +146,7 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
 
-{includeLiterate "." Fir.Execution.Modes "Exhaustive and scripted modes" (level := 2)}
+{includeLiterate "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" (level := 2)}
 
 {includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
 

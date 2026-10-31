@@ -39,21 +39,64 @@ if sys.argv[1] == "build":
 """
 
 FIR_REF = """
+R = '{"kind":"return","values":["%s"]}'
+WHY = '{"kind":"ub","reason":"why"}'
+FUEL = '{"kind":"fuel-exhausted"}'
+# What exhaustive mode prints for each function: the most choices on one
+# path and every outcome, or None past the budget.
+SETS = {
+    "@seven": (0, [R % 7]),
+    "@eight": (0, [R % 8]),
+    "@ub": (0, [WHY]),
+    "@fuel": (0, [FUEL]),
+    "@set": (1, [R % 6, R % 7]),
+    "@miss": (1, [R % 5, R % 6]),
+    "@setub": (1, [R % 7, WHY]),
+    "@undeclared": (1, [R % 7, R % 8]),
+    "@pick": (1, [R % 3]),
+}
+# The one path of scripted mode, by function and choices; any other
+# choices do not fit the run.
+PATHS = {
+    ("@wide", "3"): (R % 7, 1),
+    ("@drift", "3"): (R % 7, 1),
+    ("@undeclared", "1"): (R % 7, 1),
+    ("@pick", "3"): (R % 3, 1),
+}
 if sys.argv[1] == "run":
-    func = sys.argv[sys.argv.index("--") + 2]
-    print({
-        "@seven": '{"kind":"return","values":["7"]}',
-        "@eight": '{"kind":"return","values":["8"]}',
-        "@ub": '{"kind":"ub","reason":"why"}',
-        "@fuel": '{"kind":"fuel-exhausted"}',
-    }[func])
+    dash = sys.argv.index("--")
+    options, func = sys.argv[2:dash], sys.argv[dash + 2]
+    value = lambda o: options[options.index(o) + 1] if o in options else None
+    choices, seed = value("--choices") or "", value("--seed")
+    if "--exhaustive" in options:
+        if func not in SETS:
+            print('{"kind":"choice-budget-exceeded","budget":16}')
+        else:
+            made, outs = SETS[func]
+            print('{"kind":"outcomes","choices":%d,"outcomes":[%s]}' % (made, ",".join(outs)))
+        sys.exit(0)
+    if seed is not None:
+        n = 8 if func == "@drift" and seed == "5" else 7
+        print((R % n)[:-1] + ',"choices":1,"sequence":["%s"]}' % seed)
+        sys.exit(0)
+    if (func, choices) in PATHS:
+        out, made = PATHS[(func, choices)]
+    elif choices == "" and SETS.get(func, (1,))[0] == 0:
+        out, made = SETS[func][1][0], 0
+    else:
+        print(f"fir-ref: {func}: the choices do not fit the run: they are {choices}", file=sys.stderr)
+        sys.exit(2)
+    print(out[:-1] + ',"choices":%d}' % made)
     sys.exit(0)
 """
+
+NAMES = ["seven", "eight", "ub", "fuel", "set", "miss", "setub", "wide"]
+NAMES += ["stale", "drift", "undeclared", "pick"]
 
 MODULE = (
     "".join(
         f"func @{f}() -> i32 {{\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}}\n\n"
-        for f in ["seven", "eight", "ub", "fuel"]
+        for f in NAMES
     )
     + "locs {\n  @0 = unknown\n}\n"
 )
@@ -66,6 +109,16 @@ tests = [
   { func = "@fuel" },
   { func = "@ub", expect = "ub" },
   { func = "@eight", expect = ["7"] },
+  { func = "@set" },
+  { func = "@miss" },
+  { func = "@setub" },
+  { func = "@wide" },
+  { func = "@wide", results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@stale", results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@drift", results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@undeclared", results = [{ values = ["7"], witness = ["1"] }] },
+  { func = "@pick", choices = ["3"], expect = ["3"] },
+  { func = "@pick", expect = ["3"] },
 ]
 """
 
@@ -86,6 +139,10 @@ text = "VALIDATE"
 
 
 # The report's lines that show each kind of check.
+SET = "fir-ref makes 1 choice and gives 2 outcomes"
+WIDE = "fir-ref chooses more than its budget of 16 bits"
+DECLARES = ", and the test declares 1 result"
+NATIVE = '; native code returns ["7"]'
 EXPECTED = [
     "passed  canonical/m.fir: funk verify: accepted; fir-ref validate: accepted",
     (
@@ -100,25 +157,78 @@ EXPECTED = [
         "failed  reject/r.toml #3: funk verify: validation-error;"
         " fir-ref validate: validation-error"
     ),
+    'passed  canonical/m.fir @seven: fir-ref returns ["7"]' + NATIVE + "\n",
     (
-        'passed  canonical/m.fir @seven: fir-ref returns ["7"];'
-        ' native code returns ["7"]'
+        'failed  canonical/m.fir @eight: fir-ref returns ["8"]'
+        + NATIVE
+        + ": value 1 is 7, not 8"
     ),
-    (
-        'failed  canonical/m.fir @eight: fir-ref returns ["8"];'
-        ' native code returns ["7"]: value 1 is 7, not 8'
-    ),
-    ('invalid canonical/m.fir @ub: fir-ref hits UB (why); native code returns ["7"]'),
-    (
-        "invalid canonical/m.fir @fuel: fir-ref runs out of fuel;"
-        ' native code returns ["7"]'
-    ),
+    "invalid canonical/m.fir @ub: fir-ref hits UB (why)" + NATIVE,
+    "invalid canonical/m.fir @fuel: fir-ref runs out of fuel" + NATIVE,
     "passed  canonical/m.fir @ub (interpreter only): fir-ref hits UB (why)",
     (
         "failed  canonical/m.fir @eight (interpreter only): fir-ref returns"
         ' ["8"]: the test expects ["7"]'
     ),
-    "11 checks: 5 passed, 4 failed, 2 invalid",
+    "passed  canonical/m.fir @set: " + SET + NATIVE + "\n",
+    (
+        "failed  canonical/m.fir @miss: "
+        + SET
+        + NATIVE
+        + ': the native result refines none of the 2 outcomes: ["5"], ["6"]'
+    ),
+    (
+        "invalid canonical/m.fir @setub: "
+        + SET
+        + NATIVE
+        + ": the set holds UB (why), which allows any result"
+    ),
+    (
+        "invalid canonical/m.fir @wide: "
+        + WIDE
+        + NATIVE
+        + ": with no set to judge by, the test proves nothing unless it"
+        " declares its results, each with a witness"
+    ),
+    (
+        "passed  canonical/m.fir @wide: "
+        + WIDE
+        + DECLARES
+        + NATIVE
+        + ": each witness gives its result, and 32 seeded runs give declared"
+        " results\n"
+    ),
+    (
+        "failed  canonical/m.fir @stale: "
+        + WIDE
+        + DECLARES
+        + NATIVE
+        + ': the witness ["3"] of result 1 does not give it: fir-ref exits'
+        " with 2: fir-ref: @stale: the choices do not fit the run"
+    ),
+    (
+        "failed  canonical/m.fir @drift: "
+        + WIDE
+        + DECLARES
+        + NATIVE
+        + ': seed 5 draws ["5"] and returns ["8"], which the test does not declare'
+    ),
+    (
+        "failed  canonical/m.fir @undeclared: "
+        + SET
+        + DECLARES
+        + NATIVE
+        + ': the test does not declare ["8"], which the set holds'
+    ),
+    (
+        "passed  canonical/m.fir --choices 3 @pick (interpreter only):"
+        ' fir-ref returns ["3"]\n'
+    ),
+    (
+        "failed  canonical/m.fir @pick (interpreter only): fir-ref exits with 2:"
+        " fir-ref: @pick: the choices do not fit the run"
+    ),
+    "21 checks: 8 passed, 9 failed, 4 invalid",
 ]
 
 

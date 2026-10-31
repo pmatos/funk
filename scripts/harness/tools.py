@@ -10,6 +10,7 @@ import subprocess
 from dataclasses import dataclass
 
 from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
+from sets import BudgetExceeded, Outcomes, Path
 
 TIMEOUT = 120
 
@@ -19,6 +20,9 @@ VALIDATION_ERROR = "validation-error"
 # The exit status that goes with each verdict on one file
 # (ADR-2026-10-30-1032, ADR-2026-10-30-1741).
 STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
+# The kinds of what `fir-ref run --exhaustive` prints (ADR-2026-10-30-2218).
+OUTCOMES = "outcomes"
+BUDGET_EXCEEDED = "choice-budget-exceeded"
 
 
 @dataclass(frozen=True)
@@ -113,26 +117,71 @@ def strings(value) -> tuple[str, ...] | None:
     return None
 
 
-def outcome(ran: Ran) -> Outcome | str:
-    """What `fir-ref run` reports (ADR-2026-10-30-1856): exit status 0 with
-    `return`, `ub` or `fuel-exhausted`, or 1 with `stuck`."""
+def read_outcome(obj: dict) -> Outcome | None:
+    """One outcome, as `fir-ref run` writes it (ADR-2026-10-30-1856):
+    `return` with its values, `ub` or `stuck` with a reason, or
+    `fuel-exhausted`."""
+    kind = obj.get("kind")
+    if kind == RETURN:
+        values = strings(obj.get("values"))
+        return None if values is None else Outcome(RETURN, values)
+    if kind in (UB, STUCK) and isinstance(obj.get("reason"), str):
+        return Outcome(kind, reason=obj["reason"])
+    if kind == FUEL_EXHAUSTED:
+        return Outcome(FUEL_EXHAUSTED)
+    return None
+
+
+def count(value) -> int | None:
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    return None
+
+
+def path(ran: Ran) -> Path | str:
+    """What `fir-ref run` reports in scripted or sampled mode
+    (ADR-2026-10-30-2218, ADR-2026-10-31-0002): one outcome, with the number
+    of `choices` the path made and, in sampled mode, the `sequence` it drew.
+    The exit status is 1 for `stuck`, and 0 otherwise."""
+    if ran.status not in (0, 1):
+        return failure(ran)
+    obj = one_json_line(ran.stdout)
+    if obj is None:
+        return no_report(ran)
+    o = read_outcome(obj)
+    choices = count(obj.get("choices"))
+    sequence = strings(obj.get("sequence")) if "sequence" in obj else None
+    status = 1 if obj.get("kind") == STUCK else 0
+    bad_sequence = "sequence" in obj and sequence is None
+    if o is None or choices is None or bad_sequence or ran.status != status:
+        return f"exits with {ran.status} and prints {ran.stdout.strip()}"
+    return Path(o, choices, sequence)
+
+
+def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
+    """What `fir-ref run --exhaustive` reports (ADR-2026-10-30-2218): every
+    outcome of the run and the most `choices` that one path made, with exit
+    status 1 when one is `stuck` and 0 otherwise; or that a path would
+    choose more bits than the `budget`, with exit status 0."""
     if ran.status not in (0, 1):
         return failure(ran)
     obj = one_json_line(ran.stdout)
     if obj is None:
         return no_report(ran)
     kind = obj.get("kind")
-    want_status = 1 if kind == STUCK else 0
-    if kind == RETURN:
-        values = strings(obj.get("values"))
-        if values is not None and ran.status == 0:
-            return Outcome(RETURN, values)
-    elif kind in (UB, STUCK) and isinstance(obj.get("reason"), str):
-        if ran.status == want_status:
-            return Outcome(kind, reason=obj["reason"])
-    elif kind == FUEL_EXHAUSTED and ran.status == 0:
-        return Outcome(FUEL_EXHAUSTED)
-    return f"exits with {ran.status} and prints {ran.stdout.strip()}"
+    bad = f"exits with {ran.status} and prints {ran.stdout.strip()}"
+    if kind == BUDGET_EXCEEDED:
+        budget = count(obj.get("budget"))
+        return bad if budget is None or ran.status != 0 else BudgetExceeded(budget)
+    items = obj.get("outcomes")
+    choices = count(obj.get("choices"))
+    if kind != OUTCOMES or choices is None or not isinstance(items, list):
+        return bad
+    found = [read_outcome(i) if isinstance(i, dict) else None for i in items]
+    if not found or None in found:
+        return bad
+    status = 1 if any(o.kind == STUCK for o in found) else 0
+    return bad if ran.status != status else Outcomes(choices, tuple(found))
 
 
 def native_values(ran: Ran) -> tuple[str, ...] | str:

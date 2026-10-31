@@ -1,6 +1,6 @@
 # `fir-ref run` follows the path that `--choices` names by default, and lists every outcome with `--exhaustive`
 
-Status: accepted
+Status: accepted; extended by ADR-2026-10-31-0002
 
 ## Context
 

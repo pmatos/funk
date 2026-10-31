@@ -15,8 +15,9 @@ for each value the bits may take.
 The tree's meaning is a set: `ChoiceTree.toSet` maps each tree to the set
 of the ways its paths end. That map is a monad morphism, so a run of the
 interpreter in the tree maps to its run in the set monad, by the previous
-section. `fir-ref`'s two modes walk the tree: exhaustive mode visits every
-path, and scripted mode follows the one path that a choice sequence names.
+section. `fir-ref`'s three modes walk the tree: exhaustive mode visits every
+path, scripted mode follows the one path that a choice sequence names, and
+sampled mode draws one.
 -/
 
 namespace Fir

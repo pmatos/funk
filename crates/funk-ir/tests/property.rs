@@ -90,6 +90,7 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             .chain(&SHIFT_OPS)
             .map(|op| op.to_string()),
     );
+    want.extend(funk_ir::dialects::core::WIDTH_CHANGES.map(String::from));
     for (op, exact) in funk_ir::dialects::core::DIVISION_OPS {
         want.insert(op.to_string());
         if exact {
@@ -97,6 +98,51 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
         }
     }
     assert_eq!(seen, want);
+}
+
+/// The width changes that the generator makes, as `(op, M, N)`, from `iM`
+/// to `iN`.
+fn generated_width_changes() -> Vec<(String, u32, u32)> {
+    let int_width = funk_ir::dialects::core::int_width;
+    let mut out = Vec::new();
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let defs = f.params.iter().chain(
+                f.body
+                    .blocks
+                    .iter()
+                    .flat_map(|b| b.ops.iter().flat_map(|o| &o.results)),
+            );
+            let types: std::collections::HashMap<&str, u32> = defs
+                .map(|d| (d.name.as_str(), int_width(&d.ty).expect("an integer")))
+                .collect();
+            for op in f.body.blocks.iter().flat_map(|b| &b.ops) {
+                if funk_ir::dialects::core::WIDTH_CHANGES.contains(&op.name.as_str()) {
+                    let n = int_width(&op.results[0].ty).expect("an integer");
+                    out.push((op.name.clone(), types[op.operands[0].as_str()], n));
+                }
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn the_generator_changes_widths_only_where_validation_allows() {
+    let changes = generated_width_changes();
+    for (op, m, n) in &changes {
+        let valid = if op == "trunc" { n < m } else { m < n };
+        assert!(valid, "{op} from i{m} to i{n}");
+    }
+    for op in funk_ir::dialects::core::WIDTH_CHANGES {
+        let to_i1 = changes.iter().any(|(o, _, n)| o == op && *n == 1);
+        let from_i1 = changes.iter().any(|(o, m, _)| o == op && *m == 1);
+        assert!(if op == "trunc" { to_i1 } else { from_i1 }, "{op}");
+        assert!(
+            changes.iter().filter(|(o, ..)| o == op).count() > 20,
+            "{op}"
+        );
+    }
 }
 
 /// Rewrites the layout of a text outside its strings: each space or line
@@ -189,7 +235,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 46] = [
+    const TOKENS: [&str; 50] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -217,6 +263,10 @@ fn the_parser_never_panics_on_random_token_soup() {
         "shl",
         "lshr",
         "ashr",
+        "zext",
+        "sext",
+        "trunc",
+        ": i64",
         "sdiv",
         "udiv",
         "srem",
