@@ -130,12 +130,7 @@ fn check_shape(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
             at.block.label
         )));
     }
-    if !shape.terminator && !op.succs.is_empty() {
-        out.push(at.diag(format!(
-            "{} is not a terminator, and only terminators have successors",
-            op.name
-        )));
-    } else if op.succs.len() != shape.successors {
+    if op.succs.len() != shape.successors {
         out.push(at.diag(format!(
             "{} has {} successors, and its registration says {}",
             op.name,
@@ -143,14 +138,30 @@ fn check_shape(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
             shape.successors
         )));
     }
+    if !shape.terminator && !op.succs.is_empty() {
+        out.push(at.diag(format!(
+            "{} is not a terminator, and only terminators have successors",
+            op.name
+        )));
+    }
 }
 
 /// A successor names a block other than the entry, and passes one value of
-/// the right type for each of that block's arguments (`SuccValid`).
+/// the right type for each of that block's arguments (`SuccValid`). Each
+/// argument that is not defined is a use out of scope, whatever the block;
+/// it has no type either, so it breaks `SuccValid` too, and the message
+/// shows it by its name.
 fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) {
     let blocks = &s.func.body.blocks;
     if blocks.first().is_some_and(|e| e.label == su.label) {
         out.push(at.diag(format!("no branch may go to the entry block ^{}", su.label)));
+    }
+    for a in &su.args {
+        if !s.types.contains_key(a.as_str()) {
+            out.push(at.diag(format!(
+                "successor argument %{a} is not defined in the function"
+            )));
+        }
     }
     let Some(target) = s.blocks.get(su.label.as_str()) else {
         out.push(at.diag(format!(
@@ -159,24 +170,23 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
         )));
         return;
     };
-    for a in &su.args {
-        if !s.types.contains_key(a.as_str()) {
-            out.push(at.diag(format!(
-                "successor argument %{a} is not defined in the function"
-            )));
-        }
-    }
-    let passed: Vec<&Type> = su
+    let passed: Vec<Option<&Type>> = su
         .args
         .iter()
-        .filter_map(|a| s.types.get(a.as_str()).copied())
+        .map(|a| s.types.get(a.as_str()).copied())
         .collect();
     let wanted: Vec<&Type> = target.params.iter().map(|d| &d.ty).collect();
-    if passed.len() == su.args.len() && passed != wanted {
+    if !passed.iter().copied().eq(wanted.iter().copied().map(Some)) {
+        let shown: Vec<String> = su
+            .args
+            .iter()
+            .zip(&passed)
+            .map(|(a, &t)| t.map_or_else(|| format!("%{a}"), Type::to_string))
+            .collect();
         out.push(at.diag(format!(
             "successor ^{} passes ({}) but the block takes ({})",
             su.label,
-            Commas(&passed),
+            Commas(&shown),
             Commas(&wanted)
         )));
     }
