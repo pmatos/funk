@@ -171,3 +171,23 @@ pub fn wrap(w: u32, x: i128) -> i128 {
     let s = x.rem_euclid(m);
     if s >= m / 2 { s - m } else { s }
 }
+
+/// Runs `exe` with `args` and checks that it prints one value of `iW`,
+/// whichever it is: the result where the source's is poison.
+pub fn expect_any(exe: &Path, args: &[&str], w: u32) {
+    let out = run(exe, args);
+    let stdout = text(&out.stdout);
+    let value = stdout
+        .strip_prefix("{\"values\":[\"")
+        .and_then(|s| s.strip_suffix("\"]}\n"));
+    let of_type = value.is_some_and(|v| match w {
+        1 => v == "true" || v == "false",
+        _ => v.parse::<i128>().is_ok_and(|x| wrap(w, x) == x),
+    });
+    assert!(
+        out.status.code() == Some(0) && out.stderr.is_empty() && of_type,
+        "{} {args:?}: {stdout}{}",
+        exe.display(),
+        text(&out.stderr)
+    );
+}

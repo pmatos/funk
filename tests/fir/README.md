@@ -73,10 +73,11 @@ tests = [
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
-`const`, `add`, `sub` and `mul` with any flags, `freeze` and `ret` at `i1`,
-`i8`, `i16`, `i32` and `i64`, with at most one result. Tests of other
-widths, or of several results, go in modules whose tests are all
-interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+`const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
+and shifts, and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most
+one result. Tests of other widths, or of several results, go in modules
+whose tests are all interpreter-only, such as `tracer-i7.fir` and
+`widths.fir`.
 
 ## Must-reject texts
 
@@ -137,4 +138,6 @@ with each set of flags on every pair of boundary bit patterns,
 `poison-iN` how poison propagates through them, and `freeze-iN` `freeze`
 of values and of poison, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33` and
 `i64`; `reject/arith.toml` holds the texts of these ops that do not
-decode (#14). #15 to #20 add the other ops to `funk`.
+decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
+and `ashr` (#15); stage 3 of #15 adds texts for them. #16 to #20 add the
+other ops to `funk`.
