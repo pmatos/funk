@@ -69,7 +69,8 @@ must check.
   caller or the callee.
 - The spec states two forbidden rewrites: a `select` becomes a branch only
   with its condition frozen, and `select %c, %x, false` is not
-  `and %c, %x` when `%x` may be poison. #16 tests both.
+  `and %c, %x` when `%x` may be poison. #16 tests the `and` rewrite and
+  #19 the `cond_br` one.
 - The spec explains poison, immediate UB, `freeze` and the asymmetry
   between `select` and `cond_br` in plain words
   (`lean/Fir/Execution/PoisonUB.lean`).

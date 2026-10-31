@@ -36,6 +36,7 @@ import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.Control
+import Fir.Core.Branch
 import Fir.Core.Semantics
 import Fir.Core.ArithLaws
 import Fir.Core.WrapLaws
@@ -45,6 +46,7 @@ import Fir.Core.WidthLaws
 import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.ControlLaws
+import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
 import Fir.Execution.Modes

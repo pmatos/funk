@@ -132,8 +132,8 @@ def listed (t : String) (args : List String) (s : Nat) : Bool :=
       "\"sequence\":[\"" ++ (sequenceOf (sampleRun (body "func @f(%a: i1) -> i1"
         ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0"]) ["true"] 0)).headD "" ++
       "\"]}", status := 1 }
-#guard sampleRun (body "func @f()" ["^e:", "  br ^n @0", "^n:", "  ret @0"]) [] 0 ==
-  fails 2 "fir-ref: @f: br has no execution rules yet"
+#guard sampleRun (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) [] 0 ==
+  fails 2 "fir-ref: @f: call @f has no execution rules yet"
 
 /-! # The theorems' axioms -/
 

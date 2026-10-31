@@ -17,7 +17,9 @@
 #               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
 #               exhaustive mode (#14), runs bitwise ops and shifts
-#               (#15), and runs icmp and select (#16).
+#               (#15), runs icmp and select (#16), and runs loops with br
+#               and cond_br, a branch on poison and a loop that never
+#               ends (#19).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -244,6 +246,51 @@ END
         printf '  %%u: i1 = icmp ult %%a, %%b @0\n  %%m: i8 = select %%s, %%a, %%b @0\n' >>"$tmp/icmp.fir"
         printf '  ret %%s, %%u, %%m @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/icmp.fir"
         runs "$tmp/icmp.fir" 0 "${ret}[\"true\",\"false\",\"-1\"]$none" @f -1 1 || status=1
+        # br and cond_br run the spec's @sum; a branch on poison is UB, and
+        # a loop that never ends runs out of the fuel that --fuel sets (#19).
+        cat >"$tmp/loops.fir" <<'END'
+func @sum(%n: i32) -> i32 {
+^entry:
+  %zero: i32 = const 0 @0
+  br ^loop(%zero, %zero) @0
+^loop(%i: i32, %acc: i32):
+  %done: i1 = icmp sge %i, %n @0
+  cond_br %done, ^exit(%acc), ^body @0
+^body:
+  %acc1: i32 = add nsw %acc, %i @0
+  %one: i32 = const 1 @0
+  %i1: i32 = add nsw %i, %one @0
+  br ^loop(%i1, %acc1) @0
+^exit(%r: i32):
+  ret %r @0
+}
+
+func @branch(%a: i1) -> i1 {
+^entry:
+  %p: i1 = add nsw %a, %a @0
+  cond_br %p, ^x(%a), ^x(%p) @0
+^x(%r: i1):
+  ret %r @0
+}
+
+func @spin() {
+^entry:
+  br ^l @0
+^l:
+  br ^l @0
+}
+
+locs {
+  @0 = unknown
+}
+END
+        exhausted='{"kind":"fuel-exhausted","choices":0}'
+        runs "$tmp/loops.fir" 0 "${ret}[\"45\"]$none" @sum 10 || status=1
+        runs "$tmp/loops.fir" 0 "$exhausted" --fuel 64 @sum 10 || status=1
+        runs "$tmp/loops.fir" 0 "${ret}[\"false\"]$none" @branch false || status=1
+        runs "$tmp/loops.fir" 0 '{"kind":"ub","reason":"cond_br on poison","choices":0}' \
+            @branch true || status=1
+        runs "$tmp/loops.fir" 0 "$exhausted" --fuel 1000 @spin || status=1
         # An op without rules is an error (ADR-2026-10-30-1855).
         printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @f %%a @0\n  ret %%s @0\n}\n' \
             >"$tmp/call.fir"

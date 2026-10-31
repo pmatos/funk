@@ -185,12 +185,14 @@ are on `main`:
   minimum or poison divided by `-1`, with a reason that names the case.
 - The execution rules of `icmp`, with its ten predicates, and `select` in
   Lean ([#16](https://github.com/pmatos/funk/issues/16)).
+- The execution rules of `br` and `cond_br` in Lean
+  ([#19](https://github.com/pmatos/funk/issues/19)). `fir-ref run` runs
+  functions with loops, and reports a branch on poison as immediate UB.
 
 These parts of M0 do not exist yet:
 
-- The execution rules of the other ops. One issue for each group of
-  related ops, [#19](https://github.com/pmatos/funk/issues/19) and
-  [#20](https://github.com/pmatos/funk/issues/20), adds them.
+- The execution rules of `call`, which
+  [#20](https://github.com/pmatos/funk/issues/20) adds.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).

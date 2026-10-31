@@ -51,8 +51,9 @@ its terminators. A terminator's `exit` may say `goto i` only for a
 successor `i` that the terminator has, and validation fixes only how many
 it has. A terminator may return only values of the function's result
 types, which the dialect's own rule must ask, as the core rule for `ret`
-does. So `NeverStuck` for `br` and `cond_br` (#19) needs their `exit` to
-name only successors they have.
+does. So `NeverStuck` for `br` and `cond_br` needs their `exit` to name
+only successors they have, which #19 proves of each: `Core.br_goto_lt` and
+`Core.condBr_goto_lt`.
 
 These checks are not all of validation. The interpreter checks that a value
 is defined, not that its definition dominates its use, and it checks no

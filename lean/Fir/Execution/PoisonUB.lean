@@ -108,7 +108,7 @@ interpreter models `freeze` of poison as a choice.
 poison condition gives poison in a `select`, which can be computed early
 like any other value, and immediate UB in a `cond_br`. This asymmetry makes
 some rewrites sound in one direction only. Each of the two below is
-forbidden, and #16 tests both.
+forbidden: #16 tests the `and` rewrite, and #19 the `cond_br` one.
 
 * _A `select` becomes a branch only with its condition frozen._ Turning a
   `cond_br` and its two arms into a `select` is sound: where the source
