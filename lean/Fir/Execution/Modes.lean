@@ -19,10 +19,16 @@ import Fir.Execution.ChoiceTree
   is an error of its own, a _misfit_, never an outcome. On a sequence that
   fits, scripted mode gives a member of the run's set of outcomes: this is
   `ChoiceTree.script_toSet`, and `Func.script_outcomes` for a run.
+* _Sampled mode_ is scripted mode with no sequence given up front: it
+  draws each choice as the run makes it, from a generator, and reports the
+  values it drew. Those values are a sequence that fits the run, and
+  scripted mode on them follows the same path: this is
+  `ChoiceTree.sample_script`. So sampled mode, too, gives a member of the
+  run's set of outcomes, whatever the generator.
 
-Both modes report how many choices a path made, so that a run that makes
-no choice is known to have one outcome. The choice budget is not the fuel
-budget: each mode runs the interpreter at one fuel budget `n`, so both
+All three modes report how many choices a path made, so that a run that
+makes no choice is known to have one outcome. The choice budget is not the
+fuel budget: each mode runs the interpreter at one fuel budget `n`, so the
 theorems speak of `(run n).outcomes`, as the section on outcomes and
 behaviours says. `fir-ref`'s command line and JSON are
 ADR-2026-10-30-2218's.
@@ -227,6 +233,37 @@ theorem script_toSet {read : (w : Nat) → σ → Option (BitVec w)} :
     · rename_i b _
       exact ⟨b, script_toSet h he⟩
     · cases h
+
+/-- A value that a path chose, with its width. -/
+abbrev Chosen := (w : Nat) × BitVec w
+
+/-- Reads a chosen value as `w` bits: it reads when its width is `w`. -/
+def readChosen (w : Nat) : Chosen → Option (BitVec w)
+  | ⟨v, b⟩ => if h : v = w then some (h ▸ b) else none
+
+/-- Sampled mode: the leaf of the path on which `draw` gives each choice,
+starting from the generator `g`, and the values chosen on it, in order.
+`draw w g` gives `w` bits and the generator's next state. -/
+def sample (draw : (w : Nat) → γ → BitVec w × γ) : ChoiceTree ε α → γ → Leaf ε α × List Chosen
+  | .pure a, _ => (.ok a, [])
+  | .ub r, _ => (.ub r, [])
+  | .noOutcome e, _ => (.noOutcome e, [])
+  | .choose w k, g =>
+    let d := draw w g
+    let p := (k d.1).sample draw d.2
+    (p.1, ⟨w, d.1⟩ :: p.2)
+
+/-- The values that sampled mode chose are a choice sequence that fits the
+tree: scripted mode on them reaches the same leaf, after as many choices as
+there are values. -/
+theorem sample_script {draw : (w : Nat) → γ → BitVec w × γ} :
+    ∀ (t : ChoiceTree ε α) (g : γ) (made : Nat),
+      t.script readChosen (t.sample draw g).2 made =
+        .ok ((t.sample draw g).1, made + (t.sample draw g).2.length)
+  | .pure _, _, _ | .ub _, _, _ | .noOutcome _, _, _ => rfl
+  | .choose w k, g, made => by
+    simp only [sample, script, readChosen, dite_true, List.length_cons]
+    rw [sample_script (k (draw w g).1) (draw w g).2 (made + 1), Nat.add_assoc, Nat.add_comm 1]
 
 end ChoiceTree
 

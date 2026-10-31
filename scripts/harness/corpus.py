@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from refine import FUEL_EXHAUSTED, UB
+from sets import Declared
 from tools import PARSE_ERROR, VALIDATION_ERROR
 
 DEFAULT_FUEL = 1_000_000
@@ -24,18 +25,23 @@ TOP = ("README.md", "canonical", "noncanonical", "reject")
 
 @dataclass(frozen=True)
 class Test:
-    """One run of a function. `expect` is None for a differential test;
-    an interpreter-only test expects a tuple of values, UB or fuel
-    exhausted."""
+    """One run of a function. `expect` is None for a differential test,
+    which may declare its `results`; an interpreter-only test expects a
+    tuple of values, UB or fuel exhausted, on the path that its `choices`
+    name."""
 
     module: str
     func: str
     args: tuple[str, ...] = ()
     fuel: int = DEFAULT_FUEL
     expect: object = None
+    choices: tuple[str, ...] | None = None
+    results: tuple[Declared, ...] = ()
 
     def show(self) -> str:
         fuel = [] if self.fuel == DEFAULT_FUEL else ["--fuel", str(self.fuel)]
+        if self.choices is not None:
+            fuel += ["--choices", ",".join(self.choices)]
         text = " ".join([self.module, *fuel, self.func, *self.args])
         return text if self.expect is None else text + " (interpreter only)"
 
@@ -144,7 +150,7 @@ def is_strings(value) -> bool:
 
 def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
     """The tests of a sidecar: `tests`, a list of tables with `func` and
-    optionally `args`, `fuel` and `expect`."""
+    optionally `args`, `fuel`, `expect`, `choices` and `results`."""
     problems = [f"unknown key {k}" for k in unknown_keys(data, ("tests",))]
     items = data.get("tests")
     if not isinstance(items, list):
@@ -158,6 +164,11 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
         expect = t.get("expect")
         if isinstance(expect, list):
             expect = tuple(expect)
+        choices = t.get("choices")
+        results = tuple(
+            Declared(tuple(r["values"]), tuple(r["witness"]))
+            for r in t.get("results", [])
+        )
         found.append(
             Test(
                 module,
@@ -165,6 +176,8 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
                 tuple(t.get("args", [])),
                 t.get("fuel", DEFAULT_FUEL),
                 expect,
+                None if choices is None else tuple(choices),
+                results,
             )
         )
     return found, problems
@@ -173,7 +186,7 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
 def test_problem(t) -> str | None:
     if not isinstance(t, dict):
         return "a test is a table"
-    keys = unknown_keys(t, ("func", "args", "fuel", "expect"))
+    keys = unknown_keys(t, ("func", "args", "fuel", "expect", "choices", "results"))
     if keys:
         return f"unknown key {keys[0]}"
     func = t.get("func")
@@ -195,6 +208,44 @@ def test_problem(t) -> str | None:
         )
     ):
         return f"expect is a list of values, {UB} or {FUEL_EXHAUSTED}"
+    if "choices" in t:
+        if expect is None:
+            return "choices go with expect: a differential test declares results"
+        if not is_choices(t["choices"]):
+            return "choices is a list of values, each spelled as a constant"
+    if "results" in t:
+        if expect is not None:
+            return "results go with a differential test, not with expect"
+        return results_problem(t["results"])
+    return None
+
+
+def is_choices(value) -> bool:
+    """A choice sequence: values with no comma, which `--choices` joins."""
+    return is_strings(value) and all(v and "," not in v for v in value)
+
+
+def results_problem(results) -> str | None:
+    """Why `results` is not a list of declared results, if it is not: each
+    a table of `values` and a `witness`, no two with the same values."""
+    if not isinstance(results, list) or not results:
+        return "results is a list of declared results"
+    seen = set()
+    for i, r in enumerate(results, 1):
+        if not isinstance(r, dict):
+            return f"result {i} is a table of values and a witness"
+        keys = unknown_keys(r, ("values", "witness"))
+        if keys:
+            return f"result {i}: unknown key {keys[0]}"
+        if not is_strings(r.get("values")):
+            return f"result {i}: values is a list of values, each a value or poison"
+        if not is_choices(r.get("witness")):
+            return (
+                f"result {i}: witness is a list of choices, each spelled as a constant"
+            )
+        if tuple(r["values"]) in seen:
+            return f"result {i} declares the values of an earlier result"
+        seen.add(tuple(r["values"]))
     return None
 
 

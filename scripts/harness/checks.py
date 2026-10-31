@@ -4,9 +4,11 @@ tests of the corpus's modules."""
 from pathlib import Path
 
 import corpus
+import sets
 import tools
-from refine import FAILED, PASSED, Judgement, expected, refines, show_values
+from refine import FAILED, INVALID, PASSED, Judgement, expected, show_values
 from report import Report
+from sets import BudgetExceeded
 from tools import ACCEPTED, Verdict
 
 
@@ -90,28 +92,77 @@ class Harness:
         why = tools.build_failure(tools.run(cmd))
         return exe if why is None else f"is not built: funk build gives {why}"
 
+    def run_ref(self, path: Path, t: corpus.Test, *options: str) -> tools.Ran:
+        """Runs `fir-ref run` on a test, with more options."""
+        fuel = ["--fuel", str(t.fuel), *options, "--"]
+        return tools.run([self.fir_ref, "run", *fuel, str(path), t.func, *t.args])
+
     def test(self, path: Path, t: corpus.Test, types: dict, exe: Path | str):
         """Runs one test. `exe` is the module's executable, or why there is
         none."""
-        cmd = [self.fir_ref, "run", "--fuel", str(t.fuel), "--", str(path), t.func]
-        ref = tools.outcome(tools.run(cmd + list(t.args)))
-        detail = f"fir-ref {show(ref)}"
         if t.expect is not None:
-            j = Judgement(FAILED) if isinstance(ref, str) else expected(ref, t.expect)
-            self.report.add(j.status, t.show(), detail + why(j))
+            choices = [] if t.choices is None else ["--choices", ",".join(t.choices)]
+            ref = tools.path(self.run_ref(path, t, *choices))
+            j = (
+                Judgement(FAILED)
+                if isinstance(ref, str)
+                else expected(ref.outcome, t.expect)
+            )
+            self.report.add(j.status, t.show(), f"fir-ref {show(ref)}" + why(j))
             return
+        ref = tools.outcomes(self.run_ref(path, t, "--exhaustive"))
         native = exe
         if isinstance(exe, Path):
             native = tools.native_values(tools.run([str(exe), t.func, *t.args]))
         shown = native if isinstance(native, str) else "returns " + show_values(native)
+        detail = f"fir-ref {show(ref)}"
+        if t.results:
+            n = len(t.results)
+            detail += f", and the test declares {n} result{'s' if n != 1 else ''}"
         detail += f"; native code {shown}"
+        checked = "the set is the declared results"
         if isinstance(ref, str):
             j = Judgement(FAILED)
         elif t.func not in types:
             j = Judgement(FAILED, f"cannot read the result types of {t.func}")
+        elif isinstance(ref, BudgetExceeded):
+            if not t.results:
+                j = Judgement(
+                    INVALID,
+                    "with no set to judge by, the test proves nothing unless it"
+                    " declares its results, each with a witness",
+                )
+            else:
+                j = self.declared(path, t, None) or sets.judge_declared(
+                    t.results, native, types[t.func]
+                )
+                checked = f"{len(sets.SEEDS)} seeded runs give declared results"
         else:
-            j = refines(ref, native, types[t.func])
+            j = None
+            if t.results:
+                j = sets.problem(ref.outcomes) or self.declared(path, t, ref)
+            j = j or sets.judge_set(ref, native, types[t.func])
+        if t.results and j.status == PASSED:
+            j = Judgement(PASSED, f"each witness gives its result, and {checked}")
         self.report.add(j.status, t.show(), detail + why(j))
+
+    def declared(self, path: Path, t: corpus.Test, ref) -> Judgement | None:
+        """Checks a test's declared results: each witness gives its result,
+        and the run's set, `ref` when exhaustive mode lists it, or else each
+        seeded run, holds only declared results."""
+        for i, r in enumerate(t.results, 1):
+            got = tools.path(self.run_ref(path, t, "--choices", ",".join(r.witness)))
+            j = sets.witness(i, r, got)
+            if j is not None:
+                return j
+        if ref is not None:
+            return sets.undeclared(ref, t.results)
+        for seed in sets.SEEDS:
+            got = tools.path(self.run_ref(path, t, "--seed", str(seed)))
+            j = sets.sample(seed, got, t.results)
+            if j is not None:
+                return j
+        return None
 
 
 def why(j: Judgement) -> str:
