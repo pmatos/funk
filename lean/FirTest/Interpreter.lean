@@ -2,15 +2,15 @@ import FirTest.Run
 
 /-!
 Tests of the interpreter's paths that the core ops with rules do not reach.
-`const`, `add`, `sub`, `mul`, the bitwise ops and shifts, `freeze` and `ret`
-are never UB, and none of them jumps. So two semantics written here for
-these tests, not fir's, give the interpreter what #19 will, and what #18's
-divisions do, which `FirTest.Div` tests: `addIsUB`, in which `add` is UB,
-and `brJumps`, in which `br` goes to its successor. Every other op keeps
-the core dialect's rules. The runs are those of `fir-ref run`, in the tree
-of choices, and are reported as it reports them, in scripted mode with no
-choices. Functions built here, not parsed, reach the stuck cases that no
-text that decodes can reach.
+`const`, `add`, `sub`, `mul`, the bitwise ops and shifts, the width changes,
+`freeze` and `ret` are never UB, and none of them jumps. So two semantics
+written here for these tests, not fir's, give the interpreter what #19
+will, and what #18's divisions do, which `FirTest.Div` tests: `addIsUB`,
+in which `add` is UB, and `brJumps`, in which `br` goes to its successor.
+Every other op keeps the core dialect's rules. The runs are those of
+`fir-ref run`, in the tree of choices, and are reported as it reports
+them, in scripted mode with no choices. Functions built here, not parsed,
+reach the stuck cases that no text that decodes can reach.
 -/
 
 namespace FirTest

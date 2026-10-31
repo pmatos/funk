@@ -14,8 +14,9 @@ The tree's semantics of each op denotes the set monad's, `mapsDenote`: the
 rules are written once for any monad, and `toSet` keeps `pure`, `bind`,
 the choice effect and UB. So the soundness theorems of exhaustive and
 scripted runs hold for every core function, on every argument vector, at
-every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`. `fir-ref` computes
-`exhaustive` and `scripted` below, and nothing else, to report a run.
+every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`.
+`fir-ref` computes `exhaustive` and `scripted` below, and nothing else, to
+report a run.
 -/
 
 namespace Fir.Core
@@ -56,7 +57,8 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .mul _ _, .cons _ (.cons _ .nil) | .and _, .cons _ (.cons _ .nil)
     | .or _, .cons _ (.cons _ .nil) | .xor _, .cons _ (.cons _ .nil)
     | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
-    | .ashr _, .cons _ (.cons _ .nil) => rfl
+    | .ashr _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
+    | .trunc .., .cons _ .nil => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
@@ -67,8 +69,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .srem _, args => ruleOfEv_toSet sremValues args
     | .urem _, args => ruleOfEv_toSet uremValues args
     | .const .., _ | .icmp .., _
-    | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
-    | .ret _, _ | .call .., _ => rfl
+    | .select _, _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl
 
 /-- Exhaustive mode on the core function `f`: every path of its run on

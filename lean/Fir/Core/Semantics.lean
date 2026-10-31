@@ -2,6 +2,7 @@ import Fir.Core.Arith
 import Fir.Core.Wrap
 import Fir.Core.Freeze
 import Fir.Core.Bitwise
+import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Control
 import Fir.Core.Text
@@ -20,11 +21,11 @@ the tree of choices that `fir-ref run` computes in share them.
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. After #14, #15 and #18, that is every core
-op but `const`, `add`, `sub` and `mul`, with or without flags, the bitwise
-ops and shifts, `sdiv`, `udiv`, `srem` and `urem`, with or without `exact`,
-`freeze` and `ret`. ADR-2026-10-30-1855 decides what such an op does until
-its family lands:
+`Op.exit?` gives `none` for it. After #14, #15, #17 and #18, that is every
+core op but `const`, `add`, `sub` and `mul`, with or without flags, the
+bitwise ops and shifts, `zext`, `sext`, `trunc`, `sdiv`, `udiv`, `srem` and
+`urem`, with or without `exact`, `freeze` and `ret`. ADR-2026-10-30-1855
+decides what such an op does until its family lands:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -84,6 +85,12 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a (.cons b .nil) => pure (.cons (lshrValues a b) .nil)
   | .ashr _ => some fun
     | .cons a (.cons b .nil) => pure (.cons (ashrValues a b) .nil)
+  | .zext _ n => some fun
+    | .cons a .nil => pure (.cons (zextValue n a) .nil)
+  | .sext _ n => some fun
+    | .cons a .nil => pure (.cons (sextValue n a) .nil)
+  | .trunc _ n => some fun
+    | .cons a .nil => pure (.cons (truncValue n a) .nil)
   | _ => none
 
 /-- The rule of each core terminator, in any monad, when its family has
@@ -99,10 +106,10 @@ def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
 -- Among one instance of every core op, the tracer subset, #14's ops,
--- #15's and #18's have rules, `add` with each of its flags among them.
+-- #15's, #17's and #18's have rules, `add` with each of its flags among them.
 #guard (samples.filter Op.hasRules).map Op.name ==
   ["const", "const", "const", "const", "add", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem",
-   "and", "or", "xor", "shl", "lshr", "ashr", "freeze", "ret", "ret"]
+   "and", "or", "xor", "shl", "lshr", "ashr", "zext", "sext", "trunc", "freeze", "ret", "ret"]
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard !(Op.br).hasRules && !(Op.icmp .eq 8).hasRules
 
