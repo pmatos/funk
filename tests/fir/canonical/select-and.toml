@@ -1,0 +1,52 @@
+# Tests of select-and.fir: select %c, %x, false may not become
+# and %c, %x where %x may be poison (#16,
+# lean/Fir/Execution/PoisonUB.lean). %x is add nsw %a, %b at i1, where
+# true is -1: false when %a and %b are both false, true when exactly one
+# is true, and poison when both are true, as -1 + -1 overflows.
+# select_form is the source, select %c, %x, false; and_form is the
+# forbidden rewrite, and %c, %x; and frozen_and_form is the sound one,
+# and %c, %g with %g = freeze %x. Each runs on all eight inputs.
+#
+# A rewrite is sound when, on every input, each outcome of the rewritten
+# form is allowed by an outcome of the source: the same values, or any
+# value where the source gives poison (ADR-2026-10-29-2008). The harness
+# runs one function at a time, so each test declares its run's whole set
+# of outcomes, each with a witness, the choice of freeze where it makes
+# one: fir-ref's exhaustive mode must list exactly the declared results,
+# and native code must give one of them. Side by side, the sets show the
+# rewrite:
+# - On false, true, true, %c is false and %x is poison. select_form
+#   gives false, and and_form gives poison, which false does not allow:
+#   the rewrite is wrong. frozen_and_form gives false whichever value
+#   freeze chooses, so it passes.
+# - On true, true, true, %x is poison and chosen. select_form gives
+#   poison, which allows any value: and_form's poison, and
+#   frozen_and_form's false and true.
+# - On the other six inputs, %x is a value, and the three forms give the
+#   same one.
+tests = [
+  { func = "@select_form", args = ["false", "true", "true"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@select_form", args = ["true", "true", "true"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@select_form", args = ["false", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@select_form", args = ["false", "false", "true"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@select_form", args = ["false", "true", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@select_form", args = ["true", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@select_form", args = ["true", "false", "true"], results = [{ values = ["true"], witness = [] }] },
+  { func = "@select_form", args = ["true", "true", "false"], results = [{ values = ["true"], witness = [] }] },
+  { func = "@and_form", args = ["false", "true", "true"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@and_form", args = ["true", "true", "true"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@and_form", args = ["false", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@and_form", args = ["false", "false", "true"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@and_form", args = ["false", "true", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@and_form", args = ["true", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@and_form", args = ["true", "false", "true"], results = [{ values = ["true"], witness = [] }] },
+  { func = "@and_form", args = ["true", "true", "false"], results = [{ values = ["true"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["false", "true", "true"], results = [{ values = ["false"], witness = ["false"] }] },
+  { func = "@frozen_and_form", args = ["true", "true", "true"], results = [{ values = ["false"], witness = ["false"] }, { values = ["true"], witness = ["true"] }] },
+  { func = "@frozen_and_form", args = ["false", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["false", "false", "true"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["false", "true", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["true", "false", "false"], results = [{ values = ["false"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["true", "false", "true"], results = [{ values = ["true"], witness = [] }] },
+  { func = "@frozen_and_form", args = ["true", "true", "false"], results = [{ values = ["true"], witness = [] }] },
+]
