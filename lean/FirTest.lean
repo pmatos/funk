@@ -12,6 +12,8 @@ import FirTest.Bitwise
 import FirTest.Width
 import FirTest.Div
 import FirTest.Compare
+import FirTest.Branch
+import FirTest.Loops
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.ValidateOps
