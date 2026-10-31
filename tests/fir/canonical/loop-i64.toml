@@ -12,9 +12,6 @@
 # here runs more than a thousand times, well within the default fuel.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
-# Where fir-ref returns poison, any native value of the type does, and
-# an interpreter-only test of the same run checks that it is exactly
-# poison.
 tests = [
   { func = "@sum", args = ["0"] },
   { func = "@sum", args = ["1"] },
