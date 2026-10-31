@@ -29,8 +29,8 @@ poison (ADR-2026-10-30-2248).
 - **Poison.** Every case with a defined result is exact. Where the source
   gives poison, from its condition or from the value it chooses, the
   result is the bits of one of the two slots, which refines poison
-  (ADR-2026-10-29-2008). A poison value that is not chosen is never
-  seen.
+  (ADR-2026-10-29-2008). A poison value that is not chosen never
+  reaches the result.
 
 ## Alternatives
 
