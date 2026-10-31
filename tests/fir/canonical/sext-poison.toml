@@ -1,8 +1,9 @@
 # Tests of sext-poison.fir: a poison operand gives sext a poison result
 # (ADR-2026-10-30-0818), at every valid pair among i1, i7, i8, i16, i32,
-# i33 and i64. %p = add nsw %a, 1 is poison when %a is the signed
-# maximum, true at i1, and the function returns sext %p. On the row 0,
-# false at i1, %p is 1, true at i1, and the result is sext of it.
+# i33 and i64. %p = add nsw %a, %one, with %one = 1 (true at i1), is
+# poison when %a is the signed maximum, or true at i1, where true + true
+# = -2 overflows; the function returns sext %p. On the row 0, false at
+# i1, %p is 1, true at i1, and the result is sext of it.
 # Only fir-ref runs these tests, and each states the result that fir-ref
 # must give.
 tests = [

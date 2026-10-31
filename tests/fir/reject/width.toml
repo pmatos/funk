@@ -202,7 +202,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "zext defines an integer, not a ptr"
+rule = "zext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -322,7 +322,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sext defines an integer, not a ptr"
+rule = "sext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -442,7 +442,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "trunc defines an integer, not a ptr"
+rule = "trunc defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
