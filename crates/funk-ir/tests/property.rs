@@ -56,6 +56,36 @@ fn the_generator_covers_what_the_round_trip_must_cover() {
     assert!(quoted > 10 && booleans == [true; 2] && kinds == [true; 6] && results == [true; 3]);
 }
 
+#[test]
+fn the_generator_makes_every_op_with_every_set_of_flags() {
+    let mut seen = std::collections::BTreeSet::new();
+    for (_, m) in generated() {
+        for op in m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops) {
+            if op.name != "const" {
+                let attrs = op.attrs.iter().map(|a| format!(" {a}"));
+                seen.insert(
+                    std::iter::once(op.name.clone())
+                        .chain(attrs)
+                        .collect::<String>(),
+                );
+            }
+        }
+    }
+    let mut want = std::collections::BTreeSet::new();
+    for op in ["add", "sub", "mul"] {
+        for flags in funk_ir::dialects::core::WRAP_FLAG_SETS {
+            want.insert(
+                std::iter::once(op)
+                    .chain(flags.iter().copied())
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            );
+        }
+    }
+    want.extend(["freeze".to_string(), "ret".to_string()]);
+    assert_eq!(seen, want);
+}
+
 /// Rewrites the layout of a text outside its strings: each space or line
 /// feed becomes other whitespace or a comment, and the final line feed may
 /// go.
@@ -146,7 +176,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 30] = [
+    const TOKENS: [&str; 35] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -163,6 +193,11 @@ fn the_parser_never_panics_on_random_token_soup() {
         "=",
         "const",
         "add",
+        "sub",
+        "mul",
+        "nuw",
+        "nsw",
+        "freeze",
         "ret",
         "true",
         "-1",

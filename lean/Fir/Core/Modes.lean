@@ -11,10 +11,10 @@ outcome, for that op, as the set monad gives it none (ADR-2026-10-30-1855).
 `fir-ref` reports such a path as an error.
 
 The tree's semantics of each op denotes the set monad's, `mapsDenote`: the
-rules are written once for any monad, and `toSet` keeps `pure`, `bind` and
-the choice effect. So the soundness theorems of exhaustive and scripted
-runs hold for every core function, on every argument vector, at every fuel
-budget: `exhaustive_outcomes` and `scripted_outcomes`. `fir-ref` computes
+rules are written once for any monad, and `toSet` keeps `pure`, `bind`,
+the choice effect and UB. So the soundness theorems of exhaustive and
+scripted runs hold for every core function, on every argument vector, at
+every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`. `fir-ref` computes
 `exhaustive` and `scripted` below, and nothing else, to report a run.
 -/
 
@@ -53,7 +53,10 @@ theorem ruleOfEv_toSet {ε : Type} {w : Nat}
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
     | .add _ _, .cons _ (.cons _ .nil) | .sub _ _, .cons _ (.cons _ .nil)
-    | .mul _ _, .cons _ (.cons _ .nil) => rfl
+    | .mul _ _, .cons _ (.cons _ .nil) | .and _, .cons _ (.cons _ .nil)
+    | .or _, .cons _ (.cons _ .nil) | .xor _, .cons _ (.cons _ .nil)
+    | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
+    | .ashr _, .cons _ (.cons _ .nil) => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
@@ -63,8 +66,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args
     | .urem _, args => ruleOfEv_toSet uremValues args
-    | .const .., _ | .and _, _
-    | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _ | .ashr _, _ | .icmp .., _
+    | .const .., _ | .icmp .., _
     | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _ | .br, _ | .condBr, _
     | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl

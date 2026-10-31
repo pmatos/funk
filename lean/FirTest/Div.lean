@@ -159,52 +159,52 @@ def frozenDivisor (op : String) : String :=
 
 /-! # The theorems' axioms -/
 
-/-- info: 'Fir.Core.sdiv_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sdiv_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sdiv_propagatesPoison
 
 /-- info: 'Fir.Core.sdiv_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sdiv_returnsOnDefined
 
-/-- info: 'Fir.Core.sdiv_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sdiv_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sdiv_total
 
-/-- info: 'Fir.Core.sdiv_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.sdiv_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sdiv_monotone
 
-/-- info: 'Fir.Core.udiv_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.udiv_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.udiv_propagatesPoison
 
 /-- info: 'Fir.Core.udiv_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.udiv_returnsOnDefined
 
-/-- info: 'Fir.Core.udiv_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.udiv_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.udiv_total
 
-/-- info: 'Fir.Core.udiv_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.udiv_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.udiv_monotone
 
-/-- info: 'Fir.Core.srem_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.srem_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.srem_propagatesPoison
 
 /-- info: 'Fir.Core.srem_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.srem_returnsOnDefined
 
-/-- info: 'Fir.Core.srem_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.srem_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.srem_total
 
-/-- info: 'Fir.Core.srem_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.srem_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.srem_monotone
 
-/-- info: 'Fir.Core.urem_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.urem_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.urem_propagatesPoison
 
 /-- info: 'Fir.Core.urem_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.urem_returnsOnDefined
 
-/-- info: 'Fir.Core.urem_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.urem_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.urem_total
 
-/-- info: 'Fir.Core.urem_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.urem_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.urem_monotone
 
 /-- info: 'Fir.Core.div_zero_width' depends on axioms: [propext, Quot.sound] -/

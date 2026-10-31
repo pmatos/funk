@@ -56,15 +56,15 @@ tests = [
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
-`const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most
-one result. Tests of other widths, or of several results, go in modules
-whose tests are all interpreter-only, such as `tracer-i7.fir` and
-`widths.fir`.
+`const`, `add`, `sub` and `mul` with any flags, `freeze` and `ret` at `i1`,
+`i8`, `i16`, `i32` and `i64`, with at most one result. Tests of other
+widths, or of several results, go in modules whose tests are all
+interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
 Each `[[reject]]` table of a `reject/*.toml` file is one text that breaks
-one rule. When `const`, `add` and `ret` cannot break a rule alone, such as
+one rule. When the ops that `funk` has cannot break a rule alone, such as
 a rule of successors, the text breaks a second rule too, and `rule` names
 both.
 
@@ -113,5 +113,8 @@ locs {
   table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
   prints from them, byte for byte (ADR-2026-10-30-1250).
 
-Every text uses only the ops that both tools have: `const`, `add` without
-flags and `ret`, until #14 to #20 add the others to `funk`.
+Today the texts use only `const`, `add` without flags and `ret`, but for
+must-reject texts that name an op or a flag that fir does not have. Both
+tools now also have `sub`, `mul`, their flags `nuw` and `nsw`, and `freeze`
+(#14), and stage 3 of #14 adds texts for them. #15 to #20 add the other ops
+to `funk`.
