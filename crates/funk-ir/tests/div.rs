@@ -161,12 +161,23 @@ fn exact_is_a_flag_of_sdiv_and_udiv_only_and_comes_once() {
             ("1", "attributes are its flag exact"),
             ("\"exact\"", "attributes are its flag exact"),
             ("@exact", "attributes are its flag exact"),
+            ("exact()", "attributes are its flag exact"),
+            ("exact(1)", "attributes are its flag exact"),
         ] {
             rejected_at_name(&format!("%r: i32 = {op} {attrs} %a, %a"), op, needle);
         }
     }
     for op in ["srem", "urem"] {
-        for attrs in ["exact", "exact exact", "nuw", "nsw", "1", "\"exact\"", "@x"] {
+        for attrs in [
+            "exact",
+            "exact exact",
+            "nuw",
+            "nsw",
+            "1",
+            "\"exact\"",
+            "@x",
+            "exact()",
+        ] {
             let line = format!("%r: i32 = {op} {attrs} %a, %a");
             rejected_at_name(&line, op, "takes no attributes");
         }
@@ -289,13 +300,19 @@ fn the_verifier_rejects_ill_typed_divisions_that_a_builder_made() {
             (vec![Attr::int(1)], flag),
             (vec![Attr::Str("exact".into())], flag),
             (vec![Attr::Sym("exact".into())], flag),
+            (vec![Attr::App("exact".into(), vec![])], flag),
         ] {
             let o = built(op, &attrs, &["a", "a"], std::slice::from_ref(&i32));
             rejected_at_op(o, needle);
         }
     }
     for op in ["srem", "urem"] {
-        for attrs in [words(&["exact"]), words(&["nuw"]), vec![Attr::int(0)]] {
+        for attrs in [
+            words(&["exact"]),
+            words(&["nuw"]),
+            vec![Attr::int(0)],
+            vec![Attr::App("exact".into(), vec![])],
+        ] {
             let o = built(op, &attrs, &["a", "a"], std::slice::from_ref(&i32));
             rejected_at_op(o, &format!("{op} takes no attributes"));
         }

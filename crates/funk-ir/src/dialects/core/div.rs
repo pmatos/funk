@@ -92,6 +92,10 @@ mod tests {
                 (vec![Attr::int(1)], "attributes are its flag exact, not 1"),
                 (vec![Attr::Str("exact".into())], "attributes are its flag"),
                 (vec![Attr::Sym("exact".into())], "attributes are its flag"),
+                (
+                    vec![Attr::App("exact".into(), vec![])],
+                    "attributes are its flag",
+                ),
             ] {
                 let e = flags(op, &bad).unwrap_err();
                 assert!(e.starts_with(op) && e.contains(why), "{op} {bad:?}: {e}");
@@ -99,7 +103,12 @@ mod tests {
         }
         for op in ["srem", "urem"] {
             assert_eq!(flags(op, &[]), Ok(()));
-            for bad in [words(&["exact"]), words(&["nsw"]), vec![Attr::int(0)]] {
+            for bad in [
+                words(&["exact"]),
+                words(&["nsw"]),
+                vec![Attr::int(0)],
+                vec![Attr::App("exact".into(), vec![])],
+            ] {
                 let e = flags(op, &bad).unwrap_err();
                 assert_eq!(e, format!("{op} takes no attributes"), "{bad:?}");
             }
