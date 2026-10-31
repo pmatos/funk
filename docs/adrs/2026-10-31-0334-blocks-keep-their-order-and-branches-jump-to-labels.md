@@ -42,8 +42,8 @@ to be right by reading it (ADR-2026-10-30-1230).
 
 - **Always jump.** One case fewer, but a `jmp` to the next instruction in
   every loop body and every fall-through.
-- **Reorder blocks**, such as to put a loop's body after its header. It is
-  a code-quality pass, which M1 brings with real register allocation.
+- **Reorder blocks**, such as to put a loop's body after its header. It
+  improves the code, not its correctness, so the baseline does without it.
 
 ## Consequences
 
@@ -51,5 +51,14 @@ to be right by reading it (ADR-2026-10-30-1230).
   so assembly reads alongside the fir text.
 - A `cond_br` whose two edges both copy costs one local label and one
   extra jump.
-- `%rax` and `%rcx` are clobbered by every branch, as by every other op
-  while values live in slots; a register allocator (M1) must treat them so.
+- `%rax` and `%rcx` may be clobbered by a branch: `cond_br` loads its
+  condition into `%rax`, a copy goes through `%rax`, and a cycle of copies
+  through `%rcx`. Other ops clobber them too while values live in slots;
+  a register allocator (M1) must treat them so.
+- A later optimizer (M1) that makes poison real (ADR-2026-10-30-2248) may
+  treat a `cond_br` on poison as UB, as the spec does
+  (ADR-2026-10-30-0818). It must still read only bit 0 of the condition
+  (ADR-2026-10-30-1231), and must not branch on a value that may be
+  poison where the source does not, such as by turning a `select` into a
+  `cond_br`, without freezing it first (ADR-2026-10-31-0215,
+  `lean/Fir/Execution/PoisonUB.lean`).

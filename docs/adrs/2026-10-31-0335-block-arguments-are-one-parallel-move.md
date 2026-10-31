@@ -12,7 +12,9 @@ values to its successor's arguments all at once: in a loop
 rotates three, and `br ^loop(%a, %a)` passes one value to two arguments. A
 copy done one at a time, in order, can overwrite a slot that a later copy
 still reads. The arguments of a block are distinct values, so no two
-copies of one branch write the same slot.
+copies of one branch write the same slot. ADR-2026-10-29-2010 requires the
+backend to move each passed value into its block argument on every edge
+into the block.
 
 ## Decision
 
@@ -47,7 +49,7 @@ copies of one branch write the same slot.
   against the copies done at once. The native tests swap, rotate and fan
   out arguments round loops, and run a gcd whose loop must read `%y`
   before it writes it.
-- `%rax` and `%rcx` are clobbered between a branch's test and its jump. A
-  register allocator (M1) that keeps values in registers needs the same
-  sequencing for registers, and a scratch register or an exchange for each
-  cycle.
+- An edge's copies may clobber `%rax`, and its saves `%rcx`, before the
+  branch jumps; on a `cond_br` they come after the test. A register
+  allocator (M1) that keeps values in registers needs the same sequencing
+  for registers, and a scratch register or an exchange for each cycle.
