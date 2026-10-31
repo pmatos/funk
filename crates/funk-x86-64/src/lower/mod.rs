@@ -10,6 +10,7 @@
 mod arith;
 mod bitwise;
 mod cast;
+mod compare;
 mod constant;
 mod control;
 mod div;
@@ -115,6 +116,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| bitwise::lowering(name))
         .or_else(|| cast::lowering(name))
         .or_else(|| div::lowering(name))
+        .or_else(|| compare::lowering(name))
         .or_else(|| control::lowering(name))
 }
 

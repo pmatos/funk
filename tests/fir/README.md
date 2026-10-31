@@ -75,10 +75,10 @@ tests = [
 differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
-`exact`, `srem`, `urem` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64`,
-with at most one result. Tests of other widths, or of several results, go
-in modules whose tests are all interpreter-only, such as `tracer-i7.fir`
-and `widths.fir`.
+`exact`, `srem`, `urem`, `icmp`, `select` and `ret` at `i1`, `i8`, `i16`,
+`i32` and `i64`, with at most one result. Tests of other widths, or of
+several results, go in modules whose tests are all interpreter-only, such
+as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -157,5 +157,6 @@ operand; `zext-i7`, `zext-i33` and their `sext` and `trunc` twins run
 them to and from `i7` and `i33`, and `zext-poison`, `sext-poison` and
 `trunc-poison` on a poison operand. `reject/width.toml` holds their texts
 that do not decode or do not validate. Both tools now also have `sdiv`,
-`udiv`, `srem`, `urem` and `exact` (#18); stage 3 of #18 adds texts for
-them. #16, #19 and #20 add the other ops to `funk`.
+`udiv`, `srem`, `urem` and `exact` (#18), and `icmp` and `select` (#16);
+stage 3 of each issue adds texts for them. #19 and #20 add the other ops
+to `funk`.

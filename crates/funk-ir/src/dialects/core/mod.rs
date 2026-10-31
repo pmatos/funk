@@ -7,11 +7,13 @@
 //! `sub`, `mul`, the flags of all three and `freeze`, the bitwise family
 //! (#15) `and`, `or`, `xor`, `shl`, `lshr` and `ashr`, the width changes
 //! (#17) `zext`, `sext` and `trunc`, the division family (#18) `sdiv`,
-//! `udiv`, `srem`, `urem` and the flag `exact`, and each later family adds a
+//! `udiv`, `srem`, `urem` and the flag `exact`, the comparison family (#16)
+//! `icmp` with its predicates and `select`, and each later family adds a
 //! file and a line here.
 
 mod arith;
 mod bitwise;
+mod compare;
 mod constant;
 mod control;
 mod div;
@@ -21,6 +23,7 @@ mod width;
 
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
+pub use compare::PREDICATES;
 pub use div::DIVISION_OPS;
 pub use types::{CoreType, MAX_WIDTH, core_type, int_type, int_width};
 pub use width::WIDTH_CHANGES;
@@ -52,6 +55,8 @@ pub fn dialect() -> Dialect {
         .op(div::Division("udiv", true))
         .op(div::Division("srem", false))
         .op(div::Division("urem", false))
+        .op(compare::Icmp)
+        .op(compare::Select)
         .op(control::Ret)
 }
 
