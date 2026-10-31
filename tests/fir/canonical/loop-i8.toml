@@ -1,12 +1,12 @@
-# Tests of loop-i8.fir: loops at i8 (#19), each a block that branches
-# back to itself with block arguments. sum is the loop of the spec's
-# example @sum (lean/Fir/Text/Example.lean) at this type: it adds 0, 1,
-# ... up to, but not including, %n, with add nsw, so a sum past the
-# signed maximum is poison, which the loop carries to the end; it does
-# not loop at all on %n of at most 0. fact counts %n down to 0 as an
-# unsigned number and multiplies with mul, which wraps: it gives %n!
-# modulo 2^N. gcd is Euclid's algorithm with urem, on %a and %b read as
-# unsigned numbers, on every pair of boundary bit patterns, 0, 1, -1,
+# Tests of loop-i8.fir: loops at i8 (#19), each a header ^loop whose
+# body ^body branches back to it with block arguments. sum is the loop
+# of the spec's example @sum (lean/Fir/Text/Example.lean) at this type:
+# it adds 0, 1, ... up to, but not including, %n, with add nsw, so a sum
+# past the signed maximum is poison, which the loop carries to the end;
+# it does not loop at all on %n of at most 0. fact counts %n down to 0
+# as an unsigned number and multiplies with mul, which wraps: it gives
+# %n! modulo 2^N. gcd is Euclid's algorithm with urem, on %a and %b read
+# as unsigned numbers, on every pair of boundary bit patterns, 0, 1, -1,
 # the signed minimum and the signed maximum, and on an ordinary pair. No
 # loop here runs more than a thousand times, well within the default
 # fuel.

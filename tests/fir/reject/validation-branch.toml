@@ -3,11 +3,14 @@
 # block arguments, of terminators, of dominance across blocks, and that
 # every block is reachable from the entry (Func.Valid and Func.SuccValid
 # in lean/Fir/Validation/Rules.lean, ADR-2026-10-30-0817). Each text
-# breaks one rule alone, but for a ptr block argument: no value has type
-# ptr, so a branch that reaches it passes a value that breaks a second
-# rule too, and `rule` names both. validation-func.toml keeps the older
-# texts that gave ret a successor, and branch.toml holds the texts of br
-# and cond_br that do not decode.
+# breaks one rule alone, but for two rules that cannot be broken alone,
+# whose texts break a second rule too, and `rule` names both. No value
+# has type ptr, so a branch that reaches a ptr block argument passes it
+# a value whose ptr type is also invalid. An undefined value has no
+# type, so a successor that passes one also does not pass a value of the
+# right type. validation-func.toml keeps the older texts that gave ret a
+# successor, and branch.toml holds the texts of br and cond_br that do
+# not decode.
 
 [[reject]]
 verdict = "validation-error"
@@ -123,7 +126,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes values that the function defines: br passes %undefined"
+rule = "a successor passes values that the function defines: br passes %undefined; it has no type, so the successor also does not pass a value of the right type for ^b's argument"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -139,7 +142,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes values that the function defines: cond_br's second successor passes %undefined"
+rule = "a successor passes values that the function defines: cond_br's second successor passes %undefined; it has no type, so that successor also does not pass a value of the right type for ^b's argument"
 text = '''
 func @f(%c: i1, %a: i32) -> i32 {
 ^entry:

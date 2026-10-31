@@ -10,11 +10,13 @@
 # break a second rule too, and `rule` names both: each text of a
 # successor rule gives ret a successor, so it also breaks ret's
 # successor count, and a "tracer op" is one of const, add and ret.
-# validation-branch.toml breaks each successor rule alone with br and
-# cond_br. Two rules still cannot be broken alone: only terminators
-# have successors, as an op that is not one takes none, and a block
-# argument has no ptr type, as no value has one. The ops that own
-# regions will add texts that break the scope rule alone.
+# validation-branch.toml breaks each successor rule that can be broken
+# alone with br and cond_br. Three rules still cannot be broken alone:
+# only terminators have successors, as an op that is not one takes none;
+# a block argument has no ptr type, as no value has one; and a successor
+# passes values that the function defines, as an undefined value has no
+# type. The ops that own regions will add texts that break the scope
+# rule alone.
 
 [[reject]]
 verdict = "validation-error"
