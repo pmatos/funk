@@ -144,15 +144,17 @@ def eqSelf (ty : String) : String :=
 Where `%x` may be poison, `and %c, %x` is not a sound rewrite of
 `select %c, %x, false`: when `%c` is `false`, the `select` gives `false`
 and the `and` gives poison, which `false` does not allow. `and %c, %g`,
-with `%g = freeze %x`, is sound. `%x` is `add nsw %a, %a` at `i1`, which
-is poison when `%a` is `true` and `false` when `%a` is `false`. #16's
-corpus stage tests this rewrite with the harness. -/
+with `%g = freeze %x`, is sound. `%x` is `add nsw %a, %b` at `i1`, where
+`true` is `-1`: it is `false` when `%a` and `%b` are both `false`, `true`
+when exactly one is `true`, and poison when both are `true`, since
+`-1 + -1` overflows. The tests run all eight inputs. #16's corpus stage
+tests this rewrite with the harness. -/
 
-/-- `@f(%c: i1, %a: i1) -> i1`, which runs `lines` on `%c` and
-`%x = add nsw %a, %a`, and returns their `%s`. -/
+/-- `@f(%c: i1, %a: i1, %b: i1) -> i1`, which runs `lines` on `%c` and
+`%x = add nsw %a, %b`, and returns their `%s`. -/
 def rewritten (lines : List String) : String :=
-  body "func @f(%c: i1, %a: i1) -> i1"
-    (["^e:", "  %x: i1 = add nsw %a, %a @0", "  %z: i1 = const false @0"] ++ lines ++
+  body "func @f(%c: i1, %a: i1, %b: i1) -> i1"
+    (["^e:", "  %x: i1 = add nsw %a, %b @0", "  %z: i1 = const false @0"] ++ lines ++
       ["  ret %s @0"])
 
 /-- The source: `select %c, %x, false`. -/
@@ -166,19 +168,21 @@ def frozenAndForm : String := rewritten ["  %g: i1 = freeze %x @0", "  %s: i1 = 
 
 -- Where `%c` is `false` and `%x` is poison, the `and` gives poison and the
 -- `select` only `false`: the rewrite is wrong. `and %c, %g` gives `false`.
-#guard explore selectForm ["false", "true"] == outcomes [ret ["false"]] 0
-#guard explore andForm ["false", "true"] == outcomes [ret ["poison"]] 0
-#guard explore frozenAndForm ["false", "true"] == outcomes [ret ["false"]] 1
+#guard explore selectForm ["false", "true", "true"] == outcomes [ret ["false"]] 0
+#guard explore andForm ["false", "true", "true"] == outcomes [ret ["poison"]] 0
+#guard explore frozenAndForm ["false", "true", "true"] == outcomes [ret ["false"]] 1
 -- Where `%c` is `true` and `%x` is poison, the `select` gives poison, which
 -- allows every outcome of both rewrites.
-#guard explore selectForm ["true", "true"] == outcomes [ret ["poison"]] 0
-#guard explore andForm ["true", "true"] == outcomes [ret ["poison"]] 0
-#guard explore frozenAndForm ["true", "true"] == outcomes [ret ["false"], ret ["true"]] 1
--- Where `%x` is not poison, all three give the same value.
-#guard ["false", "true"].all fun c =>
-  explore selectForm [c, "false"] == outcomes [ret ["false"]] 0 &&
-    explore andForm [c, "false"] == outcomes [ret ["false"]] 0 &&
-    explore frozenAndForm [c, "false"] == outcomes [ret ["false"]] 0
+#guard explore selectForm ["true", "true", "true"] == outcomes [ret ["poison"]] 0
+#guard explore andForm ["true", "true", "true"] == outcomes [ret ["poison"]] 0
+#guard explore frozenAndForm ["true", "true", "true"] == outcomes [ret ["false"], ret ["true"]] 1
+-- Where `%x` is not poison, all three give the same value: `true` where `%c`
+-- and `%x` are both `true`, and `false` elsewhere.
+#guard [(["false", "false", "false"], "false"), (["false", "false", "true"], "false"),
+    (["false", "true", "false"], "false"), (["true", "false", "false"], "false"),
+    (["true", "false", "true"], "true"), (["true", "true", "false"], "true")].all
+  fun (args, v) => [selectForm, andForm, frozenAndForm].all fun t =>
+    explore t args == outcomes [ret [v]] 0
 
 /-! # The obligations' axioms -/
 
