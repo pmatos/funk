@@ -1,6 +1,6 @@
 # Tests of poison-bitwise-i1.fir: poison propagates through and, or,
 # xor, shl, lshr and ashr from either operand (ADR-2026-10-30-0818).
-# %p = add nsw %a, 1 is poison when %a is the signed maximum, true at
+# %p = add nsw %a, true is poison when %a is true, as -1 + -1 overflows
 # i1, and the function returns OP %p, %b or OP %b, %p. The right operand
 # of a shift is its amount, so OP %b, %p shifts by a poison amount.
 # %b is false for and, true for or and true for xor; it is false where a

@@ -452,3 +452,138 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "and takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = and %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "and takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = and %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "and defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = and %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "or takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = or %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "or takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = or %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "or defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = or %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "xor takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = xor %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "xor takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = xor %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "xor defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = xor %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -454,3 +454,138 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = shl %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = shl %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "shl defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = shl %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = lshr %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = lshr %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "lshr defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = lshr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes a value and an amount of one integer type: a ptr value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = ashr %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr takes a value and an amount of one integer type: a ptr amount is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = ashr %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ashr defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = ashr %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
