@@ -23,6 +23,7 @@ This refines ADR-2026-10-30-0818's sentence "#16 tests both":
 
 ## Consequences
 
-ADR-2026-10-30-0818's decision is unchanged, and so is its text, as
-accepted ADRs are. [`PoisonUB.lean`](../../lean/Fir/Execution/PoisonUB.lean)
+ADR-2026-10-30-0818's decision and body are unchanged, as an accepted
+ADR's are; only its status line gains "refined by", as other ADRs'
+status lines do. [`PoisonUB.lean`](../../lean/Fir/Execution/PoisonUB.lean)
 already names both tickets.
