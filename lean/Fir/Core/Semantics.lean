@@ -3,6 +3,7 @@ import Fir.Core.Wrap
 import Fir.Core.Freeze
 import Fir.Core.Bitwise
 import Fir.Core.Width
+import Fir.Core.Div
 import Fir.Core.Control
 import Fir.Core.Text
 
@@ -14,16 +15,17 @@ monad. It is one instance over all 24 core ops, which sends each op to the
 rule of its family. The rules are written once, for any monad that has
 the effects they ask for: `Op.denote?` for the ops that are not
 terminators, and `Op.exit?` for the terminators. `freeze` asks for the
-choice effect. So this instance and the tree of choices that `fir-ref run`
-computes in share them.
+choice effect, and the divisions for the UB effect. So this instance and
+the tree of choices that `fir-ref run` computes in share them.
 
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. After #14, #15 and #17, that is every core
-op but `const`, `add`, `sub` and `mul`, with or without flags, the bitwise
-ops and shifts, `zext`, `sext`, `trunc`, `freeze` and `ret`.
-ADR-2026-10-30-1855 decides what such an op does until its family lands:
+`Op.exit?` gives `none` for it. After #14, #15, #17 and #18, that is every
+core op but `const`, `add`, `sub` and `mul`, with or without flags, the
+bitwise ops and shifts, `zext`, `sext`, `trunc`, `sdiv`, `udiv`, `srem` and
+`urem`, with or without `exact`, `freeze` and `ret`. ADR-2026-10-30-1855
+decides what such an op does until its family lands:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -52,8 +54,8 @@ namespace Fir.Core
 variable {m : Type → Type} [Monad m]
 
 /-- The rule of each core op that is not a terminator, in any monad with
-the choice effect, when its family has given it one. -/
-def Op.denote? [MonadChoice m] : (op : Op) →
+the choice and UB effects, when its family has given it one. -/
+def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
   | .const w v => some fun _ => pure (.cons (constValue w v) .nil)
@@ -63,6 +65,10 @@ def Op.denote? [MonadChoice m] : (op : Op) →
     | .cons a (.cons b .nil) => pure (.cons (subWith f a b) .nil)
   | .mul _ f => some fun
     | .cons a (.cons b .nil) => pure (.cons (mulWith f a b) .nil)
+  | .sdiv _ x => some (ruleOfEv (sdivWith x))
+  | .udiv _ x => some (ruleOfEv (udivWith x))
+  | .srem _ => some (ruleOfEv sremValues)
+  | .urem _ => some (ruleOfEv uremValues)
   | .freeze _ => some fun
     | .cons a .nil => do
       let v ← freezeValue a
@@ -100,12 +106,12 @@ def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
 -- Among one instance of every core op, the tracer subset, #14's ops,
--- #15's and #17's have rules, `add` with each of its flags among them.
+-- #15's, #17's and #18's have rules, `add` with each of its flags among them.
 #guard (samples.filter Op.hasRules).map Op.name ==
-  ["const", "const", "const", "const", "add", "add", "sub", "mul", "and", "or", "xor", "shl",
-   "lshr", "ashr", "zext", "sext", "trunc", "freeze", "ret", "ret"]
+  ["const", "const", "const", "const", "add", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem",
+   "and", "or", "xor", "shl", "lshr", "ashr", "zext", "sext", "trunc", "freeze", "ret", "ret"]
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
-#guard !(Op.sdiv 32 false).hasRules && !(Op.br).hasRules && !(Op.icmp .eq 8).hasRules
+#guard !(Op.br).hasRules && !(Op.icmp .eq 8).hasRules
 
 end Fir.Core
 

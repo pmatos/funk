@@ -11,13 +11,14 @@ outcome, for that op, as the set monad gives it none (ADR-2026-10-30-1855).
 `fir-ref` reports such a path as an error.
 
 The tree's semantics of each op denotes the set monad's, `mapsDenote`: the
-rules are written once for any monad, and `toSet` keeps `pure`, `bind` and
-the choice effect. So the soundness theorems of exhaustive and scripted
-runs hold for every core function, on every argument vector, at every fuel
-budget: `exhaustive_outcomes` and `scripted_outcomes`. `fir-ref` computes
-`exhaustive`, `scripted` and `sampled` below, and nothing else, to report a
-run. Sampled mode's values fit the run (`sampled_fits`), so it inherits
-scripted mode's theorem: `sampled_outcomes`.
+rules are written once for any monad, and `toSet` keeps `pure`, `bind`,
+the choice effect and UB. So the soundness theorems of exhaustive and
+scripted runs hold for every core function, on every argument vector, at
+every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`.
+`fir-ref` computes `exhaustive`, `scripted` and `sampled` below, and
+nothing else, to report a run. Sampled mode's values fit the run
+(`sampled_fits`), so it inherits scripted mode's theorem:
+`sampled_outcomes`.
 -/
 
 namespace Fir.Core
@@ -40,6 +41,17 @@ theorem freezeValue_toSet {ε : Type} {w : Nat} (a : PoisonOr (BitVec w)) :
   | value _ => rfl
   | poison => exact ChoiceTree.toSet_bind _ _
 
+/-- A rule made by `ruleOfEv`, such as a division's, denotes in the tree of
+choices what it denotes in the set monad. -/
+theorem ruleOfEv_toSet {ε : Type} {w : Nat}
+    (g : PoisonOr (BitVec w) → PoisonOr (BitVec w) → Ev (PoisonOr (BitVec w)))
+    (args : HVector toType [i w, i w]) :
+    (ruleOfEv (m := ChoiceTree ε) g args).toSet = ruleOfEv g args := by
+  match args with
+  | .cons a (.cons b .nil) =>
+    simp only [ruleOfEv]
+    cases g a b <;> rfl
+
 /-- The tree's semantics of each core op denotes the set monad's. -/
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
@@ -54,7 +66,11 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
-    | .const .., _ | .sdiv .., _ | .udiv .., _ | .srem _, _ | .urem _, _ | .icmp .., _
+    | .sdiv _ x, args => ruleOfEv_toSet (sdivWith x) args
+    | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
+    | .srem _, args => ruleOfEv_toSet sremValues args
+    | .urem _, args => ruleOfEv_toSet uremValues args
+    | .const .., _ | .icmp .., _
     | .select _, _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
   exit op _ := by cases op <;> rfl
 

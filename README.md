@@ -168,12 +168,16 @@ are on `main`:
   ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
   [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md),
   [ADR-2026-10-31-0002](docs/adrs/2026-10-31-0002-fir-ref-run-draws-choices-from-a-seed.md)).
+- The execution rules of `sdiv`, `udiv`, `srem` and `urem`, with `exact`, in
+  Lean ([#18](https://github.com/pmatos/funk/issues/18)). `fir-ref run`
+  reports their immediate UB, a zero or poison divisor and the signed
+  minimum or poison divided by `-1`, with a reason that names the case.
 
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#16](https://github.com/pmatos/funk/issues/16) and
-  [#18](https://github.com/pmatos/funk/issues/18) to
+  related ops, [#16](https://github.com/pmatos/funk/issues/16),
+  [#19](https://github.com/pmatos/funk/issues/19) and
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
