@@ -1,0 +1,906 @@
+# Must-reject texts of #18's ops: sdiv and udiv with their flag exact,
+# srem and urem. These ops have no validation rule beyond their
+# signatures, so a text that breaks one does not decode: each is a parse
+# error at the op's name (ADR-2026-10-30-0815). A text with a ptr operand
+# or result also breaks validation, as ptr is reserved; the parse error
+# comes first.
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = sdiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  sdiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = sdiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: ptr = sdiv %p, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = sdiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = sdiv %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = sdiv %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes its flag once: exact exact repeats exact"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv exact exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv's only attribute is its flag exact: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv's only attribute is its flag exact: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv's only attribute is its flag exact: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv's only attribute is its flag exact: an applied attribute, exact(1), is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv exact(1) %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = udiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  udiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = udiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: ptr = udiv %p, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = udiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = udiv %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = udiv %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes its flag once: exact exact repeats exact"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv exact exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv's only attribute is its flag exact: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv's only attribute is its flag exact: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv's only attribute is its flag exact: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv's only attribute is its flag exact: an applied attribute, exact(1), is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = udiv exact(1) %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = srem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  srem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = srem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: ptr = srem %p, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = srem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = srem %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = srem %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes no attributes: exact is a flag of sdiv and udiv only"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes no attributes: an applied attribute, exact(1), is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = srem exact(1) %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = urem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  urem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = urem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: ptr = urem %p, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = urem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = urem %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = urem %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes no attributes: exact is a flag of sdiv and udiv only"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes no attributes: nuw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes no attributes: an applied attribute, exact(1), is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = urem exact(1) %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

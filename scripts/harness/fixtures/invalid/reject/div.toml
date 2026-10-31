@@ -1,0 +1,17 @@
+# A corpus holds must-reject texts, so this one holds one, copied from
+# tests/fir/reject/div.toml. Its check passes when both tools reject it.
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sdiv %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

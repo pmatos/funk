@@ -156,10 +156,21 @@ The texts also use `zext`, `sext` and `trunc` (#17). `zext.fir`,
 operand; `zext-i7`, `zext-i33` and their `sext` and `trunc` twins run
 them to and from `i7` and `i33`, and `zext-poison`, `sext-poison` and
 `trunc-poison` on a poison operand. `reject/width.toml` holds their texts
-that do not decode or do not validate. Both tools now also have `sdiv`,
-`udiv`, `srem`, `urem` and `exact` (#18), and `br` and `cond_br` (#19);
-stage 3 of each issue adds texts for them. #20 adds the other ops to
-`funk`.
+that do not decode or do not validate.
+
+The texts of #18 use `sdiv` and `udiv`, each with and without `exact`,
+`srem` and `urem`. `div-iN` runs them on every pair of boundary bit
+patterns at the seven widths above; a pair that is UB in the spec, and
+every pair at `i7` and `i33`, is an interpreter-only test, and at the
+other widths each defined pair of `exact` also has an interpreter-only
+twin. `div-i8-ax` tests the `i8` lowering, which divides through `%ax`,
+on its own. `poison-div-iN` passes poison to each of them as either
+operand and as both, at the seven widths. #18's differential test with
+a frozen divisor that can be zero is invalid, so it is not in this
+corpus: it is in the fixture corpus `scripts/harness/fixtures/invalid/`,
+and `scripts/check-harness.sh` checks that the harness reports it
+invalid because `the set holds UB (sdiv by zero)` (ADR-2026-10-31-0208).
+`reject/div.toml` holds the texts of these ops that do not decode.
 
 The texts of #16 also use `icmp` and `select`. `icmp-iN` runs `icmp`
 with each of its ten predicates, and `select-iN` runs `select` with each
@@ -170,3 +181,6 @@ seven widths. `select-and` shows that `select %c, %x, false` may not
 become `and %c, %x` where `%x` may be poison, and that
 `and %c, %g` with `%g = freeze %x` may. `reject/compare.toml` holds the
 texts of these ops that do not decode.
+
+Both tools now also have `br` and `cond_br` (#19); its stage 3 adds texts
+for them. #20 adds the other ops to `funk`.

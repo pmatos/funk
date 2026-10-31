@@ -1,0 +1,47 @@
+# Tests of div-i1.fir: sdiv and udiv, each with and without exact, srem
+# and urem at i1, on every pair of boundary bit patterns: false and true
+# (#18).
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, a broken exact, any value of the type does.
+# A pair that is UB in the spec, a zero divisor or sdiv and srem of
+# true, the signed minimum, by true, which is -1, would make a
+# differential test invalid, so it is an interpreter-only test that
+# expects ub; native code may trap there (ADR-2026-10-31-0050).
+# fir-ref's UB reason names its case, such as "sdiv by zero" or "srem of
+# the signed minimum by -1", but the harness matches ub to any reason
+# (ADR-2026-10-30-2135).
+# Each defined pair of sdiv exact and udiv exact is also an
+# interpreter-only test, which checks that fir-ref gives poison exactly
+# where the division leaves a remainder.
+# At i1 the only divisor that is not UB is true, and every defined
+# division by it leaves no remainder, so exact is never broken.
+tests = [
+  { func = "@sdiv", args = ["false", "false"], expect = "ub" },
+  { func = "@sdiv", args = ["false", "true"] },
+  { func = "@sdiv", args = ["true", "false"], expect = "ub" },
+  { func = "@sdiv", args = ["true", "true"], expect = "ub" },
+  { func = "@sdiv_exact", args = ["false", "false"], expect = "ub" },
+  { func = "@sdiv_exact", args = ["false", "true"] },
+  { func = "@sdiv_exact", args = ["false", "true"], expect = ["false"] },
+  { func = "@sdiv_exact", args = ["true", "false"], expect = "ub" },
+  { func = "@sdiv_exact", args = ["true", "true"], expect = "ub" },
+  { func = "@udiv", args = ["false", "false"], expect = "ub" },
+  { func = "@udiv", args = ["false", "true"] },
+  { func = "@udiv", args = ["true", "false"], expect = "ub" },
+  { func = "@udiv", args = ["true", "true"] },
+  { func = "@udiv_exact", args = ["false", "false"], expect = "ub" },
+  { func = "@udiv_exact", args = ["false", "true"] },
+  { func = "@udiv_exact", args = ["false", "true"], expect = ["false"] },
+  { func = "@udiv_exact", args = ["true", "false"], expect = "ub" },
+  { func = "@udiv_exact", args = ["true", "true"] },
+  { func = "@udiv_exact", args = ["true", "true"], expect = ["true"] },
+  { func = "@srem", args = ["false", "false"], expect = "ub" },
+  { func = "@srem", args = ["false", "true"] },
+  { func = "@srem", args = ["true", "false"], expect = "ub" },
+  { func = "@srem", args = ["true", "true"], expect = "ub" },
+  { func = "@urem", args = ["false", "false"], expect = "ub" },
+  { func = "@urem", args = ["false", "true"] },
+  { func = "@urem", args = ["true", "false"], expect = "ub" },
+  { func = "@urem", args = ["true", "true"] },
+]
