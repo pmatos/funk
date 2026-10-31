@@ -1,0 +1,25 @@
+# Tests of freeze-i16.fir: freeze at i16. freeze of a value gives it,
+# with no choice; freeze of poison chooses a value, the same for every
+# use (#14). %p = add nsw %a, 1 is poison when %a is the signed
+# maximum, true at i1, and %f freezes it.
+# Each test is differential. fir-ref's exhaustive mode lists every
+# outcome, and native code must return one of them. Past the choice
+# budget of 16 bits, a test declares its results, each with a
+# witness, and seeded runs check that the run gives no other.
+tests = [
+  { func = "@freeze", args = ["0"] },
+  { func = "@freeze", args = ["1"] },
+  { func = "@freeze", args = ["-1"] },
+  { func = "@freeze", args = ["-32768"] },
+  { func = "@freeze", args = ["32767"] },
+  { func = "@freeze_poison", args = ["0"] },
+  { func = "@freeze_sub", args = ["0"] },
+  { func = "@freeze_add", args = ["0"] },
+  { func = "@freeze_mul_zero", args = ["0"] },
+  { func = "@freeze_square", args = ["0"] },
+  { func = "@freeze_poison", args = ["32767"] },
+  { func = "@freeze_add", args = ["32767"] },
+  { func = "@freeze_mul_zero", args = ["32767"] },
+  { func = "@freeze_square", args = ["32767"] },
+  { func = "@freeze_sub", args = ["32767"], results = [{ values = ["0"], witness = ["5"] }] },
+]

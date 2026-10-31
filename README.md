@@ -149,26 +149,27 @@ are on `main`:
   [`tests/fir/`](tests/fir/) and on modules from the Rust generator. It
   runs each test of the corpus on `fir-ref` and, where the backend can
   build it, as native code, and checks that the native result refines
-  `fir-ref`'s
+  one of `fir-ref`'s outcomes. A test whose run chooses more than the
+  choice budget declares its results, each with a witness that the
+  harness checks, and seeded runs sample the rest
   ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
-  [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
+  [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
+  [ADR-2026-10-31-0003](docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, `freeze`
   and `ret` in Lean ([#10](https://github.com/pmatos/funk/issues/10),
   [#14](https://github.com/pmatos/funk/issues/14)). `fir-ref run` runs a
-  function in scripted mode, along the path that its choices name, or in
-  exhaustive mode, which lists every outcome; Lean proves both sound
+  function in scripted mode, along the path that its choices name, in
+  exhaustive mode, which lists every outcome, or in sampled mode, which
+  draws its choices from a seed; Lean proves all three sound
   ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
-  [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md)).
+  [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md),
+  [ADR-2026-10-31-0002](docs/adrs/2026-10-31-0002-fir-ref-run-draws-choices-from-a-seed.md)).
 
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
   related ops, [#15](https://github.com/pmatos/funk/issues/15) to
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
-- The harness's rule for a set of outcomes: declared results with
-  witnesses that it checks through `fir-ref run --choices`, and seeded
-  sampling ([#14](https://github.com/pmatos/funk/issues/14)). Until then,
-  a test whose run makes a choice, such as `freeze` of poison, fails.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
