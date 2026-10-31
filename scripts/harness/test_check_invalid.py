@@ -45,7 +45,30 @@ class Problem(unittest.TestCase):
             "the set holds UB (sdiv by zero), which allows any result",
             "a path runs out of fuel",
         )
-        self.assertIn("not for sdiv by zero", problem(1, REPORT.replace(FROZEN, fuel)))
+        self.assertIn(
+            "not because the set holds UB (sdiv by zero)",
+            problem(1, REPORT.replace(FROZEN, fuel)),
+        )
+
+    def test_the_ub_must_be_in_the_set(self):
+        # A run that makes no choice is judged by refinement, not by the
+        # set rule, even when its UB is sdiv by zero.
+        alone = (
+            "invalid canonical/div-frozen.fir @sdiv_frozen 7 127: fir-ref hits UB"
+            " (sdiv by zero); native code is killed by signal 8: UB allows any"
+            " result, so the test proves nothing"
+        )
+        self.assertIn(
+            "not because the set holds UB (sdiv by zero)",
+            problem(1, REPORT.replace(FROZEN, alone)),
+        )
+
+    def test_funk_build_must_build_the_module(self):
+        unbuilt = FROZEN.replace(
+            'native code returns ["0"]',
+            "native code is not built: funk build gives tool-error: ",
+        )
+        self.assertIn("funk build fails", problem(1, REPORT.replace(FROZEN, unbuilt)))
 
     def test_every_other_check_must_pass(self):
         out = REPORT.replace(REJECT, "failed" + REJECT.removeprefix("passed"))

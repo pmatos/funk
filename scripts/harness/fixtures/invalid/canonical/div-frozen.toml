@@ -5,7 +5,7 @@
 # (ADR-2026-10-31-0003), and an invalid test fails the run, so the test
 # lives here, outside tests/fir/. check_invalid.py runs the harness on
 # this corpus and passes only when the harness reports this test invalid
-# for sdiv by zero (ADR-2026-10-31-0208).
+# because "the set holds UB (sdiv by zero)" (ADR-2026-10-31-0208).
 tests = [
   { func = "@sdiv_frozen", args = ["7", "127"] },
 ]

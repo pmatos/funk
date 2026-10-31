@@ -34,11 +34,14 @@ hook, `scripts/check-harness.sh`, builds `fir-ref` and `funk`.
   own. The fixture's module stands in for the modules that Rust printed,
   which the harness needs. The check passes only when the report has
   one line for the test, which starts
-  `invalid canonical/div-frozen.fir @sdiv_frozen 7 127:` and names
-  `UB (sdiv by zero)`, every other check passed, and the harness exits
-  with 1. Anything else fails it: the test passed, failed or was invalid
-  for another reason, a tool error, another check that did not pass, or
-  another exit status.
+  `invalid canonical/div-frozen.fir @sdiv_frozen 7 127:`, names
+  `the set holds UB (sdiv by zero)` and does not say that `funk build`
+  failed, every other check passed, and the harness exits with 1.
+  Anything else fails it: the test passed, failed or was invalid for
+  another reason, a run with no choice that hits UB, a tool error
+  (`funk build`, `fir-ref` or `funk verify`), another check that did not
+  pass, or another exit status. A native crash is allowed: UB in the set
+  allows any result.
 - **The run.** `scripts/check-harness.sh` runs the check after the main
   run, with the same tools, and exits non-zero when either fails. The
   `fir-harness` hook already runs it when `scripts/harness/` changes.
@@ -65,7 +68,8 @@ hook, `scripts/check-harness.sh`, builds `fir-ref` and `funk`.
   listing the UB, or the harness stops reporting the test invalid, the
   hook fails.
 - The check reads the report's lines and `fir-ref`'s UB reason, which
-  the harness shows but never compares. A change to the report's layout
+  the harness shows but never compares. A change to the report's layout,
+  to the set rule's wording `the set holds UB` (`scripts/harness/sets.py`)
   or to the reason `sdiv by zero` (`lean/Fir/Core/Div.lean`) must update
   `check_invalid.py`.
 - The round-trip hooks and `crates/funk-ir/tests/corpus.rs` read

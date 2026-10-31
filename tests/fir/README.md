@@ -169,8 +169,8 @@ operand and as both, at the seven widths. #18's differential test with
 a frozen divisor that can be zero is invalid, so it is not in this
 corpus: it is in the fixture corpus `scripts/harness/fixtures/invalid/`,
 and `scripts/check-harness.sh` checks that the harness reports it
-invalid for `sdiv by zero` (ADR-2026-10-31-0208). `reject/div.toml`
-holds the texts of these ops that do not decode.
+invalid because `the set holds UB (sdiv by zero)` (ADR-2026-10-31-0208).
+`reject/div.toml` holds the texts of these ops that do not decode.
 
 Both tools now also have `icmp` and `select` (#16); stage 3 of #16 adds
 texts for them. #19 and #20 add the other ops to `funk`.

@@ -5,8 +5,9 @@ Usage: check_invalid.py --funk FUNK --fir-ref FIR_REF
 
 It runs the harness, main.py, on the fixture corpus of fixtures/invalid/,
 whose one test divides by a frozen value that can be zero. It passes only
-when the harness reports that test invalid, for UB that names a zero
-divisor, `sdiv by zero`, passes every other check, and so exits with 1.
+when `funk build` builds the module, the harness reports that test invalid
+because the set holds UB that names a zero divisor, `the set holds UB
+(sdiv by zero)`, passes every other check, and so exits with 1.
 `scripts/check-harness.sh` runs it after the main run of the harness.
 """
 
@@ -22,7 +23,7 @@ from refine import FAILED, INVALID
 HERE = Path(__file__).resolve().parent
 FIXTURE = HERE / "fixtures" / "invalid"
 TEST = "canonical/div-frozen.fir @sdiv_frozen 7 127"
-REASON = "UB (sdiv by zero)"
+REASON = "the set holds UB (sdiv by zero)"
 
 
 def problem(status: int, out: str) -> str | None:
@@ -34,7 +35,9 @@ def problem(status: int, out: str) -> str | None:
         said = next((line for line in lines if TEST in line), "no line names it")
         return f"the harness does not report {TEST} invalid: {said}"
     if REASON not in mine[0]:
-        return f"the harness reports {TEST} invalid, but not for sdiv by zero"
+        return f"the harness reports {TEST} invalid, but not because {REASON}"
+    if "funk build gives" in mine[0]:
+        return f"the harness reports {TEST} invalid, but funk build fails: {mine[0]}"
     rest = [line for line in lines if line.startswith((FAILED, INVALID))]
     if rest != mine:
         other = next(line for line in rest if line != mine[0])
@@ -73,7 +76,7 @@ def main(argv: list[str]) -> int:
     if why is not None:
         print(f"check_invalid: {why}", file=sys.stderr)
         return 1
-    print(f"check_invalid: the harness reports {TEST} invalid for {REASON}")
+    print(f"check_invalid: the harness reports {TEST} invalid: {REASON}")
     return 0
 
 
