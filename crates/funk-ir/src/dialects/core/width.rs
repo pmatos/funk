@@ -69,3 +69,71 @@ impl OpSpec for Cast {
         Err(format!("{} {rule}, not from i{m} to i{n}", self.0))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dialects::core::int_type;
+    use crate::{Attr, Module, Type};
+
+    fn types<'a>(attrs: &'a [Attr], operands: &'a [Type], results: &'a [Type]) -> OpTypes<'a> {
+        OpTypes {
+            attrs,
+            operands,
+            results,
+        }
+    }
+
+    #[test]
+    fn any_pair_of_widths_decodes_and_nothing_else_does() {
+        let (i8, i64, ptr) = (int_type(8), int_type(64), Type::word("ptr"));
+        for op in WIDTH_CHANGES.map(Cast) {
+            for (from, to) in [(&i8, &i8), (&i8, &i64), (&i64, &i8)] {
+                let t = types(&[], std::slice::from_ref(from), std::slice::from_ref(to));
+                assert_eq!(op.decode(&t), Ok(OpShape::default()), "{}", op.0);
+            }
+            let one = std::slice::from_ref(&i8);
+            for (operands, results) in [
+                (&[i8.clone(), i8.clone()][..], one),
+                (&[], one),
+                (one, &[]),
+                (one, &[i8.clone(), i8.clone()][..]),
+                (std::slice::from_ref(&ptr), one),
+                (one, std::slice::from_ref(&ptr)),
+            ] {
+                let e = op.decode(&types(&[], operands, results)).unwrap_err();
+                assert!(e.contains("takes one operand of an integer type"), "{e}");
+            }
+            for a in [Attr::word("nuw"), Attr::int(1)] {
+                let e = op.decode(&types(&[a], one, one)).unwrap_err();
+                assert_eq!(e, format!("{} takes no attributes", op.0));
+            }
+        }
+    }
+
+    #[test]
+    fn zext_and_sext_strictly_widen_and_trunc_strictly_narrows() {
+        let m = Module::new();
+        let symbols = m.symbols();
+        let cx = OpContext {
+            symbols: &symbols,
+            func: "f",
+            results: &[],
+        };
+        for op in WIDTH_CHANGES.map(Cast) {
+            for (from, to) in [(1, 1), (8, 8), (1, 8), (8, 32), (32, 8), (64, 1)] {
+                let (x, r) = ([int_type(from)], [int_type(to)]);
+                let valid = if op.0 == "trunc" {
+                    to < from
+                } else {
+                    from < to
+                };
+                let got = op.check(&cx, &types(&[], &x, &r));
+                assert_eq!(got.is_ok(), valid, "{} from i{from} to i{to}", op.0);
+                if let Err(e) = got {
+                    assert!(e.ends_with(&format!("not from i{from} to i{to}")), "{e}");
+                }
+            }
+        }
+    }
+}
