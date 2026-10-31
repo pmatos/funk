@@ -139,10 +139,16 @@ with each set of flags on every pair of boundary bit patterns,
 `poison-iN` how poison propagates through them, and `freeze-iN` `freeze`
 of values and of poison, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33` and
 `i64`; `reject/arith.toml` holds the texts of these ops that do not
-decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
-and `ashr` (#15), and `sdiv`, `udiv`, `srem`, `urem` and `exact` (#18);
-stage 3 of each issue adds texts for them. #16, #19 and #20 add the other
-ops to `funk`.
+decode (#14).
+
+The texts of #15 also use `and`, `or`, `xor`, `shl`, `lshr` and `ashr`.
+`bitwise-iN` runs `and`, `or` and `xor` on every pair of boundary bit
+patterns; `shift-iN` shifts each boundary bit pattern with `shl`, `lshr`
+and `ashr` by 0, 1, `N - 1`, `N`, `N + 1` and the boundary bit patterns;
+and `poison-bitwise-iN` passes poison to each of the six ops as either
+operand; all at the same seven widths. `freeze-xor-i64` runs `xor %f, %f`
+on a frozen poison. `reject/bitwise.toml` and `reject/shift.toml` hold
+the texts of these ops that do not decode.
 
 The texts also use `zext`, `sext` and `trunc` (#17). `zext.fir`,
 `sext.fir` and `trunc.fir` run each width change at every valid pair of
@@ -150,4 +156,6 @@ The texts also use `zext`, `sext` and `trunc` (#17). `zext.fir`,
 operand; `zext-i7`, `zext-i33` and their `sext` and `trunc` twins run
 them to and from `i7` and `i33`, and `zext-poison`, `sext-poison` and
 `trunc-poison` on a poison operand. `reject/width.toml` holds their texts
-that do not decode or do not validate.
+that do not decode or do not validate. Both tools now also have `sdiv`,
+`udiv`, `srem`, `urem` and `exact` (#18); stage 3 of #18 adds texts for
+them. #16, #19 and #20 add the other ops to `funk`.
