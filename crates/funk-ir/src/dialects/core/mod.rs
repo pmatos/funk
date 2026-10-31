@@ -6,19 +6,22 @@
 //! tracer registers `const`, `add` and `ret`, the arithmetic family (#14)
 //! `sub`, `mul`, the flags of all three and `freeze`, the bitwise family
 //! (#15) `and`, `or`, `xor`, `shl`, `lshr` and `ashr`, the width changes
-//! (#17) `zext`, `sext` and `trunc`, and each later family adds a file and a
-//! line here.
+//! (#17) `zext`, `sext` and `trunc`, the division family (#18) `sdiv`,
+//! `udiv`, `srem`, `urem` and the flag `exact`, and each later family adds a
+//! file and a line here.
 
 mod arith;
 mod bitwise;
 mod constant;
 mod control;
+mod div;
 mod freeze;
 mod types;
 mod width;
 
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
+pub use div::DIVISION_OPS;
 pub use types::{CoreType, MAX_WIDTH, core_type, int_type, int_width};
 pub use width::WIDTH_CHANGES;
 
@@ -45,6 +48,10 @@ pub fn dialect() -> Dialect {
         .op(width::Cast("zext"))
         .op(width::Cast("sext"))
         .op(width::Cast("trunc"))
+        .op(div::Division("sdiv", true))
+        .op(div::Division("udiv", true))
+        .op(div::Division("srem", false))
+        .op(div::Division("urem", false))
         .op(control::Ret)
 }
 
