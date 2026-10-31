@@ -2,18 +2,20 @@ import Std.Data.HashSet
 import Fir
 import FirRef.Utf8
 import FirRef.Report
+import FirRef.Sample
 
 /-!
 What `fir-ref run` does with a file: it parses it with the core dialect,
 runs one of its functions with the spec's interpreter, `Func.run`, and
 reports the result as one JSON object on one line (ADR-2026-10-30-1856,
-ADR-2026-10-30-2218).
+ADR-2026-10-30-2218, ADR-2026-10-31-0002).
 
 `freeze` of poison makes a choice, so a run may end in many ways.
 `fir-ref` runs the interpreter in the spec's tree of choices, with the
-core dialect's rules, and walks the tree in one of two modes, the spec's
-`Core.scripted` and `Core.exhaustive`, which Lean proves sound
-(`Core.scripted_outcomes`, `Core.exhaustive_outcomes`):
+core dialect's rules, and walks the tree in one of three modes, the
+spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`, which Lean
+proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
+`Core.sampled_outcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no
@@ -21,9 +23,13 @@ core dialect's rules, and walks the tree in one of two modes, the spec's
   reported as before #14, with a count of `0` choices, and one that makes
   a choice is an error;
 * exhaustive mode, `--exhaustive`, reports every outcome of the run, when
-  no path chooses more bits in all than its budget, `--choice-bits`.
+  no path chooses more bits in all than its budget, `--choice-bits`;
+* sampled mode, `--seed`, follows the path on which a generator seeded
+  with its number draws each choice, the spec's `Core.sampled`, and
+  reports its one outcome and the values it drew, a sequence that
+  `--choices` takes (`Core.sampled_fits`).
 
-Both say how many choices a path made. An op without rules has no outcome
+Each says how many choices a path made. An op without rules has no outcome
 in the spec, so a path that reaches one is reported as an error, not as a
 result (ADR-2026-10-30-1855), and so is a choice sequence that does not
 fit the run.
@@ -151,6 +157,22 @@ def scriptedReport (name : String) : Except (ChoiceTree.Misfit String) (RunLeaf 
     | .ok (fields, stuck) =>
       { out := jsonObject (fields ++ [("choices", toString c)]), status := if stuck then 1 else 0 }
 
+/-- A value that a path chose, spelled as `--choices` takes it: as a
+constant of its type. -/
+def chosenText : ChoiceTree.Chosen → String
+  | ⟨w, b⟩ => (Core.constAttr w b).print
+
+/-- The report of sampled mode on a run of the function whose symbol is
+written `name`: the one path that the generator draws, and the values it
+drew on it. -/
+def sampledReport (name : String) : RunLeaf × List ChoiceTree.Chosen → RunReport
+  | (l, cs) => match pathFields l.pathEnd with
+    | .error op => noRules name op
+    | .ok (fields, stuck) =>
+      { out := jsonObject (fields ++ [("choices", toString cs.length),
+          ("sequence", jsonArray (cs.map (jsonString ∘ chosenText)))]),
+        status := if stuck then 1 else 0 }
+
 /-- Each element once, in the order it first appears. -/
 def distinct (xs : List String) : List String :=
   (xs.foldl (fun (seen, out) x => if seen.contains x then (seen, out) else (seen.insert x, out.push x))
@@ -170,10 +192,12 @@ def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf × N
         status := if ps.any (·.1.2) then 1 else 0 }
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
-or exhaustive mode, with a choice budget in bits. -/
+exhaustive mode, with a choice budget in bits, or sampled mode, with the
+seed of its generator. -/
 inductive Mode where
   | scripted (choices : List String)
   | exhaustive (budget : Nat)
+  | sampled (seed : Nat)
   deriving DecidableEq, Repr
 
 /-- What `fir-ref run` reports on the bytes of `file`: it runs the function
@@ -197,5 +221,6 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
         | .ok vs, .scripted cs => scriptedReport name (Core.scripted constOf f vs fuel cs)
         | .ok vs, .exhaustive b => exhaustiveReport name b (Core.exhaustive f vs fuel b)
+        | .ok vs, .sampled s => sampledReport name (Core.sampled draw f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef

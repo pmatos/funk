@@ -2,7 +2,7 @@ import Fir.Core.Semantics
 import Fir.Execution.Modes
 
 /-!
-# The core dialect's exhaustive and scripted runs
+# The core dialect's exhaustive, scripted and sampled runs
 
 `fir-ref run` runs the core dialect's rules in the tree of choices. Each op
 runs its rule, `Core.Op.denote?` or `Core.Op.exit?`, the same rule that the
@@ -15,8 +15,10 @@ rules are written once for any monad, and `toSet` keeps `pure`, `bind`,
 the choice effect and UB. So the soundness theorems of exhaustive and
 scripted runs hold for every core function, on every argument vector, at
 every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`.
-`fir-ref` computes `exhaustive` and `scripted` below, and nothing else, to
-report a run.
+`fir-ref` computes `exhaustive`, `scripted` and `sampled` below, and
+nothing else, to report a run. Sampled mode's values fit the run
+(`sampled_fits`), so it inherits scripted mode's theorem:
+`sampled_outcomes`.
 -/
 
 namespace Fir.Core
@@ -120,5 +122,38 @@ theorem scripted_stuck {σ : Type} (read : (w : Nat) → σ → Option (BitVec w
     (hs : scripted read f args fuel cs = .ok (l, c)) {st : Stuck}
     (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.run (m := SetM) args fuel) :=
   Func.script_stuck mapsDenote read f args fuel cs hs hst
+
+/-- Sampled mode on the core function `f`: the path of its run on `args`
+with `fuel` steps on which `draw` gives each choice, from the generator
+`g`, and the values chosen on it. -/
+def sampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+    ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × List ChoiceTree.Chosen :=
+  (f.run (m := ChoiceTree Op) args fuel).run.sample draw g
+
+/-- The values that sampled mode chose are a choice sequence that fits the
+run: scripted mode on them reports the same path, with as many choices. -/
+theorem sampled_fits {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+    scripted ChoiceTree.readChosen f args fuel (sampled draw f args fuel g).2 =
+      .ok ((sampled draw f args fuel g).1, (sampled draw f args fuel g).2.length) := by
+  have h := ChoiceTree.sample_script (draw := draw) (f.run (m := ChoiceTree Op) args fuel).run g 0
+  rw [Nat.zero_add] at h
+  exact h
+
+/-- Sampled mode gives an outcome of the run at the fuel budget it runs
+with, whatever the generator. -/
+theorem sampled_outcomes {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ)
+    {o : Outcome Obs} (ho : (sampled draw f args fuel g).1.pathEnd = .outcome o) :
+    Run.outcomes (f.run (m := SetM) args fuel) o :=
+  scripted_outcomes _ f args fuel _ (sampled_fits draw f args fuel g) ho
+
+/-- Sampled mode reports a stuck path only when the run has one. -/
+theorem sampled_stuck {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ)
+    {st : Stuck} (hst : (sampled draw f args fuel g).1.pathEnd = .stuck st) :
+    Run.IsStuck (f.run (m := SetM) args fuel) :=
+  scripted_stuck _ f args fuel _ (sampled_fits draw f args fuel g) hst
 
 end Fir.Core

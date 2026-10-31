@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from corpus import DEFAULT_FUEL, Test, load, parse_rejects, parse_tests, result_types
+from sets import Declared
 
 SEVEN = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n"
 REJECT = '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = "x"\n'
@@ -43,9 +44,84 @@ class Tests(unittest.TestCase):
         self.assertEqual(tests[1].show(), 'canonical/m.fir --fuel 2 @"a b"')
         self.assertTrue(tests[2].show().endswith("(interpreter only)"))
 
+    def test_choices_and_declared_results(self):
+        tests, problems = self.parse(
+            "tests = [\n"
+            '  { func = "@f", args = ["1"], choices = ["-1", "true"], expect = ["0"] },\n'
+            '  { func = "@g", args = ["1"], results = [\n'
+            '    { values = ["0"], witness = ["5"] },\n'
+            '    { values = ["poison"], witness = [] },\n'
+            "  ] },\n"
+            "]\n"
+        )
+        self.assertEqual(problems, [])
+        m = "canonical/m.fir"
+        self.assertEqual(
+            tests,
+            [
+                Test(m, "@f", ("1",), DEFAULT_FUEL, ("0",), ("-1", "true")),
+                Test(
+                    m,
+                    "@g",
+                    ("1",),
+                    results=(Declared(("0",), ("5",)), Declared(("poison",), ())),
+                ),
+            ],
+        )
+        self.assertEqual(
+            tests[0].show(), "canonical/m.fir --choices -1,true @f 1 (interpreter only)"
+        )
+        self.assertEqual(tests[1].show(), "canonical/m.fir @g 1")
+
     def test_format_errors(self):
         for toml, needle in [
             ('test = [{ func = "@f" }]', "unknown key test"),
+            ('tests = [{ func = "@f", choices = ["1"] }]', "choices go with expect"),
+            (
+                'tests = [{ func = "@f", choices = ["1,2"], expect = [] }]',
+                "choices is a list of values",
+            ),
+            (
+                'tests = [{ func = "@f", choices = [""], expect = [] }]',
+                "choices is a list of values",
+            ),
+            (
+                'tests = [{ func = "@f", choices = 1, expect = [] }]',
+                "choices is a list of values",
+            ),
+            (
+                'tests = [{ func = "@f", expect = [], results = [] }]',
+                "results go with a differential test",
+            ),
+            ('tests = [{ func = "@f", results = [] }]', "results is a list"),
+            ('tests = [{ func = "@f", results = ["0"] }]', "result 1 is a table"),
+            (
+                'tests = [{ func = "@f", results = [{ values = ["0"] }] }]',
+                "result 1: witness is a list",
+            ),
+            (
+                'tests = [{ func = "@f", results = [{ witness = [] }] }]',
+                "result 1: values is a list",
+            ),
+            (
+                'tests = [{ func = "@f", results = [{ values = [0], witness = [] }] }]',
+                "result 1: values is a list",
+            ),
+            (
+                'tests = [{ func = "@f", results = [{ values = [], witness = ["a,b"] }] }]',
+                "result 1: witness is a list",
+            ),
+            (
+                'tests = [{ func = "@f", results = [{ values = [], witness = [], w = 1 }] }]',
+                "result 1: unknown key w",
+            ),
+            (
+                (
+                    'tests = [{ func = "@f", results = [{ values = ["0"], witness = ["1"] },'
+                    ' { values = ["0"], witness = ["2"] }] }]'
+                ),
+                "result 2 declares the values of an earlier result",
+            ),
             ('tests = [{ fun = "@f" }]', "test 1: unknown key fun"),
             ('tests = [{ func = "f" }]', "func is the function's symbol"),
             ('tests = [{ func = "@f", args = [1] }]', "args is a list of strings"),

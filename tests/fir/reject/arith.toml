@@ -1,0 +1,560 @@
+# Must-reject texts of #14's ops: sub and mul, the flags nuw and nsw of
+# add, sub and mul, and freeze. These ops have no validation rule beyond
+# their signatures, so a text that breaks one does not decode: each is a
+# parse error at the op's name (ADR-2026-10-30-0815). decoding.toml holds
+# add's other texts.
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = sub %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  sub %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = sub %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul's result has its operands' type: i32 operands give no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = mul %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  mul %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = mul %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add's flags come in one order, nuw before nsw: nsw nuw does not decode"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes each flag once: nuw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add nuw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes each flag once: nsw nsw repeats nsw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add nsw nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes each flag once: nuw nsw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add nuw nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add's only attributes are its flags, nuw and nsw: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add's only attributes are its flags, nuw and nsw: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = add 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub's flags come in one order, nuw before nsw: nsw nuw does not decode"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes each flag once: nuw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub nuw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes each flag once: nsw nsw repeats nsw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub nsw nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub takes each flag once: nuw nsw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub nuw nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub's only attributes are its flags, nuw and nsw: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sub's only attributes are its flags, nuw and nsw: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = sub 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul's flags come in one order, nuw before nsw: nsw nuw does not decode"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes each flag once: nuw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul nuw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes each flag once: nsw nsw repeats nsw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul nsw nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul takes each flag once: nuw nsw nuw repeats nuw"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul nuw nsw nuw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul's only attributes are its flags, nuw and nsw: exact is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul exact %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "mul's only attributes are its flags, nuw and nsw: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = mul 1 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze gives a value of its operand's type: an i32 operand gives no i64"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = freeze %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes one operand, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = freeze %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes one operand, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = freeze @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  freeze %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = freeze %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes no attributes: nsw is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = freeze nsw %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = freeze 0 %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

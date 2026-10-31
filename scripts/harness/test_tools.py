@@ -3,49 +3,118 @@
 import unittest
 
 from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
-from tools import Ran, Verdict, build_failure, native_values, outcome, verdict
+from sets import BudgetExceeded, Outcomes, Path
+from tools import Ran, Verdict, build_failure, native_values, outcomes, path, verdict
 
 
 class FirRefRun(unittest.TestCase):
     def test_results(self):
         cases = [
             (
-                '{"kind":"return","values":["6","poison"]}',
-                Outcome(RETURN, ("6", "poison")),
+                '{"kind":"return","values":["6","poison"],"choices":0}',
+                Path(Outcome(RETURN, ("6", "poison")), 0),
             ),
-            ('{"kind":"return","values":[]}', Outcome(RETURN, ())),
-            ('{"kind":"ub","reason":"why"}', Outcome(UB, reason="why")),
-            ('{"kind":"fuel-exhausted"}', Outcome(FUEL_EXHAUSTED)),
+            ('{"kind":"return","values":[],"choices":2}', Path(Outcome(RETURN, ()), 2)),
+            (
+                '{"kind":"ub","reason":"why","choices":0}',
+                Path(Outcome(UB, reason="why"), 0),
+            ),
+            ('{"kind":"fuel-exhausted","choices":1}', Path(Outcome(FUEL_EXHAUSTED), 1)),
         ]
         for out, want in cases:
-            self.assertEqual(outcome(Ran(0, out + "\n", "")), want)
-        stuck = '{"kind":"stuck","reason":"no terminator"}\n'
+            self.assertEqual(path(Ran(0, out + "\n", "")), want)
+        stuck = '{"kind":"stuck","reason":"no terminator","choices":0}\n'
         self.assertEqual(
-            outcome(Ran(1, stuck, "")), Outcome(STUCK, reason="no terminator")
+            path(Ran(1, stuck, "")), Path(Outcome(STUCK, reason="no terminator"), 0)
         )
+
+    def test_a_sampled_run_says_what_it_drew(self):
+        out = '{"kind":"return","values":["0"],"choices":2,"sequence":["5","-1"]}\n'
+        self.assertEqual(
+            path(Ran(0, out, "")), Path(Outcome(RETURN, ("0",)), 2, ("5", "-1"))
+        )
+        out = '{"kind":"return","values":["0"],"choices":0,"sequence":[]}\n'
+        self.assertEqual(path(Ran(0, out, "")), Path(Outcome(RETURN, ("0",)), 0, ()))
+        out = '{"kind":"return","values":["0"],"choices":1,"sequence":[5]}\n'
+        self.assertIsInstance(path(Ran(0, out, "")), str)
 
     def test_errors_are_not_results(self):
         no_rules = "fir-ref: @f: sub has no execution rules yet\n"
         self.assertEqual(
-            outcome(Ran(2, "", no_rules)),
+            path(Ran(2, "", no_rules)),
             "exits with 2: fir-ref: @f: sub has no execution rules yet",
         )
-        self.assertIsInstance(outcome(Ran(1, "", "f.fir:1:1: parse error: x\n")), str)
-        self.assertIsInstance(outcome(Ran(-11, "", "")), str)
-        self.assertIsInstance(outcome(Ran(None, "", "")), str)
+        misfit = "fir-ref: @f: the choices do not fit the run: choice 1, 2, is not a value of type i2\n"
+        self.assertEqual(path(Ran(2, "", misfit)), "exits with 2: " + misfit.strip())
+        self.assertIsInstance(path(Ran(1, "", "f.fir:1:1: parse error: x\n")), str)
+        self.assertIsInstance(path(Ran(-11, "", "")), str)
+        self.assertIsInstance(path(Ran(None, "", "")), str)
 
     def test_a_status_that_does_not_fit_the_result_is_an_error(self):
-        self.assertIsInstance(
-            outcome(Ran(1, '{"kind":"return","values":[]}\n', "")), str
+        for status, out in [
+            (1, '{"kind":"return","values":[],"choices":0}'),
+            (0, '{"kind":"stuck","reason":"r","choices":0}'),
+            (0, '{"kind":"return","values":[1],"choices":0}'),
+            (0, '{"kind":"return","values":[]}'),
+            (0, '{"kind":"return","values":[],"choices":-1}'),
+            (0, '{"kind":"return","values":[],"choices":true}'),
+            (0, '{"kind":"maybe","choices":0}'),
+            (0, "{}\n{}"),
+        ]:
+            self.assertIsInstance(path(Ran(status, out + "\n", "")), str, out)
+
+
+class Exhaustive(unittest.TestCase):
+    def test_sets(self):
+        out = (
+            '{"kind":"outcomes","choices":1,"outcomes":[{"kind":"return","values":'
+            '["0"]},{"kind":"return","values":["poison"]},{"kind":"ub","reason":"r"}]}\n'
         )
-        self.assertIsInstance(
-            outcome(Ran(0, '{"kind":"stuck","reason":"r"}\n', "")), str
+        self.assertEqual(
+            outcomes(Ran(0, out, "")),
+            Outcomes(
+                1,
+                (
+                    Outcome(RETURN, ("0",)),
+                    Outcome(RETURN, ("poison",)),
+                    Outcome(UB, reason="r"),
+                ),
+            ),
         )
-        self.assertIsInstance(
-            outcome(Ran(0, '{"kind":"return","values":[1]}\n', "")), str
+        one = '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"fuel-exhausted"}]}\n'
+        self.assertEqual(
+            outcomes(Ran(0, one, "")), Outcomes(0, (Outcome(FUEL_EXHAUSTED),))
         )
-        self.assertIsInstance(outcome(Ran(0, '{"kind":"maybe"}\n', "")), str)
-        self.assertIsInstance(outcome(Ran(0, "{}\n{}\n", "")), str)
+
+    def test_a_stuck_path_exits_with_1(self):
+        out = '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"stuck","reason":"r"}]}\n'
+        self.assertEqual(
+            outcomes(Ran(1, out, "")), Outcomes(0, (Outcome(STUCK, reason="r"),))
+        )
+        self.assertIsInstance(outcomes(Ran(0, out, "")), str)
+        ret = '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":[]}]}\n'
+        self.assertIsInstance(outcomes(Ran(1, ret, "")), str)
+
+    def test_the_budget(self):
+        out = '{"kind":"choice-budget-exceeded","budget":16}\n'
+        self.assertEqual(outcomes(Ran(0, out, "")), BudgetExceeded(16))
+        self.assertIsInstance(outcomes(Ran(1, out, "")), str)
+        bad = '{"kind":"choice-budget-exceeded","budget":"16"}\n'
+        self.assertIsInstance(outcomes(Ran(0, bad, "")), str)
+
+    def test_errors(self):
+        for out in [
+            '{"kind":"outcomes","choices":0,"outcomes":[]}',
+            '{"kind":"outcomes","outcomes":[{"kind":"fuel-exhausted"}]}',
+            '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"maybe"}]}',
+            '{"kind":"outcomes","choices":0,"outcomes":["x"]}',
+            '{"kind":"return","values":[],"choices":0}',
+        ]:
+            self.assertIsInstance(outcomes(Ran(0, out + "\n", "")), str, out)
+        self.assertEqual(
+            outcomes(Ran(2, "", "fir-ref: @f: and has no execution rules yet\n")),
+            "exits with 2: fir-ref: @f: and has no execution rules yet",
+        )
 
 
 class Native(unittest.TestCase):
@@ -116,7 +185,8 @@ class NoReport(unittest.TestCase):
         ]:
             want = f"exits with 0 and {shown}, not one JSON report"
             self.assertEqual(verdict(Ran(0, out, "")), want)
-            self.assertEqual(outcome(Ran(0, out, "")), want)
+            self.assertEqual(path(Ran(0, out, "")), want)
+            self.assertEqual(outcomes(Ran(0, out, "")), want)
             self.assertEqual(native_values(Ran(0, out, "")), want)
             self.assertEqual(build_failure(Ran(0, out, "")), want)
         self.assertEqual(

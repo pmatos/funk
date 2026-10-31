@@ -262,6 +262,11 @@ The `fir-ref` mode that takes one choice sequence and prints one outcome. A
 sequence that does not fit the run, with too few or too many values or a
 value that is not of its choice's type, is an error, never an outcome.
 
+**sampled mode**:
+The `fir-ref` mode that draws each choice from a generator seeded with a
+number, as the run makes it, and prints one outcome and the values it
+drew: a choice sequence that fits the run.
+
 **choice budget**:
 The most bits that one path may choose in exhaustive mode. A run that would
 choose more gives no set of outcomes: exhaustive mode says that the budget
@@ -270,11 +275,13 @@ is exceeded.
 **choice tree**:
 The monad that `fir-ref` runs the interpreter in: a tree whose nodes are
 choices and whose leaves say how each path ends. It maps to the set monad
-of the spec, so its walks, exhaustive and scripted, are proved sound.
+of the spec, so its walks, exhaustive, scripted and sampled, are proved
+sound.
 
 **declared results**:
 The allowed results that a test lists, each with a witness choice sequence
-from which scripted mode reproduces it.
+from which scripted mode reproduces it. When the run chooses more than the
+choice budget, seeded runs of sampled mode check that it gives no other.
 
 **differential test**:
 A test that runs a module on `fir-ref` and as native code, and checks that the
@@ -286,9 +293,10 @@ fuel exhausted, or its choices exceed the budget and it declares no results.
 It never counts as a pass.
 
 **interpreter-only test**:
-A test that runs on `fir-ref` only, and states the result it must give: the
-returned values, UB or fuel exhausted. It covers what native code cannot
-check, such as UB, fuel exhaustion and widths the backend does not lower.
+A test that runs on `fir-ref` only, and states the result it must give, on
+the path that its choices name: the returned values, UB or fuel exhausted.
+It covers what native code cannot check, such as UB, fuel exhaustion and
+widths the backend does not lower.
 
 **must-reject text**:
 A text of the test corpus that breaks one rule, and that `funk verify` and

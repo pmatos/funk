@@ -1,13 +1,13 @@
 import FirTest.Interpreter
 
 /-!
-Tests of #14's ops and of `fir-ref run`'s two modes (ADR-2026-10-30-2218),
-on `FirRef.runBytes`: `sub` and `mul`, the flags of `add`, `sub` and `mul`
-at several widths, poison that a broken flag gives and that propagates to
-the returned values, and `freeze`, whose choices scripted mode takes from
-`--choices` and exhaustive mode tries in turn. A choice sequence that does
-not fit the run is an error of its own, and so is a run that chooses more
-bits than exhaustive mode's budget.
+Tests of #14's ops and of `fir-ref run`'s exhaustive and scripted modes
+(ADR-2026-10-30-2218), on `FirRef.runBytes`: `sub` and `mul`, the flags of
+`add`, `sub` and `mul` at several widths, poison that a broken flag gives
+and that propagates to the returned values, and `freeze`, whose choices
+scripted mode takes from `--choices` and exhaustive mode tries in turn. A
+choice sequence that does not fit the run is an error of its own, and so is
+a run that chooses more bits than exhaustive mode's budget.
 -/
 
 namespace FirTest
