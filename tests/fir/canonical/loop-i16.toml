@@ -1,0 +1,60 @@
+# Tests of loop-i16.fir: loops at i16 (#19), each a block that branches
+# back to itself with block arguments. sum is the loop of the spec's
+# example @sum (lean/Fir/Text/Example.lean) at this type: it adds 0, 1,
+# ... up to, but not including, %n, with add nsw, so a sum past the
+# signed maximum is poison, which the loop carries to the end; it does
+# not loop at all on %n of at most 0. fact counts %n down to 0 as an
+# unsigned number and multiplies with mul, which wraps: it gives %n!
+# modulo 2^N. gcd is Euclid's algorithm with urem, on %a and %b read as
+# unsigned numbers, on every pair of boundary bit patterns, 0, 1, -1,
+# the signed minimum and the signed maximum, and on two consecutive
+# Fibonacci numbers, which take the most trips for their size. No loop
+# here runs more than a thousand times, well within the default fuel.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# Where fir-ref returns poison, any native value of the type does, and
+# an interpreter-only test of the same run checks that it is exactly
+# poison.
+tests = [
+  { func = "@sum", args = ["0"] },
+  { func = "@sum", args = ["1"] },
+  { func = "@sum", args = ["2"] },
+  { func = "@sum", args = ["-1"] },
+  { func = "@sum", args = ["-32768"] },
+  { func = "@sum", args = ["10"] },
+  { func = "@sum", args = ["256"] },
+  { func = "@sum", args = ["257"] },
+  { func = "@sum", args = ["257"], expect = ["poison"] },
+  { func = "@fact", args = ["0"] },
+  { func = "@fact", args = ["1"] },
+  { func = "@fact", args = ["7"] },
+  { func = "@fact", args = ["8"] },
+  { func = "@fact", args = ["9"] },
+  { func = "@fact", args = ["12"] },
+  { func = "@gcd", args = ["0", "0"] },
+  { func = "@gcd", args = ["0", "1"] },
+  { func = "@gcd", args = ["0", "-1"] },
+  { func = "@gcd", args = ["0", "-32768"] },
+  { func = "@gcd", args = ["0", "32767"] },
+  { func = "@gcd", args = ["1", "0"] },
+  { func = "@gcd", args = ["1", "1"] },
+  { func = "@gcd", args = ["1", "-1"] },
+  { func = "@gcd", args = ["1", "-32768"] },
+  { func = "@gcd", args = ["1", "32767"] },
+  { func = "@gcd", args = ["-1", "0"] },
+  { func = "@gcd", args = ["-1", "1"] },
+  { func = "@gcd", args = ["-1", "-1"] },
+  { func = "@gcd", args = ["-1", "-32768"] },
+  { func = "@gcd", args = ["-1", "32767"] },
+  { func = "@gcd", args = ["-32768", "0"] },
+  { func = "@gcd", args = ["-32768", "1"] },
+  { func = "@gcd", args = ["-32768", "-1"] },
+  { func = "@gcd", args = ["-32768", "-32768"] },
+  { func = "@gcd", args = ["-32768", "32767"] },
+  { func = "@gcd", args = ["32767", "0"] },
+  { func = "@gcd", args = ["32767", "1"] },
+  { func = "@gcd", args = ["32767", "-1"] },
+  { func = "@gcd", args = ["32767", "-32768"] },
+  { func = "@gcd", args = ["32767", "32767"] },
+  { func = "@gcd", args = ["-19168", "28657"] },
+]

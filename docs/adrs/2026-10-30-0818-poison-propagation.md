@@ -1,6 +1,6 @@
 # Poison propagates unless an op says otherwise, and every op declares its poison class
 
-Status: accepted
+Status: accepted; refined by ADR-2026-10-31-0524
 
 ## Context
 

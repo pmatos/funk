@@ -1,0 +1,62 @@
+# Tests of loop-i8.fir: loops at i8 (#19), each a block that branches
+# back to itself with block arguments. sum is the loop of the spec's
+# example @sum (lean/Fir/Text/Example.lean) at this type: it adds 0, 1,
+# ... up to, but not including, %n, with add nsw, so a sum past the
+# signed maximum is poison, which the loop carries to the end; it does
+# not loop at all on %n of at most 0. fact counts %n down to 0 as an
+# unsigned number and multiplies with mul, which wraps: it gives %n!
+# modulo 2^N. gcd is Euclid's algorithm with urem, on %a and %b read as
+# unsigned numbers, on every pair of boundary bit patterns, 0, 1, -1,
+# the signed minimum and the signed maximum, and on an ordinary pair. No
+# loop here runs more than a thousand times, well within the default
+# fuel.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# Where fir-ref returns poison, any native value of the type does, and
+# an interpreter-only test of the same run checks that it is exactly
+# poison.
+tests = [
+  { func = "@sum", args = ["0"] },
+  { func = "@sum", args = ["1"] },
+  { func = "@sum", args = ["2"] },
+  { func = "@sum", args = ["-1"] },
+  { func = "@sum", args = ["-128"] },
+  { func = "@sum", args = ["16"] },
+  { func = "@sum", args = ["17"] },
+  { func = "@sum", args = ["17"], expect = ["poison"] },
+  { func = "@sum", args = ["127"] },
+  { func = "@sum", args = ["127"], expect = ["poison"] },
+  { func = "@fact", args = ["0"] },
+  { func = "@fact", args = ["1"] },
+  { func = "@fact", args = ["5"] },
+  { func = "@fact", args = ["6"] },
+  { func = "@fact", args = ["-1"] },
+  { func = "@fact", args = ["-128"] },
+  { func = "@fact", args = ["127"] },
+  { func = "@gcd", args = ["0", "0"] },
+  { func = "@gcd", args = ["0", "1"] },
+  { func = "@gcd", args = ["0", "-1"] },
+  { func = "@gcd", args = ["0", "-128"] },
+  { func = "@gcd", args = ["0", "127"] },
+  { func = "@gcd", args = ["1", "0"] },
+  { func = "@gcd", args = ["1", "1"] },
+  { func = "@gcd", args = ["1", "-1"] },
+  { func = "@gcd", args = ["1", "-128"] },
+  { func = "@gcd", args = ["1", "127"] },
+  { func = "@gcd", args = ["-1", "0"] },
+  { func = "@gcd", args = ["-1", "1"] },
+  { func = "@gcd", args = ["-1", "-1"] },
+  { func = "@gcd", args = ["-1", "-128"] },
+  { func = "@gcd", args = ["-1", "127"] },
+  { func = "@gcd", args = ["-128", "0"] },
+  { func = "@gcd", args = ["-128", "1"] },
+  { func = "@gcd", args = ["-128", "-1"] },
+  { func = "@gcd", args = ["-128", "-128"] },
+  { func = "@gcd", args = ["-128", "127"] },
+  { func = "@gcd", args = ["127", "0"] },
+  { func = "@gcd", args = ["127", "1"] },
+  { func = "@gcd", args = ["127", "-1"] },
+  { func = "@gcd", args = ["127", "-128"] },
+  { func = "@gcd", args = ["127", "127"] },
+  { func = "@gcd", args = ["48", "18"] },
+]

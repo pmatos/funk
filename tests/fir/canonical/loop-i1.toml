@@ -1,0 +1,18 @@
+# Tests of loop-i1.fir: loops at i1 (#19), each a block that branches
+# back to itself with block arguments. sum is the loop of the spec's
+# example @sum (lean/Fir/Text/Example.lean) at this type: %i starts at
+# false, which is at least both values of %n, so it never loops. fact
+# counts %n down to false and multiplies with mul: true loops once. gcd
+# is Euclid's algorithm with urem, on every pair of false and true.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@sum", args = ["false"] },
+  { func = "@sum", args = ["true"] },
+  { func = "@fact", args = ["false"] },
+  { func = "@fact", args = ["true"] },
+  { func = "@gcd", args = ["false", "false"] },
+  { func = "@gcd", args = ["false", "true"] },
+  { func = "@gcd", args = ["true", "false"] },
+  { func = "@gcd", args = ["true", "true"] },
+]

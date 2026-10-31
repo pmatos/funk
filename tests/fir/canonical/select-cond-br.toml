@@ -1,0 +1,46 @@
+# Tests of select-cond-br.fir: select %c, %x, %y may not become a
+# cond_br on %c whose successors pass %x and %y to one block, where %c
+# may be poison; cond_br on %f = freeze %c may (#19, moved here from
+# #16; lean/Fir/Execution/PoisonUB.lean, ADR-2026-10-30-0818). %c is
+# add nsw %a, %b at i1, where true is -1: false when %a and %b are both
+# false, true when exactly one is true, and poison when both are true,
+# as -1 + -1 overflows. select_form is the source; cond_br_form is the
+# forbidden rewrite; and frozen_cond_br_form is the sound one. Each runs
+# on all four pairs %a, %b, with %x = 5 and %y = 7.
+#
+# A rewrite is sound when, on every input, each outcome of the rewritten
+# form is allowed by an outcome of the source: the same values, or any
+# value where the source gives poison, and UB only where the source is
+# UB (ADR-2026-10-29-2008). Side by side, the tests show the rewrite:
+# - On true, true, %c is poison. select_form returns poison: its set is
+#   that one result, declared below. cond_br_form branches on poison,
+#   which is immediate UB, not a choice of successor: an
+#   interpreter-only test expects ub, as UB allows any result and cannot
+#   be a differential test. A source that returns allows only returns,
+#   so select_form's poison does not allow cond_br_form's UB: the
+#   rewrite is wrong. frozen_cond_br_form returns 5 or 7, as freeze
+#   chooses true or false, and poison allows each, so it passes; native
+#   code must return one of them.
+# - On the other three pairs, %c is a value, and the three forms return
+#   the same one: 7 on false, false, and 5 on true, false and false,
+#   true.
+# Each differential test declares its run's whole set of outcomes, each
+# with a witness, the choice of freeze where it makes one: fir-ref's
+# exhaustive mode must list exactly the declared results, and native
+# code must give one of them. fir-ref's UB reason is "cond_br on
+# poison", but the harness matches ub to any reason
+# (ADR-2026-10-30-2135).
+tests = [
+  { func = "@select_form", args = ["true", "true", "5", "7"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@select_form", args = ["false", "false", "5", "7"], results = [{ values = ["7"], witness = [] }] },
+  { func = "@select_form", args = ["true", "false", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+  { func = "@select_form", args = ["false", "true", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+  { func = "@cond_br_form", args = ["true", "true", "5", "7"], expect = "ub" },
+  { func = "@cond_br_form", args = ["false", "false", "5", "7"], results = [{ values = ["7"], witness = [] }] },
+  { func = "@cond_br_form", args = ["true", "false", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+  { func = "@cond_br_form", args = ["false", "true", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+  { func = "@frozen_cond_br_form", args = ["true", "true", "5", "7"], results = [{ values = ["5"], witness = ["true"] }, { values = ["7"], witness = ["false"] }] },
+  { func = "@frozen_cond_br_form", args = ["false", "false", "5", "7"], results = [{ values = ["7"], witness = [] }] },
+  { func = "@frozen_cond_br_form", args = ["true", "false", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+  { func = "@frozen_cond_br_form", args = ["false", "true", "5", "7"], results = [{ values = ["5"], witness = [] }] },
+]

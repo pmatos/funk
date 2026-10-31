@@ -1,0 +1,58 @@
+# Tests of loop-i7.fir: loops at i7 (#19), each a block that branches
+# back to itself with block arguments. sum is the loop of the spec's
+# example @sum (lean/Fir/Text/Example.lean) at this type: it adds 0, 1,
+# ... up to, but not including, %n, with add nsw, so a sum past the
+# signed maximum is poison, which the loop carries to the end; it does
+# not loop at all on %n of at most 0. fact counts %n down to 0 as an
+# unsigned number and multiplies with mul, which wraps: it gives %n!
+# modulo 2^N. gcd is Euclid's algorithm with urem, on %a and %b read as
+# unsigned numbers, on every pair of boundary bit patterns, 0, 1, -1,
+# the signed minimum and the signed maximum, and on an ordinary pair. No
+# loop here runs more than a thousand times, well within the default
+# fuel.
+# The backend does not lower i7, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@sum", args = ["0"], expect = ["0"] },
+  { func = "@sum", args = ["1"], expect = ["0"] },
+  { func = "@sum", args = ["2"], expect = ["1"] },
+  { func = "@sum", args = ["-1"], expect = ["0"] },
+  { func = "@sum", args = ["-64"], expect = ["0"] },
+  { func = "@sum", args = ["11"], expect = ["55"] },
+  { func = "@sum", args = ["12"], expect = ["poison"] },
+  { func = "@sum", args = ["63"], expect = ["poison"] },
+  { func = "@fact", args = ["0"], expect = ["1"] },
+  { func = "@fact", args = ["1"], expect = ["1"] },
+  { func = "@fact", args = ["4"], expect = ["24"] },
+  { func = "@fact", args = ["5"], expect = ["-8"] },
+  { func = "@fact", args = ["6"], expect = ["-48"] },
+  { func = "@fact", args = ["-1"], expect = ["0"] },
+  { func = "@fact", args = ["-64"], expect = ["0"] },
+  { func = "@fact", args = ["63"], expect = ["0"] },
+  { func = "@gcd", args = ["0", "0"], expect = ["0"] },
+  { func = "@gcd", args = ["0", "1"], expect = ["1"] },
+  { func = "@gcd", args = ["0", "-1"], expect = ["-1"] },
+  { func = "@gcd", args = ["0", "-64"], expect = ["-64"] },
+  { func = "@gcd", args = ["0", "63"], expect = ["63"] },
+  { func = "@gcd", args = ["1", "0"], expect = ["1"] },
+  { func = "@gcd", args = ["1", "1"], expect = ["1"] },
+  { func = "@gcd", args = ["1", "-1"], expect = ["1"] },
+  { func = "@gcd", args = ["1", "-64"], expect = ["1"] },
+  { func = "@gcd", args = ["1", "63"], expect = ["1"] },
+  { func = "@gcd", args = ["-1", "0"], expect = ["-1"] },
+  { func = "@gcd", args = ["-1", "1"], expect = ["1"] },
+  { func = "@gcd", args = ["-1", "-1"], expect = ["-1"] },
+  { func = "@gcd", args = ["-1", "-64"], expect = ["1"] },
+  { func = "@gcd", args = ["-1", "63"], expect = ["1"] },
+  { func = "@gcd", args = ["-64", "0"], expect = ["-64"] },
+  { func = "@gcd", args = ["-64", "1"], expect = ["1"] },
+  { func = "@gcd", args = ["-64", "-1"], expect = ["1"] },
+  { func = "@gcd", args = ["-64", "-64"], expect = ["-64"] },
+  { func = "@gcd", args = ["-64", "63"], expect = ["1"] },
+  { func = "@gcd", args = ["63", "0"], expect = ["63"] },
+  { func = "@gcd", args = ["63", "1"], expect = ["1"] },
+  { func = "@gcd", args = ["63", "-1"], expect = ["1"] },
+  { func = "@gcd", args = ["63", "-64"], expect = ["1"] },
+  { func = "@gcd", args = ["63", "63"], expect = ["63"] },
+  { func = "@gcd", args = ["60", "36"], expect = ["12"] },
+]

@@ -75,17 +75,17 @@ tests = [
 differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
-`exact`, `srem`, `urem`, `icmp`, `select` and `ret` at `i1`, `i8`, `i16`,
-`i32` and `i64`, with at most one result. Tests of other widths, or of
-several results, go in modules whose tests are all interpreter-only, such
-as `tracer-i7.fir` and `widths.fir`.
+`exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br` and `ret` at
+`i1`, `i8`, `i16`, `i32` and `i64`, with at most one result. Tests of
+other widths, or of several results, go in modules whose tests are all
+interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
 Each `[[reject]]` table of a `reject/*.toml` file is one text that breaks
 one rule. When the ops that `funk` has cannot break a rule alone, such as
-a rule of successors, the text breaks a second rule too, and `rule` names
-both.
+the scope of a value defined in a region, the text breaks a second rule
+too, and `rule` names both.
 
 ```toml
 [[reject]]
@@ -182,5 +182,19 @@ become `and %c, %x` where `%x` may be poison, and that
 `and %c, %g` with `%g = freeze %x` may. `reject/compare.toml` holds the
 texts of these ops that do not decode.
 
-Both tools now also have `br` and `cond_br` (#19); its stage 3 adds texts
-for them. #20 adds the other ops to `funk`.
+The texts of #19 also use `br` and `cond_br`, which pass values to block
+arguments. `branch-iN` passes each boundary bit pattern through `br`, and
+every pair of them through `cond_br` with each condition; `loop-iN` runs
+loops: the loop of the spec's `@sum`, an iterative factorial and Euclid's
+gcd; `permute-iN` passes block arguments that swap and rotate each other
+round a loop; and `poison-branch-iN` passes poison to block arguments,
+where it arrives as poison, and branches on poison, which is UB; all at
+the same seven widths. `sum` runs the spec's `@sum` itself, and `fuel`
+runs loops that never end, which run out of fuel at the budget that each
+test sets. `select-cond-br` shows that `select %c, %x, %y` may not become
+a `cond_br` on `%c` where `%c` may be poison, and that a `cond_br` on
+`freeze %c` may. `reject/branch.toml` holds the texts of these ops that
+do not decode, and `reject/validation-branch.toml` those that break a
+rule of validation that they bring into play: of successors and their
+block arguments, terminators, dominance and reachability. #20 adds the
+other ops to `funk`.

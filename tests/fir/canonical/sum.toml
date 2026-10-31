@@ -1,0 +1,21 @@
+# Tests of sum.fir: the spec's example @sum, copied from
+# lean/Fir/Text/Example.lean with its locations, without @sum10, which
+# calls it and waits for call (#20). It adds the integers from 0 up to,
+# but not including, %n (#19), and returns 0 when %n is at most 0. The
+# largest %n here, 1000, loops a thousand times; a sum past the signed
+# maximum would need %n above 65536, which loop-i8 and loop-i16 test at
+# their widths instead.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@sum", args = ["0"] },
+  { func = "@sum", args = ["1"] },
+  { func = "@sum", args = ["2"] },
+  { func = "@sum", args = ["3"] },
+  { func = "@sum", args = ["10"] },
+  { func = "@sum", args = ["100"] },
+  { func = "@sum", args = ["1000"] },
+  { func = "@sum", args = ["-1"] },
+  { func = "@sum", args = ["-3"] },
+  { func = "@sum", args = ["-2147483648"] },
+]
