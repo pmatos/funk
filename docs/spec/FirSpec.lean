@@ -128,6 +128,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
 
+{includeLiterate "." Fir.Core.Branch "Branch rules" (level := 2)}
+
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
 
 {includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
@@ -145,6 +147,8 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Core.CompareLaws "Comparison and selection obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.BranchLaws "Branch obligations" (level := 2)}
 
 {includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
 

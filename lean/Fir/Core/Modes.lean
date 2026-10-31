@@ -52,6 +52,12 @@ theorem ruleOfEv_toSet {ε : Type} {w : Nat}
     simp only [ruleOfEv]
     cases g a b <;> rfl
 
+/-- A terminator's rule made by `exitOfEv`, such as `cond_br`'s, denotes in
+the tree of choices what it denotes in the set monad. -/
+theorem exitOfEv_toSet {ε : Type} (e : Ev Exit) :
+    (exitOfEv (m := ChoiceTree ε) e).toSet = exitOfEv e := by
+  cases e <;> rfl
+
 /-- The tree's semantics of each core op denotes the set monad's. -/
 theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := CoreDialect) where
   denote
@@ -72,7 +78,12 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .srem _, args => ruleOfEv_toSet sremValues args
     | .urem _, args => ruleOfEv_toSet uremValues args
     | .const .., _ | .br, _ | .condBr, _ | .ret _, _ | .call .., _ => rfl
-  exit op _ := by cases op <;> rfl
+  exit
+    | .condBr, .cons c .nil => exitOfEv_toSet (condBrExit c)
+    | .const .., _ | .add .., _ | .sub .., _ | .mul .., _ | .sdiv .., _ | .udiv .., _
+    | .srem _, _ | .urem _, _ | .and _, _ | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _
+    | .ashr _, _ | .icmp .., _ | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _
+    | .freeze _, _ | .br, _ | .ret _, _ | .call .., _ => rfl
 
 /-- Exhaustive mode on the core function `f`: every path of its run on
 `args` with `fuel` steps, when no path chooses more than `budget` bits in
