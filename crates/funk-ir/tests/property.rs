@@ -83,11 +83,7 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             );
         }
     }
-    want.extend([
-        "freeze".to_string(),
-        "ret".to_string(),
-        "select".to_string(),
-    ]);
+    want.extend(["freeze", "br", "cond_br", "ret", "select"].map(String::from));
     want.extend(PREDICATES.map(|p| format!("icmp {p}")));
     want.extend(
         BITWISE_OPS
@@ -105,6 +101,59 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
     assert_eq!(seen, want);
 }
 
+/// Whether `args` passes `own` again, in another order: a permutation of
+/// two or more arguments that is not the identity.
+fn permutes(own: &[&str], args: &[String]) -> bool {
+    let (mut a, mut o): (Vec<&str>, Vec<&str>) =
+        (args.iter().map(String::as_str).collect(), own.to_vec());
+    let moved = a != o;
+    a.sort_unstable();
+    o.sort_unstable();
+    own.len() >= 2 && moved && a == o
+}
+
+/// The shapes of control flow that the generator makes, each at least five
+/// times: functions of one block and of four or more, a block of two or
+/// more arguments, branches back to an earlier block, to the branch's own
+/// block and forward past the next one, one value passed to two arguments,
+/// a block's own arguments passed back to it in another order, a `cond_br`
+/// with both successors one block, and a `cond_br` on a block argument.
+#[test]
+fn the_generator_makes_loops_joins_and_block_arguments() {
+    let mut seen = [0usize; 10];
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let blocks = &f.body.blocks;
+            let index = |l: &str| blocks.iter().position(|b| b.label == l);
+            seen[0] += usize::from(blocks.len() == 1);
+            seen[1] += usize::from(blocks.len() >= 4);
+            for (k, b) in blocks.iter().enumerate() {
+                seen[2] += usize::from(b.params.len() >= 2);
+                let Some(term) = b.ops.last() else { continue };
+                let own: Vec<&str> = b.params.iter().map(|d| d.name.as_str()).collect();
+                for s in &term.succs {
+                    let t = index(&s.label).expect("a block of the function");
+                    seen[3] += usize::from(t < k);
+                    seen[4] += usize::from(t == k);
+                    seen[5] += usize::from(t > k + 1);
+                    let mut args = s.args.clone();
+                    args.sort_unstable();
+                    args.dedup();
+                    seen[6] += usize::from(args.len() < s.args.len());
+                    seen[7] += usize::from(t == k && permutes(&own, &s.args));
+                }
+                if let [c] = term.operands.as_slice()
+                    && term.name == "cond_br"
+                {
+                    seen[8] += usize::from(term.succs[0].label == term.succs[1].label);
+                    seen[9] += usize::from(own.contains(&c.as_str()));
+                }
+            }
+        }
+    }
+    assert!(seen.iter().all(|&n| n >= 5), "{seen:?}");
+}
+
 /// The width changes that the generator makes, as `(op, M, N)`, from `iM`
 /// to `iN`.
 fn generated_width_changes() -> Vec<(String, u32, u32)> {
@@ -116,7 +165,7 @@ fn generated_width_changes() -> Vec<(String, u32, u32)> {
                 f.body
                     .blocks
                     .iter()
-                    .flat_map(|b| b.ops.iter().flat_map(|o| &o.results)),
+                    .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
             );
             let types: std::collections::HashMap<&str, u32> = defs
                 .map(|d| (d.name.as_str(), int_width(&d.ty).expect("an integer")))
@@ -159,7 +208,12 @@ fn generated_uses(name: &str) -> Vec<(Vec<u32>, Vec<u32>)> {
     for (_, m) in generated() {
         for f in m.funcs() {
             let ops = || f.body.blocks.iter().flat_map(|b| &b.ops);
-            let defs = f.params.iter().chain(ops().flat_map(|o| &o.results));
+            let args = f.body.blocks.iter().flat_map(|b| &b.params);
+            let defs = f
+                .params
+                .iter()
+                .chain(args)
+                .chain(ops().flat_map(|o| &o.results));
             let types: std::collections::HashMap<&str, u32> =
                 defs.map(|d| (d.name.as_str(), width(&d.ty))).collect();
             for op in ops().filter(|o| o.name == name) {
@@ -296,7 +350,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 55] = [
+    const TOKENS: [&str; 59] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -339,6 +393,10 @@ fn the_parser_never_panics_on_random_token_soup() {
         "select",
         "icmp.slt",
         "ret",
+        "br",
+        "cond_br",
+        "^loop(",
+        "^loop",
         "true",
         "-1",
         "1",

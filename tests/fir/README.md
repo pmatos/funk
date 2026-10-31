@@ -157,6 +157,6 @@ operand; `zext-i7`, `zext-i33` and their `sext` and `trunc` twins run
 them to and from `i7` and `i33`, and `zext-poison`, `sext-poison` and
 `trunc-poison` on a poison operand. `reject/width.toml` holds their texts
 that do not decode or do not validate. Both tools now also have `sdiv`,
-`udiv`, `srem`, `urem` and `exact` (#18), and `icmp` and `select` (#16);
-stage 3 of each issue adds texts for them. #19 and #20 add the other ops
-to `funk`.
+`udiv`, `srem`, `urem` and `exact` (#18), `icmp` and `select` (#16), and
+`br` and `cond_br` (#19); stage 3 of each issue adds texts for them. #20
+adds the other ops to `funk`.
