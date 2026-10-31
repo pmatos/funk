@@ -1,10 +1,10 @@
 # Tests of poison-div-i64.fir: the poison and UB rules of sdiv and udiv,
 # each with and without exact, srem and urem at i64 (#18). %p = add nsw
 # %a, 1 is poison when %a is the signed maximum, 9223372036854775807;
-# OP_left returns OP %p, %b and OP_right returns OP %b, %p, and each
-# test passes that value as %a.
+# OP_left returns OP %p, %b, OP_right returns OP %b, %p and OP_both
+# returns OP %p, %p, and each test passes that value as %a.
 # - A poison divisor is UB, whatever the dividend: OP_right on each
-#   boundary bit pattern %b.
+#   boundary bit pattern %b, and OP_both, whose dividend is poison too.
 # - A poison dividend, OP_left by each boundary bit pattern %b: a zero
 #   divisor is UB, and so are sdiv and srem by -1, as the dividend
 #   might be the signed minimum; every other divisor gives poison,
@@ -24,6 +24,7 @@ tests = [
   { func = "@sdiv_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@sdiv_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@sdiv_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@sdiv_both", args = ["9223372036854775807"], expect = "ub" },
   { func = "@sdiv_exact_left", args = ["9223372036854775807", "0"], expect = "ub" },
   { func = "@sdiv_exact_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
   { func = "@sdiv_exact_left", args = ["9223372036854775807", "-1"], expect = "ub" },
@@ -34,6 +35,7 @@ tests = [
   { func = "@sdiv_exact_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@sdiv_exact_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@sdiv_exact_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@sdiv_exact_both", args = ["9223372036854775807"], expect = "ub" },
   { func = "@udiv_left", args = ["9223372036854775807", "0"], expect = "ub" },
   { func = "@udiv_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
   { func = "@udiv_left", args = ["9223372036854775807", "-1"], expect = ["poison"] },
@@ -44,6 +46,7 @@ tests = [
   { func = "@udiv_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@udiv_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@udiv_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@udiv_both", args = ["9223372036854775807"], expect = "ub" },
   { func = "@udiv_exact_left", args = ["9223372036854775807", "0"], expect = "ub" },
   { func = "@udiv_exact_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
   { func = "@udiv_exact_left", args = ["9223372036854775807", "-1"], expect = ["poison"] },
@@ -54,6 +57,7 @@ tests = [
   { func = "@udiv_exact_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@udiv_exact_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@udiv_exact_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@udiv_exact_both", args = ["9223372036854775807"], expect = "ub" },
   { func = "@srem_left", args = ["9223372036854775807", "0"], expect = "ub" },
   { func = "@srem_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
   { func = "@srem_left", args = ["9223372036854775807", "-1"], expect = "ub" },
@@ -64,6 +68,7 @@ tests = [
   { func = "@srem_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@srem_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@srem_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@srem_both", args = ["9223372036854775807"], expect = "ub" },
   { func = "@urem_left", args = ["9223372036854775807", "0"], expect = "ub" },
   { func = "@urem_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
   { func = "@urem_left", args = ["9223372036854775807", "-1"], expect = ["poison"] },
@@ -74,4 +79,5 @@ tests = [
   { func = "@urem_right", args = ["9223372036854775807", "-1"], expect = "ub" },
   { func = "@urem_right", args = ["9223372036854775807", "-9223372036854775808"], expect = "ub" },
   { func = "@urem_right", args = ["9223372036854775807", "9223372036854775807"], expect = "ub" },
+  { func = "@urem_both", args = ["9223372036854775807"], expect = "ub" },
 ]

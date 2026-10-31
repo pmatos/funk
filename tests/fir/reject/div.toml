@@ -127,6 +127,36 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
+rule = "sdiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = sdiv %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sdiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = sdiv %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
 rule = "sdiv takes its flag once: exact exact repeats exact"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
@@ -312,6 +342,36 @@ text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
   %r: ptr = udiv %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = udiv %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "udiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = udiv %a, %p @0
   ret %a @0
 }
 
@@ -517,6 +577,36 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
+rule = "srem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = srem %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "srem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = srem %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
 rule = "srem takes no attributes: exact is a flag of sdiv and udiv only"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
@@ -702,6 +792,36 @@ text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
   %r: ptr = urem %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = urem %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "urem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = urem %a, %p @0
   ret %a @0
 }
 

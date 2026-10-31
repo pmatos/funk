@@ -14,6 +14,14 @@ func @sdiv_right(%a: i64, %b: i64) -> i64 {
   ret %r @0
 }
 
+func @sdiv_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv %p, %p @0
+  ret %r @0
+}
+
 func @sdiv_exact_left(%a: i64, %b: i64) -> i64 {
 ^entry:
   %one: i64 = const 1 @0
@@ -27,6 +35,14 @@ func @sdiv_exact_right(%a: i64, %b: i64) -> i64 {
   %one: i64 = const 1 @0
   %p: i64 = add nsw %a, %one @0
   %r: i64 = sdiv exact %b, %p @0
+  ret %r @0
+}
+
+func @sdiv_exact_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv exact %p, %p @0
   ret %r @0
 }
 
@@ -46,6 +62,14 @@ func @udiv_right(%a: i64, %b: i64) -> i64 {
   ret %r @0
 }
 
+func @udiv_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv %p, %p @0
+  ret %r @0
+}
+
 func @udiv_exact_left(%a: i64, %b: i64) -> i64 {
 ^entry:
   %one: i64 = const 1 @0
@@ -59,6 +83,14 @@ func @udiv_exact_right(%a: i64, %b: i64) -> i64 {
   %one: i64 = const 1 @0
   %p: i64 = add nsw %a, %one @0
   %r: i64 = udiv exact %b, %p @0
+  ret %r @0
+}
+
+func @udiv_exact_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv exact %p, %p @0
   ret %r @0
 }
 
@@ -78,6 +110,14 @@ func @srem_right(%a: i64, %b: i64) -> i64 {
   ret %r @0
 }
 
+func @srem_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = srem %p, %p @0
+  ret %r @0
+}
+
 func @urem_left(%a: i64, %b: i64) -> i64 {
 ^entry:
   %one: i64 = const 1 @0
@@ -91,6 +131,14 @@ func @urem_right(%a: i64, %b: i64) -> i64 {
   %one: i64 = const 1 @0
   %p: i64 = add nsw %a, %one @0
   %r: i64 = urem %b, %p @0
+  ret %r @0
+}
+
+func @urem_both(%a: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = urem %p, %p @0
   ret %r @0
 }
 

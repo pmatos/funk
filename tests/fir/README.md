@@ -71,7 +71,9 @@ tests = [
   checks that rule on the real tools: the test passes only when
   `funk build` builds its module and the harness judges it invalid
   because exhaustive mode's set holds UB. Any other judgement fails it.
-  A test that is invalid and does not declare it still fails the run.
+  Native code runs, but its result plays no part: UB in the set allows
+  any result, a trap included. A test that is invalid and does not
+  declare it still fails the run.
   `invalid` goes with neither `expect` nor `results`.
 - With `expect`, the test is interpreter-only: only `fir-ref` runs it, and
   it must give that result. `expect` is a list of values, each a value or
@@ -169,10 +171,11 @@ that do not decode or do not validate.
 The texts of #18 use `sdiv` and `udiv`, each with and without `exact`,
 `srem` and `urem`. `div-iN` runs them on every pair of boundary bit
 patterns at the seven widths above; a pair that is UB in the spec, and
-every pair at `i7` and `i33`, is an interpreter-only test, and so is each
-defined pair of `exact`. `div-i8-ax` tests the `i8` lowering, which
-divides through `%ax`, on its own. `poison-div-iN` passes poison to each
-of them as either operand, at the seven widths. `div-frozen` holds the
+every pair at `i7` and `i33`, is an interpreter-only test, and at the
+other widths each defined pair of `exact` also has an interpreter-only
+twin. `div-i8-ax` tests the `i8` lowering, which divides through `%ax`,
+on its own. `poison-div-iN` passes poison to each of them as either
+operand and as both, at the seven widths. `div-frozen` holds the
 differential test with a frozen divisor that can be zero, which declares
 that it is invalid. `reject/div.toml` holds the texts of these ops that
 do not decode. #16, #19 and #20 add the other ops to `funk`.
