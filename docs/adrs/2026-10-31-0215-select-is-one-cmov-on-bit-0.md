@@ -46,3 +46,10 @@ poison (ADR-2026-10-30-2248).
   readable, so this costs one load and never faults.
 - Its tests run conditions with bits set above bit 0, which a test of the
   whole register, such as `testq %rcx, %rcx`, would misread.
+- Natively there is no poison, so a branch on bit 0 would also be correct
+  here. That does not make the spec's forbidden rewrites safe in the IR:
+  no optimizer may turn a `select` into a `cond_br` without freezing its
+  condition first, or `select %c, %x, false` into `and %c, %x`
+  (`lean/Fir/Execution/PoisonUB.lean`).
+- A later optimizer (M1) that makes poison real (ADR-2026-10-30-2248)
+  must still read only bit 0 of every `i1`, as this lowering does.
