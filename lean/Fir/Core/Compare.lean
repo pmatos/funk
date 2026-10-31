@@ -113,7 +113,8 @@ def boundaryPairs (w : Nat) : List (BitVec w × BitVec w × Ordering × Ordering
 
 -- At `i7`, `i8`, `i33`, `i64` and `i128`.
 #guard [7, 8, 33, 64, 128].all fun w => (boundaryPairs w).all fun (a, b, s, u) => comparesAs a b s u
--- Spelled out at `i7`: `-64` is the signed minimum and `63` the maximum.
+-- Some of them spelled out: at `i7`, `-64` is the signed minimum and `63`
+-- the signed maximum.
 #guard comparesAs (-64 : BitVec 7) 63 .lt .gt && comparesAs (63 : BitVec 7) (-1) .gt .lt
 #guard comparesAs (-128 : BitVec 8) 127 .lt .gt && comparesAs (-128 : BitVec 8) (-1) .lt .lt
 #guard comparesAs (-4294967296 : BitVec 33) 4294967295 .lt .gt
