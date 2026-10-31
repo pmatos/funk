@@ -83,6 +83,12 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
         }
     }
     want.extend(["freeze".to_string(), "ret".to_string()]);
+    for (op, exact) in funk_ir::dialects::core::DIVISION_OPS {
+        want.insert(op.to_string());
+        if exact {
+            want.insert(format!("{op} exact"));
+        }
+    }
     assert_eq!(seen, want);
 }
 
@@ -176,7 +182,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 35] = [
+    const TOKENS: [&str; 40] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -198,6 +204,11 @@ fn the_parser_never_panics_on_random_token_soup() {
         "nuw",
         "nsw",
         "freeze",
+        "sdiv",
+        "udiv",
+        "srem",
+        "urem",
+        "exact",
         "ret",
         "true",
         "-1",

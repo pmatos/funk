@@ -6,10 +6,13 @@
 //! `true` and `false`, constants at the bounds of their widths, every kind
 //! of location, and functions with zero, one and several results. The ops
 //! are those of the core dialect that the registry has: `const`, `add`,
-//! `sub` and `mul` with each combination of their flags, `freeze` and `ret`.
+//! `sub` and `mul` with each combination of their flags, `freeze`, `sdiv`
+//! and `udiv` with and without `exact`, `srem`, `urem` and `ret`. A division
+//! may be by zero: that is UB when it runs, not invalid, and no check runs
+//! these modules.
 //! The generator is deterministic: one seed gives one module.
 
-use crate::dialects::core::{MAX_WIDTH, WRAP_FLAG_SETS, int_type};
+use crate::dialects::core::{DIVISION_OPS, MAX_WIDTH, WRAP_FLAG_SETS, int_type};
 use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
@@ -257,11 +260,21 @@ impl Body<'_> {
 
     /// Defines a new value of type `t` and returns its name: `add`, `sub`
     /// or `mul` of two earlier values of that type, with any of their flags,
-    /// `freeze` of one, or a constant.
+    /// a division or remainder of two, `freeze` of one, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
         let loc = *rng.pick(self.keys);
-        let op = if !same.is_empty() && rng.one_in(2) {
+        let op = if !same.is_empty() && rng.one_in(5) {
+            let (name, exact) = *rng.pick(&DIVISION_OPS);
+            let op = Op::new(name, loc);
+            let op = if exact && rng.one_in(2) {
+                op.attr(Attr::word("exact"))
+            } else {
+                op
+            };
+            op.operand(rng.pick(&same).as_str())
+                .operand(rng.pick(&same).as_str())
+        } else if !same.is_empty() && rng.one_in(2) {
             match rng.below(4) {
                 0 => Op::new("freeze", loc).operand(rng.pick(&same).as_str()),
                 k => {
