@@ -40,7 +40,7 @@ operands at every width above zero, and only there. The lawful class
 `LawfulDialectPoison` asks it of every op instance that propagates poison,
 `i0` ones included, so the core dialect cannot meet that class as it is
 stated. Either the rule for a zero divisor or the class has to change at
-width zero; which one is pending the human's decision on #18.
+width zero; which one is pending the human's decision in #69.
 -/
 
 namespace Fir.Core

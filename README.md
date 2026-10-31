@@ -169,7 +169,9 @@ are on `main`:
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#16](https://github.com/pmatos/funk/issues/16) to
+  related ops, [#16](https://github.com/pmatos/funk/issues/16),
+  [#17](https://github.com/pmatos/funk/issues/17),
+  [#19](https://github.com/pmatos/funk/issues/19) and
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - The harness's rule for a set of outcomes: declared results with
   witnesses that it checks through `fir-ref run --choices`, and seeded
