@@ -1,7 +1,7 @@
 # Must-reject texts that parse, and break a rule of validation for a
-# function, a block or an op of the ops that both tools have: const, add,
-# sub and mul with their flags, freeze, the bitwise ops and shifts, and
-# ret.
+# function, a block or an op: const, add, sub and mul with their flags,
+# freeze, the bitwise ops and shifts, and ret. width.toml holds the texts
+# that break the width rules of zext, sext and trunc.
 #
 # With only these ops, a few rules cannot be broken alone: those of
 # successors and their block arguments, and the scope of a value defined
