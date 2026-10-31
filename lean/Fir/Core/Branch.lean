@@ -25,8 +25,8 @@ branch on poison could go either way (ADR-2026-10-30-0818).
 
 Both are exceptions to poison propagation that pass values on as they are
 (ADR-2026-10-30-0818). A successor's values reach the block's arguments
-unchanged, so a poison value arrives as poison. Only `cond_br`'s own
-condition may not be poison.
+unchanged, so a poison value arrives as poison. `cond_br`'s condition is
+the one value that they do not pass on, and a poison condition is UB.
 
 A block runs ops in order until its terminator, and a terminator may send
 control back to a block that has run before, so a function with branches
