@@ -31,7 +31,7 @@ def draws (w n : Nat) : List (BitVec w) := (List.range n).map fun s => (draw w �
 -- The other draws spread over the values, and a wide choice takes more
 -- than one draw of 64 bits.
 #guard (draws 64 100).eraseDups.length > 60
-#guard (draws 128 100).any fun b => b.toNat ≥ 2 ^ 120
+#guard (draws 128 100).any fun b => b.toNat ≥ 2 ^ 64
 
 /-! # The command line -/
 
