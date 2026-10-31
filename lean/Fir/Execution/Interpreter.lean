@@ -51,8 +51,9 @@ its terminators. A terminator's `exit` may say `goto i` only for a
 successor `i` that the terminator has, and validation fixes only how many
 it has. A terminator may return only values of the function's result
 types, which the dialect's own rule must ask, as the core rule for `ret`
-does. So `NeverStuck` for `br` and `cond_br` (#19) needs their `exit` to
-name only successors they have.
+does. So `NeverStuck` for `br` and `cond_br` needs their `exit` to name
+only successors they have, which #19 proves of each: `Core.br_goto_lt` and
+`Core.condBr_goto_lt`.
 
 These checks are not all of validation. The interpreter checks that a value
 is defined, not that its definition dominates its use, and it checks no
@@ -68,10 +69,10 @@ is lost only where an op has no outcome, which each op's totality
 obligation, `OpTotal`, rules out.
 
 Effects belong to the dialect, so the interpreter does not change when a
-dialect needs a new one. `freeze`'s rule calls `choose` and the divisions'
-rules call `ub`, so the core dialect's semantics asks for `MonadChoice m`
-and `MonadUB m`, and `fir-ref`'s exhaustive and scripted modes run this
-interpreter in the tree of choices, which has both.
+dialect needs a new one. `freeze`'s rule calls `choose`, and the divisions'
+rules and `cond_br`'s call `ub`, so the core dialect's semantics asks for
+`MonadChoice m` and `MonadUB m`, and `fir-ref`'s exhaustive and scripted
+modes run this interpreter in the tree of choices, which has both.
 A call needs the module, which `denote` cannot reach, so #20 gives `call` a
 call effect, and all calls share the run's fuel budget. That budget is an
 argument of this interpreter, which `denote` neither sees nor returns, so a

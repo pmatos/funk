@@ -1,0 +1,65 @@
+# Tests of poison-compare-i7.fir: the poison rules of icmp and select at
+# i7 (#16, ADR-2026-10-30-0818). Neither op is ever UB.
+# %p = add nsw %a, 1 is poison when %a is the signed maximum, 63.
+# icmp propagates poison: P_left returns icmp P %p, %b and P_right
+# icmp P %b, %p, for each predicate P, with %b = 0.
+# select is an exception. select_cond adds true to its condition %c the
+# same way, so the condition is poison when %c is true, and the result
+# is poison even when both values are the same. select_first returns
+# select %c, %p, %b and select_second select %c, %b, %p, with %b = -64:
+# the value not chosen does not matter, even when it is poison, and the
+# value chosen is given as it is, poison included.
+# On the row 0, %p is 1.
+# The backend does not lower i7, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@eq_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@eq_left", args = ["0", "0"], expect = ["false"] },
+  { func = "@eq_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@eq_right", args = ["0", "0"], expect = ["false"] },
+  { func = "@ne_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ne_left", args = ["0", "0"], expect = ["true"] },
+  { func = "@ne_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ne_right", args = ["0", "0"], expect = ["true"] },
+  { func = "@slt_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@slt_left", args = ["0", "0"], expect = ["false"] },
+  { func = "@slt_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@slt_right", args = ["0", "0"], expect = ["true"] },
+  { func = "@sle_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sle_left", args = ["0", "0"], expect = ["false"] },
+  { func = "@sle_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sle_right", args = ["0", "0"], expect = ["true"] },
+  { func = "@sgt_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sgt_left", args = ["0", "0"], expect = ["true"] },
+  { func = "@sgt_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sgt_right", args = ["0", "0"], expect = ["false"] },
+  { func = "@sge_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sge_left", args = ["0", "0"], expect = ["true"] },
+  { func = "@sge_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@sge_right", args = ["0", "0"], expect = ["false"] },
+  { func = "@ult_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ult_left", args = ["0", "0"], expect = ["false"] },
+  { func = "@ult_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ult_right", args = ["0", "0"], expect = ["true"] },
+  { func = "@ule_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ule_left", args = ["0", "0"], expect = ["false"] },
+  { func = "@ule_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ule_right", args = ["0", "0"], expect = ["true"] },
+  { func = "@ugt_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ugt_left", args = ["0", "0"], expect = ["true"] },
+  { func = "@ugt_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@ugt_right", args = ["0", "0"], expect = ["false"] },
+  { func = "@uge_left", args = ["63", "0"], expect = ["poison"] },
+  { func = "@uge_left", args = ["0", "0"], expect = ["true"] },
+  { func = "@uge_right", args = ["63", "0"], expect = ["poison"] },
+  { func = "@uge_right", args = ["0", "0"], expect = ["false"] },
+  { func = "@select_cond", args = ["true", "-1", "0"], expect = ["poison"] },
+  { func = "@select_cond", args = ["true", "-1", "-1"], expect = ["poison"] },
+  { func = "@select_cond", args = ["false", "-1", "0"], expect = ["-1"] },
+  { func = "@select_first", args = ["false", "63", "-64"], expect = ["-64"] },
+  { func = "@select_first", args = ["true", "63", "-64"], expect = ["poison"] },
+  { func = "@select_first", args = ["true", "0", "-64"], expect = ["1"] },
+  { func = "@select_second", args = ["true", "63", "-64"], expect = ["-64"] },
+  { func = "@select_second", args = ["false", "63", "-64"], expect = ["poison"] },
+  { func = "@select_second", args = ["false", "0", "-64"], expect = ["1"] },
+]

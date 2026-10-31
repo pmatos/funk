@@ -172,5 +172,14 @@ and `scripts/check-harness.sh` checks that the harness reports it
 invalid because `the set holds UB (sdiv by zero)` (ADR-2026-10-31-0208).
 `reject/div.toml` holds the texts of these ops that do not decode.
 
-Both tools now also have `icmp` and `select` (#16); stage 3 of #16 adds
-texts for them. #19 and #20 add the other ops to `funk`.
+The texts of #16 also use `icmp` and `select`. `icmp-iN` runs `icmp`
+with each of its ten predicates, and `select-iN` runs `select` with each
+condition, on every pair of boundary bit patterns; `poison-compare-iN`
+gives `icmp` a poison operand on either side, and `select` a poison
+condition and a poison value, chosen and not chosen; all at the same
+seven widths. `select-and` shows that `select %c, %x, false` may not
+become `and %c, %x` where `%x` may be poison, and that
+`and %c, %g` with `%g = freeze %x` may. `reject/compare.toml` holds the
+texts of these ops that do not decode.
+
+#19 and #20 add the other ops to `funk`.
