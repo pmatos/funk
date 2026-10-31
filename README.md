@@ -211,8 +211,8 @@ These parts of M0 do not exist yet:
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
 - In Rust, the core ops of [#20](https://github.com/pmatos/funk/issues/20),
-  in the IR and in the backend. The backend does not lower `i128` or return more than one
-  value yet.
+  in the IR and in the backend. The backend does not lower `i128` or
+  return more than one value yet.
 
 The epic's sub-issues list the open work in full.
 
