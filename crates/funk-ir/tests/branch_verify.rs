@@ -269,20 +269,36 @@ fn no_branch_goes_to_the_entry_block() {
 fn a_successor_passes_only_values_the_function_defines() {
     rejected(
         "^entry:\n  br ^b(%undefined) @0\n^b(%x: i32):\n  ret %x @1\n",
-        &[at_op(
-            "entry",
-            0,
-            0,
-            "successor argument %undefined is not defined in the function",
-        )],
+        &[
+            at_op(
+                "entry",
+                0,
+                0,
+                "successor argument %undefined is not defined in the function",
+            ),
+            at_op(
+                "entry",
+                0,
+                0,
+                "successor ^b passes (%undefined) but the block takes (i32)",
+            ),
+        ],
     );
     rejected(
         "^entry:\n  cond_br %c, ^b(%n), ^b(%undefined) @0\n^b(%x: i32):\n  ret %x @1\n",
-        &[at_op(
-            "entry",
-            0,
-            0,
-            "successor argument %undefined is not defined in the function",
-        )],
+        &[
+            at_op(
+                "entry",
+                0,
+                0,
+                "successor argument %undefined is not defined in the function",
+            ),
+            at_op(
+                "entry",
+                0,
+                0,
+                "successor ^b passes (%undefined) but the block takes (i32)",
+            ),
+        ],
     );
 }
