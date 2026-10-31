@@ -32,12 +32,16 @@ import Fir.Core.Arith
 import Fir.Core.Wrap
 import Fir.Core.Freeze
 import Fir.Core.Bitwise
+import Fir.Core.Width
+import Fir.Core.Div
 import Fir.Core.Control
 import Fir.Core.Semantics
 import Fir.Core.ArithLaws
 import Fir.Core.WrapLaws
 import Fir.Core.FreezeLaws
 import Fir.Core.BitwiseLaws
+import Fir.Core.WidthLaws
+import Fir.Core.DivLaws
 import Fir.Core.ControlLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree

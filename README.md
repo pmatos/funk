@@ -156,19 +156,26 @@ are on `main`:
   ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
   [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
-  bitwise ops and shifts, `freeze` and `ret` in Lean
+  bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
+  `freeze` and `ret` in Lean
   ([#10](https://github.com/pmatos/funk/issues/10),
   [#14](https://github.com/pmatos/funk/issues/14),
-  [#15](https://github.com/pmatos/funk/issues/15)). `fir-ref run` runs a
+  [#15](https://github.com/pmatos/funk/issues/15),
+  [#17](https://github.com/pmatos/funk/issues/17)). `fir-ref run` runs a
   function in scripted mode, along the path that its choices name, or in
   exhaustive mode, which lists every outcome; Lean proves both sound
   ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
   [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md)).
+- The execution rules of `sdiv`, `udiv`, `srem` and `urem`, with `exact`, in
+  Lean ([#18](https://github.com/pmatos/funk/issues/18)). `fir-ref run`
+  reports their immediate UB, a zero or poison divisor and the signed
+  minimum or poison divided by `-1`, with a reason that names the case.
 
 These parts of M0 do not exist yet:
 
 - The execution rules of the other ops. One issue for each group of
-  related ops, [#16](https://github.com/pmatos/funk/issues/16) to
+  related ops, [#16](https://github.com/pmatos/funk/issues/16),
+  [#19](https://github.com/pmatos/funk/issues/19) and
   [#20](https://github.com/pmatos/funk/issues/20), adds them.
 - The harness's rule for a set of outcomes: declared results with
   witnesses that it checks through `fir-ref run --choices`, and seeded
