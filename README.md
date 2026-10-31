@@ -124,8 +124,9 @@ are on `main`:
   ops and types are checked through a registry of dialects
   ([ADR-2026-10-30-1146](docs/adrs/2026-10-30-1146-generic-ops-and-registry.md)),
   and the core dialect registers `const`, `add`, `sub`, `mul`, their flags
-  `nuw` and `nsw`, `freeze` and `ret` so far
-  ([#14](https://github.com/pmatos/funk/issues/14)). `funk fmt` prints fir
+  `nuw` and `nsw`, `freeze`, the width changes `zext`, `sext` and `trunc`,
+  and `ret` so far ([#14](https://github.com/pmatos/funk/issues/14),
+  [#17](https://github.com/pmatos/funk/issues/17)). `funk fmt` prints fir
   in its canonical form, and `funk verify` checks it. Both report as text,
   or as JSON with `--json`.
 - The Lean parser, a section of the spec, and the first command of the
@@ -135,10 +136,10 @@ are on `main`:
   shared texts and on modules from the Rust generator.
 - The naive x86-64 backend, `funk-x86-64`
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
-  `const`, `add`, `sub` and `mul` with their flags, `freeze` and `ret` at
-  `i1`, `i8`, `i16`, `i32` and `i64` into an object file and an executable
-  for Linux. Native code holds no poison: a broken flag gives the wrapped
-  result, and `freeze` copies its operand
+  `const`, `add`, `sub` and `mul` with their flags, `freeze`, `zext`,
+  `sext`, `trunc` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an
+  object file and an executable for Linux. Native code holds no poison: a
+  broken flag gives the wrapped result, and `freeze` copies its operand
   ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
   The executable runs one function from the command line and prints its
   results as JSON
@@ -178,8 +179,10 @@ These parts of M0 do not exist yet:
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In Rust, the core ops of [#15](https://github.com/pmatos/funk/issues/15)
-  to [#20](https://github.com/pmatos/funk/issues/20), in the IR and in the
+- In Rust, the core ops of [#15](https://github.com/pmatos/funk/issues/15),
+  [#16](https://github.com/pmatos/funk/issues/16) and
+  [#18](https://github.com/pmatos/funk/issues/18) to
+  [#20](https://github.com/pmatos/funk/issues/20), in the IR and in the
   backend. The backend does not lower `i128` or return more than one
   value yet.
 
