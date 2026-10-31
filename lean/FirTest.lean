@@ -7,6 +7,7 @@ import FirTest.Print
 import FirTest.Run
 import FirTest.Interpreter
 import FirTest.Modes
+import FirTest.Sample
 import FirTest.Bitwise
 import FirTest.Width
 import FirTest.Div

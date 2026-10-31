@@ -6,6 +6,7 @@ where fir-ref returns poison. A test whose fir-ref result is UB or fuel
 exhausted proves nothing, so it is invalid, never a pass. A stuck run of a
 valid module is a failure (NeverStuck). An interpreter-only test passes
 when fir-ref gives the result it expects; an expected UB matches any reason.
+`sets.py` judges a run that makes choices by its set of outcomes.
 """
 
 import re

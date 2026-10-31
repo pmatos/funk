@@ -1,6 +1,6 @@
 # The fir test corpus keeps canonical modules, TOML sidecars of tests, non-canonical inputs and TOML files of must-reject texts apart
 
-Status: accepted
+Status: accepted; extended by ADR-2026-10-31-0003
 
 ## Context
 

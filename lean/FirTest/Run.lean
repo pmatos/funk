@@ -171,6 +171,7 @@ def addI8 (a : String) : RunReport := runText (addAt "i8") "@f" ["1", a]
 def modeText : Mode → String
   | .scripted cs => s!"scripted {cs}"
   | .exhaustive b => s!"exhaustive {b}"
+  | .sampled s => s!"sampled {s}"
 
 /-- The fuel, file, function and arguments that `run`'s command line gives,
 or its error. -/

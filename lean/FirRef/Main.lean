@@ -31,8 +31,8 @@ open Fir
 /-- The command line help. -/
 def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref validate FILE...
-       fir-ref run [--fuel N] [--choices C,...] [--exhaustive [--choice-bits B]]
-                   FILE @FUNC [ARG...]
+       fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
+                   | --seed S] FILE @FUNC [ARG...]
 
   fmt       Parse each FILE with the core dialect and print it in canonical
             form, as the spec's printer writes it. fmt does not validate: a
@@ -49,7 +49,8 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             every other width. freeze of poison makes a choice. Print one
             JSON object: the one outcome of the path that the choices name
             (the values returned, UB, fuel exhausted, or stuck), or with
-            --exhaustive every outcome of the run.
+            --exhaustive every outcome of the run, or with --seed the one
+            outcome of the path whose choices it draws, and those choices.
               --fuel N          run at most N steps, one per op (default
                                 1000000)
               --choices C,...   the choices the run makes, in order, each
@@ -58,6 +59,9 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
               --exhaustive      try every choice, and print every outcome
               --choice-bits B   with --exhaustive, choose at most B bits
                                 in all on one path (default 16)
+              --seed S          draw each choice from a generator seeded
+                                with S, below 2^64, and print the choices
+                                drawn
   -h, --help  Print this help.
 
 A FILE of - is standard input; -- ends the options.
