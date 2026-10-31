@@ -19,7 +19,7 @@ pub const WRAP_FLAG_SETS: [&[&str]; 4] = [&[], &["nuw"], &["nsw"], &["nuw", "nsw
 
 /// The width `N` of an op that takes two `iN` and defines one `iN`
 /// (`binWidth`).
-fn bin_width(operands: &[Type], results: &[Type]) -> Option<u32> {
+pub(super) fn bin_width(operands: &[Type], results: &[Type]) -> Option<u32> {
     let [a, b] = operands else { return None };
     let [r] = results else { return None };
     let w = int_width(a)?;

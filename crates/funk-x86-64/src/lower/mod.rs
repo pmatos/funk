@@ -8,6 +8,7 @@
 //! backend cannot lower: all of them, in one pass.
 
 mod arith;
+mod bitwise;
 mod cast;
 mod constant;
 mod control;
@@ -110,6 +111,7 @@ fn lowering(name: &str) -> Option<Lower> {
     constant::lowering(name)
         .or_else(|| arith::lowering(name))
         .or_else(|| freeze::lowering(name))
+        .or_else(|| bitwise::lowering(name))
         .or_else(|| cast::lowering(name))
         .or_else(|| control::lowering(name))
 }

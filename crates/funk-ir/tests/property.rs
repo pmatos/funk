@@ -5,6 +5,7 @@
 //! whatever text it accepts round-trips, and whatever it rejects, it rejects
 //! with an error.
 
+use funk_ir::dialects::core::{BITWISE_OPS, SHIFT_OPS};
 use funk_ir::generate::{self, Rng};
 use funk_ir::text::quote;
 use funk_ir::{Attr, Location, Module, Registry, parse, print, verify};
@@ -83,6 +84,12 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
         }
     }
     want.extend(["freeze".to_string(), "ret".to_string()]);
+    want.extend(
+        BITWISE_OPS
+            .iter()
+            .chain(&SHIFT_OPS)
+            .map(|op| op.to_string()),
+    );
     want.extend(funk_ir::dialects::core::WIDTH_CHANGES.map(String::from));
     assert_eq!(seen, want);
 }
@@ -222,7 +229,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 39] = [
+    const TOKENS: [&str; 45] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -244,6 +251,12 @@ fn the_parser_never_panics_on_random_token_soup() {
         "nuw",
         "nsw",
         "freeze",
+        "and",
+        "or",
+        "xor",
+        "shl",
+        "lshr",
+        "ashr",
         "zext",
         "sext",
         "trunc",
