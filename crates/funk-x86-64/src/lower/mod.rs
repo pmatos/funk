@@ -9,6 +9,7 @@
 
 mod arith;
 mod bitwise;
+mod cast;
 mod constant;
 mod control;
 mod freeze;
@@ -111,6 +112,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| arith::lowering(name))
         .or_else(|| freeze::lowering(name))
         .or_else(|| bitwise::lowering(name))
+        .or_else(|| cast::lowering(name))
         .or_else(|| control::lowering(name))
 }
 
