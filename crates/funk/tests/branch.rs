@@ -82,11 +82,17 @@ fn block_arguments_swap_rotate_and_fan_out_round_a_loop_at_every_width() {
     }
 }
 
-/// `@pick(%c: i1, %a: iW, %b: iW) -> iW`: `cond_br` to `%a`'s block when
-/// `%c` is true and `%b`'s when it is false, each passed as an argument.
-fn pick_text(w: u32) -> String {
-    format!(
-        "func @pick_{w}(%c: i1, %a: i{w}, %b: i{w}) -> i{w} {{
+/// Functions `(%c: i1, %a: iW, %b: iW) -> iW` that give `%a` when `%c` is
+/// true and `%b` when it is false, by a `cond_br` whose two edges both
+/// copy, passing `%a` and `%b` as arguments. In `@pick` the first
+/// successor's block comes next. In `@join` both successors name the block
+/// that comes next, so the edge in the middle of the branch must jump. In
+/// `@far` neither block comes next.
+fn pick_texts(w: u32) -> [String; 3] {
+    let sig = |name: &str| format!("func @{name}_{w}(%c: i1, %a: i{w}, %b: i{w}) -> i{w} {{");
+    [
+        format!(
+            "{}
 ^entry:
   cond_br %c, ^t(%a), ^e(%b) @0
 ^t(%x: i{w}):
@@ -94,19 +100,47 @@ fn pick_text(w: u32) -> String {
 ^e(%y: i{w}):
   ret %y @0
 }}
-"
-    )
+",
+            sig("pick")
+        ),
+        format!(
+            "{}
+^entry:
+  cond_br %c, ^j(%a), ^j(%b) @0
+^j(%x: i{w}):
+  ret %x @0
+}}
+",
+            sig("join")
+        ),
+        format!(
+            "{}
+^entry:
+  cond_br %c, ^t(%a), ^e(%b) @0
+^m(%z: i{w}):
+  ret %z @0
+^t(%x: i{w}):
+  br ^m(%x) @0
+^e(%y: i{w}):
+  br ^m(%y) @0
+}}
+",
+            sig("far")
+        ),
+    ]
 }
 
 #[test]
 fn cond_br_goes_by_its_condition_at_every_width() {
     for w in WIDTHS {
-        let exe = build(&format!("branch-pick-{w}"), &module(&[pick_text(w)]));
-        for a in boundaries(w) {
-            for b in boundaries(w) {
-                for (c, want) in [("true", a), ("false", b)] {
-                    let (f, a, b) = (format!("@pick_{w}"), spell(w, a), spell(w, b));
-                    expect(&exe, &[&f, c, &a, &b], &[&spell(w, want)]);
+        let exe = build(&format!("branch-pick-{w}"), &module(&pick_texts(w)));
+        for name in ["pick", "join", "far"] {
+            for a in boundaries(w) {
+                for b in boundaries(w) {
+                    for (c, want) in [("true", a), ("false", b)] {
+                        let (f, a, b) = (format!("@{name}_{w}"), spell(w, a), spell(w, b));
+                        expect(&exe, &[&f, c, &a, &b], &[&spell(w, want)]);
+                    }
                 }
             }
         }

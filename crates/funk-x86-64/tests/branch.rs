@@ -185,6 +185,39 @@ fn a_cond_br_lays_out_its_edges_so_that_the_next_block_may_follow() {
             "movq\t%rax, -24(%rbp)",
         ])
     );
+    // Both edges move and neither block comes next: each edge jumps.
+    assert_eq!(
+        cond(
+            "cond_br %c, ^t(%a), ^e(%a)",
+            ["o", "t(%x: i16)", "e(%y: i16)"]
+        ),
+        code(&[
+            test,
+            "jz\t.Lc0_1",
+            "movq\t-16(%rbp), %rax",
+            "movq\t%rax, -24(%rbp)",
+            "jmp\t.Lb0_t",
+            ".Lc0_1:",
+            "movq\t-16(%rbp), %rax",
+            "movq\t%rax, -32(%rbp)",
+            "jmp\t.Lb0_e",
+        ])
+    );
+    // Both edges move into the block that comes next: only the edge that
+    // ends the branch may fall through, so the edge in the middle jumps.
+    assert_eq!(
+        cond("cond_br %c, ^j(%a), ^j(%a)", ["j(%x: i16)", "o", "p"]),
+        code(&[
+            test,
+            "jnz\t.Lc0_1",
+            "movq\t-16(%rbp), %rax",
+            "movq\t%rax, -24(%rbp)",
+            "jmp\t.Lb0_j",
+            ".Lc0_1:",
+            "movq\t-16(%rbp), %rax",
+            "movq\t%rax, -24(%rbp)",
+        ])
+    );
 }
 
 #[test]

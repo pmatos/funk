@@ -100,6 +100,37 @@ mod tests {
         slots
     }
 
+    /// The number of cycles among `moves`: chains of copies, each reading
+    /// the slot that the next one writes, that come back to where they
+    /// started. Found by walking from each slot to the slot it reads.
+    fn cycles(moves: &[(usize, usize)], n: usize) -> usize {
+        let mut reads = vec![None; n];
+        for &(d, s) in moves {
+            if d != s {
+                reads[d] = Some(s);
+            }
+        }
+        // 0: not walked yet, 1: on the current walk, 2: walked before.
+        let mut state = vec![0u8; n];
+        let mut count = 0;
+        for start in 0..n {
+            let (mut at, mut walk) = (Some(start), Vec::new());
+            while let Some(v) = at {
+                if state[v] != 0 {
+                    count += usize::from(state[v] == 1);
+                    break;
+                }
+                state[v] = 1;
+                walk.push(v);
+                at = reads[v];
+            }
+            for v in walk {
+                state[v] = 2;
+            }
+        }
+        count
+    }
+
     #[test]
     fn only_a_cycle_goes_through_the_register() {
         let swap = sequence(&[(0, 1), (1, 0)]);
@@ -130,6 +161,16 @@ mod tests {
             ]
         );
         assert_eq!(run(&both, 3), [2, 0, 0]);
+        // Two swaps need two saves, and a chain needs none.
+        let swaps = [(0, 1), (1, 0), (2, 3), (3, 2)];
+        assert_eq!(cycles(&swaps, 4), 2);
+        let saves = sequence(&swaps)
+            .iter()
+            .filter(|s| matches!(s, Step::Save(_)))
+            .count();
+        assert_eq!(saves, 2);
+        assert_eq!(cycles(&[(0, 1), (1, 2)], 3), 0);
+        assert_eq!(cycles(&[(1, 0), (2, 0), (0, 2)], 3), 1);
     }
 
     #[test]
@@ -154,6 +195,7 @@ mod tests {
             assert_eq!(run(&steps, n), at_once(&moves, n), "{moves:?}: {steps:?}");
             let copies = moves.iter().filter(|(d, s)| d != s).count();
             let saves = steps.iter().filter(|s| matches!(s, Step::Save(_))).count();
+            assert_eq!(saves, cycles(&moves, n), "{moves:?}: {steps:?}");
             assert_eq!(steps.len(), copies + saves, "{moves:?}");
         }
     }
