@@ -1,9 +1,10 @@
 import Fir.Execution.ChoiceTree
 
 /-!
-# Exhaustive and scripted runs
+# Exhaustive, scripted and sampled runs
 
-`fir-ref` has two ways to walk a tree of choices (ADR-2026-10-29-2017):
+`fir-ref` has three ways to walk a tree of choices (ADR-2026-10-29-2017,
+ADR-2026-10-31-0002):
 
 * _Exhaustive mode_ visits every path, so it finds every way the run may
   end. The number of paths doubles with each bit chosen, so it takes a

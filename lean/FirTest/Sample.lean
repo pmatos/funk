@@ -22,6 +22,20 @@ SplitMix64's first outputs from the state 0 are its published ones. -/
 #guard (Seed.words 3 ⟨0⟩).1 ==
   0xE220A8397B1DCDAF <<< 128 ||| 0x6E789E6AA1B965F4 <<< 64 ||| 0x06C45D188009454F
 
+-- Draws by value, so that a change to the generator changes a guard. From
+-- the seed 0, the first draw is not a boundary, and the next ones are the
+-- uniform bits, the first in the highest bits.
+#guard (draw 7 ⟨0⟩).1 == -12#7
+#guard (draw 64 ⟨0⟩).1 == 7960286522194355700#64
+#guard (draw 128 ⟨0⟩).1 == 0x6e789e6aa1b965f406c45d188009454f#128
+-- These seeds draw each boundary bit pattern, in the order that `boundaries`
+-- numbers them.
+#guard (draw 7 ⟨29⟩).1 == 0#7
+#guard (draw 7 ⟨20⟩).1 == 1#7
+#guard (draw 7 ⟨9⟩).1 == BitVec.allOnes 7
+#guard (draw 7 ⟨6⟩).1 == BitVec.intMin 7
+#guard (draw 7 ⟨19⟩).1 == BitVec.intMax 7
+
 /-- The values that `draw` gives at `w` bits for the seeds below `n`. -/
 def draws (w n : Nat) : List (BitVec w) := (List.range n).map fun s => (draw w ⟨s.toUInt64⟩).1
 

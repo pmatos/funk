@@ -6,6 +6,9 @@
 # outcome, and native code must return one of them. Past the choice
 # budget of 16 bits, a test declares its results, each with a
 # witness, and seeded runs check that the run gives no other.
+# freeze_square of poison overflows mul nsw on most frozen values, so
+# its set holds poison: it checks fir-ref's set, and native code may
+# return any value of the type.
 tests = [
   { func = "@freeze", args = ["false"] },
   { func = "@freeze", args = ["true"] },

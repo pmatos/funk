@@ -2,7 +2,7 @@ import Fir.Core.Semantics
 import Fir.Execution.Modes
 
 /-!
-# The core dialect's exhaustive and scripted runs
+# The core dialect's exhaustive, scripted and sampled runs
 
 `fir-ref run` runs the core dialect's rules in the tree of choices. Each op
 runs its rule, `Core.Op.denote?` or `Core.Op.exit?`, the same rule that the

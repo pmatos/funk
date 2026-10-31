@@ -275,7 +275,8 @@ is exceeded.
 **choice tree**:
 The monad that `fir-ref` runs the interpreter in: a tree whose nodes are
 choices and whose leaves say how each path ends. It maps to the set monad
-of the spec, so its walks, exhaustive and scripted, are proved sound.
+of the spec, so its walks, exhaustive, scripted and sampled, are proved
+sound.
 
 **declared results**:
 The allowed results that a test lists, each with a witness choice sequence
@@ -293,8 +294,9 @@ It never counts as a pass.
 
 **interpreter-only test**:
 A test that runs on `fir-ref` only, and states the result it must give, on
-the path that its choices name: the returned values, UB or fuel exhausted. It covers what native code cannot
-check, such as UB, fuel exhaustion and widths the backend does not lower.
+the path that its choices name: the returned values, UB or fuel exhausted.
+It covers what native code cannot check, such as UB, fuel exhaustion and
+widths the backend does not lower.
 
 **must-reject text**:
 A text of the test corpus that breaks one rule, and that `funk verify` and

@@ -3,9 +3,9 @@
 `fir-ref run --exhaustive` lists every outcome of a run, within a budget
 on the bits that one path chooses. A run that makes no choice has one
 outcome, and native code is judged against it exactly, by refinement. Any
-other set is judged as a whole: UB or fuel exhausted in it makes the test
-invalid, a stuck path fails it, and otherwise native code passes when its
-result refines one outcome of the set.
+other set is judged as a whole: a stuck path fails the test, UB or fuel
+exhausted in it makes the test invalid, and otherwise native code passes
+when its result refines one outcome of the set.
 
 A test may declare its results, each a list of values with a witness: the
 choices, as `--choices` takes them, on which `fir-ref` gives it. The
@@ -90,8 +90,10 @@ class Declared:
 
 
 def problem(outcomes) -> Judgement | None:
-    """Why a set of outcomes judges the test by itself: UB or fuel exhausted
-    in it makes the test invalid, and a stuck path fails it."""
+    """Why a set of outcomes judges the test by itself: a stuck path fails
+    it, even beside UB, and UB or fuel exhausted in it makes it invalid."""
+    if any(o.kind == STUCK for o in outcomes):
+        return Judgement(FAILED, "no run of a valid module is stuck")
     for o in outcomes:
         if o.kind == UB:
             return Judgement(
@@ -106,8 +108,6 @@ def problem(outcomes) -> Judgement | None:
                 "a path runs out of fuel, so the result depends on the fuel"
                 " budget: raise the test's budget",
             )
-    if any(o.kind == STUCK for o in outcomes):
-        return Judgement(FAILED, "no run of a valid module is stuck")
     return None
 
 
@@ -172,10 +172,18 @@ def witness(i: int, r: Declared, got) -> Judgement | None:
 
 
 def undeclared(ref: Outcomes, results) -> Judgement | None:
-    """Checks that the test declares every outcome of the set."""
+    """Checks that the declared results are exactly the set's outcomes."""
     declared = {r.values for r in results}
     missing = [o for o in ref.outcomes if o.values not in declared]
     if not missing:
+        held = {o.values for o in ref.outcomes}
+        extra = [r for r in results if r.values not in held]
+        if extra:
+            return Judgement(
+                FAILED,
+                f"the test declares {show_values(extra[0].values)},"
+                " which the set does not hold",
+            )
         return None
     first = show_values(missing[0].values)
     if len(missing) == 1:

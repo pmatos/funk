@@ -13,8 +13,9 @@ a witness that scripted mode checks, and seeded runs check that no sampled
 outcome falls outside the list (#14). ADR-2026-10-30-2135 judges a test
 on one outcome, and ADR-2026-10-30-2050's format has no place for
 declared results or for the path of an interpreter-only test.
-`fir-ref run` has exhaustive, scripted and sampled modes
-(ADR-2026-10-30-2218, ADR-2026-10-31-0002).
+ADR-2026-10-30-2049's harness runs each test once, with
+`fir-ref run --fuel N`. `fir-ref run` has exhaustive, scripted and sampled
+modes (ADR-2026-10-30-2218, ADR-2026-10-31-0002).
 
 ## Decision
 
@@ -22,9 +23,10 @@ declared results or for the path of an interpreter-only test.
   and the default choice budget of 16 bits.
   - A run that makes no choice has one outcome, judged exactly as
     ADR-2026-10-30-2135 says: refinement, with poison refined by any value.
-  - Otherwise UB anywhere in the set makes the test invalid, fuel exhausted
-    on any path makes it invalid, and a stuck path fails it. Native code
-    passes when its result refines one outcome of the set.
+  - Otherwise a stuck path fails the test, even in a set that also holds
+    UB: no run of a valid module is stuck. Else UB anywhere in the set
+    makes the test invalid, and so does fuel exhausted on any path. Native
+    code passes when its result refines one outcome of the set.
   - Past the budget, a test that declares no results is invalid.
 - **Declared results.** A differential test may have `results`, a list of
   `{ values = [...], witness = [...] }`: the values, `poison` included,
@@ -34,7 +36,8 @@ declared results or for the path of an interpreter-only test.
     A witness that no longer fits is `fir-ref`'s error, which fails the
     test; one that reaches UB or fuel exhausted makes it invalid.
   - Within the budget, the set must be exactly the declared results: a
-    declaration that misses an outcome fails.
+    declaration that misses an outcome fails, and so does one that the set
+    does not hold.
   - Past the budget, `fir-ref run --seed S` runs for each S from 0 to 31.
     Each must give a declared result; UB or fuel exhausted makes the test
     invalid. The failure names the seed and the values it drew.
@@ -57,6 +60,8 @@ declared results or for the path of an interpreter-only test.
 
 - Each differential test costs one exhaustive run; a declared test past
   the budget costs one more run per witness and 32 sampled runs.
+- `scripts/harness/sets.py` holds these rules, beside the modules that
+  ADR-2026-10-30-2049 lists.
 - Seeded runs only sample: a declaration can still miss a result that no
   seed draws. Boundary bit patterns come up in one draw in four
   (ADR-2026-10-31-0002), so the likeliest misses are drawn.

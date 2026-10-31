@@ -71,8 +71,14 @@ class SetRule(unittest.TestCase):
     def test_a_stuck_path_fails_the_test(self):
         s = Outcomes(1, (ret("7"), Outcome(STUCK, reason="r")))
         self.assertEqual(judge_set(s, ("7",), ["i8"]).status, FAILED)
-        both = Outcomes(1, (Outcome(STUCK, reason="r"), Outcome(UB, reason="u")))
-        self.assertEqual(judge_set(both, ("7",), ["i8"]).status, INVALID)
+        # A stuck path is a fault of fir-ref or the spec, not of the test,
+        # so it fails the test even when the set also holds UB.
+        both = Outcomes(1, (Outcome(UB, reason="u"), Outcome(STUCK, reason="r")))
+        j = judge_set(both, ("7",), ["i8"])
+        self.assertEqual(j.status, FAILED)
+        self.assertEqual(j.why, "no run of a valid module is stuck")
+        fuel = Outcomes(1, (Outcome(FUEL_EXHAUSTED), Outcome(STUCK, reason="r")))
+        self.assertEqual(judge_set(fuel, ("7",), ["i8"]).status, FAILED)
 
     def test_a_set_with_no_problem(self):
         self.assertIsNone(problem((ret("1"), ret("poison"))))
@@ -121,6 +127,12 @@ class Declarations(unittest.TestCase):
         self.assertIn("does not declare 2 outcomes", undeclared(s3, [ZERO]).why)
         self.assertIsNone(undeclared(s, [ZERO, Declared(("1",), ("1",))]))
         self.assertIsNone(undeclared(Outcomes(1, (ret("0"),)), [ZERO]))
+
+    def test_a_declared_result_that_the_set_does_not_hold(self):
+        s = Outcomes(1, (ret("0"),))
+        j = undeclared(s, [ZERO, Declared(("9",), ("6",))])
+        self.assertEqual(j.status, FAILED)
+        self.assertEqual(j.why, 'the test declares ["9"], which the set does not hold')
 
     def test_a_sampled_run_gives_a_declared_result(self):
         self.assertIsNone(sample(3, Path(ret("0"), 1, ("-7",)), [ZERO]))
