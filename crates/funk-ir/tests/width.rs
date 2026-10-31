@@ -23,14 +23,14 @@ fn allowed(op: &str, m: u32, n: u32) -> bool {
     if op == "trunc" { n < m } else { m < n }
 }
 
-/// Every width change between two of [`WIDTHS`] that validation admits, as
-/// `(op, M, N)`.
-fn valid_changes() -> Vec<(&'static str, u32, u32)> {
+/// Every width change between two of [`WIDTHS`], the same width included,
+/// that validation admits if `valid` and rejects if not, as `(op, M, N)`.
+fn changes(valid: bool) -> Vec<(&'static str, u32, u32)> {
     let mut out = Vec::new();
     for op in WIDTH_CHANGES {
         for m in WIDTHS {
             for n in WIDTHS {
-                if allowed(op, m, n) {
+                if allowed(op, m, n) == valid {
                     out.push((op, m, n));
                 }
             }
@@ -59,9 +59,9 @@ fn change_built(op: &str, m: u32, n: u32) -> Func {
 
 #[test]
 fn every_valid_width_change_parses_verifies_and_prints() {
-    let changes = valid_changes();
-    assert_eq!(changes.len(), 3 * 36);
-    let funcs: Vec<String> = changes
+    let valid = changes(true);
+    assert_eq!(valid.len(), 3 * 36);
+    let funcs: Vec<String> = valid
         .iter()
         .map(|(op, m, n)| change_text(op, *m, *n))
         .collect();
@@ -71,7 +71,7 @@ fn every_valid_width_change_parses_verifies_and_prints() {
     assert_eq!(print(&m), text);
     let mut built = Module::new();
     built.locs.push(Location::Unknown);
-    for (op, from, to) in &changes {
+    for (op, from, to) in &valid {
         built = built.func(change_built(op, *from, *to));
     }
     assert_eq!(built, m);
@@ -124,22 +124,6 @@ fn ill_typed_width_changes_are_rejected_at_the_name() {
 
 const L: LocRef = LocRef(5);
 
-/// Every width change between two of [`WIDTHS`] that validation rejects,
-/// the same width included, as `(op, M, N)`.
-fn invalid_changes() -> Vec<(&'static str, u32, u32)> {
-    let mut out = Vec::new();
-    for op in WIDTH_CHANGES {
-        for m in WIDTHS {
-            for n in WIDTHS {
-                if !allowed(op, m, n) {
-                    out.push((op, m, n));
-                }
-            }
-        }
-    }
-    out
-}
-
 /// The validation error of `op` from `iM` to `iN`, where validation
 /// rejects it.
 fn wrong_direction(op: &str, m: u32, n: u32) -> String {
@@ -170,10 +154,10 @@ fn one_at_op(ds: &[Diagnostic], index: usize, message: &str) {
 
 #[test]
 fn a_width_change_that_does_not_widen_or_narrow_parses_and_fails_validation() {
-    let changes = invalid_changes();
-    assert_eq!(changes.len(), 3 * 81 - 3 * 36);
+    let invalid = changes(false);
+    assert_eq!(invalid.len(), 3 * 81 - 3 * 36);
     let reg = Registry::core();
-    for (op, m, n) in changes {
+    for (op, m, n) in invalid {
         let text = format!(
             "func @f(%a: i{m}) -> i{n} {{\n^entry:\n  %r: i{n} = {op} %a @5\n  ret %r @0\n}}\n\n\
              locs {{\n  @0 = unknown\n  @5 = name(\"here\")\n}}\n"
