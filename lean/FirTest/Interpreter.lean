@@ -2,14 +2,14 @@ import FirTest.Run
 
 /-!
 Tests of the interpreter's paths that the core ops with rules do not reach.
-`const`, `add`, `sub`, `mul`, `freeze` and `ret` are never UB, and none of
-them jumps. So two semantics written here for these tests, not fir's, give
-the interpreter what #18 and #19 will: `addIsUB`, in which `add` is UB, and
-`brJumps`, in which `br` goes to its successor. Every other op keeps the
-core dialect's rules. The runs are those of `fir-ref run`, in the tree of
-choices, and are reported as it reports them, in scripted mode with no
-choices. Functions built here, not parsed, reach the stuck cases that no
-text that decodes can reach.
+`const`, `add`, `sub`, `mul`, the bitwise ops and shifts, `freeze` and `ret`
+are never UB, and none of them jumps. So two semantics written here for
+these tests, not fir's, give the interpreter what #18 and #19 will:
+`addIsUB`, in which `add` is UB, and `brJumps`, in which `br` goes to its
+successor. Every other op keeps the core dialect's rules. The runs are
+those of `fir-ref run`, in the tree of choices, and are reported as it
+reports them, in scripted mode with no choices. Functions built here, not
+parsed, reach the stuck cases that no text that decodes can reach.
 -/
 
 namespace FirTest
@@ -146,30 +146,33 @@ def withOp (t : Core.Ty) (o : Operation CoreDialect) : Func CoreDialect :=
 /-! # The obligations' axioms
 
 The obligations of `const`, `add` (with any flags) and `ret` rest on
-`propext` alone. -/
+`propext` and `Quot.sound`, two of Lean's standard axioms
+(ADR-2026-10-30-1452). The semantics of every core op is one definition,
+and Lean's `&&&`, `|||` and `^^^` on `BitVec N`, which the bitwise ops use,
+rest on `Quot.sound`, so every core obligation does too. -/
 
-/-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_propagatesPoison
 
-/-- info: 'Fir.Core.add_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.add_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_returnsOnDefined
 
-/-- info: 'Fir.Core.add_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.add_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_total
 
-/-- info: 'Fir.Core.add_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.add_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_monotone
 
-/-- info: 'Fir.Core.const_returnsOnDefined' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.const_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.const_returnsOnDefined
 
-/-- info: 'Fir.Core.const_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.const_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.const_total
 
-/-- info: 'Fir.Core.ret_total' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ret_total' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ret_total
 
-/-- info: 'Fir.Core.ret_monotone' depends on axioms: [propext] -/
+/-- info: 'Fir.Core.ret_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ret_monotone
 
 end FirTest

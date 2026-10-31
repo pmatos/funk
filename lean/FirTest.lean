@@ -8,6 +8,7 @@ import FirTest.Run
 import FirTest.Interpreter
 import FirTest.Modes
 import FirTest.Sample
+import FirTest.Bitwise
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.ValidateOps
