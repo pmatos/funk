@@ -156,10 +156,15 @@ and `ashr` by 0, 1, `N - 1`, `N`, `N + 1` and the boundary bit patterns;
 and `poison-bitwise-iN` passes poison to each of the six ops as either
 operand; all at the same seven widths. `freeze-xor-i64` runs `xor %f, %f`
 on a frozen poison. `reject/bitwise.toml` and `reject/shift.toml` hold
-the texts of these ops that do not decode. Both tools now also have
-`zext`, `sext` and `trunc` (#17), and `sdiv`, `udiv`, `srem`, `urem` and
-`exact` (#18); stage 3 of each issue adds texts for them. #16, #19 and
-#20 add the other ops to `funk`.
+the texts of these ops that do not decode.
+
+The texts also use `zext`, `sext` and `trunc` (#17). `zext.fir`,
+`sext.fir` and `trunc.fir` run each width change at every valid pair of
+`i1`, `i8`, `i16`, `i32` and `i64`, on the boundary bit patterns of its
+operand; `zext-i7`, `zext-i33` and their `sext` and `trunc` twins run
+them to and from `i7` and `i33`, and `zext-poison`, `sext-poison` and
+`trunc-poison` on a poison operand. `reject/width.toml` holds their texts
+that do not decode or do not validate.
 
 The texts of #18 use `sdiv` and `udiv`, each with and without `exact`,
 `srem` and `urem`. `div-iN` runs them on every pair of boundary bit
@@ -170,4 +175,4 @@ divides through `%ax`, on its own. `poison-div-iN` passes poison to each
 of them as either operand, at the seven widths. `div-frozen` holds the
 differential test with a frozen divisor that can be zero, which declares
 that it is invalid. `reject/div.toml` holds the texts of these ops that
-do not decode.
+do not decode. #16, #19 and #20 add the other ops to `funk`.

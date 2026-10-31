@@ -1,0 +1,41 @@
+# Tests of trunc-i7.fir: trunc from i7 to i1 and to i7 from each of i8,
+# i16, i32, i33 and i64, on the boundary bit patterns of the operand's
+# type: 0, 1, -1, the signed minimum and the signed maximum, or false
+# and true at i1 (#17). trunc keeps the operand's low bits and drops the
+# bits above them, so -1 stays -1, the signed minimum gives 0, the
+# signed maximum gives -1, and trunc to i1 gives the operand's lowest
+# bit.
+# The backend does not lower i7, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@trunc_i7_to_i1", args = ["0"], expect = ["false"] },
+  { func = "@trunc_i7_to_i1", args = ["1"], expect = ["true"] },
+  { func = "@trunc_i7_to_i1", args = ["-1"], expect = ["true"] },
+  { func = "@trunc_i7_to_i1", args = ["-64"], expect = ["false"] },
+  { func = "@trunc_i7_to_i1", args = ["63"], expect = ["true"] },
+  { func = "@trunc_i8_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i8_to_i7", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i8_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i8_to_i7", args = ["-128"], expect = ["0"] },
+  { func = "@trunc_i8_to_i7", args = ["127"], expect = ["-1"] },
+  { func = "@trunc_i16_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i16_to_i7", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i16_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i16_to_i7", args = ["-32768"], expect = ["0"] },
+  { func = "@trunc_i16_to_i7", args = ["32767"], expect = ["-1"] },
+  { func = "@trunc_i32_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i32_to_i7", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i32_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i32_to_i7", args = ["-2147483648"], expect = ["0"] },
+  { func = "@trunc_i32_to_i7", args = ["2147483647"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i33_to_i7", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i33_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i33_to_i7", args = ["-4294967296"], expect = ["0"] },
+  { func = "@trunc_i33_to_i7", args = ["4294967295"], expect = ["-1"] },
+  { func = "@trunc_i64_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i64_to_i7", args = ["1"], expect = ["1"] },
+  { func = "@trunc_i64_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i64_to_i7", args = ["-9223372036854775808"], expect = ["0"] },
+  { func = "@trunc_i64_to_i7", args = ["9223372036854775807"], expect = ["-1"] },
+]

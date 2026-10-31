@@ -168,21 +168,21 @@ def twoFreezes : String :=
 -- An op without rules after a choice is an error, in either mode.
 #guard explore (body "func @f(%a: i1) -> i1"
     ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0",
-     "  %g: i1 = icmp eq %f, %f @0", "  ret %g @0"]) ["true"] ==
-  fails 2 "fir-ref: @f: icmp eq has no execution rules yet"
+     "  %g: i1 = call @f %f @0", "  ret %g @0"]) ["true"] ==
+  fails 2 "fir-ref: @f: call @f has no execution rules yet"
 -- The budget is checked first: past it, a path that would reach an op
 -- without rules is not run.
-/-- `@f(%a: i64) -> i1`, which freezes `add nsw %a, 1` and returns
-`icmp eq %f, %f`. -/
-def icmpSelf : String :=
-  body "func @f(%a: i64) -> i1"
+/-- `@f(%a: i64) -> i64`, which freezes `add nsw %a, 1` and returns
+`call @f %f`, a call of itself. -/
+def frozenCall : String :=
+  body "func @f(%a: i64) -> i64"
     ["^e:", "  %m: i64 = const 1 @0", "  %p: i64 = add nsw %a, %m @0", "  %f: i64 = freeze %p @0",
-     "  %d: i1 = icmp eq %f, %f @0", "  ret %d @0"]
+     "  %d: i64 = call @f %f @0", "  ret %d @0"]
 
-#guard explore icmpSelf ["9223372036854775807"] ==
+#guard explore frozenCall ["9223372036854775807"] ==
   { out := "{\"kind\":\"choice-budget-exceeded\",\"budget\":16}", status := 0 }
-#guard runText icmpSelf "@f" ["9223372036854775807"] (mode := .scripted ["5"]) ==
-  fails 2 "fir-ref: @f: icmp eq has no execution rules yet"
+#guard runText frozenCall "@f" ["9223372036854775807"] (mode := .scripted ["5"]) ==
+  fails 2 "fir-ref: @f: call @f has no execution rules yet"
 
 /-! # UB in exhaustive mode
 

@@ -1,0 +1,52 @@
+# Tests of zext-poison.fir: a poison operand gives zext a poison result
+# (ADR-2026-10-30-0818), at every valid pair among i1, i7, i8, i16, i32,
+# i33 and i64. %p = add nsw %a, %one, with %one = 1 (true at i1), is
+# poison when %a is the signed maximum, or true at i1, where true + true
+# = -2 overflows; the function returns zext %p. On the row 0, false at
+# i1, %p is 1, true at i1, and the result is zext of it.
+# Only fir-ref runs these tests, and each states the result that fir-ref
+# must give.
+tests = [
+  { func = "@zext_i1_to_i7", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i7", args = ["false"], expect = ["1"] },
+  { func = "@zext_i1_to_i8", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i8", args = ["false"], expect = ["1"] },
+  { func = "@zext_i1_to_i16", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i16", args = ["false"], expect = ["1"] },
+  { func = "@zext_i1_to_i32", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i32", args = ["false"], expect = ["1"] },
+  { func = "@zext_i1_to_i33", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i33", args = ["false"], expect = ["1"] },
+  { func = "@zext_i1_to_i64", args = ["true"], expect = ["poison"] },
+  { func = "@zext_i1_to_i64", args = ["false"], expect = ["1"] },
+  { func = "@zext_i7_to_i8", args = ["63"], expect = ["poison"] },
+  { func = "@zext_i7_to_i8", args = ["0"], expect = ["1"] },
+  { func = "@zext_i7_to_i16", args = ["63"], expect = ["poison"] },
+  { func = "@zext_i7_to_i16", args = ["0"], expect = ["1"] },
+  { func = "@zext_i7_to_i32", args = ["63"], expect = ["poison"] },
+  { func = "@zext_i7_to_i32", args = ["0"], expect = ["1"] },
+  { func = "@zext_i7_to_i33", args = ["63"], expect = ["poison"] },
+  { func = "@zext_i7_to_i33", args = ["0"], expect = ["1"] },
+  { func = "@zext_i7_to_i64", args = ["63"], expect = ["poison"] },
+  { func = "@zext_i7_to_i64", args = ["0"], expect = ["1"] },
+  { func = "@zext_i8_to_i16", args = ["127"], expect = ["poison"] },
+  { func = "@zext_i8_to_i16", args = ["0"], expect = ["1"] },
+  { func = "@zext_i8_to_i32", args = ["127"], expect = ["poison"] },
+  { func = "@zext_i8_to_i32", args = ["0"], expect = ["1"] },
+  { func = "@zext_i8_to_i33", args = ["127"], expect = ["poison"] },
+  { func = "@zext_i8_to_i33", args = ["0"], expect = ["1"] },
+  { func = "@zext_i8_to_i64", args = ["127"], expect = ["poison"] },
+  { func = "@zext_i8_to_i64", args = ["0"], expect = ["1"] },
+  { func = "@zext_i16_to_i32", args = ["32767"], expect = ["poison"] },
+  { func = "@zext_i16_to_i32", args = ["0"], expect = ["1"] },
+  { func = "@zext_i16_to_i33", args = ["32767"], expect = ["poison"] },
+  { func = "@zext_i16_to_i33", args = ["0"], expect = ["1"] },
+  { func = "@zext_i16_to_i64", args = ["32767"], expect = ["poison"] },
+  { func = "@zext_i16_to_i64", args = ["0"], expect = ["1"] },
+  { func = "@zext_i32_to_i33", args = ["2147483647"], expect = ["poison"] },
+  { func = "@zext_i32_to_i33", args = ["0"], expect = ["1"] },
+  { func = "@zext_i32_to_i64", args = ["2147483647"], expect = ["poison"] },
+  { func = "@zext_i32_to_i64", args = ["0"], expect = ["1"] },
+  { func = "@zext_i33_to_i64", args = ["4294967295"], expect = ["poison"] },
+  { func = "@zext_i33_to_i64", args = ["0"], expect = ["1"] },
+]

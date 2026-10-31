@@ -16,8 +16,8 @@
 #               write its output. fir-ref run runs functions of tests/fir/
 #               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
-#               exhaustive mode (#14), and runs bitwise ops and shifts
-#               (#15).
+#               exhaustive mode (#14), runs bitwise ops and shifts
+#               (#15), and runs icmp and select (#16).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -237,11 +237,18 @@ END
         printf '  ret %%s @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/ashr.fir"
         runs "$tmp/ashr.fir" 0 "${ret}[\"-1\"]$none" @f -128 7 || status=1
         runs "$tmp/ashr.fir" 0 "${ret}[\"poison\"]$none" @f -128 8 || status=1
-        # An op without rules is an error (ADR-2026-10-30-1855).
-        printf 'func @f(%%a: i8) -> i1 {\n^e:\n  %%s: i1 = icmp eq %%a, %%a @0\n  ret %%s @0\n}\n' \
+        # icmp reads its operands as signed or unsigned, by its predicate,
+        # and select gives the value its condition chooses (#16).
+        printf 'func @f(%%a: i8, %%b: i8) -> i1, i1, i8 {\n^e:\n  %%s: i1 = icmp slt %%a, %%b @0\n' \
             >"$tmp/icmp.fir"
-        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/icmp.fir"
-        runs "$tmp/icmp.fir" 2 'fir-ref: @f: icmp eq has no execution rules yet' @f 1 || status=1
+        printf '  %%u: i1 = icmp ult %%a, %%b @0\n  %%m: i8 = select %%s, %%a, %%b @0\n' >>"$tmp/icmp.fir"
+        printf '  ret %%s, %%u, %%m @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/icmp.fir"
+        runs "$tmp/icmp.fir" 0 "${ret}[\"true\",\"false\",\"-1\"]$none" @f -1 1 || status=1
+        # An op without rules is an error (ADR-2026-10-30-1855).
+        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @f %%a @0\n  ret %%s @0\n}\n' \
+            >"$tmp/call.fir"
+        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/call.fir"
+        runs "$tmp/call.fir" 2 'fir-ref: @f: call @f has no execution rules yet' @f 1 || status=1
         # freeze of poison makes a choice: %a + 1 overflows i2 at 1
         # (ADR-2026-10-30-2218).
         printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"

@@ -1,0 +1,61 @@
+# Tests of trunc.fir: trunc from each of i8, i16, i32 and i64 to each
+# narrower one of i1, i8, i16 and i32, on the boundary bit patterns of
+# the operand's type: 0, 1, -1, the signed minimum and the signed
+# maximum, or false and true at i1 (#17). trunc keeps the operand's low
+# bits and drops the bits above them, so -1 stays -1, the signed minimum
+# gives 0, the signed maximum gives -1, and trunc to i1 gives the
+# operand's lowest bit.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's.
+tests = [
+  { func = "@trunc_i8_to_i1", args = ["0"] },
+  { func = "@trunc_i8_to_i1", args = ["1"] },
+  { func = "@trunc_i8_to_i1", args = ["-1"] },
+  { func = "@trunc_i8_to_i1", args = ["-128"] },
+  { func = "@trunc_i8_to_i1", args = ["127"] },
+  { func = "@trunc_i16_to_i1", args = ["0"] },
+  { func = "@trunc_i16_to_i1", args = ["1"] },
+  { func = "@trunc_i16_to_i1", args = ["-1"] },
+  { func = "@trunc_i16_to_i1", args = ["-32768"] },
+  { func = "@trunc_i16_to_i1", args = ["32767"] },
+  { func = "@trunc_i16_to_i8", args = ["0"] },
+  { func = "@trunc_i16_to_i8", args = ["1"] },
+  { func = "@trunc_i16_to_i8", args = ["-1"] },
+  { func = "@trunc_i16_to_i8", args = ["-32768"] },
+  { func = "@trunc_i16_to_i8", args = ["32767"] },
+  { func = "@trunc_i32_to_i1", args = ["0"] },
+  { func = "@trunc_i32_to_i1", args = ["1"] },
+  { func = "@trunc_i32_to_i1", args = ["-1"] },
+  { func = "@trunc_i32_to_i1", args = ["-2147483648"] },
+  { func = "@trunc_i32_to_i1", args = ["2147483647"] },
+  { func = "@trunc_i32_to_i8", args = ["0"] },
+  { func = "@trunc_i32_to_i8", args = ["1"] },
+  { func = "@trunc_i32_to_i8", args = ["-1"] },
+  { func = "@trunc_i32_to_i8", args = ["-2147483648"] },
+  { func = "@trunc_i32_to_i8", args = ["2147483647"] },
+  { func = "@trunc_i32_to_i16", args = ["0"] },
+  { func = "@trunc_i32_to_i16", args = ["1"] },
+  { func = "@trunc_i32_to_i16", args = ["-1"] },
+  { func = "@trunc_i32_to_i16", args = ["-2147483648"] },
+  { func = "@trunc_i32_to_i16", args = ["2147483647"] },
+  { func = "@trunc_i64_to_i1", args = ["0"] },
+  { func = "@trunc_i64_to_i1", args = ["1"] },
+  { func = "@trunc_i64_to_i1", args = ["-1"] },
+  { func = "@trunc_i64_to_i1", args = ["-9223372036854775808"] },
+  { func = "@trunc_i64_to_i1", args = ["9223372036854775807"] },
+  { func = "@trunc_i64_to_i8", args = ["0"] },
+  { func = "@trunc_i64_to_i8", args = ["1"] },
+  { func = "@trunc_i64_to_i8", args = ["-1"] },
+  { func = "@trunc_i64_to_i8", args = ["-9223372036854775808"] },
+  { func = "@trunc_i64_to_i8", args = ["9223372036854775807"] },
+  { func = "@trunc_i64_to_i16", args = ["0"] },
+  { func = "@trunc_i64_to_i16", args = ["1"] },
+  { func = "@trunc_i64_to_i16", args = ["-1"] },
+  { func = "@trunc_i64_to_i16", args = ["-9223372036854775808"] },
+  { func = "@trunc_i64_to_i16", args = ["9223372036854775807"] },
+  { func = "@trunc_i64_to_i32", args = ["0"] },
+  { func = "@trunc_i64_to_i32", args = ["1"] },
+  { func = "@trunc_i64_to_i32", args = ["-1"] },
+  { func = "@trunc_i64_to_i32", args = ["-9223372036854775808"] },
+  { func = "@trunc_i64_to_i32", args = ["9223372036854775807"] },
+]
