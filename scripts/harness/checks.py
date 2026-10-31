@@ -144,6 +144,8 @@ class Harness:
             j = j or sets.judge_set(ref, native, types[t.func])
         if t.results and j.status == PASSED:
             j = Judgement(PASSED, f"each witness gives its result, and {checked}")
+        if t.invalid is not None:
+            j = sets.declared_invalid(j, ref, isinstance(exe, Path))
         self.report.add(j.status, t.show(), detail + why(j))
 
     def declared(self, path: Path, t: corpus.Test, ref) -> Judgement | None:

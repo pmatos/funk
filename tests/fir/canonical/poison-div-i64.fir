@@ -1,0 +1,99 @@
+func @sdiv_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv %p, %b @0
+  ret %r @0
+}
+
+func @sdiv_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv %b, %p @0
+  ret %r @0
+}
+
+func @sdiv_exact_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv exact %p, %b @0
+  ret %r @0
+}
+
+func @sdiv_exact_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = sdiv exact %b, %p @0
+  ret %r @0
+}
+
+func @udiv_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv %p, %b @0
+  ret %r @0
+}
+
+func @udiv_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv %b, %p @0
+  ret %r @0
+}
+
+func @udiv_exact_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv exact %p, %b @0
+  ret %r @0
+}
+
+func @udiv_exact_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = udiv exact %b, %p @0
+  ret %r @0
+}
+
+func @srem_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = srem %p, %b @0
+  ret %r @0
+}
+
+func @srem_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = srem %b, %p @0
+  ret %r @0
+}
+
+func @urem_left(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = urem %p, %b @0
+  ret %r @0
+}
+
+func @urem_right(%a: i64, %b: i64) -> i64 {
+^entry:
+  %one: i64 = const 1 @0
+  %p: i64 = add nsw %a, %one @0
+  %r: i64 = urem %b, %p @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}

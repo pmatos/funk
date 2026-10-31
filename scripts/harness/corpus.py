@@ -26,9 +26,9 @@ TOP = ("README.md", "canonical", "noncanonical", "reject")
 @dataclass(frozen=True)
 class Test:
     """One run of a function. `expect` is None for a differential test,
-    which may declare its `results`; an interpreter-only test expects a
-    tuple of values, UB or fuel exhausted, on the path that its `choices`
-    name."""
+    which may declare its `results`, or that it is `invalid` because its
+    set holds UB; an interpreter-only test expects a tuple of values, UB or
+    fuel exhausted, on the path that its `choices` name."""
 
     module: str
     func: str
@@ -37,12 +37,15 @@ class Test:
     expect: object = None
     choices: tuple[str, ...] | None = None
     results: tuple[Declared, ...] = ()
+    invalid: str | None = None
 
     def show(self) -> str:
         fuel = [] if self.fuel == DEFAULT_FUEL else ["--fuel", str(self.fuel)]
         if self.choices is not None:
             fuel += ["--choices", ",".join(self.choices)]
         text = " ".join([self.module, *fuel, self.func, *self.args])
+        if self.invalid is not None:
+            return text + " (declared invalid)"
         return text if self.expect is None else text + " (interpreter only)"
 
 
@@ -150,7 +153,8 @@ def is_strings(value) -> bool:
 
 def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
     """The tests of a sidecar: `tests`, a list of tables with `func` and
-    optionally `args`, `fuel`, `expect`, `choices` and `results`."""
+    optionally `args`, `fuel`, `expect`, `choices`, `results` and
+    `invalid`."""
     problems = [f"unknown key {k}" for k in unknown_keys(data, ("tests",))]
     items = data.get("tests")
     if not isinstance(items, list):
@@ -178,6 +182,7 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
                 expect,
                 None if choices is None else tuple(choices),
                 results,
+                t.get("invalid"),
             )
         )
     return found, problems
@@ -186,7 +191,9 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
 def test_problem(t) -> str | None:
     if not isinstance(t, dict):
         return "a test is a table"
-    keys = unknown_keys(t, ("func", "args", "fuel", "expect", "choices", "results"))
+    keys = unknown_keys(
+        t, ("func", "args", "fuel", "expect", "choices", "results", "invalid")
+    )
     if keys:
         return f"unknown key {keys[0]}"
     func = t.get("func")
@@ -208,6 +215,11 @@ def test_problem(t) -> str | None:
         )
     ):
         return f"expect is a list of values, {UB} or {FUEL_EXHAUSTED}"
+    if "invalid" in t:
+        if expect is not None or "results" in t:
+            return "invalid goes with a differential test that declares no results"
+        if t["invalid"] != UB:
+            return f"invalid is {UB}: the test's set of outcomes holds UB"
     if "choices" in t:
         if expect is None:
             return "choices go with expect: a differential test declares results"

@@ -1,0 +1,12 @@
+# Tests of div-frozen.fir: #18's differential test with a frozen divisor
+# that can be zero. %p = add nsw %b, 1 is poison when %b is the signed
+# maximum, 127, and %f freezes it, so %f may be any i8, 0 included: on
+# that path sdiv %a, %f is UB, "sdiv by zero". By #14's rule, UB in the
+# set makes the test invalid (ADR-2026-10-31-0003), and the harness
+# counts an invalid test as a failure. So the test declares that it is
+# invalid, invalid = "ub": it passes only when funk build builds the
+# module and the harness judges the test invalid because its set holds
+# UB, and fails otherwise (ADR-2026-10-31-0208).
+tests = [
+  { func = "@sdiv_frozen", args = ["7", "127"], invalid = "ub" },
+]

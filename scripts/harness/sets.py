@@ -14,6 +14,10 @@ must be exactly the declared results. When the run chooses more than the
 budget, seeded runs, `fir-ref run --seed S` for each S of SEEDS, sample the
 set instead, and each must give a declared result. Native code then passes
 when its result refines one declared result.
+
+A test may declare that it is invalid because its set holds UB, to check
+that rule on the real tools (ADR-2026-10-31-0208). It passes only when the
+harness judges it invalid for that reason.
 """
 
 from dataclasses import dataclass
@@ -144,6 +148,25 @@ def judge_declared(results, native, types) -> Judgement:
     checked."""
     outcomes = tuple(Outcome(RETURN, r.values) for r in results)
     return member(outcomes, native, types, "declared results")
+
+
+def declared_invalid(j: Judgement, ref, built: bool) -> Judgement:
+    """Judges a test that declares that it is invalid because its set holds
+    UB, once the harness has judged it `j`: `ref` is what exhaustive mode
+    reports, and `built` says whether `funk build` built the module. It
+    passes when the set holds UB and so makes the test invalid, and fails
+    otherwise."""
+    if not built:
+        return Judgement(FAILED, "funk build must build the module all the same")
+    holds_ub = isinstance(ref, Outcomes) and any(o.kind == UB for o in ref.outcomes)
+    if j.status == INVALID and holds_ub:
+        return Judgement(PASSED, f"invalid, as the test declares: {j.why}")
+    said = f"{j.status}: {j.why}" if j.why else j.status
+    return Judgement(
+        FAILED,
+        "the test declares that its set holds UB, which makes it invalid,"
+        f" but it is {said}",
+    )
 
 
 def witness(i: int, r: Declared, got) -> Judgement | None:

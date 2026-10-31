@@ -119,6 +119,8 @@ tests = [
   { func = "@undeclared", results = [{ values = ["7"], witness = ["1"] }] },
   { func = "@pick", choices = ["3"], expect = ["3"] },
   { func = "@pick", expect = ["3"] },
+  { func = "@setub", invalid = "ub" },
+  { func = "@set", invalid = "ub" },
 ]
 """
 
@@ -228,7 +230,21 @@ EXPECTED = [
         "failed  canonical/m.fir @pick (interpreter only): fir-ref exits with 2:"
         " fir-ref: @pick: the choices do not fit the run"
     ),
-    "21 checks: 8 passed, 9 failed, 4 invalid",
+    (
+        "passed  canonical/m.fir @setub (declared invalid): "
+        + SET
+        + NATIVE
+        + ": invalid, as the test declares: the set holds UB (why), which"
+        " allows any result"
+    ),
+    (
+        "failed  canonical/m.fir @set (declared invalid): "
+        + SET
+        + NATIVE
+        + ": the test declares that its set holds UB, which makes it invalid,"
+        " but it is passed\n"
+    ),
+    "23 checks: 9 passed, 10 failed, 4 invalid",
 ]
 
 

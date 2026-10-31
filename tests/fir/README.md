@@ -41,6 +41,7 @@ tests = [
     { values = ["0"], witness = ["5"] },
   ] },
   { func = "@freeze_poison", args = ["63"], choices = ["-64"], expect = ["-64"] },
+  { func = "@sdiv_frozen", args = ["7", "127"], invalid = "ub" },
 ]
 ```
 
@@ -65,6 +66,13 @@ tests = [
   budget, the declared results must be exactly the run's outcomes. A
   witness that no longer fits the run fails the test. Native code must
   refine one declared result.
+- `invalid = "ub"` declares that a differential test is invalid because
+  its set holds UB, as `div-frozen.toml`'s frozen divisor is (#18). It
+  checks that rule on the real tools: the test passes only when
+  `funk build` builds its module and the harness judges it invalid
+  because exhaustive mode's set holds UB. Any other judgement fails it.
+  A test that is invalid and does not declare it still fails the run.
+  `invalid` goes with neither `expect` nor `results`.
 - With `expect`, the test is interpreter-only: only `fir-ref` runs it, and
   it must give that result. `expect` is a list of values, each a value or
   `"poison"`, or `"ub"` (any reason), or `"fuel-exhausted"`. `choices`
@@ -143,3 +151,14 @@ decode (#14). Both tools now also have `and`, `or`, `xor`, `shl`, `lshr`
 and `ashr` (#15), `zext`, `sext` and `trunc` (#17), and `sdiv`, `udiv`,
 `srem`, `urem` and `exact` (#18); stage 3 of each issue adds texts for
 them. #16, #19 and #20 add the other ops to `funk`.
+
+The texts of #18 use `sdiv` and `udiv`, each with and without `exact`,
+`srem` and `urem`. `div-iN` runs them on every pair of boundary bit
+patterns at the seven widths above; a pair that is UB in the spec, and
+every pair at `i7` and `i33`, is an interpreter-only test, and so is each
+defined pair of `exact`. `div-i8-ax` tests the `i8` lowering, which
+divides through `%ax`, on its own. `poison-div-iN` passes poison to each
+of them as either operand, at the seven widths. `div-frozen` holds the
+differential test with a frozen divisor that can be zero, which declares
+that it is invalid. `reject/div.toml` holds the texts of these ops that
+do not decode.
