@@ -68,10 +68,10 @@ is lost only where an op has no outcome, which each op's totality
 obligation, `OpTotal`, rules out.
 
 Effects belong to the dialect, so the interpreter does not change when a
-dialect needs a new one. `freeze`'s rule calls `choose`, so the core
-dialect's semantics asks for `MonadChoice m`, and `fir-ref`'s exhaustive
-and scripted modes run this interpreter in the tree of choices, which has
-it.
+dialect needs a new one. `freeze`'s rule calls `choose` and the divisions'
+rules call `ub`, so the core dialect's semantics asks for `MonadChoice m`
+and `MonadUB m`, and `fir-ref`'s exhaustive and scripted modes run this
+interpreter in the tree of choices, which has both.
 A call needs the module, which `denote` cannot reach, so #20 gives `call` a
 call effect, and all calls share the run's fuel budget. That budget is an
 argument of this interpreter, which `denote` neither sees nor returns, so a
