@@ -124,6 +124,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Div "Division rules" (level := 2)}
 
+{includeLiterate "." Fir.Core.Compare "Comparison and selection rules" (level := 2)}
+
 {includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
 
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
@@ -139,6 +141,8 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Core.WidthLaws "Width change obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.DivLaws "Division obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.CompareLaws "Comparison and selection obligations" (level := 2)}
 
 {includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
 
