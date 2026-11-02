@@ -11,7 +11,7 @@
 //! sum along its deepest path. A function from which a cycle is reachable is
 //! marked recursive: its need is then the most that a run uses when it makes
 //! no call within a cycle, the least the runtime reserves for it, and the
-//! runtime gives it as much stack as memory allows.
+//! runtime gives it up to the process's stack limit, `ulimit -s`.
 //!
 //! Nothing here recurses once per call: the cycles are found by Tarjan's
 //! algorithm with the path on the heap, so a chain of any length is sized

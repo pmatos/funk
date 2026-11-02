@@ -1,12 +1,16 @@
-//! The stack of a recursive run (ADR-2026-11-02-1132): it gets as much
-//! stack as memory allows, so recursion goes deep, and a run that outgrows
-//! its stack says so in one line, with exit status 2.
+//! The stack of a recursive run (ADR-2026-11-02-1132): it follows the
+//! process's stack limit, `ulimit -s`, as a C or Rust program's does, so
+//! recursion goes as deep as that limit allows, and a run that outgrows its
+//! stack says so in one line, with exit status 2.
 //!
-//! A run that recurses without end is only ever made under `ulimit -d`, a
+//! A run whose outcome depends on `ulimit -s` sets it for its own process,
+//! through `sh`, since the limit that the tests inherit differs from machine
+//! to machine; the tests' own process keeps its limit. A run that recurses
+//! without end is made under a finite `ulimit -s`, or under `ulimit -d`, a
 //! limit on the data a process maps, and `ulimit -v`, which binds even on a
-//! kernel that ignores the first. Without them its stack would be as large
-//! as the machine's memory and swap, and the run would use them all before
-//! it reached the end.
+//! kernel that ignores the first. Under `ulimit -s unlimited` alone its
+//! stack would be as large as the machine's memory and swap, and the run
+//! would use them all before it reached the end.
 
 #![cfg(unix)]
 
@@ -18,9 +22,10 @@ use std::path::Path;
 use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};
 
-use common::{build, dir, expect, module, text, values};
+use common::{build, dir, module, text, values};
 
-/// The limit, in KiB, under which runs that never end are made: 64 MiB.
+/// The limit on data, in KiB, under which runs that never end are made with
+/// no stack limit: 64 MiB.
 const LIMIT: u64 = 64 * 1024;
 
 /// `@forever` calls itself without end; `@ping` and `@pong` call each
@@ -92,20 +97,46 @@ fn recursive() -> String {
     ])
 }
 
-/// Runs `exe` with `args` after `sh` limits the data it maps to `kib` KiB,
-/// and its address space to 16 MiB more.
-fn run_limited(kib: u64, exe: &Path, args: &[&str]) -> Output {
-    let space = kib + 16 * 1024;
+/// Runs `exe` with `args` after `sh` sets each of `limits`, such as
+/// `-s 8192`, for the run's process only.
+fn run_under(limits: &[&str], exe: &Path, args: &[&str]) -> Output {
+    let set: String = limits.iter().map(|l| format!("ulimit {l} && ")).collect();
     Command::new("sh")
         .arg("-c")
-        .arg(format!(
-            "ulimit -d {kib} && ulimit -v {space} && exec \"$0\" \"$@\""
-        ))
+        .arg(format!("{set}exec \"$0\" \"$@\""))
         .arg(exe)
         .args(args)
         .output()
         .unwrap()
 }
+
+/// Runs `exe` with `args` after `sh` limits the data it maps to `kib` KiB,
+/// and its address space to 16 MiB more.
+fn run_limited(kib: u64, exe: &Path, args: &[&str]) -> Output {
+    let (data, space) = (format!("-d {kib}"), format!("-v {}", kib + 16 * 1024));
+    run_under(&[&data, &space], exe, args)
+}
+
+/// An address space far larger than any run here maps, set with each
+/// stack limit below: under it, a runtime that ignored `ulimit -s` would
+/// fail a test that recurses without end instead of filling the machine.
+const GUARD: &str = "-v 1048576";
+
+/// The stack limit that Linux gives a process by default, 8 MiB, and its
+/// bytes.
+const DEFAULT: [&str; 2] = ["-s 8192", GUARD];
+const DEFAULT_BYTES: u64 = 8192 * 1024;
+
+/// A small stack limit, 1 MiB, and its bytes.
+const SMALL: [&str; 2] = ["-s 1024", GUARD];
+const SMALL_BYTES: u64 = 1024 * 1024;
+
+/// A large stack limit: 64 MiB.
+const LARGE: [&str; 2] = ["-s 65536", GUARD];
+
+/// No stack limit (`RLIM_INFINITY`): a recursive run's stack is then as
+/// large as memory and swap.
+const UNLIMITED: [&str; 1] = ["-s unlimited"];
 
 /// Checks that `out` is the report of a run of `name` by the program
 /// `program` that outgrew its stack, and returns the bytes it names: one
@@ -124,20 +155,49 @@ fn ran_out(out: &Output, program: &str, name: &str) -> u64 {
     bytes.unwrap_or_else(|| panic!("not the report of {name} outgrowing its stack: {err:?}"))
 }
 
-/// The runtime halves the stack it asks for until the kernel grants it, so
-/// each run's stack is more than a quarter of the limit, and less than all.
+/// Checks that `out` is a run that returned `value`.
+fn returned(out: &Output, value: &str) {
+    assert_eq!(
+        (out.status.code(), text(&out.stdout), text(&out.stderr)),
+        (Some(0), values(&[value]), String::new())
+    );
+}
+
+/// Under the default stack limit, a run that recurses without end gets
+/// 8 MiB of stack, as a C or Rust program does, and reports at once that
+/// it ran out of exactly that.
 #[test]
 fn a_run_that_recurses_without_end_reports_that_it_ran_out_of_stack() {
     let exe = build("recursion-forever", &recursive());
     let program = exe.display().to_string();
+    for name in ["@forever", "@ping", "@pong", "@outer", "@\"for ever\""] {
+        let start = Instant::now();
+        let out = run_under(&DEFAULT, &exe, &[name, "0"]);
+        assert!(start.elapsed() < Duration::from_secs(10), "{name}");
+        assert_eq!(ran_out(&out, &program, name), DEFAULT_BYTES, "{name}");
+    }
+}
+
+/// With no stack limit, a recursive run asks for memory and swap, and the
+/// runtime halves that until the kernel grants it, so under a data limit
+/// each run's stack is more than a quarter of the limit, and less than all.
+#[test]
+fn with_no_stack_limit_a_data_limit_bounds_a_recursive_run() {
+    let exe = build("recursion-unlimited", &recursive());
+    let program = exe.display().to_string();
+    let (data, space) = (format!("-d {LIMIT}"), format!("-v {}", LIMIT + 16 * 1024));
+    let limits = [UNLIMITED[0], &data, &space];
     let limit = LIMIT * 1024;
     for name in ["@forever", "@ping", "@pong", "@outer", "@\"for ever\""] {
-        let bytes = ran_out(&run_limited(LIMIT, &exe, &[name, "0"]), &program, name);
+        let bytes = ran_out(&run_under(&limits, &exe, &[name, "0"]), &program, name);
         assert!(
             bytes.is_multiple_of(4096) && bytes > limit / 4 && bytes < limit,
             "{bytes}"
         );
     }
+    returned(&run_under(&limits, &exe, &["@count", "200000"]), "200000");
+    let small = [UNLIMITED[0], "-d 1024", "-v 17408"];
+    returned(&run_under(&small, &exe, &["@count", "1000"]), "1000");
 }
 
 /// The program's path, which the report starts with, shows each control
@@ -205,24 +265,37 @@ fn a_run_that_starts_with_sigsegv_blocked_still_reports_it_ran_out() {
     ran_out(&out, &program, "@forever");
 }
 
-/// Recursion runs as deep as its stack allows: here far deeper than the
-/// 16 KiB of slack that a stack sized from one frame had, under the limit
-/// too, and under a limit of 1 MiB, which leaves a smaller stack.
+/// Recursion runs as deep as its stack allows: under the default limit far
+/// deeper than the 16 KiB of slack that a stack sized from one frame had,
+/// and with no stack limit deeper still.
 #[test]
 fn recursion_that_fits_its_stack_returns() {
     let exe = build("recursion-fits", &recursive());
-    expect(&exe, &["@count", "200000"], &["200000"]);
-    expect(&exe, &["@even", "100001"], &["false"]);
-    expect(&exe, &["@odd", "100001"], &["true"]);
-    let limited = |kib, n: &str| {
-        let out = run_limited(kib, &exe, &["@count", n]);
-        assert_eq!(
-            (out.status.code(), text(&out.stdout), text(&out.stderr)),
-            (Some(0), values(&[n]), String::new())
-        );
-    };
-    limited(LIMIT, "200000");
-    limited(1024, "1000");
+    returned(&run_under(&DEFAULT, &exe, &["@count", "50000"]), "50000");
+    returned(&run_under(&DEFAULT, &exe, &["@even", "50001"]), "false");
+    returned(&run_under(&DEFAULT, &exe, &["@odd", "50001"]), "true");
+    returned(
+        &run_under(&UNLIMITED, &exe, &["@count", "200000"]),
+        "200000",
+    );
+    returned(&run_under(&UNLIMITED, &exe, &["@even", "100001"]), "false");
+    returned(&run_under(&UNLIMITED, &exe, &["@odd", "100001"]), "true");
+}
+
+/// A recursion that needs more stack than `ulimit -s` gives reports that
+/// it ran out of exactly the limit, and returns under a larger one. Each
+/// call of `@count` takes 80 bytes, so 50,000 of them need about 4 MB and
+/// 200,000 about 16 MB.
+#[test]
+fn recursion_that_outgrows_a_small_stack_limit_runs_under_a_larger_one() {
+    let exe = build("recursion-limits", &recursive());
+    let program = exe.display().to_string();
+    let out = run_under(&SMALL, &exe, &["@count", "50000"]);
+    assert_eq!(ran_out(&out, &program, "@count"), SMALL_BYTES);
+    returned(&run_under(&DEFAULT, &exe, &["@count", "50000"]), "50000");
+    let out = run_under(&DEFAULT, &exe, &["@count", "200000"]);
+    assert_eq!(ran_out(&out, &program, "@count"), DEFAULT_BYTES);
+    returned(&run_under(&LARGE, &exe, &["@count", "200000"]), "200000");
 }
 
 /// Kills the child when dropped, so that a failed test leaves no process

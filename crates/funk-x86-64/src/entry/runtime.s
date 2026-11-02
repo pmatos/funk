@@ -4,9 +4,9 @@
 # The runtime finds the function in the table `__funk_functions`, which the
 # entry generator writes after this file, and checks the argument count. It
 # reserves the stack that the table gives for the function, which covers
-# every call it makes, or for a recursive function as much as memory allows
-# (ADR-2026-11-02-1132), with a guard page below it, and calls the
-# function's wrapper on that stack. The wrapper parses each argument with
+# every call it makes, or for a recursive function up to the process's
+# stack limit (ADR-2026-11-02-1132), with a guard page below it, and calls
+# the function's wrapper on that stack. The wrapper parses each argument with
 # `__funk_rt_arg`, calls the function, and prints each result with
 # `__funk_rt_value`. The runtime then prints the line {"values":[...]} on
 # standard output and exits with 0. A bad command line, a stack that cannot
@@ -15,8 +15,8 @@
 #
 # It uses no libc: only the Linux system calls write (1), mmap (9),
 # mprotect (10), rt_sigaction (13), rt_sigprocmask (14), rt_sigreturn (15),
-# getpid (39), kill (62), sysinfo (99), sigaltstack (131) and
-# exit_group (231). Every routine follows the System V AMD64 calling
+# getpid (39), kill (62), getrlimit (97), sysinfo (99), sigaltstack (131)
+# and exit_group (231). Every routine follows the System V AMD64 calling
 # convention.
 
 	.text
@@ -79,8 +79,8 @@ __funk_rt_main:
 	jne	.Lcount
 	movq	32(%rbx), %r12		# the stack the run needs, or the least
 	cmpq	$0, 40(%rbx)		# it gets when the function is recursive:
-	je	.Lreserve		# then as much as memory allows
-	call	__funk_rt_memory
+	je	.Lreserve		# then up to the process's stack limit
+	call	__funk_rt_recursive_stack
 	cmpq	%r12, %rax
 	jbe	.Lreserve
 	movq	%rax, %r12
@@ -173,6 +173,34 @@ __funk_rt_main:
 	call	__funk_rt_err_cstr
 	movl	$2, %edi
 	jmp	__funk_rt_exit
+
+# __funk_rt_recursive_stack() -> the bytes of stack that a recursive run
+# may reserve: the soft limit on the process's stack (ulimit -s, by
+# getrlimit), rounded down to a page, or the machine's memory and swap when
+# they are less. A recursive run follows ulimit -s, as a C or Rust program
+# does (ADR-2026-11-02-1132): 8 MiB by default, so a recursion without end
+# reports at once that it ran out, instead of filling memory and swap
+# first. ulimit -s unlimited (RLIM_INFINITY, all ones) leaves memory and
+# swap as the bound, so fir keeps no depth limit of its own; so does a
+# failed getrlimit.
+__funk_rt_recursive_stack:
+	pushq	%rbx
+	subq	$16, %rsp		# a struct rlimit: rlim_cur, rlim_max
+	movl	$3, %edi		# RLIMIT_STACK
+	movq	%rsp, %rsi
+	movl	$97, %eax		# getrlimit
+	syscall
+	movq	$-1, %rbx		# RLIM_INFINITY
+	testq	%rax, %rax
+	jnz	1f
+	movq	(%rsp), %rbx		# rlim_cur, the soft limit
+	andq	$-4096, %rbx
+1:	call	__funk_rt_memory
+	cmpq	%rbx, %rax
+	cmovaq	%rbx, %rax
+	addq	$16, %rsp
+	popq	%rbx
+	ret
 
 # __funk_rt_memory() -> the bytes of memory and swap that the machine has,
 # by sysinfo, rounded down to a page and at most 2^62; 0 if sysinfo fails.

@@ -8,8 +8,9 @@
 //! of parameters, its wrapper, the bytes of stack that a run of it needs
 //! with every call it makes (`stack.rs`), and whether it is recursive. The
 //! runtime finds a function in the table by the name on the command line,
-//! reserves that stack, or for a recursive function as much as memory
-//! allows, and calls the wrapper on it (ADR-2026-11-02-1132).
+//! reserves that stack, or for a recursive function up to the process's
+//! stack limit (`ulimit -s`), and calls the wrapper on it
+//! (ADR-2026-11-02-1132).
 
 mod stack;
 

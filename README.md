@@ -176,8 +176,8 @@ are on `main`:
   results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
   It runs the function on a stack that covers every call the function
-  makes, or for a recursive function as much stack as memory allows, and
-  a run that outgrows its stack says so in one line
+  makes, or for a recursive function up to the process's stack limit
+  (`ulimit -s`), and a run that outgrows its stack says so in one line
   ([ADR-2026-11-02-1132](docs/adrs/2026-11-02-1132-a-run-s-stack-covers-its-calls.md)).
 - The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
   `./scripts/check-harness.sh` checks that `funk verify` and

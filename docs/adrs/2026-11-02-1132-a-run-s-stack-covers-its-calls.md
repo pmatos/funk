@@ -1,4 +1,4 @@
-# A run's stack covers its calls, a recursive run gets as much as memory allows, and a run that outgrows its stack says so
+# A run's stack covers its calls, a recursive run's stack follows `ulimit -s`, and a run that outgrows its stack says so
 
 Status: accepted
 
@@ -21,15 +21,28 @@ outgrows its stack reports.
   stack faults first in the guard page.
 - How deep a recursion goes depends on its arguments, so no figure from
   the code bounds it.
-- fir has no depth limit, as it has no nesting limit
-  (ADR-2026-10-30-1549): a valid program should not fail for want of stack
-  while memory allows. No specific depth or stack size is an acceptance
+- fir has no depth limit of its own, as it has no nesting limit
+  (ADR-2026-10-30-1549). No specific depth or stack size is an acceptance
   bar.
+- A first version reserved as much stack as memory and swap for a
+  recursive run. Under default overcommit, a run that recursed without end
+  then filled memory and swap, slowing the whole machine, until an OOM
+  killer ended it, usually before the guard page. A userspace OOM killer,
+  such as `systemd-oomd`, ends the whole cgroup, with the shell, terminal
+  or harness that started the run.
+- C and Rust programs run on the process's stack, whose size is the soft
+  `RLIMIT_STACK` (`ulimit -s`): 8 MiB by default. Users know that knob.
+
+The human ruled on 2026-11-02, on
+[PR #90](https://github.com/pmatos/funk/pull/90): a run caps the stack it
+reserves at the process's stack limit, `ulimit -s`, and reports that it ran
+out of stack when it outgrows it. `ulimit -s unlimited` lifts the cap to
+memory and swap, so fir keeps no depth limit of its own.
 
 These points are one decision, the one ADR-2026-10-30-1233 leaves to
 [#20](https://github.com/pmatos/funk/issues/20): the figure says which runs
 can outgrow their stack, the reservation how far a recursive run goes, and
-the report what a run that still outgrows it says.
+the report what a run that outgrows it says.
 
 ## Decision
 
@@ -46,17 +59,20 @@ the report what a run that still outgrows it says.
   call each other: one strongly connected component) is left out. What is
   left has no cycle, so each need is a sum along the deepest path. For a
   function from which no cycle is reachable, that is the most any run
-  uses, and the runtime reserves exactly the figure, as before.
-- **A recursive run gets as much stack as memory allows.** The table marks
-  a function from which a cycle is reachable as recursive; its figure is
+  uses, and the runtime reserves exactly the figure, as before, whatever
+  `ulimit -s` says.
+- **A recursive run's stack follows `ulimit -s`.** The table marks a
+  function from which a cycle is reachable as recursive; its figure is
   then the most a run uses when it makes no call within a cycle, and the
-  least the runtime reserves for it. The runtime asks `mmap` for the
-  machine's memory and swap, from `sysinfo`, rounded down to a page and
-  never less than the figure. When
-  `mmap` refuses, as under `ulimit -d` or `ulimit -v`, it asks for half
-  as much, down to the figure. When even the figure is refused, it reports
-  `PROGRAM: cannot reserve N bytes of stack for @f`, with N the figure,
-  as ADR-2026-10-30-1233 does.
+  least the runtime reserves for it. The runtime reads the soft
+  `RLIMIT_STACK` with `getrlimit`, rounded down to a page, and reserves
+  the smaller of it and the machine's memory and swap, from `sysinfo`,
+  never less than the figure. `RLIM_INFINITY` (`ulimit -s unlimited`)
+  leaves memory and swap as the bound, as does a failed `getrlimit`.
+  When `mmap` refuses, as under `ulimit -d` or `ulimit -v`, the runtime
+  asks for half as much, down to the figure. When even the figure is
+  refused, it reports `PROGRAM: cannot reserve N bytes of stack for @f`,
+  with N the figure, as ADR-2026-10-30-1233 does.
 - **An overflow is reported.** Before it calls the wrapper, the runtime
   catches `SIGSEGV` on a 64 KiB stack of its own (`sigaltstack`), with
   `SA_SIGINFO`, `SA_ONSTACK`, `SA_RESETHAND` and `SA_RESTORER`, and
@@ -72,20 +88,25 @@ the report what a run that still outgrows it says.
   faults again and ends the process with the fault's own code and address,
   as a crash did before. A `SIGSEGV` that a process sent, the handler sends
   again with `kill` before it returns.
-- **New system calls.** The runtime now also uses `sysinfo` (99),
-  `sigaltstack` (131), `rt_sigprocmask` (14), `rt_sigreturn` (15, in the
-  restorer that x86-64 requires of a handler), `getpid` (39) and `kill`
-  (62). It still uses no libc.
+- **New system calls.** The runtime now also uses `getrlimit` (97),
+  `sysinfo` (99), `sigaltstack` (131), `rt_sigprocmask` (14),
+  `rt_sigreturn` (15, in the restorer that x86-64 requires of a handler),
+  `getpid` (39) and `kill` (62). It still uses no libc.
 
 ## Alternatives
 
-- **A fixed stack for recursion**, such as 8 MiB or 1 GiB. A runaway
-  recursion would end fast with the report, but a valid program would fail
-  for want of stack while memory allows: a depth limit by another name.
-- **`ulimit -s` for recursion.** The usual knob, but 8 MiB by default:
-  the same limit.
-- **A fixed huge reservation**, such as half the address space. The same
-  reach, but a number with no meaning, and no machine can fill it.
+- **As much stack as memory and swap, with no cap.** The first version.
+  Any depth by default, but a recursion without end fills memory and swap
+  before it reports, and can take the session that started it down with
+  it.
+- **A fixed cap of fir's own**, such as 8 MiB or 1 GiB. A depth limit, or
+  one more knob that users do not know.
+- **Cap every run at `ulimit -s`**, recursive or not. A function with a
+  frame larger than the limit could never run, which ADR-2026-10-30-1233
+  rejects; a function from which no cycle is reachable cannot outgrow its
+  figure, so a cap protects nothing there.
+- **A fixed huge reservation**, such as half the address space. A number
+  with no meaning, and the same cost as memory and swap.
 - **Grow the stack on demand** from a `PROT_NONE` reservation, in the
   handler. Under default overcommit it goes no deeper than
   `MAP_NORESERVE`; it helps only strict overcommit, for much more code.
@@ -97,36 +118,32 @@ the report what a run that still outgrows it says.
 ## Consequences
 
 - A run of a function from which no cycle is reachable never outgrows its
-  stack, whatever its calls.
-- A recursive run goes as deep as memory allows. Under default
-  overcommit its stack is as large as memory and swap, so a run that
-  recurses without end fills memory and then swap, slowing the whole
-  machine, until an OOM killer ends it, usually before it reaches the
-  guard page. The kernel's OOM killer usually picks the run. A userspace
-  one, such as `systemd-oomd`, ends the whole cgroup the run is in, so the
-  shell, terminal or harness that started it ends too.
-- The report comes instead when a limit makes the stack smaller than what
-  is free: `ulimit -d` or `ulimit -v`, or strict overcommit. A cgroup's
-  memory limit (`memory.max`) is not such a limit: `sysinfo` reports the
-  host's memory, and the cgroup's OOM killer ends the run. So anything that
-  may recurse without end runs under `ulimit -d` or `ulimit -v`; the tests
-  that do run under both.
+  stack, whatever its calls, and `ulimit -s` does not bound it.
+- By default a recursive run gets 8 MiB, as a C or Rust program does, or
+  its figure when that is more. A run that recurses without end reports
+  that it ran out within milliseconds, and touches no more than that. A valid recursion that
+  needs more stack reports it too, and runs under a larger `ulimit -s`.
+- Under `ulimit -s unlimited` a recursive run goes as deep as memory and
+  swap allow. Then, under default overcommit, a run that recurses without
+  end fills memory and swap, slowing the whole machine, until an OOM
+  killer ends it, as the first version did by default. The report comes
+  first only when `ulimit -d` or `ulimit -v`, or strict overcommit, makes
+  the stack smaller than what is free. A cgroup's memory limit
+  (`memory.max`) is not such a limit: `sysinfo` reports the host's memory.
 - Under strict overcommit (`vm.overcommit_memory = 2`) `MAP_NORESERVE` is
-  ignored, so a recursive run commits more than half of what the system has
-  left, for as long as it runs, however shallow it is. Meanwhile other
-  processes' allocations can fail.
+  ignored, so a recursive run commits its whole stack, 8 MiB by default,
+  for as long as it runs.
 - A run touches only the pages its frames use: a large stack costs
   address space, not memory.
-- The figure follows the lowering: `lower/call.rs` gives both a call's
-  callee and the words it pushes.
+- The figure follows the lowering: `lower/call.rs` gives a call's callee,
+  and `abi::pushed_words`, which the call emitter `abi::call` uses
+  (ADR-2026-11-02-1428), the words it pushes.
 - The differential harness runs a test's native executable with only a
   timeout. A native run that outgrows its stack exits with 2, a failure
-  where `fir-ref` returns. But a differential test whose recursion never
-  ends natively, such as a count-down called with -1 or a miscompiled
-  recursive function, would fill memory as above, and an OOM killer could
-  end the harness with it. So the harness must run native code under a
-  data limit before the corpus adds a differential test through a
-  recursive call ([#92](https://github.com/pmatos/funk/issues/92)); until
-  then such tests stay interpreter-only.
+  where `fir-ref` returns. Under the default `ulimit -s` a differential
+  test whose recursion never ends natively, such as a miscompiled
+  recursive function, ends at once; under `ulimit -s unlimited` it would
+  fill memory as above. [#92](https://github.com/pmatos/funk/issues/92)
+  runs native code under a data limit, and lands before this change.
 - A funk function that C code calls still runs on its caller's stack
   (ADR-2026-10-30-1230).

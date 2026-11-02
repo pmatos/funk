@@ -1,7 +1,8 @@
 //! Frames of a page or more are probed, and a built executable runs each
 //! function on a stack it reserves for it, so the process's stack limit does
 //! not bound a frame (ADR-2026-10-30-1230, ADR-2026-10-30-1233). That stack
-//! covers every call the function can make (ADR-2026-11-02-1132).
+//! covers every call the function can make; a recursive function gets the
+//! process's stack limit instead when that is more (ADR-2026-11-02-1132).
 
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
@@ -244,21 +245,50 @@ fn the_stack_of_a_run_covers_each_frame_of_a_chain_of_calls() {
     }
 }
 
-/// `@spiral` calls `@deep`, with its frame of more than a megabyte, and
-/// then itself without end. It is recursive, so it asks for as much stack
-/// as memory allows, and never less than a run's stack with no call in a
-/// cycle: its own frame and `@deep`'s. A limit of 1 MiB cannot hold that,
-/// and the report names those bytes.
-#[test]
-fn a_recursive_run_reserves_at_least_the_stack_of_its_calls_out_of_the_cycle() {
+/// `@spiral` makes the calls `calls`, in order, to `@deep`, with its frame
+/// of more than a megabyte, and to itself, without end. Returns the
+/// executable and the bytes a run of `@spiral` needs with no call in a
+/// cycle: its own frame and `@deep`'s.
+fn spiral(name: &str, calls: &[&str]) -> (PathBuf, usize) {
     let n = 150_000;
     let mut m = Module::new();
-    let spiral = chained(&mut m, "spiral", 0, &["deep", "spiral"]);
+    let spiral = chained(&mut m, "spiral", 0, calls);
     let d = deep(&mut m, n);
-    let exe = built("spiral", &m.func(spiral).func(d));
-    let need = own(4) + own(n + 2);
+    let exe = built(name, &m.func(spiral).func(d));
+    (exe, own(4) + own(n + 2))
+}
+
+/// `@spiral` is recursive, so it asks for up to the process's stack limit,
+/// and never less than a run's stack with no call in a cycle. A limit of
+/// 1 MiB on data cannot hold that, and the report names those bytes.
+#[test]
+fn a_recursive_run_reserves_at_least_the_stack_of_its_calls_out_of_the_cycle() {
+    let (exe, need) = spiral("spiral", &["deep", "spiral"]);
     let out = run_limited(&DATA, &exe, &["@spiral", "5"]);
     cannot_reserve(&out, &exe, figure(need), "spiral");
+}
+
+/// Under a stack limit of 1 MiB, below what `@spiral` needs with no call
+/// in a cycle, a run of it still gets exactly that, which the report of its
+/// recursion without end names. It calls itself before `@deep`, so a
+/// runtime that reserved more would fail fast, as it would under the limit
+/// on address space, which is far above what the run maps.
+#[test]
+fn a_stack_limit_below_the_figure_leaves_a_recursive_run_its_figure() {
+    let (exe, need) = spiral("spiral-limit", &["spiral", "deep"]);
+    let out = run_limited(&["-s 1024", "-v 262144"], &exe, &["@spiral", "5"]);
+    assert_eq!(
+        (out.status.code(), text(&out.stdout), text(&out.stderr)),
+        (
+            Some(2),
+            String::new(),
+            format!(
+                "{}: @spiral ran out of the {} bytes of stack reserved for it\n",
+                exe.display(),
+                figure(need)
+            )
+        )
+    );
 }
 
 /// A fault outside the guard page is not a run that outgrew its stack: the
