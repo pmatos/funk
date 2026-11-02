@@ -5,11 +5,13 @@ import Fir.Execution.Behaviour
 
 Three obligations tie the interpreter's runs to the behaviours above. #10
 defines the run of each function of a module on each argument vector of its
-parameter types (`Func.runs`, and `Core.funcRuns` for the core dialect). It
-proves all three for every valid function whose ops are in its tracer
-subset, `const`, `add` without flags and `ret`, and every argument vector:
-`Core.tracer_fuelMonotone`, `Core.tracer_progress` and
-`Core.tracer_neverStuck`.
+parameter types (`Func.runs`, and `Core.funcRuns` for the core dialect).
+All three hold for every valid core function that has no `call` op, on
+every argument vector, branches and loops included:
+`Core.callFree_fuelMonotone`, `Core.callFree_progress` and
+`Core.callFree_neverStuck`. #10 proved them first for its tracer subset,
+`const`, `add` without flags and `ret`: `Core.tracer_fuelMonotone`,
+`Core.tracer_progress` and `Core.tracer_neverStuck`.
 
 * _Fuel monotonicity_ (`FuelMonotone`). More fuel never changes how a run
   that returns or hits UB ends. A return or UB that a run reaches at some
@@ -37,13 +39,22 @@ module, of every dialect, calls included, whatever its ops do
 back to its caller the steps it leaves (ADR-2026-11-02-0836). Of a function
 that reaches an op without rules it holds only vacuously on the paths that
 reach the op, and says nothing of how such a function behaves
-(ADR-2026-10-30-1855). Progress and the no-stuck obligation hold for every
-valid function whose ops run straight to a return and are total
-(`Func.progress`, `Func.neverStuck`), as the tracer subset's do. Each
-ticket that adds core ops, from ticket #14 to #20, keeps progress and the
-no-stuck obligation as it adds its ops, so that once the last of them lands
-they hold for every valid function of the core dialect. #14 keeps them when
-it adds the `fir-ref` modes.
+(ADR-2026-10-30-1855).
+
+Progress and the no-stuck obligation hold for every valid function that
+runs within itself (`Func.Local`): no op calls a function, a terminator
+that jumps names a successor that it has and gives no results, and a
+terminator that returns returns values of the function's result types. Its
+run may jump and loop. No path of it is stuck (`Func.neverStuck_of_local`),
+and when its ops are total it has an outcome at every budget
+(`Func.progress_of_local`). Every valid core function runs within itself,
+and every core op but `call` is total, so both hold for every valid core
+function without a `call` op. They are statements about the run in the set
+monad, choices included, and `fir-ref`'s modes report only what that run
+does (`Core.exhaustive_stuck`, `Core.scripted_stuck`,
+`Core.sampled_stuck`), so no mode reports a stuck path of such a function.
+#20 extends progress and the no-stuck obligation to calls and recursion,
+when it gives `call` its callee.
 -/
 
 namespace Fir
