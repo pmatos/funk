@@ -4,7 +4,9 @@
 # into a call as an argument and comes back as its result. call_sub
 # passes %a and %b, in that order, to @sub, which returns %a - %b, on
 # every pair of patterns: an argument in the wrong place changes the
-# result where the two differ.
+# result for every pair of different patterns but 0 and the signed
+# minimum, and -1 and the signed maximum, which differ by 2^6, so that
+# %a - %b is %b - %a.
 # The backend does not lower i7, so each test is interpreter-only and
 # states the result that fir-ref must give.
 tests = [

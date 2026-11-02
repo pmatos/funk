@@ -13,15 +13,19 @@
 # wrong bits, changes the result. The arguments are the boundary bit
 # patterns of their types, 0, 1, -1, the signed minimum and the signed
 # maximum (false and true at i1), rotated so that each parameter takes
-# each of them.
+# each of them. No test gives two parameters of one type the same
+# pattern, so a swap of two arguments of one type changes the result:
+# call7 gives %f the opposite of %a and %g the i8 pattern two places on
+# from %b's, and call8 starts the two of each type at different places
+# in the rotation.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 tests = [
-  { func = "@call7", args = ["false", "1", "-1", "-2147483648", "9223372036854775807", "false", "1"] },
-  { func = "@call7", args = ["true", "-1", "-32768", "2147483647", "0", "true", "-1"] },
-  { func = "@call7", args = ["true", "-128", "32767", "0", "1", "true", "-128"] },
-  { func = "@call7", args = ["true", "127", "0", "1", "-1", "true", "127"] },
-  { func = "@call7", args = ["false", "0", "1", "-1", "-9223372036854775808", "false", "0"] },
+  { func = "@call7", args = ["false", "1", "-1", "-2147483648", "9223372036854775807", "true", "-128"] },
+  { func = "@call7", args = ["true", "-1", "-32768", "2147483647", "0", "false", "127"] },
+  { func = "@call7", args = ["true", "-128", "32767", "0", "1", "false", "0"] },
+  { func = "@call7", args = ["true", "127", "0", "1", "-1", "false", "1"] },
+  { func = "@call7", args = ["false", "0", "1", "-1", "-9223372036854775808", "true", "-1"] },
   { func = "@call8", args = ["0", "1", "-1", "-128", "false", "0", "1", "-1"] },
   { func = "@call8", args = ["1", "-1", "-32768", "127", "false", "1", "-1", "-2147483648"] },
   { func = "@call8", args = ["-1", "-2147483648", "32767", "0", "true", "-1", "-32768", "2147483647"] },

@@ -8,13 +8,14 @@
 # its callee runs on the steps that are left (ADR-2026-11-02-0836).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
-# A differential test recurses at most 20 deep: until PR #90 a built
-# executable's stack is its function's frame, its wrapper's and 16 KiB,
-# and the harness runs native code with no data limit until #92. A
-# deeper run, such as fact on the signed maximum or even on -1, is
-# interpreter-only, and states the value that fir-ref returns. A run of
-# more than 20,000 steps runs at a budget of 1,000 steps instead, and
-# expects fuel-exhausted: fir-ref's run takes stack for each step (#47).
+# Until the harness runs native code under a data limit (#92), a
+# differential test recurses at most 20 deep; until PR #90, a built
+# executable's stack is also only its function's frame, its wrapper's
+# and 16 KiB. A deeper run, such as fact on the signed maximum or even
+# on -1, is interpreter-only, and states the value that fir-ref returns.
+# A run of more than 20,000 steps runs at a budget of 1,000 steps
+# instead, and expects fuel-exhausted: fir-ref's run takes stack for
+# each step (#47).
 tests = [
   { func = "@fact", args = ["false"] },
   { func = "@fact", args = ["true"] },
