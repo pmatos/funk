@@ -1,0 +1,21 @@
+# Tests of fuel-call.fir: recursion that never ends runs out of fuel
+# (#20). forever calls itself, and ping and pong call each other, before
+# they return. Each call takes one step, and its callee runs on the
+# steps that are left, so all the calls of a run share its budget
+# (ADR-2026-11-02-0836). A run that never ends runs out of fuel at every
+# budget; running out at one budget is not divergence
+# (lean/Fir/Execution/Behaviour.lean). Each test sets fir-ref run's
+# budget, --fuel, with fuel, and is interpreter-only: it expects
+# fuel-exhausted, which makes a differential test invalid, and native
+# code would recurse until it runs out of stack, which the harness does
+# not limit until #92. The budgets are small, as fir-ref's run takes
+# stack for each step (#47).
+tests = [
+  { func = "@forever", args = ["1"], fuel = 0, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["1"], fuel = 1, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["1"], fuel = 2, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["1"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@ping", args = ["-1"], fuel = 1, expect = "fuel-exhausted" },
+  { func = "@ping", args = ["-1"], fuel = 2, expect = "fuel-exhausted" },
+  { func = "@ping", args = ["-1"], fuel = 1000, expect = "fuel-exhausted" },
+]

@@ -1,0 +1,17 @@
+# Tests of call-i1.fir: call at i1 (#20), on the boundary bit patterns,
+# which at i1 are false and true. call_id passes its argument to @id and
+# returns what @id returns, so each pattern goes into a call as an
+# argument and comes back as its result. call_sub passes %a and %b, in
+# that order, to @sub, which returns %a - %b, on every pair of patterns:
+# an argument in the wrong place changes the result where the two
+# differ.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@call_id", args = ["false"] },
+  { func = "@call_id", args = ["true"] },
+  { func = "@call_sub", args = ["false", "false"] },
+  { func = "@call_sub", args = ["false", "true"] },
+  { func = "@call_sub", args = ["true", "false"] },
+  { func = "@call_sub", args = ["true", "true"] },
+]

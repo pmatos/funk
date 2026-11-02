@@ -1,0 +1,261 @@
+# Must-reject texts of #20's op, call, that do not decode. call decodes
+# with exactly one attribute, its callee's symbol, and with any number
+# of operands and results of any core types (Op.decode in
+# lean/Fir/Core/Text.lean). Any other list of attributes does not
+# decode: each is a parse error at the op's name (ADR-2026-10-30-0815).
+# @1 is always a location reference, so call @1 is a call with no
+# attribute. A symbol has one spelling, so a quoted word is a parse
+# error at the symbol. An operand is a value that the caller defines, so
+# a call that passes another function's value does not decode either:
+# the value has no type in the caller, and the parse error is at the
+# operand. In each text the callee exists and takes what the call
+# passes, so the text breaks nothing else. validation-call.toml holds
+# the texts of call that decode and break a rule of validation.
+
+[[reject]]
+verdict = "parse-error"
+rule = "call has one attribute, its callee's symbol: it has none"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call's attribute is a symbol, written with @: the word g is not one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call's attribute is a symbol: the string \"g\" is not one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call "g" %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call's attribute is a symbol: the integer 7 is not one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call 7 %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call's attribute is a symbol: the applied attribute g(1) is not one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call g(1) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call has one attribute, its callee's symbol: two symbols are two"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call has one attribute, its callee's symbol: call takes no flag, and tail after the symbol is a second attribute"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g tail %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call has one attribute, its callee's symbol: call takes no flag, and tail before the symbol is a second attribute"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call tail @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a symbol that is a word is written without quotes: call's callee @\"g\" is written @g"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @"g" %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "call has one attribute, its callee's symbol: @1 is always a location reference, here the op's own, so call @1 has none; the function named 1 is called as call @\"1\" @1"
+text = '''
+func @"1"() -> i32 {
+^entry:
+  %c: i32 = const 1 @0
+  ret %c @0
+}
+
+func @f() -> i32 {
+^entry:
+  %r: i32 = call @1
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+  @1 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function uses only its own values: %x, which call passes, is the parameter of @g, the callee, not of @f"
+text = '''
+func @g(%x: i32) -> i32 {
+^entry:
+  ret %x @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function uses only its own values: %c, which call passes, is defined in @h, not in @f"
+text = '''
+func @h() -> i32 {
+^entry:
+  %c: i32 = const 7 @0
+  ret %c @0
+}
+
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f() -> i32 {
+^entry:
+  %r: i32 = call @g %c @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

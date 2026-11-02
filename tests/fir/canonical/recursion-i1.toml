@@ -1,0 +1,27 @@
+# Tests of recursion-i1.fir: recursive calls at i1 (#20). fact calls
+# itself on %n - 1 while %n is above zero, read as signed, and
+# multiplies with mul, which wraps: it gives %n! modulo 2^N, and 1 for
+# %n of at most zero. fib calls itself twice, on %n - 1 and %n - 2,
+# while %n is above 1 read as unsigned, and adds with add, which wraps.
+# even and odd call each other on %n - 1 down to zero, so -1 counts down
+# through every value of the type. Each call takes one step of fuel, and
+# its callee runs on the steps that are left (ADR-2026-11-02-0836).
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# A differential test recurses at most 20 deep: until PR #90 a built
+# executable's stack is its function's frame, its wrapper's and 16 KiB,
+# and the harness runs native code with no data limit until #92. A
+# deeper run, such as fact on the signed maximum or even on -1, is
+# interpreter-only, and states the value that fir-ref returns. A run of
+# more than 20,000 steps runs at a budget of 1,000 steps instead, and
+# expects fuel-exhausted: fir-ref's run takes stack for each step (#47).
+tests = [
+  { func = "@fact", args = ["false"] },
+  { func = "@fact", args = ["true"] },
+  { func = "@fib", args = ["false"] },
+  { func = "@fib", args = ["true"] },
+  { func = "@even", args = ["false"] },
+  { func = "@even", args = ["true"] },
+  { func = "@odd", args = ["false"] },
+  { func = "@odd", args = ["true"] },
+]
