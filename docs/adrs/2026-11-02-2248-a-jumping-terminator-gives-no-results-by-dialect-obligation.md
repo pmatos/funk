@@ -55,18 +55,21 @@ for option (c): keep it a dialect obligation in M0.
   terminator that jumps meets the condition above, and a terminator that
   returns returns values of the function's result types.
   `Func.progress_of_local` also asks that every op be total (`OpTotal`).
-  `Func.neverStuck_of_inModule` and `Func.progress_of_inModule` ask the
-  same of every function of the module through `Func.InModule`, which
-  allows calls. A function with a terminator that may jump and has
-  results cannot meet these hypotheses, so the theorems say nothing of it.
+  `Func.neverStuck_of_inModule` and `Func.progress_of_inModule` ask, of
+  every function of the module, validity and `Func.InModule`, which has
+  the same `jumps` and `returns` fields and allows calls to functions of
+  the module; the second also asks that every terminator and every op
+  with no callee be total. A function with a terminator that may jump and
+  has results cannot meet these hypotheses, so the theorems say nothing
+  of it.
 - The core dialect meets the condition. `Core.Op.exit_goto`
   ([`lean/Fir/Core/CallFree.lean`](../../lean/Fir/Core/CallFree.lean))
   proves it of every core terminator; `Core.local_of_valid` uses it for
   every valid core function without a `call` op, and
   `Core.inModule_of_valid`
   ([`lean/Fir/Core/ValidRuns.lean`](../../lean/Fir/Core/ValidRuns.lean))
-  for every function of a valid core module. So no valid core module gets
-  stuck (`Core.neverStuck`).
+  for every function of a valid core module. So no path of a run of a
+  function of a valid core module is stuck (`Core.neverStuck`).
 - The choice between a validation rule (a) and values on `Exit` (b) is
   made when M3 designs exceptions and unwinding, which the roadmap's
   "Left out of v0" table gives to M3 (C++). That is the first place where
