@@ -125,6 +125,9 @@ instance : DialectDenote ToyDialect SetM where
   denote := Op.denote
   exit _ _ := fun _ => False
 
+/-- No toy op calls a function. -/
+instance : DialectCall ToyDialect := ⟨fun _ => none⟩
+
 /-! # The toy dialect's text is lawful -/
 
 /-- Every toy op decodes from its name and attributes, at its operand and

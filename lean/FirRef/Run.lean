@@ -219,8 +219,8 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
           status := 2 }
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
-        | .ok vs, .scripted cs => scriptedReport name (Core.scripted constOf f vs fuel cs)
-        | .ok vs, .exhaustive b => exhaustiveReport name b (Core.exhaustive f vs fuel b)
-        | .ok vs, .sampled s => sampledReport name (Core.sampled draw f vs fuel ⟨s.toUInt64⟩)
+        | .ok vs, .scripted cs => scriptedReport name (Core.scripted constOf m f vs fuel cs)
+        | .ok vs, .exhaustive b => exhaustiveReport name b (Core.exhaustive m f vs fuel b)
+        | .ok vs, .sampled s => sampledReport name (Core.sampled draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef

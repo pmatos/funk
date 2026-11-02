@@ -38,14 +38,16 @@ def testArgs : (ts : List Core.Ty) → List String → Except String (HVector to
   | t :: ts, a :: as => return .cons (← testArg t a) (← testArgs ts as)
   | _, _ => .error "a number of arguments other than the parameters"
 
-/-- What `fir-ref run` would report on the function `f` with the semantics
-`s`, on arguments that may be `poison`. -/
+/-- What `fir-ref run` would report on the function `f` of the module `M`,
+by default the module of `f` alone, with the semantics `s`, on arguments
+that may be `poison`. -/
 def runFuncIn (s : DialectDenote CoreDialect Tree) (f : Func CoreDialect)
-    (args : List String := []) (fuel : Nat := defaultFuel) : Option RunReport :=
+    (args : List String := []) (fuel : Nat := defaultFuel)
+    (M : Module CoreDialect := ⟨[.func f], []⟩) : Option RunReport :=
   match testArgs (f.params.map (·.2)) args with
   | .error _ => none
   | .ok vs => letI := s
-    some (scriptedReport "@f" ((f.run (m := Tree) vs fuel).run.script constOf [] 0))
+    some (scriptedReport "@f" ((f.run M (m := Tree) vs fuel).run.script constOf [] 0))
 
 /-- What `fir-ref run` would report on the first function of the text `t`
 with the semantics `s`. -/
@@ -53,7 +55,7 @@ def runIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List String 
     (fuel : Nat := defaultFuel) : Option RunReport :=
   match parseCore t with
   | .error _ => none
-  | .ok m => m.funcs.head?.bind (runFuncIn s · args fuel)
+  | .ok m => m.funcs.head?.bind (runFuncIn s · args fuel m)
 
 /-! # UB
 

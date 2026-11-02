@@ -139,8 +139,9 @@ def Behaviour (O : Type) : Type := Outcome O → Prop
 
 /--
 The observable behaviour of a run that takes fuel. `run n` is the run with
-budget `n`, in the set monad. #10 defines the run of a function on its
-arguments, and its observable behaviour is this set.
+budget `n`, in the set monad. The runs of a function of a module on its
+arguments are such a run (`Func.runs`), and the function's observable
+behaviour on those arguments is this set.
 -/
 def observable (run : Nat → Run O) : Behaviour O
   | .ret o => ∃ n, (run n).outcomes (.ret o)

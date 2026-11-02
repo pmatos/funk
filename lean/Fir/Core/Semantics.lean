@@ -48,6 +48,14 @@ does until its family lands:
 
 Each ticket from #14 to #20 adds its family's rules to `Op.denote?` and
 `Op.exit?`, in its own section, and proves their obligations beside them.
+
+# Calls
+
+`call` takes its meaning from the call effect, which the interpreter runs
+(ADR-2026-11-02-0836), not from `denote`. The instance
+`DialectCall CoreDialect` says which core ops call a function. None does
+yet: #20 names the callee of `call` there, and until then `call` is an op
+without rules, as above.
 -/
 
 namespace Fir.Core
@@ -138,5 +146,9 @@ instance : DialectDenote CoreDialect SetM where
   exit op args := match op.exit? (m := SetM) with
     | some rule => rule args
     | none => fun _ => False
+
+/-- The core ops that call a function: none yet, until #20 names the callee
+of `call`. -/
+instance : DialectCall CoreDialect := ⟨fun _ => none⟩
 
 end Fir

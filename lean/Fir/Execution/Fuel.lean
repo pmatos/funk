@@ -4,9 +4,12 @@ import Fir.Execution.Behaviour
 # Fuel and progress
 
 Three obligations tie the interpreter's runs to the behaviours above. #10
-defines the run of each function of a valid module on each argument vector
-of its parameter types. It proves all three for every valid function whose
-ops are in its tracer subset: `const`, `add` without flags, and `ret`.
+defines the run of each function of a module on each argument vector of its
+parameter types (`Func.runs`, and `Core.funcRuns` for the core dialect). It
+proves all three for every valid function whose ops are in its tracer
+subset, `const`, `add` without flags and `ret`, and every argument vector:
+`Core.tracer_fuelMonotone`, `Core.tracer_progress` and
+`Core.tracer_neverStuck`.
 
 * _Fuel monotonicity_ (`FuelMonotone`). More fuel never changes how a run
   that returns or hits UB ends. A return or UB that a run reaches at some
@@ -28,11 +31,16 @@ ops are in its tracer subset: `const`, `add` without flags, and `ret`.
   path, which #10's definition must ensure, every path of a valid
   function's run ends in an outcome.
 
-Ticket #10 proves progress and the no-stuck obligation for every valid
-function whose ops are in its tracer subset, and every argument vector. Each ticket that
-adds core ops, from ticket #14 to #20, keeps both as it adds its ops, so
-that once the last of them lands they hold for every valid function of the
-core dialect. #14 keeps them when it adds the `fir-ref` modes.
+The proofs are general. Fuel monotonicity holds for every function of
+every module, of every dialect, calls included, whatever its ops do
+(`Func.fuelMonotone`): only the interpreter counts fuel, and a callee gives
+back to its caller the steps it leaves (ADR-2026-11-02-0836). Progress and
+the no-stuck obligation hold for every valid function whose ops run
+straight to a return and are total (`Func.progress`, `Func.neverStuck`), as
+the tracer subset's do. Each ticket that adds core ops, from ticket #14 to
+#20, keeps progress and the no-stuck obligation as it adds its ops, so that
+once the last of them lands they hold for every valid function of the core
+dialect. #14 keeps them when it adds the `fir-ref` modes.
 -/
 
 namespace Fir

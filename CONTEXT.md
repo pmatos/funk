@@ -208,7 +208,15 @@ _Avoid_: equivalence
 
 **fuel**:
 The budget that bounds a run of the reference interpreter, so that every run
-terminates. A run that runs out of fuel at every budget diverges.
+terminates. Every op takes one step, and a callee runs on the steps its
+caller has left, so a call and its callees share one budget. A run that runs
+out of fuel at every budget diverges.
+
+**call effect**:
+How a call runs: the interpreter finds the callee in the module by its
+symbol, runs it with the fuel the caller has left, and binds what it returns
+to the call's results. A dialect only says which of its ops call which
+function.
 
 **execution rules**:
 What an op does when it runs: the results it gives, the UB it hits, or where

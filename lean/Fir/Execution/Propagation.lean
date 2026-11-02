@@ -145,9 +145,9 @@ the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then
 refining that poison to the signed minimum would turn a result into UB,
 which is not a refinement.
 
-A call gets its meaning from the call effect that #20 adds, not from the
-set monad these obligations are stated in, so for `call` they are only a
-stand-in. #20 proves their counterparts at function level (see the poison
+A call gets its meaning from the call effect, which the interpreter runs
+(ADR-2026-11-02-0836), not from the set monad these obligations are stated
+in, so for `call` they are only a stand-in. #20 proves their counterparts at function level (see the poison
 classes of the core ops).
 
 Monotonicity uses the dialect's refinement of values, and the obligations

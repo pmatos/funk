@@ -158,6 +158,16 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
 
+{includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Environment "The environment of a run" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Progress "Progress and no stuck path" (level := 2)}
+
+{includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
+
 # Text format
 
 {includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}

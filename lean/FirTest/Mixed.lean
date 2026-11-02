@@ -56,9 +56,9 @@ lifted. The tests run the same rules in `Mix`, a tree of choices whose
 paths with no outcome name the op without a rule, as `fir-ref run` runs
 the core dialect's, and walk it in scripted mode with no choices. -/
 
-example (f : Func CoreToy) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
-    Run (List (DVal CoreToy)) :=
-  f.run (m := SetM) args fuel
+example (M : Module CoreToy) (f : Func CoreToy) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) : Run (List (DVal CoreToy)) :=
+  f.run M (m := SetM) args fuel
 
 /-- The tree of choices that the tests run a mixed module in. A path with
 no outcome names the op that has no rule for what the interpreter asks of
@@ -92,7 +92,7 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
   | .ok m => m.funcs.head?.bind fun f =>
     match testArgs (f.params.map (·.2)) args with
     | .error _ => none
-    | .ok vs => some <| match (f.run (m := Mix) vs fuel).run.script constOf [] 0 with
+    | .ok vs => some <| match (f.run m (m := Mix) vs fuel).run.script constOf [] 0 with
       | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok r, c))
       | .ok (.ub r, c) => scriptedReport "@f" (.ok (.ub r, c))
       | .ok (.noOutcome op, _) => { err := s!"{op} has no rule", status := 2 }

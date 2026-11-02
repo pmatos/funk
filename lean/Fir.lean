@@ -51,6 +51,11 @@ import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
 import Fir.Execution.Modes
 import Fir.Core.Modes
+import Fir.Execution.SetRuns
+import Fir.Execution.Monotone
+import Fir.Execution.Environment
+import Fir.Execution.Progress
+import Fir.Core.Runs
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
