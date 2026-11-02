@@ -85,6 +85,12 @@ refines a source function of the same type when, for each argument vector,
 the target's observable behaviour refines the source's. Both run on the
 same arguments, and every argument vector of the parameter types counts:
 since a value of `iN` may be poison, so may any argument.
+
+The relation is compositional over calls. A function on arguments that
+refine others refines itself on those others, and replacing a callee's
+body refines every caller when the callee, run in the new module,
+refines the old one (the sections on refined arguments and on replacing
+a callee).
 -/
 
 /-- The runs of a function: for each argument vector, its run at each fuel

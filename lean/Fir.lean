@@ -64,6 +64,14 @@ import Fir.Execution.Calls
 import Fir.Core.Runs
 import Fir.Core.CallFree
 import Fir.Core.ValidRuns
+import Fir.Execution.RunPaths
+import Fir.Execution.EnvRefine
+import Fir.Execution.BlackBox
+import Fir.Execution.RefineUp
+import Fir.Execution.RefineDown
+import Fir.Execution.RefineRuns
+import Fir.Execution.Replace
+import Fir.Core.CallRefine
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

@@ -26,6 +26,7 @@ import FirTest.ValidSum
 import FirTest.RunsLoops
 import FirTest.Calls
 import FirTest.RunsCalls
+import FirTest.RefineCalls
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

@@ -139,6 +139,11 @@ refines the run on the original ones. A pass that replaces one part of a
 function with a part that refines it, such as an op's result with a value
 that refines it or a callee with a function that refines it, then refines
 the whole function, and its proof need only look at the part it changes.
+For calls this is proved at function level: a function's behaviour on
+refined arguments refines its behaviour on the original ones
+(`Func.runs_args_isRefinedBy`), and replacing a callee's body refines
+every caller when the callee, run in the new module, refines the old one
+(`Func.runs_replaceBody_isRefinedBy`).
 This is also why a function refines another only if it does so on every
 argument vector, poison included: a caller may pass poison. And it explains
 the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then
@@ -147,8 +152,9 @@ which is not a refinement.
 
 A call gets its meaning from the call effect, which the interpreter runs
 (ADR-2026-11-02-0836), not from the set monad these obligations are stated
-in, so for `call` they are only a stand-in. #20 proves their counterparts at function level (see the poison
-classes of the core ops).
+in, so for `call` they are only a stand-in. Their counterparts hold at
+function level, as the paragraph above says (see also the poison classes
+of the core ops).
 
 Monotonicity uses the dialect's refinement of values, and the obligations
 tie it to poison: a poison value is refined by every value of its type.
