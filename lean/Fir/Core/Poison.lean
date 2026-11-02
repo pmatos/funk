@@ -40,14 +40,16 @@ tickets: `freeze` by #14, `select` by #16, the branches and block arguments
 by #19, `call` by #20.
 
 `call` gets its meaning from the call effect, which the interpreter runs
-with the fuel budget that the caller has left (ADR-2026-11-02-0836); #20
-names the callee of `call`. The set monad has no module and no such
-effect, so the `denote` of `call` in `SetM`, which the op-level
-obligations look at, is only a stand-in, and its totality and monotonicity
-say nothing about calls. #20 proves their real counterparts at function
-level: a call on arguments that refine others refines the call on those
-others, and congruence in the callee: replacing a callee with a function
-that refines it refines the caller.
+with the fuel budget that the caller has left (ADR-2026-11-02-0836): #20
+names the callee of `call @g`, `@g`. The set monad has no module and no
+such effect, so the `denote` of `call` in `SetM`, which the op-level
+obligations look at, is only a stand-in, immediate UB (`callStandIn`, in
+the section on calls), and its totality and monotonicity
+(`Core.call_total`, `Core.call_monotone`) say nothing about calls. #20
+proves their real counterparts at function level: a call on arguments
+that refine others refines the call on those others, and congruence in
+the callee: replacing a callee with a function that refines it refines
+the caller.
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its

@@ -37,6 +37,7 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.Control
 import Fir.Core.Branch
+import Fir.Core.Call
 import Fir.Core.Semantics
 import Fir.Core.ArithLaws
 import Fir.Core.WrapLaws
@@ -47,6 +48,7 @@ import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
+import Fir.Core.CallLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
 import Fir.Execution.Modes
@@ -57,8 +59,11 @@ import Fir.Execution.Environment
 import Fir.Execution.Progress
 import Fir.Execution.Scoped
 import Fir.Execution.Jumps
+import Fir.Execution.CallSteps
+import Fir.Execution.Calls
 import Fir.Core.Runs
 import Fir.Core.CallFree
+import Fir.Core.ValidRuns
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

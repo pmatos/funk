@@ -18,8 +18,9 @@ them.
 Branches and loops are included: a run may jump to any block, as often as
 its fuel allows. A function that runs straight (`Func.Straight`) runs
 within itself (`Func.Straight.local`), so these theorems extend those of
-the section on progress and no stuck path. Calls are left to #20, whose
-callee runs another function.
+the section on progress and no stuck path. A call runs another function:
+the section on progress with calls and recursion extends these theorems
+to calls (`Func.neverStuck_of_inModule`, `Func.progress_of_inModule`).
 
 The proof is by induction on the budget, from any op of any block of the
 function on. Its invariant is `Env.Scoped`: before an op, the environment

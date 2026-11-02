@@ -7,6 +7,7 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.Control
 import Fir.Core.Branch
+import Fir.Core.Call
 import Fir.Core.Text
 
 /-!
@@ -24,9 +25,10 @@ them.
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. After #14 to #19, that is `call`: every
-other core op has its rules. ADR-2026-10-30-1855 decides what such an op
-does until its family lands:
+`Op.exit?` gives `none` for it. Since #20 gave `call` its rule, every core
+op has its rules, so none is left without. ADR-2026-10-30-1855 decides
+what such an op does until its family lands, and the spec keeps that rule
+for every dialect:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -43,10 +45,11 @@ does until its family lands:
   `Func.neverStuck_of_local` cover such a function too, but only vacuously
   on the paths that reach the op: they say nothing of how it behaves.
 * A run that reaches such an op has no way to end on that path; when
-  every path does, `Progress` fails. So `Progress` and `NeverStuck` are
-  proved for every valid core function without a `call` op, the one op
-  left without rules (`Core.callFree_progress`, `Core.callFree_neverStuck`),
-  and #20 extends them to calls and recursion.
+  every path does, `Progress` fails. So `Progress` and `NeverStuck` were
+  proved first for every valid core function without a `call` op, while
+  `call` had no rules (`Core.callFree_progress`, `Core.callFree_neverStuck`),
+  and are proved now for every valid core function, calls and recursion
+  included (`Core.progress`, `Core.neverStuck`).
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules yet, as an error
   (ADR-2026-10-30-1856).
@@ -58,11 +61,11 @@ Each ticket from #14 to #20 adds its family's rules to `Op.denote?` and
 
 `call` takes its meaning from the call effect, which the interpreter runs
 (ADR-2026-11-02-0836), not from `denote`. The instance
-`DialectCall CoreDialect` says which core ops call a function. None does
-yet: #20 names the callee of `call` there, and until then `call` is an op
-without rules, as above. Once `call` has a callee, the interpreter never
-runs its `denote`: its entry in `Op.denote?` is only the stand-in that the
-op-level obligations look at.
+`DialectCall CoreDialect` says which core ops call a function: `call @g`
+calls `@g` (`Core.Op.callTarget?`, in the section on calls). The interpreter
+never runs `call`'s `denote`: its entry in `Op.denote?` is only the
+stand-in that the op-level obligations look at, `callStandIn`, immediate
+UB, which every behaviour of a call refines.
 -/
 
 namespace Fir.Core
@@ -111,6 +114,7 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (sextValue n a) .nil)
   | .trunc _ n => some fun
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
+  | .call .. => some callStandIn
   | _ => none
 
 /-- The rule of each core terminator, in any monad with the UB effect, when
@@ -129,16 +133,14 @@ of choice and UB that the rules of #14, #18 and #19 ask for. -/
 def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
 
--- Among one instance of every core op, the tracer subset and the ops of
--- #14 to #19 have rules, `add` with each of its flags and `icmp` with each
--- of its predicates among them.
-#guard (samples.filter Op.hasRules).map Op.name ==
-  ["const", "const", "const", "const", "add", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem",
-   "and", "or", "xor", "shl", "lshr", "ashr", "select", "zext", "sext", "trunc", "freeze", "br",
-   "cond_br", "ret", "ret"] ++ List.replicate 10 "icmp"
+-- Every core op has rules: one instance of each, `add` with each of its
+-- flags and `icmp` with each of its predicates among them. `call`'s rule
+-- in `Op.denote?` is its stand-in.
+#guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
-#guard (Op.br).hasRules && (Op.condBr).hasRules && !(Op.call "f" [.int 8] [.int 8]).hasRules
+#guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.call "f" [.int 8] [.int 8]).hasRules &&
+  (Op.call "f" [] [.ptr]).hasRules
 
 end Fir.Core
 
@@ -154,8 +156,7 @@ instance : DialectDenote CoreDialect SetM where
     | some rule => rule args
     | none => fun _ => False
 
-/-- The core ops that call a function: none yet, until #20 names the callee
-of `call`. -/
-instance : DialectCall CoreDialect := ⟨fun _ => none⟩
+/-- The core ops that call a function: `call @g` calls `@g`. -/
+instance : DialectCall CoreDialect := ⟨Core.Op.callTarget?⟩
 
 end Fir

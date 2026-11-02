@@ -9,8 +9,8 @@ hypotheses can be met, and the axioms of their proofs.
 `@sum`, the spec's example, loops until its counter reaches its argument.
 `@forever` passes a block argument round a loop that never ends, so every
 run of it runs out of fuel: progress holds because running out of fuel is
-an outcome. `@sum10` calls `@sum`, so it is not `CallFree`, and the
-theorems say nothing of it until #20.
+an outcome. `@sum10` calls `@sum`, so it is not `CallFree`: the theorems
+for every valid core function cover it, which `FirTest.RunsCalls` applies.
 -/
 
 namespace FirTest
