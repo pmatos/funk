@@ -217,7 +217,10 @@ fn any_other_sigsegv_still_ends_the_run_by_the_signal() {
     within_ten_seconds("the run never catches SIGSEGV", || {
         std::fs::read_to_string(&status).is_ok_and(caught)
     });
-    let sent = Command::new("kill").args(["-SEGV", &pid]).status().unwrap();
+    let sent = Command::new("sh")
+        .args(["-c", "kill -s SEGV \"$0\"", &pid])
+        .status()
+        .unwrap();
     assert!(sent.success());
     let mut ended = None;
     within_ten_seconds("SIGSEGV does not end the run", || {
