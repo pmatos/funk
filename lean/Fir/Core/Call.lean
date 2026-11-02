@@ -63,7 +63,8 @@ op by op, holds for every target and says nothing about a real call. Such
 statements must leave out the ops that call a function. The facts about
 calls are stated about the runs of functions: progress and no stuck path
 with calls and recursion (the section on every valid core function), and
-their refinement theorems, #20's next stage.
+their refinement theorems, for refined arguments and for a replaced
+callee (the section on refinement through core calls).
 
 An op _without_ rules is never UB in the spec (ADR-2026-10-30-1855): UB
 would give it a meaning that it does not have, would let an exception

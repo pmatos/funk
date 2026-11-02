@@ -23,7 +23,9 @@ and say nothing about a real call (ADR-2026-11-02-1156). What a call does
 is its callee's run, and the facts about it are stated about the runs of
 functions: no path of a valid core function's run is stuck, and it has
 an outcome at every budget, calls and recursion included (the section on
-every valid core function).
+every valid core function); and refining a call's arguments, or its
+callee, refines its caller (the section on refinement through core
+calls).
 -/
 
 namespace Fir.Core

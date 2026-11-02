@@ -45,11 +45,12 @@ names the callee of `call @g`, `@g`. The set monad has no module and no
 such effect, so the `denote` of `call` in `SetM`, which the op-level
 obligations look at, is only a stand-in, immediate UB (`callStandIn`, in
 the section on calls), and its totality and monotonicity
-(`Core.call_total`, `Core.call_monotone`) say nothing about calls. #20
-proves their real counterparts at function level: a call on arguments
-that refine others refines the call on those others, and congruence in
-the callee: replacing a callee with a function that refines it refines
-the caller.
+(`Core.call_total`, `Core.call_monotone`) say nothing about calls. Their
+real counterparts hold at function level (the section on refinement
+through core calls): a call on arguments that refine others refines the
+call on those others (`Core.args_isRefinedBy`), and congruence in the
+callee: replacing a callee with a function that refines it refines every
+caller (`Core.replaceBody_isRefinedBy`).
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its

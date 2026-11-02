@@ -215,13 +215,12 @@ are on `main`:
   calls, recursion included. A callee runs on the fuel that its caller
   has left, so recursion without end runs out of fuel. Lean proves that
   no path of a run of a function of a valid module is stuck, and that the
-  run has an outcome at every budget.
+  run has an outcome at every budget, and that a call refines when its
+  arguments do, and when its callee is replaced by a function that
+  refines it.
 
 These parts of M0 do not exist yet:
 
-- The proofs that a call refines when its arguments do, and when its
-  callee is replaced by a function that refines it
-  ([#20](https://github.com/pmatos/funk/issues/20)).
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).

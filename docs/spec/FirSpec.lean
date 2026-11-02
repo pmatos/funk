@@ -184,6 +184,22 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
 
+{includeLiterate "." Fir.Execution.RunPaths "The ways a step goes on" (level := 2)}
+
+{includeLiterate "." Fir.Execution.EnvRefine "Refined environments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.BlackBox "Calls as black boxes" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineUp "Returns and UB, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineDown "Running out of fuel, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineRuns "Refined arguments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Replace "Replacing a callee" (level := 2)}
+
+{includeLiterate "." Fir.Core.CallRefine "Refinement through core calls" (level := 2)}
+
 # Text format
 
 {includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}
