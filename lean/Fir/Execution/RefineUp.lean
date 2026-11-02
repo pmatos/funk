@@ -22,14 +22,15 @@ function at once, and follows the target's path step by step
   refined by the target's, and the induction covers the rest, with one
   step less.
 * A call of the same function in both enters it at the same op, in
-  environments that refine (`Func.enter_isRefinedBy`), and the induction
-  covers the callee, on fewer steps. A call of a black box is allowed by
+  environments of which the target's refines the source's
+  (`Func.enter_isRefinedBy`), and the induction covers the callee, on
+  fewer steps. A call of a black box is allowed by
   the black box's behaviours (`BlackBox.allowed`).
 * When the source's callee returns at the budget `N₁`, values that the
   target's refine, and the rest of the source's run is allowed at the
   budget `N₂`, the source's run at `N₁ + N₂ + 1` is allowed: its callee,
-  with `N₂` more steps, returns the same and leaves `N₂` more, and its rest
-  runs with that many, or more (`Func.call_cont`).
+  with `N₂` more steps, returns the same and leaves `N₂` more, so its rest
+  runs with `N₂` steps or more, and does the same (`Func.call_cont`).
 -/
 
 namespace Fir
