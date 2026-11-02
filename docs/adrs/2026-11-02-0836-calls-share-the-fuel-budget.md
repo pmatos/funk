@@ -17,8 +17,29 @@ lowered by one per op. An op's `denote` and `exit` see only the op and its
 operands: not the module, which a call needs to find its callee, and not
 the budget, which the callee must share. The set monad has no module.
 
+#70 expected that sharing fuel would change the spec's `Run` monad or
+`DialectDenote`. The ruling asks stage 5 to design the interface by which
+a call receives the remaining budget and gives back what is left
+([comment](https://github.com/pmatos/funk/issues/70#issuecomment-6572293672)).
+This design changes neither `Run` nor `DialectDenote`.
+
 Fuel is a device of the Lean definitions. It must not change what a
 program means, nor any result of `fir-ref`.
+
+This refines three accepted ADRs:
+
+- ADR-2026-10-29-2030 says that a dialect states the effects it needs as
+  class constraints on the monad, and that "calls (#20) add an effect that
+  shares the fuel budget". The call effect is not a constraint on the
+  monad: it is the run's, and a dialect names its calls through
+  `DialectCall`.
+- ADR-2026-10-30-2217 says that #20's call effect "needs its node in the
+  tree, its image in the set monad, and its case in the morphism's
+  proofs". It needs none of them: the interpreter's call path uses only
+  `pure`, `bind` and `liftExcept`, so `Func.runOps_map` covers it.
+- ADR-2026-10-30-1855 says that each ticket from #14 to #20 adds its ops'
+  rules to `Op.denote?` and `Op.exit?`. `call` takes its meaning from its
+  callee, which #20 names in `DialectCall CoreDialect`.
 
 ## Decision
 
@@ -47,11 +68,11 @@ program means, nor any result of `fir-ref`.
 
 ## Alternatives
 
-- **Fuel as the structural argument, passed to a call hook**, the
-  suggestion on #70. Kept in substance: the callee is handed the budget
-  and gives back the rest. Changed in one point: the recursion cannot
-  stay structural, for the reason above. `FuelMonotone` is still proved by
-  induction on the budget.
+- **Fuel as the structural argument, passed to a call hook.** Kept in
+  substance: the callee is handed the budget and gives back the rest, the
+  interface the ruling on #70 asks for. Changed in one point: the
+  recursion cannot stay structural, for the reason above. `FuelMonotone`
+  is still proved by induction on the budget.
 - **Fuel in a state monad.** A second counter beside the interpreter's,
   or termination that rests on a counter Lean cannot see; `FuelMonotone`
   would be about the wrong counter.
@@ -68,10 +89,22 @@ program means, nor any result of `fir-ref`.
 ## Consequences
 
 - #20 adds the callee of `call` to `DialectCall CoreDialect`, with its
-  tests and proofs, and does not change the interpreter.
+  tests and proofs, and does not change the interpreter. Once `call` has a
+  callee, the interpreter never runs its `denote`: its entry in
+  `Op.denote?` is only the stand-in that the op-level obligations
+  `OpTotal` and `OpMonotone` look at.
 - No result of `fir-ref` changes: no core op calls a function yet, each op
   still takes one step, and a function's run returns what it returned.
 - Fuel monotonicity holds for every function of every module, calls
   included, whatever its ops do (`Func.fuelMonotone`), since only the
-  interpreter counts fuel.
+  interpreter counts fuel. For a function that reaches an op without rules
+  it holds only vacuously on the paths that reach the op, and makes no
+  claim about how such a function behaves (ADR-2026-10-30-1855).
 - `Progress` and `NeverStuck` for runs with calls are #20's to prove.
+- `Func.runOps` is defined by well-founded recursion, which Lean makes
+  irreducible, and `Func.run` runs it. Proofs unfold it with its equation
+  lemmas (`simp only [Func.runOps]`) and use strong induction on the
+  budget (`Nat.strongRecOn`), as `Func.runOps_map` and `Func.runOps_ahead`
+  do. `rfl` does not evaluate a run without `unseal Func.runOps`. Compiled
+  code, `fir-ref` included, is unaffected, apart from one `min` on the
+  call path.

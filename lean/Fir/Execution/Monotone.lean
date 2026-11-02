@@ -3,18 +3,20 @@ import Fir.Execution.Interpreter
 import Fir.Execution.Refinement
 
 /-!
-# The runs of a function, and fuel monotonicity
+# Runs at every budget
 
 The runs of a function of a module are its runs in the set monad, on each
 argument vector of its parameter types, at each budget: `Func.runs`, a
 `FuncRuns`. Their observable behaviour is what the function does.
 
 They are fuel-monotone, for every function of every module of every
-dialect, whatever its ops do (`Func.fuelMonotone`). The proof needs no
-property of the ops, because the interpreter alone counts the fuel: an op
-never sees it, and a call hands its callee the steps that the caller has
-left and goes on with what the callee gives back. It rests on two facts,
-each proved by induction on the budget:
+dialect, whatever its ops do (`Func.fuelMonotone`). Of a function that
+reaches an op without rules, this holds only vacuously on the paths that
+reach the op (ADR-2026-10-30-1855). The proof needs no property of the ops,
+because the interpreter alone counts the fuel: an op never sees it, and a
+call hands its callee the steps that the caller has left and goes on with
+what the callee gives back. It rests on two facts, each proved by induction
+on the budget:
 
 * a run gives back at most the steps it was given (`Func.runOps_left_le`),
   so a caller goes on with exactly the steps its callee leaves;

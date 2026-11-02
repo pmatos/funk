@@ -5,7 +5,7 @@ import Fir.Core.Validation
 import Fir.Execution.Progress
 
 /-!
-# The runs of core functions
+# The tracer subset's three obligations
 
 The runs of the function `f` of a core module `M` are `Core.funcRuns M f`:
 on each argument vector of its parameter types, poison included, its run in
@@ -56,7 +56,14 @@ def InTracer (f : Func CoreDialect) : Prop :=
 /-- A valid function of the tracer subset runs straight to a return. -/
 theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
     (hv : f.Valid ctx) (ht : InTracer f) : f.Straight where
-  noCall _ _ _ _ := rfl
+  noCall b hb o ho := by
+    have hop := ht b hb o ho
+    revert hop
+    match o.op with
+    | .const _ _ | .add _ _ | .ret _ => intro _; rfl
+    | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
+    | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
+    | .freeze _ | .br | .condBr | .call .. => intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho
     revert args h

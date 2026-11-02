@@ -20,11 +20,13 @@ A run keeps an _environment_: the value of every name it has defined so
 far. It starts with the function's parameters bound to the arguments, then
 runs the entry block op by op.
 
-* An op that is not a terminator takes its operands from the environment,
-  and its dialect's `denote` gives its results, which join the environment.
-* An op that calls a function, as its dialect's `callee?` says, passes its
-  operands to the callee, which the run looks up in the module by its
-  symbol. The values that the callee returns are its results.
+* An op that is not a terminator and calls no function takes its operands
+  from the environment, and its dialect's `denote` gives its results,
+  which join the environment.
+* An op that is not a terminator and calls a function, as its dialect's
+  `callee?` says, passes its operands to the callee, which the run looks
+  up in the module by its symbol. The values that the callee returns are
+  its results.
 * A terminator's `exit` says where control goes. On `ret` the run returns
   the terminator's operands, any number of them (ADR-2026-10-30-0816). On
   `goto i` it binds the arguments of the block that the `i`th successor
@@ -55,7 +57,9 @@ for people. Validation makes each of these checks of a valid function:
 * a successor names a block of the function, and passes one value of the
   right type for each of that block's arguments;
 * a call names a function of the module, passes one value of the right type
-  for each of its parameters, and receives values of its own result types;
+  for each of its parameters, and receives values of its own result types,
+  which the dialect's own validation rule must ask, as the core rule for
+  `call` does;
 * an op owns no region: no op of M0 has one, and how regions run is left to
   H6, so validation rejects them;
 * the function has an entry block, which declares no arguments.

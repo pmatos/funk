@@ -31,16 +31,19 @@ subset, `const`, `add` without flags and `ret`, and every argument vector:
   path, which #10's definition must ensure, every path of a valid
   function's run ends in an outcome.
 
-The proofs are general. Fuel monotonicity holds for every function of
-every module, of every dialect, calls included, whatever its ops do
+The proofs are general. Fuel monotonicity holds for every function of every
+module, of every dialect, calls included, whatever its ops do
 (`Func.fuelMonotone`): only the interpreter counts fuel, and a callee gives
-back to its caller the steps it leaves (ADR-2026-11-02-0836). Progress and
-the no-stuck obligation hold for every valid function whose ops run
-straight to a return and are total (`Func.progress`, `Func.neverStuck`), as
-the tracer subset's do. Each ticket that adds core ops, from ticket #14 to
-#20, keeps progress and the no-stuck obligation as it adds its ops, so that
-once the last of them lands they hold for every valid function of the core
-dialect. #14 keeps them when it adds the `fir-ref` modes.
+back to its caller the steps it leaves (ADR-2026-11-02-0836). Of a function
+that reaches an op without rules it holds only vacuously on the paths that
+reach the op, and says nothing of how such a function behaves
+(ADR-2026-10-30-1855). Progress and the no-stuck obligation hold for every
+valid function whose ops run straight to a return and are total
+(`Func.progress`, `Func.neverStuck`), as the tracer subset's do. Each
+ticket that adds core ops, from ticket #14 to #20, keeps progress and the
+no-stuck obligation as it adds its ops, so that once the last of them lands
+they hold for every valid function of the core dialect. #14 keeps them when
+it adds the `fir-ref` modes.
 -/
 
 namespace Fir

@@ -1,6 +1,6 @@
 # A core op without execution rules has no outcome, and `fir-ref run` reports it, until its family lands
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-02-0836
 
 ## Context
 

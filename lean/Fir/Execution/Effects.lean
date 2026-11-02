@@ -96,7 +96,13 @@ yet: ticket #20 names the callee of `call`, and so gives `call` its meaning.
 The ops of a dialect that call a function of the module: `callee? op` is the
 symbol of the function that `op` calls, and `none` for an op that calls
 none. The interpreter runs the callee with the fuel that the caller has
-left.
+left. It asks `callee?` only of an op that is not a terminator: a
+terminator runs through `exit`, whatever `callee?` says of it.
+
+Nothing ties `callee?` to validation. The dialect's own validation rule
+for a call must check that its callee is a function of the module and
+that the types of its operands and results match the callee's signature,
+as the core rule for `call` does.
 -/
 class DialectCall (d : Dialect) where
   callee? : d.Op → Option Name

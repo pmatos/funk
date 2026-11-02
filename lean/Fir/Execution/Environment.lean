@@ -1,7 +1,7 @@
 import Fir.Execution.Interpreter
 
 /-!
-# The environment of a run
+# Lookups and type checks that succeed
 
 A run looks each operand up in its environment, by name, and checks its
 type. The lemmas below say when those lookups and checks succeed: when the

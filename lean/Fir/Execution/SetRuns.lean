@@ -1,7 +1,7 @@
 import Fir.Execution.Behaviour
 
 /-!
-# Reading a run path by path
+# How each step of a run ends
 
 The proofs of the next sections read a run in the set monad path by path.
 A computation of `ExceptT Stuck SetM` is the set of the ways its paths
