@@ -95,6 +95,12 @@ instance [TyDenote Ty] [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨O
     | .inl o, args => DialectDenote.exit (d := ⟨Op₁, Ty⟩) o args
     | .inr o, args => DialectDenote.exit (d := ⟨Op₂, Ty⟩) o args
 
+/-- An op of the sum calls the function that it calls in its own dialect. -/
+instance [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩] : DialectCall (SumDialect Ty Op₁ Op₂) where
+  callee?
+    | .inl o => callee? (d := ⟨Op₁, Ty⟩) o
+    | .inr o => callee? (d := ⟨Op₂, Ty⟩) o
+
 /-- Two dialects whose ops meet the poison obligations make a sum whose ops
 meet them: each op meets them as its own dialect's op. -/
 instance lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]

@@ -60,7 +60,7 @@ theorem MonadMorphism.except_lift {ε α : Type} (x : m α) :
     (φ.except ε).map (ExceptT.lift x) = ExceptT.lift (φ.map x) := by
   simp only [MonadMorphism.except, ExceptT.lift, ExceptT.run, ExceptT.mk, φ.map_map]
 
-variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
+variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d m] [DialectDenote d n]
 
 /-- The morphism maps each op's semantics in `m` to its semantics in `n`:
@@ -74,30 +74,38 @@ structure MonadMorphism.MapsDenote : Prop where
 
 variable {φ}
 
-/-- Running ops maps to running them in the other monad. -/
-theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (f : Func d) :
-    ∀ (fuel : Nat) (env : Env d) (os : List (Operation d)),
-      (φ.except Stuck).map (f.runOps (m := m) fuel env os) = f.runOps (m := n) fuel env os
-  | 0, _, _ => by simp [Func.runOps, (φ.except Stuck).map_pure]
-  | _ + 1, _, [] => by simp [Func.runOps, φ.except_liftExcept]
-  | k + 1, env, o :: os => by
-    have ih := Func.runOps_map h f k
-    simp only [Func.runOps]
-    simp only [apply_ite (φ.except Stuck).map, (φ.except Stuck).map_bind, φ.except_liftExcept,
-      φ.except_lift, h.denote, h.exit, ih]
-    all_goals repeat' (first | (apply bind_congr; intro _) | split)
-    all_goals simp only [(φ.except Stuck).map_bind, φ.except_liftExcept,
-      (φ.except Stuck).map_pure, ih]
+/-- Running ops maps to running them in the other monad, calls included. -/
+theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (M : Module d) (fuel : Nat) :
+    ∀ (f : Func d) (env : Env d) (os : List (Operation d)),
+      (φ.except Stuck).map (Func.runOps (m := m) M fuel f env os) =
+        Func.runOps (m := n) M fuel f env os := by
+  induction fuel using Nat.strongRecOn with
+  | ind fuel ih =>
+    intro f env os
+    match fuel, os with
+    | 0, _ => simp [Func.runOps, (φ.except Stuck).map_pure]
+    | _ + 1, [] => simp [Func.runOps, φ.except_liftExcept]
+    | k + 1, o :: os =>
+      have ih₀ := ih k (Nat.lt_succ_self k)
+      have ih₁ : ∀ j, _ := fun j => ih (min j k) (Nat.lt_succ_of_le (Nat.min_le_right j k))
+      simp only [Func.runOps]
+      all_goals repeat' (first
+        | (apply bind_congr; intro _)
+        | split
+        | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
+            φ.except_lift, h.denote, h.exit, ih₀, ih₁])
 
 /-- The interpreter cannot tell monads apart: a morphism that maps each
 op's semantics in `m` to its semantics in `n` maps a function's run in `m`
 to its run in `n`. -/
-theorem Func.run_map (h : φ.MapsDenote (d := d)) (f : Func d)
+theorem Func.run_map (h : φ.MapsDenote (d := d)) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
-    (φ.except Stuck).map (f.run (m := m) args fuel) = f.run (m := n) args fuel := by
+    (φ.except Stuck).map (f.run M (m := m) args fuel) = f.run M (m := n) args fuel := by
   simp only [Func.run]
-  all_goals repeat' (first | (apply bind_congr; intro _) | split)
-  all_goals simp only [(φ.except Stuck).map_bind, φ.except_liftExcept,
-    Func.runOps_map h]
+  all_goals repeat' (first
+    | (apply bind_congr; intro _)
+    | split
+    | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
+        Func.runOps_map h])
 
 end Fir

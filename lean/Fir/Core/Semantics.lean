@@ -37,8 +37,11 @@ does until its family lands:
   it. `PropagatesPoison` and `OpMonotone` hold of such an op, and
   `NeverStuck` and `FuelMonotone` of a function that reaches one, since the
   empty set meets every bound on what may happen; and such a function
-  refines every source. So no such statement is made of an op, or of a
-  function that reaches one, before the op has rules.
+  refines every source. So none of these statements is claimed of an op,
+  or of a function that reaches one, before the op has rules. The general
+  theorems `Func.fuelMonotone` and `Func.neverStuck` cover such a function
+  too, but only vacuously on the paths that reach the op: they say nothing
+  of how it behaves.
 * A run that reaches such an op has no way to end on that path; when
   every path does, `Progress` fails. #10 proves `Progress` and `NeverStuck` for the
   tracer subset only, and #14 to #20 extend them as they add their ops.
@@ -48,6 +51,16 @@ does until its family lands:
 
 Each ticket from #14 to #20 adds its family's rules to `Op.denote?` and
 `Op.exit?`, in its own section, and proves their obligations beside them.
+
+# Calls
+
+`call` takes its meaning from the call effect, which the interpreter runs
+(ADR-2026-11-02-0836), not from `denote`. The instance
+`DialectCall CoreDialect` says which core ops call a function. None does
+yet: #20 names the callee of `call` there, and until then `call` is an op
+without rules, as above. Once `call` has a callee, the interpreter never
+runs its `denote`: its entry in `Op.denote?` is only the stand-in that the
+op-level obligations look at.
 -/
 
 namespace Fir.Core
@@ -138,5 +151,9 @@ instance : DialectDenote CoreDialect SetM where
   exit op args := match op.exit? (m := SetM) with
     | some rule => rule args
     | none => fun _ => False
+
+/-- The core ops that call a function: none yet, until #20 names the callee
+of `call`. -/
+instance : DialectCall CoreDialect := ⟨fun _ => none⟩
 
 end Fir

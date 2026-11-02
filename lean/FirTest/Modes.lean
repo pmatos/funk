@@ -199,7 +199,7 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
     match testArgs (f.params.map (·.2)) args with
     | .error _ => none
     | .ok vs => letI := s
-      some (exhaustiveReport "@f" 16 ((f.run (m := Tree) vs defaultFuel).run.explore 16))
+      some (exhaustiveReport "@f" 16 ((f.run m (m := Tree) vs defaultFuel).run.explore 16))
 
 #guard exploreIn addIsUB (body "func @f(%a: i1) -> i1"
     ["^e:", "  %t: i1 = const true @0", "  %p: i1 = sub nsw %a, %t @0", "  %f: i1 = freeze %p @0",
