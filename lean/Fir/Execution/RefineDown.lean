@@ -200,10 +200,12 @@ theorem CallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
 /-- Every path of the target's run of ops that runs out of fuel or
 returns, at a budget of at least `(bound + 1) * (N + 1)`, is allowed by
 the source's run at `N`, from environments of which the target's refines
-the source's, when every op is monotone and every call names the same
-function in both modules or a black box. -/
-theorem Func.runOps_allowedBelow (hmono : ∀ op : d.Op, OpMonotone op) {M M' : Module d}
-    {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
+the source's, when every terminator and every op with no callee is
+monotone, and every call names the same function in both modules or a
+black box. -/
+theorem Func.runOps_allowedBelow
+    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
+    {M M' : Module d} {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
     ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)) (N : Nat),
       env.IsRefinedBy env' → (bound + 1) * (N + 1) ≤ n →
       ∀ e', (Func.runOps (m := SetM) M' n f env' os).run e' →
@@ -240,7 +242,7 @@ theorem Func.runOps_allowedBelow (hmono : ∀ op : d.Op, OpMonotone op) {M M' : 
       | callUB _ _ _ _ _ _ _ => exact absurd rfl (hnub _)
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
@@ -250,7 +252,7 @@ theorem Func.runOps_allowedBelow (hmono : ∀ op : d.Op, OpMonotone op) {M M' : 
             HVector.toDVals_isRefinedBy hr, hb'⟩)
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
@@ -260,7 +262,7 @@ theorem Func.runOps_allowedBelow (hmono : ∀ op : d.Op, OpMonotone op) {M M' : 
             (ihn _ _ _ _ _ henv₁ hb' _ he)
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _

@@ -208,15 +208,6 @@ every valid core module. -/
 /-- info: 'Fir.Func.progress_of_inModule' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.progress_of_inModule
 
-/-- info: 'Fir.Core.call_total' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.call_total
-
-/-- info: 'Fir.Core.call_monotone' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.call_monotone
-
-/-- info: 'Fir.Core.call_isRefinedBy' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.call_isRefinedBy
-
 /-- info: 'Fir.Core.Op.total_all' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.total_all
 

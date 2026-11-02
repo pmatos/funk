@@ -25,10 +25,12 @@ them.
 # Ops without rules
 
 An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. Since #20 gave `call` its rule, every core
-op has its rules, so none is left without. ADR-2026-10-30-1855 decides
-what such an op does until its family lands, and the spec keeps that rule
-for every dialect:
+`Op.exit?` gives `none` for it. Since #20 named the callee of `call`,
+every core op has its rules, so none is left without. `call`'s meaning is
+its callee's run, so `Op.denote?` gives `none` for it too, and it is not
+an op without rules (the section on calls below). ADR-2026-10-30-1855
+decides what an op without rules does until its family lands, and the
+spec keeps that rule for every dialect:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
@@ -54,8 +56,9 @@ for every dialect:
   says that the op has no execution rules yet, as an error
   (ADR-2026-10-30-1856).
 
-Each ticket from #14 to #20 adds its family's rules to `Op.denote?` and
+Each ticket from #14 to #19 adds its family's rules to `Op.denote?` and
 `Op.exit?`, in its own section, and proves their obligations beside them.
+#20 names the callee of `call` instead, below.
 
 # Calls
 
@@ -63,9 +66,13 @@ Each ticket from #14 to #20 adds its family's rules to `Op.denote?` and
 (ADR-2026-11-02-0836), not from `denote`. The instance
 `DialectCall CoreDialect` says which core ops call a function: `call @g`
 calls `@g` (`Core.Op.callTarget?`, in the section on calls). The interpreter
-never runs `call`'s `denote`: its entry in `Op.denote?` is only the
-stand-in that the op-level obligations look at, `callStandIn`, immediate
-UB, which every behaviour of a call refines.
+runs the callee of every op that has one before it looks at `denote`, so
+`call` has no rule here: `Op.denote?` gives `none` for it, and in the set
+monad its `denote` has no outcome, which no run reaches. It has no
+op-level obligation either: the poison obligations ask totality and
+monotonicity only of terminators and of ops with no callee
+(ADR-2026-11-02-1514). `Op.hasRules` counts `call` as an op with rules,
+since its callee's run is its meaning.
 -/
 
 namespace Fir.Core
@@ -114,7 +121,6 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (sextValue n a) .nil)
   | .trunc _ n => some fun
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
-  | .call .. => some callStandIn
   | _ => none
 
 /-- The rule of each core terminator, in any monad with the UB effect, when
@@ -127,20 +133,22 @@ def Op.exit? [MonadUB m] : (op : Op) →
   | .ret _ => some fun _ => pure retExit
   | _ => none
 
-/-- The op has rules: as an op that is not a terminator, or as a
-terminator. It looks at the rules in the set monad, which has the effects
-of choice and UB that the rules of #14, #18 and #19 ask for. -/
+/-- The op has rules: as an op that is not a terminator, as a terminator,
+or as an op that calls a function, whose meaning is its callee's run. It
+looks at the rules in the set monad, which has the effects of choice and
+UB that the rules of #14, #18 and #19 ask for. -/
 def Op.hasRules (op : Op) : Bool :=
-  (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome
+  (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome || op.callTarget?.isSome
 
 -- Every core op has rules: one instance of each, `add` with each of its
--- flags and `icmp` with each of its predicates among them. `call`'s rule
--- in `Op.denote?` is its stand-in.
+-- flags and `icmp` with each of its predicates among them. `call`'s are
+-- its callee's run: it has no entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr]).hasRules
+#guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
 
 end Fir.Core
 

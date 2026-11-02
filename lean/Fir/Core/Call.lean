@@ -3,7 +3,7 @@ import Fir.Core.Values
 /-!
 # Calls
 
-Ticket #20 gives `call` its rule. `call @g` runs the function of the
+Ticket #20 gives `call` its meaning. `call @g` runs the function of the
 module whose symbol is `@g`, the caller itself included, so a function
 may call itself, and two functions may call each other. A symbol that is
 not a word is quoted in text: `call @"1"` calls the function `@"1"`, and
@@ -38,42 +38,35 @@ core op semantics, sends each op there. A call then runs so:
   share one budget. A run that recurses without end runs out of fuel at
   every budget: it diverges, as a loop that never ends does.
 
-# The stand-in in the set monad
+# No rule at op level
 
-The op-level obligations of the poison classes section, totality
-(`OpTotal`) and monotonicity (`OpMonotone`), look at an op's `denote` in
-the set monad, and `LawfulDialectPoison` asks them of every op. The set
-monad has no module, so a `denote` cannot run a callee: `call`'s `denote`
-can only be a stand-in, `callStandIn`. The interpreter never runs it,
-since it runs the callee of every op that has one, and `fir-ref` never
-reports it.
+A call has no rule of its own in the set monad: `Op.denote?` gives `none`
+for `call`, and its `denote` there has no outcome. The interpreter never
+looks at it, since it runs the callee of every op that has one before it
+looks at `denote`, and `fir-ref` never reaches it. Its meaning is its
+callee's run, and nothing else.
 
-The stand-in is immediate UB, on every operand vector
-(ADR-2026-11-02-1156). UB allows every behaviour, so every way that a
-call may end, whatever its callee, refines it. It has an outcome on every
-op instance, even one with a result type that has no values, such as
-`ptr`, and it is monotone, since UB on the original operands allows
-whatever happens on refined ones. So its obligations are met trivially,
-and carry no information about calls.
+So `call` has no op-level obligation (ADR-2026-11-02-1514). The poison
+obligations of the poison classes section ask totality (`OpTotal`) and
+monotonicity (`OpMonotone`) only of the ops that the interpreter runs by
+their own rule: terminators, and ops with no callee. The set monad has no
+module, so a rule there cannot run a callee. Any rule for `call` there
+would be a stand-in with a meaning that a call does not have, such as
+immediate UB, and obligations met by a stand-in would say nothing about
+calls. A stand-in that is UB would also be refined by every computation,
+so a statement that reads it as a source, such as a rewrite rule proved
+op by op, would hold for every rewrite of a call. Such statements leave
+out the ops with a callee, as the obligations do; M1's rewrite rules will
+too (#96).
 
-The stand-in is the top of the refinement order: as a source, it is
-refined by every computation (`Core.call_isRefinedBy`). So a statement
-that reads `call`'s `denote` as a source, such as a rewrite rule proved
-op by op, holds for every target and says nothing about a real call. Such
-statements must leave out the ops that call a function. The facts about
-calls are stated about the runs of functions: progress and no stuck path
-with calls and recursion (the section on every valid core function), and
-their refinement theorems, for refined arguments and for a replaced
-callee (the section on refinement through core calls).
-
-An op _without_ rules is never UB in the spec (ADR-2026-10-30-1855): UB
-would give it a meaning that it does not have, would let an exception
-pass for lawful, since totality and monotonicity are all of an
-exception's obligations, and `fir-ref` would report it. `call` does pass
-those two vacuously, and that is acceptable only because its meaning is
-not missing: `DialectCall CoreDialect` gives it its callee's run,
-`fir-ref` never reaches its stand-in, and the facts about calls are
-proved over runs.
+The facts about calls are stated about the runs of functions instead,
+for every function of every valid core module, calls and recursion
+included: fuel monotonicity, progress and no stuck path
+(`Core.fuelMonotone`, `Core.progress`, `Core.neverStuck`, in the section
+on every valid core function), and refinement through a call, for
+refined arguments and for a replaced callee (`Core.args_isRefinedBy`,
+`Core.replaceBody_isRefinedBy`, in the section on refinement through core
+calls).
 -/
 
 namespace Fir.Core
@@ -83,16 +76,5 @@ core op calls one. -/
 def Op.callTarget? : Op → Option Name
   | .call g _ _ => some g
   | _ => none
-
-/-- The reason of `call`'s stand-in UB. No run reports it: the interpreter
-runs a call's callee instead. -/
-def callStandInReason : String := "call's stand-in, which the interpreter never runs"
-
-/-- `call`'s stand-in in any monad with the UB effect, the `denote` that
-the op-level obligations look at: immediate UB on every operand vector,
-which every behaviour of a call refines. -/
-def callStandIn {m : Type → Type} [MonadUB m] {ts rs : List Ty} :
-    HVector toType ts → m (HVector toType rs) :=
-  fun _ => MonadUB.ub callStandInReason
 
 end Fir.Core

@@ -204,10 +204,12 @@ theorem exists_common_bound {A : Type} {L : List A} (hL : ∀ a, a ∈ L) (Q : A
 /-- Congruence in the callee: in a module whose symbols are unique,
 replacing the body of its function `@g` with one under which `@g`, run
 in the new module, refines `@g` in the old, refines every function of the
-module, calls and recursion included. It asks that every op be monotone,
-that the refinement of values be reflexive and transitive, and that
-`@g` have finitely many argument vectors. -/
-theorem Func.runs_replaceBody_isRefinedBy (hmono : ∀ op : d.Op, OpMonotone op)
+module, calls and recursion included. It asks that every terminator and
+every op with no callee be monotone, that the refinement of values be
+reflexive and transitive, and that `@g` have finitely many argument
+vectors. -/
+theorem Func.runs_replaceBody_isRefinedBy
+    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)

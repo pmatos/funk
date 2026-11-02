@@ -5,10 +5,10 @@ import Fir.Execution.Replace
 /-!
 # Calls refine as their arguments and callees do
 
-`call` is a poison exception, and its op-level obligations look only at a
-stand-in, which says nothing about calls (ADR-2026-11-02-1156). Their real
-counterparts hold at function level, for the functions of every core
-module, calls and recursion included:
+`call` is a poison exception with no rule at op level, and no op-level
+obligation (ADR-2026-11-02-1514). The obligations' counterparts for calls
+hold at function level, for the functions of every core module, calls and
+recursion included:
 
 * _Refined arguments_ (`Core.args_isRefinedBy`). On arguments that refine
   others, a poison by any value, a function's observable behaviour
@@ -27,15 +27,23 @@ They follow from the general theorems of the sections on refined
 arguments and on congruence in the callee, whose hypotheses the core
 dialect meets:
 
-* every core op is monotone (`Core.Op.monotone_all`), each by the
-  obligation that its family proves, and `call` by its stand-in, which
-  the interpreter never runs;
+* every core terminator and every core op with no callee is monotone
+  (`Core.Op.monotone_all`), each by the obligation that its family
+  proves, at every width: every core op but `call`, whose way to go on
+  is its callee's run;
 * the refinement of core values is reflexive and transitive
   (`Core.Ty.isRefinedBy_refl`, `Core.Ty.isRefinedBy_trans`);
 * every core type has finitely many values: poison and the `2 ^ N` bit
   vectors of `iN`, and none of `ptr`. So every list of types has finitely
   many argument vectors (`Core.mem_argVectors`);
 * the symbols of a valid module are unique.
+
+The general theorems ask monotonicity of every terminator and every op
+with no callee, at every op instance, valid or not. The lawful class
+`LawfulDialectPoison` covers only the instances that validation accepts
+(ADR-2026-11-02-1515), so it does not give that by itself: the core
+dialect meets it with `Core.Op.monotone_all`, which holds at every width,
+`i0` included, and not through its lawful instance.
 
 Refined arguments need no validity: the theorem holds for every function
 of every core module. For a function of a valid module, no path of either
@@ -51,33 +59,35 @@ refines every source.
 
 namespace Fir.Core
 
-/-- Every core op is monotone, `call` by its stand-in, which the
-interpreter never runs. -/
-theorem Op.monotone_all : (op : Op) → OpMonotone (d := CoreDialect) op
-  | .const w v => const_monotone w v
-  | .add w f => add_monotone w f
-  | .sub w f => sub_monotone w f
-  | .mul w f => mul_monotone w f
-  | .sdiv w x => sdiv_monotone w x
-  | .udiv w x => udiv_monotone w x
-  | .srem w => srem_monotone w
-  | .urem w => urem_monotone w
-  | .and w => and_monotone w
-  | .or w => or_monotone w
-  | .xor w => xor_monotone w
-  | .shl w => shl_monotone w
-  | .lshr w => lshr_monotone w
-  | .ashr w => ashr_monotone w
-  | .icmp p w => icmp_monotone p w
-  | .select w => select_monotone w
-  | .zext m n => zext_monotone m n
-  | .sext m n => sext_monotone m n
-  | .trunc m n => trunc_monotone m n
-  | .freeze w => freeze_monotone w
-  | .br => br_monotone
-  | .condBr => condBr_monotone
-  | .ret ts => ret_monotone ts
-  | .call g ts rs => call_monotone g ts rs
+/-- Every core terminator and every core op with no callee is monotone, at
+every width: every core op but `call`. -/
+theorem Op.monotone_all : (op : Op) →
+    Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
+    OpMonotone (d := CoreDialect) op
+  | .const w v, _ => const_monotone w v
+  | .add w f, _ => add_monotone w f
+  | .sub w f, _ => sub_monotone w f
+  | .mul w f, _ => mul_monotone w f
+  | .sdiv w x, _ => sdiv_monotone w x
+  | .udiv w x, _ => udiv_monotone w x
+  | .srem w, _ => srem_monotone w
+  | .urem w, _ => urem_monotone w
+  | .and w, _ => and_monotone w
+  | .or w, _ => or_monotone w
+  | .xor w, _ => xor_monotone w
+  | .shl w, _ => shl_monotone w
+  | .lshr w, _ => lshr_monotone w
+  | .ashr w, _ => ashr_monotone w
+  | .icmp p w, _ => icmp_monotone p w
+  | .select w, _ => select_monotone w
+  | .zext m n, _ => zext_monotone m n
+  | .sext m n, _ => sext_monotone m n
+  | .trunc m n, _ => trunc_monotone m n
+  | .freeze w, _ => freeze_monotone w
+  | .br, _ => br_monotone
+  | .condBr, _ => condBr_monotone
+  | .ret ts, _ => ret_monotone ts
+  | .call .., h => by rcases h with h | h <;> cases h
 
 /-- Every value of a core type: poison and each bit vector of `iN`, and
 none of `ptr`. -/
