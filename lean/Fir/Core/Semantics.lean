@@ -48,8 +48,8 @@ for every dialect:
   every path does, `Progress` fails. So `Progress` and `NeverStuck` were
   proved first for every valid core function without a `call` op, while
   `call` had no rules (`Core.callFree_progress`, `Core.callFree_neverStuck`),
-  and are proved now for every valid core function, calls and recursion
-  included (`Core.progress`, `Core.neverStuck`).
+  and are proved now for every function of every valid core module, calls
+  and recursion included (`Core.progress`, `Core.neverStuck`).
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules yet, as an error
   (ADR-2026-10-30-1856).

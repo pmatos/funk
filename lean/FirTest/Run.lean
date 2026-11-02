@@ -6,8 +6,9 @@ Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
 several results and none, fuel, each stuck case that a text reaches, calls
-without end, and argument errors, `poison` among them. These runs make no choice, in scripted mode with no choices, the
-default; `FirTest.Modes` tests both modes on runs that choose.
+without end, and argument errors, `poison` among them. These runs make no
+choice, in scripted mode with no choices, the default; `FirTest.Modes`
+tests both modes on runs that choose.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
