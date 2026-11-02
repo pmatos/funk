@@ -21,7 +21,8 @@ rule for an op (`validOp`) reads the op's context: the module's symbol
 table and the function's result types.
 
 The human ruled on 2026-11-02, on #69, to narrow the obligations to valid
-instances, and the whole class with them.
+instances. The orchestrator took the sub-choice that #69 recommended: the
+whole class.
 
 ## Decision
 
@@ -51,8 +52,9 @@ This refines ADR-2026-10-30-0818, which asked the obligations of every op.
   holds, only to make the class provable.
 - **Narrow only `returnsOnDefined`.** The other fields hold at `i0` in the
   core dialect, but a field that speaks of instances that validation
-  rejects constrains nothing that a valid program runs. The human chose to
-  narrow the whole class.
+  rejects constrains nothing that a valid program runs. Not taken: the
+  whole class was the sub-choice #69 recommended and the orchestrator took
+  under the ruling.
 - **Ask `validOp` too.** It needs a context that an op instance alone does
   not have. Its rules, such as `zext` strictly widening, are checked by
   validation in each function, and no obligation needs them.
@@ -62,10 +64,22 @@ This refines ADR-2026-10-30-0818, which asked the obligations of every op.
 - `LawfulDialectPoison CoreDialect` holds (`Core.lawfulDialectPoison`).
 - A dialect proves its obligations only for the instances that its
   validation accepts.
-- The refinement engine asks monotonicity of every op that runs by its own
-  rule, at every instance, not only at those of the modules it compares.
-  The class does not give that by itself. The core dialect meets it with
-  `Core.Op.monotone_all`, which holds at every width, so refinement holds
-  for every core module. Whether the engine should ask it only of the ops
-  of the modules it compares, so that refinement follows from the class
-  alone for every dialect, is a question for the human.
+- The refinement engine (`Func.runs_args_isRefinedBy`,
+  `Func.runs_replaceBody_isRefinedBy` and the theorems under them) asks
+  monotonicity of every op that runs by its own rule, at every op
+  instance, valid or not, not only at those of the modules it compares.
+  The class covers only valid instances, so it does not give that by
+  itself. The core dialect meets it with `Core.Op.monotone_all`, which
+  holds at every width, `i0` included. So `Core.args_isRefinedBy` and
+  `Core.replaceBody_isRefinedBy` keep their statements, and refinement
+  holds for every core module.
+- Nothing is lost against the spec before the narrowing. No theorem took
+  the class as a hypothesis, and the core dialect had no instance. The
+  class's `monotone` field had the type of the engine's hypothesis, so a
+  lawful dialect met it in one line; now a dialect proves it at every
+  instance itself, as the core dialect already did. M0 has only the core
+  dialect.
+- Asking monotonicity only of the ops of the modules the engine compares
+  would let refinement follow from the class alone for every dialect. It
+  would change these theorems' statements beyond the guard of
+  ADR-2026-11-02-1514, which neither ruling asks for, so it is left open.

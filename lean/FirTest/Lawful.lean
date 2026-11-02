@@ -9,11 +9,13 @@ guards of the poison obligations, and the axioms of their proofs.
 * _Valid op instances._ `udiv` at `i8` is one, so the instance gives it a
   result on defined operands. `udiv` at `i0` is not, and it has no such
   result (`Core.div_zero_width`): the guard is what lets the class hold.
-  A `call` with a `ptr` operand is not one either.
+  A `call` with a `ptr` operand is not one either, but a `call` with an
+  `i8` result is.
 * _Ops that run by their own rule._ `add` meets the guard, as an op with no
   callee, and `ret` as a terminator; `call` does not. In the set monad,
-  `call` has no outcome, so it is not total at op level: the guard is what
-  lets the class leave it out.
+  `call` has no outcome, so it is not total at op level, even at a valid
+  instance: the callee guard, not validity, is what lets the class leave
+  it out.
 * _Generic theorems for the core dialect._ Every op of a valid module with
   recursion and mutual recursion is a valid op instance, and `@even`, which
   calls `@odd`, which calls it back, has an outcome at every budget by the
@@ -37,6 +39,11 @@ theorem udiv0_not_typesValid : ¬ TypesValid (d := CoreDialect) (.udiv 0 false) 
 
 /-- A `call` with a `ptr` operand is not: validation rejects `ptr`. -/
 theorem callPtr_not_typesValid : ¬ TypesValid (d := CoreDialect) (.call "f" [.ptr] []) := by
+  unfold TypesValid; decide
+
+/-- A `call` with an `i8` result is a valid op instance, so validity alone
+does not leave `call` out of the obligations. -/
+theorem call_typesValid : TypesValid (d := CoreDialect) (.call "f" [] [i 8]) := by
   unfold TypesValid; decide
 
 /-- The instance gives `udiv` at `i8` a result on defined operands. -/
@@ -72,7 +79,9 @@ theorem call_noOutcome (args : HVector toType [i 8]) (e : Ev (HVector toType [i 
     ¬ DialectDenote.denote (m := SetM) (d := CoreDialect) (.call "f" [i 8] [i 8]) args e :=
   fun h => h
 
-/-- So `call` is not total at op level, which the class does not ask. -/
+/-- So `call` is not total at op level, at a valid instance
+(`call_typesValid`): an unguarded `total` would be false, and the class
+does not ask it. -/
 theorem call_not_total : ¬ OpTotal (d := CoreDialect) (.call "f" [] [i 8]) := fun h => by
   obtain ⟨_, he⟩ := (h .nil).1 rfl
   exact he
@@ -138,6 +147,9 @@ theorem coreCore_lawful : LawfulDialectPoison (SumDialect Core.Ty Core.Op Core.O
 
 /-- info: 'FirTest.callPtr_not_typesValid' depends on axioms: [propext] -/
 #guard_msgs in #print axioms FirTest.callPtr_not_typesValid
+
+/-- info: 'FirTest.call_typesValid' depends on axioms: [propext] -/
+#guard_msgs in #print axioms FirTest.call_typesValid
 
 /-- info: 'FirTest.udiv8_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.udiv8_returnsOnDefined
