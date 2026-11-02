@@ -3,8 +3,9 @@ import Fir.Execution.RefineRuns
 /-!
 # Congruence in the callee
 
-The second of #20's function-level theorems: replacing a callee with a
-function that refines it refines every caller, recursion included
+The second of #20's function-level theorems: replacing a callee's body
+refines every caller when the callee, run in the new module, refines the
+old one, recursion included
 (`Func.runs_replaceBody_isRefinedBy`; `Core.replaceBody_isRefinedBy` for
 the core dialect).
 
@@ -37,6 +38,15 @@ which does not refine a return. The hypothesis can be met when `@g`
 calls back into the module, as the tests show, so recursion through the
 replaced callee is included, and so are callers that call themselves.
 
+The comparison is between real behaviours when `g'` is valid in the old
+module's context. Then `M'` is valid when `M` is
+(`Module.valid_replaceBody`), and for the core dialect no path of a run
+in either module is stuck, and each run has an outcome at every budget
+(`Core.neverStuck`, `Core.progress`). A body that gets stuck at once,
+such as one whose entry block declares arguments, meets the hypothesis
+with an empty behaviour, which refines every source (the section on
+refinement), and every caller's paths through `@g` are then dropped.
+
 _The proof._ Every call of the symbol `@g` is a black box, whose source is
 `g` in `M` and whose target is `g'` in `M'`, and every other symbol names
 the same function in both modules (`Module.func?_replaceBody`). The black
@@ -51,12 +61,13 @@ argument vector has such a budget, since a run that runs out of fuel
 with more steps runs out with fewer (`Func.runs_exhausted_down`). One
 budget serves them all when `@g`'s parameter types have finitely many
 argument vectors (`exists_common_bound`), as every core type has. The
-theorem needs this. Divergence is read as running out of fuel at every
-budget, which assumes finitely many ways to go at each step (the section
-on observable behaviour). A caller that could choose among infinitely
-many arguments, each making `g'` run longer before it returns, would run
-out of fuel at every budget, while with a `g` that returns at once it
-would not.
+proof needs this (ADR-2026-11-02-1426). Without it, one budget may not
+bound them all: a caller whose arguments to `@g` grow without limit can
+make `g'` run longer and longer before it returns. A dialect whose
+choices each have finitely many options, as the section on observable
+behaviour assumes, but which has a type of infinitely many values,
+would need another argument, such as König's lemma over the tree of
+choices.
 -/
 
 namespace Fir

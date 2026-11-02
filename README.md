@@ -216,8 +216,8 @@ are on `main`:
   has left, so recursion without end runs out of fuel. Lean proves that
   no path of a run of a function of a valid module is stuck, and that the
   run has an outcome at every budget, and that a call refines when its
-  arguments do, and when its callee is replaced by a function that
-  refines it.
+  arguments do, and when its callee's body is replaced so that the
+  callee, run in the new module, refines the old one.
 
 These parts of M0 do not exist yet:
 

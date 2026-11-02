@@ -49,8 +49,9 @@ the section on calls), and its totality and monotonicity
 real counterparts hold at function level (the section on refinement
 through core calls): a call on arguments that refine others refines the
 call on those others (`Core.args_isRefinedBy`), and congruence in the
-callee: replacing a callee with a function that refines it refines every
-caller (`Core.replaceBody_isRefinedBy`).
+callee: replacing a callee's body refines every caller when the callee,
+run in the new module, refines the old one
+(`Core.replaceBody_isRefinedBy`).
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its

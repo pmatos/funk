@@ -141,8 +141,9 @@ that refines it or a callee with a function that refines it, then refines
 the whole function, and its proof need only look at the part it changes.
 For calls this is proved at function level: a function's behaviour on
 refined arguments refines its behaviour on the original ones
-(`Func.runs_args_isRefinedBy`), and a callee replaced with a function that
-refines it refines every caller (`Func.runs_replaceBody_isRefinedBy`).
+(`Func.runs_args_isRefinedBy`), and replacing a callee's body refines
+every caller when the callee, run in the new module, refines the old one
+(`Func.runs_replaceBody_isRefinedBy`).
 This is also why a function refines another only if it does so on every
 argument vector, poison included: a caller may pass poison. And it explains
 the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then

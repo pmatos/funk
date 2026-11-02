@@ -40,9 +40,13 @@ dialect meets:
 Refined arguments need no validity: the theorem holds for every function
 of every core module. For a function of a valid module, no path of either
 run is stuck and both have an outcome at every budget (`Core.neverStuck`,
-`Core.progress`), so the theorem compares real behaviours. The new module
-of congruence in the callee is valid when the new function is valid in
-the old module's context (`Module.valid_replaceBody`).
+`Core.progress`), so the theorem compares real behaviours. Congruence in
+the callee compares real behaviours when the new function is valid in
+the old module's context: then the new module is valid
+(`Module.valid_replaceBody`), and neither module's runs have a stuck
+path. A body that gets stuck at once, such as one whose entry block
+declares arguments, meets the hypothesis with an empty behaviour, which
+refines every source.
 -/
 
 namespace Fir.Core
