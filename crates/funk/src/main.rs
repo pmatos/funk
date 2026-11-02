@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use funk_ir::{Module, Registry, print, text::parse_bytes, verify};
+use funk_start_fds::{Stream, closed_at_start};
 use json::Json;
 use report::{Kind, Problem, Report, Verdict};
 
@@ -151,12 +152,17 @@ fn parse_args(args: &[String]) -> Result<Request, String> {
     Ok(Request::Run(a))
 }
 
+/// The bytes of `file`, or of standard input for `-`. A standard input that
+/// was closed when funk started cannot be read: the standard library opened
+/// `/dev/null` on it, which would read as an empty text (ADR-2026-11-02-2253).
 fn read(file: &str) -> Result<Vec<u8>, String> {
     if file == "-" {
+        let cannot = |e: std::io::Error| format!("cannot read standard input: {e}");
+        if let Some(e) = closed_at_start(Stream::Stdin) {
+            return Err(cannot(e));
+        }
         let mut bytes = Vec::new();
-        std::io::stdin()
-            .read_to_end(&mut bytes)
-            .map_err(|e| format!("cannot read standard input: {e}"))?;
+        std::io::stdin().read_to_end(&mut bytes).map_err(cannot)?;
         return Ok(bytes);
     }
     std::fs::read(file).map_err(|e| format!("cannot read {file}: {e}"))
@@ -287,6 +293,24 @@ fn create_temp(target: &Path) -> std::io::Result<(PathBuf, File)> {
     }
 }
 
+/// Standard output. When it was closed when funk started, every write
+/// fails: the standard library opened `/dev/null` on it, which would take
+/// the output and lose it (ADR-2026-11-02-2253).
+struct Stdout(std::io::StdoutLock<'static>);
+
+impl Write for Stdout {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        match closed_at_start(Stream::Stdout) {
+            Some(e) => Err(e),
+            None => self.0.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.flush()
+    }
+}
+
 /// A write to standard output or standard error that failed.
 struct OutputError(&'static str, std::io::Error);
 
@@ -314,7 +338,7 @@ fn run(args: &[String]) -> u8 {
 }
 
 fn run_commands(args: &[String]) -> Result<u8, OutputError> {
-    let mut stdout = std::io::stdout().lock();
+    let mut stdout = Stdout(std::io::stdout().lock());
     let mut stderr = std::io::stderr().lock();
     let a = match parse_args(args) {
         Ok(Request::Run(a)) => a,
