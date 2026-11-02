@@ -21,8 +21,8 @@ on 2026-10-30.
 
 - [`scripts/build-spec.sh`](../../scripts/build-spec.sh) builds `lean/` with
   `lake build --wfail`. Any warning in `lean/` fails the build. The
-  `fir-spec`, `fir-ref-test` and `fir-round-trip` hooks build `lean/` through
-  that script, so each of them fails too.
+  `fir-spec`, `fir-ref-test`, `fir-round-trip` and `fir-harness` hooks build
+  `lean/` through that script, so each of them fails too.
 - The build in `docs/spec/` stays a plain `lake build`.
 
 ## Consequences
