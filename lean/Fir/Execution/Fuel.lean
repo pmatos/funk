@@ -4,9 +4,16 @@ import Fir.Execution.Behaviour
 # Fuel and progress
 
 Three obligations tie the interpreter's runs to the behaviours above. #10
-defines the run of each function of a valid module on each argument vector
-of its parameter types. It proves all three for every valid function whose
-ops are in its tracer subset: `const`, `add` without flags, and `ret`.
+defines the run of each function of a module on each argument vector of its
+parameter types (`Func.runs`, and `Core.funcRuns` for the core dialect).
+All three hold for every function of every valid core module, on every
+argument vector, calls, recursion, branches and loops included:
+`Core.fuelMonotone`, `Core.progress` and `Core.neverStuck`. #10 proved
+them first for its tracer subset, `const`, `add` without flags and `ret`:
+`Core.tracer_fuelMonotone`, `Core.tracer_progress` and
+`Core.tracer_neverStuck`; then they were proved for every valid core
+function that has no `call` op: `Core.callFree_fuelMonotone`,
+`Core.callFree_progress` and `Core.callFree_neverStuck`.
 
 * _Fuel monotonicity_ (`FuelMonotone`). More fuel never changes how a run
   that returns or hits UB ends. A return or UB that a run reaches at some
@@ -23,16 +30,45 @@ ops are in its tracer subset: `const`, `add` without flags, and `ret`.
   Which paths get stuck can depend on choices, so a run could be stuck on
   some paths and have outcomes on others. Those paths would be missing from
   its behaviour, and a behaviour with fewer outcomes refines more sources.
-  With this obligation, with every op total (`OpTotal`, in the poison
-  classes section), and with an interpreter whose own steps never drop a
-  path, which #10's definition must ensure, every path of a valid
-  function's run ends in an outcome.
+  With this obligation, with every op that runs by its own rule total
+  (`OpTotal`, in the poison classes section), and with an interpreter
+  whose own steps never drop a path, which #10's definition must ensure,
+  every path of a valid function's run ends in an outcome.
 
-Ticket #10 proves progress and the no-stuck obligation for every valid
-function whose ops are in its tracer subset, and every argument vector. Each ticket that
-adds core ops, from ticket #14 to #20, keeps both as it adds its ops, so
-that once the last of them lands they hold for every valid function of the
-core dialect. #14 keeps them when it adds the `fir-ref` modes.
+The proofs are general. Fuel monotonicity holds for every function of every
+module, of every dialect, calls included, whatever its ops do
+(`Func.fuelMonotone`): only the interpreter counts fuel, and a callee gives
+back to its caller the steps it leaves (ADR-2026-11-02-0836). Of a function
+that reaches an op without rules it holds only vacuously on the paths that
+reach the op, and says nothing of how such a function behaves
+(ADR-2026-10-30-1855).
+
+Progress and the no-stuck obligation hold for every valid function that
+runs within itself (`Func.Local`): no op calls a function, a terminator
+that jumps names a successor that it has and gives no results, and a
+terminator that returns returns values of the function's result types. Its
+run may jump and loop. No path of it is stuck (`Func.neverStuck_of_local`),
+and when its ops are total it has an outcome at every budget
+(`Func.progress_of_local`). A valid core function without a `call` op runs
+within itself, and its ops are total, as every core op but `call` is
+(`Core.Op.total`). So both hold for every valid core function without a
+`call` op.
+
+With calls, they hold for every function of a module whose functions are
+all valid and run within the module (`Func.InModule`): their terminators
+keep to the rules above, and each call names a function of the module of
+the call's type. A run may then call any function of the module, itself
+included, as deep as its fuel allows (`Func.neverStuck_of_inModule`,
+`Func.progress_of_inModule`), when every terminator and every op with no
+callee is total: an op with a callee goes on by its callee's run, and
+needs no rule of its own (ADR-2026-11-02-1514). Every function of a valid
+core module runs within the module, and every core op but `call` is total
+(`Core.Op.total_all`). So both hold for every function of every valid
+core module (`Core.progress`, `Core.neverStuck`). They are
+statements about the run in the set monad, choices included, and
+`fir-ref`'s modes report only what that run does (`Core.exhaustive_stuck`,
+`Core.scripted_stuck`, `Core.sampled_stuck`), so no mode reports a stuck
+path of such a function.
 -/
 
 namespace Fir

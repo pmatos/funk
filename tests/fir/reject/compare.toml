@@ -1,0 +1,654 @@
+# Must-reject texts of #16's ops: icmp and select. icmp decodes with one
+# attribute, its predicate, one of eq, ne, slt, sle, sgt, sge, ult, ule,
+# ugt and uge; two operands of one iN; and one i1 result. select decodes
+# with no attributes, an i1 condition and two values of one iN, and one
+# iN result. Neither op has a validation rule beyond its signature, so a
+# text that breaks one does not decode: each is a parse error at the
+# op's name (ADR-2026-10-30-0815). Every operand is defined, so both
+# tools report the op, even for the old spelling icmp.slt, which names
+# no op.
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp has one predicate, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is eq, ne, slt, sle, sgt, sge, ult, ule, ugt or uge: lt is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp lt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is eq, ne, slt, sle, sgt, sge, ult, ule, ugt or uge, in lower case: SLT is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp SLT %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is eq, ne, slt, sle, sgt, sge, ult, ule, ugt or uge: oeq, a predicate of LLVM's fcmp, is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp oeq %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp has one predicate, not the same one twice"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp has one predicate, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt sgt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp writes its predicate as an attribute: icmp.slt names no op"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp.slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's one attribute is its predicate: the flag nsw after it is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt nsw %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's one attribute is its predicate: LLVM's flag samesign before it is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp samesign ult %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is a word: an integer is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp 40 %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is a word: a string is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp "slt" %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is a word: a symbol is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp @slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp's predicate is a word: an applied attribute is not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt(1) %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands of one type: an i1 and an i32 are a type mismatch"
+text = '''
+func @f(%a: i32, %b: i64, %c: i1) -> i32 {
+^entry:
+  %r: i1 = icmp eq %c, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp defines an i1, not a value of its operands' type, i32"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = icmp slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp defines an i1, not an i8"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i8 = icmp slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp defines an i1, not a ptr; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = icmp slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i1 = icmp eq %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i1 = icmp eq %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands, not one"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp takes two operands, not three"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = icmp slt %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp defines one value, not none"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  icmp slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp defines one value, not two"
+text = '''
+func @f(%a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1, %s: i1 = icmp slt %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select's condition is an i1: an i32, the type of its values, is not one"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select's condition is an i1, not an i64"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %b, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select's condition is an i1, not a ptr; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = select %p, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes two values of one type: an i32 and an i64 are a type mismatch"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %c, %a, %b @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select defines a value of its values' type: i32 values give no i64"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i64 = select %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select defines a value of its values' type, not of its condition's: i32 values give no i1"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i1 = select %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes two values of one integer type: a ptr first value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = select %c, %p, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes two values of one integer type: a ptr second value is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
+^entry:
+  %r: i32 = select %c, %a, %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select defines a value of its values' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: ptr = select %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes no attributes: LLVM's flag nnan is not one"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select nnan %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes no attributes: a predicate is not one"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select slt %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes no attributes: an integer is not one"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select 1 %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes three operands, not none"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes three operands, not one"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %c @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes three operands, not two"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %c, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select takes three operands, not four"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32 = select %c, %a, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select defines one value, not none"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  select %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select defines one value, not two"
+text = '''
+func @f(%c: i1, %a: i32, %b: i64) -> i32 {
+^entry:
+  %r: i32, %s: i32 = select %c, %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

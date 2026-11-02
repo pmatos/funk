@@ -4,10 +4,10 @@
 //! its low `N` bits are the value, and the bits above them are unspecified.
 //! An op whose result depends only on its operands' low bits, such as `add`,
 //! works on all 64 bits and ignores the rest. An op that reads the bits above
-//! `N`, such as a comparison, a right shift, a division or `zext`, first
-//! extends those operands with [`extend`]. The same rule holds for the
-//! arguments a funk function receives and the results it returns
-//! (ADR-2026-10-30-1232).
+//! `N`, such as a comparison, a right shift, `zext`, or a division at `i1`
+//! (ADR-2026-10-31-0050), first extends those operands with [`extend`]. The
+//! same rule holds for the arguments a funk function receives and the
+//! results it returns (ADR-2026-10-30-1232).
 
 use funk_ir::Type;
 use funk_ir::dialects::core::{CoreType, core_type};

@@ -4,12 +4,31 @@
 //! The modules are valid, so they are well formed (ADR-2026-10-30-0815), and
 //! every number in them is within its limit. They cover quoted symbols,
 //! `true` and `false`, constants at the bounds of their widths, every kind
-//! of location, and functions with zero, one and several results. The ops
-//! are those of the core dialect that the registry has: `const`, `add` and
-//! `ret`. The generator is deterministic: one seed gives one module.
+//! of location, and functions with zero, one and several results, of one
+//! block or of several, with loops and block arguments (`blocks.rs`). The
+//! ops are those of the core dialect that the registry has: `const`, `add`,
+//! `sub` and `mul` with each combination of their flags, `freeze`, the
+//! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
+//! the width changes `zext`, `sext` and `trunc` between valid pairs of
+//! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem`,
+//! `icmp` with each predicate on two values of any one type, `select` at any
+//! type, the branches `br` and `cond_br`, `ret`, and `call` of any function
+//! of the module, the caller itself included, with any number of arguments
+//! and results (`calls.rs`). A division may be by zero, and a loop or a
+//! recursion may never end: that is UB or a run out of fuel, not invalid,
+//! and no check runs these modules. The generator is deterministic: one
+//! seed gives one module.
 
-use crate::dialects::core::{MAX_WIDTH, int_type};
-use crate::ir::{Attr, Block, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
+use crate::dialects::core::{
+    BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
+    int_width,
+};
+use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
+
+mod blocks;
+mod calls;
+
+use calls::Callee;
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
 /// property tests and the cross-language round trip with Lean.
@@ -58,16 +77,18 @@ pub fn module(rng: &mut Rng) -> Module {
         items: Vec::new(),
         locs,
     };
-    let mut symbols: Vec<String> = Vec::new();
+    let mut funcs: Vec<Callee> = Vec::new();
     for _ in 0..rng.below(4) {
         let name = loop {
             let s = symbol(rng);
-            if !symbols.contains(&s) {
+            if funcs.iter().all(|f| f.name != s) {
                 break s;
             }
         };
-        symbols.push(name.clone());
-        m = m.func(func(rng, name, &keys));
+        funcs.push(calls::signature(rng, name));
+    }
+    for k in 0..funcs.len() {
+        m = m.func(func(rng, &funcs, k, &keys));
     }
     m
 }
@@ -229,12 +250,15 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
     }
 }
 
-/// The values of a function so far, and the ops of its block that define
-/// them.
+/// The values in scope at the end of a block so far, the ops of the block
+/// that define them, and every value name the function has taken, with the
+/// functions of the module that a call may name.
 struct Body<'k> {
     keys: &'k [LocRef],
+    funcs: &'k [Callee],
     values: Vec<(String, Type)>,
     ops: Vec<Op>,
+    taken: Vec<String>,
 }
 
 impl Body<'_> {
@@ -244,27 +268,92 @@ impl Body<'_> {
         same.map(|(v, _)| v.clone()).collect()
     }
 
-    /// A value name that the function does not define yet.
-    fn fresh_name(&self, rng: &mut Rng) -> String {
+    /// The width changes to type `t` of the values so far, each as the op's
+    /// name and its operand: `zext` and `sext` of a narrower integer, and
+    /// `trunc` of a wider one.
+    fn casts_to(&self, t: &Type) -> Vec<(&'static str, String)> {
+        let n = int_width(t).expect("an integer type");
+        let mut out = Vec::new();
+        for (v, u) in &self.values {
+            match int_width(u).expect("an integer type") {
+                m if m < n => out.extend([("zext", v.clone()), ("sext", v.clone())]),
+                m if m > n => out.push(("trunc", v.clone())),
+                _ => {}
+            }
+        }
+        out
+    }
+
+    /// A value name that the function does not define yet, which it now
+    /// takes.
+    fn fresh_name(&mut self, rng: &mut Rng) -> String {
         loop {
             let n = name(rng, false);
-            if self.values.iter().all(|(v, _)| *v != n) {
+            if !self.taken.contains(&n) {
+                self.taken.push(n.clone());
                 return n;
             }
         }
     }
 
-    /// Defines a new value of type `t`, the sum of two earlier values of
-    /// that type or a constant, and returns its name.
+    /// Defines a new value of type `t` and returns its name: a width change
+    /// of an earlier value of another width, `icmp` of two earlier values
+    /// of one type when `t` is `i1`, `select` on an earlier `i1` of two
+    /// earlier values of type `t`, `add`, `sub` or `mul` of two, with any of
+    /// their flags, a bitwise op or a shift of two, a division or remainder
+    /// of two, `freeze` of one, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
+        let casts = self.casts_to(&t);
+        let i1 = int_type(1);
+        let conds = self.of_type(&i1);
         let loc = *rng.pick(self.keys);
-        let op = if !same.is_empty() && rng.one_in(2) {
-            Op::new("add", loc)
+        let op = if !casts.is_empty() && rng.one_in(3) {
+            let (name, x) = rng.pick(&casts);
+            Op::new(*name, loc).operand(x.as_str())
+        } else if t == i1 && !self.values.is_empty() && rng.one_in(3) {
+            let (a, u) = rng.pick(&self.values).clone();
+            let b = rng.pick(&self.of_type(&u)).clone();
+            Op::new("icmp", loc)
+                .attr(Attr::word(*rng.pick(&PREDICATES)))
+                .operand(a)
+                .operand(b)
+        } else if !conds.is_empty() && !same.is_empty() && rng.one_in(4) {
+            Op::new("select", loc)
+                .operand(rng.pick(&conds).as_str())
                 .operand(rng.pick(&same).as_str())
                 .operand(rng.pick(&same).as_str())
+        } else if !same.is_empty() && rng.one_in(5) {
+            let (name, exact) = *rng.pick(&DIVISION_OPS);
+            let op = Op::new(name, loc);
+            let op = if exact && rng.one_in(2) {
+                op.attr(Attr::word("exact"))
+            } else {
+                op
+            };
+            op.operand(rng.pick(&same).as_str())
+                .operand(rng.pick(&same).as_str())
+        } else if !same.is_empty() && rng.one_in(2) {
+            match rng.below(10) {
+                0 => Op::new("freeze", loc).operand(rng.pick(&same).as_str()),
+                k @ 4.. => {
+                    let name = [BITWISE_OPS, SHIFT_OPS].concat()[k as usize - 4];
+                    Op::new(name, loc)
+                        .operand(rng.pick(&same).as_str())
+                        .operand(rng.pick(&same).as_str())
+                }
+                k => {
+                    let name = ["add", "sub", "mul"][k as usize - 1];
+                    let flags = rng.pick(&WRAP_FLAG_SETS);
+                    let op = flags
+                        .iter()
+                        .fold(Op::new(name, loc), |op, f| op.attr(Attr::word(*f)));
+                    op.operand(rng.pick(&same).as_str())
+                        .operand(rng.pick(&same).as_str())
+                }
+            }
         } else {
-            let w = crate::dialects::core::int_width(&t).expect("an integer type");
+            let w = int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))
         };
         let n = self.fresh_name(rng);
@@ -274,39 +363,24 @@ impl Body<'_> {
     }
 }
 
-fn func(rng: &mut Rng, sym: String, keys: &[LocRef]) -> Func {
-    let mut f = Func::new(sym);
+/// The `k`-th function of `funcs`, with the type chosen for it.
+fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef]) -> Func {
+    let me = &funcs[k];
+    let mut f = Func::new(me.name.clone());
     let mut body = Body {
         keys,
+        funcs,
         values: Vec::new(),
         ops: Vec::new(),
+        taken: Vec::new(),
     };
-    for _ in 0..rng.below(4) {
-        let (n, t) = (body.fresh_name(rng), int_type(width(rng)));
+    for t in &me.ty.params {
+        let n = body.fresh_name(rng);
         body.values.push((n.clone(), t.clone()));
-        f = f.param(n, t);
+        f = f.param(n, t.clone());
     }
-    for _ in 0..rng.below(5) {
-        let t = if !body.values.is_empty() && rng.one_in(2) {
-            rng.pick(&body.values).1.clone()
-        } else {
-            int_type(width(rng))
-        };
-        body.define(rng, t);
+    for t in &me.ty.results {
+        f = f.result(t.clone());
     }
-    let mut ret = Op::new("ret", *rng.pick(keys));
-    for _ in 0..rng.below(4) {
-        let t = int_type(width(rng));
-        let have = body.of_type(&t);
-        let v = if !have.is_empty() && rng.one_in(2) {
-            rng.pick(&have).clone()
-        } else {
-            body.define(rng, t.clone())
-        };
-        ret = ret.operand(v);
-        f = f.result(t);
-    }
-    let mut block = Block::new(name(rng, false));
-    block.ops = body.ops;
-    f.block(block.op(ret))
+    blocks::build(rng, &mut body, f)
 }

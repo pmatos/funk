@@ -1,0 +1,45 @@
+# Tests of poison-branch-i64.fir: the poison and UB rules of br and
+# cond_br at i64 (#19, ADR-2026-10-30-0818). %p = add nsw %a, 1 is
+# poison when %a is the signed maximum, 9223372036854775807.
+# - A poison block argument arrives as poison: br and cond_br pass their
+#   successors' values on as they are. br_poison passes %p to ^next,
+#   which returns it. cond_br_first passes %p to ^then and %b to ^else,
+#   and cond_br_second the other way round, with %b the signed minimum,
+#   -9223372036854775808: the successor not taken does not matter, even
+#   when it passes poison.
+# - A branch on poison is immediate UB, not a choice of successor.
+#   branch_on_poison branches on icmp eq %p, %b, which is poison when %p
+#   is. branch_on_arg passes %p to ^next first, and branches there on
+#   icmp eq of the block argument, which is still poison. Each goes to
+#   ^then with %b when the two are equal, and to ^else with %a when they
+#   are not.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does. Where %p is poison, an
+# interpreter-only test of the same run checks fir-ref's exact result,
+# and a run that is UB is only interpreter-only, as UB allows any
+# result. fir-ref's UB reason is "cond_br on poison", but the harness
+# matches ub to any reason (ADR-2026-10-30-2135).
+tests = [
+  { func = "@br_poison", args = ["9223372036854775807"] },
+  { func = "@br_poison", args = ["9223372036854775807"], expect = ["poison"] },
+  { func = "@br_poison", args = ["0"] },
+  { func = "@cond_br_first", args = ["true", "9223372036854775807", "-9223372036854775808"] },
+  { func = "@cond_br_first", args = ["true", "9223372036854775807", "-9223372036854775808"], expect = ["poison"] },
+  { func = "@cond_br_first", args = ["false", "9223372036854775807", "-9223372036854775808"] },
+  { func = "@cond_br_first", args = ["false", "9223372036854775807", "-9223372036854775808"], expect = ["-9223372036854775808"] },
+  { func = "@cond_br_first", args = ["true", "0", "-9223372036854775808"] },
+  { func = "@cond_br_first", args = ["false", "0", "-9223372036854775808"] },
+  { func = "@cond_br_second", args = ["true", "9223372036854775807", "-9223372036854775808"] },
+  { func = "@cond_br_second", args = ["true", "9223372036854775807", "-9223372036854775808"], expect = ["-9223372036854775808"] },
+  { func = "@cond_br_second", args = ["false", "9223372036854775807", "-9223372036854775808"] },
+  { func = "@cond_br_second", args = ["false", "9223372036854775807", "-9223372036854775808"], expect = ["poison"] },
+  { func = "@cond_br_second", args = ["true", "0", "-9223372036854775808"] },
+  { func = "@cond_br_second", args = ["false", "0", "-9223372036854775808"] },
+  { func = "@branch_on_poison", args = ["9223372036854775807", "0"], expect = "ub" },
+  { func = "@branch_on_poison", args = ["0", "1"] },
+  { func = "@branch_on_poison", args = ["0", "-1"] },
+  { func = "@branch_on_arg", args = ["9223372036854775807", "0"], expect = "ub" },
+  { func = "@branch_on_arg", args = ["0", "1"] },
+  { func = "@branch_on_arg", args = ["0", "-1"] },
+]

@@ -49,7 +49,8 @@ run in many ways. Its behaviour is the set of outcomes over all choices
 in the set monad below. A computation in it is the set of the ways it may
 end: with a result, or with UB. `choose` may give any bits, and `ub` ends the
 computation. `fir-ref`'s exhaustive and scripted modes compute this set, or
-one member of it, and #14 proves that they do.
+one member of it, and the section on exhaustive and scripted runs proves
+that they do.
 -/
 
 /-- One way a computation may end: with a result, or with immediate UB. -/
@@ -138,8 +139,9 @@ def Behaviour (O : Type) : Type := Outcome O → Prop
 
 /--
 The observable behaviour of a run that takes fuel. `run n` is the run with
-budget `n`, in the set monad. #10 defines the run of a function on its
-arguments, and its observable behaviour is this set.
+budget `n`, in the set monad. The runs of a function of a module on its
+arguments are such a run (`Func.runs`), and the function's observable
+behaviour on those arguments is this set.
 -/
 def observable (run : Nat → Run O) : Behaviour O
   | .ret o => ∃ n, (run n).outcomes (.ret o)

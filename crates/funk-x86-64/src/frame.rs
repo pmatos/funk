@@ -8,7 +8,7 @@
 //! stores each result into its slot. No value stays in a register from one
 //! op to the next.
 //!
-//! A frame larger than a page is probed a page at a time as the prologue
+//! A frame of a page or more is probed a page at a time as the prologue
 //! makes room for it, so the stack grows one page after another and never
 //! jumps over a guard region into memory below it.
 
@@ -79,17 +79,19 @@ pub fn size_for(n: usize) -> Option<i32> {
 /// The standard prologue: saves `%rbp`, points it at the frame, and makes
 /// room for `size` bytes of slots.
 ///
-/// A frame larger than a page is probed: the prologue moves `%rsp` down a
+/// A frame of a page or more is probed: the prologue moves `%rsp` down a
 /// page at a time and touches each page as it goes, then makes room for the
-/// rest, which is less than a page. Every access to the stack is then at
-/// most a page below one already made, so the stack grows in order, and a
-/// frame too large for its stack faults on the guard page below it rather
-/// than writing past it. The probe loop counts in `%r11`, which carries no
+/// rest, which is less than a page. A smaller frame is one `subq`, at most
+/// 4080 bytes. Either way the next write, a call's return address or a
+/// stack argument after its padding, is at most a page below the last
+/// access, so the stack grows in order, and a frame too large for its stack
+/// faults on the guard page below it rather than writing past it
+/// (ADR-2026-11-02-1102). The probe loop counts in `%r11`, which carries no
 /// argument, so the parameters are still in their registers after it.
 pub fn prologue(asm: &mut Asm, size: i32) {
     asm.ins("pushq", format_args!("%rbp"));
     asm.ins("movq", format_args!("%rsp, %rbp"));
-    let (pages, rest) = if size > PAGE {
+    let (pages, rest) = if size >= PAGE {
         (size / PAGE, size % PAGE)
     } else {
         (0, size)
@@ -140,11 +142,24 @@ mod tests {
     }
 
     #[test]
-    fn a_frame_of_up_to_a_page_is_not_probed() {
+    fn a_frame_smaller_than_a_page_is_not_probed() {
         let start = "\tpushq\t%rbp\n\tmovq\t%rsp, %rbp\n";
         assert_eq!(prologue_of(0), start);
         assert_eq!(prologue_of(16), format!("{start}\tsubq\t$16, %rsp\n"));
-        assert_eq!(prologue_of(4096), format!("{start}\tsubq\t$4096, %rsp\n"));
+        assert_eq!(prologue_of(4080), format!("{start}\tsubq\t$4080, %rsp\n"));
+    }
+
+    /// A frame of exactly a page is probed too: a call after a bare
+    /// `subq $4096` would push its return address 4104 bytes below the last
+    /// access, past a one-page guard region.
+    #[test]
+    fn a_frame_of_one_page_is_probed() {
+        let probe = "\tpushq\t%rbp\n\tmovq\t%rsp, %rbp\n\tmovl\t$1, %r11d\n1:\n\tsubq\t$4096, %rsp\n\torq\t$0, (%rsp)\n\tdecl\t%r11d\n\tjnz\t1b\n";
+        assert_eq!(prologue_of(PAGE), probe);
+        assert_eq!(
+            prologue_of(PAGE + 16),
+            format!("{probe}\tsubq\t$16, %rsp\n")
+        );
     }
 
     #[test]

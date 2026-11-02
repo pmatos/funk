@@ -1,0 +1,6 @@
+# Tests of locations.fir: locations do not change what a function does.
+tests = [
+  { func = "@f", args = ["1"] },
+  { func = "@f", args = ["3"] },
+  { func = "@f", args = ["-2147483648"] },
+]

@@ -1,0 +1,48 @@
+# Tests of sext.fir: sext from each of i1, i8, i16 and i32 to each wider
+# one of i8, i16, i32 and i64, on the boundary bit patterns of the
+# operand's type: 0, 1, -1, the signed minimum and the signed maximum,
+# or false and true at i1 (#17). sext puts copies of the operand's top
+# bit above its bits, so an operand with its top bit set gives a
+# negative result, and sext of true is -1.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's.
+tests = [
+  { func = "@sext_i1_to_i8", args = ["false"] },
+  { func = "@sext_i1_to_i8", args = ["true"] },
+  { func = "@sext_i1_to_i16", args = ["false"] },
+  { func = "@sext_i1_to_i16", args = ["true"] },
+  { func = "@sext_i1_to_i32", args = ["false"] },
+  { func = "@sext_i1_to_i32", args = ["true"] },
+  { func = "@sext_i1_to_i64", args = ["false"] },
+  { func = "@sext_i1_to_i64", args = ["true"] },
+  { func = "@sext_i8_to_i16", args = ["0"] },
+  { func = "@sext_i8_to_i16", args = ["1"] },
+  { func = "@sext_i8_to_i16", args = ["-1"] },
+  { func = "@sext_i8_to_i16", args = ["-128"] },
+  { func = "@sext_i8_to_i16", args = ["127"] },
+  { func = "@sext_i8_to_i32", args = ["0"] },
+  { func = "@sext_i8_to_i32", args = ["1"] },
+  { func = "@sext_i8_to_i32", args = ["-1"] },
+  { func = "@sext_i8_to_i32", args = ["-128"] },
+  { func = "@sext_i8_to_i32", args = ["127"] },
+  { func = "@sext_i8_to_i64", args = ["0"] },
+  { func = "@sext_i8_to_i64", args = ["1"] },
+  { func = "@sext_i8_to_i64", args = ["-1"] },
+  { func = "@sext_i8_to_i64", args = ["-128"] },
+  { func = "@sext_i8_to_i64", args = ["127"] },
+  { func = "@sext_i16_to_i32", args = ["0"] },
+  { func = "@sext_i16_to_i32", args = ["1"] },
+  { func = "@sext_i16_to_i32", args = ["-1"] },
+  { func = "@sext_i16_to_i32", args = ["-32768"] },
+  { func = "@sext_i16_to_i32", args = ["32767"] },
+  { func = "@sext_i16_to_i64", args = ["0"] },
+  { func = "@sext_i16_to_i64", args = ["1"] },
+  { func = "@sext_i16_to_i64", args = ["-1"] },
+  { func = "@sext_i16_to_i64", args = ["-32768"] },
+  { func = "@sext_i16_to_i64", args = ["32767"] },
+  { func = "@sext_i32_to_i64", args = ["0"] },
+  { func = "@sext_i32_to_i64", args = ["1"] },
+  { func = "@sext_i32_to_i64", args = ["-1"] },
+  { func = "@sext_i32_to_i64", args = ["-2147483648"] },
+  { func = "@sext_i32_to_i64", args = ["2147483647"] },
+]

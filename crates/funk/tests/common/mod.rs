@@ -145,3 +145,49 @@ pub fn expect(exe: &Path, args: &[&str], expected: &[&str]) {
         exe.display()
     );
 }
+
+/// The boundary values of `iW`, read as signed integers: 0, 1, -1, the
+/// minimum and the maximum, or at `i1` `false` (0) and `true` (-1).
+pub fn boundaries(w: u32) -> Vec<i128> {
+    if w == 1 {
+        return vec![0, -1];
+    }
+    let min = -(1i128 << (w - 1));
+    vec![0, 1, -1, min, -min - 1]
+}
+
+/// The spelling of a value of `iW` in fir and on the command line.
+pub fn spell(w: u32, v: i128) -> String {
+    match (w, v & 1) {
+        (1, 1) => "true".into(),
+        (1, _) => "false".into(),
+        _ => v.to_string(),
+    }
+}
+
+/// `x` wrapped to `w` bits, read as signed. `w` is at most 64.
+pub fn wrap(w: u32, x: i128) -> i128 {
+    let m = 1i128 << w;
+    let s = x.rem_euclid(m);
+    if s >= m / 2 { s - m } else { s }
+}
+
+/// Runs `exe` with `args` and checks that it prints one value of `iW`,
+/// whichever it is: the result where the source's is poison.
+pub fn expect_any(exe: &Path, args: &[&str], w: u32) {
+    let out = run(exe, args);
+    let stdout = text(&out.stdout);
+    let value = stdout
+        .strip_prefix("{\"values\":[\"")
+        .and_then(|s| s.strip_suffix("\"]}\n"));
+    let of_type = value.is_some_and(|v| match w {
+        1 => v == "true" || v == "false",
+        _ => v.parse::<i128>().is_ok_and(|x| wrap(w, x) == x),
+    });
+    assert!(
+        out.status.code() == Some(0) && out.stderr.is_empty() && of_type,
+        "{} {args:?}: {stdout}{}",
+        exe.display(),
+        text(&out.stderr)
+    );
+}

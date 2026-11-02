@@ -1,0 +1,15 @@
+# Tests of select-i1.fir: select at i1 with each condition, false and
+# true, on every pair of false and true (#16). true chooses the first
+# value and false the second.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must equal fir-ref's.
+tests = [
+  { func = "@select", args = ["false", "false", "false"] },
+  { func = "@select", args = ["false", "false", "true"] },
+  { func = "@select", args = ["false", "true", "false"] },
+  { func = "@select", args = ["false", "true", "true"] },
+  { func = "@select", args = ["true", "false", "false"] },
+  { func = "@select", args = ["true", "false", "true"] },
+  { func = "@select", args = ["true", "true", "false"] },
+  { func = "@select", args = ["true", "true", "true"] },
+]

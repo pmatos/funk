@@ -5,12 +5,30 @@
 mod common;
 
 use common::{diagnostics, one_func, rejects};
-use funk_ir::LocRef;
+use funk_ir::{Diagnostic, LocRef};
 
 /// A function `@f(%a: i32) -> i32` with these lines in its body.
 fn func(lines: &[&str]) -> String {
     let body: String = lines.iter().map(|l| format!("{l}\n")).collect();
     one_func(&format!("func @f(%a: i32) -> i32 {{\n{body}}}\n"))
+}
+
+/// A diagnostic about the op at `index` of block `block` of `@f`, at `@0`.
+fn at_op(block: &str, index: usize, message: &str) -> Diagnostic {
+    Diagnostic {
+        message: message.into(),
+        func: Some("f".into()),
+        block: Some(block.into()),
+        op: Some(index),
+        loc: Some(LocRef(0)),
+    }
+}
+
+/// Asserts that the function with these lines is rejected with exactly the
+/// diagnostics `want`, one for each rule it breaks.
+fn rejected(lines: &[&str], want: &[Diagnostic]) {
+    let text = func(lines);
+    assert_eq!(diagnostics(&text), want, "\n{text}");
 }
 
 #[test]
@@ -106,40 +124,156 @@ fn the_terminator_is_the_last_op_and_only_the_last() {
     );
 }
 
+/// The successor count and the terminator rule are two rules of `OpValid`:
+/// an op that is not a terminator and has successors breaks both (#59).
 #[test]
 fn only_terminators_have_successors_and_as_many_as_registered() {
-    let text = func(&[
-        "^entry:",
-        "  %c: i32 = const 1 ^b @0",
-        "  ret %a @0",
-        "^b:",
-        "  ret %a @0",
-    ]);
-    rejects(&text, "only terminators have successors");
-    let text = func(&["^entry:", "  ret %a, ^b @0", "^b:", "  ret %a @0"]);
-    rejects(&text, "ret has 1 successors, and its registration says 0");
+    let count = |n: usize| format!("const has {n} successors, and its registration says 0");
+    let only = "const is not a terminator, and only terminators have successors";
+    let b = ["^b:", "  ret %a @0"];
+    rejected(
+        &[
+            "^entry:",
+            "  %c: i32 = const 1 ^b @0",
+            "  ret %a @0",
+            b[0],
+            b[1],
+        ],
+        &[at_op("entry", 0, &count(1)), at_op("entry", 0, only)],
+    );
+    rejected(
+        &[
+            "^entry:",
+            "  %c: i32 = const 1 ^b, ^b @0",
+            "  ret %a @0",
+            b[0],
+            b[1],
+        ],
+        &[at_op("entry", 0, &count(2)), at_op("entry", 0, only)],
+    );
+    rejected(
+        &["^entry:", "  %c: i32 = const 1 ^b @0", b[0], b[1]],
+        &[
+            at_op("entry", 0, "block ^entry does not end with a terminator"),
+            at_op("entry", 0, &count(1)),
+            at_op("entry", 0, only),
+        ],
+    );
+    rejected(
+        &["^entry:", "  ret %a, ^b @0", b[0], b[1]],
+        &[at_op(
+            "entry",
+            0,
+            "ret has 1 successors, and its registration says 0",
+        )],
+    );
 }
 
 #[test]
 fn successors_name_blocks_other_than_the_entry_and_pass_their_arguments() {
-    rejects(
-        &func(&["^entry:", "  ret %a, ^entry @0"]),
-        "no branch may go to the entry block ^entry",
+    let ret = "ret has 1 successors, and its registration says 0";
+    let at = |message: &str| at_op("entry", 0, message);
+    rejected(
+        &["^entry:", "  ret %a, ^entry @0"],
+        &[at("no branch may go to the entry block ^entry"), at(ret)],
     );
-    rejects(
-        &func(&["^entry:", "  ret %a, ^nowhere @0"]),
-        "successor ^nowhere is not a block",
+    rejected(
+        &["^entry:", "  ret %a, ^entry(%a) @0"],
+        &[
+            at("no branch may go to the entry block ^entry"),
+            at("successor ^entry passes (i32) but the block takes ()"),
+            at(ret),
+        ],
+    );
+    rejected(
+        &["^entry:", "  ret %a, ^nowhere @0"],
+        &[
+            at("successor ^nowhere is not a block of the function"),
+            at(ret),
+        ],
     );
     let b = ["^b(%x: i64):", "  ret %a @0"];
-    let text = func(&["^entry:", "  ret %a, ^b(%undefined) @0", b[0], b[1]]);
-    rejects(&text, "successor argument %undefined is not defined");
-    rejects(
-        &func(&["^entry:", "  ret %a, ^b(%a) @0", b[0], b[1]]),
-        "passes (i32) but the block takes (i64)",
+    rejected(
+        &["^entry:", "  ret %a, ^b(%a) @0", b[0], b[1]],
+        &[
+            at("successor ^b passes (i32) but the block takes (i64)"),
+            at(ret),
+        ],
     );
-    rejects(
-        &func(&["^entry:", "  ret %a, ^b @0", b[0], b[1]]),
-        "passes () but the block takes (i64)",
+    rejected(
+        &["^entry:", "  ret %a, ^b @0", b[0], b[1]],
+        &[
+            at("successor ^b passes () but the block takes (i64)"),
+            at(ret),
+        ],
+    );
+}
+
+/// A successor argument that is not defined breaks two rules of `OpValid`:
+/// the use is not in scope, and the successor does not pass a value of the
+/// right type for each argument of its block (`SuccValid`) (#59).
+#[test]
+fn an_undefined_successor_argument_breaks_scope_and_the_successor_rule() {
+    let undefined = "successor argument %undefined is not defined in the function";
+    let ret = "ret has 1 successors, and its registration says 0";
+    let at = |message: &str| at_op("entry", 0, message);
+    let b = ["^b(%x: i64):", "  ret %a @0"];
+    rejected(
+        &["^entry:", "  ret %a, ^b(%undefined) @0", b[0], b[1]],
+        &[
+            at(undefined),
+            at("successor ^b passes (%undefined) but the block takes (i64)"),
+            at(ret),
+        ],
+    );
+    rejected(
+        &[
+            "^entry:",
+            "  ret %a, ^b(%a, %undefined) @0",
+            "^b(%x: i32, %y: i32):",
+            "  ret %a @0",
+        ],
+        &[
+            at(undefined),
+            at("successor ^b passes (i32, %undefined) but the block takes (i32, i32)"),
+            at(ret),
+        ],
+    );
+    rejected(
+        &[
+            "^entry:",
+            "  ret %a, ^b(%undefined) @0",
+            "^b:",
+            "  ret %a @0",
+        ],
+        &[
+            at(undefined),
+            at("successor ^b passes (%undefined) but the block takes ()"),
+            at(ret),
+        ],
+    );
+    rejected(
+        &["^entry:", "  ret %a, ^nowhere(%undefined) @0"],
+        &[
+            at(undefined),
+            at("successor ^nowhere is not a block of the function"),
+            at(ret),
+        ],
+    );
+    rejected(
+        &[
+            "^entry:",
+            "  %c: i32 = const 1 ^b(%undefined) @0",
+            "  ret %a @0",
+            "^b(%x: i32):",
+            "  ret %a @0",
+        ],
+        &[
+            at(undefined),
+            at("successor ^b passes (%undefined) but the block takes (i32)"),
+            at("const has 1 successors, and its registration says 0"),
+            at("const is not a terminator, and only terminators have successors"),
+        ],
     );
 }
 

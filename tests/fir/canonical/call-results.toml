@@ -1,0 +1,27 @@
+# Tests of call-results.fir: functions and calls with no result and with
+# one (#20). nothing takes no argument and returns nothing, and
+# call_nothing calls it, then returns its own argument, which the call
+# leaves as it was. sink takes two arguments and returns nothing, and
+# call_sink passes it its own two and returns the second. seven takes no
+# argument and returns one value, and call_seven returns what it gets.
+# The backend returns at most one value until #31, so functions and
+# calls with several results are in call-several.fir, whose tests are
+# all interpreter-only.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@nothing" },
+  { func = "@call_nothing", args = ["0"] },
+  { func = "@call_nothing", args = ["1"] },
+  { func = "@call_nothing", args = ["-1"] },
+  { func = "@call_nothing", args = ["-9223372036854775808"] },
+  { func = "@call_nothing", args = ["9223372036854775807"] },
+  { func = "@sink", args = ["127", "-1"] },
+  { func = "@call_sink", args = ["0", "0"] },
+  { func = "@call_sink", args = ["1", "1"] },
+  { func = "@call_sink", args = ["-1", "-1"] },
+  { func = "@call_sink", args = ["-128", "-2147483648"] },
+  { func = "@call_sink", args = ["127", "2147483647"] },
+  { func = "@seven" },
+  { func = "@call_seven" },
+]

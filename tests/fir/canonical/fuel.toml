@@ -1,0 +1,18 @@
+# Tests of fuel.fir: loops that never end run out of fuel (#19). spin's
+# ^loop branches to itself, and count_up's passes %i + 1 to itself,
+# wrapping at i8. Each op takes one step of fuel, the terminator
+# included, so a loop that never ends runs out of fuel at every budget;
+# running out at one budget is not divergence
+# (lean/Fir/Execution/Behaviour.lean). Each test sets fir-ref run's
+# budget, --fuel, with fuel, and is interpreter-only: it expects
+# fuel-exhausted, which makes a differential test invalid. The budgets
+# are small, as fir-ref's run takes stack for each step (#47).
+tests = [
+  { func = "@spin", fuel = 0, expect = "fuel-exhausted" },
+  { func = "@spin", fuel = 1, expect = "fuel-exhausted" },
+  { func = "@spin", fuel = 2, expect = "fuel-exhausted" },
+  { func = "@spin", fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@count_up", args = ["0"], fuel = 5000, expect = "fuel-exhausted" },
+  { func = "@count_up", args = ["127"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@count_up", args = ["-128"], fuel = 3, expect = "fuel-exhausted" },
+]

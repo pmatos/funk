@@ -14,8 +14,8 @@ through the class `DialectValidation`, defined below; the core dialect's
 rules have a section of their own. A text that does not decode is
 rejected before validation, by the parser (see the text format chapter).
 
-The rules are propositions. The executable check that `fir-ref validate`
-runs (#10) is written against them.
+The rules are propositions. The validation check, at the end of this
+chapter, decides them, and `fir-ref validate` runs it (#10).
 
 # Names and their types
 

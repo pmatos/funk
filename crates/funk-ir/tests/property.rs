@@ -5,6 +5,7 @@
 //! whatever text it accepts round-trips, and whatever it rejects, it rejects
 //! with an error.
 
+use funk_ir::dialects::core::{BITWISE_OPS, PREDICATES, SHIFT_OPS};
 use funk_ir::generate::{self, Rng};
 use funk_ir::text::quote;
 use funk_ir::{Attr, Location, Module, Registry, parse, print, verify};
@@ -54,6 +55,211 @@ fn the_generator_covers_what_the_round_trip_must_cover() {
         }
     }
     assert!(quoted > 10 && booleans == [true; 2] && kinds == [true; 6] && results == [true; 3]);
+}
+
+#[test]
+fn the_generator_makes_every_op_with_every_set_of_flags() {
+    let mut seen = std::collections::BTreeSet::new();
+    for (_, m) in generated() {
+        for op in m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops) {
+            if op.name == "call" {
+                seen.insert(op.name.clone());
+            } else if op.name != "const" {
+                let attrs = op.attrs.iter().map(|a| format!(" {a}"));
+                seen.insert(
+                    std::iter::once(op.name.clone())
+                        .chain(attrs)
+                        .collect::<String>(),
+                );
+            }
+        }
+    }
+    let mut want = std::collections::BTreeSet::new();
+    for op in ["add", "sub", "mul"] {
+        for flags in funk_ir::dialects::core::WRAP_FLAG_SETS {
+            want.insert(
+                std::iter::once(op)
+                    .chain(flags.iter().copied())
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            );
+        }
+    }
+    want.extend(["freeze", "br", "cond_br", "ret", "select", "call"].map(String::from));
+    want.extend(PREDICATES.map(|p| format!("icmp {p}")));
+    want.extend(
+        BITWISE_OPS
+            .iter()
+            .chain(&SHIFT_OPS)
+            .map(|op| op.to_string()),
+    );
+    want.extend(funk_ir::dialects::core::WIDTH_CHANGES.map(String::from));
+    for (op, exact) in funk_ir::dialects::core::DIVISION_OPS {
+        want.insert(op.to_string());
+        if exact {
+            want.insert(format!("{op} exact"));
+        }
+    }
+    assert_eq!(seen, want);
+}
+
+/// Whether `args` passes `own` again, in another order: a permutation of
+/// two or more arguments that is not the identity.
+fn permutes(own: &[&str], args: &[String]) -> bool {
+    let (mut a, mut o): (Vec<&str>, Vec<&str>) =
+        (args.iter().map(String::as_str).collect(), own.to_vec());
+    let moved = a != o;
+    a.sort_unstable();
+    o.sort_unstable();
+    own.len() >= 2 && moved && a == o
+}
+
+/// The shapes of control flow that the generator makes, each at least five
+/// times: functions of one block and of four or more, a block of two or
+/// more arguments, branches back to an earlier block, to the branch's own
+/// block and forward past the next one, one value passed to two arguments,
+/// a block's own arguments passed back to it in another order, a `cond_br`
+/// with both successors one block, and a `cond_br` on a block argument.
+#[test]
+fn the_generator_makes_loops_joins_and_block_arguments() {
+    let mut seen = [0usize; 10];
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let blocks = &f.body.blocks;
+            let index = |l: &str| blocks.iter().position(|b| b.label == l);
+            seen[0] += usize::from(blocks.len() == 1);
+            seen[1] += usize::from(blocks.len() >= 4);
+            for (k, b) in blocks.iter().enumerate() {
+                seen[2] += usize::from(b.params.len() >= 2);
+                let Some(term) = b.ops.last() else { continue };
+                let own: Vec<&str> = b.params.iter().map(|d| d.name.as_str()).collect();
+                for s in &term.succs {
+                    let t = index(&s.label).expect("a block of the function");
+                    seen[3] += usize::from(t < k);
+                    seen[4] += usize::from(t == k);
+                    seen[5] += usize::from(t > k + 1);
+                    let mut args = s.args.clone();
+                    args.sort_unstable();
+                    args.dedup();
+                    seen[6] += usize::from(args.len() < s.args.len());
+                    seen[7] += usize::from(t == k && permutes(&own, &s.args));
+                }
+                if let [c] = term.operands.as_slice()
+                    && term.name == "cond_br"
+                {
+                    seen[8] += usize::from(term.succs[0].label == term.succs[1].label);
+                    seen[9] += usize::from(own.contains(&c.as_str()));
+                }
+            }
+        }
+    }
+    assert!(seen.iter().all(|&n| n >= 5), "{seen:?}");
+}
+
+/// The width changes that the generator makes, as `(op, M, N)`, from `iM`
+/// to `iN`.
+fn generated_width_changes() -> Vec<(String, u32, u32)> {
+    let int_width = funk_ir::dialects::core::int_width;
+    let mut out = Vec::new();
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let defs = f.params.iter().chain(
+                f.body
+                    .blocks
+                    .iter()
+                    .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
+            );
+            let types: std::collections::HashMap<&str, u32> = defs
+                .map(|d| (d.name.as_str(), int_width(&d.ty).expect("an integer")))
+                .collect();
+            for op in f.body.blocks.iter().flat_map(|b| &b.ops) {
+                if funk_ir::dialects::core::WIDTH_CHANGES.contains(&op.name.as_str()) {
+                    let n = int_width(&op.results[0].ty).expect("an integer");
+                    out.push((op.name.clone(), types[op.operands[0].as_str()], n));
+                }
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn the_generator_changes_widths_only_where_validation_allows() {
+    let changes = generated_width_changes();
+    for (op, m, n) in &changes {
+        let valid = if op == "trunc" { n < m } else { m < n };
+        assert!(valid, "{op} from i{m} to i{n}");
+    }
+    for op in funk_ir::dialects::core::WIDTH_CHANGES {
+        let to_i1 = changes.iter().any(|(o, _, n)| o == op && *n == 1);
+        let from_i1 = changes.iter().any(|(o, m, _)| o == op && *m == 1);
+        assert!(if op == "trunc" { to_i1 } else { from_i1 }, "{op}");
+        assert!(
+            changes.iter().filter(|(o, ..)| o == op).count() > 20,
+            "{op}"
+        );
+    }
+}
+
+/// Each op named `name` that the generator makes, as the widths of its
+/// operands and the widths of its results.
+fn generated_uses(name: &str) -> Vec<(Vec<u32>, Vec<u32>)> {
+    let int_width = funk_ir::dialects::core::int_width;
+    let width = |t: &funk_ir::Type| int_width(t).expect("an integer");
+    let mut out = Vec::new();
+    for (_, m) in generated() {
+        for f in m.funcs() {
+            let ops = || f.body.blocks.iter().flat_map(|b| &b.ops);
+            let args = f.body.blocks.iter().flat_map(|b| &b.params);
+            let defs = f
+                .params
+                .iter()
+                .chain(args)
+                .chain(ops().flat_map(|o| &o.results));
+            let types: std::collections::HashMap<&str, u32> =
+                defs.map(|d| (d.name.as_str(), width(&d.ty))).collect();
+            for op in ops().filter(|o| o.name == name) {
+                let operands = op.operands.iter().map(|x| types[x.as_str()]).collect();
+                let results = op.results.iter().map(|d| width(&d.ty)).collect();
+                out.push((operands, results));
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn the_generator_compares_and_selects_at_every_kind_of_width() {
+    // `i1`, a width the backend lowers, another width up to `i64`, one
+    // above `i64`, and one above `i1024`, which `width` gives only near
+    // `MAX_WIDTH`.
+    let kind = |w: u32| match w {
+        1 => 0,
+        8 | 16 | 32 | 64 => 1,
+        2..=63 => 2,
+        65..=1024 => 3,
+        _ => 4,
+    };
+    let (mut compared, mut selected) = ([0; 5], [0; 5]);
+    for (operands, results) in generated_uses("icmp") {
+        let [a, b] = operands[..] else {
+            panic!("icmp of {operands:?}")
+        };
+        assert!(
+            a == b && results == [1],
+            "icmp of {operands:?} to {results:?}"
+        );
+        compared[kind(a)] += 1;
+    }
+    for (operands, results) in generated_uses("select") {
+        let [c, a, b] = operands[..] else {
+            panic!("select of {operands:?}")
+        };
+        assert!(c == 1 && a == b && results == [a], "select of {operands:?}");
+        selected[kind(a)] += 1;
+    }
+    assert!(compared.iter().all(|&n| n > 0), "icmp at {compared:?}");
+    assert!(selected.iter().all(|&n| n > 0), "select at {selected:?}");
 }
 
 /// Rewrites the layout of a text outside its strings: each space or line
@@ -146,7 +352,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 30] = [
+    const TOKENS: [&str; 59] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -163,7 +369,36 @@ fn the_parser_never_panics_on_random_token_soup() {
         "=",
         "const",
         "add",
+        "sub",
+        "mul",
+        "nuw",
+        "nsw",
+        "freeze",
+        "and",
+        "or",
+        "xor",
+        "shl",
+        "lshr",
+        "ashr",
+        "zext",
+        "sext",
+        "trunc",
+        ": i64",
+        "sdiv",
+        "udiv",
+        "srem",
+        "urem",
+        "exact",
+        "icmp",
+        "slt",
+        "uge",
+        "select",
+        "icmp.slt",
         "ret",
+        "br",
+        "cond_br",
+        "^loop(",
+        "^loop",
         "true",
         "-1",
         "1",

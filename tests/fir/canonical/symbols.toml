@@ -1,0 +1,12 @@
+# Tests of symbols.fir: both tools find each function by its symbol as text
+# writes it, quoted when it is not a word.
+tests = [
+  { func = '@"1"' },
+  { func = '@"a b"' },
+  { func = '@""' },
+  { func = '@"_ZN3foo$LT$E"' },
+  { func = '@"tab\tquote\"slash\\line\n"' },
+  { func = '@"\u{202e}hidden\u{85}\u{feff}\u{1}"' },
+  { func = '@"résumé"' },
+  { func = "@_start.v2" },
+]

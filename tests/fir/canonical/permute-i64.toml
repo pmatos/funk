@@ -1,0 +1,38 @@
+# Tests of permute-i64.fir: block arguments that swap and rotate each
+# other at i64 (#19). A branch binds all of a block's arguments at once,
+# to values each read before any is bound. ^body passes ^loop's
+# arguments back to it %n times: swapped, %y and %x, in swap_first and
+# swap_second, and rotated, %y, %z and %x, in rotate_first,
+# rotate_second and rotate_third. Each returns one of them, as the
+# backend returns at most one value, so together they show the whole
+# order. The values are the signed minimum, the signed maximum and -1,
+# and %n is 0, 1, 2, 3 and 7 for a swap, and 0 to 4 for a rotation.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@swap_first", args = ["-9223372036854775808", "9223372036854775807", "0"] },
+  { func = "@swap_second", args = ["-9223372036854775808", "9223372036854775807", "0"] },
+  { func = "@swap_first", args = ["-9223372036854775808", "9223372036854775807", "1"] },
+  { func = "@swap_second", args = ["-9223372036854775808", "9223372036854775807", "1"] },
+  { func = "@swap_first", args = ["-9223372036854775808", "9223372036854775807", "2"] },
+  { func = "@swap_second", args = ["-9223372036854775808", "9223372036854775807", "2"] },
+  { func = "@swap_first", args = ["-9223372036854775808", "9223372036854775807", "3"] },
+  { func = "@swap_second", args = ["-9223372036854775808", "9223372036854775807", "3"] },
+  { func = "@swap_first", args = ["-9223372036854775808", "9223372036854775807", "7"] },
+  { func = "@swap_second", args = ["-9223372036854775808", "9223372036854775807", "7"] },
+  { func = "@rotate_first", args = ["-9223372036854775808", "9223372036854775807", "-1", "0"] },
+  { func = "@rotate_second", args = ["-9223372036854775808", "9223372036854775807", "-1", "0"] },
+  { func = "@rotate_third", args = ["-9223372036854775808", "9223372036854775807", "-1", "0"] },
+  { func = "@rotate_first", args = ["-9223372036854775808", "9223372036854775807", "-1", "1"] },
+  { func = "@rotate_second", args = ["-9223372036854775808", "9223372036854775807", "-1", "1"] },
+  { func = "@rotate_third", args = ["-9223372036854775808", "9223372036854775807", "-1", "1"] },
+  { func = "@rotate_first", args = ["-9223372036854775808", "9223372036854775807", "-1", "2"] },
+  { func = "@rotate_second", args = ["-9223372036854775808", "9223372036854775807", "-1", "2"] },
+  { func = "@rotate_third", args = ["-9223372036854775808", "9223372036854775807", "-1", "2"] },
+  { func = "@rotate_first", args = ["-9223372036854775808", "9223372036854775807", "-1", "3"] },
+  { func = "@rotate_second", args = ["-9223372036854775808", "9223372036854775807", "-1", "3"] },
+  { func = "@rotate_third", args = ["-9223372036854775808", "9223372036854775807", "-1", "3"] },
+  { func = "@rotate_first", args = ["-9223372036854775808", "9223372036854775807", "-1", "4"] },
+  { func = "@rotate_second", args = ["-9223372036854775808", "9223372036854775807", "-1", "4"] },
+  { func = "@rotate_third", args = ["-9223372036854775808", "9223372036854775807", "-1", "4"] },
+]

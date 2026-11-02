@@ -1,0 +1,25 @@
+# Tests of mul-i1.fir: mul at i1, with each set of its
+# flags, on every pair of boundary bit patterns: 0, 1, -1, the signed
+# minimum and the signed maximum, or false and true at i1. A broken
+# flag gives poison (#14).
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does.
+tests = [
+  { func = "@mul", args = ["false", "false"] },
+  { func = "@mul", args = ["false", "true"] },
+  { func = "@mul", args = ["true", "false"] },
+  { func = "@mul", args = ["true", "true"] },
+  { func = "@mul_nuw", args = ["false", "false"] },
+  { func = "@mul_nuw", args = ["false", "true"] },
+  { func = "@mul_nuw", args = ["true", "false"] },
+  { func = "@mul_nuw", args = ["true", "true"] },
+  { func = "@mul_nsw", args = ["false", "false"] },
+  { func = "@mul_nsw", args = ["false", "true"] },
+  { func = "@mul_nsw", args = ["true", "false"] },
+  { func = "@mul_nsw", args = ["true", "true"] },
+  { func = "@mul_nuw_nsw", args = ["false", "false"] },
+  { func = "@mul_nuw_nsw", args = ["false", "true"] },
+  { func = "@mul_nuw_nsw", args = ["true", "false"] },
+  { func = "@mul_nuw_nsw", args = ["true", "true"] },
+]

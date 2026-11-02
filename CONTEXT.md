@@ -27,6 +27,12 @@ What a dialect gives for one op: its name, its attributes and the types it is
 used at, such as `add` with `nsw` at `i32`. In Lean it is a value of the
 dialect's `Op` type, from which the op's operand and result types follow.
 
+**valid op instance**:
+An op instance whose operand and result types validation accepts
+(`TypesValid`), such as `udiv` at `i8` but not at `i0`. Every op of a
+valid function is one. The poison obligations speak only of valid op
+instances (ADR-2026-11-02-1515).
+
 **attribute**:
 A constant part of an op that is not a value, such as the flag `nsw`, the
 predicate `slt` of an `icmp`, the value of a `const` or the callee `@f` of a
@@ -99,11 +105,25 @@ error, with a text position), or rejected by validation (a validation
 error, with an IR location). `funk verify` and `fir-ref validate` must give
 the same verdict on every text.
 
+**validation check**:
+The executable check, in the spec, that decides validation: it lists a
+module's problems, each a broken rule said in words with where it is, and
+the list is empty exactly when the module is valid. `fir-ref validate` runs
+it; `funk verify` is the Rust verifier that must agree with it.
+
 **well-formed module**:
 A module whose printed text says everything it holds, so that parsing the
 text gives the module back. Every valid module is well formed. A text that
 follows the grammar but does not decode, such as one with a type mismatch,
 is a parse error with a located reason.
+
+### Native calls
+
+**funk calling convention**:
+The rules for calling a function compiled by funk: where its arguments and
+results pass, which registers it preserves, how its symbol is spelled, and
+how its stack is aligned. A call between funk functions passes arguments
+without extension; calls to code funk did not compile may need other rules.
 
 ### Dialects
 
@@ -130,6 +150,12 @@ A dialect that only tests register, to show that a new dialect needs no
 change to the IR, the parser or the printer. Its ops and types are named
 `toy.` and a word, such as `toy.br`, so they never collide with core ops.
 
+**sum dialect**:
+One dialect that holds the ops of two dialects over the same types, so that
+one module can mix them. It sends each op name to one of the two, so no op
+name may belong to both. Only the Lean tests build one, from the core
+dialect and a test dialect (ADR-2026-10-30-2040).
+
 ### Semantics
 
 **poison**:
@@ -146,8 +172,11 @@ How an op treats a poison operand. A propagating op returns only poison from
 it, and is UB on it only where a defined value in its place could be UB too;
 it also returns a result on some operands with no poison, and proves all
 three in Lean. An exception, such as `select` or `freeze`, states its own
-rule. Every op of every dialect declares its class, and every op is total
-and monotone: refining its operands refines what it does.
+rule. Every op of every dialect declares its class. The obligations speak
+of valid op instances, and every one that runs by its own rule, a
+terminator or an op with no callee, is total and monotone: refining its
+operands refines what it does (ADR-2026-11-02-1514,
+ADR-2026-11-02-1515).
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed
@@ -196,7 +225,21 @@ _Avoid_: equivalence
 
 **fuel**:
 The budget that bounds a run of the reference interpreter, so that every run
-terminates. A run that runs out of fuel at every budget diverges.
+terminates. Every op takes one step, and a callee runs on the steps its
+caller has left, so a call and its callees share one budget. A run that runs
+out of fuel at every budget diverges.
+
+**call effect**:
+How a call runs: the interpreter finds the callee in the module by its
+symbol, runs it with the fuel the caller has left, and binds what it returns
+to the call's results. A dialect only says which of its ops call which
+function.
+
+**execution rules**:
+What an op does when it runs: the results it gives, the UB it hits, or where
+a terminator sends control. Each op family's ticket writes them in Lean.
+Until it does, the family's ops have none: the spec gives them no outcome,
+and `fir-ref run` reports such an op as an error, never as a result.
 
 **fuel monotonicity**:
 The interpreter's obligation that more fuel never changes how a run that
@@ -209,19 +252,22 @@ at every fuel budget. Without it, an empty behaviour would refine anything.
 
 **no-stuck obligation**:
 The interpreter's obligation that no path of a run of a valid function is
-stuck, at any fuel budget. With every op total, and with an interpreter
-whose own steps never drop a path, which #10's definition must ensure, no
-path of the run is lost.
+stuck, at any fuel budget. With every op that runs by its own rule total,
+and with an interpreter whose own steps never drop a path, which #10's
+definition must ensure, no path of the run is lost.
 
 **op totality**:
-Every op's obligation to have an outcome on every operand vector: a result
-or UB, or for a terminator, where control goes or UB. So its semantics never
-drops a path of a run.
+The obligation of every valid op instance that runs by its own rule, a
+terminator or an op with no callee, to have an outcome on every operand
+vector: a result or UB, or for a terminator, where control goes or UB. So
+its semantics never drops a path of a run. An op with a callee, such as
+`call`, has no rule of its own: its meaning is its callee's run.
 
 **op monotonicity**:
-Every op's obligation that refining its operands refines what it does. It
-makes refinement compositional: a part replaced by one that refines it
-refines the whole function.
+The obligation of every valid op instance that runs by its own rule that
+refining its operands refines what it does. It makes refinement
+compositional: a part replaced by one that refines it refines the whole
+function.
 
 ### The oracle
 
@@ -240,17 +286,48 @@ The `fir-ref` mode that tries every choice sequence, within a budget on the
 total number of choice bits, and prints the set of outcomes.
 
 **scripted mode**:
-The `fir-ref` mode that takes one choice sequence and prints one outcome.
+The `fir-ref` mode that takes one choice sequence and prints one outcome. A
+sequence that does not fit the run, with too few or too many values or a
+value that is not of its choice's type, is an error, never an outcome.
+
+**sampled mode**:
+The `fir-ref` mode that draws each choice from a generator seeded with a
+number, as the run makes it, and prints one outcome and the values it
+drew: a choice sequence that fits the run.
+
+**choice budget**:
+The most bits that one path may choose in exhaustive mode. A run that would
+choose more gives no set of outcomes: exhaustive mode says that the budget
+is exceeded.
+
+**choice tree**:
+The monad that `fir-ref` runs the interpreter in: a tree whose nodes are
+choices and whose leaves say how each path ends. It maps to the set monad
+of the spec, so its walks, exhaustive, scripted and sampled, are proved
+sound.
 
 **declared results**:
 The allowed results that a test lists, each with a witness choice sequence
-from which scripted mode reproduces it.
+from which scripted mode reproduces it. When the run chooses more than the
+choice budget, seeded runs of sampled mode check that it gives no other.
 
 **differential test**:
 A test that runs a module on `fir-ref` and as native code, and checks that the
 native result refines the `fir-ref` result.
 
 **invalid test**:
-A differential test that can prove nothing: an outcome in its set is UB, or its
-choices exceed the budget and it declares no results. It never counts as a
-pass.
+A differential test that can prove nothing: an outcome in its set is UB or
+fuel exhausted, or its choices exceed the budget and it declares no results.
+It never counts as a pass.
+
+**interpreter-only test**:
+A test that runs on `fir-ref` only, and states the result it must give, on
+the path that its choices name: the returned values, UB or fuel exhausted.
+It covers what native code cannot check, such as UB, fuel exhaustion and
+widths the backend does not lower.
+
+**must-reject text**:
+A text of the test corpus that breaks one rule, and that `funk verify` and
+`fir-ref validate` must both reject with the same verdict: rejected by the
+parser or by validation. When the tracer subset cannot break a rule alone,
+the text breaks a second rule too, and names both (ADR-2026-10-30-2050).

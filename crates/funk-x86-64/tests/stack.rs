@@ -1,4 +1,4 @@
-//! Frames larger than a page are probed, and a built executable runs each
+//! Frames of a page or more are probed, and a built executable runs each
 //! function on a stack it reserves for it, so the process's stack limit does
 //! not bound a frame (ADR-2026-10-30-1230, ADR-2026-10-30-1233).
 
