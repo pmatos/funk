@@ -22,6 +22,8 @@ import FirTest.Sum
 import FirTest.Toy
 import FirTest.Mixed
 import FirTest.Runs
+import FirTest.ValidSum
+import FirTest.RunsLoops
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

@@ -28,10 +28,11 @@ terminators, and `ret` returns, by its rule, values of the function's
 result types, by its validation rule. Each of the three ops is total
 (`Core.const_total`, `Core.add_total`, `Core.ret_total`).
 
-The op families of #14 to #20 keep `Progress` and `NeverStuck` as they
-add their ops; the branches of #19 and the calls of #20 need more than a
-straight run, since a jump lands in another block and a call runs another
-function.
+Every valid core function without a `call` op meets the three
+obligations too, branches and loops included, as the section on core
+functions without calls proves (`Core.callFree_fuelMonotone`,
+`Core.callFree_progress`, `Core.callFree_neverStuck`). #20 extends them to
+calls and recursion.
 -/
 
 namespace Fir.Core

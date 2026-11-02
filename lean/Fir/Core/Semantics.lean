@@ -39,12 +39,14 @@ does until its family lands:
   empty set meets every bound on what may happen; and such a function
   refines every source. So none of these statements is claimed of an op,
   or of a function that reaches one, before the op has rules. The general
-  theorems `Func.fuelMonotone` and `Func.neverStuck` cover such a function
-  too, but only vacuously on the paths that reach the op: they say nothing
-  of how it behaves.
+  theorems `Func.fuelMonotone`, `Func.neverStuck` and
+  `Func.neverStuck_of_local` cover such a function too, but only vacuously
+  on the paths that reach the op: they say nothing of how it behaves.
 * A run that reaches such an op has no way to end on that path; when
-  every path does, `Progress` fails. #10 proves `Progress` and `NeverStuck` for the
-  tracer subset only, and #14 to #20 extend them as they add their ops.
+  every path does, `Progress` fails. So `Progress` and `NeverStuck` are
+  proved for every valid core function without a `call` op, the one op
+  left without rules (`Core.callFree_progress`, `Core.callFree_neverStuck`),
+  and #20 extends them to calls and recursion.
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules yet, as an error
   (ADR-2026-10-30-1856).

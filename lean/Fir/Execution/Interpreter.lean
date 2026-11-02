@@ -71,15 +71,22 @@ it has. A terminator may return only values of the function's result
 types, which the dialect's own rule must ask, as the core rule for `ret`
 does. So `NeverStuck` for `br` and `cond_br` needs their `exit` to name
 only successors they have, which #19 proves of each: `Core.br_goto_lt` and
-`Core.condBr_goto_lt`.
+`Core.condBr_goto_lt`. One more condition is no check of its own: a
+terminator that jumps gives no results. The interpreter binds none for it,
+while validation puts them in scope in the blocks that its block
+dominates, so a use of one would be stuck. No core terminator has results.
+Whether validation should rule them out for every dialect is an open
+question (#89).
 
 These checks are not all of validation. The interpreter checks that a value
 is defined, not that its definition dominates its use, and it checks no
 other rule of validation than those above. So a run of a function that
 validation rejects may end with an outcome, which means nothing: only a
 valid function's runs mean something (ADR-2026-10-30-1856). No path of a
-valid function's run is stuck, which ticket #10 proves for every function
-that runs straight to a return, its tracer subset among them (see "Fuel and
+valid function's run is stuck. That is proved for every valid function
+that calls no function and whose terminators meet the three conditions
+above (`Func.Local`), jumps and loops included, so for every valid core
+function without a `call` op; #20 extends it to calls (see "Fuel and
 progress").
 
 The interpreter's own steps never drop a path. Each step goes on, ends the

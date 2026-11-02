@@ -55,7 +55,10 @@ import Fir.Execution.SetRuns
 import Fir.Execution.Monotone
 import Fir.Execution.Environment
 import Fir.Execution.Progress
+import Fir.Execution.Scoped
+import Fir.Execution.Jumps
 import Fir.Core.Runs
+import Fir.Core.CallFree
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

@@ -166,7 +166,13 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Execution.Progress "Progress and no stuck path" (level := 2)}
 
+{includeLiterate "." Fir.Execution.Scoped "Scope along a run" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
+
 {includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
+
+{includeLiterate "." Fir.Core.CallFree "Core functions without calls" (level := 2)}
 
 # Text format
 

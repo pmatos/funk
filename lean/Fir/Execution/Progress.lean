@@ -12,8 +12,9 @@ terminator returns, never jumps, and returns values of the function's
 result types (`Func.Straight`). The tracer subset of #10, `const`, `add`
 without flags and `ret`, is such a set of ops. Branches and calls need
 more: a jump lands in a block whose values are defined on another path,
-and a call runs another function. Tickets #19 and #20 extend these
-theorems to them.
+and a call runs another function. The next two sections extend these
+theorems to jumps and loops (`Func.neverStuck_of_local`,
+`Func.progress_of_local`), and #20 extends them to calls.
 
 The proof follows the run through the entry block, the only block that
 such a function runs. Before its op at index `i`, the run's environment
