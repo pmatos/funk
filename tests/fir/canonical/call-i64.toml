@@ -2,9 +2,9 @@
 # patterns: 0, 1, -1, the signed minimum and the signed maximum. call_id
 # passes its argument to @id and returns what @id returns, so each
 # pattern goes into a call as an argument and comes back as its result.
-# call_sub passes %a and %b, in that order, to @sub, which returns %a -
-# %b, on every pair of patterns: an argument in the wrong place changes
-# the result where the two differ.
+# call_sub passes %a and %b, in that order, to @sub, which returns
+# %a - %b, on every pair of patterns: an argument in the wrong place
+# changes the result where the two differ.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 tests = [
