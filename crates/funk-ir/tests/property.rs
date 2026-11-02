@@ -62,7 +62,9 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
     let mut seen = std::collections::BTreeSet::new();
     for (_, m) in generated() {
         for op in m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops) {
-            if op.name != "const" {
+            if op.name == "call" {
+                seen.insert(op.name.clone());
+            } else if op.name != "const" {
                 let attrs = op.attrs.iter().map(|a| format!(" {a}"));
                 seen.insert(
                     std::iter::once(op.name.clone())
@@ -83,7 +85,7 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             );
         }
     }
-    want.extend(["freeze", "br", "cond_br", "ret", "select"].map(String::from));
+    want.extend(["freeze", "br", "cond_br", "ret", "select", "call"].map(String::from));
     want.extend(PREDICATES.map(|p| format!("icmp {p}")));
     want.extend(
         BITWISE_OPS

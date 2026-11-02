@@ -196,5 +196,5 @@ a `cond_br` on `%c` where `%c` may be poison, and that a `cond_br` on
 `freeze %c` may. `reject/branch.toml` holds the texts of these ops that
 do not decode, and `reject/validation-branch.toml` those that break a
 rule of validation that they bring into play: of successors and their
-block arguments, terminators, dominance and reachability. #20 adds the
-other ops to `funk`.
+block arguments, terminators, dominance and reachability. Both tools
+have `call` (#20) too; its texts come with #20's corpus.

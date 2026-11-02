@@ -128,15 +128,18 @@ are on `main`:
   shifts `shl`, `lshr` and `ashr`, the width changes `zext`, `sext` and
   `trunc`, `sdiv` and `udiv` with their flag `exact`, `srem`, `urem`,
   `icmp` with its ten predicates, `select`, the branches `br` and
-  `cond_br`, and `ret` so far
+  `cond_br`, `ret`, and `call` of any function of the module, with any
+  number of arguments and results
   ([#14](https://github.com/pmatos/funk/issues/14),
   [#15](https://github.com/pmatos/funk/issues/15),
   [#16](https://github.com/pmatos/funk/issues/16),
   [#17](https://github.com/pmatos/funk/issues/17),
   [#18](https://github.com/pmatos/funk/issues/18),
-  [#19](https://github.com/pmatos/funk/issues/19)). The verifier checks
-  dominance across blocks, block arguments and that every block is
-  reachable from the entry. `funk fmt` prints fir
+  [#19](https://github.com/pmatos/funk/issues/19),
+  [#20](https://github.com/pmatos/funk/issues/20)). The verifier checks
+  dominance across blocks, block arguments, that every block is
+  reachable from the entry, and that each call matches its callee's
+  signature. `funk fmt` prints fir
   in its canonical form, and `funk verify` checks it. Both report as text,
   or as JSON with `--json`.
 - The Lean parser, a section of the spec, and the first command of the
@@ -148,9 +151,9 @@ are on `main`:
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
   `const`, `add`, `sub` and `mul` with their flags, `freeze`, the bitwise
   ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or
-  without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br` and
-  `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an object file and an
-  executable for Linux. Native code holds no poison: a broken `nuw` or `nsw` gives the
+  without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
+  `ret` and `call` at `i1`, `i8`, `i16`, `i32` and `i64` into an object
+  file and an executable for Linux. Native code holds no poison: a broken `nuw` or `nsw` gives the
   wrapped result, a broken `exact` the plain quotient, a shift by `N` or
   more gives what x86's masked shift gives, and `freeze` copies its
   operand
@@ -166,6 +169,9 @@ are on `main`:
   A branch copies the values it passes into its block's arguments as one
   parallel move
   ([ADR-2026-10-31-0335](docs/adrs/2026-10-31-0335-block-arguments-are-one-parallel-move.md)).
+  A call follows System V and extends no argument
+  ([ADR-2026-10-30-1232](docs/adrs/2026-10-30-1232-funk-function-abi.md),
+  [ADR-2026-11-02-1021](docs/adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)).
   The executable runs one function from the command line and prints its
   results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
@@ -212,9 +218,8 @@ These parts of M0 do not exist yet:
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In Rust, the core ops of [#20](https://github.com/pmatos/funk/issues/20),
-  in the IR and in the backend. The backend does not lower `i128` or
-  return more than one value yet.
+- In the backend, `i128` and functions and calls with more than one
+  result.
 
 The epic's sub-issues list the open work in full.
 
