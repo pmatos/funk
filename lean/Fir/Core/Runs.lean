@@ -23,7 +23,7 @@ the core dialect. Fuel monotonicity holds for every function of every
 module (`Func.fuelMonotone`). Progress and the no-stuck obligation hold for
 every valid function whose ops run straight to a return and are total
 (`Func.progress`, `Func.neverStuck`). A function of the tracer subset runs
-straight: no core op calls a function yet, `const` and `add` are not
+straight: no op of the subset calls a function, `const` and `add` are not
 terminators, and `ret` returns, by its rule, values of the function's
 result types, by its validation rule. Each of the three ops is total
 (`Core.const_total`, `Core.add_total`, `Core.ret_total`).
@@ -31,8 +31,10 @@ result types, by its validation rule. Each of the three ops is total
 Every valid core function without a `call` op meets the three
 obligations too, branches and loops included, as the section on core
 functions without calls proves (`Core.callFree_fuelMonotone`,
-`Core.callFree_progress`, `Core.callFree_neverStuck`). #20 extends them to
-calls and recursion.
+`Core.callFree_progress`, `Core.callFree_neverStuck`), and so does every
+function of every valid core module, calls and recursion included, as the
+section on every valid core function proves (`Core.fuelMonotone`,
+`Core.progress`, `Core.neverStuck`).
 -/
 
 namespace Fir.Core

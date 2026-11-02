@@ -6,12 +6,14 @@ import Fir.Execution.Behaviour
 Three obligations tie the interpreter's runs to the behaviours above. #10
 defines the run of each function of a module on each argument vector of its
 parameter types (`Func.runs`, and `Core.funcRuns` for the core dialect).
-All three hold for every valid core function that has no `call` op, on
-every argument vector, branches and loops included:
-`Core.callFree_fuelMonotone`, `Core.callFree_progress` and
-`Core.callFree_neverStuck`. #10 proved them first for its tracer subset,
-`const`, `add` without flags and `ret`: `Core.tracer_fuelMonotone`,
-`Core.tracer_progress` and `Core.tracer_neverStuck`.
+All three hold for every function of every valid core module, on every
+argument vector, calls, recursion, branches and loops included:
+`Core.fuelMonotone`, `Core.progress` and `Core.neverStuck`. #10 proved
+them first for its tracer subset, `const`, `add` without flags and `ret`:
+`Core.tracer_fuelMonotone`, `Core.tracer_progress` and
+`Core.tracer_neverStuck`; then they were proved for every valid core
+function that has no `call` op: `Core.callFree_fuelMonotone`,
+`Core.callFree_progress` and `Core.callFree_neverStuck`.
 
 * _Fuel monotonicity_ (`FuelMonotone`). More fuel never changes how a run
   that returns or hits UB ends. A return or UB that a run reaches at some
@@ -48,14 +50,23 @@ terminator that returns returns values of the function's result types. Its
 run may jump and loop. No path of it is stuck (`Func.neverStuck_of_local`),
 and when its ops are total it has an outcome at every budget
 (`Func.progress_of_local`). A valid core function without a `call` op runs
-within itself, and its ops are total, as every core op but `call` is. So
-both hold for every valid core function without a `call` op. They are
+within itself, and its ops are total, as every core op is
+(`Core.Op.total_all`). So both hold for every valid core function without
+a `call` op.
+
+With calls, they hold for every function of a module whose functions are
+all valid and run within the module (`Func.InModule`): their terminators
+keep to the rules above, and each call names a function of the module of
+the call's type. A run may then call any function of the module, itself
+included, as deep as its fuel allows (`Func.neverStuck_of_inModule`,
+`Func.progress_of_inModule`). Every function of a valid core module runs
+within the module, and every core op is total, `call` by its stand-in,
+which the interpreter never runs. So both hold for every function of
+every valid core module (`Core.progress`, `Core.neverStuck`). They are
 statements about the run in the set monad, choices included, and
 `fir-ref`'s modes report only what that run does (`Core.exhaustive_stuck`,
 `Core.scripted_stuck`, `Core.sampled_stuck`), so no mode reports a stuck
 path of such a function.
-#20 extends progress and the no-stuck obligation to calls and recursion,
-when it gives `call` its callee.
 -/
 
 namespace Fir

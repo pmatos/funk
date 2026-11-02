@@ -20,8 +20,8 @@ def lit (ty : String) (n : Nat) : String :=
 
 /-! # The spec's example
 
-`@sum` adds the integers from `0` up to, but not including, `%n`. Its
-`@sum10` calls it, so it waits for `call`'s rules (#20). -/
+`@sum` adds the integers from `0` up to, but not including, `%n`, and
+`@sum10` calls it on `10` (#20). -/
 
 /-- The spec's example module, as text. -/
 def sumText : String := Example.sumModule.print
@@ -34,7 +34,7 @@ def sumText : String := Example.sumModule.print
 #guard runText sumText "@sum" ["-3"] == returns ["0"]
 #guard runText sumText "@sum" ["100"] (mode := .exhaustive 16) ==
   outcomes [ret ["4950"]] 0
-#guard runText sumText "@sum10" == fails 2 "fir-ref: @sum10: call @sum has no execution rules yet"
+#guard runText sumText "@sum10" == returns ["45"]
 -- `@sum` on `%n ≥ 0` takes `6 * %n + 5` steps: two in `^entry`, two in each
 -- of the `%n + 1` visits of `^loop`, four in each of the `%n` runs of
 -- `^body`, and one in `^exit`.

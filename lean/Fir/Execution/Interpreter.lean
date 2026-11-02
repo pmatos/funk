@@ -83,11 +83,11 @@ is defined, not that its definition dominates its use, and it checks no
 other rule of validation than those above. So a run of a function that
 validation rejects may end with an outcome, which means nothing: only a
 valid function's runs mean something (ADR-2026-10-30-1856). No path of a
-valid function's run is stuck. That is proved for every valid function
-that calls no function and whose terminators meet the three conditions
-above (`Func.Local`), jumps and loops included, so for every valid core
-function without a `call` op; #20 extends it to calls (see "Fuel and
-progress").
+valid function's run is stuck. That is proved for every function of a
+module whose functions are all valid, meet the conditions above on their
+terminators, and call only functions of the module, of the types of their
+calls (`Func.InModule`), jumps, loops, calls and recursion included, so
+for every function of every valid core module (see "Fuel and progress").
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; the only computations that branch are
@@ -102,8 +102,8 @@ rules and `cond_br`'s call `ub`, so the core dialect's semantics asks for
 modes run this interpreter in the tree of choices, which has both. The call
 effect is the one exception, and it is written once here for every
 dialect: a dialect says only which of its ops call which function
-(`DialectCall`). No core op calls one until #20 names the callee of `call`,
-and the interpreter does not change then.
+(`DialectCall`). In the core dialect, `call @g` calls `@g`, which #20
+named without a change to the interpreter.
 -/
 
 namespace Fir

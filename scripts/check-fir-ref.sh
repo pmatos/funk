@@ -17,9 +17,11 @@
 #               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
 #               exhaustive mode (#14), runs bitwise ops and shifts
-#               (#15), runs icmp and select (#16), and runs loops with br
+#               (#15), runs icmp and select (#16), runs loops with br
 #               and cond_br, a branch on poison and a loop that never
-#               ends (#19).
+#               ends (#19), and runs calls: a function named by a quoted
+#               symbol returns its callee's result, and a call without
+#               end runs out of fuel (#20).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -291,11 +293,18 @@ END
         runs "$tmp/loops.fir" 0 '{"kind":"ub","reason":"cond_br on poison","choices":0}' \
             @branch true || status=1
         runs "$tmp/loops.fir" 0 "$exhausted" --fuel 1000 @spin || status=1
-        # An op without rules is an error (ADR-2026-10-30-1855).
+        # A call runs its callee, which may be any function of the module,
+        # named as text names it, and a call without end runs out of fuel
+        # (#20).
         printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @f %%a @0\n  ret %%s @0\n}\n' \
             >"$tmp/call.fir"
+        printf '\nfunc @"1"(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @g %%a @0\n  ret %%s @0\n}\n' \
+            >>"$tmp/call.fir"
+        printf '\nfunc @g(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = add %%a, %%a @0\n  ret %%s @0\n}\n' \
+            >>"$tmp/call.fir"
         printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/call.fir"
-        runs "$tmp/call.fir" 2 'fir-ref: @f: call @f has no execution rules yet' @f 1 || status=1
+        runs "$tmp/call.fir" 0 "$exhausted" --fuel 100 @f 1 || status=1
+        runs "$tmp/call.fir" 0 "${ret}[\"42\"]$none" '@"1"' 21 || status=1
         # freeze of poison makes a choice: %a + 1 overflows i2 at 1
         # (ADR-2026-10-30-2218).
         printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"
