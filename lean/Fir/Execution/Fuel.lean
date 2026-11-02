@@ -50,8 +50,9 @@ terminator that returns returns values of the function's result types. Its
 run may jump and loop. No path of it is stuck (`Func.neverStuck_of_local`),
 and when its ops are total it has an outcome at every budget
 (`Func.progress_of_local`). A valid core function without a `call` op runs
-within itself, and its ops are total, as every core op but `call` is. So
-both hold for every valid core function without a `call` op.
+within itself, and its ops are total, as every core op is
+(`Core.Op.total_all`). So both hold for every valid core function without
+a `call` op.
 
 With calls, they hold for every function of a module whose functions are
 all valid and run within the module (`Func.InModule`): their terminators

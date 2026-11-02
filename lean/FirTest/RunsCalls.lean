@@ -214,6 +214,9 @@ every valid core module. -/
 /-- info: 'Fir.Core.call_monotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.call_monotone
 
+/-- info: 'Fir.Core.call_isRefinedBy' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.call_isRefinedBy
+
 /-- info: 'Fir.Core.Op.total_all' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.total_all
 

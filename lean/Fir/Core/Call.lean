@@ -53,13 +53,26 @@ The stand-in is immediate UB, on every operand vector
 call may end, whatever its callee, refines it. It has an outcome on every
 op instance, even one with a result type that has no values, such as
 `ptr`, and it is monotone, since UB on the original operands allows
-whatever happens on refined ones. So it claims nothing about calls: its
-obligations hold, and say nothing of how a call behaves. The facts about calls are stated about the runs of functions:
-progress and no stuck path with calls and recursion (the section on every
-valid core function), and their refinement theorems, #20's next stage. An
-op _without_ rules is never UB in the spec (ADR-2026-10-30-1855), because
-`fir-ref` would report that UB as the op's meaning. `call` has rules, its
-callee's, and `fir-ref` never reaches its stand-in.
+whatever happens on refined ones. So its obligations are met trivially,
+and carry no information about calls.
+
+The stand-in is the top of the refinement order: as a source, it is
+refined by every computation (`Core.call_isRefinedBy`). So a statement
+that reads `call`'s `denote` as a source, such as a rewrite rule proved
+op by op, holds for every target and says nothing about a real call. Such
+statements must leave out the ops that call a function. The facts about
+calls are stated about the runs of functions: progress and no stuck path
+with calls and recursion (the section on every valid core function), and
+their refinement theorems, #20's next stage.
+
+An op _without_ rules is never UB in the spec (ADR-2026-10-30-1855): UB
+would give it a meaning that it does not have, would let an exception
+pass for lawful, since totality and monotonicity are all of an
+exception's obligations, and `fir-ref` would report it. `call` does pass
+those two vacuously, and that is acceptable only because its meaning is
+not missing: `DialectCall CoreDialect` gives it its callee's run,
+`fir-ref` never reaches its stand-in, and the facts about calls are
+proved over runs.
 -/
 
 namespace Fir.Core

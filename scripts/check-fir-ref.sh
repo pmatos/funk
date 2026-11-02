@@ -17,9 +17,11 @@
 #               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
 #               exhaustive mode (#14), runs bitwise ops and shifts
-#               (#15), runs icmp and select (#16), and runs loops with br
+#               (#15), runs icmp and select (#16), runs loops with br
 #               and cond_br, a branch on poison and a loop that never
-#               ends (#19).
+#               ends (#19), and runs calls: a function named by a quoted
+#               symbol returns its callee's result, and a call without
+#               end runs out of fuel (#20).
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the

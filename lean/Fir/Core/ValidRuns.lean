@@ -26,7 +26,8 @@ sections:
   obligations of its family, and `call` by its stand-in, which the
   interpreter never runs. So its run has an outcome at every budget
   (`Func.progress_of_inModule`). A call's own way to go on is its
-  callee's run, which the induction of the previous section covers.
+  callee's run, which the induction on the budget in the section on
+  progress with calls covers (`Module.calls_hasPath`).
 
 The theorems for core functions without calls (`Core.callFree_fuelMonotone`,
 `Core.callFree_progress`, `Core.callFree_neverStuck`) keep their
