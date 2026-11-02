@@ -14,9 +14,10 @@
 # standard error, with exit status 2.
 #
 # It uses no libc: only the Linux system calls write (1), mmap (9),
-# mprotect (10), rt_sigaction (13), rt_sigreturn (15), getpid (39),
-# kill (62), sysinfo (99), sigaltstack (131) and exit_group (231). Every
-# routine follows the System V AMD64 calling convention.
+# mprotect (10), rt_sigaction (13), rt_sigprocmask (14), rt_sigreturn (15),
+# getpid (39), kill (62), sysinfo (99), sigaltstack (131) and
+# exit_group (231). Every routine follows the System V AMD64 calling
+# convention.
 
 	.text
 
@@ -77,7 +78,7 @@ __funk_rt_main:
 	cmpq	16(%rbx), %r12
 	jne	.Lcount
 	movq	32(%rbx), %r12		# the stack the run needs, or the least
-	cmpq	$0, 40(%rbx)		# of it when the function is recursive:
+	cmpq	$0, 40(%rbx)		# it gets when the function is recursive:
 	je	.Lreserve		# then as much as memory allows
 	call	__funk_rt_memory
 	cmpq	%r12, %rax
@@ -199,7 +200,8 @@ __funk_rt_memory:
 	ret
 
 # __funk_rt_catch_overflow(): has SIGSEGV run __funk_rt_overflow on a
-# stack of its own, since a run that outgrew its stack has none left.
+# stack of its own, since a run that outgrew its stack has none left, and
+# unblocks SIGSEGV, which a parent can leave blocked across execve.
 __funk_rt_catch_overflow:
 	leaq	.Lalt_stack(%rip), %rdi
 	xorl	%esi, %esi
@@ -211,6 +213,12 @@ __funk_rt_catch_overflow:
 	movl	$8, %r10d		# the size of a signal set
 	movl	$13, %eax		# rt_sigaction
 	syscall
+	movl	$1, %edi		# SIG_UNBLOCK
+	leaq	.Lsig_segv(%rip), %rsi
+	xorl	%edx, %edx
+	movl	$8, %r10d
+	movl	$14, %eax		# rt_sigprocmask
+	syscall
 	ret
 
 # __funk_rt_overflow(signal, info, context): the SIGSEGV handler. Every
@@ -218,12 +226,14 @@ __funk_rt_catch_overflow:
 # (ADR-2026-11-02-1102), so a run that outgrows its stack faults first in
 # the guard page. That fault is reported in one line, with exit status 2;
 # the buffered output is never written, so standard output stays empty.
-# Any other SIGSEGV is not the runtime's to report. SA_RESETHAND has put the
-# default action back, so the handler sends the signal again and returns,
-# and SIGSEGV ends the process as it would with no handler.
+# Any other SIGSEGV is not the runtime's to report, and SA_RESETHAND has
+# put the default action back. After any other fault the handler returns,
+# so the instruction faults again and ends the process with the fault's own
+# code and address, as with no handler. A SIGSEGV that a process sent, the
+# handler sends again before it returns.
 __funk_rt_overflow:
 	cmpl	$0, 8(%rsi)		# si_code: above 0 for a fault, not
-	jle	1f			# for a signal that a process sent
+	jle	2f			# for a signal that a process sent
 	movq	16(%rsi), %rax		# si_addr, the address of the fault
 	subq	__funk_rt_guard(%rip), %rax
 	cmpq	$4096, %rax
@@ -238,7 +248,8 @@ __funk_rt_overflow:
 	call	__funk_rt_err_num
 	leaq	.Lmsg_stack_reserved(%rip), %rdi
 	jmp	.Ldie
-1:	movl	$39, %eax		# getpid
+1:	ret
+2:	movl	$39, %eax		# getpid
 	syscall
 	movl	%eax, %edi
 	movl	$11, %esi		# SIGSEGV
@@ -586,6 +597,7 @@ __funk_rt_err_num:
 .Lsig_overflow:	.quad	__funk_rt_overflow, 0x8c000004, __funk_rt_restore, 0
 # stack_t: the signal handler's stack, no flags, and its size
 .Lalt_stack:	.quad	__funk_rt_alt_stack, 0, 65536
+.Lsig_segv:	.quad	1 << 10		# a signal set that holds SIGSEGV
 .Lhex:	.ascii	"0123456789abcdef"
 .Ltrue:	.ascii	"true"
 .Ltrue_end:

@@ -3,7 +3,8 @@
 //! its stack says so in one line, with exit status 2.
 //!
 //! A run that recurses without end is only ever made under `ulimit -d`, a
-//! limit on the data a process maps. Without one its stack would be as large
+//! limit on the data a process maps, and `ulimit -v`, which binds even on a
+//! kernel that ignores the first. Without them its stack would be as large
 //! as the machine's memory and swap, and the run would use them all before
 //! it reached the end.
 
@@ -17,7 +18,7 @@ use std::path::Path;
 use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};
 
-use common::{build, expect, module, text, values};
+use common::{build, dir, expect, module, text, values};
 
 /// The limit, in KiB, under which runs that never end are made: 64 MiB.
 const LIMIT: u64 = 64 * 1024;
@@ -91,11 +92,15 @@ fn recursive() -> String {
     ])
 }
 
-/// Runs `exe` with `args` after `sh` limits the data it maps to `kib` KiB.
+/// Runs `exe` with `args` after `sh` limits the data it maps to `kib` KiB,
+/// and its address space to 16 MiB more.
 fn run_limited(kib: u64, exe: &Path, args: &[&str]) -> Output {
+    let space = kib + 16 * 1024;
     Command::new("sh")
         .arg("-c")
-        .arg(format!("ulimit -d {kib} && exec \"$0\" \"$@\""))
+        .arg(format!(
+            "ulimit -d {kib} && ulimit -v {space} && exec \"$0\" \"$@\""
+        ))
         .arg(exe)
         .args(args)
         .output()
@@ -148,6 +153,56 @@ fn the_report_shows_control_bytes_in_the_program_s_path_escaped() {
         &shown,
         "@forever",
     );
+}
+
+/// A launcher that blocks SIGSEGV and then runs its arguments as a command.
+/// It is a static executable of its own because Rust's `Command` unblocks
+/// every signal in the child; a blocked signal stays blocked across execve.
+const BLOCKING: &str = "\t.globl\t_start
+_start:
+\tmovl\t$14, %eax\t\t# rt_sigprocmask
+\txorl\t%edi, %edi\t\t# SIG_BLOCK
+\tleaq\tsegv(%rip), %rsi
+\txorl\t%edx, %edx
+\tmovl\t$8, %r10d
+\tsyscall
+\tmovq\t(%rsp), %rcx\t\t# argc
+\tmovq\t16(%rsp), %rdi\t\t# argv[1], the command
+\tleaq\t16(%rsp), %rsi\t\t# its arguments
+\tleaq\t16(%rsp,%rcx,8), %rdx\t# the environment
+\tmovl\t$59, %eax\t\t# execve
+\tsyscall
+\tmovl\t$127, %edi
+\tmovl\t$60, %eax\t\t# exit
+\tsyscall
+\t.section\t.rodata
+segv:\t.quad\t1 << 10
+\t.section\t.note.GNU-stack,\"\",@progbits
+";
+
+/// A parent can leave SIGSEGV blocked when it runs the program. The runtime
+/// unblocks it, so a run that outgrows its stack still says so.
+#[test]
+fn a_run_that_starts_with_sigsegv_blocked_still_reports_it_ran_out() {
+    let exe = build("recursion-blocked", &recursive());
+    let at = dir("recursion-blocking");
+    let (source, object, launcher) = (at.join("b.s"), at.join("b.o"), at.join("b"));
+    std::fs::write(&source, BLOCKING).unwrap();
+    let ok = |cmd: &mut Command| {
+        let out = cmd.output().unwrap();
+        assert!(out.status.success(), "{}", text(&out.stderr));
+    };
+    ok(Command::new("as")
+        .args(["--64", "-o"])
+        .arg(&object)
+        .arg(&source));
+    ok(Command::new("ld")
+        .args(["-m", "elf_x86_64", "-static", "-o"])
+        .arg(&launcher)
+        .arg(&object));
+    let program = exe.display().to_string();
+    let out = run_limited(LIMIT, &launcher, &[&program, "@forever", "0"]);
+    ran_out(&out, &program, "@forever");
 }
 
 /// Recursion runs as deep as its stack allows: here far deeper than the

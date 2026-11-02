@@ -9,7 +9,8 @@
 //! cycle goes depends on the arguments, so no figure from the code bounds
 //! it. Without those calls the call graph has no cycle, and each need is a
 //! sum along its deepest path. A function from which a cycle is reachable is
-//! marked recursive: its need is then the least that a run needs, and the
+//! marked recursive: its need is then the most that a run uses when it makes
+//! no call within a cycle, the least the runtime reserves for it, and the
 //! runtime gives it as much stack as memory allows.
 //!
 //! Nothing here recurses once per call: the cycles are found by Tarjan's
@@ -268,7 +269,7 @@ mod tests {
     }
 
     /// A function that reaches a cycle through a call is recursive, and
-    /// needs at least what the cycle's function needs without its cycle.
+    /// its figure covers the cycle's function without its cycle.
     /// A cycle elsewhere in the module changes nothing.
     #[test]
     fn a_function_that_reaches_a_cycle_is_recursive() {
