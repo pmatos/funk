@@ -2,7 +2,8 @@
 //! (ADR-2026-10-30-1232), the arguments past the sixth pushed with padding
 //! to keep `%rsp` 16-byte aligned, no extension of any argument or result
 //! (ADR-2026-11-02-1021), the callee's symbol as ADR-2026-10-30-1232 spells
-//! it, and no callee-saved register but `%rbp` ever written.
+//! it, no callee-saved register but `%rbp` ever written, and no call that
+//! lands more than a page below the stack's last access.
 
 use funk_ir::{LocRef, Module, Registry, parse};
 use funk_x86_64::compile;
@@ -199,6 +200,85 @@ fn a_call_keeps_the_stack_aligned_and_saves_no_register() {
         }
         text += "  call @f @0\n  ret @0\n}\n";
         check_registers_and_alignment(&lowered(&text));
+    }
+}
+
+/// Checks that every access to the stack in every function is at most a
+/// page below the deepest one already made, counting in bytes below the
+/// function's entry, where the caller wrote the return address: the slots
+/// at `-N(%rbp)`, each push, the probe loop's pages and each call's return
+/// address (ADR-2026-10-30-1230, ADR-2026-11-02-1102).
+fn check_no_access_skips_a_page(asm: &str) {
+    let (mut below, mut deepest, mut pages) = (0i64, 0i64, 1i64);
+    let touch = |at: i64, deepest: &mut i64, line: &str| {
+        assert!(at - *deepest <= 4096, "{at} below {deepest}: {line}\n{asm}");
+        *deepest = (*deepest).max(at);
+    };
+    for line in asm.lines() {
+        if let Some(i) = line.find("(%rbp)") {
+            let start = line[..i].rfind(['\t', ' ']).map_or(0, |j| j + 1);
+            if let Ok(disp) = line[start..i].parse::<i64>() {
+                touch(8 - disp, &mut deepest, line);
+            }
+        }
+        let parts: Vec<&str> = line.trim().split('\t').collect();
+        match parts.as_slice() {
+            [label] if label.ends_with(':') && !label.starts_with('.') && label != &"1:" => {
+                (below, deepest) = (0, 0);
+            }
+            ["movl", ops] if ops.ends_with(", %r11d") => {
+                pages = ops[1..ops.len() - 7].parse().unwrap();
+            }
+            ["orq", "$0, (%rsp)"] => {
+                touch(below, &mut deepest, line);
+                for _ in 1..pages {
+                    below += 4096;
+                    touch(below, &mut deepest, line);
+                }
+            }
+            ["pushq", _] => {
+                below += 8;
+                touch(below, &mut deepest, line);
+            }
+            ["subq", ops] if ops.ends_with(", %rsp") => {
+                below += ops[1..ops.len() - 6].parse::<i64>().unwrap();
+            }
+            ["addq", ops] if ops.ends_with(", %rsp") => {
+                below -= ops[1..ops.len() - 6].parse::<i64>().unwrap();
+            }
+            ["call", _] => touch(below + 8, &mut deepest, line),
+            _ => {}
+        }
+    }
+}
+
+/// A call lands at most a page below the last access, from frames of 0 to
+/// 13 values and of about one and two pages, with no argument and with
+/// stack arguments: a frame of exactly a page is probed
+/// (ADR-2026-11-02-1102).
+#[test]
+fn a_call_lands_at_most_a_page_below_the_last_access() {
+    let consts = |n: usize| -> String {
+        (0..n)
+            .map(|k| format!("  %v{k}: i64 = const {k} @0\n"))
+            .collect()
+    };
+    let seven = ["%x"; 7].join(", ");
+    let callee = "func @g() {\n^entry:\n  ret @0\n}\n\n\
+                  func @h(%a: i64, %b: i64, %c: i64, %d: i64, %e: i64, %f: i64, %g: i64) {\n\
+                  ^entry:\n  ret @0\n}\n\n";
+    for n in (0..=13).chain(500..=530).chain(1015..=1030) {
+        let text = format!(
+            "{callee}func @f() {{\n^entry:\n  call @g @0\n{}  ret @0\n}}\n\n\
+             func @f2(%x: i64) {{\n^entry:\n  call @h {seven} @0\n{}  ret @0\n}}\n",
+            consts(n),
+            consts(n)
+        );
+        let asm = lowered(&text);
+        check_no_access_skips_a_page(&asm);
+        if n == 512 {
+            assert_has(&asm, &["movl\t$1, %r11d"]);
+        }
     }
 }
 

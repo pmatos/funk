@@ -6,6 +6,8 @@
 
 mod common;
 
+use std::collections::HashSet;
+
 use common::{one_func, parse_ok};
 use funk_ir::dialects::core::int_type;
 use funk_ir::generate::{self, Rng};
@@ -263,13 +265,15 @@ locs {
 /// The calls that the generator makes, each at least five times: a call of
 /// the caller itself, of a function before it and of one after it, calls
 /// with no argument, with two or more, with no result, one result and two
-/// or more, and a call of a function whose name the text quotes.
+/// or more, a call of a function whose name the text quotes, and a module
+/// in which two functions call each other.
 #[test]
 fn the_generator_makes_recursive_calls_with_any_number_of_results() {
-    let mut seen = [0usize; 9];
+    let mut seen = [0usize; 10];
     for seed in 0..generate::ROUND_TRIP_MODULES {
         let m = generate::module(&mut Rng::new(seed));
         let names: Vec<&str> = m.funcs().map(|f| f.name.as_str()).collect();
+        let mut edges = HashSet::new();
         for (k, f) in m.funcs().enumerate() {
             for op in f.body.blocks.iter().flat_map(|b| &b.ops) {
                 let [Attr::Sym(g)] = op.attrs.as_slice() else {
@@ -277,6 +281,7 @@ fn the_generator_makes_recursive_calls_with_any_number_of_results() {
                 };
                 assert_eq!(op.name, "call");
                 let at = names.iter().position(|n| n == g).expect("a function");
+                edges.insert((k, at));
                 seen[0] += usize::from(at == k);
                 seen[1] += usize::from(at < k);
                 seen[2] += usize::from(at > k);
@@ -288,6 +293,11 @@ fn the_generator_makes_recursive_calls_with_any_number_of_results() {
                 seen[8] += usize::from(!funk_ir::ir::names::is_word(g));
             }
         }
+        seen[9] += usize::from(
+            edges
+                .iter()
+                .any(|&(a, b)| a != b && edges.contains(&(b, a))),
+        );
     }
     assert!(seen.iter().all(|&n| n >= 5), "{seen:?}");
 }

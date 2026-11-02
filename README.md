@@ -220,6 +220,13 @@ These parts of M0 do not exist yet:
 - The proof that parsing a printed module gives the module back.
 - In the backend, `i128` and functions and calls with more than one
   result.
+- In the backend, a stack that covers callees. The executable that
+  `funk build` writes sizes the stack of a run from the called function's
+  own frame, its wrapper's and 16 KiB, so a run whose callees need more
+  ends with `SIGSEGV` on the guard page. How the stack figure covers
+  callees, and what a run that outgrows its stack reports, are a later
+  backend stage of [#20](https://github.com/pmatos/funk/issues/20)
+  ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
 
 The epic's sub-issues list the open work in full.
 

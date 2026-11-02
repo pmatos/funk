@@ -19,8 +19,11 @@ what a funk caller extends, and asks for a sign- or zero-extension marker
 on each narrow parameter before funk calls code that it did not compile,
 since fir types carry no sign.
 
-In M0 every callee is a function of the module: fir has no item that
-declares a function defined elsewhere.
+In M0 the callee of every fir `call` is a function of the module: fir
+has no item that declares a function defined elsewhere. The backend's own
+calls, such as the entry wrapper's calls to the runtime
+(ADR-2026-10-30-1233), are not `call` ops, and this ADR does not cover
+them.
 
 ## Decision
 
@@ -34,7 +37,7 @@ declares a function defined elsewhere.
 - **The marker waits for external callees.** The ticket that lets fir
   declare a function that funk did not compile defines the marker that
   ADR-2026-10-30-1232 asks for, and extends the narrow arguments of calls
-  to such functions only. Until then no funk call reaches code that funk
+  to such functions only. Until then no fir `call` reaches code that funk
   did not compile.
 
 ## Alternatives
