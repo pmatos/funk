@@ -1,0 +1,38 @@
+# Tests of poison-call-i1.fir: the poison and UB rules of call at i1
+# (#20, ADR-2026-11-02-1156). %p = add nsw %a, true is poison when %a is
+# true, where true + true overflows.
+# - A poison argument reaches the callee as poison: passes gives %p to
+#   @id, which returns it, so the call's result is poison.
+# - A poison that the callee returns is a poison result: @makes returns
+#   %p, and receives adds one to what it gets back, which stays poison.
+# - call is not a propagating op: ignores passes %p to @zero, which
+#   ignores its argument, and the call returns 0 even when %p is poison.
+# - UB in a callee is UB of its caller: calls_div calls @div, a udiv,
+#   which is UB by zero and returns %a divided by one; branches_on
+#   passes %p to @branches, which branches on it, and a branch on poison
+#   is UB.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# Where fir-ref returns poison, any native value of the type does, and
+# an interpreter-only test of the same run checks that it is exactly
+# poison; so does one for ignores, which must return 0 exactly. A run
+# that is UB is only interpreter-only, as UB allows any result; fir-ref
+# gives the callee's reason, but the harness matches ub to any reason
+# (ADR-2026-10-30-2135).
+tests = [
+  { func = "@passes", args = ["false"] },
+  { func = "@passes", args = ["true"] },
+  { func = "@passes", args = ["true"], expect = ["poison"] },
+  { func = "@receives", args = ["false"] },
+  { func = "@receives", args = ["true"] },
+  { func = "@receives", args = ["true"], expect = ["poison"] },
+  { func = "@ignores", args = ["false"] },
+  { func = "@ignores", args = ["true"] },
+  { func = "@ignores", args = ["true"], expect = ["false"] },
+  { func = "@branches_on", args = ["false"] },
+  { func = "@branches_on", args = ["true"], expect = "ub" },
+  { func = "@calls_div", args = ["false", "false"], expect = "ub" },
+  { func = "@calls_div", args = ["true", "false"], expect = "ub" },
+  { func = "@calls_div", args = ["false", "true"] },
+  { func = "@calls_div", args = ["true", "true"] },
+]

@@ -1,0 +1,327 @@
+# Must-reject texts of #20's op, call, that parse and break a rule of
+# validation. A call's callee is a function of the module, and the call
+# passes and receives the types of its callee's signature, any number of
+# each: as many arguments as the callee has parameters, each of its
+# parameter's type, and as many results as the callee returns, each of
+# its type (Op.symbolRefs and Op.Valid in lean/Fir/Core/Validation.lean).
+# A call decodes at any types, so a call that does not match its callee
+# is a validation error, not a parse error (ADR-2026-10-30-0815). A call
+# of a symbol that names no function breaks both rules, since no
+# signature is there for it to match, and its rule names both. A callee
+# may come before or after its caller, or be the caller itself.
+# reject/call.toml holds the texts of call that do not decode.
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's callee is a function of the module: @g is not one, so no signature matches the call either"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's callee is a function of the module: @\"1\", a symbol quoted as it is not a word, is not one, so no signature matches the call either"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @"1" %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's callee is a function of the module: @nothing is not one, though the call passes nothing and receives nothing, so no signature matches the call either"
+text = '''
+func @f() {
+^entry:
+  call @nothing @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes one argument for each of its callee's parameters: one for two"
+text = '''
+func @g(%a: i32, %b: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes one argument for each of its callee's parameters: two for one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g %a, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes one argument for each of its callee's parameters: none for one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f() -> i32 {
+^entry:
+  %r: i32 = call @g @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes one argument for each of its callee's parameters: a recursive call of @f passes none for one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @f @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes an argument of its parameter's type: an i32 for an i64"
+text = '''
+func @g(%a: i64) -> i64 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i64 {
+^entry:
+  %r: i64 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes an argument of its parameter's type: an i16 for an i8 and an i8 for an i16, in the wrong order, to @g, which comes after its caller"
+text = '''
+func @f(%a: i8, %b: i16) -> i8 {
+^entry:
+  %r: i8 = call @g %b, %a @0
+  ret %r @0
+}
+
+func @g(%a: i8, %b: i16) -> i8 {
+^entry:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call passes an argument of its parameter's type: an i1 for an i8"
+text = '''
+func @g(%a: i8) {
+^entry:
+  ret @0
+}
+
+func @f(%c: i1) {
+^entry:
+  call @g %c @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call defines one result for each of its callee's results: none for one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) {
+^entry:
+  call @g %a @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call defines one result for each of its callee's results: two for one"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32, %s: i32 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call defines one result for each of its callee's results: one for none"
+text = '''
+func @g(%a: i32) {
+^entry:
+  ret @0
+}
+
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call defines one result for each of its callee's results: one for three"
+text = '''
+func @g(%a: i8) -> i8, i8, i8 {
+^entry:
+  ret %a, %a, %a @0
+}
+
+func @f(%a: i8) -> i8 {
+^entry:
+  %r: i8 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's result has its callee's result type: an i64 for an i32"
+text = '''
+func @g(%a: i32) -> i32 {
+^entry:
+  ret %a @0
+}
+
+func @f(%a: i32) -> i64 {
+^entry:
+  %r: i64 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's result has its callee's result type: an i16 for an i8 and an i8 for an i16, in the wrong order"
+text = '''
+func @g(%a: i8, %b: i16) -> i8, i16 {
+^entry:
+  ret %a, %b @0
+}
+
+func @f(%a: i8, %b: i16) -> i8 {
+^entry:
+  %x: i16, %y: i8 = call @g %a, %b @0
+  ret %y @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call's result has its callee's result type: a recursive call of @f defines an i1 for an i32"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i1 = call @f %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

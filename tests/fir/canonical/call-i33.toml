@@ -1,0 +1,43 @@
+# Tests of call-i33.fir: call at i33 (#20), on the boundary bit
+# patterns: 0, 1, -1, the signed minimum and the signed maximum. call_id
+# passes its argument to @id and returns what @id returns, so each
+# pattern goes into a call as an argument and comes back as its result.
+# call_sub passes %a and %b, in that order, to @sub, which returns
+# %a - %b, on every pair of patterns: an argument in the wrong place
+# changes the result for every pair of different patterns but 0 and the
+# signed minimum, and -1 and the signed maximum, which differ by 2^32,
+# so that %a - %b is %b - %a.
+# The backend does not lower i33, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@call_id", args = ["0"], expect = ["0"] },
+  { func = "@call_id", args = ["1"], expect = ["1"] },
+  { func = "@call_id", args = ["-1"], expect = ["-1"] },
+  { func = "@call_id", args = ["-4294967296"], expect = ["-4294967296"] },
+  { func = "@call_id", args = ["4294967295"], expect = ["4294967295"] },
+  { func = "@call_sub", args = ["0", "0"], expect = ["0"] },
+  { func = "@call_sub", args = ["0", "1"], expect = ["-1"] },
+  { func = "@call_sub", args = ["0", "-1"], expect = ["1"] },
+  { func = "@call_sub", args = ["0", "-4294967296"], expect = ["-4294967296"] },
+  { func = "@call_sub", args = ["0", "4294967295"], expect = ["-4294967295"] },
+  { func = "@call_sub", args = ["1", "0"], expect = ["1"] },
+  { func = "@call_sub", args = ["1", "1"], expect = ["0"] },
+  { func = "@call_sub", args = ["1", "-1"], expect = ["2"] },
+  { func = "@call_sub", args = ["1", "-4294967296"], expect = ["-4294967295"] },
+  { func = "@call_sub", args = ["1", "4294967295"], expect = ["-4294967294"] },
+  { func = "@call_sub", args = ["-1", "0"], expect = ["-1"] },
+  { func = "@call_sub", args = ["-1", "1"], expect = ["-2"] },
+  { func = "@call_sub", args = ["-1", "-1"], expect = ["0"] },
+  { func = "@call_sub", args = ["-1", "-4294967296"], expect = ["4294967295"] },
+  { func = "@call_sub", args = ["-1", "4294967295"], expect = ["-4294967296"] },
+  { func = "@call_sub", args = ["-4294967296", "0"], expect = ["-4294967296"] },
+  { func = "@call_sub", args = ["-4294967296", "1"], expect = ["4294967295"] },
+  { func = "@call_sub", args = ["-4294967296", "-1"], expect = ["-4294967295"] },
+  { func = "@call_sub", args = ["-4294967296", "-4294967296"], expect = ["0"] },
+  { func = "@call_sub", args = ["-4294967296", "4294967295"], expect = ["1"] },
+  { func = "@call_sub", args = ["4294967295", "0"], expect = ["4294967295"] },
+  { func = "@call_sub", args = ["4294967295", "1"], expect = ["4294967294"] },
+  { func = "@call_sub", args = ["4294967295", "-1"], expect = ["-4294967296"] },
+  { func = "@call_sub", args = ["4294967295", "-4294967296"], expect = ["-1"] },
+  { func = "@call_sub", args = ["4294967295", "4294967295"], expect = ["0"] },
+]

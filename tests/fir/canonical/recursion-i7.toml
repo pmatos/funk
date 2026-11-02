@@ -1,0 +1,59 @@
+# Tests of recursion-i7.fir: recursive calls at i7 (#20). fact calls
+# itself on %n - 1 while %n is above zero, read as signed, and
+# multiplies with mul, which wraps: it gives %n! modulo 2^N, and 1 for
+# %n of at most zero. fib calls itself twice, on %n - 1 and %n - 2,
+# while %n is above 1 read as unsigned, and adds with add, which wraps.
+# even and odd call each other on %n - 1 down to zero, so -1 counts down
+# through every value of the type. Each call takes one step of fuel, and
+# its callee runs on the steps that are left (ADR-2026-11-02-0836).
+# The backend does not lower i7, so each test is interpreter-only and
+# states the result that fir-ref must give. A run of more than 20,000
+# steps runs at a budget of 1,000 steps instead, and expects
+# fuel-exhausted: fir-ref's run takes stack for each step (#47).
+# fact on 5 takes 45 steps, its callees' included: eight for each level
+# that calls and five for the last. At a budget of 45 it returns, and at
+# 44 it runs out of fuel.
+tests = [
+  { func = "@fact", args = ["0"], expect = ["1"] },
+  { func = "@fact", args = ["1"], expect = ["1"] },
+  { func = "@fact", args = ["-1"], expect = ["1"] },
+  { func = "@fact", args = ["-64"], expect = ["1"] },
+  { func = "@fact", args = ["63"], expect = ["0"] },
+  { func = "@fact", args = ["2"], expect = ["2"] },
+  { func = "@fact", args = ["3"], expect = ["6"] },
+  { func = "@fact", args = ["5"], expect = ["-8"] },
+  { func = "@fact", args = ["10"], expect = ["0"] },
+  { func = "@fact", args = ["12"], expect = ["0"] },
+  { func = "@fact", args = ["13"], expect = ["0"] },
+  { func = "@fact", args = ["20"], expect = ["0"] },
+  { func = "@fib", args = ["0"], expect = ["0"] },
+  { func = "@fib", args = ["1"], expect = ["1"] },
+  { func = "@fib", args = ["-1"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["-64"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["63"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["2"], expect = ["1"] },
+  { func = "@fib", args = ["3"], expect = ["2"] },
+  { func = "@fib", args = ["5"], expect = ["5"] },
+  { func = "@fib", args = ["10"], expect = ["55"] },
+  { func = "@fib", args = ["15"], expect = ["-30"] },
+  { func = "@even", args = ["0"], expect = ["true"] },
+  { func = "@even", args = ["1"], expect = ["false"] },
+  { func = "@even", args = ["-1"], expect = ["false"] },
+  { func = "@even", args = ["-64"], expect = ["true"] },
+  { func = "@even", args = ["63"], expect = ["false"] },
+  { func = "@even", args = ["2"], expect = ["true"] },
+  { func = "@even", args = ["7"], expect = ["false"] },
+  { func = "@even", args = ["10"], expect = ["true"] },
+  { func = "@even", args = ["20"], expect = ["true"] },
+  { func = "@odd", args = ["0"], expect = ["false"] },
+  { func = "@odd", args = ["1"], expect = ["true"] },
+  { func = "@odd", args = ["-1"], expect = ["true"] },
+  { func = "@odd", args = ["-64"], expect = ["false"] },
+  { func = "@odd", args = ["63"], expect = ["true"] },
+  { func = "@odd", args = ["2"], expect = ["false"] },
+  { func = "@odd", args = ["7"], expect = ["true"] },
+  { func = "@odd", args = ["10"], expect = ["false"] },
+  { func = "@odd", args = ["20"], expect = ["false"] },
+  { func = "@fact", args = ["5"], fuel = 45, expect = ["-8"] },
+  { func = "@fact", args = ["5"], fuel = 44, expect = "fuel-exhausted" },
+]
