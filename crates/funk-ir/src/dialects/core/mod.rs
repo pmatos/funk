@@ -9,10 +9,12 @@
 //! (#17) `zext`, `sext` and `trunc`, the division family (#18) `sdiv`,
 //! `udiv`, `srem`, `urem` and the flag `exact`, the comparison family (#16)
 //! `icmp` with its predicates and `select`, the branches (#19) `br` and
-//! `cond_br`, and each later family adds a file and a line here.
+//! `cond_br`, and the calls (#20) `call`. A later family adds a file and a
+//! line here.
 
 mod arith;
 mod bitwise;
+mod call;
 mod compare;
 mod constant;
 mod control;
@@ -60,6 +62,7 @@ pub fn dialect() -> Dialect {
         .op(control::Br)
         .op(control::CondBr)
         .op(control::Ret)
+        .op(call::Call)
 }
 
 /// Writes a list of types as `(t1, t2)`, for messages.

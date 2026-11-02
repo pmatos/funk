@@ -157,8 +157,8 @@ fn run(exe: &Path, w: u32, name: &str, args: &[i128], want: Option<i128>) {
 
 #[test]
 fn the_spec_s_sum_runs_and_gives_45_at_10() {
-    // The text of `lean/Fir/Text/Example.lean`, without `@sum10`, whose
-    // `call` is #20's.
+    // The text of `lean/Fir/Text/Example.lean`, without `@sum10`, which
+    // calls it and runs in `call_args.rs`.
     let text = "func @sum(%n: i32) -> i32 {
 ^entry:
   %zero: i32 = const 0 @1

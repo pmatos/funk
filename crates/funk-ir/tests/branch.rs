@@ -82,7 +82,7 @@ fn branches_parse_verify_and_print_at_any_width() {
 #[test]
 fn the_spec_s_sum_is_valid() {
     // `@sum` of `lean/Fir/Text/Example.lean`, with its locations; its
-    // `@sum10` calls it, and `call` is #20's.
+    // `@sum10`, which calls it, is in `call.rs`.
     let text = "func @sum(%n: i32) -> i32 {
 ^entry:
   %zero: i32 = const 0 @1

@@ -12,10 +12,12 @@
 //! the width changes `zext`, `sext` and `trunc` between valid pairs of
 //! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem`,
 //! `icmp` with each predicate on two values of any one type, `select` at any
-//! type, the branches `br` and `cond_br`, and `ret`. A division may be by
-//! zero and a loop may never end: that is UB or a run out of fuel, not
-//! invalid, and no check runs these modules. The generator is
-//! deterministic: one seed gives one module.
+//! type, the branches `br` and `cond_br`, `ret`, and `call` of any function
+//! of the module, the caller itself included, with any number of arguments
+//! and results (`calls.rs`). A division may be by zero, and a loop or a
+//! recursion may never end: that is UB or a run out of fuel, not invalid,
+//! and no check runs these modules. The generator is deterministic: one
+//! seed gives one module.
 
 use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
@@ -24,6 +26,9 @@ use crate::dialects::core::{
 use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 mod blocks;
+mod calls;
+
+use calls::Callee;
 
 /// How many modules, from seed 0, the round-trip checks generate: the Rust
 /// property tests and the cross-language round trip with Lean.
@@ -72,16 +77,18 @@ pub fn module(rng: &mut Rng) -> Module {
         items: Vec::new(),
         locs,
     };
-    let mut symbols: Vec<String> = Vec::new();
+    let mut funcs: Vec<Callee> = Vec::new();
     for _ in 0..rng.below(4) {
         let name = loop {
             let s = symbol(rng);
-            if !symbols.contains(&s) {
+            if funcs.iter().all(|f| f.name != s) {
                 break s;
             }
         };
-        symbols.push(name.clone());
-        m = m.func(func(rng, name, &keys));
+        funcs.push(calls::signature(rng, name));
+    }
+    for k in 0..funcs.len() {
+        m = m.func(func(rng, &funcs, k, &keys));
     }
     m
 }
@@ -244,9 +251,11 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
 }
 
 /// The values in scope at the end of a block so far, the ops of the block
-/// that define them, and every value name the function has taken.
+/// that define them, and every value name the function has taken, with the
+/// functions of the module that a call may name.
 struct Body<'k> {
     keys: &'k [LocRef],
+    funcs: &'k [Callee],
     values: Vec<(String, Type)>,
     ops: Vec<Op>,
     taken: Vec<String>,
@@ -354,18 +363,24 @@ impl Body<'_> {
     }
 }
 
-fn func(rng: &mut Rng, sym: String, keys: &[LocRef]) -> Func {
-    let mut f = Func::new(sym);
+/// The `k`-th function of `funcs`, with the type chosen for it.
+fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef]) -> Func {
+    let me = &funcs[k];
+    let mut f = Func::new(me.name.clone());
     let mut body = Body {
         keys,
+        funcs,
         values: Vec::new(),
         ops: Vec::new(),
         taken: Vec::new(),
     };
-    for _ in 0..rng.below(4) {
-        let (n, t) = (body.fresh_name(rng), int_type(width(rng)));
+    for t in &me.ty.params {
+        let n = body.fresh_name(rng);
         body.values.push((n.clone(), t.clone()));
-        f = f.param(n, t);
+        f = f.param(n, t.clone());
+    }
+    for t in &me.ty.results {
+        f = f.result(t.clone());
     }
     blocks::build(rng, &mut body, f)
 }

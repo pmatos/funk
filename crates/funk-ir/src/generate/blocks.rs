@@ -10,6 +10,10 @@
 //! passes values of their types: values in scope, often the block's own
 //! arguments in another order, or new ones.
 //!
+//! A block's ops may call any function of the module (`calls.rs`), and the
+//! last block returns the values of the function's result types, which
+//! were chosen with its symbol.
+//!
 //! A value is in scope in a block when its definition dominates it
 //! (`Func.InScope`): the function's parameters, the definitions of every
 //! block that dominates it, and those of the block itself before the use.
@@ -18,12 +22,12 @@
 //! dominates only blocks after it in the chain, so the blocks are filled in
 //! order.
 
-use super::{Body, Rng, name, width};
+use super::{Body, Rng, calls, name, width};
 use crate::dialects::core::int_type;
 use crate::ir::{Block, Func, Op, Type};
 
 /// The blocks of `f`, whose parameters `body` holds, with their branches
-/// and the `ret` that ends the last one, which also sets `f`'s results.
+/// and the `ret` of `f`'s results that ends the last one.
 pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
     let n = if rng.one_in(3) {
         1
@@ -64,6 +68,10 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
         body.values.extend(params[k].iter().cloned());
         body.ops = Vec::new();
         for _ in 0..rng.below(4) {
+            if !body.funcs.is_empty() && rng.one_in(5) {
+                calls::call(rng, body);
+                continue;
+            }
             let t = if !body.values.is_empty() && rng.one_in(2) {
                 rng.pick(&body.values).1.clone()
             } else {
@@ -73,11 +81,7 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
         }
         let term = match exits.get(k) {
             Some(targets) => branch(rng, body, targets, &labels, &params),
-            None => {
-                let (g, ret) = ret(rng, body, f);
-                f = g;
-                ret
-            }
+            None => ret(rng, body, &f),
         };
         let mut block = Block::new(labels[k].clone());
         for (x, t) in &params[k] {
@@ -143,7 +147,7 @@ fn dominates(exits: &[Vec<usize>], a: usize, b: usize) -> bool {
 }
 
 /// A value of type `t` in scope: often one that is, otherwise a new one.
-fn value(rng: &mut Rng, body: &mut Body<'_>, t: &Type) -> String {
+pub(super) fn value(rng: &mut Rng, body: &mut Body<'_>, t: &Type) -> String {
     let have = body.of_type(t);
     if !have.is_empty() && !rng.one_in(4) {
         rng.pick(&have).clone()
@@ -203,22 +207,19 @@ fn branch(
     op
 }
 
-/// The `ret` of the last block, of zero to three values, and `f` with
-/// their types as its results.
-fn ret(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> (Func, Op) {
+/// The `ret` of the last block: a value of each of `f`'s result types.
+fn ret(rng: &mut Rng, body: &mut Body<'_>, f: &Func) -> Op {
     let mut ret = Op::new("ret", *rng.pick(body.keys));
-    for _ in 0..rng.below(4) {
-        let t = int_type(width(rng));
-        let have = body.of_type(&t);
+    for t in &f.results {
+        let have = body.of_type(t);
         let v = if !have.is_empty() && rng.one_in(2) {
             rng.pick(&have).clone()
         } else {
             body.define(rng, t.clone())
         };
         ret = ret.operand(v);
-        f = f.result(t);
     }
-    (f, ret)
+    ret
 }
 
 #[cfg(test)]

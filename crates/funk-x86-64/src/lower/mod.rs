@@ -11,10 +11,12 @@
 //! own label, and a branch jumps to its successor's label unless that
 //! block comes next (ADR-2026-10-31-0334). A branch copies the values it
 //! passes into its successor's arguments as one parallel move (`moves.rs`,
-//! ADR-2026-10-31-0335).
+//! ADR-2026-10-31-0335). A call follows System V, with no extension of
+//! its arguments (`call.rs`, ADR-2026-11-02-1021).
 
 mod arith;
 mod bitwise;
+mod call;
 mod cast;
 mod compare;
 mod constant;
@@ -159,6 +161,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| div::lowering(name))
         .or_else(|| compare::lowering(name))
         .or_else(|| control::lowering(name))
+        .or_else(|| call::lowering(name))
 }
 
 /// A module's functions, lowered.
