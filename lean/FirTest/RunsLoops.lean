@@ -135,6 +135,12 @@ theorems for every valid core function without calls. -/
 /-- info: 'Fir.Func.progress_of_local' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.progress_of_local
 
+/-- info: 'Fir.Core.local_of_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.local_of_valid
+
+/-- info: 'Fir.Core.callFree_runsWell' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.callFree_runsWell
+
 /-- info: 'Fir.Core.callFree_fuelMonotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.callFree_fuelMonotone
 

@@ -7,10 +7,11 @@ functions with loops.
 
 The validation check decides validity, but its proof cannot run in the
 kernel: it looks up labels in hash tables, and `String.hash` has no
-definition that the kernel can unfold. So these proofs go rule by rule.
-Each rule but two is decided by the kernel. Scope is decided against a
-list of facts of dominance, each proved by hand (`ScopeOK`, `opValid_of`),
-and reachability is a path from the entry to each block.
+definition that the kernel can unfold. So these proofs go rule by rule,
+and the kernel decides most of them. Scope is decided against a list of
+facts of dominance, each proved by hand (`ScopeOK`, `opValid_of`), and
+reachability is a path from the entry to each block, given by hand.
+`FirTest.RunsLoops` uses the same tests for a function of its own.
 -/
 
 namespace FirTest
