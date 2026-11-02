@@ -73,12 +73,13 @@ This refines ADR-2026-10-30-0818, which asked the obligations of every op.
   holds at every width, `i0` included. So `Core.args_isRefinedBy` and
   `Core.replaceBody_isRefinedBy` keep their statements, and refinement
   holds for every core module.
-- Nothing is lost against the spec before the narrowing. No theorem took
-  the class as a hypothesis, and the core dialect had no instance. The
-  class's `monotone` field had the type of the engine's hypothesis, so a
-  lawful dialect met it in one line; now a dialect proves it at every
-  instance itself, as the core dialect already did. M0 has only the core
-  dialect.
+- Nothing is lost against the spec before the narrowing. No theorem of
+  the spec took the class as a hypothesis: the only use was a test's sum
+  of two dialects, whose instance is built from its summands'. The core
+  dialect had no instance. The class's `monotone` field had the type of
+  the engine's hypothesis, so a lawful dialect met it in one line; now a
+  dialect proves it at every instance itself, as the core dialect already
+  did. M0 has only the core dialect.
 - Asking monotonicity only of the ops of the modules the engine compares
   would let refinement follow from the class alone for every dialect. It
   would change these theorems' statements beyond the guard of
