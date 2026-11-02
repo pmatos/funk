@@ -42,9 +42,11 @@ callee.
   `Func.runs_replaceBody_isRefinedBy`). Their proofs used the obligations
   only for such ops.
 - `Core.callStandIn`, its reason `Core.callStandInReason`,
-  `Core.call_total`, `Core.call_monotone` and `Core.call_isRefinedBy` are
-  removed. `Core.Op.total_all` and `Core.Op.monotone_all` hold for every
-  core op that meets the guard: every core op but `call`.
+  `Core.call_denote`, which stated it, `Core.call_total`,
+  `Core.call_monotone` and `Core.call_isRefinedBy` are removed, with
+  `lean/Fir/Core/CallLaws.lean`, which held them. `Core.Op.total_all`
+  and `Core.Op.monotone_all` hold for every core op that meets the guard:
+  every core op but `call`.
 - Where the spec counts which ops have rules (`Core.Op.hasRules`), an op
   with a callee has them: its meaning is its callee's run.
 
