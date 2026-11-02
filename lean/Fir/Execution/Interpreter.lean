@@ -160,7 +160,7 @@ def Func.enter (f : Func d) (args : List (DVal d)) :
   let some entry := f.blocks.head? | stuck "the function has no blocks"
   if !entry.params.isEmpty then stuck s!"the entry block ^{entry.label} declares arguments"
   if args.map (·.1) = f.params.map (·.2) then pure (entry.body, (f.params.map (·.1)).zip args)
-  else stuck s!"@{f.name} takes arguments of types other than its call passes"
+  else stuck s!"a call passes @{f.name} arguments of types other than its parameter types"
 
 /--
 Runs the ops `os` of a block of the function `f`, then the blocks that

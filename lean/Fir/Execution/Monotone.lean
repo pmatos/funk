@@ -47,6 +47,7 @@ def LeavesAtMost (n : Nat) (s : ExceptT Stuck SetM (Result (α × Nat))) : Prop 
 
 namespace LeavesAtMost
 
+/-- `x >>= g` leaves at most `n` steps when `g` does on each result of `x`. -/
 theorem bind {n : Nat} {x : ExceptT Stuck SetM β} {g : β → ExceptT Stuck SetM (Result (α × Nat))}
     (h : ∀ b, x.run (.ok (.ok b)) → LeavesAtMost n (g b)) : LeavesAtMost n (x >>= g) := by
   intro a k hk
@@ -55,15 +56,19 @@ theorem bind {n : Nat} {x : ExceptT Stuck SetM β} {g : β → ExceptT Stuck Set
   · cases he
   · cases he
 
+/-- A stuck computation returns nothing. -/
 theorem of_stuck {n : Nat} {r : String} : LeavesAtMost n (liftExcept (stuck r) : ExceptT Stuck SetM (Result (α × Nat))) :=
   fun _ _ hk => nomatch (run_liftExcept _ _).1 hk
 
+/-- A run that runs out of fuel returns nothing. -/
 theorem exhausted {n : Nat} : LeavesAtMost n (pure .fuelExhausted : ExceptT Stuck SetM (Result (α × Nat))) :=
   fun _ _ hk => nomatch (run_pure _ _).1 hk
 
+/-- A return that leaves `k ≤ n` steps leaves at most `n`. -/
 theorem ret {n k : Nat} {a : α} (h : k ≤ n) : LeavesAtMost n (pure (.ret (a, k)) : ExceptT Stuck SetM (Result (α × Nat))) :=
   fun _ _ hk => by cases (run_pure _ _).1 hk; exact h
 
+/-- A bound on the steps left holds for every larger bound. -/
 theorem mono {n n' : Nat} {s : ExceptT Stuck SetM (Result (α × Nat))} (h : n ≤ n') (hs : LeavesAtMost n s) :
     LeavesAtMost n' s :=
   fun a k hk => Nat.le_trans (hs a k hk) h

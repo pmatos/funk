@@ -41,6 +41,7 @@ section
 
 variable {d : Dialect}
 
+/-- A list with a head is that head and a tail. -/
 theorem eq_cons_of_head? {l : List α} {a : α} (h : l.head? = some a) : ∃ t, l = a :: t := by
   cases l with
   | nil => cases h

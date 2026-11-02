@@ -67,16 +67,21 @@ def HasPath (s : ExceptT Stuck SetM α) : Prop := ∃ e, s.run e
 
 namespace NoStuck
 
+/-- `pure a` is never stuck. -/
 theorem pure' {a : α} : NoStuck (pure a : ExceptT Stuck SetM α) :=
   fun _ h => nomatch (run_pure _ _).1 h
 
+/-- A computation that succeeds is never stuck. -/
 theorem liftExcept_ok {a : α} :
     NoStuck (liftExcept (Except.ok a : Except Stuck α) : ExceptT Stuck SetM α) :=
   fun _ h => nomatch (run_liftExcept _ _).1 h
 
+/-- A computation of the set monad, lifted, is never stuck. -/
 theorem lift {s : SetM α} : NoStuck (ExceptT.lift s : ExceptT Stuck SetM α) := fun _ h => by
   rcases (run_lift _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ <;> cases he
 
+/-- `x >>= g` is never stuck when `x` is not, and `g` is not on any
+result of `x`. -/
 theorem bind {x : ExceptT Stuck SetM α} {g : α → ExceptT Stuck SetM β} (hx : NoStuck x)
     (hg : ∀ a, x.run (.ok (.ok a)) → NoStuck (g a)) : NoStuck (x >>= g) := fun st h => by
   rcases (run_bind x g _).1 h with ⟨a, ha, h⟩ | ⟨st', hst, _⟩ | ⟨_, _, he⟩
@@ -88,13 +93,17 @@ end NoStuck
 
 namespace HasPath
 
+/-- `pure a` has a path. -/
 theorem pure' {a : α} : HasPath (pure a : ExceptT Stuck SetM α) := ⟨_, rfl⟩
 
+/-- `x >>= g` has a path when `x` may end with `a` and `g a` has a path. -/
 theorem bind_ok {x : ExceptT Stuck SetM α} {g : α → ExceptT Stuck SetM β} {a : α}
     (hx : x.run (.ok (.ok a))) (hg : HasPath (g a)) : HasPath (x >>= g) :=
   let ⟨e, he⟩ := hg
   ⟨e, (run_bind x g e).2 (.inl ⟨a, hx, he⟩)⟩
 
+/-- A lifted computation that has a way to end, followed by `g`, has a path
+when `g` has one on each result. -/
 theorem bind_lift {s : SetM α} {g : α → ExceptT Stuck SetM β} (hs : ∃ e, s e)
     (hg : ∀ a, s (.ok a) → HasPath (g a)) : HasPath (ExceptT.lift s >>= g) := by
   obtain ⟨e, he⟩ := hs
