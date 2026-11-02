@@ -1,0 +1,11 @@
+# Tests of freeze-xor-i64.fir: xor %f, %f at i64, where %f freezes
+# %p = add nsw %a, 1 (#15, ADR-2026-10-29-2017). On 0, %p is 1, and the
+# run makes no choice. On the signed maximum, %p is poison, and freeze
+# chooses one of 2^64 values, past the choice budget of 16 bits, so the
+# test declares its one result, 0, with a witness, and seeded runs check
+# that the run gives no other. Every use of %f sees the same bits, so
+# native code must return 0 too.
+tests = [
+  { func = "@freeze_xor", args = ["0"] },
+  { func = "@freeze_xor", args = ["9223372036854775807"], results = [{ values = ["0"], witness = ["5"] }] },
+]

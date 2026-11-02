@@ -1,0 +1,19 @@
+# Tests of bitwise-i1.fir: and, or and xor at i1 on every pair of
+# boundary bit patterns: 0, 1, -1, the signed minimum and the signed
+# maximum, or false and true at i1 (#15).
+# Each test is differential: fir-ref and native code run it, and the
+# native result must equal fir-ref's.
+tests = [
+  { func = "@and", args = ["false", "false"] },
+  { func = "@and", args = ["false", "true"] },
+  { func = "@and", args = ["true", "false"] },
+  { func = "@and", args = ["true", "true"] },
+  { func = "@or", args = ["false", "false"] },
+  { func = "@or", args = ["false", "true"] },
+  { func = "@or", args = ["true", "false"] },
+  { func = "@or", args = ["true", "true"] },
+  { func = "@xor", args = ["false", "false"] },
+  { func = "@xor", args = ["false", "true"] },
+  { func = "@xor", args = ["true", "false"] },
+  { func = "@xor", args = ["true", "true"] },
+]

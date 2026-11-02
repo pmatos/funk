@@ -4,10 +4,30 @@ import FirRef.Main
 import FirTest.Axioms
 import FirTest.Parse
 import FirTest.Print
+import FirTest.Run
+import FirTest.Interpreter
+import FirTest.Modes
+import FirTest.Sample
+import FirTest.Bitwise
+import FirTest.Width
+import FirTest.Div
+import FirTest.Compare
+import FirTest.Branch
+import FirTest.Loops
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.ValidateOps
 import FirTest.Validate
+import FirTest.Sum
+import FirTest.Toy
+import FirTest.Mixed
+import FirTest.Runs
+import FirTest.ValidSum
+import FirTest.RunsLoops
+import FirTest.Calls
+import FirTest.RunsCalls
+import FirTest.RefineCalls
+import FirTest.Lawful
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

@@ -6,10 +6,24 @@
 //! width of every value where it is defined, and reports, as a
 //! [`Diagnostic`] at the op or block, each width and each op that the
 //! backend cannot lower: all of them, in one pass.
+//!
+//! Blocks are laid out in the order of the function's body, each at its
+//! own label, and a branch jumps to its successor's label unless that
+//! block comes next (ADR-2026-10-31-0334). A branch copies the values it
+//! passes into its successor's arguments as one parallel move (`moves.rs`,
+//! ADR-2026-10-31-0335). A call follows System V, with no extension of
+//! its arguments (`call.rs`, ADR-2026-11-02-1021).
 
 mod arith;
+mod bitwise;
+mod call;
+mod cast;
+mod compare;
 mod constant;
 mod control;
+mod div;
+mod freeze;
+mod moves;
 
 use std::collections::HashMap;
 
@@ -51,6 +65,14 @@ pub struct Cx<'f> {
     /// The width of each value defined so far; `None` when the backend does
     /// not lower it.
     widths: HashMap<&'f str, Option<u32>>,
+    /// The index of the function in its module, which its labels hold.
+    func: usize,
+    /// The arguments of each block, by label.
+    params: HashMap<&'f str, &'f [Def]>,
+    /// The label of the block after the one being lowered, if any.
+    next: Option<&'f str>,
+    /// How many local labels the function has made so far.
+    locals: usize,
 }
 
 impl<'f> Cx<'f> {
@@ -85,6 +107,32 @@ impl<'f> Cx<'f> {
         Ok(())
     }
 
+    /// The arguments of the block labelled `label`.
+    pub fn block_params(&self, label: &str) -> Result<&'f [Def], Unlowered> {
+        self.params
+            .get(label)
+            .copied()
+            .ok_or_else(|| format!("^{label} is not a block of the function").into())
+    }
+
+    /// The assembly label of the block labelled `label`.
+    pub fn block_label(&self, label: &str) -> String {
+        block_label(self.func, label)
+    }
+
+    /// Whether the block labelled `label` comes right after the one being
+    /// lowered, so that its code follows with no jump.
+    pub fn falls_through(&self, label: &str) -> bool {
+        self.next == Some(label)
+    }
+
+    /// A new local label of the function, `.Lc` with the function's index
+    /// and a count, which no block label can be.
+    pub fn local_label(&mut self) -> String {
+        self.locals += 1;
+        format!(".Lc{}_{}", self.func, self.locals)
+    }
+
     /// Records the width of each of `defs`, and returns why the backend does
     /// not lower each one it does not.
     fn define(&mut self, defs: &'f [Def]) -> Vec<String> {
@@ -107,7 +155,13 @@ pub type Lower = fn(&mut Cx<'_>, &Op) -> Result<(), Unlowered>;
 fn lowering(name: &str) -> Option<Lower> {
     constant::lowering(name)
         .or_else(|| arith::lowering(name))
+        .or_else(|| freeze::lowering(name))
+        .or_else(|| bitwise::lowering(name))
+        .or_else(|| cast::lowering(name))
+        .or_else(|| div::lowering(name))
+        .or_else(|| compare::lowering(name))
         .or_else(|| control::lowering(name))
+        .or_else(|| call::lowering(name))
 }
 
 /// A module's functions, lowered.
@@ -169,7 +223,14 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
         asm: Asm::new(),
         frame,
         widths: HashMap::new(),
+        func: i,
+        params: HashMap::new(),
+        next: None,
+        locals: 0,
     };
+    for b in &f.body.blocks {
+        cx.params.entry(b.label.as_str()).or_insert(&b.params);
+    }
     // Every width is known before any op is lowered, since a block may use a
     // value that a block after it in the list defines.
     for why in cx.define(&f.params) {
@@ -215,7 +276,8 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
             cx.asm.ins("movq", format_args!("%rax, {slot}"));
         }
     }
-    for b in &f.body.blocks {
+    for (k, b) in f.body.blocks.iter().enumerate() {
+        cx.next = f.body.blocks.get(k + 1).map(|n| n.label.as_str());
         block(i, f, &mut cx, b, out);
     }
     cx.asm.directive(format_args!(".size\t{sym}, .-{sym}"));

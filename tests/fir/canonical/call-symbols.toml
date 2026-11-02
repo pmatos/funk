@@ -1,0 +1,21 @@
+# Tests of call-symbols.fir: a callee whose name is not a word, @"1"
+# (#20). It is quoted, since @1 is always a location reference. caller
+# calls it, and both tools run @"1" itself by its name as text writes
+# it: fir-ref run takes it so, and so does the built executable, which
+# names it __funk_sym_31 in its assembly (ADR-2026-10-30-1232). @"1"
+# adds one, with add, which wraps, to each boundary bit pattern, 0, 1,
+# -1, the signed minimum and the signed maximum.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = '@"1"', args = ["0"] },
+  { func = '@"1"', args = ["1"] },
+  { func = '@"1"', args = ["-1"] },
+  { func = '@"1"', args = ["-2147483648"] },
+  { func = '@"1"', args = ["2147483647"] },
+  { func = "@caller", args = ["0"] },
+  { func = "@caller", args = ["1"] },
+  { func = "@caller", args = ["-1"] },
+  { func = "@caller", args = ["-2147483648"] },
+  { func = "@caller", args = ["2147483647"] },
+]

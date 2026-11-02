@@ -203,10 +203,7 @@ fn an_op_that_does_not_decode_is_rejected_at_its_name() {
         ("%c: i32 = add %a @0", "add takes two operands"),
         ("%c: i32 = add %a, %a, %a @0", "add takes two operands"),
         ("%c: i64 = add %a, %a @0", "add takes two operands"),
-        (
-            "%c: i32 = add nsw %a, %a @0",
-            "flags are not registered yet",
-        ),
+        ("%c: i32 = add nsw nuw %a, %a @0", "nuw before nsw"),
         (
             "%c: i1 = const 1 @0",
             "an i1 constant is written true or false",
@@ -226,7 +223,7 @@ fn an_op_that_does_not_decode_is_rejected_at_its_name() {
         ("%c: i8, %d: i8 = const 1 @0", "one value"),
         ("%c: i8 = ret @0", "ret defines no values"),
         ("ret nsw %a @0", "ret takes no attributes"),
-        ("%c: i8 = sub %a, %a @0", "unknown op sub"),
+        ("%c: i32 = addi %a, %a @0", "unknown op addi"),
         ("%c: i8 = toy.mix %a @0", "unknown op toy.mix"),
     ] {
         let b = if op.contains("%b") {

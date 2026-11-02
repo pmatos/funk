@@ -1,6 +1,8 @@
 import Fir
 import FirRef.Utf8
 import FirRef.Report
+import FirRef.Run
+import FirRef.RunArgs
 
 /-!
 `fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). It
@@ -18,7 +20,8 @@ spec's readers still recurse once per level on the main thread that Lean's
 runtime gives a program, so a text nested millions of levels deep overflows
 its stack until the next stage of #47 replaces them too. `validate` runs the
 spec's validation check, which walks nested blocks with `FirRef.allBlocks`
-(ADR-2026-10-30-1742).
+(ADR-2026-10-30-1742). `run` runs the spec's interpreter in its tree of
+choices, in scripted or exhaustive mode (`FirRef.Run`).
 -/
 
 namespace FirRef
@@ -28,6 +31,8 @@ open Fir
 /-- The command line help. -/
 def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref validate FILE...
+       fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
+                   | --seed S] FILE @FUNC [ARG...]
 
   fmt       Parse each FILE with the core dialect and print it in canonical
             form, as the spec's printer writes it. fmt does not validate: a
@@ -37,13 +42,37 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             validation check. Print one JSON object per FILE, on one line,
             as funk verify --json does: the FILE, its verdict (accepted,
             parse-error, validation-error or io-error) and its diagnostics.
+  run       Parse FILE with the core dialect, without validating it, and
+            run its function @FUNC, named as fir's text writes it, with the
+            spec's interpreter. Give one ARG per parameter, spelled as a
+            constant of its type: true or false at i1, signed decimal at
+            every other width. freeze of poison makes a choice. Print one
+            JSON object: the one outcome of the path that the choices name
+            (the values returned, UB, fuel exhausted, or stuck), or with
+            --exhaustive every outcome of the run, or with --seed the one
+            outcome of the path whose choices it draws, and those choices.
+              --fuel N          run at most N steps, one per op (default
+                                1000000)
+              --choices C,...   the choices the run makes, in order, each
+                                spelled as a constant of its type, with
+                                commas between them (default: none)
+              --exhaustive      try every choice, and print every outcome
+              --choice-bits B   with --exhaustive, choose at most B bits
+                                in all on one path (default 16)
+              --seed S          draw each choice from a generator seeded
+                                with S, below 2^64, and print the choices
+                                drawn
   -h, --help  Print this help.
 
 A FILE of - is standard input; -- ends the options.
 
 Exit status: 0 when every FILE parses (and, with fmt --check, is canonical,
 or with validate, is valid), 1 when one does not parse, is not canonical or
-is not valid, 2 on a usage or I/O error.
+is not valid, 2 on a usage or I/O error. run exits with 0 when the function
+returns, hits UB or runs out of fuel, or with --exhaustive when no path is
+stuck, 1 when FILE does not parse or a path is stuck, and 2 on a usage, I/O
+or argument error, choices that do not fit the run, or at an op that has
+no execution rules yet.
 "
 
 /-- The bytes of a file, or of standard input for `-`. -/
@@ -85,6 +114,20 @@ def validateFile (file : String) : IO UInt32 := do
     let (line, status) := validateBytes file bytes
     IO.println line
     return status
+
+/-- What `run` reports on its arguments, and its exit status. -/
+def runFile (a : RunArgs) : IO UInt32 := do
+  match ← (readInput a.file).toBaseIO with
+  | .error e =>
+    let why := ((toString e).splitOn "\n").headD ""
+    let what := if a.file == "-" then "standard input" else shown a.file
+    IO.eprintln s!"fir-ref: cannot read {what}: {why}"
+    return 2
+  | .ok bytes =>
+    let r := runBytes a.file bytes a.fuel a.func a.args a.mode
+    if !r.out.isEmpty then IO.println r.out
+    if !r.err.isEmpty then IO.eprintln r.err
+    return r.status
 
 /-- The files that `validate` is given. `--` ends the options, and it has
 none. -/
@@ -142,6 +185,10 @@ def run (args : List String) : IO UInt32 := do
       else if (files.filter (· == "-")).length > 1 then
         fail "- may be given once: standard input can be read only once"
       else files.foldlM (fun status file => return max status (← validateFile file)) 0
+  | "run" :: rest =>
+    match runArgs rest with
+    | .error why => fail why
+    | .ok a => runFile a
   | cmd :: _ => fail s!"unknown command {cmd}"
 
 end FirRef

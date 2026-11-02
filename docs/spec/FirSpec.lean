@@ -110,6 +110,98 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Unlawful "Semantics the obligations reject" (level := 2)}
 
+{includeLiterate "." Fir.Execution.Interpreter "The interpreter" (level := 2)}
+
+{includeLiterate "." Fir.Core.Arith "Arithmetic rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Wrap "Wrap flag rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Freeze "The freeze rule" (level := 2)}
+
+{includeLiterate "." Fir.Core.Bitwise "Bitwise and shift rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Width "Width change rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Div "Division rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Compare "Comparison and selection rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Branch "Branch rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Call "Call rules" (level := 2)}
+
+{includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
+
+{includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.WrapLaws "Arithmetic obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.FreezeLaws "Freeze obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.WidthLaws "Width change obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.DivLaws "Division obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.CompareLaws "Comparison and selection obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+
+{includeLiterate "." Fir.Core.BranchLaws "Branch obligations" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
+
+{includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" (level := 2)}
+
+{includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
+
+{includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Environment "The environment of a run" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Progress "Progress and no stuck path" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Scoped "Scope along a run" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
+
+{includeLiterate "." Fir.Execution.CallSteps "What a call step needs" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Calls "Progress with calls" (level := 2)}
+
+{includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
+
+{includeLiterate "." Fir.Core.CallFree "Core functions without calls" (level := 2)}
+
+{includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RunPaths "The ways a step goes on" (level := 2)}
+
+{includeLiterate "." Fir.Execution.EnvRefine "Refined environments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.BlackBox "Calls as black boxes" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineUp "Returns and UB, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineDown "Running out of fuel, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineRuns "Refined arguments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Replace "Replacing a callee" (level := 2)}
+
+{includeLiterate "." Fir.Core.CallRefine "Refinement through core calls" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Lawful "What the lawful class gives" (level := 2)}
+
+{includeLiterate "." Fir.Core.Lawful "The core dialect's poison obligations" (level := 2)}
+
 # Text format
 
 {includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}

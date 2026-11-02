@@ -1,4 +1,5 @@
 import Fir.Execution.Behaviour
+import Fir.Validation.Rules
 
 /-!
 # Poison classes
@@ -109,8 +110,9 @@ structure PropagatesPoison (op : d.Op) : Prop where
 /-!
 # More obligations
 
-Two more obligations hold for every op, whatever its poison class, and a
-third for every op that propagates poison.
+Two more obligations hold for every op that runs by its own rule,
+whatever its poison class, and a third for every op that propagates
+poison.
 
 * _Totality_ (`OpTotal`). On every operand vector, an op that is not a
   terminator has some outcome: a result or UB. So does the exit of a
@@ -131,24 +133,48 @@ third for every op that propagates poison.
   that is always UB, such as a future `unreachable`, stays allowed.
 
 Totality and monotonicity look only at what runs: the `denote` of an op that
-is not a terminator, and the `exit` of a terminator.
+is not a terminator, and the `exit` of a terminator. So they cover only
+the ops that the interpreter runs by these rules: terminators, and ops
+with no callee (`callee? op = none`). An op with a callee runs its callee,
+never its `denote` (the call effect), so it has no rule at op level, and
+no op-level obligation: its meaning is its callee's run
+(ADR-2026-11-02-1514).
 
 Monotonicity is what makes refinement compositional. A run only passes
-values from op to op, so when every op is monotone, a run on refined values
+values from op to op, and from a caller to its callee and back, so when
+every op that runs by its own rule is monotone, a run on refined values
 refines the run on the original ones. A pass that replaces one part of a
 function with a part that refines it, such as an op's result with a value
 that refines it or a callee with a function that refines it, then refines
 the whole function, and its proof need only look at the part it changes.
+For calls this is proved at function level: a function's behaviour on
+refined arguments refines its behaviour on the original ones
+(`Func.runs_args_isRefinedBy`), and replacing a callee's body refines
+every caller when the callee, run in the new module, refines the old one
+(`Func.runs_replaceBody_isRefinedBy`).
 This is also why a function refines another only if it does so on every
 argument vector, poison included: a caller may pass poison. And it explains
 the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then
 refining that poison to the signed minimum would turn a result into UB,
 which is not a refinement.
 
-A call gets its meaning from the call effect that #20 adds, not from the
-set monad these obligations are stated in, so for `call` they are only a
-stand-in. #20 proves their counterparts at function level (see the poison
-classes of the core ops).
+A call gets its meaning from the call effect, which the interpreter runs
+(ADR-2026-11-02-0836), not from the set monad these obligations are stated
+in. A rule for it in the set monad could only be a stand-in, with a meaning
+that a call does not have, such as immediate UB, and obligations met by a
+stand-in would say nothing about calls. So the obligations leave out the
+ops with a callee. Their counterparts for calls hold at function level, as
+the paragraph above says, and so do progress and no stuck path, by an
+induction over the callee's run (the section on progress with calls).
+
+The obligations speak only of valid op instances: those whose operand and
+result types validation accepts (`TypesValid`, in the validation chapter;
+ADR-2026-11-02-1515). Validation rejects every other instance in every
+function, so no valid program runs one, and every op of a valid function
+is a valid instance (`Func.Valid.typesValid`). An instance that validation
+rejects may break an obligation without harm: at `i0`, which the core
+dialect's validation rejects, every divisor is zero, so no division
+returns a result on defined operands (`Core.div_zero_width`).
 
 Monotonicity uses the dialect's refinement of values, and the obligations
 tie it to poison: a poison value is refined by every value of its type.
@@ -201,16 +227,21 @@ def OpMonotone (op : d.Op) : Prop :=
       (isTerminator op = true →
         SetM.IsRefinedBy Eq (DialectDenote.exit op args) (DialectDenote.exit op args'))
 
-/-- A dialect whose ops meet the poison obligations: a poison value is
-refined by every value of its type, every propagating op propagates poison
-and returns a result on some defined operands, and every op is total and
-monotone. -/
+/-- A dialect whose valid op instances meet the poison obligations: a
+poison value of a valid type is refined by every value of its type; every
+valid instance that propagates poison propagates it and returns a result
+on some defined operands; and every valid instance that runs by its own
+rule, a terminator or an op with no callee, is total and monotone. -/
 class LawfulDialectPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
-    [DialectSignature d] [DialectPoison d] [DialectDenote d SetM] : Prop where
-  poison_isRefinedBy : ∀ {t : d.Ty} (p v : ⟦t⟧), TyPoison.IsPoison p → TyRefinement.IsRefinedBy p v
-  propagates : ∀ op : d.Op, poisonClass op = .propagates → PropagatesPoison op
-  returnsOnDefined : ∀ op : d.Op, poisonClass op = .propagates → ReturnsOnDefined op
-  total : ∀ op : d.Op, OpTotal op
-  monotone : ∀ op : d.Op, OpMonotone op
+    [DialectSignature d] [DialectPoison d] [DialectDenote d SetM] [DialectCall d]
+    [DialectValidation d] : Prop where
+  poison_isRefinedBy : ∀ {t : d.Ty}, validTy t → ∀ (p v : ⟦t⟧), TyPoison.IsPoison p →
+    TyRefinement.IsRefinedBy p v
+  propagates : ∀ op : d.Op, TypesValid op → poisonClass op = .propagates → PropagatesPoison op
+  returnsOnDefined : ∀ op : d.Op, TypesValid op → poisonClass op = .propagates →
+    ReturnsOnDefined op
+  total : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none → OpTotal op
+  monotone : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
+    OpMonotone op
 
 end Fir

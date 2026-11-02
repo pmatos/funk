@@ -79,6 +79,22 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec|check-fir-ref|rust-env)\.sh$)
+      # The differential harness (ADR-2026-10-30-2049): funk verify and
+      # fir-ref validate give every text of tests/fir/ and every generated
+      # module the same verdict, and native code refines fir-ref on every
+      # test. It needs elan, rustup and GNU as and ld.
+      - id: fir-harness
+        name: fir-ref and native code agree on the corpus (the differential harness)
+        entry: scripts/check-harness.sh
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-harness\.sh$|rust-env\.sh$|harness/))
+      - id: fir-harness-test
+        name: The differential harness passes its tests
+        entry: python -m unittest discover -s scripts/harness -p test_*.py
+        language: python
+        pass_filenames: false
+        files: ^scripts/harness/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

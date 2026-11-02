@@ -1,4 +1,6 @@
 import Fir.Core.Poison
+import Fir.Core.Semantics
+import Fir.Core.Check
 
 /-!
 # Semantics that the obligations reject
@@ -21,9 +23,21 @@ reject it.
 * `alwaysUB`: every op is UB on every operand vector. It meets the poison
   clauses, and the obligation that a propagating op returns a result on
   some defined operands rejects it.
+
+The obligations speak only of valid op instances, and each rejection
+below is at one: `add` at `i1` or `sdiv` at `i8`, which validation
+accepts, and which runs by its own rule, since it calls no function.
 -/
 
 namespace Fir.Core.Unlawful
+
+/-- `add` at `i1` is a valid op instance. -/
+theorem add_typesValid : TypesValid (d := CoreDialect) (.add 1 {}) := by
+  unfold TypesValid; decide
+
+/-- `sdiv` at `i8` is a valid op instance. -/
+theorem sdiv_typesValid : TypesValid (d := CoreDialect) (.sdiv 8 false) := by
+  unfold TypesValid; decide
 
 /-- No op has any outcome. -/
 @[instance_reducible] def noOutcome : DialectDenote CoreDialect SetM where
@@ -31,9 +45,10 @@ namespace Fir.Core.Unlawful
   exit _ _ := fun _ => False
 
 /-- Totality rejects a semantics in which an op has no outcome. -/
-theorem noOutcome_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ noOutcome := by
+theorem noOutcome_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ noOutcome _ _ := by
   intro h
-  obtain ⟨_, he⟩ := (h.total (.add 1 {}) (.cons .poison (.cons .poison .nil))).1 rfl
+  obtain ⟨_, he⟩ :=
+    (h.total (.add 1 {}) add_typesValid (.inr rfl) (.cons .poison (.cons .poison .nil))).1 rfl
   exact he
 
 /-- Every op is immediate UB when an operand is poison, and returns some
@@ -46,14 +61,15 @@ result otherwise. -/
 
 /-- An `add` that is UB on a poison operand is not UB by its own rules: on
 operands with no poison, it is never UB. -/
-theorem poisonIsUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ poisonIsUB := by
+theorem poisonIsUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ poisonIsUB _ _ := by
   intro h
   letI := poisonIsUB
   let args : HVector toType (sig (d := CoreDialect) (.add 1 {})) :=
     .cons .poison (.cons .poison .nil)
   have hp : args.Any TyPoison.IsPoison := Or.inl rfl
   obtain ⟨_, ⟨hn, _⟩, _, hub⟩ :=
-    (h.propagates (.add 1 {}) rfl).ubByOwnRules args "poison" hp (Or.inl ⟨hp, _, rfl⟩)
+    (h.propagates (.add 1 {}) add_typesValid rfl).ubByOwnRules args "poison" hp
+      (Or.inl ⟨hp, _, rfl⟩)
   rcases hub with ⟨hp', _⟩ | ⟨_, _, he⟩
   · exact hn hp'
   · cases he
@@ -97,8 +113,8 @@ theorem oldSDiv_not_monotone : ¬ @OpMonotone CoreDialect _ _ oldSDiv _ (.sdiv 8
   | .ok (.cons _ .nil), _, hr => exact hr
 
 /-- So the obligations reject the rule. -/
-theorem oldSDiv_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ oldSDiv :=
-  fun h => oldSDiv_not_monotone (h.monotone _)
+theorem oldSDiv_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ oldSDiv _ _ :=
+  fun h => oldSDiv_not_monotone (h.monotone _ sdiv_typesValid (.inr rfl))
 
 /-!
 # A semantics that is always UB
@@ -151,9 +167,9 @@ theorem alwaysUB_propagatesPoison (op : Op) :
     ubByOwnRules := fun args r _ _ => ⟨fillZero args, fillZero_fills args, r, r, rfl⟩ }
 
 /-- But the obligations reject it: `add` returns no result on any operands. -/
-theorem alwaysUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ alwaysUB := by
+theorem alwaysUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ alwaysUB _ _ := by
   intro h
-  obtain ⟨_, _, _, _, he⟩ := h.returnsOnDefined (.add 1 {}) rfl
+  obtain ⟨_, _, _, _, he⟩ := h.returnsOnDefined (.add 1 {}) add_typesValid rfl
   cases he
 
 end Fir.Core.Unlawful

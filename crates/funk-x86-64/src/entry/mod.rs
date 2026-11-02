@@ -12,7 +12,7 @@
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module};
 
-use crate::abi::{ARG_REGS, RESULT_REG, symbol};
+use crate::abi::{self, RESULT_REG};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
@@ -110,17 +110,7 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, frame: i32) -> Result<u64, Diagnos
         asm.ins("call", format_args!("__funk_rt_arg"));
         asm.ins("movq", format_args!("%rax, {at}"));
     }
-    let on_stack = slots.get(ARG_REGS.len()..).unwrap_or_default();
-    if on_stack.len() % 2 == 1 {
-        asm.ins("subq", format_args!("$8, %rsp"));
-    }
-    for at in on_stack.iter().rev() {
-        asm.ins("pushq", format_args!("{at}"));
-    }
-    for (reg, at) in ARG_REGS.iter().zip(&slots) {
-        asm.ins("movq", format_args!("{at}, {}", reg.q()));
-    }
-    asm.ins("call", format_args!("{}", symbol(&f.name)));
+    let outgoing = abi::call(asm, &f.name, &slots).map_err(report)?;
     if let Some(w) = result {
         width::extend(asm, Ext::Sign, w, RESULT_REG);
         asm.ins("movq", format_args!("{}, {}", RESULT_REG.q(), Reg::Rdi.q()));
@@ -128,22 +118,20 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, frame: i32) -> Result<u64, Diagnos
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
-    Ok(stack_need(frame, size, on_stack.len()))
+    Ok(stack_need(frame, size, outgoing))
 }
 
 /// The bytes of stack that a wrapper with a frame of `wrapper` bytes and
-/// `on_stack` arguments on the stack needs to call a function with a frame
-/// of `frame` bytes, rounded up to a page. Each frame also holds a return
-/// address and a saved `%rbp`, and the arguments on the stack are padded to
-/// an even number.
-fn stack_need(frame: i32, wrapper: i32, on_stack: usize) -> u64 {
-    let on_stack = on_stack as u64;
-    let args = 8 * (on_stack + on_stack % 2);
+/// `outgoing` bytes of argument space needs to call a function with a
+/// frame of `frame` bytes, rounded up to a page. The call emitter supplies
+/// the outgoing space, padding included. Each frame also holds a return
+/// address and a saved `%rbp`.
+fn stack_need(frame: i32, wrapper: i32, outgoing: u64) -> u64 {
     let bytes = u64::from(frame.unsigned_abs())
         + 16
         + u64::from(wrapper.unsigned_abs())
         + 16
-        + args
+        + outgoing
         + RUNTIME_STACK;
     let page = u64::from(PAGE.unsigned_abs());
     bytes.div_ceil(page) * page
@@ -164,7 +152,7 @@ mod tests {
         );
         let most = i32::MAX & !15;
         assert_eq!(
-            stack_need(most, most, (1 << 20) - 1),
+            stack_need(most, most, 8 << 20),
             (1 << 32) + (8 << 20) + 4 * 4096
         );
     }

@@ -1,0 +1,10 @@
+# Tests of add.fir. Each is differential: fir-ref and native code run it,
+# and the native result must refine fir-ref's.
+tests = [
+  { func = "@add3", args = ["1", "2", "3"] },
+  { func = "@add3", args = ["2147483647", "1", "0"] }, # wraps to the minimum
+  { func = "@add3", args = ["-2147483648", "-1", "-2147483648"] },
+  { func = "@double", args = ["-5"] },
+  { func = "@double", args = ["-4611686018427387905"] },
+  { func = "@double", args = ["9223372036854775807"] },
+]

@@ -123,9 +123,25 @@ are on `main`:
   memory, with a parser, a printer and a verifier that follow the spec. Its
   ops and types are checked through a registry of dialects
   ([ADR-2026-10-30-1146](docs/adrs/2026-10-30-1146-generic-ops-and-registry.md)),
-  and the core dialect registers `const`, `add` and `ret` so far. `funk fmt`
-  prints fir in its canonical form, and `funk verify` checks it. Both report
-  as text, or as JSON with `--json`.
+  and the core dialect registers `const`, `add`, `sub`, `mul`, their flags
+  `nuw` and `nsw`, `freeze`, the bitwise ops `and`, `or` and `xor`, the
+  shifts `shl`, `lshr` and `ashr`, the width changes `zext`, `sext` and
+  `trunc`, `sdiv` and `udiv` with their flag `exact`, `srem`, `urem`,
+  `icmp` with its ten predicates, `select`, the branches `br` and
+  `cond_br`, `ret`, and `call` of any function of the module, with any
+  number of arguments and results
+  ([#14](https://github.com/pmatos/funk/issues/14),
+  [#15](https://github.com/pmatos/funk/issues/15),
+  [#16](https://github.com/pmatos/funk/issues/16),
+  [#17](https://github.com/pmatos/funk/issues/17),
+  [#18](https://github.com/pmatos/funk/issues/18),
+  [#19](https://github.com/pmatos/funk/issues/19),
+  [#20](https://github.com/pmatos/funk/issues/20)). The verifier checks
+  dominance across blocks, block arguments, that every block is
+  reachable from the entry, and that each call matches its callee's
+  signature. `funk fmt` prints fir
+  in its canonical form, and `funk verify` checks it. Both report as text,
+  or as JSON with `--json`.
 - The Lean parser, a section of the spec, and the first command of the
   reference interpreter's executable, `fir-ref fmt`
   ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
@@ -133,28 +149,96 @@ are on `main`:
   shared texts and on modules from the Rust generator.
 - The naive x86-64 backend, `funk-x86-64`
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
-  `const`, `add` and `ret` at `i1`, `i8`, `i16`, `i32` and `i64` into an
-  object file and an executable for Linux. The executable runs one function
-  from the command line and prints its results as JSON
+  `const`, `add`, `sub` and `mul` with their flags, `freeze`, the bitwise
+  ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or
+  without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
+  `ret` and `call` at `i1`, `i8`, `i16`, `i32` and `i64` into an object
+  file and an executable for Linux. Native code holds no poison: a broken `nuw` or `nsw` gives the
+  wrapped result, a broken `exact` the plain quotient, a shift by `N` or
+  more gives what x86's masked shift gives, and `freeze` copies its
+  operand
+  ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
+  A division is one bare `div` or `idiv` of its own size, with no guard
+  ([ADR-2026-10-31-0050](docs/adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)).
+  A `select` tests bit 0 of its condition and is one `cmov`, with no
+  branch
+  ([ADR-2026-10-31-0215](docs/adrs/2026-10-31-0215-select-is-one-cmov-on-bit-0.md)).
+  Blocks keep their order, a branch jumps unless its block comes next,
+  and a `cond_br` tests bit 0 of its condition
+  ([ADR-2026-10-31-0334](docs/adrs/2026-10-31-0334-blocks-keep-their-order-and-branches-jump-to-labels.md)).
+  A branch copies the values it passes into its block's arguments as one
+  parallel move
+  ([ADR-2026-10-31-0335](docs/adrs/2026-10-31-0335-block-arguments-are-one-parallel-move.md)).
+  A call follows System V and extends no argument
+  ([ADR-2026-10-30-1232](docs/adrs/2026-10-30-1232-funk-function-abi.md),
+  [ADR-2026-11-02-1021](docs/adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)).
+  The executable runs one function from the command line and prints its
+  results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
+- The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
+  `./scripts/check-harness.sh` checks that `funk verify` and
+  `fir-ref validate` give the same verdict on every text of
+  [`tests/fir/`](tests/fir/) and on modules from the Rust generator. It
+  runs each test of the corpus on `fir-ref` and, where the backend can
+  build it, as native code, and checks that the native result refines
+  one of `fir-ref`'s outcomes. A test whose run chooses more than the
+  choice budget declares its results, each with a witness that the
+  harness checks, and seeded runs sample the rest
+  ([ADR-2026-10-30-2049](docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
+  [ADR-2026-10-30-2135](docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
+  [ADR-2026-10-31-0003](docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
+- The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
+  bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
+  `freeze` and `ret` in Lean
+  ([#10](https://github.com/pmatos/funk/issues/10),
+  [#14](https://github.com/pmatos/funk/issues/14),
+  [#15](https://github.com/pmatos/funk/issues/15),
+  [#17](https://github.com/pmatos/funk/issues/17)). `fir-ref run` runs a
+  function in scripted mode, along the path that its choices name, in
+  exhaustive mode, which lists every outcome, or in sampled mode, which
+  draws its choices from a seed; Lean proves all three sound
+  ([ADR-2026-10-30-2217](docs/adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
+  [ADR-2026-10-30-2218](docs/adrs/2026-10-30-2218-fir-ref-run-modes.md),
+  [ADR-2026-10-31-0002](docs/adrs/2026-10-31-0002-fir-ref-run-draws-choices-from-a-seed.md)).
+- The execution rules of `sdiv`, `udiv`, `srem` and `urem`, with `exact`, in
+  Lean ([#18](https://github.com/pmatos/funk/issues/18)). `fir-ref run`
+  reports their immediate UB, a zero or poison divisor and the signed
+  minimum or poison divided by `-1`, with a reason that names the case.
+- The execution rules of `icmp`, with its ten predicates, and `select` in
+  Lean ([#16](https://github.com/pmatos/funk/issues/16)).
+- The execution rules of `br` and `cond_br` in Lean
+  ([#19](https://github.com/pmatos/funk/issues/19)). `fir-ref run` runs
+  functions with loops, and reports a branch on poison as immediate UB.
+- The execution rules of `call` in Lean
+  ([#20](https://github.com/pmatos/funk/issues/20)). `fir-ref run` runs
+  any function of a module, named as text names it, and the functions it
+  calls, recursion included. A callee runs on the fuel that its caller
+  has left, so recursion without end runs out of fuel. Lean proves that
+  no path of a run of a function of a valid module is stuck, and that the
+  run has an outcome at every budget, and that a call refines when its
+  arguments do, and when its callee's body is replaced so that the
+  callee, run in the new module, refines the old one. Every core op
+  instance that validation accepts meets the poison obligations
+  (`LawfulDialectPoison CoreDialect`); a call has no op-level rule, since
+  its meaning is its callee's run
+  ([ADR-2026-11-02-1514](docs/adrs/2026-11-02-1514-a-call-has-no-op-level-rule.md),
+  [ADR-2026-11-02-1515](docs/adrs/2026-11-02-1515-poison-obligations-cover-valid-op-instances.md)).
 
 These parts of M0 do not exist yet:
 
-- The execution rules of the ops. The Lean tracer,
-  [#10](https://github.com/pmatos/funk/issues/10), adds them for `const`,
-  `add` and `ret`. One issue for each group of related ops,
-  [#14](https://github.com/pmatos/funk/issues/14) to
-  [#20](https://github.com/pmatos/funk/issues/20), adds the rest.
-- The validation check behind `fir-ref validate`, and the interpreter
-  behind `fir-ref run`.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In Rust, the core ops other than `const`, `add` and `ret`, in the IR and
-  in the backend. The backend does not lower `i128` or return more than one
-  value yet.
-- The differential tests that compare native results with `fir-ref`.
+- In the backend, `i128` and functions and calls with more than one
+  result.
+- In the backend, a stack that covers callees. The executable that
+  `funk build` writes sizes the stack of a run from the called function's
+  own frame, its wrapper's and 16 KiB, so a run whose callees need more
+  ends with `SIGSEGV` on the guard page. How the stack figure covers
+  callees, and what a run that outgrows its stack reports, are a later
+  backend stage of [#20](https://github.com/pmatos/funk/issues/20)
+  ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
 
 The epic's sub-issues list the open work in full.
 
@@ -169,10 +253,10 @@ The epic's sub-issues list the open work in full.
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
 | `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, and `funk`, the driver |
-| `tests/fir/` | fir texts that the Rust and Lean sides share: canonical texts, and inputs that format to them |
+| `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, and must-reject texts |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
-| `scripts/` | Scripts for the spec build, the Rust checks, the hooks and agent sessions |
+| `scripts/` | Scripts for the spec build, the Rust checks, the differential harness (`scripts/harness/`), the hooks and agent sessions |
 | `.github/` | The CI and Pages workflows, the ruleset for `main` and the Dependabot settings |
 | `.pre-commit-config.yaml` | Every check, for the local hooks and for CI |
 | `.claude/settings.json` | Claude Code settings, which install the git hooks when a session starts |
@@ -239,12 +323,14 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later. Install
-`elan` and `rustup` too, and GNU binutils on an x86-64 Linux host. Three
-checks need elan: `fir-spec` builds the spec, `fir-ref-test` runs the Lean
-tests, and `fir-round-trip` has Lean reprint what Rust prints. Four need
+`elan` and `rustup` too, GNU binutils on an x86-64 Linux host, and Python
+3.11 or later. Four checks need elan: `fir-spec` builds the spec,
+`fir-ref-test` runs the Lean tests, `fir-round-trip` has Lean reprint what
+Rust prints, and `fir-harness` runs the differential harness. Five need
 rustup: `rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and
-`fir-round-trip` runs it. `rust-test` builds and runs native code, so it
-needs binutils. Then install the git hooks:
+`fir-round-trip` and `fir-harness` run it. `rust-test` and `fir-harness`
+build and run native code, so they need binutils. Then install the git
+hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

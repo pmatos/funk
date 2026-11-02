@@ -1,0 +1,51 @@
+# Tests of poison-bitwise-i64.fir: poison propagates through and, or,
+# xor, shl, lshr and ashr from either operand (ADR-2026-10-30-0818).
+# %p = add nsw %a, 1 is poison when %a is the signed maximum, true at
+# i1, and the function returns OP %p, %b or OP %b, %p. The right operand
+# of a shift is its amount, so OP %b, %p shifts by a poison amount.
+# %b is 0 for and, -1 for or and 1 for xor; it is 1 where a shift shifts
+# %p, and 0 where it shifts by %p. and %p, 0, or %p, -1 and a shift of 0
+# would each give one value whatever %p is, but they give poison.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's; where fir-ref returns
+# poison, any value of the type does.
+# Where fir-ref returns poison, an interpreter-only test of the same
+# run checks that it is exactly poison.
+tests = [
+  { func = "@and_left", args = ["9223372036854775807", "0"] },
+  { func = "@and_left", args = ["9223372036854775807", "0"], expect = ["poison"] },
+  { func = "@and_left", args = ["0", "0"] },
+  { func = "@and_right", args = ["9223372036854775807", "0"] },
+  { func = "@and_right", args = ["9223372036854775807", "0"], expect = ["poison"] },
+  { func = "@and_right", args = ["0", "0"] },
+  { func = "@or_left", args = ["9223372036854775807", "-1"] },
+  { func = "@or_left", args = ["9223372036854775807", "-1"], expect = ["poison"] },
+  { func = "@or_left", args = ["0", "-1"] },
+  { func = "@or_right", args = ["9223372036854775807", "-1"] },
+  { func = "@or_right", args = ["9223372036854775807", "-1"], expect = ["poison"] },
+  { func = "@or_right", args = ["0", "-1"] },
+  { func = "@xor_left", args = ["9223372036854775807", "1"] },
+  { func = "@xor_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
+  { func = "@xor_left", args = ["0", "1"] },
+  { func = "@xor_right", args = ["9223372036854775807", "1"] },
+  { func = "@xor_right", args = ["9223372036854775807", "1"], expect = ["poison"] },
+  { func = "@xor_right", args = ["0", "1"] },
+  { func = "@shl_left", args = ["9223372036854775807", "1"] },
+  { func = "@shl_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
+  { func = "@shl_left", args = ["0", "1"] },
+  { func = "@shl_right", args = ["9223372036854775807", "0"] },
+  { func = "@shl_right", args = ["9223372036854775807", "0"], expect = ["poison"] },
+  { func = "@shl_right", args = ["0", "0"] },
+  { func = "@lshr_left", args = ["9223372036854775807", "1"] },
+  { func = "@lshr_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
+  { func = "@lshr_left", args = ["0", "1"] },
+  { func = "@lshr_right", args = ["9223372036854775807", "0"] },
+  { func = "@lshr_right", args = ["9223372036854775807", "0"], expect = ["poison"] },
+  { func = "@lshr_right", args = ["0", "0"] },
+  { func = "@ashr_left", args = ["9223372036854775807", "1"] },
+  { func = "@ashr_left", args = ["9223372036854775807", "1"], expect = ["poison"] },
+  { func = "@ashr_left", args = ["0", "1"] },
+  { func = "@ashr_right", args = ["9223372036854775807", "0"] },
+  { func = "@ashr_right", args = ["9223372036854775807", "0"], expect = ["poison"] },
+  { func = "@ashr_right", args = ["0", "0"] },
+]

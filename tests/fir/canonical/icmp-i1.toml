@@ -1,0 +1,48 @@
+# Tests of icmp-i1.fir: icmp with each of its ten predicates at i1, on
+# every pair of false and true (#16). true is -1 read as signed and 1
+# read as unsigned, so true and false are in one order for the s
+# predicates and in the other for the u predicates.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must equal fir-ref's.
+tests = [
+  { func = "@eq", args = ["false", "false"] },
+  { func = "@eq", args = ["false", "true"] },
+  { func = "@eq", args = ["true", "false"] },
+  { func = "@eq", args = ["true", "true"] },
+  { func = "@ne", args = ["false", "false"] },
+  { func = "@ne", args = ["false", "true"] },
+  { func = "@ne", args = ["true", "false"] },
+  { func = "@ne", args = ["true", "true"] },
+  { func = "@slt", args = ["false", "false"] },
+  { func = "@slt", args = ["false", "true"] },
+  { func = "@slt", args = ["true", "false"] },
+  { func = "@slt", args = ["true", "true"] },
+  { func = "@sle", args = ["false", "false"] },
+  { func = "@sle", args = ["false", "true"] },
+  { func = "@sle", args = ["true", "false"] },
+  { func = "@sle", args = ["true", "true"] },
+  { func = "@sgt", args = ["false", "false"] },
+  { func = "@sgt", args = ["false", "true"] },
+  { func = "@sgt", args = ["true", "false"] },
+  { func = "@sgt", args = ["true", "true"] },
+  { func = "@sge", args = ["false", "false"] },
+  { func = "@sge", args = ["false", "true"] },
+  { func = "@sge", args = ["true", "false"] },
+  { func = "@sge", args = ["true", "true"] },
+  { func = "@ult", args = ["false", "false"] },
+  { func = "@ult", args = ["false", "true"] },
+  { func = "@ult", args = ["true", "false"] },
+  { func = "@ult", args = ["true", "true"] },
+  { func = "@ule", args = ["false", "false"] },
+  { func = "@ule", args = ["false", "true"] },
+  { func = "@ule", args = ["true", "false"] },
+  { func = "@ule", args = ["true", "true"] },
+  { func = "@ugt", args = ["false", "false"] },
+  { func = "@ugt", args = ["false", "true"] },
+  { func = "@ugt", args = ["true", "false"] },
+  { func = "@ugt", args = ["true", "true"] },
+  { func = "@uge", args = ["false", "false"] },
+  { func = "@uge", args = ["false", "true"] },
+  { func = "@uge", args = ["true", "false"] },
+  { func = "@uge", args = ["true", "true"] },
+]

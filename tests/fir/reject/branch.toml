@@ -1,0 +1,423 @@
+# Must-reject texts of #19's ops, br and cond_br, that do not decode. br
+# decodes with no attributes, no operands and no results: the values it
+# passes belong to its one successor. cond_br decodes with no
+# attributes, one operand, its i1 condition, and no results. A text
+# that breaks one of these does not decode: each is a parse error at
+# the op's name (ADR-2026-10-30-0815). Every value is defined and every
+# successor names a block that takes what it passes, so the text breaks
+# nothing else, but for a ptr type, which validation would also reject.
+# The spec's op set calls cond_br condBr, a name that the text does not
+# accept. validation-branch.toml holds the texts of br and cond_br that
+# decode and break a rule of validation.
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no attributes: the word likely is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br likely ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br 1 ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no attributes: a string is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br "loop" ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no attributes: a symbol is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br @f ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no attributes: an applied attribute is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br weight(1) ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no operands: the values it passes belong to its successor, and %a is an operand"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  br %a, ^b(%a) @0
+^b(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no operands: an i1 condition is not one, as cond_br takes it"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  br %c, ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br takes no operands: a ptr operand is not one; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%p: ptr, %a: i32) -> i32 {
+^entry:
+  br %p, ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br defines no value, not an i32"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = br ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "br defines no value, not a ptr; a ptr value is also invalid, but decoding fails first"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: ptr = br ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes no attributes: the word likely is not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br likely %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes no attributes: an integer is not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br 1 %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes no attributes: an applied attribute, such as a branch weight, is not one"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br weights(3, 1) %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br's condition is an i1, not an i8"
+text = '''
+func @f(%c: i8, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br's condition is an i1, not an i32, the type of the values it passes"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  cond_br %a, ^x(%a), ^y(%a) @0
+^x(%p: i32):
+  ret %p @0
+^y(%q: i32):
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br's condition is an i1, not an i64"
+text = '''
+func @f(%c: i64, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br's condition is an i1, not an i2"
+text = '''
+func @f(%c: i2, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br's condition is an i1, not a ptr; a ptr parameter is also invalid, but decoding fails first"
+text = '''
+func @f(%p: ptr, %a: i32) -> i32 {
+^entry:
+  cond_br %p, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes one operand, its condition, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  cond_br ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes one operand, its condition, not two"
+text = '''
+func @f(%c: i1, %d: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, %d, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br takes one operand, its condition: the values it passes belong to its successors, and %a is an operand"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, %a, ^x(%a), ^y(%a) @0
+^x(%p: i32):
+  ret %p @0
+^y(%q: i32):
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br defines no value, not an i1"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  %r: i1 = cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br defines no value, not two"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  %r: i32, %s: i32 = cond_br %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "cond_br is written cond_br: condBr, its name in the spec's op set, names no op"
+text = '''
+func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  condBr %c, ^x, ^y @0
+^x:
+  ret %a @0
+^y:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

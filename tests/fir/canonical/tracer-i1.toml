@@ -1,0 +1,23 @@
+# Tests of tracer-i1.fir: const, add and ret at i1.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's.
+tests = [
+  { func = "@id", args = ["false"] },
+  { func = "@id", args = ["true"] },
+  { func = "@add", args = ["false", "false"] },
+  { func = "@add", args = ["false", "true"] },
+  { func = "@add", args = ["true", "false"] },
+  { func = "@add", args = ["true", "true"] },
+  { func = "@double", args = ["false"] },
+  { func = "@double", args = ["true"] },
+  { func = "@inc", args = ["false"] },
+  { func = "@inc", args = ["true"] },
+  { func = "@const_false" },
+  { func = "@const_true" },
+  { func = "@sum8", args = ["true", "true", "true", "true", "true", "true", "true", "true"] },
+  { func = "@sum8", args = ["true", "false", "false", "false", "false", "false", "false", "false"] },
+  { func = "@sum8", args = ["false", "false", "false", "false", "false", "false", "true", "true"] },
+  { func = "@sum8", args = ["false", "false", "false", "false", "false", "false", "false", "true"] },
+  { func = "@last", args = ["false", "false", "false", "false", "false", "false", "false", "true"] },
+  { func = "@none", args = ["false"] },
+]
