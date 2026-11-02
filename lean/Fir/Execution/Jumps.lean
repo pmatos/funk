@@ -10,7 +10,9 @@ function, and its terminators keep to the rules that validation makes of
 them.
 
 * A terminator that jumps names a successor that it has, and gives no
-  results, since the interpreter binds none for it.
+  results, since the interpreter binds none for it. Validation does not
+  rule such results out in general, but no core terminator has any
+  (#89).
 * A terminator that returns returns values of the function's result types.
 
 Branches and loops are included: a run may jump to any block, as often as
@@ -132,7 +134,9 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 
 /-- The ops of `f` run within `f`: no op calls a function; a terminator
 that jumps names a successor that it has, and gives no results; and a
-terminator that returns returns values of `f`'s result types. -/
+terminator that returns returns values of `f`'s result types. The
+interpreter binds no result of a terminator, and validation does not rule
+them out for every dialect (#89). -/
 structure Func.Local (f : Func d) : Prop where
   noCall : ∀ b ∈ f.blocks, ∀ o ∈ b.body, callee? o.op = none
   jumps : ∀ b ∈ f.blocks, ∀ o ∈ b.body, isTerminator o.op = true → ∀ args i,
