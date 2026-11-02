@@ -138,4 +138,27 @@ structure Module.Valid (m : Module d) : Prop where
   locs : LocTable.Valid m.locs
   funcs : ∀ f ∈ m.funcs, f.Valid m.context
 
+/-!
+# Valid op instances
+
+An op instance's types are its operand types and its result types. They
+are _valid_ when validation accepts each of them (`TypesValid`), as it
+accepts the types of every value that a valid function defines. For the
+core dialect that is `iN` with `1 ≤ N ≤ maxWidth`, never `ptr`. It reads
+no context: it is a property of the op instance alone, where an op's own
+rule (`validOp`) reads the module's symbols and the function's result
+types.
+
+Every op of a valid function is a valid op instance
+(`Func.Valid.typesValid`, in the section on what the lawful class gives),
+since the general rules check its operand and result types against the
+types of the values it uses and defines. The poison obligations speak
+only of valid op instances (ADR-2026-11-02-1515).
+-/
+
+/-- Validation accepts the types of the op instance `op`: each of its
+operand types and each of its result types is valid for its dialect. -/
+def TypesValid (op : d.Op) : Prop :=
+  (∀ t ∈ sig op, validTy t) ∧ ∀ t ∈ returnTypes op, validTy t
+
 end Fir

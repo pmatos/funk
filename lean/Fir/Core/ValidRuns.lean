@@ -1,5 +1,4 @@
 import Fir.Core.CallFree
-import Fir.Core.CallLaws
 import Fir.Execution.Calls
 
 /-!
@@ -22,12 +21,12 @@ sections:
   `cond_br` and `ret` keep to the rules of their terminators, as for a
   function without calls. So no path of its run is stuck
   (`Func.neverStuck_of_inModule`);
-* every core op is total (`Core.Op.total_all`): each op but `call` by the
-  obligations of its family, and `call` by its stand-in, which the
-  interpreter never runs. So its run has an outcome at every budget
-  (`Func.progress_of_inModule`). A call's own way to go on is its
-  callee's run, which the induction on the budget in the section on
-  progress with calls covers (`Module.calls_hasPath`).
+* every core terminator and every core op with no callee is total
+  (`Core.Op.total_all`), by the obligations of its family: every core op
+  but `call`. So its run has an outcome at every budget
+  (`Func.progress_of_inModule`). `call` needs no rule of its own: its way
+  to go on is its callee's run, which the induction on the budget in the
+  section on progress with calls covers (`Module.calls_hasPath`).
 
 The theorems for core functions without calls (`Core.callFree_fuelMonotone`,
 `Core.callFree_progress`, `Core.callFree_neverStuck`) keep their
@@ -43,11 +42,16 @@ theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect
     ∃ ts rs, op = .call s ts rs := by
   cases op <;> (cases h; try exact ⟨_, _, rfl⟩)
 
-/-- Every core op is total, `call` by its stand-in. -/
-theorem Op.total_all (op : Op) : OpTotal (d := CoreDialect) op := by
-  cases h : op.isCall with
-  | false => exact op.total h
-  | true => cases op <;> first | exact call_total _ _ _ | cases h
+/-- Every core terminator and every core op with no callee is total: every
+core op but `call`. -/
+theorem Op.total_all (op : Op)
+    (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) :
+    OpTotal (d := CoreDialect) op := by
+  cases hc : op.isCall with
+  | false => exact op.total hc
+  | true =>
+    cases op <;> try cases hc
+    all_goals rcases h with h | h <;> cases h
 
 /-- Every function of a valid core module runs within the module: each
 `call` names a function of the module of its type, by its validation rule,
@@ -78,7 +82,7 @@ theorem runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (args : HVector toType (f.p
     RunsWell (funcRuns M f args) :=
   have hm := fun g hg => inModule_of_valid (hM.funcs g hg)
   ⟨Func.fuelMonotone M f args,
-    Func.progress_of_inModule hM.funcs hm (fun _ _ _ _ o _ => o.op.total_all) hf args,
+    Func.progress_of_inModule hM.funcs hm (fun _ _ _ _ o _ hc => o.op.total_all hc) hf args,
     Func.neverStuck_of_inModule hM.funcs hm hf args⟩
 
 /-- More fuel never changes how a run of a function of a valid core module

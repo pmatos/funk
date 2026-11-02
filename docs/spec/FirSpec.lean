@@ -152,8 +152,6 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.BranchLaws "Branch obligations" (level := 2)}
 
-{includeLiterate "." Fir.Core.CallLaws "Call obligations" (level := 2)}
-
 {includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
 
 {includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
@@ -199,6 +197,10 @@ functions, blocks and ops.
 {includeLiterate "." Fir.Execution.Replace "Replacing a callee" (level := 2)}
 
 {includeLiterate "." Fir.Core.CallRefine "Refinement through core calls" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Lawful "What the lawful class gives" (level := 2)}
+
+{includeLiterate "." Fir.Core.Lawful "The core dialect's poison obligations" (level := 2)}
 
 # Text format
 

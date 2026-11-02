@@ -48,7 +48,6 @@ import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
-import Fir.Core.CallLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
 import Fir.Execution.Modes
@@ -72,6 +71,8 @@ import Fir.Execution.RefineDown
 import Fir.Execution.RefineRuns
 import Fir.Execution.Replace
 import Fir.Core.CallRefine
+import Fir.Execution.Lawful
+import Fir.Core.Lawful
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print

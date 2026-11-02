@@ -217,7 +217,12 @@ are on `main`:
   no path of a run of a function of a valid module is stuck, and that the
   run has an outcome at every budget, and that a call refines when its
   arguments do, and when its callee's body is replaced so that the
-  callee, run in the new module, refines the old one.
+  callee, run in the new module, refines the old one. Every core op
+  instance that validation accepts meets the poison obligations
+  (`LawfulDialectPoison CoreDialect`); a call has no op-level rule, since
+  its meaning is its callee's run
+  ([ADR-2026-11-02-1514](docs/adrs/2026-11-02-1514-a-call-has-no-op-level-rule.md),
+  [ADR-2026-11-02-1515](docs/adrs/2026-11-02-1515-poison-obligations-cover-valid-op-instances.md)).
 
 These parts of M0 do not exist yet:
 

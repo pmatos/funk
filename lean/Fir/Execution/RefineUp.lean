@@ -6,7 +6,8 @@ import Fir.Execution.BlackBox
 Every return and every UB of a run of ops in the target module is allowed
 by the source's run of the same ops at some budget, from environments of
 which the target's refines the source's (`Func.runOps_allowed`), when
-every op is monotone and every call names the same function in both
+every op that runs by its own rule, a terminator or an op with no
+callee, is monotone, and every call names the same function in both
 modules or a black box (`CallsRefined`). Calls and recursion are
 included.
 
@@ -103,10 +104,12 @@ theorem CallsRefined.callee_allowed {M M' : Module d} {bound : Nat} (hc : CallsR
 
 /-- Every return and UB of the target's run of ops is allowed by the
 source's at some budget, from environments of which the target's refines
-the source's, when every op is monotone and every call names the same
-function in both modules or a black box. -/
-theorem Func.runOps_allowed (hmono : ∀ op : d.Op, OpMonotone op) {M M' : Module d} {bound : Nat}
-    (hcalls : CallsRefined M M' bound) (n : Nat) :
+the source's, when every terminator and every op with no callee is
+monotone, and every call names the same function in both modules or a
+black box. -/
+theorem Func.runOps_allowed
+    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
+    {M M' : Module d} {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
     ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)), env.IsRefinedBy env' →
       ∀ e', (Func.runOps (m := SetM) M' n f env' os).run e' →
         Allowed (fun N => Func.runOps (m := SetM) M N f env os) e' := by
@@ -138,12 +141,12 @@ theorem Func.runOps_allowed (hmono : ∀ op : d.Op, OpMonotone op) {M M' : Modul
       cases (Func.stepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok .ret, he₀, _ =>
@@ -152,7 +155,7 @@ theorem Func.runOps_allowed (hmono : ∀ op : d.Op, OpMonotone op) {M M' : Modul
             HVector.toDVals_isRefinedBy hr⟩
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (.goto _), he₀, rfl =>
@@ -160,12 +163,12 @@ theorem Func.runOps_allowed (hmono : ∀ op : d.Op, OpMonotone op) {M M' : Modul
           exact step (fun N x _ h => .goto hreg hargs hT hos he₀ hj₁ h) (ihn _ _ _ _ henv₁ _ he)
       | denoteUB hreg hargs' hT hc hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
         | .ok rs, he₀, hrs =>

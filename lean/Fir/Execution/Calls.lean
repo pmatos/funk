@@ -43,9 +43,12 @@ one of the section on jumps, `Env.Scoped`. A call is the one new step:
   than it had, so the induction covers the rest of its run.
 
 `NeverStuck` needs nothing more of the ops' semantics. `Progress` needs
-each op to be total (`OpTotal`), so that each step has a way to go on. A
-callee's run that ends with UB or out of fuel ends its caller's run so,
-and that is a way for it to end.
+each op that runs by its own rule, a terminator or an op with no callee,
+to be total (`OpTotal`), so that each step has a way to go on. An op with
+a callee goes on by its callee's run, which the induction covers, and
+needs no rule of its own (ADR-2026-11-02-1514). A callee's run that ends
+with UB or out of fuel ends its caller's run so, and that is a way for it
+to end.
 -/
 
 namespace Fir
@@ -166,10 +169,12 @@ theorem Module.calls_noStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
 /-- A run of a function of the module `M` has a path, from any op of any of
 its blocks on, with an environment that holds the values in scope there,
 when every function of `M` is valid and runs within `M`, and every op of
-`M` is total. -/
+`M` that runs by its own rule, a terminator or an op with no callee, is
+total. -/
 theorem Module.calls_hasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (hm : ∀ g ∈ M.funcs, g.InModule M)
-    (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body, OpTotal o.op) (n : Nat) :
+    (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body,
+      isTerminator o.op = true ∨ callee? o.op = none → OpTotal o.op) (n : Nat) :
     ∀ f ∈ M.funcs, ∀ b ∈ f.blocks, ∀ (i : Nat) (env : Env d), i < b.body.length →
       env.Scoped f b.label i → HasPath (Func.runOps (m := SetM) M n f env (b.body.drop i)) := by
   induction n using Nat.strongRecOn with
@@ -181,7 +186,6 @@ theorem Module.calls_hasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     have hvf := hv f hf
     have ho := List.getElem_mem hi
     obtain ⟨hreg, ⟨args, hargs⟩, hrty, hlast, hnext⟩ := Func.op_ready_of_scoped hvf hb hi hold
-    have htot := ht f hf b hb _ ho args
     rw [List.drop_eq_getElem_cons hi]
     simp only [Func.runOps]
     rw [ite_eq_right (by simp [hreg])]
@@ -190,7 +194,7 @@ theorem Module.calls_hasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     split
     · rename_i hT
       rw [ite_eq_right (by simp [hlast hT])]
-      refine HasPath.bind_lift (htot.2 hT) fun x hex => ?_
+      refine HasPath.bind_lift ((ht f hf b hb _ ho (.inl hT) args).2 hT) fun x hex => ?_
       cases x with
       | ret => rw [ite_eq_left ((hm f hf).returns b hb _ ho hT args hex)]; exact HasPath.pure'
       | goto k =>
@@ -205,7 +209,8 @@ theorem Module.calls_hasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     · rename_i hT
       have hTf : isTerminator b.body[i].op = false := by simpa using hT
       split
-      · refine HasPath.bind_lift (htot.1 hTf) fun rs _ => ?_
+      · rename_i hc
+        refine HasPath.bind_lift ((ht f hf b hb _ ho (.inr hc) args).1 hTf) fun rs _ => ?_
         have hlen : (b.body[i].results.map (·.1)).length = rs.toDVals.length := by
           have h1 := congrArg List.length (HVector.toDVals_types rs)
           have h2 := congrArg List.length hrty
@@ -267,10 +272,12 @@ theorem Func.neverStuck_of_inModule (hv : ∀ g ∈ M.funcs, g.Valid ctx)
 
 /-- A run of a function of the module `M` has an outcome at every budget,
 on any argument vector, calls and recursion included, when every function
-of `M` is valid and runs within `M`, and every op of `M` is total. -/
+of `M` is valid and runs within `M`, and every op of `M` that runs by its
+own rule, a terminator or an op with no callee, is total. -/
 theorem Func.progress_of_inModule (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (hm : ∀ g ∈ M.funcs, g.InModule M)
-    (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body, OpTotal o.op) {f : Func d}
+    (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body,
+      isTerminator o.op = true ∨ callee? o.op = none → OpTotal o.op) {f : Func d}
     (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
     Progress (f.runs M args) := by
   intro n

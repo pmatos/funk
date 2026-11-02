@@ -10,11 +10,12 @@ arguments that refine others; and in a module where one callee has a new
 body. Their proofs share one engine. It follows a path of the target's run
 and finds a way that the source's run allows it. Each op runs alike in
 both, on operands of which the target's refine the source's: what it does
-on them is allowed by what it does on the source's, since every op is
-monotone (`OpMonotone`). A call is where the two modules may differ. Each
-symbol names, in both, the same function, whose run the engine follows in
-turn, or a _black box_ (`BlackBox`): a function `g` of `M` and a function
-`g'` of `M'`, of the same parameter types, such that
+on them is allowed by what it does on the source's, since every op that
+runs by its own rule is monotone (`OpMonotone`). A call is where the two
+modules may differ. Each symbol names, in both, the same function, whose
+run the engine follows in turn, or a _black box_ (`BlackBox`): a function
+`g` of `M` and a function `g'` of `M'`, of the same parameter types, such
+that
 
 * on arguments that refine others, the observable behaviour of `g'`
   refines that of `g`: a fact about their whole runs, which the engine

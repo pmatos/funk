@@ -35,23 +35,22 @@ ticket then proves the obligations of its ops: #14 for `add` with its flags,
 `sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16 for
 `icmp` and `select`, #17 for the width changes, #18 for the divisions, #19
 for the branches and #20 for `call`. The last of them gives
-`LawfulDialectPoison CoreDialect`. The exceptions' rules are tested by their
+`LawfulDialectPoison CoreDialect` (the section on the core dialect's
+poison obligations). The exceptions' rules are tested by their
 tickets: `freeze` by #14, `select` by #16, the branches and block arguments
 by #19, `call` by #20.
 
 `call` gets its meaning from the call effect, which the interpreter runs
 with the fuel budget that the caller has left (ADR-2026-11-02-0836): #20
 names the callee of `call @g`, `@g`. The set monad has no module and no
-such effect, so the `denote` of `call` in `SetM`, which the op-level
-obligations look at, is only a stand-in, immediate UB (`callStandIn`, in
-the section on calls), and its totality and monotonicity
-(`Core.call_total`, `Core.call_monotone`) say nothing about calls. Their
-real counterparts hold at function level (the section on refinement
-through core calls): a call on arguments that refine others refines the
-call on those others (`Core.args_isRefinedBy`), and congruence in the
-callee: replacing a callee's body refines every caller when the callee,
-run in the new module, refines the old one
-(`Core.replaceBody_isRefinedBy`).
+such effect, so `call` has no rule there, and no op-level obligation: the
+obligations ask totality and monotonicity only of terminators and of ops
+with no callee (ADR-2026-11-02-1514). Their counterparts for calls hold at
+function level (the section on refinement through core calls): a call on
+arguments that refine others refines the call on those others
+(`Core.args_isRefinedBy`), and congruence in the callee: replacing a
+callee's body refines every caller when the callee, run in the new
+module, refines the old one (`Core.replaceBody_isRefinedBy`).
 
 Below, for every semantics, a poison core value is refined by every value
 of its type, and `const` meets its poison clauses and is monotone. Its

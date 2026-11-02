@@ -92,8 +92,10 @@ for every function of every valid core module (see "Fuel and progress").
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; the only computations that branch are
 the ops', which the interpreter lifts into `ExceptT Stuck m` whole. A path
-is lost only where an op has no outcome, which each op's totality
-obligation, `OpTotal`, rules out.
+is lost only where an op has no outcome, which the totality obligation,
+`OpTotal`, rules out for every op that the interpreter runs by its own
+rule: a terminator, or an op with no callee. An op with a callee runs its
+callee, never its `denote`.
 
 Effects belong to the dialect, so the interpreter does not change when a
 dialect needs a new one. `freeze`'s rule calls `choose`, and the divisions'
