@@ -1,10 +1,40 @@
-"""Tests of how the harness reads what funk, fir-ref and native code print."""
+"""Tests of how the harness runs native code, and reads what funk, fir-ref
+and native code print."""
 
+import json
+import resource
+import sys
 import unittest
 
 from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
 from sets import BudgetExceeded, Outcomes, Path
-from tools import Ran, Verdict, build_failure, native_values, outcomes, path, verdict
+from tools import (
+    DATA_LIMIT,
+    Ran,
+    Verdict,
+    build_failure,
+    native_values,
+    outcomes,
+    path,
+    run,
+    run_native,
+    verdict,
+)
+
+LIMITS = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+# A child that prints its soft and hard limits on data and address space,
+# then maps as many bytes as its argument says, and exits with ENOMEM when
+# it cannot.
+MAP = """
+import errno, json, mmap, resource, sys
+limits = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+print(json.dumps([resource.getrlimit(r) for r in limits]))
+flags = mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS | mmap.MAP_NORESERVE
+try:
+    mmap.mmap(-1, int(sys.argv[1]), flags=flags)
+except OSError as e:
+    sys.exit(errno.errorcode[e.errno])
+"""
 
 
 class FirRefRun(unittest.TestCase):
@@ -135,6 +165,32 @@ class Native(unittest.TestCase):
         self.assertIsInstance(
             native_values(Ran(0, '{"values":[]}\n', "warning\n")), str
         )
+
+
+class DataLimit(unittest.TestCase):
+    def setUp(self):
+        own = [resource.getrlimit(r)[0] for r in LIMITS]
+        unlimited = [resource.RLIM_INFINITY] * 2
+        why = "these tests need no limit on data or address space of their own"
+        self.assertEqual(own, unlimited, why)
+
+    def mapping(self, runner, size: int) -> tuple[Ran, list]:
+        """Runs MAP with `runner` on `size`: how it ended, and its limits."""
+        ran = runner([sys.executable, "-c", MAP, str(size)])
+        return ran, json.loads(ran.stdout)
+
+    def test_native_code_runs_under_the_limit(self):
+        ran, limits = self.mapping(run_native, DATA_LIMIT // 2)
+        self.assertEqual(ran.status, 0, ran.stderr)
+        self.assertEqual(limits, [[DATA_LIMIT, DATA_LIMIT]] * 2)
+        ran, limits = self.mapping(run_native, DATA_LIMIT + 1)
+        self.assertEqual((ran.status, ran.stderr), (1, "ENOMEM\n"))
+        self.assertEqual(limits, [[DATA_LIMIT, DATA_LIMIT]] * 2)
+
+    def test_the_other_tools_run_without_it(self):
+        ran, limits = self.mapping(run, DATA_LIMIT + 1)
+        self.assertEqual(ran.status, 0, ran.stderr)
+        self.assertEqual(limits, [list(resource.getrlimit(r)) for r in LIMITS])
 
 
 class Verdicts(unittest.TestCase):

@@ -1,6 +1,7 @@
 # The differential harness is a Python program, `scripts/harness/`, that `scripts/check-harness.sh` runs over the corpus
 
-Status: accepted; extended by ADR-2026-10-31-0003 and ADR-2026-10-31-0208
+Status: accepted; extended by ADR-2026-10-31-0003, ADR-2026-10-31-0208 and
+ADR-2026-11-02-2250
 
 ## Context
 

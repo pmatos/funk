@@ -28,11 +28,15 @@ print(json.dumps({"file": sys.argv[-1], "verdict": verdict, "diagnostics": diags
 sys.exit(0 if verdict == "accepted" else 1)
 """
 
+# The executable that the stand-in for funk builds prints its values only
+# when it runs under a limit on data and address space.
 FUNK = """
 if sys.argv[1] == "build":
     out = sys.argv[sys.argv.index("-o") + 1]
     with open(out, "w") as f:
-        f.write("#!/bin/sh\\necho '{\\"values\\":[\\"7\\"]}'\\n")
+        f.write("#!/bin/sh\\n")
+        f.write('[ "$(ulimit -d)" != unlimited ] && [ "$(ulimit -v)" != unlimited ] || exit 3\\n')
+        f.write("echo '{\\"values\\":[\\"7\\"]}'\\n")
     os.chmod(out, 0o755)
     print(json.dumps({"file": sys.argv[-1], "verdict": "accepted", "diagnostics": []}))
     sys.exit(0)
