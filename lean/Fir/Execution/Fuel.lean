@@ -47,12 +47,13 @@ that jumps names a successor that it has and gives no results, and a
 terminator that returns returns values of the function's result types. Its
 run may jump and loop. No path of it is stuck (`Func.neverStuck_of_local`),
 and when its ops are total it has an outcome at every budget
-(`Func.progress_of_local`). Every valid core function runs within itself,
-and every core op but `call` is total, so both hold for every valid core
-function without a `call` op. They are statements about the run in the set
-monad, choices included, and `fir-ref`'s modes report only what that run
-does (`Core.exhaustive_stuck`, `Core.scripted_stuck`,
-`Core.sampled_stuck`), so no mode reports a stuck path of such a function.
+(`Func.progress_of_local`). A valid core function without a `call` op runs
+within itself, and its ops are total, as every core op but `call` is. So
+both hold for every valid core function without a `call` op. They are
+statements about the run in the set monad, choices included, and
+`fir-ref`'s modes report only what that run does (`Core.exhaustive_stuck`,
+`Core.scripted_stuck`, `Core.sampled_stuck`), so no mode reports a stuck
+path of such a function.
 #20 extends progress and the no-stuck obligation to calls and recursion,
 when it gives `call` its callee.
 -/

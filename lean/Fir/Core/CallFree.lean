@@ -19,12 +19,13 @@ from the general theorems of the previous sections:
 
 * fuel monotonicity holds for every function of every module
   (`Func.fuelMonotone`);
-* every valid core function runs within itself (`Core.local_of_valid`): no
-  core op calls a function yet; `br` and `cond_br` go only to successors
-  they have (`Core.br_goto_lt`, `Core.condBr_goto_lt`) and give no
-  results; and `ret`, the only core op whose exit returns, returns values
-  of the function's result types, by its validation rule. So no path of
-  its run is stuck (`Func.neverStuck_of_local`);
+* every valid core function without a `call` op runs within itself
+  (`Core.local_of_valid`): none of its ops calls a function; `br` and
+  `cond_br` go only to successors they have (`Core.br_goto_lt`,
+  `Core.condBr_goto_lt`) and give no results; and `ret`, the only core op
+  whose exit returns, returns values of the function's result types, by
+  its validation rule. So no path of its run is stuck
+  (`Func.neverStuck_of_local`);
 * every core op but `call` is total, by the obligations that each family
   proves of its ops (`Core.Op.total`). So such a function's run has an
   outcome at every budget (`Func.progress_of_local`).
@@ -107,10 +108,15 @@ theorem Op.exit_ret (op : Op) (args : HVector toType (Fir.sig (d := CoreDialect)
         split at h' <;> cases h'
   | _ => cases h
 
-/-- Every valid core function runs within itself. -/
+/-- A core op other than `call` calls no function. -/
+theorem Op.callee_none : (op : Op) → op.isCall = false → callee? (d := CoreDialect) op = none
+  | .call .., h => nomatch h
+  | _, _ => rfl
+
+/-- Every valid core function without a `call` op runs within itself. -/
 theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
-    (hv : f.Valid ctx) : f.Local where
-  noCall _ _ _ _ := rfl
+    (hv : f.Valid ctx) (hc : CallFree f) : f.Local where
+  noCall b hb o ho := o.op.callee_none (hc b hb o ho)
   jumps _ _ o _ hT args _ h := Op.exit_goto o.op args hT h
   returns b hb o ho _ args h := by
     obtain ⟨ts, hts⟩ := Op.exit_ret o.op args h
@@ -132,8 +138,8 @@ every argument vector, jumps and loops included. -/
 theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
     (args : HVector toType (f.params.map (·.2))) : RunsWell (funcRuns M f args) :=
   ⟨Func.fuelMonotone M f args,
-    Func.progress_of_local hv (local_of_valid hv) (total_of_callFree hc) M args,
-    Func.neverStuck_of_local hv (local_of_valid hv) M args⟩
+    Func.progress_of_local hv (local_of_valid hv hc) (total_of_callFree hc) M args,
+    Func.neverStuck_of_local hv (local_of_valid hv hc) M args⟩
 
 /-- More fuel never changes how a run of a valid core function without
 calls returns or hits UB. -/

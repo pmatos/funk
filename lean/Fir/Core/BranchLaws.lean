@@ -33,7 +33,8 @@ op: every `goto i` that its exit may give has `i` below its successor
 count. `br_goto_lt` and `condBr_goto_lt` prove it of `br`, which goes only
 to successor `0` of its one, and of `cond_br`, which goes only to
 successor `0` or `1` of its two. The proof that every valid core function
-runs within itself rests on them (`Core.local_of_valid`).
+without a `call` op runs within itself rests on them
+(`Core.local_of_valid`).
 -/
 
 namespace Fir.Core
