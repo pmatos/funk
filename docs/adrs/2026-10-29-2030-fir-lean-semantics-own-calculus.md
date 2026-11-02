@@ -1,6 +1,6 @@
 # fir's Lean semantics is its own calculus, in the shape of LeanMLIR's classes
 
-Status: accepted; refined by ADR-2026-11-02-0836
+Status: accepted; refined by ADR-2026-11-02-0836 and ADR-2026-11-02-2248
 
 ## Context
 
