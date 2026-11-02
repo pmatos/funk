@@ -31,9 +31,25 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
     }
 }
 
+/// The function that `op` calls, if it is a `call`.
+pub fn callee(op: &Op) -> Option<&str> {
+    match (op.name.as_str(), op.attrs.as_slice()) {
+        ("call", [Attr::Sym(callee)]) => Some(callee),
+        _ => None,
+    }
+}
+
+/// The 8-byte words that a call with `args` arguments pushes before it
+/// calls: each argument past the sixth, and one word of padding when there
+/// is an odd number of them. The entry's wrappers call the same way.
+pub fn pushed_words(args: usize) -> usize {
+    let on_stack = args.saturating_sub(ARG_REGS.len());
+    on_stack + on_stack % 2
+}
+
 /// `%r = call @f %a, %b`.
 fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
-    let [Attr::Sym(callee)] = op.attrs.as_slice() else {
+    let Some(callee) = callee(op) else {
         return Err("call names its callee by one symbol".into());
     };
     if op.results.len() > 1 {
@@ -51,7 +67,7 @@ fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     }
     let on_stack = op.operands.get(ARG_REGS.len()..).unwrap_or_default();
     let pad = on_stack.len() % 2 == 1;
-    let pushed = (on_stack.len() + usize::from(pad))
+    let pushed = pushed_words(op.operands.len())
         .checked_mul(8)
         .and_then(|n| i32::try_from(n).ok())
         .ok_or("the call passes more arguments on the stack than 2 GiB holds")?;

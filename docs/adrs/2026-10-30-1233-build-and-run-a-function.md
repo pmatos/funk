@@ -1,6 +1,6 @@
 # A built executable runs one function: PROGRAM @FUNCTION ARG... prints {"values":[...]}
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-02-1132
 
 ## Context
 

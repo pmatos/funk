@@ -1,16 +1,26 @@
 //! Frames of a page or more are probed, and a built executable runs each
 //! function on a stack it reserves for it, so the process's stack limit does
-//! not bound a frame (ADR-2026-10-30-1230, ADR-2026-10-30-1233).
+//! not bound a frame (ADR-2026-10-30-1230, ADR-2026-10-30-1233). That stack
+//! covers every call the function can make (ADR-2026-11-02-1132).
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use funk_ir::{Attr, Block, Func, Location, Module, Op, dialects::core};
 use funk_x86_64::build;
+use funk_x86_64::frame::size_for;
 
 /// `@deep(%x: i64) -> i64`, which adds 1 to `%x` `n` times, one value per
 /// add, so its frame holds about `n` slots of 8 bytes.
 fn deep(m: &mut Module, n: usize) -> Func {
+    chained(m, "deep", n, &[])
+}
+
+/// `@name(%x: i64) -> i64`, which adds 1 to `%x` `n` times, one value per
+/// add, then passes the sum through a call to each of `callees` in turn,
+/// and returns what the last one gives: `n + 2` values, and one more for
+/// each call.
+fn chained(m: &mut Module, name: &str, n: usize, callees: &[&str]) -> Func {
     let here = m.locs.push(Location::Unknown);
     let i64 = core::int_type(64);
     let one = Op::new("const", here)
@@ -27,11 +37,31 @@ fn deep(m: &mut Module, n: usize) -> Func {
         b = b.op(add);
         last = v;
     }
+    for (k, callee) in callees.iter().enumerate() {
+        let r = format!("r{k}");
+        let call = Op::new("call", here)
+            .attr(Attr::Sym(callee.to_string()))
+            .operand(last)
+            .result(r.clone(), i64.clone());
+        b = b.op(call);
+        last = r;
+    }
     b = b.op(Op::new("ret", here).operand(last));
-    Func::new("deep")
-        .param("x", i64.clone())
-        .result(i64)
-        .block(b)
+    Func::new(name).param("x", i64.clone()).result(i64).block(b)
+}
+
+/// The stack that the table gives a function of one parameter, a run of
+/// which needs `need` bytes below its return address: the wrapper's return
+/// address, saved `%rbp` and frame of one slot, and 16 KiB for the
+/// runtime, rounded up to a page.
+fn figure(need: usize) -> usize {
+    (need + 16 + 16 + 16 * 1024).div_ceil(4096) * 4096
+}
+
+/// The bytes of a function's frame of `values` values, and its return
+/// address and saved `%rbp`.
+fn own(values: usize) -> usize {
+    usize::try_from(size_for(values).unwrap()).unwrap() + 16
 }
 
 /// `@seven() -> i8`, with a frame of one slot.
@@ -153,4 +183,66 @@ fn many_parameters_probe_the_wrapper_and_the_function() {
         &argv.iter().map(String::as_str).collect::<Vec<_>>(),
     );
     printed(&out, &((6 + n - 1) * 1000).to_string());
+}
+
+/// Checks that `out` reports, in one line, that the stack of `bytes` bytes
+/// for `@name` cannot be reserved.
+fn cannot_reserve(out: &Output, exe: &Path, bytes: usize, name: &str) {
+    assert_eq!(
+        (out.status.code(), text(&out.stdout), text(&out.stderr)),
+        (
+            Some(2),
+            String::new(),
+            format!(
+                "{}: cannot reserve {bytes} bytes of stack for @{name}\n",
+                exe.display()
+            )
+        )
+    );
+}
+
+/// `@top` calls `@mid`, which calls `@leaf`, each with a frame of more
+/// than a megabyte: far more than the 16 KiB of slack that a stack sized
+/// from `@top`'s frame alone had. The figure is the sum of the three, as
+/// the report of a stack that a limit of 1 MiB cannot hold shows.
+#[test]
+fn the_stack_of_a_run_covers_each_frame_of_a_chain_of_calls() {
+    let n = 150_000;
+    let mut m = Module::new();
+    let top = chained(&mut m, "top", n, &["mid"]);
+    let mid = chained(&mut m, "mid", n, &["leaf"]);
+    let leaf = chained(&mut m, "leaf", n, &[]);
+    let exe = built("chain", &m.func(top).func(mid).func(leaf));
+    printed(
+        &Command::new(&exe).args(["@top", "5"]).output().unwrap(),
+        &(3 * n + 5).to_string(),
+    );
+    printed(
+        &run_limited("-s 8192", &exe, &["@top", "5"]),
+        &(3 * n + 5).to_string(),
+    );
+    let leaf = own(n + 2);
+    let mid = own(n + 3) + leaf;
+    let top = own(n + 3) + mid;
+    for (name, need) in [("top", top), ("mid", mid), ("leaf", leaf)] {
+        let out = run_limited("-d 1024", &exe, &[&format!("@{name}"), "5"]);
+        cannot_reserve(&out, &exe, figure(need), name);
+    }
+}
+
+/// `@spiral` calls `@deep`, with its frame of more than a megabyte, and
+/// then itself without end. It is recursive, so it asks for as much stack
+/// as memory allows, but it needs at least a run's stack with no call in
+/// a cycle: its own frame and `@deep`'s. A limit of 1 MiB cannot hold that,
+/// and the report names those bytes.
+#[test]
+fn a_recursive_run_needs_at_least_the_stack_of_its_calls_out_of_the_cycle() {
+    let n = 150_000;
+    let mut m = Module::new();
+    let spiral = chained(&mut m, "spiral", 0, &["deep", "spiral"]);
+    let d = deep(&mut m, n);
+    let exe = built("spiral", &m.func(spiral).func(d));
+    let need = own(4) + own(n + 2);
+    let out = run_limited("-d 1024", &exe, &["@spiral", "5"]);
+    cannot_reserve(&out, &exe, figure(need), "spiral");
 }

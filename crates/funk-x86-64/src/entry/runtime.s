@@ -3,17 +3,20 @@
 # The executable runs one function of the module: `PROGRAM @FUNCTION ARG...`.
 # The runtime finds the function in the table `__funk_functions`, which the
 # entry generator writes after this file, and checks the argument count. It
-# reserves the stack that the table gives for the function, with a guard
-# page below it, and calls the function's wrapper on that stack. The wrapper
-# parses each argument with `__funk_rt_arg`, calls the function, and prints
-# each result with `__funk_rt_value`. The runtime then prints the line
-# {"values":[...]} on standard output and exits with 0. A bad command line,
-# or a stack that cannot be reserved, is reported in one line on standard
-# error, with exit status 2.
+# reserves the stack that the table gives for the function, which covers
+# every call it makes, or for a recursive function as much as memory allows
+# (ADR-2026-11-02-1132), with a guard page below it, and calls the
+# function's wrapper on that stack. The wrapper parses each argument with
+# `__funk_rt_arg`, calls the function, and prints each result with
+# `__funk_rt_value`. The runtime then prints the line {"values":[...]} on
+# standard output and exits with 0. A bad command line, a stack that cannot
+# be reserved, or a run that outgrows its stack is reported in one line on
+# standard error, with exit status 2.
 #
 # It uses no libc: only the Linux system calls write (1), mmap (9),
-# mprotect (10), rt_sigaction (13) and exit_group (231). Every routine
-# follows the System V AMD64 calling convention.
+# mprotect (10), rt_sigaction (13), rt_sigreturn (15), getpid (39),
+# kill (62), sysinfo (99), sigaltstack (131) and exit_group (231). Every
+# routine follows the System V AMD64 calling convention.
 
 	.text
 
@@ -67,14 +70,21 @@ __funk_rt_main:
 	call	__funk_rt_equal
 	testl	%eax, %eax
 	jnz	.Lfound
-	addq	$40, %rbx		# the next entry of the table
+	addq	$48, %rbx		# the next entry of the table
 	decq	%r14
 	jmp	.Lfind
 .Lfound:
 	cmpq	16(%rbx), %r12
 	jne	.Lcount
-	movq	32(%rbx), %rsi		# the stack the wrapper needs,
-	addq	$4096, %rsi		# and a guard page below it
+	movq	32(%rbx), %r12		# the stack the run needs, or the least
+	cmpq	$0, 40(%rbx)		# of it when the function is recursive:
+	je	.Lreserve		# then as much as memory allows
+	call	__funk_rt_memory
+	cmpq	%r12, %rax
+	jbe	.Lreserve
+	movq	%rax, %r12
+.Lreserve:
+	leaq	4096(%r12), %rsi	# the stack, and a guard page below it
 	xorl	%edi, %edi
 	movl	$3, %edx		# PROT_READ | PROT_WRITE
 	movl	$0x24022, %r10d		# MAP_PRIVATE | MAP_ANONYMOUS
@@ -84,7 +94,16 @@ __funk_rt_main:
 	movl	$9, %eax		# mmap
 	syscall
 	cmpq	$-4095, %rax
-	jae	.Lno_stack
+	jb	.Lreserved
+	cmpq	32(%rbx), %r12		# refused: try half as much, but never
+	jbe	.Lno_stack		# less than the run needs
+	shrq	$1, %r12
+	andq	$-4096, %r12
+	cmpq	32(%rbx), %r12
+	jae	.Lreserve
+	movq	32(%rbx), %r12
+	jmp	.Lreserve
+.Lreserved:
 	movq	%rax, %r14
 	movq	%rax, %rdi
 	movl	$4096, %esi
@@ -93,11 +112,14 @@ __funk_rt_main:
 	syscall
 	testq	%rax, %rax
 	jnz	.Lno_stack
+	movq	%r14, __funk_rt_guard(%rip)
+	movq	%r12, __funk_rt_stack(%rip)
+	movq	%r13, __funk_rt_function(%rip)
+	call	__funk_rt_catch_overflow
 	leaq	.Lopen(%rip), %rdi
 	movl	$(.Lopen_end - .Lopen), %esi
 	call	__funk_rt_out
-	movq	32(%rbx), %rax
-	leaq	4096(%r14,%rax), %rsp	# the top of the reserved stack
+	leaq	4096(%r14,%r12), %rsp	# the top of the reserved stack
 	call	*24(%rbx)
 	leaq	-32(%rbp), %rsp		# back on the process's stack
 	leaq	.Lclose(%rip), %rdi
@@ -150,6 +172,85 @@ __funk_rt_main:
 	call	__funk_rt_err_cstr
 	movl	$2, %edi
 	jmp	__funk_rt_exit
+
+# __funk_rt_memory() -> the bytes of memory and swap that the machine has,
+# by sysinfo, rounded down to a page and at most 2^62; 0 if sysinfo fails.
+__funk_rt_memory:
+	subq	$120, %rsp		# a struct sysinfo: 112 bytes
+	movq	%rsp, %rdi
+	movl	$99, %eax		# sysinfo
+	syscall
+	testq	%rax, %rax
+	jnz	2f
+	movq	32(%rsp), %rax		# totalram
+	addq	64(%rsp), %rax		# totalswap
+	jc	1f
+	movl	104(%rsp), %ecx		# mem_unit
+	mulq	%rcx
+	jc	1f
+	movabsq	$0x4000000000000000, %rcx
+	cmpq	%rcx, %rax
+	jbe	3f
+1:	movabsq	$0x4000000000000000, %rax
+	jmp	3f
+2:	xorl	%eax, %eax
+3:	andq	$-4096, %rax
+	addq	$120, %rsp
+	ret
+
+# __funk_rt_catch_overflow(): has SIGSEGV run __funk_rt_overflow on a
+# stack of its own, since a run that outgrew its stack has none left.
+__funk_rt_catch_overflow:
+	leaq	.Lalt_stack(%rip), %rdi
+	xorl	%esi, %esi
+	movl	$131, %eax		# sigaltstack
+	syscall
+	movl	$11, %edi		# SIGSEGV
+	leaq	.Lsig_overflow(%rip), %rsi
+	xorl	%edx, %edx
+	movl	$8, %r10d		# the size of a signal set
+	movl	$13, %eax		# rt_sigaction
+	syscall
+	ret
+
+# __funk_rt_overflow(signal, info, context): the SIGSEGV handler. Every
+# access to the stack is at most a page below one made before it
+# (ADR-2026-11-02-1102), so a run that outgrows its stack faults first in
+# the guard page. That fault is reported in one line, with exit status 2;
+# the buffered output is never written, so standard output stays empty.
+# Any other SIGSEGV is not the runtime's to report. SA_RESETHAND has put the
+# default action back, so the handler sends the signal again and returns,
+# and SIGSEGV ends the process as it would with no handler.
+__funk_rt_overflow:
+	cmpl	$0, 8(%rsi)		# si_code: above 0 for a fault, not
+	jle	1f			# for a signal that a process sent
+	movq	16(%rsi), %rax		# si_addr, the address of the fault
+	subq	__funk_rt_guard(%rip), %rax
+	cmpq	$4096, %rax
+	jae	1f
+	subq	$8, %rsp
+	call	__funk_rt_err_program
+	movq	__funk_rt_function(%rip), %rdi
+	call	__funk_rt_err_text
+	leaq	.Lmsg_ran_out(%rip), %rdi
+	call	__funk_rt_err_cstr
+	movq	__funk_rt_stack(%rip), %rdi
+	call	__funk_rt_err_num
+	leaq	.Lmsg_stack_reserved(%rip), %rdi
+	jmp	.Ldie
+1:	movl	$39, %eax		# getpid
+	syscall
+	movl	%eax, %edi
+	movl	$11, %esi		# SIGSEGV
+	movl	$62, %eax		# kill
+	syscall
+	ret
+
+# __funk_rt_restore(): where a signal handler returns to.
+__funk_rt_restore:
+	movl	$15, %eax		# rt_sigreturn
+	syscall
+	ud2
 
 # __funk_rt_arg(index, width) -> the value of argument `index` of the
 # function, parsed as a value of `iW`. Exits with 2 if it is not one.
@@ -480,6 +581,11 @@ __funk_rt_err_num:
 	.section	.rodata
 	.p2align	3
 .Lsig_ignore:	.quad	1, 0, 0, 0	# struct sigaction: SIG_IGN, no flags
+# struct sigaction: the handler, SA_SIGINFO | SA_ONSTACK | SA_RESETHAND
+# | SA_RESTORER, the restorer, and no signal blocked
+.Lsig_overflow:	.quad	__funk_rt_overflow, 0x8c000004, __funk_rt_restore, 0
+# stack_t: the signal handler's stack, no flags, and its size
+.Lalt_stack:	.quad	__funk_rt_alt_stack, 0, 65536
 .Lhex:	.ascii	"0123456789abcdef"
 .Ltrue:	.ascii	"true"
 .Ltrue_end:
@@ -502,6 +608,8 @@ __funk_rt_err_num:
 .Lmsg_not_value:	.asciz	" is not a value of type i"
 .Lmsg_no_stack:	.asciz	"cannot reserve "
 .Lmsg_stack_for:	.asciz	" bytes of stack for "
+.Lmsg_ran_out:	.asciz	" ran out of the "
+.Lmsg_stack_reserved:	.asciz	" bytes of stack reserved for it\n"
 .Lmsg_newline:	.asciz	"\n"
 
 	.bss
@@ -511,3 +619,8 @@ __funk_rt_out_len:	.skip	8
 __funk_rt_count:	.skip	8
 __funk_rt_program:	.skip	8
 __funk_rt_args:	.skip	8
+__funk_rt_guard:	.skip	8	# the guard page below the run's stack
+__funk_rt_stack:	.skip	8	# the bytes of the run's stack
+__funk_rt_function:	.skip	8	# the function's name, as typed
+	.p2align	4
+__funk_rt_alt_stack:	.skip	65536	# the stack of the SIGSEGV handler
