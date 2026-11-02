@@ -27,6 +27,12 @@ What a dialect gives for one op: its name, its attributes and the types it is
 used at, such as `add` with `nsw` at `i32`. In Lean it is a value of the
 dialect's `Op` type, from which the op's operand and result types follow.
 
+**valid op instance**:
+An op instance whose operand and result types validation accepts
+(`TypesValid`), such as `udiv` at `i8` but not at `i0`. Every op of a
+valid function is one. The poison obligations speak only of valid op
+instances (ADR-2026-11-02-1515).
+
 **attribute**:
 A constant part of an op that is not a value, such as the flag `nsw`, the
 predicate `slt` of an `icmp`, the value of a `const` or the callee `@f` of a
@@ -111,6 +117,14 @@ text gives the module back. Every valid module is well formed. A text that
 follows the grammar but does not decode, such as one with a type mismatch,
 is a parse error with a located reason.
 
+### Native calls
+
+**funk calling convention**:
+The rules for calling a function compiled by funk: where its arguments and
+results pass, which registers it preserves, how its symbol is spelled, and
+how its stack is aligned. A call between funk functions passes arguments
+without extension; calls to code funk did not compile may need other rules.
+
 ### Dialects
 
 **dialect**:
@@ -158,8 +172,11 @@ How an op treats a poison operand. A propagating op returns only poison from
 it, and is UB on it only where a defined value in its place could be UB too;
 it also returns a result on some operands with no poison, and proves all
 three in Lean. An exception, such as `select` or `freeze`, states its own
-rule. Every op of every dialect declares its class, and every op is total
-and monotone: refining its operands refines what it does.
+rule. Every op of every dialect declares its class. The obligations speak
+of valid op instances, and every one that runs by its own rule, a
+terminator or an op with no callee, is total and monotone: refining its
+operands refines what it does (ADR-2026-11-02-1514,
+ADR-2026-11-02-1515).
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed
@@ -235,19 +252,22 @@ at every fuel budget. Without it, an empty behaviour would refine anything.
 
 **no-stuck obligation**:
 The interpreter's obligation that no path of a run of a valid function is
-stuck, at any fuel budget. With every op total, and with an interpreter
-whose own steps never drop a path, which #10's definition must ensure, no
-path of the run is lost.
+stuck, at any fuel budget. With every op that runs by its own rule total,
+and with an interpreter whose own steps never drop a path, which #10's
+definition must ensure, no path of the run is lost.
 
 **op totality**:
-Every op's obligation to have an outcome on every operand vector: a result
-or UB, or for a terminator, where control goes or UB. So its semantics never
-drops a path of a run.
+The obligation of every valid op instance that runs by its own rule, a
+terminator or an op with no callee, to have an outcome on every operand
+vector: a result or UB, or for a terminator, where control goes or UB. So
+its semantics never drops a path of a run. An op with a callee, such as
+`call`, has no rule of its own: its meaning is its callee's run.
 
 **op monotonicity**:
-Every op's obligation that refining its operands refines what it does. It
-makes refinement compositional: a part replaced by one that refines it
-refines the whole function.
+The obligation of every valid op instance that runs by its own rule that
+refining its operands refines what it does. It makes refinement
+compositional: a part replaced by one that refines it refines the whole
+function.
 
 ### The oracle
 

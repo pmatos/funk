@@ -88,8 +88,9 @@ interpreter runs that function:
   ends the whole run so, and a callee that is stuck leaves its caller
   stuck.
 
-An op that calls no function runs through `denote`. No core op calls one
-yet: ticket #20 names the callee of `call`, and so gives `call` its meaning.
+An op that calls no function runs through `denote`. In the core dialect,
+`call @g` calls `@g`, and no other op calls a function: ticket #20 names
+the callee of `call`, and so gives `call` its meaning.
 -/
 
 /--

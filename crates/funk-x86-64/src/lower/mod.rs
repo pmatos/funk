@@ -30,7 +30,7 @@ use std::collections::HashMap;
 use funk_ir::text::{print_op, print_symbol};
 use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
-pub use call::{callee, pushed_words};
+pub use call::callee;
 
 use crate::abi::{ARG_REGS, stack_arg_offset, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};

@@ -30,11 +30,12 @@ from the general theorems of the previous sections:
   proves of its ops (`Core.Op.total`). So such a function's run has an
   outcome at every budget (`Func.progress_of_local`).
 
-`call` is left out. It has no rules until #20 names its callee, and an op
-without rules has no outcome (ADR-2026-10-30-1855). So no claim is made
-here of a function that has a `call` op, though `NeverStuck` would hold of
-it only vacuously, on the paths that reach the call. #20 extends these
-theorems to calls and recursion.
+A function with a `call` op is left out here: its run runs other
+functions of its module, so these theorems, which ask only that the
+function itself be valid, cannot cover it. They came first, while `call`
+had no rules (ADR-2026-10-30-1855). The section on every valid core
+function extends them to calls and recursion, for every function of a
+valid module (`Core.fuelMonotone`, `Core.progress`, `Core.neverStuck`).
 -/
 
 namespace Fir.Core
@@ -109,9 +110,9 @@ theorem Op.exit_ret (op : Op) (args : HVector toType (Fir.sig (d := CoreDialect)
   | _ => cases h
 
 /-- A core op other than `call` calls no function. -/
-theorem Op.callee_none : (op : Op) → op.isCall = false → callee? (d := CoreDialect) op = none
-  | .call .., h => nomatch h
-  | _, _ => rfl
+theorem Op.callee_none : (op : Op) → op.isCall = false → callee? (d := CoreDialect) op = none := by
+  intro op h
+  cases op <;> first | rfl | cases h
 
 /-- Every valid core function without a `call` op runs within itself. -/
 theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}

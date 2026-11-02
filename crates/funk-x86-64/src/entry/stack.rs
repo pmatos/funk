@@ -21,7 +21,8 @@ use std::collections::HashMap;
 
 use funk_ir::{Func, Module};
 
-use crate::lower::{callee, pushed_words};
+use crate::abi::pushed_words;
+use crate::lower::callee;
 
 /// The stack a run of one function needs.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -194,7 +195,7 @@ mod tests {
     }
 
     /// The arguments past the sixth are pushed, padded to an even number,
-    /// as `lower/call.rs` pushes them.
+    /// as `abi::call` pushes them.
     #[test]
     fn a_call_needs_the_arguments_it_pushes() {
         for (args, pushed) in [(0, 0), (6, 0), (7, 16), (8, 16), (9, 32), (12, 48)] {

@@ -130,6 +130,8 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Branch "Branch rules" (level := 2)}
 
+{includeLiterate "." Fir.Core.Call "Call rules" (level := 2)}
+
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
 
 {includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
@@ -170,9 +172,35 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
 
+{includeLiterate "." Fir.Execution.CallSteps "What a call step needs" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Calls "Progress with calls" (level := 2)}
+
 {includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
 
 {includeLiterate "." Fir.Core.CallFree "Core functions without calls" (level := 2)}
+
+{includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RunPaths "The ways a step goes on" (level := 2)}
+
+{includeLiterate "." Fir.Execution.EnvRefine "Refined environments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.BlackBox "Calls as black boxes" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineUp "Returns and UB, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineDown "Running out of fuel, followed back" (level := 2)}
+
+{includeLiterate "." Fir.Execution.RefineRuns "Refined arguments" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Replace "Replacing a callee" (level := 2)}
+
+{includeLiterate "." Fir.Core.CallRefine "Refinement through core calls" (level := 2)}
+
+{includeLiterate "." Fir.Execution.Lawful "What the lawful class gives" (level := 2)}
+
+{includeLiterate "." Fir.Core.Lawful "The core dialect's poison obligations" (level := 2)}
 
 # Text format
 

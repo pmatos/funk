@@ -5,10 +5,10 @@ import FirRef.RunArgs
 Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
-several results and none, fuel, each stuck case that a text reaches, ops
-without rules (ADR-2026-10-30-1855), and argument errors, `poison` among
-them. These runs make no choice, in scripted mode with no choices, the
-default; `FirTest.Modes` tests both modes on runs that choose.
+several results and none, fuel, each stuck case that a text reaches, calls
+without end, and argument errors, `poison` among them. These runs make no
+choice, in scripted mode with no choices, the default; `FirTest.Modes`
+tests both modes on runs that choose.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
@@ -118,17 +118,21 @@ def body (header : String) (lines : List String) : String :=
     ["^e:", "  %b: i32 = add %a, %a @0", "  %a: i32 = sub %b, %b @0", "  ret %b @0"]) "@f" ==
   stuckBy "%a is not defined"
 
-/-! # Ops without rules
+/-! # Calls without end
 
-A core op whose family has not landed has no rules yet, so `fir-ref`
-reports an error and no result (ADR-2026-10-30-1855), in either mode. -/
+A function that calls itself without end runs out of fuel, in either mode:
+each call takes a step, and its callee runs on the steps that are left
+(#20). Until #20 gave `call` its rule, `fir-ref` reported these runs as
+an error, an op without rules (ADR-2026-10-30-1855); no core op is
+without rules now. `FirTest.Calls` tests calls that return. -/
 
 #guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = call @f %a @0", "  ret %s @0"])
-    "@f" ["1"] == fails 2 "fir-ref: @f: call @f has no execution rules yet"
+    "@f" ["1"] (fuel := 100) == exhausted
 #guard runText (body "func @f(%a: i8) -> i1" ["^e:", "  %s: i1 = call @f %a @0", "  ret %s @0"])
-    "@f" ["1"] (mode := .exhaustive 16) == fails 2 "fir-ref: @f: call @f has no execution rules yet"
-#guard runText (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) "@f" ==
-  fails 2 "fir-ref: @f: call @f has no execution rules yet"
+    "@f" ["1"] (fuel := 100) (mode := .exhaustive 16) ==
+  { out := "{\"kind\":\"outcomes\",\"choices\":0,\"outcomes\":[{\"kind\":\"fuel-exhausted\"}]}",
+    status := 0 }
+#guard runText (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) "@f" (fuel := 100) == exhausted
 
 /-! # Arguments -/
 

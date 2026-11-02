@@ -165,13 +165,16 @@ def twoFreezes : String :=
 #guard explore (body "func @f(%a: i1) -> i1"
     ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0"]) ["true"] ==
   outcomes ["{\"kind\":\"stuck\",\"reason\":\"a block ends without a terminator\"}"] 1 1
--- An op without rules after a choice is an error, in either mode.
+-- A call after a choice runs its callee on each path. `@f` calls itself
+-- without end, so every path runs out of fuel; on the path that chooses
+-- `true` each time, each call's `freeze` chooses again, four times in 12
+-- steps.
 #guard explore (body "func @f(%a: i1) -> i1"
     ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0",
-     "  %g: i1 = call @f %f @0", "  ret %g @0"]) ["true"] ==
-  fails 2 "fir-ref: @f: call @f has no execution rules yet"
--- The budget is checked first: past it, a path that would reach an op
--- without rules is not run.
+     "  %g: i1 = call @f %f @0", "  ret %g @0"]) ["true"] (fuel := 12) ==
+  outcomes ["{\"kind\":\"fuel-exhausted\"}"] 4
+-- The budget is checked first: past it, the path is not run, nor the call
+-- that follows its choice.
 /-- `@f(%a: i64) -> i64`, which freezes `add nsw %a, 1` and returns
 `call @f %f`, a call of itself. -/
 def frozenCall : String :=
@@ -181,8 +184,8 @@ def frozenCall : String :=
 
 #guard explore frozenCall ["9223372036854775807"] ==
   { out := "{\"kind\":\"choice-budget-exceeded\",\"budget\":16}", status := 0 }
-#guard runText frozenCall "@f" ["9223372036854775807"] (mode := .scripted ["5"]) ==
-  fails 2 "fir-ref: @f: call @f has no execution rules yet"
+#guard runText frozenCall "@f" ["9223372036854775807"] (fuel := 100) (mode := .scripted ["5"]) ==
+  { out := "{\"kind\":\"fuel-exhausted\",\"choices\":1}", status := 0 }
 
 /-! # UB in exhaustive mode
 

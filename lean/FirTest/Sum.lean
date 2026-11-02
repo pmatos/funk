@@ -10,8 +10,12 @@ sum. An op of either side has the signature, the text, the rules, the poison
 class and the semantics that its own dialect gives it, and the types have the
 text and the validity that the first dialect gives them. The classes of the
 types themselves, such as `TyDenote`, are the shared types' own, so the sum
-needs no instance of them. Two dialects whose ops meet the poison
-obligations make a sum whose ops meet them (`SumDialect.lawfulPoison`).
+needs no instance of them. Two dialects whose valid op instances meet the
+poison obligations make a sum whose valid op instances meet them, when
+every type that the first dialect accepts the second accepts too
+(`SumDialect.lawfulPoison`): the obligations of each side cover the
+instances whose types its own validation accepts, and the sum's types are
+valid as the first says.
 
 Reading an op sends its name to one side, by the name alone, and that side
 decodes it: `SumRoute` says which names go to the second dialect. Given two
@@ -101,27 +105,35 @@ instance [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩] : DialectCa
     | .inl o => callee? (d := ⟨Op₁, Ty⟩) o
     | .inr o => callee? (d := ⟨Op₂, Ty⟩) o
 
-/-- Two dialects whose ops meet the poison obligations make a sum whose ops
-meet them: each op meets them as its own dialect's op. -/
-instance lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
+/-- Two dialects whose valid op instances meet the poison obligations make
+a sum whose valid op instances meet them, when every type that the first
+dialect accepts the second accepts too: each op meets them as its own
+dialect's op. -/
+theorem lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
     [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
     [DialectPoison ⟨Op₁, Ty⟩] [DialectPoison ⟨Op₂, Ty⟩]
     [DialectDenote ⟨Op₁, Ty⟩ SetM] [DialectDenote ⟨Op₂, Ty⟩ SetM]
-    [h₁ : LawfulDialectPoison ⟨Op₁, Ty⟩] [h₂ : LawfulDialectPoison ⟨Op₂, Ty⟩] :
+    [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩]
+    [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
+    [h₁ : LawfulDialectPoison ⟨Op₁, Ty⟩] [h₂ : LawfulDialectPoison ⟨Op₂, Ty⟩]
+    (hty : ∀ t : Ty, validTy (d := ⟨Op₁, Ty⟩) t → validTy (d := ⟨Op₂, Ty⟩) t) :
     LawfulDialectPoison (SumDialect Ty Op₁ Op₂) where
   poison_isRefinedBy := h₁.poison_isRefinedBy
   propagates
-    | .inl o, hc => ⟨(h₁.propagates o hc).1, (h₁.propagates o hc).2⟩
-    | .inr o, hc => ⟨(h₂.propagates o hc).1, (h₂.propagates o hc).2⟩
+    | .inl o, hv, hc => ⟨(h₁.propagates o hv hc).1, (h₁.propagates o hv hc).2⟩
+    | .inr o, hv, hc =>
+      have hv₂ := And.intro (fun t ht => hty t (hv.1 t ht)) (fun t ht => hty t (hv.2 t ht))
+      ⟨(h₂.propagates o hv₂ hc).1, (h₂.propagates o hv₂ hc).2⟩
   returnsOnDefined
-    | .inl o, hc => h₁.returnsOnDefined o hc
-    | .inr o, hc => h₂.returnsOnDefined o hc
+    | .inl o, hv, hc => h₁.returnsOnDefined o hv hc
+    | .inr o, hv, hc =>
+      h₂.returnsOnDefined o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩ hc
   total
-    | .inl o => h₁.total o
-    | .inr o => h₂.total o
+    | .inl o, hv => h₁.total o hv
+    | .inr o, hv => h₂.total o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
   monotone
-    | .inl o => h₁.monotone o
-    | .inr o => h₂.monotone o
+    | .inl o, hv => h₁.monotone o hv
+    | .inr o, hv => h₂.monotone o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
 
 variable [SumRoute Op₁ Op₂] [DialectText ⟨Op₁, Ty⟩] [DialectText ⟨Op₂, Ty⟩]
 

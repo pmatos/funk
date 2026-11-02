@@ -75,10 +75,10 @@ tests = [
 differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
-`exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br` and `ret` at
-`i1`, `i8`, `i16`, `i32` and `i64`, with at most one result. Tests of
-other widths, or of several results, go in modules whose tests are all
-interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+`exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
+`call` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most one result.
+Tests of other widths, or of several results, go in modules whose tests
+are all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -196,5 +196,26 @@ a `cond_br` on `%c` where `%c` may be poison, and that a `cond_br` on
 `freeze %c` may. `reject/branch.toml` holds the texts of these ops that
 do not decode, and `reject/validation-branch.toml` those that break a
 rule of validation that they bring into play: of successors and their
-block arguments, terminators, dominance and reachability. Both tools
-have `call` (#20) too; its texts come with #20's corpus.
+block arguments, terminators, dominance and reachability.
+
+The texts of #20 also use `call`. `call-iN` passes each boundary bit
+pattern through a call, as an argument and as its result, and every
+pair of them to a callee that subtracts; `recursion-iN` runs a recursive
+factorial and Fibonacci, and even and odd, which call each other; and
+`poison-call-iN` passes poison to a callee and returns it from one, and
+calls a callee that hits UB, which is UB of its caller; all at the same
+seven widths. A run that never ends is interpreter-only, since a
+differential test that runs out of fuel is invalid. Until the harness
+runs native code under a data limit (#92), a differential test recurses
+at most 20 deep, and a deeper run is interpreter-only too; until PR #90,
+a built executable's stack is also only its function's frame, its
+wrapper's and 16 KiB. `call-args` passes seven and eight arguments of
+mixed widths, some on the stack;
+`call-results` calls functions with no result and with one, and
+`call-several`, interpreter-only, with several; `call-symbols` calls
+`@"1"` and runs it by that name; `sum` runs the spec's `@sum10`, which
+calls `@sum`; and `fuel-call` runs recursion that never ends out of
+fuel at the budget that each test sets. `reject/call.toml` holds the
+texts of `call` that do not decode, and `reject/validation-call.toml`
+those that break its rules of validation: an unknown callee, and
+arguments or results that do not match the callee's signature.

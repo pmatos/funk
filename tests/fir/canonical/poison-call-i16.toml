@@ -1,0 +1,56 @@
+# Tests of poison-call-i16.fir: the poison and UB rules of call at i16
+# (#20, ADR-2026-11-02-1156). %p = add nsw %a, 1 is poison when %a is
+# 32767, the signed maximum.
+# - A poison argument reaches the callee as poison: passes gives %p to
+#   @id, which returns it, so the call's result is poison.
+# - A poison that the callee returns is a poison result: @makes returns
+#   %p, and receives adds one to what it gets back, which stays poison.
+# - call is not a propagating op: ignores passes %p to @zero, which
+#   ignores its argument, and the call returns 0 even when %p is poison.
+# - UB in a callee is UB of its caller: calls_div calls @div, a udiv,
+#   which is UB by zero and returns %a divided by one; branches_on
+#   passes %p to @branches, which branches on it, and a branch on poison
+#   is UB.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# Where fir-ref returns poison, any native value of the type does, and
+# an interpreter-only test of the same run checks that it is exactly
+# poison; so does one for ignores, which must return 0 exactly. A run
+# that is UB is only interpreter-only, as UB allows any result; fir-ref
+# gives the callee's reason, but the harness matches ub to any reason
+# (ADR-2026-10-30-2135).
+tests = [
+  { func = "@passes", args = ["0"] },
+  { func = "@passes", args = ["1"] },
+  { func = "@passes", args = ["-1"] },
+  { func = "@passes", args = ["-32768"] },
+  { func = "@passes", args = ["32767"] },
+  { func = "@passes", args = ["32767"], expect = ["poison"] },
+  { func = "@receives", args = ["0"] },
+  { func = "@receives", args = ["1"] },
+  { func = "@receives", args = ["-1"] },
+  { func = "@receives", args = ["-32768"] },
+  { func = "@receives", args = ["32767"] },
+  { func = "@receives", args = ["32767"], expect = ["poison"] },
+  { func = "@ignores", args = ["0"] },
+  { func = "@ignores", args = ["1"] },
+  { func = "@ignores", args = ["-1"] },
+  { func = "@ignores", args = ["-32768"] },
+  { func = "@ignores", args = ["32767"] },
+  { func = "@ignores", args = ["32767"], expect = ["0"] },
+  { func = "@branches_on", args = ["0"] },
+  { func = "@branches_on", args = ["1"] },
+  { func = "@branches_on", args = ["-1"] },
+  { func = "@branches_on", args = ["-32768"] },
+  { func = "@branches_on", args = ["32767"], expect = "ub" },
+  { func = "@calls_div", args = ["0", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["1", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["-1", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["-32768", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["32767", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["0", "1"] },
+  { func = "@calls_div", args = ["1", "1"] },
+  { func = "@calls_div", args = ["-1", "1"] },
+  { func = "@calls_div", args = ["-32768", "1"] },
+  { func = "@calls_div", args = ["32767", "1"] },
+]

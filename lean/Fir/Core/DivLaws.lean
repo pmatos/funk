@@ -31,16 +31,19 @@ signedness and any result on two values, so they hold with and without
 
 # A width of zero
 
-`i0` is not a type: validation rejects it. The obligations, though, speak
-of every op instance, `udiv 0 false` among them. `BitVec 0` has one value,
-`0`, so at width zero every divisor is zero and every division is UB.
-No division at width zero returns a result on defined operands, as
-`div_zero_width` shows. So the four ops return a result on defined
-operands at every width above zero, and only there. The lawful class
-`LawfulDialectPoison` asks it of every op instance that propagates poison,
-`i0` ones included, so the core dialect cannot meet that class as it is
-stated. Either the rule for a zero divisor or the class has to change at
-width zero; which one is pending the human's decision in #69.
+`i0` is not a type: validation rejects it. Lean's op instances, though,
+include `udiv 0 false`. `BitVec 0` has one value, `0`, so at width zero
+every divisor is zero and every division is UB. No division at width
+zero returns a result on defined operands, as `div_zero_width` shows. So
+the four ops return a result on defined operands at every width above
+zero, and only there.
+
+This is why the lawful class `LawfulDialectPoison` speaks only of op
+instances whose types validation accepts (`TypesValid`): the human ruled
+on #69 to narrow the class rather than change the rule for a zero divisor
+(ADR-2026-11-02-1515). Validation accepts `iN` only for `N ≥ 1`, so the
+four ops meet the class at every width it covers, and division at `i0`
+keeps its rule.
 -/
 
 namespace Fir.Core

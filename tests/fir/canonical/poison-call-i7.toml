@@ -1,0 +1,47 @@
+# Tests of poison-call-i7.fir: the poison and UB rules of call at i7
+# (#20, ADR-2026-11-02-1156). %p = add nsw %a, 1 is poison when %a is
+# 63, the signed maximum.
+# - A poison argument reaches the callee as poison: passes gives %p to
+#   @id, which returns it, so the call's result is poison.
+# - A poison that the callee returns is a poison result: @makes returns
+#   %p, and receives adds one to what it gets back, which stays poison.
+# - call is not a propagating op: ignores passes %p to @zero, which
+#   ignores its argument, and the call returns 0 even when %p is poison.
+# - UB in a callee is UB of its caller: calls_div calls @div, a udiv,
+#   which is UB by zero and returns %a divided by one; branches_on
+#   passes %p to @branches, which branches on it, and a branch on poison
+#   is UB.
+# The backend does not lower i7, so each test is interpreter-only and
+# states the result that fir-ref must give.
+tests = [
+  { func = "@passes", args = ["0"], expect = ["1"] },
+  { func = "@passes", args = ["1"], expect = ["2"] },
+  { func = "@passes", args = ["-1"], expect = ["0"] },
+  { func = "@passes", args = ["-64"], expect = ["-63"] },
+  { func = "@passes", args = ["63"], expect = ["poison"] },
+  { func = "@receives", args = ["0"], expect = ["2"] },
+  { func = "@receives", args = ["1"], expect = ["3"] },
+  { func = "@receives", args = ["-1"], expect = ["1"] },
+  { func = "@receives", args = ["-64"], expect = ["-62"] },
+  { func = "@receives", args = ["63"], expect = ["poison"] },
+  { func = "@ignores", args = ["0"], expect = ["0"] },
+  { func = "@ignores", args = ["1"], expect = ["0"] },
+  { func = "@ignores", args = ["-1"], expect = ["0"] },
+  { func = "@ignores", args = ["-64"], expect = ["0"] },
+  { func = "@ignores", args = ["63"], expect = ["0"] },
+  { func = "@branches_on", args = ["0"], expect = ["1"] },
+  { func = "@branches_on", args = ["1"], expect = ["2"] },
+  { func = "@branches_on", args = ["-1"], expect = ["1"] },
+  { func = "@branches_on", args = ["-64"], expect = ["-63"] },
+  { func = "@branches_on", args = ["63"], expect = "ub" },
+  { func = "@calls_div", args = ["0", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["1", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["-1", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["-64", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["63", "0"], expect = "ub" },
+  { func = "@calls_div", args = ["0", "1"], expect = ["0"] },
+  { func = "@calls_div", args = ["1", "1"], expect = ["1"] },
+  { func = "@calls_div", args = ["-1", "1"], expect = ["-1"] },
+  { func = "@calls_div", args = ["-64", "1"], expect = ["-64"] },
+  { func = "@calls_div", args = ["63", "1"], expect = ["63"] },
+]

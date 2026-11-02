@@ -16,10 +16,10 @@ mod stack;
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module};
 
-use crate::abi::{ARG_REGS, RESULT_REG, symbol};
+use crate::abi::{self, RESULT_REG};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
-use crate::lower::{at, pushed_words};
+use crate::lower::at;
 use crate::width::{self, Ext};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
@@ -120,17 +120,7 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
         asm.ins("call", format_args!("__funk_rt_arg"));
         asm.ins("movq", format_args!("%rax, {at}"));
     }
-    let on_stack = slots.get(ARG_REGS.len()..).unwrap_or_default();
-    if on_stack.len() % 2 == 1 {
-        asm.ins("subq", format_args!("$8, %rsp"));
-    }
-    for at in on_stack.iter().rev() {
-        asm.ins("pushq", format_args!("{at}"));
-    }
-    for (reg, at) in ARG_REGS.iter().zip(&slots) {
-        asm.ins("movq", format_args!("{at}, {}", reg.q()));
-    }
-    asm.ins("call", format_args!("{}", symbol(&f.name)));
+    let outgoing = abi::call(asm, &f.name, &slots).map_err(report)?;
     if let Some(w) = result {
         width::extend(asm, Ext::Sign, w, RESULT_REG);
         asm.ins("movq", format_args!("{}, {}", RESULT_REG.q(), Reg::Rdi.q()));
@@ -138,21 +128,20 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
-    Ok(stack_need(need, size, params.len()))
+    Ok(stack_need(need, size, outgoing))
 }
 
-/// The bytes of stack that a wrapper with a frame of `wrapper` bytes needs
-/// to call a function of `params` parameters, a run of which needs `need`
-/// bytes below its return address, rounded up to a page and at most
-/// [`MOST_STACK`]. The wrapper's frame also holds a return address and a
-/// saved `%rbp`, and it pushes the arguments past the sixth, padded to an
-/// even number, as a call does.
-fn stack_need(need: u64, wrapper: i32, params: usize) -> u64 {
-    let args = u64::try_from(pushed_words(params)).map_or(u64::MAX, |w| w.saturating_mul(8));
+/// The bytes of stack that a wrapper with a frame of `wrapper` bytes and
+/// `outgoing` bytes of argument space needs to call a function, a run of
+/// which needs `need` bytes below its return address, rounded up to a page
+/// and at most [`MOST_STACK`]. The call emitter supplies the outgoing
+/// space, padding included. The wrapper's frame also holds a return address
+/// and a saved `%rbp`.
+fn stack_need(need: u64, wrapper: i32, outgoing: u64) -> u64 {
     let bytes = need
         .saturating_add(16)
         .saturating_add(u64::from(wrapper.unsigned_abs()))
-        .saturating_add(args)
+        .saturating_add(outgoing)
         .saturating_add(RUNTIME_STACK)
         .min(MOST_STACK);
     let page = u64::from(PAGE.unsigned_abs());
@@ -169,12 +158,12 @@ mod tests {
     fn the_stack_holds_the_need_the_wrapper_and_the_runtime() {
         assert_eq!(stack_need(16, 0, 0), 5 * 4096);
         assert_eq!(stack_need(32, 0, 0), 5 * 4096);
-        assert_eq!(stack_need(16, 0, 7), 5 * 4096);
+        assert_eq!(stack_need(16, 0, 16), 5 * 4096);
         let big = 1 << 24;
         assert_eq!(stack_need(big + 16, 16, 0), big + 5 * 4096);
         let most = u64::from((i32::MAX & !15).unsigned_abs());
         assert_eq!(
-            stack_need(most + 16, i32::MAX & !15, (1 << 20) + 5),
+            stack_need(most + 16, i32::MAX & !15, 8 << 20),
             (1 << 32) + (8 << 20) + 4 * 4096
         );
     }
@@ -183,6 +172,6 @@ mod tests {
     fn a_stack_beyond_any_machine_is_capped() {
         assert_eq!(stack_need(u64::MAX, 16, 0), MOST_STACK);
         assert_eq!(stack_need(MOST_STACK, 0, 0), MOST_STACK);
-        assert_eq!(stack_need(MOST_STACK - 4096, 0, usize::MAX), MOST_STACK);
+        assert_eq!(stack_need(MOST_STACK - 4096, 0, u64::MAX), MOST_STACK);
     }
 }

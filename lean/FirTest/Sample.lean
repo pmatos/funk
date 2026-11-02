@@ -124,16 +124,16 @@ def listed (t : String) (args : List String) (s : Nat) : Bool :=
 #guard (List.range 32).all (replays (subSelf "i64") ["9223372036854775807"])
 #guard (List.range 4).all (replays (frozen "i2") ["0"])
 
--- A stuck path is reported with status 1, and an op without rules as an
--- error.
+-- A stuck path is reported with status 1, and a call without end runs out
+-- of fuel.
 #guard sampleRun (body "func @f(%a: i1) -> i1"
     ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0"]) ["true"] 0 ==
   { out := "{\"kind\":\"stuck\",\"reason\":\"a block ends without a terminator\",\"choices\":1," ++
       "\"sequence\":[\"" ++ (sequenceOf (sampleRun (body "func @f(%a: i1) -> i1"
         ["^e:", "  %p: i1 = add nsw %a, %a @0", "  %f: i1 = freeze %p @0"]) ["true"] 0)).headD "" ++
       "\"]}", status := 1 }
-#guard sampleRun (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) [] 0 ==
-  fails 2 "fir-ref: @f: call @f has no execution rules yet"
+#guard runText (body "func @f()" ["^e:", "  call @f @0", "  ret @0"]) "@f" [] 100 (.sampled 0) ==
+  { out := "{\"kind\":\"fuel-exhausted\",\"choices\":0,\"sequence\":[]}", status := 0 }
 
 /-! # The theorems' axioms -/
 

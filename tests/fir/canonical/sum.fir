@@ -14,10 +14,19 @@ func @sum(%n: i32) -> i32 {
   ret %r @4
 }
 
+func @sum10() -> i32 {
+^entry:
+  %ten: i32 = const 10 @5
+  %s: i32 = call @sum %ten @6
+  ret %s @0
+}
+
 locs {
   @0 = unknown
   @1 = "sum.c":2:3 to 2:15
   @2 = "sum.c":3:10 to 3:16
   @3 = "sum.c":4:5 to 4:17
   @4 = "sum.c":6:3 to 6:14
+  @5 = "main.c":2:19 to 2:21
+  @6 = "main.c":2:15 to 2:22
 }

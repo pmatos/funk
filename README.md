@@ -213,11 +213,23 @@ are on `main`:
 - The execution rules of `br` and `cond_br` in Lean
   ([#19](https://github.com/pmatos/funk/issues/19)). `fir-ref run` runs
   functions with loops, and reports a branch on poison as immediate UB.
+- The execution rules of `call` in Lean
+  ([#20](https://github.com/pmatos/funk/issues/20)). `fir-ref run` runs
+  any function of a module, named as text names it, and the functions it
+  calls, recursion included. A callee runs on the fuel that its caller
+  has left, so recursion without end runs out of fuel. Lean proves that
+  no path of a run of a function of a valid module is stuck, and that the
+  run has an outcome at every budget, and that a call refines when its
+  arguments do, and when its callee's body is replaced so that the
+  callee, run in the new module, refines the old one. Every core op
+  instance that validation accepts meets the poison obligations
+  (`LawfulDialectPoison CoreDialect`); a call has no op-level rule, since
+  its meaning is its callee's run
+  ([ADR-2026-11-02-1514](docs/adrs/2026-11-02-1514-a-call-has-no-op-level-rule.md),
+  [ADR-2026-11-02-1515](docs/adrs/2026-11-02-1515-poison-obligations-cover-valid-op-instances.md)).
 
 These parts of M0 do not exist yet:
 
-- The execution rules of `call`, which
-  [#20](https://github.com/pmatos/funk/issues/20) adds.
 - A `fir-ref` that reads and prints texts nested to any depth: today it
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
