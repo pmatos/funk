@@ -6,13 +6,52 @@ use std::fmt::Write;
 
 use funk_ir::ir::names::is_word;
 
-use crate::asm::Reg;
+use crate::asm::{Asm, Mem, Reg};
 
 /// The registers that carry the first six integer arguments, in order.
 pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8, Reg::R9];
 
 /// The register that carries an integer result.
 pub const RESULT_REG: Reg = Reg::Rax;
+
+/// Emits a complete outgoing call to the funk function `callee`, given
+/// its raw fir name and argument slots in parameter order. `%rsp` must be
+/// 16-byte aligned, and every source slot is relative to `%rbp`.
+///
+/// Arguments pass as their slots hold them, without extension. The call
+/// restores `%rsp` and leaves the result in [`RESULT_REG`]. The returned
+/// byte count is its peak outgoing argument space, padding included, but
+/// not the return address: entry stack reservation accounts for that
+/// separately. A size error appends no assembly.
+///
+/// This owns placement and accounting for both fir calls and executable
+/// entry code (ADR-2026-11-02-1428).
+pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Mem]) -> Result<u64, String> {
+    let bytes = outgoing_bytes(args.len())
+        .ok_or("the call passes more arguments on the stack than 2 GiB holds")?;
+    let on_stack = args.get(ARG_REGS.len()..).unwrap_or_default();
+    if on_stack.len() % 2 == 1 {
+        asm.ins("subq", format_args!("$8, %rsp"));
+    }
+    for slot in on_stack.iter().rev() {
+        asm.ins("pushq", format_args!("{slot}"));
+    }
+    for (reg, slot) in ARG_REGS.iter().zip(args) {
+        asm.ins("movq", format_args!("{slot}, {}", reg.q()));
+    }
+    asm.ins("call", format_args!("{}", symbol(callee)));
+    if bytes > 0 {
+        asm.ins("addq", format_args!("${bytes}, %rsp"));
+    }
+    Ok(bytes as u64)
+}
+
+/// The padded outgoing area must fit the signed immediate of `addq`.
+fn outgoing_bytes(arguments: usize) -> Option<i32> {
+    let stack = arguments.saturating_sub(ARG_REGS.len());
+    let padded = stack.checked_add(stack % 2)?;
+    i32::try_from(padded.checked_mul(8)?).ok()
+}
 
 /// The offset from `%rbp`, after the standard prologue, of argument `i`
 /// when it is passed on the stack: `i >= 6`. The return address is at
@@ -81,3 +120,7 @@ mod tests {
         assert_eq!(stack_arg_offset(usize::MAX), None);
     }
 }
+
+#[cfg(test)]
+#[path = "abi/call_tests.rs"]
+mod call_tests;

@@ -318,3 +318,48 @@ fn a_call_at_a_width_the_backend_does_not_lower_is_reported_once() {
     assert_eq!(ds.len(), 3, "{msgs:#?}");
     assert!(msgs.iter().all(|d| !d.contains("call")), "{msgs:#?}");
 }
+
+/// Entry generation uses the same outgoing convention as a fir call and
+/// restores its space before the runtime prints the result. Counts around
+/// a page make a missing or double-counted outgoing area visible in the
+/// reservation table, as well as exercising the register/stack transition.
+#[test]
+fn entry_restores_outgoing_space_and_reserves_its_peak() {
+    for (n, outgoing, reservation) in [
+        (0, 0, 20480),
+        (6, 0, 20480),
+        (7, 16, 20480),
+        (8, 16, 20480),
+        (509, 4032, 28672),
+        (510, 4032, 28672),
+        (511, 4048, 28672),
+        (512, 4048, 28672),
+        (513, 4064, 32768),
+        (600, 4752, 32768),
+    ] {
+        let params = (0..n)
+            .map(|k| format!("%p{k}: i64"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let text = format!(
+            "func @f({params}) -> i64 {{\n^entry:\n  %r: i64 = const 7 @0\n  ret %r @0\n}}\n"
+        );
+        let entry = compile(&module(&text)).unwrap().entry;
+        let after_call = entry.split_once("\tcall\tf\n").unwrap().1;
+        let cleanup = if outgoing == 0 {
+            String::new()
+        } else {
+            format!("\taddq\t${outgoing}, %rsp\n")
+        };
+        assert!(
+            after_call.starts_with(&format!("{cleanup}\tmovq\t%rax, %rdi\n")),
+            "{n} arguments: {after_call}"
+        );
+        assert!(
+            entry.contains(&format!(
+                "\t.quad\t.Lname0, 2, {n}, __funk_entry_0, {reservation}\n"
+            )),
+            "{n} arguments: {entry}"
+        );
+    }
+}

@@ -111,6 +111,14 @@ text gives the module back. Every valid module is well formed. A text that
 follows the grammar but does not decode, such as one with a type mismatch,
 is a parse error with a located reason.
 
+### Native calls
+
+**funk calling convention**:
+The rules for calling a function compiled by funk: where its arguments and
+results pass, which registers it preserves, how its symbol is spelled, and
+how its stack is aligned. A call between funk functions passes arguments
+without extension; calls to code funk did not compile may need other rules.
+
 ### Dialects
 
 **dialect**:
