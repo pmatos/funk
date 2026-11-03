@@ -22,7 +22,7 @@ Each move lowers the sum of the numbers of the blocks' parents, so the
 passes end; a pass that does not lower it moves nothing.
 -/
 
-namespace FirRef
+namespace FirRef.Dom
 
 open Fir
 
@@ -373,4 +373,4 @@ theorem Lifted.ancestor_iff (S : Setting g e pre R P order) {pm : Std.HashMap Na
     · exact Classical.byContradiction fun ha =>
         hn (h.avoid c hc z (fun h' => ha (h' ▸ .refl)) ha)
 
-end FirRef
+end FirRef.Dom

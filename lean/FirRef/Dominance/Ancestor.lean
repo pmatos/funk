@@ -10,7 +10,7 @@ up from the one with the larger number. `Above` is a path of the graph that,
 after its first block, enters only blocks numbered above a bound.
 -/
 
-namespace FirRef
+namespace FirRef.Dom
 
 open Fir
 
@@ -203,4 +203,4 @@ theorem avoids {k : Nat} {x y w : Name} (h : Above g pre k x y) (hx : Avoids g e
 
 end Above
 
-end FirRef
+end FirRef.Dom

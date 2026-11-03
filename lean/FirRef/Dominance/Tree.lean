@@ -5,15 +5,15 @@ The first step of `fir-ref`'s dominator tree: a depth-first search of a
 function's graph from its entry, which numbers each block it reaches in the
 order it reaches it and records the block it came from. Those records form
 a spanning tree of the reached blocks whose edges are edges of the graph,
-and each block's number is above its parent's. The search reaches exactly
-the blocks of the graph that a path from the entry reaches
-(`tree_complete`).
+and each block's number is above its parent's. The search numbers every
+block of the graph that a path from the entry reaches (`tree_complete`),
+and only blocks of the graph (`tree_key`).
 
 Like the spec's `search`, it keeps what is left to visit on a list and makes
 only tail calls, so it takes no stack per block.
 -/
 
-namespace FirRef
+namespace FirRef.Dom
 
 open Fir
 
@@ -264,4 +264,4 @@ theorem tree_key {e : Name} {x : Name} (he : g.contains e = true)
     (hx : (tree g e).pre.contains x = true) : g.contains x = true :=
   (tree_inv he).key x hx
 
-end FirRef
+end FirRef.Dom

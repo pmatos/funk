@@ -25,7 +25,7 @@ that property too, and miss dominators.
 - **`FirRef.problemsIn` replaces `Func.problemsIn`.** It is a copy of the
   spec's check, with copies of `siteDominates`, `useProblems` and
   `opProblems` that take the function deciding dominance as an argument.
-  It builds the function's dominator tree once (`FirRef.dominance`) and
+  It builds the function's dominator tree once (`FirRef.Dom.dominance`) and
   answers every use from it. `problemsIn_eq_problemsIn : @Func.problemsIn =
   @FirRef.problemsIn` is registered with `@[csimp]`, in a module that
   `FirRef.Validate` imports, so `FirRef.funcProblems` calls it.
@@ -35,7 +35,7 @@ that property too, and miss dominators.
   one moves nothing. This is the iterative algorithm of Cooper, Harvey and
   Kennedy that `funk verify` uses, started from the search's tree instead
   of from no tree.
-- **The proof is an invariant of the lifting** (`FirRef.Lifted`): each
+- **The proof is an invariant of the lifting** (`FirRef.Dom.Lifted`): each
   block is numbered above its parent; each block is reached from its parent
   along a path of blocks numbered above that parent; and every block that
   is not an ancestor of `c` can be avoided on some path from the entry to

@@ -20,7 +20,7 @@ ADR-2026-10-30-1742). The rest of the check stays the spec's.
 
 namespace FirRef
 
-open Fir
+open Fir Dom
 
 variable {d : Dialect}
 

@@ -11,7 +11,7 @@ need only that it is an ancestor. `dominance_eq` proves the answers equal to
 the spec's search, `dominatesIn`, for every pair of labels.
 -/
 
-namespace FirRef
+namespace FirRef.Dom
 
 open Fir
 
@@ -251,4 +251,4 @@ theorem dominance_eq (g : Graph) (e? : Option Name) :
     · rename_i he
       exact (dominatesIn_absent (Bool.eq_false_iff.mpr he) a l).symm
 
-end FirRef
+end FirRef.Dom

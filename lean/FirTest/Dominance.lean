@@ -13,7 +13,7 @@ value of the entry. The last checks pin the axioms of the theorems.
 
 namespace FirTest.Dominators
 
-open Fir Fir.Core FirRef
+open Fir Fir.Core FirRef FirRef.Dom
 
 /-- The graph of the nodes `nodes` and the edges `edges`. -/
 def graphOf (nodes : List Name) (edges : List (Name × Name)) : Graph :=
@@ -139,8 +139,8 @@ info: 'FirRef.problemsIn_eq_problemsIn' depends on axioms: [propext, Classical.c
 #guard_msgs in #print axioms FirRef.problemsIn_eq_problemsIn
 
 /--
-info: 'FirRef.dominance_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'FirRef.Dom.dominance_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms FirRef.dominance_eq
+#guard_msgs in #print axioms FirRef.Dom.dominance_eq
 
 end FirTest.Dominators
