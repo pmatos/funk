@@ -1,12 +1,14 @@
 """The harness's checks: the verdicts of both tools on every text, and the
 tests of the corpus's modules."""
 
+from functools import partial
 from pathlib import Path
 
 import corpus
 import sets
+import standins
 import tools
-from refine import FAILED, INVALID, PASSED, Judgement, expected, show_values
+from refine import FAILED, INVALID, PASSED, POISON, Judgement, expected, show_values
 from report import Report
 from sets import BudgetExceeded
 from tools import ACCEPTED, Verdict
@@ -74,12 +76,14 @@ class Harness:
                     " accept the module first",
                 )
             return
-        types = corpus.result_types(module.path.read_text(encoding="utf-8"))
+        text = module.path.read_text(encoding="utf-8")
+        types = corpus.result_types(text)
+        params = corpus.param_types(text)
         exe = "is not built: the module has no differential test"
         if any(t.expect is None for t in module.tests):
             exe = self.build(module)
         for t in module.tests:
-            self.test(module.path, t, types, exe)
+            self.test(module.path, t, types, exe, params.get(t.func))
 
     def build(self, module: corpus.Module) -> Path | str:
         """The executable that `funk build` makes of a module, or why it
@@ -97,9 +101,11 @@ class Harness:
         fuel = ["--fuel", str(t.fuel), *options, "--"]
         return tools.run([self.fir_ref, "run", *fuel, str(path), t.func, *t.args])
 
-    def test(self, path: Path, t: corpus.Test, types: dict, exe: Path | str):
+    def test(
+        self, path: Path, t: corpus.Test, types: dict, exe: Path | str, params=None
+    ):
         """Runs one test. `exe` is the module's executable, or why there is
-        none."""
+        none, and `params` the parameter types of the test's function."""
         if t.expect is not None:
             choices = [] if t.choices is None else ["--choices", ",".join(t.choices)]
             ref = tools.path(self.run_ref(path, t, *choices))
@@ -111,40 +117,67 @@ class Harness:
             self.report.add(j.status, t.show(), f"fir-ref {show(ref)}" + why(j))
             return
         ref = tools.outcomes(self.run_ref(path, t, "--exhaustive"))
-        native = exe
-        if isinstance(exe, Path):
-            native = tools.native_values(tools.run_native([str(exe), t.func, *t.args]))
-        shown = native if isinstance(native, str) else "returns " + show_values(native)
         detail = f"fir-ref {show(ref)}"
         if t.results:
             n = len(t.results)
             detail += f", and the test declares {n} result{'s' if n != 1 else ''}"
-        detail += f"; native code {shown}"
         checked = "the set is the declared results"
+        # `pre` judges the test whatever native code returns; otherwise
+        # `judge` judges each native result.
+        pre, judge = None, None
         if isinstance(ref, str):
-            j = Judgement(FAILED)
+            pre = Judgement(FAILED)
         elif t.func not in types:
-            j = Judgement(FAILED, f"cannot read the result types of {t.func}")
+            pre = Judgement(FAILED, f"cannot read the result types of {t.func}")
         elif isinstance(ref, BudgetExceeded):
             if not t.results:
-                j = Judgement(
+                pre = Judgement(
                     INVALID,
                     "with no set to judge by, the test proves nothing unless it"
                     " declares its results, each with a witness",
                 )
             else:
-                j = self.declared(path, t, None) or sets.judge_declared(
-                    t.results, native, types[t.func]
-                )
+                pre = self.declared(path, t, None)
+                judge = partial(sets.judge_declared, t.results, types=types[t.func])
                 checked = f"{len(sets.SEEDS)} seeded runs give declared results"
         else:
-            j = None
             if t.results:
-                j = sets.problem(ref.outcomes) or self.declared(path, t, ref)
-            j = j or sets.judge_set(ref, native, types[t.func])
+                pre = sets.problem(ref.outcomes) or self.declared(path, t, ref)
+            judge = partial(sets.judge_set, ref, types=types[t.func])
+        shown, j = self.native(t, exe, params, partial(either, pre, judge))
+        detail += f"; native code {shown}"
         if t.results and j.status == PASSED:
             j = Judgement(PASSED, f"each witness gives its result, and {checked}")
         self.report.add(j.status, t.show(), detail + why(j))
+
+    def native(self, t: corpus.Test, exe: Path | str, params, judge):
+        """Runs native code on a differential test and judges its result
+        with `judge`: what to show of it, and the judgement. A test whose
+        arguments hold poison runs native code on each vector of stand-ins
+        (`standins.py`), and passes when each result passes."""
+        if not isinstance(exe, Path):
+            return exe, judge(exe)
+        if POISON not in t.args:
+            native = self.run_native(exe, t.func, t.args)
+            return returned(native), judge(native)
+        vectors = standins.vectors(t.args, params)
+        if isinstance(vectors, str):
+            return f"is not run: {vectors}", judge(f"is not run: {vectors}")
+        each = f"{len(vectors)} argument vectors with stand-ins for poison"
+        shown = None
+        for args in vectors:
+            native = self.run_native(exe, t.func, args)
+            j = judge(native)
+            on = f"{returned(native)} on {' '.join(args)}"
+            if j.status != PASSED:
+                return f"{on}, one of {each}", j
+            shown = shown or f"{on}, and passes on all {each}"
+        return shown, j
+
+    def run_native(self, exe: Path, func: str, args) -> tuple[str, ...] | str:
+        """What a built executable returns on a function and its arguments,
+        or how it fails."""
+        return tools.native_values(tools.run_native([str(exe), func, *args]))
 
     def declared(self, path: Path, t: corpus.Test, ref) -> Judgement | None:
         """Checks a test's declared results: each witness gives its result,
@@ -163,6 +196,17 @@ class Harness:
             if j is not None:
                 return j
         return None
+
+
+def either(pre: Judgement | None, judge, native) -> Judgement:
+    """`pre` when it judges the test by itself, and otherwise `judge` on
+    the native result."""
+    return pre or judge(native)
+
+
+def returned(native) -> str:
+    """What native code did: the values it returned, or how it failed."""
+    return native if isinstance(native, str) else "returns " + show_values(native)
 
 
 def why(j: Judgement) -> str:

@@ -55,8 +55,8 @@ tests = [
 - `func` is the function's symbol as text writes it. Write a quoted symbol
   in a TOML literal string, between single quotes.
 - `args` gives one argument per parameter, each spelled as a constant of
-  its type: `true` or `false` at `i1`, signed decimal at every other width.
-  There are no `poison` arguments.
+  its type: `true` or `false` at `i1`, signed decimal at every other width;
+  or `poison`, at any integer type (#123).
 - `fuel` is `fir-ref run`'s budget, one step per op; 1,000,000 by default.
 - Without `expect`, the test is differential. It runs on `fir-ref`, in
   exhaustive mode, and as native code from `funk build`, and the native
@@ -64,7 +64,11 @@ tests = [
   values, each equal, or anything of its type where `fir-ref` returns
   poison. A run that makes no choice has one outcome. UB or fuel exhausted
   among the outcomes makes the test invalid, which counts as a failure:
-  raise the fuel budget, or make the test interpreter-only.
+  raise the fuel budget, or make the test interpreter-only. Native code
+  takes no `poison`: it runs on each combination of stand-ins in its place,
+  the boundary bit patterns of its type, and each result must refine one
+  of `fir-ref`'s outcomes on the poison
+  ([ADR-2026-11-03-1847](../../docs/adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
 - `results` declares a differential test's results, each a list of
   `values` and a `witness`: the choices on which `fir-ref run --choices`
   gives them. A test whose run chooses more than 16 bits on one path must
@@ -323,6 +327,11 @@ differential tests run it as native code, which gives zero for it, and
 the interpreter-only tests that fill its cells observe the poison
 ([ADR-2026-11-03-1618](../../docs/adrs/2026-11-03-1618-poison-s-differential-cells-are-filled-by-native-runs-and-its-interpreter-only-cells-by-observing-it.md)).
 `reject/poison.toml` holds its texts that do not decode.
+
+The tests of #123 pass `poison` as an argument. `poison-arg-iN` runs
+arithmetic, bitwise ops, shifts, `icmp`, `select`, width changes,
+division, `br`, `cond_br`, a loop, calls, a recursion, several results
+and `freeze` on poison arguments, at the eight widths above.
 
 ## Cases ported from LLVM
 

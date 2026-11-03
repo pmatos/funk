@@ -19,6 +19,15 @@ every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`.
 nothing else, to report a run. Sampled mode's values fit the run
 (`sampled_fits`), so it inherits scripted mode's theorem:
 `sampled_outcomes`.
+
+The theorems hold on every argument vector of the function's parameter
+types, poison included, and `fir-ref run` takes `poison` as an argument of
+any `iN` (#123). A run on a poison argument is refined by the run with any
+value in its place, calls and recursion included (`Core.args_isRefinedBy`).
+So the harness runs native code, which holds no poison, on stand-in values
+in place of each poison argument, and judges each result against the
+outcomes that `fir-ref` lists for the run on the poison
+(ADR-2026-11-03-1847).
 -/
 
 namespace Fir.Core

@@ -324,6 +324,12 @@ choice budget, seeded runs of sampled mode check that it gives no other.
 A test that runs a module on `fir-ref` and as native code, and checks that the
 native result refines the `fir-ref` result.
 
+**stand-in**:
+A defined value that native code runs a differential test on in place of
+a poison argument, since native code holds no poison: each boundary bit
+pattern of the argument's type, in every combination. Each native result
+must refine `fir-ref`'s outcome on the poison itself (ADR-2026-11-03-1847).
+
 **invalid test**:
 A differential test that can prove nothing: an outcome in its set is UB or
 fuel exhausted, or its choices exceed the budget and it declares no results.
