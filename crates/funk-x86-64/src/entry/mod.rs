@@ -5,9 +5,14 @@
 //! function, which parses the function's arguments, calls it by the System V
 //! convention and prints its result, and the table `__funk_functions`, which
 //! gives each function's name as fir writes it (`@f`, `@"a b"`), its number
-//! of parameters, its wrapper and the bytes of stack that the wrapper needs.
-//! The runtime finds a function in the table by the name on the command
-//! line, reserves that stack, and calls the wrapper on it.
+//! of parameters, its wrapper, the bytes of stack that a run of it needs
+//! with every call it makes (`stack.rs`), and whether it is recursive. The
+//! runtime finds a function in the table by the name on the command line,
+//! reserves that stack, or for a recursive function up to the process's
+//! stack limit (`ulimit -s`), and calls the wrapper on it
+//! (ADR-2026-11-02-1132).
+
+mod stack;
 
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module};
@@ -26,6 +31,10 @@ const RUNTIME: &str = include_str!("runtime.s");
 /// spare: the deepest of them uses less than 256 bytes.
 const RUNTIME_STACK: u64 = 16 * 1024;
 
+/// The largest figure in the table: no machine can map more, and the
+/// runtime adds a guard page to it without overflow.
+const MOST_STACK: u64 = 1 << 62;
+
 /// The entry point's assembly for `m`, which the backend has lowered into
 /// functions with frames of `frames` bytes. A function whose results the
 /// wrappers cannot print is reported.
@@ -36,9 +45,10 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
     let mut out = Vec::new();
     let mut stacks = Vec::new();
     let funcs: Vec<&Func> = m.funcs().collect();
-    for (i, (f, &frame)) in funcs.iter().zip(frames).enumerate() {
-        match wrapper(&mut asm, i, f, frame) {
-            Ok(stack) => stacks.push(stack),
+    let needs = stack::needs(m, frames);
+    for (i, (f, need)) in funcs.iter().zip(&needs).enumerate() {
+        match wrapper(&mut asm, i, f, need.bytes) {
+            Ok(stack) => stacks.push((stack, u8::from(need.recursive))),
             Err(d) => out.push(d),
         }
     }
@@ -50,9 +60,9 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
     asm.label("__funk_functions");
     asm.directive(format_args!(".quad\t{}", funcs.len()));
     let names: Vec<String> = funcs.iter().map(|f| print_symbol(&f.name)).collect();
-    for (i, ((f, name), stack)) in funcs.iter().zip(&names).zip(&stacks).enumerate() {
+    for (i, ((f, name), (stack, recursive))) in funcs.iter().zip(&names).zip(&stacks).enumerate() {
         asm.directive(format_args!(
-            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}, {stack}",
+            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}, {stack}, {recursive}",
             name.len(),
             f.params.len()
         ));
@@ -68,14 +78,15 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
     Ok(asm.finish())
 }
 
-/// The wrapper `__funk_entry_I` of the `i`-th function `f`, whose frame is
-/// `frame` bytes, and the bytes of stack that the wrapper needs to run.
+/// The wrapper `__funk_entry_I` of the `i`-th function `f`, a run of which
+/// needs `need` bytes below its return address, and the bytes of stack that
+/// the wrapper needs to run it.
 ///
 /// Lowering has already reported each parameter whose width the backend
 /// does not lower, and each `ret` with more than one value. The wrapper
 /// checks the signature again because a function that never reaches a
 /// `ret`, which branches allow, must still have results it can print.
-fn wrapper(asm: &mut Asm, i: usize, f: &Func, frame: i32) -> Result<u64, Diagnostic> {
+fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnostic> {
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
     let params = f
         .params
@@ -118,21 +129,22 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, frame: i32) -> Result<u64, Diagnos
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
-    Ok(stack_need(frame, size, outgoing))
+    Ok(stack_need(need, size, outgoing))
 }
 
 /// The bytes of stack that a wrapper with a frame of `wrapper` bytes and
-/// `outgoing` bytes of argument space needs to call a function with a
-/// frame of `frame` bytes, rounded up to a page. The call emitter supplies
-/// the outgoing space, padding included. Each frame also holds a return
-/// address and a saved `%rbp`.
-fn stack_need(frame: i32, wrapper: i32, outgoing: u64) -> u64 {
-    let bytes = u64::from(frame.unsigned_abs())
-        + 16
-        + u64::from(wrapper.unsigned_abs())
-        + 16
-        + outgoing
-        + RUNTIME_STACK;
+/// `outgoing` bytes of argument space needs to call a function, a run of
+/// which needs `need` bytes below its return address, rounded up to a page
+/// and at most [`MOST_STACK`]. The call emitter supplies the outgoing
+/// space, padding included. The wrapper's frame also holds a return address
+/// and a saved `%rbp`.
+fn stack_need(need: u64, wrapper: i32, outgoing: u64) -> u64 {
+    let bytes = need
+        .saturating_add(16)
+        .saturating_add(u64::from(wrapper.unsigned_abs()))
+        .saturating_add(outgoing)
+        .saturating_add(RUNTIME_STACK)
+        .min(MOST_STACK);
     let page = u64::from(PAGE.unsigned_abs());
     bytes.div_ceil(page) * page
 }
@@ -141,19 +153,26 @@ fn stack_need(frame: i32, wrapper: i32, outgoing: u64) -> u64 {
 mod tests {
     use super::*;
 
+    /// A function's need already holds its return address and saved
+    /// `%rbp`: 16 bytes and its frame, and what its calls need.
     #[test]
-    fn the_stack_holds_both_frames_and_the_runtime() {
-        assert_eq!(stack_need(0, 0, 0), 5 * 4096);
+    fn the_stack_holds_the_need_the_wrapper_and_the_runtime() {
         assert_eq!(stack_need(16, 0, 0), 5 * 4096);
+        assert_eq!(stack_need(32, 0, 0), 5 * 4096);
+        assert_eq!(stack_need(16, 0, 16), 5 * 4096);
         let big = 1 << 24;
+        assert_eq!(stack_need(big + 16, 16, 0), big + 5 * 4096);
+        let most = u64::from((i32::MAX & !15).unsigned_abs());
         assert_eq!(
-            stack_need(big, 16, 0),
-            u64::from(big.unsigned_abs()) + 5 * 4096
-        );
-        let most = i32::MAX & !15;
-        assert_eq!(
-            stack_need(most, most, 8 << 20),
+            stack_need(most + 16, i32::MAX & !15, 8 << 20),
             (1 << 32) + (8 << 20) + 4 * 4096
         );
+    }
+
+    #[test]
+    fn a_stack_beyond_any_machine_is_capped() {
+        assert_eq!(stack_need(u64::MAX, 16, 0), MOST_STACK);
+        assert_eq!(stack_need(MOST_STACK, 0, 0), MOST_STACK);
+        assert_eq!(stack_need(MOST_STACK - 4096, 0, u64::MAX), MOST_STACK);
     }
 }

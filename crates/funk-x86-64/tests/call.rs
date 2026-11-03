@@ -357,7 +357,7 @@ fn entry_restores_outgoing_space_and_reserves_its_peak() {
         );
         assert!(
             entry.contains(&format!(
-                "\t.quad\t.Lname0, 2, {n}, __funk_entry_0, {reservation}\n"
+                "\t.quad\t.Lname0, 2, {n}, __funk_entry_0, {reservation}, 0\n"
             )),
             "{n} arguments: {entry}"
         );

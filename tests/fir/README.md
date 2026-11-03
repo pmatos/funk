@@ -207,10 +207,9 @@ calls a callee that hits UB, which is UB of its caller; all at the same
 seven widths. A run that never ends is interpreter-only, since a
 differential test that runs out of fuel is invalid. Until the harness
 runs native code under a data limit (#92), a differential test recurses
-at most 20 deep, and a deeper run is interpreter-only too; until PR #90,
-a built executable's stack is also only its function's frame, its
-wrapper's and 16 KiB. `call-args` passes seven and eight arguments of
-mixed widths, some on the stack;
+at most 20 deep, and a deeper run is interpreter-only too.
+`call-args` passes seven and eight arguments of mixed widths, some on
+the stack;
 `call-results` calls functions with no result and with one, and
 `call-several`, interpreter-only, with several; `call-symbols` calls
 `@"1"` and runs it by that name; `sum` runs the spec's `@sum10`, which

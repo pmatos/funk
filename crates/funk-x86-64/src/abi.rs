@@ -46,11 +46,18 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Mem]) -> Result<u64, Str
     Ok(bytes as u64)
 }
 
+/// The 8-byte words that [`call`] pushes for `arguments` arguments before
+/// the return address: each argument past the sixth, and a word of padding
+/// when there is an odd number of them. The entry's stack figure reads a
+/// call by it too (ADR-2026-11-02-1132).
+pub(crate) fn pushed_words(arguments: usize) -> usize {
+    let stack = arguments.saturating_sub(ARG_REGS.len());
+    stack + stack % 2
+}
+
 /// The padded outgoing area must fit the signed immediate of `addq`.
 fn outgoing_bytes(arguments: usize) -> Option<i32> {
-    let stack = arguments.saturating_sub(ARG_REGS.len());
-    let padded = stack.checked_add(stack % 2)?;
-    i32::try_from(padded.checked_mul(8)?).ok()
+    i32::try_from(pushed_words(arguments).checked_mul(8)?).ok()
 }
 
 /// The offset from `%rbp`, after the standard prologue, of argument `i`

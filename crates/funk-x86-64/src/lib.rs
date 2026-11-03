@@ -6,7 +6,8 @@
 //! per fir function, each a global symbol that follows the System V AMD64
 //! calling convention (ADR-2026-10-30-1232), so C code can link to it. The
 //! entry file holds the entry point of an executable that runs one function
-//! from the command line and prints its results (ADR-2026-10-30-1233).
+//! from the command line and prints its results (ADR-2026-10-30-1233), on a
+//! stack that covers every call it makes (ADR-2026-11-02-1132).
 //! [`build`] assembles both with `as` and links them with `ld` into an
 //! object file and an executable (ADR-2026-10-30-1326).
 //!

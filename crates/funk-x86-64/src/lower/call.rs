@@ -19,9 +19,17 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
     }
 }
 
+/// The function that `op` calls, if it is a `call`.
+pub fn callee(op: &Op) -> Option<&str> {
+    match (op.name.as_str(), op.attrs.as_slice()) {
+        ("call", [Attr::Sym(callee)]) => Some(callee),
+        _ => None,
+    }
+}
+
 /// `%r = call @f %a, %b`.
 fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
-    let [Attr::Sym(callee)] = op.attrs.as_slice() else {
+    let Some(callee) = callee(op) else {
         return Err("call names its callee by one symbol".into());
     };
     if op.results.len() > 1 {
