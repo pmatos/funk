@@ -75,8 +75,8 @@ only successors they have, which #19 proves of each: `Core.br_goto_lt` and
 terminator that jumps gives no results. The interpreter binds none for it,
 while validation puts them in scope in the blocks that its block
 dominates, so a use of one would be stuck. No core terminator has results.
-Whether validation should rule them out for every dialect is an open
-question (#89).
+That condition is the dialect's obligation, not a rule of validation,
+until M3 designs exceptions and unwinding (ADR-2026-11-02-2248).
 
 These checks are not all of validation. The interpreter checks that a value
 is defined, not that its definition dominates its use, and it checks no
