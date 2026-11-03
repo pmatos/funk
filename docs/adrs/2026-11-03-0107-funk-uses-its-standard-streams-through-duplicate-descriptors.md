@@ -74,7 +74,7 @@ ADR said that its behaviour on a closed standard error did not change.
   exits with 2 in any case.
 - funk holds up to three more descriptors than before. Under an open-file
   limit below 6 it reports "Too many open files" where it used to run.
-  `fir-ref` aborts under a limit below 12, so no comparison sees this.
+  `fir-ref` fails under a limit below 12, so no comparison sees this.
 - A test runs `fmt` on several files with standard output and standard
   error on one file, and checks that their lines come in order. It fails
   if standard output is buffered by more than a line.
