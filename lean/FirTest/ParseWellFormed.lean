@@ -8,12 +8,14 @@ gives is well formed, so its printed form reads back as it
 idempotent. The texts below are ones that the printer did not write: they
 have comments, other spacing, a tab, a block's first op on its label's
 line, `const-1` for `const -1`, quoted symbols, a call to a quoted symbol,
-an op that owns a region, and no final line feed. One is of the sum of the
-core and the toy dialect. Each test applies the theorem to whatever the
-parser reads from the text, and a `#guard` runs the parser: it reads the
-text, the printer writes another text, and reading and printing that text
-gives it back. The last checks pin the axioms of the theorems to Lean's
-standard ones.
+an op that owns a region with a block argument, callsite, fused and
+derived locations, and no final line feed. One is of the sum of the core
+and the toy dialect. Each test applies the theorem to whatever the parser
+reads from the text, and a `#guard` runs the parser: it reads the text, the
+printer writes another text, and reading and printing that text gives it
+back. One more `#guard` checks that the parser rejects a value defined
+again inside a region, the check that `namesUnique` rests on at depth. The
+last checks pin the axioms of the theorems to Lean's standard ones.
 -/
 
 namespace FirTest
@@ -37,7 +39,8 @@ def fmtIdempotent (d : Dialect) [DialectText d] (t : String) : Bool :=
 /-! # Comments, spacing and a quoted symbol -/
 
 /-- A function whose symbol, `1`, is not a word, written with comments, a
-tab, no spaces where none are needed, `const-1`, and no final line feed. -/
+tab, no spaces where none are needed, `const-1`, a location table with
+callsite, fused and derived locations, and no final line feed. -/
 def commented : String :=
   "// A function whose symbol is not a word.\n" ++
   "func @\"1\"( %a : i32,%b:i32 )->i32{ // no spaces where none are needed\n" ++
@@ -45,7 +48,8 @@ def commented : String :=
   "  %c: i32=const-1 @1\n" ++
   "  %t: i32 = add %s, %c @0\n" ++
   "  ret %t @0 }\n" ++
-  "locs{@0=unknown @1 = \"f.c\":1:2 to 3:4}"
+  "locs{@0=unknown @1 = \"f.c\":1:2 to 3:4 @2=callsite(@0 at @1) @3=fused(@0,@1)\n" ++
+  "@4 = derived( @0 )}"
 
 /-- Whatever the parser reads from `commented` is well formed. -/
 theorem commented_wellFormed {m : Module CoreDialect} (h : Fir.parse commented = .ok m) :
@@ -63,20 +67,21 @@ theorem commented_reprint {m : Module CoreDialect} (h : Fir.parse commented = .o
 #guard fmtIn CoreDialect commented == some
   ("func @\"1\"(%a: i32, %b: i32) -> i32 {\n^entry:\n  %s: i32 = add nsw %a, %b @0\n" ++
     "  %c: i32 = const -1 @1\n  %t: i32 = add %s, %c @0\n  ret %t @0\n}\n\n" ++
-    "locs {\n  @0 = unknown\n  @1 = \"f.c\":1:2 to 3:4\n}\n")
+    "locs {\n  @0 = unknown\n  @1 = \"f.c\":1:2 to 3:4\n  @2 = callsite(@0 at @1)\n" ++
+    "  @3 = fused(@0, @1)\n  @4 = derived(@0)\n}\n")
 #guard fmtIdempotent CoreDialect commented
 
 /-! # Branches, calls and regions -/
 
 /-- A function whose symbol is quoted and calls itself, after a branch that
-passes an argument, and a function whose op owns a region, all on few
-lines, ending with a comment. -/
+passes an argument, and a function whose op owns a region whose block
+defines a value, all on few lines, ending with a comment. -/
 def calls : String :=
   "func @\"two words\"(%x: i8) -> i8 {\n" ++
   "^entry: br ^next(%x) @0\n" ++
   "^next(%y: i8):  %r: i8 = call @\"two words\" %y @0\n" ++
   "  ret %r @0\n}\n" ++
-  "func @g(){^entry: br { ^inner: ret @0 } @0 }\n" ++
+  "func @g(){^entry: br { ^inner(%v: i8): ret @0 } @0 }\n" ++
   "locs { @0 = unknown }\n// the end"
 
 /-- Whatever the parser reads from `calls` is well formed. -/
@@ -93,9 +98,15 @@ theorem calls_parse_print {m : Module CoreDialect} (h : Fir.parse calls = .ok m)
 #guard fmtIn CoreDialect calls == some
   ("func @\"two words\"(%x: i8) -> i8 {\n^entry:\n  br ^next(%x) @0\n^next(%y: i8):\n" ++
     "  %r: i8 = call @\"two words\" %y @0\n  ret %r @0\n}\n\n" ++
-    "func @g() {\n^entry:\n  br {\n    ^inner:\n      ret @0\n  } @0\n}\n\n" ++
+    "func @g() {\n^entry:\n  br {\n    ^inner(%v: i8):\n      ret @0\n  } @0\n}\n\n" ++
     "locs {\n  @0 = unknown\n}\n")
 #guard fmtIdempotent CoreDialect calls
+
+-- A value is defined once in its function, at any depth: the parser
+-- rejects `%a` defined again by a block of a region, at its second
+-- definition.
+#guard rejectedAt (oneFunc "func @f(%a: i8){^e: br { ^i(%a: i8): ret @0 } @0 }") 1 29
+  "%a is defined twice"
 
 /-! # Another dialect -/
 

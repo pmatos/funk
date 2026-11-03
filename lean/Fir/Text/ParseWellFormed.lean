@@ -34,7 +34,9 @@ from the text to the module. Of each function, `Func.WellFormed` asks:
   `SBlock.adds`).
 * `names`, that each value's name is a name: the lexer reads a value as `%`
   and one or more name characters (`lexToken_writable`), and a definition's
-  name is a value token (`readDef_writable`, `readDefType_writable`).
+  name is a value token: `readDef` takes it from one, and so does
+  `readOps` for an op's first result (`readDef_writable`,
+  `readBlocks_writable`).
 * `labels`, that each label is a name: the lexer reads a label as `^` and
   one or more name characters, and `readBlocks` takes a block's label from
   a label token.

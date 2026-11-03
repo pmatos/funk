@@ -30,9 +30,9 @@ a value or a label token, a word from a word token, a reference from a
 location reference token, and the lexer's step says that each of those
 tokens can be written. `ReadsWritable read P ts` says that on tokens `ts`
 that can be written, `read` gives what `P` holds of and leaves tokens that
-can be written. The tokens it leaves are a suffix of `ts`, but the readers'
-types say only that they are no more, so each lemma says that they can be
-written.
+can be written. The tokens a reader leaves are a suffix of `ts`, but its
+type says only that there are no more of them than in `ts`. So the type
+does not say that they can be written, and each lemma states it.
 -/
 
 namespace Fir

@@ -15,8 +15,9 @@ by their functional induction principle, `readBlocks.induct`, which Lean
 derives from the readers' own recursion. Each case of the principle is one
 reader on one shape of tokens, and takes what the readers it calls do on
 the tokens left to them as hypotheses: the structure that
-ADR-2026-11-03-0028 records for the round trip's lemmas. No case unfolds a
-reader that it calls.
+ADR-2026-11-03-0028 records for the round trip's lemmas, which
+ADR-2026-11-03-0328 applies to this proof. No case unfolds a reader that it
+calls.
 -/
 
 namespace Fir.Text
