@@ -301,3 +301,25 @@ fn output_that_cannot_be_written_is_an_io_error() {
         assert!(!err.contains("panicked"), "{err}");
     }
 }
+
+/// Standard output is buffered by line and standard error is not
+/// (ADR-2026-11-03-0107), so on one file each file's output and
+/// diagnostics come in the order funk reaches them.
+#[cfg(unix)]
+#[test]
+fn standard_output_and_error_interleave_in_order_on_one_file() {
+    let ok = file("interleave-ok.fir", DEAD);
+    let bad = file("interleave-bad.fir", "func @f(\n");
+    let nc = file("interleave-nc.fir", &SEVEN.replacen("  %c", "    %c", 1));
+    let parse_error = text(&funk(&["fmt", &bad], "").stderr);
+    assert!(parse_error.contains(": parse error: "), "{parse_error}");
+    let out = Command::new("sh")
+        .arg("-c")
+        .arg(r#"exec "$0" "$@" 2>&1"#)
+        .arg(env!("CARGO_BIN_EXE_funk"))
+        .args(["fmt", &ok, &bad, &nc])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(1));
+    assert_eq!(text(&out.stdout), format!("{DEAD}{parse_error}{SEVEN}"));
+}

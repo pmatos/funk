@@ -18,21 +18,6 @@ namespace Fir
 
 open Text
 
-/-- Takes the first token off `h : ts.map (·.tok) = t :: rest`: `ts` becomes
-`⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. -/
-local macro "take_tok " h:ident : tactic => `(tactic| (
-  (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
-  obtain ⟨_, _, he, $h:ident⟩ := $h
-  subst he))
-
-/-- `take_tok`, naming the token's position `p`. -/
-local macro "take_pos " h:ident p:ident : tactic => `(tactic| (
-  (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
-  obtain ⟨$p:ident, _, he, $h:ident⟩ := $h
-  subst he))
-
 variable {d : Dialect} [DialectText d]
 
 /-- An op's results and its `=`, when it has results. -/

@@ -193,8 +193,8 @@ as a width beyond the text's limit, may not be.
 Three more laws say that what the dialect writes fits the grammar: each op
 name is a word, each op's attributes can be written, and each valid type is
 written as a type. With them, every valid module of the dialect is well
-formed (see the round-trip section). The round-trip theorem of #11 rests on
-these laws, for every dialect.
+formed (see the round-trip section). The round-trip theorem,
+`printThenParse`, rests on these laws, for every dialect.
 -/
 class LawfulDialectText (d : Dialect) [DialectSignature d] [DialectValidation d]
     [DialectText d] : Prop where
