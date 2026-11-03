@@ -51,9 +51,9 @@ Facts:
   `Module.WellFormed` gives them all.
 - **One predicate per step says what a reader does with a part.** `Spells`
   for the lexer, `Reads` for the grammar, `Defines` and `Decodes` for the
-  two passes of the decoder. Each says what the reader gives on the text,
-  the tokens or the tree of one part, whatever follows it and at any
-  positions.
+  two passes of the decoder. Each says what the step gives on the text,
+  the tokens or the tree of one part, at any positions, and, for `Spells`
+  and `Reads`, before whatever may follow the part.
 - **The lemmas for blocks, ops and regions take what the nested readers do
   as hypotheses.** Each such lemma, such as `readOps_cons_reads`,
   `defineOps_cons` or `decodeOps_cons`, is not recursive: it takes the

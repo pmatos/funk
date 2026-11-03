@@ -6,14 +6,15 @@ import FirTest.Mixed
 Tests of #11's round trip, `printThenParse`, and of what follows from it,
 applied to concrete modules. The spec's example module and the module of
 `@fact`, `@even` and `@odd` are valid, so each reads back from its printed
-text, and no other valid module prints the same text. A module that is well
-formed but not valid reads back too: its `add` owns a region, which no core
-op may, and the region's block defines values that the first pass of
-decoding reads between the results of the ops around it. A module of the
-sum of the core dialect and a test dialect reads back from the laws of the
-sum's text alone, and so does every well-formed module of the test dialect
-by itself. The `#guard`s run the parser on the same modules. The last
-checks pin the axioms of the theorems to Lean's standard ones.
+text, and no other valid module prints as the example module does. A
+module that is well formed but not valid reads back too: its `add` owns a
+region, which no core op may, and the region's block defines values that
+the first pass of decoding reads between the results of the ops around it.
+A module of the sum of the core dialect and a test dialect reads back from
+the laws of the sum's text alone, and so does every well-formed module of
+the test dialect by itself. The `#guard`s run the parser and the printer on
+the same modules. The last checks pin the axioms of the theorems to Lean's
+standard ones.
 -/
 
 namespace FirTest

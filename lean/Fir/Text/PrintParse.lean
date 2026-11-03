@@ -34,8 +34,9 @@ The proof uses nothing of a dialect but the seven laws of
   by case.
 
 Neither reworks the proof of `PrintThenParse`. A new kind of item (H4, H5)
-is a change to the parser itself, since `decodeItem` must learn to decode
-it, and so it extends the decoding step of this proof.
+is a change to the printer and the parser themselves, since a new
+constructor of `Item` must be printed and `decodeItem` must learn to decode
+it, and so it extends the lemmas for items of each step of this proof.
 -/
 
 namespace Fir
