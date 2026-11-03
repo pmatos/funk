@@ -62,4 +62,9 @@ tests = [
   { func = "@cond_br", args = ["true", "9223372036854775807", "-1"] },
   { func = "@cond_br", args = ["true", "9223372036854775807", "-9223372036854775808"] },
   { func = "@cond_br", args = ["true", "9223372036854775807", "9223372036854775807"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@br", args = ["-1"], expect = ["-1"] },
+  { func = "@br", args = ["-9223372036854775808"], expect = ["-9223372036854775808"] },
+  { func = "@br", args = ["9223372036854775807"], expect = ["9223372036854775807"] },
 ]

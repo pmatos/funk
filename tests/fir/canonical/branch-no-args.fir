@@ -13,11 +13,14 @@ func @diamond(%c: i1, %a: i64, %b: i64) -> i64 {
   %d: i64 = sub %a, %b @0
   cond_br %c, ^then, ^else @0
 ^then:
-  br ^join @0
+  br ^difference @0
 ^else:
-  br ^join @0
-^join:
+  br ^sum @0
+^difference:
   ret %d @0
+^sum:
+  %e: i64 = add %a, %b @0
+  ret %e @0
 }
 
 func @chain(%a: i128) -> i128, i1 {

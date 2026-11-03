@@ -46,7 +46,9 @@ outcome, not the ops it ran.
   `func` cell of its function's results. This is static: a block that
   the test's arguments skip still counts. `fir-ref` gives no trace of
   the ops a run takes, and a second interpreter in Python would break
-  S7. So whoever fills a cell writes a test whose path runs the op. The
+  S7. So whoever fills a cell writes a test whose path runs the op and
+  whose outcome depends on what the op computes: a test that only passes
+  poison into the op checks how poison goes through it, not the op. The
   count does not look at the outcome; the harness judges that.
 - **The matrix.** `scripts/harness/coverage.py` counts, for each cell,
   the tests that exercise it, and writes the counts as Markdown to
@@ -61,8 +63,11 @@ outcome, not the ops it ran.
   `coverage.py`, which fails when the committed matrix is not the one it
   makes, or when a cell has no test. `coverage.py --write` rewrites it.
   The unit tests run in the `fir-harness-test` hook, and one of them
-  reads `Op.name`, `Pred.all`, `decodeWrap` and `decodeExact` in
-  `Text.lean` and fails when the cell set no longer follows them.
+  reads `Op.name`, `Pred.all`, `decodeWrap`, `decodeExact`, the arms
+  of `Op.decode` and `Op.attrs`, and `plainBinOps` in `Text.lean`. It
+  fails when the cell set no longer follows them, and so when an op
+  that took no attribute is given one through an existing decoder, such
+  as `exact` on `lshr`.
 
 ## Alternatives
 
@@ -79,7 +84,7 @@ outcome, not the ops it ran.
 - Adding or removing a test changes the counts, so a PR that changes
   the corpus regenerates the matrix, after merging `main` when `main`
   changed the corpus too.
-- A new op, flag or predicate in the core dialect fails the unit tests
-  until `scripts/harness/cells.py` has its cells, and then the hook
-  until the corpus tests them.
+- A new op, flag or predicate in the core dialect, or a flag on an op
+  that had none, fails the unit tests until `scripts/harness/cells.py`
+  has its cells, and then the hook until the corpus tests them.
 - A new side or width is a change to this ADR and to `cells.py`.

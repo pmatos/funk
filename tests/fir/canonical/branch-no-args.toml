@@ -1,7 +1,8 @@
 # Tests of branch-no-args.fir: br to blocks that take no arguments, so
 # the branch passes nothing. @jump jumps to a block written after the one
 # it then jumps back to; @diamond goes to ^then when %c is true and to
-# ^else when it is false, and each jumps to ^join; @chain jumps twice
+# ^else when it is false, ^then jumps to ^difference, which returns
+# %a - %b, and ^else to ^sum, which returns %a + %b; @chain jumps twice
 # and returns two values; @none returns no value.
 # Each test is differential: fir-ref and native code run it, and the
 # native result must refine fir-ref's.

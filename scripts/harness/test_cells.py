@@ -29,20 +29,113 @@ def attr_lists(body: str) -> set[str]:
     return found
 
 
+def decoded_attrs(text: str) -> dict[str, tuple[str, ...]]:
+    """The attributes that are cells of each op, as `Op.decode` reads
+    them: the arm of an op that reads its attributes with `decodeWrap`,
+    `decodeExact` or `Pred.all` takes theirs, and an op of `plainBinOps`,
+    or whose arm takes them through `bare`, takes none. A constant's value
+    and a callee are not cells, and any other arm is not known."""
+    body = definition(text, "Op.decode")
+    arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
+    for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
+        arms.setdefault(name, "bare")
+    readers = {
+        "decodeWrap": cells.WRAP,
+        "decodeExact": cells.EXACT,
+        "Pred.all": cells.PREDS,
+        "bare": ("",),
+        "decodeCast": ("",),
+    }
+    found = {}
+    for name, arm in arms.items():
+        if name in ("const", "call"):
+            found[name] = ("",)
+            continue
+        read = [attrs for reader, attrs in readers.items() if reader in arm]
+        found[name] = read[0] if len(read) == 1 else ("unknown",)
+    return found
+
+
+def flagged_ops(text: str) -> dict[str, set[str]]:
+    """The constructors that each arm of `Op.attrs` gives attributes, by
+    what the arm writes: the wrap flags, `exact`, a predicate's name, a
+    constant or a callee."""
+    found: dict[str, set[str]] = {}
+    arms = re.findall(r"\n  \| ([._][^=]*)=> (.*)", definition(text, "Op.attrs"))
+    for ctors, result in arms:
+        found.setdefault(result.strip(), set()).update(re.findall(r"\.(\w+)", ctors))
+    return found
+
+
 class Tests(unittest.TestCase):
-    def test_the_ops_of_the_core_dialect(self):
-        text = TEXT.read_text(encoding="utf-8")
+    def assert_cells_follow(self, text: str):
         names = re.findall(r'=> "(\w+)"', definition(text, "Op.name"))
         self.assertEqual(sorted(names), sorted(cells.OPS))
         preds = re.findall(r"\.(\w+)", definition(text, "Pred.all").split(":=")[1])
         self.assertEqual(tuple(preds), cells.PREDS)
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
-        for op in ("add", "sub", "mul"):
-            self.assertEqual(cells.AT_WIDTH[op], cells.WRAP)
-        for op in ("sdiv", "udiv"):
-            self.assertEqual(cells.AT_WIDTH[op], cells.EXACT)
-        self.assertEqual(cells.AT_WIDTH["icmp"], cells.PREDS)
+        self.assertIn("bare as", definition(text, "decodeCast"))
+        self.assertEqual(
+            decoded_attrs(text), {op: cells.AT_WIDTH.get(op, ("",)) for op in cells.OPS}
+        )
+        flagged = flagged_ops(text)
+        self.assertEqual(
+            set(flagged),
+            {
+                "[constAttr w v]",
+                "[.word p.name]",
+                "f.attrs",
+                'if e then [.word "exact"] else []',
+                "[.sym f]",
+                "[]",
+            },
+        )
+        self.assertEqual(flagged["[constAttr w v]"], {"const"})
+        self.assertEqual(flagged["[.word p.name]"], {"icmp"})
+        self.assertEqual(flagged["f.attrs"], {"add", "sub", "mul"})
+        self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
+        self.assertEqual(flagged["[.sym f]"], {"call"})
+        self.assertEqual(flagged["[]"], set())
+
+    def test_the_ops_of_the_core_dialect(self):
+        self.assert_cells_follow(TEXT.read_text(encoding="utf-8"))
+
+    def test_a_new_flag_on_an_op_that_had_none(self):
+        # `exact` on `lshr`, as LLVM has it: `Op.attrs` writes it, and
+        # `Op.decode` reads it with `decodeExact` instead of through
+        # `plainBinOps`. Each of the two edits alone fails the check too.
+        original = TEXT.read_text(encoding="utf-8")
+        to_attrs = (
+            "| .sdiv _ e | .udiv _ e =>",
+            "| .sdiv _ e | .udiv _ e | .lshr _ e =>",
+        )
+        to_decode = [
+            (
+                '  | "select" =>',
+                (
+                    '  | "lshr" => do pure (.lshr (← binWidth ts rs) (← decodeExact as))\n'
+                    '  | "select" =>'
+                ),
+            ),
+            ('("shl", .shl), ("lshr", .lshr), ', '("shl", .shl), '),
+        ]
+        text = original
+        for old, new in [to_attrs, *to_decode]:
+            self.assertEqual(text.count(old), 1, old)
+            text = text.replace(old, new)
+        self.assertEqual(decoded_attrs(text)["lshr"], cells.EXACT)
+        self.assertEqual(flagged_ops(text)["f.attrs"], {"add", "sub", "mul"})
+        decode_only = original
+        for old, new in to_decode:
+            decode_only = decode_only.replace(old, new)
+        for name, edited in [
+            ("both", text),
+            ("Op.attrs", original.replace(*to_attrs)),
+            ("Op.decode", decode_only),
+        ]:
+            with self.subTest(edit=name), self.assertRaises(AssertionError):
+                self.assert_cells_follow(edited)
 
     def test_the_cell_set(self):
         widths = (1, 8, 128)
