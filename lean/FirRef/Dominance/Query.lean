@@ -1,14 +1,21 @@
-import FirRef.Dominance.Lift
+import FirRef.Dominance.Place
 
 /-!
-`fir-ref`'s answer to "does block `a` dominate block `l`": the search's
-tree, lifted into the dominator tree once per function (`Oracle.build`),
-then one walk up from `l` per question. The walk follows jump pointers, so
-it takes a number of steps logarithmic in the depth of `l`. A block's jump
-pointer is an ancestor of the block, chosen by the rule of Myers' skew-binary
-lists (E. W. Myers, "An applicative random-access stack", 1983); the proofs
-need only that it is an ancestor. `dominance_eq` proves the answers equal to
-the spec's search, `dominatesIn`, for every pair of labels.
+`fir-ref`'s answer to "does block `a` dominate block `l`": the dominator
+tree, built once per function (`Oracle.build`), then one walk up from `l`
+per question, in steps logarithmic in the depth of `l` (`climbs`).
+
+The tree is built in four steps: the search's tree (`tree`), the
+semidominators (`Semis.run`), the placement of each block under the nearest
+ancestor of its parent numbered at most its semidominator (`place`), and
+the check that each block's parent is an ancestor of each of its
+predecessors (`fixed`). The search's tree has the facts of `Lifted`, and
+each step keeps them, so when the check passes the tree's ancestors are
+the dominators. If it ever failed, the lifting of `FirRef.Dominance.Lift`
+would go on from the placed tree until no block moves, and would end with
+the dominator tree too; on every graph that the tests try, the check
+passes. `dominance_eq` proves the answers equal to the spec's search,
+`dominatesIn`, for every pair of labels.
 -/
 
 namespace FirRef.Dom
@@ -54,106 +61,6 @@ theorem tree_setting (he : g.contains e = true) :
   · rw [mem_preds, List.mem_reverse, h.order]
   · rw [List.mem_reverse, h.order]
 
-/-! # Jump pointers -/
-
-/-- The jump pointer and the depth of each block given one so far. -/
-structure Jumps where
-  jump : Std.HashMap Name Name
-  depth : Std.HashMap Name Nat
-
-/-- Gives block `x` of the tree `pm` its jump pointer: its parent's jump
-pointer's jump pointer, when the parent's two jumps are equally long, or
-else its parent. -/
-def Jumps.add (pm : Std.HashMap Name Name) (e : Name) (j : Jumps) (x : Name) : Jumps :=
-  if x = e then j
-  else
-    let p := parentIn pm x
-    let jp := parentIn j.jump p
-    let jjp := parentIn j.jump jp
-    let dp := j.depth.getD p 0
-    let djp := j.depth.getD jp 0
-    let v := if dp - djp = djp - j.depth.getD jjp 0 then jjp else p
-    ⟨j.jump.insert x v, j.depth.insert x (dp + 1)⟩
-
-/-- The jump pointers of the blocks of `order`, parents first. -/
-def jumps (pm : Std.HashMap Name Name) (e : Name) (order : List Name) : Jumps :=
-  order.foldl (Jumps.add pm e) ⟨∅, ∅⟩
-
-theorem jumps_ancestor {par : Name → Name} {pre : Name → Nat} {R : Name → Prop}
-    {pm : Std.HashMap Name Name} (hpar : par = parentIn pm) (hs : Shaped par pre R e)
-    (order : List Name) (hord : ∀ x ∈ order, R x) :
-    ∀ x, R x → Ancestor par e (parentIn (jumps pm e order).jump x) x ∧
-      R (parentIn (jumps pm e order).jump x) := by
-  suffices ∀ (L : List Name) (j : Jumps), (∀ x ∈ L, R x) →
-      (∀ x, R x → Ancestor par e (parentIn j.jump x) x ∧ R (parentIn j.jump x)) →
-      ∀ x, R x → Ancestor par e (parentIn (L.foldl (Jumps.add pm e) j).jump x) x ∧
-        R (parentIn (L.foldl (Jumps.add pm e) j).jump x) from
-    this order _ hord fun x hx => by
-      simp only [parentIn, Std.HashMap.getD_empty]; exact ⟨.refl, hx⟩
-  intro L
-  induction L with
-  | nil => exact fun _ _ h => h
-  | cons y L ih =>
-    intro j hL hj
-    apply ih _ (fun x hx => hL x (List.mem_cons_of_mem _ hx))
-    intro x hx
-    have hy := hL y (List.mem_cons_self ..)
-    unfold Jumps.add
-    split
-    · exact hj x hx
-    · rename_i hye
-      simp only
-      rw [parentIn_insert]
-      split
-      · rename_i hyx
-        subst hyx
-        have hp := hs.up _ hy hye
-        rw [hpar] at hp
-        obtain ⟨a1, r1⟩ := hj _ hp.1
-        obtain ⟨a2, r2⟩ := hj _ r1
-        have hup : Ancestor par e (parentIn pm y) y := .up hye (hpar ▸ .refl)
-        split
-        · exact ⟨(a2.trans a1).trans hup, r2⟩
-        · exact ⟨hup, hp.1⟩
-      · exact hj x hx
-
-/-! # The walk -/
-
-/-- Whether `a` is an ancestor of `cur`: walk up from `cur`, by jump
-pointers that do not pass `a`'s number and otherwise by parents, until the
-number is at most `a`'s. The checks on the numbers make the walk end on any
-input; on a shaped tree they always pass. -/
-def climbs (pre : Name → Nat) (par jump : Name → Name) (a cur : Name) : Bool :=
-  if pre cur ≤ pre a then decide (cur = a)
-  else if pre a ≤ pre (jump cur) ∧ pre (jump cur) < pre cur then climbs pre par jump a (jump cur)
-  else if pre (par cur) < pre cur then climbs pre par jump a (par cur)
-  else false
-termination_by pre cur
-
-theorem climbs_iff {par jump : Name → Name} {pre : Name → Nat} {R : Name → Prop}
-    (hs : Shaped par pre R e) (hj : ∀ x, R x → Ancestor par e (jump x) x ∧ R (jump x))
-    {a cur : Name} (hc : R cur) : climbs pre par jump a cur = true ↔ Ancestor par e a cur := by
-  fun_induction climbs pre par jump a cur with
-  | case1 cur hle =>
-    rw [decide_eq_true_iff]
-    exact ⟨fun h => h ▸ .refl, fun h => (h.eq_of_pre hs hc hle).symm⟩
-  | case2 cur _ hj' ih =>
-    obtain ⟨ha, hr⟩ := hj cur hc
-    rw [ih hr]
-    refine ⟨fun h => h.trans ha, fun h => ?_⟩
-    rcases h.linear ha with h' | h'
-    · exact h'
-    · exact (h'.eq_of_pre hs (h.mem hs hc) hj'.1) ▸ .refl
-  | case3 cur hgt _ hlt ih =>
-    have hce : cur ≠ e := fun he => by
-      rw [he, hs.root_pre] at hgt; exact hgt (Nat.zero_le _)
-    rw [ih (hs.up cur hc hce).1]
-    refine ⟨fun h => .up hce h, fun h => (h.inv fun h' => hgt (h' ▸ Nat.le_refl _)).2⟩
-  | case4 cur hgt _ hng =>
-    have hce : cur ≠ e := fun he => by
-      rw [he, hs.root_pre] at hgt; exact hgt (Nat.zero_le _)
-    exact absurd (hs.up cur hc hce).2 hng
-
 /-! # The answer to every question of dominance -/
 
 /-- The dominator tree of a function's graph, with what its walk reads: each
@@ -168,12 +75,56 @@ does not reach `l`, or `a` is an ancestor of `l` in the dominator tree. -/
 def Oracle.dominates (o : Oracle) (a l : Name) : Bool :=
   a == l || !o.pre.contains l || climbs (o.pre.getD · 0) (parentIn o.par) (parentIn o.jump) a l
 
+/-- The search's tree `t` of a function's graph, with the predecessors `P`
+and the blocks `order` it numbers, in increasing order, placed by their
+semidominators. -/
+def Found.placing (t : Found) (P : Std.HashMap Name (List Name)) (e : Name)
+    (order : List Name) : Placing :=
+  let s := Semis.run t.num (parentIn t.up) P e t.order t.count
+  place t.num (Semis.semi t.num (parentIn t.up) s) e order t.up
+
 /-- The dominator tree of the graph `g` from the entry `e`. -/
 def Oracle.build (g : Graph) (e : Name) : Oracle :=
   let t := tree g e
   let order := t.order.reverse
-  let pm := lifts t.num (preds g order) e order t.up
-  ⟨t.pre, pm, (jumps pm e order).jump⟩
+  let P := preds g order
+  let st := t.placing P e order
+  if fixed t.num P e st.pm st.js.jump order then ⟨t.pre, st.pm, st.js.jump⟩
+  else
+    let pm := lifts t.num P e order st.pm
+    ⟨t.pre, pm, (jumps pm e order).jump⟩
+
+/-- What the build ends with: a tree with the facts of `Lifted`, in which
+each block's parent is an ancestor of each of its predecessors, and jump
+pointers that are ancestors. -/
+theorem build_spec (he : g.contains e = true) :
+    ∃ pm jump, Oracle.build g e = ⟨(tree g e).pre, pm, jump⟩ ∧
+      Lifted g e (tree g e).num (fun x => (tree g e).pre.contains x = true) pm ∧
+      (∀ b, (tree g e).pre.contains b = true → b ≠ e →
+        ∀ u ∈ (preds g (tree g e).order.reverse).getD b [],
+          Ancestor (parentIn pm) e (parentIn pm b) u) ∧
+      ∀ x, (tree g e).pre.contains x = true →
+        Ancestor (parentIn pm) e (parentIn jump x) x ∧
+          (tree g e).pre.contains (parentIn jump x) = true := by
+  have S := tree_setting he
+  have hi := tree_inv he
+  have hsem := Semis.run_spec (tree_lifted he) (fun x hx hxe => (hi.parent x hx hxe).2.2)
+    (fun u y hu => (S.preds u y).mp hu)
+    (tree g e).order (fun x hx => (hi.order x).mp hx)
+    (Nat.lt_of_le_of_lt (Nat.zero_le _) (hi.lt e hi.root))
+  have hpl : ((tree g e).placing (preds g (tree g e).order.reverse) e
+      (tree g e).order.reverse).Ok g e (tree g e).num (fun x => (tree g e).pre.contains x = true) :=
+    place_ok hsem (tree_lifted he) (tree g e).order.reverse (fun x hx => (S.order x).mp hx)
+  simp only [Oracle.build]
+  generalize (tree g e).placing (preds g (tree g e).order.reverse) e (tree g e).order.reverse = st
+    at hpl ⊢
+  cases hf : fixed (tree g e).num (preds g (tree g e).order.reverse) e st.pm st.js.jump
+    (tree g e).order.reverse
+  · rw [ite_eq_right Bool.false_ne_true]
+    obtain ⟨h, hfix⟩ := lifts_spec S hpl.lifted
+    exact ⟨_, _, rfl, h, hfix, jumps_ancestor rfl h.shaped _ (fun x hx => (S.order x).mp hx)⟩
+  · rw [ite_eq_left rfl]
+    exact ⟨_, _, rfl, hpl.lifted, fixed_spec S hpl.lifted.shaped hpl.jump hf, hpl.jump⟩
 
 /-- The dominator tree of the graph `g` whose paths start at the entry `e?`,
 when the entry is a block of the graph. It is data, not a function, so that
@@ -225,9 +176,8 @@ theorem dominance_eq (g : Graph) (e? : Option Name) :
     split
     · rename_i he
       have S := tree_setting he
-      obtain ⟨h, hfix⟩ := lifts_spec S (tree_lifted he)
-      have hj := jumps_ancestor rfl h.shaped _ (fun x hx => (S.order x).mp hx)
-      simp only [dominatesBy, Oracle.dominates, Oracle.build, dominatesIn, avoidingIn]
+      obtain ⟨pm, jump, hb, h, hfix, hj⟩ := build_spec he
+      simp only [dominatesBy, Oracle.dominates, hb, dominatesIn, avoidingIn]
       by_cases hal : a = l
       · subst hal; simp
       · have hal' : (a == l) = false := beq_eq_false_iff_ne.mpr hal

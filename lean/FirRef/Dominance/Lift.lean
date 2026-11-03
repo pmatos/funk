@@ -2,13 +2,17 @@ import FirRef.Dominance.Ancestor
 
 /-!
 `fir-ref` turns the search's spanning tree into the dominator tree by
-lifting blocks: a block whose parent is not an ancestor of each of its
-predecessors moves up to the nearest common ancestor of its parent and its
-predecessors. Passes over the blocks repeat until one moves nothing. This is
-the iterative algorithm of Cooper, Harvey and Kennedy, which `funk verify`
-also uses, started from the spanning tree instead of from nothing.
+moving blocks up the tree. The placement of `FirRef.Dominance.Place` moves
+each block once, guided by its semidominator. If the tree it ends with
+fails the check there, the lifting below goes on: a block whose parent is
+not an ancestor of each of its predecessors moves up to the nearest common
+ancestor of its parent and its predecessors, and passes over the blocks
+repeat until one moves nothing. This is the iterative algorithm of Cooper,
+Harvey and Kennedy, which `funk verify` also uses.
 
-Three facts hold of the tree at every step (`Lifted`). Each block is
+Three facts hold of the tree at every step (`Lifted`), and every move that
+takes from a block only ancestors that some path avoids keeps them
+(`move_lifted`). Each block is
 numbered above its parent. Each block is reached from its parent by a path
 whose blocks are numbered above the parent. And every block that is not an
 ancestor of a block `c` can be avoided on a path from the entry to `c`: so
@@ -169,6 +173,40 @@ theorem parentIn_insert (pm : Std.HashMap Name Name) (b q y : Name) :
     parentIn (pm.insert b q) y = if b = y then q else parentIn pm y := by
   simp [parentIn, Std.HashMap.getD_insert]
 
+/-- Moving block `b` up to an ancestor `q` of its parent keeps the tree's
+facts, when every block that the move takes from `b`'s ancestors can be
+avoided on a path from the entry to `b`. -/
+theorem move_lifted {pm : Std.HashMap Name Name} (h : Lifted g e pre R pm) {b q : Name}
+    (hb : R b) (hbe : b ≠ e) (hq : Ancestor (parentIn pm) e q (parentIn pm b))
+    (hlost : ∀ z, Ancestor (parentIn pm) e z (parentIn pm b) → ¬ Ancestor (parentIn pm) e z q →
+      z ≠ b → Avoids g e z b) :
+    Lifted g e pre R (pm.insert b q) := by
+  have hs := h.shaped
+  have hp := hs.up b hb hbe
+  have hqR : R q := hq.mem hs hp.1
+  have hpar : ∀ y, y ≠ b → parentIn (pm.insert b q) y = parentIn pm y :=
+    fun y hy => by rw [parentIn_insert, ite_eq_right (Ne.symm hy)]
+  have hpb : parentIn (pm.insert b q) b = q := by rw [parentIn_insert, ite_eq_left rfl]
+  have hqp := hq.pre_le hs hp.1
+  have hqb : pre q < pre b := Nat.lt_of_le_of_lt hqp hp.2
+  refine ⟨⟨hs.root, hs.root_pre, ?_⟩, ?_, ?_⟩
+  · intro y hy hye
+    by_cases hyb : y = b
+    · subst hyb; rw [hpb]; exact ⟨hqR, hqb⟩
+    · rw [hpar y hyb]; exact hs.up y hy hye
+  · intro y hy hye
+    by_cases hyb : y = b
+    · subst hyb
+      rw [hpb]
+      exact (h.ancestor_above hq hp.1).trans ((h.above y hb hye).mono hqp)
+    · rw [hpar y hyb]; exact h.above y hy hye
+  · intro c hc z hzc hn
+    by_cases hzc' : Ancestor (parentIn pm) e z c
+    · obtain ⟨h1, h2, h3, h4⟩ := ancestor_lost hs hpar hpb hbe hqR hqb hzc' hn
+      exact h.avoids_down (hlost z h1 h2 h4) (ancestor_of_move hbe hq hpar hpb h3) hc
+        (Nat.le_of_lt (Nat.lt_of_le_of_lt (h1.pre_le hs hp.1) hp.2))
+    · exact h.avoid c hc z hzc hzc'
+
 theorem lift_lifted (S : Setting g e pre R P order) {pm : Std.HashMap Name Name}
     (h : Lifted g e pre R pm) {b : Name} (hb : R b) : Lifted g e pre R (lift pre P e pm b) := by
   unfold lift
@@ -177,39 +215,16 @@ theorem lift_lifted (S : Setting g e pre R P order) {pm : Std.HashMap Name Name}
   rename_i hbe
   simp only
   split
-  · rename_i hlt
-    have hs := h.shaped
-    have hp := hs.up b hb hbe
-    obtain ⟨n1, n2, _, n4⟩ := foldl_nca_spec hs (P.getD b [])
+  · have hp := h.shaped.up b hb hbe
+    obtain ⟨_, n2, _, n4⟩ := foldl_nca_spec h.shaped (P.getD b [])
       (fun u hu => ((S.preds u b).mp hu).1) hp.1
-    have hpar : ∀ y, y ≠ b → parentIn (pm.insert b (target pre P pm b)) y = parentIn pm y :=
-      fun y hy => by rw [parentIn_insert, ite_eq_right (Ne.symm hy)]
-    have hpb : parentIn (pm.insert b (target pre P pm b)) b = target pre P pm b := by
-      rw [parentIn_insert, ite_eq_left rfl]
-    have hqb : pre (target pre P pm b) < pre b := Nat.lt_trans hlt hp.2
-    refine ⟨⟨S.root, S.root_pre, ?_⟩, ?_, ?_⟩
-    · intro y hy hye
-      by_cases hyb : y = b
-      · subst hyb; rw [hpb]; exact ⟨n1, hqb⟩
-      · rw [hpar y hyb]; exact hs.up y hy hye
-    · intro y hy hye
-      by_cases hyb : y = b
-      · subst hyb
-        rw [hpb]
-        exact (h.ancestor_above n2 hp.1).trans ((h.above y hb hye).mono (Nat.le_of_lt hlt))
-      · rw [hpar y hyb]; exact h.above y hy hye
-    · intro c hc z hzc hn
-      by_cases hzc' : Ancestor (parentIn pm) e z c
-      · obtain ⟨h1, h2, h3, h4⟩ := ancestor_lost hs hpar hpb hbe n1 hqb hzc' hn
-        have : ¬ ∀ u ∈ P.getD b [], Ancestor (parentIn pm) e z u := fun hall => h2 (n4 z h1 hall)
-        obtain ⟨u, hzu⟩ := Classical.not_forall.mp this
-        obtain ⟨hu, hzu⟩ := Classical.not_imp.mp hzu
-        obtain ⟨huR, hub⟩ := (S.preds u b).mp hu
-        have hzu' : z ≠ u := fun h' => hzu (h' ▸ .refl)
-        have hpath : Avoids g e z b := .step (h.avoid u huR z hzu' hzu) hub (bne_iff_ne.mpr h4.symm)
-        exact h.avoids_down hpath (ancestor_of_move hbe n2 hpar hpb h3) hc
-          (Nat.le_of_lt (Nat.lt_of_le_of_lt (h1.pre_le hs hp.1) hp.2))
-      · exact h.avoid c hc z hzc hzc'
+    refine move_lifted h hb hbe n2 fun z h1 h2 h4 => ?_
+    have : ¬ ∀ u ∈ P.getD b [], Ancestor (parentIn pm) e z u := fun hall => h2 (n4 z h1 hall)
+    obtain ⟨u, hzu⟩ := Classical.not_forall.mp this
+    obtain ⟨hu, hzu⟩ := Classical.not_imp.mp hzu
+    obtain ⟨huR, hub⟩ := (S.preds u b).mp hu
+    have hzu' : z ≠ u := fun h' => hzu (h' ▸ .refl)
+    exact .step (h.avoid u huR z hzu' hzu) hub (bne_iff_ne.mpr h4.symm)
   · exact h
 
 theorem pass_lifted (S : Setting g e pre R P order) (L : List Name) (hL : ∀ b ∈ L, R b)

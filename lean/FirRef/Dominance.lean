@@ -7,7 +7,11 @@ import FirRef.Dominance.Query
 another block with its own search of the function's graph, `dominatesIn`,
 so a function of `V` blocks with `U` such uses takes time in `O(U · V)`.
 `problemsIn` builds the function's dominator tree once, with
-`dominance` (`FirRef.Dominance.Query`), and answers each use from it.
+`dominance` (`FirRef.Dominance.Query`), and answers each use from it. It
+answers without the tree when the defining block is the use's own or the
+entry, which dominates every block; it builds the tree only when a
+question needs it, so a function with no other use across blocks costs no
+more than the spec's check.
 
 The copies below are the spec's `siteDominates`, `useProblems`,
 `opProblems` and `Func.problemsIn`, word for word, but for the function that
@@ -53,12 +57,38 @@ theorem useProblemsWith_eq (t : FuncTables d) :
   simp only [useProblemsWith, useProblems, siteDominatesWith_eq]
   split <;> rename_i h <;> simp only [h]
 
-/-- The dominator tree decides dominance in the function's graph as the
+theorem dominatesIn_entry (g : Graph) (a l : Name) : dominatesIn g [a] a l = true := by
+  simp [dominatesIn, avoidingIn, search]
+
+/-- Dominance from the entry `e?`: a block dominates itself, the entry
+dominates every block, and the tree `tree`, built when first asked,
+decides the rest. -/
+def domWith (e? : Option Name) (tree : Thunk (Option Oracle)) (a l : Name) : Bool :=
+  a == l || e? == some a || dominatesBy tree.get a l
+
+/-- The dominator tree, built when first asked, decides dominance in the
+graph `g` as the spec's search does. -/
+theorem domWith_eq (g : Graph) (e? : Option Name) :
+    domWith e? (Thunk.mk fun _ => dominance g e?) = dominatesIn g e?.toList := by
+  funext a l
+  rw [domWith, show (Thunk.mk fun _ => dominance g e?).get = dominance g e? from rfl,
+    dominance_eq]
+  cases e? with
+  | none => simp [dominatesIn_nil]
+  | some e =>
+    by_cases hea : e = a
+    · subst hea
+      simp [dominatesIn_entry]
+    · have h : (some e == some a) = false := by simpa using hea
+      rw [h, Bool.or_false, Option.toList_some, dominatesIn]
+      cases a == l <;> rfl
+
+/-- The function's dominator tree decides dominance in its graph as the
 spec's search does. -/
 theorem dominance_tables (f : Func d) (all : List (Block d)) :
-    dominatesBy (dominance (f.tables all).graph f.entryLabel?) =
+    domWith f.entryLabel? (Thunk.mk fun _ => dominance (f.tables all).graph f.entryLabel?) =
       dominatesIn (f.tables all).graph (f.tables all).start :=
-  dominance_eq _ _
+  domWith_eq _ _
 
 variable [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d]
@@ -103,10 +133,10 @@ theorem opProblemsWith_eq (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : B
   simp only [opProblemsWith, opProblems, useProblemsWith_eq]
 
 /-- `Func.problemsIn`, deciding dominance with the function's dominator
-tree, built once. -/
+tree, built at most once. -/
 def problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Problem :=
   let t := f.tables all
-  let tree := dominance t.graph f.entryLabel?
+  let tree := Thunk.mk fun _ => dominance t.graph f.entryLabel?
   let defs := f.params ++ all.flatMap Block.defs
   let reached := reachedIn t.graph t.start
   f.entryProblems ++
@@ -129,12 +159,13 @@ def problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Proble
   f.blocks.filterMap (fun b => if b.body ≠ [] then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
   f.blocks.flatMap (fun b => let n := b.body.length
-    b.body.zipIdx.flatMap fun (o, i) => opProblemsWith (dominatesBy tree) lk f t b n i o)
+    b.body.zipIdx.flatMap fun (o, i) => opProblemsWith (domWith f.entryLabel? tree) lk f t b n i o)
 
 @[csimp] theorem problemsIn_eq_problemsIn : @Func.problemsIn = @problemsIn := by
   funext d _ _ _ _ lk f all
-  have h : ∀ b n i o, opProblemsWith (dominatesBy (dominance (f.tables all).graph
-      f.entryLabel?)) lk f (f.tables all) b n i o = opProblems lk f (f.tables all) b n i o :=
+  have h : ∀ b n i o, opProblemsWith (domWith f.entryLabel? (Thunk.mk fun _ =>
+      dominance (f.tables all).graph f.entryLabel?)) lk f (f.tables all) b n i o =
+        opProblems lk f (f.tables all) b n i o :=
     fun b n i o => by
       rw [dominance_tables]
       exact opProblemsWith_eq lk f (f.tables all) b n i o

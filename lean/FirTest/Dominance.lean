@@ -3,12 +3,15 @@ import FirTest.Validate
 /-!
 Tests of `fir-ref`'s dominator tree (#55). On graphs, its answers are the
 spec's search's, `dominatesIn`, for every pair of labels: on graphs chosen
-for the cases the lifting must handle, and on 300 graphs drawn at random.
-On functions, the check runs `FirRef.problemsIn` (this module imports
+for the cases the lifting must handle, on the shapes where lifting alone
+takes quadratic time, and on 330 graphs drawn at random. On all of them,
+and on 400 more random graphs, the placement by semidominators is the
+dominator tree at once (`placesAll`), so the lifting is never needed. On
+functions, the check runs `FirRef.problemsIn` (this module imports
 `FirRef.Fast` through `FirTest.Validate`) and finds the problems of
-dominance; on chains of 100,000 blocks, it accepts a function where each
-block uses the value of the block before it, and one where each uses the
-value of the entry. The last checks pin the axioms of the theorems.
+dominance; it accepts functions of 100,000 blocks in a chain and of 20,000
+blocks in those shapes, each block using a value of a block that dominates
+it. The last checks pin the axioms of the theorems.
 -/
 
 namespace FirTest.Dominators
@@ -25,6 +28,20 @@ def agrees (g : Graph) (e : Name) (labels : List Name) : Bool :=
   labels.all fun a => labels.all fun l =>
     dominatesBy (dominance g (some e)) a l == dominatesIn g [e] a l
 
+/-- Whether the placement by semidominators passes the check that
+`Oracle.build` makes, so that the build needs no lifting. -/
+def placesAll (g : Graph) (e : Name) : Bool :=
+  !g.contains e ||
+    let t := tree g e
+    let order := t.order.reverse
+    let P := preds g order
+    let st := t.placing P e order
+    fixed t.num P e st.pm st.js.jump order
+
+/-- The tree agrees with the spec's search on every pair of the graph's
+blocks and a label that is not one, and needs no lifting. -/
+def sound (g : Graph) (e : Name) : Bool := agrees g e ("zz" :: g.keys) && placesAll g e
+
 /-- The pairs of distinct `labels` where the first dominates the second, by
 the tree from the entry `e`. -/
 def dominated (g : Graph) (e : Name) (labels : List Name) : List (Name × Name) :=
@@ -36,7 +53,7 @@ def dominated (g : Graph) (e : Name) (labels : List Name) : List (Name × Name) 
 /-- A diamond: the entry branches to `a` and `b`, which join at `c`. -/
 def diamond : Graph := graphOf ["e", "a", "b", "c"] [("e", "a"), ("e", "b"), ("a", "c"), ("b", "c")]
 
-#guard agrees diamond "e" ["e", "a", "b", "c", "zz"]
+#guard agrees diamond "e" ["e", "a", "b", "c", "zz"] && placesAll diamond "e"
 #guard dominated diamond "e" ["e", "a", "b", "c"] == [("e", "a"), ("e", "b"), ("e", "c")]
 
 /-- `b` and `c` reach each other, and `x` dominates both: a tree where they
@@ -45,7 +62,7 @@ so only lifting from the search's tree finds `x`. -/
 def crossed : Graph :=
   graphOf ["s", "x", "b", "c"] [("s", "x"), ("x", "b"), ("x", "c"), ("b", "c"), ("c", "b")]
 
-#guard agrees crossed "s" ["s", "x", "b", "c"]
+#guard agrees crossed "s" ["s", "x", "b", "c"] && placesAll crossed "s"
 #guard dominated crossed "s" ["s", "x", "b", "c"] ==
   [("s", "x"), ("s", "b"), ("s", "c"), ("x", "b"), ("x", "c")]
 
@@ -54,7 +71,7 @@ def crossed : Graph :=
 def twoPasses : Graph :=
   graphOf ["s", "a", "b", "c"] [("s", "a"), ("a", "b"), ("b", "c"), ("c", "b"), ("s", "c")]
 
-#guard agrees twoPasses "s" ["s", "a", "b", "c"]
+#guard agrees twoPasses "s" ["s", "a", "b", "c"] && placesAll twoPasses "s"
 #guard dominated twoPasses "s" ["s", "a", "b", "c"] == [("s", "a"), ("s", "b"), ("s", "c")]
 
 /-- An irreducible loop, nested loops, a self-loop, a successor that is not
@@ -65,7 +82,8 @@ def tangle : Graph :=
      ("h1", "a"), ("h1", "b2"), ("a", "b2"), ("b2", "a"), ("a", "a"), ("a", "exit"),
      ("b2", "out"), ("u", "a")]
 
-#guard agrees tangle "e" ["e", "h1", "h2", "b", "x", "a", "b2", "exit", "u", "out", "zz"]
+#guard agrees tangle "e" ["e", "h1", "h2", "b", "x", "a", "b2", "exit", "u", "out", "zz"] &&
+  placesAll tangle "e"
 #guard dominated tangle "e" ["h1", "h2", "b", "x", "a", "b2", "exit"] ==
   [("h1", "h2"), ("h1", "b"), ("h1", "x"), ("h1", "a"), ("h1", "b2"), ("h1", "exit"),
    ("h2", "b"), ("h2", "x"), ("a", "exit")]
@@ -94,9 +112,72 @@ def randomAgree (count : Nat) : Bool :=
     let n := 2 + i % 7
     let (es, s) := randomEdges n s
     let nodes := (List.range n).map (s!"n{·}")
-    (ok && agrees (graphOf nodes es) "n0" (s!"n{n}" :: "zz" :: nodes), s)) (true, 1)).1
+    (ok && agrees (graphOf nodes es) "n0" (s!"n{n}" :: "zz" :: nodes) &&
+      placesAll (graphOf nodes es) "n0", s)) (true, 1)).1
 
 #guard randomAgree 300
+
+/-- The edges of a sparse random graph over the nodes `n0` to `n(n-1)`: each
+node has one to three successors, drawn from the nodes and `n(n)`, which is
+not one, from the state `s`. -/
+def sparseEdges (n s : Nat) : List (Name × Name) × Nat :=
+  (List.range n).foldl (fun (es, s) i =>
+    let s := lcg s
+    (List.range (1 + s / 65536 % 3)).foldl (fun (es, s) _ =>
+      let s := lcg s
+      ((s!"n{i}", s!"n{s / 65536 % (n + 1)}") :: es, s)) (es, s)) ([], s)
+
+/-- `count` sparse random graphs of `low` nodes and up to `span - 1` more, each
+of which passes `ok` from the entry `n0`. -/
+def sparseAll (count low span : Nat) (ok : Graph → Name → Bool) : Bool :=
+  ((List.range count).foldl (fun (all, s) i =>
+    let n := low + i % span
+    let (es, s) := sparseEdges n s
+    (all && ok (graphOf ((List.range n).map (s!"n{·}")) es) "n0", s)) (true, 7)).1
+
+-- The tree agrees with the spec's search on 30 graphs of 10 to 20 nodes;
+-- the placement needs no lifting on 400 graphs of 10 to 209 nodes.
+#guard sparseAll 30 10 11 sound
+#guard sparseAll 400 10 200 placesAll
+
+/-! # Shapes where lifting alone takes quadratic time -/
+
+/-- The blocks and edges of a function: each block with its successors. -/
+abbrev Shape := List (Name × List Name)
+
+/-- The graph of a shape. -/
+def Shape.graph (sh : Shape) : Graph :=
+  graphOf (sh.map (·.1)) (sh.flatMap fun (l, ss) => ss.map (l, ·))
+
+/-- The entry, a chain of `n` checks that may each leave for one shared exit
+`^j` (the "goto fail" shape), and the exit. -/
+def exits (n : Nat) : Shape :=
+  ("e", ["c1"]) :: (List.range n).map (fun i =>
+    (s!"c{i + 1}", [if i + 1 = n then "j" else s!"c{i + 2}", "j"])) ++ [("j", [])]
+
+/-- Loops nested `d` deep: the headers `h1` to `hd` in a chain, and the
+latches `td` to `t1`, each of which jumps back to its header or on to the
+next latch. -/
+def nested (d : Nat) : Shape :=
+  ("e", ["h1"]) :: (List.range d).map (fun i =>
+    (s!"h{i + 1}", [if i + 1 = d then s!"t{d}" else s!"h{i + 2}"])) ++
+  (List.range d).reverse.map (fun i => (s!"t{i + 1}", [s!"h{i + 1}", s!"t{i}"])) ++ [("t0", [])]
+
+/-- Blocks `x1` to `xm` that each reach both neighbours, entered at both
+ends: from the entry at `x1`, and through `y` at `xm`. -/
+def passes (m : Nat) : Shape :=
+  ("e", ["x1", "y"]) :: ("y", [s!"x{m}"]) :: (List.range m).map (fun i =>
+    (s!"x{i + 1}", (if i + 1 < m then [s!"x{i + 2}"] else ["z"]) ++
+      (if i = 0 then [] else [s!"x{i}"]))) ++ [("z", [])]
+
+/-- Blocks `b0` to `bn` in a chain, where each block past the middle also
+jumps back to its mirror image below the middle. -/
+def zigzag (n : Nat) : Shape :=
+  (List.range n).map (fun i =>
+    (s!"b{i}", s!"b{i + 1}" :: if 2 * i > n then [s!"b{n - i}"] else [])) ++ [(s!"b{n}", [])]
+
+#guard sound (exits 40).graph "e" && sound (nested 20).graph "e" &&
+  sound (passes 40).graph "e" && sound (zigzag 41).graph "b0" && sound (zigzag 40).graph "b0"
 
 /-! # Functions -/
 
@@ -118,6 +199,39 @@ def previous (i : Nat) : Name := if i = 0 then "p" else s!"v{i - 1}"
 #guard messages (chain 100000 fun i => if i = 0 then "p" else "v0") == []
 #guard messages (chain 4 fun i => if i = 1 then "v3" else previous i) ==
   ["%v3 is defined in ^b3, which does not dominate ^b1"]
+
+/-- A function of the shape `sh`, with parameters `%p: i32` and `%c: i1`.
+Block `l` defines `%vl`, a `freeze` of the value of the block `use l`, or
+of `%p` for the entry, and ends with `ret`, `br` or `cond_br %c` by its
+number of successors. -/
+def ofShape (sh : Shape) (use : Name → Name) : Module CoreDialect :=
+  moduleOf [⟨"f", [("p", .int 32), ("c", .int 1)], [], ⟨sh.zipIdx.map fun ((l, ss), i) =>
+    ⟨l, [], [op [(s!"v{l}", .int 32)] (.freeze 32) [if i = 0 then "p" else s!"v{use l}"],
+      match ss with
+      | [] => op [] (.ret []) []
+      | [s] => op [] .br [] 0 [⟨s, []⟩]
+      | ss => op [] .condBr ["c"] 0 (ss.map (⟨·, []⟩))]⟩⟩⟩]
+
+/-- The label of `l`'s letter and the next number, or the number before. -/
+def shift (l : Name) (next : Bool) : Name :=
+  match l.toList with
+  | c :: ds => match (String.ofList ds).toNat? with
+    | some k => String.ofList [c] ++ toString (if next then k + 1 else k - 1)
+    | none => l
+  | [] => l
+
+-- Each check uses the value of the check before it; the exit, the entry's.
+#guard messages (ofShape (exits 20000) fun l =>
+  if l = "j" ∨ l = "c1" then "e" else shift l false) == []
+-- Each block uses the value of its immediate dominator: the header before
+-- it, the latch after it, or for `t_d` the header `h_d`.
+#guard messages (ofShape (nested 10000) fun l =>
+  if l = "h1" then "e" else if l = "t10000" then "h10000"
+  else shift l (l.toList.head? == some 't')) == []
+-- Each `x` and `y` uses the entry's value, and `z` that of `x_m`.
+#guard messages (ofShape (passes 20000) fun l => if l = "z" then "x20000" else "e") == []
+-- Each block uses the value of the block before it.
+#guard messages (ofShape (zigzag 20000) (shift · false)) == []
 
 /-- A diamond whose join uses a value of one arm, and a loop whose header
 uses a value of its body. -/

@@ -19,8 +19,8 @@ and `moduleProblems` are copies of them, compiled after it and proved equal
 by `rfl`, and two more `@[csimp]` theorems make `fir-ref` call the copies.
 The rest of the check, `Func.problemsIn`, takes the list of blocks as an
 argument and walks only lists. `FirRef.Dominance`, imported first, replaces
-it with a copy that decides dominance with a dominator tree built once per
-function, so the copies here call that one (#55). The spec's
+it with a copy that decides dominance with a dominator tree built at most
+once per function, so the copies here call that one (#55). The spec's
 instances `Decidable m.Valid` and `Decidable (f.Valid ctx)` are compiled
 before these theorems too, and `decide` inlines them, so `fir-ref` decides
 validity with `Module.problems`, never with `decide`.
