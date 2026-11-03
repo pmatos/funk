@@ -15,8 +15,7 @@ The LLVM Project is under the Apache License v2.0 with LLVM Exceptions
 beside this file. Only the empty line that ends LLVM's file is gone, as
 the repository's `end-of-file-fixer` check removes it. The files of this
 directory are distributed under that licence, not under funk's MIT
-licence. The rest of the repository is not
-derived from LLVM.
+licence.
 
 [ADR-2026-11-03-0643](../../../docs/adrs/2026-11-03-0643-ported-llvm-tests-keep-llvm-s-licence-and-name-their-source.md)
 decides this layout and how the licence is kept, and
@@ -39,8 +38,8 @@ how the cases were chosen and rewritten.
   the sidecar says why; otherwise the case is left out.
 - A result that a code generation test stores through a pointer is
   returned instead, and a struct of two values is two results.
-- Vectors, floating point, pointers, memory, calls to other functions,
-  intrinsics and `switch` are left out.
+- Vectors, floating point, pointers, memory, calls to functions that the
+  file does not define, intrinsics and `switch` are left out.
 
 Where LLVM folds a function, its tests expect the folded value; where the
 input gives poison or UB, the test expects that, and the sidecar says how

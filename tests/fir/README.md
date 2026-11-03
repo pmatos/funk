@@ -129,13 +129,14 @@ locs {
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
   texts in Rust, those of `llvm/` among the canonical ones.
 - `scripts/check-fir-ref.sh test` checks them, `llvm/` too, with
-  `fir-ref fmt`, and that `fir-ref validate` accepts each one. It also runs functions of
-  `add.fir`, `locations.fir`, `names.fir`, `results.fir`, `seven.fir`,
-  `symbols.fir` and `widths.fir`, and of `noncanonical/add.fir`, with
-  `fir-ref run`, and checks each result against a table of its own
-  (ADR-2026-10-30-1856). Editing one of those files means updating that
-  table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
-  prints from them, byte for byte (ADR-2026-10-30-1250).
+  `fir-ref fmt`, and that `fir-ref validate` accepts each one. It also
+  runs functions of `add.fir`, `locations.fir`, `names.fir`,
+  `results.fir`, `seven.fir`, `symbols.fir` and `widths.fir`, and of
+  `noncanonical/add.fir`, with `fir-ref run`, and checks each result
+  against a table of its own (ADR-2026-10-30-1856). Editing one of those
+  files means updating that table. `scripts/check-fir-ref.sh round-trip`
+  has Lean reprint what Rust prints from them, byte for byte
+  (ADR-2026-10-30-1250).
 
 The texts use `const`, `add`, `sub` and `mul` with their flags `nuw` and
 `nsw`, `freeze` and `ret`, but for must-reject texts that name an op or a

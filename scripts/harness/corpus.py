@@ -8,7 +8,8 @@
   tools must give and the rule it breaks.
 - `llvm/NAME.fir` is a canonical, valid module ported from an LLVM test,
   and `llvm/NAME.toml` lists its tests, names the LLVM test it comes from
-  and, for each test, the function or CHECK lines of that test. LLVM's
+  and, for each test, the function, CHECK lines or RUN line of that test
+  that the test runs. LLVM's
   licence, `llvm/LICENSE.TXT`, and a notice, `llvm/README.md`, are beside
   them (ADR-2026-11-03-0643).
 
