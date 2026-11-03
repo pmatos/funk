@@ -76,7 +76,9 @@ tests = [
   of `fir-ref run --seed` must each give a declared result. Within the
   budget, the declared results must be exactly the run's outcomes. A
   witness that no longer fits the run fails the test. Native code must
-  refine one declared result.
+  refine one declared result. When it fails on a poison stand-in, the
+  harness runs `fir-ref` on that vector too: UB or fuel exhausted there
+  makes the test invalid.
 - With `expect`, the test is interpreter-only: only `fir-ref` runs it, and
   it must give that result. `expect` is a list of values, each a value or
   `"poison"`, or `"ub"` (any reason), or `"fuel-exhausted"`. `choices`
