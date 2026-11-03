@@ -1,7 +1,8 @@
 //! Writes the texts that Rust prints for the cross-language round trip
 //! (#10): the printed form of every file of the shared corpus,
-//! `tests/fir/`, and of the first `COUNT` modules of the generator. The Lean
-//! side parses and reprints each one, and the bytes must match
+//! `tests/fir/`, the modules ported from LLVM's tests among them, and of
+//! the first `COUNT` modules of the generator. The Lean side parses and
+//! reprints each one, and the bytes must match
 //! (`scripts/check-fir-ref.sh round-trip`).
 //!
 //! Usage: `cargo run -p funk-ir --example fir_texts -- OUT_DIR [COUNT]`
@@ -54,7 +55,9 @@ fn run(args: &[String]) -> Result<(), String> {
     let out = Path::new(out);
     std::fs::create_dir_all(out).map_err(|e| format!("cannot create {}: {e}", out.display()))?;
     let reg = Registry::core();
-    let files = corpus(out, "canonical", &reg)? + corpus(out, "noncanonical", &reg)?;
+    let files = corpus(out, "canonical", &reg)?
+        + corpus(out, "noncanonical", &reg)?
+        + corpus(out, "llvm", &reg)?;
     for seed in 0..count {
         let m = generate::module(&mut Rng::new(seed));
         write(out, &format!("generated-{seed}.fir"), &print(&m))?;

@@ -3,7 +3,8 @@
 # fir-ref-test and fir-round-trip call it, locally and in CI.
 #   test        Builds the Lean package, which runs the Lean tests, then
 #               checks print(parse(t)) == t on every canonical text of
-#               tests/fir/, that each non-canonical text prints as its
+#               tests/fir/, in canonical/ and in llvm/, the modules ported
+#               from LLVM's tests, that each non-canonical text prints as its
 #               canonical sibling, that a string of ten million
 #               characters is read and printed on a 256 KiB stack, that
 #               a block of a million ops and a function of a million
@@ -52,7 +53,7 @@ fir_ref=$repo_root/lean/.lake/build/bin/fir-ref
 case "$1" in
     test)
         status=0
-        "$fir_ref" fmt --check tests/fir/canonical/*.fir || status=1
+        "$fir_ref" fmt --check tests/fir/canonical/*.fir tests/fir/llvm/*.fir || status=1
         for text in tests/fir/noncanonical/*.fir; do
             canonical=tests/fir/canonical/$(basename "$text")
             if ! "$fir_ref" fmt "$text" | cmp -s - "$canonical"; then
@@ -72,7 +73,7 @@ case "$1" in
             status=1
         fi
         # fir-ref validate reports one JSON verdict per file (ADR-2026-10-30-1741).
-        corpus=(tests/fir/canonical/*.fir tests/fir/noncanonical/*.fir)
+        corpus=(tests/fir/canonical/*.fir tests/fir/noncanonical/*.fir tests/fir/llvm/*.fir)
         rc=0
         "$fir_ref" validate "${corpus[@]}" >"$tmp/corpus.json" || rc=$?
         accepted=$(grep -c '"verdict":"accepted"' "$tmp/corpus.json" || true)

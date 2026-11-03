@@ -6,11 +6,17 @@
   `canonical/NAME.fir`.
 - `reject/*.toml` lists must-reject texts, each with the verdict that both
   tools must give and the rule it breaks.
+- `llvm/NAME.fir` is a canonical, valid module ported from an LLVM test,
+  and `llvm/NAME.toml` lists its tests, names the LLVM test it comes from
+  and, for each test, the function or CHECK lines of that test. LLVM's
+  licence, `llvm/LICENSE.TXT`, and a notice, `llvm/README.md`, are beside
+  them (ADR-2026-11-03-0643).
 
 Anything else in the corpus is a format error, as is a sidecar key that the
 format does not have.
 """
 
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,7 +26,10 @@ from sets import Declared
 from tools import PARSE_ERROR, VALIDATION_ERROR
 
 DEFAULT_FUEL = 1_000_000
-TOP = ("README.md", "canonical", "noncanonical", "reject")
+TOP = ("README.md", "canonical", "noncanonical", "reject", "llvm")
+# The files beside the modules ported from LLVM: its licence, and the
+# notice that says where they come from.
+NOTICES = ("LICENSE.TXT", "README.md")
 
 
 @dataclass(frozen=True)
@@ -69,16 +78,21 @@ class Corpus:
     errors: list[str] = field(default_factory=list)
 
 
-def files(directory: Path, suffixes: tuple[str, ...], errors: list[str]) -> list[Path]:
+def files(
+    directory: Path,
+    suffixes: tuple[str, ...],
+    errors: list[str],
+    beside: tuple[str, ...] = (),
+) -> list[Path]:
     """The files of `directory` with these suffixes, by name; anything else
-    is an error."""
+    is an error, but for the files named `beside`."""
     if not directory.is_dir():
         return []
     found = []
     for p in sorted(directory.iterdir()):
         if p.is_file() and p.suffix in suffixes:
             found.append(p)
-        else:
+        elif not (p.is_file() and p.name in beside):
             errors.append(f"{p}: the corpus has no place for this")
     return found
 
@@ -110,7 +124,43 @@ def load(root: Path) -> Corpus:
         c.rejects += read_rejects(p, f"reject/{p.name}", c.errors)
     if not c.rejects:
         c.errors.append(f"{root / 'reject'}: the corpus has no must-reject texts")
+    load_ported(root / "llvm", c)
     return c
+
+
+def load_ported(directory: Path, c: Corpus):
+    """The modules ported from LLVM's tests, in `llvm/`: each with a
+    sidecar that names its source, beside LLVM's licence and a notice, and
+    all from one llvm-project commit (ADR-2026-11-03-0643)."""
+    if not directory.is_dir():
+        return
+    for name in NOTICES:
+        if not (directory / name).is_file():
+            c.errors.append(
+                f"{directory / name}: the modules ported from LLVM keep its"
+                " licence and a notice beside them"
+            )
+    found = files(directory, (".fir", ".toml"), c.errors, NOTICES)
+    firs = {p.stem for p in found if p.suffix == ".fir"}
+    commits = set()
+    for p in found:
+        if p.suffix == ".toml" and p.stem not in firs:
+            c.errors.append(f"{p}: there is no {p.stem}.fir to test")
+    for p in found:
+        if p.suffix != ".fir":
+            continue
+        sidecar = p.with_suffix(".toml")
+        tests = []
+        if sidecar.is_file():
+            tests = read_tests(sidecar, f"llvm/{p.name}", c.errors, commits)
+        else:
+            c.errors.append(f"{p}: a ported module has a sidecar that names its source")
+        c.modules.append(Module(f"llvm/{p.name}", p, tests))
+    if len(commits) > 1:
+        c.errors.append(
+            f"{directory}: the ported modules come from one llvm-project"
+            f" commit, not {len(commits)}: {', '.join(sorted(commits))}"
+        )
 
 
 def read_toml(path: Path, errors: list[str]) -> dict | None:
@@ -122,12 +172,19 @@ def read_toml(path: Path, errors: list[str]) -> dict | None:
         return None
 
 
-def read_tests(path: Path, module: str, errors: list[str]) -> list[Test]:
+def read_tests(
+    path: Path, module: str, errors: list[str], commits: set[str] | None = None
+) -> list[Test]:
+    """The tests of a sidecar. With `commits`, the sidecar is a ported
+    module's, and its source's commit joins `commits`."""
     data = read_toml(path, errors)
     if data is None:
         return []
-    found, problems = parse_tests(data, module)
+    ported = commits is not None
+    found, problems = parse_tests(data, module, ported)
     errors += [f"{path}: {p}" for p in problems]
+    if ported and source_problem(data.get("source")) is None:
+        commits.add(data["source"]["commit"])
     return found
 
 
@@ -148,16 +205,24 @@ def is_strings(value) -> bool:
     return isinstance(value, list) and all(isinstance(v, str) for v in value)
 
 
-def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
+def parse_tests(
+    data: dict, module: str, ported: bool = False
+) -> tuple[list[Test], list[str]]:
     """The tests of a sidecar: `tests`, a list of tables with `func` and
-    optionally `args`, `fuel`, `expect`, `choices` and `results`."""
-    problems = [f"unknown key {k}" for k in unknown_keys(data, ("tests",))]
+    optionally `args`, `fuel`, `expect`, `choices` and `results`. A ported
+    module's sidecar also has `source`, and each of its tests `from`."""
+    keys = ("tests", "source") if ported else ("tests",)
+    problems = [f"unknown key {k}" for k in unknown_keys(data, keys)]
+    if ported:
+        why = source_problem(data.get("source"))
+        if why:
+            problems.append(why)
     items = data.get("tests")
     if not isinstance(items, list):
         return [], problems + ["tests is a list of tests"]
     found = []
     for i, t in enumerate(items, 1):
-        why = test_problem(t)
+        why = test_problem(t, ported)
         if why:
             problems.append(f"test {i}: {why}")
             continue
@@ -183,12 +248,43 @@ def parse_tests(data: dict, module: str) -> tuple[list[Test], list[str]]:
     return found, problems
 
 
-def test_problem(t) -> str | None:
+def source_problem(source) -> str | None:
+    """Why `source` does not name the LLVM test that a ported module comes
+    from, and the llvm-project commit it was read at, if it does not."""
+    if not isinstance(source, dict):
+        return (
+            "source is a table: the file of the LLVM test that the module"
+            " comes from, and the llvm-project commit it was read at"
+        )
+    keys = unknown_keys(source, ("file", "commit"))
+    if keys:
+        return f"source: unknown key {keys[0]}"
+    file = source.get("file")
+    if not (
+        isinstance(file, str) and file.startswith("llvm/test/") and file.endswith(".ll")
+    ):
+        return (
+            "source: file is the path of an LLVM test in llvm-project, such"
+            " as llvm/test/Transforms/InstSimplify/shift.ll"
+        )
+    commit = source.get("commit")
+    if not isinstance(commit, str) or re.fullmatch("[0-9a-f]{40}", commit) is None:
+        return "source: commit is the full hash of an llvm-project commit"
+    return None
+
+
+def test_problem(t, ported: bool = False) -> str | None:
     if not isinstance(t, dict):
         return "a test is a table"
-    keys = unknown_keys(t, ("func", "args", "fuel", "expect", "choices", "results"))
+    allowed = ("func", "args", "fuel", "expect", "choices", "results")
+    keys = unknown_keys(t, allowed + (("from",) if ported else ()))
     if keys:
         return f"unknown key {keys[0]}"
+    if ported and not (isinstance(t.get("from"), str) and t["from"]):
+        return (
+            "from names the function, or the CHECK lines, of the LLVM test"
+            " that the test comes from"
+        )
     func = t.get("func")
     if not isinstance(func, str) or not func.startswith("@"):
         return "func is the function's symbol, as text writes it, such as @add3"

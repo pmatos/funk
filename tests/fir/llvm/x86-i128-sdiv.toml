@@ -1,0 +1,44 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/i128-sdiv.ll, ported to fir by
+# hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in LICENSE.TXT
+# beside this file, and README.md says how the cases were chosen and
+# rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# Each function divides an i128 by a constant beyond 64 bits: 2^66, -2^66
+# and -2^66 - 3, which native code divides through the runtime helper of
+# ADR-2026-11-03-0415.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/CodeGen/X86/i128-sdiv.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["-2305843009213693952"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["170141183460469231731687303715884105727"], results = [{ values = ["2305843009213693951"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["1512366075204170947332355369683137040"], results = [{ values = ["20496382304121723"], witness = [] }], from = "@test1" },
+  { func = "@test2", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2305843009213693952"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["170141183460469231731687303715884105727"], results = [{ values = ["-2305843009213693951"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["1512366075204170947332355369683137040"], results = [{ values = ["-20496382304121723"], witness = [] }], from = "@test2" },
+  { func = "@test3", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2305843009213693951"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["170141183460469231731687303715884105727"], results = [{ values = ["-2305843009213693951"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["1512366075204170947332355369683137040"], results = [{ values = ["-20496382304121723"], witness = [] }], from = "@test3" },
+]

@@ -1,0 +1,25 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/exact-nsw-nuw.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. Dividing twice by the signed
+# minimum gives 0: udiv by 2^31 leaves 0 or 1, and 0 or 1 by 2^31 is 0.
+# @div2 divides by -1 first, which is UB on the signed minimum; LLVM's 0
+# refines it. @shift1 to @shift5 use lshr exact, ashr exact, shl nuw and
+# shl nsw, which fir's shifts do not have, and are left out.
+#
+# No other function of the file is left out.
+source = { file = "llvm/test/Transforms/InstSimplify/exact-nsw-nuw.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@div1", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@div1" },
+  { func = "@div1", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@div1" },
+  { func = "@div1", args = ["2147483647"], results = [{ values = ["0"], witness = [] }], from = "@div1" },
+  { func = "@div1", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@div1" },
+  { func = "@div2", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
+  { func = "@div2", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
+  { func = "@div2", args = ["2147483647"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
+  { func = "@div2", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
+  { func = "@div2", args = ["-2147483648"], expect = "ub", from = "@div2" },
+]

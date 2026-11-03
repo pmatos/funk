@@ -23,6 +23,11 @@ and, for a run that makes choices,
   other layout. It parses to the same module as `canonical/NAME.fir`, which
   is its canonical form.
 - `reject/*.toml` holds the must-reject texts, grouped by what they break.
+- `llvm/NAME.fir` is a canonical text ported by hand from an LLVM test,
+  and `llvm/NAME.toml` lists its tests, as below; beside them are LLVM's
+  licence, `llvm/LICENSE.TXT`, and a notice, `llvm/README.md`. Their
+  files are under LLVM's licence, not funk's
+  ([ADR-2026-11-03-0643](../../docs/adrs/2026-11-03-0643-ported-llvm-tests-keep-llvm-s-licence-and-name-their-source.md)).
 
 The corpus holds nothing else: the harness fails on any other file, and on
 a key that the format below does not have.
@@ -122,9 +127,9 @@ locs {
   `fir-harness` hook, runs everything above, and checks that both tools
   accept every module of the Rust generator.
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
-  texts in Rust.
-- `scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
-  `fir-ref validate` accepts each one. It also runs functions of
+  texts in Rust, those of `llvm/` among the canonical ones.
+- `scripts/check-fir-ref.sh test` checks them, `llvm/` too, with
+  `fir-ref fmt`, and that `fir-ref validate` accepts each one. It also runs functions of
   `add.fir`, `locations.fir`, `names.fir`, `results.fir`, `seven.fir`,
   `symbols.fir` and `widths.fir`, and of `noncanonical/add.fir`, with
   `fir-ref run`, and checks each result against a table of its own
@@ -284,3 +289,13 @@ op as either operand and as both. `div-calls-i128` returns quotients
 and remainders among several results and passes them across calls, and
 `div-symbol-i128` names functions after the helper's routines
 ([ADR-2026-11-03-0414](../../docs/adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md)).
+
+## Cases ported from LLVM
+
+The modules of `llvm/` are LLVM test cases ported to fir by hand (#23).
+[`llvm/README.md`](llvm/README.md) lists them, says where each comes
+from and how the cases were rewritten, and shows the two keys that a
+ported sidecar has more than the format above, both required: `source`,
+the LLVM test file and the llvm-project commit it was read at, and each
+test's `from`, the LLVM function, or its CHECK or RUN lines, that the
+test's function is.

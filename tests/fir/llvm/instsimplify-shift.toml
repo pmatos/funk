@@ -1,0 +1,88 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/shift.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. A shift by
+# N or more gives poison in fir as in LLVM, so a fold that replaces a
+# shift whose amount may be that large is a refinement: the folded value
+# is allowed where the input gives poison. @shl_by_bitwidth gives poison;
+# @ashr_all_ones and @all_ones_left_right give -1 below 32 and poison at
+# 32 or more, where LLVM's -1 refines them; and the three @*_by_sext_bool
+# functions give %y on false and poison on true, as sext of true is -1, a
+# shift by 255, so LLVM's %y refines them.
+#
+# @shl_or_shr is LLVM's shl nuw without nuw, which fir's shl does not
+# have: the shift of a zext from i32 by 32 never wraps, so the flag never
+# gave poison. @shl_or_shr.folded is its CHECK lines, zext %a, and both
+# run on the same arguments. @shl_or_shr2 is the negative test, which LLVM
+# does not fold: on 0 and -2147483648 it gives 1, not zext %a.
+#
+# @poison to @poison6 shift by poison or shift poison. fir has no poison
+# constant, so each writes LLVM's poison as %p = shl %n, %n with %n = 32,
+# which the spec makes poison. @almost_all_ones_left_right and
+# @all_ones_left_right_not_same_shift are negative tests: on 31, and on 4
+# and 2, they give 0 and -4, not -1.
+#
+# The file's functions that neither this module nor
+# instsimplify-shift-widths holds are left out: those on vectors or undef,
+# and the @shl_nsw_* and @shl_nuw_* functions, which use shl nsw and shl
+# nuw.
+source = { file = "llvm/test/Transforms/InstSimplify/shift.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@shl_by_bitwidth", args = ["5"], expect = ["poison"], from = "@shl_by_bitwidth" },
+  { func = "@shl_by_bitwidth", args = ["-1"], expect = ["poison"], from = "@shl_by_bitwidth" },
+  { func = "@ashr_all_ones", args = ["0"], results = [{ values = ["-1"], witness = [] }], from = "@ashr_all_ones" },
+  { func = "@ashr_all_ones", args = ["1"], results = [{ values = ["-1"], witness = [] }], from = "@ashr_all_ones" },
+  { func = "@ashr_all_ones", args = ["31"], results = [{ values = ["-1"], witness = [] }], from = "@ashr_all_ones" },
+  { func = "@ashr_all_ones", args = ["32"], expect = ["poison"], from = "@ashr_all_ones" },
+  { func = "@ashr_all_ones", args = ["-1"], expect = ["poison"], from = "@ashr_all_ones" },
+  { func = "@lshr_by_sext_bool", args = ["false", "5"], results = [{ values = ["5"], witness = [] }], from = "@lshr_by_sext_bool" },
+  { func = "@lshr_by_sext_bool", args = ["false", "-128"], results = [{ values = ["-128"], witness = [] }], from = "@lshr_by_sext_bool" },
+  { func = "@lshr_by_sext_bool", args = ["false", "-1"], results = [{ values = ["-1"], witness = [] }], from = "@lshr_by_sext_bool" },
+  { func = "@lshr_by_sext_bool", args = ["true", "5"], expect = ["poison"], from = "@lshr_by_sext_bool" },
+  { func = "@ashr_by_sext_bool", args = ["false", "5"], results = [{ values = ["5"], witness = [] }], from = "@ashr_by_sext_bool" },
+  { func = "@ashr_by_sext_bool", args = ["false", "-128"], results = [{ values = ["-128"], witness = [] }], from = "@ashr_by_sext_bool" },
+  { func = "@ashr_by_sext_bool", args = ["false", "-1"], results = [{ values = ["-1"], witness = [] }], from = "@ashr_by_sext_bool" },
+  { func = "@ashr_by_sext_bool", args = ["true", "5"], expect = ["poison"], from = "@ashr_by_sext_bool" },
+  { func = "@shl_by_sext_bool", args = ["false", "5"], results = [{ values = ["5"], witness = [] }], from = "@shl_by_sext_bool" },
+  { func = "@shl_by_sext_bool", args = ["false", "-128"], results = [{ values = ["-128"], witness = [] }], from = "@shl_by_sext_bool" },
+  { func = "@shl_by_sext_bool", args = ["false", "-1"], results = [{ values = ["-1"], witness = [] }], from = "@shl_by_sext_bool" },
+  { func = "@shl_by_sext_bool", args = ["true", "5"], expect = ["poison"], from = "@shl_by_sext_bool" },
+  { func = "@shl_or_shr", args = ["5", "7"], results = [{ values = ["5"], witness = [] }], from = "@shl_or_shr" },
+  { func = "@shl_or_shr", args = ["-1", "-1"], results = [{ values = ["4294967295"], witness = [] }], from = "@shl_or_shr" },
+  { func = "@shl_or_shr", args = ["-2147483648", "123"], results = [{ values = ["2147483648"], witness = [] }], from = "@shl_or_shr" },
+  { func = "@shl_or_shr", args = ["0", "-1"], results = [{ values = ["0"], witness = [] }], from = "@shl_or_shr" },
+  { func = "@shl_or_shr.folded", args = ["5", "7"], results = [{ values = ["5"], witness = [] }], from = "@shl_or_shr, its CHECK lines" },
+  { func = "@shl_or_shr.folded", args = ["-1", "-1"], results = [{ values = ["4294967295"], witness = [] }], from = "@shl_or_shr, its CHECK lines" },
+  { func = "@shl_or_shr.folded", args = ["-2147483648", "123"], results = [{ values = ["2147483648"], witness = [] }], from = "@shl_or_shr, its CHECK lines" },
+  { func = "@shl_or_shr.folded", args = ["0", "-1"], results = [{ values = ["0"], witness = [] }], from = "@shl_or_shr, its CHECK lines" },
+  { func = "@shl_or_shr2", args = ["5", "7"], results = [{ values = ["5"], witness = [] }], from = "@shl_or_shr2" },
+  { func = "@shl_or_shr2", args = ["0", "-1"], results = [{ values = ["1"], witness = [] }], from = "@shl_or_shr2" },
+  { func = "@shl_or_shr2", args = ["0", "-2147483648"], results = [{ values = ["1"], witness = [] }], from = "@shl_or_shr2" },
+  { func = "@shl_or_shr2", args = ["-1", "0"], results = [{ values = ["4294967295"], witness = [] }], from = "@shl_or_shr2" },
+  { func = "@poison", args = ["5"], expect = ["poison"], from = "@poison" },
+  { func = "@poison", args = ["0"], expect = ["poison"], from = "@poison" },
+  { func = "@poison2", args = ["5"], expect = ["poison"], from = "@poison2" },
+  { func = "@poison2", args = ["0"], expect = ["poison"], from = "@poison2" },
+  { func = "@poison3", args = ["5"], expect = ["poison"], from = "@poison3" },
+  { func = "@poison3", args = ["0"], expect = ["poison"], from = "@poison3" },
+  { func = "@poison4", args = ["5"], expect = ["poison"], from = "@poison4" },
+  { func = "@poison4", args = ["0"], expect = ["poison"], from = "@poison4" },
+  { func = "@poison5", args = ["5"], expect = ["poison"], from = "@poison5" },
+  { func = "@poison5", args = ["0"], expect = ["poison"], from = "@poison5" },
+  { func = "@poison6", args = ["5"], expect = ["poison"], from = "@poison6" },
+  { func = "@poison6", args = ["0"], expect = ["poison"], from = "@poison6" },
+  { func = "@all_ones_left_right", args = ["0"], results = [{ values = ["-1"], witness = [] }], from = "@all_ones_left_right" },
+  { func = "@all_ones_left_right", args = ["1"], results = [{ values = ["-1"], witness = [] }], from = "@all_ones_left_right" },
+  { func = "@all_ones_left_right", args = ["31"], results = [{ values = ["-1"], witness = [] }], from = "@all_ones_left_right" },
+  { func = "@all_ones_left_right", args = ["32"], expect = ["poison"], from = "@all_ones_left_right" },
+  { func = "@all_ones_left_right", args = ["-2147483648"], expect = ["poison"], from = "@all_ones_left_right" },
+  { func = "@almost_all_ones_left_right", args = ["0"], results = [{ values = ["-2"], witness = [] }], from = "@almost_all_ones_left_right" },
+  { func = "@almost_all_ones_left_right", args = ["1"], results = [{ values = ["-2"], witness = [] }], from = "@almost_all_ones_left_right" },
+  { func = "@almost_all_ones_left_right", args = ["31"], results = [{ values = ["0"], witness = [] }], from = "@almost_all_ones_left_right" },
+  { func = "@all_ones_left_right_not_same_shift", args = ["1", "0"], results = [{ values = ["-2"], witness = [] }], from = "@all_ones_left_right_not_same_shift" },
+  { func = "@all_ones_left_right_not_same_shift", args = ["0", "5"], results = [{ values = ["-1"], witness = [] }], from = "@all_ones_left_right_not_same_shift" },
+  { func = "@all_ones_left_right_not_same_shift", args = ["4", "2"], results = [{ values = ["-4"], witness = [] }], from = "@all_ones_left_right_not_same_shift" },
+]

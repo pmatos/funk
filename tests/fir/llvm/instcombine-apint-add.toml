@@ -1,0 +1,80 @@
+# Derived from LLVM: llvm/test/Transforms/InstCombine/apint-add.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. Flipping
+# the sign bit with xor and then adding the signed minimum gives the
+# operand back, at i1, i15, i47, i65, i111 and i1024; @test4 and @test9
+# add 1 to a value whose bit 0 is clear, which is an or, and @test8 adds
+# the signed minimum to an xor with a value whose top bit is set, which is
+# one xor; @sext zero-extends %x xor -8 from i4 to i7 and adds -8 with
+# nsw, which is a sext. Each fold that gives other ops runs beside its
+# CHECK lines on the same arguments. @test9's CHECK lines write or
+# disjoint, a flag that fir's or does not have: bit 0 of the and is clear,
+# so the flag never gives poison there, and the fir form drops it. LLVM
+# writes @test4's mask, 562949953421310, unsigned; fir writes that i49
+# constant -2. The widths are ones that the backend does not lower, so
+# every test is interpreter-only.
+#
+# The file's other functions are left out: @test3vec and @sext_vec work on
+# vectors, and @sext_multiuse is a variant of @sext whose other uses
+# divide.
+source = { file = "llvm/test/Transforms/InstCombine/apint-add.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["true"], expect = ["true"], from = "@test1" },
+  { func = "@test1", args = ["false"], expect = ["false"], from = "@test1" },
+  { func = "@test2", args = ["0"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["-1"], expect = ["-1"], from = "@test2" },
+  { func = "@test2", args = ["-70368744177664"], expect = ["-70368744177664"], from = "@test2" },
+  { func = "@test2", args = ["70368744177663"], expect = ["70368744177663"], from = "@test2" },
+  { func = "@test3", args = ["0"], expect = ["0"], from = "@test3" },
+  { func = "@test3", args = ["-1"], expect = ["-1"], from = "@test3" },
+  { func = "@test3", args = ["-16384"], expect = ["-16384"], from = "@test3" },
+  { func = "@test3", args = ["16383"], expect = ["16383"], from = "@test3" },
+  { func = "@test4", args = ["0"], expect = ["1"], from = "@test4" },
+  { func = "@test4", args = ["-1"], expect = ["-1"], from = "@test4" },
+  { func = "@test4", args = ["6"], expect = ["7"], from = "@test4" },
+  { func = "@test4", args = ["-281474976710656"], expect = ["-281474976710655"], from = "@test4" },
+  { func = "@test4.folded", args = ["0"], expect = ["1"], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["-1"], expect = ["-1"], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["6"], expect = ["7"], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["-281474976710656"], expect = ["-281474976710655"], from = "@test4, its CHECK lines" },
+  { func = "@sext", args = ["-8"], expect = ["-8"], from = "@sext" },
+  { func = "@sext", args = ["-1"], expect = ["-1"], from = "@sext" },
+  { func = "@sext", args = ["0"], expect = ["0"], from = "@sext" },
+  { func = "@sext", args = ["7"], expect = ["7"], from = "@sext" },
+  { func = "@sext.folded", args = ["-8"], expect = ["-8"], from = "@sext, its CHECK lines" },
+  { func = "@sext.folded", args = ["-1"], expect = ["-1"], from = "@sext, its CHECK lines" },
+  { func = "@sext.folded", args = ["0"], expect = ["0"], from = "@sext, its CHECK lines" },
+  { func = "@sext.folded", args = ["7"], expect = ["7"], from = "@sext, its CHECK lines" },
+  { func = "@test5", args = ["0"], expect = ["0"], from = "@test5" },
+  { func = "@test5", args = ["-1"], expect = ["-1"], from = "@test5" },
+  { func = "@test5", args = ["-1298074214633706907132624082305024"], expect = ["-1298074214633706907132624082305024"], from = "@test5" },
+  { func = "@test5", args = ["1298074214633706907132624082305023"], expect = ["1298074214633706907132624082305023"], from = "@test5" },
+  { func = "@test6", args = ["0"], expect = ["0"], from = "@test6" },
+  { func = "@test6", args = ["-1"], expect = ["-1"], from = "@test6" },
+  { func = "@test6", args = ["-18446744073709551616"], expect = ["-18446744073709551616"], from = "@test6" },
+  { func = "@test6", args = ["18446744073709551615"], expect = ["18446744073709551615"], from = "@test6" },
+  { func = "@test7", args = ["0"], expect = ["0"], from = "@test7" },
+  { func = "@test7", args = ["-1"], expect = ["-1"], from = "@test7" },
+  { func = "@test7", args = ["-89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068608"], expect = ["-89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068608"], from = "@test7" },
+  { func = "@test7", args = ["89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068607"], expect = ["89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068607"], from = "@test7" },
+  { func = "@test8", args = ["0"], expect = ["170141183460469231731687303715884105600"], from = "@test8" },
+  { func = "@test8", args = ["-1"], expect = ["-170141183460469231731687303715884105601"], from = "@test8" },
+  { func = "@test8", args = ["255"], expect = ["170141183460469231731687303715884105599"], from = "@test8" },
+  { func = "@test8", args = ["-170141183460469231731687303715884105728"], expect = ["-128"], from = "@test8" },
+  { func = "@test8.folded", args = ["0"], expect = ["170141183460469231731687303715884105600"], from = "@test8, its CHECK lines" },
+  { func = "@test8.folded", args = ["-1"], expect = ["-170141183460469231731687303715884105601"], from = "@test8, its CHECK lines" },
+  { func = "@test8.folded", args = ["255"], expect = ["170141183460469231731687303715884105599"], from = "@test8, its CHECK lines" },
+  { func = "@test8.folded", args = ["-170141183460469231731687303715884105728"], expect = ["-128"], from = "@test8, its CHECK lines" },
+  { func = "@test9", args = ["0"], expect = ["1"], from = "@test9" },
+  { func = "@test9", args = ["-1"], expect = ["562949953421311"], from = "@test9" },
+  { func = "@test9", args = ["6"], expect = ["7"], from = "@test9" },
+  { func = "@test9", args = ["-75557863725914323419136"], expect = ["1"], from = "@test9" },
+  { func = "@test9.folded", args = ["0"], expect = ["1"], from = "@test9, its CHECK lines" },
+  { func = "@test9.folded", args = ["-1"], expect = ["562949953421311"], from = "@test9, its CHECK lines" },
+  { func = "@test9.folded", args = ["6"], expect = ["7"], from = "@test9, its CHECK lines" },
+  { func = "@test9.folded", args = ["-75557863725914323419136"], expect = ["1"], from = "@test9, its CHECK lines" },
+]

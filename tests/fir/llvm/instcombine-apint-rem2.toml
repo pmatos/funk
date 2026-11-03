@@ -1,0 +1,51 @@
+# Derived from LLVM: llvm/test/Transforms/InstCombine/apint-rem2.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is, or says that it is the form that
+# the RUN line asks InstCombine for. The file's RUN line checks only that
+# no urem remains: a urem by a power of two becomes an and, and a urem by
+# a select of two powers of two an and by a select. The test.folded
+# functions are those forms, written by hand, and run beside the inputs on
+# the same arguments. The widths, i333, i499, i599, are ones that the
+# backend does not lower, so every test is interpreter-only, and each
+# expects the value that the urem gives.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/Transforms/InstCombine/apint-rem2.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["-1"], expect = ["70368744177663"], from = "@test1" },
+  { func = "@test1", args = ["0"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["4095"], expect = ["4095"], from = "@test1" },
+  { func = "@test1", args = ["-8749002899132047697490008908470485461412677723572849745703082425639811996797503692894052708092215296"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["8749002899132047697490008908470485461412677723572849745703082425639811996797503692894052708092215295"], expect = ["70368744177663"], from = "@test1" },
+  { func = "@test1.folded", args = ["-1"], expect = ["70368744177663"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["0"], expect = ["0"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["4095"], expect = ["4095"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["-8749002899132047697490008908470485461412677723572849745703082425639811996797503692894052708092215296"], expect = ["0"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["8749002899132047697490008908470485461412677723572849745703082425639811996797503692894052708092215295"], expect = ["70368744177663"], from = "@test1, as its RUN line folds it" },
+  { func = "@test2", args = ["-1"], expect = ["10633823966279326983230456482242756607"], from = "@test2" },
+  { func = "@test2", args = ["0"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["4095"], expect = ["4095"], from = "@test2" },
+  { func = "@test2", args = ["-818347651974035467503297424206899788054160511510766197370822842024033449101168638720817523081476039287721671031890017752304314136471348263332131897344"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["818347651974035467503297424206899788054160511510766197370822842024033449101168638720817523081476039287721671031890017752304314136471348263332131897343"], expect = ["10633823966279326983230456482242756607"], from = "@test2" },
+  { func = "@test2.folded", args = ["-1"], expect = ["10633823966279326983230456482242756607"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["0"], expect = ["0"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["4095"], expect = ["4095"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["-818347651974035467503297424206899788054160511510766197370822842024033449101168638720817523081476039287721671031890017752304314136471348263332131897344"], expect = ["0"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["818347651974035467503297424206899788054160511510766197370822842024033449101168638720817523081476039287721671031890017752304314136471348263332131897343"], expect = ["10633823966279326983230456482242756607"], from = "@test2, as its RUN line folds it" },
+  { func = "@test3", args = ["-1", "true"], expect = ["70368744177663"], from = "@test3" },
+  { func = "@test3", args = ["-1", "false"], expect = ["4095"], from = "@test3" },
+  { func = "@test3", args = ["0", "true"], expect = ["0"], from = "@test3" },
+  { func = "@test3", args = ["0", "false"], expect = ["0"], from = "@test3" },
+  { func = "@test3", args = ["4095", "true"], expect = ["4095"], from = "@test3" },
+  { func = "@test3", args = ["4095", "false"], expect = ["4095"], from = "@test3" },
+  { func = "@test3.folded", args = ["-1", "true"], expect = ["70368744177663"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["-1", "false"], expect = ["4095"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["0", "true"], expect = ["0"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["0", "false"], expect = ["0"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["4095", "true"], expect = ["4095"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["4095", "false"], expect = ["4095"], from = "@test3, as its RUN line folds it" },
+]

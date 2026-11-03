@@ -1,0 +1,87 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/signed-div-rem.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. This module
+# holds the file's sdiv functions, and instsimplify-signed-div-rem-srem
+# the others. A dividend whose magnitude is known to be below the
+# divisor's divides to 0 and has itself as its remainder: an i8 extended
+# to i32 is below 129 and 256, and an and with 253 or an or with -253 is
+# below 254. Each negative test, which LLVM does not fold, moves the
+# divisor to the edge and shows a quotient of 1 or -1. The srem functions
+# run beside their CHECK lines, which return the extended or masked
+# operand. @sdiv_min_dividend divides -32768 by a zext from i8: by 0 it is
+# UB, and @sdiv_min_divisor divides by -32768 and gives 0.
+#
+# The file's functions that neither this module nor
+# instsimplify-signed-div-rem-srem holds are variants of these with the
+# divisor's sign or the operand's mask changed, and are left out.
+source = { file = "llvm/test/Transforms/InstSimplify/signed-div-rem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@sdiv_sext_big_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_big_divisor" },
+  { func = "@sdiv_sext_big_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_big_divisor" },
+  { func = "@sdiv_sext_big_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_big_divisor" },
+  { func = "@sdiv_sext_big_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_big_divisor" },
+  { func = "@not_sdiv_sext_big_divisor", args = ["-128"], results = [{ values = ["-1"], witness = [] }], from = "@not_sdiv_sext_big_divisor" },
+  { func = "@not_sdiv_sext_big_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_big_divisor" },
+  { func = "@not_sdiv_sext_big_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_big_divisor" },
+  { func = "@not_sdiv_sext_big_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_big_divisor" },
+  { func = "@sdiv_sext_small_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_small_divisor" },
+  { func = "@sdiv_sext_small_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_small_divisor" },
+  { func = "@sdiv_sext_small_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_small_divisor" },
+  { func = "@sdiv_sext_small_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_sext_small_divisor" },
+  { func = "@not_sdiv_sext_small_divisor", args = ["-128"], results = [{ values = ["1"], witness = [] }], from = "@not_sdiv_sext_small_divisor" },
+  { func = "@not_sdiv_sext_small_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_small_divisor" },
+  { func = "@not_sdiv_sext_small_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_small_divisor" },
+  { func = "@not_sdiv_sext_small_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_sext_small_divisor" },
+  { func = "@sdiv_zext_big_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_big_divisor" },
+  { func = "@sdiv_zext_big_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_big_divisor" },
+  { func = "@sdiv_zext_big_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_big_divisor" },
+  { func = "@sdiv_zext_big_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_big_divisor" },
+  { func = "@not_sdiv_zext_big_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_big_divisor" },
+  { func = "@not_sdiv_zext_big_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_big_divisor" },
+  { func = "@not_sdiv_zext_big_divisor", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@not_sdiv_zext_big_divisor" },
+  { func = "@not_sdiv_zext_big_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_big_divisor" },
+  { func = "@sdiv_zext_small_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_small_divisor" },
+  { func = "@sdiv_zext_small_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_small_divisor" },
+  { func = "@sdiv_zext_small_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_small_divisor" },
+  { func = "@sdiv_zext_small_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_zext_small_divisor" },
+  { func = "@not_sdiv_zext_small_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_small_divisor" },
+  { func = "@not_sdiv_zext_small_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_small_divisor" },
+  { func = "@not_sdiv_zext_small_divisor", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@not_sdiv_zext_small_divisor" },
+  { func = "@not_sdiv_zext_small_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_zext_small_divisor" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["253"], results = [{ values = ["1"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-253"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits", args = ["253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits", args = ["-253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_clear_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["253"], results = [{ values = ["0"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-253"], results = [{ values = ["-1"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits", args = ["-2147483648"], results = [{ values = ["-1"], witness = [] }], from = "@not_sdiv_dividend_known_smaller_than_pos_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits", args = ["253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits", args = ["-253"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits" },
+  { func = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_dividend_known_smaller_than_neg_divisor_set_bits" },
+  { func = "@sdiv_min_dividend", args = ["1"], results = [{ values = ["-32768"], witness = [] }], from = "@sdiv_min_dividend" },
+  { func = "@sdiv_min_dividend", args = ["-1"], results = [{ values = ["-128"], witness = [] }], from = "@sdiv_min_dividend" },
+  { func = "@sdiv_min_dividend", args = ["127"], results = [{ values = ["-258"], witness = [] }], from = "@sdiv_min_dividend" },
+  { func = "@sdiv_min_dividend", args = ["0"], expect = "ub", from = "@sdiv_min_dividend" },
+  { func = "@sdiv_min_divisor", args = ["-128"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_min_divisor" },
+  { func = "@sdiv_min_divisor", args = ["127"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_min_divisor" },
+  { func = "@sdiv_min_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_min_divisor" },
+  { func = "@sdiv_min_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@sdiv_min_divisor" },
+]

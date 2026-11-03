@@ -1,0 +1,97 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/rem.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. A remainder
+# by zero is immediate UB, and so is srem of the signed minimum by -1, so
+# a fold to 0 holds wherever the input is defined: @zero_dividend on 0,
+# @zext_bool_srem_divisor on false, @select1 and @select2 on 0 and true,
+# and @srem_with_sext_bool_divisor on false and on true with the signed
+# minimum are UB, which LLVM's 0 refines. @srem_minusone_divisor is UB in
+# fir and LangRef, and LLVM's CHECK line gives poison, a refinement of it.
+#
+# @rem1 and @rem2 take the remainder twice, and @rem1.folded and
+# @rem2.folded once, as their CHECK lines do; both run on the same
+# arguments, and @rem3, the negative test, gives 0, not -1, on -7 and 3.
+# @urem_dividend_known_smaller_than_constant_divisor runs beside its CHECK
+# lines, an and. @srem_of_mul_nsw and @urem_of_mul_nuw give 0, or poison
+# where the mul's flag breaks, which LLVM's 0 refines; without the flag,
+# @srem_of_mul and @urem_of_mul_nsw give 65536 and 1.
+#
+# The file's functions that neither this module nor
+# instsimplify-rem-widths holds are left out: those on vectors or undef,
+# those that use shl nsw or shl nuw, @rem4, which calls a function the
+# file does not define, and variants of the functions here with other
+# constants or operands.
+source = { file = "llvm/test/Transforms/InstSimplify/rem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@zero_dividend", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@zero_dividend" },
+  { func = "@zero_dividend", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@zero_dividend" },
+  { func = "@zero_dividend", args = ["0"], expect = "ub", from = "@zero_dividend" },
+  { func = "@zext_bool_srem_divisor", args = ["true", "7"], results = [{ values = ["0"], witness = [] }], from = "@zext_bool_srem_divisor" },
+  { func = "@zext_bool_srem_divisor", args = ["true", "-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@zext_bool_srem_divisor" },
+  { func = "@zext_bool_srem_divisor", args = ["false", "7"], expect = "ub", from = "@zext_bool_srem_divisor" },
+  { func = "@select1", args = ["7", "true"], results = [{ values = ["0"], witness = [] }], from = "@select1" },
+  { func = "@select1", args = ["7", "false"], results = [{ values = ["0"], witness = [] }], from = "@select1" },
+  { func = "@select1", args = ["-2147483648", "true"], results = [{ values = ["0"], witness = [] }], from = "@select1" },
+  { func = "@select1", args = ["-1", "true"], results = [{ values = ["0"], witness = [] }], from = "@select1" },
+  { func = "@select1", args = ["0", "true"], expect = "ub", from = "@select1" },
+  { func = "@select2", args = ["7", "true"], results = [{ values = ["0"], witness = [] }], from = "@select2" },
+  { func = "@select2", args = ["7", "false"], results = [{ values = ["0"], witness = [] }], from = "@select2" },
+  { func = "@select2", args = ["-2147483648", "true"], results = [{ values = ["0"], witness = [] }], from = "@select2" },
+  { func = "@select2", args = ["-1", "true"], results = [{ values = ["0"], witness = [] }], from = "@select2" },
+  { func = "@select2", args = ["0", "true"], expect = "ub", from = "@select2" },
+  { func = "@rem1", args = ["7", "3"], results = [{ values = ["1"], witness = [] }], from = "@rem1" },
+  { func = "@rem1", args = ["-7", "3"], results = [{ values = ["-1"], witness = [] }], from = "@rem1" },
+  { func = "@rem1", args = ["-1", "10"], results = [{ values = ["-1"], witness = [] }], from = "@rem1" },
+  { func = "@rem1", args = ["7", "0"], expect = "ub", from = "@rem1" },
+  { func = "@rem1", args = ["-2147483648", "-1"], expect = "ub", from = "@rem1" },
+  { func = "@rem1.folded", args = ["7", "3"], results = [{ values = ["1"], witness = [] }], from = "@rem1, its CHECK lines" },
+  { func = "@rem1.folded", args = ["-7", "3"], results = [{ values = ["-1"], witness = [] }], from = "@rem1, its CHECK lines" },
+  { func = "@rem1.folded", args = ["-1", "10"], results = [{ values = ["-1"], witness = [] }], from = "@rem1, its CHECK lines" },
+  { func = "@rem1.folded", args = ["7", "0"], expect = "ub", from = "@rem1, its CHECK lines" },
+  { func = "@rem1.folded", args = ["-2147483648", "-1"], expect = "ub", from = "@rem1, its CHECK lines" },
+  { func = "@rem2", args = ["7", "3"], results = [{ values = ["1"], witness = [] }], from = "@rem2" },
+  { func = "@rem2", args = ["-7", "3"], results = [{ values = ["0"], witness = [] }], from = "@rem2" },
+  { func = "@rem2", args = ["-1", "10"], results = [{ values = ["5"], witness = [] }], from = "@rem2" },
+  { func = "@rem2", args = ["7", "0"], expect = "ub", from = "@rem2" },
+  { func = "@rem2", args = ["-2147483648", "-1"], results = [{ values = ["-2147483648"], witness = [] }], from = "@rem2" },
+  { func = "@rem2.folded", args = ["7", "3"], results = [{ values = ["1"], witness = [] }], from = "@rem2, its CHECK lines" },
+  { func = "@rem2.folded", args = ["-7", "3"], results = [{ values = ["0"], witness = [] }], from = "@rem2, its CHECK lines" },
+  { func = "@rem2.folded", args = ["-1", "10"], results = [{ values = ["5"], witness = [] }], from = "@rem2, its CHECK lines" },
+  { func = "@rem2.folded", args = ["7", "0"], expect = "ub", from = "@rem2, its CHECK lines" },
+  { func = "@rem2.folded", args = ["-2147483648", "-1"], results = [{ values = ["-2147483648"], witness = [] }], from = "@rem2, its CHECK lines" },
+  { func = "@rem3", args = ["-7", "3"], results = [{ values = ["0"], witness = [] }], from = "@rem3" },
+  { func = "@rem3", args = ["7", "3"], results = [{ values = ["1"], witness = [] }], from = "@rem3" },
+  { func = "@rem3", args = ["7", "0"], expect = "ub", from = "@rem3" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor", args = ["-1"], results = [{ values = ["250"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor", args = ["255"], results = [{ values = ["250"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor.folded", args = ["-1"], results = [{ values = ["250"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor, its CHECK lines" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor.folded", args = ["255"], results = [{ values = ["250"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor, its CHECK lines" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor.folded", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor, its CHECK lines" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor2", args = ["true"], results = [{ values = ["13"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@urem_dividend_known_smaller_than_constant_divisor2", args = ["false"], results = [{ values = ["12"], witness = [] }], from = "@urem_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@urem_constant_dividend_known_smaller_than_divisor", args = ["0"], results = [{ values = ["250"], witness = [] }], from = "@urem_constant_dividend_known_smaller_than_divisor" },
+  { func = "@urem_constant_dividend_known_smaller_than_divisor", args = ["-1"], results = [{ values = ["250"], witness = [] }], from = "@urem_constant_dividend_known_smaller_than_divisor" },
+  { func = "@srem_with_sext_bool_divisor", args = ["true", "7"], results = [{ values = ["0"], witness = [] }], from = "@srem_with_sext_bool_divisor" },
+  { func = "@srem_with_sext_bool_divisor", args = ["true", "-2147483648"], expect = "ub", from = "@srem_with_sext_bool_divisor" },
+  { func = "@srem_with_sext_bool_divisor", args = ["false", "7"], expect = "ub", from = "@srem_with_sext_bool_divisor" },
+  { func = "@srem_minusone_divisor", args = [], expect = "ub", from = "@srem_minusone_divisor" },
+  { func = "@srem_of_mul_nsw", args = ["6", "7"], results = [{ values = ["0"], witness = [] }], from = "@srem_of_mul_nsw" },
+  { func = "@srem_of_mul_nsw", args = ["-6", "7"], results = [{ values = ["0"], witness = [] }], from = "@srem_of_mul_nsw" },
+  { func = "@srem_of_mul_nsw", args = ["65536", "65536"], expect = ["poison"], from = "@srem_of_mul_nsw" },
+  { func = "@srem_of_mul_nsw", args = ["5", "0"], expect = "ub", from = "@srem_of_mul_nsw" },
+  { func = "@srem_of_mul", args = ["6", "7"], results = [{ values = ["0"], witness = [] }], from = "@srem_of_mul" },
+  { func = "@srem_of_mul", args = ["65536", "65537"], results = [{ values = ["65536"], witness = [] }], from = "@srem_of_mul" },
+  { func = "@urem_of_mul_nuw", args = ["6", "7"], results = [{ values = ["0"], witness = [] }], from = "@urem_of_mul_nuw" },
+  { func = "@urem_of_mul_nuw", args = ["65536", "65536"], expect = ["poison"], from = "@urem_of_mul_nuw" },
+  { func = "@urem_of_mul_nuw", args = ["5", "0"], expect = "ub", from = "@urem_of_mul_nuw" },
+  { func = "@urem_of_mul_nsw", args = ["6", "7"], results = [{ values = ["0"], witness = [] }], from = "@urem_of_mul_nsw" },
+  { func = "@urem_of_mul_nsw", args = ["-1", "3"], results = [{ values = ["1"], witness = [] }], from = "@urem_of_mul_nsw" },
+  { func = "@srem_mul_udiv", args = ["-56", "3"], results = [{ values = ["-1"], witness = [] }], from = "@srem_mul_udiv" },
+  { func = "@srem_mul_udiv", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@srem_mul_udiv" },
+  { func = "@srem_mul_udiv", args = ["7", "0"], expect = "ub", from = "@srem_mul_udiv" },
+]

@@ -1,0 +1,65 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/legalize-shift-64.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# Each function shifts an i64 by an amount masked to 0 to 7 and
+# zero-extended from i32, which never reaches 64, so every test is
+# defined.
+#
+# The file's other functions, @test5 and @test6, are left out: one shifts
+# a vector and the other uses memory.
+source = { file = "llvm/test/CodeGen/X86/legalize-shift-64.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["-1", "0"], results = [{ values = ["4294967295"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1", "7"], results = [{ values = ["549755813760"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1", "-1"], results = [{ values = ["549755813760"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1", "13"], results = [{ values = ["137438953440"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["305419896", "0"], results = [{ values = ["305419896"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["305419896", "7"], results = [{ values = ["39093746688"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["305419896", "-1"], results = [{ values = ["39093746688"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["305419896", "13"], results = [{ values = ["9773436672"], witness = [] }], from = "@test1" },
+  { func = "@test2", args = ["-9223372036854775808", "0"], results = [{ values = ["-9223372036854775808"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-9223372036854775808", "7"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-9223372036854775808", "-1"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-9223372036854775808", "13"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1", "0"], results = [{ values = ["-1"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1", "7"], results = [{ values = ["-128"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1", "-1"], results = [{ values = ["-128"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1", "13"], results = [{ values = ["-32"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["81985529216486895", "0"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["81985529216486895", "7"], results = [{ values = ["-7952596333999229056"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["81985529216486895", "-1"], results = [{ values = ["-7952596333999229056"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["81985529216486895", "13"], results = [{ values = ["2623536934927580640"], witness = [] }], from = "@test2" },
+  { func = "@test3", args = ["-9223372036854775808", "0"], results = [{ values = ["-9223372036854775808"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-9223372036854775808", "7"], results = [{ values = ["72057594037927936"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-9223372036854775808", "-1"], results = [{ values = ["72057594037927936"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-9223372036854775808", "13"], results = [{ values = ["288230376151711744"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1", "0"], results = [{ values = ["-1"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1", "7"], results = [{ values = ["144115188075855871"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1", "-1"], results = [{ values = ["144115188075855871"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1", "13"], results = [{ values = ["576460752303423487"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["81985529216486895", "0"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["81985529216486895", "7"], results = [{ values = ["640511947003803"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["81985529216486895", "-1"], results = [{ values = ["640511947003803"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["81985529216486895", "13"], results = [{ values = ["2562047788015215"], witness = [] }], from = "@test3" },
+  { func = "@test4", args = ["-9223372036854775808", "0"], results = [{ values = ["-9223372036854775808"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-9223372036854775808", "7"], results = [{ values = ["-72057594037927936"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-9223372036854775808", "-1"], results = [{ values = ["-72057594037927936"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-9223372036854775808", "13"], results = [{ values = ["-288230376151711744"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1", "0"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1", "7"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1", "-1"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1", "13"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["81985529216486895", "0"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["81985529216486895", "7"], results = [{ values = ["640511947003803"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["81985529216486895", "-1"], results = [{ values = ["640511947003803"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["81985529216486895", "13"], results = [{ values = ["2562047788015215"], witness = [] }], from = "@test4" },
+]

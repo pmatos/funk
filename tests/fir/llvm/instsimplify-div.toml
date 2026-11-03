@@ -1,0 +1,120 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/div.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. Division by
+# zero is immediate UB in fir as in LLVM, so many of these folds hold
+# because the input is UB wherever they would be wrong: @zero_dividend on
+# 0, @zext_bool_udiv_divisor on false, the eight @*_one_*_divisor
+# functions where 1 rem %b is 0, @sdiv_and_one_divisor on an even %x and
+# @sdiv_neg_or_divisor on an odd %x. Those runs are interpreter-only tests
+# that expect ub; LLVM's folded value refines UB.
+#
+# @sdiv_minusone_divisor divides -128 by -1 at i8. LLVM's CHECK line
+# returns poison, a refinement of the UB that LangRef gives this division;
+# fir-ref reports the UB itself. @sdiv_exact_trailing_zeros divides an odd
+# number by -42 with exact, which is poison on every argument, as LLVM
+# says. @udiv_exact_mul_nsw and @sdiv_exact_mul_nuw give %x, or poison
+# where the mul's flag or the division's exact breaks; LLVM's %x refines
+# them. The negative tests, which LLVM does not fold, show why:
+# @sdiv_exact_trailing_zeros_eq is defined on 40, @udiv_exact_mul is
+# poison on -1 without nsw, and @udiv_mul_nsw gives 9, not -1, on -1
+# without exact.
+#
+# The file's other functions are left out: those on vectors, those on
+# constants made from pointers, @div1, which calls a function the file
+# does not define, and variants of the functions here with other
+# constants.
+source = { file = "llvm/test/Transforms/InstSimplify/div.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@zero_dividend", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@zero_dividend" },
+  { func = "@zero_dividend", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@zero_dividend" },
+  { func = "@zero_dividend", args = ["0"], expect = "ub", from = "@zero_dividend" },
+  { func = "@zext_bool_udiv_divisor", args = ["true", "7"], results = [{ values = ["7"], witness = [] }], from = "@zext_bool_udiv_divisor" },
+  { func = "@zext_bool_udiv_divisor", args = ["true", "-1"], results = [{ values = ["-1"], witness = [] }], from = "@zext_bool_udiv_divisor" },
+  { func = "@zext_bool_udiv_divisor", args = ["false", "7"], expect = "ub", from = "@zext_bool_udiv_divisor" },
+  { func = "@udiv_dividend_known_smaller_than_constant_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@udiv_dividend_known_smaller_than_constant_divisor" },
+  { func = "@udiv_dividend_known_smaller_than_constant_divisor", args = ["250"], results = [{ values = ["0"], witness = [] }], from = "@udiv_dividend_known_smaller_than_constant_divisor" },
+  { func = "@udiv_dividend_known_smaller_than_constant_divisor", args = ["251"], results = [{ values = ["0"], witness = [] }], from = "@udiv_dividend_known_smaller_than_constant_divisor" },
+  { func = "@not_udiv_dividend_known_smaller_than_constant_divisor", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@not_udiv_dividend_known_smaller_than_constant_divisor" },
+  { func = "@not_udiv_dividend_known_smaller_than_constant_divisor", args = ["250"], results = [{ values = ["0"], witness = [] }], from = "@not_udiv_dividend_known_smaller_than_constant_divisor" },
+  { func = "@udiv_constant_dividend_known_smaller_than_divisor", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_constant_dividend_known_smaller_than_divisor" },
+  { func = "@udiv_constant_dividend_known_smaller_than_divisor", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@udiv_constant_dividend_known_smaller_than_divisor" },
+  { func = "@udiv_constant_dividend_known_smaller_than_divisor", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@udiv_constant_dividend_known_smaller_than_divisor" },
+  { func = "@not_udiv_constant_dividend_known_smaller_than_divisor", args = ["0"], results = [{ values = ["1"], witness = [] }], from = "@not_udiv_constant_dividend_known_smaller_than_divisor" },
+  { func = "@not_udiv_constant_dividend_known_smaller_than_divisor", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@not_udiv_constant_dividend_known_smaller_than_divisor" },
+  { func = "@udiv_dividend_known_smaller_than_constant_divisor2", args = ["true"], results = [{ values = ["0"], witness = [] }], from = "@udiv_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@udiv_dividend_known_smaller_than_constant_divisor2", args = ["false"], results = [{ values = ["0"], witness = [] }], from = "@udiv_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@not_udiv_dividend_known_smaller_than_constant_divisor2", args = ["true"], results = [{ values = ["1"], witness = [] }], from = "@not_udiv_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@not_udiv_dividend_known_smaller_than_constant_divisor2", args = ["false"], results = [{ values = ["0"], witness = [] }], from = "@not_udiv_dividend_known_smaller_than_constant_divisor2" },
+  { func = "@sdiv_minusone_divisor", args = [], expect = "ub", from = "@sdiv_minusone_divisor" },
+  { func = "@const_sdiv_zero_negone", args = [], results = [{ values = ["0"], witness = [] }], from = "@const_sdiv_zero_negone" },
+  { func = "@sdiv_exact_trailing_zeros", args = ["0"], expect = ["poison"], from = "@sdiv_exact_trailing_zeros" },
+  { func = "@sdiv_exact_trailing_zeros", args = ["-1"], expect = ["poison"], from = "@sdiv_exact_trailing_zeros" },
+  { func = "@sdiv_exact_trailing_zeros", args = ["83"], expect = ["poison"], from = "@sdiv_exact_trailing_zeros" },
+  { func = "@sdiv_exact_trailing_zeros_eq", args = ["40"], results = [{ values = ["-1"], witness = [] }], from = "@sdiv_exact_trailing_zeros_eq" },
+  { func = "@sdiv_exact_trailing_zeros_eq", args = ["0"], expect = ["poison"], from = "@sdiv_exact_trailing_zeros_eq" },
+  { func = "@sdiv_one_srem_divisor", args = ["7", "2"], results = [{ values = ["7"], witness = [] }], from = "@sdiv_one_srem_divisor" },
+  { func = "@sdiv_one_srem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["-2147483648"], witness = [] }], from = "@sdiv_one_srem_divisor" },
+  { func = "@sdiv_one_srem_divisor", args = ["7", "-1"], expect = "ub", from = "@sdiv_one_srem_divisor" },
+  { func = "@sdiv_one_srem_divisor", args = ["7", "1"], expect = "ub", from = "@sdiv_one_srem_divisor" },
+  { func = "@sdiv_one_srem_divisor", args = ["7", "0"], expect = "ub", from = "@sdiv_one_srem_divisor" },
+  { func = "@sdiv_one_urem_divisor", args = ["7", "2"], results = [{ values = ["7"], witness = [] }], from = "@sdiv_one_urem_divisor" },
+  { func = "@sdiv_one_urem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["-2147483648"], witness = [] }], from = "@sdiv_one_urem_divisor" },
+  { func = "@sdiv_one_urem_divisor", args = ["7", "-1"], results = [{ values = ["7"], witness = [] }], from = "@sdiv_one_urem_divisor" },
+  { func = "@sdiv_one_urem_divisor", args = ["7", "1"], expect = "ub", from = "@sdiv_one_urem_divisor" },
+  { func = "@sdiv_one_urem_divisor", args = ["7", "0"], expect = "ub", from = "@sdiv_one_urem_divisor" },
+  { func = "@udiv_one_srem_divisor", args = ["7", "2"], results = [{ values = ["7"], witness = [] }], from = "@udiv_one_srem_divisor" },
+  { func = "@udiv_one_srem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["-2147483648"], witness = [] }], from = "@udiv_one_srem_divisor" },
+  { func = "@udiv_one_srem_divisor", args = ["7", "-1"], expect = "ub", from = "@udiv_one_srem_divisor" },
+  { func = "@udiv_one_srem_divisor", args = ["7", "1"], expect = "ub", from = "@udiv_one_srem_divisor" },
+  { func = "@udiv_one_srem_divisor", args = ["7", "0"], expect = "ub", from = "@udiv_one_srem_divisor" },
+  { func = "@udiv_one_urem_divisor", args = ["7", "2"], results = [{ values = ["7"], witness = [] }], from = "@udiv_one_urem_divisor" },
+  { func = "@udiv_one_urem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["-2147483648"], witness = [] }], from = "@udiv_one_urem_divisor" },
+  { func = "@udiv_one_urem_divisor", args = ["7", "-1"], results = [{ values = ["7"], witness = [] }], from = "@udiv_one_urem_divisor" },
+  { func = "@udiv_one_urem_divisor", args = ["7", "1"], expect = "ub", from = "@udiv_one_urem_divisor" },
+  { func = "@udiv_one_urem_divisor", args = ["7", "0"], expect = "ub", from = "@udiv_one_urem_divisor" },
+  { func = "@srem_one_srem_divisor", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@srem_one_srem_divisor" },
+  { func = "@srem_one_srem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["0"], witness = [] }], from = "@srem_one_srem_divisor" },
+  { func = "@srem_one_srem_divisor", args = ["7", "-1"], expect = "ub", from = "@srem_one_srem_divisor" },
+  { func = "@srem_one_srem_divisor", args = ["7", "1"], expect = "ub", from = "@srem_one_srem_divisor" },
+  { func = "@srem_one_srem_divisor", args = ["7", "0"], expect = "ub", from = "@srem_one_srem_divisor" },
+  { func = "@urem_one_srem_divisor", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@urem_one_srem_divisor" },
+  { func = "@urem_one_srem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["0"], witness = [] }], from = "@urem_one_srem_divisor" },
+  { func = "@urem_one_srem_divisor", args = ["7", "-1"], expect = "ub", from = "@urem_one_srem_divisor" },
+  { func = "@urem_one_srem_divisor", args = ["7", "1"], expect = "ub", from = "@urem_one_srem_divisor" },
+  { func = "@urem_one_srem_divisor", args = ["7", "0"], expect = "ub", from = "@urem_one_srem_divisor" },
+  { func = "@srem_one_urem_divisor", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@srem_one_urem_divisor" },
+  { func = "@srem_one_urem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["0"], witness = [] }], from = "@srem_one_urem_divisor" },
+  { func = "@srem_one_urem_divisor", args = ["7", "-1"], results = [{ values = ["0"], witness = [] }], from = "@srem_one_urem_divisor" },
+  { func = "@srem_one_urem_divisor", args = ["7", "1"], expect = "ub", from = "@srem_one_urem_divisor" },
+  { func = "@srem_one_urem_divisor", args = ["7", "0"], expect = "ub", from = "@srem_one_urem_divisor" },
+  { func = "@urem_one_urem_divisor", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@urem_one_urem_divisor" },
+  { func = "@urem_one_urem_divisor", args = ["-2147483648", "-3"], results = [{ values = ["0"], witness = [] }], from = "@urem_one_urem_divisor" },
+  { func = "@urem_one_urem_divisor", args = ["7", "-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_one_urem_divisor" },
+  { func = "@urem_one_urem_divisor", args = ["7", "1"], expect = "ub", from = "@urem_one_urem_divisor" },
+  { func = "@urem_one_urem_divisor", args = ["7", "0"], expect = "ub", from = "@urem_one_urem_divisor" },
+  { func = "@sdiv_and_one_divisor", args = ["1", "7"], results = [{ values = ["7"], witness = [] }], from = "@sdiv_and_one_divisor" },
+  { func = "@sdiv_and_one_divisor", args = ["-1", "-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@sdiv_and_one_divisor" },
+  { func = "@sdiv_and_one_divisor", args = ["2", "7"], expect = "ub", from = "@sdiv_and_one_divisor" },
+  { func = "@sdiv_neg_or_divisor", args = ["0", "7"], results = [{ values = ["7"], witness = [] }], from = "@sdiv_neg_or_divisor" },
+  { func = "@sdiv_neg_or_divisor", args = ["-2", "-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@sdiv_neg_or_divisor" },
+  { func = "@sdiv_neg_or_divisor", args = ["1", "7"], expect = "ub", from = "@sdiv_neg_or_divisor" },
+  { func = "@sdiv_neg_or_multi_one_bit_divisor", args = ["0", "7"], results = [{ values = ["3"], witness = [] }], from = "@sdiv_neg_or_multi_one_bit_divisor" },
+  { func = "@sdiv_neg_or_multi_one_bit_divisor", args = ["2", "7"], expect = "ub", from = "@sdiv_neg_or_multi_one_bit_divisor" },
+  { func = "@udiv_exact_mul_nsw", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@udiv_exact_mul_nsw" },
+  { func = "@udiv_exact_mul_nsw", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_exact_mul_nsw" },
+  { func = "@udiv_exact_mul_nsw", args = ["-1"], expect = ["poison"], from = "@udiv_exact_mul_nsw" },
+  { func = "@udiv_exact_mul_nsw", args = ["6"], expect = ["poison"], from = "@udiv_exact_mul_nsw" },
+  { func = "@sdiv_exact_mul_nuw", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@sdiv_exact_mul_nuw" },
+  { func = "@sdiv_exact_mul_nuw", args = ["10"], expect = ["poison"], from = "@sdiv_exact_mul_nuw" },
+  { func = "@sdiv_exact_mul_nuw", args = ["11"], expect = ["poison"], from = "@sdiv_exact_mul_nuw" },
+  { func = "@sdiv_exact_mul_nuw", args = ["-1"], expect = ["poison"], from = "@sdiv_exact_mul_nuw" },
+  { func = "@udiv_exact_mul", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@udiv_exact_mul" },
+  { func = "@udiv_exact_mul", args = ["-1"], expect = ["poison"], from = "@udiv_exact_mul" },
+  { func = "@udiv_exact_mul", args = ["11"], expect = ["poison"], from = "@udiv_exact_mul" },
+  { func = "@udiv_mul_nsw", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@udiv_mul_nsw" },
+  { func = "@udiv_mul_nsw", args = ["-1"], results = [{ values = ["9"], witness = [] }], from = "@udiv_mul_nsw" },
+]

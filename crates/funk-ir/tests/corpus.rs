@@ -5,9 +5,18 @@ mod common;
 use common::{fir_files, parse_ok};
 use funk_ir::{Registry, print, verify};
 
+/// The canonical texts: those of `canonical/`, and the modules ported from
+/// LLVM's tests, in `llvm/` (ADR-2026-11-03-0643).
+fn canonical_texts() -> Vec<(String, String)> {
+    let mut texts = fir_files("canonical");
+    let ported = fir_files("llvm").into_iter();
+    texts.extend(ported.map(|(name, text)| (format!("llvm/{name}"), text)));
+    texts
+}
+
 #[test]
 fn canonical_texts_print_back_byte_for_byte() {
-    for (name, text) in fir_files("canonical") {
+    for (name, text) in canonical_texts() {
         let m = parse_ok(&text);
         assert_eq!(print(&m), text, "{name}");
         assert_eq!(parse_ok(&print(&m)), m, "{name}");
@@ -17,7 +26,7 @@ fn canonical_texts_print_back_byte_for_byte() {
 #[test]
 fn canonical_texts_are_valid() {
     let reg = Registry::core();
-    for (name, text) in fir_files("canonical") {
+    for (name, text) in canonical_texts() {
         let ds = verify(&parse_ok(&text), &reg);
         assert!(ds.is_empty(), "{name}: {ds:#?}");
     }
@@ -40,7 +49,7 @@ fn noncanonical_inputs_parse_to_their_canonical_form() {
 /// Layouts that the repository's hooks keep out of committed files.
 #[test]
 fn layouts_the_hooks_forbid_parse_to_the_same_module() {
-    for (name, text) in fir_files("canonical") {
+    for (name, text) in canonical_texts() {
         let m = parse_ok(&text);
         let variants = [
             text.trim_end_matches('\n').to_string(),

@@ -1,0 +1,87 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/cmp_ext.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. Each function compares the zext
+# and the sext of one i32 at i64, with one of the eight ordered
+# predicates. The two are equal on a non-negative value; on a negative one
+# the sext is below the zext as signed integers and above it as unsigned
+# ones. So eight of them always give true or false, as LLVM folds them,
+# and the other eight give true on one sign and false on the other: each
+# runs on 0, 1, -1 and the signed minimum.
+#
+# The file's other functions, @zext_ugt_sext_vec and @sext_ult_zext_vec,
+# work on vectors and are left out.
+source = { file = "llvm/test/Transforms/InstSimplify/cmp_ext.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@zext_uge_sext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@zext_uge_sext" },
+  { func = "@zext_uge_sext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@zext_uge_sext" },
+  { func = "@zext_uge_sext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@zext_uge_sext" },
+  { func = "@zext_uge_sext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@zext_uge_sext" },
+  { func = "@zext_ugt_sext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@zext_ugt_sext" },
+  { func = "@zext_ugt_sext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@zext_ugt_sext" },
+  { func = "@zext_ugt_sext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@zext_ugt_sext" },
+  { func = "@zext_ugt_sext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@zext_ugt_sext" },
+  { func = "@zext_ult_sext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@zext_ult_sext" },
+  { func = "@zext_ult_sext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@zext_ult_sext" },
+  { func = "@zext_ult_sext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@zext_ult_sext" },
+  { func = "@zext_ult_sext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@zext_ult_sext" },
+  { func = "@zext_ule_sext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@zext_ule_sext" },
+  { func = "@zext_ule_sext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@zext_ule_sext" },
+  { func = "@zext_ule_sext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@zext_ule_sext" },
+  { func = "@zext_ule_sext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@zext_ule_sext" },
+  { func = "@zext_sge_sext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@zext_sge_sext" },
+  { func = "@zext_sge_sext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@zext_sge_sext" },
+  { func = "@zext_sge_sext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@zext_sge_sext" },
+  { func = "@zext_sge_sext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@zext_sge_sext" },
+  { func = "@zext_sgt_sext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@zext_sgt_sext" },
+  { func = "@zext_sgt_sext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@zext_sgt_sext" },
+  { func = "@zext_sgt_sext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@zext_sgt_sext" },
+  { func = "@zext_sgt_sext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@zext_sgt_sext" },
+  { func = "@zext_slt_sext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@zext_slt_sext" },
+  { func = "@zext_slt_sext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@zext_slt_sext" },
+  { func = "@zext_slt_sext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@zext_slt_sext" },
+  { func = "@zext_slt_sext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@zext_slt_sext" },
+  { func = "@zext_sle_sext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@zext_sle_sext" },
+  { func = "@zext_sle_sext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@zext_sle_sext" },
+  { func = "@zext_sle_sext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@zext_sle_sext" },
+  { func = "@zext_sle_sext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@zext_sle_sext" },
+  { func = "@sext_uge_zext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@sext_uge_zext" },
+  { func = "@sext_uge_zext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@sext_uge_zext" },
+  { func = "@sext_uge_zext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@sext_uge_zext" },
+  { func = "@sext_uge_zext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@sext_uge_zext" },
+  { func = "@sext_ugt_zext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@sext_ugt_zext" },
+  { func = "@sext_ugt_zext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@sext_ugt_zext" },
+  { func = "@sext_ugt_zext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@sext_ugt_zext" },
+  { func = "@sext_ugt_zext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@sext_ugt_zext" },
+  { func = "@sext_ult_zext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@sext_ult_zext" },
+  { func = "@sext_ult_zext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@sext_ult_zext" },
+  { func = "@sext_ult_zext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@sext_ult_zext" },
+  { func = "@sext_ult_zext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@sext_ult_zext" },
+  { func = "@sext_ule_zext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@sext_ule_zext" },
+  { func = "@sext_ule_zext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@sext_ule_zext" },
+  { func = "@sext_ule_zext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@sext_ule_zext" },
+  { func = "@sext_ule_zext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@sext_ule_zext" },
+  { func = "@sext_sge_zext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@sext_sge_zext" },
+  { func = "@sext_sge_zext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@sext_sge_zext" },
+  { func = "@sext_sge_zext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@sext_sge_zext" },
+  { func = "@sext_sge_zext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@sext_sge_zext" },
+  { func = "@sext_sgt_zext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@sext_sgt_zext" },
+  { func = "@sext_sgt_zext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@sext_sgt_zext" },
+  { func = "@sext_sgt_zext", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@sext_sgt_zext" },
+  { func = "@sext_sgt_zext", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@sext_sgt_zext" },
+  { func = "@sext_slt_zext", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@sext_slt_zext" },
+  { func = "@sext_slt_zext", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@sext_slt_zext" },
+  { func = "@sext_slt_zext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@sext_slt_zext" },
+  { func = "@sext_slt_zext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@sext_slt_zext" },
+  { func = "@sext_sle_zext", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@sext_sle_zext" },
+  { func = "@sext_sle_zext", args = ["1"], results = [{ values = ["true"], witness = [] }], from = "@sext_sle_zext" },
+  { func = "@sext_sle_zext", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@sext_sle_zext" },
+  { func = "@sext_sle_zext", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@sext_sle_zext" },
+  { func = "@zext_ugt_sext_different_operand", args = ["0", "1"], results = [{ values = ["true"], witness = [] }], from = "@zext_ugt_sext_different_operand" },
+  { func = "@zext_ugt_sext_different_operand", args = ["1", "0"], results = [{ values = ["false"], witness = [] }], from = "@zext_ugt_sext_different_operand" },
+  { func = "@sext_ult_zext_different_operand", args = ["0", "1"], results = [{ values = ["true"], witness = [] }], from = "@sext_ult_zext_different_operand" },
+  { func = "@sext_ult_zext_different_operand", args = ["1", "0"], results = [{ values = ["false"], witness = [] }], from = "@sext_ult_zext_different_operand" },
+]

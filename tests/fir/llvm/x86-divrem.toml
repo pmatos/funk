@@ -1,0 +1,78 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/divrem.ll, ported to fir by
+# hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in LICENSE.TXT
+# beside this file, and README.md says how the cases were chosen and
+# rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# Each function takes the quotient and the remainder of one division,
+# which x86 computes with one div or idiv. LLVM's functions store both
+# through pointers; fir has no memory, so each returns both as its two
+# results. By 0 both are UB, and so are the signed ones of the signed
+# minimum by -1: those tests are interpreter-only.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/CodeGen/X86/divrem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@si64", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@si64" },
+  { func = "@si64", args = ["-7", "2"], results = [{ values = ["-3", "-1"], witness = [] }], from = "@si64" },
+  { func = "@si64", args = ["7", "-2"], results = [{ values = ["-3", "1"], witness = [] }], from = "@si64" },
+  { func = "@si64", args = ["-9223372036854775808", "-1"], expect = "ub", from = "@si64" },
+  { func = "@si64", args = ["-9223372036854775808", "3"], results = [{ values = ["-3074457345618258602", "-2"], witness = [] }], from = "@si64" },
+  { func = "@si64", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@si64" },
+  { func = "@si64", args = ["5", "0"], expect = "ub", from = "@si64" },
+  { func = "@si32", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@si32" },
+  { func = "@si32", args = ["-7", "2"], results = [{ values = ["-3", "-1"], witness = [] }], from = "@si32" },
+  { func = "@si32", args = ["7", "-2"], results = [{ values = ["-3", "1"], witness = [] }], from = "@si32" },
+  { func = "@si32", args = ["-2147483648", "-1"], expect = "ub", from = "@si32" },
+  { func = "@si32", args = ["-2147483648", "3"], results = [{ values = ["-715827882", "-2"], witness = [] }], from = "@si32" },
+  { func = "@si32", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@si32" },
+  { func = "@si32", args = ["5", "0"], expect = "ub", from = "@si32" },
+  { func = "@si16", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@si16" },
+  { func = "@si16", args = ["-7", "2"], results = [{ values = ["-3", "-1"], witness = [] }], from = "@si16" },
+  { func = "@si16", args = ["7", "-2"], results = [{ values = ["-3", "1"], witness = [] }], from = "@si16" },
+  { func = "@si16", args = ["-32768", "-1"], expect = "ub", from = "@si16" },
+  { func = "@si16", args = ["-32768", "3"], results = [{ values = ["-10922", "-2"], witness = [] }], from = "@si16" },
+  { func = "@si16", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@si16" },
+  { func = "@si16", args = ["5", "0"], expect = "ub", from = "@si16" },
+  { func = "@si8", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@si8" },
+  { func = "@si8", args = ["-7", "2"], results = [{ values = ["-3", "-1"], witness = [] }], from = "@si8" },
+  { func = "@si8", args = ["7", "-2"], results = [{ values = ["-3", "1"], witness = [] }], from = "@si8" },
+  { func = "@si8", args = ["-128", "-1"], expect = "ub", from = "@si8" },
+  { func = "@si8", args = ["-128", "3"], results = [{ values = ["-42", "-2"], witness = [] }], from = "@si8" },
+  { func = "@si8", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@si8" },
+  { func = "@si8", args = ["5", "0"], expect = "ub", from = "@si8" },
+  { func = "@ui64", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["-7", "2"], results = [{ values = ["9223372036854775804", "1"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["7", "-2"], results = [{ values = ["0", "7"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["-9223372036854775808", "-1"], results = [{ values = ["0", "-9223372036854775808"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["-9223372036854775808", "3"], results = [{ values = ["3074457345618258602", "2"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@ui64" },
+  { func = "@ui64", args = ["5", "0"], expect = "ub", from = "@ui64" },
+  { func = "@ui32", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["-7", "2"], results = [{ values = ["2147483644", "1"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["7", "-2"], results = [{ values = ["0", "7"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["-2147483648", "-1"], results = [{ values = ["0", "-2147483648"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["-2147483648", "3"], results = [{ values = ["715827882", "2"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@ui32" },
+  { func = "@ui32", args = ["5", "0"], expect = "ub", from = "@ui32" },
+  { func = "@ui16", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["-7", "2"], results = [{ values = ["32764", "1"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["7", "-2"], results = [{ values = ["0", "7"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["-32768", "-1"], results = [{ values = ["0", "-32768"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["-32768", "3"], results = [{ values = ["10922", "2"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@ui16" },
+  { func = "@ui16", args = ["5", "0"], expect = "ub", from = "@ui16" },
+  { func = "@ui8", args = ["7", "2"], results = [{ values = ["3", "1"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["-7", "2"], results = [{ values = ["124", "1"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["7", "-2"], results = [{ values = ["0", "7"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["-128", "-1"], results = [{ values = ["0", "-128"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["-128", "3"], results = [{ values = ["42", "2"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["-1", "-1"], results = [{ values = ["1", "0"], witness = [] }], from = "@ui8" },
+  { func = "@ui8", args = ["5", "0"], expect = "ub", from = "@ui8" },
+]
