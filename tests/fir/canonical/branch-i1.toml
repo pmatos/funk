@@ -16,4 +16,8 @@ tests = [
   { func = "@cond_br", args = ["true", "false", "true"] },
   { func = "@cond_br", args = ["true", "true", "false"] },
   { func = "@cond_br", args = ["true", "true", "true"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@br", args = ["false"], expect = ["false"] },
+  { func = "@br", args = ["true"], expect = ["true"] },
 ]

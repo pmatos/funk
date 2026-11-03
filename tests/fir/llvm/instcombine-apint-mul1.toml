@@ -1,0 +1,30 @@
+# Derived from LLVM: llvm/test/Transforms/InstCombine/apint-mul1.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. A mul by
+# 1024 is a shl by 10, at i17, a width that the backend does not lower, so
+# every test is interpreter-only; @test1.folded is the CHECK lines, and
+# both run on the same arguments.
+#
+# The file's other functions, @test2 and @test3, work on vectors and are
+# left out.
+source = { file = "llvm/test/Transforms/InstCombine/apint-mul1.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["0"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["1"], expect = ["1024"], from = "@test1" },
+  { func = "@test1", args = ["-1"], expect = ["-1024"], from = "@test1" },
+  { func = "@test1", args = ["-65536"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["65535"], expect = ["-1024"], from = "@test1" },
+  { func = "@test1", args = ["127"], expect = ["-1024"], from = "@test1" },
+  { func = "@test1", args = ["128"], expect = ["0"], from = "@test1" },
+  { func = "@test1.folded", args = ["0"], expect = ["0"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["1"], expect = ["1024"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["-1"], expect = ["-1024"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["-65536"], expect = ["0"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["65535"], expect = ["-1024"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["127"], expect = ["-1024"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["128"], expect = ["0"], from = "@test1, its CHECK lines" },
+]

@@ -106,4 +106,22 @@ tests = [
   { func = "@add_nuw_nsw", args = ["2147483647", "-1"] },
   { func = "@add_nuw_nsw", args = ["2147483647", "-2147483648"] },
   { func = "@add_nuw_nsw", args = ["2147483647", "2147483647"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@add", args = ["1", "2"], expect = ["3"] },
+  { func = "@add_nuw", args = ["1", "2"], expect = ["3"] },
+  { func = "@add_nsw", args = ["1", "2"], expect = ["3"] },
+  { func = "@add_nuw_nsw", args = ["1", "2"], expect = ["3"] },
+  { func = "@add", args = ["2147483647", "1"], expect = ["-2147483648"] },
+  { func = "@add_nuw", args = ["2147483647", "1"], expect = ["-2147483648"] },
+  { func = "@add_nsw", args = ["2147483647", "1"], expect = ["poison"] },
+  { func = "@add_nuw_nsw", args = ["2147483647", "1"], expect = ["poison"] },
+  { func = "@add", args = ["-1", "1"], expect = ["0"] },
+  { func = "@add_nuw", args = ["-1", "1"], expect = ["poison"] },
+  { func = "@add_nsw", args = ["-1", "1"], expect = ["0"] },
+  { func = "@add_nuw_nsw", args = ["-1", "1"], expect = ["poison"] },
+  { func = "@add", args = ["-2147483648", "-1"], expect = ["2147483647"] },
+  { func = "@add_nuw", args = ["-2147483648", "-1"], expect = ["poison"] },
+  { func = "@add_nsw", args = ["-2147483648", "-1"], expect = ["poison"] },
+  { func = "@add_nuw_nsw", args = ["-2147483648", "-1"], expect = ["poison"] },
 ]

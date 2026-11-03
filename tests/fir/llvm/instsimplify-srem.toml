@@ -1,0 +1,31 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/srem.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The remainder of a value by its
+# negation is 0, with no flag: at the signed minimum the negation is the
+# signed minimum, and srem of it by itself is 0. Only 0 is UB, as a
+# remainder by 0, which LLVM's 0 refines. The remainder by -1 is UB only
+# for the signed minimum, which these functions never divide by -1.
+#
+# The file's other functions work on vectors and are left out.
+source = { file = "llvm/test/Transforms/InstSimplify/srem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@negated_operand", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand" },
+  { func = "@negated_operand", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand" },
+  { func = "@negated_operand", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand" },
+  { func = "@negated_operand", args = ["2147483647"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand" },
+  { func = "@negated_operand", args = ["0"], expect = "ub", from = "@negated_operand" },
+  { func = "@knownnegation", args = ["5", "3"], results = [{ values = ["0"], witness = [] }], from = "@knownnegation" },
+  { func = "@knownnegation", args = ["-2147483648", "0"], results = [{ values = ["0"], witness = [] }], from = "@knownnegation" },
+  { func = "@knownnegation", args = ["0", "1"], results = [{ values = ["0"], witness = [] }], from = "@knownnegation" },
+  { func = "@knownnegation", args = ["1", "0"], results = [{ values = ["0"], witness = [] }], from = "@knownnegation" },
+  { func = "@knownnegation", args = ["3", "3"], expect = "ub", from = "@knownnegation" },
+  { func = "@negated_operand_commute", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand_commute" },
+  { func = "@negated_operand_commute", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand_commute" },
+  { func = "@negated_operand_commute", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand_commute" },
+  { func = "@negated_operand_commute", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@negated_operand_commute" },
+  { func = "@negated_operand_commute", args = ["0"], expect = "ub", from = "@negated_operand_commute" },
+]

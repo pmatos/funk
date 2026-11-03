@@ -3,8 +3,8 @@
 # the signed maximum (#16). Pairs such as -1 and 0, or the signed
 # minimum and the signed maximum, are in one order read as signed and in
 # the other read as unsigned.
-# Each test is differential: fir-ref and native code run it, and the
-# native result must equal fir-ref's.
+# Each test without expect is differential: fir-ref and native code
+# run it, and the native result must equal fir-ref's.
 tests = [
   { func = "@eq", args = ["0", "0"] },
   { func = "@eq", args = ["0", "1"] },
@@ -256,4 +256,46 @@ tests = [
   { func = "@uge", args = ["32767", "-1"] },
   { func = "@uge", args = ["32767", "-32768"] },
   { func = "@uge", args = ["32767", "32767"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@eq", args = ["-1", "1"], expect = ["false"] },
+  { func = "@ne", args = ["-1", "1"], expect = ["true"] },
+  { func = "@slt", args = ["-1", "1"], expect = ["true"] },
+  { func = "@sle", args = ["-1", "1"], expect = ["true"] },
+  { func = "@sgt", args = ["-1", "1"], expect = ["false"] },
+  { func = "@sge", args = ["-1", "1"], expect = ["false"] },
+  { func = "@ult", args = ["-1", "1"], expect = ["false"] },
+  { func = "@ule", args = ["-1", "1"], expect = ["false"] },
+  { func = "@ugt", args = ["-1", "1"], expect = ["true"] },
+  { func = "@uge", args = ["-1", "1"], expect = ["true"] },
+  { func = "@eq", args = ["1", "-1"], expect = ["false"] },
+  { func = "@ne", args = ["1", "-1"], expect = ["true"] },
+  { func = "@slt", args = ["1", "-1"], expect = ["false"] },
+  { func = "@sle", args = ["1", "-1"], expect = ["false"] },
+  { func = "@sgt", args = ["1", "-1"], expect = ["true"] },
+  { func = "@sge", args = ["1", "-1"], expect = ["true"] },
+  { func = "@ult", args = ["1", "-1"], expect = ["true"] },
+  { func = "@ule", args = ["1", "-1"], expect = ["true"] },
+  { func = "@ugt", args = ["1", "-1"], expect = ["false"] },
+  { func = "@uge", args = ["1", "-1"], expect = ["false"] },
+  { func = "@eq", args = ["7", "7"], expect = ["true"] },
+  { func = "@ne", args = ["7", "7"], expect = ["false"] },
+  { func = "@slt", args = ["7", "7"], expect = ["false"] },
+  { func = "@sle", args = ["7", "7"], expect = ["true"] },
+  { func = "@sgt", args = ["7", "7"], expect = ["false"] },
+  { func = "@sge", args = ["7", "7"], expect = ["true"] },
+  { func = "@ult", args = ["7", "7"], expect = ["false"] },
+  { func = "@ule", args = ["7", "7"], expect = ["true"] },
+  { func = "@ugt", args = ["7", "7"], expect = ["false"] },
+  { func = "@uge", args = ["7", "7"], expect = ["true"] },
+  { func = "@eq", args = ["1", "2"], expect = ["false"] },
+  { func = "@ne", args = ["1", "2"], expect = ["true"] },
+  { func = "@slt", args = ["1", "2"], expect = ["true"] },
+  { func = "@sle", args = ["1", "2"], expect = ["true"] },
+  { func = "@sgt", args = ["1", "2"], expect = ["false"] },
+  { func = "@sge", args = ["1", "2"], expect = ["false"] },
+  { func = "@ult", args = ["1", "2"], expect = ["true"] },
+  { func = "@ule", args = ["1", "2"], expect = ["true"] },
+  { func = "@ugt", args = ["1", "2"], expect = ["false"] },
+  { func = "@uge", args = ["1", "2"], expect = ["false"] },
 ]

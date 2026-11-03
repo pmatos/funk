@@ -1,0 +1,53 @@
+# Derived from LLVM: llvm/test/Transforms/InstCombine/div-i1.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. At i1 the only defined divisor
+# is true, which is -1 as a signed integer and 1 as an unsigned one, and
+# true is also the signed minimum. So udiv gives its dividend, urem gives
+# false, and sdiv and srem are defined only on false by true: sdiv and
+# srem of true by true divide the signed minimum by -1, which is UB, as is
+# every division by false. LLVM's folds, %x and false, refine each. The
+# four @*_by_zero_indirect_is_poison functions divide by a value that is
+# false on both paths; LLVM's phi is a block argument, and its CHECK lines
+# return poison, which refines the UB that fir-ref reports on every
+# argument.
+#
+# The file's other function, @pt62607, calls llvm.assume and is left out.
+source = { file = "llvm/test/Transforms/InstCombine/div-i1.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@sdiv_by_zero_indirect_is_poison", args = ["false", "false", "true"], expect = "ub", from = "@sdiv_by_zero_indirect_is_poison" },
+  { func = "@sdiv_by_zero_indirect_is_poison", args = ["false", "true", "true"], expect = "ub", from = "@sdiv_by_zero_indirect_is_poison" },
+  { func = "@sdiv_by_zero_indirect_is_poison", args = ["true", "false", "true"], expect = "ub", from = "@sdiv_by_zero_indirect_is_poison" },
+  { func = "@sdiv_by_zero_indirect_is_poison", args = ["true", "true", "true"], expect = "ub", from = "@sdiv_by_zero_indirect_is_poison" },
+  { func = "@udiv_by_zero_indirect_is_poison", args = ["false", "false", "true"], expect = "ub", from = "@udiv_by_zero_indirect_is_poison" },
+  { func = "@udiv_by_zero_indirect_is_poison", args = ["false", "true", "true"], expect = "ub", from = "@udiv_by_zero_indirect_is_poison" },
+  { func = "@udiv_by_zero_indirect_is_poison", args = ["true", "false", "true"], expect = "ub", from = "@udiv_by_zero_indirect_is_poison" },
+  { func = "@udiv_by_zero_indirect_is_poison", args = ["true", "true", "true"], expect = "ub", from = "@udiv_by_zero_indirect_is_poison" },
+  { func = "@srem_by_zero_indirect_is_poison", args = ["false", "false", "true"], expect = "ub", from = "@srem_by_zero_indirect_is_poison" },
+  { func = "@srem_by_zero_indirect_is_poison", args = ["false", "true", "true"], expect = "ub", from = "@srem_by_zero_indirect_is_poison" },
+  { func = "@srem_by_zero_indirect_is_poison", args = ["true", "false", "true"], expect = "ub", from = "@srem_by_zero_indirect_is_poison" },
+  { func = "@srem_by_zero_indirect_is_poison", args = ["true", "true", "true"], expect = "ub", from = "@srem_by_zero_indirect_is_poison" },
+  { func = "@urem_by_zero_indirect_is_poison", args = ["false", "false", "true"], expect = "ub", from = "@urem_by_zero_indirect_is_poison" },
+  { func = "@urem_by_zero_indirect_is_poison", args = ["false", "true", "true"], expect = "ub", from = "@urem_by_zero_indirect_is_poison" },
+  { func = "@urem_by_zero_indirect_is_poison", args = ["true", "false", "true"], expect = "ub", from = "@urem_by_zero_indirect_is_poison" },
+  { func = "@urem_by_zero_indirect_is_poison", args = ["true", "true", "true"], expect = "ub", from = "@urem_by_zero_indirect_is_poison" },
+  { func = "@sdiv_i1_is_op0", args = ["false", "false"], expect = "ub", from = "@sdiv_i1_is_op0" },
+  { func = "@sdiv_i1_is_op0", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@sdiv_i1_is_op0" },
+  { func = "@sdiv_i1_is_op0", args = ["true", "false"], expect = "ub", from = "@sdiv_i1_is_op0" },
+  { func = "@sdiv_i1_is_op0", args = ["true", "true"], expect = "ub", from = "@sdiv_i1_is_op0" },
+  { func = "@udiv_i1_is_op0", args = ["false", "false"], expect = "ub", from = "@udiv_i1_is_op0" },
+  { func = "@udiv_i1_is_op0", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@udiv_i1_is_op0" },
+  { func = "@udiv_i1_is_op0", args = ["true", "false"], expect = "ub", from = "@udiv_i1_is_op0" },
+  { func = "@udiv_i1_is_op0", args = ["true", "true"], results = [{ values = ["true"], witness = [] }], from = "@udiv_i1_is_op0" },
+  { func = "@srem_i1_is_zero", args = ["false", "false"], expect = "ub", from = "@srem_i1_is_zero" },
+  { func = "@srem_i1_is_zero", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@srem_i1_is_zero" },
+  { func = "@srem_i1_is_zero", args = ["true", "false"], expect = "ub", from = "@srem_i1_is_zero" },
+  { func = "@srem_i1_is_zero", args = ["true", "true"], expect = "ub", from = "@srem_i1_is_zero" },
+  { func = "@urem_i1_is_zero", args = ["false", "false"], expect = "ub", from = "@urem_i1_is_zero" },
+  { func = "@urem_i1_is_zero", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@urem_i1_is_zero" },
+  { func = "@urem_i1_is_zero", args = ["true", "false"], expect = "ub", from = "@urem_i1_is_zero" },
+  { func = "@urem_i1_is_zero", args = ["true", "true"], results = [{ values = ["false"], witness = [] }], from = "@urem_i1_is_zero" },
+]

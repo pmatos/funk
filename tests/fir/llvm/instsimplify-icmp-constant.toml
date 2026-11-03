@@ -1,0 +1,110 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/icmp-constant.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. Each function compares the
+# result of an op with a constant that the op's range of results is all on
+# one side of, so LLVM folds the icmp to true or false. Where a flag gives
+# the range, the op is poison on the arguments that break it, and so is
+# the icmp: @tautological9, the @add_nsw_* functions and the @mul_nuw_*
+# and @mul_nsw_* ones give poison there, which LLVM's constant refines.
+# @udiv5 and @compare_dividend divide by %X, which is UB at 0. LLVM writes
+# the i8 constant 255 as 255, and fir as -1. The negative tests, which
+# LLVM does not fold, move the constant by one and give the other answer
+# on one argument: -128 for the @*_limit functions, and 126 for
+# @mul_urem_cmp_constant1, as 126 * 43 is 42 modulo 256. @mul_nsw_by_zero
+# and @mul_nuw_by_zero keep LLVM's blocks in their order, in which %m is
+# used in a block that comes before the one that defines it, which
+# dominates it.
+#
+# The file's other functions are left out: those on vectors, those that
+# use shl nsw, lshr exact or ashr exact, flags that fir's shifts do not
+# have, and variants of the functions here with other constants.
+source = { file = "llvm/test/Transforms/InstSimplify/icmp-constant.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@tautological_ule", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@tautological_ule" },
+  { func = "@tautological_ule", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@tautological_ule" },
+  { func = "@tautological_ule", args = ["127"], results = [{ values = ["true"], witness = [] }], from = "@tautological_ule" },
+  { func = "@tautological_ugt", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@tautological_ugt" },
+  { func = "@tautological_ugt", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@tautological_ugt" },
+  { func = "@tautological_ugt", args = ["127"], results = [{ values = ["false"], witness = [] }], from = "@tautological_ugt" },
+  { func = "@urem3", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@urem3" },
+  { func = "@urem3", args = ["9"], results = [{ values = ["true"], witness = [] }], from = "@urem3" },
+  { func = "@urem3", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@urem3" },
+  { func = "@srem1", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@srem1" },
+  { func = "@srem1", args = ["2147483647"], results = [{ values = ["false"], witness = [] }], from = "@srem1" },
+  { func = "@srem1", args = ["7"], results = [{ values = ["false"], witness = [] }], from = "@srem1" },
+  { func = "@udiv5", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@udiv5" },
+  { func = "@udiv5", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@udiv5" },
+  { func = "@udiv5", args = ["0"], expect = "ub", from = "@udiv5" },
+  { func = "@udiv1", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@udiv1" },
+  { func = "@udiv1", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@udiv1" },
+  { func = "@compare_dividend", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@compare_dividend" },
+  { func = "@compare_dividend", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@compare_dividend" },
+  { func = "@compare_dividend", args = ["0"], expect = "ub", from = "@compare_dividend" },
+  { func = "@sdiv1", args = ["2147483647"], results = [{ values = ["true"], witness = [] }], from = "@sdiv1" },
+  { func = "@sdiv1", args = ["-2147483648"], results = [{ values = ["true"], witness = [] }], from = "@sdiv1" },
+  { func = "@lshr2", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@lshr2" },
+  { func = "@lshr2", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@lshr2" },
+  { func = "@lshr_sgt_false", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@lshr_sgt_false" },
+  { func = "@lshr_sgt_false", args = ["31"], results = [{ values = ["false"], witness = [] }], from = "@lshr_sgt_false" },
+  { func = "@lshr_sgt_false", args = ["32"], expect = ["poison"], from = "@lshr_sgt_false" },
+  { func = "@ashr2", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@ashr2" },
+  { func = "@ashr2", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@ashr2" },
+  { func = "@ashr_sgt_false", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@ashr_sgt_false" },
+  { func = "@ashr_sgt_false", args = ["31"], results = [{ values = ["false"], witness = [] }], from = "@ashr_sgt_false" },
+  { func = "@ashr_sgt_false", args = ["40"], expect = ["poison"], from = "@ashr_sgt_false" },
+  { func = "@or1", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@or1" },
+  { func = "@or1", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@or1" },
+  { func = "@or4_true", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@or4_true" },
+  { func = "@or4_true", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@or4_true" },
+  { func = "@or4_true", args = ["127"], results = [{ values = ["true"], witness = [] }], from = "@or4_true" },
+  { func = "@or5_true", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@or5_true" },
+  { func = "@or5_true", args = ["-1"], results = [{ values = ["true"], witness = [] }], from = "@or5_true" },
+  { func = "@or5_true", args = ["127"], results = [{ values = ["true"], witness = [] }], from = "@or5_true" },
+  { func = "@and1", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@and1" },
+  { func = "@and1", args = ["62"], results = [{ values = ["false"], witness = [] }], from = "@and1" },
+  { func = "@and2", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@and2" },
+  { func = "@and2", args = ["62"], results = [{ values = ["false"], witness = [] }], from = "@and2" },
+  { func = "@tautological9", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@tautological9" },
+  { func = "@tautological9", args = ["-14"], results = [{ values = ["true"], witness = [] }], from = "@tautological9" },
+  { func = "@tautological9", args = ["-1"], expect = ["poison"], from = "@tautological9" },
+  { func = "@tautological9", args = ["-13"], expect = ["poison"], from = "@tautological9" },
+  { func = "@add_nsw_neg_const1", args = ["2147483647"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_neg_const1" },
+  { func = "@add_nsw_neg_const1", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_neg_const1" },
+  { func = "@add_nsw_neg_const1", args = ["-2"], expect = ["poison"], from = "@add_nsw_neg_const1" },
+  { func = "@add_nsw_sgt", args = ["-128"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_sgt" },
+  { func = "@add_nsw_sgt", args = ["122"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_sgt" },
+  { func = "@add_nsw_sgt", args = ["123"], expect = ["poison"], from = "@add_nsw_sgt" },
+  { func = "@add_nsw_nuw_sgt", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_nuw_sgt" },
+  { func = "@add_nsw_nuw_sgt", args = ["-128"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_nuw_sgt" },
+  { func = "@add_nsw_nuw_sgt", args = ["123"], expect = ["poison"], from = "@add_nsw_nuw_sgt" },
+  { func = "@add_nsw_nuw_sgt", args = ["-1"], expect = ["poison"], from = "@add_nsw_nuw_sgt" },
+  { func = "@add_nsw_sgt_limit", args = ["-128"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_sgt_limit" },
+  { func = "@add_nsw_sgt_limit", args = ["0"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_sgt_limit" },
+  { func = "@add_nsw_slt", args = ["-128"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_slt" },
+  { func = "@add_nsw_slt", args = ["122"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_slt" },
+  { func = "@add_nsw_slt", args = ["123"], expect = ["poison"], from = "@add_nsw_slt" },
+  { func = "@add_nsw_slt_limit", args = ["-128"], results = [{ values = ["true"], witness = [] }], from = "@add_nsw_slt_limit" },
+  { func = "@add_nsw_slt_limit", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_slt_limit" },
+  { func = "@add_nsw_pos_const5", args = ["-2147483648"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_pos_const5" },
+  { func = "@add_nsw_pos_const5", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@add_nsw_pos_const5" },
+  { func = "@add_nsw_pos_const5", args = ["2147483647"], expect = ["poison"], from = "@add_nsw_pos_const5" },
+  { func = "@mul_nuw_urem_cmp_constant1", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@mul_nuw_urem_cmp_constant1" },
+  { func = "@mul_nuw_urem_cmp_constant1", args = ["5"], results = [{ values = ["false"], witness = [] }], from = "@mul_nuw_urem_cmp_constant1" },
+  { func = "@mul_nuw_urem_cmp_constant1", args = ["6"], expect = ["poison"], from = "@mul_nuw_urem_cmp_constant1" },
+  { func = "@mul_nuw_urem_cmp_constant1", args = ["-1"], expect = ["poison"], from = "@mul_nuw_urem_cmp_constant1" },
+  { func = "@mul_urem_cmp_constant1", args = ["126"], results = [{ values = ["true"], witness = [] }], from = "@mul_urem_cmp_constant1" },
+  { func = "@mul_urem_cmp_constant1", args = ["5"], results = [{ values = ["false"], witness = [] }], from = "@mul_urem_cmp_constant1" },
+  { func = "@mul_nsw_srem_cmp_constant1", args = ["1"], results = [{ values = ["false"], witness = [] }], from = "@mul_nsw_srem_cmp_constant1" },
+  { func = "@mul_nsw_srem_cmp_constant1", args = ["-2"], results = [{ values = ["false"], witness = [] }], from = "@mul_nsw_srem_cmp_constant1" },
+  { func = "@mul_nsw_srem_cmp_constant1", args = ["126"], expect = ["poison"], from = "@mul_nsw_srem_cmp_constant1" },
+  { func = "@mul_nsw_by_zero", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@mul_nsw_by_zero" },
+  { func = "@mul_nsw_by_zero", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@mul_nsw_by_zero" },
+  { func = "@mul_nsw_by_zero", args = ["45"], results = [{ values = ["false"], witness = [] }], from = "@mul_nsw_by_zero" },
+  { func = "@mul_nuw_by_zero", args = ["0"], results = [{ values = ["false"], witness = [] }], from = "@mul_nuw_by_zero" },
+  { func = "@mul_nuw_by_zero", args = ["-1"], results = [{ values = ["false"], witness = [] }], from = "@mul_nuw_by_zero" },
+  { func = "@mul_nuw_by_zero", args = ["45"], results = [{ values = ["false"], witness = [] }], from = "@mul_nuw_by_zero" },
+]

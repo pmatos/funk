@@ -31,6 +31,7 @@ import FirTest.RefineCalls
 import FirTest.Lawful
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
+import FirTest.G0
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

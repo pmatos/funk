@@ -10,6 +10,9 @@ and how it judges a test in
 [ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)
 and, for a run that makes choices,
 [ADR-2026-10-31-0003](../../docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md).
+The [coverage matrix](../../docs/coverage/README.md) counts the tests
+that exercise each op instance at each width, on each side
+([ADR-2026-11-03-0557](../../docs/adrs/2026-11-03-0557-a-generated-matrix-counts-the-tests-of-each-cell.md)).
 
 ## Layout
 
@@ -23,6 +26,11 @@ and, for a run that makes choices,
   other layout. It parses to the same module as `canonical/NAME.fir`, which
   is its canonical form.
 - `reject/*.toml` holds the must-reject texts, grouped by what they break.
+- `llvm/NAME.fir` is a canonical text ported by hand from an LLVM test,
+  and `llvm/NAME.toml` lists its tests, as below; beside them are LLVM's
+  licence, `llvm/LICENSE.TXT`, and a notice, `llvm/README.md`. Their
+  files are under LLVM's licence, not funk's
+  ([ADR-2026-11-03-0643](../../docs/adrs/2026-11-03-0643-ported-llvm-tests-keep-llvm-s-licence-and-name-their-source.md)).
 
 The corpus holds nothing else: the harness fails on any other file, and on
 a key that the format below does not have.
@@ -121,16 +129,21 @@ locs {
 - `scripts/check-harness.sh`, the differential harness and the
   `fir-harness` hook, runs everything above, and checks that both tools
   accept every module of the Rust generator.
+- `scripts/harness/coverage.py`, the `coverage-matrix` hook, writes the
+  coverage matrix from the tests and fails when the committed one is
+  stale or a cell has no test. Run it with `--write` after changing a
+  test.
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
-  texts in Rust.
-- `scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
-  `fir-ref validate` accepts each one. It also runs functions of
-  `add.fir`, `locations.fir`, `names.fir`, `results.fir`, `seven.fir`,
-  `symbols.fir` and `widths.fir`, and of `noncanonical/add.fir`, with
-  `fir-ref run`, and checks each result against a table of its own
-  (ADR-2026-10-30-1856). Editing one of those files means updating that
-  table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
-  prints from them, byte for byte (ADR-2026-10-30-1250).
+  texts in Rust, those of `llvm/` among the canonical ones.
+- `scripts/check-fir-ref.sh test` checks them, `llvm/` too, with
+  `fir-ref fmt`, and that `fir-ref validate` accepts each one. It also
+  runs functions of `add.fir`, `locations.fir`, `names.fir`,
+  `results.fir`, `seven.fir`, `symbols.fir` and `widths.fir`, and of
+  `noncanonical/add.fir`, with `fir-ref run`, and checks each result
+  against a table of its own (ADR-2026-10-30-1856). Editing one of those
+  files means updating that table. `scripts/check-fir-ref.sh round-trip`
+  has Lean reprint what Rust prints from them, byte for byte
+  (ADR-2026-10-30-1250).
 
 The texts use `const`, `add`, `sub` and `mul` with their flags `nuw` and
 `nsw`, `freeze` and `ret`, but for must-reject texts that name an op or a
@@ -284,3 +297,23 @@ op as either operand and as both. `div-calls-i128` returns quotients
 and remainders among several results and passes them across calls, and
 `div-symbol-i128` names functions after the helper's routines
 ([ADR-2026-11-03-0414](../../docs/adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md)).
+
+The texts of #23 fill the cells of the coverage matrix that had no
+test. `branch-no-args` runs `br` to blocks that take no arguments, as a
+differential test. The interpreter-only tests at the end of `add-i128`,
+`sub-i128`, `mul-i128`, `bitwise-i128`, the three `icmp-*-i128`,
+`select-i128`, `branch-i128`, `zext-i128`, `sext-i128` and `trunc-i128`
+state what `fir-ref` gives at `i128`, and those at the end of
+`freeze-i1` to `freeze-i64` what it gives for `freeze` on each choice,
+as `freeze-i7` does. `zext-i7`, `sext-i7`, `trunc-i7` and their `i33`
+twins also change widths to and from `i128`.
+
+## Cases ported from LLVM
+
+The modules of `llvm/` are LLVM test cases ported to fir by hand (#23).
+[`llvm/README.md`](llvm/README.md) lists them, says where each comes
+from and how the cases were rewritten, and shows the two keys that a
+ported sidecar has more than the format above, both required: `source`,
+the LLVM test file and the llvm-project commit it was read at, and each
+test's `from`, the LLVM function, or its CHECK or RUN lines, that the
+test's function is.

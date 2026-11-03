@@ -1,0 +1,23 @@
+# Derived from LLVM:
+# llvm/test/Transforms/InstSimplify/2010-12-20-Boolean.ll, ported to fir
+# by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function on both values of i1, and its from names the
+# LLVM function that the function is. At i1, x + x is false, false - x and
+# x * x are x, and icmp ne %x, false is %x. LLVM writes the constant false
+# as 0, which fir writes false.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/Transforms/InstSimplify/2010-12-20-Boolean.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@add", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@add" },
+  { func = "@add", args = ["true"], results = [{ values = ["false"], witness = [] }], from = "@add" },
+  { func = "@sub", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@sub" },
+  { func = "@sub", args = ["true"], results = [{ values = ["true"], witness = [] }], from = "@sub" },
+  { func = "@mul", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@mul" },
+  { func = "@mul", args = ["true"], results = [{ values = ["true"], witness = [] }], from = "@mul" },
+  { func = "@ne", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@ne" },
+  { func = "@ne", args = ["true"], results = [{ values = ["true"], witness = [] }], from = "@ne" },
+]

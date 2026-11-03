@@ -1,0 +1,22 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/cast.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. A trunc to i1 of a zext from i1
+# gives the operand back. The negative test @zext_of_trunc_no_flag
+# zero-extends what a trunc to i32 kept, which loses the high half: on -1
+# it gives 4294967295.
+#
+# The file's other functions are left out: @test2 to @test5 work on
+# pointers, and the others use trunc nuw or trunc nsw, flags that fir's
+# trunc does not have.
+source = { file = "llvm/test/Transforms/InstSimplify/cast.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["true"], results = [{ values = ["true"], witness = [] }], from = "@test1" },
+  { func = "@zext_of_trunc_no_flag", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@zext_of_trunc_no_flag" },
+  { func = "@zext_of_trunc_no_flag", args = ["-1"], results = [{ values = ["4294967295"], witness = [] }], from = "@zext_of_trunc_no_flag" },
+  { func = "@zext_of_trunc_no_flag", args = ["4294967296"], results = [{ values = ["0"], witness = [] }], from = "@zext_of_trunc_no_flag" },
+]

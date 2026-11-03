@@ -1,0 +1,103 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/shift-i128.ll, ported to fir by
+# hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in LICENSE.TXT
+# beside this file, and README.md says how the cases were chosen and
+# rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# The @test_*_i128 functions store their shift through a pointer; fir has
+# no memory, so each returns it instead. A shift by 128 or more gives
+# poison, so the *_outofrange functions, which shift by -1, that is 2^128
+# - 1, give poison on every argument, and so do the others on an amount of
+# 128 or more: those tests are interpreter-only. @lshr_shl_mask clears the
+# top bit. The three @shift_i128_limited_shamt* functions shift by a
+# difference of i32s, zero-extended with nneg, a flag that fir's zext does
+# not have. An amount with its sign bit set is 2^31 or more, so the shl
+# gives poison on it with nneg or without, and dropping the flag changes
+# no result. Where the sub has nuw, a %b above the other operand gives
+# poison too.
+#
+# The file's other functions work on vectors and are left out.
+source = { file = "llvm/test/CodeGen/X86/shift-i128.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "0"], results = [{ values = ["-170141183460469231731687303715884105728"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "1"], results = [{ values = ["85070591730234615865843651857942052864"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "63"], results = [{ values = ["18446744073709551616"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "64"], results = [{ values = ["9223372036854775808"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "65"], results = [{ values = ["4611686018427387904"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "127"], results = [{ values = ["1"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "128"], expect = ["poison"], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["-170141183460469231731687303715884105728", "-1"], expect = ["poison"], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "0"], results = [{ values = ["1512366075204170947332355369683137040"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "1"], results = [{ values = ["756183037602085473666177684841568520"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "63"], results = [{ values = ["163971058432973791"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "64"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "65"], results = [{ values = ["40992764608243447"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "127"], results = [{ values = ["0"], witness = [] }], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "128"], expect = ["poison"], from = "@test_lshr_i128" },
+  { func = "@test_lshr_i128", args = ["1512366075204170947332355369683137040", "-1"], expect = ["poison"], from = "@test_lshr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "0"], results = [{ values = ["-170141183460469231731687303715884105728"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "1"], results = [{ values = ["-85070591730234615865843651857942052864"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "63"], results = [{ values = ["-18446744073709551616"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "64"], results = [{ values = ["-9223372036854775808"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "65"], results = [{ values = ["-4611686018427387904"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "127"], results = [{ values = ["-1"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "128"], expect = ["poison"], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["-170141183460469231731687303715884105728", "-1"], expect = ["poison"], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "0"], results = [{ values = ["1512366075204170947332355369683137040"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "1"], results = [{ values = ["756183037602085473666177684841568520"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "63"], results = [{ values = ["163971058432973791"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "64"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "65"], results = [{ values = ["40992764608243447"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "127"], results = [{ values = ["0"], witness = [] }], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "128"], expect = ["poison"], from = "@test_ashr_i128" },
+  { func = "@test_ashr_i128", args = ["1512366075204170947332355369683137040", "-1"], expect = ["poison"], from = "@test_ashr_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "0"], results = [{ values = ["-170141183460469231731687303715884105728"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "1"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "63"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "64"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "65"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "127"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "128"], expect = ["poison"], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["-170141183460469231731687303715884105728", "-1"], expect = ["poison"], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "0"], results = [{ values = ["1512366075204170947332355369683137040"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "1"], results = [{ values = ["3024732150408341894664710739366274080"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "63"], results = [{ values = ["-756183037602085473707170449449811968"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "64"], results = [{ values = ["-1512366075204170947414340898899623936"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "65"], results = [{ values = ["-3024732150408341894828681797799247872"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "127"], results = [{ values = ["0"], witness = [] }], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "128"], expect = ["poison"], from = "@test_shl_i128" },
+  { func = "@test_shl_i128", args = ["1512366075204170947332355369683137040", "-1"], expect = ["poison"], from = "@test_shl_i128" },
+  { func = "@test_lshr_i128_outofrange", args = ["0"], expect = ["poison"], from = "@test_lshr_i128_outofrange" },
+  { func = "@test_lshr_i128_outofrange", args = ["-1"], expect = ["poison"], from = "@test_lshr_i128_outofrange" },
+  { func = "@test_ashr_i128_outofrange", args = ["0"], expect = ["poison"], from = "@test_ashr_i128_outofrange" },
+  { func = "@test_ashr_i128_outofrange", args = ["-1"], expect = ["poison"], from = "@test_ashr_i128_outofrange" },
+  { func = "@test_shl_i128_outofrange", args = ["0"], expect = ["poison"], from = "@test_shl_i128_outofrange" },
+  { func = "@test_shl_i128_outofrange", args = ["-1"], expect = ["poison"], from = "@test_shl_i128_outofrange" },
+  { func = "@lshr_shl_mask", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@lshr_shl_mask", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@lshr_shl_mask", args = ["-1"], results = [{ values = ["170141183460469231731687303715884105727"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@lshr_shl_mask", args = ["18446744073709551615"], results = [{ values = ["18446744073709551615"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@lshr_shl_mask", args = ["18446744073709551616"], results = [{ values = ["18446744073709551616"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@lshr_shl_mask", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["0"], witness = [] }], from = "@lshr_shl_mask" },
+  { func = "@shift_i128_limited_shamt", args = ["-1", "0"], results = [{ values = ["-64"], witness = [] }], from = "@shift_i128_limited_shamt" },
+  { func = "@shift_i128_limited_shamt", args = ["-1", "6"], results = [{ values = ["-1"], witness = [] }], from = "@shift_i128_limited_shamt" },
+  { func = "@shift_i128_limited_shamt", args = ["-1", "3"], results = [{ values = ["-8"], witness = [] }], from = "@shift_i128_limited_shamt" },
+  { func = "@shift_i128_limited_shamt", args = ["-1", "7"], expect = ["poison"], from = "@shift_i128_limited_shamt" },
+  { func = "@shift_i128_limited_shamt", args = ["-1", "-1"], expect = ["poison"], from = "@shift_i128_limited_shamt" },
+  { func = "@shift_i128_limited_shamt_no_nuw", args = ["-1", "0"], results = [{ values = ["-64"], witness = [] }], from = "@shift_i128_limited_shamt_no_nuw" },
+  { func = "@shift_i128_limited_shamt_no_nuw", args = ["-1", "6"], results = [{ values = ["-1"], witness = [] }], from = "@shift_i128_limited_shamt_no_nuw" },
+  { func = "@shift_i128_limited_shamt_no_nuw", args = ["-1", "3"], results = [{ values = ["-8"], witness = [] }], from = "@shift_i128_limited_shamt_no_nuw" },
+  { func = "@shift_i128_limited_shamt_no_nuw", args = ["-1", "7"], expect = ["poison"], from = "@shift_i128_limited_shamt_no_nuw" },
+  { func = "@shift_i128_limited_shamt_no_nuw", args = ["-1", "-1"], results = [{ values = ["-128"], witness = [] }], from = "@shift_i128_limited_shamt_no_nuw" },
+  { func = "@shift_i128_limited_shamt_unknown_lhs", args = ["-1", "0", "6"], results = [{ values = ["-64"], witness = [] }], from = "@shift_i128_limited_shamt_unknown_lhs" },
+  { func = "@shift_i128_limited_shamt_unknown_lhs", args = ["1", "3", "130"], results = [{ values = ["-170141183460469231731687303715884105728"], witness = [] }], from = "@shift_i128_limited_shamt_unknown_lhs" },
+  { func = "@shift_i128_limited_shamt_unknown_lhs", args = ["1", "0", "128"], expect = ["poison"], from = "@shift_i128_limited_shamt_unknown_lhs" },
+  { func = "@shift_i128_limited_shamt_unknown_lhs", args = ["1", "5", "3"], expect = ["poison"], from = "@shift_i128_limited_shamt_unknown_lhs" },
+  { func = "@shift_i128_limited_shamt_unknown_lhs", args = ["1", "0", "-1"], expect = ["poison"], from = "@shift_i128_limited_shamt_unknown_lhs" },
+]
