@@ -6,10 +6,8 @@
 # budget; running out at one budget is not divergence
 # (lean/Fir/Execution/Behaviour.lean). Each test sets fir-ref run's
 # budget, --fuel, with fuel, and is interpreter-only: it expects
-# fuel-exhausted, which makes a differential test invalid, and native
-# code would recurse without end, and the harness runs native code with
-# no data limit until #92. The budgets are small, as fir-ref's run takes
-# stack for each step (#47).
+# fuel-exhausted, which makes a differential test invalid. The budgets
+# are small, as fir-ref's run takes stack for each step (#47).
 tests = [
   { func = "@forever", args = ["1"], fuel = 0, expect = "fuel-exhausted" },
   { func = "@forever", args = ["1"], fuel = 1, expect = "fuel-exhausted" },
