@@ -236,6 +236,33 @@ func @urem_mul_sdiv(%x: i8, %y: i8) -> i8 {
   ret %mod @30
 }
 
+func @simplify_urem_of_mul(%x: i8) -> i8 {
+^entry:
+  %c30: i8 = const 30 @31
+  %mul: i8 = mul nuw %x, %c30 @31
+  %c10: i8 = const 10 @31
+  %r: i8 = urem %mul, %c10 @31
+  ret %r @31
+}
+
+func @simplify_urem_of_mul_fail_bad_flag(%x: i8) -> i8 {
+^entry:
+  %c30: i8 = const 30 @32
+  %mul: i8 = mul nsw %x, %c30 @32
+  %c10: i8 = const 10 @32
+  %r: i8 = urem %mul, %c10 @32
+  ret %r @32
+}
+
+func @simplify_urem_of_mul_fail_bad_mod(%x: i8) -> i8 {
+^entry:
+  %c31: i8 = const 31 @33
+  %mul: i8 = mul nuw %x, %c31 @33
+  %c10: i8 = const 10 @33
+  %r: i8 = urem %mul, %c10 @33
+  ret %r @33
+}
+
 locs {
   @0 = "llvm/test/Transforms/InstSimplify/rem.ll":4:1 to 10:2
   @1 = "llvm/test/Transforms/InstSimplify/rem.ll":111:1 to 118:2
@@ -268,4 +295,7 @@ locs {
   @28 = "llvm/test/Transforms/InstSimplify/rem.ll":439:1 to 448:2
   @29 = "llvm/test/Transforms/InstSimplify/rem.ll":460:1 to 471:2
   @30 = "llvm/test/Transforms/InstSimplify/rem.ll":483:1 to 494:2
+  @31 = "llvm/test/Transforms/InstSimplify/rem.ll":516:1 to 523:2
+  @32 = "llvm/test/Transforms/InstSimplify/rem.ll":525:1 to 534:2
+  @33 = "llvm/test/Transforms/InstSimplify/rem.ll":536:1 to 545:2
 }

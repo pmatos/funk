@@ -41,8 +41,8 @@ that property too, and miss dominators.
   is not an ancestor of `c` can be avoided on some path from the entry to
   `c`. The search's tree has all three, and each move keeps them. When no
   block moves, every path to a block passes through its ancestors. So the
-  ancestors are the dominators (`Lifted.ancestor_iff`), and `dominance_eq` proves
-  the answers equal to `dominatesIn` for every pair of labels. A pass that
+  ancestors are the dominators (`Lifted.ancestor_iff`), and `dominance_eq`
+  proves the answers equal to `dominatesIn` for every pair of labels. A pass that
   moves a block lowers the sum of the numbers of the blocks' parents, which
   gives the passes a measure; no fuel.
 - **A question walks up from the use's block**, by jump pointers chosen by

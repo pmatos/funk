@@ -11,7 +11,7 @@ block uses the value of the block before it, and one where each uses the
 value of the entry. The last checks pin the axioms of the theorems.
 -/
 
-namespace FirTest
+namespace FirTest.Dominators
 
 open Fir Fir.Core FirRef
 
@@ -143,4 +143,4 @@ info: 'FirRef.dominance_eq' depends on axioms: [propext, Classical.choice, Quot.
 -/
 #guard_msgs in #print axioms FirRef.dominance_eq
 
-end FirTest
+end FirTest.Dominators

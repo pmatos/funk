@@ -1,6 +1,6 @@
 # ADR ids are unique: a taken minute adds the seconds, and a hook checks it
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-1612
 
 ## Context
 
