@@ -1,6 +1,6 @@
 """A small reader of Rust source for scripts/check_unsafe_code.py: its
-tokens without comments and string contents, and its items, nested in
-modules, impls, traits and `verus!` blocks."""
+tokens without comments, each string literal one token, and its items,
+nested in modules, impls, traits and `verus!` blocks."""
 
 import re
 from typing import NamedTuple
@@ -55,8 +55,9 @@ class Item(NamedTuple):
 
 def tokens(text: str) -> list[tuple[str, str, int]]:
     """Rust tokens as (kind, text, line), without comments; a string
-    literal is one `str` token without its contents. A raw identifier
-    loses its `r#` unless it spells a keyword."""
+    literal is one `str` token that holds its source text, so no word in it
+    reads as an identifier. A raw identifier loses its `r#` unless it
+    spells a keyword."""
     out = []
     pos, line = 0, 1
     while pos < len(text):
@@ -78,12 +79,12 @@ def tokens(text: str) -> list[tuple[str, str, int]]:
             close = '"' + "#" * len(match["hashes"])
             found = text.find(close, end)
             end = len(text) if found < 0 else found + len(close)
-            out.append(("str", "", line))
+            out.append(("str", text[pos:end], line))
         elif kind == "str":
             while end < len(text) and text[end] != '"':
                 end += 2 if text[end] == "\\" else 1
             end += 1
-            out.append(("str", "", line))
+            out.append(("str", text[pos:end], line))
         elif kind == "ident":
             word = match.group()
             bare = word.removeprefix("r#")
@@ -162,9 +163,9 @@ def head(toks, i: int, end: int) -> tuple[str, int] | None:
 
 def item_end(toks, i: int, end: int, kind: str | None) -> int:
     """The index just past the item that starts at toks[i]: past its first
-    `;`, or past its first brace group unless it is a constant, static or
-    type alias, whose value may hold braces."""
-    value = kind in ("const", "static", "type")
+    `;`, or past its first brace group unless it is a constant, static,
+    type alias or `use`, whose value or path may hold braces."""
+    value = kind in ("const", "static", "type", "use")
     i = skip_attributes(toks, i, end)
     while i < end:
         if is_punct(toks, i, ";"):

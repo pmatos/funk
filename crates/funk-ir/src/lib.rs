@@ -22,6 +22,9 @@
 //! assert_eq!(print(&m), text);
 //! ```
 
+// Cargo does not pass [lints] to doctests (ADR-2026-11-03-0808).
+#![doc(test(attr(forbid(unsafe_code))))]
+
 pub mod dialects;
 pub mod generate;
 pub mod ir;

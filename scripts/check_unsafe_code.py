@@ -4,27 +4,36 @@ proof outside the trusted base (ADR-2026-11-03-0808).
 Unsafe code may live only in a verified module: a file of VERIFIED_MODULES,
 in a crate that opts into Verus, so that the verus-proof hook proves it.
 There, `unsafe` may appear only on the items of TRUSTED_BASE, which
-ADR-2026-11-03-0808 lists; outside `verus!` a verified module holds only
-inner attributes, `use`, constants and trusted items, and it holds no macro
-but its `verus!` block. The calls that the proof rests on are those of
-CALLS. The check also fails on `unsafe_code` in an attribute other than a
-trusted one; a manifest that lets a crate with no verified module use unsafe
-code; an assumption (`assume`, `admit`, `axiom`, `external_body`,
-`assume_specification` and their kin) other than on a trusted item; code
-that Verus does not see when it verifies; and a trusted item that is gone.
+ADR-2026-11-03-0808 lists, and the text of the trusted base, of #117's
+specification and of `record` is pinned (scripts/unsafe_pins.py). Outside
+`verus!` a verified module holds only inner attributes, `use`, constants
+and trusted items; it calls no macro but its `verus!` block and renames no
+import; and the names that the proof rests on appear only where CALLS and
+NAMES allow. The check also fails on `unsafe_code` in an attribute that does
+not forbid or deny it; an assumption (`assume`, `admit`, `axiom`,
+`external_body`, `assume_specification` and their kin) or a `verifier`
+attribute other than on a trusted item; code that Verus does not see when it
+verifies; a trusted item that is gone; and a manifest or crate root that
+would let code past rustc's lint or the check (scripts/unsafe_manifests.py).
 It reads the Rust files and Cargo manifests that git tracks, without
-comments and strings.
+comments.
 """
 
-import re
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from rust_items import attributes, is_ident, is_punct, items, tokens
+from unsafe_manifests import (
+    crate_of,
+    is_verus_crate,
+    manifest,
+    manifest_problems,
+    opts_in,
+)
+from unsafe_pins import pin_problems
 
 ADR = "docs/adrs/2026-11-03-0808-unsafe-rust-needs-a-verus-proof-with-a-listed-trusted-base.md"
 
@@ -47,32 +56,58 @@ TRUSTED_BASE = {
     },
 }
 
-# Function -> the one item that names it, once, besides its own definition.
-# So one view of the slots exists, `record` ends by consuming it in
-# `finish`, `.init_array` holds `record`, and each descriptor gets one
-# `fcntl` call (ADR-2026-11-03-0808).
+# Function -> the one item that names it, once, besides its own definition;
+# a method call, after `.`, does not count. Only `record` takes the view of
+# the slots and hands it to `finish`, only `record_slots` stores and asks
+# `fcntl`, and `.init_array` holds `record` (ADR-2026-11-03-0808).
 CALLS = {
     "crates/funk-start-fds/src/record.rs": {
         "take_slots": "record",
         "finish": "record",
         "record": "RECORD",
         "getfd": "record_slots",
+        "store": "record_slots",
+    },
+}
+
+# Name -> the items that may name it. No other item names `Slots`, so none
+# can alias, copy or make the view of the slots.
+NAMES = {
+    "crates/funk-start-fds/src/record.rs": {
+        "Slots": {"Slots", "take_slots", "store", "record_slots", "finish", "record"},
     },
 }
 
 # Words that make Verus assume instead of prove: they count in Verus crates.
 ASSUMPTIONS = {"assume", "admit", "axiom", "external"}
 ASSUMPTION_PREFIXES = ("assume_", "external_")
+# The one `verifier` attribute that may stand, on a trusted item.
+VERIFIER_ATTRIBUTES = {"external_body"}
+# Words that `!(`, `![` or `!{` may follow without calling a macro.
+NOT_MACROS = {"if", "while", "match", "return", "break", "in"}
+NOT_MACROS |= {"requires", "ensures", "invariant", "decreases", "recommends"}
 # The words that may stand in the `mod` item that mounts a verified module.
 MOUNT_WORDS = {"mod", "cfg", "any", "target_os"}
 
 
-def marks(word: str, verus_crate: bool) -> str | None:
+def marks(toks, i: int, verus_crate: bool) -> str | None:
+    word = toks[i][1]
+    if word == "unsafe_code" and strict(toks, i):
+        return None
     if word in ("unsafe", "unsafe_code", "cfg", "cfg_attr") or is_verus_cfg(word):
         return word
     if verus_crate and (word in ASSUMPTIONS or word.startswith(ASSUMPTION_PREFIXES)):
         return word
     return None
+
+
+def strict(toks, i: int) -> bool:
+    """toks[i] is a lint in `forbid(...)` or `deny(...)`, which only make
+    the rule stricter."""
+    while is_punct(toks, i - 1, ",") and i >= 2 and toks[i - 2][0] == "ident":
+        i -= 2
+    level = is_ident(toks, i - 2, "forbid") or is_ident(toks, i - 2, "deny")
+    return is_punct(toks, i - 1, "(") and level
 
 
 def is_verus_cfg(word: str) -> bool:
@@ -101,7 +136,20 @@ def file_problems(path: str, text: str, verus_crate: bool, used: set) -> list[st
                 found.append(
                     f"{where}: it takes code from a file that this check may not read"
                 )
-            mark = marks(word, verus_crate)
+            if verus_crate and (setting := verifier_setting(toks, i, in_attr)):
+                found.append(
+                    f"{path}:{line}: `{word}::{setting}` in {item}: of Verus's"
+                    " attributes, only `verifier::external_body` may stand, on a"
+                    " trusted item"
+                )
+            top = kind == "verus!" and not in_verus and word == "verus"
+            macro = is_macro_call(toks, i) and word not in NOT_MACROS
+            if verified and macro and not top:
+                found.append(
+                    f"{path}:{line}: `{word}!` in {item}: a verified module"
+                    " calls no macro but its verus! block"
+                )
+            mark = marks(toks, i, verus_crate)
             if mark is None or (mark in ("cfg", "cfg_attr") and not verified):
                 continue
             if mark in trusted.get(item, ()):
@@ -110,7 +158,8 @@ def file_problems(path: str, text: str, verus_crate: bool, used: set) -> list[st
                 found.append(f"{where}: {why(mark)}")
         if verified:
             found += layout_problems(path, toks, item, kind, lo, hi, in_verus)
-    return found + call_problems(path, toks, entries)
+    found += call_problems(path, toks, entries)
+    return found + name_problems(path, toks, entries)
 
 
 def shadows(toks, i: int) -> bool:
@@ -129,18 +178,38 @@ def reads_a_file(toks, i: int, in_attr: set[int]) -> bool:
     return word == "path" and i in in_attr and is_punct(toks, i + 1, "=")
 
 
+def verifier_setting(toks, i: int, in_attr: set[int]) -> str | None:
+    """X, when toks[i] starts `verifier::X` or `verifier(X)` in an attribute,
+    other than an allowed one, or Verus's own `verus::X`."""
+    if i not in in_attr or toks[i][1] not in ("verifier", "verus"):
+        return None
+    if is_punct(toks, i + 1, ":") and is_punct(toks, i + 2, ":"):
+        at = i + 3
+    elif is_punct(toks, i + 1, "(") and toks[i][1] == "verifier":
+        at = i + 2
+    else:
+        return None
+    setting = toks[at][1] if at < len(toks) else "?"
+    if toks[i][1] == "verifier" and setting in VERIFIER_ATTRIBUTES:
+        return None
+    return setting
+
+
 def layout_problems(path, toks, item, kind, lo, hi, in_verus) -> list[str]:
     """Outside `verus!`, a verified module holds only inner attributes,
-    `use`, constants and trusted items, and it holds no macro but its
-    `verus!` block, since Verus and this check do not see what one makes."""
+    `use`, constants and trusted items. It defines no macro, since Verus and
+    this check do not see what one makes, and renames no import, so no macro
+    passes for a keyword."""
     line = toks[lo][2]
-    macro = kind == "macro_rules" or (kind or "").endswith("!")
-    if macro and (kind != "verus!" or in_verus):
-        return [f"{path}:{line}: `{kind}` in {item}: no macro in a verified module"]
-    trusted = TRUSTED_BASE.get(path, {})
-    if in_verus or kind in ("inner", "use", "verus!") or item in trusted:
+    if kind == "macro_rules":
+        return [
+            f"{path}:{line}: `macro_rules` in {item}: no macro in a verified module"
+        ]
+    if kind == "use" and any(is_ident(toks, i, "as") for i in range(lo, hi)):
+        return [f"{path}:{line}: `as` in {item}: a verified module renames no import"]
+    if in_verus or kind in ("inner", "use", "const", "verus!"):
         return []
-    if kind == "const" and not any(is_macro_call(toks, i) for i in range(lo, hi)):
+    if item in TRUSTED_BASE.get(path, {}):
         return []
     return [
         (
@@ -155,13 +224,21 @@ def is_macro_call(toks, i: int) -> bool:
     return toks[i][0] == "ident" and is_punct(toks, i + 1, "!") and opens
 
 
+def named(toks, entry, name: str) -> int:
+    """How often `entry` names `name`, other than as a method after `.`."""
+    return sum(
+        1
+        for i in range(entry.lo, entry.hi)
+        if is_ident(toks, i, name) and not is_punct(toks, i - 1, ".")
+    )
+
+
 def call_problems(path: str, toks, entries) -> list[str]:
     found = []
     for callee, caller in CALLS.get(path, {}).items():
         counts: dict[str, int] = {}
         for entry in entries:
-            n = sum(1 for i in range(entry.lo, entry.hi) if is_ident(toks, i, callee))
-            counts[entry.path] = counts.get(entry.path, 0) + n
+            counts[entry.path] = counts.get(entry.path, 0) + named(toks, entry, callee)
         if counts.pop(callee, 0) != 1:
             found.append(f"{path}: {callee} must be defined once, by that name")
         if (here := counts.pop(caller, 0)) != 1:
@@ -170,6 +247,18 @@ def call_problems(path: str, toks, entries) -> list[str]:
             found.append(
                 f"{path}: `{callee}` in {item}: only {caller} may name it ({ADR})"
             )
+    return found
+
+
+def name_problems(path: str, toks, entries) -> list[str]:
+    found = []
+    for name, allowed in NAMES.get(path, {}).items():
+        for entry in entries:
+            if entry.path.split("::")[0] not in allowed and named(toks, entry, name):
+                found.append(
+                    f"{path}:{toks[entry.lo][2]}: `{name}` in {entry.path}: only"
+                    f" {', '.join(sorted(allowed))} may name it ({ADR})"
+                )
     return found
 
 
@@ -203,63 +292,6 @@ def why(mark: str) -> str:
     return "Verus would assume it without proof; only a trusted item may"
 
 
-def manifest(root: Path, path: str) -> dict:
-    with open(root / path, "rb") as f:
-        return tomllib.load(f)
-
-
-def crate_of(path: str, manifests: list[str]) -> str | None:
-    dirs = [m.removesuffix("Cargo.toml") for m in manifests]
-    owners = [d for d in dirs if path.startswith(d)]
-    return max(owners, key=len) + "Cargo.toml" if owners else None
-
-
-def is_verus_crate(data: dict) -> bool:
-    tables = [data.get(k, {}) for k in ("dependencies", "dev-dependencies")]
-    tables += [t.get("dependencies", {}) for t in data.get("target", {}).values()]
-    meta = data.get("package", {}).get("metadata", {})
-    return "verus" in meta or any("vstd" in t for t in tables)
-
-
-def opts_in(data: dict) -> bool:
-    meta = data.get("package", {}).get("metadata", {}).get("verus", {})
-    return meta.get("verify") is True
-
-
-def unsafe_level(lints: dict) -> str:
-    level = lints.get("rust", {}).get("unsafe_code", "allow")
-    return level.get("level", "allow") if isinstance(level, dict) else level
-
-
-def manifest_problems(path: str, data: dict, verified: bool) -> list[str]:
-    """The workspace forbids unsafe code; every crate inherits that or
-    forbids it too, except a crate with a verified module, which denies it.
-    No manifest declares a Verus configuration to rustc."""
-    found = []
-    lints = data.get("lints", {})
-    shared = data.get("workspace", {}).get("lints", {})
-    if "workspace" in data and (level := unsafe_level(shared)) != "forbid":
-        found.append(f"{path}: unsafe_code is {level} in [workspace.lints], not forbid")
-    if "package" in data:
-        level = unsafe_level(lints)
-        if verified and level != "deny":
-            found.append(
-                f"{path}: unsafe_code is {level}, not deny, in a crate with a"
-                " verified module"
-            )
-        if not verified and lints.get("workspace") is not True and level != "forbid":
-            found.append(
-                f"{path}: unsafe_code is {level}, not forbid, in a crate with no"
-                " verified module; inherit [workspace.lints] or forbid it"
-            )
-    for table in (lints, shared):
-        cfgs = table.get("rust", {}).get("unexpected_cfgs", {})
-        for entry in cfgs.get("check-cfg", []) if isinstance(cfgs, dict) else []:
-            if re.search(r"\bverus_", entry):
-                found.append(f"{path}: check-cfg declares {entry}, a Verus cfg")
-    return found
-
-
 def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[str]:
     """One message per violation in the given repository-relative files."""
     found, used = [], set()
@@ -270,6 +302,7 @@ def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[st
         verus_crate = crate is not None and is_verus_crate(data[crate])
         text = (root / path).read_text(encoding="utf-8")
         found += file_problems(path, text, verus_crate, used)
+        found += pin_problems(path, text, ADR)
     for module, mount in sorted(VERIFIED_MODULES.items()):
         if module not in rust_files:
             continue
@@ -281,7 +314,8 @@ def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[st
             )
         found += mount_problems(root, module, mount, rust_files)
     for path in sorted(manifests):
-        found += manifest_problems(path, data[path], path in verified_crates)
+        verified = path in verified_crates
+        found += manifest_problems(root, path, data[path], verified, rust_files)
     for path, trusted in sorted(TRUSTED_BASE.items()):
         for item, allowed in sorted(trusted.items()):
             for mark in sorted(

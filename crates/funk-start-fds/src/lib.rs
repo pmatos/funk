@@ -9,6 +9,9 @@
 //! workspace, and Verus proves it (ADR-2026-11-03-0808). On every other
 //! target it compiles out, and every descriptor reads as open.
 
+// Cargo does not pass [lints] to doctests (ADR-2026-11-03-0808).
+#![doc(test(attr(forbid(unsafe_code))))]
+
 use std::io;
 use std::sync::atomic::{AtomicI32, Ordering};
 

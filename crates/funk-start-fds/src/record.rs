@@ -12,13 +12,17 @@
 //! Verus cannot check a foreign function, a link section, or the value that
 //! a standard-library atomic holds. Each of those sits behind one item
 //! marked TRUSTED, whose specification Verus assumes without proof. They
-//! are the trusted base that ADR-2026-11-03-0808 lists, and the
-//! `unsafe-code` check rejects any other unsafe code or assumption.
+//! are the trusted base that ADR-2026-11-03-0808 lists. The `unsafe-code`
+//! check rejects any other unsafe code or assumption, and pins the text of
+//! the trusted base, of #117's specification and of `record`, so only
+//! `record_slots`' body, which Verus proves, changes without a new ADR.
 
+// TRUSTED: the crate denies unsafe code, and the workspace forbids it in
+// every other crate; this module alone allows it, for its trusted items.
 #![allow(unsafe_code)]
 
 use std::ffi::c_int;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicI32, Ordering};
 
 use vstd::prelude::*;
 
@@ -63,8 +67,8 @@ pub open spec fn recorded(fd: int) -> i32 {
 /// call, named `getfd_error(fd)`, since nothing runs between the two.
 /// The names depend on `fd` alone, so Verus takes every call on one
 /// descriptor to give the same answer. That holds while `record` runs, as
-/// nothing else runs then, and the `unsafe-code` check allows one call, in
-/// `record_slots`.
+/// nothing else runs then and `F_GETFD` changes nothing, and the
+/// `unsafe-code` check lets only `record_slots` name `getfd`.
 #[verifier::external_body]
 fn getfd(fd: c_int) -> (result: (c_int, Option<i32>))
     ensures
@@ -84,10 +88,11 @@ fn getfd(fd: c_int) -> (result: (c_int, Option<i32>))
 /// `holds` says what each one holds. Only `take_slots` makes one and only
 /// `store` changes one. In the built crate it is never constructed:
 /// `Tracked<&mut Slots>` is a zero-sized `PhantomData`, and `take_slots` is
-/// erased.
+/// erased. Its field is not `Copy`, so neither is `Slots`: no copy of the
+/// view can exist.
 #[verifier::external_body]
 pub tracked struct Slots {
-    _private: (),
+    _private: core::cell::Cell<()>,
 }
 
 impl Slots {
@@ -98,9 +103,9 @@ impl Slots {
 /// TRUSTED, the `.init_array` contract: the C runtime calls `record` once,
 /// on the main thread, before `main` and before any other thread exists. So
 /// while `record` runs, it alone reads and writes `CLOSED`, and it may hold
-/// the one view of its slots. The `unsafe-code` check allows one call, in
-/// `record`, so no other view exists. Verus assumes nothing of what they
-/// hold.
+/// the one view of its slots. The `unsafe-code` check lets only `record`
+/// name `take_slots`, and pins `record`'s text, which calls it once, so no
+/// other view exists. Verus assumes nothing of what they hold.
 axiom fn take_slots() -> (tracked slots: Slots);
 
 /// TRUSTED: stores `code` in slot `fd` of `CLOSED`. Afterwards that slot
@@ -114,7 +119,9 @@ fn store(fd: usize, code: i32, Tracked(slots): Tracked<&mut Slots>)
         forall|i: int| i != fd ==> #[trigger] final(slots).holds(i) == old(slots).holds(i),
     no_unwind
 {
-    super::CLOSED[fd].store(code, Ordering::Relaxed);
+    // The array's length in the type: `fd < 3` keeps the index in bounds.
+    let closed: &[AtomicI32; 3] = &super::CLOSED;
+    closed[fd].store(code, Ordering::Relaxed);
 }
 
 /// Stores in each slot of `CLOSED` the error of its descriptor, or 0: the
@@ -146,8 +153,8 @@ fn record_slots(Tracked(slots): Tracked<&mut Slots>)
 
 /// #117's specification of `record`: each slot of `CLOSED` holds what
 /// `recorded` says. It consumes the view of the slots, so once `record` has
-/// called it, nothing can store to them. The `unsafe-code` check requires
-/// that `record` calls it.
+/// called it, nothing can store to them. The `unsafe-code` check pins
+/// `record`'s text, which ends by calling it.
 proof fn finish(tracked slots: Slots)
     requires
         forall|fd: int| 0 <= fd < 3 ==> #[trigger] slots.holds(fd) == recorded(fd),
