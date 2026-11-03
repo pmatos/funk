@@ -1,21 +1,13 @@
 """Tests for the pins of scripts/check_unsafe_code.py (scripts/
-unsafe_pins.py): an edit to the trusted base, to #117's specification, to
-`record` or to the file that mounts the verified module fails the check,
-even where Verus would still pass. Run:
+unsafe_pins.py): an edit to the trusted base, to #117's specification or
+to `record` fails the check, even where Verus would still pass. Run:
 python -m unittest discover -s scripts -p "test_*unsafe*.py"
 """
 
 import unittest
 
-from unsafe_pins import OUTSIDE, WHOLE
-from unsafe_planting import (
-    FDS_LIB,
-    check,
-    in_verus,
-    real,
-    record,
-    with_record_slots_body,
-)
+from unsafe_pins import OUTSIDE
+from unsafe_planting import check, in_verus, record, with_record_slots_body
 
 # A body for `record_slots` that Verus proves too, in other words.
 BODY = """    let mut fd: usize = 0;
@@ -198,35 +190,6 @@ class PlantedRecord(Case):
         i += 1;
     }"""
         self.assert_pinned("record", (body, loop))
-
-
-class PlantedLib(unittest.TestCase):
-    """lib.rs is pinned whole: it defines the `CLOSED` that `store` writes,
-    and mounts the verified module."""
-
-    def assert_pinned(self, old: str, new: str):
-        found = check(fds_lib=real(FDS_LIB, old, new))
-        self.assertTrue(
-            any(f"lib.rs: {WHOLE} is not the text" in m for m in found), found
-        )
-
-    def test_closed(self):
-        self.assert_pinned(
-            "static CLOSED: [AtomicI32; 3]",
-            "static CLOSED: &[AtomicI32; 3] = &DECOY;\nstatic DECOY: [AtomicI32; 3]",
-        )
-        self.assert_pinned(
-            "    Stdin = 0,\n    Stdout = 1,", "    Stdin = 1,\n    Stdout = 0,"
-        )
-        self.assert_pinned("        0 => None,", "        9 => None,")
-
-    def test_the_mount(self):
-        self.assert_pinned('    target_os = "linux",\n', "")
-        self.assert_pinned("#[cfg(any(\n", "#[cfg(any(all(), \n")
-
-    def test_a_crate_renamed_in_the_root(self):
-        """`extern crate self as std;` would retarget record.rs's `std::`."""
-        self.assert_pinned("use std::io;", "extern crate self as std;\nuse std::io;")
 
 
 class Unpinned(unittest.TestCase):

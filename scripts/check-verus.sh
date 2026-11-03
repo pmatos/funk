@@ -18,10 +18,13 @@ source scripts/rust-env.sh
 
 # The Verus release that checks the proofs. CI installs the same one; change
 # both, and vstd's version in crates/funk-start-fds/Cargo.toml, together.
+# Use the official release zip: a source build's cargo-verus lacks the vstd
+# compatibility row for its own release and fails with "Components are
+# incompatible".
 pinned=0.2026.11.02.8bf68ee
 
 if ! verus=$(command -v verus); then
-    echo "verus is not on PATH. Unzip Verus $pinned from" >&2
+    echo "verus is not on PATH. Unzip the official release zip of Verus $pinned from" >&2
     echo "https://github.com/verus-lang/verus/releases and put its directory on PATH." >&2
     exit 1
 fi
@@ -71,8 +74,18 @@ EOF
 for crate in "${crates[@]}"; do
     cargo clean --locked --quiet --target-dir target/verus -p "$crate"
 done
-"$cargo_verus" verus verify --workspace --locked --check-toolchain \
-    --target-dir target/verus -- --output-json >"$work/results.json"
+if ! "$cargo_verus" verus verify --workspace --locked --check-toolchain \
+    --target-dir target/verus -- --output-json >"$work/results.json" \
+    2>"$work/verus.err"; then
+    cat "$work/verus.err" >&2
+    if grep -q "Components are incompatible" "$work/verus.err"; then
+        echo "The verus-proof hook needs the official release zip of Verus $pinned," >&2
+        echo "from https://github.com/verus-lang/verus/releases: a source build's" >&2
+        echo "cargo-verus lacks the vstd compatibility row for its own release." >&2
+    fi
+    exit 1
+fi
+cat "$work/verus.err" >&2
 
 # Each crate that opts in must have verified the functions that
 # scripts/verus_report.py names: a cfg that hides a verified module from

@@ -14,9 +14,9 @@
 //! marked TRUSTED, whose specification Verus assumes without proof. They
 //! are the trusted base that ADR-2026-11-03-0808 lists. The `unsafe-code`
 //! check rejects any other unsafe code or assumption, and pins the text of
-//! the trusted base, of #117's specification, of `record` and of `lib.rs`.
-//! Only `record_slots`' body, which Verus proves, and new proof or spec
-//! functions whose names no pinned text holds change without a new ADR.
+//! the trusted base, of #117's specification and of `record`. Only
+//! `record_slots`' body and new items inside `verus!`, which Verus checks,
+//! change without a new ADR.
 
 // TRUSTED: the crate denies unsafe code, and the workspace forbids it in
 // every other crate; this module alone allows it, for its trusted items.

@@ -85,10 +85,12 @@ commands until it succeeds. Start agents in another worktree with
   (the `rust-fmt`, `rust-clippy` and `rust-test` hooks; it installs the
   toolchain that `rust-toolchain.toml` pins), GNU binutils (`as` and
   `ld`) on an x86-64 Linux host, which `funk build` runs in the
-  `rust-test` hook, and Verus (the `verus-proof` hook): unzip the release
-  that `scripts/check-verus.sh` pins, from
+  `rust-test` hook, and Verus (the `verus-proof` hook): unzip the official
+  release zip that `scripts/check-verus.sh` pins, from
   <https://github.com/verus-lang/verus/releases>, and put its directory on
-  `PATH`.
+  `PATH`. The hook needs that zip, not a source build: a source build's
+  `cargo-verus` lacks the vstd compatibility row for its own release and
+  fails with "Components are incompatible".
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.

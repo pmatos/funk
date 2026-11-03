@@ -1,7 +1,7 @@
 """Helpers for the tests of scripts/check_unsafe_code.py, which plant a
 violation in a copy of the workspace's real files and check that the check
-fails on it. Run the tests: python -m unittest discover -s scripts -p
-"test_*unsafe*.py"
+fails on it, or plant legitimate work and check that it passes. Run the
+tests: python -m unittest discover -s scripts -p "test_*unsafe*.py"
 """
 
 import re
@@ -9,7 +9,6 @@ import tempfile
 from pathlib import Path
 
 from check_unsafe_code import problems
-from unsafe_manifests import is_cargo_config
 
 REPO = Path(__file__).resolve().parent.parent
 RECORD = "crates/funk-start-fds/src/record.rs"
@@ -44,8 +43,7 @@ def check(**files: str) -> list[str]:
             (root / path).write_text(text, encoding="utf-8")
         rust = [p for p in texts if p.endswith(".rs")]
         manifests = [p for p in texts if p.endswith("Cargo.toml")]
-        configs = [p for p in texts if is_cargo_config(p)]
-        return problems(root, rust, manifests, configs)
+        return problems(root, rust, manifests)
 
 
 def real(path: str, old: str, new: str) -> str:

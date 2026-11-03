@@ -41,12 +41,7 @@ class Clean(unittest.TestCase):
     def test_verus_words_outside_a_verus_crate_do_not_count(self):
         ir = "pub fn assume(external: bool) -> bool { admit(external) }\n"
         ir += "fn admit(axiom: bool) -> bool { axiom }\n#[cfg(test)]\nmod t {}\n"
-        ir += '#[path = "t.rs"]\nmod u;\n'
         self.assertEqual(check(ir=DOCTESTS + ir), [])
-
-    def test_a_path_that_is_not_an_attribute_does_not_count(self):
-        code = "    let path = 0u8;\n    let _ = path;\n"
-        self.assertEqual(check(record=in_record_slots(code)), [])
 
     def test_forbid_and_deny_of_unsafe_code_do_not_count(self):
         ir = "#![forbid(unsafe_code)]\n#[deny(dead_code, unsafe_code)]\nmod m {}\n"

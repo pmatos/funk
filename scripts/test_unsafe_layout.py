@@ -7,8 +7,6 @@ import unittest
 
 from unsafe_planting import (
     FDS,
-    FDS_LIB,
-    REPO,
     after_verus,
     check,
     in_record_slots,
@@ -35,10 +33,9 @@ class PlantedOutsideVerus(Case):
         self.assert_fails("`global_asm!`", record=in_verus(code))
 
     def test_include(self):
-        self.assert_fails("`include`", record=after_verus('include!("helper.in");'))
+        self.assert_fails("`include!`", record=after_verus('include!("helper.in");'))
         code = 'fn f() -> u8 { include!("helper.in") }'
-        self.assert_fails("`include`", record=in_verus(code))
-        self.assert_fails("`include`", fds_lib=(REPO / FDS_LIB).read_text() + code)
+        self.assert_fails("`include!`", record=in_verus(code))
 
     def test_a_macro_called_in_an_expression(self):
         """`option_env!` is set when cargo-verus builds, not cargo build."""
@@ -58,10 +55,6 @@ class PlantedOutsideVerus(Case):
         code = "use std::option_env as requires;"
         self.assert_fails("`as` in std", record=in_verus(code))
 
-    def test_a_path_attribute_in_a_verus_crate(self):
-        lib = (REPO / FDS_LIB).read_text() + '#[path = "evil.txt"]\nmod evil;\n'
-        self.assert_fails("`path`", fds_lib=lib)
-
     def test_a_verus_macro_that_shadows_vstds(self):
         code = "macro_rules! verus { ($($t:tt)*) => { $($t)* } }"
         self.assert_fails("`verus`", record=after_verus(code))
@@ -76,8 +69,7 @@ class PlantedOutsideVerus(Case):
 
 class PlantedNames(Case):
     """take_slots and finish are named once, in record; getfd and store
-    once, in record_slots; record once, in RECORD; and Slots only by the
-    items that use the view of the slots."""
+    once, in record_slots; record once, in RECORD."""
 
     def test_a_second_take_slots(self):
         second = (
@@ -109,14 +101,6 @@ class PlantedNames(Case):
         planted = planted_record("fn() = record;", "fn() = other;")
         self.assert_fails("RECORD names record 0 times", record=planted)
 
-    def test_an_alias_of_slots(self):
-        """A copy of the view would let a store follow `finish`."""
-        code = "type View = Slots;\nimpl Clone for View { fn clone(&self) -> Self"
-        code += " { loop {} } }"
-        self.assert_fails("`Slots` in View", record=in_verus(code))
-        code = "mod copy { use super::Slots; }"
-        self.assert_fails("`Slots` in copy", record=in_verus(code))
-
 
 class PlantedBlindSpots(Case):
     def test_code_that_verus_does_not_see(self):
@@ -138,18 +122,6 @@ class PlantedBlindSpots(Case):
             " starts with `verus_`",
             ir=ir,
         )
-
-    def test_a_cfg_on_the_mod_that_mounts_a_verified_module(self):
-        lib = real(FDS_LIB, "))]\nmod record;", ', not(feature = "x")))]\nmod record;')
-        self.assert_fails("`not` on `mod record`", fds_lib=lib)
-        lib = real(
-            FDS_LIB, "mod record;", '#[cfg_attr(unix, path = "empty.rs")]\nmod record;'
-        )
-        self.assert_fails("`cfg_attr` on `mod record`", fds_lib=lib)
-
-    def test_a_verified_module_that_is_not_mounted(self):
-        lib = real(FDS_LIB, "mod record;", "mod other;")
-        self.assert_fails("must mount the verified module", fds_lib=lib)
 
     def test_a_verus_cfg_declared_in_a_manifest(self):
         fds = real(

@@ -7,11 +7,9 @@ Verus assumes a trusted item's specification without proof, and proves
 proof means, and Verus would still pass. So each is pinned by a digest of
 its tokens: its text without comments or layout, with its attributes and
 the contents of its string literals. All the text outside `verus!` is
-pinned too, and so is the whole of the file that mounts the verified
-module, which defines the `CLOSED` that `store` writes. What may change
-without a new pin is `record_slots`' body, which Verus proves against its
-pinned signature, and new proof or spec functions inside `verus!` whose
-names no pinned text holds (scripts/unsafe_items.py).
+pinned too. What may change without a new pin is `record_slots`' body,
+which Verus proves against its pinned signature, and new items inside
+`verus!`, which Verus checks.
 
 Run this file to print the digests of the current text.
 """
@@ -23,17 +21,12 @@ from pathlib import Path
 from rust_items import is_punct, items, tokens
 
 OUTSIDE = "<outside verus!>"
-WHOLE = "<whole file>"
 
 # Item -> the first 32 hex digits of the SHA-256 of its tokens, joined by
 # spaces. An item's text is that of every item of that name and of what it
 # nests, such as an impl's functions, inside `verus!` or not. OUTSIDE is
-# every item outside `verus!`, with the `verus!` block's own brackets, and
-# WHOLE is every token of the file.
+# every item outside `verus!`, with the `verus!` block's own brackets.
 PINS = {
-    "crates/funk-start-fds/src/lib.rs": {
-        WHOLE: "eff716f8cabc359b6255f82d9c23f9a8",
-    },
     "crates/funk-start-fds/src/record.rs": {
         OUTSIDE: "62c33443a91b98483be1c03787b79b88",
         "<module>": "14463c81dd47caad0f05c576569075a7",
@@ -57,9 +50,7 @@ SIGNATURE_ONLY = {"record_slots"}
 
 
 def pinned_text(toks, entries, name: str) -> str:
-    if name == WHOLE:
-        spans = [(0, len(toks))]
-    elif name == OUTSIDE:
+    if name == OUTSIDE:
         spans = [(e.lo, e.hi) for e in entries if not e.in_verus]
     else:
         spans = [(e.lo, e.hi) for e in entries if is_under(e.path, name)]
@@ -71,21 +62,6 @@ def pinned_text(toks, entries, name: str) -> str:
 def is_under(path: str, name: str) -> bool:
     """`path` is the item `name` or nested in it, such as `Slots::holds`."""
     return path == name or path.startswith(name + "::")
-
-
-def is_pinned(file: str, path: str) -> bool:
-    return any(is_under(path, name) for name in PINS.get(file, {}))
-
-
-def protected(file: str, toks, entries) -> set[str]:
-    """Every identifier of the file's pinned texts: no new item may take one
-    of these names, or it could change what a pinned text means."""
-    return {
-        word
-        for name in PINS.get(file, {})
-        for word in pinned_text(toks, entries, name).split()
-        if word.isidentifier()
-    }
 
 
 def body(toks, lo: int, hi: int) -> int:

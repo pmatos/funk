@@ -91,6 +91,24 @@ class CheckVerus(unittest.TestCase):
         self.assertEqual(done.returncode, 1)
         self.assertIn("cargo-verus is missing", done.stderr)
 
+    def test_a_source_build_gets_a_hint(self):
+        """A source build's cargo-verus knows no vstd for its own release."""
+        tool(
+            self.release / "cargo-verus",
+            'echo "Error: Components are incompatible:" >&2\nexit 1\n',
+        )
+        done = self.run_script()
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("Components are incompatible", done.stderr)
+        self.assertIn("needs the official release zip", done.stderr)
+
+    def test_another_failure_gets_no_hint(self):
+        tool(self.release / "cargo-verus", 'echo "error: proof failed" >&2\nexit 1\n')
+        done = self.run_script()
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("proof failed", done.stderr)
+        self.assertNotIn("release zip", done.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
