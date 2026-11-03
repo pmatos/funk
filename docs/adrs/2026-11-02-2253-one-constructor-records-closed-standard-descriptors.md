@@ -9,8 +9,8 @@ error, and says on standard error that it cannot write its output, with
 exit 2. `fir-ref` does this for a closed standard input and a closed
 standard output. funk did not
 ([#60](https://github.com/pmatos/funk/issues/60)): it read a closed
-standard input as an empty text, a parse error with exit 1, and exited 0
-with its output lost.
+standard input as an empty text, a parse error with exit 1. On a closed
+standard output it exited with its verdict, 0 or 1, with its output lost.
 
 The cause is Rust's standard library. Before `main` runs, its start-up code
 opens `/dev/null` on each of descriptors 0 to 2 that is closed. Inside

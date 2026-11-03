@@ -79,7 +79,9 @@ mod record {
     // the main thread, before `main`, with the C calling convention.
     // `record` has it, takes no argument that it reads, and only calls
     // `fcntl`, reads `errno` and stores to atomics, none of which needs the
-    // standard library's start-up code.
+    // standard library's start-up code. Some C runtimes pass `argc`, `argv`
+    // and `envp` to these functions and others pass nothing; a C function
+    // may ignore its arguments, since the caller owns and cleans them up.
     #[used]
     #[unsafe(link_section = ".init_array")]
     static RECORD: extern "C" fn() = record;

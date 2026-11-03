@@ -64,6 +64,7 @@ fn a_closed_standard_input_is_an_io_error() {
 #[test]
 fn a_closed_standard_output_is_a_failed_write() {
     let seven = file("closed-stdout.fir", SEVEN);
+    let nc = file("closed-stdout-nc.fir", &SEVEN.replacen("  %c", "    %c", 1));
     let out = dir("closed-stdout").join("seven");
     let out = out.to_str().unwrap();
     for args in [
@@ -71,6 +72,8 @@ fn a_closed_standard_output_is_a_failed_write() {
         &["--version"],
         &["verify", "--json", &seven],
         &["fmt", &seven],
+        &["fmt", "--check", &nc],
+        &["fmt", "--json", &seven],
         &["build", "--json", "-o", out, &seven],
     ] {
         let run = funk_with(">&-", args);
@@ -95,6 +98,8 @@ fn a_closed_descriptor_that_funk_does_not_use_is_no_error() {
     assert!(text(&run.stdout).contains(r#""verdict":"accepted""#));
 }
 
+/// `<>` opens `/dev/null` for reading and writing, as Python's
+/// `subprocess.DEVNULL` and the standard library's own reopening do.
 #[test]
 fn open_descriptors_on_dev_null_behave_as_before() {
     let seven = file("dev-null.fir", SEVEN);
@@ -105,15 +110,23 @@ fn open_descriptors_on_dev_null_behave_as_before() {
         .unwrap();
     assert_eq!(run.status.code(), Some(1));
     assert!(text(&run.stdout).starts_with(r#"{"file":"-","verdict":"parse-error""#));
-    let run = funk_with("</dev/null", &["verify", "--json", "-"]);
-    assert_eq!(run.status.code(), Some(1));
-    assert!(text(&run.stdout).starts_with(r#"{"file":"-","verdict":"parse-error""#));
+    for redirect in ["</dev/null", "<>/dev/null"] {
+        let run = funk_with(redirect, &["verify", "--json", "-"]);
+        assert_eq!(run.status.code(), Some(1), "{redirect}");
+        assert!(
+            text(&run.stdout).starts_with(r#"{"file":"-","verdict":"parse-error""#),
+            "{redirect}"
+        );
+    }
     for args in [&["--version"][..], &["verify", "--json", &seven]] {
         let run = Command::new(env!("CARGO_BIN_EXE_funk"))
             .args(args)
             .stdout(Stdio::null())
             .output()
             .unwrap();
+        assert_eq!(run.status.code(), Some(0), "{args:?}");
+        assert_eq!(text(&run.stderr), "", "{args:?}");
+        let run = funk_with("1<>/dev/null", args);
         assert_eq!(run.status.code(), Some(0), "{args:?}");
         assert_eq!(text(&run.stderr), "", "{args:?}");
     }
