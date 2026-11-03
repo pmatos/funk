@@ -1,4 +1,4 @@
-# A funk function returns its results as System V returns a structure of one eightbyte per result
+# A funk function returns its results as System V returns a structure with one member per result
 
 Status: accepted
 
@@ -30,11 +30,14 @@ AMD64 function, callable from C, and returns no value or one value in
 
 - **The results are a structure.** A function returns its results as
   System V returns a C structure with one member per result, in order,
-  each aligned to 8 bytes. A result of at most 64 bits takes one eightbyte
-  of its own. An `i128` takes two, at an offset that is a multiple of 16,
-  its low half first. To C, results `T1, ..., Tn` are
-  `struct { _Alignas(8) C1 r1; ...; _Alignas(8) Cn rn; }`, where `Ck` is
-  `_Bool`, `intN_t`, `uintN_t` or `__int128` as the result's width says.
+  each aligned to 8 bytes, or to 16 for an `i128`. A result of at most 64
+  bits takes one eightbyte of its own. An `i128` takes two, at an offset
+  that is a multiple of 16, its low half first. To C, results
+  `T1, ..., Tn` are `struct { M1; ...; Mn; }`. For a result of at most 64
+  bits, `Mk` is `_Alignas(8) Ck rk`, where `Ck` is `_Bool`, `intN_t` or
+  `uintN_t` as its width says. For an `i128`, `Mk` is `__int128 rk`, with
+  no `_Alignas`: an `__int128` is 16-byte aligned already, and C forbids
+  `_Alignas` to lower an alignment.
 - **Two eightbytes come back in registers.** No result returns nothing. When
   the results take one or two eightbytes, the first is in `%rax` and the
   second in `%rdx`: one result in `%rax`, two in `%rax` and `%rdx`, and one

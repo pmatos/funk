@@ -1,5 +1,6 @@
 //! Where a funk function's results go (ADR-2026-11-03-0109): as System V
-//! returns a structure with one member per result, each aligned to 8 bytes.
+//! returns a structure with one member per result, each aligned to 8 bytes,
+//! or to 16 for an `i128`.
 //!
 //! A result of at most 64 bits takes one eightbyte, an `i128` two, its low
 //! half first. Results of one or two eightbytes come back in `%rax`, then
