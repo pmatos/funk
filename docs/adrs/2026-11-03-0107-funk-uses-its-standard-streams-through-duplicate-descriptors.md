@@ -16,10 +16,14 @@ successful write (`handle_ebadf` in `library/std/src/io/stdio.rs`, Rust
 write. So funk read a standard input open only for writing as an empty
 text, a parse error with exit 1. It lost its output on a standard output
 open only for reading, and exited with its verdict. It also exited with its
-verdict when it could not write a diagnostic to a standard error that was
-closed or open only for reading. `fir-ref` exits with 2 in each case
+verdict when it could not write a diagnostic to a standard error open only
+for reading. `fir-ref` exits with 2 in each case
 ([#104](https://github.com/pmatos/funk/issues/104)).
 
+A closed standard error hid the same failure another way. Before `main`,
+the standard library opens `/dev/null` on each standard descriptor that is
+closed, so the diagnostic went there and funk exited with its verdict,
+where `fir-ref` exits with 2.
 ADR-2026-11-02-2253 records which standard descriptors were closed when
 funk started. funk used that for standard input and output only, and the
 ADR said that its behaviour on a closed standard error did not change.
