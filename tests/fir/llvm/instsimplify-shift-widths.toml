@@ -1,0 +1,41 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/shift.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# The functions of shift.ll at widths that the backend does not lower:
+# i39, i41, i47 and i55. So every test is interpreter-only, and each
+# expects the value that LLVM's CHECK lines give: a shift by 0 gives its
+# operand, a shift of 0 gives 0, at any amount below the width, and
+# @lshr_by_bitwidth, lshr by 55 at i55, gives poison. A shift of 0 by the
+# width or more gives poison, which LLVM's 0 refines.
+#
+# instsimplify-shift holds the file's other functions that came in.
+source = { file = "llvm/test/Transforms/InstSimplify/shift.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@shl_by_0", args = ["-70368744177664"], expect = ["-70368744177664"], from = "@shl_by_0" },
+  { func = "@shl_by_0", args = ["70368744177663"], expect = ["70368744177663"], from = "@shl_by_0" },
+  { func = "@shl_by_0", args = ["-1"], expect = ["-1"], from = "@shl_by_0" },
+  { func = "@shl_by_0", args = ["0"], expect = ["0"], from = "@shl_by_0" },
+  { func = "@shl_by_0", args = ["1"], expect = ["1"], from = "@shl_by_0" },
+  { func = "@shl_0", args = ["0"], expect = ["0"], from = "@shl_0" },
+  { func = "@shl_0", args = ["1"], expect = ["0"], from = "@shl_0" },
+  { func = "@shl_0", args = ["40"], expect = ["0"], from = "@shl_0" },
+  { func = "@shl_0", args = ["41"], expect = ["poison"], from = "@shl_0" },
+  { func = "@shl_0", args = ["-1"], expect = ["poison"], from = "@shl_0" },
+  { func = "@ashr_by_0", args = ["-1099511627776"], expect = ["-1099511627776"], from = "@ashr_by_0" },
+  { func = "@ashr_by_0", args = ["1099511627775"], expect = ["1099511627775"], from = "@ashr_by_0" },
+  { func = "@ashr_by_0", args = ["-1"], expect = ["-1"], from = "@ashr_by_0" },
+  { func = "@ashr_by_0", args = ["0"], expect = ["0"], from = "@ashr_by_0" },
+  { func = "@ashr_by_0", args = ["1"], expect = ["1"], from = "@ashr_by_0" },
+  { func = "@ashr_0", args = ["0"], expect = ["0"], from = "@ashr_0" },
+  { func = "@ashr_0", args = ["1"], expect = ["0"], from = "@ashr_0" },
+  { func = "@ashr_0", args = ["38"], expect = ["0"], from = "@ashr_0" },
+  { func = "@ashr_0", args = ["39"], expect = ["poison"], from = "@ashr_0" },
+  { func = "@ashr_0", args = ["-1"], expect = ["poison"], from = "@ashr_0" },
+  { func = "@lshr_by_bitwidth", args = ["-18014398509481984"], expect = ["poison"], from = "@lshr_by_bitwidth" },
+  { func = "@lshr_by_bitwidth", args = ["18014398509481983"], expect = ["poison"], from = "@lshr_by_bitwidth" },
+  { func = "@lshr_by_bitwidth", args = ["-1"], expect = ["poison"], from = "@lshr_by_bitwidth" },
+  { func = "@lshr_by_bitwidth", args = ["0"], expect = ["poison"], from = "@lshr_by_bitwidth" },
+  { func = "@lshr_by_bitwidth", args = ["1"], expect = ["poison"], from = "@lshr_by_bitwidth" },
+]

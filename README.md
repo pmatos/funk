@@ -269,7 +269,7 @@ The epic's sub-issues list the open work in full.
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
 | `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, `funk-start-fds`, which records the standard descriptors that were closed at start-up, and `funk`, the driver |
-| `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, and must-reject texts |
+| `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, must-reject texts, and cases ported from LLVM |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
 | `scripts/` | Scripts for the spec build, the Rust checks, the differential harness (`scripts/harness/`), the hooks and agent sessions |
@@ -369,4 +369,5 @@ triaged: a pull request is not treated as a request for work.
 
 ## Licence
 
-Funk is licensed under the MIT License. See [`LICENSE`](LICENSE).
+Funk is licensed under the MIT License. See [`LICENSE`](LICENSE). The cases in
+`tests/fir/llvm/` are under [LLVM's licence](tests/fir/llvm/README.md).

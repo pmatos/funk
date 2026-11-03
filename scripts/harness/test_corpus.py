@@ -8,6 +8,7 @@ from pathlib import Path
 from corpus import DEFAULT_FUEL, Test, load, parse_rejects, parse_tests, result_types
 from sets import Declared
 
+LICENCE = (Path(__file__).parents[2] / "tests/fir/llvm/LICENSE.TXT").read_text()
 SEVEN = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n"
 REJECT = '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = "x"\n'
 
@@ -262,6 +263,117 @@ class Layout(unittest.TestCase):
             c = load(root)
         self.assertEqual(c.errors, [])
         self.assertEqual([r.name for r in c.rejects], ["reject/r.toml #1"])
+
+
+COMMIT = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5"
+SOURCE = (
+    'source = { file = "llvm/test/Transforms/InstSimplify/shift.ll",'
+    f' commit = "{COMMIT}" }}\n'
+)
+
+
+def ported(tests: str, commit: str = COMMIT) -> str:
+    return SOURCE.replace(COMMIT, commit) + f"tests = [{tests}]\n"
+
+
+class Ported(unittest.TestCase):
+    """The modules ported from LLVM's tests (ADR-2026-11-03-0643)."""
+
+    def corpus(self, files: list[tuple[str, str]]):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            base = [("canonical/seven.fir", SEVEN), ("reject/r.toml", REJECT)]
+            for name, text in base + files:
+                (root / name).parent.mkdir(exist_ok=True)
+                (root / name).write_text(text)
+            return load(root)
+
+    def test_a_ported_module_names_its_source(self):
+        c = self.corpus(
+            [
+                ("llvm/LICENSE.TXT", LICENCE),
+                ("llvm/README.md", "the notice"),
+                ("llvm/shift.fir", SEVEN),
+                ("llvm/shift.toml", ported('{ func = "@seven", from = "@shl_by_0" }')),
+            ]
+        )
+        self.assertEqual(c.errors, [])
+        self.assertEqual(
+            [m.name for m in c.modules], ["canonical/seven.fir", "llvm/shift.fir"]
+        )
+        self.assertEqual(c.modules[1].tests, [Test("llvm/shift.fir", "@seven")])
+
+    def test_ported_format_errors(self):
+        test = '{ func = "@f", from = "@f" }'
+        for toml, needle in [
+            (f"tests = [{test}]", "source is a table"),
+            (
+                ported(test).replace("shift.ll", "shift.txt"),
+                "source: file is the path of an LLVM test",
+            ),
+            (ported(test, "7a941df"), "source: commit is the full hash"),
+            (ported(test, COMMIT.upper()), "source: commit is the full hash"),
+            (ported(test).replace(" }", ", tag = 1 }", 1), "source: unknown key tag"),
+            (ported('{ func = "@f" }'), "test 1: from names the function"),
+            (ported('{ func = "@f", from = "" }'), "test 1: from names the function"),
+            (ported(test) + "notes = 1\n", "unknown key notes"),
+        ]:
+            _, problems = parse_tests(tomllib.loads(toml), "llvm/m.fir", True)
+            self.assertTrue(any(needle in p for p in problems), (toml, problems))
+        for toml, needle in [
+            (ported(test), "unknown key source"),
+            (f"tests = [{test}]", "test 1: unknown key from"),
+        ]:
+            _, problems = parse_tests(tomllib.loads(toml), "canonical/m.fir")
+            self.assertTrue(any(needle in p for p in problems), (toml, problems))
+
+    def test_ported_modules_keep_the_licence_and_one_commit(self):
+        other = "0" * 40
+        c = self.corpus(
+            [
+                ("llvm/a.fir", SEVEN),
+                ("llvm/a.toml", ported('{ func = "@seven", from = "@a" }')),
+                ("llvm/b.fir", SEVEN),
+                ("llvm/b.toml", ported('{ func = "@seven", from = "@b" }', other)),
+                ("llvm/c.fir", SEVEN),
+                ("llvm/d.toml", ported("")),
+                ("llvm/notes.txt", ""),
+            ]
+        )
+        errors = "\n".join(c.errors)
+        for needle in [
+            "LICENSE.TXT: the modules ported from LLVM keep its licence",
+            "README.md: the modules ported from LLVM keep its licence",
+            "c.fir: a ported module has a sidecar that names its source",
+            "d.toml: there is no d.fir to test",
+            "notes.txt: the corpus has no place",
+            f"from one llvm-project commit, not 2: {other}, {COMMIT}",
+        ]:
+            self.assertIn(needle, errors)
+        self.assertEqual(len(c.errors), 6, errors)
+        self.assertEqual(
+            [m.name for m in c.modules],
+            ["canonical/seven.fir", "llvm/a.fir", "llvm/b.fir", "llvm/c.fir"],
+        )
+
+    def test_the_licence_is_llvm_s(self):
+        for text in ["", LICENCE + "\n", LICENCE.replace("Apache", "Apache-ish", 1)]:
+            c = self.corpus(
+                [
+                    ("llvm/LICENSE.TXT", text),
+                    ("llvm/README.md", "the notice"),
+                    ("llvm/shift.fir", SEVEN),
+                    (
+                        "llvm/shift.toml",
+                        ported('{ func = "@seven", from = "@shl_by_0" }'),
+                    ),
+                ]
+            )
+            self.assertEqual(len(c.errors), 1, c.errors)
+            self.assertIn(
+                "LICENSE.TXT: is not LLVM's licence as the pinned llvm-project commit has it",
+                c.errors[0],
+            )
 
 
 if __name__ == "__main__":

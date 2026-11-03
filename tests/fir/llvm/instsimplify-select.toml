@@ -1,0 +1,147 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/select.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. Where LLVM
+# folds a select to an operand or a constant, the tests expect that value;
+# where it folds it to other ops, the CHECK lines run beside it on the
+# same arguments. A select whose arms differ only where its condition
+# rules them out is its other arm, or one op: @test1 to @test13 and
+# @select_icmp_* test a bit and set or clear it, @select_neutral_add_rhs
+# adds 0 where %y is 0, and the recursive ones replace %a with %b where
+# the condition says they are equal.
+#
+# @poison2 and @poison3 choose poison on one arm. fir has no poison
+# constant, so each writes it as %p = shl %n, %n with %n = 32, which the
+# spec makes poison: on the condition that chooses it the input gives
+# poison, and LLVM's %x refines it. @select_sub_cmp gives poison where sub
+# nsw overflows, in both forms. The negative tests show where a fold would
+# be wrong: @select_neutral_sub_lhs gives 5, not -5, on 5 and 0, and
+# @replace_false_op_sgt_neg_and gives 0, not 4, on 4.
+#
+# The file's functions that neither this module nor
+# instsimplify-select-widths holds are left out: those on vectors,
+# pointers or undef, those that use or disjoint or assume, and variants of
+# the functions here with commuted arms, other predicates or other
+# constants.
+source = { file = "llvm/test/Transforms/InstSimplify/select.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@bool_true_or_false", args = ["true"], results = [{ values = ["true"], witness = [] }], from = "@bool_true_or_false" },
+  { func = "@bool_true_or_false", args = ["false"], results = [{ values = ["false"], witness = [] }], from = "@bool_true_or_false" },
+  { func = "@cond_is_false", args = ["1", "2"], results = [{ values = ["2"], witness = [] }], from = "@cond_is_false" },
+  { func = "@cond_is_true", args = ["1", "2"], results = [{ values = ["1"], witness = [] }], from = "@cond_is_true" },
+  { func = "@equal_arms", args = ["true", "7"], results = [{ values = ["7"], witness = [] }], from = "@equal_arms" },
+  { func = "@equal_arms", args = ["false", "7"], results = [{ values = ["7"], witness = [] }], from = "@equal_arms" },
+  { func = "@test1", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test1" },
+  { func = "@test3", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1"], results = [{ values = ["-2"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test3" },
+  { func = "@test3.folded", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test3, its CHECK lines" },
+  { func = "@test3.folded", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test3, its CHECK lines" },
+  { func = "@test3.folded", args = ["-1"], results = [{ values = ["-2"], witness = [] }], from = "@test3, its CHECK lines" },
+  { func = "@test3.folded", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test3, its CHECK lines" },
+  { func = "@test4", args = ["0"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["1"], results = [{ values = ["-2147483647"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["2147483647"], results = [{ values = ["-1"], witness = [] }], from = "@test4" },
+  { func = "@test4.folded", args = ["0"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["1"], results = [{ values = ["-2147483647"], witness = [] }], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@test4, its CHECK lines" },
+  { func = "@test4.folded", args = ["2147483647"], results = [{ values = ["-1"], witness = [] }], from = "@test4, its CHECK lines" },
+  { func = "@test6", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["-1"], results = [{ values = ["2147483647"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["2147483647"], results = [{ values = ["2147483647"], witness = [] }], from = "@test6" },
+  { func = "@test6.folded", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test6, its CHECK lines" },
+  { func = "@test6.folded", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@test6, its CHECK lines" },
+  { func = "@test6.folded", args = ["-1"], results = [{ values = ["2147483647"], witness = [] }], from = "@test6, its CHECK lines" },
+  { func = "@test6.folded", args = ["-2147483648"], results = [{ values = ["0"], witness = [] }], from = "@test6, its CHECK lines" },
+  { func = "@test6.folded", args = ["2147483647"], results = [{ values = ["2147483647"], witness = [] }], from = "@test6, its CHECK lines" },
+  { func = "@test12", args = ["3"], results = [{ values = ["3"], witness = [] }], from = "@test12" },
+  { func = "@test12", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@test12" },
+  { func = "@test12", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@test12" },
+  { func = "@test12", args = ["12"], results = [{ values = ["0"], witness = [] }], from = "@test12" },
+  { func = "@test12.folded", args = ["3"], results = [{ values = ["3"], witness = [] }], from = "@test12, its CHECK lines" },
+  { func = "@test12.folded", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@test12, its CHECK lines" },
+  { func = "@test12.folded", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@test12, its CHECK lines" },
+  { func = "@test12.folded", args = ["12"], results = [{ values = ["0"], witness = [] }], from = "@test12, its CHECK lines" },
+  { func = "@test13", args = ["3"], results = [{ values = ["3"], witness = [] }], from = "@test13" },
+  { func = "@test13", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@test13" },
+  { func = "@test13", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@test13" },
+  { func = "@test13", args = ["12"], results = [{ values = ["0"], witness = [] }], from = "@test13" },
+  { func = "@test13.folded", args = ["3"], results = [{ values = ["3"], witness = [] }], from = "@test13, its CHECK lines" },
+  { func = "@test13.folded", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@test13, its CHECK lines" },
+  { func = "@test13.folded", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@test13, its CHECK lines" },
+  { func = "@test13.folded", args = ["12"], results = [{ values = ["0"], witness = [] }], from = "@test13, its CHECK lines" },
+  { func = "@select_icmp_and_8_eq_0_or_8", args = ["0"], results = [{ values = ["8"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8" },
+  { func = "@select_icmp_and_8_eq_0_or_8", args = ["8"], results = [{ values = ["8"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8" },
+  { func = "@select_icmp_and_8_eq_0_or_8", args = ["-9"], results = [{ values = ["-1"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8" },
+  { func = "@select_icmp_and_8_eq_0_or_8", args = ["7"], results = [{ values = ["15"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8" },
+  { func = "@select_icmp_and_8_eq_0_or_8.folded", args = ["0"], results = [{ values = ["8"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8, its CHECK lines" },
+  { func = "@select_icmp_and_8_eq_0_or_8.folded", args = ["8"], results = [{ values = ["8"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8, its CHECK lines" },
+  { func = "@select_icmp_and_8_eq_0_or_8.folded", args = ["-9"], results = [{ values = ["-1"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8, its CHECK lines" },
+  { func = "@select_icmp_and_8_eq_0_or_8.folded", args = ["7"], results = [{ values = ["15"], witness = [] }], from = "@select_icmp_and_8_eq_0_or_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128", args = ["0"], results = [{ values = ["128"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128", args = ["128"], results = [{ values = ["128"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128", args = ["256"], results = [{ values = ["384"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128.folded", args = ["0"], results = [{ values = ["128"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128.folded", args = ["128"], results = [{ values = ["128"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128.folded", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_ne_0_or_128.folded", args = ["256"], results = [{ values = ["384"], witness = [] }], from = "@select_icmp_trunc_8_ne_0_or_128, its CHECK lines" },
+  { func = "@select_neutral_add_rhs", args = ["5", "0"], results = [{ values = ["5"], witness = [] }], from = "@select_neutral_add_rhs" },
+  { func = "@select_neutral_add_rhs", args = ["5", "3"], results = [{ values = ["8"], witness = [] }], from = "@select_neutral_add_rhs" },
+  { func = "@select_neutral_add_rhs", args = ["2147483647", "1"], results = [{ values = ["-2147483648"], witness = [] }], from = "@select_neutral_add_rhs" },
+  { func = "@select_neutral_add_rhs.folded", args = ["5", "0"], results = [{ values = ["5"], witness = [] }], from = "@select_neutral_add_rhs, its CHECK lines" },
+  { func = "@select_neutral_add_rhs.folded", args = ["5", "3"], results = [{ values = ["8"], witness = [] }], from = "@select_neutral_add_rhs, its CHECK lines" },
+  { func = "@select_neutral_add_rhs.folded", args = ["2147483647", "1"], results = [{ values = ["-2147483648"], witness = [] }], from = "@select_neutral_add_rhs, its CHECK lines" },
+  { func = "@select_neutral_sub_lhs", args = ["5", "0"], results = [{ values = ["5"], witness = [] }], from = "@select_neutral_sub_lhs" },
+  { func = "@select_neutral_sub_lhs", args = ["5", "3"], results = [{ values = ["-2"], witness = [] }], from = "@select_neutral_sub_lhs" },
+  { func = "@select_eq_xor_recursive", args = ["5", "5"], results = [{ values = ["-1"], witness = [] }], from = "@select_eq_xor_recursive" },
+  { func = "@select_eq_xor_recursive", args = ["5", "3"], results = [{ values = ["-7"], witness = [] }], from = "@select_eq_xor_recursive" },
+  { func = "@select_eq_xor_recursive", args = ["-128", "127"], results = [{ values = ["0"], witness = [] }], from = "@select_eq_xor_recursive" },
+  { func = "@select_eq_xor_recursive.folded", args = ["5", "5"], results = [{ values = ["-1"], witness = [] }], from = "@select_eq_xor_recursive, its CHECK lines" },
+  { func = "@select_eq_xor_recursive.folded", args = ["5", "3"], results = [{ values = ["-7"], witness = [] }], from = "@select_eq_xor_recursive, its CHECK lines" },
+  { func = "@select_eq_xor_recursive.folded", args = ["-128", "127"], results = [{ values = ["0"], witness = [] }], from = "@select_eq_xor_recursive, its CHECK lines" },
+  { func = "@select_eq_and_recursive", args = ["0"], results = [{ values = ["1"], witness = [] }], from = "@select_eq_and_recursive" },
+  { func = "@select_eq_and_recursive", args = ["12"], results = [{ values = ["5"], witness = [] }], from = "@select_eq_and_recursive" },
+  { func = "@select_eq_and_recursive", args = ["-128"], results = [{ values = ["-127"], witness = [] }], from = "@select_eq_and_recursive" },
+  { func = "@select_eq_and_recursive.folded", args = ["0"], results = [{ values = ["1"], witness = [] }], from = "@select_eq_and_recursive, its CHECK lines" },
+  { func = "@select_eq_and_recursive.folded", args = ["12"], results = [{ values = ["5"], witness = [] }], from = "@select_eq_and_recursive, its CHECK lines" },
+  { func = "@select_eq_and_recursive.folded", args = ["-128"], results = [{ values = ["-127"], witness = [] }], from = "@select_eq_and_recursive, its CHECK lines" },
+  { func = "@select_eq_xor_recursive_allow_refinement", args = ["5", "0"], results = [{ values = ["0"], witness = [] }], from = "@select_eq_xor_recursive_allow_refinement" },
+  { func = "@select_eq_xor_recursive_allow_refinement", args = ["5", "3"], results = [{ values = ["0"], witness = [] }], from = "@select_eq_xor_recursive_allow_refinement" },
+  { func = "@poison2", args = ["true", "7"], expect = ["poison"], from = "@poison2" },
+  { func = "@poison2", args = ["false", "7"], results = [{ values = ["7"], witness = [] }], from = "@poison2" },
+  { func = "@poison3", args = ["false", "7"], expect = ["poison"], from = "@poison3" },
+  { func = "@poison3", args = ["true", "7"], results = [{ values = ["7"], witness = [] }], from = "@poison3" },
+  { func = "@replace_false_op_eq_neg_and", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@replace_false_op_eq_neg_and" },
+  { func = "@replace_false_op_eq_neg_and", args = ["12"], results = [{ values = ["4"], witness = [] }], from = "@replace_false_op_eq_neg_and" },
+  { func = "@replace_false_op_eq_neg_and", args = ["-128"], results = [{ values = ["-128"], witness = [] }], from = "@replace_false_op_eq_neg_and" },
+  { func = "@replace_false_op_eq_neg_and.folded", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@replace_false_op_eq_neg_and, its CHECK lines" },
+  { func = "@replace_false_op_eq_neg_and.folded", args = ["12"], results = [{ values = ["4"], witness = [] }], from = "@replace_false_op_eq_neg_and, its CHECK lines" },
+  { func = "@replace_false_op_eq_neg_and.folded", args = ["-128"], results = [{ values = ["-128"], witness = [] }], from = "@replace_false_op_eq_neg_and, its CHECK lines" },
+  { func = "@replace_false_op_eq_shl_or", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@replace_false_op_eq_shl_or" },
+  { func = "@replace_false_op_eq_shl_or", args = ["1"], results = [{ values = ["9"], witness = [] }], from = "@replace_false_op_eq_shl_or" },
+  { func = "@replace_false_op_eq_shl_or", args = ["-128"], results = [{ values = ["-128"], witness = [] }], from = "@replace_false_op_eq_shl_or" },
+  { func = "@replace_false_op_eq_shl_or.folded", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@replace_false_op_eq_shl_or, its CHECK lines" },
+  { func = "@replace_false_op_eq_shl_or.folded", args = ["1"], results = [{ values = ["9"], witness = [] }], from = "@replace_false_op_eq_shl_or, its CHECK lines" },
+  { func = "@replace_false_op_eq_shl_or.folded", args = ["-128"], results = [{ values = ["-128"], witness = [] }], from = "@replace_false_op_eq_shl_or, its CHECK lines" },
+  { func = "@replace_false_op_sgt_neg_and", args = ["4"], results = [{ values = ["0"], witness = [] }], from = "@replace_false_op_sgt_neg_and" },
+  { func = "@replace_false_op_sgt_neg_and", args = ["-4"], results = [{ values = ["4"], witness = [] }], from = "@replace_false_op_sgt_neg_and" },
+  { func = "@select_sub_cmp", args = ["5", "3"], results = [{ values = ["-2"], witness = [] }], from = "@select_sub_cmp" },
+  { func = "@select_sub_cmp", args = ["7", "7"], results = [{ values = ["0"], witness = [] }], from = "@select_sub_cmp" },
+  { func = "@select_sub_cmp", args = ["-128", "1"], expect = ["poison"], from = "@select_sub_cmp" },
+  { func = "@select_sub_cmp.folded", args = ["5", "3"], results = [{ values = ["-2"], witness = [] }], from = "@select_sub_cmp, its CHECK lines" },
+  { func = "@select_sub_cmp.folded", args = ["7", "7"], results = [{ values = ["0"], witness = [] }], from = "@select_sub_cmp, its CHECK lines" },
+  { func = "@select_sub_cmp.folded", args = ["-128", "1"], expect = ["poison"], from = "@select_sub_cmp, its CHECK lines" },
+]

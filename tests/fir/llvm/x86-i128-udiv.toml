@@ -1,0 +1,83 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/i128-udiv.ll, ported to fir by
+# hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in LICENSE.TXT
+# beside this file, and README.md says how the cases were chosen and
+# rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# Each function divides an i128 by a constant, or takes the remainder,
+# unsigned: by 2^66, by 2^128 - 2^66 and by 2^128 - 2^66 - 3, which LLVM
+# writes as the negative constants that fir writes too, and by 7, 11, 22,
+# 56 and 67, which LLVM lowers with a magic multiply, and native code here
+# through the runtime helper of ADR-2026-11-03-0415. Each runs on the same
+# values.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/CodeGen/X86/i128-udiv.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1"], results = [{ values = ["4611686018427387903"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2305843009213693952"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["170141183460469231731687303715884105727"], results = [{ values = ["2305843009213693951"], witness = [] }], from = "@test1" },
+  { func = "@test2", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["170141183460469231731687303715884105727"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test3", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["18446744073709551615"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["18446744073709551616"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["170141183460469231731687303715884105727"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@div_by_7", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_7", args = ["-1"], results = [{ values = ["48611766702991209066196372490252601636"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_7", args = ["18446744073709551615"], results = [{ values = ["2635249153387078802"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_7", args = ["18446744073709551616"], results = [{ values = ["2635249153387078802"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_7", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["24305883351495604533098186245126300818"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_7", args = ["170141183460469231731687303715884105727"], results = [{ values = ["24305883351495604533098186245126300818"], witness = [] }], from = "@div_by_7" },
+  { func = "@div_by_11", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_11", args = ["-1"], results = [{ values = ["30934760629176223951215873402888019223"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_11", args = ["18446744073709551615"], results = [{ values = ["1676976733973595601"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_11", args = ["18446744073709551616"], results = [{ values = ["1676976733973595601"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_11", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["15467380314588111975607936701444009611"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_11", args = ["170141183460469231731687303715884105727"], results = [{ values = ["15467380314588111975607936701444009611"], witness = [] }], from = "@div_by_11" },
+  { func = "@div_by_22", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_22", args = ["-1"], results = [{ values = ["15467380314588111975607936701444009611"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_22", args = ["18446744073709551615"], results = [{ values = ["838488366986797800"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_22", args = ["18446744073709551616"], results = [{ values = ["838488366986797800"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_22", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["7733690157294055987803968350722004805"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_22", args = ["170141183460469231731687303715884105727"], results = [{ values = ["7733690157294055987803968350722004805"], witness = [] }], from = "@div_by_22" },
+  { func = "@div_by_56", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@div_by_56" },
+  { func = "@div_by_56", args = ["-1"], results = [{ values = ["6076470837873901133274546561281575204"], witness = [] }], from = "@div_by_56" },
+  { func = "@div_by_56", args = ["18446744073709551615"], results = [{ values = ["329406144173384850"], witness = [] }], from = "@div_by_56" },
+  { func = "@div_by_56", args = ["18446744073709551616"], results = [{ values = ["329406144173384850"], witness = [] }], from = "@div_by_56" },
+  { func = "@div_by_56", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["3038235418936950566637273280640787602"], witness = [] }], from = "@div_by_56" },
+  { func = "@div_by_56", args = ["170141183460469231731687303715884105727"], results = [{ values = ["3038235418936950566637273280640787602"], witness = [] }], from = "@div_by_56" },
+  { func = "@rem_by_7", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_7", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_7", args = ["18446744073709551615"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_7", args = ["18446744073709551616"], results = [{ values = ["2"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_7", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_7", args = ["170141183460469231731687303715884105727"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_7" },
+  { func = "@rem_by_14", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_14" },
+  { func = "@rem_by_14", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@rem_by_14" },
+  { func = "@rem_by_14", args = ["18446744073709551615"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_14" },
+  { func = "@rem_by_14", args = ["18446744073709551616"], results = [{ values = ["2"], witness = [] }], from = "@rem_by_14" },
+  { func = "@rem_by_14", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2"], witness = [] }], from = "@rem_by_14" },
+  { func = "@rem_by_14", args = ["170141183460469231731687303715884105727"], results = [{ values = ["1"], witness = [] }], from = "@rem_by_14" },
+  { func = "@div_by_67", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@div_by_67" },
+  { func = "@div_by_67", args = ["-1"], results = [{ values = ["5078841297327439753184695633309973305"], witness = [] }], from = "@div_by_67" },
+  { func = "@div_by_67", args = ["18446744073709551615"], results = [{ values = ["275324538413575397"], witness = [] }], from = "@div_by_67" },
+  { func = "@div_by_67", args = ["18446744073709551616"], results = [{ values = ["275324538413575397"], witness = [] }], from = "@div_by_67" },
+  { func = "@div_by_67", args = ["-170141183460469231731687303715884105728"], results = [{ values = ["2539420648663719876592347816654986652"], witness = [] }], from = "@div_by_67" },
+  { func = "@div_by_67", args = ["170141183460469231731687303715884105727"], results = [{ values = ["2539420648663719876592347816654986652"], witness = [] }], from = "@div_by_67" },
+]

@@ -1,0 +1,20 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/rem.ll, ported to
+# fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# @srem_mul_sdiv works at i4, a width that the backend does not lower, so
+# its tests are interpreter-only. (%x sdiv %y) * %y is a multiple of %y,
+# so its srem by %y is 0, as LLVM folds it, wherever the sdiv is defined:
+# by 0, and -8 by -1, it is UB.
+#
+# instsimplify-rem holds the file's other functions that came in.
+source = { file = "llvm/test/Transforms/InstSimplify/rem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@srem_mul_sdiv", args = ["7", "2"], expect = ["0"], from = "@srem_mul_sdiv" },
+  { func = "@srem_mul_sdiv", args = ["-8", "3"], expect = ["0"], from = "@srem_mul_sdiv" },
+  { func = "@srem_mul_sdiv", args = ["7", "-8"], expect = ["0"], from = "@srem_mul_sdiv" },
+  { func = "@srem_mul_sdiv", args = ["-7", "-2"], expect = ["0"], from = "@srem_mul_sdiv" },
+  { func = "@srem_mul_sdiv", args = ["-8", "-1"], expect = "ub", from = "@srem_mul_sdiv" },
+  { func = "@srem_mul_sdiv", args = ["5", "0"], expect = "ub", from = "@srem_mul_sdiv" },
+]

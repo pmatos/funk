@@ -1,0 +1,135 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/divide-by-constant.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# This module holds the file's i64 functions, and
+# x86-divide-by-constant-narrow the others. Each function divides, or
+# takes the remainder, by a constant, which LLVM lowers with a magic
+# multiply and shifts. Native code divides with div or idiv, and each test
+# checks the quotient on values at both ends of the range and between.
+# LLVM writes constants of 2^63 or more unsigned, and fir writes them as
+# the negative values of the same bits: 13835058055282163710 is
+# -4611686018427387906. @PR38622 and @PR38622_signed return a struct of an
+# i64 and an i32 through insertvalue on undef; fir has no undef and no
+# structs, and the functions return the two values as their two results.
+#
+# The file's functions that neither this module nor
+# x86-divide-by-constant-narrow holds are left out: the divisions by 15,
+# 257 and 65535, variants of those by 17, 255 and 65537, and
+# @urem_i64_3_optsize, which is @urem_i64_3 with optsize.
+source = { file = "llvm/test/CodeGen/X86/divide-by-constant.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@PR23590", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@PR23590" },
+  { func = "@PR23590", args = ["-1"], results = [{ values = ["233"], witness = [] }], from = "@PR23590" },
+  { func = "@PR23590", args = ["12344"], results = [{ values = ["1763"], witness = [] }], from = "@PR23590" },
+  { func = "@PR23590", args = ["-9223372036854775808"], results = [{ values = ["116"], witness = [] }], from = "@PR23590" },
+  { func = "@PR23590", args = ["81985529216486895"], results = [{ values = ["1247"], witness = [] }], from = "@PR23590" },
+  { func = "@PR38622", args = ["0"], results = [{ values = ["0", "0"], witness = [] }], from = "@PR38622" },
+  { func = "@PR38622", args = ["-1"], results = [{ values = ["4611686018", "1709551615"], witness = [] }], from = "@PR38622" },
+  { func = "@PR38622", args = ["12344"], results = [{ values = ["0", "12344"], witness = [] }], from = "@PR38622" },
+  { func = "@PR38622", args = ["-9223372036854775808"], results = [{ values = ["2305843009", "854775808"], witness = [] }], from = "@PR38622" },
+  { func = "@PR38622", args = ["81985529216486895"], results = [{ values = ["20496382", "1216486895"], witness = [] }], from = "@PR38622" },
+  { func = "@PR38622_signed", args = ["0"], results = [{ values = ["0", "0"], witness = [] }], from = "@PR38622_signed" },
+  { func = "@PR38622_signed", args = ["-1"], results = [{ values = ["0", "-1"], witness = [] }], from = "@PR38622_signed" },
+  { func = "@PR38622_signed", args = ["12344"], results = [{ values = ["0", "12344"], witness = [] }], from = "@PR38622_signed" },
+  { func = "@PR38622_signed", args = ["-9223372036854775808"], results = [{ values = ["-2305843009", "-854775808"], witness = [] }], from = "@PR38622_signed" },
+  { func = "@PR38622_signed", args = ["81985529216486895"], results = [{ values = ["20496382", "1216486895"], witness = [] }], from = "@PR38622_signed" },
+  { func = "@urem_i64_3", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_3" },
+  { func = "@urem_i64_3", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_3" },
+  { func = "@urem_i64_3", args = ["12344"], results = [{ values = ["2"], witness = [] }], from = "@urem_i64_3" },
+  { func = "@urem_i64_3", args = ["-9223372036854775808"], results = [{ values = ["2"], witness = [] }], from = "@urem_i64_3" },
+  { func = "@urem_i64_3", args = ["81985529216486895"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_3" },
+  { func = "@udiv_i64_3", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_3" },
+  { func = "@udiv_i64_3", args = ["-1"], results = [{ values = ["6148914691236517205"], witness = [] }], from = "@udiv_i64_3" },
+  { func = "@udiv_i64_3", args = ["12344"], results = [{ values = ["4114"], witness = [] }], from = "@udiv_i64_3" },
+  { func = "@udiv_i64_3", args = ["-9223372036854775808"], results = [{ values = ["3074457345618258602"], witness = [] }], from = "@udiv_i64_3" },
+  { func = "@udiv_i64_3", args = ["81985529216486895"], results = [{ values = ["27328509738828965"], witness = [] }], from = "@udiv_i64_3" },
+  { func = "@urem_i64_5", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_5" },
+  { func = "@urem_i64_5", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_5" },
+  { func = "@urem_i64_5", args = ["12344"], results = [{ values = ["4"], witness = [] }], from = "@urem_i64_5" },
+  { func = "@urem_i64_5", args = ["-9223372036854775808"], results = [{ values = ["3"], witness = [] }], from = "@urem_i64_5" },
+  { func = "@urem_i64_5", args = ["81985529216486895"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_5" },
+  { func = "@udiv_i64_5", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_5" },
+  { func = "@udiv_i64_5", args = ["-1"], results = [{ values = ["3689348814741910323"], witness = [] }], from = "@udiv_i64_5" },
+  { func = "@udiv_i64_5", args = ["12344"], results = [{ values = ["2468"], witness = [] }], from = "@udiv_i64_5" },
+  { func = "@udiv_i64_5", args = ["-9223372036854775808"], results = [{ values = ["1844674407370955161"], witness = [] }], from = "@udiv_i64_5" },
+  { func = "@udiv_i64_5", args = ["81985529216486895"], results = [{ values = ["16397105843297379"], witness = [] }], from = "@udiv_i64_5" },
+  { func = "@urem_i64_17", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_17" },
+  { func = "@urem_i64_17", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_17" },
+  { func = "@urem_i64_17", args = ["12344"], results = [{ values = ["2"], witness = [] }], from = "@urem_i64_17" },
+  { func = "@urem_i64_17", args = ["-9223372036854775808"], results = [{ values = ["9"], witness = [] }], from = "@urem_i64_17" },
+  { func = "@urem_i64_17", args = ["81985529216486895"], results = [{ values = ["8"], witness = [] }], from = "@urem_i64_17" },
+  { func = "@udiv_i64_17", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_17" },
+  { func = "@udiv_i64_17", args = ["-1"], results = [{ values = ["1085102592571150095"], witness = [] }], from = "@udiv_i64_17" },
+  { func = "@udiv_i64_17", args = ["12344"], results = [{ values = ["726"], witness = [] }], from = "@udiv_i64_17" },
+  { func = "@udiv_i64_17", args = ["-9223372036854775808"], results = [{ values = ["542551296285575047"], witness = [] }], from = "@udiv_i64_17" },
+  { func = "@udiv_i64_17", args = ["81985529216486895"], results = [{ values = ["4822678189205111"], witness = [] }], from = "@udiv_i64_17" },
+  { func = "@urem_i64_255", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_255" },
+  { func = "@urem_i64_255", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_255" },
+  { func = "@urem_i64_255", args = ["12344"], results = [{ values = ["104"], witness = [] }], from = "@urem_i64_255" },
+  { func = "@urem_i64_255", args = ["-9223372036854775808"], results = [{ values = ["128"], witness = [] }], from = "@urem_i64_255" },
+  { func = "@urem_i64_255", args = ["81985529216486895"], results = [{ values = ["195"], witness = [] }], from = "@urem_i64_255" },
+  { func = "@udiv_i64_255", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_255" },
+  { func = "@udiv_i64_255", args = ["-1"], results = [{ values = ["72340172838076673"], witness = [] }], from = "@udiv_i64_255" },
+  { func = "@udiv_i64_255", args = ["12344"], results = [{ values = ["48"], witness = [] }], from = "@udiv_i64_255" },
+  { func = "@udiv_i64_255", args = ["-9223372036854775808"], results = [{ values = ["36170086419038336"], witness = [] }], from = "@udiv_i64_255" },
+  { func = "@udiv_i64_255", args = ["81985529216486895"], results = [{ values = ["321511879280340"], witness = [] }], from = "@udiv_i64_255" },
+  { func = "@urem_i64_65537", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_65537" },
+  { func = "@urem_i64_65537", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_65537" },
+  { func = "@urem_i64_65537", args = ["12344"], results = [{ values = ["12344"], witness = [] }], from = "@urem_i64_65537" },
+  { func = "@urem_i64_65537", args = ["-9223372036854775808"], results = [{ values = ["32769"], witness = [] }], from = "@urem_i64_65537" },
+  { func = "@urem_i64_65537", args = ["81985529216486895"], results = [{ values = ["34952"], witness = [] }], from = "@urem_i64_65537" },
+  { func = "@udiv_i64_65537", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_65537" },
+  { func = "@udiv_i64_65537", args = ["-1"], results = [{ values = ["281470681808895"], witness = [] }], from = "@udiv_i64_65537" },
+  { func = "@udiv_i64_65537", args = ["12344"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_65537" },
+  { func = "@udiv_i64_65537", args = ["-9223372036854775808"], results = [{ values = ["140735340904447"], witness = [] }], from = "@udiv_i64_65537" },
+  { func = "@udiv_i64_65537", args = ["81985529216486895"], results = [{ values = ["1250980808039"], witness = [] }], from = "@udiv_i64_65537" },
+  { func = "@urem_i64_12", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_12" },
+  { func = "@urem_i64_12", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@urem_i64_12" },
+  { func = "@urem_i64_12", args = ["12344"], results = [{ values = ["8"], witness = [] }], from = "@urem_i64_12" },
+  { func = "@urem_i64_12", args = ["-9223372036854775808"], results = [{ values = ["8"], witness = [] }], from = "@urem_i64_12" },
+  { func = "@urem_i64_12", args = ["81985529216486895"], results = [{ values = ["3"], witness = [] }], from = "@urem_i64_12" },
+  { func = "@udiv_i64_12", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_12" },
+  { func = "@udiv_i64_12", args = ["-1"], results = [{ values = ["1537228672809129301"], witness = [] }], from = "@udiv_i64_12" },
+  { func = "@udiv_i64_12", args = ["12344"], results = [{ values = ["1028"], witness = [] }], from = "@udiv_i64_12" },
+  { func = "@udiv_i64_12", args = ["-9223372036854775808"], results = [{ values = ["768614336404564650"], witness = [] }], from = "@udiv_i64_12" },
+  { func = "@udiv_i64_12", args = ["81985529216486895"], results = [{ values = ["6832127434707241"], witness = [] }], from = "@udiv_i64_12" },
+  { func = "@udiv_i64_magic_large_postshift", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_postshift" },
+  { func = "@udiv_i64_magic_large_postshift", args = ["-1"], results = [{ values = ["1"], witness = [] }], from = "@udiv_i64_magic_large_postshift" },
+  { func = "@udiv_i64_magic_large_postshift", args = ["12344"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_postshift" },
+  { func = "@udiv_i64_magic_large_postshift", args = ["-9223372036854775808"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_postshift" },
+  { func = "@udiv_i64_magic_large_postshift", args = ["81985529216486895"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_postshift" },
+  { func = "@urem_i64_magic_large_postshift", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_magic_large_postshift" },
+  { func = "@urem_i64_magic_large_postshift", args = ["-1"], results = [{ values = ["4611686018427387905"], witness = [] }], from = "@urem_i64_magic_large_postshift" },
+  { func = "@urem_i64_magic_large_postshift", args = ["12344"], results = [{ values = ["12344"], witness = [] }], from = "@urem_i64_magic_large_postshift" },
+  { func = "@urem_i64_magic_large_postshift", args = ["-9223372036854775808"], results = [{ values = ["-9223372036854775808"], witness = [] }], from = "@urem_i64_magic_large_postshift" },
+  { func = "@urem_i64_magic_large_postshift", args = ["81985529216486895"], results = [{ values = ["81985529216486895"], witness = [] }], from = "@urem_i64_magic_large_postshift" },
+  { func = "@udiv_i64_magic_large_preshift", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_preshift" },
+  { func = "@udiv_i64_magic_large_preshift", args = ["-1"], results = [{ values = ["306783378"], witness = [] }], from = "@udiv_i64_magic_large_preshift" },
+  { func = "@udiv_i64_magic_large_preshift", args = ["12344"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_large_preshift" },
+  { func = "@udiv_i64_magic_large_preshift", args = ["-9223372036854775808"], results = [{ values = ["153391689"], witness = [] }], from = "@udiv_i64_magic_large_preshift" },
+  { func = "@udiv_i64_magic_large_preshift", args = ["81985529216486895"], results = [{ values = ["1363481"], witness = [] }], from = "@udiv_i64_magic_large_preshift" },
+  { func = "@urem_i64_magic_large_preshift", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_magic_large_preshift" },
+  { func = "@urem_i64_magic_large_preshift", args = ["-1"], results = [{ values = ["17793435939"], witness = [] }], from = "@urem_i64_magic_large_preshift" },
+  { func = "@urem_i64_magic_large_preshift", args = ["12344"], results = [{ values = ["12344"], witness = [] }], from = "@urem_i64_magic_large_preshift" },
+  { func = "@urem_i64_magic_large_preshift", args = ["-9223372036854775808"], results = [{ values = ["8896717970"], witness = [] }], from = "@urem_i64_magic_large_preshift" },
+  { func = "@urem_i64_magic_large_preshift", args = ["81985529216486895"], results = [{ values = ["40967170593"], witness = [] }], from = "@urem_i64_magic_large_preshift" },
+  { func = "@udiv_i64_magic_is_add", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_is_add" },
+  { func = "@udiv_i64_magic_is_add", args = ["-1"], results = [{ values = ["21845"], witness = [] }], from = "@udiv_i64_magic_is_add" },
+  { func = "@udiv_i64_magic_is_add", args = ["12344"], results = [{ values = ["0"], witness = [] }], from = "@udiv_i64_magic_is_add" },
+  { func = "@udiv_i64_magic_is_add", args = ["-9223372036854775808"], results = [{ values = ["10922"], witness = [] }], from = "@udiv_i64_magic_is_add" },
+  { func = "@udiv_i64_magic_is_add", args = ["81985529216486895"], results = [{ values = ["97"], witness = [] }], from = "@udiv_i64_magic_is_add" },
+  { func = "@urem_i64_magic_is_add", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@urem_i64_magic_is_add" },
+  { func = "@urem_i64_magic_is_add", args = ["-1"], results = [{ values = ["187651416151380"], witness = [] }], from = "@urem_i64_magic_is_add" },
+  { func = "@urem_i64_magic_is_add", args = ["12344"], results = [{ values = ["12344"], witness = [] }], from = "@urem_i64_magic_is_add" },
+  { func = "@urem_i64_magic_is_add", args = ["-9223372036854775808"], results = [{ values = ["516040320625322"], witness = [] }], from = "@urem_i64_magic_is_add" },
+  { func = "@urem_i64_magic_is_add", args = ["81985529216486895"], results = [{ values = ["75894381858384"], witness = [] }], from = "@urem_i64_magic_is_add" },
+]

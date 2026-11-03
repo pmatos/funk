@@ -1,0 +1,54 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/freeze.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. freeze of a
+# value that is not poison gives that value, so freeze of a freeze is one
+# freeze, freeze of a constant is the constant, and a freeze of an icmp of
+# frozen operands, or of a value that a branch has already tested, is not
+# needed: each runs beside its CHECK lines on the same arguments. @phi
+# passes frozen values through LLVM's phis, which fir writes as block
+# arguments; @phi_noopt passes %a1 unfrozen, so LLVM keeps the last
+# freeze. The tests pass no poison, as a test's arguments are values, so
+# each freeze here gives its operand.
+#
+# The file's other functions are left out: they work on pointers, vectors
+# or floating point, or use calls or switch.
+source = { file = "llvm/test/Transforms/InstSimplify/freeze.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@fold", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@fold" },
+  { func = "@fold", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@fold" },
+  { func = "@fold", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@fold" },
+  { func = "@fold.folded", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@fold, its CHECK lines" },
+  { func = "@fold.folded", args = ["-1"], results = [{ values = ["-1"], witness = [] }], from = "@fold, its CHECK lines" },
+  { func = "@fold.folded", args = ["-2147483648"], results = [{ values = ["-2147483648"], witness = [] }], from = "@fold, its CHECK lines" },
+  { func = "@make_const", args = [], results = [{ values = ["10"], witness = [] }], from = "@make_const" },
+  { func = "@icmp", args = ["1", "1"], results = [{ values = ["true"], witness = [] }], from = "@icmp" },
+  { func = "@icmp", args = ["1", "2"], results = [{ values = ["false"], witness = [] }], from = "@icmp" },
+  { func = "@icmp.folded", args = ["1", "1"], results = [{ values = ["true"], witness = [] }], from = "@icmp, its CHECK lines" },
+  { func = "@icmp.folded", args = ["1", "2"], results = [{ values = ["false"], witness = [] }], from = "@icmp, its CHECK lines" },
+  { func = "@icmp_noopt", args = ["1", "1"], results = [{ values = ["true"], witness = [] }], from = "@icmp_noopt" },
+  { func = "@icmp_noopt", args = ["1", "2"], results = [{ values = ["false"], witness = [] }], from = "@icmp_noopt" },
+  { func = "@brcond", args = ["true", "true"], results = [{ values = ["true"], witness = [] }], from = "@brcond" },
+  { func = "@brcond", args = ["true", "false"], results = [{ values = ["true"], witness = [] }], from = "@brcond" },
+  { func = "@brcond", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@brcond" },
+  { func = "@brcond", args = ["false", "false"], results = [{ values = ["false"], witness = [] }], from = "@brcond" },
+  { func = "@brcond.folded", args = ["true", "true"], results = [{ values = ["true"], witness = [] }], from = "@brcond, its CHECK lines" },
+  { func = "@brcond.folded", args = ["true", "false"], results = [{ values = ["true"], witness = [] }], from = "@brcond, its CHECK lines" },
+  { func = "@brcond.folded", args = ["false", "true"], results = [{ values = ["false"], witness = [] }], from = "@brcond, its CHECK lines" },
+  { func = "@brcond.folded", args = ["false", "false"], results = [{ values = ["false"], witness = [] }], from = "@brcond, its CHECK lines" },
+  { func = "@phi", args = ["true", "true", "1", "2"], results = [{ values = ["2"], witness = [] }], from = "@phi" },
+  { func = "@phi", args = ["true", "false", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi" },
+  { func = "@phi", args = ["false", "true", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi" },
+  { func = "@phi", args = ["false", "false", "-1", "-2147483648"], results = [{ values = ["-1"], witness = [] }], from = "@phi" },
+  { func = "@phi.folded", args = ["true", "true", "1", "2"], results = [{ values = ["2"], witness = [] }], from = "@phi, its CHECK lines" },
+  { func = "@phi.folded", args = ["true", "false", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi, its CHECK lines" },
+  { func = "@phi.folded", args = ["false", "true", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi, its CHECK lines" },
+  { func = "@phi.folded", args = ["false", "false", "-1", "-2147483648"], results = [{ values = ["-1"], witness = [] }], from = "@phi, its CHECK lines" },
+  { func = "@phi_noopt", args = ["true", "true", "1", "2"], results = [{ values = ["2"], witness = [] }], from = "@phi_noopt" },
+  { func = "@phi_noopt", args = ["true", "false", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi_noopt" },
+  { func = "@phi_noopt", args = ["false", "true", "1", "2"], results = [{ values = ["1"], witness = [] }], from = "@phi_noopt" },
+  { func = "@phi_noopt", args = ["false", "false", "-1", "-2147483648"], results = [{ values = ["-1"], witness = [] }], from = "@phi_noopt" },
+]

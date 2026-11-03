@@ -1,0 +1,42 @@
+# Derived from LLVM:
+# llvm/test/Transforms/InstCombine/apint-shift-simplify.ll, ported to fir
+# by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. A bitwise
+# op of two values shifted by one amount is the shift of the bitwise op,
+# at i41, i49 and i57, widths that the backend does not lower, so every
+# test is interpreter-only. Each test.folded function is its CHECK lines:
+# the bitwise op first, then the shift. Both run on the same arguments,
+# and both give poison when the amount is the width or more.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/Transforms/InstCombine/apint-shift-simplify.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test0", args = ["-1", "5", "3"], expect = ["40"], from = "@test0" },
+  { func = "@test0", args = ["12", "10", "0"], expect = ["8"], from = "@test0" },
+  { func = "@test0", args = ["-1099511627776", "-1", "40"], expect = ["0"], from = "@test0" },
+  { func = "@test0", args = ["7", "7", "41"], expect = ["poison"], from = "@test0" },
+  { func = "@test0.folded", args = ["-1", "5", "3"], expect = ["40"], from = "@test0, its CHECK lines" },
+  { func = "@test0.folded", args = ["12", "10", "0"], expect = ["8"], from = "@test0, its CHECK lines" },
+  { func = "@test0.folded", args = ["-1099511627776", "-1", "40"], expect = ["0"], from = "@test0, its CHECK lines" },
+  { func = "@test0.folded", args = ["7", "7", "41"], expect = ["poison"], from = "@test0, its CHECK lines" },
+  { func = "@test1", args = ["-1", "5", "3"], expect = ["18014398509481983"], from = "@test1" },
+  { func = "@test1", args = ["12", "10", "0"], expect = ["14"], from = "@test1" },
+  { func = "@test1", args = ["-72057594037927936", "-1", "56"], expect = ["1"], from = "@test1" },
+  { func = "@test1", args = ["7", "7", "57"], expect = ["poison"], from = "@test1" },
+  { func = "@test1.folded", args = ["-1", "5", "3"], expect = ["18014398509481983"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["12", "10", "0"], expect = ["14"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["-72057594037927936", "-1", "56"], expect = ["1"], from = "@test1, its CHECK lines" },
+  { func = "@test1.folded", args = ["7", "7", "57"], expect = ["poison"], from = "@test1, its CHECK lines" },
+  { func = "@test2", args = ["-1", "5", "3"], expect = ["-1"], from = "@test2" },
+  { func = "@test2", args = ["12", "10", "0"], expect = ["6"], from = "@test2" },
+  { func = "@test2", args = ["-281474976710656", "-1", "48"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["7", "7", "49"], expect = ["poison"], from = "@test2" },
+  { func = "@test2.folded", args = ["-1", "5", "3"], expect = ["-1"], from = "@test2, its CHECK lines" },
+  { func = "@test2.folded", args = ["12", "10", "0"], expect = ["6"], from = "@test2, its CHECK lines" },
+  { func = "@test2.folded", args = ["-281474976710656", "-1", "48"], expect = ["0"], from = "@test2, its CHECK lines" },
+  { func = "@test2.folded", args = ["7", "7", "49"], expect = ["poison"], from = "@test2, its CHECK lines" },
+]

@@ -1,0 +1,25 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/i128-mul.ll, ported to fir by
+# hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in LICENSE.TXT
+# beside this file, and README.md says how the cases were chosen and
+# rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# @foo is the high half of the 128-bit product of two zero-extended i64s,
+# which the backend computes with an i128 mul and an lshr by 64.
+#
+# The file's other function, @mul1, loads and stores and is left out.
+source = { file = "llvm/test/CodeGen/X86/i128-mul.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@foo", args = ["0", "0"], results = [{ values = ["0"], witness = [] }], from = "@foo" },
+  { func = "@foo", args = ["-1", "-1"], results = [{ values = ["-2"], witness = [] }], from = "@foo" },
+  { func = "@foo", args = ["-1", "2"], results = [{ values = ["1"], witness = [] }], from = "@foo" },
+  { func = "@foo", args = ["4294967296", "4294967296"], results = [{ values = ["1"], witness = [] }], from = "@foo" },
+  { func = "@foo", args = ["-9223372036854775808", "3"], results = [{ values = ["1"], witness = [] }], from = "@foo" },
+  { func = "@foo", args = ["81985529216486895", "-81985529216486896"], results = [{ values = ["81621149086635842"], witness = [] }], from = "@foo" },
+]

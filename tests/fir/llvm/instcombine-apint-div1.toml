@@ -1,0 +1,51 @@
+# Derived from LLVM: llvm/test/Transforms/InstCombine/apint-div1.ll,
+# ported to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception,
+# is in LICENSE.TXT beside this file, and README.md says how the cases
+# were chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is, or says that it is the form that
+# the RUN line asks InstCombine for. The file's RUN line checks only that
+# no udiv remains: a udiv by a power of two becomes an lshr, and a udiv by
+# a select of two powers of two an lshr by a select. The test.folded
+# functions are those forms, written by hand, and run beside the inputs on
+# the same arguments. The widths, i33, i49, i59, are ones that the backend
+# does not lower, so every test is interpreter-only, and each expects the
+# value that the udiv gives.
+#
+# Every function of the file is here.
+source = { file = "llvm/test/Transforms/InstCombine/apint-div1.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["-1"], expect = ["2097151"], from = "@test1" },
+  { func = "@test1", args = ["0"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["4095"], expect = ["0"], from = "@test1" },
+  { func = "@test1", args = ["-4294967296"], expect = ["1048576"], from = "@test1" },
+  { func = "@test1", args = ["4294967295"], expect = ["1048575"], from = "@test1" },
+  { func = "@test1.folded", args = ["-1"], expect = ["2097151"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["0"], expect = ["0"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["4095"], expect = ["0"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["-4294967296"], expect = ["1048576"], from = "@test1, as its RUN line folds it" },
+  { func = "@test1.folded", args = ["4294967295"], expect = ["1048575"], from = "@test1, as its RUN line folds it" },
+  { func = "@test2", args = ["-1"], expect = ["1048575"], from = "@test2" },
+  { func = "@test2", args = ["0"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["4095"], expect = ["0"], from = "@test2" },
+  { func = "@test2", args = ["-281474976710656"], expect = ["524288"], from = "@test2" },
+  { func = "@test2", args = ["281474976710655"], expect = ["524287"], from = "@test2" },
+  { func = "@test2.folded", args = ["-1"], expect = ["1048575"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["0"], expect = ["0"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["4095"], expect = ["0"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["-281474976710656"], expect = ["524288"], from = "@test2, as its RUN line folds it" },
+  { func = "@test2.folded", args = ["281474976710655"], expect = ["524287"], from = "@test2, as its RUN line folds it" },
+  { func = "@test3", args = ["-1", "true"], expect = ["562949953421311"], from = "@test3" },
+  { func = "@test3", args = ["-1", "false"], expect = ["140737488355327"], from = "@test3" },
+  { func = "@test3", args = ["0", "true"], expect = ["0"], from = "@test3" },
+  { func = "@test3", args = ["0", "false"], expect = ["0"], from = "@test3" },
+  { func = "@test3", args = ["4095", "true"], expect = ["3"], from = "@test3" },
+  { func = "@test3", args = ["4095", "false"], expect = ["0"], from = "@test3" },
+  { func = "@test3.folded", args = ["-1", "true"], expect = ["562949953421311"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["-1", "false"], expect = ["140737488355327"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["0", "true"], expect = ["0"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["0", "false"], expect = ["0"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["4095", "true"], expect = ["3"], from = "@test3, as its RUN line folds it" },
+  { func = "@test3.folded", args = ["4095", "false"], expect = ["0"], from = "@test3, as its RUN line folds it" },
+]

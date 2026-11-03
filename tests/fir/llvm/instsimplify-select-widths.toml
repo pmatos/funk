@@ -1,0 +1,39 @@
+# Derived from LLVM: llvm/test/Transforms/InstSimplify/select.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function, or its CHECK lines, that the function is. These
+# functions of select.ll truncate %x to i4, a width that the backend does
+# not lower, so every test is interpreter-only. The i4's sign bit is bit 3
+# of %x. @select_icmp_trunc_8_eq_0_and_not_8 keeps %x where bit 3 is clear
+# and clears it where it is set, which is one and with -9, and runs beside
+# that and on the same arguments; @select_icmp_trunc_8_ne_0_and_not_8
+# keeps %x where bit 3 is set and clears it where it is clear already,
+# which is %x.
+#
+# instsimplify-select holds the file's other functions that came in. The
+# two _alt functions are these with the other predicate and the arms
+# swapped, and are left out.
+source = { file = "llvm/test/Transforms/InstSimplify/select.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["0"], expect = ["0"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["8"], expect = ["0"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["-1"], expect = ["-9"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["7"], expect = ["7"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["-9"], expect = ["-9"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8", args = ["-2147483648"], expect = ["-2147483648"], from = "@select_icmp_trunc_8_eq_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["0"], expect = ["0"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["8"], expect = ["0"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["-1"], expect = ["-9"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["7"], expect = ["7"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["-9"], expect = ["-9"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_eq_0_and_not_8.folded", args = ["-2147483648"], expect = ["-2147483648"], from = "@select_icmp_trunc_8_eq_0_and_not_8, its CHECK lines" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["0"], expect = ["0"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["8"], expect = ["8"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["-1"], expect = ["-1"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["7"], expect = ["7"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["-9"], expect = ["-9"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+  { func = "@select_icmp_trunc_8_ne_0_and_not_8", args = ["-2147483648"], expect = ["-2147483648"], from = "@select_icmp_trunc_8_ne_0_and_not_8" },
+]

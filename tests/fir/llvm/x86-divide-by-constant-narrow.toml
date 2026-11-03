@@ -1,0 +1,102 @@
+# Derived from LLVM: llvm/test/CodeGen/X86/divide-by-constant.ll, ported
+# to fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
+# LICENSE.TXT beside this file, and README.md says how the cases were
+# chosen and rewritten (ADR-2026-11-03-0644).
+#
+# Each test runs one function at the arguments given, and its from names
+# the LLVM function that the function is. The file is a code generation
+# test: its CHECK lines are x86 assembly, which say nothing that fir can
+# run, so each test declares the value that the function's IR computes,
+# worked out apart from fir-ref, and runs as native code as well as on
+# fir-ref where it is defined.
+#
+# This module holds the file's i8, i16 and i32 functions, and
+# x86-divide-by-constant-i64 the others. Each function divides, or takes
+# the remainder, by a constant, which LLVM lowers with a magic multiply
+# and shifts. Native code divides with div or idiv, and each test checks
+# the quotient on values at both ends of the range and between. The
+# parameter and result attributes zeroext and signext of @test1 to @test4
+# and @test6, which tell the x86 calling convention how to pass a narrow
+# value, are dropped: they do not change what the function computes.
+#
+# The file's functions that neither this module nor
+# x86-divide-by-constant-i64 holds are left out: the divisions by 15, 257
+# and 65535, variants of those by 17, 255 and 65537, and
+# @urem_i64_3_optsize, which is @urem_i64_3 with optsize.
+source = { file = "llvm/test/CodeGen/X86/divide-by-constant.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
+tests = [
+  { func = "@test1", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-1"], results = [{ values = ["1985"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["-32768"], results = [{ values = ["992"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["32767"], results = [{ values = ["992"], witness = [] }], from = "@test1" },
+  { func = "@test1", args = ["1000"], results = [{ values = ["30"], witness = [] }], from = "@test1" },
+  { func = "@test2", args = ["5", "0"], results = [{ values = ["0"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["5", "-1"], results = [{ values = ["21845"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["5", "32767"], results = [{ values = ["10922"], witness = [] }], from = "@test2" },
+  { func = "@test2", args = ["5", "3"], results = [{ values = ["1"], witness = [] }], from = "@test2" },
+  { func = "@test3", args = ["5", "0"], results = [{ values = ["0"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["5", "-1"], results = [{ values = ["85"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["5", "127"], results = [{ values = ["42"], witness = [] }], from = "@test3" },
+  { func = "@test3", args = ["5", "3"], results = [{ values = ["1"], witness = [] }], from = "@test3" },
+  { func = "@test4", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["-32768"], results = [{ values = ["-992"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["32767"], results = [{ values = ["992"], witness = [] }], from = "@test4" },
+  { func = "@test4", args = ["1000"], results = [{ values = ["30"], witness = [] }], from = "@test4" },
+  { func = "@test5", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test5" },
+  { func = "@test5", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test5" },
+  { func = "@test5", args = ["-1"], results = [{ values = ["2"], witness = [] }], from = "@test5" },
+  { func = "@test5", args = ["-2147483648"], results = [{ values = ["1"], witness = [] }], from = "@test5" },
+  { func = "@test5", args = ["2147483647"], results = [{ values = ["1"], witness = [] }], from = "@test5" },
+  { func = "@test5", args = ["1000"], results = [{ values = ["0"], witness = [] }], from = "@test5" },
+  { func = "@test6", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["-32768"], results = [{ values = ["-3276"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["32767"], results = [{ values = ["3276"], witness = [] }], from = "@test6" },
+  { func = "@test6", args = ["1000"], results = [{ values = ["100"], witness = [] }], from = "@test6" },
+  { func = "@test7", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test7" },
+  { func = "@test7", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test7" },
+  { func = "@test7", args = ["-1"], results = [{ values = ["153391689"], witness = [] }], from = "@test7" },
+  { func = "@test7", args = ["-2147483648"], results = [{ values = ["76695844"], witness = [] }], from = "@test7" },
+  { func = "@test7", args = ["2147483647"], results = [{ values = ["76695844"], witness = [] }], from = "@test7" },
+  { func = "@test7", args = ["1000"], results = [{ values = ["35"], witness = [] }], from = "@test7" },
+  { func = "@test8", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test8" },
+  { func = "@test8", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test8" },
+  { func = "@test8", args = ["-1"], results = [{ values = ["3"], witness = [] }], from = "@test8" },
+  { func = "@test8", args = ["-128"], results = [{ values = ["1"], witness = [] }], from = "@test8" },
+  { func = "@test8", args = ["127"], results = [{ values = ["1"], witness = [] }], from = "@test8" },
+  { func = "@test8", args = ["100"], results = [{ values = ["1"], witness = [] }], from = "@test8" },
+  { func = "@test9", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@test9" },
+  { func = "@test9", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@test9" },
+  { func = "@test9", args = ["-1"], results = [{ values = ["2"], witness = [] }], from = "@test9" },
+  { func = "@test9", args = ["-128"], results = [{ values = ["1"], witness = [] }], from = "@test9" },
+  { func = "@test9", args = ["127"], results = [{ values = ["1"], witness = [] }], from = "@test9" },
+  { func = "@test9", args = ["100"], results = [{ values = ["0"], witness = [] }], from = "@test9" },
+  { func = "@testsize1", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize1", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize1", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize1", args = ["-2147483648"], results = [{ values = ["-67108864"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize1", args = ["2147483647"], results = [{ values = ["67108863"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize1", args = ["1000"], results = [{ values = ["31"], witness = [] }], from = "@testsize1" },
+  { func = "@testsize2", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize2", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize2", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize2", args = ["-2147483648"], results = [{ values = ["-65075262"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize2", args = ["2147483647"], results = [{ values = ["65075262"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize2", args = ["1000"], results = [{ values = ["30"], witness = [] }], from = "@testsize2" },
+  { func = "@testsize3", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize3", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize3", args = ["-1"], results = [{ values = ["134217727"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize3", args = ["-2147483648"], results = [{ values = ["67108864"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize3", args = ["2147483647"], results = [{ values = ["67108863"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize3", args = ["1000"], results = [{ values = ["31"], witness = [] }], from = "@testsize3" },
+  { func = "@testsize4", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@testsize4" },
+  { func = "@testsize4", args = ["1"], results = [{ values = ["0"], witness = [] }], from = "@testsize4" },
+  { func = "@testsize4", args = ["-1"], results = [{ values = ["130150524"], witness = [] }], from = "@testsize4" },
+  { func = "@testsize4", args = ["-2147483648"], results = [{ values = ["65075262"], witness = [] }], from = "@testsize4" },
+  { func = "@testsize4", args = ["2147483647"], results = [{ values = ["65075262"], witness = [] }], from = "@testsize4" },
+  { func = "@testsize4", args = ["1000"], results = [{ values = ["30"], witness = [] }], from = "@testsize4" },
+]
