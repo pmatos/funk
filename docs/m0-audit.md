@@ -35,8 +35,10 @@ imports `Fir` and prints the axioms of each name.
 
 The check that keeps this true is `#check_axioms`, the last command of
 `lean/FirTest.lean`. It fails the build of `lean/` when any of its
-declarations depends on another axiom, `sorryAx` included
-(ADR-2026-10-30-1452, ADR-2026-10-30-1838), and `lake build --wfail`
+declarations depends on an axiom other than the three standard ones and
+the axioms of native evaluation that it confirms by running their claims
+again, so `sorryAx` fails it (ADR-2026-10-30-1452, ADR-2026-10-30-1838),
+and `lake build --wfail`
 fails on a `sorry` in an `example` (ADR-2026-10-30-1837). The `fir-spec`
 hook runs both on every pull request. The word `sorry` appears in `lean/`
 only in the prose of `lean/FirTest/Axioms.lean`.
@@ -146,10 +148,13 @@ Of those 266, 14 recurse deeper than 20 calls, in `recursion-i8` and
 are in `tracer-i128`, which states what `fir-ref` gives for `const`,
 `add` and `ret` at `i128`; `add-i128` runs the same additions
 differentially. The other 200 fill interpreter-only cells of the coverage
-matrix (#115), in modules whose other tests run natively. Nine modules at
-the backend's widths are not built, since all their tests are
-interpreter-only: `fuel` and `fuel-call` (every run runs out of fuel),
-the six `poison-div-iN` (every run gives UB or poison) and `tracer-i128`.
+matrix (#115), in modules whose other tests run natively.
+
+Of the 257 modules, 74 are not built: 64 hold a width that the backend
+rejects, `empty` has no test, and nine at the backend's widths have only
+interpreter-only tests: `fuel` and `fuel-call` (every run runs out of
+fuel), the six `poison-div-iN` (every run gives UB or poison) and
+`tracer-i128`.
 
 So `fir-ref` and the Rust tools agree on every text of the corpus, and
 native code refines `fir-ref` on every one of the 10,980 runs that it
