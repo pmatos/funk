@@ -13,8 +13,8 @@ it maps the interpreter's run in the first to its run in the second. The
 interpreter is written against an abstract monad, so it cannot tell the two
 apart: this is the theorem `Func.run_map`.
 
-`fir-ref`'s exhaustive and scripted modes rely on it: they run the
-interpreter in the tree of choices of the next section, and the morphism
+`fir-ref`'s exhaustive, scripted and sampled modes rely on it: they run
+the interpreter in the tree of choices of the next section, and the morphism
 from that tree to the set monad carries their results to the spec's run.
 -/
 

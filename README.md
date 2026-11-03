@@ -10,9 +10,9 @@ definition. Second, agents build funk, and they are meant to use it.
 
 Funk is at an early stage. Today the repository holds fir's specification,
 written in Lean, and the decisions behind it. It also holds the first Rust
-code: a library that reads, prints and checks fir, and a driver, `funk`. It
-holds no compiler yet. See [status](#status) for what exists and what does
-not. Agents should read
+code: a library that reads, prints and checks fir, a naive x86-64 backend,
+and a driver, `funk`, that compiles fir to an executable for x86-64 Linux.
+See [status](#status) for what exists and what does not. Agents should read
 [`AGENTS.md`](AGENTS.md) before they start a task.
 
 ## Goals and direction
@@ -146,7 +146,11 @@ are on `main`:
   reference interpreter's executable, `fir-ref fmt`
   ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
   op of every dialect. Lean reprints what Rust prints, byte for byte, on the
-  shared texts and on modules from the Rust generator.
+  shared texts and on modules from the Rust generator. Lean proves that
+  parsing a printed module gives the module back, and that every module
+  the parser gives is well formed
+  ([#11](https://github.com/pmatos/funk/issues/11),
+  [#105](https://github.com/pmatos/funk/issues/105)).
 - The naive x86-64 backend, `funk-x86-64`
   ([#12](https://github.com/pmatos/funk/issues/12)). `funk build` compiles
   `const`, `add`, `sub` and `mul` with their flags, `freeze`, the bitwise
@@ -247,10 +251,9 @@ are on `main`:
 
 These parts of M0 do not exist yet:
 
-- A `fir-ref` that reads and prints texts nested to any depth: today it
-  overflows its stack on texts nested millions of levels deep
+- A `fir-ref` that reads texts nested to any depth: today its readers
+  overflow their stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
-- The proof that parsing a printed module gives the module back.
 
 The epic's sub-issues list the open work in full.
 

@@ -29,18 +29,24 @@ The chapters follow the WebAssembly specification:
 * _Execution_ explains poison and immediate UB in plain words, then gives
   what a run can end with, what a function shows to an observer, the
   refinement relation that defines correctness, and how each op treats
-  poison.
+  poison. It then gives the interpreter, the execution rules of every
+  core op with the proofs that they meet the poison obligations, the
+  exhaustive, scripted and sampled modes that `fir-ref run` walks, and
+  the proofs about runs: fuel monotonicity, progress, no stuck path, and
+  refinement through calls.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, the round-trip properties, and the
-  parser.
+  parser, with the proofs that parsing a printed module gives it back and
+  that every module the parser gives is well formed.
 
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every
-dialect, and the core dialect of M0 is its first instance. The rules of each
-op family, for validation and execution, are added by the tickets that build
-the family. The decisions behind the definitions are architecture decision
-records (ADRs), cited by their ids, such as ADR-2026-10-29-2014. Each
-citation links to the ADR in the appendix, which holds every ADR.
+dialect, and the core dialect of M0 is its first instance. Each op family
+of the core dialect has its execution rules, and the proofs of its
+obligations, in sections of their own. The decisions behind the
+definitions are architecture decision records (ADRs), cited by their ids,
+such as ADR-2026-10-29-2014. Each citation links to the ADR in the
+appendix, which holds every ADR.
 
 # Abstract syntax
 

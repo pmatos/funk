@@ -21,7 +21,7 @@ runtime gives a program, so a text nested millions of levels deep overflows
 its stack until the next stage of #47 replaces them too. `validate` runs the
 spec's validation check, which walks nested blocks with `FirRef.allBlocks`
 (ADR-2026-10-30-1742). `run` runs the spec's interpreter in its tree of
-choices, in scripted or exhaustive mode (`FirRef.Run`).
+choices, in scripted, exhaustive or sampled mode (`FirRef.Run`).
 -/
 
 namespace FirRef
