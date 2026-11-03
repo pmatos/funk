@@ -4,8 +4,9 @@ import Fir.Syntax.Module
 Validation decides which terms are fir programs. Like the Wasm spec, it is a
 judgement over the abstract syntax, separate from it: the terms of the
 previous chapter can say things that make no sense, such as using a value
-that is never defined, and validation rules them out. Execution is defined
-for valid modules only.
+that is never defined, and validation rules them out. Execution gives a
+meaning to valid modules only: the interpreter runs any module, but only
+the runs of a valid one mean something (ADR-2026-10-30-1856).
 
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation

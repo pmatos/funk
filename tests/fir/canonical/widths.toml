@@ -1,5 +1,5 @@
-# Tests of widths.fir: several results, and widths that the backend does
-# not lower (i7, i33, i128 and the widest, i16777215). Each test is
+# Tests of widths.fir: several results, widths that the backend does not
+# lower (i7, i33 and the widest, i16777215), and i128. Each test is
 # interpreter-only and states fir-ref's result.
 tests = [
   { func = "@booleans", expect = ["true", "false"] },

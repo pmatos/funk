@@ -76,7 +76,7 @@ theorem Core.behaviour_isRefinedBy_trans {a b c : Behaviour Core.Obs} :
 The runs of a core function with parameter types `ts`: its run on each
 argument vector of those types. A value of `iN` may be poison, so poison
 arguments are part of the type, and function refinement covers them
-(choice 23).
+(the section on refining functions).
 -/
 abbrev Core.FuncRuns (ts : List Core.Ty) : Type := Fir.FuncRuns (HVector toType ts) Core.Obs
 
