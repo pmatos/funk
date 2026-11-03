@@ -45,6 +45,13 @@ class PlantedTargets(Case):
         toml += '\n[[bin]]\nname = "x"\npath = "src/lib.rs"\nedition = "2021"\n'
         self.assert_fails("[bin] edition: a target is on", ir_toml=toml)
 
+    def test_a_target_on_the_2024_edition_passes(self):
+        toml = (REPO / IR_TOML).read_text() + '\n[lib]\nedition = "2024"\n'
+        self.assertEqual(check(ir_toml=toml), [])
+        toml = (REPO / IR_TOML).read_text()
+        toml += '\n[[bin]]\nname = "x"\npath = "src/lib.rs"\nedition = "2024"\n'
+        self.assertEqual(check(ir_toml=toml), [])
+
     def test_a_proc_macro(self):
         """rustc does not report `unsafe_code` in a proc macro's output."""
         base = (REPO / IR_TOML).read_text() + "\n[lib]\n"
@@ -129,6 +136,11 @@ class PlantedEditionAndDoctests(Case):
         self.assert_fails(f"{IR_TOML}: the edition is not", ir_toml=toml, ir=ir)
         root = (REPO / "Cargo.toml").read_text().replace('"2024"', '"2021"')
         self.assert_fails("the workspace's edition is 2021", root=root)
+
+    def test_the_2024_edition_by_its_name_passes(self):
+        """`cargo new` writes `edition = "2024"`, the workspace's edition."""
+        toml = real(IR_TOML, "edition.workspace = true", 'edition = "2024"')
+        self.assertEqual(check(ir_toml=toml), [])
 
     def test_a_library_whose_doctests_may_use_unsafe_code(self):
         ir = "//! ```\n//! unsafe { std::hint::unreachable_unchecked() }\n//! ```\n"

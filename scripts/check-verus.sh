@@ -25,8 +25,9 @@ if ! verus=$(command -v verus); then
     echo "https://github.com/verus-lang/verus/releases and put its directory on PATH." >&2
     exit 1
 fi
-# The release's own cargo-verus, not another one on PATH or in ~/.cargo/bin.
-cargo_verus="$(dirname "$verus")/cargo-verus"
+# The release's own cargo-verus, not another one on PATH or in ~/.cargo/bin,
+# found beside the real binary when `verus` on PATH is a symlink.
+cargo_verus="$(dirname "$(readlink -f "$verus")")/cargo-verus"
 if [[ ! -x "$cargo_verus" ]]; then
     echo "$cargo_verus is missing: reinstall Verus $pinned, whose zip holds it." >&2
     exit 1
@@ -68,7 +69,7 @@ EOF
 # --check-toolchain fails when vstd's version is not the one that this
 # Verus release ships.
 for crate in "${crates[@]}"; do
-    cargo clean --quiet --target-dir target/verus -p "$crate"
+    cargo clean --locked --quiet --target-dir target/verus -p "$crate"
 done
 "$cargo_verus" verus verify --workspace --locked --check-toolchain \
     --target-dir target/verus -- --output-json >"$work/results.json"

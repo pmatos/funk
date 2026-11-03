@@ -129,6 +129,16 @@ class PlantedBlindSpots(Case):
         ir = "#[cfg(not(verus_keep_ghost_body))]\npub fn f() {}\n"
         self.assert_fails("`verus_keep_ghost_body`", ir=ir)
 
+    def test_a_verus_word_outside_a_cfg(self):
+        """The rule over-approximates: any `verus_*` word fails, and the
+        message says what to do."""
+        ir = "pub fn verus_version() -> u32 {\n    0\n}\n"
+        self.assert_fails(
+            "`verus_version` in verus_version: no identifier in the workspace"
+            " starts with `verus_`",
+            ir=ir,
+        )
+
     def test_a_cfg_on_the_mod_that_mounts_a_verified_module(self):
         lib = real(FDS_LIB, "))]\nmod record;", ', not(feature = "x")))]\nmod record;')
         self.assert_fails("`not` on `mod record`", fds_lib=lib)

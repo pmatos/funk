@@ -148,10 +148,11 @@ rest.
     item; and any `verifier::` or `verus::` attribute but
     `verifier::external_body`, such as `exec_allows_no_decreases_clause`,
     with which `loop {}` proves anything;
-  - a word that starts with `verus_`, such as `verus_keep_ghost`, a
-    manifest that declares one to `check-cfg`, and `cfg` or `cfg_attr` in
-    a verified module: Verus sets those configurations and cargo does not,
-    so they select code that Verus may not see;
+  - a word that starts with `verus_` in any crate, such as
+    `verus_keep_ghost`, a manifest that declares one to `check-cfg`, and
+    `cfg` or `cfg_attr` in a verified module: Verus sets those
+    configurations and cargo does not, so they select code that Verus may
+    not see;
   - a verified module whose crate does not opt in, one that its parent
     does not mount by one `mod` item, a `mod` item that carries anything
     but a `target_os` cfg, and a trusted item that is gone;
@@ -206,7 +207,60 @@ and now carries a proof.
   what its lints enforce, except where rustc does not report them: in a
   proc macro's output, so the workspace has no proc-macro crate. It
   over-approximates: a name such as `external_count` in a crate that uses
-  vstd fails too, and is renamed. A helper of `record_slots` is a proof or
-  spec function, or code in its body; a new exec function needs a new ADR.
+  vstd fails too, and is renamed; so does `verus_version` in any crate.
+- The check binds every crate of the workspace, not only
+  `funk-start-fds`. In any crate:
+  - no `unsafe` but on the trusted base; more unsafe code needs a new
+    verified module, a new ADR and a human ruling;
+  - no `allow`, `warn` or `expect` of `unsafe_code`, only `forbid` or
+    `deny`;
+  - `[lints] workspace = true`, or `unsafe_code = "forbid"` in its own
+    `[lints.rust]`, which then repeats each workspace lint it keeps;
+    `[workspace.lints]` keeps `forbid`;
+  - the 2024 edition, by `edition.workspace = true` or
+    `edition = "2024"`, and no target on another edition;
+  - each library root holds `#![doc(test(attr(forbid(unsafe_code))))]`,
+    as an inner attribute of its own, even with `doctest = false`;
+  - no build script, no `build` key but `false`, no `links`: no crate
+    generates code at build time or links a native library of its own;
+  - no proc-macro crate: no derive or attribute macro of our own;
+  - no tracked `.cargo/config.toml` or `.cargo/config`: no shared alias,
+    runner, linker, `rustflags` or `[env]`;
+  - every target `path` is a tracked `.rs` file;
+  - no identifier that starts with `verus_`, even in a crate without
+    vstd, and no `check-cfg` entry for one;
+  - no `as verus` and no `macro_rules! verus`;
+  - no `[patch]` or `[replace]` of vstd or a `verus_*` crate;
+  - a commit that touches `crates/`, a Cargo file or the Rust pin needs
+    the Verus release that ADR-2026-11-03-0809 pins, and a Rust bump
+    waits for a Verus release on that toolchain.
+- In `funk-start-fds`, beyond the pins:
+  - `lib.rs` is pinned whole: a code change to it, such as a new public
+    function, a derive, a `#[cfg(test)]` test or a new target in
+    `mod record`'s cfg, needs a new ADR and a human ruling; comments and
+    layout may change, but a token such as a trailing comma may not;
+  - it depends on vstd alone, by a plain version: no `libc`, no
+    dev-dependency, no target dependency, and no target `path`;
+  - no file but `record.rs` uses vstd or `verus!`, and none holds
+    `extern crate`, `include!` or a `path` attribute;
+  - no `assume`, `admit`, `axiom`, `external`, or word that starts with
+    `assume_` or `external_`, even as a local name, in any of its files,
+    its tests included;
+  - no `verifier::` or `verus::` attribute but `verifier::external_body`
+    on a trusted item, so no `rlimit`, `opaque`, `spinoff_prover` or
+    `loop_isolation`.
+- What changes in `record.rs` without a new ADR is `record_slots`' body
+  and new proof or spec functions, and these are narrow: nothing outside
+  `verus!`, so a lemma's import is a full path; inside it no exec
+  function, constant, type, `use` or `broadcast use`; no macro call,
+  such as `calc!`, `seq!` or `assert_seqs_equal!`; no `cfg`, so no
+  `#[cfg(test)]` tests in the file; a new function names no `Slots`, so
+  no lemma about the slots, and takes no name that a pinned text holds,
+  such as `code` or `closed`; and the body names `getfd` and `store`
+  once each, and `record`, `finish` and `take_slots` not at all, even as
+  local names. A new exec function needs a new ADR.
+- A new pin needs a new ADR that restates every digest, since this one
+  is immutable, and `ADR` in `scripts/check_unsafe_code.py` pointed at
+  it: the test that the ADR lists every digest reads that file alone.
 - Verus checks the module on x86-64 Linux, in CI; the other ELF Unix targets
   build the same source.

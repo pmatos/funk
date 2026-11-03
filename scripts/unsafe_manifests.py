@@ -126,7 +126,8 @@ def edition_problems(path: str, data: dict) -> list[str]:
         edition = data["workspace"].get("package", {}).get("edition")
         if edition != EDITION:
             found.append(f"{path}: the workspace's edition is {edition}, not {EDITION}")
-    if "package" in data and data["package"].get("edition") != {"workspace": True}:
+    crate = data.get("package", {}).get("edition")
+    if "package" in data and crate not in ({"workspace": True}, EDITION):
         found.append(
             f"{path}: the edition is not the workspace's {EDITION}, in which an"
             " extern block and an unsafe attribute say `unsafe`"
@@ -158,7 +159,7 @@ def target_problems(
         for table in value if isinstance(value, list) else [value]:
             if not isinstance(table, dict):
                 continue
-            if "edition" in table:
+            if table.get("edition", EDITION) != EDITION:
                 found.append(
                     f"{path}: [{key}] edition: a target is on the workspace's"
                     f" {EDITION} edition, in which an unsafe attribute says `unsafe`"

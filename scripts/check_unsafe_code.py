@@ -302,7 +302,13 @@ def mount_problems(root: Path, module: str, mount: str, rust_files: list[str]):
 
 
 def why(mark: str) -> str:
-    if is_verus_cfg(mark) or mark in ("cfg", "cfg_attr"):
+    if is_verus_cfg(mark):
+        return (
+            "no identifier in the workspace starts with `verus_`, since Verus"
+            " sets configurations of such names, which select code that Verus"
+            " may not see; rename it"
+        )
+    if mark in ("cfg", "cfg_attr"):
         return "Verus would not see the code that it selects"
     if mark in ("unsafe", "unsafe_code"):
         return "unsafe code only on a trusted item of a verified module"

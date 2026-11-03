@@ -87,11 +87,11 @@ repos:
         pass_filenames: false
         files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$|scripts/verus_report\.py$)
       - id: verus-report-test
-        name: The verus-proof hook's report reader passes its tests
-        entry: python -m unittest discover -s scripts -p "test_verus_report.py"
+        name: The verus-proof hook's script and report reader pass their tests
+        entry: python -m unittest discover -s scripts -p "test_*verus*.py"
         language: python
         pass_filenames: false
-        files: ^(crates/[^/]+/Cargo\.toml$|scripts/(test_)?verus_report\.py$)
+        files: ^(crates/[^/]+/Cargo\.toml$|rust-toolchain\.toml$|scripts/((test_)?verus_report\.py|test_check_verus\.py|(check-verus|rust-env)\.sh)$)
       # Unsafe code only where Verus proves it, and no assumption outside the
       # trusted base that ADR-2026-11-03-0808 lists.
       - id: unsafe-code
