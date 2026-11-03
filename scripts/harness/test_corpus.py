@@ -8,6 +8,7 @@ from pathlib import Path
 from corpus import DEFAULT_FUEL, Test, load, parse_rejects, parse_tests, result_types
 from sets import Declared
 
+LICENCE = (Path(__file__).parents[2] / "tests/fir/llvm/LICENSE.TXT").read_text()
 SEVEN = "func @seven() -> i32 {\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}\n"
 REJECT = '[[reject]]\nverdict = "parse-error"\nrule = "r"\ntext = "x"\n'
 
@@ -290,7 +291,7 @@ class Ported(unittest.TestCase):
     def test_a_ported_module_names_its_source(self):
         c = self.corpus(
             [
-                ("llvm/LICENSE.TXT", "the licence"),
+                ("llvm/LICENSE.TXT", LICENCE),
                 ("llvm/README.md", "the notice"),
                 ("llvm/shift.fir", SEVEN),
                 ("llvm/shift.toml", ported('{ func = "@seven", from = "@shl_by_0" }')),
@@ -354,6 +355,25 @@ class Ported(unittest.TestCase):
             [m.name for m in c.modules],
             ["canonical/seven.fir", "llvm/a.fir", "llvm/b.fir", "llvm/c.fir"],
         )
+
+    def test_the_licence_is_llvm_s(self):
+        for text in ["", LICENCE + "\n", LICENCE.replace("Apache", "Apache-ish", 1)]:
+            c = self.corpus(
+                [
+                    ("llvm/LICENSE.TXT", text),
+                    ("llvm/README.md", "the notice"),
+                    ("llvm/shift.fir", SEVEN),
+                    (
+                        "llvm/shift.toml",
+                        ported('{ func = "@seven", from = "@shl_by_0" }'),
+                    ),
+                ]
+            )
+            self.assertEqual(len(c.errors), 1, c.errors)
+            self.assertIn(
+                "LICENSE.TXT: is not LLVM's licence as the pinned llvm-project commit has it",
+                c.errors[0],
+            )
 
 
 if __name__ == "__main__":

@@ -66,13 +66,13 @@ func @sdiv1(%X: i32) -> i1 {
   ret %B @7
 }
 
-func @lshr2(%X: i32) -> i1 {
+func @lshr2(%x: i32) -> i1 {
 ^entry:
-  %c: i32 = const 30 @8
-  %A: i32 = lshr %X, %c @8
-  %k: i32 = const 8 @8
-  %B: i1 = icmp ugt %A, %k @8
-  ret %B @8
+  %c30: i32 = const 30 @8
+  %s: i32 = lshr %x, %c30 @8
+  %c8: i32 = const 8 @8
+  %c: i1 = icmp ugt %s, %c8 @8
+  ret %c @8
 }
 
 func @lshr_sgt_false(%X: i32) -> i1 {
@@ -84,13 +84,13 @@ func @lshr_sgt_false(%X: i32) -> i1 {
   ret %B @9
 }
 
-func @ashr2(%X: i32) -> i1 {
+func @ashr2(%x: i32) -> i1 {
 ^entry:
-  %c: i32 = const 30 @10
-  %A: i32 = ashr %X, %c @10
-  %k: i32 = const -5 @10
-  %B: i1 = icmp slt %A, %k @10
-  ret %B @10
+  %c30: i32 = const 30 @10
+  %s: i32 = ashr %x, %c30 @10
+  %m5: i32 = const -5 @10
+  %c: i1 = icmp slt %s, %m5 @10
+  ret %c @10
 }
 
 func @ashr_sgt_false(%X: i32) -> i1 {

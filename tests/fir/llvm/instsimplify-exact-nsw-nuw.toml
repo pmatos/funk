@@ -7,10 +7,18 @@
 # the LLVM function that the function is. Dividing twice by the signed
 # minimum gives 0: udiv by 2^31 leaves 0 or 1, and 0 or 1 by 2^31 is 0.
 # @div2 divides by -1 first, which is UB on the signed minimum; LLVM's 0
-# refines it. @shift1 to @shift5 use lshr exact, ashr exact, shl nuw and
-# shl nsw, which fir's shifts do not have, and are left out.
+# refines it.
 #
-# No other function of the file is left out.
+# @shift2 is the negative test that shows lshr exact at work in @shift1:
+# without exact, %A lshr %B shl %B is %A with its low %B bits cleared, -16
+# on -1 and 4, not %A. LLVM's shl nuw is dropped, a flag that fir's shl
+# does not have: the lshr clears the top %B bits, which are the bits that
+# the shl shifts out, so the flag never gives poison, and a shift by 32 or
+# more is poison with or without it.
+#
+# @shift1 and @shift3 to @shift5 are left out: their folds rest on lshr
+# exact, ashr exact, shl nuw and shl nsw, flags that fir's shifts do not
+# have.
 source = { file = "llvm/test/Transforms/InstSimplify/exact-nsw-nuw.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
 tests = [
   { func = "@div1", args = ["-1"], results = [{ values = ["0"], witness = [] }], from = "@div1" },
@@ -22,4 +30,10 @@ tests = [
   { func = "@div2", args = ["2147483647"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
   { func = "@div2", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "@div2" },
   { func = "@div2", args = ["-2147483648"], expect = "ub", from = "@div2" },
+  { func = "@shift2", args = ["-1", "4"], results = [{ values = ["-16"], witness = [] }], from = "@shift2" },
+  { func = "@shift2", args = ["13", "2"], results = [{ values = ["12"], witness = [] }], from = "@shift2" },
+  { func = "@shift2", args = ["12", "2"], results = [{ values = ["12"], witness = [] }], from = "@shift2" },
+  { func = "@shift2", args = ["5", "0"], results = [{ values = ["5"], witness = [] }], from = "@shift2" },
+  { func = "@shift2", args = ["-1", "31"], results = [{ values = ["-2147483648"], witness = [] }], from = "@shift2" },
+  { func = "@shift2", args = ["5", "32"], expect = ["poison"], from = "@shift2" },
 ]

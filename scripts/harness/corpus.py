@@ -11,12 +11,14 @@
   and, for each test, the function, CHECK lines or RUN line of that test
   that the test runs. LLVM's
   licence, `llvm/LICENSE.TXT`, and a notice, `llvm/README.md`, are beside
-  them (ADR-2026-11-03-0643).
+  them (ADR-2026-11-03-0643), and the licence is the one of the pinned
+  commit.
 
 Anything else in the corpus is a format error, as is a sidecar key that the
 format does not have.
 """
 
+import hashlib
 import re
 import tomllib
 from dataclasses import dataclass, field
@@ -31,6 +33,9 @@ TOP = ("README.md", "canonical", "noncanonical", "reject", "llvm")
 # The files beside the modules ported from LLVM: its licence, and the
 # notice that says where they come from.
 NOTICES = ("LICENSE.TXT", "README.md")
+# The SHA-256 of llvm/LICENSE.TXT at the pinned llvm-project commit, less
+# the empty line that ends it, which the end-of-file-fixer hook removes.
+LICENCE_SHA256 = "3340babe8ac7bc6ae294d93aa01c310a250d43d5b760e5c12954882d4e5c83c7"
 
 
 @dataclass(frozen=True)
@@ -141,6 +146,14 @@ def load_ported(directory: Path, c: Corpus):
                 f"{directory / name}: the modules ported from LLVM keep its"
                 " licence and a notice beside them"
             )
+    licence = directory / "LICENSE.TXT"
+    if (
+        licence.is_file()
+        and hashlib.sha256(licence.read_bytes()).hexdigest() != LICENCE_SHA256
+    ):
+        c.errors.append(
+            f"{licence}: is not LLVM's licence as the pinned llvm-project commit has it"
+        )
     found = files(directory, (".fir", ".toml"), c.errors, NOTICES)
     firs = {p.stem for p in found if p.suffix == ".fir"}
     commits = set()

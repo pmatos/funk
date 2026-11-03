@@ -17,7 +17,9 @@
 # have: the shift of a zext from i32 by 32 never wraps, so the flag never
 # gave poison. @shl_or_shr.folded is its CHECK lines, zext %a, and both
 # run on the same arguments. @shl_or_shr2 is the negative test, which LLVM
-# does not fold: on 0 and -2147483648 it gives 1, not zext %a.
+# does not fold: on 0 and -2147483648 it gives 1, not zext %a. Its shl nuw
+# is dropped too: a zext from i32 shifted left by 31 stays below 2^63, so
+# it never wraps.
 #
 # @poison to @poison6 shift by poison or shift poison. fir has no poison
 # constant, so each writes LLVM's poison as %p = shl %n, %n with %n = 32,

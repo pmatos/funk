@@ -14,15 +14,10 @@
 # x86-divide-by-constant-i64 the others. Each function divides, or takes
 # the remainder, by a constant, which LLVM lowers with a magic multiply
 # and shifts. Native code divides with div or idiv, and each test checks
-# the quotient on values at both ends of the range and between. LLVM
-# writes constants of 2^63 or more unsigned, and fir writes them as the
-# negative values of the same bits: 13835058055282163710 is
-# -4611686018427387906. @PR38622 and @PR38622_signed return a struct of an
-# i64 and an i32 through insertvalue on undef; fir has no undef and no
-# structs, and the functions return the two values as their two results.
-# The parameter attributes zeroext and signext, which tell the x86 calling
-# convention how to pass a narrow value, are dropped: they do not change
-# what the function computes.
+# the quotient on values at both ends of the range and between. The
+# parameter and result attributes zeroext and signext of @test1 to @test4
+# and @test6, which tell the x86 calling convention how to pass a narrow
+# value, are dropped: they do not change what the function computes.
 #
 # The file's functions that neither this module nor
 # x86-divide-by-constant-i64 holds are left out: the divisions by 15, 257

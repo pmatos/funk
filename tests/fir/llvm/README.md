@@ -13,7 +13,8 @@ The LLVM Project is under the Apache License v2.0 with LLVM Exceptions
 (`Apache-2.0 WITH LLVM-exception`). Its licence, copied from
 `llvm/LICENSE.TXT` at that commit, is in [`LICENSE.TXT`](LICENSE.TXT)
 beside this file. Only the empty line that ends LLVM's file is gone, as
-the repository's `end-of-file-fixer` check removes it. The files of this
+the repository's `end-of-file-fixer` check removes it, and the harness
+checks that the copy is that licence. The files of this
 directory are distributed under that licence, not under funk's MIT
 licence.
 
@@ -71,7 +72,8 @@ tests = [
   line, that the test's function is.
 
 Each function's ops carry a location that names the LLVM file and the
-lines of the function, or of its CHECK lines, that they come from, so
+lines of the function, of its CHECK lines or of the file's RUN line that
+they come from, so
 each `.fir` text says, in its own canonical form, that it is derived from
 LLVM.
 
@@ -79,7 +81,7 @@ LLVM.
 
 | Module | LLVM test | Functions | Differential | Interpreter-only |
 | --- | --- | ---: | ---: | ---: |
-| `instcombine-apint-add` | `llvm/test/Transforms/InstCombine/apint-add.ll` | 14 | 0 | 54 |
+| `instcombine-apint-add` | `llvm/test/Transforms/InstCombine/apint-add.ll` | 16 | 0 | 86 |
 | `instcombine-apint-div1` | `llvm/test/Transforms/InstCombine/apint-div1.ll` | 6 | 0 | 32 |
 | `instcombine-apint-div2` | `llvm/test/Transforms/InstCombine/apint-div2.ll` | 6 | 0 | 32 |
 | `instcombine-apint-mul1` | `llvm/test/Transforms/InstCombine/apint-mul1.ll` | 2 | 0 | 14 |
@@ -90,14 +92,15 @@ LLVM.
 | `instsimplify-2010-12-20-Boolean` | `llvm/test/Transforms/InstSimplify/2010-12-20-Boolean.ll` | 4 | 8 | 0 |
 | `instsimplify-cast` | `llvm/test/Transforms/InstSimplify/cast.ll` | 2 | 5 | 0 |
 | `instsimplify-cmp_ext` | `llvm/test/Transforms/InstSimplify/cmp_ext.ll` | 18 | 68 | 0 |
-| `instsimplify-div` | `llvm/test/Transforms/InstSimplify/div.ll` | 27 | 51 | 37 |
-| `instsimplify-exact-nsw-nuw` | `llvm/test/Transforms/InstSimplify/exact-nsw-nuw.ll` | 2 | 8 | 1 |
+| `instsimplify-div` | `llvm/test/Transforms/InstSimplify/div.ll` | 27 | 53 | 37 |
+| `instsimplify-exact-nsw-nuw` | `llvm/test/Transforms/InstSimplify/exact-nsw-nuw.ll` | 3 | 13 | 2 |
 | `instsimplify-freeze` | `llvm/test/Transforms/InstSimplify/freeze.ll` | 11 | 33 | 0 |
 | `instsimplify-icmp-constant` | `llvm/test/Transforms/InstSimplify/icmp-constant.ll` | 30 | 68 | 15 |
 | `instsimplify-rem-widths` | `llvm/test/Transforms/InstSimplify/rem.ll` | 1 | 0 | 6 |
-| `instsimplify-rem` | `llvm/test/Transforms/InstSimplify/rem.ll` | 20 | 48 | 19 |
-| `instsimplify-sdiv` | `llvm/test/Transforms/InstSimplify/sdiv.ll` | 6 | 12 | 9 |
-| `instsimplify-select` | `llvm/test/Transforms/InstSimplify/select.ll` | 30 | 91 | 4 |
+| `instsimplify-rem` | `llvm/test/Transforms/InstSimplify/rem.ll` | 31 | 74 | 27 |
+| `instsimplify-sdiv` | `llvm/test/Transforms/InstSimplify/sdiv.ll` | 6 | 12 | 10 |
+| `instsimplify-select-widths` | `llvm/test/Transforms/InstSimplify/select.ll` | 3 | 0 | 18 |
+| `instsimplify-select` | `llvm/test/Transforms/InstSimplify/select.ll` | 36 | 112 | 4 |
 | `instsimplify-shift-widths` | `llvm/test/Transforms/InstSimplify/shift.ll` | 5 | 0 | 25 |
 | `instsimplify-shift` | `llvm/test/Transforms/InstSimplify/shift.ll` | 17 | 33 | 21 |
 | `instsimplify-signed-div-rem-sdiv` | `llvm/test/Transforms/InstSimplify/signed-div-rem.ll` | 16 | 63 | 1 |
@@ -112,4 +115,4 @@ LLVM.
 | `x86-i128-udiv` | `llvm/test/CodeGen/X86/i128-udiv.ll` | 10 | 60 | 0 |
 | `x86-legalize-shift-64` | `llvm/test/CodeGen/X86/legalize-shift-64.ll` | 4 | 44 | 0 |
 | `x86-shift-i128` | `llvm/test/CodeGen/X86/shift-i128.ll` | 10 | 51 | 24 |
-| All 33 modules | | 328 | 964 | 423 |
+| All 34 modules | | 351 | 1018 | 483 |

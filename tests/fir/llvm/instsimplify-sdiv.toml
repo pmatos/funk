@@ -8,9 +8,11 @@
 # is -1. With nsw on the negation, the input is poison or UB wherever that
 # is not so: at 0 the division is 0 by 0, UB; at the signed minimum the
 # negation is poison, which gives poison as a dividend and UB as a
-# divisor; and @knownnegation's operands are both poison when %x - %y
-# overflows. LLVM's -1 refines each. The negative tests drop nsw, and on
-# the signed minimum the quotient is 1, not -1.
+# divisor; and where %x - %y overflows, @knownnegation's %xy is poison,
+# and so is %yx, and a poison divisor is UB, unless %x - %y is 2^31: then
+# %yx is the signed minimum, and the poison dividend gives poison, as on 0
+# and the signed minimum. LLVM's -1 refines each. The negative tests drop
+# nsw, and on the signed minimum the quotient is 1, not -1.
 #
 # The file's other functions are left out: those on vectors, and
 # @knownnegation_bad_1 and @knownnegation_bad_2, variants of
@@ -27,6 +29,7 @@ tests = [
   { func = "@knownnegation", args = ["3", "3"], expect = "ub", from = "@knownnegation" },
   { func = "@knownnegation", args = ["-2147483648", "1"], expect = "ub", from = "@knownnegation" },
   { func = "@knownnegation", args = ["-2147483648", "0"], expect = "ub", from = "@knownnegation" },
+  { func = "@knownnegation", args = ["0", "-2147483648"], expect = ["poison"], from = "@knownnegation" },
   { func = "@negated_operand_2", args = ["10"], results = [{ values = ["-1"], witness = [] }], from = "@negated_operand_2" },
   { func = "@negated_operand_2", args = ["-2147483648"], results = [{ values = ["-1"], witness = [] }], from = "@negated_operand_2" },
   { func = "@negated_operand_2", args = ["5"], expect = "ub", from = "@negated_operand_2" },

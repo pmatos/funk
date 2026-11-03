@@ -10,17 +10,19 @@
 # add 1 to a value whose bit 0 is clear, which is an or, and @test8 adds
 # the signed minimum to an xor with a value whose top bit is set, which is
 # one xor; @sext zero-extends %x xor -8 from i4 to i7 and adds -8 with
-# nsw, which is a sext. Each fold that gives other ops runs beside its
-# CHECK lines on the same arguments. @test9's CHECK lines write or
-# disjoint, a flag that fir's or does not have: bit 0 of the and is clear,
-# so the flag never gives poison there, and the fir form drops it. LLVM
-# writes @test4's mask, 562949953421310, unsigned; fir writes that i49
-# constant -2. The widths are ones that the backend does not lower, so
-# every test is interpreter-only.
+# nsw, which is a sext. @sext_multiuse uses that xor and that zext again,
+# to divide, which does not stop the fold, and runs beside its CHECK lines
+# on all 16 values of %x: on 0 its first sdiv, and on -8 its second,
+# divides by 0, which is UB in both forms. Each fold that gives other ops
+# runs beside its CHECK lines on the same arguments. @test9's CHECK lines
+# write or disjoint, a flag that fir's or does not have: bit 0 of the and
+# is clear, so the flag never gives poison there, and the fir form drops
+# it. LLVM writes @test4's mask, 562949953421310, unsigned; fir writes
+# that i49 constant -2. The widths are ones that the backend does not
+# lower, so every test is interpreter-only.
 #
-# The file's other functions are left out: @test3vec and @sext_vec work on
-# vectors, and @sext_multiuse is a variant of @sext whose other uses
-# divide.
+# The file's other functions, @test3vec and @sext_vec, work on vectors and
+# are left out.
 source = { file = "llvm/test/Transforms/InstCombine/apint-add.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
 tests = [
   { func = "@test1", args = ["true"], expect = ["true"], from = "@test1" },
@@ -49,6 +51,38 @@ tests = [
   { func = "@sext.folded", args = ["-1"], expect = ["-1"], from = "@sext, its CHECK lines" },
   { func = "@sext.folded", args = ["0"], expect = ["0"], from = "@sext, its CHECK lines" },
   { func = "@sext.folded", args = ["7"], expect = ["7"], from = "@sext, its CHECK lines" },
+  { func = "@sext_multiuse", args = ["-8"], expect = "ub", from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-7"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-6"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-5"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-4"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-3"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-2"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["-1"], expect = ["-1"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["0"], expect = "ub", from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["1"], expect = ["1"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["2"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["3"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["4"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["5"], expect = ["0"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["6"], expect = ["-1"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse", args = ["7"], expect = ["-2"], from = "@sext_multiuse" },
+  { func = "@sext_multiuse.folded", args = ["-8"], expect = "ub", from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-7"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-6"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-5"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-4"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-3"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-2"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["-1"], expect = ["-1"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["0"], expect = "ub", from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["1"], expect = ["1"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["2"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["3"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["4"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["5"], expect = ["0"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["6"], expect = ["-1"], from = "@sext_multiuse, its CHECK lines" },
+  { func = "@sext_multiuse.folded", args = ["7"], expect = ["-2"], from = "@sext_multiuse, its CHECK lines" },
   { func = "@test5", args = ["0"], expect = ["0"], from = "@test5" },
   { func = "@test5", args = ["-1"], expect = ["-1"], from = "@test5" },
   { func = "@test5", args = ["-1298074214633706907132624082305024"], expect = ["-1298074214633706907132624082305024"], from = "@test5" },

@@ -20,9 +20,6 @@
 # -4611686018427387906. @PR38622 and @PR38622_signed return a struct of an
 # i64 and an i32 through insertvalue on undef; fir has no undef and no
 # structs, and the functions return the two values as their two results.
-# The parameter attributes zeroext and signext, which tell the x86 calling
-# convention how to pass a narrow value, are dropped: they do not change
-# what the function computes.
 #
 # The file's functions that neither this module nor
 # x86-divide-by-constant-narrow holds are left out: the divisions by 15,

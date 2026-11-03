@@ -9,11 +9,10 @@
 # the others. A dividend whose magnitude is known to be below the
 # divisor's divides to 0 and has itself as its remainder: an i8 extended
 # to i32 is below 129 and 256, and an and with 253 or an or with -253 is
-# below 254. Each negative test, which LLVM does not fold, moves the
-# divisor to the edge and shows a quotient of 1 or -1. The srem functions
-# run beside their CHECK lines, which return the extended or masked
-# operand. @sdiv_min_dividend divides -32768 by a zext from i8: by 0 it is
-# UB, and @sdiv_min_divisor divides by -32768 and gives 0.
+# below 254. The functions that LLVM folds run beside their CHECK lines,
+# which return the extended or masked operand. Each negative test, which
+# LLVM does not fold, moves the divisor to the edge, where the dividend
+# can reach it and the remainder is 0, not the dividend.
 #
 # The file's functions that neither this module nor
 # instsimplify-signed-div-rem-sdiv holds are variants of these with the

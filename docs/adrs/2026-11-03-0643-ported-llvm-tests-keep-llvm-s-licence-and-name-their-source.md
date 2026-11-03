@@ -41,12 +41,13 @@ a notice as a comment.
   file's RUN line, that the test's function is. Each sidecar's comment
   starts "Derived from LLVM" and says how its cases were rewritten.
 - **The texts mark themselves.** Each function's ops carry one location,
-  a source range of the LLVM test file: the function's lines, or the
-  CHECK lines that its folded form comes from.
+  a source range of the LLVM test file: the function's lines, the CHECK
+  lines that its folded form comes from, or the file's RUN line.
 - **One commit.** Every module names llvm-project
   `7a941dfb2877a0b8cf30323fefa85ad019e0b0f5`, the tag `llvmorg-23.1.4`.
 - **The harness checks it.** `scripts/harness/corpus.py` reports a
-  missing `LICENSE.TXT` or `README.md`, a module without a sidecar, a
+  missing `LICENSE.TXT` or `README.md`, a `LICENSE.TXT` whose SHA-256 is
+  not that of the pinned commit's licence, a module without a sidecar, a
   sidecar without a well-formed `source`, a test without `from`, any
   other file in the directory, and modules from more than one commit.
   Outside `llvm/`, `source` and `from` are unknown keys.

@@ -19,8 +19,9 @@
 # says. @udiv_exact_mul_nsw and @sdiv_exact_mul_nuw give %x, or poison
 # where the mul's flag or the division's exact breaks; LLVM's %x refines
 # them. The negative tests, which LLVM does not fold, show why:
-# @sdiv_exact_trailing_zeros_eq is defined on 40, @udiv_exact_mul is
-# poison on -1 without nsw, and @udiv_mul_nsw gives 9, not -1, on -1
+# @sdiv_exact_trailing_zeros_eq is defined on 40; @udiv_exact_mul, without
+# nsw, wraps 24 * %x to a multiple of 24 whose quotient is not %x, and
+# gives 0 on 32 and 10 on 42; and @udiv_mul_nsw gives 9, not -1, on -1
 # without exact.
 #
 # The file's other functions are left out: those on vectors, those on
@@ -113,6 +114,8 @@ tests = [
   { func = "@sdiv_exact_mul_nuw", args = ["11"], expect = ["poison"], from = "@sdiv_exact_mul_nuw" },
   { func = "@sdiv_exact_mul_nuw", args = ["-1"], expect = ["poison"], from = "@sdiv_exact_mul_nuw" },
   { func = "@udiv_exact_mul", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@udiv_exact_mul" },
+  { func = "@udiv_exact_mul", args = ["32"], results = [{ values = ["0"], witness = [] }], from = "@udiv_exact_mul" },
+  { func = "@udiv_exact_mul", args = ["42"], results = [{ values = ["10"], witness = [] }], from = "@udiv_exact_mul" },
   { func = "@udiv_exact_mul", args = ["-1"], expect = ["poison"], from = "@udiv_exact_mul" },
   { func = "@udiv_exact_mul", args = ["11"], expect = ["poison"], from = "@udiv_exact_mul" },
   { func = "@udiv_mul_nsw", args = ["5"], results = [{ values = ["5"], witness = [] }], from = "@udiv_mul_nsw" },
