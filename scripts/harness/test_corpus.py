@@ -5,7 +5,15 @@ import tomllib
 import unittest
 from pathlib import Path
 
-from corpus import DEFAULT_FUEL, Test, load, parse_rejects, parse_tests, result_types
+from corpus import (
+    DEFAULT_FUEL,
+    Test,
+    load,
+    param_types,
+    parse_rejects,
+    parse_tests,
+    result_types,
+)
 from sets import Declared
 
 LICENCE = (Path(__file__).parents[2] / "tests/fir/llvm/LICENSE.TXT").read_text()
@@ -23,6 +31,7 @@ class Tests(unittest.TestCase):
             '  { func = "@add3", args = ["1", "2", "3"] },\n'
             "  { func = '@\"a b\"', fuel = 2 },\n"
             '  { func = "@odd", args = ["1"], expect = ["-63", "poison"] },\n'
+            '  { func = "@add3", args = ["poison", "2", "poison"] },\n'
             '  { func = "@f", expect = "ub" },\n'
             '  { func = "@g", fuel = 1, expect = "fuel-exhausted" },\n'
             '  { func = "@none", expect = [] },\n'
@@ -36,6 +45,7 @@ class Tests(unittest.TestCase):
                 Test(m, "@add3", ("1", "2", "3")),
                 Test(m, '@"a b"', (), 2),
                 Test(m, "@odd", ("1",), DEFAULT_FUEL, ("-63", "poison")),
+                Test(m, "@add3", ("poison", "2", "poison")),
                 Test(m, "@f", (), DEFAULT_FUEL, "ub"),
                 Test(m, "@g", (), 1, "fuel-exhausted"),
                 Test(m, "@none", (), DEFAULT_FUEL, ()),
@@ -44,6 +54,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(tests[0].show(), "canonical/m.fir @add3 1 2 3")
         self.assertEqual(tests[1].show(), 'canonical/m.fir --fuel 2 @"a b"')
         self.assertTrue(tests[2].show().endswith("(interpreter only)"))
+        self.assertEqual(tests[3].show(), "canonical/m.fir @add3 poison 2 poison")
 
     def test_choices_and_declared_results(self):
         tests, problems = self.parse(
@@ -187,21 +198,35 @@ class Rejects(unittest.TestCase):
 
 
 class ResultTypes(unittest.TestCase):
+    TEXT = (
+        "func @none() {\n^e:\n  ret @0\n}\n\n"
+        + SEVEN
+        + '\nfunc @"a) -> b \\" {"(%x: i8, %y: i16) -> i16, i8, i8 {\n'
+        "^e:\n  ret %y, %x, %x @0\n}\n\n"
+        "func @t(%x: toy.t(i8, 2)) -> toy.t(i8, 2), i1 {\n^e:\n  ret @0\n}\n"
+    )
+
     def test_signatures(self):
-        text = (
-            "func @none() {\n^e:\n  ret @0\n}\n\n"
-            + SEVEN
-            + '\nfunc @"a) -> b \\" {"(%x: i8, %y: i16) -> i16, i8, i8 {\n'
-            "^e:\n  ret %y, %x, %x @0\n}\n\n"
-            "func @t(%x: toy.t(i8, 2)) -> toy.t(i8, 2), i1 {\n^e:\n  ret @0\n}\n"
-        )
         self.assertEqual(
-            result_types(text),
+            result_types(self.TEXT),
             {
                 "@none": [],
                 "@seven": ["i32"],
                 '@"a) -> b \\" {"': ["i16", "i8", "i8"],
                 "@t": ["toy.t(i8, 2)", "i1"],
+            },
+        )
+
+    def test_parameters(self):
+        text = self.TEXT + "\nfunc @p(%p: ptr, %w: i128, %c: i1) {\n^e:\n  ret @0\n}\n"
+        self.assertEqual(
+            param_types(text),
+            {
+                "@none": [],
+                "@seven": [],
+                '@"a) -> b \\" {"': ["i8", "i16"],
+                "@t": ["toy.t(i8, 2)"],
+                "@p": ["ptr", "i128", "i1"],
             },
         )
 

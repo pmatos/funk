@@ -40,7 +40,8 @@ LICENCE_SHA256 = "3340babe8ac7bc6ae294d93aa01c310a250d43d5b760e5c12954882d4e5c83
 
 @dataclass(frozen=True)
 class Test:
-    """One run of a function. `expect` is None for a differential test,
+    """One run of a function. Each of its `args` is a value spelled as a
+    constant, or `poison` (#123). `expect` is None for a differential test,
     which may declare its `results`; an interpreter-only test expects a
     tuple of values, UB or fuel exhausted, on the path that its `choices`
     name."""
@@ -303,7 +304,9 @@ def test_problem(t, ported: bool = False) -> str | None:
     if not isinstance(func, str) or not func.startswith("@"):
         return "func is the function's symbol, as text writes it, such as @add3"
     if not is_strings(t.get("args", [])):
-        return "args is a list of strings, each a value spelled as a constant"
+        return (
+            "args is a list of strings, each a value spelled as a constant, or poison"
+        )
     fuel = t.get("fuel", DEFAULT_FUEL)
     if not isinstance(fuel, int) or isinstance(fuel, bool) or fuel < 0:
         return "fuel is a number of steps"
@@ -421,6 +424,25 @@ def result_types(text: str) -> dict[str, list[str]]:
             continue
         tail = rest[close + 1 :]
         found[rest[:end]] = split_types(tail[4:]) if tail.startswith(" -> ") else []
+    return found
+
+
+def param_types(text: str) -> dict[str, list[str]]:
+    """The parameter types of each function of a canonical module, by its
+    symbol as text writes it, read from the signature line as
+    `result_types` reads its results: `%NAME: TYPE` for each parameter."""
+    found = {}
+    for line in text.split("\n"):
+        if not line.startswith("func @") or not line.endswith(" {"):
+            continue
+        rest = line[len("func ") : -len(" {")]
+        end = symbol_end(rest)
+        close = closing_paren(rest, end)
+        if close is None:
+            continue
+        inside = rest[end + 1 : close]
+        params = split_types(inside) if inside else []
+        found[rest[:end]] = [p.partition(": ")[2] for p in params]
     return found
 
 

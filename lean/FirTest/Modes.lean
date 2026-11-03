@@ -199,7 +199,7 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
   match parseCore t with
   | .error _ => none
   | .ok m => m.funcs.head?.bind fun f =>
-    match testArgs (f.params.map (·.2)) args with
+    match readArgs (f.params.map (·.2)) args with
     | .error _ => none
     | .ok vs => letI := s
       some (exhaustiveReport "@f" 16 ((f.run m (m := Tree) vs defaultFuel).run.explore 16))

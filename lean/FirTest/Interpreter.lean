@@ -26,25 +26,13 @@ abbrev Tree := ChoiceTree Core.Op
     | op, args => DialectDenote.denote (m := Tree) op args
   exit := DialectDenote.exit (m := Tree)
 
-/-- An argument of type `t` for these tests: `poison`, which `fir-ref run`
-does not take, or an argument that it reads. -/
-def testArg : (t : Core.Ty) → String → Except String ⟦t⟧
-  | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
-  | t, s => readArg t s
-
-/-- One test argument for each type of `ts`. -/
-def testArgs : (ts : List Core.Ty) → List String → Except String (HVector toType ts)
-  | [], [] => pure .nil
-  | t :: ts, a :: as => return .cons (← testArg t a) (← testArgs ts as)
-  | _, _ => .error "a number of arguments other than the parameters"
-
 /-- What `fir-ref run` would report on the function `f` of the module `M`,
 by default the module of `f` alone, with the semantics `s`, on arguments
-that may be `poison`. -/
+that `fir-ref run` reads, `poison` among them. -/
 def runFuncIn (s : DialectDenote CoreDialect Tree) (f : Func CoreDialect)
     (args : List String := []) (fuel : Nat := defaultFuel)
     (M : Module CoreDialect := ⟨[.func f], []⟩) : Option RunReport :=
-  match testArgs (f.params.map (·.2)) args with
+  match readArgs (f.params.map (·.2)) args with
   | .error _ => none
   | .ok vs => letI := s
     some (scriptedReport "@f" ((f.run M (m := Tree) vs fuel).run.script constOf [] 0))

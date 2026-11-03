@@ -9,11 +9,12 @@ writes: where `br` and `cond_br` go, at `i1`, `i7`, `i8`, `i33`, `i64`,
 its reason and ends the run; a poison block argument, which arrives as
 poison; a branch on a frozen poison, which may go either way; and the
 forbidden rewrite of a `select` into a `cond_br` on the same condition.
-`fir-ref run` takes no `poison` argument, so the tests of poison operands
-run the same rules through `runIn`, and others make poison with a broken
-flag. `FirTest.Loops` tests loops. Every function that these tests run is
-valid, so its runs mean something (ADR-2026-10-30-1856), but for one, whose
-successor ends without a terminator: UB ends its run first.
+The tests of poison operands run the same rules through `runIn`, whose
+arguments may be `poison`, as `fir-ref run`'s may (#123), and others make
+poison with a broken flag. `FirTest.Loops` tests loops. Every function
+that these tests run is valid, so its runs mean something
+(ADR-2026-10-30-1856), but for one, whose successor ends without a
+terminator: UB ends its run first.
 -/
 
 namespace FirTest
