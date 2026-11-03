@@ -53,8 +53,10 @@ outcome, not the ops it ran.
   [`docs/coverage/README.md`](../coverage/README.md): for each side, a
   table of ops at a width, one of width changes and one of passed and
   returned values. It cannot live in `tests/fir/`, which holds only the
-  corpus (ADR-2026-10-30-2050). If it grows past the file-size budget,
-  it splits by side into files of `docs/coverage/`.
+  corpus (ADR-2026-10-30-2050). Its size follows the cell set, not the
+  number of tests: about 9,400 bytes. A new width or side that would
+  take it past the file-size budget splits it by side into files of
+  `docs/coverage/`.
 - **The check.** The `coverage-matrix` pre-commit hook runs
   `coverage.py`, which fails when the committed matrix is not the one it
   makes, or when a cell has no test. `coverage.py --write` rewrites it.

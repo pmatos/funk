@@ -121,6 +121,8 @@ class Tests(unittest.TestCase):
             Op("udiv", ("nuw",), ("i8", "i8"), ("i8",), ()),
             Op("icmp", ("lt",), ("i8", "i8"), ("i1",), ()),
             Op("add", ("nsw", "nuw"), ("i8", "i8"), ("i8",), ()),
+            Op("zext", ("nuw",), ("i8",), ("i16",), ()),
+            Op("ret", ("exact",), ("i8",), (), ()),
             Op("load", (), ("ptr",), ("i8",), ()),
         ]:
             with self.subTest(op=op), self.assertRaises(CellError):

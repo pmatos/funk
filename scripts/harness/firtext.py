@@ -2,11 +2,12 @@
 coverage matrix (ADR-2026-11-03-0557).
 
 It reads the grammar of the text-format chapter, `lean/Fir/Text/Grammar.lean`
-and `lean/Fir/Text/Lexical.lean`: one production for every op, so it knows
-no op by name. It keeps what the matrix needs of each op: its name, its
-attributes, the types of its operands, results and successor arguments, and
-its callee. It reads the corpus's canonical modules, which both tools accept,
-and so checks no rule of validation; a text it cannot read is an error.
+and `lean/Fir/Text/Lexical.lean`: one production for every op, so the reader
+knows no op by name. It keeps what the matrix needs of each op: its name, its
+attributes, and the types of its operands, results and successor arguments;
+`Function.callees` takes the callee of each `call`. It reads the corpus's
+canonical modules, which both tools accept, and so checks no rule of
+validation; a text it cannot read is an error.
 """
 
 from dataclasses import dataclass

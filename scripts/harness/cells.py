@@ -4,9 +4,9 @@ The cell set follows the core dialect's op instances, `Op` in
 `lean/Fir/Core/Ops.lean`, as `lean/Fir/Core/Text.lean` writes them: an op,
 its flag set or predicate, and its width. `add`, `sub` and `mul` take the
 flag sets of `decodeWrap`, `sdiv` and `udiv` those of `decodeExact`, and
-`icmp` each predicate of `Pred.all`; every other op has no attribute but a
-constant's value or a callee. A flag or predicate that the spec does not
-give an op is not a cell.
+`icmp` each predicate of `Pred.all`. A constant's value and a callee are
+attributes but not cells, and the other ops have no attributes. A flag or
+predicate that the spec does not give an op is not a cell.
 
 - An op at a width is a cell for each width of the matrix's side.
 - A width change, `zext`, `sext` or `trunc`, is a cell for each pair of
@@ -128,6 +128,8 @@ def of_op(op: Op) -> set[Cell]:
             raise CellError(f"{op.name} {attr} is not a cell")
         typed = op.operands if op.name == "icmp" else op.results
         return {Cell("ops", op.name, attr, typed[0])}
+    if op.attrs and op.name != "call":
+        raise CellError(f"{op.name} {' '.join(op.attrs)} is not a cell")
     if op.name in CASTS:
         return {Cell("casts", op.name, op.operands[0], op.results[0])}
     if op.name in ("br", "cond_br"):
