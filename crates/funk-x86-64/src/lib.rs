@@ -4,18 +4,21 @@
 //! [`compile`] lowers a valid module to two assembly files in GNU `as`'s
 //! AT&T syntax (ADR-2026-10-30-1229). The module's file holds one function
 //! per fir function, each a global symbol that follows the System V AMD64
-//! calling convention (ADR-2026-10-30-1232), so C code can link to it. The
-//! entry file holds the entry point of an executable that runs one function
-//! from the command line and prints its results (ADR-2026-10-30-1233), on a
-//! stack that covers every call it makes (ADR-2026-11-02-1132).
+//! calling convention (ADR-2026-10-30-1232), so C code can link to it, and,
+//! when a function divides at `i128`, the runtime helper that it calls,
+//! under local symbols (ADR-2026-11-03-0414). The entry file holds the
+//! entry point of an executable that runs one function from the command
+//! line and prints its results (ADR-2026-10-30-1233), on a stack that
+//! covers every call it makes (ADR-2026-11-02-1132).
 //! [`build`] assembles both with `as` and links them with `ld` into an
 //! object file and an executable (ADR-2026-10-30-1326).
 //!
 //! Register allocation is the baseline: every value has a stack slot, and
 //! each op loads its operands and stores its results (ADR-2026-10-30-1230).
 //! The backend lowers `i1`, `i8`, `i16`, `i32` and `i64`
-//! (ADR-2026-10-30-1231), and `i128` as a pair of eightbytes, except in
-//! division (ADR-2026-11-03-010730), and functions and calls with any
+//! (ADR-2026-10-30-1231), and `i128` as a pair of eightbytes
+//! (ADR-2026-11-03-010730), whose division calls a System V routine of
+//! the helper (ADR-2026-11-03-0415), and functions and calls with any
 //! number of results, which come back as System V returns a structure: in
 //! `%rax` and `%rdx`, or in a result area that the caller provides
 //! (ADR-2026-11-03-0109). A call between funk functions extends no argument

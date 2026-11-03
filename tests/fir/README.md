@@ -76,9 +76,8 @@ differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
 `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
-`call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for the four ops of
-division, `i128`, with any number of results. Tests of other widths, or
-of division at `i128`, go in modules whose tests are all
+`call` at `i1`, `i8`, `i16`, `i32`, `i64` and `i128`, with any number
+of results. Tests of other widths go in modules whose tests are all
 interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
@@ -271,3 +270,17 @@ and runs out of fuel in callees that return `i128`s among other results.
 `several-args-i128` passes `i128` arguments to calls whose results go in
 memory, so that the area's address takes `%rdi` and some of them go on
 the stack, and recurses 20 deep returning two `i128`s around an `i64`.
+
+The texts of #22 divide at `i128`, which native code does through a
+runtime helper
+([ADR-2026-11-03-0415](../../docs/adrs/2026-11-03-0415-the-i128-division-routines-are-system-v-functions.md)).
+`div-sdiv-i128`, `div-udiv-i128`, `div-srem-i128` and `div-urem-i128`
+run each op on every pair of 13 values of both signs, below and above
+`2^64` and near the signed minimum; a pair that is UB in the spec is an
+interpreter-only test. `div-sdiv-exact-i128` and `div-udiv-exact-i128`
+run `exact` on pairs that divide exactly and pairs that do not, each
+with an interpreter-only twin. `poison-div-i128` passes poison to each
+op as either operand and as both. `div-calls-i128` returns quotients
+and remainders among several results and passes them across calls, and
+`div-symbol-i128` names functions after the helper's routines
+([ADR-2026-11-03-0414](../../docs/adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md)).

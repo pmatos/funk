@@ -18,16 +18,46 @@
 //! poison, which any value refines (ADR-2026-10-29-2008), so `exact`
 //! lowers as the plain quotient (ADR-2026-10-30-2248).
 //!
-//! No instruction divides 128 bits by 128 bits, and division at `i128`
-//! goes through a runtime helper (#22). Until then the backend reports each
-//! of the four ops at `i128` at the op, with its result's name, as it
-//! reports a width it does not lower (ADR-2026-11-03-010730).
+//! No instruction divides 128 bits by 128 bits, so each op at `i128` is a
+//! call of a routine of the runtime helper `div128.s`, which the module's
+//! own object file carries (ADR-2026-11-03-0414). The call passes the
+//! operands and takes the result as System V passes and returns an
+//! `__int128`, and the routine clobbers only registers that System V lets
+//! a callee clobber, none of which holds a value from one op to the next
+//! (ADR-2026-11-03-0415).
 
 use funk_ir::Op;
+use funk_ir::dialects::core::{CoreType, core_type};
 
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
 use crate::width::{Ext, PAIR, extend};
+
+/// The runtime helper: the routines that divide at `i128`, as assembly,
+/// which [`super::module`] appends once to a module that calls one.
+pub const HELPER: &str = include_str!("div128.s");
+
+/// The bytes of stack that a call of a routine of [`HELPER`] uses below
+/// the caller's `%rsp`: its return address, the sign that
+/// `__funk_rt_sdiv128` and `__funk_rt_srem128` push, and their call of
+/// `__funk_rt_udivmod128` or `__funk_rt_magnitudes`.
+pub const HELPER_STACK: u64 = 24;
+
+/// The routine of [`HELPER`] that `op` calls, if it is a division at
+/// `i128`.
+pub fn helper(op: &Op) -> Option<&'static str> {
+    let routine = match op.name.as_str() {
+        "sdiv" => "__funk_rt_sdiv128",
+        "udiv" => "__funk_rt_udiv128",
+        "srem" => "__funk_rt_srem128",
+        "urem" => "__funk_rt_urem128",
+        _ => return None,
+    };
+    let [r] = op.results.as_slice() else {
+        return None;
+    };
+    (core_type(&r.ty) == Some(CoreType::Int(PAIR))).then_some(routine)
+}
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -61,14 +91,19 @@ fn urem(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
 
 /// Loads `%a` into `%rax` and `%b` into `%rcx`, divides them, reading both
 /// as `ext` says, and stores the quotient, or the remainder when
-/// `remainder` is set, as the result.
+/// `remainder` is set, as the result. At `i128` it loads `%a` into
+/// `%rsi:%rdi` and `%b` into `%rcx:%rdx`, calls the op's routine of
+/// [`HELPER`], and stores `%rdx:%rax`.
 fn divide(cx: &mut Cx<'_>, op: &Op, ext: Ext, remainder: bool) -> Result<(), Unlowered> {
     let ([a, b], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err(format!("{} takes two operands and defines one value", op.name).into());
     };
     let w = cx.width(&r.name)?;
-    if w == PAIR {
-        return Err(unsupported_at_i128(&r.name, &op.name).into());
+    if let Some(routine) = helper(op) {
+        cx.load_pair(Reg::Rdi, Reg::Rsi, a)?;
+        cx.load_pair(Reg::Rdx, Reg::Rcx, b)?;
+        cx.asm.ins("call", format_args!("{routine}"));
+        return cx.store_pair(&r.name, Reg::Rax, Reg::Rdx);
     }
     cx.load(Reg::Rax, a)?;
     cx.load(Reg::Rcx, b)?;
@@ -115,10 +150,55 @@ fn divide(cx: &mut Cx<'_>, op: &Op, ext: Ext, remainder: bool) -> Result<(), Unl
     cx.store(&r.name, out)
 }
 
-/// Why `op`, whose result is `%result`, is not lowered at `i128`.
-fn unsupported_at_i128(result: &str, op: &str) -> String {
-    format!(
-        "%{result}: the x86-64 backend does not lower {op} at i128 yet: it lowers {op} at \
-         i1, i8, i16, i32 and i64"
-    )
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The helper's code: each line without its comment.
+    fn code() -> impl Iterator<Item = &'static str> {
+        HELPER
+            .lines()
+            .map(|l| l.split('#').next().unwrap_or_default())
+    }
+
+    /// The routines touch no register that System V makes a callee save,
+    /// at any size, and push as much as they pop (ADR-2026-11-03-0415).
+    #[test]
+    fn the_helper_touches_only_caller_saved_registers() {
+        let saved = ["bx", "bl", "bh", "bp", "r12", "r13", "r14", "r15"];
+        for line in code() {
+            for reg in saved {
+                assert!(!line.contains(&format!("%{reg}")), "{line}");
+                assert!(!line.contains(&format!("%e{reg}")), "{line}");
+                assert!(!line.contains(&format!("%r{reg}")), "{line}");
+            }
+            assert!(!line.contains("%rsp") && !line.contains("%esp"), "{line}");
+        }
+        let count = |m: &str| code().filter(|l| l.trim_start().starts_with(m)).count();
+        assert_eq!(count("pushq"), count("popq"));
+    }
+
+    /// Every label is a local `__funk_rt_` symbol, which no fir function's
+    /// symbol is, or starts with `.Lrt_div128_`, which no block's or
+    /// function's local label does (ADR-2026-11-03-0414).
+    #[test]
+    fn the_helper_s_labels_stay_apart_from_the_module_s() {
+        let labels: Vec<&str> = code()
+            .filter_map(|l| l.strip_suffix(':'))
+            .filter(|l| !l.starts_with(char::is_whitespace))
+            .collect();
+        assert_eq!(labels.len(), 9, "{labels:?}");
+        for label in labels {
+            assert!(
+                label.starts_with("__funk_rt_") || label.starts_with(".Lrt_div128_"),
+                "{label}"
+            );
+            assert_ne!(crate::abi::symbol(label), label);
+        }
+        assert!(!code().any(|l| l.contains(".globl")));
+        for routine in ["sdiv", "udiv", "srem", "urem"] {
+            let name = format!("__funk_rt_{routine}128:");
+            assert!(code().any(|l| l == name), "{name}");
+        }
+    }
 }

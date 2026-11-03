@@ -192,6 +192,33 @@ pub fn expect_any(exe: &Path, args: &[&str], w: u32) {
     );
 }
 
+/// Runs `exe` with `args` and checks that it prints one value of `i128`,
+/// whichever it is: the result where the source's is poison.
+pub fn expect_some_i128(exe: &Path, args: &[&str]) {
+    let out = run(exe, args);
+    let stdout = text(&out.stdout);
+    let value = stdout
+        .strip_prefix("{\"values\":[\"")
+        .and_then(|s| s.strip_suffix("\"]}\n"));
+    assert!(
+        out.status.code() == Some(0)
+            && out.stderr.is_empty()
+            && value.is_some_and(|v| v.parse::<i128>().is_ok()),
+        "{} {args:?}: {stdout}{}",
+        exe.display(),
+        text(&out.stderr)
+    );
+}
+
+/// Checks one run of a function that returns an `i128`: the exact result,
+/// or any value where it is poison.
+pub fn check_i128(exe: &Path, args: &[&str], result: Option<i128>) {
+    match result {
+        Some(r) => expect(exe, args, &[&r.to_string()]),
+        None => expect_some_i128(exe, args),
+    }
+}
+
 /// Checks how funk exits when it cannot write standard error, with `run`
 /// starting it that way on its arguments: with 2 when it has a diagnostic
 /// to write there, as `fir-ref` does, and with its verdict when it has

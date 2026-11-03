@@ -1,6 +1,6 @@
 # Division lowers to one bare div or idiv of the op's own size
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-0415
 
 ## Context
 

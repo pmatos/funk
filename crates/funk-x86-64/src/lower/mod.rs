@@ -18,7 +18,9 @@
 //!
 //! An `i128` is a pair of eightbytes in two slots, and each op lowers it
 //! through a pair of registers, `%rax` for its low half and `%rdx` for its
-//! high one unless the op says otherwise (ADR-2026-11-03-010730).
+//! high one unless the op says otherwise (ADR-2026-11-03-010730). Division
+//! at `i128` calls a routine of the runtime helper, which the module's
+//! text then ends with, once (`div.rs`, ADR-2026-11-03-0414).
 
 mod arith;
 mod bitwise;
@@ -37,6 +39,7 @@ use funk_ir::text::{print_op, print_symbol};
 use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
+pub use div::{HELPER_STACK, helper};
 
 use crate::abi::{self, Loc, layout, stack_arg_offset, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
@@ -221,8 +224,9 @@ pub struct Lowered {
     pub frames: Vec<i32>,
 }
 
-/// The assembly of every function of `m`, or a diagnostic for each part
-/// that the backend cannot lower. `m` must be valid.
+/// The assembly of every function of `m`, followed by the runtime helper
+/// when a function divides at `i128`, or a diagnostic for each part that
+/// the backend cannot lower. `m` must be valid.
 pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     let mut out = Vec::new();
@@ -233,6 +237,10 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
             asm.raw(&code);
             frames.push(size);
         }
+    }
+    let mut ops = m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops);
+    if ops.any(|op| helper(op).is_some()) {
+        asm.raw(div::HELPER);
     }
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {
