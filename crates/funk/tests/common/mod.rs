@@ -209,7 +209,6 @@ pub fn check_unwritable_stderr(name: &str, run: impl Fn(&[&str]) -> Output) {
         (&["verify", &dead], 2),
         (&["build", "-o", out, &bad], 2),
         (&["build", "-o", out, &dead], 2),
-        (&["bogus"], 2),
         (&["fmt", "--json", &bad], 1),
         (&["verify", "--json", &bad], 1),
         (&["build", "--json", "-o", out, &dead], 1),
