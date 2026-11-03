@@ -191,3 +191,32 @@ pub fn expect_any(exe: &Path, args: &[&str], w: u32) {
         text(&out.stderr)
     );
 }
+
+/// Checks how funk exits when it cannot write standard error, with `run`
+/// starting it that way on its arguments: with 2 when it has a diagnostic
+/// to write there, as `fir-ref` does, and with its verdict when it has
+/// none. `name` names the files that the runs read and write.
+pub fn check_unwritable_stderr(name: &str, run: impl Fn(&[&str]) -> Output) {
+    let seven = file(&format!("{name}-seven.fir"), SEVEN);
+    let bad = file(&format!("{name}-bad.fir"), "func @f(\n");
+    let dead = file(&format!("{name}-dead.fir"), DEAD);
+    let out = dir(name).join("out");
+    let out = out.to_str().unwrap();
+    for (args, status) in [
+        (&["fmt", &bad][..], 2),
+        (&["fmt", "--check", &bad], 2),
+        (&["verify", &bad], 2),
+        (&["verify", &dead], 2),
+        (&["build", "-o", out, &bad], 2),
+        (&["build", "-o", out, &dead], 2),
+        (&["fmt", "--json", &bad], 1),
+        (&["verify", "--json", &bad], 1),
+        (&["build", "--json", "-o", out, &dead], 1),
+        (&["fmt", &dead], 0),
+        (&["verify", &seven], 0),
+        (&["--version"], 0),
+    ] {
+        let ran = run(args);
+        assert_eq!(ran.status.code(), Some(status), "{args:?}");
+    }
+}
