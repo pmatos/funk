@@ -11,6 +11,7 @@ import FirTest.Modes
 import FirTest.Sample
 import FirTest.Bitwise
 import FirTest.Width
+import FirTest.PoisonOp
 import FirTest.Div
 import FirTest.Compare
 import FirTest.Branch

@@ -142,7 +142,7 @@ class Tests(unittest.TestCase):
         found = cells.cells(widths)
         self.assertEqual(len(found), len(set(found)))
         rows = sum(len(a) for a in cells.AT_WIDTH.values())
-        self.assertEqual(rows, 37)
+        self.assertEqual(rows, 38)
         ops = [c for c in found if c.table == "ops"]
         self.assertEqual(len(ops), rows * 3)
         self.assertNotIn(Cell("ops", "and", "nuw", "i8"), found)
@@ -183,6 +183,10 @@ class Tests(unittest.TestCase):
             of_op(Op("sext", (), ("i1",), ("i128",), ())),
             {Cell("casts", "sext", "i1", "i128")},
         )
+        self.assertEqual(
+            of_op(Op("poison", (), (), ("i33",), ())),
+            {Cell("ops", "poison", "", "i33")},
+        )
 
     def test_passed_and_returned_values(self):
         self.assertEqual(
@@ -216,6 +220,7 @@ class Tests(unittest.TestCase):
             Op("add", ("nsw", "nuw"), ("i8", "i8"), ("i8",), ()),
             Op("zext", ("nuw",), ("i8",), ("i16",), ()),
             Op("ret", ("exact",), ("i8",), (), ()),
+            Op("poison", ("0",), (), ("i8",), ()),
             Op("load", (), ("ptr",), ("i8",), ()),
         ]:
             with self.subTest(op=op), self.assertRaises(CellError):

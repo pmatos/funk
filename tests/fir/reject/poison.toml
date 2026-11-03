@@ -1,0 +1,125 @@
+# Must-reject texts of poison, the constant op of #122
+# (ADR-2026-11-03-1615). It has no attributes and no operands, and
+# defines one integer. It has no validation rule beyond its signature, so
+# a text that breaks one does not decode: each is a parse error at the
+# op's name (ADR-2026-10-30-0815).
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison takes no operands, not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = poison %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison takes no operands, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = poison %a, %a @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison has no attributes: no value, as const has"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = poison 0 @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison has no attributes: no word"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = poison nsw @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison has no attributes: no symbol"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = poison @g @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison defines one value, not none"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  poison @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison defines one value, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32, %s: i32 = poison @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison defines an integer: ptr is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: ptr = poison @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

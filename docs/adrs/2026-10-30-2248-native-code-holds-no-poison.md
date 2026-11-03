@@ -1,6 +1,6 @@
 # Native code holds no poison: flagged ops wrap, and freeze copies its operand
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-1616
 
 ## Context
 

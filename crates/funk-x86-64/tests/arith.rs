@@ -1,6 +1,7 @@
 //! How `add`, `sub`, `mul` and `freeze` are lowered (#14): one 64-bit
 //! instruction at every width, the same with any flags, and `freeze` as a
-//! copy into its own slot (ADR-2026-10-30-1231, ADR-2026-10-30-2248).
+//! copy into its own slot (ADR-2026-10-30-1231, ADR-2026-10-30-2248); and
+//! `poison` (#122), as zero in its slot (ADR-2026-11-03-1616).
 
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
 use funk_ir::{Registry, parse};
@@ -44,6 +45,16 @@ fn freeze_copies_its_operand_into_its_own_slot() {
             "\t# {line} @0\n\tmovq\t-16(%rbp), %rax\n\tmovq\t%rax, -24(%rbp)\n\
              \t# ret %r @0\n"
         );
+        let asm = lowered(w, &line);
+        assert!(asm.contains(&code), "{code}\nnot in\n{asm}");
+    }
+}
+
+#[test]
+fn poison_writes_zero_into_its_slot() {
+    for w in WIDTHS {
+        let line = format!("%r: i{w} = poison");
+        let code = format!("\t# {line} @0\n\tmovq\t$0, -24(%rbp)\n\t# ret %r @0\n");
         let asm = lowered(w, &line);
         assert!(asm.contains(&code), "{code}\nnot in\n{asm}");
     }

@@ -1,6 +1,6 @@
 # Only a dialect, and code that builds, lowers or runs its programs, name its ops; tests in Rust and Lean keep it so
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-1617
 
 ## Context
 

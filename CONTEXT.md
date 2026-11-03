@@ -171,7 +171,8 @@ A poison operand gives a poison result unless the op says otherwise. Using
 poison is not UB in itself, but some uses are: branching on it (S1), and any
 use where some value it could take would be UB, such as dividing by it, or
 dividing it by `-1` with `sdiv` or `srem`, since it could be the signed
-minimum.
+minimum. A program writes a poison value with the core op `poison`, as
+in `%p: i32 = poison` (ADR-2026-11-03-1615).
 _Avoid_: undef (fir has none)
 
 **poison class**:

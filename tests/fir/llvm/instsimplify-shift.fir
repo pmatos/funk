@@ -63,48 +63,42 @@ func @shl_or_shr2(%a: i32, %b: i32) -> i64 {
 
 func @poison(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @8
-  %p: i32 = shl %n, %n @8
+  %p: i32 = poison @8
   %v: i32 = lshr %x, %p @8
   ret %v @8
 }
 
 func @poison2(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @9
-  %p: i32 = shl %n, %n @9
+  %p: i32 = poison @9
   %v: i32 = ashr %x, %p @9
   ret %v @9
 }
 
 func @poison3(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @10
-  %p: i32 = shl %n, %n @10
+  %p: i32 = poison @10
   %v: i32 = shl %x, %p @10
   ret %v @10
 }
 
 func @poison4(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @11
-  %p: i32 = shl %n, %n @11
+  %p: i32 = poison @11
   %v: i32 = lshr %p, %x @11
   ret %v @11
 }
 
 func @poison5(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @12
-  %p: i32 = shl %n, %n @12
+  %p: i32 = poison @12
   %v: i32 = ashr %p, %x @12
   ret %v @12
 }
 
 func @poison6(%x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @13
-  %p: i32 = shl %n, %n @13
+  %p: i32 = poison @13
   %v: i32 = shl %p, %x @13
   ret %v @13
 }
