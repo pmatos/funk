@@ -1,4 +1,4 @@
-# The i128 division helper is hand-written assembly that each module's object file carries, under local __funk_rt_ symbols
+# The i128 division helper is hand-written assembly that each module's object file carries, under local `__funk_rt_` symbols
 
 Status: accepted
 
@@ -16,8 +16,9 @@ its symbol stays apart from the module's.
   functions, which become `OUTPUT.o`, and the entry point with its
   runtime, `runtime.s` and `values.s`, which only the executable gets.
   C code may link `OUTPUT.o` and call its functions (ADR-2026-10-30-1232).
-- ADR-2026-10-30-1230 rejected a stack probe routine such as `__chkstk`
-  because C code that links the object file would have to provide it.
+- ADR-2026-10-30-1230 rejected a stack probe routine such as `__chkstk`,
+  partly because C code that links the object file would have to provide
+  it.
 - Any string is a fir symbol (ADR-2026-10-29-2012). `abi::symbol` spells
   a word that starts with a letter as itself, and every other name as
   `__funk_sym_` and its bytes in hexadecimal (ADR-2026-10-30-1232).

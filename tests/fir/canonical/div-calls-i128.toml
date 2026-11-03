@@ -1,8 +1,8 @@
 # Tests of div-calls-i128.fir: division at i128 among several results
 # and across calls (#22). divmod returns the quotient and the remainder
-# of sdiv and srem, two i128s, which come back in registers, and udivmod
-# the quotient's low 64 bits and the quotient and remainder of udiv and
-# urem, which come back in a result area (ADR-2026-11-03-0109).
+# of sdiv and srem, two i128s, and udivmod the quotient's low 64 bits and
+# the quotient and remainder of udiv and urem: four and five eightbytes,
+# so natively both come back in a result area (ADR-2026-11-03-0109).
 # recompose multiplies divmod's results back into the dividend. nested
 # passes an sdiv's quotient to udivmod, and returns an srem of one of
 # udivmod's results. exact_arg passes the quotient of an sdiv exact to

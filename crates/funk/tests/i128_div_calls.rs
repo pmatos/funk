@@ -34,10 +34,11 @@ fn refs(vs: &[String]) -> Vec<&str> {
     vs.iter().map(String::as_str).collect()
 }
 
-/// `@divmod` returns its quotient and remainder in `%rax` and `%rdx`, two
-/// `i128`s in the result area; `@udivmod3` returns `i128, i64, i128` in the
-/// area. Callers pass the results on, as arguments and as results, and
-/// `@recompose` multiplies them back into the dividend.
+/// `@divmod` returns its quotient and remainder, two `i128`s, and
+/// `@udivmod3` returns `i128, i64, i128`: four and five eightbytes, so
+/// both go in the caller's result area (ADR-2026-11-03-0109). Callers pass
+/// the results on, as arguments and as results, and `@recompose`
+/// multiplies them back into the dividend.
 #[test]
 fn division_works_among_several_results_and_across_calls() {
     let funcs = [
