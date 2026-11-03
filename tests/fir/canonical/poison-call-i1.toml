@@ -1,5 +1,5 @@
 # Tests of poison-call-i1.fir: the poison and UB rules of call at i1
-# (#20, ADR-2026-11-02-1156). %p = add nsw %a, true is poison when %a is
+# (#20, ADR-2026-11-02-1514). %p = add nsw %a, true is poison when %a is
 # true, where true + true overflows.
 # - A poison argument reaches the callee as poison: passes gives %p to
 #   @id, which returns it, so the call's result is poison.
