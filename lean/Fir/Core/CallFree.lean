@@ -74,6 +74,7 @@ theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect
   | .sext m n, _ => sext_total m n
   | .trunc m n, _ => trunc_total m n
   | .freeze w, _ => freeze_total w
+  | .poison w, _ => poison_total w
   | .br, _ => br_total
   | .condBr, _ => condBr_total
   | .ret ts, _ => ret_total ts

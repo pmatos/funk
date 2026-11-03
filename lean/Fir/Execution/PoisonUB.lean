@@ -18,7 +18,9 @@ that use it and, by default, makes their results poison too. Nothing goes
 wrong unless poison reaches a place where a defined value is needed: a
 branch condition, a divisor, or the dividend of `sdiv` or `srem` by `-1`.
 Poison is deferred UB: a failure that is recorded in a value, and that
-becomes UB only if it is used in such a place.
+becomes UB only if it is used in such a place. A program may also write
+poison itself, with the core dialect's constant `poison`
+(ADR-2026-11-03-1615), as LLVM's programs write its `poison` constant.
 
 # Why defer at all
 

@@ -13,9 +13,9 @@
 # adds 0 where %y is 0, and the recursive ones replace %a with %b where
 # the condition says they are equal.
 #
-# @poison2 and @poison3 choose poison on one arm. fir has no poison
-# constant, so each writes it as %p = shl %n, %n with %n = 32, which the
-# spec makes poison: on the condition that chooses it the input gives
+# @poison2 and @poison3 choose poison on one arm, which each writes with
+# fir's op poison, as LLVM writes its poison constant
+# (ADR-2026-11-03-1619): on the condition that chooses it the input gives
 # poison, and LLVM's %x refines it. @select_sub_cmp gives poison where sub
 # nsw overflows, in both forms. The negative tests show where a fold would
 # be wrong: @select_neutral_sub_lhs gives 5, not -5, on 5 and 0, and

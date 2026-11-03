@@ -81,7 +81,8 @@ tests = [
 
 `funk build` builds a module all or nothing. So a module with a
 differential test holds only functions that the backend lowers: today
-`const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
+`const`, `poison`, `add`, `sub` and `mul` with any flags, `freeze`, the
+bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
 `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
 `call` at `i1`, `i8`, `i16`, `i32`, `i64` and `i128`, with any number
@@ -308,6 +309,20 @@ state what `fir-ref` gives at `i128`, and those at the end of
 `freeze-i1` to `freeze-i64` what it gives for `freeze` on each choice,
 as `freeze-i7` does. `zext-i7`, `sext-i7`, `trunc-i7` and their `i33`
 twins also change widths to and from `i128`.
+
+The texts of #122 also use `poison`, the constant whose result is poison
+([ADR-2026-11-03-1615](../../docs/adrs/2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md)).
+Until then fir had no poison constant, and a text made poison with an op
+whose rule gives it, such as `add nsw` on the signed maximum.
+`poison-op-iN` returns it, alone and beside a value, adds it, compares
+it with itself, which is poison, selects it on either arm, passes it to
+a callee that ignores it, freezes it, and branches on it and divides by
+it, which is UB, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33`, `i64` and
+`i128`. At the backend's widths the
+differential tests run it as native code, which gives zero for it, and
+the interpreter-only tests that fill its cells observe the poison
+([ADR-2026-11-03-1618](../../docs/adrs/2026-11-03-1618-poison-s-differential-cells-are-filled-by-native-runs-and-its-interpreter-only-cells-by-observing-it.md)).
+`reject/poison.toml` holds its texts that do not decode.
 
 ## Cases ported from LLVM
 

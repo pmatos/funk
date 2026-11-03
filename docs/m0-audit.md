@@ -25,6 +25,17 @@ Line numbers are those of `ca5fd9f`; #119 changes none of the files they
 point into. Corpus counts include #119's tests. #5 stays open after #23
 closes: see the last section.
 
+Addendum, 2026-11-03: [#122](https://github.com/pmatos/funk/issues/122)
+came after this audit and changes five of its facts; the evidence below
+is that of `ca5fd9f`, and #122 did not check it again. The core op set
+has 25 ops: `poison` is a constant whose result is poison, of class
+`propagates`, so 19 ops propagate and six are exceptions, and S1 and
+ADR-2026-10-30-0818 are also refined by ADR-2026-11-03-1615. The
+coverage matrix has 783 cells, each with a test (ADR-2026-11-03-1618).
+The LLVM ports write LLVM's poison constant with `poison`, not
+`shl %n, %n` (ADR-2026-11-03-1619). `poison` is a core word for the G0
+checks (ADR-2026-11-03-1617).
+
 ## The Lean criteria
 
 #23 asks that Lean have, with no `sorry`, the five items of the first

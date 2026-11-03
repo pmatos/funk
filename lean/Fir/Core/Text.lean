@@ -18,6 +18,9 @@ results, which are written where those values are defined.
   `.`, which is reserved for dialect names (H4).
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * `condBr` is written `cond_br`: `cond_br %c, ^then, ^else(%x) @1`.
+* `poison` has no attributes and no operands, so its name comes right
+  before its location: `%p: i32 = poison @1`. Its result is one `iN`, as
+  for `const`.
 * Every other op is written with the name it has in the op set, and no
   attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`.
 * An `i1` constant is written `true` or `false`, as in LLVM and MLIR.
@@ -52,7 +55,7 @@ def Op.name : Op → String
   | .shl _ => "shl" | .lshr _ => "lshr" | .ashr _ => "ashr"
   | .icmp .. => "icmp" | .select _ => "select"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
-  | .freeze _ => "freeze" | .br => "br" | .condBr => "cond_br"
+  | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .call .. => "call"
 
 /-- The flags of `add`, `sub` and `mul`, in their fixed order. -/
@@ -141,6 +144,9 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "call" => match as with
     | [.sym f] => some (.call f ts rs)
     | _ => none
+  | "poison" => match ts, rs with
+    | [], [.int w] => bare as (some (.poison w))
+    | _, _ => none
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- How a core type is written. -/
@@ -181,7 +187,7 @@ def samples : List Op :=
    .sub 16 { nsw := true }, .mul 64 { nuw := true, nsw := true },
    .sdiv 32 true, .udiv 32 false, .srem 8, .urem 8, .and 1, .or 33, .xor 128,
    .shl 32, .lshr 32, .ashr 32, .select 8, .zext 8 32, .sext 1 64, .trunc 64 7,
-   .freeze 2, .br, .condBr, .ret [.int 32], .ret [], .call "f" [.int 8] [.int 1]] ++
+   .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .call "f" [.int 8] [.int 1]] ++
   Pred.all.map (.icmp · 32)
 
 -- Decoding an op's encoding, at its own types, gives the op back.
@@ -197,6 +203,10 @@ def samples : List Op :=
 #guard Op.decode "const" [.word "true"] [] [.int 8] == none
 #guard Op.decode "icmp" [.word "slt"] [.int 8, .int 8] [.int 1] == some (.icmp .slt 8)
 #guard Op.decode "icmp.slt" [] [.int 8, .int 8] [.int 1] == none
+#guard Op.decode "poison" [] [] [.int 1] == some (.poison 1)
+#guard Op.decode "poison" [.int 0] [] [.int 8] == none && Op.decode "poison" [] [.int 8] [.int 8] == none
+#guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
+#guard Op.decode "poison" [] [] [.ptr] == none
 #guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
 
 end Fir.Core

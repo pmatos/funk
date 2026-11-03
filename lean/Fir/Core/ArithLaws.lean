@@ -11,6 +11,11 @@ total and monotone. `const` meets its poison clauses and is monotone whatever
 its semantics, as the core poison classes section proves; its rule gives the
 rest.
 
+`poison` meets them the same way (ADR-2026-11-03-1615). Its one operand
+vector is the empty one, which holds no poison, and on it `poison` returns
+its result, the poison of its type: a result on defined operands, which is
+all that obligation asks, and an outcome, which is all that totality asks.
+
 The sum without flags gives poison on a poison operand, and on operands
 that refine others it gives a sum that refines theirs. The next section
 proves `add`, with and without its flags, lawful, with `sub` and `mul`.
@@ -26,6 +31,23 @@ theorem const_returnsOnDefined (w : Nat) (v : BitVec w) :
 /-- `const` has an outcome on its one operand vector. -/
 theorem const_total (w : Nat) (v : BitVec w) : OpTotal (d := CoreDialect) (.const w v) :=
   fun _ => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+
+/-- `poison` returns its result on its one operand vector, the empty one,
+which holds no poison. -/
+theorem poison_returnsOnDefined (w : Nat) : ReturnsOnDefined (d := CoreDialect) (.poison w) :=
+  ⟨.nil, fun h => h, _, rfl⟩
+
+/-- `poison` has an outcome on its one operand vector. -/
+theorem poison_total (w : Nat) : OpTotal (d := CoreDialect) (.poison w) :=
+  fun _ => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+
+/-- In the set monad, `poison` returns the poison of its type, and nothing
+else: no other value and no UB. -/
+theorem poison_denote (w : Nat)
+    (e : Ev (HVector toType (Fir.returnTypes (d := CoreDialect) (.poison w)))) :
+    DialectDenote.denote (m := SetM) (d := CoreDialect) (.poison w) .nil e ↔
+      e = .ok (.cons (PoisonOr.poison : PoisonOr (BitVec w)) .nil) :=
+  Iff.rfl
 
 /-- A poison operand of `add` gives poison. -/
 theorem addValues_poison {a b : PoisonOr (BitVec w)} (h : a = .poison ∨ b = .poison) :

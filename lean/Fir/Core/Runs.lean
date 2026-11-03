@@ -66,7 +66,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .const _ _ | .add _ _ | .ret _ => intro _; rfl
     | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
     | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
-    | .freeze _ | .br | .condBr | .call .. => intro h; exact False.elim h
+    | .freeze _ | .poison _ | .br | .condBr | .call .. => intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho
     revert args h
@@ -95,7 +95,7 @@ theorem total_of_tracer {f : Func CoreDialect} (ht : InTracer f) :
   | .ret ts => intro _; exact ret_total ts
   | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
   | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
-  | .freeze _ | .br | .condBr | .call .. => intro h; exact False.elim h
+  | .freeze _ | .poison _ | .br | .condBr | .call .. => intro h; exact False.elim h
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 

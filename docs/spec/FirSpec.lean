@@ -10,8 +10,9 @@ set_option pp.rawOnError true
 fir is the intermediate representation of funk, a compiler toolchain in the
 spirit of LLVM. This document is fir's specification, version 0. It covers
 the M0 core: integers of any width from 1 to 16,777,215, arithmetic,
-bitwise ops and shifts, comparison and selection, width changes, `freeze`,
-branches with block arguments, calls and return.
+bitwise ops and shifts, comparison and selection, width changes, `freeze`
+and the constant `poison`, branches with block arguments, calls and
+return.
 
 The specification is literate Lean (ADR-2026-10-29-2015). Its formal content
 is the Lean definitions of the package `fir` in the repository's `lean/`

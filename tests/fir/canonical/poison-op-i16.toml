@@ -1,0 +1,79 @@
+# Tests of poison-op-i16.fir: the op poison at i16 (#122,
+# ADR-2026-11-03-1615). Its result is poison on every run, and each
+# function passes it to one kind of op.
+#
+# The differential tests run poison as native code, which builds and
+# must refine fir-ref's outcome. Native code holds no poison: it gives
+# zero for one (ADR-2026-11-03-1616), and any value refines a poison
+# result, so these tests show that poison lowers and runs, not what it
+# gives (ADR-2026-11-03-1618). A function that freezes the poison gives
+# whatever freeze chooses, and sub %f, %f gives 0 whatever it chose.
+#
+# Most interpreter-only tests observe the poison
+# (ADR-2026-11-03-1618): fir-ref returns it alone, through add,
+# through select on the arm that chooses it, and beside a value; icmp
+# eq %p, %p is poison, not true; freeze chooses a value for it; and a
+# branch on it or a division by it is UB. @poison_unused,
+# @poison_call, whose callee ignores it, and @poison_select on the
+# other arm do not observe it: they show that a poison that does not
+# reach the result changes nothing. They count towards its cells,
+# since the count is static (ADR-2026-11-03-0557), but the tests that
+# observe the poison are what fill them.
+tests = [
+  { func = "@poison" },
+  { func = "@poison_unused", args = ["1"] },
+  { func = "@poison_unused", args = ["-1"] },
+  { func = "@poison_unused", args = ["-32768"] },
+  { func = "@poison_add", args = ["1"] },
+  { func = "@poison_add", args = ["-1"] },
+  { func = "@poison_add", args = ["-32768"] },
+  { func = "@poison_select", args = ["true", "1"] },
+  { func = "@poison_select", args = ["true", "-1"] },
+  { func = "@poison_select", args = ["true", "-32768"] },
+  { func = "@poison_select", args = ["false", "1"] },
+  { func = "@poison_select", args = ["false", "-1"] },
+  { func = "@poison_select", args = ["false", "-32768"] },
+  { func = "@poison_icmp" },
+  { func = "@poison_freeze" },
+  { func = "@poison_freeze_sub" },
+  { func = "@poison_pair", args = ["1"] },
+  { func = "@poison_pair", args = ["-1"] },
+  { func = "@poison_pair", args = ["-32768"] },
+  { func = "@poison_call", args = ["1"] },
+  { func = "@poison_call", args = ["-1"] },
+  { func = "@poison_call", args = ["-32768"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # expected result.
+  { func = "@poison", expect = ["poison"] },
+  { func = "@poison_unused", args = ["1"], expect = ["1"] },
+  { func = "@poison_unused", args = ["-1"], expect = ["-1"] },
+  { func = "@poison_unused", args = ["-32768"], expect = ["-32768"] },
+  { func = "@poison_add", args = ["1"], expect = ["poison"] },
+  { func = "@poison_add", args = ["-1"], expect = ["poison"] },
+  { func = "@poison_add", args = ["-32768"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "1"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "-1"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "-32768"], expect = ["poison"] },
+  { func = "@poison_select", args = ["false", "1"], expect = ["1"] },
+  { func = "@poison_select", args = ["false", "-1"], expect = ["-1"] },
+  { func = "@poison_select", args = ["false", "-32768"], expect = ["-32768"] },
+  { func = "@poison_icmp", expect = ["poison"] },
+  { func = "@poison_freeze", choices = ["0"], expect = ["0"] },
+  { func = "@poison_freeze", choices = ["1"], expect = ["1"] },
+  { func = "@poison_freeze", choices = ["-1"], expect = ["-1"] },
+  { func = "@poison_freeze", choices = ["32767"], expect = ["32767"] },
+  { func = "@poison_freeze_sub", choices = ["0"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["1"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["-1"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["32767"], expect = ["0"] },
+  { func = "@poison_pair", args = ["1"], expect = ["1", "poison"] },
+  { func = "@poison_pair", args = ["-1"], expect = ["-1", "poison"] },
+  { func = "@poison_pair", args = ["-32768"], expect = ["-32768", "poison"] },
+  { func = "@poison_call", args = ["1"], expect = ["1"] },
+  { func = "@poison_call", args = ["-1"], expect = ["-1"] },
+  { func = "@poison_call", args = ["-32768"], expect = ["-32768"] },
+  { func = "@poison_cond_br", args = ["-32768"], expect = "ub" },
+  { func = "@poison_udiv", args = ["1"], expect = "ub" },
+  { func = "@poison_udiv", args = ["-1"], expect = "ub" },
+  { func = "@poison_udiv", args = ["-32768"], expect = "ub" },
+]
