@@ -1,3 +1,4 @@
+import FirRef.PrintInt
 import FirRef.PrintAttr
 import FirRef.PrintModule
 import FirRef.Parse
