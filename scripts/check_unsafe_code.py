@@ -3,15 +3,17 @@ proof outside the trusted base (ADR-2026-11-03-0808).
 
 Unsafe code may live only in a verified module: a file of VERIFIED_MODULES,
 in a crate that opts into Verus, so that the verus-proof hook proves it.
-There, `unsafe` may appear inside `verus!`, where Verus checks it, and on the
-items of TRUSTED_BASE, which ADR-2026-11-03-0808 lists. Everywhere else it
-fails. So do `unsafe_code` in an attribute other than a trusted one, or below
-`forbid` in the manifest of a crate with no verified module; an assumption
-(`assume`, `admit`, `axiom`, `external_body`, `assume_specification` and
-their kin) other than on a trusted item; code that Verus does not see when it
-verifies; a verified module whose crate does not opt in; and a trusted item
-that is gone. The check reads the Rust files and Cargo manifests that git
-tracks, without comments and strings.
+There, `unsafe` may appear only on the items of TRUSTED_BASE, which
+ADR-2026-11-03-0808 lists; outside `verus!` a verified module holds only
+inner attributes, `use`, constants and trusted items, and it holds no macro
+but its `verus!` block. The calls that the proof rests on are those of
+CALLS. The check also fails on `unsafe_code` in an attribute other than a
+trusted one; a manifest that lets a crate with no verified module use unsafe
+code; an assumption (`assume`, `admit`, `axiom`, `external_body`,
+`assume_specification` and their kin) other than on a trusted item; code
+that Verus does not see when it verifies; and a trusted item that is gone.
+It reads the Rust files and Cargo manifests that git tracks, without
+comments and strings.
 """
 
 import re
@@ -20,9 +22,16 @@ import sys
 import tomllib
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from rust_items import attributes, is_ident, is_punct, items, tokens
+
 ADR = "docs/adrs/2026-11-03-0808-unsafe-rust-needs-a-verus-proof-with-a-listed-trusted-base.md"
 
-VERIFIED_MODULES = {"crates/funk-start-fds/src/record.rs"}
+# Verified module -> the file whose `mod` item mounts it.
+VERIFIED_MODULES = {
+    "crates/funk-start-fds/src/record.rs": "crates/funk-start-fds/src/lib.rs",
+}
 
 # Item -> the marks it may carry. `<module>` is the file's inner attributes;
 # an extern block is named after the functions it declares.
@@ -31,7 +40,6 @@ TRUSTED_BASE = {
         "<module>": {"unsafe_code"},
         "fcntl": {"unsafe"},
         "getfd": {"external_body", "unsafe"},
-        "last_error": {"external_body"},
         "Slots": {"external_body"},
         "take_slots": {"axiom"},
         "store": {"external_body"},
@@ -39,235 +47,159 @@ TRUSTED_BASE = {
     },
 }
 
+# Function -> the one item that names it, once, besides its own definition.
+# So one view of the slots exists, `record` ends by consuming it in
+# `finish`, `.init_array` holds `record`, and each descriptor gets one
+# `fcntl` call (ADR-2026-11-03-0808).
+CALLS = {
+    "crates/funk-start-fds/src/record.rs": {
+        "take_slots": "record",
+        "finish": "record",
+        "record": "RECORD",
+        "getfd": "record_slots",
+    },
+}
+
 # Words that make Verus assume instead of prove: they count in Verus crates.
 ASSUMPTIONS = {"assume", "admit", "axiom", "external"}
 ASSUMPTION_PREFIXES = ("assume_", "external_")
-# Configurations that differ between Verus's run and cargo's build.
-VERUS_CFGS = {"verus_keep_ghost", "verus_only"}
-ITEM_KINDS = {
-    "fn",
-    "struct",
-    "enum",
-    "union",
-    "trait",
-    "impl",
-    "static",
-    "const",
-    "type",
-    "mod",
-    "extern",
-    "use",
-    "macro_rules",
-}
-OPEN = {"(": ")", "[": "]", "{": "}"}
-TOKEN = re.compile(
-    r"""(?P<space>\s+)
-    | (?P<line>//[^\n]*)
-    | (?P<block>/\*)
-    | (?P<raw>(?:br|cr|r)(?P<hashes>\#*)")
-    | (?P<str>[bc]?")
-    | (?P<char>b?'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F_]*\}|.)|[^\\'\n])')
-    | (?P<life>'[A-Za-z_][A-Za-z0-9_]*)
-    | (?P<ident>(?:r\#)?[A-Za-z_][A-Za-z0-9_]*)
-    | (?P<num>[0-9][A-Za-z0-9_]*)
-    | (?P<punct>.)""",
-    re.VERBOSE | re.DOTALL,
-)
-
-
-def tokens(text: str) -> list[tuple[str, str, int]]:
-    """Rust tokens as (kind, text, line), without comments; a string
-    literal is one `str` token without its contents."""
-    out = []
-    pos, line = 0, 1
-    while pos < len(text):
-        match = TOKEN.match(text, pos)
-        assert match is not None
-        kind, end = match.lastgroup, match.end()
-        if kind == "hashes":
-            kind = "raw"
-        if kind == "block":
-            depth = 1
-            while depth and end < len(text):
-                if text.startswith("/*", end):
-                    depth, end = depth + 1, end + 2
-                elif text.startswith("*/", end):
-                    depth, end = depth - 1, end + 2
-                else:
-                    end += 1
-        elif kind == "raw":
-            close = '"' + "#" * len(match["hashes"])
-            found = text.find(close, end)
-            end = len(text) if found < 0 else found + len(close)
-            out.append(("str", "", line))
-        elif kind == "str":
-            while end < len(text) and text[end] != '"':
-                end += 2 if text[end] == "\\" else 1
-            end += 1
-            out.append(("str", "", line))
-        elif kind not in ("space", "line"):
-            out.append((kind, match.group(), line))
-        line += text.count("\n", pos, end)
-        pos = end
-    return out
-
-
-def group_end(toks, i: int) -> int:
-    """The index just past the bracket group that opens at toks[i]."""
-    depth = 0
-    for j in range(i, len(toks)):
-        text = toks[j][1] if toks[j][0] == "punct" else ""
-        if text in OPEN:
-            depth += 1
-        elif text in OPEN.values():
-            depth -= 1
-            if depth == 0:
-                return j + 1
-    return len(toks)
-
-
-def is_punct(toks, i: int, text: str) -> bool:
-    return i < len(toks) and toks[i][0] == "punct" and toks[i][1] == text
-
-
-def skip_attributes(toks, i: int, end: int) -> int:
-    while i < end and is_punct(toks, i, "#") and not is_punct(toks, i + 1, "!"):
-        i = group_end(toks, i + 1)
-    return i
-
-
-def head(toks, i: int, end: int) -> tuple[str, int] | None:
-    """The kind of the item that starts at toks[i] (an item keyword, or
-    `name!` for a macro), and the index of that token."""
-    i = skip_attributes(toks, i, end)
-    while i < end:
-        kind, text, _ = toks[i]
-        if is_punct(toks, i, "("):
-            i = group_end(toks, i)
-            continue
-        if kind == "ident" and is_punct(toks, i + 1, "!") and text != "macro_rules":
-            return f"{text}!", i
-        nxt = toks[i + 1][1] if i + 1 < end else ""
-        if text == "const" and nxt in ("fn", "unsafe", "async", "extern"):
-            i += 1
-            continue
-        if kind == "ident" and text in ITEM_KINDS:
-            return text, i
-        if kind != "ident" and kind != "str":
-            return None
-        i += 1
-    return None
-
-
-def item_end(toks, i: int, end: int, kind: str | None) -> int:
-    """The index just past the item that starts at toks[i]: past its first
-    `;`, or past its first brace group unless it is a constant, static or
-    type alias, whose value may hold braces."""
-    value = kind in ("const", "static", "type")
-    i = skip_attributes(toks, i, end)
-    while i < end:
-        if is_punct(toks, i, ";"):
-            return i + 1
-        if toks[i][0] == "punct" and toks[i][1] in OPEN:
-            brace = toks[i][1] == "{"
-            i = group_end(toks, i)
-            if brace and not value:
-                return i
-            continue
-        i += 1
-    return end
-
-
-def name_of(toks, kind: str, at: int, end: int) -> str:
-    if kind.endswith("!"):
-        return kind
-    if kind == "extern" and at + 1 < end and toks[at + 1][0] == "str":
-        if is_punct(toks, at + 2, "{"):
-            close = group_end(toks, at + 2)
-            fns = [
-                toks[j + 1][1]
-                for j in range(at + 2, close - 1)
-                if toks[j][1] == "fn" and toks[j + 1][0] == "ident"
-            ]
-            return "+".join(fns) or "extern"
-        found = head(toks, at + 2, end)
-        return name_of(toks, *found, end) if found else "extern"
-    if kind == "impl":
-        body = next((j for j in range(at, end) if is_punct(toks, j, "{")), end)
-        idents = [j for j in range(at + 1, body) if toks[j][0] == "ident"]
-        after_for = [j for j in idents if toks[j - 1][1] == "for"]
-        own = [j for j in idents if toks[j][1] not in ("for", "dyn", "unsafe")]
-        target = after_for[-1:] or own[:1]
-        return toks[target[0]][1] if target else "impl"
-    nxt = at + 1
-    while nxt < end and (toks[nxt][1] == "mut" or is_punct(toks, nxt, "!")):
-        nxt += 1
-    return toks[nxt][1] if nxt < end and toks[nxt][0] == "ident" else kind
-
-
-def items(toks, start: int, end: int, path: str, in_verus: bool):
-    """Yield (item path, first token, end token, inside verus!) for the
-    items between start and end, and for those nested in modules, impls,
-    traits and `verus!` blocks, whose own tokens are their header and their
-    closing brace. A file's inner attributes are the item `<module>`."""
-    i = start
-    while i < end:
-        first = i
-        if is_punct(toks, i, "#") and is_punct(toks, i + 1, "!"):
-            i = group_end(toks, i + 2)
-            yield join(path, "<module>"), first, i, in_verus
-            continue
-        found = head(toks, i, end)
-        kind, at = found if found else (None, i)
-        i = item_end(toks, i, end, kind)
-        name = name_of(toks, kind, at, end) if kind else "<unnamed>"
-        body = next((j for j in range(at, i) if is_punct(toks, j, "{")), None)
-        nested = kind in ("mod", "impl", "trait", "verus!") and body is not None
-        if not nested:
-            yield join(path, name), first, i, in_verus
-            continue
-        inner = path if kind == "verus!" else join(path, name)
-        yield join(path, name), first, body + 1, in_verus
-        yield from items(toks, body + 1, i - 1, inner, in_verus or kind == "verus!")
-        yield join(path, name), i - 1, i, in_verus
-
-
-def join(path: str, name: str) -> str:
-    return f"{path}::{name}" if path else name
+# The words that may stand in the `mod` item that mounts a verified module.
+MOUNT_WORDS = {"mod", "cfg", "any", "target_os"}
 
 
 def marks(word: str, verus_crate: bool) -> str | None:
-    if word in ("unsafe", "unsafe_code", "cfg", "cfg_attr") or word in VERUS_CFGS:
+    if word in ("unsafe", "unsafe_code", "cfg", "cfg_attr") or is_verus_cfg(word):
         return word
     if verus_crate and (word in ASSUMPTIONS or word.startswith(ASSUMPTION_PREFIXES)):
         return word
     return None
 
 
+def is_verus_cfg(word: str) -> bool:
+    """Verus sets configurations named `verus_*` that cargo does not."""
+    return word.startswith("verus_")
+
+
 def file_problems(path: str, text: str, verus_crate: bool, used: set) -> list[str]:
     toks = tokens(text)
     verified = path in VERIFIED_MODULES
     trusted = TRUSTED_BASE.get(path, {})
+    in_attr = attributes(toks)
     found = []
-    for item, lo, hi, in_verus in items(toks, 0, len(toks), "", False):
-        for kind, word, line in toks[lo:hi]:
-            mark = marks(word, verus_crate) if kind == "ident" else None
+    entries = list(items(toks, 0, len(toks)))
+    for item, kind, lo, hi, in_verus in entries:
+        for i in range(lo, hi):
+            kind_i, word, line = toks[i]
+            if kind_i != "ident":
+                continue
+            where = f"{path}:{line}: `{word}` in {item}"
+            if word == "verus" and shadows(toks, i):
+                found.append(
+                    f"{where}: it shadows vstd's verus!, so Verus would not see the code"
+                )
+            if verus_crate and reads_a_file(toks, i, in_attr):
+                found.append(
+                    f"{where}: it takes code from a file that this check may not read"
+                )
+            mark = marks(word, verus_crate)
             if mark is None or (mark in ("cfg", "cfg_attr") and not verified):
                 continue
             if mark in trusted.get(item, ()):
                 used.add((path, item, mark))
-            elif mark != "unsafe" or not (verified and in_verus):
-                found.append(f"{path}:{line}: `{word}` in {item}: {why(mark)}")
+            else:
+                found.append(f"{where}: {why(mark)}")
+        if verified:
+            found += layout_problems(path, toks, item, kind, lo, hi, in_verus)
+    return found + call_problems(path, toks, entries)
+
+
+def shadows(toks, i: int) -> bool:
+    """`verus` at toks[i] names a macro other than vstd's: `as verus` or
+    `macro_rules! verus`."""
+    after_rules = is_punct(toks, i - 1, "!") and is_ident(toks, i - 2, "macro_rules")
+    return is_ident(toks, i - 1, "as") or after_rules
+
+
+def reads_a_file(toks, i: int, in_attr: set[int]) -> bool:
+    """toks[i] is `include!`, or `path =` in an attribute, such as
+    `#[path = "x.txt"] mod m;`."""
+    word = toks[i][1]
+    if word == "include":
+        return is_punct(toks, i + 1, "!")
+    return word == "path" and i in in_attr and is_punct(toks, i + 1, "=")
+
+
+def layout_problems(path, toks, item, kind, lo, hi, in_verus) -> list[str]:
+    """Outside `verus!`, a verified module holds only inner attributes,
+    `use`, constants and trusted items, and it holds no macro but its
+    `verus!` block, since Verus and this check do not see what one makes."""
+    line = toks[lo][2]
+    macro = kind == "macro_rules" or (kind or "").endswith("!")
+    if macro and (kind != "verus!" or in_verus):
+        return [f"{path}:{line}: `{kind}` in {item}: no macro in a verified module"]
+    trusted = TRUSTED_BASE.get(path, {})
+    if in_verus or kind in ("inner", "use", "verus!") or item in trusted:
+        return []
+    if kind == "const" and not any(is_macro_call(toks, i) for i in range(lo, hi)):
+        return []
+    return [
+        (
+            f"{path}:{line}: {item} sits outside verus! in a verified module, where"
+            " only inner attributes, `use`, constants and trusted items may"
+        )
+    ]
+
+
+def is_macro_call(toks, i: int) -> bool:
+    opens = any(is_punct(toks, i + 2, b) for b in "([{")
+    return toks[i][0] == "ident" and is_punct(toks, i + 1, "!") and opens
+
+
+def call_problems(path: str, toks, entries) -> list[str]:
+    found = []
+    for callee, caller in CALLS.get(path, {}).items():
+        counts: dict[str, int] = {}
+        for entry in entries:
+            n = sum(1 for i in range(entry.lo, entry.hi) if is_ident(toks, i, callee))
+            counts[entry.path] = counts.get(entry.path, 0) + n
+        if counts.pop(callee, 0) != 1:
+            found.append(f"{path}: {callee} must be defined once, by that name")
+        if (here := counts.pop(caller, 0)) != 1:
+            found.append(f"{path}: {caller} names {callee} {here} times, not once")
+        for item in sorted(i for i, n in counts.items() if n):
+            found.append(
+                f"{path}: `{callee}` in {item}: only {caller} may name it ({ADR})"
+            )
     return found
 
 
+def mount_problems(root: Path, module: str, mount: str, rust_files: list[str]):
+    """The verified module is mounted once, by `mod <name>;`, and only a
+    `target_os` cfg may select it: Verus and cargo then build the same code."""
+    name = Path(module).stem
+    toks, mounts = [], []
+    if mount in rust_files:
+        toks = tokens((root / mount).read_text(encoding="utf-8"))
+        mounts = [e for e in items(toks, 0, len(toks)) if e.kind == "mod"]
+        mounts = [e for e in mounts if e.path == name]
+    if len(mounts) != 1 or not is_punct(toks, mounts[0].hi - 1, ";"):
+        return [
+            f"{mount}: must mount the verified module {module} once, by `mod {name};`"
+        ]
+    lo, hi = mounts[0].lo, mounts[0].hi
+    return [
+        f"{mount}:{toks[i][2]}: `{toks[i][1]}` on `mod {name}`: only a target_os"
+        " cfg may select a verified module"
+        for i in range(lo, hi)
+        if toks[i][0] == "ident" and toks[i][1] not in MOUNT_WORDS | {name}
+    ]
+
+
 def why(mark: str) -> str:
-    if mark in VERUS_CFGS or mark in ("cfg", "cfg_attr"):
+    if is_verus_cfg(mark) or mark in ("cfg", "cfg_attr"):
         return "Verus would not see the code that it selects"
     if mark in ("unsafe", "unsafe_code"):
-        return (
-            "unsafe code only inside verus! in a verified module, or on a trusted item"
-        )
+        return "unsafe code only on a trusted item of a verified module"
     return "Verus would assume it without proof; only a trusted item may"
 
 
@@ -294,12 +226,38 @@ def opts_in(data: dict) -> bool:
     return meta.get("verify") is True
 
 
-def lint_level(data: dict) -> str | None:
-    for lints in (data.get("lints", {}), data.get("workspace", {}).get("lints", {})):
-        level = lints.get("rust", {}).get("unsafe_code")
-        if level is not None:
-            return level.get("level") if isinstance(level, dict) else level
-    return None
+def unsafe_level(lints: dict) -> str:
+    level = lints.get("rust", {}).get("unsafe_code", "allow")
+    return level.get("level", "allow") if isinstance(level, dict) else level
+
+
+def manifest_problems(path: str, data: dict, verified: bool) -> list[str]:
+    """The workspace forbids unsafe code; every crate inherits that or
+    forbids it too, except a crate with a verified module, which denies it.
+    No manifest declares a Verus configuration to rustc."""
+    found = []
+    lints = data.get("lints", {})
+    shared = data.get("workspace", {}).get("lints", {})
+    if "workspace" in data and (level := unsafe_level(shared)) != "forbid":
+        found.append(f"{path}: unsafe_code is {level} in [workspace.lints], not forbid")
+    if "package" in data:
+        level = unsafe_level(lints)
+        if verified and level != "deny":
+            found.append(
+                f"{path}: unsafe_code is {level}, not deny, in a crate with a"
+                " verified module"
+            )
+        if not verified and lints.get("workspace") is not True and level != "forbid":
+            found.append(
+                f"{path}: unsafe_code is {level}, not forbid, in a crate with no"
+                " verified module; inherit [workspace.lints] or forbid it"
+            )
+    for table in (lints, shared):
+        cfgs = table.get("rust", {}).get("unexpected_cfgs", {})
+        for entry in cfgs.get("check-cfg", []) if isinstance(cfgs, dict) else []:
+            if re.search(r"\bverus_", entry):
+                found.append(f"{path}: check-cfg declares {entry}, a Verus cfg")
+    return found
 
 
 def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[str]:
@@ -312,20 +270,18 @@ def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[st
         verus_crate = crate is not None and is_verus_crate(data[crate])
         text = (root / path).read_text(encoding="utf-8")
         found += file_problems(path, text, verus_crate, used)
-    for module in sorted(VERIFIED_MODULES):
+    for module, mount in sorted(VERIFIED_MODULES.items()):
+        if module not in rust_files:
+            continue
         crate = crate_of(module, manifests)
-        if module in rust_files and (crate is None or not opts_in(data[crate])):
+        if crate is None or not opts_in(data[crate]):
             found.append(
                 f"{module}: a verified module, but its crate does not opt into"
                 " Verus with [package.metadata.verus] verify = true"
             )
+        found += mount_problems(root, module, mount, rust_files)
     for path in sorted(manifests):
-        level = lint_level(data[path])
-        if level not in (None, "forbid") and path not in verified_crates:
-            found.append(
-                f"{path}: unsafe_code is {level}, not forbid, in a crate with"
-                " no verified module"
-            )
+        found += manifest_problems(path, data[path], path in verified_crates)
     for path, trusted in sorted(TRUSTED_BASE.items()):
         for item, allowed in sorted(trusted.items()):
             for mark in sorted(

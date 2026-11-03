@@ -13,7 +13,11 @@ updates:
     open-pull-requests-limit: 5
   # The workspace's crates (ADR-2026-10-30-1030). vstd and the verus_*
   # crates move only with the Verus release that CI pins
-  # (ADR-2026-11-03-0809).
+  # (ADR-2026-11-03-0809). vstd is the only direct dependency, so this entry
+  # opens no version updates, only security updates for the other nine
+  # crates in Cargo.lock. An advisory against vstd or a verus_* crate needs
+  # a bump by hand: the release and its SHA-256 in ci.yml, the pin in
+  # scripts/check-verus.sh and vstd's version, together.
   - package-ecosystem: cargo
     directory: /
     schedule:

@@ -93,13 +93,13 @@ repos:
         entry: python scripts/check_unsafe_code.py
         language: python
         pass_filenames: false
-        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/check_unsafe_code\.py$)
+        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/(check_unsafe_code|rust_items)\.py$)
       - id: unsafe-code-test
         name: The unsafe-code check passes its tests
         entry: python scripts/test_check_unsafe_code.py
         language: python
         pass_filenames: false
-        files: ^(crates/funk-start-fds/|Cargo\.toml$|docs/adrs/|scripts/(test_)?check_unsafe_code\.py$)
+        files: ^(crates/funk-start-fds/|(crates/funk-ir/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items)\.py$)
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test

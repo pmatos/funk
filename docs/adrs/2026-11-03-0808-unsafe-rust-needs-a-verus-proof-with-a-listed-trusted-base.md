@@ -28,22 +28,29 @@ rest.
   hook verifies (ADR-2026-11-03-0809). Its code is inside `verus!`, except
   the trusted pieces that Verus cannot take.
 - **One verified module**, `crates/funk-start-fds/src/record.rs`. Verus
-  proves `record_slots` against #117's specification: afterwards, slot `fd`
-  of `CLOSED` holds the OS error that `fcntl(fd, F_GETFD)` failed with, for
-  `fd` in 0 to 2, and 0 when it did not fail with one. Every index is in
-  bounds and nothing panics (`no_unwind`). `record`, the constructor, calls
-  it.
+  proves `record`, the constructor, against #117's specification: when it
+  returns, slot `fd` of `CLOSED` holds the OS error that
+  `fcntl(fd, F_GETFD)` failed with, for `fd` in 0 to 2, and 0 when it did
+  not fail with one. `record` takes the view of the slots, has
+  `record_slots` fill them, and ends by passing the view to `finish`, a
+  proof function that requires the specification and consumes the view, so
+  no store can follow. Every index is in bounds and nothing panics
+  (`no_unwind`).
 - **The trusted base**, in `crates/funk-start-fds/src/record.rs`, each item
   marked TRUSTED in the code with its specification:
   - the `fcntl` extern block: POSIX's variadic `fcntl`, from the C library.
-  - `getfd`: calls `fcntl(fd, F_GETFD)`. Assumes it returns without
+  - `getfd`: calls `fcntl(fd, F_GETFD)`, then reads `errno` with
+    `io::Error::last_os_error().raw_os_error()`. Assumes it returns without
     panicking and writes no memory the program owns. Its result may be any
-    `c_int`, named `getfd_result(fd)`.
-  - `last_error`: `io::Error::last_os_error().raw_os_error()`. Assumes that,
-    called right after `getfd(fd)` returned -1, it gives the error of that
-    call, named `getfd_error(fd)`.
+    `c_int`, named `getfd_result(fd)`; when it is -1, `errno` holds that
+    call's error, named `getfd_error(fd)`, since nothing runs between the
+    two. Both names depend on `fd` alone, so every call on one descriptor
+    gives the same answer. That holds while `record` runs, since nothing
+    else runs then, and the check allows one call, in `record_slots`.
   - `Slots`: a ghost token that stands for the three slots of `CLOSED`;
-    `holds(fd)` is what slot `fd` holds. The build erases it.
+    `holds(fd)` is what slot `fd` holds. The built crate never constructs
+    it: `Tracked<&mut Slots>` is a zero-sized `PhantomData`, and
+    `take_slots` is erased.
   - `store`: `CLOSED[fd].store(code, Relaxed)`. Assumes that afterwards
     slot `fd` holds `code` and no other slot changed.
   - `take_slots`, an `axiom fn`, and `RECORD`, the
@@ -51,30 +58,51 @@ rest.
     contract. The C runtime calls `record` once, on the main thread, before
     `main` and before any other thread exists, with the C calling
     convention. So `record` alone uses `CLOSED` while it runs, and
-    `take_slots` hands it `Slots`. Nothing is assumed of what they hold.
+    `take_slots` hands it the one `Slots`: the check allows one call of
+    `take_slots`, in `record`. Nothing is assumed of what the slots hold.
   - the module's `#![allow(unsafe_code)]`, under the crate's
     `unsafe_code = "deny"`.
 - **`record` stores every slot**, 0 for an open descriptor, where it
   stored nothing before. The slot held 0 already, so funk behaves as
   before, and the proof needs no assumption on the slots' first values.
 - **The `unsafe-code` check**, `scripts/check_unsafe_code.py`, reads every
-  tracked Rust file and manifest, without comments and strings. Its tests
+  tracked Rust file and manifest, without comments and strings, and reads
+  a raw identifier such as `r#external_body` as the plain one. Its tests
   plant each kind of violation, and check that this ADR names every trusted
   item. It fails on:
   - `unsafe` (a block, function, trait, impl or extern block, or an
-    `unsafe(...)` attribute) other than inside `verus!` in a verified
-    module or on a trusted item;
+    `unsafe(...)` attribute) other than on a trusted item, inside `verus!`
+    too: Verus accepts some unsafe code there without a check, such as an
+    `unsafe impl` (verus-lang/verus#3184);
+  - in a verified module, an item outside `verus!` other than inner
+    attributes, `use`, a constant with no macro call and a trusted item,
+    and any macro but the `verus!` block: `macro_rules!`, `global_asm!` or
+    `include!` make code that neither Verus nor the check reads;
+  - `macro_rules! verus` or `as verus` anywhere, which would shadow vstd's
+    `verus!`, and in a crate that uses vstd, `include!` or a `path`
+    attribute, which take code from a file the check may not read;
+  - a call that the proof rests on, made other than once from its one
+    caller: `take_slots` and `finish` from `record`, `getfd` from
+    `record_slots`, and `record` from `RECORD`;
   - `unsafe_code` in an attribute, such as `allow(unsafe_code)`, other than
-    the trusted one, and `unsafe_code` below `forbid` in the manifest of a
-    crate with no verified module;
+    the trusted one; `[workspace.lints]` without `unsafe_code = "forbid"`;
+    a crate with no verified module that neither inherits it nor forbids
+    unsafe code; and a crate with a verified module whose `unsafe_code` is
+    not `deny`;
   - in a crate that uses vstd, `assume`, `admit`, `axiom`, `external` or a
     word that starts with `assume_` or `external_`, such as
     `external_body` and `assume_specification`, other than on a trusted
     item;
-  - `verus_keep_ghost` and `verus_only`, and `cfg` or `cfg_attr` in a
-    verified module: they select code that Verus may not see;
-  - a verified module whose crate does not opt in, and a trusted item that
-    is gone.
+  - a word that starts with `verus_`, such as `verus_keep_ghost`, a
+    manifest that declares one to `check-cfg`, and `cfg` or `cfg_attr` in
+    a verified module: Verus sets those configurations and cargo does not,
+    so they select code that Verus may not see;
+  - a verified module whose crate does not opt in, one that its parent
+    does not mount by one `mod` item, a `mod` item that carries anything
+    but a `target_os` cfg, and a trusted item that is gone.
+- **The `verus-proof` hook** also fails when Verus verifies nothing in a
+  crate that opts in, as when a cfg hides its proof from Verus but not
+  from cargo.
 - **A change to the trusted base** or a new verified module needs a new
   ADR and a human ruling, as ADR-2026-11-02-2253 asks of a new exception.
 
@@ -99,6 +127,7 @@ and now carries a proof.
 - Verus proves the constructor's logic, bounds and freedom from panics.
   Review covers only the trusted items, a few lines each.
 - The check fails on unsafe code or an assumption outside the list, so a
-  new one cannot slip in through review.
+  new one cannot slip in through review. It over-approximates: a name such
+  as `external_count` in a crate that uses vstd fails too, and is renamed.
 - Verus checks the module on x86-64 Linux, in CI; the other ELF Unix targets
   build the same source.

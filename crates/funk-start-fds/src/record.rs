@@ -1,10 +1,13 @@
 //! The constructor that records which standard descriptors were closed at
 //! start-up, and its proof (ADR-2026-11-02-2253, ADR-2026-11-03-0808).
 //!
-//! Verus proves `record_slots` against #117's specification: afterwards,
-//! slot `fd` of `CLOSED` holds the OS error that `fcntl(fd, F_GETFD)` failed
-//! with, for `fd` in 0 to 2, and 0 when it did not fail with one. Verus also
-//! proves that every index is in bounds and that nothing panics.
+//! Verus proves `record`, the constructor, against #117's specification:
+//! when it returns, slot `fd` of `CLOSED` holds the OS error that
+//! `fcntl(fd, F_GETFD)` failed with, for `fd` in 0 to 2, and 0 when it did
+//! not fail with one. `record` ends by passing the view of the slots to
+//! `finish`, which requires that and consumes the view, so no store can
+//! follow. Verus also proves that every index is in bounds and that nothing
+//! panics.
 //!
 //! Verus cannot check a foreign function, a link section, or the value that
 //! a standard-library atomic holds. Each of those sits behind one item
@@ -31,10 +34,10 @@ unsafe extern "C" {
 
 verus! {
 
-/// What `fcntl(fd, F_GETFD)` returned when `record` called it.
+/// What `fcntl(fd, F_GETFD)` returns while `record` runs.
 pub uninterp spec fn getfd_result(fd: int) -> c_int;
 
-/// The OS error that `fcntl(fd, F_GETFD)` left in `errno` when it failed,
+/// The OS error that `fcntl(fd, F_GETFD)` leaves in `errno` when it fails,
 /// as `io::Error::raw_os_error` gives it.
 pub uninterp spec fn getfd_error(fd: int) -> Option<i32>;
 
@@ -51,41 +54,37 @@ pub open spec fn recorded(fd: int) -> i32 {
     }
 }
 
-/// TRUSTED: calls `fcntl(fd, F_GETFD)`. Verus assumes that it returns
-/// without panicking and writes no memory that the program owns: its
-/// signature lets it change nothing that Verus tracks. `F_GETFD` only reads
-/// the descriptor's flags, and on a descriptor that is not open it fails
-/// with `EBADF`. Its result may be any `c_int`, named `getfd_result(fd)`.
+/// TRUSTED: calls `fcntl(fd, F_GETFD)` and reads `errno` right after it.
+/// Verus assumes that it returns without panicking and writes no memory
+/// that the program owns: its signature lets it change nothing that Verus
+/// tracks. `F_GETFD` only reads the descriptor's flags, and on a descriptor
+/// that is not open it fails with `EBADF`. Its result may be any `c_int`,
+/// named `getfd_result(fd)`. When it is -1, `errno` holds the error of this
+/// call, named `getfd_error(fd)`, since nothing runs between the two.
+/// The names depend on `fd` alone, so Verus takes every call on one
+/// descriptor to give the same answer. That holds while `record` runs, as
+/// nothing else runs then, and the `unsafe-code` check allows one call, in
+/// `record_slots`.
 #[verifier::external_body]
-fn getfd(fd: c_int) -> (result: c_int)
+fn getfd(fd: c_int) -> (result: (c_int, Option<i32>))
     ensures
-        result == getfd_result(fd as int),
+        result.0 == getfd_result(fd as int),
+        result.0 == -1 ==> result.1 == getfd_error(fd as int),
     no_unwind
 {
     // SAFETY: `F_GETFD` takes no third argument. On a descriptor that is
     // not open it fails with `EBADF`, and changes nothing.
-    unsafe { fcntl(fd, F_GETFD) }
-}
-
-/// TRUSTED: the OS error of the last failed call into the C library on this
-/// thread. Called right after `getfd(fd)` returned -1, with no call between
-/// that could set `errno`, it is the error of that call.
-#[verifier::external_body]
-fn last_error(Ghost(fd): Ghost<int>) -> (code: Option<i32>)
-    requires
-        getfd_result(fd) == -1,
-    ensures
-        code == getfd_error(fd),
-    no_unwind
-{
-    std::io::Error::last_os_error().raw_os_error()
+    let result = unsafe { fcntl(fd, F_GETFD) };
+    (result, std::io::Error::last_os_error().raw_os_error())
 }
 
 /// TRUSTED: a ghost view of the three slots of `CLOSED`. Verus cannot see
 /// the value of a standard-library atomic: vstd's specification of
 /// `AtomicI32` says nothing of it. So this token stands for the slots, and
 /// `holds` says what each one holds. Only `take_slots` makes one and only
-/// `store` changes one. Erased: it does not exist in the built crate.
+/// `store` changes one. In the built crate it is never constructed:
+/// `Tracked<&mut Slots>` is a zero-sized `PhantomData`, and `take_slots` is
+/// erased.
 #[verifier::external_body]
 pub tracked struct Slots {
     _private: (),
@@ -99,7 +98,9 @@ impl Slots {
 /// TRUSTED, the `.init_array` contract: the C runtime calls `record` once,
 /// on the main thread, before `main` and before any other thread exists. So
 /// while `record` runs, it alone reads and writes `CLOSED`, and it may hold
-/// the view of its slots. Verus assumes nothing of what they hold.
+/// the one view of its slots. The `unsafe-code` check allows one call, in
+/// `record`, so no other view exists. Verus assumes nothing of what they
+/// hold.
 axiom fn take_slots() -> (tracked slots: Slots);
 
 /// TRUSTED: stores `code` in slot `fd` of `CLOSED`. Afterwards that slot
@@ -132,14 +133,25 @@ fn record_slots(Tracked(slots): Tracked<&mut Slots>)
             forall|i: int| 0 <= i < fd ==> #[trigger] slots.holds(i) == recorded(i),
         decreases 3 - fd,
     {
-        let code = if getfd(fd as c_int) == -1 {
-            last_error(Ghost(fd as int)).unwrap_or(0)
+        let (result, error) = getfd(fd as c_int);
+        let code = if result == -1 {
+            error.unwrap_or(0)
         } else {
             0
         };
         store(fd, code, Tracked(slots));
         fd += 1;
     }
+}
+
+/// #117's specification of `record`: each slot of `CLOSED` holds what
+/// `recorded` says. It consumes the view of the slots, so once `record` has
+/// called it, nothing can store to them. The `unsafe-code` check requires
+/// that `record` calls it.
+proof fn finish(tracked slots: Slots)
+    requires
+        forall|fd: int| 0 <= fd < 3 ==> #[trigger] slots.holds(fd) == recorded(fd),
+{
 }
 
 /// Records the error of each standard descriptor that is closed. It runs
@@ -150,6 +162,9 @@ extern "C" fn record()
 {
     let tracked mut slots = take_slots();
     record_slots(Tracked(&mut slots));
+    proof {
+        finish(slots);
+    }
 }
 
 } // verus!
