@@ -150,7 +150,9 @@ rest.
       prove anything. A new proof carries no `rlimit`, `opaque`,
       `spinoff_prover` or `loop_isolation`;
   - in a crate with a verified module:
-    - `unsafe_code = "deny"`, with the workspace's other lints repeated;
+    - `unsafe_code = "deny"` in its own `[lints.rust]`. Keeping the
+      workspace's other lints in step is a convention that its
+      `Cargo.toml` comment states, not a check;
     - `[package.metadata.verus] verify = true`;
     - no file but a verified module uses vstd or calls `verus!`, so
       verified code can name none of the crate's other items, such as

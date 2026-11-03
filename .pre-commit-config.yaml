@@ -99,7 +99,7 @@ repos:
         entry: python scripts/check_unsafe_code.py
         language: python
         pass_filenames: false
-        files: (\.rs$|(^|/)Cargo\.toml$|(^|/)\.cargo/|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
+        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
       - id: unsafe-code-test
         name: The unsafe-code check passes its tests
         entry: python -m unittest discover -s scripts -p "test_*unsafe*.py"

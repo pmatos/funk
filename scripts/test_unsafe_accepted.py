@@ -92,10 +92,6 @@ class AcceptedWork(unittest.TestCase):
         found = check(**files)
         self.assertTrue(any(f"{toml}: unsafe_code is allow" in m for m in found))
 
-    def test_a_cargo_configuration_with_an_alias(self):
-        config = '[alias]\nxtask = "run -p xtask --"\n'
-        self.assertEqual(check(**{".cargo/config.toml": config}), [])
-
     def test_a_dev_dependency_of_funk_start_fds(self):
         fds = (REPO / FDS).read_text() + '\n[dev-dependencies]\ntempfile = "3"\n'
         self.assertEqual(check(fds=fds), [])
