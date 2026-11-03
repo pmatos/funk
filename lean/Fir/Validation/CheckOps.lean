@@ -102,9 +102,10 @@ theorem Func.mem_sites (f : Func d) (all : List (Block d)) (x : Name) (s : DefSi
 
 A definition dominates a use as `Func.DominatesUse` says: a parameter
 always, a block argument when its block dominates the use's, and an op's
-result when it comes earlier in the use's block, or its block dominates the
-use's. A use is in scope when the function defines the value among its
-top-level blocks and each definition dominates the use.
+result when it comes earlier in the use's block, or when its block is
+another block that dominates the use's. A use is in scope when the function
+defines the value among its top-level blocks and each definition dominates
+the use.
 -/
 
 /-- Whether a definition at site `s` dominates a use by the op at index `i`

@@ -6,9 +6,9 @@ import Fir.Core.Values
 The core dialect's execution rules come family by family, one family to a
 section, behind the definitions that every family shares: the op set, its
 signature, its text, its validation rules and its poison classes. Ticket
-#10 gives the rules of its tracer subset: `const`, `add` without flags, and
-`ret`. This section has the first two, and #14 adds the flags of `add`, and
-`sub` and `mul`.
+#10 gave the rules of its tracer subset: `const`, `add` without flags, and
+`ret`. This section has the first two. The next one, from #14, gives `add`
+its flags, and `sub` and `mul` their rules.
 
 A rule says what an op computes from values of its operand types. A value
 of `iN` is `PoisonOr (BitVec N)`, so each rule says what it does with
@@ -21,9 +21,9 @@ from 1 to `maxWidth`.
   gives poison: `add` propagates poison (ADR-2026-10-30-0818).
 
 The flags of `add`, and `sub` and `mul`, are the next section's, the wrap
-flag rules. What the dialect's semantics does with an op whose family has
-no rules yet is in the section on the core dialect's semantics
-(ADR-2026-10-30-1855).
+flag rules. Every core op has its rules. What a dialect's semantics does
+with an op that has none is in the section on the core dialect's
+semantics (ADR-2026-10-30-1855).
 -/
 
 namespace Fir.Core

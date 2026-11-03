@@ -30,6 +30,20 @@ repos:
         language: python
         pass_filenames: false
         files: ^scripts/(test_)?check_adr_ids\.py$
+      # G0's source check on the Lean side (ADR-2026-11-03-0600). The Rust
+      # side is crates/funk-ir/tests/g0.rs, which rust-test runs.
+      - id: g0
+        name: Lean code written for every dialect names no part of the core dialect
+        entry: python scripts/check_g0.py
+        language: python
+        pass_filenames: false
+        files: ^(lean/|scripts/check_g0\.py$)
+      - id: g0-test
+        name: The G0 check passes its tests
+        entry: python scripts/test_check_g0.py
+        language: python
+        pass_filenames: false
+        files: ^(lean/|scripts/(test_)?check_g0\.py$)
       # The spec renders the ADRs as its appendix and checks every ADR
       # citation in lean/, the top-level files of docs/spec/ and docs/adrs/
       # (ADR-2026-10-30-1439).

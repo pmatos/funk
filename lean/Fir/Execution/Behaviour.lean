@@ -48,9 +48,9 @@ run in many ways. Its behaviour is the set of outcomes over all choices
 (ADR-2026-10-29-2017). That set is what the interpreter computes when it runs
 in the set monad below. A computation in it is the set of the ways it may
 end: with a result, or with UB. `choose` may give any bits, and `ub` ends the
-computation. `fir-ref`'s exhaustive and scripted modes compute this set, or
-one member of it, and the section on exhaustive and scripted runs proves
-that they do.
+computation. `fir-ref`'s exhaustive, scripted and sampled modes compute this
+set, or one member of it, and the section on exhaustive, scripted and
+sampled runs proves that they do.
 -/
 
 /-- One way a computation may end: with a result, or with immediate UB. -/
@@ -109,9 +109,9 @@ UB that some budget reaches, and divergence when every budget can be
 exhausted. In a behaviour, `fuelExhausted` stands for divergence.
 
 The two meet only through the bridge lemma `observable_eq_at` of the next
-section. #14's soundness theorems for `fir-ref`'s exhaustive and scripted
-modes are stated against `(run n).outcomes`, for the budget the mode runs
-with, and so is any rule that judges a run at one budget.
+section. The soundness theorems of `fir-ref`'s exhaustive, scripted and
+sampled modes are stated against `(run n).outcomes`, for the budget the
+mode runs with, and so is any rule that judges a run at one budget.
 
 Reading divergence as "every budget can be exhausted" assumes that every
 choice has finitely many options. Then, by König's lemma, a run that can
@@ -120,8 +120,8 @@ never ends. The core dialect's one choice, `choose w`, has `2^w` options. An
 effect that a dialect adds must keep this assumption, or come with its own
 definition of divergence.
 
-Execution gives valid modules their meaning, but the executable interpreter
-of #10 also runs modules that have not been validated. So a run computes in
+Execution gives valid modules their meaning, but `fir-ref run` also runs
+modules that have not been validated. So a run computes in
 `ExceptT Stuck SetM`: each of its paths ends with a result, with UB, or
 _stuck_, when it reaches a case that validation rules out, such as an
 undefined value or an operand of the wrong type. Stuck is part of each

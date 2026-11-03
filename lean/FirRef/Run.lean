@@ -19,8 +19,8 @@ proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no
-  `--choices`, the sequence is empty, so a run that makes no choice is
-  reported as before #14, with a count of `0` choices, and one that makes
+  `--choices`, the sequence is empty, so a run that makes no choice
+  reports its one outcome, with a count of `0` choices, and one that makes
   a choice is an error;
 * exhaustive mode, `--exhaustive`, reports every outcome of the run, when
   no path chooses more bits in all than its budget, `--choice-bits`;

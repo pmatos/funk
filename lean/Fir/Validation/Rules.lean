@@ -18,8 +18,11 @@ An op in block `b` at index `i` of function `f` is valid when:
 * it is a terminator exactly when it is the last op of its block, and it has
   as many successors as its op instance says; an op that is not a terminator
   has none, whatever its dialect says;
-* each value it uses is in scope: defined in the function and dominating the
-  use;
+* each of its successors is valid: it names a block of the function other
+  than the entry, and passes one value of the right type for each of that
+  block's arguments (`Func.SuccValid`, below);
+* each value it uses, an operand or a value that it passes to a successor,
+  is in scope: defined in the function and dominating the use;
 * each symbol it refers to names a function of the module;
 * its dialect's own rule holds;
 * its location reference is a key of the module's location table (H8).
