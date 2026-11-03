@@ -60,10 +60,14 @@ obligations of `add` and `ret`, in the sections after the interpreter.
 
 namespace Fir.Core
 
-/-- The poison class of each core op. -/
+/-- The poison class of each core op. Each op is listed, with no case for
+the rest, so a new core op does not build until it declares its class
+(ADR-2026-11-03-0600). -/
 def Op.poisonClass : Op → PoisonClass
+  | .const .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _
+  | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .zext .. | .sext ..
+  | .trunc .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .call .. => .exception
-  | _ => .propagates
 
 /-- A core value is poison when it is the poison of its `iN`. -/
 def Ty.IsPoison : {t : Ty} → ⟦t⟧ → Prop
