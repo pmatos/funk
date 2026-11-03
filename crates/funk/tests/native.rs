@@ -5,7 +5,7 @@
 mod common;
 
 use common::{boundaries, build, expect, func, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 #[test]
 fn parameters_constants_and_add_run_at_every_width() {

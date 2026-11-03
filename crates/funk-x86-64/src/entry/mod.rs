@@ -1,7 +1,9 @@
 //! The entry point of an executable that `funk build` links (ADR-2026-10-30-1233).
 //!
-//! It is one assembly file: the fixed runtime in `runtime.s`, then what this
-//! module writes for the module being built. That is a wrapper for each
+//! It is one assembly file: the fixed runtime in `runtime.s` and
+//! `values.s`, which parses arguments and prints results at every width
+//! (ADR-2026-11-03-0108), then what this module writes for the module
+//! being built. That is a wrapper for each
 //! function, which parses the function's arguments, calls it by the System V
 //! convention and prints each of its results, in order
 //! (ADR-2026-11-03-0109), and the table `__funk_functions`, which
@@ -19,17 +21,18 @@ use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module, Type};
 
 use crate::abi::{
-    self,
+    self, Arg,
     results::{Area, Layout},
 };
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
-use crate::width::{self, Ext};
+use crate::width::{self, Ext, PAIR};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
-/// wrappers call.
-const RUNTIME: &str = include_str!("runtime.s");
+/// wrappers call, among them those that read arguments and print results
+/// at every width, `i128` included, in `values.s`.
+const RUNTIME: &str = concat!(include_str!("runtime.s"), include_str!("values.s"));
 
 /// The stack that the runtime's routines need below a wrapper, with room to
 /// spare: the deepest of them uses less than 256 bytes.
@@ -91,8 +94,9 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
 /// because a function that never reaches a `ret`, which branches allow,
 /// must still have results it can print.
 ///
-/// Its frame holds a slot per argument, which after the call holds a result
-/// instead, and more slots when there are more results than arguments. When
+/// Its frame holds a slot per eightbyte of an argument, two for an `i128`,
+/// which after the call holds an eightbyte of a result instead, and more
+/// slots when the results take more eightbytes than the arguments. When
 /// the results go in memory it also holds the slot for the result area's
 /// address and, at its bottom, the area (ADR-2026-11-03-0109).
 fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnostic> {
@@ -101,17 +105,18 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
     let results = widths(&f.results).map_err(report)?;
     let layout = Layout::new(&results).map_err(report)?;
     let too_many = || report("the function has more values than a wrapper's frame holds".into());
-    let values = params.len().max(layout.places().len());
-    let slots = (1..=values + layout.hidden_arguments())
-        .map(|k| displacement(k).map(|disp| Mem { disp }))
-        .collect::<Option<Vec<Mem>>>()
-        .ok_or_else(too_many)?;
-    let size = size_for(slots.len())
+    let (args, arg_words) = slots(&params).ok_or_else(too_many)?;
+    let (outs, out_words) = slots(&results).ok_or_else(too_many)?;
+    let values = arg_words.max(out_words);
+    let address = values + 1;
+    let size = size_for(values + layout.hidden_arguments())
         .and_then(|s| s.checked_add(layout.area()))
         .ok_or_else(too_many)?;
     let area = if layout.in_memory() {
         Some(Area {
-            address: slots[values],
+            address: Mem {
+                disp: displacement(address).ok_or_else(too_many)?,
+            },
             base: Mem { disp: -size },
         })
     } else {
@@ -121,30 +126,67 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
     asm.label(&format!("__funk_entry_{i}"));
     asm.comment(format_args!("{}", print_symbol(&f.name)));
     frame::prologue(asm, size);
-    for (j, (w, at)) in params.iter().zip(&slots).enumerate() {
+    for (j, (w, a)) in params.iter().zip(&args).enumerate() {
         asm.ins("movl", format_args!("${j}, %edi"));
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_arg"));
-        asm.ins("movq", format_args!("%rax, {at}"));
+        asm.ins("movq", format_args!("%rax, {}", a.slot));
+        if a.words == 2 {
+            asm.ins("movq", format_args!("%rdx, {}", a.slot.high()));
+        }
     }
-    let mut args = Vec::with_capacity(layout.hidden_arguments() + params.len());
-    args.extend(area.map(|a| a.address));
-    args.extend(&slots[..params.len()]);
+    let mut passed = Vec::with_capacity(args.len() + 1);
+    passed.extend(area.map(|a| Arg {
+        slot: a.address,
+        words: 1,
+    }));
+    passed.extend(&args);
     if let Some(area) = area {
         layout.pass(asm, area);
     }
-    let outgoing = abi::call(asm, &f.name, &args).map_err(report)?;
-    let into = &slots[..layout.places().len()];
-    layout.receive(asm, area, into).map_err(report)?;
-    let rdi = Reg::Rdi;
-    for (w, slot) in results.iter().zip(into) {
-        asm.ins("movq", format_args!("{slot}, {}", rdi.q()));
-        width::extend(asm, Ext::Sign, *w, rdi);
+    let outgoing = abi::call(asm, &f.name, &passed).map_err(report)?;
+    let into: Vec<Mem> = outs.iter().flat_map(eightbytes).collect();
+    layout.receive(asm, area, &into).map_err(report)?;
+    // `__funk_rt_value` reads the high half of an `i128` from `%rdx`.
+    let (rdi, rdx) = (Reg::Rdi, Reg::Rdx);
+    for (&w, out) in results.iter().zip(&outs) {
+        asm.ins("movq", format_args!("{}, {}", out.slot, rdi.q()));
+        if w == PAIR {
+            asm.ins("movq", format_args!("{}, {}", out.slot.high(), rdx.q()));
+        } else {
+            width::extend(asm, Ext::Sign, w, rdi);
+        }
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
     Ok(stack_need(need, size, outgoing))
+}
+
+/// The slots in a wrapper's frame of values of `widths`, from `-8(%rbp)`
+/// down, and how many slots they take: two for an `i128`, its low half
+/// below, as in a function's frame (ADR-2026-11-03-010730). The arguments
+/// take these slots, and after the call the results take them again.
+fn slots(widths: &[u32]) -> Option<(Vec<Arg>, usize)> {
+    let mut used = 0usize;
+    let mut out = Vec::with_capacity(widths.len());
+    for &w in widths {
+        let words = if w == PAIR { 2 } else { 1 };
+        used = used.checked_add(words)?;
+        let disp = displacement(used)?;
+        out.push(Arg {
+            slot: Mem { disp },
+            words,
+        });
+    }
+    Some((out, used))
+}
+
+/// The slot of each eightbyte of `value`, its low half first.
+fn eightbytes(value: &Arg) -> impl Iterator<Item = Mem> {
+    [value.slot, value.slot.high()]
+        .into_iter()
+        .take(value.words)
 }
 
 /// The width of each of `types`, or why the backend does not lower one.

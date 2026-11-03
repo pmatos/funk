@@ -3,10 +3,11 @@
 //!
 //! Every value a function defines, parameters first, then each block's
 //! arguments and each op's results in order, has an 8-byte slot of its own
-//! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An op
-//! loads its operands from their slots into scratch registers, computes, and
-//! stores each result into its slot. No value stays in a register from one
-//! op to the next.
+//! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An
+//! `i128` has two slots next to each other, its low half at the lower
+//! address (ADR-2026-11-03-010730). An op loads its operands from their slots
+//! into scratch registers, computes, and stores each result into its slot.
+//! No value stays in a register from one op to the next.
 //!
 //! Below the values' slots, a frame holds what the result convention needs
 //! (ADR-2026-11-03-0109): a slot for the address of the function's own
@@ -25,6 +26,7 @@ use funk_ir::Func;
 use crate::abi::results::{Area, Layout};
 use crate::asm::{Asm, Mem, Reg};
 use crate::lower::callee;
+use crate::width;
 
 /// The size of a page: the stack grows, and a frame is probed, a page at a
 /// time.
@@ -51,12 +53,13 @@ impl<'f> Frame<'f> {
                 .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
         );
         let mut slots = HashMap::new();
+        let mut used = 0usize;
         for d in defs {
-            let n = slots.len() + 1;
-            let disp = displacement(n).ok_or_else(too_big)?;
+            used = used.checked_add(width::words(&d.ty)).ok_or_else(too_big)?;
+            let disp = displacement(used).ok_or_else(too_big)?;
             slots.entry(d.name.as_str()).or_insert(Mem { disp });
         }
-        let mut count = slots.len();
+        let mut count = used;
         let mut next = || {
             count += 1;
             displacement(count)
@@ -92,7 +95,8 @@ impl<'f> Frame<'f> {
         })
     }
 
-    /// The slot of the value named `name`.
+    /// The slot of the value named `name`: for an `i128`, the slot of its
+    /// low half, whose [`Mem::high`] is the slot of its high half.
     pub fn slot(&self, name: &str) -> Option<Mem> {
         self.slots.get(name).copied()
     }
@@ -119,7 +123,9 @@ fn too_big() -> String {
     "the function defines more values than a frame of 2 GiB holds".into()
 }
 
-/// The displacement of the `n`-th slot, from 1: `-8 * n`.
+/// The displacement of the `n`-th slot, from 1: `-8 * n`. A value that
+/// ends with the `n`-th slot starts there: an `i128` that takes the slots
+/// `n - 1` and `n` has its low half at `-8 * n`.
 pub fn displacement(n: usize) -> Option<i32> {
     i32::try_from(n).ok()?.checked_mul(-8)
 }
@@ -190,6 +196,19 @@ mod tests {
         assert_eq!(frame.size(), 32);
     }
 
+    #[test]
+    fn an_i128_takes_two_slots_with_its_low_half_below() {
+        let text = "func @f(%a: i128, %b: i8, %c: i128) -> i128 {\n^entry:\n  %d: i128 = add %a, %c @0\n  ret %d @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let f = m.funcs().next().unwrap();
+        let frame = Frame::new(f).unwrap();
+        assert_eq!(frame.slot("a"), Some(Mem { disp: -16 }));
+        assert_eq!(frame.slot("b"), Some(Mem { disp: -24 }));
+        assert_eq!(frame.slot("c"), Some(Mem { disp: -40 }));
+        assert_eq!(frame.slot("d"), Some(Mem { disp: -56 }));
+        assert_eq!(frame.size(), 64);
+    }
+
     /// After the values: the slot for the function's own result area's
     /// address, the slot for the address it passes, and at the bottom the
     /// largest area that one of its calls needs (ADR-2026-11-03-0109).
@@ -221,6 +240,29 @@ mod tests {
         assert_eq!(frames[2].result_area(), Some(area));
         assert_eq!(frames[2].size(), 80 + 48);
         assert_eq!(frames[2].slot("h"), Some(Mem { disp: -64 }));
+    }
+
+    /// The slots for the addresses come after both slots of each `i128`,
+    /// and an area holds each `i128` result in 16 bytes, 16-byte aligned.
+    #[test]
+    fn an_i128_among_results_in_memory_counts_two_slots_and_16_bytes() {
+        let text = "func @g(%a: i128) -> i8, i128 {\n^entry:\n  %b: i8 = trunc %a @0\n  ret %b, %a @0\n}\n\n\
+                    func @f(%a: i128) -> i128, i128 {\n^entry:\n  \
+                    %b: i8, %c: i128 = call @g %a @0\n  ret %c, %a @0\n}\n\n\
+                    locs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let frames: Vec<Frame> = m.funcs().map(|f| Frame::new(f).unwrap()).collect();
+        assert_eq!(frames[0].slot("b"), Some(Mem { disp: -24 }));
+        assert_eq!(frames[0].results_address(), Some(Mem { disp: -32 }));
+        assert_eq!(frames[0].size(), 32);
+        assert_eq!(frames[1].slot("c"), Some(Mem { disp: -40 }));
+        assert_eq!(frames[1].results_address(), Some(Mem { disp: -48 }));
+        let area = Area {
+            address: Mem { disp: -56 },
+            base: Mem { disp: -96 },
+        };
+        assert_eq!(frames[1].result_area(), Some(area));
+        assert_eq!(frames[1].size(), 64 + 32);
     }
 
     fn prologue_of(size: i32) -> String {

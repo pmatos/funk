@@ -56,6 +56,17 @@ pub struct Mem {
     pub disp: i32,
 }
 
+impl Mem {
+    /// The eightbyte just above this one: the high half of an `i128` whose
+    /// low half is here, since a pair holds its low half at the lower
+    /// address (ADR-2026-11-03-010730).
+    pub fn high(self) -> Mem {
+        Mem {
+            disp: self.disp + 8,
+        }
+    }
+}
+
 impl fmt::Display for Mem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}(%rbp)", self.disp)
@@ -125,6 +136,7 @@ mod tests {
         assert_eq!(Reg::R9.at(32), "%r9d");
         assert_eq!(Reg::Rsi.q(), "%rsi");
         assert_eq!(Mem { disp: -16 }.to_string(), "-16(%rbp)");
+        assert_eq!(Mem { disp: -16 }.high(), Mem { disp: -8 });
     }
 
     #[test]

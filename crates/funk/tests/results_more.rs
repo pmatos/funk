@@ -7,7 +7,7 @@
 mod common;
 
 use common::{boundaries, build, expect, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// `@mixed` returns seven results of five widths, in memory: `e`, `!a`
 /// (`a + true`, whose slot holds 2 for `true`), `c - 1`, `b + 1`, `d`, `a`

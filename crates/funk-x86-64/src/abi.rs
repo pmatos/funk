@@ -1,10 +1,16 @@
 //! How a funk function looks from outside (ADR-2026-10-30-1232): its symbol in the
 //! object file, where its arguments arrive and, in [`results`], where its
 //! results go (ADR-2026-11-03-0109), by the System V AMD64 calling convention.
+//! An `i128` passes as two eightbytes (ADR-2026-11-03-0108); `layout.rs`
+//! says where each one goes.
+
+mod layout;
 
 use std::fmt::Write;
 
 use funk_ir::ir::names::is_word;
+
+pub(crate) use layout::{Loc, layout};
 
 use crate::asm::{Asm, Mem, Reg};
 
@@ -13,32 +19,64 @@ pub mod results;
 /// The registers that carry the first six integer arguments, in order.
 pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8, Reg::R9];
 
-/// The register that carries an integer result.
+/// The register that carries an integer result, or the low half of an
+/// `i128` result; [`results`] says where the others go.
 pub const RESULT_REG: Reg = Reg::Rax;
 
+/// An argument of an outgoing call: the slot that holds it, relative to
+/// `%rbp`, and how many eightbytes it has: 2 for an `i128`, whose high half
+/// is in the slot above ([`Mem::high`]), and 1 for any other value.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Arg {
+    pub slot: Mem,
+    pub words: usize,
+}
+
 /// Emits a complete outgoing call to the funk function `callee`, given
-/// its raw fir name and argument slots in parameter order. `%rsp` must be
-/// 16-byte aligned, and every source slot is relative to `%rbp`.
+/// its raw fir name and its arguments in parameter order. `%rsp` must be
+/// 16-byte aligned.
 ///
-/// Arguments pass as their slots hold them, without extension. The call
-/// restores `%rsp` and leaves the results where [`results`] puts them. The
-/// returned byte count is its peak outgoing argument space, padding
-/// included, but not the return address: entry stack reservation accounts
-/// for that separately. A size error appends no assembly.
+/// Arguments pass as their slots hold them, without extension, where
+/// [`layout`] puts them: the eightbytes on the stack are pushed from the
+/// top down, a hole of padding as a `subq`, then the registers are loaded.
+/// When the results go in memory, the first argument is the address of the
+/// result area, of one eightbyte (ADR-2026-11-03-0109). The call restores
+/// `%rsp` and leaves the results where [`results`] puts them. The returned
+/// byte count is its peak outgoing argument space, padding included, but
+/// not the return address: entry stack reservation accounts for that
+/// separately. A size error appends no assembly.
 ///
 /// This owns placement and accounting for both fir calls and executable
 /// entry code (ADR-2026-11-02-1428).
-pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Mem]) -> Result<u64, String> {
-    let bytes = outgoing_bytes(args.len())
+pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, String> {
+    let words: Vec<usize> = args.iter().map(|a| a.words).collect();
+    let layout = layout(&words);
+    let bytes = outgoing_bytes(layout.stack)
         .ok_or("the call passes more arguments on the stack than 2 GiB holds")?;
-    let on_stack = args.get(ARG_REGS.len()..).unwrap_or_default();
-    if on_stack.len() % 2 == 1 {
-        asm.ins("subq", format_args!("$8, %rsp"));
+    let mut stack = vec![None; layout.stack / 8];
+    let mut regs = Vec::new();
+    for (a, locs) in args.iter().zip(&layout.args) {
+        for (loc, slot) in locs.iter().zip([a.slot, a.slot.high()]) {
+            match *loc {
+                Loc::Reg(reg) => regs.push((reg, slot)),
+                Loc::Stack(at) => stack[at / 8] = Some(slot),
+            }
+        }
     }
-    for slot in on_stack.iter().rev() {
-        asm.ins("pushq", format_args!("{slot}"));
+    let mut hole = 0;
+    for word in stack.iter().rev() {
+        match word {
+            None => hole += 8,
+            Some(slot) => {
+                if hole > 0 {
+                    asm.ins("subq", format_args!("${hole}, %rsp"));
+                    hole = 0;
+                }
+                asm.ins("pushq", format_args!("{slot}"));
+            }
+        }
     }
-    for (reg, slot) in ARG_REGS.iter().zip(args) {
+    for (reg, slot) in regs {
         asm.ins("movq", format_args!("{slot}, {}", reg.q()));
     }
     asm.ins("call", format_args!("{}", symbol(callee)));
@@ -48,26 +86,38 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Mem]) -> Result<u64, Str
     Ok(bytes as u64)
 }
 
-/// The 8-byte words that [`call`] pushes for `arguments` arguments before
-/// the return address: each argument past the sixth, and a word of padding
-/// when there is an odd number of them. The entry's stack figure reads a
-/// call by it too (ADR-2026-11-02-1132).
-pub(crate) fn pushed_words(arguments: usize) -> usize {
-    let stack = arguments.saturating_sub(ARG_REGS.len());
-    stack + stack % 2
+/// The eightbytes of each argument of a call, in the order that [`layout`]
+/// places them: `hidden` arguments of one eightbyte first, which is the
+/// address of the result area when the results go in memory
+/// ([`results::Layout::hidden_arguments`], ADR-2026-11-03-0109), then each
+/// of `args`. The address takes `%rdi`, so an `i128` argument looks for its
+/// pair of registers from `%rsi` on. The callee's prologue and the entry's
+/// stack figure read a call by this; [`call`] gets the address as its first
+/// [`Arg`].
+pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = usize>) -> Vec<usize> {
+    std::iter::repeat_n(1, hidden).chain(args).collect()
 }
 
-/// The padded outgoing area must fit the signed immediate of `addq`.
-fn outgoing_bytes(arguments: usize) -> Option<i32> {
-    i32::try_from(pushed_words(arguments).checked_mul(8)?).ok()
+/// The 8-byte words that [`call`] pushes, before the return address, for
+/// arguments of `words` eightbytes each: those that [`layout`] puts on the
+/// stack, and the padding between and after them. The entry's stack figure
+/// reads a call by it too (ADR-2026-11-02-1132).
+pub(crate) fn pushed_words(words: &[usize]) -> usize {
+    layout(words).stack / 8
 }
 
-/// The offset from `%rbp`, after the standard prologue, of argument `i`
-/// when it is passed on the stack: `i >= 6`. The return address is at
-/// `8(%rbp)`, and stack arguments follow it, 8 bytes each.
-pub fn stack_arg_offset(i: usize) -> Option<i32> {
-    let slot = i.checked_sub(ARG_REGS.len())?;
-    i32::try_from(slot).ok()?.checked_mul(8)?.checked_add(16)
+/// The padded outgoing area of `bytes` must fit the signed immediate of
+/// `addq`.
+fn outgoing_bytes(bytes: usize) -> Option<i32> {
+    i32::try_from(bytes).ok()
+}
+
+/// The offset from `%rbp`, after the standard prologue, of the eightbyte of
+/// an argument that the caller put `at` bytes above `%rsp` at the call
+/// ([`Loc::Stack`]). The return address is at `8(%rbp)`, and the stack
+/// arguments start at `16(%rbp)`.
+pub fn stack_arg_offset(at: usize) -> Option<i32> {
+    i32::try_from(at).ok()?.checked_add(16)
 }
 
 /// The symbol of the fir function `name` in the object file.
@@ -123,9 +173,10 @@ mod tests {
 
     #[test]
     fn stack_arguments_follow_the_return_address() {
-        assert_eq!(stack_arg_offset(5), None);
-        assert_eq!(stack_arg_offset(6), Some(16));
-        assert_eq!(stack_arg_offset(9), Some(40));
+        assert_eq!(stack_arg_offset(0), Some(16));
+        assert_eq!(stack_arg_offset(24), Some(40));
+        assert_eq!(stack_arg_offset(i32::MAX as usize - 16), Some(i32::MAX));
+        assert_eq!(stack_arg_offset(i32::MAX as usize - 15), None);
         assert_eq!(stack_arg_offset(usize::MAX), None);
     }
 }

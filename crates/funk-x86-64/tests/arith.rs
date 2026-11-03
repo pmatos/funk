@@ -5,7 +5,7 @@
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The assembly of `@f(%a: iW, %b: iW) -> iW` with the one op `line`,
 /// whose result is `%r`.

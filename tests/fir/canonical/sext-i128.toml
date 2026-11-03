@@ -1,0 +1,31 @@
+# Tests of sext-i128.fir: sext from each of i1, i8, i16, i32 and i64 to
+# i128 (#21), on the boundary bit patterns of the operand's type: 0, 1,
+# -1, the signed minimum and the signed maximum, or false and true at
+# i1. sext puts copies of the operand's top bit above it, so an operand with
+# its top bit set gives a negative result, all ones in its high half.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's.
+tests = [
+  { func = "@sext_i1_to_i128", args = ["false"] },
+  { func = "@sext_i1_to_i128", args = ["true"] },
+  { func = "@sext_i8_to_i128", args = ["0"] },
+  { func = "@sext_i8_to_i128", args = ["1"] },
+  { func = "@sext_i8_to_i128", args = ["-1"] },
+  { func = "@sext_i8_to_i128", args = ["-128"] },
+  { func = "@sext_i8_to_i128", args = ["127"] },
+  { func = "@sext_i16_to_i128", args = ["0"] },
+  { func = "@sext_i16_to_i128", args = ["1"] },
+  { func = "@sext_i16_to_i128", args = ["-1"] },
+  { func = "@sext_i16_to_i128", args = ["-32768"] },
+  { func = "@sext_i16_to_i128", args = ["32767"] },
+  { func = "@sext_i32_to_i128", args = ["0"] },
+  { func = "@sext_i32_to_i128", args = ["1"] },
+  { func = "@sext_i32_to_i128", args = ["-1"] },
+  { func = "@sext_i32_to_i128", args = ["-2147483648"] },
+  { func = "@sext_i32_to_i128", args = ["2147483647"] },
+  { func = "@sext_i64_to_i128", args = ["0"] },
+  { func = "@sext_i64_to_i128", args = ["1"] },
+  { func = "@sext_i64_to_i128", args = ["-1"] },
+  { func = "@sext_i64_to_i128", args = ["-9223372036854775808"] },
+  { func = "@sext_i64_to_i128", args = ["9223372036854775807"] },
+]

@@ -259,9 +259,9 @@ fn each_function_has_labels_of_its_own() {
 fn a_block_argument_of_a_width_the_backend_lacks_is_reported_once() {
     let text = "func @f(%a: i8) -> i8 {
 ^entry:
-  %w: i128 = zext %a @0
+  %w: i256 = zext %a @0
   br ^b(%w, %a) @0
-^b(%x: i128, %y: i8):
+^b(%x: i256, %y: i8):
   ret %y @0
 }
 

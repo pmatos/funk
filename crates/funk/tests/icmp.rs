@@ -14,7 +14,7 @@ use std::path::Path;
 
 use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
 use funk_ir::dialects::core::PREDICATES;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// Whether `p` holds of `a` and `b`, two values of `iW` read as signed
 /// (`Pred.holds` in `lean/Fir/Core/Compare.lean`, #77). `W` is at most 64.

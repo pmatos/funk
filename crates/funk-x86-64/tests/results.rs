@@ -206,16 +206,8 @@ fn no_result_and_one_result_need_no_area() {
 /// is defined: a call's result at the call, with its location.
 #[test]
 fn a_result_of_a_width_the_backend_does_not_lower_is_reported_at_its_op() {
-    for (t, why) in [
-        (
-            "i7",
-            "the x86-64 backend lowers i1, i8, i16, i32 and i64, not i7",
-        ),
-        (
-            "i128",
-            "the x86-64 backend does not lower i128 yet: it lowers i1, i8, i16, i32 and i64",
-        ),
-    ] {
+    for t in ["i7", "i256"] {
+        let why = format!("the x86-64 backend lowers i1, i8, i16, i32, i64 and i128, not {t}");
         let m = module(&format!(
             "func @g(%a: i64, %b: {t}) -> i64, {t}, i64 {{\n^entry:\n  ret %a, %b, %a @0\n}}\n\n\
              func @f(%a: i64, %b: {t}) -> i64 {{\n^entry:\n  \

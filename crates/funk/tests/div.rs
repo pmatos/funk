@@ -12,7 +12,7 @@ use std::path::Path;
 
 use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
 use funk_ir::dialects::core::DIVISION_OPS;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// How an op ends on two values (`divEv` in `lean/Fir/Core/Div.lean`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

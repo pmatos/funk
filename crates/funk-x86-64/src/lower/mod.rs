@@ -15,6 +15,10 @@
 //! its arguments (`call.rs`, ADR-2026-11-02-1021). `ret` and `call` place
 //! and read any number of results as `abi::results` lays them out
 //! (ADR-2026-11-03-0109).
+//!
+//! An `i128` is a pair of eightbytes in two slots, and each op lowers it
+//! through a pair of registers, `%rax` for its low half and `%rdx` for its
+//! high one unless the op says otherwise (ADR-2026-11-03-010730).
 
 mod arith;
 mod bitwise;
@@ -34,7 +38,7 @@ use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
 
-use crate::abi::{ARG_REGS, stack_arg_offset, symbol};
+use crate::abi::{self, Loc, layout, stack_arg_offset, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
@@ -111,6 +115,37 @@ impl<'f> Cx<'f> {
         Ok(())
     }
 
+    /// Loads the `i128` value `name` from its two slots: its low half into
+    /// `lo` and its high half into `hi`.
+    pub fn load_pair(&mut self, lo: Reg, hi: Reg, name: &str) -> Result<(), Unlowered> {
+        let slot = self.slot(name)?;
+        self.asm.ins("movq", format_args!("{slot}, {}", lo.q()));
+        self.asm
+            .ins("movq", format_args!("{}, {}", slot.high(), hi.q()));
+        Ok(())
+    }
+
+    /// The slots of each eightbyte of the value `name`, its low half first:
+    /// one, or two for an `i128`.
+    pub fn eightbytes(&self, name: &str) -> Result<Vec<Mem>, Unlowered> {
+        let slot = self.slot(name)?;
+        if self.width(name)? == width::PAIR {
+            Ok(vec![slot, slot.high()])
+        } else {
+            Ok(vec![slot])
+        }
+    }
+
+    /// Stores `lo` and `hi` into the two slots of the `i128` value `name`,
+    /// as its low half and its high half.
+    pub fn store_pair(&mut self, name: &str, lo: Reg, hi: Reg) -> Result<(), Unlowered> {
+        let slot = self.slot(name)?;
+        self.asm.ins("movq", format_args!("{}, {slot}", lo.q()));
+        self.asm
+            .ins("movq", format_args!("{}, {}", hi.q(), slot.high()));
+        Ok(())
+    }
+
     /// The arguments of the block labelled `label`.
     pub fn block_params(&self, label: &str) -> Result<&'f [Def], Unlowered> {
         self.params
@@ -149,6 +184,16 @@ impl<'f> Cx<'f> {
             self.widths.insert(d.name.as_str(), w.ok());
         }
         out
+    }
+}
+
+/// Whether the first result of `op` is an `i128`, so that the op lowers
+/// through register pairs. An op with no result is lowered by its own
+/// rule, which reports its shape.
+pub fn is_pair(cx: &Cx<'_>, op: &Op) -> Result<bool, Unlowered> {
+    match op.results.first() {
+        Some(r) => Ok(cx.width(&r.name)? == width::PAIR),
+        None => Ok(false),
     }
 }
 
@@ -258,14 +303,12 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
     cx.asm.label(&sym);
     frame::prologue(&mut cx.asm, cx.frame.size());
     // The address of the function's result area, when its results go in
-    // memory, arrives first, and its parameters after it (ADR-2026-11-03-0109).
+    // memory, arrives first, as an argument of one eightbyte, and its
+    // parameters after it (ADR-2026-11-03-0109).
     let hidden = cx.frame.results_address();
-    if let Some(slot) = hidden {
-        cx.asm
-            .ins("movq", format_args!("{}, {slot}", ARG_REGS[0].q()));
-    }
-    for (k, d) in f.params.iter().enumerate() {
-        let n = k + usize::from(hidden.is_some());
+    let mut incoming = Vec::with_capacity(f.params.len() + 1);
+    incoming.extend(hidden.map(|slot| ("the address of the result area".to_string(), slot)));
+    for d in &f.params {
         let Some(slot) = cx.frame.slot(&d.name) else {
             out.push(at(
                 f,
@@ -275,17 +318,27 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
             ));
             return None;
         };
-        if let Some(reg) = ARG_REGS.get(n) {
-            cx.asm.ins("movq", format_args!("{}, {slot}", reg.q()));
-        } else {
-            let Some(disp) = stack_arg_offset(n) else {
-                let why = format!("parameter %{} is out of the reach of %rbp", d.name);
-                out.push(at(f, entry, None, why));
-                return None;
-            };
-            let from = Mem { disp };
-            cx.asm.ins("movq", format_args!("{from}, %rax"));
-            cx.asm.ins("movq", format_args!("%rax, {slot}"));
+        incoming.push((format!("parameter %{}", d.name), slot));
+    }
+    let words = abi::passed(
+        usize::from(hidden.is_some()),
+        f.params.iter().map(|d| width::words(&d.ty)),
+    );
+    for ((what, slot), locs) in incoming.iter().zip(layout(&words).args) {
+        for (loc, to) in locs.into_iter().zip([*slot, slot.high()]) {
+            match loc {
+                Loc::Reg(reg) => cx.asm.ins("movq", format_args!("{}, {to}", reg.q())),
+                Loc::Stack(on_stack) => {
+                    let Some(disp) = stack_arg_offset(on_stack) else {
+                        let why = format!("{what} is out of the reach of %rbp");
+                        out.push(at(f, entry, None, why));
+                        return None;
+                    };
+                    let from = Mem { disp };
+                    cx.asm.ins("movq", format_args!("{from}, %rax"));
+                    cx.asm.ins("movq", format_args!("%rax, {to}"));
+                }
+            }
         }
     }
     for (k, b) in f.body.blocks.iter().enumerate() {

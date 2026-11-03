@@ -152,11 +152,16 @@ are on `main`:
   `const`, `add`, `sub` and `mul` with their flags, `freeze`, the bitwise
   ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or
   without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
-  `ret` and `call` at `i1`, `i8`, `i16`, `i32` and `i64` into an object
-  file and an executable for Linux. Native code holds no poison: a broken `nuw` or `nsw` gives the
+  `ret` and `call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for
+  division, `i128` into an object file and an executable for Linux. An
+  `i128` is a pair of eightbytes, and each op lowers it through a pair of
+  registers
+  ([ADR-2026-11-03-010730](docs/adrs/2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md)).
+  Native code holds no poison: a broken `nuw` or `nsw` gives the
   wrapped result, a broken `exact` the plain quotient, a shift by `N` or
-  more gives what x86's masked shift gives, and `freeze` copies its
-  operand
+  more gives what x86's masked shift gives (at `i128`, what the pair's
+  shift sequence gives for the amount's low 7 bits), and `freeze` copies
+  its operand
   ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
   A division is one bare `div` or `idiv` of its own size, with no guard
   ([ADR-2026-10-31-0050](docs/adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)).
@@ -171,10 +176,13 @@ are on `main`:
   ([ADR-2026-10-31-0335](docs/adrs/2026-10-31-0335-block-arguments-are-one-parallel-move.md)).
   A call follows System V and extends no argument
   ([ADR-2026-10-30-1232](docs/adrs/2026-10-30-1232-funk-function-abi.md),
-  [ADR-2026-11-02-1021](docs/adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)).
+  [ADR-2026-11-02-1021](docs/adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)),
+  and passes an `i128` in two registers or in 16 aligned bytes of the
+  stack
+  ([ADR-2026-11-03-0108](docs/adrs/2026-11-03-0108-an-i128-passes-in-two-registers-or-sixteen-aligned-bytes.md)).
   Functions and calls return any number of results, as System V returns
-  a structure: one or two in `%rax` and `%rdx`, more in a result area
-  that the caller provides
+  a structure: one or two eightbytes in `%rax` and `%rdx`, so one `i128`
+  in `%rdx:%rax`, and more in a result area that the caller provides
   ([ADR-2026-11-03-0109](docs/adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)).
   The executable runs one function from the command line and prints its
   results as JSON
@@ -238,7 +246,8 @@ These parts of M0 do not exist yet:
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In the backend, `i128`.
+- In the backend, division at `i128`
+  ([#22](https://github.com/pmatos/funk/issues/22)).
 
 The epic's sub-issues list the open work in full.
 

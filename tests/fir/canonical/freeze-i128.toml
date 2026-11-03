@@ -1,0 +1,28 @@
+# Tests of freeze-i128.fir: freeze at i128 (#21). freeze of a value
+# gives it, with no choice; freeze of poison chooses a value, the same for
+# every use, both of its halves (#14). %p = add nsw %a, 1 is poison when
+# %a is the signed maximum, and %f freezes it. freeze_halves takes %f
+# apart into its high and its low half and puts them back together: the
+# result xors that with %f, so it is 0 only when every use of %f reads the
+# same two halves. freeze_twice freezes %p twice, and subtracts one from
+# the other: on 0 they are one value, and on the signed maximum each
+# chooses its own, so that test would have every value of the type.
+# Each test is differential. fir-ref's exhaustive mode lists every
+# outcome, and native code must return one of them. Past the choice
+# budget of 16 bits, a test declares its results, each with a
+# witness, and seeded runs check that the run gives no other.
+tests = [
+  { func = "@freeze", args = ["0"] },
+  { func = "@freeze", args = ["1"] },
+  { func = "@freeze", args = ["-1"] },
+  { func = "@freeze", args = ["-170141183460469231731687303715884105728"] },
+  { func = "@freeze", args = ["170141183460469231731687303715884105727"] },
+  { func = "@freeze", args = ["18446744073709551615"] },
+  { func = "@freeze", args = ["1512366075204170947332355369683137040"] },
+  { func = "@freeze_poison", args = ["0"] },
+  { func = "@freeze_sub", args = ["0"] },
+  { func = "@freeze_twice", args = ["0"] },
+  { func = "@freeze_halves", args = ["0"] },
+  { func = "@freeze_sub", args = ["170141183460469231731687303715884105727"], results = [{ values = ["0"], witness = ["5"] }] },
+  { func = "@freeze_halves", args = ["170141183460469231731687303715884105727"], results = [{ values = ["0"], witness = ["1512366075204170947332355369683137040"] }] },
+]

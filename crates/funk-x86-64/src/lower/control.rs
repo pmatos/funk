@@ -15,6 +15,11 @@
 //! An `i1` result is returned as 0 or 1 in all of its eightbyte. That is
 //! more than C gives for a `_Bool` result, which defines only bits 0 to 7,
 //! so code that calls C may rely only on `%al` (ADR-2026-10-30-1232).
+//!
+//! An `i128` passes to a block argument as two copies of the parallel move,
+//! one per half (ADR-2026-11-03-010730). It returns as two eightbytes: alone
+//! in `%rdx:%rax`, and among other results in the area
+//! (ADR-2026-11-03-0108, ADR-2026-11-03-0109).
 
 use funk_ir::{Op, Succ};
 
@@ -23,6 +28,7 @@ use super::{Cx, Lower, Unlowered};
 use crate::abi::results::Layout;
 use crate::asm::{Mem, Reg};
 use crate::frame;
+use crate::width::PAIR;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -98,9 +104,13 @@ fn moves(cx: &Cx<'_>, s: &Succ) -> Result<Vec<Step<Mem>>, Unlowered> {
     }
     let mut pairs = Vec::with_capacity(params.len());
     for (p, a) in params.iter().zip(&s.args) {
-        cx.width(&p.name)?;
+        let w = cx.width(&p.name)?;
         cx.width(a)?;
-        pairs.push((cx.slot(&p.name)?, cx.slot(a)?));
+        let (to, from) = (cx.slot(&p.name)?, cx.slot(a)?);
+        pairs.push((to, from));
+        if w == PAIR {
+            pairs.push((to.high(), from.high()));
+        }
     }
     Ok(sequence(&pairs))
 }
@@ -128,12 +138,13 @@ fn edge(cx: &mut Cx<'_>, s: &Succ, steps: &[Step<Mem>], ends: bool) {
 
 /// `ret %a, %b`, with any number of values.
 fn ret(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
+    let mut widths = Vec::with_capacity(op.operands.len());
     let mut from = Vec::with_capacity(op.operands.len());
     for v in &op.operands {
         let w = cx.width(v)?;
-        from.push((cx.slot(v)?, w));
+        widths.push(w);
+        from.extend(cx.eightbytes(v)?.into_iter().map(|slot| (slot, w)));
     }
-    let widths: Vec<u32> = from.iter().map(|&(_, w)| w).collect();
     let layout = Layout::new(&widths)?;
     let address = cx.frame.results_address();
     layout.give(&mut cx.asm, address, &from)?;

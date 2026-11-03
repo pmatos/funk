@@ -1,6 +1,7 @@
 # A funk function is a System V AMD64 function, with a symbol made from its fir name
 
-Status: accepted; refined by ADR-2026-11-02-1021 and ADR-2026-11-03-0109
+Status: accepted; refined by ADR-2026-11-02-1021, ADR-2026-11-03-0108 and
+ADR-2026-11-03-0109
 
 ## Context
 

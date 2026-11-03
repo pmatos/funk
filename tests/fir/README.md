@@ -76,8 +76,9 @@ differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
 `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
-`call` at `i1`, `i8`, `i16`, `i32` and `i64`, with any number of
-results. Tests of other widths go in modules whose tests are all
+`call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for the four ops of
+division, `i128`, with any number of results. Tests of other widths, or
+of division at `i128`, go in modules whose tests are all
 interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
@@ -225,6 +226,26 @@ texts of `call` that do not decode, and `reject/validation-call.toml`
 those that break its rules of validation: an unknown callee, and
 arguments or results that do not match the callee's signature.
 
+The texts of #21 run every op but division at `i128`, on the boundary
+bit patterns and on values that cross the 64-bit boundary, such as
+`2^64 - 1`, `2^64`, `-2^64` and a value whose halves differ.
+`add-i128`, `sub-i128` and `mul-i128` run each op with each set of
+flags, and add pairs that carry or borrow out of the low half, and
+products whose high half comes from the cross products. `bitwise-i128`,
+`icmp-eq-i128`, `icmp-signed-i128`, `icmp-unsigned-i128` and
+`select-i128` add values whose halves differ, or whose low halves
+compare the other way from their high halves. `shl-i128`, `lshr-i128`
+and `ashr-i128` shift by 63, 64, 65 and 127, and by 128 or more, which
+gives poison. `zext-i128`, `sext-i128` and `trunc-i128` change widths
+to and from `i1`, `i8`, `i16`, `i32` and `i64`. `freeze-i128` freezes
+values and poison, and `freeze-xor-i128` runs `xor %f, %f` on a frozen
+poison, declared as its one result `0` with a witness. `branch-i128`,
+`permute-i128` and `loop-i128` pass `i128` block arguments, and
+`call-i128`, `call-args-i128` and `recursion-i128` pass and return
+`i128`s across calls, in register pairs and on the stack, in each layout
+of ADR-2026-11-03-0108. `tracer-i128` states what `fir-ref` gives for
+`const`, `add` and `ret` at `i128`.
+
 The texts of #31 return several values natively, as
 [ADR-2026-11-03-0109](../../docs/adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)
 lays them out: one or two in registers, more in a result area that the
@@ -238,3 +259,15 @@ results of mixed widths and calls with six or more arguments whose
 results go in memory, so that some arguments go on the stack.
 `results` and `call-several`, interpreter-only until #31, are
 differential.
+
+The texts of #21 that came after #31 return an `i128` among several
+results, which goes in the result area at an offset that is a multiple
+of 16, low half first. `several-i128` returns an `i128` first, in the
+middle, last, and twice, among narrower results, poison in an `i128`
+next to defined results and the reverse, and a frozen value twice.
+`several-pairs-i128` returns an `i128` next to an `i64` in either order,
+and two `i128`s, passes an `i128` result on to other calls, and hits UB
+and runs out of fuel in callees that return `i128`s among other results.
+`several-args-i128` passes `i128` arguments to calls whose results go in
+memory, so that the area's address takes `%rdi` and some of them go on
+the stack, and recurses 20 deep returning two `i128`s around an `i64`.
