@@ -13,8 +13,9 @@ attributes, and a block of 100,000 ops, and get the decoder's verdict on
 each: the reader reads them whole. A lexer error at the end of a text is
 reported before a reader error at its start, as the spec reports it. On
 small texts, `readText` gives what the spec's lexer and `Text.readModule`
-give, errors included. The last checks pin the axioms of the theorems to
-Lean's standard ones.
+give, errors included; here `Text.readModule` runs as `FirRef.readModule`,
+the same readers on a list of tokens. The last checks pin the axioms of the
+theorems to Lean's standard ones.
 -/
 
 namespace FirTest

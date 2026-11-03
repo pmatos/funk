@@ -1,10 +1,10 @@
 import FirRef.Read.Attr
 
 /-!
-The readers of flat lists, on a cursor: definitions, successors and the
-operands of an op. Each spec reader recurses once per element; each reader
-here is a loop that keeps the elements read so far, last first, so its only
-call to itself is a tail call.
+The readers of flat lists, on a cursor: definitions and successors. Each
+spec reader recurses once per element; each reader here is a loop that
+keeps the elements read so far, last first, so its only call to itself is
+a tail call.
 -/
 
 namespace FirRef
