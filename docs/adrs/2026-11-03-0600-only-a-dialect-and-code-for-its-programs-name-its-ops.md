@@ -29,13 +29,16 @@ no one declared for it.
 _Generic code_ sees every op alike and must not know the ops of any
 dialect. It is:
 
-- in Rust, all of `funk-ir`'s `src/` but `src/dialects/` and the module
-  generator, `src/generate.rs` and `src/generate/`: the IR, the registry,
-  the parser, the printer and the verifier;
+- in Rust, all of `funk-ir`'s `src/` but `src/dialects/`, the module
+  generator (`src/generate.rs` and `src/generate/`) and the unit tests
+  (`#[cfg(test)]` items and the files of `#[cfg(test)]` modules): the IR,
+  the registry, the parser, the printer and the verifier;
 - in Lean, all of `lean/Fir/` but the core dialect's `lean/Fir/Core/` and
   the text chapter's example, `Fir/Text/Example.lean`, which is a core
-  module; and all of `lean/FirRef/` but `fir-ref`'s command line: `Main`,
-  `Report`, `Run`, `RunArgs` and `Sample`.
+  module; all of `lean/FirRef/` but `fir-ref`'s command line, which runs
+  core programs: its entry point `Main`, its reports `Report`, and
+  `fir-ref run` and its arguments, `Run` and `RunArgs`; and G0's own
+  test, `lean/FirTest/G0.lean`.
 
 Generic code reaches a dialect's ops only through the registry (`OpSpec`,
 `TypeSpec`) or the dialect's classes (`DialectText`, `DialectSignature`,
@@ -46,8 +49,11 @@ not per-op code. Neither is an item's kind: a new kind of item is a new
 
 Code that builds, lowers or runs the programs of one dialect may name its
 ops: the dialect's own files, the module generator of the property tests,
-the x86-64 backend's lowering (each op family by name; any other op is a
-diagnostic at the op), `fir-ref`'s command line, the tests and the corpus.
+the x86-64 backend (`crates/funk-x86-64/`: its lowering names each op
+family, the rest of it reaches ops through the lowering, and any other op
+is a diagnostic at the op), `funk`'s command line (`crates/funk/src/`,
+which today reaches ops only by registering the core dialect,
+`Registry::core()`), `fir-ref`'s command line, the tests and the corpus.
 
 Two files of the text chapter end with the core dialect's corollaries of
 results proved for every dialect: `Core.printThenParse` in
@@ -56,9 +62,9 @@ results proved for every dialect: `Core.printThenParse` in
 write its words.
 
 Every op of every dialect declares its class through `DialectPoison`. The
-core dialect lists each of its 24 ops in `Core.Op.poisonClass`, with no
-case for the rest. The Rust IR has no semantics, so poison classes are
-Lean's alone (S7).
+core dialect lists each of its 24 ops by its constructor in
+`Core.Op.poisonClass`, with no case for the rest. The Rust IR has no
+semantics, so poison classes are Lean's alone (S7).
 
 ### How CI keeps it
 
@@ -68,26 +74,34 @@ Lean's alone (S7).
   built field by field with a name that no dialect registers, so the test
   stops compiling if the name stops being a string. A small lexer,
   `tests/g0_scan/`, reads the code of the generic modules, without
-  comments and `#[cfg(test)]` items. The test fails when that code writes
-  a word of the core dialect's text as a string (an op name from the core
-  dialect's registration, a predicate, a flag, `exact`, `true`, `false`,
-  `ptr` or an `iN`), names the `dialects` module outside `lib.rs` and
-  `registry.rs`, or declares an `enum` with a variant named after a core
-  op.
+  comments and unit tests. The test fails when that code writes a word of
+  the core dialect's text as a string (an op name from the core dialect's
+  registration, a predicate, a flag, `exact`, `true`, `false`, `ptr` or an
+  `iN`), names the `dialects` module in a path outside `lib.rs` and
+  `registry.rs` (a field or a variable of that name is not the module), or
+  declares an `enum` with two or more variants named after core ops. One
+  such variant is not a closed set of ops: the spec's own `Exit` has
+  `ret`.
 - `scripts/check_g0.py`, which a new hook, `g0`, runs, with its tests in
   `scripts/test_check_g0.py` (hook `g0-test`). In the generic Lean files,
-  it fails on a name with a part `Core` or `CoreDialect`, imports
-  included, and on a string that is a word of the code of
-  `lean/Fir/Core/Text.lean` or an `iN`. It skips comments and commands
-  such as `#guard`.
+  it fails on a name with a part `Core` or `CoreDialect` (Lean's own
+  `Lean.` names aside), on an import of a module that it leaves out, and
+  on a string that is a word of the code of `lean/Fir/Core/Text.lean` or
+  an `iN`. It reads raw strings, and the code inside an interpolated
+  string, and skips comments and commands such as `#guard`. It also fails
+  when a case of `Core.Op.poisonClass` is not one op's constructor, so a
+  case for the rest cannot come back. The dialects' directories are one
+  constant, `DIALECT_DIRS`, so the ADR that adds a dialect moves the line
+  there.
 - `lean/FirTest/G0.lean`, which `fir-spec` and `fir-ref-test` build. It
   restates for an arbitrary dialect, with the spec's own proof or
   definition: the parser and the printer, `fir-ref`'s copies of them, both
   round trips, that the parser gives well-formed modules and that valid
   modules are well formed, the validation check, the interpreter, and the
   theorems of fuel monotonicity, progress, no stuck path and poison
-  propagation. Narrowing one of them to the core
-  dialect breaks the build. With no case for the rest in
+  propagation. Narrowing one of those definitions or theorems to the core
+  dialect breaks the build, and `g0` fails if a statement of `G0.lean`
+  names the core dialect. With no case for the rest in
   `Core.Op.poisonClass`, a new core op does not build until it declares
   its class.
 

@@ -11,7 +11,9 @@ with the spec's own proof or definition. It builds only while those stay
 parameterized over the dialect: narrowing one of them to the core dialect
 breaks this file. `scripts/check_g0.py` checks the other half, that the
 code of the spec's chapters for every dialect names nothing of the core
-dialect and writes none of its words.
+dialect and writes none of its words. It checks this file too, outside its
+`#guard` commands, so a statement below cannot be narrowed to the core
+dialect.
 
 The last section checks that every core op declares its poison class.
 -/
@@ -128,7 +130,8 @@ theorem propagates (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d
 /-!
 The core dialect declares a class for each of its ops, case by case:
 `Core.Op.poisonClass` has no case for the rest, so a new core op does not
-build until it has one. Eighteen ops propagate poison and six are
+build until it has one, and `scripts/check_g0.py` fails if a case for the
+rest comes back. Eighteen ops propagate poison and six are
 exceptions (ADR-2026-10-30-0818). The samples of the core ops name all 24,
 and the checks below pin the split on them.
 -/

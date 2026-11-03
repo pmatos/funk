@@ -5,14 +5,14 @@
 //! and the IR, the parser, the printer and the verifier have no per-op code
 //! (ADR-2026-10-29-2016, ADR-2026-10-30-1146). The tests check it two ways.
 //! An empty registry knows no op, so nothing outside the registry knows
-//! one. And the code of every module but the dialects and the module
-//! generator writes no word of the core dialect's text, names the core
-//! dialect only to register it, and declares no `enum` with a variant named
-//! after a core op.
+//! one. And the code of every module but the dialects, the module generator
+//! and the unit tests writes no word of the core dialect's text, names the
+//! core dialect only to register it, and declares no `enum` with two or
+//! more variants named after core ops.
 
 mod g0_scan;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use funk_ir::dialects::core::{self, PREDICATES, WRAP_FLAG_SETS};
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
@@ -67,40 +67,47 @@ fn camel(word: &str) -> String {
         .collect()
 }
 
-/// The modules of `funk-ir` whose code sees every op alike: all of `src/`
-/// but the dialects, which define ops, and the module generator, which
-/// builds core modules for the property tests. A new module is checked
-/// unless it goes in one of those places.
+/// The modules of `funk-ir` whose code sees every op alike, with their
+/// text (`g0_scan::sources`).
 fn generic_sources() -> Vec<(String, String)> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let mut files = Vec::new();
-    let mut dirs = vec![root.join("src")];
-    while let Some(dir) = dirs.pop() {
-        for entry in std::fs::read_dir(&dir).expect("a source directory") {
-            let path = entry.expect("a directory entry").path();
-            if path.is_dir() {
-                dirs.push(path);
-            } else if path.extension().is_some_and(|x| x == "rs") {
-                files.push(path);
+    g0_scan::sources::generic_sources(Path::new(env!("CARGO_MANIFEST_DIR")))
+}
+
+/// Whether the code names the `dialects` module: as a part of a path, as
+/// in `crate::dialects::core` or `use crate::{dialects, ir}`, or in its
+/// declaration. A field, a variable or a parameter of that name is not the
+/// module.
+fn names_the_dialects_module(ts: &[Tok]) -> bool {
+    let colons =
+        |k: usize| ts.get(k) == Some(&Tok::Punct(':')) && ts.get(k + 1) == Some(&Tok::Punct(':'));
+    let mut in_use = false;
+    for (k, t) in ts.iter().enumerate() {
+        match t {
+            Tok::Ident(kw) if kw == "use" => in_use = ts.get(k + 1) != Some(&Tok::Punct('<')),
+            Tok::Punct(';') => in_use = false,
+            Tok::Ident(name) if name == "dialects" => {
+                let after_mod = k > 0 && ts[k - 1] == Tok::Ident("mod".into());
+                if in_use || after_mod || colons(k + 1) || (k >= 2 && colons(k - 2)) {
+                    return true;
+                }
             }
+            _ => {}
         }
     }
-    let rel = |p: &Path| -> String {
-        let r = p.strip_prefix(&root).expect("under the crate");
-        r.to_string_lossy().replace('\\', "/")
-    };
-    let mut out: Vec<(String, String)> = files
-        .iter()
-        .map(|p| (rel(p), p))
-        .filter(|(r, _)| {
-            !r.starts_with("src/dialects/")
-                && r != "src/generate.rs"
-                && !r.starts_with("src/generate/")
+    false
+}
+
+/// Each `enum` of the code with two or more variants named after core
+/// ops: a closed set of ops. One such variant is not one: the spec's own
+/// `Exit` has a variant `ret`.
+fn enums_of_core_ops(ts: &[Tok], variants: &[String]) -> Vec<String> {
+    enum_variants(ts)
+        .into_iter()
+        .filter_map(|(name, vs)| {
+            let ops: Vec<&String> = vs.iter().filter(|v| variants.contains(v)).collect();
+            (ops.len() >= 2).then(|| format!("{name} {{ {ops:?} }}"))
         })
-        .map(|(r, p)| (r, std::fs::read_to_string(p).expect("a UTF-8 source")))
-        .collect();
-    out.sort();
-    out
+        .collect()
 }
 
 /// The text of a module with one function, `@f`, whose entry block holds
@@ -201,8 +208,7 @@ fn only_the_registry_names_the_core_dialect() {
         if path == "src/lib.rs" || path == "src/registry.rs" {
             continue;
         }
-        let toks = code(&tokens(&src));
-        if toks.iter().any(|t| *t == Tok::Ident("dialects".into())) {
+        if names_the_dialects_module(&code(&tokens(&src))) {
             found.push(path);
         }
     }
@@ -214,14 +220,36 @@ fn only_the_registry_names_the_core_dialect() {
 }
 
 #[test]
-fn no_enum_has_a_variant_named_after_a_core_op() {
+fn the_dialects_module_is_named_only_as_a_path() {
+    let names = |src: &str| names_the_dialects_module(&code(&tokens(src)));
+    for src in [
+        "use crate::dialects;",
+        "use crate::dialects::core::dialect;",
+        "use crate::{dialects, ir};",
+        "fn f() { super::dialects::core::dialect(); }",
+        "fn f() { dialects::core::dialect(); }",
+        "pub mod dialects;",
+    ] {
+        assert!(names(src), "{src}");
+    }
+    for src in [
+        "pub fn count(dialects: &[String]) -> usize { dialects.len() }",
+        "fn f(&self) -> usize { self.dialects.len() }",
+        "struct R { dialects: Vec<String> }",
+        "fn f(d: Vec<String>) -> R { R { dialects: d } }",
+        "fn f(dialects: &[u8]) -> impl Iterator + use<'_> { dialects.iter() }",
+    ] {
+        assert!(!names(src), "{src}");
+    }
+}
+
+#[test]
+fn no_enum_is_a_closed_set_of_core_ops() {
     let variants: Vec<String> = core_ops().iter().map(|w| camel(w)).collect();
     let mut found = Vec::new();
     for (path, src) in generic_sources() {
-        for (name, v) in enum_variants(&code(&tokens(&src))) {
-            if variants.contains(&v) {
-                found.push(format!("{path}: {name}::{v}"));
-            }
+        for e in enums_of_core_ops(&code(&tokens(&src)), &variants) {
+            found.push(format!("{path}: {e}"));
         }
     }
     assert!(
@@ -229,4 +257,12 @@ fn no_enum_has_a_variant_named_after_a_core_op() {
         "a closed enum of core ops outside a dialect (ADR-2026-11-03-0600): {found:?}"
     );
     assert_eq!(camel("cond_br"), "CondBr");
+    let enums = |src: &str| enums_of_core_ops(&code(&tokens(src)), &variants);
+    assert_eq!(
+        enums("enum OpKind { Add, Sub }"),
+        ["OpKind { [\"Add\", \"Sub\"] }"]
+    );
+    assert_eq!(enums("enum T { Br, CondBr(u8), Ret { n: u8 } }").len(), 1);
+    assert!(enums("enum Exit { Ret, Jump }").is_empty());
+    assert!(enums("enum Tok { Str(String), Ident(String), Punct(char) }").is_empty());
 }

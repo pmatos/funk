@@ -2,6 +2,8 @@
 //! identifiers and punctuation of a source, without its comments, and
 //! without the items it compiles only for its own unit tests.
 
+pub mod sources;
+
 /// A token of Rust code.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Tok {
@@ -149,7 +151,8 @@ fn is_cfg_test(ts: &[Tok]) -> bool {
 }
 
 /// The code of a source's tokens: each item marked `#[cfg(test)]` is cut,
-/// up to the `;` that ends it or the brace that closes its body.
+/// up to the `;` that ends it or the brace that closes its body, outside
+/// any bracket, as in `const X: [&str; 1] = ["br"];`.
 pub fn code(ts: &[Tok]) -> Vec<Tok> {
     let mut out = Vec::new();
     let mut i = 0;
@@ -166,10 +169,10 @@ pub fn code(ts: &[Tok]) -> Vec<Tok> {
             i += 1;
             match t {
                 Tok::Punct(';') if depth == 0 => break,
-                Tok::Punct('{') => depth += 1,
-                Tok::Punct('}') => {
+                Tok::Punct('{' | '(' | '[') => depth += 1,
+                Tok::Punct(c @ ('}' | ')' | ']')) => {
                     depth = depth.saturating_sub(1);
-                    if depth == 0 {
+                    if depth == 0 && *c == '}' {
                         break;
                     }
                 }
@@ -180,8 +183,76 @@ pub fn code(ts: &[Tok]) -> Vec<Tok> {
     out
 }
 
+/// The index of the bracket that closes the one at `open`, or the end.
+fn closing(ts: &[Tok], open: usize) -> usize {
+    let mut depth = 0usize;
+    for (k, t) in ts.iter().enumerate().skip(open) {
+        match t {
+            Tok::Punct('{' | '(' | '[') => depth += 1,
+            Tok::Punct('}' | ')' | ']') => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return k;
+                }
+            }
+            _ => {}
+        }
+    }
+    ts.len()
+}
+
+/// A module that a source compiles only for its unit tests,
+/// `#[cfg(test)] mod name;` or `#[cfg(test)] mod name { … }`, and the file
+/// that its `#[path = "…"]` names, if it has one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TestMod {
+    pub name: String,
+    pub path: Option<String>,
+}
+
+/// The test modules of a source's tokens, comments left out but the
+/// `#[cfg(test)]` items kept.
+pub fn test_modules(ts: &[Tok]) -> Vec<TestMod> {
+    let mut out = Vec::new();
+    let (mut test, mut path) = (false, None);
+    let mut i = 0;
+    while i < ts.len() {
+        if ts[i] == Tok::Punct('#') && ts.get(i + 1) == Some(&Tok::Punct('[')) {
+            let end = closing(ts, i + 1);
+            let attr = &ts[(i + 2).min(end)..end];
+            test |= is_cfg_test(&ts[i..]);
+            if let [Tok::Ident(key), Tok::Punct('='), Tok::Str(p)] = attr
+                && key == "path"
+            {
+                path = Some(p.clone());
+            }
+            i = end + 1;
+            continue;
+        }
+        if ts[i] == Tok::Ident("pub".into()) {
+            i += 1;
+            if ts.get(i) == Some(&Tok::Punct('(')) {
+                i = closing(ts, i) + 1;
+            }
+            continue;
+        }
+        if let (Tok::Ident(kw), Some(Tok::Ident(name))) = (&ts[i], ts.get(i + 1))
+            && kw == "mod"
+            && test
+        {
+            out.push(TestMod {
+                name: name.clone(),
+                path: path.clone(),
+            });
+        }
+        (test, path) = (false, None);
+        i += 1;
+    }
+    out
+}
+
 /// Each `enum` of the code and the names of its variants.
-pub fn enum_variants(ts: &[Tok]) -> Vec<(String, String)> {
+pub fn enum_variants(ts: &[Tok]) -> Vec<(String, Vec<String>)> {
     let mut out = Vec::new();
     for (k, t) in ts.iter().enumerate() {
         let (Tok::Ident(kw), Some(Tok::Ident(name))) = (t, ts.get(k + 1)) else {
@@ -195,6 +266,7 @@ pub fn enum_variants(ts: &[Tok]) -> Vec<(String, String)> {
         };
         let mut depth = 0usize;
         let mut expect = true;
+        let mut variants = Vec::new();
         for t in &ts[k + open..] {
             match t {
                 Tok::Punct('{' | '(' | '[') => depth += 1,
@@ -206,12 +278,13 @@ pub fn enum_variants(ts: &[Tok]) -> Vec<(String, String)> {
                 }
                 Tok::Punct(',') if depth == 1 => expect = true,
                 Tok::Ident(v) if depth == 1 && expect => {
-                    out.push((name.clone(), v.clone()));
+                    variants.push(v.clone());
                     expect = false;
                 }
                 _ => {}
             }
         }
+        out.push((name.clone(), variants));
     }
     out
 }
@@ -231,7 +304,14 @@ mod tests {
 }
 #[cfg(test)]
 const ICMP: &str = "icmp";
+#[cfg(test)]
+const OPS: [&str; 2] = ["add", "sub"];
+#[cfg(test)]
+fn h() -> [u8; 1] { let _ = "ret"; [0; 1] }
+#[cfg(test)]
+struct S(&'static str);
 enum E<T> { #[default] Add, Sub(T), CondBr { x: [u8; 2] }, Ret = 3 }
+enum F { X }
 "##;
     let ts = code(&tokens(src));
     let strs: Vec<&str> = ts
@@ -244,6 +324,42 @@ enum E<T> { #[default] Add, Sub(T), CondBr { x: [u8; 2] }, Ret = 3 }
     assert_eq!(strs, ["const", "br \"quoted\"", "or", "\\\"ret\\\""]);
     assert!(!ts.contains(&Tok::Ident("tests".into())));
     assert!(!ts.contains(&Tok::Ident("ICMP".into())));
-    let vs: Vec<String> = enum_variants(&ts).into_iter().map(|(_, v)| v).collect();
-    assert_eq!(vs, ["Add", "Sub", "CondBr", "Ret"]);
+    assert!(!ts.contains(&Tok::Ident("OPS".into())));
+    assert!(!ts.contains(&Tok::Ident("S".into())));
+    let es = enum_variants(&ts);
+    let names: Vec<&str> = es.iter().map(|(n, _)| n.as_str()).collect();
+    assert_eq!(names, ["E", "F"]);
+    assert_eq!(es[0].1, ["Add", "Sub", "CondBr", "Ret"]);
+    assert_eq!(es[1].1, ["X"]);
+}
+
+#[test]
+fn the_lexer_finds_the_test_modules() {
+    let src = r#"
+#[cfg(test)]
+mod more_tests;
+#[cfg(test)]
+#[path = "t.rs"]
+pub(crate) mod tests;
+#[path = "p.rs"] #[cfg(test)] mod inline { mod deeper; }
+mod real;
+#[cfg(not(test))]
+mod not_a_test;
+#[cfg(test)]
+use std::fmt;
+mod after_a_test_use;
+"#;
+    let found = test_modules(&tokens(src));
+    let want = |name: &str, path: Option<&str>| TestMod {
+        name: name.into(),
+        path: path.map(String::from),
+    };
+    assert_eq!(
+        found,
+        [
+            want("more_tests", None),
+            want("tests", Some("t.rs")),
+            want("inline", Some("p.rs")),
+        ]
+    );
 }
