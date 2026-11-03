@@ -33,12 +33,19 @@ harness and the shell that started it
   which bounds every mapping, `MAP_NORESERVE` ones included. A hard limit
   equal to the soft one keeps the executable from raising it.
 - **1 GiB, `tools.DATA_LIMIT`.** It is far more than a run of the corpus
-  maps: its code, and a stack of its frames and 16 KiB, or at most
-  `ulimit -s`, 8 MiB by default, under PR #90. It is far less than a CI
-  runner's memory, so a runaway run ends long before memory or swap
-  fill. One fixed size, so a verdict does not depend on the machine.
-  When the harness already runs under a lower soft limit, the child
-  keeps that one: the limit never loosens, and setting it never fails.
+  needs: its code, and a stack of its frames and 16 KiB, or at most
+  `ulimit -s`, 8 MiB by default, under PR #90. Under
+  `ulimit -s unlimited`, PR #90's runtime asks for memory and swap,
+  `RLIMIT_AS` refuses, and the runtime halves its request until one
+  fits. So a valid test still runs, on a stack below 1 GiB, and a
+  runaway one still ends at its guard page with exit status 2. The
+  harness relies on that halving there: a runtime that gave up at the
+  first refusal would exit with 2 on every recursive test. 1 GiB is far
+  less than a CI runner's memory, so a runaway run ends long before
+  memory or swap fill. One fixed size, so a verdict does not depend on
+  the machine. When the harness already runs under a lower soft limit,
+  the child keeps that one: the limit never loosens, and setting it
+  never fails.
 - **The verdicts do not change.** A run that cannot reserve its stack
   exits with 2 (ADR-2026-10-30-1233), and one that outgrows it exits
   with 2 under PR #90 or dies by `SIGSEGV`. `tools.native_values` reads
@@ -67,7 +74,10 @@ harness and the shell that started it
 - `preexec_fn` runs in the child between `fork` and `exec`, which Python
   documents as unsafe in a process with threads; the harness has none.
 - `test_tools.py` checks that a child of `run_native` runs under the
-  limit, maps below it and cannot map past it, and that a child of
-  `run` keeps the harness's limits. In `test_main.py`, the executable
-  that the stand-in for `funk` builds prints its values only under a
-  limit, so a harness that ran it with `run` would fail the test.
+  limit, maps below it and cannot map past it, and keeps a lower limit
+  that it inherits, and that a child of `run` keeps the harness's
+  limits. In `test_main.py`, the executable that the stand-in for
+  `funk` builds prints its values only under a limit, and each stand-in
+  for `funk` and `fir-ref` fails unless it runs under the harness's own
+  limits. So a harness that ran native code with `run`, or a tool with
+  `run_native`, would fail the test.

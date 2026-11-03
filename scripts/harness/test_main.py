@@ -3,6 +3,7 @@ fir-ref, so that each kind of failure shows in its report."""
 
 import io
 import os
+import resource
 import sys
 import tempfile
 import textwrap
@@ -26,6 +27,16 @@ elif "VALIDATE" in text or "DISAGREE" in text:
     diags = [{"kind": verdict, "message": "m"}]
 print(json.dumps({"file": sys.argv[-1], "verdict": verdict, "diagnostics": diags}))
 sys.exit(0 if verdict == "accepted" else 1)
+"""
+
+LIMITS = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+# Each stand-in fails unless it runs under the limits on data and address
+# space that the harness itself has: only native code runs under the limit.
+GUARD = """
+kinds = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+limits = [list(resource.getrlimit(r)) for r in kinds]
+if limits != OWN:
+    sys.exit(f"{sys.argv[1]} runs under the limits {limits}, not {OWN}")
 """
 
 # The executable that the stand-in for funk builds prints its values only
@@ -238,9 +249,11 @@ EXPECTED = [
 
 def tool(path: Path, body: str, fir_ref: bool):
     """Writes a stand-in: a shell script that runs its Python program."""
-    head = f"import json, os, sys\nFIR_REF = {fir_ref}\n"
+    own = [list(resource.getrlimit(r)) for r in LIMITS]
+    head = f"import json, os, resource, sys\nFIR_REF = {fir_ref}\nOWN = {own}\n"
+    program = head + GUARD + textwrap.dedent(body) + textwrap.dedent(VERDICT)
     script = path.with_suffix(".py")
-    script.write_text(head + textwrap.dedent(body) + textwrap.dedent(VERDICT))
+    script.write_text(program)
     path.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
     os.chmod(path, 0o755)
 
