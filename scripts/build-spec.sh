@@ -72,7 +72,10 @@ if [[ "$update" == true ]]; then
 fi
 
 cd "$repo_root/lean"
-lake build
+# lean/ has no dependencies, so every warning is in our own code and fails the
+# build. docs/spec/ keeps a plain build: Verso's warnings are not ours
+# (ADR-2026-10-30-1837).
+lake build --wfail
 if [[ "$lean_only" == true ]]; then
     exit 0
 fi

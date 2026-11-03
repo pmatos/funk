@@ -16,6 +16,7 @@ import FirTest.Branch
 import FirTest.Loops
 import FirTest.Lex
 import FirTest.Decode
+import FirTest.Read
 import FirTest.ValidateOps
 import FirTest.Validate
 import FirTest.Sum
