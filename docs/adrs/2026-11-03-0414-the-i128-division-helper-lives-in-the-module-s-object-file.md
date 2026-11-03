@@ -78,3 +78,7 @@ its symbol stays apart from the module's.
   against Rust's `i128` and `u128` arithmetic.
 - This refines ADR-2026-10-30-1229: the module's assembly file may end
   with the helper.
+- This also refines ADR-2026-11-03-010730, whose consequences left
+  division at `i128` to #22: `sdiv`, `udiv`, `srem` and `urem` at `i128`
+  now lower as calls of the helper that the module's object file
+  carries.
