@@ -24,9 +24,12 @@ The grammar step needs nothing of a module's names, words or numbers but
 two things. Each type it writes is written as a word or an applied word
 (`Attr.IsType`), since `readType` reads only those; and each line and
 column of its location table is below `2^32`, since `readNat` reads only
-those. A name that is not a word, a label that is not a name or a location
-reference of `2^32` reads back as itself: the lexer, not the grammar,
-rejects those.
+those. The readers take any token of the right kind, so a value name or a
+label that is not a name, an op name or an attribute's word that is not a
+word, and an op's location reference of `2^32` each read back as
+themselves: the lexer, not the grammar, rejects those. The references
+inside the location table are bounded by the hypothesis that gives the
+lines and columns, `LocTable.InLimits`, although no reader checks them.
 -/
 
 namespace Fir.Text
@@ -45,11 +48,20 @@ theorem map_tok_cons {ts : List Token} {t : Tok} {rest : List Tok}
   exact ⟨p, ts', rfl, h'⟩
 
 /-- Takes the first token off `h : ts.map (·.tok) = t :: rest`: `ts` becomes
-`⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. -/
-local macro "take_tok " h:ident : tactic => `(tactic| (
+`⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. The proofs of
+the grammar step share it, and `take_pos`: inside `namespace Fir.Text`, or
+through `open Text`. -/
+scoped macro "take_tok " h:ident : tactic => `(tactic| (
   (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
+  replace $h:ident := Fir.Text.map_tok_cons $h
   obtain ⟨_, _, he, $h:ident⟩ := $h
+  subst he))
+
+/-- `take_tok`, naming the token's position `p`. -/
+scoped macro "take_pos " h:ident p:ident : tactic => `(tactic| (
+  (try dsimp only at $h:ident)
+  replace $h:ident := Fir.Text.map_tok_cons $h
+  obtain ⟨$p:ident, _, he, $h:ident⟩ := $h
   subst he))
 
 /-- Tokens whose first is not `t` do not start with `t`. -/
@@ -102,7 +114,7 @@ theorem Reads.more {α β γ : Type} {item : (ts : List Token) → Read α ts} {
     simp only [h₁, ok_bind, h₄]
     exact ⟨_, _, rfl, by simp [h₂, ← h₅], h₆⟩
 
-/-! # Attributes and types -/
+/-! # Attributes and types read back -/
 
 /-- An attribute's tokens start with a token that starts an attribute. -/
 theorem Attr.tokens_cons (a : Attr) : ∃ t ts, a.tokens = t :: ts ∧ t.startsAttr = true := by
