@@ -17,7 +17,7 @@
 //! which #31 decides; until then the backend reports it at the `ret`.
 //!
 //! An `i128` passes to a block argument as two copies of the parallel move,
-//! one per half, and returns in `%rdx:%rax` (ADR-2026-11-03-0107,
+//! one per half, and returns in `%rdx:%rax` (ADR-2026-11-03-010730,
 //! ADR-2026-11-03-0108).
 
 use funk_ir::{Op, Succ};

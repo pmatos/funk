@@ -3,7 +3,7 @@
 //! A constant is written into its slot as a 64-bit immediate: its value read
 //! as a signed integer, so its low `N` bits are its bits. `true` is 1 and
 //! `false` is 0. An `i128` constant is two immediates, its low and its high
-//! 64 bits, one into each of its slots (ADR-2026-11-03-0107).
+//! 64 bits, one into each of its slots (ADR-2026-11-03-010730).
 
 use funk_ir::{Attr, Op};
 

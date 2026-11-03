@@ -17,7 +17,7 @@
 //! refines (ADR-2026-10-29-2008), so it gives whatever the masked shift
 //! gives (ADR-2026-10-30-2248).
 //!
-//! At `i128` (ADR-2026-11-03-0107), `and`, `or` and `xor` apply to each
+//! At `i128` (ADR-2026-11-03-010730), `and`, `or` and `xor` apply to each
 //! half. A shift reads its amount's low half only: an amount below 128 is
 //! that half, and any other gives poison. The value's halves are shifted
 //! together by `%cl` with `shldq` or `shrdq`, which move bits from one half

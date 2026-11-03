@@ -57,8 +57,6 @@ bits from one register into another.
     `i128`s is two cycles.
   - `ret` returns an `i128` in `%rdx:%rax`; ADR-2026-11-03-0108 says how
     calls pass and return it.
-- **Division waits.** `sdiv`, `udiv`, `srem` and `urem` at `i128` are
-  reported at the op, with its result's name, until #22's helper.
 - **Poison is not tracked per half.** Native code holds no poison
   (ADR-2026-10-30-2248): where the source gives poison, the two slots
   hold some bits. `freeze` copies both halves into its own two slots,
@@ -83,6 +81,9 @@ ADR-2026-10-30-1231, which reported `i128` until #21.
 
 ## Consequences
 
+- Division is not lowered at `i128` yet: `sdiv`, `udiv`, `srem` and
+  `urem` at `i128` are reported at the op, with its result's name, until
+  #22's helper.
 - An op at `i128` is a few instructions on two registers. It clobbers
   `%rax`, `%rcx` and `%rdx`, and a shift `%rsi` too, which is free while
   every value lives in its slots; a register allocator (M1) needs pairs

@@ -4,7 +4,7 @@
 //! later narrower argument still takes a register that it left; an `i128`
 //! result comes back in `%rdx:%rax` (ADR-2026-11-03-0108). Block arguments
 //! move both halves of an `i128` in one parallel move
-//! (ADR-2026-11-03-0107).
+//! (ADR-2026-11-03-010730).
 
 mod common;
 

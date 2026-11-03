@@ -14,7 +14,7 @@
 //! high half is zero for `zext`, and for `sext` 64 copies of the extended
 //! value's top bit, which `sarq $63` makes. `trunc` from `i128` copies its
 //! operand's low half, whose low `N` bits are the result
-//! (ADR-2026-11-03-0107).
+//! (ADR-2026-11-03-010730).
 
 use funk_ir::Op;
 

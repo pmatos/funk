@@ -1,6 +1,6 @@
 # A run's stack covers its calls, a recursive run's stack follows `ulimit -s`, and a run that outgrows its stack says so
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-0108
 
 ## Context
 

@@ -21,7 +21,7 @@
 //! No instruction divides 128 bits by 128 bits, and division at `i128`
 //! goes through a runtime helper (#22). Until then the backend reports each
 //! of the four ops at `i128` at the op, with its result's name, as it
-//! reports a width it does not lower (ADR-2026-11-03-0107).
+//! reports a width it does not lower (ADR-2026-11-03-010730).
 
 use funk_ir::Op;
 

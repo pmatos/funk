@@ -5,7 +5,7 @@
 //! arguments and each op's results in order, has an 8-byte slot of its own
 //! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An
 //! `i128` has two slots next to each other, its low half at the lower
-//! address (ADR-2026-11-03-0107). An op loads its operands from their slots
+//! address (ADR-2026-11-03-010730). An op loads its operands from their slots
 //! into scratch registers, computes, and stores each result into its slot.
 //! No value stays in a register from one op to the next.
 //!

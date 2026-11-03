@@ -1,4 +1,4 @@
-//! Integer widths in registers (ADR-2026-10-30-1231, ADR-2026-11-03-0107).
+//! Integer widths in registers (ADR-2026-10-30-1231, ADR-2026-11-03-010730).
 //!
 //! The backend holds a value of `iN`, `N` at most 64, in one 64-bit
 //! register or stack slot: its low `N` bits are the value, and the bits
@@ -11,7 +11,7 @@
 //!
 //! A value of `i128` is a pair of eightbytes, each 64 bits of the value with
 //! none unspecified: the low eightbyte in one register or slot, the high one
-//! in another (ADR-2026-11-03-0107).
+//! in another (ADR-2026-11-03-010730).
 
 use funk_ir::Type;
 use funk_ir::dialects::core::{CoreType, core_type};

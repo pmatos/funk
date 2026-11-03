@@ -59,7 +59,7 @@ pub struct Mem {
 impl Mem {
     /// The eightbyte just above this one: the high half of an `i128` whose
     /// low half is here, since a pair holds its low half at the lower
-    /// address (ADR-2026-11-03-0107).
+    /// address (ADR-2026-11-03-010730).
     pub fn high(self) -> Mem {
         Mem {
             disp: self.disp + 8,

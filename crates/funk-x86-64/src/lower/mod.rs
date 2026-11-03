@@ -16,7 +16,7 @@
 //!
 //! An `i128` is a pair of eightbytes in two slots, and each op lowers it
 //! through a pair of registers, `%rax` for its low half and `%rdx` for its
-//! high one unless the op says otherwise (ADR-2026-11-03-0107).
+//! high one unless the op says otherwise (ADR-2026-11-03-010730).
 
 mod arith;
 mod bitwise;

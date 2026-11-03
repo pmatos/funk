@@ -17,7 +17,7 @@
 //! operand of `icmp` or a poison condition or chosen value of `select`,
 //! any value of the type refines it.
 //!
-//! At `i128` (ADR-2026-11-03-0107), `eq` and `ne` `xorq` each half of `%a`
+//! At `i128` (ADR-2026-11-03-010730), `eq` and `ne` `xorq` each half of `%a`
 //! with `%b`'s and `orq` the two: the result is zero when the values are
 //! equal. Every other predicate is one of `<` and `>=`, signed or
 //! unsigned, of `%a` and `%b` or of `%b` and `%a`: `cmpq` of the low halves

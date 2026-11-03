@@ -156,11 +156,12 @@ are on `main`:
   division, `i128` into an object file and an executable for Linux. An
   `i128` is a pair of eightbytes, and each op lowers it through a pair of
   registers
-  ([ADR-2026-11-03-0107](docs/adrs/2026-11-03-0107-an-i128-is-a-pair-of-eightbytes.md)).
+  ([ADR-2026-11-03-010730](docs/adrs/2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md)).
   Native code holds no poison: a broken `nuw` or `nsw` gives the
   wrapped result, a broken `exact` the plain quotient, a shift by `N` or
-  more gives what x86's masked shift gives, and `freeze` copies its
-  operand
+  more gives what x86's masked shift gives (at `i128`, what the pair's
+  shift sequence gives for the amount's low 7 bits), and `freeze` copies
+  its operand
   ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
   A division is one bare `div` or `idiv` of its own size, with no guard
   ([ADR-2026-10-31-0050](docs/adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)).

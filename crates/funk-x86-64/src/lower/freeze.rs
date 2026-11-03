@@ -7,7 +7,7 @@
 //! the same bits (ADR-2026-10-29-2006, ADR-2026-10-30-2248). An `i128` is
 //! copied whole, both halves into the result's two slots, so the halves of
 //! a frozen value stay one value: every use reads the same 128 bits
-//! (ADR-2026-11-03-0107).
+//! (ADR-2026-11-03-010730).
 
 use funk_ir::Op;
 

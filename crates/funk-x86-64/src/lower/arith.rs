@@ -6,7 +6,7 @@
 //! `addq`, `subq` or `imulq` computes the op at every width up to 64,
 //! whatever the bits above `N` hold (ADR-2026-10-30-1231).
 //!
-//! At `i128` the halves are in `%rax` and `%rdx` (ADR-2026-11-03-0107).
+//! At `i128` the halves are in `%rax` and `%rdx` (ADR-2026-11-03-010730).
 //! `add` is `addq` of the low halves and `adcq` of the high ones, which adds
 //! the carry, and `sub` is `subq` and `sbbq`, which subtracts the borrow.
 //! `mul` keeps the low 128 bits of the product: `mulq` gives the whole

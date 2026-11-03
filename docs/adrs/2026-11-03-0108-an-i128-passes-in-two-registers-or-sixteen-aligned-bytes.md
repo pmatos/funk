@@ -8,7 +8,7 @@ A funk function is a System V AMD64 function (ADR-2026-10-30-1232): its
 integer arguments go in `%rdi`, `%rsi`, `%rdx`, `%rcx`, `%r8` and `%r9`,
 then on the stack, and its result in `%rax`. C code may call it. That ADR
 gives each argument 8 bytes, and [#21](https://github.com/pmatos/funk/issues/21)
-adds `i128`, two eightbytes (ADR-2026-11-03-0107).
+adds `i128`, two eightbytes (ADR-2026-11-03-010730).
 
 System V passes an `__int128` as two eightbytes of class INTEGER. Both go
 in registers when two are free, and otherwise the whole argument goes on
@@ -53,12 +53,13 @@ and the entry's stack figure (ADR-2026-11-02-1132).
 - **The executable.** The wrapper parses an `i128` argument into two
   slots and passes `%rdx`, the high half of an `i128` result, to the
   printer. The runtime's routines that parse arguments and print results
-  work on 128 bits at every width. They move from `runtime.s` to
-  `entry/values.s`, which follows it in the entry file, so that each
-  file stays within its budget (ADR-2026-10-28-0724).
+  work on 128 bits at every width.
 
 This refines ADR-2026-10-30-1232: an `i128` takes two eightbytes, in a
-register pair or on the stack, and returns in `%rdx:%rax`.
+register pair or on the stack, and returns in `%rdx:%rax`. It refines
+ADR-2026-10-30-1233 for the executable's wrapper and runtime, and
+ADR-2026-11-02-1132 for the stack figure, which now reads the layout
+that `abi::call` reads.
 
 ## Alternatives
 
@@ -77,6 +78,9 @@ register pair or on the stack, and returns in `%rdx:%rax`.
   was checked by hand with gcc 16 and clang on the four prototypes.
 - A call with `i128` arguments may leave a register unused and a hole on
   the stack.
+- The runtime's value routines grew past what `runtime.s` can hold
+  within its budget (ADR-2026-10-28-0724), so they move to
+  `entry/values.s`, which follows it in the entry file.
 - Where an `i128` goes when a function returns several values is #31's
   to decide; whichever of #21 and #31 lands second tests an `i128` among
   several results.
