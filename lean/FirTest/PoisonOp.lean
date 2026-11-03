@@ -8,8 +8,8 @@ result, the poison of its type, at every width of the corpus and at the
 widest type; and what each kind of op does with that poison. Ops that
 propagate poison give poison, `select` gives it only when it chooses it,
 `freeze` chooses a value for it, and a branch on it or a division by it is
-immediate UB. `fir-ref run` takes no `poison` argument, and these tests
-need none: the op makes the poison (ADR-2026-11-03-1615).
+immediate UB. These tests need no `poison` argument, which `fir-ref run`
+also takes (#123): the op makes the poison (ADR-2026-11-03-1615).
 -/
 
 namespace FirTest

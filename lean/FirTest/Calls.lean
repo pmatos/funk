@@ -254,8 +254,8 @@ def poisonText : String := withFuncs ["func @id(%a: i8) -> i8 {
 #guard runValid poisonText "@frozen" ["true"] (mode := .scripted ["true"]) == returns ["true"] 1
 #guard runValid poisonText "@frozen" ["false"] (mode := .exhaustive 16) ==
   outcomes [ret ["false"]] 0
--- `fir-ref run` takes no poison argument, but the spec's run does: the
--- first function, `@id`, returns it.
+-- A poison argument, which `fir-ref run` takes too (#123): the first
+-- function, `@id`, returns it.
 #guard runIn inferInstance poisonText ["poison"] == some (returns ["poison"])
 
 /-! # UB in a callee

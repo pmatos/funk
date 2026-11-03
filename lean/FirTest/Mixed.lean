@@ -90,7 +90,7 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
   match parseMixed t with
   | .error _ => none
   | .ok m => m.funcs.head?.bind fun f =>
-    match testArgs (f.params.map (·.2)) args with
+    match readArgs (f.params.map (·.2)) args with
     | .error _ => none
     | .ok vs => some <| match (f.run m (m := Mix) vs fuel).run.script constOf [] 0 with
       | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok r, c))

@@ -30,7 +30,10 @@ results, which are written where those values are defined.
   errors.
 * The values of `fir-ref`'s arguments, the values in its JSON output and
   the values of a scripted choice sequence are spelled the same way: `true`
-  and `false` at `i1`, and signed decimal at every other width.
+  and `false` at `i1`, and signed decimal at every other width. An argument
+  and a value in the output may also be `poison`, at any `iN`: `fir-ref run`
+  runs a function on a poison argument, as the runs of every function do
+  (#123). A choice may not, since `freeze` chooses a value of its type.
 * Flags are written in a fixed order, `nuw` before `nsw`, each at most once.
 * `iN` is written `i` and `N` in decimal with no leading zeros, such as
   `i32`, and `ptr` is written `ptr`. A width above `maxWidth` is a parse

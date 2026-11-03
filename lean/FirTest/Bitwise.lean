@@ -98,7 +98,7 @@ amount whose top bit is set, such as `-1`. -/
 
 /-! # Poison
 
-`runIn` takes `poison` as an argument, which `fir-ref run` does not. -/
+`runIn` takes `poison` as an argument, as `fir-ref run` does (#123). -/
 
 -- A poison operand, in either place, gives poison.
 #guard ["and", "or", "xor", "shl", "lshr", "ashr"].all fun op =>

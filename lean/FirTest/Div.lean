@@ -6,9 +6,9 @@ writes: `sdiv`, `udiv`, `srem` and `urem`, with and without `exact`, at
 `i1`, `i7`, `i8`, `i33`, `i64`, `i128` and `i16777215`, with the boundary
 values; their immediate UB, each with its reason, which ends the run; the
 poison that `exact` and a poison dividend give; and a frozen divisor that
-may be zero, in both modes. `fir-ref run` takes no `poison` argument, so the
-tests of poison operands run the same rules through `runIn`, whose
-arguments may be `poison`.
+may be zero, in both modes. The tests of poison operands run the same
+rules through `runIn`, whose arguments may be `poison`, as `fir-ref run`'s
+may (#123).
 -/
 
 namespace FirTest

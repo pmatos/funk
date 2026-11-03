@@ -8,9 +8,9 @@ values `0`, `1`, all ones (`-1`), the signed minimum and the signed
 maximum, and on pairs whose signed order is not their unsigned order.
 Neither op is UB. `icmp` propagates poison; `select` gives poison for a
 poison condition and gives the value it chooses as it is, so a poison it
-does not choose does not matter. `fir-ref run` takes no `poison` argument,
-so the tests of poison operands run the same rules through `runIn`, and
-others make poison with a broken flag.
+does not choose does not matter. The tests of poison operands run the
+same rules through `runIn`, whose arguments may be `poison`, as
+`fir-ref run`'s may (#123), and others make poison with a broken flag.
 -/
 
 namespace FirTest
@@ -91,7 +91,7 @@ def selectWidths : List (String × String × String) :=
 
 /-! # Poison
 
-`runIn` takes `poison` as an argument, which `fir-ref run` does not. -/
+`runIn` takes `poison` as an argument, as `fir-ref run` does (#123). -/
 
 -- A poison operand of `icmp` gives poison, in either place.
 #guard Core.Pred.all.all fun p =>

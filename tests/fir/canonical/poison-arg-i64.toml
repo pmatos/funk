@@ -1,0 +1,131 @@
+# Tests of poison-arg-i64.fir: functions of each kind run on poison
+# arguments at i64 (#123). fir-ref run takes poison as an argument of
+# any integer type. Ops that propagate poison give poison: add, sub and
+# xor of %a with itself, mul and and with 0, or with -1, the shifts,
+# icmp, icmp eq of %a with itself included, the width changes, and a
+# division of a poison dividend. select and cond_br give the value they
+# choose, poison or not; a select on a poison condition is poison, while
+# a branch on poison is UB, as are a poison divisor and a poison
+# dividend of sdiv or srem by -1. br, call and ret pass poison on as it
+# is, through a loop and a recursion too, and a callee that ignores its
+# poison argument returns a value. freeze_sub freezes the poison and
+# subtracts it from itself, which gives 0 whatever freeze chooses.
+#
+# Each test without expect is differential. fir-ref runs it on the
+# poison; native code, which holds no poison, runs it once on each
+# vector of stand-ins in place of the poison: 0, 1, all ones, the signed
+# minimum and the signed maximum of its type, so false and true at i1,
+# in every combination (ADR-2026-11-03-1847). Each native result must
+# refine fir-ref's. Where the poison reaches the result, fir-ref returns
+# poison, and any value refines it; where it does not, as in select,
+# cond_br and call_first on a poison they do not choose, and in
+# freeze_sub, native code must give the defined value on every stand-in.
+# A run that is UB is interpreter-only, since UB allows any result.
+#
+# freeze of a poison i64 chooses more than the choice budget of 16 bits,
+# so the differential freeze_sub declares its one result, 0, with a
+# witness, and seeded runs check that the run gives no other.
+tests = [
+  { func = "@add", args = ["poison", "1"] },
+  { func = "@add", args = ["1", "poison"] },
+  { func = "@add", args = ["poison", "poison"] },
+  { func = "@add_nsw", args = ["poison", "0"] },
+  { func = "@sub_self", args = ["poison"] },
+  { func = "@mul_zero", args = ["poison"] },
+  { func = "@and_zero", args = ["poison"] },
+  { func = "@or_ones", args = ["poison"] },
+  { func = "@xor_self", args = ["poison"] },
+  { func = "@shl", args = ["poison", "0"] },
+  { func = "@shl", args = ["1", "poison"] },
+  { func = "@lshr", args = ["poison", "0"] },
+  { func = "@lshr", args = ["1", "poison"] },
+  { func = "@ashr", args = ["poison", "0"] },
+  { func = "@ashr", args = ["1", "poison"] },
+  { func = "@icmp_eq_self", args = ["poison"] },
+  { func = "@icmp_ult", args = ["poison", "0"] },
+  { func = "@icmp_ult", args = ["0", "poison"] },
+  { func = "@select", args = ["poison", "1", "2"] },
+  { func = "@select", args = ["true", "1", "poison"] },
+  { func = "@select", args = ["false", "poison", "2"] },
+  { func = "@select", args = ["true", "poison", "2"] },
+  { func = "@select", args = ["false", "1", "poison"] },
+  { func = "@zext", args = ["poison"] },
+  { func = "@sext", args = ["poison"] },
+  { func = "@trunc", args = ["poison"] },
+  { func = "@udiv", args = ["poison", "3"] },
+  { func = "@sdiv", args = ["poison", "3"] },
+  { func = "@urem", args = ["poison", "3"] },
+  { func = "@srem", args = ["poison", "3"] },
+  { func = "@br_arg", args = ["poison"] },
+  { func = "@cond_br", args = ["true", "1", "poison"] },
+  { func = "@cond_br", args = ["false", "poison", "2"] },
+  { func = "@cond_br", args = ["true", "poison", "2"] },
+  { func = "@loop", args = ["3", "poison"] },
+  { func = "@loop", args = ["0", "poison"] },
+  { func = "@call_id", args = ["poison"] },
+  { func = "@call_first", args = ["1", "poison"] },
+  { func = "@call_first", args = ["poison", "1"] },
+  { func = "@rec", args = ["3", "poison"] },
+  { func = "@swap", args = ["poison", "1"] },
+  { func = "@swap", args = ["1", "poison"] },
+  { func = "@swap", args = ["poison", "poison"] },
+  { func = "@call_swap", args = ["1", "poison"] },
+  { func = "@freeze_sub", args = ["poison"], results = [{ values = ["0"], witness = ["5"] }] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give
+  # the expected result.
+  { func = "@add", args = ["poison", "1"], expect = ["poison"] },
+  { func = "@add", args = ["1", "poison"], expect = ["poison"] },
+  { func = "@add", args = ["poison", "poison"], expect = ["poison"] },
+  { func = "@add_nsw", args = ["poison", "0"], expect = ["poison"] },
+  { func = "@sub_self", args = ["poison"], expect = ["poison"] },
+  { func = "@mul_zero", args = ["poison"], expect = ["poison"] },
+  { func = "@and_zero", args = ["poison"], expect = ["poison"] },
+  { func = "@or_ones", args = ["poison"], expect = ["poison"] },
+  { func = "@xor_self", args = ["poison"], expect = ["poison"] },
+  { func = "@shl", args = ["poison", "0"], expect = ["poison"] },
+  { func = "@shl", args = ["1", "poison"], expect = ["poison"] },
+  { func = "@lshr", args = ["poison", "0"], expect = ["poison"] },
+  { func = "@lshr", args = ["1", "poison"], expect = ["poison"] },
+  { func = "@ashr", args = ["poison", "0"], expect = ["poison"] },
+  { func = "@ashr", args = ["1", "poison"], expect = ["poison"] },
+  { func = "@icmp_eq_self", args = ["poison"], expect = ["poison"] },
+  { func = "@icmp_ult", args = ["poison", "0"], expect = ["poison"] },
+  { func = "@icmp_ult", args = ["0", "poison"], expect = ["poison"] },
+  { func = "@select", args = ["poison", "1", "2"], expect = ["poison"] },
+  { func = "@select", args = ["true", "1", "poison"], expect = ["1"] },
+  { func = "@select", args = ["false", "poison", "2"], expect = ["2"] },
+  { func = "@select", args = ["true", "poison", "2"], expect = ["poison"] },
+  { func = "@select", args = ["false", "1", "poison"], expect = ["poison"] },
+  { func = "@zext", args = ["poison"], expect = ["poison"] },
+  { func = "@sext", args = ["poison"], expect = ["poison"] },
+  { func = "@trunc", args = ["poison"], expect = ["poison"] },
+  { func = "@udiv", args = ["poison", "3"], expect = ["poison"] },
+  { func = "@udiv", args = ["1", "poison"], expect = "ub" },
+  { func = "@sdiv", args = ["poison", "3"], expect = ["poison"] },
+  { func = "@sdiv", args = ["1", "poison"], expect = "ub" },
+  { func = "@sdiv", args = ["poison", "-1"], expect = "ub" },
+  { func = "@urem", args = ["poison", "3"], expect = ["poison"] },
+  { func = "@urem", args = ["1", "poison"], expect = "ub" },
+  { func = "@srem", args = ["poison", "3"], expect = ["poison"] },
+  { func = "@srem", args = ["1", "poison"], expect = "ub" },
+  { func = "@srem", args = ["poison", "-1"], expect = "ub" },
+  { func = "@br_arg", args = ["poison"], expect = ["poison"] },
+  { func = "@cond_br", args = ["true", "1", "poison"], expect = ["1"] },
+  { func = "@cond_br", args = ["false", "poison", "2"], expect = ["2"] },
+  { func = "@cond_br", args = ["true", "poison", "2"], expect = ["poison"] },
+  { func = "@cond_br", args = ["poison", "1", "2"], expect = "ub" },
+  { func = "@loop", args = ["3", "poison"], expect = ["poison"] },
+  { func = "@loop", args = ["0", "poison"], expect = ["poison"] },
+  { func = "@loop", args = ["poison", "1"], expect = "ub" },
+  { func = "@call_id", args = ["poison"], expect = ["poison"] },
+  { func = "@call_first", args = ["1", "poison"], expect = ["1"] },
+  { func = "@call_first", args = ["poison", "1"], expect = ["poison"] },
+  { func = "@rec", args = ["3", "poison"], expect = ["poison"] },
+  { func = "@rec", args = ["poison", "1"], expect = "ub" },
+  { func = "@swap", args = ["poison", "1"], expect = ["1", "poison"] },
+  { func = "@swap", args = ["1", "poison"], expect = ["poison", "1"] },
+  { func = "@swap", args = ["poison", "poison"], expect = ["poison", "poison"] },
+  { func = "@call_swap", args = ["1", "poison"], expect = ["poison", "1"] },
+  { func = "@freeze_sub", args = ["poison"], choices = ["1"], expect = ["0"] },
+  { func = "@freeze_sub", args = ["poison"], choices = ["-1"], expect = ["0"] },
+]

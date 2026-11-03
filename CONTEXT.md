@@ -324,6 +324,13 @@ choice budget, seeded runs of sampled mode check that it gives no other.
 A test that runs a module on `fir-ref` and as native code, and checks that the
 native result refines the `fir-ref` result.
 
+**poison stand-in**:
+A defined value of `iN` that native code runs a differential test on in
+place of a poison argument: one of the type's boundary bit patterns, 0, 1,
+all ones, the signed minimum or the signed maximum (ADR-2026-11-03-1847).
+_Avoid_: stand-in alone (the spec's prose also uses it for a placeholder
+rule of an op, and `test_main.py` for a fake tool)
+
 **invalid test**:
 A differential test that can prove nothing: an outcome in its set is UB or
 fuel exhausted, or its choices exceed the budget and it declares no results.
