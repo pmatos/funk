@@ -109,6 +109,15 @@ repos:
         language: python
         pass_filenames: false
         files: ^scripts/harness/
+      # The corpus's coverage matrix (ADR-2026-11-03-0557): the committed
+      # docs/coverage/README.md is the one that coverage.py makes, and
+      # every cell has a test.
+      - id: coverage-matrix
+        name: The corpus's coverage matrix is current, and every cell has a test
+        entry: python scripts/harness/coverage.py
+        language: python
+        pass_filenames: false
+        files: ^(tests/fir/|docs/coverage/|scripts/harness/)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

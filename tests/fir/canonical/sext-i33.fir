@@ -28,6 +28,12 @@ func @sext_i33_to_i64(%a: i33) -> i64 {
   ret %r @0
 }
 
+func @sext_i33_to_i128(%a: i33) -> i128 {
+^entry:
+  %r: i128 = sext %a @0
+  ret %r @0
+}
+
 locs {
   @0 = unknown
 }

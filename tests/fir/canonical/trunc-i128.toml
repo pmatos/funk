@@ -3,8 +3,8 @@
 # signed minimum and the signed maximum) and on values on either side of
 # 2^63 and 2^64: trunc keeps the low bits of the low half, whatever the
 # high half holds.
-# Each test is differential: fir-ref and native code run it, and the
-# native result must refine fir-ref's.
+# Each test without expect is differential: fir-ref and native code
+# run it, and the native result must refine fir-ref's.
 tests = [
   { func = "@trunc_i128_to_i1", args = ["0"] },
   { func = "@trunc_i128_to_i1", args = ["1"] },
@@ -66,4 +66,36 @@ tests = [
   { func = "@trunc_i128_to_i64", args = ["9223372036854775808"] },
   { func = "@trunc_i128_to_i64", args = ["-9223372036854775809"] },
   { func = "@trunc_i128_to_i64", args = ["1512366075204170947332355369683137040"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@trunc_i128_to_i1", args = ["0"], expect = ["false"] },
+  { func = "@trunc_i128_to_i1", args = ["-1"], expect = ["true"] },
+  { func = "@trunc_i128_to_i1", args = ["-170141183460469231731687303715884105728"], expect = ["false"] },
+  { func = "@trunc_i128_to_i1", args = ["170141183460469231731687303715884105727"], expect = ["true"] },
+  { func = "@trunc_i128_to_i1", args = ["18446744073709551615"], expect = ["true"] },
+  { func = "@trunc_i128_to_i1", args = ["18446744073709551616"], expect = ["false"] },
+  { func = "@trunc_i128_to_i8", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i128_to_i8", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i8", args = ["-170141183460469231731687303715884105728"], expect = ["0"] },
+  { func = "@trunc_i128_to_i8", args = ["170141183460469231731687303715884105727"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i8", args = ["18446744073709551615"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i8", args = ["18446744073709551616"], expect = ["0"] },
+  { func = "@trunc_i128_to_i16", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i128_to_i16", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i16", args = ["-170141183460469231731687303715884105728"], expect = ["0"] },
+  { func = "@trunc_i128_to_i16", args = ["170141183460469231731687303715884105727"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i16", args = ["18446744073709551615"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i16", args = ["18446744073709551616"], expect = ["0"] },
+  { func = "@trunc_i128_to_i32", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i128_to_i32", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i32", args = ["-170141183460469231731687303715884105728"], expect = ["0"] },
+  { func = "@trunc_i128_to_i32", args = ["170141183460469231731687303715884105727"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i32", args = ["18446744073709551615"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i32", args = ["18446744073709551616"], expect = ["0"] },
+  { func = "@trunc_i128_to_i64", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i128_to_i64", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i64", args = ["-170141183460469231731687303715884105728"], expect = ["0"] },
+  { func = "@trunc_i128_to_i64", args = ["170141183460469231731687303715884105727"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i64", args = ["18446744073709551615"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i64", args = ["18446744073709551616"], expect = ["0"] },
 ]

@@ -2,8 +2,8 @@
 # every pair of false and true (#16). true is -1 read as signed and 1
 # read as unsigned, so true and false are in one order for the s
 # predicates and in the other for the u predicates.
-# Each test is differential: fir-ref and native code run it, and the
-# native result must equal fir-ref's.
+# Each test without expect is differential: fir-ref and native code
+# run it, and the native result must equal fir-ref's.
 tests = [
   { func = "@eq", args = ["false", "false"] },
   { func = "@eq", args = ["false", "true"] },
@@ -45,4 +45,46 @@ tests = [
   { func = "@uge", args = ["false", "true"] },
   { func = "@uge", args = ["true", "false"] },
   { func = "@uge", args = ["true", "true"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@eq", args = ["true", "false"], expect = ["false"] },
+  { func = "@ne", args = ["true", "false"], expect = ["true"] },
+  { func = "@slt", args = ["true", "false"], expect = ["true"] },
+  { func = "@sle", args = ["true", "false"], expect = ["true"] },
+  { func = "@sgt", args = ["true", "false"], expect = ["false"] },
+  { func = "@sge", args = ["true", "false"], expect = ["false"] },
+  { func = "@ult", args = ["true", "false"], expect = ["false"] },
+  { func = "@ule", args = ["true", "false"], expect = ["false"] },
+  { func = "@ugt", args = ["true", "false"], expect = ["true"] },
+  { func = "@uge", args = ["true", "false"], expect = ["true"] },
+  { func = "@eq", args = ["false", "true"], expect = ["false"] },
+  { func = "@ne", args = ["false", "true"], expect = ["true"] },
+  { func = "@slt", args = ["false", "true"], expect = ["false"] },
+  { func = "@sle", args = ["false", "true"], expect = ["false"] },
+  { func = "@sgt", args = ["false", "true"], expect = ["true"] },
+  { func = "@sge", args = ["false", "true"], expect = ["true"] },
+  { func = "@ult", args = ["false", "true"], expect = ["true"] },
+  { func = "@ule", args = ["false", "true"], expect = ["true"] },
+  { func = "@ugt", args = ["false", "true"], expect = ["false"] },
+  { func = "@uge", args = ["false", "true"], expect = ["false"] },
+  { func = "@eq", args = ["true", "true"], expect = ["true"] },
+  { func = "@ne", args = ["true", "true"], expect = ["false"] },
+  { func = "@slt", args = ["true", "true"], expect = ["false"] },
+  { func = "@sle", args = ["true", "true"], expect = ["true"] },
+  { func = "@sgt", args = ["true", "true"], expect = ["false"] },
+  { func = "@sge", args = ["true", "true"], expect = ["true"] },
+  { func = "@ult", args = ["true", "true"], expect = ["false"] },
+  { func = "@ule", args = ["true", "true"], expect = ["true"] },
+  { func = "@ugt", args = ["true", "true"], expect = ["false"] },
+  { func = "@uge", args = ["true", "true"], expect = ["true"] },
+  { func = "@eq", args = ["false", "false"], expect = ["true"] },
+  { func = "@ne", args = ["false", "false"], expect = ["false"] },
+  { func = "@slt", args = ["false", "false"], expect = ["false"] },
+  { func = "@sle", args = ["false", "false"], expect = ["true"] },
+  { func = "@sgt", args = ["false", "false"], expect = ["false"] },
+  { func = "@sge", args = ["false", "false"], expect = ["true"] },
+  { func = "@ult", args = ["false", "false"], expect = ["false"] },
+  { func = "@ule", args = ["false", "false"], expect = ["true"] },
+  { func = "@ugt", args = ["false", "false"], expect = ["false"] },
+  { func = "@uge", args = ["false", "false"], expect = ["true"] },
 ]
