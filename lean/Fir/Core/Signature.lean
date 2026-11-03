@@ -19,7 +19,7 @@ abbrev i (w : Nat) : Ty := .int w
 
 /-- The operand types of each core op. -/
 def Op.sig : Op → List Ty
-  | .const _ _ | .br => []
+  | .const _ _ | .poison _ | .br => []
   | .add w _ | .sub w _ | .mul w _ | .sdiv w _ | .udiv w _ | .srem w | .urem w
   | .and w | .or w | .xor w | .shl w | .lshr w | .ashr w | .icmp _ w => [i w, i w]
   | .select w => [i 1, i w, i w]
@@ -33,7 +33,7 @@ def Op.sig : Op → List Ty
 def Op.returnTypes : Op → List Ty
   | .const w _ | .add w _ | .sub w _ | .mul w _ | .sdiv w _ | .udiv w _
   | .srem w | .urem w | .and w | .or w | .xor w | .shl w | .lshr w | .ashr w
-  | .select w | .freeze w => [i w]
+  | .select w | .freeze w | .poison w => [i w]
   | .icmp _ _ => [i 1]
   | .zext _ n | .sext _ n | .trunc _ n => [i n]
   | .br | .condBr | .ret _ => []

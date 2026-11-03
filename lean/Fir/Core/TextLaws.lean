@@ -4,7 +4,7 @@ import Fir.Core.Validation
 import Fir.Text.RoundTrip
 
 /-!
-The core dialect meets the seven laws of `LawfulDialectText`, for all 24 of
+The core dialect meets the seven laws of `LawfulDialectText`, for all 25 of
 its ops and every type. The laws are proved for every op instance, valid or
 not: every width, `0` included, every predicate, every combination of
 flags, `true` and `false` at `i1`, and `ret` and `call` with any number of
@@ -238,6 +238,11 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · -- call
     split at h <;> cases h
     exact ⟨rfl, rfl, rfl, rfl⟩
+  · -- poison
+    split at h <;> (try cases h)
+    obtain ⟨rfl, h⟩ := bare_eq h
+    cases h
+    exact ⟨rfl, rfl, rfl, rfl⟩
   · -- srem, urem, and, or, xor, shl, lshr and ashr
     split at h
     · rename_i mk hmk
@@ -343,7 +348,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 24 core ops and
+/-- The core dialect's text meets the seven laws, for all 25 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

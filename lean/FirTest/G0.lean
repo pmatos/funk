@@ -131,15 +131,15 @@ theorem propagates (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d
 The core dialect declares a class for each of its ops, case by case:
 `Core.Op.poisonClass` has no case for the rest, so a new core op does not
 build until it has one, and `scripts/check_g0.py` fails if a case for the
-rest comes back. Eighteen ops propagate poison and six are
-exceptions (ADR-2026-10-30-0818). The samples of the core ops name all 24,
-and the checks below pin the split on them.
+rest comes back. Nineteen ops propagate poison and six are
+exceptions (ADR-2026-10-30-0818, ADR-2026-11-03-1615). The samples of the
+core ops name all 25, and the checks below pin the split on them.
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 24
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 25
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
-   "ashr", "zext", "sext", "trunc", "icmp"]
+   "ashr", "zext", "sext", "trunc", "poison", "icmp"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "call"]
 

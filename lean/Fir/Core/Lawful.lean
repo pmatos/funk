@@ -12,11 +12,14 @@ op family proves (#10 and #14 to #19):
 * _Poison is refined by every value._ A poison `iN` is refined by every
   value of `iN` (`Core.Ty.poison_isRefinedBy`), at every width; `ptr`,
   which validation rejects, has no values.
-* _Propagation._ Each of the 18 ops that propagate poison does, at every
-  width (`Core.Op.propagates_all`): `const`, the arithmetic, the four
-  divisions, the bitwise ops and shifts, `icmp` and the width changes.
+* _Propagation._ Each of the 19 ops that propagate poison does, at every
+  width (`Core.Op.propagates_all`): `const`, `poison`, the arithmetic, the
+  four divisions, the bitwise ops and shifts, `icmp` and the width
+  changes.
 * _A result on defined operands._ Each of them returns a result on some
-  operand vector with no poison (`Core.Op.returnsOnDefined_valid`). The
+  operand vector with no poison (`Core.Op.returnsOnDefined_valid`).
+  `poison` does on the empty vector, where its result is poison: the
+  field asks for a result, not for a defined one (ADR-2026-11-03-1615). The
   four divisions do only at a width above zero (`Core.div_zero_width`),
   and validation accepts `iN` only for `N ≥ 1`, so they do at every valid
   width. This is the one field that needs the instance to be valid
@@ -56,6 +59,7 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .zext m n, _ => zext_propagatesPoison m n
   | .sext m n, _ => sext_propagatesPoison m n
   | .trunc m n, _ => trunc_propagatesPoison m n
+  | .poison w, _ => poison_propagatesPoison w
   | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .call .., h => nomatch h
 
 /-- A valid core op instance with an operand of type `iN` has `N` above
@@ -87,6 +91,7 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .zext m n, _, _ => zext_returnsOnDefined m n
   | .sext m n, _, _ => sext_returnsOnDefined m n
   | .trunc m n, _, _ => trunc_returnsOnDefined m n
+  | .poison w, _, _ => poison_returnsOnDefined w
   | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h
   | .call .., _, h => nomatch h
 

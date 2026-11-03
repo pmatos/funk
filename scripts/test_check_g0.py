@@ -17,8 +17,8 @@ from check_g0 import (
 
 CORE_OPS = [
     "const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor",
-    "shl", "lshr", "ashr", "icmp", "select", "zext", "sext", "trunc", "freeze", "br",
-    "cond_br", "ret", "call",
+    "shl", "lshr", "ashr", "icmp", "select", "zext", "sext", "trunc", "freeze", "poison",
+    "br", "cond_br", "ret", "call",
 ]  # fmt: skip
 
 CORE_TEXT_SAMPLE = """
@@ -180,6 +180,27 @@ class Rules(unittest.TestCase):
                 'lean/FirRef/Parse.lean:1: writes the core dialect\'s word "i32"',
             ],
         )
+
+    def test_a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word(self):
+        # `poison` names a core op and S1's deferred-UB value. Generic code
+        # may not write it alone as a string, whatever it means there, but
+        # may write a sentence that holds it (ADR-2026-11-03-1617).
+        core = CORE_TEXT_SAMPLE.replace('"ret"', '"ret" | .poison _ => "poison"')
+        generic = (
+            'def kind : String := "poison"\n'
+            'def why : String := "a poison divisor"\n'
+            'def how : String := s!"{kind}: deferred UB"\n'
+        )
+        root = tree(self, {CORE_TEXT: core, "lean/Fir/Execution/Report.lean": generic})
+        self.assertIn("poison", core_words(root))
+        self.assertEqual(
+            problems(root),
+            [
+                'lean/Fir/Execution/Report.lean:1: writes the core dialect\'s word "poison"'
+            ],
+        )
+        moved = {CORE_TEXT: core, "lean/Fir/Core/Report.lean": generic}
+        self.assertEqual(problems(tree(self, moved)), [])
 
     def test_corollary_files_may_name_the_core_dialect_but_not_write_its_words(self):
         text = 'import Fir.Core.TextLaws\ntheorem Core.x : "add" = "add" := rfl\n'

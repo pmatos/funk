@@ -1,4 +1,5 @@
 import Fir.Text.Print
+import FirRef.PrintInt
 
 /-!
 `fir-ref` prints attributes with `printAttr`, not with the spec's
@@ -6,11 +7,14 @@ import Fir.Text.Print
 arguments' text at each level. `printAttr` keeps what is left to print on
 an explicit stack of frames and appends each piece of text to one
 accumulator, so it takes no stack per level and runs in time linear in the
-text it writes, apart from the digits of an integer, which `printInt`
-writes with `toString`, in time quadratic in their number (#41). The
-theorem `print_eq_printAttr` proves the two equal, and `@[csimp]` makes
-Lean compile every later call of `Attr.print` as a call of `printAttr`
+text it writes, apart from the digits of long integers. The theorem
+`print_eq_printAttr` proves the two equal, and `@[csimp]` makes Lean
+compile every later call of `Attr.print` as a call of `printAttr`
 (ADR-2026-10-30-1450).
+
+This module imports `FirRef.PrintInt`, so `printAttrs` is compiled after
+`printInt_eq_printDecimal` and writes integers with `printDecimal`, which
+splits long ones at powers of ten (#41, ADR-2026-11-03-1603).
 -/
 
 namespace FirRef

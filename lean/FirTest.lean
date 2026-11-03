@@ -4,12 +4,14 @@ import FirRef.Main
 import FirTest.Axioms
 import FirTest.Parse
 import FirTest.Print
+import FirTest.PrintInt
 import FirTest.Run
 import FirTest.Interpreter
 import FirTest.Modes
 import FirTest.Sample
 import FirTest.Bitwise
 import FirTest.Width
+import FirTest.PoisonOp
 import FirTest.Div
 import FirTest.Compare
 import FirTest.Branch

@@ -21,9 +21,9 @@
 # is dropped too: a zext from i32 shifted left by 31 stays below 2^63, so
 # it never wraps.
 #
-# @poison to @poison6 shift by poison or shift poison. fir has no poison
-# constant, so each writes LLVM's poison as %p = shl %n, %n with %n = 32,
-# which the spec makes poison. @almost_all_ones_left_right and
+# @poison to @poison6 shift by poison or shift poison, which each writes
+# with fir's op poison, as LLVM writes its poison constant
+# (ADR-2026-11-03-1619). @almost_all_ones_left_right and
 # @all_ones_left_right_not_same_shift are negative tests: on 31, and on 4
 # and 2, they give 0 and -4, not -1.
 #

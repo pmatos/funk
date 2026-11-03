@@ -67,7 +67,10 @@ checks, `pre-commit` and `PR title`, are green.
 2. Write commit messages as Conventional Commits; the `commit-msg` hook checks.
 3. Open a PR whose title is a Conventional Commit header: squash merging makes
    it the commit message on `main`. Body: what changed and why, `Closes #N`.
-4. Merge by squash once CI is green (auto-merge is fine). Never merge red.
+4. If the PR is behind `main`, merge `main` into it, or use GitHub's "Update
+   branch", and wait for its checks on the new head. The ruleset blocks a PR
+   that is behind `main` from merging (ADR-2026-11-03-1612).
+5. Merge by squash once CI is green (auto-merge is fine). Never merge red.
 
 Format: `type(scope)!: summary`. Types: `feat`, `fix`, `perf`, `refactor`,
 `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`. `!` marks a breaking

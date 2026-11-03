@@ -175,11 +175,25 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
         assert!(files.iter().any(|f| f == want), "{want} is not checked");
     }
     assert!(files.iter().all(|f| !f.starts_with("src/dialects/")));
-    assert!(core_ops().len() >= 24, "{:?}", core_ops());
-    for w in ["add", "cond_br", "slt", "nsw", "exact", "true", "ptr"] {
+    assert!(core_ops().len() >= 25, "{:?}", core_ops());
+    for w in [
+        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr",
+    ] {
         assert!(is_core_word(&core_words(), w), "{w}");
     }
     assert!(is_core_word(&core_words(), "i32") && !is_core_word(&core_words(), "i"));
+}
+
+/// The strings of the code of `src` that are words of the core dialect,
+/// each written alone.
+fn core_words_written(words: &[String], src: &str) -> Vec<String> {
+    code(&tokens(src))
+        .into_iter()
+        .filter_map(|t| match t {
+            Tok::Str(s) if is_core_word(words, &s) => Some(s),
+            _ => None,
+        })
+        .collect()
 }
 
 #[test]
@@ -187,18 +201,45 @@ fn the_generic_modules_write_no_word_of_the_core_dialect() {
     let words = core_words();
     let mut found = Vec::new();
     for (path, src) in generic_sources() {
-        for t in code(&tokens(&src)) {
-            if let Tok::Str(s) = t
-                && is_core_word(&words, &s)
-            {
-                found.push(format!("{path}: \"{s}\""));
-            }
+        for s in core_words_written(&words, &src) {
+            found.push(format!("{path}: \"{s}\""));
         }
     }
     assert!(
         found.is_empty(),
         "per-op code outside a dialect (ADR-2026-11-03-0600): {found:#?}"
     );
+}
+
+/// `poison` names a core op and S1's deferred-UB value. It is a word of
+/// the core dialect all the same: generic code does not write it alone as
+/// a string, and may write a message or a sentence that holds it, which is
+/// not a word (ADR-2026-11-03-1617).
+#[test]
+fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
+    let words = core_words();
+    assert!(
+        core_ops().iter().any(|op| op == "poison"),
+        "{:?}",
+        core_ops()
+    );
+    let written = |src: &str| core_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn kind() -> &'static str { "poison" }"#),
+        ["poison"]
+    );
+    assert_eq!(
+        written(r#"fn f(n: &str) -> bool { n == "poison" || n == "freeze" }"#),
+        ["poison", "freeze"]
+    );
+    for src in [
+        r#"fn why() -> String { format!("a poison divisor") }"#,
+        r#"fn why() -> &'static str { "poison: deferred UB" }"#,
+        "// \"poison\" in a comment\nfn f() {}",
+        r#"#[cfg(test)] mod t { fn f() { let _ = "poison"; } }"#,
+    ] {
+        assert!(written(src).is_empty(), "{src}");
+    }
 }
 
 #[test]
