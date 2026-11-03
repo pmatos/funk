@@ -100,3 +100,7 @@ import Fir.Text.ReadBlocks
 import Fir.Text.ReadFunc
 import Fir.Text.ReadTable
 import Fir.Text.ReadModule
+import Fir.Text.DecodeScope
+import Fir.Text.DecodeBlocks
+import Fir.Text.DecodeModule
+import Fir.Text.PrintParse

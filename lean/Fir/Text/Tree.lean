@@ -156,7 +156,10 @@ theorem Operation.treeList_eq_map :
 /-! # What a tree that erases to a module's tree holds
 
 The decoding step starts from a tree that erases to a module's tree, and
-these lemmas say what each of its parts holds.
+these lemmas say what each of its parts holds: a definition, an op, a list
+of ops, a list of blocks, a list of regions, an item and the module. Each
+of the three lists has exactly as many elements as the module's, each
+erasing to its counterpart's tree.
 -/
 
 /-- A definition that erases to a definition's tree names its value and
@@ -178,6 +181,76 @@ theorem SOp.erase_eq_tree {so : SOp} {o : Operation d} (h : so.erase = o.tree) :
   obtain ⟨h₁, h₂, -, h₄, h₅, h₆, h₇, h₈⟩ := h
   refine ⟨h₁, h₂, h₄, ?_, h₆, h₇, h₈⟩
   simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) h₅
+
+/-- No ops erase to the trees of no ops. -/
+theorem SOp.eraseList_eq_nil {sos : List SOp}
+    (h : SOp.eraseList sos = Operation.treeList ([] : List (Operation d))) : sos = [] := by
+  cases sos with
+  | nil => rfl
+  | cons _ _ => simp [SOp.eraseList, Operation.treeList] at h
+
+/-- Ops that erase to the trees of an op and the ops after it are an op
+that erases to the op's tree, then ops that erase to the others' trees. -/
+theorem SOp.eraseList_eq_cons {sos : List SOp} {o : Operation d} {os : List (Operation d)}
+    (h : SOp.eraseList sos = Operation.treeList (o :: os)) :
+    ∃ so sos', sos = so :: sos' ∧ so.erase = o.tree ∧
+      SOp.eraseList sos' = Operation.treeList os := by
+  cases sos with
+  | nil => simp [SOp.eraseList, Operation.treeList] at h
+  | cons so sos' =>
+    simp only [SOp.eraseList, Operation.treeList, List.cons.injEq] at h
+    exact ⟨so, sos', rfl, h.1, h.2⟩
+
+/-- No blocks erase to the trees of no blocks. -/
+theorem SBlock.eraseList_eq_nil {sbs : List SBlock}
+    (h : SBlock.eraseList sbs = Block.treeList ([] : List (Block d))) : sbs = [] := by
+  cases sbs with
+  | nil => rfl
+  | cons sb _ =>
+    obtain ⟨_, _, _⟩ := sb
+    simp [SBlock.eraseList, Block.treeList] at h
+
+/-- Blocks that erase to the trees of a block and the blocks after it are a
+block with the block's label, with arguments and ops that erase to the
+block's, then blocks that erase to the others' trees. -/
+theorem SBlock.eraseList_eq_cons {sbs : List SBlock} {b : Block d} {bs : List (Block d)}
+    (h : SBlock.eraseList sbs = Block.treeList (b :: bs)) :
+    ∃ sb sbs', sbs = sb :: sbs' ∧ sb.label = b.label ∧
+      sb.params.map SDef.erase = b.params.map defTree ∧
+      SOp.eraseList sb.ops = Operation.treeList b.body ∧
+      SBlock.eraseList sbs' = Block.treeList bs := by
+  obtain ⟨label, params, body⟩ := b
+  cases sbs with
+  | nil => simp [SBlock.eraseList, Block.treeList] at h
+  | cons sb sbs' =>
+    obtain ⟨label', params', ops⟩ := sb
+    simp only [SBlock.eraseList, Block.treeList, List.cons.injEq, SBlock.mk.injEq] at h
+    obtain ⟨⟨h₁, h₂, h₃⟩, h₄⟩ := h
+    exact ⟨_, sbs', rfl, h₁, h₂, h₃, h₄⟩
+
+/-- No regions erase to the trees of no regions. -/
+theorem SRegion.eraseList_eq_nil {srs : List SRegion}
+    (h : SRegion.eraseList srs = Region.treeList ([] : List (Region d))) : srs = [] := by
+  cases srs with
+  | nil => rfl
+  | cons sr _ =>
+    obtain ⟨_⟩ := sr
+    simp [SRegion.eraseList, Region.treeList] at h
+
+/-- Regions that erase to the trees of a region and the regions after it
+are a region whose blocks erase to the region's, then regions that erase to
+the others' trees. -/
+theorem SRegion.eraseList_eq_cons {srs : List SRegion} {r : Region d} {rs : List (Region d)}
+    (h : SRegion.eraseList srs = Region.treeList (r :: rs)) :
+    ∃ sr srs', srs = sr :: srs' ∧ SBlock.eraseList sr.blocks = Block.treeList r.blocks ∧
+      SRegion.eraseList srs' = Region.treeList rs := by
+  obtain ⟨blocks⟩ := r
+  cases srs with
+  | nil => simp [SRegion.eraseList, Region.treeList] at h
+  | cons sr srs' =>
+    obtain ⟨bs⟩ := sr
+    simp only [SRegion.eraseList, Region.treeList, List.cons.injEq, SRegion.mk.injEq] at h
+    exact ⟨_, srs', rfl, h.1, h.2⟩
 
 /-- An item that erases to a function's tree is a `func` with the
 function's symbol, parameters and result types, no attributes, and the

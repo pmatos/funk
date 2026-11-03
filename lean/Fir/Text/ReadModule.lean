@@ -15,28 +15,14 @@ each type the module writes is written as a type, and that its location
 table is within the limits. A well-formed module has both
 (`Module.WellFormed.readModule_tokens`), so with `lex_print` the first two
 steps of the parser read its printed text as its tree
-(`Module.WellFormed.read_print`). The last step decodes that tree; that it
-gives the module back is the next step of #11.
+(`Module.WellFormed.read_print`). The last step decodes that tree, and
+gives the module back (`Module.WellFormed.decodeModule_eq`, in the sections
+that follow).
 -/
 
 namespace Fir
 
 open Text
-
-/-- Takes the first token off `h : ts.map (·.tok) = t :: rest`: `ts` becomes
-`⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. -/
-local macro "take_tok " h:ident : tactic => `(tactic| (
-  (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
-  obtain ⟨_, _, he, $h:ident⟩ := $h
-  subst he))
-
-/-- `take_tok`, naming the token's position `p`. -/
-local macro "take_pos " h:ident p:ident : tactic => `(tactic| (
-  (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
-  obtain ⟨$p:ident, _, he, $h:ident⟩ := $h
-  subst he))
 
 variable {d : Dialect} [DialectText d]
 
