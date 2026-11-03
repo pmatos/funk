@@ -84,9 +84,9 @@ that property too, and miss dominators.
 
 - `fir-ref validate` checks a chain of a million blocks, each using the
   value of the block before it, in about 20 seconds of CPU time, and a
-  million blocks that may each leave for one shared exit in about 30; the
-  tree takes about 6 and 15 of those seconds. The spec's search takes hours
-  on both. `scripts/check-fir-ref.sh test` runs them under soft limits of
+  million blocks that may each leave for one shared exit in 25 to 35,
+  depending on the machine's load; the tree takes a third of each or a
+  little more. The spec's search takes hours on both. `scripts/check-fir-ref.sh test` runs them under soft limits of
   120 and 180 seconds of CPU time.
 - Time near-linear in the size of the graph rests on published results,
   not on proofs here: `O(m log n)` steps for the simple version of
