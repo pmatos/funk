@@ -1,10 +1,67 @@
-"""Tests of how the harness reads what funk, fir-ref and native code print."""
+"""Tests of how the harness runs native code, and reads what funk, fir-ref
+and native code print."""
 
+import json
+import os
+import resource
+import sys
 import unittest
 
 from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
 from sets import BudgetExceeded, Outcomes, Path
-from tools import Ran, Verdict, build_failure, native_values, outcomes, path, verdict
+from tools import (
+    DATA_LIMIT,
+    Ran,
+    Verdict,
+    build_failure,
+    native_values,
+    outcomes,
+    path,
+    run,
+    run_native,
+    verdict,
+)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LIMITS = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+# A child that prints its soft and hard limits on data and address space,
+# then maps as many bytes as its argument says, and exits with ENOMEM when
+# it cannot. mmap has MAP_NORESERVE from Python 3.13; 0x4000 is its value
+# on x86-64 Linux.
+MAP = """
+import errno, json, mmap, resource, sys
+limits = (resource.RLIMIT_DATA, resource.RLIMIT_AS)
+print(json.dumps([resource.getrlimit(r) for r in limits]))
+noreserve = getattr(mmap, "MAP_NORESERVE", 0x4000)
+flags = mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS | noreserve
+try:
+    mmap.mmap(-1, int(sys.argv[1]), flags=flags)
+except OSError as e:
+    sys.exit(errno.errorcode[e.errno])
+"""
+# A child that runs the rest of its arguments with tools.run_native, from
+# the harness directory that its first argument names, and ends as they do.
+RUN_NATIVE = """
+import sys
+sys.path.insert(0, sys.argv[1])
+import tools
+ran = tools.run_native(sys.argv[2:])
+sys.stdout.write(ran.stdout)
+sys.stderr.write(ran.stderr)
+sys.exit(ran.status)
+"""
+
+
+def lowered(soft: int, hards: list[int]):
+    """A runner that runs a command with run_native, from a child whose soft
+    limits on data and address space are `soft`, and whose hard limits are
+    `hards`."""
+
+    def lower():
+        for r, hard in zip(LIMITS, hards):
+            resource.setrlimit(r, (soft, hard))
+
+    return lambda cmd: run([sys.executable, "-c", RUN_NATIVE, HERE, *cmd], lower)
 
 
 class FirRefRun(unittest.TestCase):
@@ -135,6 +192,47 @@ class Native(unittest.TestCase):
         self.assertIsInstance(
             native_values(Ran(0, '{"values":[]}\n', "warning\n")), str
         )
+
+
+class DataLimit(unittest.TestCase):
+    def setUp(self):
+        own = [resource.getrlimit(r)[0] for r in LIMITS]
+        room = all(s == resource.RLIM_INFINITY or s >= 2 * DATA_LIMIT for s in own)
+        why = (
+            "these tests need soft limits on data and address space of at"
+            f" least {2 * DATA_LIMIT} bytes, not {own}:"
+            " run ulimit -d unlimited -v unlimited"
+        )
+        self.assertTrue(room, why)
+
+    def mapping(self, runner, size: int) -> tuple[Ran, list]:
+        """Runs MAP with `runner` on `size`: how it ended, and its limits."""
+        ran = runner([sys.executable, "-c", MAP, str(size)])
+        return ran, json.loads(ran.stdout)
+
+    def test_native_code_runs_under_the_limit(self):
+        ran, limits = self.mapping(run_native, DATA_LIMIT // 2)
+        self.assertEqual(ran.status, 0, ran.stderr)
+        self.assertEqual(limits, [[DATA_LIMIT, DATA_LIMIT]] * 2)
+        ran, limits = self.mapping(run_native, DATA_LIMIT + 1)
+        self.assertEqual((ran.status, ran.stderr), (1, "ENOMEM\n"))
+        self.assertEqual(limits, [[DATA_LIMIT, DATA_LIMIT]] * 2)
+
+    def test_the_other_tools_run_without_it(self):
+        ran, limits = self.mapping(run, DATA_LIMIT + 1)
+        self.assertEqual(ran.status, 0, ran.stderr)
+        self.assertEqual(limits, [list(resource.getrlimit(r)) for r in LIMITS])
+
+    def test_a_lower_limit_stays(self):
+        """Under a lower soft limit, with the hard limit above it or equal
+        to it, native code keeps that limit: it never loosens, and setting
+        it never fails."""
+        lower = DATA_LIMIT * 3 // 4
+        for hards in ([resource.getrlimit(r)[1] for r in LIMITS], [lower] * 2):
+            with self.subTest(hards=hards):
+                ran, limits = self.mapping(lowered(lower, hards), DATA_LIMIT // 2)
+                self.assertEqual(ran.status, 0, ran.stderr)
+                self.assertEqual(limits, [[lower, lower]] * 2)
 
 
 class Verdicts(unittest.TestCase):
