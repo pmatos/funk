@@ -22,7 +22,7 @@ owns, and a user owns `pmatos/funk`.
 ## Decision
 
 - `.github/rulesets/main.json` sets `strict_required_status_checks_policy`
-  to `true`. GitHub then merges a pull request only when its branch
+  to `true`. GitHub then lets a pull request merge only when its branch
   contains the head of `main` and the required checks passed on the
   branch's own head.
 - A pull request that is behind `main` merges `main` into its branch, or
@@ -31,7 +31,11 @@ owns, and a user owns `pmatos/funk`.
 - The live ruleset follows the file. After the pull request that brings
   this ADR merges, it is updated with the `gh api -X PUT` command that
   ADR-2026-10-28-0725 gives, and read back with
-  `gh api repos/pmatos/funk/rulesets/<id>` to confirm it matches.
+  `gh api repos/pmatos/funk/rulesets/26023009` to confirm that each field
+  the file sets has the file's value, and that
+  `strict_required_status_checks_policy` is `true`. The live ruleset also
+  holds fields the file does not set, such as its `id` and two optional
+  `pull_request` parameters, so it never equals the file as a whole.
 
 ## Alternatives
 
@@ -50,3 +54,8 @@ owns, and a user owns `pmatos/funk`.
   them.
 - Auto-merge does not update a branch. A pull request with auto-merge on
   that falls behind waits until someone updates it.
+- This refines ADR-2026-10-28-0725: the ruleset it versions now also
+  requires a pull request to be up to date with `main`.
+- This also refines ADR-2026-10-30-1329, whose consequence that two pull
+  requests can still merge an ADR id clash no longer holds: the second one
+  falls behind, updates, and fails `adr-ids` before it merges.
