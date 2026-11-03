@@ -23,7 +23,6 @@ open Text
 variable {d : Dialect} [DialectSignature d] [DialectValidation d] [DialectText d]
   [LawfulDialectText d]
 
-
 /-- Result types that decode, from types written as types, can be written
 and decode back to themselves. -/
 theorem mapM_decodeType_writable {g : Attr × TextPos → Except ParseError d.Ty}

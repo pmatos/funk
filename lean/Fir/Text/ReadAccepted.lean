@@ -31,7 +31,8 @@ location reference token, and the lexer's step says that each of those
 tokens can be written. `ReadsWritable read P ts` says that on tokens `ts`
 that can be written, `read` gives what `P` holds of and leaves tokens that
 can be written. The tokens it leaves are a suffix of `ts`, but the readers'
-types say only that they are no more, so each lemma states it.
+types say only that they are no more, so each lemma says that they can be
+written.
 -/
 
 namespace Fir

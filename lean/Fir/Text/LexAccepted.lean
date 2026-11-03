@@ -46,9 +46,9 @@ theorem bind_eq_ok {ε α β : Type} {x : Except ε α} {f : α → Except ε β
   | ok a => exact ⟨a, rfl, h⟩
 
 /-- Takes the first step of `h : (x >>= f) = .ok b` apart with `bind_eq_ok`:
-`x` gave a result, and `pat` matches it, the equation `x = .ok a` and what
-`f` gave. `h` itself is dropped, so that the goals of the proofs that use it
-do not hold each step's program twice. -/
+`pat` matches the result `a` of `x`, the equation `x = .ok a`, and the
+equation `f a = .ok b`. `h` itself is dropped, so that the goals of the
+proofs that use it do not hold each step's program twice. -/
 scoped macro "bind_step " h:ident " with " pat:Lean.Parser.Tactic.rcasesPatMed : tactic =>
   `(tactic| (
     replace $h:ident := Fir.Text.bind_eq_ok $h:ident

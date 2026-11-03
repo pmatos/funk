@@ -6,9 +6,9 @@ import Fir.Text.ReadAcceptedBlocks
 On tokens that can be written, the readers of items give items that can be
 written. An item's parameters come from `readDefs`, its result types from
 `readType`, and its body from `readBlocks`, or from `readItems` when it
-starts with a word. Its kind, its symbol and its attributes are not asked
-anything, since decoding accepts only a `func` with no attributes, whatever
-its symbol.
+starts with a word. Nothing is asked of its kind, its symbol or its
+attributes: decoding accepts only a `func` with no attributes, whatever its
+symbol.
 
 `readItems` and `readItem` call one another, for the items of a body. They
 are proved together by their functional induction principle,
