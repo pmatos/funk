@@ -152,8 +152,8 @@ are on `main`:
   `const`, `add`, `sub` and `mul` with their flags, `freeze`, the bitwise
   ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or
   without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
-  `ret` and `call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for
-  division, `i128` into an object file and an executable for Linux. An
+  `ret` and `call` at `i1`, `i8`, `i16`, `i32`, `i64` and `i128` into
+  an object file and an executable for Linux. An
   `i128` is a pair of eightbytes, and each op lowers it through a pair of
   registers
   ([ADR-2026-11-03-010730](docs/adrs/2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md)).
@@ -164,7 +164,12 @@ are on `main`:
   its operand
   ([ADR-2026-10-30-2248](docs/adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
   A division is one bare `div` or `idiv` of its own size, with no guard
-  ([ADR-2026-10-31-0050](docs/adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)).
+  ([ADR-2026-10-31-0050](docs/adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)),
+  and at `i128` a call of a System V routine, with no guard either, of a
+  hand-written helper that the module's object file carries under local
+  symbols
+  ([ADR-2026-11-03-0414](docs/adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md),
+  [ADR-2026-11-03-0415](docs/adrs/2026-11-03-0415-the-i128-division-routines-are-system-v-functions.md)).
   A `select` tests bit 0 of its condition and is one `cmov`, with no
   branch
   ([ADR-2026-10-31-0215](docs/adrs/2026-10-31-0215-select-is-one-cmov-on-bit-0.md)).
@@ -246,8 +251,6 @@ These parts of M0 do not exist yet:
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In the backend, division at `i128`
-  ([#22](https://github.com/pmatos/funk/issues/22)).
 
 The epic's sub-issues list the open work in full.
 

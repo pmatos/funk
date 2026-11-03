@@ -1,6 +1,6 @@
 # An i128 is a pair of eightbytes in two slots, and each op lowers it through a register pair
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-0414
 
 ## Context
 

@@ -7,7 +7,7 @@
 
 mod common;
 
-use common::{boundaries, build, expect, func, module, run, spell, text, wrap};
+use common::{boundaries, build, check_i128 as check, expect, func, module, spell, wrap};
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
 
 /// The boundary bit patterns of `i128`, values on either side of `2^63`
@@ -28,32 +28,6 @@ const VALUES: [i128; 14] = [
     -(1 << 64),
     0x0123_4567_89ab_cdef_fedc_ba98_7654_3210,
 ];
-
-/// Runs `exe` with `args` and checks that it prints one value of `i128`,
-/// whichever it is: the result where the source's is poison.
-fn expect_some(exe: &std::path::Path, args: &[&str]) {
-    let out = run(exe, args);
-    let stdout = text(&out.stdout);
-    let value = stdout
-        .strip_prefix("{\"values\":[\"")
-        .and_then(|s| s.strip_suffix("\"]}\n"));
-    assert!(
-        out.status.code() == Some(0)
-            && out.stderr.is_empty()
-            && value.is_some_and(|v| v.parse::<i128>().is_ok()),
-        "{} {args:?}: {stdout}{}",
-        exe.display(),
-        text(&out.stderr)
-    );
-}
-
-/// Checks one run: the exact result, or any value where it is poison.
-fn check(exe: &std::path::Path, args: &[&str], result: Option<i128>) {
-    match result {
-        Some(r) => expect(exe, args, &[&r.to_string()]),
-        None => expect_some(exe, args),
-    }
-}
 
 /// `op` with `flags` on `a` and `b`: the wrapped result, or `None` when a
 /// flag is broken, so that the result is poison.
@@ -334,23 +308,5 @@ fn constants_are_both_halves_of_their_value() {
     let exe = build("i128-const", &module(&funcs));
     for (k, v) in VALUES.iter().enumerate() {
         expect(&exe, &[&format!("@c{k}")], &[&v.to_string()]);
-    }
-}
-
-#[test]
-fn division_at_i128_is_not_lowered_yet() {
-    for op in ["sdiv", "udiv", "srem", "urem"] {
-        let line = format!("%r: i128 = {op} %a, %b");
-        let text = module(&[func("d", "%a: i128, %b: i128", "i128", &[&line, "ret %r"])]);
-        let (out, _, _) = common::try_build(&format!("i128-{op}"), &text, &[]);
-        assert_eq!(out.status.code(), Some(1));
-        let err = common::text(&out.stderr);
-        assert!(
-            err.contains(&format!(
-                "unsupported in @d ^entry op 0: %r: the x86-64 backend does not lower {op} at \
-                 i128 yet"
-            )),
-            "{err}"
-        );
     }
 }

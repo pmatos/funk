@@ -4,7 +4,9 @@
 //! A function's need is the stack it uses below the return address that its
 //! caller pushes: that address and its saved `%rbp`, its frame, and the
 //! deepest of its calls, each with the arguments it pushes and the callee's
-//! own need. A call between two functions of one cycle, such as a function
+//! own need. A division at `i128` is a call of the runtime helper, which
+//! pushes no argument and needs `HELPER_STACK` bytes (ADR-2026-11-03-0415).
+//! A call between two functions of one cycle, such as a function
 //! that calls itself or two that call each other, is left out: how deep a
 //! cycle goes depends on the arguments, so no figure from the code bounds
 //! it. Without those calls the call graph has no cycle, and each need is a
@@ -22,7 +24,7 @@ use std::collections::HashMap;
 use funk_ir::{Func, Module, Op};
 
 use crate::abi::{self, pushed_words, results::Layout};
-use crate::lower::callee;
+use crate::lower::{HELPER_STACK, callee, helper};
 use crate::width;
 
 /// The stack a run of one function needs.
@@ -67,6 +69,18 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
         let frame = frames.get(i).map_or(0, |s| u64::from(s.unsigned_abs()));
         frame.saturating_add(16)
     };
+    // What the function's calls of the runtime helper need, if it makes any.
+    let helpers: Vec<u64> = funcs
+        .iter()
+        .map(|f| {
+            let mut ops = f.body.blocks.iter().flat_map(|b| &b.ops);
+            if ops.any(|op| helper(op).is_some()) {
+                HELPER_STACK
+            } else {
+                0
+            }
+        })
+        .collect();
     let mut out = vec![Need::default(); funcs.len()];
     let mut component = vec![0; funcs.len()];
     // Each component comes after every component that it calls, whose
@@ -78,7 +92,7 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
         let cycle = members.len() > 1 || calls[members[0]].iter().any(|&(g, _)| g == members[0]);
         for &f in &members {
             let mut need = Need {
-                bytes: 0,
+                bytes: helpers[f],
                 recursive: cycle,
             };
             for &(g, pushed) in &calls[f] {
@@ -322,6 +336,33 @@ mod tests {
                 .func(Func::new("g").block(Block::new("entry").op(ret())));
             assert_eq!(needs(&m, &[16, 16])[0], need(32 + pushed + 32, false));
         }
+    }
+
+    /// A division at `i128` calls the runtime helper, which needs
+    /// `HELPER_STACK` bytes below the frame, as deep as the helper goes; a
+    /// division at `i64` calls nothing. A call deeper than the helper
+    /// covers it.
+    #[test]
+    fn a_division_at_i128_needs_the_helper_s_stack() {
+        use funk_ir::{Registry, parse};
+        let text = "func @d(%a: i128, %b: i128) -> i128 {\n^entry:\n  \
+                    %q: i128 = sdiv %a, %b @0\n  ret %q @0\n}\n\n\
+                    func @n(%a: i64, %b: i64) -> i64 {\n^entry:\n  \
+                    %q: i64 = urem %a, %b @0\n  ret %q @0\n}\n\n\
+                    func @c(%a: i128, %b: i128) -> i128 {\n^entry:\n  \
+                    %q: i128 = call @d %a, %b @0\n  %r: i128 = urem %q, %b @0\n  \
+                    ret %r @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        assert_eq!(HELPER_STACK, 24);
+        let d = 16 + 48 + 24;
+        assert_eq!(
+            needs(&m, &[48, 32, 64]),
+            [
+                need(d, false),
+                need(16 + 32, false),
+                need(16 + 64 + d, false)
+            ]
+        );
     }
 
     /// Calls one after another reuse the same stack: the need is the
