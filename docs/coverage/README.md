@@ -22,7 +22,7 @@ allow, or a width for a row that passes no value.
 
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 502 | 751 | 442 | 777 | 631 | 623 |
+| `const` |  | 502 | 756 | 442 | 777 | 631 | 623 |
 | `add` |  | 200 | 349 | 305 | 282 | 424 | 528 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 210 | 224 | 205 | 217 | 204 | 106 |
@@ -32,15 +32,15 @@ allow, or a width for a row that passes no value.
 | `sub` | `nsw` | 8 | 33 | 29 | 41 | 29 | 35 |
 | `sub` | `nuw nsw` | 8 | 29 | 29 | 34 | 29 | 35 |
 | `mul` |  | 16 | 59 | 49 | 57 | 59 | 227 |
-| `mul` | `nuw` | 8 | 35 | 29 | 32 | 29 | 37 |
-| `mul` | `nsw` | 10 | 40 | 31 | 34 | 30 | 37 |
+| `mul` | `nuw` | 8 | 39 | 29 | 32 | 29 | 37 |
+| `mul` | `nsw` | 10 | 41 | 31 | 34 | 30 | 37 |
 | `mul` | `nuw nsw` | 8 | 29 | 29 | 29 | 29 | 37 |
 | `sdiv` |  | 2 | 86 | 43 | 124 | 30 | 282 |
 | `sdiv` | `exact` | 1 | 21 | 19 | 19 | 19 | 66 |
 | `udiv` |  | 10 | 155 | 81 | 128 | 138 | 266 |
 | `udiv` | `exact` | 2 | 25 | 20 | 20 | 20 | 60 |
 | `srem` |  | 2 | 86 | 24 | 101 | 29 | 258 |
-| `urem` |  | 12 | 158 | 92 | 157 | 159 | 225 |
+| `urem` |  | 12 | 163 | 92 | 157 | 159 | 225 |
 | `and` |  | 24 | 43 | 29 | 161 | 29 | 32 |
 | `or` |  | 8 | 42 | 29 | 100 | 37 | 34 |
 | `xor` |  | 8 | 47 | 29 | 32 | 31 | 51 |
@@ -92,13 +92,13 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 765 |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 53 | 135 | 127 | 150 | 127 | 148 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2173 | 1401 | 1096 | 1490 | 1257 | 2303 |
+| `ret` | returns one value |  | 2173 | 1406 | 1096 | 1490 | 1257 | 2303 |
 | `ret` | returns several values |  | 274 | 424 | 258 | 239 | 389 | 531 |
 | `call` | gives no result | 32 |  |  |  |  |  |  |
 | `call` | gives one result |  | 71 | 72 | 73 | 78 | 82 | 110 |
 | `call` | gives several results |  | 170 | 219 | 125 | 110 | 188 | 278 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |
-| `func` | returns one value |  | 2173 | 1401 | 1096 | 1490 | 1257 | 2303 |
+| `func` | returns one value |  | 2173 | 1406 | 1096 | 1490 | 1257 | 2303 |
 | `func` | returns several values |  | 274 | 424 | 258 | 230 | 389 | 495 |
 
 ## Interpreter-only tests
@@ -107,7 +107,7 @@ allow, or a width for a row that passes no value.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 284 | 472 | 292 | 212 | 295 | 462 | 205 | 131 |
+| `const` |  | 284 | 472 | 294 | 212 | 295 | 462 | 205 | 131 |
 | `add` |  | 7 | 222 | 25 | 22 | 22 | 222 | 22 | 57 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 172 | 346 | 210 | 203 | 202 | 318 | 196 | 98 |
@@ -117,7 +117,7 @@ allow, or a width for a row that passes no value.
 | `sub` | `nsw` | 6 | 29 | 8 | 6 | 17 | 29 | 6 | 5 |
 | `sub` | `nuw nsw` | 6 | 29 | 6 | 6 | 11 | 29 | 6 | 5 |
 | `mul` |  | 8 | 63 | 26 | 21 | 21 | 61 | 21 | 16 |
-| `mul` | `nuw` | 6 | 29 | 11 | 6 | 10 | 29 | 6 | 6 |
+| `mul` | `nuw` | 6 | 29 | 13 | 6 | 10 | 29 | 6 | 6 |
 | `mul` | `nsw` | 10 | 35 | 15 | 12 | 14 | 35 | 12 | 6 |
 | `mul` | `nuw nsw` | 8 | 29 | 6 | 6 | 6 | 29 | 6 | 6 |
 | `sdiv` |  | 15 | 68 | 22 | 20 | 40 | 36 | 19 | 44 |
@@ -125,7 +125,7 @@ allow, or a width for a row that passes no value.
 | `udiv` |  | 19 | 96 | 33 | 32 | 39 | 101 | 46 | 36 |
 | `udiv` | `exact` | 9 | 36 | 40 | 36 | 36 | 36 | 36 | 75 |
 | `srem` |  | 15 | 36 | 21 | 19 | 51 | 36 | 19 | 44 |
-| `urem` |  | 17 | 112 | 29 | 27 | 47 | 117 | 41 | 36 |
+| `urem` |  | 17 | 112 | 31 | 27 | 47 | 117 | 41 | 36 |
 | `and` |  | 22 | 29 | 5 | 5 | 24 | 34 | 5 | 4 |
 | `or` |  | 6 | 29 | 9 | 5 | 7 | 29 | 5 | 4 |
 | `xor` |  | 8 | 29 | 5 | 5 | 7 | 29 | 5 | 12 |
@@ -183,11 +183,11 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 373 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 6 | 131 | 9 | 7 | 6 | 129 | 6 | 4 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 1236 | 1225 | 447 | 427 | 537 | 1263 | 447 | 722 |
+| `ret` | returns one value |  | 1236 | 1225 | 449 | 427 | 537 | 1263 | 447 | 722 |
 | `ret` | returns several values |  | 45 | 179 | 29 | 19 | 19 | 179 | 42 | 40 |
 | `call` | gives no result | 13 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 66 | 84 | 19 | 15 | 15 | 84 | 15 | 11 |
 | `call` | gives several results |  | 40 | 91 | 16 | 10 | 10 | 91 | 24 | 26 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 1236 | 1225 | 447 | 427 | 537 | 1263 | 447 | 722 |
+| `func` | returns one value |  | 1236 | 1225 | 449 | 427 | 537 | 1263 | 447 | 722 |
 | `func` | returns several values |  | 45 | 179 | 29 | 19 | 19 | 179 | 42 | 38 |
