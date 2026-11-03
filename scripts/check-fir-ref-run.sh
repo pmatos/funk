@@ -7,7 +7,8 @@
 # and select (#16), runs loops with br and cond_br, a branch on poison and a
 # loop that never ends (#19), and runs calls: a function named by a quoted
 # symbol returns its callee's result, and a call without end runs out of
-# fuel (#20).
+# fuel (#20). It runs functions on poison arguments, and rejects poison
+# where it is not an argument of an integer type (#123).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -175,7 +176,16 @@ runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
     @double 9223372036854775808 || status=1
-runs $c/add.fir 2 'fir-ref: poison is not a value of type i64' @double poison || status=1
+# poison is an argument of any iN (#123), but not of ptr, and not a choice.
+runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
+runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1
+runs $c/add.fir 2 'fir-ref: Poison is not a value of type i64' @double Poison || status=1
+runs "$tmp/freeze.fir" 0 "${ret}[\"-2\"],\"choices\":1}" --choices -2 @f poison || status=1
+runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f poison || status=1
+runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: choice 1, poison, is not a value of type i2' \
+    --choices poison @f poison || status=1
+printf 'func @p(%%x: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >"$tmp/ptr.fir"
+runs "$tmp/ptr.fir" 2 'fir-ref: poison is not a value of type ptr' @p poison || status=1
 runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
 runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
 rc=0

@@ -36,8 +36,10 @@ fit the run.
 
 Arguments, choices and values are spelled as constants are in text: `true`
 and `false` at `i1`, and signed decimal at every other width, read with the
-spec's lexer and checked with `Core.Op.decode`. A value may also be
-`poison`; an argument or a choice may not.
+spec's lexer and checked with `Core.Op.decode`. A value or an argument may
+also be `poison`, at any `iN`, so that a run may start from poison, as the
+runs of `Core.FuncRuns` do (#123). A choice may not: `freeze` chooses a
+value of its type.
 -/
 
 namespace FirRef
@@ -86,8 +88,10 @@ def constOf (w : Nat) (s : String) : Option (BitVec w) := do
   | some (.const w' v) => if h : w' = w then some (h ▸ v) else none
   | _ => none
 
-/-- An argument of type `t`: a constant of `t`. -/
+/-- An argument of type `t`: a constant of `t`, or `poison` at any `iN`,
+spelled as `valueText` spells it. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
+  | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
   | .int w, s => match constOf w s with
     | some v => pure (.value v : PoisonOr (BitVec w))
     | none => .error s!"{shown s} is not a value of type {tyText (.int w)}"

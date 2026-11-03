@@ -47,6 +47,9 @@ if sys.argv[1] == "build":
     with open(out, "w") as f:
         f.write("#!/bin/sh\\n")
         f.write('[ "$(ulimit -d)" != unlimited ] && [ "$(ulimit -v)" != unlimited ] || exit 3\\n')
+        # Native code takes no poison, and gives 8 on the i32 minimum.
+        f.write('case " $* " in *" poison "*) exit 4;; esac\\n')
+        f.write('case " $* " in *" -2147483648 "*) echo \\'{"values":["8"]}\\'; exit;; esac\\n')
         f.write("echo '{\\"values\\":[\\"7\\"]}'\\n")
     os.chmod(out, 0o755)
     print(json.dumps({"file": sys.argv[-1], "verdict": "accepted", "diagnostics": []}))
@@ -69,6 +72,10 @@ SETS = {
     "@setub": (1, [R % 7, WHY]),
     "@undeclared": (1, [R % 7, R % 8]),
     "@pick": (1, [R % 3]),
+    "@poisoned": (0, [R % "poison"]),
+    "@poisonkept": (0, [R % 7]),
+    "@poisonub": (0, [WHY]),
+    "@poisonptr": (0, [R % "poison"]),
 }
 # The one path of scripted mode, by function and choices; any other
 # choices do not fit the run.
@@ -77,18 +84,40 @@ PATHS = {
     ("@drift", "3"): (R % 7, 1),
     ("@undeclared", "1"): (R % 7, 1),
     ("@pick", "3"): (R % 3, 1),
+    ("@poisonwide", "3"): (R % 7, 1),
+    ("@poisonhidden", "3"): (R % 7, 1),
+    ("@poisonseeded", "3"): (R % 7, 1),
+}
+# What exhaustive mode prints for a vector of stand-ins that the harness
+# runs fir-ref on, by function and arguments, as SETS.
+VECTORS = {
+    ("@poisonwide", "-2147483648 true"): (0, [R % 7]),
+    ("@poisonhidden", "-2147483648 true"): (0, [WHY]),
 }
 if sys.argv[1] == "run":
     dash = sys.argv.index("--")
-    options, func = sys.argv[2:dash], sys.argv[dash + 2]
+    options, func, args = sys.argv[2:dash], sys.argv[dash + 2], sys.argv[dash + 3:]
+    vector = (func, " ".join(args))
+    # fir-ref gets each poison argument as it is, but on a vector of
+    # stand-ins of @poisonseeded, or one in VECTORS.
+    stood = vector in VECTORS or (func == "@poisonseeded" and "poison" not in args)
+    if func.startswith("@poison") and "poison" not in args and not stood:
+        print(f"fir-ref: {func} is run with no poison", file=sys.stderr)
+        sys.exit(2)
     value = lambda o: options[options.index(o) + 1] if o in options else None
     choices, seed = value("--choices") or "", value("--seed")
     if "--exhaustive" in options:
-        if func not in SETS:
+        made_outs = VECTORS.get(vector, SETS.get(func))
+        if made_outs is None:
             print('{"kind":"choice-budget-exceeded","budget":16}')
         else:
-            made, outs = SETS[func]
+            made, outs = made_outs
             print('{"kind":"outcomes","choices":%d,"outcomes":[%s]}' % (made, ",".join(outs)))
+        sys.exit(0)
+    # A seeded run on a vector of stand-ins of @poisonseeded runs out of
+    # fuel on seed 9.
+    if stood and func == "@poisonseeded" and seed == "9":
+        print(FUEL[:-1] + ',"choices":1,"sequence":["9"]}')
         sys.exit(0)
     if seed is not None:
         n = 8 if func == "@drift" and seed == "5" else 7
@@ -108,10 +137,22 @@ if sys.argv[1] == "run":
 NAMES = ["seven", "eight", "ub", "fuel", "set", "miss", "setub", "wide"]
 NAMES += ["stale", "drift", "undeclared", "pick"]
 
+# Functions that take arguments, which tests give as poison.
+PARAMS = {
+    "poisoned": "%a: i32, %c: i1",
+    "poisonkept": "%a: i32, %c: i1",
+    "poisonub": "%a: i32, %c: i1",
+    "poisonwide": "%a: i32, %c: i1",
+    "poisonptr": "%p: ptr",
+    "poisonhidden": "%a: i32, %c: i1",
+    "poisonseeded": "%a: i32, %c: i1",
+}
+
 MODULE = (
     "".join(
-        f"func @{f}() -> i32 {{\n^entry:\n  %c: i32 = const 7 @0\n  ret %c @0\n}}\n\n"
-        for f in NAMES
+        f"func @{f}({PARAMS.get(f, '')}) -> i32 {{\n^entry:\n"
+        "  %c: i32 = const 7 @0\n  ret %c @0\n}\n\n"
+        for f in NAMES + list(PARAMS)
     )
     + "locs {\n  @0 = unknown\n}\n"
 )
@@ -134,6 +175,15 @@ tests = [
   { func = "@undeclared", results = [{ values = ["7"], witness = ["1"] }] },
   { func = "@pick", choices = ["3"], expect = ["3"] },
   { func = "@pick", expect = ["3"] },
+  { func = "@poisoned", args = ["poison", "true"] },
+  { func = "@poisonkept", args = ["poison", "true"] },
+  { func = "@poisonub", args = ["poison", "poison"] },
+  { func = "@poisonptr", args = ["poison"] },
+  { func = "@poisoned", args = ["poison", "true"], expect = ["poison"] },
+  { func = "@poisonwide", args = ["poison", "true"], results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@poisonhidden", args = ["poison", "true"], results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@poisonseeded", args = ["poison", "true"], results = [{ values = ["7"], witness = ["3"] }] },
+  { func = "@poisonkept", args = ["poison", "true"], results = [{ values = ["7"], witness = ["3"] }] },
 ]
 """
 
@@ -158,6 +208,10 @@ SET = "fir-ref makes 1 choice and gives 2 outcomes"
 WIDE = "fir-ref chooses more than its budget of 16 bits"
 DECLARES = ", and the test declares 1 result"
 NATIVE = '; native code returns ["7"]'
+POISON_MIN = (
+    '; native code returns ["8"] on -2147483648 true, one of 5 argument vectors'
+    " with stand-ins for poison"
+)
 EXPECTED = [
     "passed  canonical/m.fir: funk verify: accepted; fir-ref validate: accepted",
     (
@@ -243,7 +297,63 @@ EXPECTED = [
         "failed  canonical/m.fir @pick (interpreter only): fir-ref exits with 2:"
         " fir-ref: @pick: the choices do not fit the run"
     ),
-    "21 checks: 8 passed, 9 failed, 4 invalid",
+    (
+        'passed  canonical/m.fir @poisoned poison true: fir-ref returns ["poison"];'
+        ' native code returns ["7"] on 0 true, and passes on all 5 argument'
+        " vectors with stand-ins for poison\n"
+    ),
+    (
+        'failed  canonical/m.fir @poisonkept poison true: fir-ref returns ["7"];'
+        ' native code returns ["8"] on -2147483648 true, one of 5 argument'
+        " vectors with stand-ins for poison: value 1 is 8, not 7"
+    ),
+    (
+        "invalid canonical/m.fir @poisonub poison poison: fir-ref hits UB (why);"
+        ' native code returns ["7"] on 0 false: UB allows any result, so the test'
+        " proves nothing\n"
+    ),
+    (
+        'failed  canonical/m.fir @poisonptr poison: fir-ref returns ["poison"];'
+        " native code is not run: argument 1 is poison, and ptr has no stand-in"
+        " for it: native code fails where fir-ref returns"
+    ),
+    (
+        "passed  canonical/m.fir @poisoned poison true (interpreter only):"
+        ' fir-ref returns ["poison"]\n'
+    ),
+    (
+        "failed  canonical/m.fir @poisonwide poison true: "
+        + WIDE
+        + DECLARES
+        + POISON_MIN
+        + ': the native result refines none of the 1 declared results: ["7"];'
+        ' on -2147483648 true, fir-ref returns ["7"]\n'
+    ),
+    (
+        "invalid canonical/m.fir @poisonhidden poison true: "
+        + WIDE
+        + DECLARES
+        + POISON_MIN
+        + ": on -2147483648 true, fir-ref hits UB (why), so the run on poison"
+        " hits UB too, or runs out of fuel, on a path that the seeded runs"
+        " miss: UB allows any result, so the test proves nothing\n"
+    ),
+    (
+        "invalid canonical/m.fir @poisonseeded poison true: "
+        + WIDE
+        + DECLARES
+        + POISON_MIN
+        + ": on -2147483648 true, fir-ref --seed 9 runs out of fuel, so the"
+        " result depends on the fuel budget: raise the test's budget\n"
+    ),
+    (
+        'failed  canonical/m.fir @poisonkept poison true: fir-ref returns ["7"]'
+        + DECLARES
+        + '; native code returns ["7"] on 0 true: the witness ["3"] of result 1'
+        " does not give it: fir-ref exits with 2: fir-ref: @poisonkept: the"
+        " choices do not fit the run"
+    ),
+    "30 checks: 10 passed, 13 failed, 7 invalid",
 ]
 
 

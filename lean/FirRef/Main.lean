@@ -48,7 +48,8 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             run its function @FUNC, named as fir's text writes it, with the
             spec's interpreter. Give one ARG per parameter, spelled as a
             constant of its type: true or false at i1, signed decimal at
-            every other width. freeze of poison makes a choice. Print one
+            every other width; or poison, at any integer type, for a
+            poison argument. freeze of poison makes a choice. Print one
             JSON object: the one outcome of the path that the choices name
             (the values returned, UB, fuel exhausted, or stuck), or with
             --exhaustive every outcome of the run, or with --seed the one

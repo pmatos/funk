@@ -101,10 +101,9 @@ The same rules, value by value, where the top bit is set. -/
 
 /-! # Poison
 
-A poison operand gives poison, at every pair of widths. `fir-ref run`
-takes no poison argument, so the first test gives one through the
-interpreter as `fir-ref` runs it, and the next makes one with a broken
-flag. -/
+A poison operand gives poison, at every pair of widths. The first test
+gives one as an argument, through the interpreter as `fir-ref` runs it,
+and the next makes one with a broken flag. -/
 
 #guard pairs.all fun (op, m, n) =>
   runIn inferInstance (changeAt op m n) ["poison"] == some (returns ["poison"])
