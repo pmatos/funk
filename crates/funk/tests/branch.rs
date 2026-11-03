@@ -9,7 +9,7 @@ mod common;
 use std::path::Path;
 
 use common::{boundaries, build, expect, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// A loop at `iW` over `^loop(%x, %y, %z, %k: i8)` that passes `next`, the
 /// three values in some order, while `%k` is above zero, counting `%k`

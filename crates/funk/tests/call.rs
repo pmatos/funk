@@ -10,7 +10,7 @@ mod common;
 use std::path::Path;
 
 use common::{boundaries, build, expect, module, spell, text, try_build, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// A recursive factorial at `iW`, with no flags: `%n` times the factorial
 /// of `%n - 1` while `%n` is above zero, read as signed, and 1 otherwise.

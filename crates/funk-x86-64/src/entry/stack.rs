@@ -23,6 +23,7 @@ use funk_ir::{Func, Module};
 
 use crate::abi::pushed_words;
 use crate::lower::callee;
+use crate::width;
 
 /// The stack a run of one function needs.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -52,10 +53,16 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
     let calls: Vec<Vec<Call>> = funcs
         .iter()
         .map(|f| {
+            let types = value_words(f);
             let ops = f.body.blocks.iter().flat_map(|b| &b.ops);
             ops.filter_map(|op| {
                 let i = *index.get(callee(op)?)?;
-                let words = u64::try_from(pushed_words(op.operands.len())).unwrap_or(u64::MAX);
+                let args: Vec<usize> = op
+                    .operands
+                    .iter()
+                    .map(|x| types.get(x.as_str()).copied().unwrap_or(1))
+                    .collect();
+                let words = u64::try_from(pushed_words(&args)).unwrap_or(u64::MAX);
                 Some((i, words.saturating_mul(8)))
             })
             .collect()
@@ -92,6 +99,20 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
         }
     }
     out
+}
+
+/// The eightbytes of each value that `f` defines, as the lowering passes it
+/// to a call: two for an `i128`, one for any other (`width::words`). An
+/// argument that `f` does not define, which only a module that is not valid
+/// has, counts as one.
+fn value_words(f: &Func) -> HashMap<&str, usize> {
+    let blocks = f.body.blocks.iter();
+    let defs = f
+        .params
+        .iter()
+        .chain(blocks.flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))));
+    defs.map(|d| (d.name.as_str(), width::words(&d.ty)))
+        .collect()
 }
 
 /// The strongly connected components of the call graph `calls`, by
@@ -201,6 +222,39 @@ mod tests {
         for (args, pushed) in [(0, 0), (6, 0), (7, 16), (8, 16), (9, 32), (12, 48)] {
             let m = module(&[("f", &[("g", args)]), ("g", &[])]);
             assert_eq!(needs(&m, &[16, 16])[0], need(32 + pushed + 32, false));
+        }
+    }
+
+    /// An `i128` argument is two eightbytes where `abi::layout` puts it:
+    /// past the registers it is 16 bytes, aligned to 16, so a hole may come
+    /// before it, and a later `i64` may take a register it left.
+    #[test]
+    fn a_call_needs_the_eightbytes_of_its_i128_arguments() {
+        use funk_ir::{Registry, parse};
+        for (params, pushed) in [
+            ("i128, i128, i128", 0),
+            ("i128, i128, i128, i128", 16),
+            ("i64, i64, i64, i64, i64, i128, i64", 16),
+            ("i64, i64, i64, i64, i64, i64, i64, i128", 32),
+            ("i128, i128, i128, i64, i128, i64, i128", 64),
+        ] {
+            let types: Vec<&str> = params.split(", ").collect();
+            let decl: Vec<String> = (0..types.len())
+                .map(|k| format!("%p{k}: {}", types[k]))
+                .collect();
+            let args: Vec<String> = (0..types.len()).map(|k| format!("%p{k}")).collect();
+            let text = format!(
+                "func @g({0}) {{\n^entry:\n  ret @0\n}}\n\nfunc @f({0}) {{\n^entry:\n  call @g {1} @0\n  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n",
+                decl.join(", "),
+                args.join(", ")
+            );
+            let m = parse(&text, &Registry::core()).unwrap();
+            let g = 16 + 64;
+            assert_eq!(
+                needs(&m, &[64, 32])[1],
+                need(16 + 32 + pushed + g, false),
+                "{params}"
+            );
         }
     }
 

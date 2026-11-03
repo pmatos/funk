@@ -1,0 +1,70 @@
+# Tests of recursion-i128.fir: recursive calls at i128 (#21), each
+# returning its result in %rdx and %rax. fact calls itself on %n - 1
+# while %n is above zero, read as signed, and multiplies with mul, which
+# wraps: it gives %n! modulo 2^128, and 1 for %n of at most zero; 21! is
+# past 2^64, and 34! past 2^127. fib calls itself twice, on %n - 1 and
+# %n - 2, while %n is above 1 read as unsigned, and adds with add, which
+# wraps. scale calls itself %n times and multiplies %k by itself on the
+# way back, so it gives %k^(%n + 1) modulo 2^128, with %k on both sides
+# of 2^64. Each call takes one step of fuel, and its callee runs on the
+# steps that are left (ADR-2026-11-02-0836).
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+# A differential test recurses at most 20 deep, as tests/fir/README.md
+# says of the corpus's calls. fact on 21 and more, past 2^64, is
+# interpreter-only, and states the value that fir-ref returns; fact in
+# loop-i128 runs those natively too, and scale crosses 2^64 within 20
+# calls.
+# A run of more than 20,000 steps runs at a budget of 1,000 steps
+# instead, and expects fuel-exhausted: fir-ref's run takes stack for
+# each step (#47).
+tests = [
+  { func = "@fact", args = ["0"] },
+  { func = "@fact", args = ["1"] },
+  { func = "@fact", args = ["-1"] },
+  { func = "@fact", args = ["-170141183460469231731687303715884105728"] },
+  { func = "@fact", args = ["5"] },
+  { func = "@fact", args = ["20"] },
+  { func = "@fact", args = ["21"], expect = ["51090942171709440000"] },
+  { func = "@fact", args = ["25"], expect = ["15511210043330985984000000"] },
+  { func = "@fact", args = ["30"], expect = ["265252859812191058636308480000000"] },
+  { func = "@fact", args = ["33"], expect = ["8683317618811886495518194401280000000"] },
+  { func = "@fact", args = ["34"], expect = ["-45049567881334322615755997788248211456"] },
+  { func = "@fact", args = ["35"], expect = ["124676958757991025765413114570153656320"] },
+  { func = "@fact", args = ["40"], expect = ["-163786086074113512846170655452924215296"] },
+  { func = "@fact", args = ["170141183460469231731687303715884105727"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["0"] },
+  { func = "@fib", args = ["1"] },
+  { func = "@fib", args = ["2"] },
+  { func = "@fib", args = ["3"] },
+  { func = "@fib", args = ["10"] },
+  { func = "@fib", args = ["15"] },
+  { func = "@fib", args = ["-1"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["-170141183460469231731687303715884105728"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@fib", args = ["170141183460469231731687303715884105727"], fuel = 1000, expect = "fuel-exhausted" },
+  { func = "@scale", args = ["0", "3"] },
+  { func = "@scale", args = ["0", "-3"] },
+  { func = "@scale", args = ["0", "18446744073709551617"] },
+  { func = "@scale", args = ["0", "9223372036854775808"] },
+  { func = "@scale", args = ["0", "1512366075204170947332355369683137040"] },
+  { func = "@scale", args = ["1", "3"] },
+  { func = "@scale", args = ["1", "-3"] },
+  { func = "@scale", args = ["1", "18446744073709551617"] },
+  { func = "@scale", args = ["1", "9223372036854775808"] },
+  { func = "@scale", args = ["1", "1512366075204170947332355369683137040"] },
+  { func = "@scale", args = ["2", "3"] },
+  { func = "@scale", args = ["2", "-3"] },
+  { func = "@scale", args = ["2", "18446744073709551617"] },
+  { func = "@scale", args = ["2", "9223372036854775808"] },
+  { func = "@scale", args = ["2", "1512366075204170947332355369683137040"] },
+  { func = "@scale", args = ["3", "3"] },
+  { func = "@scale", args = ["3", "-3"] },
+  { func = "@scale", args = ["3", "18446744073709551617"] },
+  { func = "@scale", args = ["3", "9223372036854775808"] },
+  { func = "@scale", args = ["3", "1512366075204170947332355369683137040"] },
+  { func = "@scale", args = ["20", "3"] },
+  { func = "@scale", args = ["20", "-3"] },
+  { func = "@scale", args = ["20", "18446744073709551617"] },
+  { func = "@scale", args = ["20", "9223372036854775808"] },
+  { func = "@scale", args = ["20", "1512366075204170947332355369683137040"] },
+]

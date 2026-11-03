@@ -15,7 +15,7 @@ mod common;
 use std::path::Path;
 
 use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The result of `op` on `a` and `b`, two values of `iW` read as signed, or
 /// `None` where it is poison: a shift by an amount, read as unsigned, of

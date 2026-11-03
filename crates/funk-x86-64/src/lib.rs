@@ -14,9 +14,11 @@
 //! Register allocation is the baseline: every value has a stack slot, and
 //! each op loads its operands and stores its results (ADR-2026-10-30-1230).
 //! The backend lowers `i1`, `i8`, `i16`, `i32` and `i64`
-//! (ADR-2026-10-30-1231), and functions and calls with at most one result
-//! (#31). A call between funk functions extends no argument
-//! (ADR-2026-11-02-1021).
+//! (ADR-2026-10-30-1231), and `i128` as a pair of eightbytes, except in
+//! division (ADR-2026-11-03-0107), and functions and calls with at most one
+//! result (#31). A call between funk functions extends no argument
+//! (ADR-2026-11-02-1021), and passes an `i128` in two registers or in 16
+//! aligned bytes of the stack (ADR-2026-11-03-0108).
 //! Anything else is reported as a [`Diagnostic`] that carries the IR
 //! location of the op, or of the block for a parameter.
 //!

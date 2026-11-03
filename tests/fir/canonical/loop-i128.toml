@@ -1,0 +1,46 @@
+# Tests of loop-i128.fir: loops at i128 (#21), each a header ^loop whose
+# body ^body branches back to it with block arguments. sum adds %step to
+# 0, %n times, with add nsw, so a sum past the signed maximum is poison,
+# which the loop carries to the end; it does not loop at all on %n of at
+# most 0. Its steps cross 2^64, so the sum carries into the high half.
+# fact counts %n down to 0 and multiplies with mul, which wraps: it gives
+# %n! modulo 2^128. 21! is past 2^64 and 34! past 2^127. No loop here
+# runs more than a hundred times, well within the default fuel.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@sum", args = ["0", "1"] },
+  { func = "@sum", args = ["0", "18446744073709551615"] },
+  { func = "@sum", args = ["0", "18446744073709551616"] },
+  { func = "@sum", args = ["0", "1512366075204170947332355369683137040"] },
+  { func = "@sum", args = ["0", "3402823669209384634633746074317682114"] },
+  { func = "@sum", args = ["1", "1"] },
+  { func = "@sum", args = ["1", "18446744073709551615"] },
+  { func = "@sum", args = ["1", "18446744073709551616"] },
+  { func = "@sum", args = ["1", "1512366075204170947332355369683137040"] },
+  { func = "@sum", args = ["1", "3402823669209384634633746074317682114"] },
+  { func = "@sum", args = ["10", "1"] },
+  { func = "@sum", args = ["10", "18446744073709551615"] },
+  { func = "@sum", args = ["10", "18446744073709551616"] },
+  { func = "@sum", args = ["10", "1512366075204170947332355369683137040"] },
+  { func = "@sum", args = ["10", "3402823669209384634633746074317682114"] },
+  { func = "@sum", args = ["100", "1"] },
+  { func = "@sum", args = ["100", "18446744073709551615"] },
+  { func = "@sum", args = ["100", "18446744073709551616"] },
+  { func = "@sum", args = ["100", "1512366075204170947332355369683137040"] },
+  { func = "@sum", args = ["100", "3402823669209384634633746074317682114"] },
+  { func = "@sum", args = ["-5", "1512366075204170947332355369683137040"] },
+  { func = "@sum", args = ["3", "170141183460469231731687303715884105727"] },
+  { func = "@fact", args = ["0"] },
+  { func = "@fact", args = ["1"] },
+  { func = "@fact", args = ["2"] },
+  { func = "@fact", args = ["20"] },
+  { func = "@fact", args = ["21"] },
+  { func = "@fact", args = ["25"] },
+  { func = "@fact", args = ["30"] },
+  { func = "@fact", args = ["33"] },
+  { func = "@fact", args = ["34"] },
+  { func = "@fact", args = ["35"] },
+  { func = "@fact", args = ["40"] },
+  { func = "@fact", args = ["100"] },
+]

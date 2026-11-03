@@ -9,7 +9,7 @@ mod common;
 
 use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The exact result of `op` on `a` and `b`, or `None` if it does not fit an
 /// `i128`.

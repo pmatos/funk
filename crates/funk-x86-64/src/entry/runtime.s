@@ -8,7 +8,8 @@
 # stack limit (ADR-2026-11-02-1132), with a guard page below it, and calls
 # the function's wrapper on that stack. The wrapper parses each argument with
 # `__funk_rt_arg`, calls the function, and prints each result with
-# `__funk_rt_value`. The runtime then prints the line {"values":[...]} on
+# `__funk_rt_value`, both in values.s, which follows this file. The runtime
+# then prints the line {"values":[...]} on
 # standard output and exits with 0. A bad command line, a stack that cannot
 # be reserved, or a run that outgrows its stack is reported in one line on
 # standard error, with exit status 2.
@@ -291,172 +292,6 @@ __funk_rt_restore:
 	syscall
 	ud2
 
-# __funk_rt_arg(index, width) -> the value of argument `index` of the
-# function, parsed as a value of `iW`. Exits with 2 if it is not one.
-__funk_rt_arg:
-	pushq	%rbx
-	pushq	%r12
-	subq	$8, %rsp
-	movl	%esi, %r12d
-	movq	__funk_rt_args(%rip), %rax
-	movq	(%rax,%rdi,8), %rbx
-	movq	%rbx, %rdi
-	call	__funk_rt_parse
-	testl	%edx, %edx
-	jz	1f
-	addq	$8, %rsp
-	popq	%r12
-	popq	%rbx
-	ret
-1:	call	__funk_rt_err_program
-	movq	%rbx, %rdi
-	call	__funk_rt_err_text
-	leaq	.Lmsg_not_value(%rip), %rdi
-	call	__funk_rt_err_cstr
-	movq	%r12, %rdi
-	call	__funk_rt_err_num
-	leaq	.Lmsg_newline(%rip), %rdi
-	jmp	.Ldie
-
-# __funk_rt_parse(text, width) -> %rax = the value, %edx = 1; or %edx = 0
-# when `text` is not the spelling of a value of `iW`: true or false at i1,
-# and otherwise a signed decimal with no leading zeros, no `+` and no `-0`,
-# from -2^(W-1) to 2^(W-1)-1. W is from 1 to 64.
-__funk_rt_parse:
-	cmpl	$1, %esi
-	jne	.Lparse_int
-	leaq	.Ltrue(%rip), %rsi
-	movl	$(.Ltrue_end - .Ltrue), %edx
-	call	__funk_rt_equal
-	testl	%eax, %eax
-	jz	1f
-	movl	$1, %edx
-	ret
-1:	leaq	.Lfalse(%rip), %rsi
-	movl	$(.Lfalse_end - .Lfalse), %edx
-	call	__funk_rt_equal
-	movl	%eax, %edx
-	xorl	%eax, %eax
-	ret
-.Lparse_int:
-	xorl	%r8d, %r8d
-	cmpb	$45, (%rdi)		# '-'
-	jne	1f
-	movl	$1, %r8d
-	incq	%rdi
-1:	movzbl	(%rdi), %ecx
-	cmpl	$48, %ecx		# '0': only "0" itself
-	jne	2f
-	testl	%r8d, %r8d
-	jnz	.Lparse_fail
-	cmpb	$0, 1(%rdi)
-	jne	.Lparse_fail
-	xorl	%eax, %eax
-	movl	$1, %edx
-	ret
-2:	subl	$49, %ecx		# the first digit is 1 to 9
-	cmpl	$8, %ecx
-	ja	.Lparse_fail
-	xorl	%eax, %eax
-	movl	$10, %r9d
-3:	movzbl	(%rdi), %ecx
-	testl	%ecx, %ecx
-	jz	4f
-	subl	$48, %ecx
-	cmpl	$9, %ecx
-	ja	.Lparse_fail
-	mulq	%r9
-	jc	.Lparse_fail
-	addq	%rcx, %rax
-	jc	.Lparse_fail
-	incq	%rdi
-	jmp	3b
-4:	leal	-1(%rsi), %ecx		# the bound 2^(W-1)
-	movl	$1, %edx
-	shlq	%cl, %rdx
-	testl	%r8d, %r8d
-	jnz	5f
-	cmpq	%rdx, %rax
-	jae	.Lparse_fail
-	movl	$1, %edx
-	ret
-5:	cmpq	%rdx, %rax
-	ja	.Lparse_fail
-	negq	%rax
-	movl	$1, %edx
-	ret
-.Lparse_fail:
-	xorl	%eax, %eax
-	xorl	%edx, %edx
-	ret
-
-# __funk_rt_value(value, width): prints one result, after a comma unless it
-# is the first: "true" or "false" at i1, by bit 0, and otherwise the signed
-# decimal of `value`, which the wrapper has sign-extended from W bits.
-__funk_rt_value:
-	pushq	%rbx
-	pushq	%r12
-	subq	$40, %rsp
-	movq	%rdi, %rbx
-	movl	%esi, %r12d
-	movq	__funk_rt_count(%rip), %rax
-	incq	__funk_rt_count(%rip)
-	testq	%rax, %rax
-	jz	1f
-	leaq	.Lcomma(%rip), %rdi
-	movl	$1, %esi
-	call	__funk_rt_out
-1:	leaq	.Lquote(%rip), %rdi
-	movl	$1, %esi
-	call	__funk_rt_out
-	cmpl	$1, %r12d
-	jne	3f
-	leaq	.Ltrue(%rip), %rdi
-	movl	$(.Ltrue_end - .Ltrue), %esi
-	testb	$1, %bl
-	jnz	2f
-	leaq	.Lfalse(%rip), %rdi
-	movl	$(.Lfalse_end - .Lfalse), %esi
-2:	call	__funk_rt_out
-	jmp	4f
-3:	movq	%rbx, %rdi
-	leaq	32(%rsp), %rsi
-	call	__funk_rt_format
-	movq	%rax, %rdi
-	leaq	32(%rsp), %rsi
-	subq	%rax, %rsi
-	call	__funk_rt_out
-4:	leaq	.Lquote(%rip), %rdi
-	movl	$1, %esi
-	call	__funk_rt_out
-	addq	$40, %rsp
-	popq	%r12
-	popq	%rbx
-	ret
-
-# __funk_rt_format(value, end) -> the start of the signed decimal of
-# `value`, written into the bytes just before `end`: at most 20.
-__funk_rt_format:
-	movq	%rdi, %rax
-	movq	%rsi, %r8
-	movl	$10, %ecx
-	testq	%rax, %rax
-	jns	1f
-	negq	%rax			# the magnitude; 2^63 for the minimum
-1:	xorl	%edx, %edx
-	divq	%rcx
-	addl	$48, %edx		# '0'
-	decq	%r8
-	movb	%dl, (%r8)
-	testq	%rax, %rax
-	jnz	1b
-	testq	%rdi, %rdi
-	jns	2f
-	decq	%r8
-	movb	$45, (%r8)		# '-'
-2:	movq	%r8, %rax
-	ret
-
 # __funk_rt_equal(cstr, bytes, len) -> 1 when the NUL-terminated `cstr`
 # holds exactly the `len` bytes at `bytes`, else 0. Changes only %rax,
 # %rcx and %r8.
@@ -606,15 +441,17 @@ __funk_rt_err_cstr:
 
 # __funk_rt_err_num(n): writes the signed decimal of `n` to standard error.
 __funk_rt_err_num:
-	subq	$40, %rsp
-	leaq	32(%rsp), %rsi
+	subq	$56, %rsp
+	movq	%rdi, %rsi		# n, sign-extended to 128 bits
+	sarq	$63, %rsi
+	leaq	48(%rsp), %rdx
 	call	__funk_rt_format
 	movq	%rax, %rsi
-	leaq	32(%rsp), %rdx
+	leaq	48(%rsp), %rdx
 	subq	%rax, %rdx
 	movl	$2, %edi
 	call	__funk_rt_write
-	addq	$40, %rsp
+	addq	$56, %rsp
 	ret
 
 	.section	.rodata
@@ -627,16 +464,10 @@ __funk_rt_err_num:
 .Lalt_stack:	.quad	__funk_rt_alt_stack, 0, 65536
 .Lsig_segv:	.quad	1 << 10		# a signal set that holds SIGSEGV
 .Lhex:	.ascii	"0123456789abcdef"
-.Ltrue:	.ascii	"true"
-.Ltrue_end:
-.Lfalse:	.ascii	"false"
-.Lfalse_end:
 .Lopen:	.ascii	"{\"values\":["
 .Lopen_end:
 .Lclose:	.ascii	"]}\n"
 .Lclose_end:
-.Lcomma:	.ascii	","
-.Lquote:	.ascii	"\""
 .Lprogram_default:	.asciz	"program"
 .Lmsg_usage:	.asciz	"usage: "
 .Lmsg_usage_args:	.asciz	" @FUNCTION ARG...\n"
@@ -645,7 +476,6 @@ __funk_rt_err_num:
 .Lmsg_in_program:	.asciz	" in this program\n"
 .Lmsg_takes:	.asciz	" takes "
 .Lmsg_arguments_not:	.asciz	" arguments, not "
-.Lmsg_not_value:	.asciz	" is not a value of type i"
 .Lmsg_no_stack:	.asciz	"cannot reserve "
 .Lmsg_stack_for:	.asciz	" bytes of stack for "
 .Lmsg_ran_out:	.asciz	" ran out of the "

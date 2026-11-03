@@ -13,7 +13,7 @@ use std::path::Path;
 
 use common::{boundaries, build, expect, expect_any, func, module, spell, wrap};
 use funk_ir::dialects::core::PREDICATES;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// `select` on `c`, `a` and `b`, each `None` where it is poison
 /// (`selectValues` in `lean/Fir/Core/Compare.lean`, #77).

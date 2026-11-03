@@ -1,6 +1,7 @@
 # Tests of tracer-i128.fir: const, add and ret at i128.
-# The backend does not lower i128, so each test is interpreter-only and
-# states the result that fir-ref must give.
+# Each test is interpreter-only and states the result that fir-ref must
+# give. The differential tests of i128, which the backend lowers (#21),
+# are in the other *-i128 modules.
 tests = [
   { func = "@id", args = ["0"], expect = ["0"] },
   { func = "@id", args = ["1"], expect = ["1"] },

@@ -76,9 +76,10 @@ differential test holds only functions that the backend lowers: today
 `const`, `add`, `sub` and `mul` with any flags, `freeze`, the bitwise ops
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
 `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
-`call` at `i1`, `i8`, `i16`, `i32` and `i64`, with at most one result.
-Tests of other widths, or of several results, go in modules whose tests
-are all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+`call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for the four ops of
+division, `i128`, with at most one result. Tests of other widths, of
+division at `i128`, or of several results, go in modules whose tests are
+all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -218,3 +219,23 @@ fuel at the budget that each test sets. `reject/call.toml` holds the
 texts of `call` that do not decode, and `reject/validation-call.toml`
 those that break its rules of validation: an unknown callee, and
 arguments or results that do not match the callee's signature.
+
+The texts of #21 run every op but division at `i128`, on the boundary
+bit patterns and on values that cross the 64-bit boundary, such as
+`2^64 - 1`, `2^64`, `-2^64` and a value whose halves differ.
+`add-i128`, `sub-i128` and `mul-i128` run each op with each set of
+flags, and add pairs that carry or borrow out of the low half, and
+products whose high half comes from the cross products. `bitwise-i128`,
+`icmp-eq-i128`, `icmp-signed-i128`, `icmp-unsigned-i128` and
+`select-i128` add values whose halves differ, or whose low halves
+compare the other way from their high halves. `shl-i128`, `lshr-i128`
+and `ashr-i128` shift by 63, 64, 65 and 127, and by 128 or more, which
+gives poison. `zext-i128`, `sext-i128` and `trunc-i128` change widths
+to and from `i1`, `i8`, `i16`, `i32` and `i64`. `freeze-i128` freezes
+values and poison, and `freeze-xor-i128` runs `xor %f, %f` on a frozen
+poison, declared as its one result `0` with a witness. `branch-i128`,
+`permute-i128` and `loop-i128` pass `i128` block arguments, and
+`call-i128`, `call-args-i128` and `recursion-i128` pass and return
+`i128`s across calls, in register pairs and on the stack, in each layout
+of ADR-2026-11-03-0108. `tracer-i128` states what `fir-ref` gives for
+`const`, `add` and `ret` at `i128`.

@@ -14,7 +14,7 @@ mod common;
 use std::path::Path;
 
 use common::{boundaries, build, expect, expect_any, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The most trips a test asks a loop to make.
 const TRIPS: i128 = 1 << 15;

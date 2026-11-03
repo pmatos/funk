@@ -17,12 +17,17 @@
 //! `div` does on them, a trap included, is correct. A broken `exact` gives
 //! poison, which any value refines (ADR-2026-10-29-2008), so `exact`
 //! lowers as the plain quotient (ADR-2026-10-30-2248).
+//!
+//! No instruction divides 128 bits by 128 bits, and division at `i128`
+//! goes through a runtime helper (#22). Until then the backend reports each
+//! of the four ops at `i128` at the op, with its result's name, as it
+//! reports a width it does not lower (ADR-2026-11-03-0107).
 
 use funk_ir::Op;
 
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
-use crate::width::{Ext, extend};
+use crate::width::{Ext, PAIR, extend};
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -62,6 +67,9 @@ fn divide(cx: &mut Cx<'_>, op: &Op, ext: Ext, remainder: bool) -> Result<(), Unl
         return Err(format!("{} takes two operands and defines one value", op.name).into());
     };
     let w = cx.width(&r.name)?;
+    if w == PAIR {
+        return Err(unsupported_at_i128(&r.name, &op.name).into());
+    }
     cx.load(Reg::Rax, a)?;
     cx.load(Reg::Rcx, b)?;
     if w == 1 {
@@ -105,4 +113,12 @@ fn divide(cx: &mut Cx<'_>, op: &Op, ext: Ext, remainder: bool) -> Result<(), Unl
         (true, _) => rdx,
     };
     cx.store(&r.name, out)
+}
+
+/// Why `op`, whose result is `%result`, is not lowered at `i128`.
+fn unsupported_at_i128(result: &str, op: &str) -> String {
+    format!(
+        "%{result}: the x86-64 backend does not lower {op} at i128 yet: it lowers {op} at \
+         i1, i8, i16, i32 and i64"
+    )
 }

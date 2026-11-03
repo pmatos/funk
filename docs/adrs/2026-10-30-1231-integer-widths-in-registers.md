@@ -1,6 +1,6 @@
 # A value of iN lives in the low N bits of a 64-bit register or slot; the bits above are unspecified
 
-Status: accepted; refined by ADR-2026-10-31-0050
+Status: accepted; refined by ADR-2026-10-31-0050 and ADR-2026-11-03-0107
 
 ## Context
 

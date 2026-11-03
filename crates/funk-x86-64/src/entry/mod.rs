@@ -1,7 +1,9 @@
 //! The entry point of an executable that `funk build` links (ADR-2026-10-30-1233).
 //!
-//! It is one assembly file: the fixed runtime in `runtime.s`, then what this
-//! module writes for the module being built. That is a wrapper for each
+//! It is one assembly file: the fixed runtime in `runtime.s` and
+//! `values.s`, which parses arguments and prints results at every width
+//! (ADR-2026-11-03-0108), then what this module writes for the module
+//! being built. That is a wrapper for each
 //! function, which parses the function's arguments, calls it by the System V
 //! convention and prints its result, and the table `__funk_functions`, which
 //! gives each function's name as fir writes it (`@f`, `@"a b"`), its number
@@ -17,15 +19,16 @@ mod stack;
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module};
 
-use crate::abi::{self, RESULT_REG};
+use crate::abi::{self, Arg, RESULT_REG};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
-use crate::width::{self, Ext};
+use crate::width::{self, Ext, PAIR};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
-/// wrappers call.
-const RUNTIME: &str = include_str!("runtime.s");
+/// wrappers call, among them those that read arguments and print results
+/// at every width, `i128` included, in `values.s`.
+const RUNTIME: &str = concat!(include_str!("runtime.s"), include_str!("values.s"));
 
 /// The stack that the runtime's routines need below a wrapper, with room to
 /// spare: the deepest of them uses less than 256 bytes.
@@ -106,24 +109,40 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
         }
     };
     let too_many = || report("the function has more parameters than a frame holds".into());
-    let size = size_for(params.len()).ok_or_else(too_many)?;
-    let slots = (1..=params.len())
-        .map(|k| displacement(k).map(|disp| Mem { disp }))
-        .collect::<Option<Vec<Mem>>>()
-        .ok_or_else(too_many)?;
+    // Each parameter has a slot in the wrapper's frame, and an `i128` two,
+    // as in a function's frame.
+    let mut used = 0usize;
+    let mut args = Vec::with_capacity(params.len());
+    for &w in &params {
+        let words = if w == PAIR { 2 } else { 1 };
+        used = used.checked_add(words).ok_or_else(too_many)?;
+        let disp = displacement(used).ok_or_else(too_many)?;
+        args.push(Arg {
+            slot: Mem { disp },
+            words,
+        });
+    }
+    let size = size_for(used).ok_or_else(too_many)?;
     asm.directive(format_args!(".p2align\t4"));
     asm.label(&format!("__funk_entry_{i}"));
     asm.comment(format_args!("{}", print_symbol(&f.name)));
     frame::prologue(asm, size);
-    for (j, (w, at)) in params.iter().zip(&slots).enumerate() {
+    for (j, (w, a)) in params.iter().zip(&args).enumerate() {
         asm.ins("movl", format_args!("${j}, %edi"));
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_arg"));
-        asm.ins("movq", format_args!("%rax, {at}"));
+        asm.ins("movq", format_args!("%rax, {}", a.slot));
+        if a.words == 2 {
+            asm.ins("movq", format_args!("%rdx, {}", a.slot.high()));
+        }
     }
-    let outgoing = abi::call(asm, &f.name, &slots).map_err(report)?;
+    let outgoing = abi::call(asm, &f.name, &args).map_err(report)?;
     if let Some(w) = result {
-        width::extend(asm, Ext::Sign, w, RESULT_REG);
+        // `__funk_rt_value` reads the high half of an `i128` from `%rdx`,
+        // where the call left it.
+        if w != PAIR {
+            width::extend(asm, Ext::Sign, w, RESULT_REG);
+        }
         asm.ins("movq", format_args!("{}, {}", RESULT_REG.q(), Reg::Rdi.q()));
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_value"));

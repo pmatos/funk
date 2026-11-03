@@ -10,7 +10,7 @@ mod common;
 
 use common::{boundaries, build, expect, file, func, funk, module, spell, text, wrap};
 use funk_ir::dialects::core::WIDTH_CHANGES;
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The result of `op` from `iM` to `iN` on `v`, a value of `iM` read as
 /// signed, read as signed at `iN`. `zext` keeps the unsigned value, `sext`

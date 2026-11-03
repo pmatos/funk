@@ -8,8 +8,11 @@ use std::process::{Command, Output};
 
 use common::{DEAD, SEVEN, dir, expect, funk, funk_in, text, try_build};
 
-/// A function with a parameter of `i7`, a value of `i33` and one of `i128`.
-const ODD: &str = "func @odd(%a: i7) -> i7 {\n^entry:\n  %c: i33 = const 1 @1\n  %w: i128 = const 2 @2\n  ret %a @3\n}\n\nlocs {\n  @1 = \"w.c\":1:1 to 1:5\n  @2 = name(\"wide\")\n  @3 = unknown\n}\n";
+/// A function with a parameter of `i7`, a value of `i33` and one of `i256`.
+const ODD: &str = "func @odd(%a: i7) -> i7 {\n^entry:\n  %c: i33 = const 1 @1\n  %w: i256 = const 2 @2\n  ret %a @3\n}\n\nlocs {\n  @1 = \"w.c\":1:1 to 1:5\n  @2 = name(\"wide\")\n  @3 = unknown\n}\n";
+
+/// A function that divides at `i128`, with each op of division.
+const WIDE_DIV: &str = "func @q(%a: i128, %b: i128) -> i128 {\n^entry:\n  %s: i128 = add %a, %b @1\n  %q: i128 = sdiv %a, %b @2\n  %u: i128 = udiv %a, %s @2\n  %r: i128 = srem %q, %u @2\n  %m: i128 = urem %r, %b @3\n  ret %m @1\n}\n\nlocs {\n  @1 = unknown\n  @2 = \"d.c\":3:5 to 3:10\n  @3 = name(\"rem\")\n}\n";
 
 /// A function with two results.
 const PAIR: &str = "func @pair(%x: i8) -> i8, i8 {\n^entry:\n  ret %x, %x @4\n}\n\nlocs {\n  @4 = \"p.c\":2:3 to 2:12\n}\n";
@@ -64,7 +67,7 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
         )),
         "{json}"
     );
-    let lowers = "the x86-64 backend lowers i1, i8, i16, i32 and i64";
+    let lowers = "the x86-64 backend lowers i1, i8, i16, i32, i64 and i128";
     for want in [
         format!(
             "{{\"kind\":\"unsupported\",\"message\":\"parameter %a: {lowers}, not i7\",\"func\":\"odd\",\"block\":\"entry\",\"op\":null,\"loc\":{{\"ref\":1,\"location\":\"\\\"w.c\\\":1:1 to 1:5\"}}}}"
@@ -72,7 +75,9 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
         format!(
             "{{\"kind\":\"unsupported\",\"message\":\"%c: {lowers}, not i33\",\"func\":\"odd\",\"block\":\"entry\",\"op\":0,\"loc\":{{\"ref\":1,\"location\":\"\\\"w.c\\\":1:1 to 1:5\"}}}}"
         ),
-        "\"message\":\"%w: the x86-64 backend does not lower i128 yet: it lowers i1, i8, i16, i32 and i64\",\"func\":\"odd\",\"block\":\"entry\",\"op\":1,\"loc\":{\"ref\":2,\"location\":\"name(\\\"wide\\\")\"}}".to_string(),
+        format!(
+            "{{\"kind\":\"unsupported\",\"message\":\"%w: {lowers}, not i256\",\"func\":\"odd\",\"block\":\"entry\",\"op\":1,\"loc\":{{\"ref\":2,\"location\":\"name(\\\"wide\\\")\"}}}}"
+        ),
     ] {
         assert!(json.contains(&want), "{want}\nnot in\n{json}");
     }
@@ -83,6 +88,32 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
     assert!(text(&out.stderr).starts_with(&format!(
         "{src}: unsupported in @odd ^entry: parameter %a: {lowers}, not i7 (at @1 = \"w.c\":1:1 to 1:5)\n"
     )));
+}
+
+/// Division and remainder at `i128` wait for a runtime helper (#22): each
+/// op is reported at its location, and nothing else of the function is.
+#[test]
+fn division_at_i128_is_reported_at_each_op() {
+    let (out, exe, src) = try_build("wide-div", WIDE_DIV, &[]);
+    assert_eq!(out.status.code(), Some(1));
+    let at = |n: usize, r: &str, op: &str, loc: &str| {
+        format!(
+            "{src}: unsupported in @q ^entry op {n}: %{r}: the x86-64 backend does not lower {op} \
+             at i128 yet: it lowers {op} at i1, i8, i16, i32 and i64 (at {loc})\n"
+        )
+    };
+    let d = "@2 = \"d.c\":3:5 to 3:10";
+    assert_eq!(
+        text(&out.stderr),
+        [
+            at(1, "q", "sdiv", d),
+            at(2, "u", "udiv", d),
+            at(3, "r", "srem", d),
+            at(4, "m", "urem", "@3 = name(\"rem\")"),
+        ]
+        .concat()
+    );
+    assert!(nothing_written(&exe));
 }
 
 #[test]

@@ -10,7 +10,7 @@
 mod common;
 
 use common::{boundaries, build, expect, module, spell, wrap};
-use funk_x86_64::width::SUPPORTED as WIDTHS;
+use funk_x86_64::width::ONE_REGISTER as WIDTHS;
 
 /// The width of argument `i` of a call: the widths in turn.
 fn width(i: usize) -> u32 {

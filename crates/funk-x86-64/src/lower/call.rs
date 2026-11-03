@@ -5,12 +5,15 @@
 //! (ADR-2026-11-02-1428). Arguments and results move as their slots hold
 //! them, without extension (ADR-2026-11-02-1021). Every value lives in its
 //! slot, so nothing needs saving around the call. More than one result
-//! needs the convention of #31 and is reported at the call until then.
+//! needs the convention of #31 and is reported at the call until then. An
+//! `i128` passes as two eightbytes, and comes back in `%rdx:%rax`
+//! (ADR-2026-11-03-0108).
 
 use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
-use crate::abi::{self, RESULT_REG};
+use crate::abi::{self, Arg, RESULT_HIGH_REG, RESULT_REG};
+use crate::width::PAIR;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -39,20 +42,24 @@ fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         )
         .into());
     }
+    let mut args = Vec::with_capacity(op.operands.len());
     for x in &op.operands {
-        cx.width(x)?;
+        let words = if cx.width(x)? == PAIR { 2 } else { 1 };
+        args.push(Arg {
+            slot: cx.slot(x)?,
+            words,
+        });
     }
     for d in &op.results {
         cx.width(&d.name)?;
     }
-    let args = op
-        .operands
-        .iter()
-        .map(|x| cx.slot(x))
-        .collect::<Result<Vec<_>, _>>()?;
     abi::call(&mut cx.asm, callee, &args)?;
     if let [r] = op.results.as_slice() {
-        cx.store(&r.name, RESULT_REG)?;
+        if cx.width(&r.name)? == PAIR {
+            cx.store_pair(&r.name, RESULT_REG, RESULT_HIGH_REG)?;
+        } else {
+            cx.store(&r.name, RESULT_REG)?;
+        }
     }
     Ok(())
 }

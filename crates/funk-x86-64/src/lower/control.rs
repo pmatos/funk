@@ -15,15 +15,19 @@
 //! defines only bits 0 to 7, so code that calls C may rely only on `%al`.
 //! A function with more than one result needs a convention for the others,
 //! which #31 decides; until then the backend reports it at the `ret`.
+//!
+//! An `i128` passes to a block argument as two copies of the parallel move,
+//! one per half, and returns in `%rdx:%rax` (ADR-2026-11-03-0107,
+//! ADR-2026-11-03-0108).
 
 use funk_ir::{Op, Succ};
 
 use super::moves::{Src, Step, sequence};
 use super::{Cx, Lower, Unlowered};
-use crate::abi::RESULT_REG;
+use crate::abi::{RESULT_HIGH_REG, RESULT_REG};
 use crate::asm::{Mem, Reg};
 use crate::frame;
-use crate::width::{self, Ext};
+use crate::width::{self, Ext, PAIR};
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -99,9 +103,13 @@ fn moves(cx: &Cx<'_>, s: &Succ) -> Result<Vec<Step<Mem>>, Unlowered> {
     }
     let mut pairs = Vec::with_capacity(params.len());
     for (p, a) in params.iter().zip(&s.args) {
-        cx.width(&p.name)?;
+        let w = cx.width(&p.name)?;
         cx.width(a)?;
-        pairs.push((cx.slot(&p.name)?, cx.slot(a)?));
+        let (to, from) = (cx.slot(&p.name)?, cx.slot(a)?);
+        pairs.push((to, from));
+        if w == PAIR {
+            pairs.push((to.high(), from.high()));
+        }
     }
     Ok(sequence(&pairs))
 }
@@ -133,7 +141,11 @@ fn ret(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         [] => {}
         [v] => {
             let w = cx.width(v)?;
-            cx.load(RESULT_REG, v)?;
+            if w == PAIR {
+                cx.load_pair(RESULT_REG, RESULT_HIGH_REG, v)?;
+            } else {
+                cx.load(RESULT_REG, v)?;
+            }
             if w == 1 {
                 width::extend(&mut cx.asm, Ext::Zero, 1, RESULT_REG);
             }

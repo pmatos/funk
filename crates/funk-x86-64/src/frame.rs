@@ -3,10 +3,11 @@
 //!
 //! Every value a function defines, parameters first, then each block's
 //! arguments and each op's results in order, has an 8-byte slot of its own
-//! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An op
-//! loads its operands from their slots into scratch registers, computes, and
-//! stores each result into its slot. No value stays in a register from one
-//! op to the next.
+//! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An
+//! `i128` has two slots next to each other, its low half at the lower
+//! address (ADR-2026-11-03-0107). An op loads its operands from their slots
+//! into scratch registers, computes, and stores each result into its slot.
+//! No value stays in a register from one op to the next.
 //!
 //! A frame of a page or more is probed a page at a time as the prologue
 //! makes room for it, so the stack grows one page after another and never
@@ -17,6 +18,7 @@ use std::collections::HashMap;
 use funk_ir::Func;
 
 use crate::asm::{Asm, Mem, Reg};
+use crate::width;
 
 /// The size of a page: the stack grows, and a frame is probed, a page at a
 /// time.
@@ -40,16 +42,18 @@ impl<'f> Frame<'f> {
                 .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
         );
         let mut slots = HashMap::new();
+        let mut used = 0usize;
         for d in defs {
-            let n = slots.len() + 1;
-            let disp = displacement(n).ok_or_else(too_big)?;
+            used = used.checked_add(width::words(&d.ty)).ok_or_else(too_big)?;
+            let disp = displacement(used).ok_or_else(too_big)?;
             slots.entry(d.name.as_str()).or_insert(Mem { disp });
         }
-        let size = size_for(slots.len()).ok_or_else(too_big)?;
+        let size = size_for(used).ok_or_else(too_big)?;
         Ok(Frame { slots, size })
     }
 
-    /// The slot of the value named `name`.
+    /// The slot of the value named `name`: for an `i128`, the slot of its
+    /// low half, whose [`Mem::high`] is the slot of its high half.
     pub fn slot(&self, name: &str) -> Option<Mem> {
         self.slots.get(name).copied()
     }
@@ -64,7 +68,9 @@ fn too_big() -> String {
     "the function defines more values than a frame of 2 GiB holds".into()
 }
 
-/// The displacement of the `n`-th slot, from 1: `-8 * n`.
+/// The displacement of the `n`-th slot, from 1: `-8 * n`. A value that
+/// ends with the `n`-th slot starts there: an `i128` that takes the slots
+/// `n - 1` and `n` has its low half at `-8 * n`.
 pub fn displacement(n: usize) -> Option<i32> {
     i32::try_from(n).ok()?.checked_mul(-8)
 }
@@ -133,6 +139,19 @@ mod tests {
         assert_eq!(frame.slot("c"), Some(Mem { disp: -24 }));
         assert_eq!(frame.slot("d"), None);
         assert_eq!(frame.size(), 32);
+    }
+
+    #[test]
+    fn an_i128_takes_two_slots_with_its_low_half_below() {
+        let text = "func @f(%a: i128, %b: i8, %c: i128) -> i128 {\n^entry:\n  %d: i128 = add %a, %c @0\n  ret %d @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let f = m.funcs().next().unwrap();
+        let frame = Frame::new(f).unwrap();
+        assert_eq!(frame.slot("a"), Some(Mem { disp: -16 }));
+        assert_eq!(frame.slot("b"), Some(Mem { disp: -24 }));
+        assert_eq!(frame.slot("c"), Some(Mem { disp: -40 }));
+        assert_eq!(frame.slot("d"), Some(Mem { disp: -56 }));
+        assert_eq!(frame.size(), 64);
     }
 
     fn prologue_of(size: i32) -> String {
