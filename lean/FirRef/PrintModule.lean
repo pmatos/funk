@@ -8,9 +8,11 @@ of its tail after it, so it takes time quadratic in the length of a block
 and cubic in the depth of regions. `printModule` keeps what is left to
 print on an explicit stack of frames and appends each piece of text to one
 accumulator: it takes no stack per level and runs in time linear in the
-text it writes. The theorem `print_eq_printModule` proves the two equal,
-and `@[csimp]` makes Lean compile every later call of `Module.print` as a
-call of `printModule` (ADR-2026-10-30-1450).
+text it writes, apart from the digits of an integer, which `printInt`
+writes with `toString`, in time quadratic in their number (#41). The
+theorem `print_eq_printModule` proves the two equal, and `@[csimp]` makes
+Lean compile every later call of `Module.print` as a call of `printModule`
+(ADR-2026-10-30-1450).
 
 This module comes after `FirRef.PrintAttr`, so the attributes and types
 that it prints go through `printAttr`. It prints definitions with its own
@@ -153,7 +155,7 @@ decreasing_by
     omega
 
 /-- A module in text: `Module.print`, with no stack per level of regions
-and in linear time. -/
+and in linear time apart from long integers (#41). -/
 def printModule (m : Module d) : String := printFrames "" [.items m.items, .str m.locs.print]
 
 /-- The loop appends the text of its frames. -/

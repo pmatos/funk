@@ -14,8 +14,9 @@ fir has no nesting limit (#36), so `fir-ref` must give a verdict at any
 depth. It runs implementations of the spec's functions that take no stack
 per level, each proved equal to its spec function and registered with
 `@[csimp]` (ADR-2026-10-30-1450). The printer's and the decoder's are done:
-`Module.print` runs as `FirRef.printModule`, in time linear in the text, and
-`Fir.parse` as `FirRef.parse`, which decodes with `FirRef.decodeModule`. The
+`Module.print` runs as `FirRef.printModule`, in time linear in the text
+apart from the digits of long integers (#41), and `Fir.parse` as
+`FirRef.parse`, which decodes with `FirRef.decodeModule`. The
 spec's readers still recurse once per level on the main thread that Lean's
 runtime gives a program, so a text nested millions of levels deep overflows
 its stack until the next stage of #47 replaces them too. `validate` runs the

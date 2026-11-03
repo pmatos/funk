@@ -9,9 +9,9 @@ set_option pp.rawOnError true
 
 fir is the intermediate representation of funk, a compiler toolchain in the
 spirit of LLVM. This document is fir's specification, version 0. It covers
-the M0 core: integers of any width, arithmetic, bitwise ops and shifts,
-comparisons, width changes, `freeze`, branches with block arguments, calls
-and return.
+the M0 core: integers of any width from 1 to 16,777,215, arithmetic,
+bitwise ops and shifts, comparison and selection, width changes, `freeze`,
+branches with block arguments, calls and return.
 
 The specification is literate Lean (ADR-2026-10-29-2015). Its formal content
 is the Lean definitions of the package `fir` in the repository's `lean/`
@@ -36,8 +36,8 @@ The chapters follow the WebAssembly specification:
   refinement through calls.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, the round-trip properties, and the
-  parser, with the proofs that parsing a printed module gives it back and
-  that every module the parser gives is well formed.
+  parser, with the proofs that parsing a printed well-formed module gives
+  it back and that every module the parser gives is well formed.
 
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every

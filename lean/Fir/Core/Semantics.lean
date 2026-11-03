@@ -24,8 +24,9 @@ them.
 
 # Ops without rules
 
-An op has no rules when its dialect's semantics gives it none, as
-`Op.denote?` and `Op.exit?` do by giving `none`. Every core op has its
+An op has no rules when its dialect's semantics gives it none. In the
+core dialect, that is when `Op.hasRules` is false: `Op.denote?` and
+`Op.exit?` give it `none`, and it calls no function. Every core op has its
 rules: each op family gave its ops theirs, and #20, the last, named the
 callee of `call`. `call`'s meaning is its callee's run, so `Op.denote?`
 gives `none` for it too, and it is not an op without rules (the section
@@ -37,7 +38,9 @@ every dialect:
   its `exit` is the empty set. That is not a stand-in semantics. The
   totality obligation `OpTotal` rejects it, as it rejects
   `Core.Unlawful.noOutcome`, so a dialect's `LawfulDialectPoison` cannot
-  be proved while one of its ops lacks its rules. No core op does, and
+  be proved while one of its valid op instances that runs by its own rule
+  (a terminator, or an op with no callee) lacks its rules, unless one of
+  its operand types has no value. No core op lacks them, and
   `Core.lawfulDialectPoison` proves `LawfulDialectPoison CoreDialect`.
 * Only totality, `ReturnsOnDefined`, progress and the lawful class reject
   it. `PropagatesPoison` and `OpMonotone` hold of such an op, and
@@ -60,7 +63,9 @@ every dialect:
 
 Each family's rules are in its own section, and `Op.denote?` and
 `Op.exit?` send each op to them; the obligations of each family are
-proved beside its rules. `call` names its callee instead, below.
+proved in sections of their own after this one, from "Constant
+obligations" (`Fir/Core/ArithLaws.lean`) to "Branch obligations"
+(`Fir/Core/BranchLaws.lean`). `call` names its callee instead, below.
 
 # Calls
 

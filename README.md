@@ -113,11 +113,12 @@ are on `main`:
 - The fir v0 spec. Its chapters are Lean modules in `lean/`, with prose beside
   each definition. [Verso](https://github.com/leanprover/verso), Lean's
   documentation tool, renders them as HTML from `docs/spec/`. The spec gives
-  fir's abstract syntax and its validation rules. It also gives the general
-  definitions of execution, such as outcomes and refinement. And it gives the
-  text format, with its grammar and printer. CI builds the spec on every pull
-  request, and every push to `main` publishes it at
-  <https://p.ocmatos.com/funk/>.
+  fir's abstract syntax, its validation rules and the check that decides
+  them. It gives execution: outcomes, refinement, poison, the interpreter,
+  the rules of every core op, the three modes of `fir-ref run` and the
+  proofs about runs. And it gives the text format: its grammar, its printer
+  and its parser. CI builds the spec on every pull request, and every push
+  to `main` publishes it at <https://p.ocmatos.com/funk/>.
 - The Rust IR library `funk-ir` and the driver `funk`
   ([#9](https://github.com/pmatos/funk/issues/9)). `funk-ir` holds fir in
   memory, with a parser, a printer and a verifier that follow the spec. Its
@@ -147,8 +148,8 @@ are on `main`:
   ([#10](https://github.com/pmatos/funk/issues/10)). The parser reads every
   op of every dialect. Lean reprints what Rust prints, byte for byte, on the
   shared texts and on modules from the Rust generator. Lean proves that
-  parsing a printed module gives the module back, and that every module
-  the parser gives is well formed
+  parsing a printed well-formed module gives the module back, and that
+  every module the parser gives is well formed
   ([#11](https://github.com/pmatos/funk/issues/11),
   [#105](https://github.com/pmatos/funk/issues/105)).
 - The naive x86-64 backend, `funk-x86-64`

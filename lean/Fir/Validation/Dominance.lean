@@ -91,8 +91,8 @@ def Func.Defines (f : Func d) (x : Name) : DefSite → Prop
 A definition at site `s` dominates a use by the op at index `i` of the block
 labelled `l`. A parameter dominates every use. A block argument dominates the
 uses in every block its block dominates, its own included. An op's result
-dominates the uses by later ops of its block, and the uses in the blocks that
-its block dominates. An op never uses its own results.
+dominates the uses by later ops of its block, and the uses in the other
+blocks that its block dominates. An op never uses its own results.
 
 The arguments that a terminator passes to its successors are uses by the
 terminator, in its own block.
