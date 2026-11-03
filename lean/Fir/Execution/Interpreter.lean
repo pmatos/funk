@@ -100,10 +100,10 @@ callee, never its `denote`.
 Effects belong to the dialect, so the interpreter does not change when a
 dialect needs a new one. `freeze`'s rule calls `choose`, and the divisions'
 rules and `cond_br`'s call `ub`, so the core dialect's semantics asks for
-`MonadChoice m` and `MonadUB m`, and `fir-ref`'s exhaustive and scripted
-modes run this interpreter in the tree of choices, which has both. The call
-effect is the one exception, and it is written once here for every
-dialect: a dialect says only which of its ops call which function
+`MonadChoice m` and `MonadUB m`, and `fir-ref`'s exhaustive, scripted and
+sampled modes run this interpreter in the tree of choices, which has both.
+The call effect is the one exception, and it is written once here for
+every dialect: a dialect says only which of its ops call which function
 (`DialectCall`). In the core dialect, `call @g` calls `@g`, which #20
 named without a change to the interpreter.
 -/

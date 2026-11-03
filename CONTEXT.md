@@ -244,9 +244,10 @@ function.
 
 **execution rules**:
 What an op does when it runs: the results it gives, the UB it hits, or where
-a terminator sends control. Each op family's ticket writes them in Lean.
-Until it does, the family's ops have none: the spec gives them no outcome,
-and `fir-ref run` reports such an op as an error, never as a result.
+a terminator sends control. Each op family of the core dialect has them
+in Lean, so every core op does, `call` through its callee's run. An op
+without them has no outcome in the spec (ADR-2026-10-30-1855), and
+`fir-ref run` reports such an op as an error, never as a result.
 
 **fuel monotonicity**:
 The interpreter's obligation that more fuel never changes how a run that
@@ -260,8 +261,8 @@ at every fuel budget. Without it, an empty behaviour would refine anything.
 **no-stuck obligation**:
 The interpreter's obligation that no path of a run of a valid function is
 stuck, at any fuel budget. With every op that runs by its own rule total,
-and with an interpreter whose own steps never drop a path, which #10's
-definition must ensure, no path of the run is lost.
+and with an interpreter whose own steps never drop a path, as its
+definition ensures, no path of the run is lost.
 
 **op totality**:
 The obligation of every valid op instance that runs by its own rule, a
@@ -336,5 +337,6 @@ widths the backend does not lower.
 **must-reject text**:
 A text of the test corpus that breaks one rule, and that `funk verify` and
 `fir-ref validate` must both reject with the same verdict: rejected by the
-parser or by validation. When the tracer subset cannot break a rule alone,
-the text breaks a second rule too, and names both (ADR-2026-10-30-2050).
+parser or by validation. When the ops of the core dialect cannot break a
+rule alone, such as the scope of a value defined in a region, the text
+breaks a second rule too, and names both (ADR-2026-10-30-2050).

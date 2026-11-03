@@ -4,9 +4,10 @@ import Fir.Validation.Search
 /-!
 The check finds a function's paths with the search above, over the
 function's graph as a table: each block's label, with the labels of the
-blocks that its terminator can jump to (`Func.Edge`). Every path starts at
-the entry. The theorems below say that the search decides `Func.Reachable`
-and `Func.Dominates` for every block of the function.
+successors of its ops, which in a valid function are its terminator's
+(`Func.Edge`). Every path starts at the entry. The theorems below say
+that the search decides `Func.Reachable` and `Func.Dominates` for every
+block of the function.
 -/
 
 namespace Fir

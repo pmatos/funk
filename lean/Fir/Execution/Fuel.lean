@@ -32,8 +32,8 @@ function that has no `call` op: `Core.callFree_fuelMonotone`,
   its behaviour, and a behaviour with fewer outcomes refines more sources.
   With this obligation, with every op that runs by its own rule total
   (`OpTotal`, in the poison classes section), and with an interpreter
-  whose own steps never drop a path, which #10's definition must ensure,
-  every path of a valid function's run ends in an outcome.
+  whose own steps never drop a path, as the section on the interpreter
+  explains, every path of a valid function's run ends in an outcome.
 
 The proofs are general. Fuel monotonicity holds for every function of every
 module, of every dialect, calls included, whatever its ops do

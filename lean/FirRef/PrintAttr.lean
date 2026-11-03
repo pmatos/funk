@@ -6,9 +6,11 @@ import Fir.Text.Print
 arguments' text at each level. `printAttr` keeps what is left to print on
 an explicit stack of frames and appends each piece of text to one
 accumulator, so it takes no stack per level and runs in time linear in the
-text it writes. The theorem `print_eq_printAttr` proves the two equal, and
-`@[csimp]` makes Lean compile every later call of `Attr.print` as a call of
-`printAttr` (ADR-2026-10-30-1450).
+text it writes, apart from the digits of an integer, which `printInt`
+writes with `toString`, in time quadratic in their number (#41). The
+theorem `print_eq_printAttr` proves the two equal, and `@[csimp]` makes
+Lean compile every later call of `Attr.print` as a call of `printAttr`
+(ADR-2026-10-30-1450).
 -/
 
 namespace FirRef
@@ -67,7 +69,7 @@ decreasing_by
   all_goals simp only [attrFramesWeight, AttrFrame.weight, attrWeight, argsWeight]; omega
 
 /-- An attribute, or a type, in text: `Attr.print`, with no stack per level
-and in linear time. -/
+and in linear time apart from long integers (#41). -/
 def printAttr (a : Attr) : String := printAttrs "" [.attr a]
 
 /-- The arguments of an applied attribute after the first: the spec's

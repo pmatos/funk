@@ -1,6 +1,6 @@
 //! The printer writes the bytes that the spec's own checks fix
 //! (`#guard`s in `lean/Fir/Text/Example.lean`). Printing needs no registry,
-//! so these modules use ops that the tracer does not register yet.
+//! so these modules are printed without one.
 
 use funk_ir::dialects::core::int_type;
 use funk_ir::text::{print_func, print_op};
