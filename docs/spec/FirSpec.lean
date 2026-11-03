@@ -258,6 +258,14 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.ReadModule "The module read back" (level := 2)}
 
+{includeLiterate "." Fir.Text.DecodeScope "The decoding step" (level := 2)}
+
+{includeLiterate "." Fir.Text.DecodeBlocks "Blocks and ops decoded back" (level := 2)}
+
+{includeLiterate "." Fir.Text.DecodeModule "The module decoded back" (level := 2)}
+
+{includeLiterate "." Fir.Text.PrintParse "The round trip, proved" (level := 2)}
+
 # Architecture decision records
 %%%
 tag := "adrs"

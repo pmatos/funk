@@ -13,14 +13,6 @@ that `LocTable.InLimits` gives. The table's entries read back before its
 
 namespace Fir.Text
 
-/-- Takes the first token off `h : ts.map (·.tok) = t :: rest`: `ts` becomes
-`⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. -/
-local macro "take_tok " h:ident : tactic => `(tactic| (
-  (try dsimp only at $h:ident)
-  replace $h:ident := map_tok_cons $h
-  obtain ⟨_, _, he, $h:ident⟩ := $h
-  subst he))
-
 /-- `readNat` reads a number below `2^32`. -/
 theorem readNat_cons (what : String) {n : Nat} (hn : n < Location.limit) (p : TextPos)
     (ts : List Token) : readNat what (⟨.int n, p⟩ :: ts) = .ok (n, ⟨ts, Nat.le_succ _⟩) := by
@@ -40,8 +32,9 @@ theorem readLocRef_reads (r : LocRef) : Reads readLocRef id r [.locRef r] (· �
   rw [readLocRef_cons]
   exact ⟨_, _, rfl, rfl, h⟩
 
-/-- `readLocation` reads a location's tokens as the location, when its
-lines and columns are below `2^32`. -/
+/-- `readLocation` reads a location's tokens as the location, when every
+number it holds is below `2^32`: its lines and columns, which `readNat`
+checks, and its references, which no reader checks. -/
 theorem Location.reads (l : Location) (hl : ∀ n ∈ l.numbers, n < Location.limit) :
     Reads readLocation id l l.tokens (fun _ => True) := by
   intro ts rest h _

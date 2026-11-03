@@ -206,9 +206,15 @@ factorial and Fibonacci, and even and odd, which call each other; and
 `poison-call-iN` passes poison to a callee and returns it from one, and
 calls a callee that hits UB, which is UB of its caller; all at the same
 seven widths. A run that never ends is interpreter-only, since a
-differential test that runs out of fuel is invalid. Until the harness
-runs native code under a data limit (#92), a differential test recurses
-at most 20 deep, and a deeper run is interpreter-only too.
+differential test that runs out of fuel is invalid. A differential test
+recurses at most 20 deep, and a deeper run is interpreter-only too.
+PR #93 set that cap while a built executable's stack was its function's
+frame, its wrapper's and 16 KiB, and the harness ran native code with no
+data limit. Neither holds now, and no limit of either tool sets 20: a
+recursive run's stack follows `ulimit -s`, 8 MiB by default
+(ADR-2026-11-02-1132), the harness runs native code under a data limit
+of 1 GiB (ADR-2026-11-02-2250), and `fir-ref` stops at its fuel. The cap
+stays as it is; making deeper runs differential is a decision of its own.
 `call-args` passes seven and eight arguments of mixed widths, some on
 the stack;
 `call-results` calls functions with no result and with one, and
