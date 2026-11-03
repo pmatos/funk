@@ -104,3 +104,12 @@ import Fir.Text.DecodeScope
 import Fir.Text.DecodeBlocks
 import Fir.Text.DecodeModule
 import Fir.Text.PrintParse
+import Fir.Text.LexAccepted
+import Fir.Text.ReadAccepted
+import Fir.Text.ReadAcceptedBlocks
+import Fir.Text.ReadAcceptedItems
+import Fir.Text.ReadAcceptedModule
+import Fir.Text.DecodeAcceptedScope
+import Fir.Text.DecodeAccepted
+import Fir.Text.DecodeAcceptedModule
+import Fir.Text.ParseWellFormed

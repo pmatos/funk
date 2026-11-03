@@ -266,6 +266,24 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Text.PrintParse "The round trip, proved" (level := 2)}
 
+{includeLiterate "." Fir.Text.LexAccepted "What the lexer accepts" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadAccepted "What the grammar accepts" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadAcceptedItems "Accepted items" (level := 2)}
+
+{includeLiterate "." Fir.Text.ReadAcceptedModule "An accepted location table" (level := 2)}
+
+{includeLiterate "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" (level := 2)}
+
+{includeLiterate "." Fir.Text.DecodeAccepted "What the second pass accepts" (level := 2)}
+
+{includeLiterate "." Fir.Text.DecodeAcceptedModule "What decoding accepts" (level := 2)}
+
+{includeLiterate "." Fir.Text.ParseWellFormed "Parsed modules are well formed" (level := 2)}
+
 # Architecture decision records
 %%%
 tag := "adrs"
