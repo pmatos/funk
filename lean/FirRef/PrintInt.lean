@@ -26,7 +26,7 @@ below takes and returns, so that Lean appends to it in place. The theorem
 `printDecimal` (ADR-2026-10-30-1450). `FirRef.PrintAttr` imports this
 module: its `printAttrs` writes the integers of attributes, and Lean
 compiles it there, where it would otherwise inline `printInt` and call
-`Int.repr`.
+`Int.repr` (ADR-2026-11-03-1603).
 -/
 
 namespace FirRef
