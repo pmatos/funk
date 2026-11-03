@@ -11,8 +11,8 @@ them.
 
 * A terminator that jumps names a successor that it has, and gives no
   results, since the interpreter binds none for it. Validation does not
-  rule such results out in general, but no core terminator has any
-  (#89).
+  rule such results out in general: in M0 that is the dialect's
+  obligation (ADR-2026-11-02-2248), and no core terminator has any.
 * A terminator that returns returns values of the function's result types.
 
 Branches and loops are included: a run may jump to any block, as often as
@@ -137,7 +137,8 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 that jumps names a successor that it has, and gives no results; and a
 terminator that returns returns values of `f`'s result types. The
 interpreter binds no result of a terminator, and validation does not rule
-them out for every dialect (#89). -/
+them out for every dialect: in M0 that is the dialect's obligation
+(ADR-2026-11-02-2248). -/
 structure Func.Local (f : Func d) : Prop where
   noCall : ∀ b ∈ f.blocks, ∀ o ∈ b.body, callee? o.op = none
   jumps : ∀ b ∈ f.blocks, ∀ o ∈ b.body, isTerminator o.op = true → ∀ args i,

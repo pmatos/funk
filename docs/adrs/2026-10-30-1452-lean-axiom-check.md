@@ -1,6 +1,6 @@
 # The Lean build fails on sorry, non-standard axioms, unsafe, partial, implemented_by and extern
 
-Status: accepted
+Status: accepted; refined by ADR-2026-10-30-1837 and ADR-2026-10-30-1838
 
 ## Context
 

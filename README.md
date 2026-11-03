@@ -249,7 +249,7 @@ The epic's sub-issues list the open work in full.
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
-| `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, and `funk`, the driver |
+| `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, `funk-start-fds`, which records the standard descriptors that were closed at start-up, and `funk`, the driver |
 | `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, and must-reject texts |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |

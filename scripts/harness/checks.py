@@ -113,7 +113,7 @@ class Harness:
         ref = tools.outcomes(self.run_ref(path, t, "--exhaustive"))
         native = exe
         if isinstance(exe, Path):
-            native = tools.native_values(tools.run([str(exe), t.func, *t.args]))
+            native = tools.native_values(tools.run_native([str(exe), t.func, *t.args]))
         shown = native if isinstance(native, str) else "returns " + show_values(native)
         detail = f"fir-ref {show(ref)}"
         if t.results:

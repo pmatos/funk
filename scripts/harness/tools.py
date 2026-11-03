@@ -6,6 +6,7 @@ running anything.
 """
 
 import json
+import resource
 import subprocess
 from dataclasses import dataclass
 
@@ -13,6 +14,9 @@ from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
 from sets import BudgetExceeded, Outcomes, Path
 
 TIMEOUT = 120
+# The most data and address space that a built executable may map
+# (ADR-2026-11-02-2250).
+DATA_LIMIT = 1 << 30
 
 ACCEPTED = "accepted"
 PARSE_ERROR = "parse-error"
@@ -49,19 +53,38 @@ class Verdict:
         return f"{self.verdict} at {self.position[0]}:{self.position[1]}"
 
 
-def run(cmd: list[str]) -> Ran:
-    """Runs `cmd`. Raises OSError when it cannot be started."""
+def run(cmd: list[str], preexec_fn=None) -> Ran:
+    """Runs `cmd`; a given `preexec_fn` runs in the child before `cmd`
+    starts. Raises OSError when it cannot be started."""
     try:
         p = subprocess.run(
             cmd,
             capture_output=True,
             check=False,
+            preexec_fn=preexec_fn,
             stdin=subprocess.DEVNULL,
             timeout=TIMEOUT,
         )
     except subprocess.TimeoutExpired as e:
         return Ran(None, decode(e.stdout), decode(e.stderr))
     return Ran(p.returncode, decode(p.stdout), decode(p.stderr))
+
+
+def run_native(cmd: list[str]) -> Ran:
+    """Runs a built executable as `run` does, under the data limit. Only
+    native code runs under it, never fir-ref, funk, as or ld."""
+    return run(cmd, limit_data)
+
+
+def limit_data():
+    """Sets the soft and hard limits on the data and the address space of
+    this process to DATA_LIMIT, or to its soft limit when that is lower."""
+    for r in (resource.RLIMIT_DATA, resource.RLIMIT_AS):
+        soft, _ = resource.getrlimit(r)
+        cap = DATA_LIMIT
+        if soft != resource.RLIM_INFINITY:
+            cap = min(soft, DATA_LIMIT)
+        resource.setrlimit(r, (cap, cap))
 
 
 def decode(b: bytes | None) -> str:
