@@ -1,6 +1,6 @@
 # LLVM test cases are chosen for M0's ops and rewritten into fir by fixed rules
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-1619
 
 ## Context
 

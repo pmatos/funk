@@ -3,7 +3,8 @@ import Fir.Syntax.Dialect
 
 /-!
 The M0 op set: constants, integer arithmetic, bitwise ops and shifts,
-comparison and selection, width changes, `freeze`, branches and calls. Each
+comparison and selection, width changes, `freeze` and `poison`, branches
+and calls. Each
 op below is an op instance: it carries its attributes and the widths it is
 used at, so that its operand and result types follow from it.
 
@@ -20,6 +21,8 @@ records them:
 * A poison operand gives a poison result, unless the op says otherwise. The
   ops that say otherwise are `select`, `freeze`, the terminators and `call`;
   the execution chapter lists each op's poison class.
+* `poison` gives poison on every run: it is how a program writes a poison
+  value.
 * A broken flag (`nuw`, `nsw`, `exact`) gives poison.
 * A shift amount `≥ N` gives poison, and so does a poison shift amount.
 * A zero divisor is immediate UB, and so is a poison divisor, because it
@@ -112,6 +115,10 @@ Poison control:
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
   poison, gives an arbitrary but fixed value: every use of the result sees
   the same bits (S1, ADR-2026-10-29-2006; ADR-2026-10-29-2017).
+* `poison w`: the poison of type `iN`. Like `const`, it has no operands,
+  but it has no attributes either, and its result is poison on every run.
+  Native code may give any value of `iN` in its place, since every value
+  refines poison (S4).
 
 Control flow. These ops are the terminators:
 
@@ -151,6 +158,7 @@ inductive Op where
   | sext (m n : Nat)
   | trunc (m n : Nat)
   | freeze (w : Nat)
+  | poison (w : Nat)
   | br
   | condBr
   | ret (ts : List Ty)

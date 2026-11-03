@@ -33,7 +33,7 @@ def entryOnly (ops : List (Operation CoreDialect)) (params : List (Name × Ty) :
 
 /-! # Every op of the core dialect, in a valid function -/
 
-/-- A function that uses each of the 24 core ops validly. -/
+/-- A function that uses each of the 25 core ops validly. -/
 def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n^entry:\n" ++
   String.join (["%k: i32 = const 7", "%s1: i32 = add nuw nsw %a, %b", "%s2: i32 = sub %a, %b",
     "%s3: i32 = mul %a, %k", "%s4: i32 = sdiv exact %a, %b", "%s5: i32 = udiv %a, %b",
@@ -41,7 +41,8 @@ def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n
     "%s9: i32 = or %a, %b", "%s10: i32 = xor %a, %b", "%s11: i32 = shl %a, %b",
     "%s12: i32 = lshr %a, %b", "%s13: i32 = ashr %a, %b", "%lt: i1 = icmp slt %a, %b",
     "%sel: i32 = select %lt, %a, %b", "%w: i64 = zext %a", "%v: i64 = sext %a",
-    "%t: i8 = trunc %a", "%f: i32 = freeze %sel", "%r: i32 = call @all %a, %b, %c",
+    "%t: i8 = trunc %a", "%f: i32 = freeze %sel", "%z: i32 = poison",
+    "%r: i32 = call @all %a, %b, %c",
     "cond_br %c, ^x(%f), ^y"].map ("  " ++ · ++ " @0\n")) ++
   "^x(%p: i32):\n  br ^y @0\n^y:\n  ret %a @0\n}\n")
 

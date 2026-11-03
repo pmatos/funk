@@ -301,7 +301,7 @@ impl Body<'_> {
     /// of one type when `t` is `i1`, `select` on an earlier `i1` of two
     /// earlier values of type `t`, `add`, `sub` or `mul` of two, with any of
     /// their flags, a bitwise op or a shift of two, a division or remainder
-    /// of two, `freeze` of one, or a constant.
+    /// of two, `freeze` of one, `poison`, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
         let same = self.of_type(&t);
         let casts = self.casts_to(&t);
@@ -352,6 +352,8 @@ impl Body<'_> {
                         .operand(rng.pick(&same).as_str())
                 }
             }
+        } else if rng.one_in(8) {
+            Op::new("poison", loc)
         } else {
             let w = int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))

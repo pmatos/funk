@@ -84,6 +84,7 @@ theorem Op.monotone_all : (op : Op) →
   | .sext m n, _ => sext_monotone m n
   | .trunc m n, _ => trunc_monotone m n
   | .freeze w, _ => freeze_monotone w
+  | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone
   | .condBr, _ => condBr_monotone
   | .ret ts, _ => ret_monotone ts

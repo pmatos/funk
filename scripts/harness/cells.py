@@ -6,7 +6,9 @@ its flag set or predicate, and its width. `add`, `sub` and `mul` take the
 flag sets of `decodeWrap`, `sdiv` and `udiv` those of `decodeExact`, and
 `icmp` each predicate of `Pred.all`. A constant's value and a callee are
 attributes but not cells, and the other ops have no attributes. A flag or
-predicate that the spec does not give an op is not a cell.
+predicate that the spec does not give an op is not a cell. `poison`, which
+has neither operands nor attributes, is a cell at each width of its result
+(ADR-2026-11-03-1618).
 
 - An op at a width is a cell for each width of the matrix's side.
 - A width change, `zext`, `sext` or `trunc`, is a cell for each pair of
@@ -49,6 +51,7 @@ AT_WIDTH = {
     "icmp": PREDS,
     "select": ("",),
     "freeze": ("",),
+    "poison": ("",),
 }
 CASTS = ("zext", "sext", "trunc")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"

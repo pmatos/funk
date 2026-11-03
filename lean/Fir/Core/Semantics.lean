@@ -14,7 +14,7 @@ import Fir.Core.Text
 # The core dialect's semantics
 
 `DialectDenote CoreDialect SetM` gives every core op its meaning in the set
-monad. It is one instance over all 24 core ops, which sends each op to the
+monad. It is one instance over all 25 core ops, which sends each op to the
 rule of its family. The rules are written once, for any monad that has
 the effects they ask for: `Op.denote?` for the ops that are not
 terminators, and `Op.exit?` for the terminators. `freeze` asks for the
@@ -93,6 +93,7 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
   | .const w v => some fun _ => pure (.cons (constValue w v) .nil)
+  | .poison w => some fun _ => pure (.cons (poisonValue w) .nil)
   | .add _ f => some fun
     | .cons a (.cons b .nil) => pure (.cons (addWith f a b) .nil)
   | .sub _ f => some fun

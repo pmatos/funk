@@ -5,7 +5,7 @@ import Fir.Validation.CheckModule
 The validation check needs a dialect's types to have decidable equality, and
 its two rules to be decidable. The core dialect's types derive
 `DecidableEq`, and its rules are decided below, case by case. With them,
-the check covers every one of the 24 core ops: the general rules check each
+the check covers every one of the 25 core ops: the general rules check each
 op's operand and result types, its place in its block, its successors and
 its uses against its signature, and `Op.Valid` adds the rules of `ret`,
 `call`, `zext`, `sext` and `trunc`.

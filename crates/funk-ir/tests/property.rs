@@ -85,7 +85,7 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             );
         }
     }
-    want.extend(["freeze", "br", "cond_br", "ret", "select", "call"].map(String::from));
+    want.extend(["freeze", "poison", "br", "cond_br", "ret", "select", "call"].map(String::from));
     want.extend(PREDICATES.map(|p| format!("icmp {p}")));
     want.extend(
         BITWISE_OPS
@@ -352,7 +352,7 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 59] = [
+    const TOKENS: [&str; 60] = [
         "func",
         "@f",
         "@\"x y\"",
@@ -374,6 +374,7 @@ fn the_parser_never_panics_on_random_token_soup() {
         "nuw",
         "nsw",
         "freeze",
+        "poison",
         "and",
         "or",
         "xor",

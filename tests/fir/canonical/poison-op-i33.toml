@@ -1,0 +1,42 @@
+# Tests of poison-op-i33.fir: the op poison at i33 (#122,
+# ADR-2026-11-03-1615). Its result is poison on every run, and each
+# function passes it to one kind of op. The backend does not lower
+# i33, so every test is interpreter-only, and each observes the poison:
+# fir-ref returns it alone, through add, and beside a value; icmp eq
+# %p, %p is poison, not true; select gives it only on the arm it
+# chooses; a callee that ignores it returns its other argument; freeze
+# chooses a value for it; and a branch on it or a division by it is UB.
+tests = [
+  { func = "@poison", expect = ["poison"] },
+  { func = "@poison_unused", args = ["1"], expect = ["1"] },
+  { func = "@poison_unused", args = ["-1"], expect = ["-1"] },
+  { func = "@poison_unused", args = ["-4294967296"], expect = ["-4294967296"] },
+  { func = "@poison_add", args = ["1"], expect = ["poison"] },
+  { func = "@poison_add", args = ["-1"], expect = ["poison"] },
+  { func = "@poison_add", args = ["-4294967296"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "1"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "-1"], expect = ["poison"] },
+  { func = "@poison_select", args = ["true", "-4294967296"], expect = ["poison"] },
+  { func = "@poison_select", args = ["false", "1"], expect = ["1"] },
+  { func = "@poison_select", args = ["false", "-1"], expect = ["-1"] },
+  { func = "@poison_select", args = ["false", "-4294967296"], expect = ["-4294967296"] },
+  { func = "@poison_icmp", expect = ["poison"] },
+  { func = "@poison_freeze", choices = ["0"], expect = ["0"] },
+  { func = "@poison_freeze", choices = ["1"], expect = ["1"] },
+  { func = "@poison_freeze", choices = ["-1"], expect = ["-1"] },
+  { func = "@poison_freeze", choices = ["4294967295"], expect = ["4294967295"] },
+  { func = "@poison_freeze_sub", choices = ["0"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["1"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["-1"], expect = ["0"] },
+  { func = "@poison_freeze_sub", choices = ["4294967295"], expect = ["0"] },
+  { func = "@poison_pair", args = ["1"], expect = ["1", "poison"] },
+  { func = "@poison_pair", args = ["-1"], expect = ["-1", "poison"] },
+  { func = "@poison_pair", args = ["-4294967296"], expect = ["-4294967296", "poison"] },
+  { func = "@poison_call", args = ["1"], expect = ["1"] },
+  { func = "@poison_call", args = ["-1"], expect = ["-1"] },
+  { func = "@poison_call", args = ["-4294967296"], expect = ["-4294967296"] },
+  { func = "@poison_cond_br", args = ["-4294967296"], expect = "ub" },
+  { func = "@poison_udiv", args = ["1"], expect = "ub" },
+  { func = "@poison_udiv", args = ["-1"], expect = "ub" },
+  { func = "@poison_udiv", args = ["-4294967296"], expect = "ub" },
+]

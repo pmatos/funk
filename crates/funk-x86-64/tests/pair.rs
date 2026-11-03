@@ -287,6 +287,15 @@ fn a_constant_is_its_low_and_its_high_64_bits() {
 }
 
 #[test]
+fn poison_writes_zero_into_both_halves() {
+    let line = "%r: i128 = poison";
+    let asm = lowered(&format!(
+        "func @f() -> i128 {{\n^entry:\n  {line} @0\n  ret %r @0\n}}\n"
+    ));
+    assert_op(&asm, line, &["movq\t$0, -16(%rbp)", "movq\t$0, -8(%rbp)"]);
+}
+
+#[test]
 fn an_i128_returns_in_rdx_and_rax() {
     let asm = lowered("func @f(%a: i128) -> i128 {\n^entry:\n  ret %a @0\n}\n");
     let want = "\t# ret %a @0\n\tmovq\t-16(%rbp), %rax\n\tmovq\t-8(%rbp), %rdx\n\tleave\n\tret\n";

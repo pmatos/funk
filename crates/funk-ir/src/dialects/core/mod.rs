@@ -9,8 +9,8 @@
 //! (#17) `zext`, `sext` and `trunc`, the division family (#18) `sdiv`,
 //! `udiv`, `srem`, `urem` and the flag `exact`, the comparison family (#16)
 //! `icmp` with its predicates and `select`, the branches (#19) `br` and
-//! `cond_br`, and the calls (#20) `call`. A later family adds a file and a
-//! line here.
+//! `cond_br`, and the calls (#20) `call`. #122 adds the constant `poison`
+//! beside `const`. A later family adds a file and a line here.
 
 mod arith;
 mod bitwise;
@@ -44,6 +44,7 @@ pub fn dialect() -> Dialect {
         .op(arith::Wrap("sub"))
         .op(arith::Wrap("mul"))
         .op(freeze::Freeze)
+        .op(constant::Poison)
         .op(bitwise::Bitwise("and"))
         .op(bitwise::Bitwise("or"))
         .op(bitwise::Bitwise("xor"))

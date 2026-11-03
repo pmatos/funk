@@ -31,9 +31,10 @@ how the cases were chosen and rewritten.
   `false`, a comparison is `icmp slt %a, %b`, and a constant is written
   in fir's signed spelling: LLVM's `i64 13835058055282163710` is
   `-4611686018427387906`.
-- fir has no `undef`: a case that rests on it is left out. fir has no
-  poison constant: a case that uses one writes it as `%p = shl %n, %n`
-  with `%n` the width, which is poison.
+- fir has no `undef`: a case that rests on it is left out. LLVM's
+  `poison` constant is fir's op `poison`, as in `%p: i32 = poison`
+  (ADR-2026-11-03-1619). Until #122 gave fir that op, a case wrote it as
+  `%p = shl %n, %n` with `%n` the width, which is poison.
 - A flag that fir does not have, such as `shl nuw`, `zext nneg` or
   `or disjoint`, is dropped only where it can never give poison, and
   the sidecar says why; otherwise the case is left out.

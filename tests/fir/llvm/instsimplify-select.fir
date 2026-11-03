@@ -237,16 +237,14 @@ func @select_eq_xor_recursive_allow_refinement(%a: i8, %b: i8) -> i8 {
 
 func @poison2(%cond: i1, %x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @27
-  %p: i32 = shl %n, %n @27
+  %p: i32 = poison @27
   %v: i32 = select %cond, %p, %x @27
   ret %v @27
 }
 
 func @poison3(%cond: i1, %x: i32) -> i32 {
 ^entry:
-  %n: i32 = const 32 @28
-  %p: i32 = shl %n, %n @28
+  %p: i32 = poison @28
   %v: i32 = select %cond, %x, %p @28
   ret %v @28
 }
