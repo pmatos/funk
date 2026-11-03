@@ -52,16 +52,18 @@ for option (c): keep it a dialect obligation in M0.
 - The generic theorems cover a function of a dialect only through these
   hypotheses. `Func.neverStuck_of_local` asks that the function be valid
   and run within itself (`Func.Local`): no op calls a function, a
-  terminator that jumps meets the condition above, and a terminator that
-  returns returns values of the function's result types.
-  `Func.progress_of_local` also asks that every op be total (`OpTotal`).
-  `Func.neverStuck_of_inModule` and `Func.progress_of_inModule` ask, of
-  every function of the module, validity and `Func.InModule`, which has
-  the same `jumps` and `returns` fields and allows calls to functions of
-  the module; the second also asks that every terminator and every op
-  with no callee be total. A function with a terminator that may jump and
-  has results cannot meet these hypotheses, so the theorems say nothing
-  of it.
+  terminator that jumps names a successor that it has and gives no
+  results (`jumps`), and a terminator that returns returns values of the
+  function's result types (`returns`). `Func.progress_of_local` also asks
+  that every op be total (`OpTotal`).
+  `Func.neverStuck_of_inModule` and `Func.progress_of_inModule` ask that
+  every function of the module be valid and meet `Func.InModule`.
+  `Func.InModule` has the same `jumps` and `returns` fields, and asks
+  that each op that calls a function name a symbol of the module of the
+  call's type (`calls`). `Func.progress_of_inModule` also asks that every
+  terminator and every op with no callee be total. A function with a
+  terminator that may jump and has results cannot meet these hypotheses,
+  so the theorems say nothing of it.
 - The core dialect meets the condition. `Core.Op.exit_goto`
   ([`lean/Fir/Core/CallFree.lean`](../../lean/Fir/Core/CallFree.lean))
   proves it of every core terminator; `Core.local_of_valid` uses it for
@@ -76,8 +78,10 @@ for option (c): keep it a dialect obligation in M0.
   a terminator with results would make sense.
 
 This refines ADR-2026-10-29-2030. Its "a validated module never gets
-stuck" holds for a dialect whose terminators meet the condition, and its
-`Exit`, which "may grow (H6, unwinding)", does not grow in M0.
+stuck" holds only for a dialect whose terminators meet the condition: the
+theorems that prove it ask for it through `Func.Local` and
+`Func.InModule`. Its `Exit`, which "may grow (H6, unwinding)", does not
+grow in M0.
 
 ## Alternatives
 
@@ -99,5 +103,5 @@ stuck" holds for a dialect whose terminators meet the condition, and its
   In a dialect that gives a jumping terminator results, a valid function
   that uses one of them in a block that the terminator's block dominates
   gets stuck.
-- M3's design of exceptions and unwinding picks (a), (b) or another
-  option, in an ADR that refines or supersedes this one.
+- M3's design of exceptions and unwinding chooses between (a) and (b), in
+  an ADR that refines or supersedes this one.
