@@ -5,10 +5,13 @@ Unsafe code may live only in a verified module: a file of VERIFIED_MODULES,
 in a crate that opts into Verus, so that the verus-proof hook proves it.
 There, `unsafe` may appear inside `verus!`, where Verus checks it, and on the
 items of TRUSTED_BASE, which ADR-2026-11-03-0808 lists. Everywhere else it
-fails, and so does an `unsafe_code` lint, an assumption (`assume`, `admit`,
-`axiom`, `external_body`, `assume_specification` and their kin) and any
-code that Verus does not see when it verifies. The check reads the Rust
-files and Cargo manifests that git tracks, without comments and strings.
+fails. So do `unsafe_code` in an attribute other than a trusted one, or below
+`forbid` in the manifest of a crate with no verified module; an assumption
+(`assume`, `admit`, `axiom`, `external_body`, `assume_specification` and
+their kin) other than on a trusted item; code that Verus does not see when it
+verifies; a verified module whose crate does not opt in; and a trusted item
+that is gone. The check reads the Rust files and Cargo manifests that git
+tracks, without comments and strings.
 """
 
 import re

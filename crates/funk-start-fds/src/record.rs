@@ -51,12 +51,11 @@ pub open spec fn recorded(fd: int) -> i32 {
     }
 }
 
-/// TRUSTED: calls `fcntl(fd, F_GETFD)`. Verus assumes only that it returns
-/// and does not panic: its result may be any `c_int`, which is named
-/// `getfd_result(fd)`. It writes no memory that the program owns, as its
-/// signature tells Verus: `F_GETFD` only reads the descriptor's flags, and
-/// on a descriptor that is not open it fails with `EBADF` and changes
-/// nothing.
+/// TRUSTED: calls `fcntl(fd, F_GETFD)`. Verus assumes that it returns
+/// without panicking and writes no memory that the program owns: its
+/// signature lets it change nothing that Verus tracks. `F_GETFD` only reads
+/// the descriptor's flags, and on a descriptor that is not open it fails
+/// with `EBADF`. Its result may be any `c_int`, named `getfd_result(fd)`.
 #[verifier::external_body]
 fn getfd(fd: c_int) -> (result: c_int)
     ensures

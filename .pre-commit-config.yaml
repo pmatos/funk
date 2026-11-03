@@ -79,7 +79,7 @@ repos:
         entry: python scripts/check_unsafe_code.py
         language: python
         pass_filenames: false
-        files: ^(crates/|Cargo\.toml$|scripts/check_unsafe_code\.py$)
+        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/check_unsafe_code\.py$)
       - id: unsafe-code-test
         name: The unsafe-code check passes its tests
         entry: python scripts/test_check_unsafe_code.py
