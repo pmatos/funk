@@ -4,7 +4,9 @@ import Fir.Validation.Scope
 fir is in SSA form: every value has one definition, and that definition
 dominates each of its uses. Dominance is a property of the function's
 control-flow graph, whose nodes are the blocks and whose edges go from a
-block to the successors of its terminator.
+block to the successors of its ops (`Block.succLabels`). In a valid
+function only the terminator has successors, so they are its
+terminator's.
 
 The graph, reachability and dominance below are over a function's top-level
 blocks. How values are scoped in the regions of an op, and how dominance
@@ -89,8 +91,8 @@ def Func.Defines (f : Func d) (x : Name) : DefSite → Prop
 A definition at site `s` dominates a use by the op at index `i` of the block
 labelled `l`. A parameter dominates every use. A block argument dominates the
 uses in every block its block dominates, its own included. An op's result
-dominates the uses by later ops of its block, and the uses in the blocks that
-its block dominates. An op never uses its own results.
+dominates the uses by later ops of its block, and the uses in the other
+blocks that its block dominates. An op never uses its own results.
 
 The arguments that a terminator passes to its successors are uses by the
 terminator, in its own block.

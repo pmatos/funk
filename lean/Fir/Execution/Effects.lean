@@ -58,8 +58,9 @@ dialect needs.
   a successor are its successor arguments, and a return returns the
   terminator's operands.
 
-Validation guarantees that an op is only ever given values of its operand
-types.
+The interpreter gives an op only values of its operand types: it checks
+each operand's type before it calls `denote` or `exit`, and the path is
+stuck when one does not match, which validation rules out.
 -/
 class DialectDenote (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
     (m : Type → Type) where

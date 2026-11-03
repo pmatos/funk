@@ -6,7 +6,7 @@ reference interpreter, `fir-ref`: the only interpreter of fir, a test oracle
 that never ships inside a compiler (S7, ADR-2026-10-29-2009). Its general
 part, below, fixes what a run can end with, what a function shows to an
 observer, and when one function correctly replaces another. The interpreter
-itself, and the rules of each op, are written by #10 and #14 to #20.
+itself, and the rules of each op, come in the sections after it.
 
 # Poison
 

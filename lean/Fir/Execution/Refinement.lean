@@ -19,8 +19,8 @@ and a target that loses some of its paths refines more sources than it
 should. The obligations of the previous section rule both out for a valid
 function: progress, so its behaviour is never empty, and no stuck path.
 With every op that runs by its own rule total, and with an interpreter
-whose own steps never drop a path, which #10's definition must ensure, no
-path is then lost.
+whose own steps never drop a path, as the section on the interpreter
+explains, no path is then lost.
 -/
 
 namespace Fir

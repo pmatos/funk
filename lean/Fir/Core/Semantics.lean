@@ -24,25 +24,30 @@ them.
 
 # Ops without rules
 
-An op whose family has not landed has no rule yet: `Op.denote?` or
-`Op.exit?` gives `none` for it. Since #20 named the callee of `call`,
-every core op has its rules, so none is left without. `call`'s meaning is
-its callee's run, so `Op.denote?` gives `none` for it too, and it is not
-an op without rules (the section on calls below). ADR-2026-10-30-1855
-decides what an op without rules does until its family lands, and the
-spec keeps that rule for every dialect:
+An op has no rules when its dialect's semantics gives it none. In the
+core dialect, that is when `Op.hasRules` is false: `Op.denote?` and
+`Op.exit?` give it `none`, and it calls no function. Every core op has its
+rules: each op family gave its ops theirs, and #20, the last, named the
+callee of `call`. `call`'s meaning is its callee's run, so `Op.denote?`
+gives `none` for it too, and it is not an op without rules (the section
+on calls below). ADR-2026-10-30-1855 decided what an op without rules
+does while its family had not landed, and the spec keeps that rule for
+every dialect:
 
 * In the spec, it has no outcome: on every operand vector, its `denote` or
   its `exit` is the empty set. That is not a stand-in semantics. The
   totality obligation `OpTotal` rejects it, as it rejects
-  `Core.Unlawful.noOutcome`, so `LawfulDialectPoison CoreDialect` cannot be
-  proved while any op lacks its rules.
+  `Core.Unlawful.noOutcome`, so a dialect's `LawfulDialectPoison` cannot
+  be proved while one of its valid op instances that runs by its own rule
+  (a terminator, or an op with no callee) lacks its rules, unless one of
+  its operand types has no value. No core op lacks them, and
+  `Core.lawfulDialectPoison` proves `LawfulDialectPoison CoreDialect`.
 * Only totality, `ReturnsOnDefined`, progress and the lawful class reject
   it. `PropagatesPoison` and `OpMonotone` hold of such an op, and
   `NeverStuck` and `FuelMonotone` of a function that reaches one, since the
   empty set meets every bound on what may happen; and such a function
-  refines every source. So none of these statements is claimed of an op,
-  or of a function that reaches one, before the op has rules. The general
+  refines every source. So none of these statements is claimed of an op
+  without rules, or of a function that reaches one. The general
   theorems `Func.fuelMonotone`, `Func.neverStuck` and
   `Func.neverStuck_of_local` cover such a function too, but only vacuously
   on the paths that reach the op: they say nothing of how it behaves.
@@ -53,12 +58,14 @@ spec keeps that rule for every dialect:
   and are proved now for every function of every valid core module, calls
   and recursion included (`Core.progress`, `Core.neverStuck`).
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
-  says that the op has no execution rules yet, as an error
+  says that the op has no execution rules, as an error
   (ADR-2026-10-30-1856).
 
-Each ticket from #14 to #19 adds its family's rules to `Op.denote?` and
-`Op.exit?`, in its own section, and proves their obligations beside them.
-#20 names the callee of `call` instead, below.
+Each family's rules are in its own section, and `Op.denote?` and
+`Op.exit?` send each op to them; the obligations of each family are
+proved in sections of their own after this one, from "Constant
+obligations" (`Fir/Core/ArithLaws.lean`) to "Branch obligations"
+(`Fir/Core/BranchLaws.lean`). `call` names its callee instead, below.
 
 # Calls
 
@@ -80,7 +87,8 @@ namespace Fir.Core
 variable {m : Type → Type} [Monad m]
 
 /-- The rule of each core op that is not a terminator, in any monad with
-the choice and UB effects, when its family has given it one. -/
+the choice and UB effects; `none` for `call`, whose meaning is its
+callee's run, and for the terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
@@ -123,8 +131,8 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
   | _ => none
 
-/-- The rule of each core terminator, in any monad with the UB effect, when
-its family has given it one. -/
+/-- The rule of each core terminator, in any monad with the UB effect;
+`none` for every op that is not a terminator. -/
 def Op.exit? [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) → m Exit)
   | .br => some fun _ => pure brExit
@@ -136,7 +144,7 @@ def Op.exit? [MonadUB m] : (op : Op) →
 /-- The op has rules: as an op that is not a terminator, as a terminator,
 or as an op that calls a function, whose meaning is its callee's run. It
 looks at the rules in the set monad, which has the effects of choice and
-UB that the rules of #14, #18 and #19 ask for. -/
+UB that the rules of `freeze`, the divisions and `cond_br` ask for. -/
 def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome || op.callTarget?.isSome
 
@@ -155,7 +163,8 @@ end Fir.Core
 namespace Fir
 
 /-- The core dialect's semantics in the set monad: each op's rule, and no
-outcome for an op that has no rule yet. -/
+outcome where `Op.denote?` or `Op.exit?` gives none, as for `call`, whose
+`denote` no run reaches. -/
 instance : DialectDenote CoreDialect SetM where
   denote op args := match op.denote? (m := SetM) with
     | some rule => rule args

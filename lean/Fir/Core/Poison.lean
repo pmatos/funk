@@ -25,20 +25,21 @@ Six ops are exceptions, each with its own rule:
 * `br`, `ret` and `call` pass values on as they are, poison included: to
   block arguments, to the caller, or to the callee and back.
 
-The core dialect's execution rules land with its op families, so the
-obligations land with them too. Ticket #10 gives the semantics of the
-tracer subset, `const`, `add` and `ret`, with the instance of
-`DialectDenote CoreDialect SetM`, and proves the obligations of those three
+The core dialect's execution rules landed with its op families, and the
+obligations with them. Ticket #10 gave the semantics of the tracer subset,
+`const`, `add` and `ret`, with the instance of
+`DialectDenote CoreDialect SetM`, and proved the obligations of those three
 ops: `PropagatesPoison` for `add`, a result on defined operands for
 `const` and `add`, and totality and monotonicity for all three. Each family
-ticket then proves the obligations of its ops: #14 for `add` with its flags,
-`sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16 for
-`icmp` and `select`, #17 for the width changes, #18 for the divisions, #19
-for the branches and #20 for `call`. The last of them gives
-`LawfulDialectPoison CoreDialect` (the section on the core dialect's
-poison obligations). The exceptions' rules are tested by their
-tickets: `freeze` by #14, `select` by #16, the branches and block arguments
-by #19, `call` by #20.
+ticket then proved the obligations of its ops: #14 for `add` with its
+flags, `sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16
+for `icmp` and `select`, #17 for the width changes, #18 for the divisions
+and #19 for the branches. `call` has no op-level obligation, as below.
+The last ticket, #20, gave `LawfulDialectPoison CoreDialect`
+(`Core.lawfulDialectPoison`, in the section on the core dialect's poison
+obligations). The exceptions' rules are tested by their tickets: `freeze`
+by #14, `select` by #16, the branches and block arguments by #19, `call`
+by #20.
 
 `call` gets its meaning from the call effect, which the interpreter runs
 with the fuel budget that the caller has left (ADR-2026-11-02-0836): #20
@@ -60,10 +61,14 @@ obligations of `add` and `ret`, in the sections after the interpreter.
 
 namespace Fir.Core
 
-/-- The poison class of each core op. -/
+/-- The poison class of each core op. Each op is listed, with no case for
+the rest, so a new core op does not build until it declares its class
+(ADR-2026-11-03-0600). -/
 def Op.poisonClass : Op → PoisonClass
+  | .const .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _
+  | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .zext .. | .sext ..
+  | .trunc .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .call .. => .exception
-  | _ => .propagates
 
 /-- A core value is poison when it is the poison of its `iN`. -/
 def Ty.IsPoison : {t : Ty} → ⟦t⟧ → Prop
