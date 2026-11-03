@@ -8,8 +8,8 @@ result, the poison of its type, at every width of the corpus and at the
 widest type; and what each kind of op does with that poison. Ops that
 propagate poison give poison, `select` gives it only when it chooses it,
 `freeze` chooses a value for it, and a branch on it or a division by it is
-immediate UB. `fir-ref run` takes no `poison` argument, so these tests
-need no other way to make one (ADR-2026-11-03-1615).
+immediate UB. `fir-ref run` takes no `poison` argument, and these tests
+need none: the op makes the poison (ADR-2026-11-03-1615).
 -/
 
 namespace FirTest
@@ -34,7 +34,8 @@ its location. Its text reads back and prints as itself, at every width. -/
 #guard (widths ++ [16777215]).all fun n => roundTrips (poisonOpAt n)
 #guard rejectedAt (func ["%p: i32 = poison %a @0", "ret %p @0"]) 3 13 "op poison does not decode"
 #guard rejectedAt (func ["%p: i32 = poison 0 @0", "ret %p @0"]) 3 13 "op poison does not decode"
-#guard rejectedAt (func ["%p: i32, %q: i32 = poison @0", "ret %p @0"]) 3 22 "op poison does not decode"
+#guard rejectedAt (func ["%p: i32, %q: i32 = poison @0", "ret %p @0"]) 3 22
+  "op poison does not decode"
 #guard rejectedAt (func ["poison @0", "ret %a @0"]) 3 3 "op poison does not decode"
 
 /-! # Its result

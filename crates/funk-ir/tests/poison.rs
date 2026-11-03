@@ -47,10 +47,10 @@ fn poison_parses_verifies_and_prints_at_any_width() {
     }
 }
 
-/// `@f(%a: i32, %q: ptr) -> i32` with one op on line 3, then `ret %a`.
+/// `@f(%a: i32) -> i32` with one op on line 3, then `ret %a`.
 fn with_op(op: &str) -> String {
     one_func(&format!(
-        "func @f(%a: i32, %q: ptr) -> i32 {{\n^entry:\n  {op} @0\n  ret %a @0\n}}\n"
+        "func @f(%a: i32) -> i32 {{\n^entry:\n  {op} @0\n  ret %a @0\n}}\n"
     ))
 }
 
