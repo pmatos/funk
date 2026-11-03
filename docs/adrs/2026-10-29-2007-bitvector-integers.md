@@ -1,6 +1,6 @@
 # Integers are bitvectors `iN` of any width, and signedness lives on ops
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-1000
 
 ## Context
 
