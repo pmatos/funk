@@ -4,7 +4,9 @@ import Fir.Validation.Scope
 fir is in SSA form: every value has one definition, and that definition
 dominates each of its uses. Dominance is a property of the function's
 control-flow graph, whose nodes are the blocks and whose edges go from a
-block to the successors of its terminator.
+block to the successors of its ops (`Block.succLabels`). In a valid
+function only the terminator has successors, so they are its
+terminator's.
 
 The graph, reachability and dominance below are over a function's top-level
 blocks. How values are scoped in the regions of an op, and how dominance
