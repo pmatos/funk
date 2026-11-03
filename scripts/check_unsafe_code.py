@@ -5,18 +5,21 @@ Unsafe code may live only in a verified module: a file of VERIFIED_MODULES,
 in a crate that opts into Verus, so that the verus-proof hook proves it.
 There, `unsafe` may appear only on the items of TRUSTED_BASE, which
 ADR-2026-11-03-0808 lists, and the text of the trusted base, of #117's
-specification and of `record` is pinned (scripts/unsafe_pins.py). Outside
-`verus!` a verified module holds only inner attributes, `use`, constants
-and trusted items; it calls no macro but its `verus!` block and renames no
-import; and the names that the proof rests on appear only where CALLS and
-NAMES allow. The check also fails on `unsafe_code` in an attribute that does
+specification, of `record` and of the file that mounts the module is pinned
+(scripts/unsafe_pins.py). Outside `verus!` a verified module holds only
+inner attributes, `use`, constants and trusted items; inside it, only
+pinned items and new proof or spec functions with fresh names
+(scripts/unsafe_items.py). It calls no macro but its `verus!` block and
+renames no import, and the names that the proof rests on appear only where
+CALLS and NAMES allow. The rest of its crate uses no vstd and no `extern
+crate`. The check also fails on `unsafe_code` in an attribute that does
 not forbid or deny it; an assumption (`assume`, `admit`, `axiom`,
 `external_body`, `assume_specification` and their kin) or a `verifier`
 attribute other than on a trusted item; code that Verus does not see when it
-verifies; a trusted item that is gone; and a manifest or crate root that
-would let code past rustc's lint or the check (scripts/unsafe_manifests.py).
-It reads the Rust files and Cargo manifests that git tracks, without
-comments.
+verifies; a trusted item that is gone; and a manifest, crate root or Cargo
+configuration that would let code past rustc's lint or the check
+(scripts/unsafe_manifests.py). It reads the Rust files, Cargo manifests and
+Cargo configurations that git tracks, without comments.
 """
 
 import subprocess
@@ -26,8 +29,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from rust_items import attributes, is_ident, is_punct, items, tokens
+from unsafe_items import crate_problems, verus_item_problems
 from unsafe_manifests import (
+    config_problems,
     crate_of,
+    is_cargo_config,
     is_verus_crate,
     manifest,
     manifest_problems,
@@ -103,9 +109,14 @@ def marks(toks, i: int, verus_crate: bool) -> str | None:
 
 def strict(toks, i: int) -> bool:
     """toks[i] is a lint in `forbid(...)` or `deny(...)`, which only make
-    the rule stricter."""
+    the rule stricter. Each lint before it is a path, such as
+    `clippy::all`."""
     while is_punct(toks, i - 1, ",") and i >= 2 and toks[i - 2][0] == "ident":
         i -= 2
+        while is_punct(toks, i - 1, ":") and is_punct(toks, i - 2, ":"):
+            if i < 3 or toks[i - 3][0] != "ident":
+                return False
+            i -= 3
     level = is_ident(toks, i - 2, "forbid") or is_ident(toks, i - 2, "deny")
     return is_punct(toks, i - 1, "(") and level
 
@@ -115,7 +126,9 @@ def is_verus_cfg(word: str) -> bool:
     return word.startswith("verus_")
 
 
-def file_problems(path: str, text: str, verus_crate: bool, used: set) -> list[str]:
+def file_problems(
+    path: str, text: str, verus_crate: bool, used: set, verified_crate: bool = False
+) -> list[str]:
     toks = tokens(text)
     verified = path in VERIFIED_MODULES
     trusted = TRUSTED_BASE.get(path, {})
@@ -158,6 +171,10 @@ def file_problems(path: str, text: str, verus_crate: bool, used: set) -> list[st
                 found.append(f"{where}: {why(mark)}")
         if verified:
             found += layout_problems(path, toks, item, kind, lo, hi, in_verus)
+    if verified:
+        found += verus_item_problems(path, toks, entries)
+    if verified_crate:
+        found += crate_problems(path, toks, verified)
     found += call_problems(path, toks, entries)
     return found + name_problems(path, toks, entries)
 
@@ -292,16 +309,20 @@ def why(mark: str) -> str:
     return "Verus would assume it without proof; only a trusted item may"
 
 
-def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[str]:
-    """One message per violation in the given repository-relative files."""
+def problems(
+    root: Path, rust_files: list[str], manifests: list[str], configs=()
+) -> list[str]:
+    """One message per violation in the given repository-relative files:
+    Rust files, Cargo manifests and Cargo configurations."""
     found, used = [], set()
     data = {m: manifest(root, m) for m in manifests}
     verified_crates = {crate_of(m, manifests) for m in VERIFIED_MODULES}
     for path in sorted(rust_files):
         crate = crate_of(path, manifests)
         verus_crate = crate is not None and is_verus_crate(data[crate])
+        in_verified = crate is not None and crate in verified_crates
         text = (root / path).read_text(encoding="utf-8")
-        found += file_problems(path, text, verus_crate, used)
+        found += file_problems(path, text, verus_crate, used, in_verified)
         found += pin_problems(path, text, ADR)
     for module, mount in sorted(VERIFIED_MODULES.items()):
         if module not in rust_files:
@@ -316,6 +337,7 @@ def problems(root: Path, rust_files: list[str], manifests: list[str]) -> list[st
     for path in sorted(manifests):
         verified = path in verified_crates
         found += manifest_problems(root, path, data[path], verified, rust_files)
+    found += config_problems(sorted(configs))
     for path, trusted in sorted(TRUSTED_BASE.items()):
         for item, allowed in sorted(trusted.items()):
             for mark in sorted(
@@ -339,7 +361,8 @@ def main() -> int:
     files = [f for f in git("-C", str(root), "ls-files", "-z").split("\0") if f]
     rust = [f for f in files if f.endswith(".rs")]
     manifests = [f for f in files if f == "Cargo.toml" or f.endswith("/Cargo.toml")]
-    found = problems(root, rust, manifests)
+    configs = [f for f in files if is_cargo_config(f)]
+    found = problems(root, rust, manifests, configs)
     for message in found:
         print(message, file=sys.stderr)
     if found:

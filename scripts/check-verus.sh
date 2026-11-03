@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs Verus on every crate of the workspace that opts in with
 # `[package.metadata.verus] verify = true`, and fails when a proof fails or
-# when Verus verifies nothing in such a crate (ADR-2026-11-03-0808,
-# ADR-2026-11-03-0809). The verus-proof pre-commit hook calls it, locally
+# when Verus did not verify each function of such a crate that
+# scripts/verus_report.py names (ADR-2026-11-03-0808, ADR-2026-11-03-0809). The verus-proof pre-commit hook calls it, locally
 # and in CI.
 set -euo pipefail
 
@@ -73,26 +73,7 @@ done
 "$cargo_verus" verus verify --workspace --locked --check-toolchain \
     --target-dir target/verus -- --output-json >"$work/results.json"
 
-# A crate that opts in must have verified something: a cfg that hides its
-# proof from Verus, but not from cargo, leaves nothing verified.
-python3 -I - "$work/results.json" "${crates[@]}" <<'EOF'
-import json, sys
-text, decoder, at, reports = open(sys.argv[1]).read(), json.JSONDecoder(), 0, []
-while True:
-    at = len(text) - len(text[at:].lstrip())
-    if at == len(text):
-        break
-    report, at = decoder.raw_decode(text, at)
-    reports.append(report)
-failed = False
-for crate in sys.argv[2:]:
-    prefix = crate.replace("-", "_") + "::"
-    mine = [r for r in reports if any(f.startswith(prefix) for f in r["func-details"])]
-    results = mine[-1]["verification-results"] if mine else {}
-    if not results.get("success") or results.get("verified", 0) < 1:
-        print(f"Verus verified nothing in {crate}: {results}", file=sys.stderr)
-        failed = True
-    else:
-        print(f"{crate}: Verus verified {results['verified']} items, 0 errors")
-sys.exit(1 if failed else 0)
-EOF
+# Each crate that opts in must have verified the functions that
+# scripts/verus_report.py names: a cfg that hides a verified module from
+# Verus, but not from cargo, leaves them out.
+python3 -I scripts/verus_report.py "$work/results.json" "${crates[@]}"

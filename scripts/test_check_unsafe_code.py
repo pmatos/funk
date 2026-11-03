@@ -16,9 +16,11 @@ from unsafe_planting import (
     IR_TOML,
     REPO,
     check,
+    in_record_slots,
     in_verus,
     real,
     record,
+    with_record_slots_body,
 )
 
 
@@ -43,12 +45,14 @@ class Clean(unittest.TestCase):
         self.assertEqual(check(ir=DOCTESTS + ir), [])
 
     def test_a_path_that_is_not_an_attribute_does_not_count(self):
-        code = "fn f() { let path = 0u8; let _ = path; }"
-        self.assertEqual(check(record=in_verus(code)), [])
+        code = "    let path = 0u8;\n    let _ = path;\n"
+        self.assertEqual(check(record=in_record_slots(code)), [])
 
     def test_forbid_and_deny_of_unsafe_code_do_not_count(self):
         ir = "#![forbid(unsafe_code)]\n#[deny(dead_code, unsafe_code)]\nmod m {}\n"
         self.assertEqual(check(ir=DOCTESTS + ir), [])
+        ir = "#![deny(clippy::all, unsafe_code)]\n#[forbid(a::b::c, unsafe_code)]\n"
+        self.assertEqual(check(ir=DOCTESTS + ir + "mod m {}\n"), [])
 
 
 class PlantedUnsafe(unittest.TestCase):
@@ -83,6 +87,9 @@ class PlantedUnsafe(unittest.TestCase):
         self.assert_fails("unsafe_code", ir="#![allow(unsafe_code)]\npub fn f() {}\n")
         self.assert_fails("unsafe_code", ir="#[allow(unsafe_code)]\nmod m {}\n")
         self.assert_fails("unsafe_code", ir="#[warn(dead_code, unsafe_code)]\nmod m {}")
+        ir = "#[allow(clippy::all, unsafe_code)]\nmod m {}\n"
+        self.assert_fails("unsafe_code", ir=ir)
+        self.assert_fails("unsafe_code", ir="#[allow(::all, unsafe_code)]\nmod m {}\n")
         ir = "#[cfg_attr(unix, expect(unsafe_code))]\nmod m {}\n"
         self.assert_fails("unsafe_code", ir=ir)
 
@@ -140,10 +147,7 @@ class PlantedAssumptions(unittest.TestCase):
         self.assertTrue(any(f"`{word}`" in m for m in found), found)
 
     def test_assume(self):
-        planted = record(
-            "        fd += 1;\n", "        fd += 1;\n        assume(false);\n"
-        )
-        self.assert_fails("assume", record=planted)
+        self.assert_fails("assume", record=in_record_slots("    assume(false);\n"))
 
     def test_admit(self):
         self.assert_fails(
@@ -196,7 +200,7 @@ class PlantedAssumptions(unittest.TestCase):
         for written in (f"verifier::{attribute}", f"verifier({attribute})"):
             code = f"#[{written}]\nfn f() ensures false {{ loop {{}} }}"
             self.assert_fails(f"verifier::{attribute}", record=in_verus(code))
-        planted = record("    let mut fd: usize = 0;\n", "    loop {}\n")
+        planted = with_record_slots_body("    loop {}\n")
         planted = planted.replace(
             "fn record_slots(", f"#[verifier::{attribute}]\nfn record_slots("
         )
@@ -206,6 +210,12 @@ class PlantedAssumptions(unittest.TestCase):
 
 
 class TheAdr(unittest.TestCase):
+    def test_every_trusted_item_is_pinned(self):
+        """A pin covers every item of a name, so no second item may take a
+        trusted item's name, and its marks, past the check."""
+        for path, trusted in TRUSTED_BASE.items():
+            self.assertLessEqual(set(trusted), set(PINS[path]))
+
     def test_lists_every_trusted_item_and_every_pin(self):
         text = (REPO / ADR).read_text(encoding="utf-8")
         for path, trusted in TRUSTED_BASE.items():

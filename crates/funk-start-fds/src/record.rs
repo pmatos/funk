@@ -14,8 +14,9 @@
 //! marked TRUSTED, whose specification Verus assumes without proof. They
 //! are the trusted base that ADR-2026-11-03-0808 lists. The `unsafe-code`
 //! check rejects any other unsafe code or assumption, and pins the text of
-//! the trusted base, of #117's specification and of `record`, so only
-//! `record_slots`' body, which Verus proves, changes without a new ADR.
+//! the trusted base, of #117's specification, of `record` and of `lib.rs`.
+//! Only `record_slots`' body, which Verus proves, and new proof or spec
+//! functions whose names no pinned text holds change without a new ADR.
 
 // TRUSTED: the crate denies unsafe code, and the workspace forbids it in
 // every other crate; this module alone allows it, for its trusted items.
@@ -68,9 +69,12 @@ pub open spec fn recorded(fd: int) -> i32 {
 /// The names depend on `fd` alone, so Verus takes every call on one
 /// descriptor to give the same answer. That holds while `record` runs, as
 /// nothing else runs then and `F_GETFD` changes nothing, and the
-/// `unsafe-code` check lets only `record_slots` name `getfd`.
+/// `unsafe-code` check lets only `record_slots` name `getfd`. It requires
+/// a standard descriptor, so it assumes nothing of any other.
 #[verifier::external_body]
 fn getfd(fd: c_int) -> (result: (c_int, Option<i32>))
+    requires
+        0 <= fd < 3,
     ensures
         result.0 == getfd_result(fd as int),
         result.0 == -1 ==> result.1 == getfd_error(fd as int),
@@ -88,11 +92,12 @@ fn getfd(fd: c_int) -> (result: (c_int, Option<i32>))
 /// `holds` says what each one holds. Only `take_slots` makes one and only
 /// `store` changes one. In the built crate it is never constructed:
 /// `Tracked<&mut Slots>` is a zero-sized `PhantomData`, and `take_slots` is
-/// erased. Its field is not `Copy`, so neither is `Slots`: no copy of the
-/// view can exist.
+/// erased. Its field is a `Cell`, which is not `Copy`, so rustc rejects any
+/// `Copy` for `Slots`. The leading `::` names the real `core`, which no
+/// local item can shadow.
 #[verifier::external_body]
 pub tracked struct Slots {
-    _private: core::cell::Cell<()>,
+    _private: ::core::cell::Cell<()>,
 }
 
 impl Slots {

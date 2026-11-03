@@ -4,10 +4,12 @@ fails on it. Run the tests: python -m unittest discover -s scripts -p
 "test_*unsafe*.py"
 """
 
+import re
 import tempfile
 from pathlib import Path
 
 from check_unsafe_code import problems
+from unsafe_manifests import is_cargo_config
 
 REPO = Path(__file__).resolve().parent.parent
 RECORD = "crates/funk-start-fds/src/record.rs"
@@ -42,7 +44,8 @@ def check(**files: str) -> list[str]:
             (root / path).write_text(text, encoding="utf-8")
         rust = [p for p in texts if p.endswith(".rs")]
         manifests = [p for p in texts if p.endswith("Cargo.toml")]
-        return problems(root, rust, manifests)
+        configs = [p for p in texts if is_cargo_config(p)]
+        return problems(root, rust, manifests, configs)
 
 
 def real(path: str, old: str, new: str) -> str:
@@ -62,3 +65,30 @@ def in_verus(code: str) -> str:
 
 def after_verus(code: str) -> str:
     return record("} // verus!", "} // verus!\n" + code)
+
+
+def record_slots_body() -> tuple[str, int, int]:
+    """The real record.rs, and where `record_slots`' body starts and ends.
+    The body is free, so it is found from the pinned signature, with no
+    word of the body."""
+    text = (REPO / RECORD).read_text(encoding="utf-8")
+    signature = re.search(r"\bfn\s+record_slots\s*\(", text)
+    assert signature is not None
+    lo = text.index("{", signature.end()) + 1
+    depth, hi = 1, lo
+    while depth:
+        depth += {"{": 1, "}": -1}.get(text[hi], 0)
+        hi += 1
+    return text, lo, hi - 1
+
+
+def in_record_slots(code: str) -> str:
+    """The real record.rs, with `code` first in `record_slots`' body."""
+    text, lo, _ = record_slots_body()
+    return text[:lo] + "\n" + code + text[lo:]
+
+
+def with_record_slots_body(body: str) -> str:
+    """The real record.rs, with `body` as `record_slots`' whole body."""
+    text, lo, hi = record_slots_body()
+    return text[:lo] + "\n" + body + text[hi:]

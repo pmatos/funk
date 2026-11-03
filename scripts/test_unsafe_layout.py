@@ -5,7 +5,16 @@ python -m unittest discover -s scripts -p "test_*unsafe*.py"
 
 import unittest
 
-from unsafe_planting import FDS, FDS_LIB, REPO, after_verus, check, in_verus, real
+from unsafe_planting import (
+    FDS,
+    FDS_LIB,
+    REPO,
+    after_verus,
+    check,
+    in_record_slots,
+    in_verus,
+    real,
+)
 from unsafe_planting import record as planted_record
 
 
@@ -33,10 +42,9 @@ class PlantedOutsideVerus(Case):
 
     def test_a_macro_called_in_an_expression(self):
         """`option_env!` is set when cargo-verus builds, not cargo build."""
-        line = "        let code = if result == -1 {\n"
         for name in ("option_env", "env", "cfg", "include_str", "concat"):
             call = f'{name}!("__VERUS_DRIVER_VIA_CARGO__")'
-            planted = planted_record(line, f"        let _x = {call};\n{line}")
+            planted = in_record_slots(f"    let _x = {call};\n")
             self.assert_fails(f"`{name}!`", record=planted)
         self.assert_fails("`m!`", record=after_verus("const C: u8 = m!();"))
 
@@ -76,9 +84,7 @@ class PlantedNames(Case):
             "let tracked mut other = take_slots();\n"
             "        store(0, 99, Tracked(&mut other));\n"
         )
-        planted = planted_record(
-            "        fd += 1;\n", "        fd += 1;\n        " + second
-        )
+        planted = in_record_slots("    " + second)
         self.assert_fails("`take_slots` in record_slots", record=planted)
         planted = planted_record("    proof {\n", "    " + second + "    proof {\n")
         self.assert_fails("record names take_slots 2 times", record=planted)
@@ -88,8 +94,7 @@ class PlantedNames(Case):
         self.assert_fails("record names finish 0 times", record=planted)
 
     def test_a_second_getfd(self):
-        code = "        let _first = getfd(fd as c_int);\n"
-        planted = planted_record("        let (result,", code + "        let (result,")
+        planted = in_record_slots("    let _first = getfd(0);\n")
         self.assert_fails("record_slots names getfd 2 times", record=planted)
         self.assert_fails("`getfd` in f", record=in_verus("fn f() { getfd(0); }"))
 

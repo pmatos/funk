@@ -1,15 +1,19 @@
-"""The rules of scripts/check_unsafe_code.py on Cargo manifests and crate
-roots (ADR-2026-11-03-0808): rustc's `unsafe_code` lint reaches every line
-that cargo compiles, and nothing puts code in a crate past the check.
+"""The rules of scripts/check_unsafe_code.py on Cargo manifests, crate
+roots and Cargo configurations (ADR-2026-11-03-0808): rustc's `unsafe_code`
+lint reaches every line that cargo compiles, and nothing puts code in a
+crate past the check.
 
 The workspace forbids unsafe code, and every crate inherits that or forbids
 it too, except a crate with a verified module, which denies it. Cargo does
 not pass those lints to doctests, so the root of each library forbids
-unsafe code in its doctests itself. Every crate is on the 2024 edition,
-where an extern block and an unsafe attribute must say `unsafe`. A target's
-file and a build script are tracked `.rs` files, which the check reads. A
-crate with a verified module keeps the default layout and has no build
-script and no dependency but vstd, from crates.io, so no file or macro from
+unsafe code in its doctests itself. Every crate and target is on the 2024
+edition, where an extern block and an unsafe attribute must say `unsafe`.
+A target's file is a tracked `.rs` file, which the check reads. No crate is
+a proc macro, since rustc does not report the lint in a proc macro's
+output, even at `forbid`. No crate has a build script or links a native
+library, and no Cargo configuration is tracked, since each can link code
+that no `.rs` file holds. A crate with a verified module keeps the default
+layout and depends on vstd alone, from crates.io, so no macro from
 elsewhere puts code in it.
 """
 
@@ -24,6 +28,23 @@ EDITION = "2024"
 DOCTESTS = "#![doc(test(attr(forbid(unsafe_code))))]"
 TARGETS = ("lib", "bin", "test", "bench", "example")
 DEPENDENCIES = ("dependencies", "dev-dependencies", "build-dependencies")
+# Cargo reads `.cargo/config.toml`, or `.cargo/config`, in the directory it
+# runs in and in each one above it.
+CARGO_CONFIG = re.compile(r"(^|/)\.cargo/config(\.toml)?$")
+
+
+def is_cargo_config(path: str) -> bool:
+    return CARGO_CONFIG.search(path) is not None
+
+
+def config_problems(configs: list[str]) -> list[str]:
+    """A Cargo configuration can set `rustflags`, a linker, a
+    `rustc-wrapper` or a `[patch]`: code that no tracked `.rs` file holds."""
+    return [
+        f"{path}: a Cargo configuration can link code that the check never"
+        " reads; keep its settings in the manifests"
+        for path in configs
+    ]
 
 
 def manifest(root: Path, path: str) -> dict:
@@ -61,9 +82,10 @@ def manifest_problems(
     found += patch_problems(path, data)
     if "package" in data:
         found += target_problems(path, data, verified, rust_files)
+        found += native_problems(path, data, rust_files)
         found += doctest_problems(root, path, data, rust_files)
     if verified:
-        found += dependency_problems(path, data, rust_files)
+        found += dependency_problems(path, data)
     return found
 
 
@@ -127,41 +149,65 @@ def patch_problems(path: str, data: dict) -> list[str]:
 def target_problems(
     path: str, data: dict, verified: bool, rust_files: list[str]
 ) -> list[str]:
-    """A target's file and a build script are tracked `.rs` files, which the
-    check reads. A crate with a verified module keeps the default layout."""
+    """A target's file is a tracked `.rs` file, which the check reads, and
+    its edition is the workspace's. A crate with a verified module keeps the
+    default layout. No library is a proc macro."""
     here, found = posixpath.dirname(path), []
-    named = []
     for key in TARGETS:
         value = data.get(key, [])
         for table in value if isinstance(value, list) else [value]:
-            if isinstance(table, dict) and "path" in table:
-                named.append((f"[{key}] path", table["path"]))
-    build = data["package"].get("build")
-    if build is not None and build is not False:
-        named.append(("build", "build.rs" if build is True else build))
-    for key, value in named:
-        target = posixpath.normpath(posixpath.join(here, str(value)))
-        if verified:
-            found.append(
-                f"{path}: {key} in a crate with a verified module, which keeps"
-                " Cargo's default layout and has no build script"
-            )
-        elif not (target.endswith(".rs") and target in rust_files):
-            found.append(
-                f"{path}: {key} = {value!r} is not a tracked .rs file, which"
-                " this check would read"
-            )
+            if not isinstance(table, dict):
+                continue
+            if "edition" in table:
+                found.append(
+                    f"{path}: [{key}] edition: a target is on the workspace's"
+                    f" {EDITION} edition, in which an unsafe attribute says `unsafe`"
+                )
+            if "path" not in table:
+                continue
+            value = table["path"]
+            target = posixpath.normpath(posixpath.join(here, str(value)))
+            if verified:
+                found.append(
+                    f"{path}: [{key}] path in a crate with a verified module,"
+                    " which keeps Cargo's default layout"
+                )
+            elif not (target.endswith(".rs") and target in rust_files):
+                found.append(
+                    f"{path}: [{key}] path = {value!r} is not a tracked .rs file,"
+                    " which this check would read"
+                )
+    lib = data.get("lib", {})
+    lib = lib if isinstance(lib, dict) else {}
+    types = [t for k in ("crate-type", "crate_type") for t in lib.get(k) or []]
+    if lib.get("proc-macro") or lib.get("proc_macro") or "proc-macro" in types:
+        found.append(
+            f"{path}: a proc macro: rustc does not report `unsafe_code` in its"
+            " output, even where the lint is `forbid`"
+        )
     return found
 
 
-def dependency_problems(path: str, data: dict, rust_files: list[str]) -> list[str]:
-    """A crate with a verified module has no build script and depends on
-    vstd alone, by its version on crates.io: no other crate's macro or build
-    script puts code in it."""
+def native_problems(path: str, data: dict, rust_files: list[str]) -> list[str]:
+    """No build script and no `links`: either can link code that no tracked
+    `.rs` file holds, such as an `.init_array` entry assembled at build
+    time."""
     found = []
-    here = posixpath.dirname(path)
-    if posixpath.join(here, "build.rs") in rust_files:
-        found.append(f"{path}: a crate with a verified module has no build.rs")
+    build = data["package"].get("build")
+    if build is not None and build is not False:
+        found.append(f"{path}: build = {build!r}: no crate has a build script")
+    script = posixpath.join(posixpath.dirname(path), "build.rs")
+    if script in rust_files:
+        found.append(f"{script}: no crate has a build script")
+    if "links" in data["package"]:
+        found.append(f"{path}: links: no crate links a native library")
+    return found
+
+
+def dependency_problems(path: str, data: dict) -> list[str]:
+    """A crate with a verified module depends on vstd alone, by its version
+    on crates.io: no other crate's macro or build script puts code in it."""
+    found = []
     tables = [(k, data.get(k, {})) for k in DEPENDENCIES]
     for target, table in data.get("target", {}).items():
         tables += [(f"target.{target}.{k}", table.get(k, {})) for k in DEPENDENCIES]

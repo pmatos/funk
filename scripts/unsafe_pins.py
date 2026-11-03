@@ -7,9 +7,11 @@ Verus assumes a trusted item's specification without proof, and proves
 proof means, and Verus would still pass. So each is pinned by a digest of
 its tokens: its text without comments or layout, with its attributes and
 the contents of its string literals. All the text outside `verus!` is
-pinned too. What may change without a new pin is `record_slots`' body,
-which Verus proves against its pinned signature, and new items inside
-`verus!`, which the check's other rules govern.
+pinned too, and so is the whole of the file that mounts the verified
+module, which defines the `CLOSED` that `store` writes. What may change
+without a new pin is `record_slots`' body, which Verus proves against its
+pinned signature, and new proof or spec functions inside `verus!` whose
+names no pinned text holds (scripts/unsafe_items.py).
 
 Run this file to print the digests of the current text.
 """
@@ -21,19 +23,27 @@ from pathlib import Path
 from rust_items import is_punct, items, tokens
 
 OUTSIDE = "<outside verus!>"
+WHOLE = "<whole file>"
 
 # Item -> the first 32 hex digits of the SHA-256 of its tokens, joined by
 # spaces. An item's text is that of every item of that name and of what it
-# nests, such as an impl's functions. OUTSIDE is every item outside
-# `verus!`, with the `verus!` block's own brackets.
+# nests, such as an impl's functions, inside `verus!` or not. OUTSIDE is
+# every item outside `verus!`, with the `verus!` block's own brackets, and
+# WHOLE is every token of the file.
 PINS = {
+    "crates/funk-start-fds/src/lib.rs": {
+        WHOLE: "eff716f8cabc359b6255f82d9c23f9a8",
+    },
     "crates/funk-start-fds/src/record.rs": {
         OUTSIDE: "62c33443a91b98483be1c03787b79b88",
+        "<module>": "14463c81dd47caad0f05c576569075a7",
+        "fcntl": "5f7e97dcda1b9d3316c485f8a7d68231",
+        "RECORD": "164d4da18a4fa67336936955f1dce68d",
         "getfd_result": "8a11764c47df02dc60910cd9c29390f7",
         "getfd_error": "205e7fafe7fdab6640934d7d2a004358",
         "recorded": "326ffb47b78d0047a16fca535e91d8f6",
-        "getfd": "d7348219c4a78f17568846590ac4dcdf",
-        "Slots": "8f9306a8afb74ff8394783ad2d509b00",
+        "getfd": "01a5f7c3c0242be238824df243d82c5e",
+        "Slots": "e2fb744c0eea21724cbe816093227e12",
         "take_slots": "0f4d1d6cf21e96e05482d5f77048a462",
         "store": "a053251f8a0ba7a82a906ae6389e9c20",
         "record_slots": "ec6ad38b80605048affda900cf3d72b4",
@@ -47,14 +57,35 @@ SIGNATURE_ONLY = {"record_slots"}
 
 
 def pinned_text(toks, entries, name: str) -> str:
-    if name == OUTSIDE:
+    if name == WHOLE:
+        spans = [(0, len(toks))]
+    elif name == OUTSIDE:
         spans = [(e.lo, e.hi) for e in entries if not e.in_verus]
     else:
-        mine = [e for e in entries if e.path == name or e.path.startswith(name + "::")]
-        spans = [(e.lo, e.hi) for e in mine]
+        spans = [(e.lo, e.hi) for e in entries if is_under(e.path, name)]
     if name in SIGNATURE_ONLY:
         spans = [(lo, body(toks, lo, hi)) for lo, hi in spans]
     return " ".join(toks[i][1] for lo, hi in spans for i in range(lo, hi))
+
+
+def is_under(path: str, name: str) -> bool:
+    """`path` is the item `name` or nested in it, such as `Slots::holds`."""
+    return path == name or path.startswith(name + "::")
+
+
+def is_pinned(file: str, path: str) -> bool:
+    return any(is_under(path, name) for name in PINS.get(file, {}))
+
+
+def protected(file: str, toks, entries) -> set[str]:
+    """Every identifier of the file's pinned texts: no new item may take one
+    of these names, or it could change what a pinned text means."""
+    return {
+        word
+        for name in PINS.get(file, {})
+        for word in pinned_text(toks, entries, name).split()
+        if word.isidentifier()
+    }
 
 
 def body(toks, lo: int, hi: int) -> int:

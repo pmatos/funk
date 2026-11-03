@@ -85,7 +85,13 @@ repos:
         entry: scripts/check-verus.sh
         language: unsupported_script
         pass_filenames: false
-        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$)
+        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$|scripts/verus_report\.py$)
+      - id: verus-report-test
+        name: The verus-proof hook's report reader passes its tests
+        entry: python -m unittest discover -s scripts -p "test_verus_report.py"
+        language: python
+        pass_filenames: false
+        files: ^(crates/[^/]+/Cargo\.toml$|scripts/(test_)?verus_report\.py$)
       # Unsafe code only where Verus proves it, and no assumption outside the
       # trusted base that ADR-2026-11-03-0808 lists.
       - id: unsafe-code
@@ -93,13 +99,13 @@ repos:
         entry: python scripts/check_unsafe_code.py
         language: python
         pass_filenames: false
-        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
+        files: (\.rs$|(^|/)Cargo\.toml$|(^|/)\.cargo/|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
       - id: unsafe-code-test
         name: The unsafe-code check passes its tests
         entry: python -m unittest discover -s scripts -p "test_*unsafe*.py"
         language: python
         pass_filenames: false
-        files: ^(crates/funk-start-fds/|(crates/funk-ir/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items|(test_)?unsafe_[a-z]+)\.py$)
+        files: ^(crates/funk-start-fds/|(crates/(funk|funk-ir)/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items|(test_)?unsafe_[a-z]+)\.py$)
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test

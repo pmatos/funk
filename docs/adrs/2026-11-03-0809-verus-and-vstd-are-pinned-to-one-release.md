@@ -43,8 +43,10 @@ Facts, checked on 2026-11-03: the latest Verus release is
   verifies every crate that opts in, and vstd. `--check-toolchain` fails
   when vstd's version is not the release's. It cleans each crate that opts
   in first, so that Verus verifies it again and reports, as JSON, what it
-  verified; the hook fails when that is nothing. It runs when a file under
-  `crates/`, a Cargo file, the Rust pin or its script changes.
+  verified; `scripts/verus_report.py` reads that, and the hook fails
+  unless Verus proved each function that it names. It runs when a file
+  under `crates/`, a Cargo file, the Rust pin or one of its scripts
+  changes.
 - **vstd `=0.0.0-2026-11-01-0251`**, from crates.io, is a dependency of
   `funk-start-fds` only. `Cargo.lock` pins what it brings, all from
   crates.io: `verus_builtin`, `verus_builtin_macros`,

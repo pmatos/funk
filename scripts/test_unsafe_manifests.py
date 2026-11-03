@@ -8,6 +8,8 @@ import unittest
 
 from unsafe_planting import DOCTESTS, FDS, FDS_LIB, IR, IR_TOML, REPO, check, real
 
+FUNK_TOML = "crates/funk/Cargo.toml"
+
 
 class Case(unittest.TestCase):
     def assert_fails(self, text: str, **files: str):
@@ -16,8 +18,9 @@ class Case(unittest.TestCase):
 
 
 class PlantedTargets(Case):
-    """A target's file and a build script are tracked .rs files, which the
-    check reads; a crate with a verified module keeps the default layout."""
+    """A target's file is a tracked .rs file, which the check reads, on the
+    workspace's edition; a crate with a verified module keeps the default
+    layout."""
 
     def test_a_library_in_a_file_the_check_does_not_read(self):
         lib = real(
@@ -34,13 +37,58 @@ class PlantedTargets(Case):
         toml += 'path = "examples/../src/x.rs"\n'
         self.assertEqual(check(ir_toml=toml, **{"crates/funk-ir/src/x.rs": ""}), [])
 
+    def test_a_target_on_another_edition(self):
+        """A 2021 target need not write `unsafe(...)` on `export_name`."""
+        toml = (REPO / IR_TOML).read_text() + '\n[lib]\nedition = "2021"\n'
+        self.assert_fails("[lib] edition: a target is on", ir_toml=toml)
+        toml = (REPO / IR_TOML).read_text()
+        toml += '\n[[bin]]\nname = "x"\npath = "src/lib.rs"\nedition = "2021"\n'
+        self.assert_fails("[bin] edition: a target is on", ir_toml=toml)
+
+    def test_a_proc_macro(self):
+        """rustc does not report `unsafe_code` in a proc macro's output."""
+        base = (REPO / IR_TOML).read_text() + "\n[lib]\n"
+        for lib in (
+            "proc-macro = true\n",
+            "proc_macro = true\n",
+            'crate-type = ["proc-macro"]\n',
+            'crate_type = ["rlib", "proc-macro"]\n',
+        ):
+            self.assert_fails(f"{IR_TOML}: a proc macro", ir_toml=base + lib)
+
+
+class PlantedNativeCode(Case):
+    """No build script, `links` or Cargo configuration: each can link code
+    that no tracked .rs file holds."""
+
     def test_a_build_script(self):
         toml = real(IR_TOML, "publish.workspace = true", 'build = "b.txt"')
-        self.assert_fails("build = 'b.txt' is not a tracked", ir_toml=toml)
+        self.assert_fails("build = 'b.txt': no crate has a build script", ir_toml=toml)
         fds = real(FDS, "publish.workspace = true", 'build = "build.rs"')
-        self.assert_fails("build in a crate with a verified module", fds=fds)
-        planted = {"crates/funk-start-fds/build.rs": "fn main() {}\n"}
-        self.assert_fails("a crate with a verified module has no build.rs", **planted)
+        self.assert_fails("build = 'build.rs': no crate has", fds=fds)
+        for crate in ("funk-start-fds", "funk"):
+            script = f"crates/{crate}/build.rs"
+            files = {script: "fn main() {}\n"}
+            if crate == "funk":
+                files[FUNK_TOML] = (REPO / FUNK_TOML).read_text()
+            self.assert_fails(f"{script}: no crate has a build script", **files)
+
+    def test_build_false_passes(self):
+        toml = real(IR_TOML, "publish.workspace = true", "build = false")
+        self.assertEqual(check(ir_toml=toml), [])
+
+    def test_links(self):
+        toml = real(IR_TOML, "publish.workspace = true", 'links = "m"')
+        self.assert_fails("links: no crate links a native library", ir_toml=toml)
+
+    def test_a_cargo_configuration(self):
+        config = '[target.x86_64-unknown-linux-gnu]\nrustflags = ["-Clink-arg=x.o"]\n'
+        for path in (
+            ".cargo/config.toml",
+            ".cargo/config",
+            "crates/funk/.cargo/config",
+        ):
+            self.assert_fails(f"{path}: a Cargo configuration", **{path: config})
 
 
 class PlantedDependencies(Case):
