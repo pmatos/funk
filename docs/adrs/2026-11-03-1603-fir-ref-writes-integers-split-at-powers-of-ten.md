@@ -17,9 +17,10 @@ ADR-2026-10-30-1450 gives the way `fir-ref` runs a faster function: proved
 equal to the spec's, and registered with `@[csimp]`. Its consequences note
 that `printAttrs` inlines `printInt` and calls `Int.repr`, so a theorem on
 `Nat.repr` or `toString` changes nothing, and a theorem on `printInt` must
-be in scope where `printAttrs` is compiled. Every integer that `fir-ref`
-writes as text goes through `FirRef.printAttr`: `fmt` through
-`FirRef.printModule`, `run` through `Attr.print` of the value's constant.
+be in scope where `printAttrs` is compiled. Every integer of a module or a
+run result that `fir-ref` writes goes through `FirRef.printAttr`: `fmt`
+through `FirRef.printModule`, `run` through `Attr.print` of the value's
+constant.
 
 ## Decision
 
@@ -68,11 +69,22 @@ writes as text goes through `FirRef.printAttr`: `fmt` through
 - `fir-ref fmt` reprints a module with the signed maximum and minimum of
   `i16777215` in about 4 seconds of CPU time, about 1.5 of them writing
   the digits, and `fir-ref run` returns both in about 5.
-- A spec function compiled before the theorem keeps calling `Int.repr`.
-  One is on `fir-ref`'s path: `Tok.describe`, in `lean/Fir/Text/Lex.lean`,
-  names an integer in a parse error, and the spec's readers, compiled in
-  `lean/Fir/`, call it. So a parse error that names an integer of millions
-  of digits still takes time quadratic in them.
+- Four spec functions that `fir-ref` runs still take time quadratic in an
+  integer's digits. They meet a long integer only in a text that does not
+  parse or decode, given to `fir-ref validate`, `fmt` or `run`:
+  - `Tok.describe` (`lean/Fir/Text/Lex.lean:57`) names an integer in a
+    parse error, through `fail` (`lean/Fir/Text/Read.lean:106`).
+  - `lexAt` (`lean/Fir/Text/Lex.lean:219`) names a location reference
+    that is out of range.
+  - `readNat` (`lean/Fir/Text/ReadLocs.lean:17`) names a line or a column
+    that is out of range.
+  - `Ty.decode` (`lean/Fir/Core/Text.lean:158-159`) reads a type's whole
+    width with `String.toNat?` and writes it back with `toString` before
+    it compares it with the limit.
+
+  They call `Int.repr`, `Nat.repr` or `String.toNat?` in code compiled in
+  `lean/Fir/`, before any `FirRef` theorem, so `printInt_eq_printDecimal`
+  reaches none of them.
 - A new caller of `printInt` in `lean/FirRef/` reaches `printDecimal` only
   if its module imports `FirRef.PrintInt`, directly or through
   `FirRef.Fast`.
