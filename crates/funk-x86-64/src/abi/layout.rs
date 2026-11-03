@@ -10,6 +10,13 @@
 //! area is padded to a multiple of 16, so `%rsp` stays 16-byte aligned at
 //! the call. gcc and clang lay out `__int128` arguments the same way.
 //!
+//! When a call's results go in memory, the address of the result area is
+//! its first argument, of one eightbyte (ADR-2026-11-03-0109), as C passes
+//! the address of a structure it returns in memory. The list that this
+//! layout reads then starts with it (`abi::passed`), so it takes `%rdi`
+//! and every argument after it moves along: an `i128` that would have had
+//! `%r8` and `%r9` goes on the stack.
+//!
 //! The caller ([`super::call`]), the callee's prologue (`lower::func`), and
 //! the entry's stack figure (`abi::pushed_words`) all read this one layout.
 
@@ -64,6 +71,7 @@ pub fn layout(words: &[usize]) -> Layout {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::abi::passed;
     use Loc::Stack;
     use Reg::*;
 
@@ -141,6 +149,34 @@ mod tests {
         );
         assert_eq!(l.args[3], [Stack(0), Stack(8)]);
         assert_eq!(l.stack, 16);
+    }
+
+    /// The layouts that gcc 16 and clang give these C prototypes, whose
+    /// structure result goes in memory, so its address takes `%rdi` first.
+    #[test]
+    fn the_address_of_a_result_area_moves_the_arguments_along() {
+        // s1 f(long a, b, c, d, __int128 x): x would have had %r8 and %r9;
+        // with the address first, only %r9 is left, so x goes on the stack.
+        assert_eq!(layout(&[1, 1, 1, 1, 2]).args[4], regs(&[R8, R9]));
+        let l = layout(&passed(1, [1, 1, 1, 1, 2]));
+        assert_eq!(l.args[0], regs(&[Rdi]));
+        assert_eq!(l.args[4], regs(&[R8]));
+        assert_eq!(l.args[5], [Stack(0), Stack(8)]);
+        assert_eq!(l.stack, 16);
+        // s2 f(__int128 a, b, long c, __int128 d): the address, a and b
+        // take five registers; c takes %r9, and d goes on the stack.
+        let l = layout(&passed(1, [2, 2, 1, 2]));
+        assert_eq!(l.args[1..3], [regs(&[Rsi, Rdx]), regs(&[Rcx, R8])]);
+        assert_eq!(l.args[3], regs(&[R9]));
+        assert_eq!(l.args[4], [Stack(0), Stack(8)]);
+        // s3 f(long a, b, c, d, e, __int128 x, long y): y has no register
+        // left, and goes at 16, after x.
+        let l = layout(&passed(1, [1, 1, 1, 1, 1, 2, 1]));
+        assert_eq!(l.args[5], regs(&[R9]));
+        assert_eq!(l.args[6], [Stack(0), Stack(8)]);
+        assert_eq!(l.args[7], [Stack(16)]);
+        assert_eq!(l.stack, 32);
+        assert_eq!(passed(0, [2, 1]), [2, 1]);
     }
 
     #[test]

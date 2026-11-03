@@ -1,6 +1,7 @@
 # Register allocation is spill-everything: every value has its own stack slot
 
-Status: accepted; refined by ADR-2026-11-02-1102 and ADR-2026-11-03-010730
+Status: accepted; refined by ADR-2026-11-02-1102, ADR-2026-11-03-010730 and
+ADR-2026-11-03-0109
 
 ## Context
 

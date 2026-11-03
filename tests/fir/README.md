@@ -77,9 +77,9 @@ differential test holds only functions that the backend lowers: today
 and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with or without
 `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`, `ret` and
 `call` at `i1`, `i8`, `i16`, `i32`, `i64` and, but for the four ops of
-division, `i128`, with at most one result. Tests of other widths, of
-division at `i128`, or of several results, go in modules whose tests are
-all interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
+division, `i128`, with any number of results. Tests of other widths, or
+of division at `i128`, go in modules whose tests are all
+interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
 
 ## Must-reject texts
 
@@ -218,7 +218,7 @@ stays as it is; making deeper runs differential is a decision of its own.
 `call-args` passes seven and eight arguments of mixed widths, some on
 the stack;
 `call-results` calls functions with no result and with one, and
-`call-several`, interpreter-only, with several; `call-symbols` calls
+`call-several` with several; `call-symbols` calls
 `@"1"` and runs it by that name; `sum` runs the spec's `@sum10`, which
 calls `@sum`; and `fuel-call` runs recursion that never ends out of
 fuel at the budget that each test sets. `reject/call.toml` holds the
@@ -245,3 +245,17 @@ poison, declared as its one result `0` with a witness. `branch-i128`,
 `i128`s across calls, in register pairs and on the stack, in each layout
 of ADR-2026-11-03-0108. `tracer-i128` states what `fir-ref` gives for
 `const`, `add` and `ret` at `i128`.
+
+The texts of #31 return several values natively, as
+[ADR-2026-11-03-0109](../../docs/adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)
+lays them out: one or two in registers, more in a result area that the
+caller provides. `several-iN` returns no value, two, three and eight,
+passes the results of one call on to others, recurses directly and
+mutually returning several values, returns poison in one value and
+defined values in the others, and hits UB and runs out of fuel in a
+callee that returns several values, at the same seven widths; at `i7`
+and `i33` every test is interpreter-only. `several-mixed` returns
+results of mixed widths and calls with six or more arguments whose
+results go in memory, so that some arguments go on the stack.
+`results` and `call-several`, interpreter-only until #31, are
+differential.

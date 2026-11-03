@@ -1,5 +1,6 @@
-//! funk on a standard input or output that was closed when it started
-//! (ADR-2026-11-02-2253): the targets where `funk-start-fds` records them.
+//! funk on a standard input, output or error that was closed when it
+//! started (ADR-2026-11-02-2253, ADR-2026-11-03-0107): the targets where
+//! `funk-start-fds` records them.
 
 #![cfg(any(
     target_os = "linux",
@@ -16,7 +17,7 @@ mod common;
 
 use std::process::{Command, Output, Stdio};
 
-use common::{SEVEN, dir, file, text};
+use common::{DEAD, SEVEN, check_unwritable_stderr, dir, file, text};
 
 /// Runs funk with `args` from a shell that applies `redirect` first, such as
 /// `<&-`, which closes standard input.
@@ -88,6 +89,11 @@ fn a_closed_standard_output_is_a_failed_write() {
 }
 
 #[test]
+fn a_closed_standard_error_fails_each_diagnostic() {
+    check_unwritable_stderr("closed-stderr", |args| funk_with("2>&-", args));
+}
+
+#[test]
 fn a_closed_descriptor_that_funk_does_not_use_is_no_error() {
     let seven = file("closed-unused.fir", SEVEN);
     let run = funk_with(">&-", &["verify", &seven]);
@@ -103,31 +109,58 @@ fn a_closed_descriptor_that_funk_does_not_use_is_no_error() {
 #[test]
 fn open_descriptors_on_dev_null_behave_as_before() {
     let seven = file("dev-null.fir", SEVEN);
-    let run = Command::new(env!("CARGO_BIN_EXE_funk"))
-        .args(["verify", "--json", "-"])
-        .stdin(Stdio::null())
-        .output()
-        .unwrap();
-    assert_eq!(run.status.code(), Some(1));
-    assert!(text(&run.stdout).starts_with(r#"{"file":"-","verdict":"parse-error""#));
-    for redirect in ["</dev/null", "<>/dev/null"] {
-        let run = funk_with(redirect, &["verify", "--json", "-"]);
-        assert_eq!(run.status.code(), Some(1), "{redirect}");
-        assert!(
-            text(&run.stdout).starts_with(r#"{"file":"-","verdict":"parse-error""#),
-            "{redirect}"
-        );
+    let nc = file("dev-null-nc.fir", &SEVEN.replacen("  %c", "    %c", 1));
+    let bad = file("dev-null-bad.fir", "func @f(\n");
+    let dead = file("dev-null-dead.fir", DEAD);
+    let out = dir("dev-null").join("seven");
+    let out = out.to_str().unwrap();
+    let direct = || Command::new(env!("CARGO_BIN_EXE_funk"));
+    for args in [
+        &["verify", "--json", "-"][..],
+        &["fmt", "--json", "-"],
+        &["build", "--json", "-o", out, "-"],
+    ] {
+        let run = direct().args(args).stdin(Stdio::null()).output().unwrap();
+        assert_eq!(run.status.code(), Some(1), "{args:?}");
+        let parse_error = r#"{"file":"-","verdict":"parse-error""#;
+        assert!(text(&run.stdout).starts_with(parse_error), "{args:?}");
+        for redirect in ["</dev/null", "<>/dev/null"] {
+            let run = funk_with(redirect, args);
+            assert_eq!(run.status.code(), Some(1), "{redirect} {args:?}");
+            assert!(
+                text(&run.stdout).starts_with(parse_error),
+                "{redirect} {args:?}"
+            );
+        }
     }
-    for args in [&["--version"][..], &["verify", "--json", &seven]] {
-        let run = Command::new(env!("CARGO_BIN_EXE_funk"))
-            .args(args)
-            .stdout(Stdio::null())
-            .output()
-            .unwrap();
-        assert_eq!(run.status.code(), Some(0), "{args:?}");
+    for (args, status) in [
+        (&["--version"][..], 0),
+        (&["verify", "--json", &seven], 0),
+        (&["fmt", &seven], 0),
+        (&["fmt", "--json", &seven], 0),
+        (&["fmt", "--check", &nc], 1),
+        (&["build", "--json", "-o", out, &seven], 0),
+    ] {
+        let run = direct().args(args).stdout(Stdio::null()).output().unwrap();
+        assert_eq!(run.status.code(), Some(status), "{args:?}");
         assert_eq!(text(&run.stderr), "", "{args:?}");
-        let run = funk_with("1<>/dev/null", args);
-        assert_eq!(run.status.code(), Some(0), "{args:?}");
-        assert_eq!(text(&run.stderr), "", "{args:?}");
+        for redirect in [">/dev/null", "1<>/dev/null"] {
+            let run = funk_with(redirect, args);
+            assert_eq!(run.status.code(), Some(status), "{redirect} {args:?}");
+            assert_eq!(text(&run.stderr), "", "{redirect} {args:?}");
+        }
+    }
+    for args in [
+        &["fmt", &bad][..],
+        &["verify", &bad],
+        &["verify", &dead],
+        &["build", "-o", out, &dead],
+    ] {
+        let run = direct().args(args).stderr(Stdio::null()).output().unwrap();
+        assert_eq!(run.status.code(), Some(1), "{args:?}");
+        for redirect in ["2>/dev/null", "2<>/dev/null"] {
+            let run = funk_with(redirect, args);
+            assert_eq!(run.status.code(), Some(1), "{redirect} {args:?}");
+        }
     }
 }

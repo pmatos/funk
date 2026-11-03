@@ -1,7 +1,8 @@
 //! How a funk function looks from outside (ADR-2026-10-30-1232): its symbol in the
-//! object file, where its arguments arrive and where its result goes, by the
-//! System V AMD64 calling convention. An `i128` passes as two eightbytes
-//! (ADR-2026-11-03-0108); `layout.rs` says where each one goes.
+//! object file, where its arguments arrive and, in [`results`], where its
+//! results go (ADR-2026-11-03-0109), by the System V AMD64 calling convention.
+//! An `i128` passes as two eightbytes (ADR-2026-11-03-0108); `layout.rs`
+//! says where each one goes.
 
 mod layout;
 
@@ -13,15 +14,14 @@ pub(crate) use layout::{Loc, layout};
 
 use crate::asm::{Asm, Mem, Reg};
 
+pub mod results;
+
 /// The registers that carry the first six integer arguments, in order.
 pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8, Reg::R9];
 
 /// The register that carries an integer result, or the low half of an
-/// `i128` result.
+/// `i128` result; [`results`] says where the others go.
 pub const RESULT_REG: Reg = Reg::Rax;
-
-/// The register that carries the high half of an `i128` result.
-pub const RESULT_HIGH_REG: Reg = Reg::Rdx;
 
 /// An argument of an outgoing call: the slot that holds it, relative to
 /// `%rbp`, and how many eightbytes it has: 2 for an `i128`, whose high half
@@ -39,8 +39,9 @@ pub(crate) struct Arg {
 /// Arguments pass as their slots hold them, without extension, where
 /// [`layout`] puts them: the eightbytes on the stack are pushed from the
 /// top down, a hole of padding as a `subq`, then the registers are loaded.
-/// The call restores `%rsp` and leaves the result in [`RESULT_REG`], and
-/// the high half of an `i128` result in [`RESULT_HIGH_REG`]. The returned
+/// When the results go in memory, the first argument is the address of the
+/// result area, of one eightbyte (ADR-2026-11-03-0109). The call restores
+/// `%rsp` and leaves the results where [`results`] puts them. The returned
 /// byte count is its peak outgoing argument space, padding included, but
 /// not the return address: entry stack reservation accounts for that
 /// separately. A size error appends no assembly.
@@ -83,6 +84,18 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
         asm.ins("addq", format_args!("${bytes}, %rsp"));
     }
     Ok(bytes as u64)
+}
+
+/// The eightbytes of each argument of a call, in the order that [`layout`]
+/// places them: `hidden` arguments of one eightbyte first, which is the
+/// address of the result area when the results go in memory
+/// ([`results::Layout::hidden_arguments`], ADR-2026-11-03-0109), then each
+/// of `args`. The address takes `%rdi`, so an `i128` argument looks for its
+/// pair of registers from `%rsi` on. The callee's prologue and the entry's
+/// stack figure read a call by this; [`call`] gets the address as its first
+/// [`Arg`].
+pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = usize>) -> Vec<usize> {
+    std::iter::repeat_n(1, hidden).chain(args).collect()
 }
 
 /// The 8-byte words that [`call`] pushes, before the return address, for

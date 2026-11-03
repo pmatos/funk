@@ -4,22 +4,23 @@
 # swap returns in order, and returns them in reverse order again: its
 # own arguments. divmod returns the quotient and the remainder of a
 # udiv, and call_divmod binds both and puts %a back together from them.
-# The backend returns at most one value until #31, and a module builds
-# all or nothing, so each test is interpreter-only and states fir-ref's
-# result, a list of the returned values.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's, value by value. Natively swap's
+# three results go in a result area that its caller provides, and
+# divmod's two in registers (#31, ADR-2026-11-03-0109).
 tests = [
-  { func = "@call_swap", args = ["0", "1", "false"], expect = ["0", "1", "false"] },
-  { func = "@call_swap", args = ["1", "-1", "true"], expect = ["1", "-1", "true"] },
-  { func = "@call_swap", args = ["-1", "-32768", "false"], expect = ["-1", "-32768", "false"] },
-  { func = "@call_swap", args = ["-128", "32767", "true"], expect = ["-128", "32767", "true"] },
-  { func = "@call_swap", args = ["127", "0", "false"], expect = ["127", "0", "false"] },
-  { func = "@swap", args = ["1", "-2", "true"], expect = ["true", "-2", "1"] },
-  { func = "@divmod", args = ["100", "7"], expect = ["14", "2"] },
-  { func = "@call_divmod", args = ["100", "7"], expect = ["100"] },
-  { func = "@divmod", args = ["-1", "10"], expect = ["429496729", "5"] },
-  { func = "@call_divmod", args = ["-1", "10"], expect = ["-1"] },
-  { func = "@divmod", args = ["-2147483648", "-1"], expect = ["0", "-2147483648"] },
-  { func = "@call_divmod", args = ["-2147483648", "-1"], expect = ["-2147483648"] },
-  { func = "@divmod", args = ["2147483647", "2"], expect = ["1073741823", "1"] },
-  { func = "@call_divmod", args = ["2147483647", "2"], expect = ["2147483647"] },
+  { func = "@call_swap", args = ["0", "1", "false"] },
+  { func = "@call_swap", args = ["1", "-1", "true"] },
+  { func = "@call_swap", args = ["-1", "-32768", "false"] },
+  { func = "@call_swap", args = ["-128", "32767", "true"] },
+  { func = "@call_swap", args = ["127", "0", "false"] },
+  { func = "@swap", args = ["1", "-2", "true"] },
+  { func = "@divmod", args = ["100", "7"] },
+  { func = "@call_divmod", args = ["100", "7"] },
+  { func = "@divmod", args = ["-1", "10"] },
+  { func = "@call_divmod", args = ["-1", "10"] },
+  { func = "@divmod", args = ["-2147483648", "-1"] },
+  { func = "@call_divmod", args = ["-2147483648", "-1"] },
+  { func = "@divmod", args = ["2147483647", "2"] },
+  { func = "@call_divmod", args = ["2147483647", "2"] },
 ]

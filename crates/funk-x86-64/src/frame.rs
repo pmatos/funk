@@ -9,6 +9,12 @@
 //! into scratch registers, computes, and stores each result into its slot.
 //! No value stays in a register from one op to the next.
 //!
+//! Below the values' slots, a frame holds what the result convention needs
+//! (ADR-2026-11-03-0109): a slot for the address of the function's own
+//! result area when its results go in memory, a slot for the address that
+//! it passes to a call whose results go in memory, and at its bottom the
+//! area for those calls, as large as the largest that one of them needs.
+//!
 //! A frame of a page or more is probed a page at a time as the prologue
 //! makes room for it, so the stack grows one page after another and never
 //! jumps over a guard region into memory below it.
@@ -17,17 +23,22 @@ use std::collections::HashMap;
 
 use funk_ir::Func;
 
+use crate::abi::results::{Area, Layout};
 use crate::asm::{Asm, Mem, Reg};
+use crate::lower::callee;
 use crate::width;
 
 /// The size of a page: the stack grows, and a frame is probed, a page at a
 /// time.
 pub const PAGE: i32 = 4096;
 
-/// The slots of a function's values, and the frame's size.
+/// The slots of a function's values, what its results and calls need, and
+/// the frame's size.
 #[derive(Debug)]
 pub struct Frame<'f> {
     slots: HashMap<&'f str, Mem>,
+    results: Option<Mem>,
+    area: Option<Area>,
     size: i32,
 }
 
@@ -48,14 +59,58 @@ impl<'f> Frame<'f> {
             let disp = displacement(used).ok_or_else(too_big)?;
             slots.entry(d.name.as_str()).or_insert(Mem { disp });
         }
-        let size = size_for(used).ok_or_else(too_big)?;
-        Ok(Frame { slots, size })
+        let mut count = used;
+        let mut next = || {
+            count += 1;
+            displacement(count)
+                .map(|disp| Mem { disp })
+                .ok_or_else(too_big)
+        };
+        let returns = Layout::of_types(&f.results)?;
+        let results = if returns.in_memory() {
+            Some(next()?)
+        } else {
+            None
+        };
+        let mut most = 0;
+        for op in f.body.blocks.iter().flat_map(|b| &b.ops) {
+            if callee(op).is_some() {
+                let l = Layout::of_types(op.results.iter().map(|d| &d.ty))?;
+                most = most.max(l.area());
+            }
+        }
+        let address = if most > 0 { Some(next()?) } else { None };
+        let size = size_for(count)
+            .and_then(|s| s.checked_add(most))
+            .ok_or_else(too_big)?;
+        let area = address.map(|address| Area {
+            address,
+            base: Mem { disp: -size },
+        });
+        Ok(Frame {
+            slots,
+            results,
+            area,
+            size,
+        })
     }
 
     /// The slot of the value named `name`: for an `i128`, the slot of its
     /// low half, whose [`Mem::high`] is the slot of its high half.
     pub fn slot(&self, name: &str) -> Option<Mem> {
         self.slots.get(name).copied()
+    }
+
+    /// The slot that holds the address of the function's own result area,
+    /// which it receives first, when its results go in memory.
+    pub fn results_address(&self) -> Option<Mem> {
+        self.results
+    }
+
+    /// The result area for the function's calls whose results go in memory,
+    /// if it makes any.
+    pub fn result_area(&self) -> Option<Area> {
+        self.area
     }
 
     /// The frame's size in bytes below `%rbp`: a multiple of 16.
@@ -152,6 +207,62 @@ mod tests {
         assert_eq!(frame.slot("c"), Some(Mem { disp: -40 }));
         assert_eq!(frame.slot("d"), Some(Mem { disp: -56 }));
         assert_eq!(frame.size(), 64);
+    }
+
+    /// After the values: the slot for the function's own result area's
+    /// address, the slot for the address it passes, and at the bottom the
+    /// largest area that one of its calls needs (ADR-2026-11-03-0109).
+    #[test]
+    fn a_frame_holds_what_results_in_memory_need() {
+        let text = "func @three() -> i8, i8, i8 {\n^entry:\n  %c: i8 = const 1 @0\n  ret %c, %c, %c @0\n}\n\n\
+                    func @five() -> i8, i8, i8, i8, i8 {\n^entry:\n  \
+                    %a: i8, %b: i8, %c: i8 = call @three @0\n  ret %a, %b, %c, %a, %b @0\n}\n\n\
+                    func @f() -> i8, i8 {\n^entry:\n  %a: i8, %b: i8, %c: i8 = call @three @0\n  \
+                    %d: i8, %e: i8, %f: i8, %g: i8, %h: i8 = call @five @0\n  ret %a, %h @0\n}\n\n\
+                    locs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let frames: Vec<Frame> = m.funcs().map(|f| Frame::new(f).unwrap()).collect();
+        assert_eq!(frames[0].results_address(), Some(Mem { disp: -16 }));
+        assert_eq!(frames[0].result_area(), None);
+        assert_eq!(frames[0].size(), 16);
+        assert_eq!(frames[1].results_address(), Some(Mem { disp: -32 }));
+        let area = Area {
+            address: Mem { disp: -40 },
+            base: Mem { disp: -80 },
+        };
+        assert_eq!(frames[1].result_area(), Some(area));
+        assert_eq!(frames[1].size(), 48 + 32);
+        assert_eq!(frames[2].results_address(), None);
+        let area = Area {
+            address: Mem { disp: -72 },
+            base: Mem { disp: -128 },
+        };
+        assert_eq!(frames[2].result_area(), Some(area));
+        assert_eq!(frames[2].size(), 80 + 48);
+        assert_eq!(frames[2].slot("h"), Some(Mem { disp: -64 }));
+    }
+
+    /// The slots for the addresses come after both slots of each `i128`,
+    /// and an area holds each `i128` result in 16 bytes, 16-byte aligned.
+    #[test]
+    fn an_i128_among_results_in_memory_counts_two_slots_and_16_bytes() {
+        let text = "func @g(%a: i128) -> i8, i128 {\n^entry:\n  %b: i8 = trunc %a @0\n  ret %b, %a @0\n}\n\n\
+                    func @f(%a: i128) -> i128, i128 {\n^entry:\n  \
+                    %b: i8, %c: i128 = call @g %a @0\n  ret %c, %a @0\n}\n\n\
+                    locs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let frames: Vec<Frame> = m.funcs().map(|f| Frame::new(f).unwrap()).collect();
+        assert_eq!(frames[0].slot("b"), Some(Mem { disp: -24 }));
+        assert_eq!(frames[0].results_address(), Some(Mem { disp: -32 }));
+        assert_eq!(frames[0].size(), 32);
+        assert_eq!(frames[1].slot("c"), Some(Mem { disp: -40 }));
+        assert_eq!(frames[1].results_address(), Some(Mem { disp: -48 }));
+        let area = Area {
+            address: Mem { disp: -56 },
+            base: Mem { disp: -96 },
+        };
+        assert_eq!(frames[1].result_area(), Some(area));
+        assert_eq!(frames[1].size(), 64 + 32);
     }
 
     fn prologue_of(size: i32) -> String {

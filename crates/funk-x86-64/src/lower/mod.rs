@@ -12,7 +12,9 @@
 //! block comes next (ADR-2026-10-31-0334). A branch copies the values it
 //! passes into its successor's arguments as one parallel move (`moves.rs`,
 //! ADR-2026-10-31-0335). A call follows System V, with no extension of
-//! its arguments (`call.rs`, ADR-2026-11-02-1021).
+//! its arguments (`call.rs`, ADR-2026-11-02-1021). `ret` and `call` place
+//! and read any number of results as `abi::results` lays them out
+//! (ADR-2026-11-03-0109).
 //!
 //! An `i128` is a pair of eightbytes in two slots, and each op lowers it
 //! through a pair of registers, `%rax` for its low half and `%rdx` for its
@@ -36,7 +38,7 @@ use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
 
-use crate::abi::{Loc, layout, stack_arg_offset, symbol};
+use crate::abi::{self, Loc, layout, stack_arg_offset, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
@@ -121,6 +123,17 @@ impl<'f> Cx<'f> {
         self.asm
             .ins("movq", format_args!("{}, {}", slot.high(), hi.q()));
         Ok(())
+    }
+
+    /// The slots of each eightbyte of the value `name`, its low half first:
+    /// one, or two for an `i128`.
+    pub fn eightbytes(&self, name: &str) -> Result<Vec<Mem>, Unlowered> {
+        let slot = self.slot(name)?;
+        if self.width(name)? == width::PAIR {
+            Ok(vec![slot, slot.high()])
+        } else {
+            Ok(vec![slot])
+        }
     }
 
     /// Stores `lo` and `hi` into the two slots of the `i128` value `name`,
@@ -289,8 +302,13 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
     cx.asm.directive(format_args!(".p2align\t4"));
     cx.asm.label(&sym);
     frame::prologue(&mut cx.asm, cx.frame.size());
-    let words: Vec<usize> = f.params.iter().map(|d| width::words(&d.ty)).collect();
-    for (d, locs) in f.params.iter().zip(layout(&words).args) {
+    // The address of the function's result area, when its results go in
+    // memory, arrives first, as an argument of one eightbyte, and its
+    // parameters after it (ADR-2026-11-03-0109).
+    let hidden = cx.frame.results_address();
+    let mut incoming = Vec::with_capacity(f.params.len() + 1);
+    incoming.extend(hidden.map(|slot| ("the address of the result area".to_string(), slot)));
+    for d in &f.params {
         let Some(slot) = cx.frame.slot(&d.name) else {
             out.push(at(
                 f,
@@ -300,12 +318,19 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
             ));
             return None;
         };
-        for (loc, to) in locs.into_iter().zip([slot, slot.high()]) {
+        incoming.push((format!("parameter %{}", d.name), slot));
+    }
+    let words = abi::passed(
+        usize::from(hidden.is_some()),
+        f.params.iter().map(|d| width::words(&d.ty)),
+    );
+    for ((what, slot), locs) in incoming.iter().zip(layout(&words).args) {
+        for (loc, to) in locs.into_iter().zip([*slot, slot.high()]) {
             match loc {
                 Loc::Reg(reg) => cx.asm.ins("movq", format_args!("{}, {to}", reg.q())),
                 Loc::Stack(on_stack) => {
                     let Some(disp) = stack_arg_offset(on_stack) else {
-                        let why = format!("parameter %{} is out of the reach of %rbp", d.name);
+                        let why = format!("{what} is out of the reach of %rbp");
                         out.push(at(f, entry, None, why));
                         return None;
                     };

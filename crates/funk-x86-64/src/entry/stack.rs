@@ -19,9 +19,9 @@
 
 use std::collections::HashMap;
 
-use funk_ir::{Func, Module};
+use funk_ir::{Func, Module, Op};
 
-use crate::abi::pushed_words;
+use crate::abi::{self, pushed_words, results::Layout};
 use crate::lower::callee;
 use crate::width;
 
@@ -57,12 +57,7 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
             let ops = f.body.blocks.iter().flat_map(|b| &b.ops);
             ops.filter_map(|op| {
                 let i = *index.get(callee(op)?)?;
-                let args: Vec<usize> = op
-                    .operands
-                    .iter()
-                    .map(|x| types.get(x.as_str()).copied().unwrap_or(1))
-                    .collect();
-                let words = u64::try_from(pushed_words(&args)).unwrap_or(u64::MAX);
+                let words = u64::try_from(pushed_words(&passed(op, &types))).unwrap_or(u64::MAX);
                 Some((i, words.saturating_mul(8)))
             })
             .collect()
@@ -113,6 +108,21 @@ fn value_words(f: &Func) -> HashMap<&str, usize> {
         .chain(blocks.flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))));
     defs.map(|d| (d.name.as_str(), width::words(&d.ty)))
         .collect()
+}
+
+/// The eightbytes of each argument that the call `op` passes, as
+/// `abi::call` lays them out: the address of its result area first when its
+/// results go in memory (ADR-2026-11-03-0109), then its operands, of the
+/// eightbytes that `types` gives. Lowering has checked the layout, so one
+/// that fails here cannot be built and counts nothing more.
+fn passed(op: &Op, types: &HashMap<&str, usize>) -> Vec<usize> {
+    let layout = Layout::of_types(op.results.iter().map(|d| &d.ty));
+    let hidden = layout.map_or(0, |l| l.hidden_arguments());
+    let args = op.operands.iter();
+    abi::passed(
+        hidden,
+        args.map(|x| types.get(x.as_str()).copied().unwrap_or(1)),
+    )
 }
 
 /// The strongly connected components of the call graph `calls`, by
@@ -255,6 +265,62 @@ mod tests {
                 need(16 + 32 + pushed + g, false),
                 "{params}"
             );
+        }
+    }
+
+    /// With the address of a result area first, four `i64` arguments leave
+    /// one register for an `i128`, which then goes on the stack whole.
+    #[test]
+    fn the_address_of_a_result_area_moves_an_i128_to_the_stack() {
+        use funk_ir::{Registry, parse};
+        let params = "%a: i64, %b: i64, %c: i64, %d: i64, %x: i128";
+        for (results, values, defs, pushed) in [
+            ("i128", "%x", "%r: i128", 0),
+            ("i128, i64", "%x, %a", "%r: i128, %s: i64", 16),
+            (
+                "i64, i128, i1",
+                "%a, %x, %t",
+                "%r: i64, %s: i128, %u: i1",
+                16,
+            ),
+        ] {
+            let text = format!(
+                "func @g({params}) -> {results} {{\n^entry:\n  %t: i1 = const true @0\n  \
+                 ret {values} @0\n}}\n\n\
+                 func @f({params}) {{\n^entry:\n  {defs} = call @g %a, %b, %c, %d, %x @0\n  \
+                 ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+            );
+            let m = parse(&text, &Registry::core()).unwrap_or_else(|e| panic!("{e}\n{text}"));
+            let g = 16 + 64;
+            assert_eq!(
+                needs(&m, &[64, 32])[1],
+                need(16 + 32 + pushed + g, false),
+                "{results}"
+            );
+        }
+    }
+
+    /// A call whose results go in memory passes the area's address first,
+    /// so six arguments push one word and its padding (ADR-2026-11-03-0109).
+    #[test]
+    fn the_address_of_a_result_area_counts_among_the_arguments() {
+        let i64 = funk_ir::dialects::core::int_type(64);
+        for (results, pushed) in [(0, 0), (1, 0), (2, 0), (3, 16), (9, 16)] {
+            let mut m = Module::new();
+            let here = m.locs.push(Location::Unknown);
+            let mut call = Op::new("call", here).attr(Attr::Sym("g".into()));
+            for _ in 0..6 {
+                call = call.operand("x");
+            }
+            for k in 0..results {
+                call = call.result(format!("r{k}"), i64.clone());
+            }
+            let ret = || Op::new("ret", here);
+            let f = Func::new("f").block(Block::new("entry").op(call).op(ret()));
+            let m = m
+                .func(f)
+                .func(Func::new("g").block(Block::new("entry").op(ret())));
+            assert_eq!(needs(&m, &[16, 16])[0], need(32 + pushed + 32, false));
         }
     }
 

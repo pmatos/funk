@@ -5,10 +5,10 @@
 # of the high ones. ^body passes ^loop's arguments back to it %n times:
 # swapped, %y and %x, in swap_first and swap_second, and rotated, %y, %z
 # and %x, in rotate_first, rotate_second and rotate_third. Each returns
-# one of them, as the backend returns at most one value, so together they
-# show the whole order. The values are the signed minimum, the signed
-# maximum and -1, and values whose halves differ, and %n is 0, 1, 2, 3
-# and 7 for a swap, and 0 to 4 for a rotation.
+# one of them, and together they show the whole order. The values are
+# the signed minimum, the signed maximum and -1, and values whose halves
+# differ, and %n is 0, 1, 2, 3 and 7 for a swap, and 0 to 4 for a
+# rotation.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 tests = [

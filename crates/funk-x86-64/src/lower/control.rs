@@ -9,25 +9,26 @@
 //! Native code holds no poison (ADR-2026-10-30-2248): a branch on poison is
 //! UB in the source, and here it goes one way or the other.
 //!
-//! `ret` puts its value, if it has one, in the result register, then
-//! returns (ADR-2026-10-30-1232). An `i1` result is returned as 0 or 1 in
-//! all of `%rax`. That is more than C gives for a `_Bool` result, which
-//! defines only bits 0 to 7, so code that calls C may rely only on `%al`.
-//! A function with more than one result needs a convention for the others,
-//! which #31 decides; until then the backend reports it at the `ret`.
+//! `ret` puts its values where the result convention says, then returns
+//! (ADR-2026-11-03-0109): one or two eightbytes in `%rax` and `%rdx`, and
+//! more in the caller's result area, whose address it returns in `%rax`.
+//! An `i1` result is returned as 0 or 1 in all of its eightbyte. That is
+//! more than C gives for a `_Bool` result, which defines only bits 0 to 7,
+//! so code that calls C may rely only on `%al` (ADR-2026-10-30-1232).
 //!
 //! An `i128` passes to a block argument as two copies of the parallel move,
-//! one per half, and returns in `%rdx:%rax` (ADR-2026-11-03-010730,
-//! ADR-2026-11-03-0108).
+//! one per half (ADR-2026-11-03-010730). It returns as two eightbytes: alone
+//! in `%rdx:%rax`, and among other results in the area
+//! (ADR-2026-11-03-0108, ADR-2026-11-03-0109).
 
 use funk_ir::{Op, Succ};
 
 use super::moves::{Src, Step, sequence};
 use super::{Cx, Lower, Unlowered};
-use crate::abi::{RESULT_HIGH_REG, RESULT_REG};
+use crate::abi::results::Layout;
 use crate::asm::{Mem, Reg};
 use crate::frame;
-use crate::width::{self, Ext, PAIR};
+use crate::width::PAIR;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -135,30 +136,18 @@ fn edge(cx: &mut Cx<'_>, s: &Succ, steps: &[Step<Mem>], ends: bool) {
     }
 }
 
-/// `ret %a`, or `ret` with no value.
+/// `ret %a, %b`, with any number of values.
 fn ret(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
-    match op.operands.as_slice() {
-        [] => {}
-        [v] => {
-            let w = cx.width(v)?;
-            if w == PAIR {
-                cx.load_pair(RESULT_REG, RESULT_HIGH_REG, v)?;
-            } else {
-                cx.load(RESULT_REG, v)?;
-            }
-            if w == 1 {
-                width::extend(&mut cx.asm, Ext::Zero, 1, RESULT_REG);
-            }
-        }
-        vs => {
-            return Err(format!(
-                "ret returns {} values: the x86-64 backend returns at most one value \
-                 so far",
-                vs.len()
-            )
-            .into());
-        }
+    let mut widths = Vec::with_capacity(op.operands.len());
+    let mut from = Vec::with_capacity(op.operands.len());
+    for v in &op.operands {
+        let w = cx.width(v)?;
+        widths.push(w);
+        from.extend(cx.eightbytes(v)?.into_iter().map(|slot| (slot, w)));
     }
+    let layout = Layout::new(&widths)?;
+    let address = cx.frame.results_address();
+    layout.give(&mut cx.asm, address, &from)?;
     frame::epilogue(&mut cx.asm);
     Ok(())
 }

@@ -4,9 +4,8 @@
 # leaves as it was. sink takes two arguments and returns nothing, and
 # call_sink passes it its own two and returns the second. seven takes no
 # argument and returns one value, and call_seven returns what it gets.
-# The backend returns at most one value until #31, so functions and
-# calls with several results are in call-several.fir, whose tests are
-# all interpreter-only.
+# Functions and calls with several results are in call-several.fir and
+# the several-iN.fir modules.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 tests = [
