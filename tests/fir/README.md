@@ -259,3 +259,15 @@ results of mixed widths and calls with six or more arguments whose
 results go in memory, so that some arguments go on the stack.
 `results` and `call-several`, interpreter-only until #31, are
 differential.
+
+The texts of #21 that came after #31 return an `i128` among several
+results, which goes in the result area at an offset that is a multiple
+of 16, low half first. `several-i128` returns an `i128` first, in the
+middle, last, and twice, among narrower results, poison in an `i128`
+next to defined results and the reverse, and a frozen value twice.
+`several-pairs-i128` returns an `i128` next to an `i64` in either order,
+and two `i128`s, passes an `i128` result on to other calls, and hits UB
+and runs out of fuel in callees that return `i128`s among other results.
+`several-args-i128` passes `i128` arguments to calls whose results go in
+memory, so that the area's address takes `%rdi` and some of them go on
+the stack, and recurses 20 deep returning two `i128`s around an `i64`.

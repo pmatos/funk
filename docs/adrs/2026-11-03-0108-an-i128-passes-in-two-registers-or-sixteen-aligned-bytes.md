@@ -48,6 +48,16 @@ and the entry's stack figure (ADR-2026-11-02-1132).
   at the call.
 - **The result.** `ret` of an `i128` puts its low half in `%rax` and its
   high half in `%rdx`, and a call stores both into its result's slots.
+  Next to other results it goes in the caller's result area, as
+  ADR-2026-11-03-0109 lays results out.
+- **The result area's address.** When a call's results go in memory, the
+  area's address is its first argument, of one eightbyte
+  (ADR-2026-11-03-0109). The layout reads it first, in the caller, the
+  prologue and the stack figure alike (`abi::passed`), so it takes
+  `%rdi`, and an `i128` looks for its pair from `%rsi` on: after four
+  one-eightbyte arguments it finds only `%r9` and goes on the stack. C
+  passes the address of a structure that it returns in memory the same
+  way.
 - **The stack figure** counts the words that a call pushes from the same
   layout, by the eightbytes of the call's operands.
 - **The executable.** The wrapper parses an `i128` argument into two
@@ -75,12 +85,15 @@ that `abi::call` reads.
 
 - C code can call a funk function with `__int128` arguments and result,
   in any of the layouts above; a C program linked with the object file
-  was checked by hand with gcc 16 and clang on the four prototypes.
+  was checked by hand with gcc 16 and clang on the four prototypes, and
+  on functions that return `{i8, i128, i64}`, `{i128, i128}`, and an
+  `i128` among other results with `i128` arguments that the area's
+  address moves to the stack.
 - A call with `i128` arguments may leave a register unused and a hole on
   the stack.
 - The runtime's value routines grew past what `runtime.s` can hold
   within its budget (ADR-2026-10-28-0724), so they move to
   `entry/values.s`, which follows it in the entry file.
-- Where an `i128` goes when a function returns several values is #31's
-  to decide; whichever of #21 and #31 lands second tests an `i128` among
-  several results.
+- An `i128` among several results, and `i128` arguments of a call whose
+  results go in memory, follow ADR-2026-11-03-0109 and the layout above.
+  #21 lands after #31, so it tests both.
