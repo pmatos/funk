@@ -34,14 +34,22 @@
 # give -2 and 2. @srem_mul_udiv and @urem_mul_sdiv mix a signed and an
 # unsigned division, and give -1 and 1 on -56 and 3.
 #
+# The three functions of lines 516 to 545 keep LLVM's names with simplify
+# spelled correctly. LLVM's names misspell it, dropping its second i, and
+# the repository's spelling check rejects them (ADR-2026-11-03-1614), so
+# each of their tests' from names the function by its file and lines.
+# @simplify_urem_of_mul, a urem by 10 of a mul nuw by 30, gives 0 on 0, 3
+# and 8, and poison on 9 and -1, where the mul's flag breaks, which LLVM's
+# 0 refines. Its negative tests show what the fold needs: with nsw for
+# nuw, @simplify_urem_of_mul_fail_bad_flag gives 6 on -1, as the mul gives
+# 226 unsigned; with 31, not a multiple of 10,
+# @simplify_urem_of_mul_fail_bad_mod gives 1 on 1.
+#
 # The file's functions that neither this module nor
 # instsimplify-rem-widths holds are left out: those on vectors or undef;
 # @rem4, which calls a function the file does not define; and @rem5 and
 # @rem8, whose fold rests on shl nsw and shl nuw, flags that fir's shl
-# does not have. The three functions of lines 516 to 545, a fold of a urem
-# of a mul nuw by a multiple of the divisor and two negative tests, are
-# left out too: LLVM misspells simplify in their names, which the
-# repository's spelling check rejects, and fir keeps LLVM's names.
+# does not have.
 source = { file = "llvm/test/Transforms/InstSimplify/rem.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }
 tests = [
   { func = "@zero_dividend", args = ["5"], results = [{ values = ["0"], witness = [] }], from = "@zero_dividend" },
@@ -145,4 +153,11 @@ tests = [
   { func = "@urem_mul_sdiv", args = ["7", "2"], results = [{ values = ["0"], witness = [] }], from = "@urem_mul_sdiv" },
   { func = "@urem_mul_sdiv", args = ["-128", "-1"], expect = "ub", from = "@urem_mul_sdiv" },
   { func = "@urem_mul_sdiv", args = ["7", "0"], expect = "ub", from = "@urem_mul_sdiv" },
+  { func = "@simplify_urem_of_mul", args = ["0"], results = [{ values = ["0"], witness = [] }], from = "rem.ll lines 516 to 523, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul", args = ["3"], results = [{ values = ["0"], witness = [] }], from = "rem.ll lines 516 to 523, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul", args = ["8"], results = [{ values = ["0"], witness = [] }], from = "rem.ll lines 516 to 523, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul", args = ["9"], expect = ["poison"], from = "rem.ll lines 516 to 523, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul", args = ["-1"], expect = ["poison"], from = "rem.ll lines 516 to 523, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul_fail_bad_flag", args = ["-1"], results = [{ values = ["6"], witness = [] }], from = "rem.ll lines 525 to 534, whose LLVM name misspells simplify" },
+  { func = "@simplify_urem_of_mul_fail_bad_mod", args = ["1"], results = [{ values = ["1"], witness = [] }], from = "rem.ll lines 536 to 545, whose LLVM name misspells simplify" },
 ]
