@@ -52,12 +52,13 @@ and the entry's stack figure (ADR-2026-11-02-1132).
   ADR-2026-11-03-0109 lays results out.
 - **The result area's address.** When a call's results go in memory, the
   area's address is its first argument, of one eightbyte
-  (ADR-2026-11-03-0109). The layout reads it first, in the caller, the
-  prologue and the stack figure alike (`abi::passed`), so it takes
-  `%rdi`, and an `i128` looks for its pair from `%rsi` on: after four
-  one-eightbyte arguments it finds only `%r9` and goes on the stack. C
-  passes the address of a structure that it returns in memory the same
-  way.
+  (ADR-2026-11-03-0109). The layout reads it first everywhere: the
+  prologue and the stack figure build their list with `abi::passed`, and
+  `lower/call.rs` and the entry wrapper pass the address as their first
+  `Arg`. So it takes `%rdi`, and an `i128` looks for its pair from
+  `%rsi` on: after four one-eightbyte arguments it finds only `%r9` and
+  goes on the stack. C passes the address of a structure that it returns
+  in memory the same way.
 - **The stack figure** counts the words that a call pushes from the same
   layout, by the eightbytes of the call's operands.
 - **The executable.** The wrapper parses an `i128` argument into two
