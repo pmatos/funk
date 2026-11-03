@@ -1,6 +1,6 @@
 # One start-up constructor records closed standard descriptors, the workspace's only unsafe code
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-03-0107
 
 ## Context
 
