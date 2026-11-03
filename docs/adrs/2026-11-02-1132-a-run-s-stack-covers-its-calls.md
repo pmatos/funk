@@ -33,11 +33,15 @@ outgrows its stack reports.
 - C and Rust programs run on the process's stack, whose size is the soft
   `RLIMIT_STACK` (`ulimit -s`): 8 MiB by default. Users know that knob.
 
-The human ruled on 2026-11-02, on
-[PR #90](https://github.com/pmatos/funk/pull/90): a run caps the stack it
-reserves at the process's stack limit, `ulimit -s`, and reports that it ran
-out of stack when it outgrows it. `ulimit -s unlimited` lifts the cap to
-memory and swap, so fir keeps no depth limit of its own.
+The question put to the human, on
+[PR #90](https://github.com/pmatos/funk/pull/90), was how much stack a
+recursive run should reserve, then as much as memory and swap. A run from
+which no cycle is reachable reserves exactly its figure, which
+ADR-2026-10-30-1233 keeps out of `ulimit -s`, so it was not in question.
+The human ruled on 2026-11-02, with option 2 of three: a run caps the
+stack it reserves at the process's stack limit, `ulimit -s`, and reports
+that it ran out of stack when it outgrows it. `ulimit -s unlimited` lifts
+the cap to memory and swap, so fir keeps no depth limit of its own.
 
 These points are one decision, the one ADR-2026-10-30-1233 leaves to
 [#20](https://github.com/pmatos/funk/issues/20): the figure says which runs
@@ -105,6 +109,9 @@ the report what a run that outgrows it says.
   frame larger than the limit could never run, which ADR-2026-10-30-1233
   rejects; a function from which no cycle is reachable cannot outgrow its
   figure, so a cap protects nothing there.
+- **Cap a recursive run below its figure** when `ulimit -s` is smaller.
+  Its frames could not run even when it makes no call within a cycle,
+  which ADR-2026-10-30-1233 rejects for any function.
 - **A fixed huge reservation**, such as half the address space. A number
   with no meaning, and the same cost as memory and swap.
 - **Grow the stack on demand** from a `PROT_NONE` reservation, in the
@@ -121,8 +128,9 @@ the report what a run that outgrows it says.
   stack, whatever its calls, and `ulimit -s` does not bound it.
 - By default a recursive run gets 8 MiB, as a C or Rust program does, or
   its figure when that is more. A run that recurses without end reports
-  that it ran out within milliseconds, and touches no more than that. A valid recursion that
-  needs more stack reports it too, and runs under a larger `ulimit -s`.
+  that it ran out within milliseconds, and touches no more than that. A
+  valid recursion that needs more stack reports it too, and runs under a
+  larger `ulimit -s`.
 - Under `ulimit -s unlimited` a recursive run goes as deep as memory and
   swap allow. Then, under default overcommit, a run that recurses without
   end fills memory and swap, slowing the whole machine, until an OOM
@@ -138,12 +146,15 @@ the report what a run that outgrows it says.
 - The figure follows the lowering: `lower/call.rs` gives a call's callee,
   and `abi::pushed_words`, which the call emitter `abi::call` uses
   (ADR-2026-11-02-1428), the words it pushes.
-- The differential harness runs a test's native executable with only a
-  timeout. A native run that outgrows its stack exits with 2, a failure
-  where `fir-ref` returns. Under the default `ulimit -s` a differential
-  test whose recursion never ends natively, such as a miscompiled
-  recursive function, ends at once; under `ulimit -s unlimited` it would
-  fill memory as above. [#92](https://github.com/pmatos/funk/issues/92)
-  runs native code under a data limit, and lands before this change.
+- The differential harness runs a test's native executable under a limit
+  of 1 GiB on its data and its address space
+  ([#92](https://github.com/pmatos/funk/issues/92),
+  [PR #102](https://github.com/pmatos/funk/pull/102)). A native run that
+  outgrows its stack exits with 2, a failure where `fir-ref` returns.
+  Under the default `ulimit -s` a differential test whose recursion never
+  ends natively, such as a miscompiled recursive function, ends at once;
+  under `ulimit -s unlimited` the runtime halves its request until the
+  stack fits under that limit, so the run still ends, after touching less
+  than 1 GiB.
 - A funk function that C code calls still runs on its caller's stack
   (ADR-2026-10-30-1230).

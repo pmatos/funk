@@ -5,12 +5,14 @@
 //!
 //! A run whose outcome depends on `ulimit -s` sets it for its own process,
 //! through `sh`, since the limit that the tests inherit differs from machine
-//! to machine; the tests' own process keeps its limit. A run that recurses
-//! without end is made under a finite `ulimit -s`, or under `ulimit -d`, a
-//! limit on the data a process maps, and `ulimit -v`, which binds even on a
-//! kernel that ignores the first. Under `ulimit -s unlimited` alone its
-//! stack would be as large as the machine's memory and swap, and the run
-//! would use them all before it reached the end.
+//! to machine; the tests' own process keeps its limit. Raising it, to
+//! 64 MiB or to `unlimited`, needs a hard limit at least that high, as
+//! Linux gives by default. Every run of a recursive function is made under
+//! `ulimit -v`, a limit on the address space a process maps, and some also
+//! under `ulimit -d`, a limit on its data. Under `ulimit -s unlimited` alone
+//! a recursive run's stack would be as large as the machine's memory and
+//! swap, and a run that recursed without end, which a regression could
+//! make of any run here, would use them all before it reached the end.
 
 #![cfg(unix)]
 
@@ -117,9 +119,11 @@ fn run_limited(kib: u64, exe: &Path, args: &[&str]) -> Output {
     run_under(&[&data, &space], exe, args)
 }
 
-/// An address space far larger than any run here maps, set with each
-/// stack limit below: under it, a runtime that ignored `ulimit -s` would
-/// fail a test that recurses without end instead of filling the machine.
+/// A limit on the address space, 1 GiB, set with each stack limit below,
+/// so that no run here can fill the machine: under it, a runtime that
+/// ignored `ulimit -s` would fail a test that recurses without end
+/// instead, and under `ulimit -s unlimited` the runtime halves memory and
+/// swap until the stack fits, which still leaves far more than 8 MiB.
 const GUARD: &str = "-v 1048576";
 
 /// The stack limit that Linux gives a process by default, 8 MiB, and its
@@ -131,12 +135,17 @@ const DEFAULT_BYTES: u64 = 8192 * 1024;
 const SMALL: [&str; 2] = ["-s 1024", GUARD];
 const SMALL_BYTES: u64 = 1024 * 1024;
 
+/// A stack limit that is not a whole number of pages, 1023 KiB, and its
+/// bytes rounded down to a page, which the runtime reserves.
+const ODD: [&str; 2] = ["-s 1023", GUARD];
+const ODD_BYTES: u64 = 1023 * 1024 / 4096 * 4096;
+
 /// A large stack limit: 64 MiB.
 const LARGE: [&str; 2] = ["-s 65536", GUARD];
 
 /// No stack limit (`RLIM_INFINITY`): a recursive run's stack is then as
-/// large as memory and swap.
-const UNLIMITED: [&str; 1] = ["-s unlimited"];
+/// large as memory and swap, or under the guard as large as fits in it.
+const UNLIMITED: [&str; 2] = ["-s unlimited", GUARD];
 
 /// Checks that `out` is the report of a run of `name` by the program
 /// `program` that outgrew its stack, and returns the bytes it names: one
@@ -283,15 +292,17 @@ fn recursion_that_fits_its_stack_returns() {
 }
 
 /// A recursion that needs more stack than `ulimit -s` gives reports that
-/// it ran out of exactly the limit, and returns under a larger one. Each
-/// call of `@count` takes 80 bytes, so 50,000 of them need about 4 MB and
-/// 200,000 about 16 MB.
+/// it ran out of exactly the limit, rounded down to a page, and returns
+/// under a larger one. Each call of `@count` takes 80 bytes, so 50,000 of
+/// them need about 4 MB and 200,000 about 16 MB.
 #[test]
 fn recursion_that_outgrows_a_small_stack_limit_runs_under_a_larger_one() {
     let exe = build("recursion-limits", &recursive());
     let program = exe.display().to_string();
     let out = run_under(&SMALL, &exe, &["@count", "50000"]);
     assert_eq!(ran_out(&out, &program, "@count"), SMALL_BYTES);
+    let out = run_under(&ODD, &exe, &["@count", "50000"]);
+    assert_eq!(ran_out(&out, &program, "@count"), ODD_BYTES);
     returned(&run_under(&DEFAULT, &exe, &["@count", "50000"]), "50000");
     let out = run_under(&DEFAULT, &exe, &["@count", "200000"]);
     assert_eq!(ran_out(&out, &program, "@count"), DEFAULT_BYTES);
