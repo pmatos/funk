@@ -27,11 +27,10 @@ theorem nextTokP_lt (i : s.Pos) (p : TextPos) :
     have := length_lt_of_peekP h
     omega
   | case4 => intro t j q hn; cases hn
-  | case5 i p i₁ i₂ h₁ body hfd h hws hnl ih =>
-    intro t j q hn
+  | case5 i p i₁ i₂ h₁ n j hc h hws hnl ih =>
+    intro t j' q hn
     have := ih hn
-    rw [chars_skipWhileP] at this
-    have := length_dropWhile_le notLineFeed (chars i₂)
+    have := commentP_le hc
     have := length_lt_of_peekP h₁
     have := length_lt_of_peekP h
     omega

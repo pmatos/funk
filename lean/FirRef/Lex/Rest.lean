@@ -83,15 +83,14 @@ theorem lexFrom_eq (i : s.Pos) (p : TextPos) (acc : List Token) :
     rcases hc with rfl | rfl <;> rw [lexFrom]
   | case3 i p i₁ h hc ih =>
     rw [← ih, chars_of_peekP h, lexFrom]
-  | case4 i p i₁ i₂ h₁ body c' n hfd h =>
+  | case4 i p i₁ i₂ h₁ c' n hc h =>
     rw [chars_of_peekP h, chars_of_peekP h₁, lexFrom]
-    simp only [body, takeWhileP_eq, List.reverse_nil, List.nil_append] at hfd
-    simp only [hfd]
+    simp only [commentP_inl hc]
     try rfl
-  | case5 i p i₁ i₂ h₁ body hfd h hws hnl ih =>
+  | case5 i p i₁ i₂ h₁ n j hc h hws hnl ih =>
+    obtain ⟨hfd, rfl, rfl⟩ := commentP_inr hc
     rw [← ih, chars_of_peekP h, chars_of_peekP h₁, lexFrom]
-    simp only [body, takeWhileP_eq, List.reverse_nil, List.nil_append, chars_skipWhileP] at hfd ⊢
-    simp only [hfd]
+    simp only [hfd, chars_skipWhileP, Nat.zero_add]
   | case6 i p c i₁ h hws hnl i₂ h₁ hs t j q hx | case7 i p c i₁ h hws hnl i₂ h₁ hs e hx =>
     rw [chars_of_peekP h, lexFrom_token p acc hws hnl (fun _ e _ => hs e), hx]
     try rfl

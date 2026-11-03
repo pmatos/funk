@@ -7,7 +7,9 @@ its characters that the spec's lexer reads (`String.toList`). `chars p` is
 the characters from the position `p` on, as that list: proofs and measures
 use it, and code never builds it. The functions here walk a position as the
 spec's lexer walks its list: `skipWhileP` is `List.dropWhile`, and
-`takeWhileP` is `List.takeWhile`.
+`takeWhileP` is `List.takeWhile`. `commentP` scans a comment's body as the
+spec's lexer does with `firstDisallowed` and `utf8Len`, without a list of
+its characters.
 -/
 
 namespace FirRef
@@ -74,8 +76,10 @@ theorem takeWhileP_eq (f : Char → Bool) (p : s.Pos) (acc : List Char) :
   | case2 p acc h hf ih => rw [ih, chars_next h, List.takeWhile_cons_of_pos hf]; simp
   | case3 p acc h hf => rw [chars_next h, List.takeWhile_cons_of_neg hf]; simp
 
-/-- The next character at `p` and the position after it, if any. -/
-def peekP (p : s.Pos) : Option (Char × s.Pos) :=
+/-- The next character at `p` and the position after it, if any. It is
+inlined, so that the code of its callers builds neither the option nor the
+pair. -/
+@[inline] def peekP (p : s.Pos) : Option (Char × s.Pos) :=
   if h : p = s.endPos then none else some (p.get h, p.next h)
 
 theorem chars_of_peekP {p q : s.Pos} {c : Char} (h : peekP p = some (c, q)) :
@@ -99,5 +103,78 @@ theorem length_lt_of_peekP {p q : s.Pos} {c : Char} (h : peekP p = some (c, q)) 
     (chars q).length < (chars p).length := by
   rw [chars_of_peekP h]
   simp
+
+theorem skipWhileP_endPos (f : Char → Bool) : skipWhileP f s.endPos = s.endPos := by
+  rw [skipWhileP]
+  simp
+
+theorem skipWhileP_of_pos {f : Char → Bool} {p : s.Pos} (h : p ≠ s.endPos)
+    (hf : f (p.get h) = true) : skipWhileP f p = skipWhileP f (p.next h) := by
+  rw [skipWhileP]
+  simp [h, hf]
+
+theorem skipWhileP_of_neg {f : Char → Bool} {p : s.Pos} (h : p ≠ s.endPos)
+    (hf : ¬f (p.get h) = true) : skipWhileP f p = p := by
+  rw [skipWhileP]
+  simp [h, hf]
+
+/-- Scans the body of a comment from `i`, `n` bytes into it, without a list
+of its characters: the first character that is not allowed outside
+strings, with its offset in bytes, or the body's width in bytes and the
+position of the line feed or the end of the text after it. Its only call
+to itself is a tail call. -/
+def commentP (i : s.Pos) (n : Nat) : (Char × Nat) ⊕ (Nat × s.Pos) :=
+  if h : i = s.endPos then .inr (n, i)
+  else if notLineFeed (i.get h) then
+    if allowedOutsideStrings (i.get h) then commentP (i.next h) (n + (i.get h).utf8Size)
+    else .inl (i.get h, n)
+  else .inr (n, i)
+termination_by (chars i).length
+decreasing_by exact length_chars_next h
+
+/-- `commentP` finds what the spec's lexer finds in a comment's body, the
+characters up to the next line feed: `firstDisallowed`, then `utf8Len` and
+`List.dropWhile`. -/
+theorem commentP_eq (i : s.Pos) (n : Nat) :
+    commentP i n = match firstDisallowed ((chars i).takeWhile notLineFeed) n with
+      | some x => .inl x
+      | none => .inr (n + utf8Len ((chars i).takeWhile notLineFeed), skipWhileP notLineFeed i) := by
+  fun_induction commentP i n with
+  | case1 n =>
+    simp [chars_endPos, firstDisallowed, utf8Len, skipWhileP_endPos]
+  | case2 i n h hf ha ih =>
+    rw [ih, chars_next h, List.takeWhile_cons_of_pos hf, skipWhileP_of_pos h hf]
+    simp only [firstDisallowed, ha, ↓reduceIte]
+    split <;> simp [utf8Len, Nat.add_assoc]
+  | case3 i n h hf ha =>
+    rw [chars_next h, List.takeWhile_cons_of_pos hf]
+    simp [firstDisallowed, ha]
+  | case4 i n h hf =>
+    rw [chars_next h, List.takeWhile_cons_of_neg hf, skipWhileP_of_neg h hf]
+    simp [firstDisallowed, utf8Len]
+
+theorem commentP_inl {i : s.Pos} {n : Nat} {x : Char × Nat} (h : commentP i n = .inl x) :
+    firstDisallowed ((chars i).takeWhile notLineFeed) n = some x := by
+  rw [commentP_eq] at h
+  split at h
+  · rename_i y hy
+    cases h
+    exact hy
+  · cases h
+
+theorem commentP_inr {i j : s.Pos} {n m : Nat} (h : commentP i n = .inr (m, j)) :
+    firstDisallowed ((chars i).takeWhile notLineFeed) n = none ∧
+      m = n + utf8Len ((chars i).takeWhile notLineFeed) ∧ j = skipWhileP notLineFeed i := by
+  rw [commentP_eq] at h
+  split at h
+  · cases h
+  · rename_i hy
+    simp only [Sum.inr.injEq, Prod.mk.injEq] at h
+    exact ⟨hy, h.1.symm, h.2.symm⟩
+
+theorem commentP_le {i j : s.Pos} {n m : Nat} (h : commentP i n = .inr (m, j)) :
+    (chars j).length ≤ (chars i).length := by
+  rw [(commentP_inr h).2.2, chars_skipWhileP]
+  exact length_dropWhile_le notLineFeed (chars i)
 
 end FirRef

@@ -270,14 +270,17 @@ def keywordC (kw : String) (s : σ) : Except ParseError (Unit × σ) :=
 theorem keywordC_eq (kw : String) (s : σ) : V (keywordC kw s) = U (keyword kw (view s)) :=
   expectC_eq _ _ _
 
-/-- `readOpLoc`, on a cursor. -/
-def readOpLocC (s : σ) : Except ParseError (LocRef × σ) :=
-  match uncons s with
+/-- `readOpLoc`, on what `uncons s` gave, so that a reader that looked at
+the next token reads it without taking it again. -/
+def opLocOf (s : σ) : Option (Token × σ) → Except ParseError (LocRef × σ)
   | some (⟨.locRef r, _⟩, s') => .ok (r, s')
   | _ => failC s "the op's location reference, such as @0"
 
+/-- `readOpLoc`, on a cursor. -/
+def readOpLocC (s : σ) : Except ParseError (LocRef × σ) := opLocOf s (uncons s)
+
 theorem readOpLocC_eq (s : σ) : V (readOpLocC s) = U (readOpLoc (view s)) := by
-  unfold readOpLocC
+  unfold readOpLocC opLocOf
   split
   · rename_i r p s' h
     rw [view_of_uncons h]

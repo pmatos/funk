@@ -90,7 +90,8 @@ theorem blocksLoop_eq (s : σ) (fs : List BFrame) : V (blocksLoop s fs) = bRun (
     simp only [bRun]
     rw [U_readRegions_lbrace]
     b_norm
-  | case15 s hd rs loc s₁ hl l params os fs hn ih =>
+  | case15 s hd rs loc s₁ l params os fs hn hl ih =>
+    change readOpLocC s = _ at hl
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
     simp only [bRun]
@@ -98,13 +99,15 @@ theorem blocksLoop_eq (s : σ) (fs : List BFrame) : V (blocksLoop s fs) = bRun (
     simp only [okBind]
     rw [← readOpLocC_eq, hl]
     b_norm
-  | case16 s hd rs fs loc s₁ hl hn ho =>
+  | case16 s hd rs fs loc s₁ ho hn hl =>
+    change readOpLocC s = _ at hl
     simp only [bRun]
     rw [U_readRegions_nil (not_head hn)]
     simp only [okBind]
     rw [← readOpLocC_eq, hl]
     rcases fs with _ | ⟨_ | _ | _, fs⟩ <;> first | rfl | exact absurd rfl (ho _ _ _ _)
-  | case17 s hd rs fs e hl hn =>
+  | case17 s hd rs fs e hn hl =>
+    change readOpLocC s = _ at hl
     simp only [bRun]
     rw [U_readRegions_nil (not_head hn)]
     simp only [okBind]

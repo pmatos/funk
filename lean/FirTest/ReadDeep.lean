@@ -8,14 +8,23 @@ and reads with loops that take no stack per level of nesting. This module
 imports `FirRef.Utf8`, as `fir-ref` does, so `Fir.parse` below runs as
 `FirRef.parse`.
 
-The checks parse texts nested 100,000 levels deep in regions, items and
-attributes, and a block of 100,000 ops, and get the decoder's verdict on
-each: the reader reads them whole. A lexer error at the end of a text is
-reported before a reader error at its start, as the spec reports it. On
-small texts, `readText` gives what the spec's lexer and `Text.readModule`
-give, errors included; here `Text.readModule` runs as `FirRef.readModule`,
-the same readers on a list of tokens. The last checks pin the axioms of the
-theorems to Lean's standard ones.
+The spec's readers take stack per level of nesting. Here, in the
+elaborator, they overflow the stack on attributes or items nested 800,000
+levels deep and on regions nested 400,000 deep, and the build fails. The
+first checks read deeper texts, one for each loop of the readers:
+attributes and items nested 1,000,000 levels deep, through `Fir.parse`,
+with the decoder's verdict on each, and regions nested 600,000 deep, with
+`readText` alone. They pass only because the readers that `fir-ref` runs
+take no stack per level; through `Fir.parse`, they also need
+`parse_eq_parse`.
+
+A lexer error at the end of a text is reported before a reader error at
+its start, as the spec reports it: `readText` runs the readers first, then
+looks for a lexer error when they fail. On small texts, `readText` gives
+what the spec's lexer and `Text.readModule` give, errors included; here
+`Text.readModule` runs as `FirRef.readModule`, the same readers on a list
+of tokens. The last checks pin the axioms of the theorems to Lean's
+standard ones.
 -/
 
 namespace FirTest
@@ -73,17 +82,16 @@ def lexError (text : String) : Option (Nat × Nat × String) :=
   | .ok _ => none
   | .error e => some (errorShown e)
 
-/-! # Deep and long texts -/
+/-! # Deep texts -/
 
-#guard parseError (deepRegionsText 100000) = some (200003, 5, "value %x is not defined in @f")
-#guard parseError (deepItemsText 100000) = some (2, 1, "a func's body holds blocks, not items")
-#guard parseError (deepAttrText 100000) = some (3, 3,
+-- `attrLoop`: the readers read the attribute whole, and the decoder rejects the op.
+#guard parseError (deepAttrText 1000000) = some (3, 3,
   "op ret does not decode: the dialect has no op with this name and these attributes, " ++
     "operand types and result types")
-#guard parseError (flatOpsText 100000) = none
-
--- The reader reads the deep items whole; the decoder is what rejects them.
-#guard readTextError (deepItemsText 100000) = none
+-- `itemsLoop`: the readers read the items whole, and the decoder rejects the first.
+#guard parseError (deepItemsText 1000000) = some (2, 1, "a func's body holds blocks, not items")
+-- `blocksLoop`: the readers read the regions whole.
+#guard readTextError (deepRegionsText 600000) = none
 
 /-! # Errors -/
 
@@ -94,14 +102,25 @@ def lateLexError : String := "}\n" ++ flatOpsText 1000 ++ "\x07"
 #guard parseError lateLexError = lexError lateLexError
 #guard readTextError lateLexError = lexError lateLexError
 
+/-- A text that the readers read up to a lexer error at its end, in a
+comment: they stop there, and the lexer's error is reported. -/
+def endLexError : String := flatOpsText 1000 ++ "// a\x07\n"
+
+#guard (lexError endLexError).isSome
+#guard parseError endLexError = lexError endLexError
+#guard readTextError endLexError = lexError endLexError
+
 /-- Texts that the readers reject, at their start, in the middle and at
-their end, and texts that the lexer rejects. -/
+their end, some after a comment with characters of several bytes, and
+texts that the lexer rejects. -/
 def badTexts : List String :=
   ["", "}", "func", "func @f( {", "func @f() {\n^e:\n  ret @0\n", deepRegionsText 3 ++ "}",
     "func @f() {\n^e:\n  %a: i32 = const 1\n}\n" ++ locsText, deepAttrText 3 ++ "locs", "\"abc",
-    "@99999999999", "func @f() -> i32 {\n^e:\n  ret 1 @0\n}\n" ++ locsText ++ "x", "- 1"]
+    "@99999999999", "func @f() -> i32 {\n^e:\n  ret 1 @0\n}\n" ++ locsText ++ "x", "- 1",
+    "// a\x07b\n" ++ locsText, "func @f() {\n// é" ++ String.singleton (Char.ofNat 0x1F600) ++ "x",
+    "func @f() {\n// é\n}"]
 
-#guard badTexts.all fun t => readTextError t = specReadError t
+#guard badTexts.all fun t => readTextError t = specReadError t && (readTextError t).isSome
 #guard [deepRegionsText 3, deepItemsText 3, deepAttrText 3, flatOpsText 3].all fun t =>
   readTextError t = specReadError t && (readTextError t).isNone
 

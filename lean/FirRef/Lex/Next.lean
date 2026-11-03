@@ -152,10 +152,9 @@ def nextTokP (i : s.Pos) (p : TextPos) :
       match _h₁ : peekP i₁ with
       | some ('/', i₂) =>
         if c = '/' then
-          let body := takeWhileP notLineFeed i₂ []
-          match firstDisallowed body 0 with
-          | some (c', n) => errorAt (p.advance (2 + n)) (codePoint c' ++ " is not allowed outside strings")
-          | none => nextTokP (skipWhileP notLineFeed i₂) (p.advance (2 + utf8Len body))
+          match _hc : commentP i₂ 0 with
+          | .inl (c', n) => errorAt (p.advance (2 + n)) (codePoint c' ++ " is not allowed outside strings")
+          | .inr (n, j) => nextTokP j (p.advance (2 + n))
         else
           match lexTokenP c i₁ p with
           | .ok (t, j, q) => .ok (⟨t, p⟩, some (j, q))
@@ -168,8 +167,7 @@ termination_by (chars i).length
 decreasing_by
   · exact length_lt_of_peekP _h
   · exact length_lt_of_peekP _h
-  · rw [chars_skipWhileP]
-    have := length_dropWhile_le notLineFeed (chars i₂)
+  · have := commentP_le _hc
     have := length_lt_of_peekP _h₁
     have := length_lt_of_peekP _h
     omega

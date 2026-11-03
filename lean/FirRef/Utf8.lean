@@ -47,17 +47,24 @@ def validUpTo (b : ByteArray) (i : Nat) : Nat :=
   else b.size
 termination_by b.size - i
 
+/-- The line of the byte `b[n]` and the offset of the first byte of that
+line, from the line feeds before it: `line` and `start` are those of the
+byte `b[i]`, and the bytes from `i` on are counted without a copy of
+them. Its only call to itself is a tail call. -/
+def lineOf (b : ByteArray) (n i line start : Nat) : Nat × Nat :=
+  if i < n then
+    if b[i]? = some 10 then lineOf b n (i + 1) (line + 1) (i + 1)
+    else lineOf b n (i + 1) line start
+  else (line, start)
+termination_by n - i
+
 /-- Parses the bytes of a file with the dialect `d`. -/
 def parseBytes {d : Dialect} [DialectText d] (b : ByteArray) : Except ParseError (Module d) :=
   match String.fromUTF8? b with
   | some text => Fir.parse text
   | none =>
     let n := validUpTo b 0
-    let valid := (b.extract 0 n).toList
-    let line := (valid.filter (· = 10)).length + 1
-    let lineStart := match valid.reverse.findIdx? (· = 10) with
-      | some k => n - k
-      | none => 0
+    let (line, lineStart) := lineOf b n 0 1 0
     .error ⟨⟨line, n - lineStart + 1⟩, "the text is not UTF-8"⟩
 
 end FirRef

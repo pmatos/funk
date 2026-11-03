@@ -42,7 +42,7 @@ variable {σ : Type} [Cursor σ]
 
 theorem readOpLocC_lt {s s' : σ} {loc : LocRef} (h : readOpLocC s = .ok (loc, s')) :
     (view s').length < (view s).length := by
-  unfold readOpLocC at h
+  unfold readOpLocC opLocOf at h
   split at h
   · rename_i r p s₁ hs
     simp only [Except.ok.injEq, Prod.mk.injEq] at h
@@ -85,8 +85,8 @@ def blocksLoop (s : σ) (fs : List BFrame) : Except ParseError (List SBlock × �
   | .regions hd done :: fs =>
     match _h : uncons s with
     | some (⟨.lbrace, _⟩, s₁) => blocksLoop s₁ (.blocks [] :: .regions hd done :: fs)
-    | _ =>
-      match _hl : readOpLocC s with
+    | u =>
+      match _hl : opLocOf s u with
       | .ok (loc, s₁) =>
         match fs with
         | .ops l params os :: fs => blocksLoop s₁ (.ops l params (hd.op done.reverse loc :: os) :: fs)
@@ -109,7 +109,7 @@ decreasing_by
   · omega
   · have := length_lt _h
     omega
-  · have := readOpLocC_lt _hl
+  · have := readOpLocC_lt (s := s) (by rw [readOpLocC, _h]; exact _hl)
     omega
 
 /-- What a frame completes: the blocks of a region or a body, a block, or

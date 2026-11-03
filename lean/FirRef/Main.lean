@@ -17,8 +17,9 @@ per level, each proved equal to its spec function and registered with
 `FirRef.printModule`, in time linear in the text apart from the digits of
 long integers, which `FirRef.printDecimal` splits at powers of ten (#41),
 and `Fir.parse` as `FirRef.parse`, which lexes each token from the text's
-positions when its readers ask for it, after a pass that finds the lexer's
-error, and decodes with `FirRef.decodeModule` (ADR-2026-11-03-1810).
+positions when its readers ask for it, lexes the whole text again only
+when they fail, to find a lexer error, and decodes with
+`FirRef.decodeModule` (ADR-2026-11-03-1810).
 `validate` runs the spec's validation check, which walks nested blocks with
 `FirRef.allBlocks` (ADR-2026-10-30-1742). `run` runs the spec's interpreter
 in its tree of choices, in scripted, exhaustive or sampled mode

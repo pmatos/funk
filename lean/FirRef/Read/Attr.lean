@@ -9,7 +9,9 @@ last first. Every call to itself is a tail call, and each consumes a token.
 `attrLoop_eq` proves that the loop computes it, errors included.
 
 `readAttrsC` reads the attributes of an op or an item, as long as one
-follows, with an accumulator.
+follows, with an accumulator. It looks at the next token to see whether an
+attribute starts there, and `attrFrom` reads the attribute from that token
+on, so that a cursor that lexes each token does not lex it again.
 -/
 
 namespace FirRef
@@ -186,13 +188,66 @@ theorem readAttrC_lt {s s' : σ} {a : Attr} (h : readAttrC s = .ok (a, s')) :
     (view s').length < (view s).length :=
   length_lt' (readAttrC_eq s) rfl h
 
+/-- `readAttrC`, after the word `w` of an applied attribute and its `(`,
+with `s₂` the cursor after them. -/
+def attrApp (w : String) (s₂ : σ) : Except ParseError (Attr × σ) :=
+  match uncons s₂ with
+  | some (⟨.rparen, _⟩, s₃) => attrLoop s₃ (some (.app w [])) []
+  | _ => attrLoop s₂ none [(w, [])]
+
+/-- `readAttrC s`, when `uncons s` gave the token `t` and the cursor `s₁`:
+a reader that looked at `t` reads the attribute without lexing `t` again. -/
+def attrFrom (s : σ) (t : Token) (s₁ : σ) : Except ParseError (Attr × σ) :=
+  match t with
+  | ⟨.word w, _⟩ =>
+    match uncons s₁ with
+    | some (⟨.lparen, _⟩, s₂) => attrApp w s₂
+    | _ => attrLoop s₁ (some (.word w)) []
+  | ⟨.int i, _⟩ => attrLoop s₁ (some (.int i)) []
+  | ⟨.str x, _⟩ => attrLoop s₁ (some (.str x)) []
+  | ⟨.sym x, _⟩ => attrLoop s₁ (some (.sym x)) []
+  | _ => failC s "an attribute"
+
+theorem attrFrom_eq {s s₁ : σ} {t : Token} (h : uncons s = some (t, s₁)) :
+    attrFrom s t s₁ = readAttrC s := by
+  rw [readAttrC, attrLoop]
+  split
+  · rename_i w p s₁' heq
+    rw [h] at heq
+    cases heq
+    simp only [attrFrom, attrApp]
+    rcases h1 : uncons s₁ with _ | ⟨⟨tk, q⟩, s₂⟩
+    · rfl
+    · cases tk <;> try rfl
+      dsimp only
+      rcases h2 : uncons s₂ with _ | ⟨⟨tk', q'⟩, s₃⟩
+      · rfl
+      · cases tk' <;> rfl
+  all_goals first
+    | (rename_i heq; rw [h] at heq; cases heq; rfl)
+    | skip
+  rename_i hw hi hx hy
+  rcases t with ⟨tk, p⟩
+  cases tk <;> first
+    | rfl
+    | exact absurd h (hw _ _ _)
+    | exact absurd h (hi _ _ _)
+    | exact absurd h (hx _ _ _)
+    | exact absurd h (hy _ _ _)
+
+theorem attrApp_eq {s s₁ s₂ : σ} {w : String} {p q : TextPos}
+    (h : uncons s = some (⟨.word w, p⟩, s₁)) (h₁ : uncons s₁ = some (⟨.lparen, q⟩, s₂)) :
+    attrApp w s₂ = readAttrC s := by
+  rw [← attrFrom_eq h]
+  simp only [attrFrom, h₁]
+
 /-- `readType`, on a cursor, with no stack per level. -/
 def readTypeC (s : σ) : Except ParseError ((Attr × TextPos) × σ) :=
   match uncons s with
   | some (⟨.word w, p⟩, s₁) =>
     match uncons s₁ with
-    | some (⟨.lparen, _⟩, _) =>
-      match readAttrC s with
+    | some (⟨.lparen, _⟩, s₂) =>
+      match attrApp w s₂ with
       | .ok (a, s') => .ok ((a, p), s')
       | .error e => .error e
     | _ => .ok ((.word w, p), s₁)
@@ -205,10 +260,10 @@ theorem readTypeC_eq (s : σ) : V (readTypeC s) = U (readType (view s)) := by
     split
     · rename_i q s₂ h₁
       have e := readAttrC_eq s
-      rw [view_of_uncons h, view_of_uncons h₁, U_readAttr_app] at e
+      rw [← attrApp_eq h h₁, view_of_uncons h, view_of_uncons h₁, U_readAttr_app] at e
       rw [view_of_uncons h, view_of_uncons h₁, readType]
       revert e
-      rcases readAttrC s with e | ⟨a, s'⟩ <;> rcases readAttrArgs (view s₂) with e' | ⟨args, r, hr'⟩ <;>
+      rcases attrApp w s₂ with e | ⟨a, s'⟩ <;> rcases readAttrArgs (view s₂) with e' | ⟨args, r, hr'⟩ <;>
         simp
     · rename_i hn
       rw [view_of_uncons h, readType]
@@ -232,21 +287,22 @@ theorem readTypeC_le {s s' : σ} {a : Attr × TextPos} (h : readTypeC s = .ok (a
 first. Its only call to itself is a tail call. -/
 def readAttrsC (s : σ) (acc : List (Attr × TextPos)) :
     Except ParseError (List (Attr × TextPos) × σ) :=
-  match uncons s with
-  | some (t, _) =>
+  match _hu : uncons s with
+  | some (t, s₁) =>
     if t.tok.startsAttr then
-      match _h : readAttrC s with
+      match _h : attrFrom s t s₁ with
       | .ok (a, s') => readAttrsC s' ((a, t.pos) :: acc)
       | .error e => .error e
     else .ok (acc.reverse, s)
   | none => .ok (acc.reverse, s)
 termination_by (view s).length
-decreasing_by exact readAttrC_lt _h
+decreasing_by exact readAttrC_lt ((attrFrom_eq _hu).symm.trans _h)
 
 theorem readAttrsC_eq (s : σ) (acc : List (Attr × TextPos)) :
     V (readAttrsC s acc) = (U (readAttrs (view s))).map fun (xs, r) => (acc.reverse ++ xs, r) := by
   fun_induction readAttrsC s acc with
   | case1 s acc t s₁ h hs a s' ha ih =>
+    rw [attrFrom_eq h] at ha
     have e := readAttrC_eq s
     rw [ha, view_of_uncons h] at e
     rw [ih, view_of_uncons h, readAttrs]
@@ -259,6 +315,7 @@ theorem readAttrsC_eq (s : σ) (acc : List (Attr × TextPos)) :
       subst hb hr'
       rcases readAttrs (view s') with e | ⟨xs, r', hr''⟩ <;> simp
   | case2 s acc t s₁ h hs e he =>
+    rw [attrFrom_eq h] at he
     have e' := readAttrC_eq s
     rw [he, view_of_uncons h] at e'
     rw [view_of_uncons h, readAttrs]

@@ -7,8 +7,9 @@ token from the text when a reader asks for it, so the readers take a text's
 tokens without a list of them. Its view is `lexToks`, the tokens from its
 state up to the lexer's first error, if any: when the text lexes without
 an error from there, they are the tokens that the spec's lexer gives
-(`lexToks_of_lexRest`). `fir-ref` runs `lexCheck` first, so its readers
-take a text's tokens only when the text has no lexer error.
+(`lexToks_of_lexRest`). At a lexer error the cursor ends, so the readers
+fail there, and `FirRef.readText` then runs `lexCheck` for the lexer's
+error.
 -/
 
 namespace FirRef
