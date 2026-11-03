@@ -3,7 +3,8 @@
 //! It is one assembly file: the fixed runtime in `runtime.s`, then what this
 //! module writes for the module being built. That is a wrapper for each
 //! function, which parses the function's arguments, calls it by the System V
-//! convention and prints its result, and the table `__funk_functions`, which
+//! convention and prints each of its results, in order
+//! (ADR-2026-11-03-0109), and the table `__funk_functions`, which
 //! gives each function's name as fir writes it (`@f`, `@"a b"`), its number
 //! of parameters, its wrapper, the bytes of stack that a run of it needs
 //! with every call it makes (`stack.rs`), and whether it is recursive. The
@@ -15,9 +16,12 @@
 mod stack;
 
 use funk_ir::text::print_symbol;
-use funk_ir::{Diagnostic, Func, Module};
+use funk_ir::{Diagnostic, Func, Module, Type};
 
-use crate::abi::{self, RESULT_REG};
+use crate::abi::{
+    self,
+    results::{Area, Layout},
+};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
@@ -82,35 +86,37 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
 /// needs `need` bytes below its return address, and the bytes of stack that
 /// the wrapper needs to run it.
 ///
-/// Lowering has already reported each parameter whose width the backend
-/// does not lower, and each `ret` with more than one value. The wrapper
-/// checks the signature again because a function that never reaches a
-/// `ret`, which branches allow, must still have results it can print.
+/// Lowering has already reported each parameter and each value whose width
+/// the backend does not lower. The wrapper checks the signature again
+/// because a function that never reaches a `ret`, which branches allow,
+/// must still have results it can print.
+///
+/// Its frame holds a slot per argument, which after the call holds a result
+/// instead, and more slots when there are more results than arguments. When
+/// the results go in memory it also holds the slot for the result area's
+/// address and, at its bottom, the area (ADR-2026-11-03-0109).
 fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnostic> {
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
-    let params = f
-        .params
-        .iter()
-        .map(|d| width::check(&d.ty))
-        .collect::<Result<Vec<u32>, String>>()
-        .map_err(report)?;
-    let result = match f.results.as_slice() {
-        [] => None,
-        [t] => Some(width::check(t).map_err(report)?),
-        ts => {
-            return Err(report(format!(
-                "the function returns {} values: the x86-64 backend returns at most one \
-                 value so far",
-                ts.len()
-            )));
-        }
-    };
-    let too_many = || report("the function has more parameters than a frame holds".into());
-    let size = size_for(params.len()).ok_or_else(too_many)?;
-    let slots = (1..=params.len())
+    let params = widths(f.params.iter().map(|d| &d.ty)).map_err(report)?;
+    let results = widths(&f.results).map_err(report)?;
+    let layout = Layout::new(&results).map_err(report)?;
+    let too_many = || report("the function has more values than a wrapper's frame holds".into());
+    let values = params.len().max(layout.places().len());
+    let slots = (1..=values + layout.hidden_arguments())
         .map(|k| displacement(k).map(|disp| Mem { disp }))
         .collect::<Option<Vec<Mem>>>()
         .ok_or_else(too_many)?;
+    let size = size_for(slots.len())
+        .and_then(|s| s.checked_add(layout.area()))
+        .ok_or_else(too_many)?;
+    let area = if layout.in_memory() {
+        Some(Area {
+            address: slots[values],
+            base: Mem { disp: -size },
+        })
+    } else {
+        None
+    };
     asm.directive(format_args!(".p2align\t4"));
     asm.label(&format!("__funk_entry_{i}"));
     asm.comment(format_args!("{}", print_symbol(&f.name)));
@@ -121,15 +127,29 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
         asm.ins("call", format_args!("__funk_rt_arg"));
         asm.ins("movq", format_args!("%rax, {at}"));
     }
-    let outgoing = abi::call(asm, &f.name, &slots).map_err(report)?;
-    if let Some(w) = result {
-        width::extend(asm, Ext::Sign, w, RESULT_REG);
-        asm.ins("movq", format_args!("{}, {}", RESULT_REG.q(), Reg::Rdi.q()));
+    let mut args = Vec::with_capacity(layout.hidden_arguments() + params.len());
+    args.extend(area.map(|a| a.address));
+    args.extend(&slots[..params.len()]);
+    if let Some(area) = area {
+        layout.pass(asm, area);
+    }
+    let outgoing = abi::call(asm, &f.name, &args).map_err(report)?;
+    let into = &slots[..layout.places().len()];
+    layout.receive(asm, area, into).map_err(report)?;
+    let rdi = Reg::Rdi;
+    for (w, slot) in results.iter().zip(into) {
+        asm.ins("movq", format_args!("{slot}, {}", rdi.q()));
+        width::extend(asm, Ext::Sign, *w, rdi);
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_value"));
     }
     frame::epilogue(asm);
     Ok(stack_need(need, size, outgoing))
+}
+
+/// The width of each of `types`, or why the backend does not lower one.
+fn widths<'t>(types: impl IntoIterator<Item = &'t Type>) -> Result<Vec<u32>, String> {
+    types.into_iter().map(width::check).collect()
 }
 
 /// The bytes of stack that a wrapper with a frame of `wrapper` bytes and

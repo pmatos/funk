@@ -4,13 +4,15 @@
 //! outgoing argument placement, symbol spelling and stack cleanup
 //! (ADR-2026-11-02-1428). Arguments and results move as their slots hold
 //! them, without extension (ADR-2026-11-02-1021). Every value lives in its
-//! slot, so nothing needs saving around the call. More than one result
-//! needs the convention of #31 and is reported at the call until then.
+//! slot, so nothing needs saving around the call. A call has any number of
+//! results, which [`crate::abi::results`] lays out (ADR-2026-11-03-0109):
+//! when they go in memory, the call passes the address of its frame's
+//! result area first, and copies each result out of the area after it.
 
 use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
-use crate::abi::{self, RESULT_REG};
+use crate::abi::{self, results::Layout};
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -27,32 +29,39 @@ pub fn callee(op: &Op) -> Option<&str> {
     }
 }
 
-/// `%r = call @f %a, %b`.
+/// `%r, %s = call @f %a, %b`.
 fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let Some(callee) = callee(op) else {
         return Err("call names its callee by one symbol".into());
     };
-    if op.results.len() > 1 {
-        return Err(format!(
-            "call returns {} values: the x86-64 backend returns at most one value so far",
-            op.results.len()
-        )
-        .into());
-    }
     for x in &op.operands {
         cx.width(x)?;
     }
+    let mut widths = Vec::with_capacity(op.results.len());
     for d in &op.results {
-        cx.width(&d.name)?;
+        widths.push(cx.width(&d.name)?);
     }
-    let args = op
-        .operands
+    let layout = Layout::new(&widths)?;
+    let area = if layout.in_memory() {
+        let area = cx.frame.result_area();
+        Some(area.ok_or("the frame has no result area for the call")?)
+    } else {
+        None
+    };
+    let mut args = Vec::with_capacity(layout.hidden_arguments() + op.operands.len());
+    args.extend(area.map(|a| a.address));
+    for x in &op.operands {
+        args.push(cx.slot(x)?);
+    }
+    let into = op
+        .results
         .iter()
-        .map(|x| cx.slot(x))
+        .map(|r| cx.slot(&r.name))
         .collect::<Result<Vec<_>, _>>()?;
-    abi::call(&mut cx.asm, callee, &args)?;
-    if let [r] = op.results.as_slice() {
-        cx.store(&r.name, RESULT_REG)?;
+    if let Some(area) = area {
+        layout.pass(&mut cx.asm, area);
     }
+    abi::call(&mut cx.asm, callee, &args)?;
+    layout.receive(&mut cx.asm, area, &into)?;
     Ok(())
 }

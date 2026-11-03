@@ -9,7 +9,7 @@ mod common;
 
 use std::path::Path;
 
-use common::{boundaries, build, expect, module, spell, text, try_build, wrap};
+use common::{boundaries, build, expect, module, spell, wrap};
 use funk_x86_64::width::SUPPORTED as WIDTHS;
 
 /// A recursive factorial at `iW`, with no flags: `%n` times the factorial
@@ -244,33 +244,4 @@ func @\"a b\"(%x: {t}) -> {t} {{
             expect(&exe, &["@\"a b\"", &s], &[&spell(w, wrap(w, v + 2))]);
         }
     }
-}
-
-#[test]
-fn a_call_with_more_than_one_result_is_reported_at_the_call() {
-    let fir = "func @two() -> i8, i8 {
-^entry:
-  %c: i8 = const 1 @0
-  ret %c, %c @0
-}
-
-func @f() -> i8 {
-^entry:
-  %a: i8, %b: i8 = call @two @1
-  ret %a @0
-}
-
-locs {
-  @0 = unknown
-  @1 = \"t.c\":4:3 to 4:9
-}
-";
-    let (out, _, src) = try_build("call-two", fir, &[]);
-    assert_eq!(out.status.code(), Some(1));
-    let stderr = text(&out.stderr);
-    let want = format!(
-        "{src}: unsupported in @f ^entry op 0: call returns 2 values: the x86-64 backend \
-         returns at most one value so far (at @1 = \"t.c\":4:3 to 4:9)\n"
-    );
-    assert!(stderr.contains(&want), "{want}\nnot in\n{stderr}");
 }

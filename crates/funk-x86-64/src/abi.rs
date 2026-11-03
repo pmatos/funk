@@ -1,12 +1,14 @@
 //! How a funk function looks from outside (ADR-2026-10-30-1232): its symbol in the
-//! object file, where its arguments arrive and where its result goes, by the
-//! System V AMD64 calling convention.
+//! object file, where its arguments arrive and, in [`results`], where its
+//! results go (ADR-2026-11-03-0109), by the System V AMD64 calling convention.
 
 use std::fmt::Write;
 
 use funk_ir::ir::names::is_word;
 
 use crate::asm::{Asm, Mem, Reg};
+
+pub mod results;
 
 /// The registers that carry the first six integer arguments, in order.
 pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8, Reg::R9];
@@ -19,10 +21,10 @@ pub const RESULT_REG: Reg = Reg::Rax;
 /// 16-byte aligned, and every source slot is relative to `%rbp`.
 ///
 /// Arguments pass as their slots hold them, without extension. The call
-/// restores `%rsp` and leaves the result in [`RESULT_REG`]. The returned
-/// byte count is its peak outgoing argument space, padding included, but
-/// not the return address: entry stack reservation accounts for that
-/// separately. A size error appends no assembly.
+/// restores `%rsp` and leaves the results where [`results`] puts them. The
+/// returned byte count is its peak outgoing argument space, padding
+/// included, but not the return address: entry stack reservation accounts
+/// for that separately. A size error appends no assembly.
 ///
 /// This owns placement and accounting for both fir calls and executable
 /// entry code (ADR-2026-11-02-1428).

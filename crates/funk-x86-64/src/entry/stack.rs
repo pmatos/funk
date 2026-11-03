@@ -19,9 +19,9 @@
 
 use std::collections::HashMap;
 
-use funk_ir::{Func, Module};
+use funk_ir::{Func, Module, Op};
 
-use crate::abi::pushed_words;
+use crate::abi::{pushed_words, results::Layout};
 use crate::lower::callee;
 
 /// The stack a run of one function needs.
@@ -55,7 +55,7 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
             let ops = f.body.blocks.iter().flat_map(|b| &b.ops);
             ops.filter_map(|op| {
                 let i = *index.get(callee(op)?)?;
-                let words = u64::try_from(pushed_words(op.operands.len())).unwrap_or(u64::MAX);
+                let words = u64::try_from(pushed_words(passed(op))).unwrap_or(u64::MAX);
                 Some((i, words.saturating_mul(8)))
             })
             .collect()
@@ -92,6 +92,16 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
         }
     }
     out
+}
+
+/// The words of arguments that the call `op` passes: its operands, after
+/// the address of its result area when its results go in memory
+/// (ADR-2026-11-03-0109). Lowering has checked the layout, so one that fails
+/// here cannot be built and counts nothing more.
+fn passed(op: &Op) -> usize {
+    let layout = Layout::of_types(op.results.iter().map(|d| &d.ty));
+    let hidden = layout.map_or(0, |l| l.hidden_arguments());
+    op.operands.len().saturating_add(hidden)
 }
 
 /// The strongly connected components of the call graph `calls`, by
@@ -200,6 +210,30 @@ mod tests {
     fn a_call_needs_the_arguments_it_pushes() {
         for (args, pushed) in [(0, 0), (6, 0), (7, 16), (8, 16), (9, 32), (12, 48)] {
             let m = module(&[("f", &[("g", args)]), ("g", &[])]);
+            assert_eq!(needs(&m, &[16, 16])[0], need(32 + pushed + 32, false));
+        }
+    }
+
+    /// A call whose results go in memory passes the area's address first,
+    /// so six arguments push one word and its padding (ADR-2026-11-03-0109).
+    #[test]
+    fn the_address_of_a_result_area_counts_among_the_arguments() {
+        let i64 = funk_ir::dialects::core::int_type(64);
+        for (results, pushed) in [(0, 0), (1, 0), (2, 0), (3, 16), (9, 16)] {
+            let mut m = Module::new();
+            let here = m.locs.push(Location::Unknown);
+            let mut call = Op::new("call", here).attr(Attr::Sym("g".into()));
+            for _ in 0..6 {
+                call = call.operand("x");
+            }
+            for k in 0..results {
+                call = call.result(format!("r{k}"), i64.clone());
+            }
+            let ret = || Op::new("ret", here);
+            let f = Func::new("f").block(Block::new("entry").op(call).op(ret()));
+            let m = m
+                .func(f)
+                .func(Func::new("g").block(Block::new("entry").op(ret())));
             assert_eq!(needs(&m, &[16, 16])[0], need(32 + pushed + 32, false));
         }
     }
