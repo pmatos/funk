@@ -7,17 +7,16 @@
 //! of location, and functions with zero, one and several results, of one
 //! block or of several, with loops and block arguments (`blocks.rs`). The
 //! ops are those of the core dialect that the registry has: `const`, `add`,
-//! `sub` and `mul` with each combination of their flags, `freeze`, the
-//! bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
-//! the width changes `zext`, `sext` and `trunc` between valid pairs of
-//! widths, `sdiv` and `udiv` with and without `exact`, `srem`, `urem`,
-//! `icmp` with each predicate on two values of any one type, `select` at any
-//! type, the branches `br` and `cond_br`, `ret`, and `call` of any function
-//! of the module, the caller itself included, with any number of arguments
-//! and results (`calls.rs`). A division may be by zero, and a loop or a
-//! recursion may never end: that is UB or a run out of fuel, not invalid,
-//! and no check runs these modules. The generator is deterministic: one
-//! seed gives one module.
+//! `sub` and `mul` with each combination of their flags, `freeze`, `poison`,
+//! the bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
+//! the width changes `zext`, `sext` and `trunc` between valid pairs of widths,
+//! `sdiv` and `udiv` with and without `exact`, `srem`, `urem`, `icmp` with each
+//! predicate on two values of any one type, `select` at any type, the branches
+//! `br` and `cond_br`, `ret`, and `call` of any function of the module, the
+//! caller itself included, with any number of arguments and results
+//! (`calls.rs`). A division may be by zero, and a loop or a recursion may never
+//! end: that is UB or a run out of fuel, not invalid, and no check runs these
+//! modules. The generator is deterministic: one seed gives one module.
 
 use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,

@@ -320,7 +320,7 @@ a callee that ignores it, freezes it, and branches on it and divides by
 it, which is UB, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33`, `i64` and
 `i128`. At the backend's widths the
 differential tests run it as native code, which gives zero for it, and
-the interpreter-only tests observe the poison
+the interpreter-only tests that fill its cells observe the poison
 ([ADR-2026-11-03-1618](../../docs/adrs/2026-11-03-1618-poison-s-differential-cells-are-filled-by-native-runs-and-its-interpreter-only-cells-by-observing-it.md)).
 `reject/poison.toml` holds its texts that do not decode.
 

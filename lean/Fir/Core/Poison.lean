@@ -38,8 +38,9 @@ ops: `PropagatesPoison` for `add`, a result on defined operands for
 `const` and `add`, and totality and monotonicity for all three. Each family
 ticket then proved the obligations of its ops: #14 for `add` with its
 flags, `sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16
-for `icmp` and `select`, #17 for the width changes, #18 for the divisions
-and #19 for the branches. `call` has no op-level obligation, as below.
+for `icmp` and `select`, #17 for the width changes, #18 for the
+divisions, #19 for the branches and #122 for `poison`. `call` has no
+op-level obligation, as below.
 The last ticket, #20, gave `LawfulDialectPoison CoreDialect`
 (`Core.lawfulDialectPoison`, in the section on the core dialect's poison
 obligations). The exceptions' rules are tested by their tickets: `freeze`

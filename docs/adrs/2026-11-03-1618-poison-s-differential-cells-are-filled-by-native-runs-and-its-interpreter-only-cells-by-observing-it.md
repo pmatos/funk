@@ -35,3 +35,7 @@ met.
 - On the differential side, a test of `poison` shows that it lowers and
   runs, not what it gives; its value is checked on the interpreter-only
   side.
+- No check reads the outcome: the static count also adds a test whose
+  result does not depend on the poison, such as one that ignores it. So
+  whoever writes or reviews a test of `poison` keeps, in each
+  interpreter-only cell, at least one test that observes the poison.
