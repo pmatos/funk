@@ -2,15 +2,28 @@
 
 This file records the evidence that the acceptance criteria of
 [#23](https://github.com/pmatos/funk/issues/23) and the four "Done when"
-items of the M0 epic, [#5](https://github.com/pmatos/funk/issues/5), hold
-on `main` at `ca5fd9f`, the merge of #116. Four stages of #23 built what
-it checks: the spec against Lean and the Rust side against the spec
+items of the M0 epic, [#5](https://github.com/pmatos/funk/issues/5), hold.
+Four stages of #23 built what it checks: the spec against Lean and the
+Rust side against the spec
 ([#113](https://github.com/pmatos/funk/pull/113)), the G0 check
 ([#114](https://github.com/pmatos/funk/pull/114)), the coverage matrix
 ([#115](https://github.com/pmatos/funk/pull/115)) and the ports of LLVM
 tests ([#116](https://github.com/pmatos/funk/pull/116)). It records
-evidence, not a decision, so it is not an ADR. Line numbers are those of
-`ca5fd9f`. #5 stays open after #23 closes: see the last section.
+evidence, not a decision, so it is not an ADR.
+
+It was checked against `main` at `ca5fd9f`, the merge of #116. There,
+every item held but two points, which the pull request that adds this
+file, [#119](https://github.com/pmatos/funk/pull/119), mends:
+
+- `tracer-i128`, a module at a width that the backend lowers, had only
+  interpreter-only tests, so CI never ran it as native code (item 2).
+  #119 adds its differential tests.
+- No ADR recorded the human's ruling N3, which caps widths, so S2's ADR
+  read wider than the spec (item 1). #119 adds ADR-2026-11-03-1000.
+
+Line numbers are those of `ca5fd9f`; #119 changes none of the files they
+point into. Corpus counts include #119's tests. #5 stays open after #23
+closes: see the last section.
 
 ## The Lean criteria
 
@@ -72,7 +85,7 @@ No item is missing, and none is weaker than #23 states it.
 | --- | --- | --- |
 | E0, effect ordering | ADR-2026-10-29-2005 | accepted |
 | S1, poison and `freeze` | ADR-2026-10-29-2006 | accepted; refined by ADR-2026-10-30-0818 |
-| S2, integers `iN` | ADR-2026-10-29-2007 | accepted |
+| S2, integers `iN` | ADR-2026-10-29-2007 | accepted; refined by ADR-2026-11-03-1000 |
 | S4, refinement | ADR-2026-10-29-2008 | accepted; refined by ADR-2026-10-30-0816 |
 | S7, semantics in Lean | ADR-2026-10-29-2009 | accepted |
 | H1, block arguments | ADR-2026-10-29-2010 | accepted |
@@ -88,6 +101,15 @@ in the oracle (ADR-2026-10-29-2017), fir's own Lean calculus after the
 spike of #24 (ADR-2026-10-29-2030), assembly through GNU `as` and `ld`
 (ADR-2026-10-30-1229) and spilling every value (ADR-2026-10-30-1230).
 None of these ADRs is superseded.
+
+S2's ADR says that the IR and the Lean interpreter accept any `N >= 1`,
+but the human's ruling N3 (part 3 of the rulings on #8, 2026-10-30, in
+the [rulings comment](https://github.com/pmatos/funk/issues/5#issuecomment-6506908304)
+on #5) caps widths at 16,777,215, MLIR's limit. Lean (`maxWidth`,
+`lean/Fir/Core/Types.lean:30`) and Rust (`MAX_WIDTH`,
+`crates/funk-ir/src/dialects/core/types.rs:13`) follow N3, but no ADR
+held it until #119 added ADR-2026-11-03-1000, which records N3 and
+refines S2. It changes no semantics: the spec already said so.
 
 The spec is literate Lean rendered with Verso. `docs/spec/FirSpec.lean`
 renders 115 modules of `lean/` in the Wasm spec's four chapters (abstract
@@ -113,15 +135,15 @@ request. `.github/workflows/pages.yml` publishes it from every push to
 
 ### 2. Lean and Rust agree on every corpus program, and native results refine Lean's
 
-The steps of `scripts/check-harness.sh`, run at `ca5fd9f`, end with
-`19646 checks: 19646 passed, 0 failed, 0 invalid`:
+The steps of `scripts/check-harness.sh`, run on the corpus of #119, end
+with `19697 checks: 19697 passed, 0 failed, 0 invalid`:
 
 | Check | Count |
 | --- | --- |
 | `funk verify` and `fir-ref validate` accept a text of the corpus | 261: 257 modules, 4 non-canonical inputs |
-| They accept a module that Rust's generator printed | 600 |
+| They accept a module that Rust printed (`crates/funk-ir/examples/fir_texts.rs`) | 861: 600 from its generator, and the corpus's 261 texts as Rust prints them |
 | They give a must-reject text the same verdict, and a parse error the same line and column | 488 |
-| A differential test: native code's result refines `fir-ref`'s | 10,980 |
+| A differential test: native code's result refines `fir-ref`'s | 11,031 |
 | An interpreter-only test: `fir-ref` gives the expected result | 7,056 |
 
 `scripts/harness/check_invalid.py` also passes: the harness reports the
@@ -129,36 +151,47 @@ fixture with a frozen divisor invalid (ADR-2026-10-31-0208). The
 `fir-ref-test` and `fir-round-trip` hooks check that `fir-ref fmt`
 reprints each text Rust prints, byte for byte (item 3).
 
-`funk build` builds the 183 modules that have a differential test. By the
-corpus format, only `fir-ref` runs an interpreter-only test
-(ADR-2026-10-30-2050). Why each one is interpreter-only:
+The harness builds, with `funk build`, the 184 modules that have a
+differential test, and no other (`scripts/harness/checks.py:78-80`). By
+the corpus format, only `fir-ref` runs an interpreter-only test
+(ADR-2026-10-30-2050). Why each one is interpreter-only, with each test
+counted once, under the first reason in this order that applies:
 
 | Reason | Tests |
 | --- | --- |
 | Its module has a width that the backend rejects, as S2 asks (`crates/funk/tests/build.rs:61`) | 3,935 |
 | `fir-ref` gives UB, which any native behaviour refines; as a differential test it would be invalid | 669 |
+| It names the choices of a path through `freeze` | 175 |
 | `fir-ref` gives poison in a result, which any native value refines | 1,323 |
 | The run never ends, so it runs out of fuel | 82 |
-| It names the choices of a path through `freeze` | 175 |
-| A defined result, with a differential test of the same function on the same arguments | 606 |
-| A defined result, with no such differential test | 266 |
+| A defined result, with a differential test of the same function on the same arguments | 658 |
+| A defined result, with no such differential test | 214 |
 
-Of those 266, 14 recurse deeper than 20 calls, in `recursion-i8` and
-`recursion-i128`: the cap that #107 restated, which the human kept. 52
-are in `tracer-i128`, which states what `fir-ref` gives for `const`,
-`add` and `ret` at `i128`; `add-i128` runs the same additions
-differentially. The other 200 fill interpreter-only cells of the coverage
-matrix (#115), in modules whose other tests run natively.
+Of those 214, 14 recurse deeper than 20 calls, in `recursion-i8` and
+`recursion-i128`: the cap that #107 restated, which stays. Deeper
+differential runs are an option, not a requirement
+([comment](https://github.com/pmatos/funk/issues/23#issuecomment-6592996398)
+on #23), since the human ruled on 2026-10-30 that no depth is an M0
+acceptance bar. The other 200 fill interpreter-only cells of the coverage
+matrix (#115). Each of them runs a function that a differential test of
+the same module runs as native code on other arguments.
 
-Of the 257 modules, 74 are not built: 64 hold a width that the backend
-rejects, `empty` has no test, and nine at the backend's widths have only
-interpreter-only tests: `fuel` and `fuel-call` (every run runs out of
-fuel), the six `poison-div-iN` (every run gives UB or poison) and
-`tracer-i128`.
+At `ca5fd9f`, `tracer-i128` held 52 more runs with a defined result and
+no differential test, at `i128`, which the backend lowers. It was a
+corpus program that CI never ran as native code. #119 repeats each of
+those runs as a differential test, 51 in all, since two of them differ
+only in their fuel, and native code gives `fir-ref`'s result on each.
+
+Of the 257 modules, the harness does not build 73: 64 hold a width that
+the backend rejects, `empty` has no test, and eight at the backend's
+widths have only interpreter-only tests: `fuel` and `fuel-call` (every
+run runs out of fuel) and the six `poison-div-iN` (every run gives UB or
+poison). `funk build` accepts those eight too.
 
 So `fir-ref` and the Rust tools agree on every text of the corpus, and
-native code refines `fir-ref` on every one of the 10,980 runs that it
-makes, in every module that the backend builds.
+native code refines `fir-ref` on every one of the 11,031 runs that it
+makes, in every module with a differential test. Every module at the
+backend's widths with a run that has a defined result is one of them.
 
 ### 3. Round trips hold in Rust and across Rust and Lean, under fuzzing
 
@@ -207,9 +240,10 @@ requires the checks `pre-commit` and `PR title` on every merge. CI run
 
 ## What stays open
 
-- #5 stays open. Its open sub-issues, #41, #47 and #55, are
-  performance and depth work, which the human parked on 2026-10-30; no
-  depth is an M0 acceptance bar. #117 (Verus) is not part of #23.
+- #5 stays open. Its other open sub-issues are #41, #47 and #55,
+  performance and depth work that the human parked on 2026-10-30 (no
+  depth is an M0 acceptance bar), and #117 (Verus), which is not part of
+  #23.
 - The 20-deep cap on differential recursion stays, as #107 restated it.
 - A question for the human, not part of #23: whether `tests/fir/llvm/`
   may get an exception from the `typos` check, so that the three

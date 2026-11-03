@@ -256,7 +256,8 @@ poison, declared as its one result `0` with a witness. `branch-i128`,
 `call-i128`, `call-args-i128` and `recursion-i128` pass and return
 `i128`s across calls, in register pairs and on the stack, in each layout
 of ADR-2026-11-03-0108. `tracer-i128` states what `fir-ref` gives for
-`const`, `add` and `ret` at `i128`.
+`const`, `add` and `ret` at `i128`, and repeats each run with a defined
+result as a differential test.
 
 The texts of #31 return several values natively, as
 [ADR-2026-11-03-0109](../../docs/adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)
