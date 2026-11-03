@@ -1,8 +1,8 @@
 # Tests of zext-i7.fir: zext from i1 to i7 and from i7 to each of i8,
-# i16, i32, i33 and i64, on the boundary bit patterns of the operand's
-# type: 0, 1, -1, the signed minimum and the signed maximum, or false
-# and true at i1 (#17). zext puts zeros above the operand's bits, so an
-# operand with its top bit set gives a nonnegative result.
+# i16, i32, i33, i64 and i128, on the boundary bit patterns of the
+# operand's type: 0, 1, -1, the signed minimum and the signed maximum,
+# or false and true at i1 (#17). zext puts zeros above the operand's
+# bits, so an operand with its top bit set gives a nonnegative result.
 # The backend does not lower i7, so each test is interpreter-only and
 # states the result that fir-ref must give.
 tests = [
@@ -33,4 +33,10 @@ tests = [
   { func = "@zext_i7_to_i64", args = ["-1"], expect = ["127"] },
   { func = "@zext_i7_to_i64", args = ["-64"], expect = ["64"] },
   { func = "@zext_i7_to_i64", args = ["63"], expect = ["63"] },
+  # zext from i7 to i128.
+  { func = "@zext_i7_to_i128", args = ["0"], expect = ["0"] },
+  { func = "@zext_i7_to_i128", args = ["1"], expect = ["1"] },
+  { func = "@zext_i7_to_i128", args = ["-1"], expect = ["127"] },
+  { func = "@zext_i7_to_i128", args = ["-64"], expect = ["64"] },
+  { func = "@zext_i7_to_i128", args = ["63"], expect = ["63"] },
 ]

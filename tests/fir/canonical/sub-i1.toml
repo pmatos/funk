@@ -22,4 +22,22 @@ tests = [
   { func = "@sub_nuw_nsw", args = ["false", "true"] },
   { func = "@sub_nuw_nsw", args = ["true", "false"] },
   { func = "@sub_nuw_nsw", args = ["true", "true"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@sub", args = ["false", "false"], expect = ["false"] },
+  { func = "@sub_nuw", args = ["false", "false"], expect = ["false"] },
+  { func = "@sub_nsw", args = ["false", "false"], expect = ["false"] },
+  { func = "@sub_nuw_nsw", args = ["false", "false"], expect = ["false"] },
+  { func = "@sub", args = ["false", "true"], expect = ["true"] },
+  { func = "@sub_nuw", args = ["false", "true"], expect = ["poison"] },
+  { func = "@sub_nsw", args = ["false", "true"], expect = ["poison"] },
+  { func = "@sub_nuw_nsw", args = ["false", "true"], expect = ["poison"] },
+  { func = "@sub", args = ["true", "false"], expect = ["true"] },
+  { func = "@sub_nuw", args = ["true", "false"], expect = ["true"] },
+  { func = "@sub_nsw", args = ["true", "false"], expect = ["true"] },
+  { func = "@sub_nuw_nsw", args = ["true", "false"], expect = ["true"] },
+  { func = "@sub", args = ["true", "true"], expect = ["false"] },
+  { func = "@sub_nuw", args = ["true", "true"], expect = ["false"] },
+  { func = "@sub_nsw", args = ["true", "true"], expect = ["false"] },
+  { func = "@sub_nuw_nsw", args = ["true", "true"], expect = ["false"] },
 ]

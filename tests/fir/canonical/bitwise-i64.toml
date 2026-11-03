@@ -1,8 +1,8 @@
 # Tests of bitwise-i64.fir: and, or and xor at i64 on every pair of
 # boundary bit patterns: 0, 1, -1, the signed minimum and the signed
 # maximum, or false and true at i1 (#15).
-# Each test is differential: fir-ref and native code run it, and the
-# native result must equal fir-ref's.
+# Each test without expect is differential: fir-ref and native code
+# run it, and the native result must equal fir-ref's.
 tests = [
   { func = "@and", args = ["0", "0"] },
   { func = "@and", args = ["0", "1"] },
@@ -79,4 +79,15 @@ tests = [
   { func = "@xor", args = ["9223372036854775807", "-1"] },
   { func = "@xor", args = ["9223372036854775807", "-9223372036854775808"] },
   { func = "@xor", args = ["9223372036854775807", "9223372036854775807"] },
+  # Interpreter-only tests: fir-ref alone runs each, and must give the
+  # result it states (the coverage matrix, ADR-2026-11-03-0557).
+  { func = "@and", args = ["12", "10"], expect = ["8"] },
+  { func = "@or", args = ["12", "10"], expect = ["14"] },
+  { func = "@xor", args = ["12", "10"], expect = ["6"] },
+  { func = "@and", args = ["-1", "1"], expect = ["1"] },
+  { func = "@or", args = ["-1", "1"], expect = ["-1"] },
+  { func = "@xor", args = ["-1", "1"], expect = ["-2"] },
+  { func = "@and", args = ["-9223372036854775808", "9223372036854775807"], expect = ["0"] },
+  { func = "@or", args = ["-9223372036854775808", "9223372036854775807"], expect = ["-1"] },
+  { func = "@xor", args = ["-9223372036854775808", "9223372036854775807"], expect = ["-1"] },
 ]
