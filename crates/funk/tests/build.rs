@@ -86,22 +86,29 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
 }
 
 #[test]
-fn more_than_one_result_is_reported_at_the_ret() {
-    let (out, exe, src) = try_build("pair", PAIR, &[]);
+fn a_function_with_several_results_builds_and_prints_each() {
+    let (out, exe, _) = try_build("pair", PAIR, &[]);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    expect(Path::new(&exe), &["@pair", "-128"], &["-128", "-128"]);
+}
+
+/// A result of a width that the backend does not lower is reported where
+/// its value is defined, as any value is, once, in a function of several
+/// results (ADR-2026-11-03-0109).
+#[test]
+fn a_result_of_an_unsupported_width_is_reported_at_its_op() {
+    let fir = PAIR
+        .replace("-> i8, i8", "-> i8, i33")
+        .replace("ret %x, %x @4", "%w: i33 = sext %x @4\n  ret %x, %w @4");
+    let (out, exe, src) = try_build("pair-i33", &fir, &[]);
     assert_eq!(out.status.code(), Some(1));
     assert_eq!(
         text(&out.stderr),
         format!(
-            "{src}: unsupported in @pair ^entry op 0: ret returns 2 values: the x86-64 backend returns at most one value so far (at @4 = \"p.c\":2:3 to 2:12)\n"
+            "{src}: unsupported in @pair ^entry op 0: %w: the x86-64 backend lowers i1, i8, i16, i32 and i64, not i33 (at @4 = \"p.c\":2:3 to 2:12)\n"
         )
     );
     assert!(nothing_written(&exe));
-    let (out, _, _) = try_build("pair-json", PAIR, &["--json"]);
-    let json = text(&out.stdout);
-    assert!(
-        json.contains("\"func\":\"pair\",\"block\":\"entry\",\"op\":0,\"loc\":{\"ref\":4,"),
-        "{json}"
-    );
 }
 
 #[test]

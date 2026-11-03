@@ -5,7 +5,7 @@
 //! it, no callee-saved register but `%rbp` ever written, and no call that
 //! lands more than a page below the stack's last access.
 
-use funk_ir::{LocRef, Module, Registry, parse};
+use funk_ir::{Module, Registry, parse};
 use funk_x86_64::compile;
 
 /// The module of the functions `funcs`, each with its ops at `@0`.
@@ -30,6 +30,13 @@ fn assert_has(asm: &str, lines: &[&str]) {
 /// returns its first, and `@caller`, which passes its own parameters in
 /// reverse order to it.
 fn chain(n: usize, types: &[&str]) -> String {
+    returning(n, 1, types)
+}
+
+/// [`chain`], where `@callee` returns its first parameter `r` times and
+/// `@caller` returns all `r` results of its call: in memory when `r` is
+/// more than two (ADR-2026-11-03-0109).
+fn returning(n: usize, r: usize, types: &[&str]) -> String {
     let ty = |k: usize| types[k % types.len()];
     let params = |rev: bool| -> String {
         (0..n)
@@ -41,15 +48,26 @@ fn chain(n: usize, types: &[&str]) -> String {
             .join(", ")
     };
     let args: Vec<String> = (0..n).rev().map(|k| format!("%p{k}")).collect();
+    let names: Vec<String> = (0..r)
+        .map(|k| {
+            if k == 0 {
+                "%r".into()
+            } else {
+                format!("%r{k}")
+            }
+        })
+        .collect();
+    let defs: Vec<String> = names.iter().map(|v| format!("{v}: {}", ty(0))).collect();
+    let types = vec![ty(0); r].join(", ");
     format!(
-        "func @callee({}) -> {} {{\n^entry:\n  ret %p0 @0\n}}\n\n\
-         func @caller({}) -> {} {{\n^entry:\n  %r: {} = call @callee {} @0\n  ret %r @0\n}}\n",
+        "func @callee({}) -> {types} {{\n^entry:\n  ret {} @0\n}}\n\n\
+         func @caller({}) -> {types} {{\n^entry:\n  {} = call @callee {} @0\n  ret {} @0\n}}\n",
         params(false),
-        ty(0),
+        vec!["%p0"; r].join(", "),
         params(true),
-        ty(0),
-        ty(0),
-        args.join(", ")
+        defs.join(", "),
+        args.join(", "),
+        names.join(", ")
     )
 }
 
@@ -194,6 +212,10 @@ fn check_registers_and_alignment(asm: &str) {
 fn a_call_keeps_the_stack_aligned_and_saves_no_register() {
     for n in 0..=13 {
         check_registers_and_alignment(&lowered(&chain(n.max(1), &["i8", "i64", "i1"])));
+        for r in [2, 3, 9] {
+            let text = returning(n.max(1), r, &["i16", "i1", "i32"]);
+            check_registers_and_alignment(&lowered(&text));
+        }
         let mut text = String::from("func @f() {\n^entry:\n");
         for k in 0..n {
             text += &format!("  %v{k}: i32 = const {k} @0\n");
@@ -215,7 +237,8 @@ fn check_no_access_skips_a_page(asm: &str) {
         *deepest = (*deepest).max(at);
     };
     for line in asm.lines() {
-        if let Some(i) = line.find("(%rbp)") {
+        // `leaq` of a slot, the address of a result area, touches nothing.
+        if let Some(i) = line.find("(%rbp)").filter(|_| !line.contains("leaq")) {
             let start = line[..i].rfind(['\t', ' ']).map_or(0, |j| j + 1);
             if let Ok(disp) = line[start..i].parse::<i64>() {
                 touch(8 - disp, &mut deepest, line);
@@ -254,8 +277,8 @@ fn check_no_access_skips_a_page(asm: &str) {
 
 /// A call lands at most a page below the last access, from frames of 0 to
 /// 13 values and of about one and two pages, with no argument and with
-/// stack arguments: a frame of exactly a page is probed
-/// (ADR-2026-11-02-1102).
+/// stack arguments, and with results in a result area at the frame's
+/// bottom: a frame of exactly a page is probed (ADR-2026-11-02-1102).
 #[test]
 fn a_call_lands_at_most_a_page_below_the_last_access() {
     let consts = |n: usize| -> String {
@@ -266,11 +289,16 @@ fn a_call_lands_at_most_a_page_below_the_last_access() {
     let seven = ["%x"; 7].join(", ");
     let callee = "func @g() {\n^entry:\n  ret @0\n}\n\n\
                   func @h(%a: i64, %b: i64, %c: i64, %d: i64, %e: i64, %f: i64, %g: i64) {\n\
-                  ^entry:\n  ret @0\n}\n\n";
+                  ^entry:\n  ret @0\n}\n\n\
+                  func @h3(%a: i64, %b: i64, %c: i64, %d: i64, %e: i64, %f: i64, %g: i64) \
+                  -> i64, i64, i64 {\n^entry:\n  ret %a, %b, %c @0\n}\n\n";
     for n in (0..=13).chain(500..=530).chain(1015..=1030) {
         let text = format!(
             "{callee}func @f() {{\n^entry:\n  call @g @0\n{}  ret @0\n}}\n\n\
-             func @f2(%x: i64) {{\n^entry:\n  call @h {seven} @0\n{}  ret @0\n}}\n",
+             func @f2(%x: i64) {{\n^entry:\n  call @h {seven} @0\n{}  ret @0\n}}\n\n\
+             func @f3(%x: i64) {{\n^entry:\n  \
+             %a: i64, %b: i64, %c: i64 = call @h3 {seven} @0\n{}  ret @0\n}}\n",
+            consts(n),
             consts(n),
             consts(n)
         );
@@ -280,31 +308,6 @@ fn a_call_lands_at_most_a_page_below_the_last_access() {
             assert_has(&asm, &["movl\t$1, %r11d"]);
         }
     }
-}
-
-#[test]
-fn a_call_with_more_than_one_result_is_reported_at_the_call() {
-    let m = module(
-        "func @two() -> i8, i8 {\n^entry:\n  %c: i8 = const 1 @0\n  ret %c, %c @0\n}\n\n\
-         func @f() -> i8 {\n^entry:\n  %a: i8, %b: i8 = call @two @1\n  ret %a @0\n}\n",
-    );
-    let ds = compile(&m).unwrap_err();
-    let at: Vec<_> = ds
-        .iter()
-        .map(|d| (d.func.as_deref(), d.block.as_deref(), d.op, d.loc))
-        .collect();
-    assert_eq!(
-        at,
-        [
-            (Some("two"), Some("entry"), Some(1), Some(LocRef(0))),
-            (Some("f"), Some("entry"), Some(0), Some(LocRef(1))),
-        ],
-        "{ds:#?}"
-    );
-    assert_eq!(
-        ds[1].message,
-        "call returns 2 values: the x86-64 backend returns at most one value so far"
-    );
 }
 
 #[test]
@@ -351,8 +354,12 @@ fn entry_restores_outgoing_space_and_reserves_its_peak() {
         } else {
             format!("\taddq\t${outgoing}, %rsp\n")
         };
+        // The result goes in the first slot, whose argument the call no
+        // longer needs, and is printed from there (ADR-2026-11-03-0109).
         assert!(
-            after_call.starts_with(&format!("{cleanup}\tmovq\t%rax, %rdi\n")),
+            after_call.starts_with(&format!(
+                "{cleanup}\tmovq\t%rax, -8(%rbp)\n\tmovq\t-8(%rbp), %rdi\n"
+            )),
             "{n} arguments: {after_call}"
         );
         assert!(

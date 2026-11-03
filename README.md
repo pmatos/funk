@@ -172,6 +172,10 @@ are on `main`:
   A call follows System V and extends no argument
   ([ADR-2026-10-30-1232](docs/adrs/2026-10-30-1232-funk-function-abi.md),
   [ADR-2026-11-02-1021](docs/adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)).
+  Functions and calls return any number of results, as System V returns
+  a structure: one or two in `%rax` and `%rdx`, more in a result area
+  that the caller provides
+  ([ADR-2026-11-03-0109](docs/adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)).
   The executable runs one function from the command line and prints its
   results as JSON
   ([ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)).
@@ -234,8 +238,7 @@ These parts of M0 do not exist yet:
   overflows its stack on texts nested millions of levels deep
   ([#47](https://github.com/pmatos/funk/issues/47)).
 - The proof that parsing a printed module gives the module back.
-- In the backend, `i128` and functions and calls with more than one
-  result.
+- In the backend, `i128`.
 
 The epic's sub-issues list the open work in full.
 

@@ -1,0 +1,69 @@
+# Tests of several-i1.fir: functions and calls with any number of
+# results at i1 (#31, ADR-2026-11-03-0109). none returns nothing, and
+# call_none calls it and returns its argument. two returns a + b and a,
+# which come back in registers natively; three returns a - b, a + b and
+# b, and eight a, a + 1, ... a + 7, with add and sub, which wrap: more
+# than the two registers hold, so natively they go in a result area that
+# the caller provides. use passes two results of three on to two and one
+# of two on to eight, and returns one result of each call. fibs returns
+# two consecutive Fibonacci numbers and trib three Tribonacci numbers,
+# each calling itself on %n - 1 down to zero; even and odd call each
+# other on %n - 1 down to zero and return whether %n is even or odd, %n
+# and 2 * %n. poison returns a, a + 1 with nsw, which is poison when it
+# overflows, and 1, and call_poison returns them reversed through a
+# call. divmod returns the quotient, the remainder and the divisor of a
+# udiv and urem, and call_divmod two of them through a call; a zero
+# divisor is UB in the callee, and so of its caller. forever calls
+# itself before it returns three values, and runs out of fuel.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's, value by value: a
+# poison value matches any native value of its type. An interpreter-only
+# twin of each run that returns poison checks that exactly that value is
+# poison. UB and fuel exhaustion are interpreter-only. Recursion goes at
+# most 20 deep.
+tests = [
+  { func = "@none", args = ["false"] },
+  { func = "@call_none", args = ["false"] },
+  { func = "@eight", args = ["false"] },
+  { func = "@none", args = ["true"] },
+  { func = "@call_none", args = ["true"] },
+  { func = "@eight", args = ["true"] },
+  { func = "@two", args = ["false", "false"] },
+  { func = "@three", args = ["false", "false"] },
+  { func = "@use", args = ["false", "false"] },
+  { func = "@two", args = ["false", "true"] },
+  { func = "@three", args = ["false", "true"] },
+  { func = "@use", args = ["false", "true"] },
+  { func = "@two", args = ["true", "false"] },
+  { func = "@three", args = ["true", "false"] },
+  { func = "@use", args = ["true", "false"] },
+  { func = "@two", args = ["true", "true"] },
+  { func = "@three", args = ["true", "true"] },
+  { func = "@use", args = ["true", "true"] },
+  { func = "@fibs", args = ["false"] },
+  { func = "@trib", args = ["false"] },
+  { func = "@even", args = ["false"] },
+  { func = "@odd", args = ["false"] },
+  { func = "@fibs", args = ["true"] },
+  { func = "@trib", args = ["true"] },
+  { func = "@even", args = ["true"] },
+  { func = "@odd", args = ["true"] },
+  { func = "@poison", args = ["false"] },
+  { func = "@call_poison", args = ["false"] },
+  { func = "@poison", args = ["true"] },
+  { func = "@poison", args = ["true"], expect = ["true", "poison", "true"] },
+  { func = "@call_poison", args = ["true"] },
+  { func = "@call_poison", args = ["true"], expect = ["true", "poison", "true"] },
+  { func = "@divmod", args = ["false", "false"], expect = "ub" },
+  { func = "@call_divmod", args = ["false", "false"], expect = "ub" },
+  { func = "@divmod", args = ["false", "true"] },
+  { func = "@call_divmod", args = ["false", "true"] },
+  { func = "@divmod", args = ["true", "false"], expect = "ub" },
+  { func = "@call_divmod", args = ["true", "false"], expect = "ub" },
+  { func = "@divmod", args = ["true", "true"] },
+  { func = "@call_divmod", args = ["true", "true"] },
+  { func = "@forever", args = ["true"], fuel = 0, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["true"], fuel = 1, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["true"], fuel = 2, expect = "fuel-exhausted" },
+  { func = "@forever", args = ["true"], fuel = 1000, expect = "fuel-exhausted" },
+]

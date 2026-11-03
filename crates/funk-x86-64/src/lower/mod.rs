@@ -12,7 +12,9 @@
 //! block comes next (ADR-2026-10-31-0334). A branch copies the values it
 //! passes into its successor's arguments as one parallel move (`moves.rs`,
 //! ADR-2026-10-31-0335). A call follows System V, with no extension of
-//! its arguments (`call.rs`, ADR-2026-11-02-1021).
+//! its arguments (`call.rs`, ADR-2026-11-02-1021). `ret` and `call` place
+//! and read any number of results as `abi::results` lays them out
+//! (ADR-2026-11-03-0109).
 
 mod arith;
 mod bitwise;
@@ -255,7 +257,15 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
     cx.asm.directive(format_args!(".p2align\t4"));
     cx.asm.label(&sym);
     frame::prologue(&mut cx.asm, cx.frame.size());
-    for (n, d) in f.params.iter().enumerate() {
+    // The address of the function's result area, when its results go in
+    // memory, arrives first, and its parameters after it (ADR-2026-11-03-0109).
+    let hidden = cx.frame.results_address();
+    if let Some(slot) = hidden {
+        cx.asm
+            .ins("movq", format_args!("{}, {slot}", ARG_REGS[0].q()));
+    }
+    for (k, d) in f.params.iter().enumerate() {
+        let n = k + usize::from(hidden.is_some());
         let Some(slot) = cx.frame.slot(&d.name) else {
             out.push(at(
                 f,
