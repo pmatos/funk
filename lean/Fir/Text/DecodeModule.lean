@@ -13,8 +13,8 @@ and decodes the blocks in the scope with the second pass.
 
 The result is `Module.WellFormed.decodeModule_eq`: on any tree that erases
 to the tree of a well-formed module, at any positions, `decodeModule` gives
-the module back. Decoding reads positions only to report errors, and the
-tree of a well-formed module has none.
+the module back. Decoding reads positions only to report errors, and on
+the tree of a well-formed module it reports none.
 -/
 
 namespace Fir

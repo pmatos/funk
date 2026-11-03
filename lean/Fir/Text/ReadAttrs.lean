@@ -49,7 +49,8 @@ theorem map_tok_cons {ts : List Token} {t : Tok} {rest : List Tok}
 
 /-- Takes the first token off `h : ts.map (·.tok) = t :: rest`: `ts` becomes
 `⟨t, p⟩ :: ts'`, and `h` says that `ts'.map (·.tok) = rest`. The proofs of
-the grammar step share it, and `take_pos`, through `open Text`. -/
+the grammar step share it, and `take_pos`: inside `namespace Fir.Text`, or
+through `open Text`. -/
 scoped macro "take_tok " h:ident : tactic => `(tactic| (
   (try dsimp only at $h:ident)
   replace $h:ident := Fir.Text.map_tok_cons $h

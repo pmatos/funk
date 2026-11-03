@@ -1,6 +1,7 @@
 import FirTest.ValidSum
 import FirTest.RunsCalls
 import FirTest.Mixed
+import FirTest.Lex
 
 /-!
 Tests of #11's round trip, `printThenParse`, and of what follows from it,
@@ -10,10 +11,14 @@ text, and no other valid module prints as the example module does. A
 module that is well formed but not valid reads back too: its `add` owns a
 region, which no core op may, and the region's block defines values that
 the first pass of decoding reads between the results of the ops around it.
-A module of the sum of the core dialect and a test dialect reads back from
-the laws of the sum's text alone, and so does every well-formed module of
-the test dialect by itself. The `#guard`s run the parser and the printer on
-the same modules. The last checks pin the axioms of the theorems to Lean's
+So do a function with no blocks; a function whose ops own regions three
+levels deep; and a module whose symbols and strings need every escape and
+whose location table holds every kind of location, with numbers up to the
+largest below `2^32`. A module of the sum of the core dialect and a test
+dialect reads back from the laws of the sum's text alone, and so does every
+well-formed module of the test dialect by itself, such as one with a single
+op of the test dialect. The `#guard`s run the parser and the printer on the
+same modules. The last checks pin the axioms of the theorems to Lean's
 standard ones.
 -/
 
@@ -104,6 +109,87 @@ theorem regionModule_parse_print : Fir.parse regionModule.print = .ok regionModu
   | .ok m => m.print == regionModule.print
   | .error _ => false
 
+/-- Proves a function of concrete syntax well formed: the kernel checks its
+names, labels, types, operands, results, successors and locations, and the
+dialect's laws give the rest. -/
+local macro "func_wellFormed" : tactic => `(tactic| exact {
+  namesUnique := by decide +kernel
+  names := fun x _ => Text.isName_iff.2 (by revert x; decide +kernel)
+  labels := fun b _ => Text.isName_iff.2 (by revert b; decide +kernel)
+  types := fun t _ =>
+    have hv : validTy t := by revert t; decide +kernel
+    ⟨LawfulDialectText.tyAttr_isType t hv, LawfulDialectText.decodeTy_encode t hv⟩
+  ops := fun o _ => by
+    refine ⟨LawfulDialectText.opName_isWord _, LawfulDialectText.opAttrs_writable _, ?_⟩
+    simp only [Text.isName_iff]
+    revert o
+    decide +kernel })
+
+/-! # A function with no blocks -/
+
+/-- `@e`, whose body has no blocks. -/
+def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨[]⟩⟩
+
+/-- The module of `@e`. -/
+def emptyModule : Module CoreDialect := ⟨[.func emptyFn], [(0, .unknown)]⟩
+
+-- The body is `{` and `}`, with no block between them.
+#guard emptyModule.print == "func @e() {\n}\n\nlocs {\n  @0 = unknown\n}\n"
+
+/-- The module of `@e` is well formed. -/
+theorem emptyModule_wellFormed : emptyModule.WellFormed where
+  funcs f hf := by
+    simp only [emptyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+      List.not_mem_nil, or_false] at hf
+    subst hf
+    func_wellFormed
+  locs := by unfold LocTable.InLimits; decide +kernel
+
+/-- The module of `@e` reads back from its printed text: the parser reads
+the empty body as no blocks. -/
+theorem emptyModule_parse_print : Fir.parse emptyModule.print = .ok emptyModule :=
+  emptyModule_wellFormed.parse_print
+
+#guard match Fir.parse (d := CoreDialect) emptyModule.print with
+  | .ok m => m.print == emptyModule.print
+  | .error _ => false
+
+/-! # Nesting, escapes and every kind of location -/
+
+/-- `nested 3`, of `FirTest.Print`, is well formed: its ops own regions three
+levels deep. -/
+theorem nested_wellFormed : (nested 3).WellFormed where
+  funcs f hf := by
+    simp only [nested, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+      List.not_mem_nil, or_false] at hf
+    subst hf
+    func_wellFormed
+  locs := by unfold LocTable.InLimits; decide +kernel
+
+/-- `nested 3` reads back from its printed text. -/
+theorem nested_parse_print : Fir.parse (nested 3).print = .ok (nested 3) :=
+  nested_wellFormed.parse_print
+
+/-- `tricky`, of `FirTest.Lex`, is well formed: a branch that passes
+arguments, a call, a 256-bit constant, and a location table with fused,
+callsite, derived, name and range locations, whose references, lines and
+columns go up to `2^32 - 1`. -/
+theorem tricky_wellFormed : tricky.WellFormed where
+  funcs f hf := by
+    simp only [tricky, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+      List.not_mem_nil, or_false] at hf
+    rcases hf with rfl | rfl <;> func_wellFormed
+  locs := by unfold LocTable.InLimits; decide +kernel
+
+/-- `tricky` reads back from its printed text, every escape and location
+included. -/
+theorem tricky_parse_print : Fir.parse tricky.print = .ok tricky :=
+  tricky_wellFormed.parse_print
+
+#guard [nested 3, tricky].all fun m₀ => match Fir.parse (d := CoreDialect) m₀.print with
+  | .ok m => m.print == m₀.print
+  | .error _ => false
+
 /-! # Another dialect -/
 
 /-- The round trip of the toy dialect, from its own laws. -/
@@ -112,6 +198,35 @@ theorem toy_printThenParse : PrintThenParse (d := ToyDialect) Fir.parse := print
 /-- The round trip of the sum of the core and the toy dialect, from the
 laws of the sum's text. -/
 theorem coreToy_printThenParse : PrintThenParse (d := CoreToy) Fir.parse := printThenParse
+
+/-- `@m`, a function of the toy dialect alone: one `toy.mask`, and no
+terminator, since the toy dialect has none. -/
+def toyFn : Func ToyDialect :=
+  ⟨"m", [("a", i 8)], [i 8], ⟨[⟨"entry", [], [⟨[("k", i 8)], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
+
+/-- The module of `@m`. -/
+def toyModule : Module ToyDialect := ⟨[.func toyFn], [(0, .unknown)]⟩
+
+/-- The module of `@m` is well formed. -/
+theorem toyModule_wellFormed : toyModule.WellFormed where
+  funcs f hf := by
+    simp only [toyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+      List.not_mem_nil, or_false] at hf
+    subst hf
+    func_wellFormed
+  locs := by unfold LocTable.InLimits; decide +kernel
+
+/-- The module of `@m` reads back from its printed text, by the toy
+dialect's laws alone, although it is not valid. -/
+theorem toyModule_parse_print : Fir.parse toyModule.print = .ok toyModule :=
+  toyModule_wellFormed.parse_print
+
+-- The module is not valid, since its block has no terminator, and the
+-- parser reads its text back.
+#guard !toyModule.problems.isEmpty
+#guard match Fir.parse (d := ToyDialect) toyModule.print with
+  | .ok m => m.print == toyModule.print
+  | .error _ => false
 
 /-- The function of `FirTest.Mixed`'s mixed module, as abstract syntax: a
 toy op whose result a core op uses. -/

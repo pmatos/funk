@@ -20,8 +20,9 @@ different valid core modules never print the same text (`Core.print_injective`).
 The round trip, `printThenParse`, covers every dialect whose text is lawful
 at once, and uses nothing of a dialect but these laws. So a change to the
 core op set, such as a new op or a new flag, extends the proof below, case
-by case, and does not rework the proof of `PrintThenParse`; the section on
-parsing a printed module says how the round trip extends.
+by case, and does not rework the proof of `PrintThenParse`; the section
+"What a new dialect or a new core op needs", beside `printThenParse` in
+"The round trip, proved", says how the round trip extends.
 -/
 
 namespace Fir.Core

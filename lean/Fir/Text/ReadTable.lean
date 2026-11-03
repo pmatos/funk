@@ -34,7 +34,7 @@ theorem readLocRef_reads (r : LocRef) : Reads readLocRef id r [.locRef r] (· �
 
 /-- `readLocation` reads a location's tokens as the location, when every
 number it holds is below `2^32`: its lines and columns, which `readNat`
-checks, or its references, which no reader checks. -/
+checks, and its references, which no reader checks. -/
 theorem Location.reads (l : Location) (hl : ∀ n ∈ l.numbers, n < Location.limit) :
     Reads readLocation id l l.tokens (fun _ => True) := by
   intro ts rest h _

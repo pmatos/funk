@@ -1,4 +1,4 @@
-# The round-trip proof follows the parser's three steps, and its lemmas for nested parts take what the nested steps do as hypotheses
+# The round-trip proof follows the parser's three steps
 
 Status: accepted
 
@@ -53,7 +53,8 @@ Facts:
   for the lexer, `Reads` for the grammar, `Defines` and `Decodes` for the
   two passes of the decoder. Each says what the step gives on the text,
   the tokens or the tree of one part, at any positions, and, for `Spells`
-  and `Reads`, before whatever may follow the part.
+  and `Reads`, before what follows the part, when that starts at a
+  boundary (`Spells`) or with a token that `stop` allows (`Reads`).
 - **The lemmas for blocks, ops and regions take what the nested readers do
   as hypotheses.** Each such lemma, such as `readOps_cons_reads`,
   `defineOps_cons` or `decodeOps_cons`, is not recursive: it takes the
@@ -63,12 +64,11 @@ Facts:
   `Block.decodesList`, then tie the lemmas together by structural
   recursion on the module's blocks, ops and regions.
 - **The decoder's scope is matched by permutation.** `Block.scopeDefs`
-  lists a function's definitions in the order that the first pass reads
-  them, `Block.scopeDefs_perm` proves that list a permutation of
-  `Func.defs`, and, since a well-formed function names each value once, the
-  scope gives each value the type that `Func.typeOf` gives it.
-- **The proof is part of `Fir`.** Each of its modules is a section of the
-  text format chapter, on its own page.
+  lists the blocks' definitions in the order that the first pass reads
+  them, `Func.scopeDefs_perm` proves the parameters followed by that list a
+  permutation of `Func.defs`, and, since a well-formed function names each
+  value once, the scope gives each value the type that `Func.typeOf` gives
+  it.
 
 ## Why the hypotheses
 
@@ -86,8 +86,8 @@ larger. This ADR records the choice so that a later change keeps it.
   goals would mix the lexer's state, the readers' tokens and the decoder's
   scope, and a change to one step would break the proof of the others.
 - **A decoder or a token order that matches `Func.defs`**, so that no
-  permutation is needed. That changes what the parser computes, which the
-  proof may not do.
+  permutation is needed. That changes what the printer or the parser
+  computes, which the proof may not do.
 - **First proving that decoding ignores positions**, then decoding
   `Module.tree m` itself. It needs a mutual induction of its own, and the
   inversion lemmas of `Tree.lean` already give each part of the tree, at
