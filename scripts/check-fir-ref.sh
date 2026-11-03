@@ -14,7 +14,9 @@
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
-#               write its output. fir-ref run runs functions of tests/fir/
+#               write its output. It accepts a function of a million blocks
+#               in a chain, each using the value of the block before it,
+#               within 120 seconds of CPU time (#55). fir-ref run runs functions of tests/fir/
 #               and prints the result that each one should give (#10),
 #               runs a function that freezes poison in scripted and
 #               exhaustive mode (#14), runs bitwise ops and shifts
@@ -174,6 +176,26 @@ case "$1" in
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
         done
+        # A function of a million blocks in a chain, each using the value of
+        # the block before it (#55). The spec's check searches the graph
+        # once per such use, in time quadratic in the chain: hours here.
+        # fir-ref builds the dominator tree once and takes about 20 seconds
+        # of CPU time. Past the soft limit it ends with SIGXCPU, status 152.
+        awk -v end="$ending" 'BEGIN {
+            printf "func @f() {\n^b0:\n  %%v0: i32 = const 0 @0\n"
+            for (i = 1; i < 1000000; i++)
+                printf "  br ^b%d @0\n^b%d:\n  %%v%d: i32 = freeze %%v%d @0\n", i, i, i, i - 1
+            printf "  ret @0\n%s", end
+        }' >"$tmp/chain.fir"
+        rc=0
+        (ulimit -c 0 && ulimit -S -t 120 && exec "$fir_ref" validate "$tmp/chain.fir") \
+            >"$tmp/chain.json" || rc=$?
+        if [[ $rc -ne 0 ]] || ! grep -q '"verdict":"accepted"' "$tmp/chain.json"; then
+            why=""
+            if [[ $rc -eq 152 ]]; then why=" within 120 seconds of CPU time"; fi
+            echo "fir-ref validate does not accept a chain of a million blocks$why" >&2
+            status=1
+        fi
         # fir-ref run runs the functions of the corpus and prints each
         # result as one JSON object (ADR-2026-10-30-1856). runs FILE STATUS
         # OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and

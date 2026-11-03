@@ -1,6 +1,7 @@
 import FirRef.PrintAttr
 import FirRef.PrintModule
 import FirRef.Parse
+import FirRef.Dominance
 import FirRef.Validate
 
 /-!
