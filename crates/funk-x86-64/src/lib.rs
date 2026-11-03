@@ -29,6 +29,9 @@
 //!
 //! Each op family's lowering lives in a file of its own in `lower/`.
 
+// Cargo does not pass [lints] to doctests (ADR-2026-11-03-0808).
+#![doc(test(attr(forbid(unsafe_code))))]
+
 pub mod abi;
 pub mod asm;
 mod entry;

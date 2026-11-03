@@ -8,6 +8,17 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+# Verus proves the crate's unsafe code (ADR-2026-11-03-0808). vstd is
+# Verus's standard library: the `verus!` macro of the version that the
+# pinned Verus release ships keeps the proof for Verus and erases it when
+# cargo builds the crate (ADR-2026-11-03-0809).
+[dependencies]
+vstd = "=0.0.0-2026-11-01-0251"
+
+# The verus-proof hook runs `cargo verus verify` on every crate that opts in.
+[package.metadata.verus]
+verify = true
+
 # Cargo cannot inherit [workspace.lints] and change one of them, and the
 # workspace's `forbid` cannot be lifted by an `allow`. So this crate repeats
 # the workspace's lints with `unsafe_code` at `deny`, and one module allows
