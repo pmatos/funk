@@ -92,4 +92,16 @@ on such a host."
     echo "$warning"
     echo "$warning" >&2
 fi
+# The verus-proof hook proves the unsafe code with Verus, the release that
+# check-verus.sh pins (ADR-2026-11-03-0809).
+if ! command -v verus >/dev/null || ! command -v cargo-verus >/dev/null; then
+    warning="Warning: Verus is not on PATH.
+The verus-proof hook needs it. A commit that changes the Rust crates, the
+Cargo files or the Rust toolchain runs it, and so does every
+'pre-commit run --all-files'. Unzip the release that
+scripts/check-verus.sh pins, from
+https://github.com/verus-lang/verus/releases, and put its directory on PATH."
+    echo "$warning"
+    echo "$warning" >&2
+fi
 echo "Repository hooks and environments are installed and verified."

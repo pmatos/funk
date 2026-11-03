@@ -6,8 +6,8 @@
 //! an empty one, nor a closed standard output from one that takes every
 //! write. On ELF Unix targets, one constructor in `.init_array` looks at
 //! them first and records what it finds. It is the only unsafe code in the
-//! workspace. On every other target it compiles out, and every descriptor
-//! reads as open.
+//! workspace, and Verus proves it (ADR-2026-11-03-0808). On every other
+//! target it compiles out, and every descriptor reads as open.
 
 use std::io;
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -34,7 +34,8 @@ pub fn closed_at_start(stream: Stream) -> Option<io::Error> {
 }
 
 /// The constructor, its `.init_array` entry and the one C function it
-/// calls: all of the crate's unsafe code.
+/// calls: all of the crate's unsafe code, which Verus proves
+/// (ADR-2026-11-03-0808).
 #[cfg(any(
     target_os = "linux",
     target_os = "android",
@@ -45,44 +46,4 @@ pub fn closed_at_start(stream: Stream) -> Option<io::Error> {
     target_os = "illumos",
     target_os = "solaris"
 ))]
-#[allow(unsafe_code)]
-mod record {
-    use std::ffi::c_int;
-    use std::sync::atomic::Ordering;
-
-    /// `F_GETFD` of `<fcntl.h>`: 1 on every target this module is built for.
-    const F_GETFD: c_int = 1;
-
-    // SAFETY: this is POSIX's `int fcntl(int fildes, int cmd, ...)`, which
-    // the C library of every target this module is built for provides.
-    unsafe extern "C" {
-        fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
-    }
-
-    /// Records the error of each standard descriptor that is closed. It
-    /// runs from `.init_array`, before the standard library's start-up
-    /// code opens `/dev/null` on them.
-    extern "C" fn record() {
-        for (fd, slot) in (0..).zip(&super::CLOSED) {
-            // SAFETY: `F_GETFD` only reads the descriptor's flags and takes
-            // no third argument. On a descriptor that is not open it fails
-            // with `EBADF`, and changes nothing.
-            if unsafe { fcntl(fd, F_GETFD) } == -1
-                && let Some(code) = std::io::Error::last_os_error().raw_os_error()
-            {
-                slot.store(code, Ordering::Relaxed);
-            }
-        }
-    }
-
-    // SAFETY: the C runtime calls each function in `.init_array` once, on
-    // the main thread, before `main`, with the C calling convention.
-    // `record` has it, takes no argument that it reads, and only calls
-    // `fcntl`, reads `errno` and stores to atomics, none of which needs the
-    // standard library's start-up code. Some C runtimes pass `argc`, `argv`
-    // and `envp` to these functions and others pass nothing; a C function
-    // may ignore its arguments, since the caller owns and cleans them up.
-    #[used]
-    #[unsafe(link_section = ".init_array")]
-    static RECORD: extern "C" fn() = record;
-}
+mod record;

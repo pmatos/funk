@@ -63,6 +63,29 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-rust|rust-env)\.sh$)
+      # Verus proves the unsafe code of each crate that opts in
+      # (ADR-2026-11-03-0808, ADR-2026-11-03-0809). It needs the Verus
+      # release that check-verus.sh pins on PATH, and rustup.
+      - id: verus-proof
+        name: Verus proves the crates that opt in (cargo verus verify)
+        entry: scripts/check-verus.sh
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$)
+      # Unsafe code only where Verus proves it, and no assumption outside the
+      # trusted base that ADR-2026-11-03-0808 lists.
+      - id: unsafe-code
+        name: Unsafe Rust is only in verified modules, trusting only the listed base
+        entry: python scripts/check_unsafe_code.py
+        language: python
+        pass_filenames: false
+        files: ^(crates/|Cargo\.toml$|scripts/check_unsafe_code\.py$)
+      - id: unsafe-code-test
+        name: The unsafe-code check passes its tests
+        entry: python scripts/test_check_unsafe_code.py
+        language: python
+        pass_filenames: false
+        files: ^(crates/funk-start-fds/|Cargo\.toml$|docs/adrs/|scripts/(test_)?check_unsafe_code\.py$)
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test
