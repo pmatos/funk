@@ -28,6 +28,12 @@ func @trunc_i64_to_i33(%a: i64) -> i33 {
   ret %r @0
 }
 
+func @trunc_i128_to_i33(%a: i128) -> i33 {
+^entry:
+  %r: i33 = trunc %a @0
+  ret %r @0
+}
+
 locs {
   @0 = unknown
 }

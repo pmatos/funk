@@ -34,6 +34,12 @@ func @trunc_i64_to_i7(%a: i64) -> i7 {
   ret %r @0
 }
 
+func @trunc_i128_to_i7(%a: i128) -> i7 {
+^entry:
+  %r: i7 = trunc %a @0
+  ret %r @0
+}
+
 locs {
   @0 = unknown
 }

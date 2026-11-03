@@ -1,10 +1,10 @@
 # Tests of trunc-i7.fir: trunc from i7 to i1 and to i7 from each of i8,
-# i16, i32, i33 and i64, on the boundary bit patterns of the operand's
-# type: 0, 1, -1, the signed minimum and the signed maximum, or false
-# and true at i1 (#17). trunc keeps the operand's low bits and drops the
-# bits above them, so -1 stays -1, the signed minimum gives 0, the
-# signed maximum gives -1, and trunc to i1 gives the operand's lowest
-# bit.
+# i16, i32, i33, i64 and i128, on the boundary bit patterns of the
+# operand's type: 0, 1, -1, the signed minimum and the signed maximum,
+# or false and true at i1 (#17). trunc keeps the operand's low bits and
+# drops the bits above them, so -1 stays -1, the signed minimum gives 0,
+# the signed maximum gives -1, and trunc to i1 gives the operand's
+# lowest bit.
 # The backend does not lower i7, so each test is interpreter-only and
 # states the result that fir-ref must give.
 tests = [
@@ -38,4 +38,14 @@ tests = [
   { func = "@trunc_i64_to_i7", args = ["-1"], expect = ["-1"] },
   { func = "@trunc_i64_to_i7", args = ["-9223372036854775808"], expect = ["0"] },
   { func = "@trunc_i64_to_i7", args = ["9223372036854775807"], expect = ["-1"] },
+  # trunc from i128 to i7: on 0, -1 and the signed minimum and maximum
+  # of i128, and on 63, 64 and 128, which give the signed maximum and
+  # minimum of i7, and 0.
+  { func = "@trunc_i128_to_i7", args = ["0"], expect = ["0"] },
+  { func = "@trunc_i128_to_i7", args = ["-1"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i7", args = ["-170141183460469231731687303715884105728"], expect = ["0"] },
+  { func = "@trunc_i128_to_i7", args = ["170141183460469231731687303715884105727"], expect = ["-1"] },
+  { func = "@trunc_i128_to_i7", args = ["63"], expect = ["63"] },
+  { func = "@trunc_i128_to_i7", args = ["64"], expect = ["-64"] },
+  { func = "@trunc_i128_to_i7", args = ["128"], expect = ["0"] },
 ]

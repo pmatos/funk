@@ -34,6 +34,12 @@ func @zext_i7_to_i64(%a: i7) -> i64 {
   ret %r @0
 }
 
+func @zext_i7_to_i128(%a: i7) -> i128 {
+^entry:
+  %r: i128 = zext %a @0
+  ret %r @0
+}
+
 locs {
   @0 = unknown
 }

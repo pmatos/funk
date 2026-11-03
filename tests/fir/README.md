@@ -10,6 +10,9 @@ and how it judges a test in
 [ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)
 and, for a run that makes choices,
 [ADR-2026-10-31-0003](../../docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md).
+The [coverage matrix](../../docs/coverage/README.md) counts the tests
+that exercise each op instance at each width, on each side
+([ADR-2026-11-03-0557](../../docs/adrs/2026-11-03-0557-a-generated-matrix-counts-the-tests-of-each-cell.md)).
 
 ## Layout
 
@@ -121,6 +124,10 @@ locs {
 - `scripts/check-harness.sh`, the differential harness and the
   `fir-harness` hook, runs everything above, and checks that both tools
   accept every module of the Rust generator.
+- `scripts/harness/coverage.py`, the `coverage-matrix` hook, writes the
+  coverage matrix from the tests and fails when the committed one is
+  stale or a cell has no test. Run it with `--write` after changing a
+  test.
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
   texts in Rust.
 - `scripts/check-fir-ref.sh test` checks them with `fir-ref fmt`, and that
@@ -284,3 +291,13 @@ op as either operand and as both. `div-calls-i128` returns quotients
 and remainders among several results and passes them across calls, and
 `div-symbol-i128` names functions after the helper's routines
 ([ADR-2026-11-03-0414](../../docs/adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md)).
+
+The texts of #23 fill the cells of the coverage matrix that had no
+test. `branch-no-args` runs `br` to blocks that take no arguments, as a
+differential test. The interpreter-only tests at the end of `add-i128`,
+`sub-i128`, `mul-i128`, `bitwise-i128`, the three `icmp-*-i128`,
+`select-i128`, `branch-i128`, `zext-i128`, `sext-i128` and `trunc-i128`
+state what `fir-ref` gives at `i128`, and those at the end of
+`freeze-i1` to `freeze-i64` what it gives for `freeze` on each choice,
+as `freeze-i7` does. `zext-i7`, `sext-i7`, `trunc-i7` and their `i33`
+twins also change widths to and from `i128`.

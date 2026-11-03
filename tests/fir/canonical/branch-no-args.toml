@@ -1,0 +1,21 @@
+# Tests of branch-no-args.fir: br to blocks that take no arguments, so
+# the branch passes nothing. @jump jumps to a block written after the one
+# it then jumps back to; @diamond goes to ^then when %c is true and to
+# ^else when it is false, and each jumps to ^join; @chain jumps twice
+# and returns two values; @none returns no value.
+# Each test is differential: fir-ref and native code run it, and the
+# native result must refine fir-ref's.
+tests = [
+  { func = "@jump", args = ["1", "2"] },
+  { func = "@jump", args = ["127", "1"] },
+  { func = "@jump", args = ["-128", "-1"] },
+  { func = "@diamond", args = ["true", "5", "3"] },
+  { func = "@diamond", args = ["false", "5", "3"] },
+  { func = "@diamond", args = ["true", "-9223372036854775808", "1"] },
+  { func = "@diamond", args = ["false", "0", "-9223372036854775808"] },
+  { func = "@chain", args = ["0"] },
+  { func = "@chain", args = ["18446744073709551615"] },
+  { func = "@chain", args = ["85070591730234615865843651857942052863"] },
+  { func = "@chain", args = ["-1"] },
+  { func = "@none" },
+]
