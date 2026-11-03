@@ -114,7 +114,7 @@ repos:
         args: [test]
         language: unsupported_script
         pass_filenames: false
-        files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref)\.sh$)
+        files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref(-run)?)\.sh$)
       - id: fir-round-trip
         name: Lean reprints the texts that Rust prints, byte for byte
         entry: scripts/check-fir-ref.sh
