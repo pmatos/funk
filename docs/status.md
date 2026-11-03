@@ -121,6 +121,11 @@ are on `main`:
   ([ADR-2026-10-30-2049](adrs/2026-10-30-2049-differential-harness-in-python.md),
   [ADR-2026-10-30-2135](adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
   [ADR-2026-10-31-0003](adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
+  A test may pass `poison` as an argument, which `fir-ref run` takes as
+  it is, and native code then runs on stand-ins in its place, the
+  boundary bit patterns of its type
+  ([#123](https://github.com/pmatos/funk/issues/123),
+  [ADR-2026-11-03-1847](adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
   bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
   `freeze` and `ret` in Lean
