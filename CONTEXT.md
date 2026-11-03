@@ -329,6 +329,8 @@ A defined value that native code runs a differential test on in place of
 a poison argument, since native code holds no poison: each boundary bit
 pattern of the argument's type, in every combination. Each native result
 must refine `fir-ref`'s outcome on the poison itself (ADR-2026-11-03-1847).
+Elsewhere, as in ADR-2026-11-02-1156, a stand-in is a placeholder semantics
+of an op, which the interpreter never runs.
 
 **invalid test**:
 A differential test that can prove nothing: an outcome in its set is UB or

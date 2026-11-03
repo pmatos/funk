@@ -62,8 +62,12 @@ By transitivity (`Core.behaviour_isRefinedBy_trans`), a correct native
 result on stand-ins refines the behaviour on the poison. At the test's
 budget, where no path runs out of fuel, that behaviour is the run's set
 of outcomes (`observable_eq_at`, `Func.fuelMonotone`), which exhaustive
-mode lists (`Core.exhaustive_outcomes`). So a failure is a bug of native
-code on the vector it names. UB in a refining run needs UB in the run it
+mode lists (`Core.exhaustive_outcomes`). Past the choice budget, the
+test's declared results stand for that set: scripted and sampled mode
+give only its outcomes (`Core.scripted_outcomes`,
+`Core.sampled_outcomes`), and seeded runs only sample it, as
+ADR-2026-10-31-0003 says. So a failure is a bug of native code on the
+vector it names. UB in a refining run needs UB in the run it
 refines, so a test whose poison run has no UB never runs native code on
 a vector that is UB, such as a zero divisor.
 
