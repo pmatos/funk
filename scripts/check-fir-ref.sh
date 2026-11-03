@@ -9,20 +9,15 @@
 #               characters is read and printed on a 256 KiB stack, that
 #               a block of a million ops and a function of a million
 #               blocks are reprinted within 120 seconds, and regions
-#               nested 3,000 deep within 8 seconds of CPU time (#47).
+#               nested 3,000 deep within 8 seconds of CPU time (#47), and
+#               that fir-ref run and fmt write the signed maximum and
+#               minimum of i16777215, of 5,050,445 digits, within 30
+#               seconds of CPU time each (#41).
 #               fir-ref validate accepts every text of tests/fir/, and
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
-#               write its output. fir-ref run runs functions of tests/fir/
-#               and prints the result that each one should give (#10),
-#               runs a function that freezes poison in scripted and
-#               exhaustive mode (#14), runs bitwise ops and shifts
-#               (#15), runs icmp and select (#16), runs loops with br
-#               and cond_br, a branch on poison and a loop that never
-#               ends (#19), and runs calls: a function named by a quoted
-#               symbol returns its callee's result, and a call without
-#               end runs out of fuel (#20).
+#               write its output. check-fir-ref-run.sh checks fir-ref run.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -174,166 +169,63 @@ case "$1" in
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
         done
-        # fir-ref run runs the functions of the corpus and prints each
-        # result as one JSON object (ADR-2026-10-30-1856). runs FILE STATUS
-        # OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and
-        # prints OUTPUT, a JSON result on standard output or a message on
-        # standard error, and nothing on the other stream.
-        runs() {
-            local file=$1 want_rc=$2 want=$3 rc=0 out err want_out want_err
-            shift 3
-            out=$("$fir_ref" run "$file" "$@" 2>"$tmp/run.err") || rc=$?
-            err=$(<"$tmp/run.err")
-            if [[ $want == "{"* ]]; then
-                want_out=$want want_err=''
-            else
-                want_out='' want_err=$want
-            fi
-            if [[ $rc -ne $want_rc || $out != "$want_out" || $err != "$want_err" ]]; then
-                echo "fir-ref run $file $* exits with $rc, prints '$out' and" \
-                    "'$err' on standard error; expected $want_rc, '$want_out'" \
-                    "and '$want_err'" >&2
-                return 1
-            fi
+        # The widest constants (#41): the signed maximum of i16777215,
+        # 2^16777214 - 1, and its minimum have 5,050,445 digits. fir-ref run
+        # computes the maximum, whose length and last nine digits are checked
+        # here, fir-ref fmt reprints a module with both constants, and
+        # fir-ref run returns them. Each takes up to 5 seconds of CPU time,
+        # and runs under a soft limit of 30; the spec's printInt, quadratic
+        # in the number of digits, takes hours.
+        printf 'func @max() -> i16777215 {\n^e:\n  %%a: i16777215 = const -1 @0\n' >"$tmp/max.fir"
+        printf '  %%b: i16777215 = const 1 @0\n  %%m: i16777215 = lshr %%a, %%b @0\n' >>"$tmp/max.fir"
+        printf '  ret %%m @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/max.fir"
+        # widest WHAT ARGS...: fir-ref ARGS... succeeds within 30 seconds of
+        # CPU time, or the check reports that fir-ref does not WHAT.
+        widest() {
+            local what=$1 rc=0
+            shift
+            (ulimit -c 0; ulimit -S -t 30; exec "$fir_ref" "$@") || rc=$?
+            case $rc in
+                0) return 0 ;;
+                152) what+=" within 30 seconds of CPU time" ;;
+            esac
+            echo "fir-ref does not $what" >&2
+            return 1
         }
-        c=tests/fir/canonical
-        ret='{"kind":"return","values":'
-        # A run that makes no choice says so (ADR-2026-10-30-2218).
-        none=',"choices":0}'
-        while read -r file want args; do
-            # shellcheck disable=SC2086 # ARGS is a list of words.
-            runs "$c/$file" 0 "$ret$want$none" $args || status=1
-        done <<'END'
-add.fir ["6"] @add3 1 2 3
-add.fir ["-2147483648"] @add3 2147483647 1 0
-add.fir ["-10"] @double -5
-locations.fir ["15"] @f 1
-names.fir ["105"] @names 1 2 3
-results.fir [] @none
-results.fir ["-7"] @one -7
-results.fir ["2","2","1"] @several 1 2
-results.fir [] @unused 3
-seven.fir ["7"] @seven
-symbols.fir [] @_start.v2
-widths.fir ["true","false"] @booleans
-widths.fir ["-128","127","0","-1"] @bytes
-widths.fir ["-63","-4294967296"] @odd 1 1
-widths.fir ["-9223372036854775808","170141183460469231731687303715884105727","-170141183460469231731687303715884105728"] @wide
-widths.fir ["-1"] @widest 0
-END
-        # shellcheck disable=SC2016 # The symbols are written as text writes them.
-        for sym in '@"1"' '@"a b"' '@""' '@"_ZN3foo$LT$E"' '@"tab\tquote\"slash\\line\n"' \
-            '@"\u{202e}hidden\u{85}\u{feff}\u{1}"' '@"résumé"'; do
-            runs $c/symbols.fir 0 "${ret}[]$none" "$sym" || status=1
+        widest "compute 2^16777214 - 1" run "$tmp/max.fir" @max >"$tmp/max.json" || status=1
+        max=$(sed -n 's/^{"kind":"return","values":\["\([0-9]*\)"\],"choices":0}$/\1/p' "$tmp/max.json")
+        # The last nine digits of 2^16777214, by repeated squaring.
+        r=1 b=2 e=16777214 m=1000000000
+        while ((e > 0)); do
+            if ((e & 1)); then r=$((r * b % m)); fi
+            b=$((b * b % m)) e=$((e >> 1))
         done
-        runs tests/fir/noncanonical/add.fir 0 "${ret}[\"6\"]$none" @add3 1 2 3 || status=1
-        runs $c/seven.fir 0 '{"kind":"fuel-exhausted","choices":0}' --fuel 1 @seven || status=1
-        runs - 0 "${ret}[\"7\"]$none" @seven <$c/seven.fir || status=1
-        printf 'func @f() -> i32 {\n^e:\n  %%c: i32 = const 1 @0\n}\n\nlocs {\n  @0 = unknown\n}\n' \
-            >"$tmp/open-block.fir"
-        runs "$tmp/open-block.fir" 1 \
-            '{"kind":"stuck","reason":"a block ends without a terminator","choices":0}' @f || status=1
-        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = and %%a, %%a @0\n  ret %%s @0\n}\n' \
-            >"$tmp/and.fir"
-        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/and.fir"
-        runs "$tmp/and.fir" 0 "${ret}[\"-3\"]$none" @f -3 || status=1
-        # A shift by N or more gives poison (#15).
-        printf 'func @f(%%a: i8, %%n: i8) -> i8 {\n^e:\n  %%s: i8 = ashr %%a, %%n @0\n' >"$tmp/ashr.fir"
-        printf '  ret %%s @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/ashr.fir"
-        runs "$tmp/ashr.fir" 0 "${ret}[\"-1\"]$none" @f -128 7 || status=1
-        runs "$tmp/ashr.fir" 0 "${ret}[\"poison\"]$none" @f -128 8 || status=1
-        # icmp reads its operands as signed or unsigned, by its predicate,
-        # and select gives the value its condition chooses (#16).
-        printf 'func @f(%%a: i8, %%b: i8) -> i1, i1, i8 {\n^e:\n  %%s: i1 = icmp slt %%a, %%b @0\n' \
-            >"$tmp/icmp.fir"
-        printf '  %%u: i1 = icmp ult %%a, %%b @0\n  %%m: i8 = select %%s, %%a, %%b @0\n' >>"$tmp/icmp.fir"
-        printf '  ret %%s, %%u, %%m @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/icmp.fir"
-        runs "$tmp/icmp.fir" 0 "${ret}[\"true\",\"false\",\"-1\"]$none" @f -1 1 || status=1
-        # br and cond_br run the spec's @sum; a branch on poison is UB, and
-        # a loop that never ends runs out of the fuel that --fuel sets (#19).
-        cat >"$tmp/loops.fir" <<'END'
-func @sum(%n: i32) -> i32 {
-^entry:
-  %zero: i32 = const 0 @0
-  br ^loop(%zero, %zero) @0
-^loop(%i: i32, %acc: i32):
-  %done: i1 = icmp sge %i, %n @0
-  cond_br %done, ^exit(%acc), ^body @0
-^body:
-  %acc1: i32 = add nsw %acc, %i @0
-  %one: i32 = const 1 @0
-  %i1: i32 = add nsw %i, %one @0
-  br ^loop(%i1, %acc1) @0
-^exit(%r: i32):
-  ret %r @0
-}
-
-func @branch(%a: i1) -> i1 {
-^entry:
-  %p: i1 = add nsw %a, %a @0
-  cond_br %p, ^x(%a), ^x(%p) @0
-^x(%r: i1):
-  ret %r @0
-}
-
-func @spin() {
-^entry:
-  br ^l @0
-^l:
-  br ^l @0
-}
-
-locs {
-  @0 = unknown
-}
-END
-        exhausted='{"kind":"fuel-exhausted","choices":0}'
-        runs "$tmp/loops.fir" 0 "${ret}[\"45\"]$none" @sum 10 || status=1
-        runs "$tmp/loops.fir" 0 "$exhausted" --fuel 64 @sum 10 || status=1
-        runs "$tmp/loops.fir" 0 "${ret}[\"false\"]$none" @branch false || status=1
-        runs "$tmp/loops.fir" 0 '{"kind":"ub","reason":"cond_br on poison","choices":0}' \
-            @branch true || status=1
-        runs "$tmp/loops.fir" 0 "$exhausted" --fuel 1000 @spin || status=1
-        # A call runs its callee, which may be any function of the module,
-        # named as text names it, and a call without end runs out of fuel
-        # (#20).
-        printf 'func @f(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @f %%a @0\n  ret %%s @0\n}\n' \
-            >"$tmp/call.fir"
-        printf '\nfunc @"1"(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = call @g %%a @0\n  ret %%s @0\n}\n' \
-            >>"$tmp/call.fir"
-        printf '\nfunc @g(%%a: i8) -> i8 {\n^e:\n  %%s: i8 = add %%a, %%a @0\n  ret %%s @0\n}\n' \
-            >>"$tmp/call.fir"
-        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/call.fir"
-        runs "$tmp/call.fir" 0 "$exhausted" --fuel 100 @f 1 || status=1
-        runs "$tmp/call.fir" 0 "${ret}[\"42\"]$none" '@"1"' 21 || status=1
-        # freeze of poison makes a choice: %a + 1 overflows i2 at 1
-        # (ADR-2026-10-30-2218).
-        printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"
-        printf '  %%p: i2 = add nsw %%a, %%m @0\n  %%f: i2 = freeze %%p @0\n  ret %%f @0\n}\n' \
-            >>"$tmp/freeze.fir"
-        printf '\nlocs {\n  @0 = unknown\n}\n' >>"$tmp/freeze.fir"
-        runs "$tmp/freeze.fir" 0 "${ret}[\"-1\"],\"choices\":1}" --choices -1 @f 1 || status=1
-        runs "$tmp/freeze.fir" 0 "${ret}[\"1\"]$none" @f 0 || status=1
-        runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: the run makes choice 1, of type i2, and --choices gives 0 choices' \
-            @f 1 || status=1
-        runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: choice 1, 2, is not a value of type i2' \
-            --choices 2 @f 1 || status=1
-        outcomes='{"kind":"outcomes","choices":1,"outcomes":['
-        for v in 0 1 -2 -1; do outcomes+="${ret}[\"$v\"]},"; done
-        runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f 1 || status=1
-        runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
-            --exhaustive --choice-bits 1 @f 1 || status=1
-        runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
-            @double 9223372036854775808 || status=1
-        runs $c/add.fir 2 'fir-ref: poison is not a value of type i64' @double poison || status=1
-        runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
-        runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
-        rc=0
-        "$fir_ref" run "$tmp/missing.fir" @f 2>/dev/null || rc=$?
-        if [[ $rc -ne 2 ]]; then
-            echo "fir-ref run on a missing file exits with $rc, not 2" >&2
+        printf -v last '%09d' $(((r + m - 1) % m))
+        if [[ ${#max} -ne 5050445 || ${max: -9} != "$last" ]]; then
+            echo "fir-ref run does not return 2^16777214 - 1 at i16777215" >&2
             status=1
+        else
+            # 2^16777214 ends in 4, so the minimum is the maximum's digits
+            # with the last one 4, negated.
+            min=-${max%?}4
+            {
+                printf 'func @f() -> i16777215, i16777215 {\n^e:\n'
+                printf '  %%max: i16777215 = const %s @0\n' "$max"
+                printf '  %%min: i16777215 = const %s @0\n' "$min"
+                printf '  ret %%max, %%min @0\n}\n\nlocs {\n  @0 = unknown\n}\n'
+            } >"$tmp/widest.fir"
+            widest "reprint the widest constants" fmt --check "$tmp/widest.fir" || status=1
+            want=$(printf '{"kind":"return","values":["%s","%s"],"choices":0}' "$max" "$min")
+            if ! widest "return the widest constants" run "$tmp/widest.fir" @f >"$tmp/widest.json"; then
+                status=1
+            elif [[ $(<"$tmp/widest.json") != "$want" ]]; then
+                echo "fir-ref run does not return the widest constants as their text writes them" >&2
+                status=1
+            fi
         fi
+        # fir-ref run runs functions and prints their results (#10, #14 to
+        # #20); check-fir-ref-run.sh holds those checks.
+        scripts/check-fir-ref-run.sh "$fir_ref" || status=1
         exit "$status"
         ;;
     round-trip)
