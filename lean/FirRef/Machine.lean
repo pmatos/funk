@@ -5,13 +5,14 @@ import Fir.Execution.Modes
 the tree (ADR-2026-10-30-2218). The spec's `Func.runOps` recurses once per
 op it runs, through the tree's `bind`, and a call runs its callee inside
 the caller's recursion, so the compiled interpreter takes stack for every
-step and for every level of calls (#47, ADR-2026-11-04-2132). This module is the machine that
-`fir-ref` runs instead: `Machine.advance` takes the steps of a run in a
-loop whose recursive calls are all tail calls, and keeps each caller that
-waits for its callee on an explicit stack of frames. It stops where the run
-ends or makes a choice, and gives what is left after each value of the
-choice as a state of the machine, so that the walkers of `FirRef.RunModes`
-can follow one path or every path without stack per step.
+step and for every level of calls (#47). This module is the machine that
+`fir-ref` runs instead (ADR-2026-11-04-2132): `Machine.advance` takes the
+steps of a run in a loop whose recursive calls are all tail calls, and
+keeps each caller that waits for its callee on an explicit stack of
+frames. It stops where the run ends or makes a choice, and gives what is
+left after each value of the choice as a state of the machine, so that the
+walkers of `FirRef.RunModes` can follow one path or every path without
+stack per step.
 
 The theorem `Machine.advance_tree` proves that the machine computes the
 spec's tree: a state stands for the spec's computation of what is left of
