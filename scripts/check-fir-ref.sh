@@ -179,8 +179,9 @@ case "$1" in
         # Kennedy's lifting alone takes quadratic time. The spec's check
         # searches the graph once per such use, in time quadratic in the
         # number of blocks: hours here. fir-ref builds the dominator tree once
-        # and takes 19 to 34, and 25 to 42, seconds of CPU time, by the load
-        # on the machine. Past the soft limit it ends with SIGXCPU, status 152.
+        # and takes 19 to 27, and 25 to 30, seconds of CPU time on a lightly
+        # loaded host, and up to 75 and 88 under heavy load. Past the soft
+        # limit it ends with SIGXCPU, status 152.
         awk -v end="$ending" 'BEGIN {
             printf "func @f() {\n^b0:\n  %%v0: i32 = const 0 @0\n"
             for (i = 1; i < 1000000; i++)

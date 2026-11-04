@@ -96,13 +96,21 @@ that property too, and miss dominators.
   try, so the lifting never runs. If it ever ran, it would have no such
   bound: its passes and walks can each be linear in the number of blocks.
 - `fir-ref validate` checks a chain of a million blocks, each using the
-  value of the block before it, in 19 to 34 seconds of CPU time, by the
-  load on the machine, and a million blocks that may each leave for one
-  shared exit in 25 to 42; the tree takes a third of each or a little
-  more. The spec's search takes hours on both.
-  `scripts/check-fir-ref.sh test` runs them under soft limits of 180 and
-  240 seconds of CPU time, at least 5 times the slowest of those times.
+  value of the block before it, in 19 to 27 seconds of CPU time on a
+  lightly loaded host, and a million blocks that may each leave for one
+  shared exit in 25 to 30; the tree takes a third of each or a little
+  more. The spec's search takes hours on both. CPU time grows with
+  contention: on a shared host of 12 cores and 24 threads, at a load near
+  40, they took up to 75 and 88 seconds. `scripts/check-fir-ref.sh test`
+  runs them under soft limits of 180 and 240 seconds of CPU time, at
+  least 6.5 times their light-load times. That margin is taken against
+  light-load time, as for the 30-second limit on the widest constants,
+  which take about 5: no fixed limit stays 5 times above every load.
 - A function whose uses are all defined in their own block or in the entry
-  never builds the tree, so it costs what the spec's check costs.
+  never builds the tree, so it costs what the spec's check costs. A
+  function with one or a few uses defined elsewhere pays for the whole
+  tree: on a million blocks with one such use, `fir-ref validate` takes
+  1.7 to 2.6 times the CPU time of the spec's check, which makes one
+  search.
 - A change to the spec's `Func.problemsIn`, `opProblems`, `useProblems` or
   `siteDominates` breaks `problemsIn_eq_problemsIn` until the copies follow.
