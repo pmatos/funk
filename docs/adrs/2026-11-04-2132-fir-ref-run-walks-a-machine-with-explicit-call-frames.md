@@ -51,10 +51,12 @@ the spec keeps its definitions. Two facts choose where:
   and `Machine.sampled`
   ([`lean/FirRef/RunModes.lean`](../../lean/FirRef/RunModes.lean)) walk
   its states in loops of tail calls: scripted and sampled modes with an
-  accumulator, exhaustive mode with a work list of states, in the order
-  that the spec visits the paths. For every dialect, each is proved to
-  give what the spec's `ChoiceTree.script`, `explore` or `sample` gives on
-  the tree of the run.
+  accumulator, exhaustive mode with a work list of states and of each
+  choice's values still to visit, in the order that the spec visits the
+  paths. Like the spec, it goes on from a value only when it gets to it,
+  and stops at the first path over its budget. For every dialect, each is
+  proved to give what the spec's `ChoiceTree.script`, `explore` or
+  `sample` gives on the tree of the run.
 - **`FirRef.Run` registers them for the core dialect.** It defines
   `FirRef.runScripted`, `FirRef.runExhaustive` and `FirRef.runSampled`
   with the types of the spec's modes and registers
@@ -74,7 +76,9 @@ the spec keeps its definitions. Two facts choose where:
   modes would still take stack for every choice.
 - **Write `Func.runOps` as a machine in the spec.** The spec would lose its
   readable interpreter, which its theorems on runs, progress and
-  refinement are about.
+  refinement are about. ADR-2026-11-02-0836 rejected a machine with a
+  stack of frames for the spec on the same ground; here the machine is
+  only what `fir-ref` runs, proved equal to the spec's interpreter.
 - **A larger stack.** It moves the limit instead of removing it
   (ADR-2026-10-30-1450).
 
