@@ -19,8 +19,8 @@
 #               with 2 on an argument that is not UTF-8 and when it cannot
 #               write its output. It accepts two functions of a million
 #               blocks, each block using the value of the block before it:
-#               a chain within 120 seconds of CPU time, and a chain of
-#               checks that may each leave for one shared exit within 180
+#               a chain within 180 seconds of CPU time, and a chain of
+#               checks that may each leave for one shared exit within 240
 #               (#55). check-fir-ref-run.sh checks fir-ref run.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
@@ -179,8 +179,8 @@ case "$1" in
         # Kennedy's lifting alone takes quadratic time. The spec's check
         # searches the graph once per such use, in time quadratic in the
         # number of blocks: hours here. fir-ref builds the dominator tree once
-        # and takes about 20, and 25 to 35, seconds of CPU time. Past the soft
-        # limit it ends with SIGXCPU, status 152.
+        # and takes 19 to 34, and 25 to 42, seconds of CPU time, by the load
+        # on the machine. Past the soft limit it ends with SIGXCPU, status 152.
         awk -v end="$ending" 'BEGIN {
             printf "func @f() {\n^b0:\n  %%v0: i32 = const 0 @0\n"
             for (i = 1; i < 1000000; i++)
@@ -195,8 +195,8 @@ case "$1" in
             }
             printf "^j:\n  ret %%v0 @0\n%s", end
         }' >"$tmp/exits.fir"
-        for check in "chain:120:a chain of a million blocks" \
-            "exits:180:a million blocks that may each leave for one exit"; do
+        for check in "chain:180:a chain of a million blocks" \
+            "exits:240:a million blocks that may each leave for one exit"; do
             IFS=: read -r name limit what <<<"$check"
             rc=0
             (ulimit -c 0 && ulimit -S -t "$limit" && exec "$fir_ref" validate "$tmp/$name.fir") \

@@ -1,4 +1,4 @@
-# `fir-ref` decides dominance with a dominator tree lifted from its search tree
+# `fir-ref` decides dominance with a dominator tree placed by semidominators
 
 Status: accepted
 
@@ -82,19 +82,26 @@ that property too, and miss dominators.
 
 ## Consequences
 
+- The worst case, for a function whose entry reaches `n` blocks along `m`
+  edges, with `U` uses defined in another block: the tree takes
+  `O(m log n)` steps, each a hash-map operation. The search takes
+  `O(n + m)`, the semidominators `O(m log n)` (the simple version of
+  Lengauer and Tarjan's algorithm), the placement `O(n log n)` and the
+  check `O(m log n)`, since each walk by jump pointers takes `O(log n)`
+  steps. Each question takes `O(log n)` more, so dominance costs
+  `O((m + U) log n)`, where the spec's search costs `O(U · (n + m))`.
+- That bound rests on published results, not on proofs here: it holds when
+  the semidominators are exact, so that the placement is the dominator
+  tree and the check passes. The tests check that on every graph they
+  try, so the lifting never runs. If it ever ran, it would have no such
+  bound: its passes and walks can each be linear in the number of blocks.
 - `fir-ref validate` checks a chain of a million blocks, each using the
-  value of the block before it, in about 20 seconds of CPU time, and a
-  million blocks that may each leave for one shared exit in 25 to 35,
-  depending on the machine's load; the tree takes a third of each or a
-  little more. The spec's search takes hours on both. `scripts/check-fir-ref.sh test` runs them under soft limits of
-  120 and 180 seconds of CPU time.
-- Time near-linear in the size of the graph rests on published results,
-  not on proofs here: `O(m log n)` steps for the simple version of
-  Lengauer and Tarjan's algorithm, and steps logarithmic in the depth for
-  each walk by jump pointers. The tests check, on every graph they try,
-  that the placement passes the check, so the lifting never runs. If it
-  ever ran, it would have no such bound: its passes and walks can each be
-  linear in the number of blocks.
+  value of the block before it, in 19 to 34 seconds of CPU time, by the
+  load on the machine, and a million blocks that may each leave for one
+  shared exit in 25 to 42; the tree takes a third of each or a little
+  more. The spec's search takes hours on both.
+  `scripts/check-fir-ref.sh test` runs them under soft limits of 180 and
+  240 seconds of CPU time, at least 5 times the slowest of those times.
 - A function whose uses are all defined in their own block or in the entry
   never builds the tree, so it costs what the spec's check costs.
 - A change to the spec's `Func.problemsIn`, `opProblems`, `useProblems` or
