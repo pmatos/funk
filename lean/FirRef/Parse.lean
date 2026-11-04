@@ -9,9 +9,11 @@ the list into a tree, and decodes the tree. `FirRef.parse` keeps neither a
 list of the text's characters nor a list of its tokens
 (ADR-2026-11-03-1810):
 
-* `readModuleC` reads the tree from a `LexCursor`, which lexes each token
-  when a reader asks for it, with readers that take no stack per level of
-  nesting. The cursor ends at a lexer error, so the readers fail there;
+* `readModuleC` reads the tree from a `LexCursor`, with readers that take
+  no stack per level of nesting. The cursor holds its next token, already
+  lexed, and lexes the one after it only where a reader takes the token,
+  so each token is lexed once. The cursor ends at a lexer error, so the
+  readers fail there;
 * only when the readers fail does `lexCheck` run the lexer over the whole
   text, keeping no token, so that a lexer error anywhere in the text is
   reported before the readers' error, as the spec reports it. When the
@@ -32,8 +34,9 @@ namespace FirRef
 open Fir
 
 /-- The tree of a text, as the spec's lexer and readers give it, without a
-list of the text's characters or tokens. The text is lexed once when the
-readers accept it, and lexed whole a second time only when they fail. -/
+list of the text's characters or tokens. Each token is lexed once when the
+readers accept the text, and the text is lexed whole a second time only
+when they fail. -/
 def readText (text : String) : Except ParseError Text.SModule :=
   match readModuleC (LexCursor.start text) with
   | .ok m => .ok m
@@ -54,6 +57,7 @@ theorem readText_eq (text : String) :
     · -- The readers accepted, so they took `eof`, and the text lexes.
       exfalso
       obtain ⟨t, ht, he⟩ := readModule_ok_eof hr
+      rw [LexCursor.view_start_eq] at ht
       obtain ⟨ts, hts⟩ := lexRest_of_eof_mem (some (text.startPos, ⟨1, 1⟩)) t ht he
       rw [hl] at hts
       cases hts

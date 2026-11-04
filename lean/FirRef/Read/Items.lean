@@ -23,42 +23,61 @@ inductive IFrame where
 
 variable {σ : Type} [Cursor σ]
 
+/-- Whether the next token is the word `locs`. It looks at the token and
+does not take it. -/
+def atLocs (s : σ) : Bool :=
+  match uncons s with
+  | some (⟨.word w, _⟩, _) => w == "locs"
+  | _ => false
+
 /-- The kind of the next item and the cursor after it, if an item follows:
 a word, but not `locs` at the top of the module. -/
 def nextItem (top : Bool) (s : σ) : Option (String × TextPos × σ) :=
-  match uncons s with
-  | some (⟨.word w, p⟩, s₁) => if top ∧ w = "locs" then none else some (w, p, s₁)
-  | _ => none
+  if top && atLocs s then none
+  else
+    match uncons s with
+    | some (⟨.word w, p⟩, s₁) => some (w, p, s₁)
+    | _ => none
 
 theorem nextItem_some {top : Bool} {s s₁ : σ} {w : String} {p : TextPos}
     (h : nextItem top s = some (w, p, s₁)) :
     uncons s = some (⟨.word w, p⟩, s₁) ∧ ¬(top = true ∧ w = "locs") := by
   unfold nextItem at h
   split at h
-  · rename_i w' p' s' hs
+  · cases h
+  · rename_i ht
     split at h
-    · cases h
-    · rename_i hn
+    · rename_i w' p' s' hs
       simp only [Option.some.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, rfl, rfl⟩ := h
-      exact ⟨hs, hn⟩
-  · cases h
+      refine ⟨hs, ?_⟩
+      rintro ⟨rfl, rfl⟩
+      apply ht
+      simp [atLocs, hs]
+    · cases h
 
 theorem U_readItems_none {top : Bool} {s : σ} (h : nextItem top s = none) :
     U (readItems top (view s)) = .ok ([], view s) := by
   unfold nextItem at h
   split at h
-  · rename_i w p s₁ hs
-    split at h
-    · rename_i ht
+  · rename_i ht
+    simp only [Bool.and_eq_true] at ht
+    obtain ⟨rfl, hl⟩ := ht
+    unfold atLocs at hl
+    split at hl
+    · rename_i w p s₁ hs
+      simp only [beq_iff_eq] at hl
+      subst hl
       rw [view_of_uncons hs, readItems]
-      simp [ht]
+      simp
+    · cases hl
+  · split at h
     · cases h
-  · rename_i hn
-    rw [readItems]
-    · rfl
-    · intro w p rest he
-      exact not_head (hn w) p rest he
+    · rename_i hn
+      rw [readItems]
+      · rfl
+      · intro w p rest he
+        exact not_head (hn w) p rest he
 
 /-- `readBlocks`, on a cursor, with no stack per level. -/
 def readBlocksC (s : σ) : Except ParseError (List SBlock × σ) := blocksLoop s [.blocks []]

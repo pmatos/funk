@@ -16,8 +16,8 @@ per level, each proved equal to its spec function and registered with
 `@[csimp]` (ADR-2026-10-30-1450). `Module.print` runs as
 `FirRef.printModule`, in time linear in the text apart from the digits of
 long integers, which `FirRef.printDecimal` splits at powers of ten (#41),
-and `Fir.parse` as `FirRef.parse`, which lexes each token from the text's
-positions when its readers ask for it, lexes the whole text again only
+and `Fir.parse` as `FirRef.parse`, which lexes each token once, from the
+text's positions, as its readers reach it, lexes the whole text again only
 when they fail, to find a lexer error, and decodes with
 `FirRef.decodeModule` (ADR-2026-11-03-1810).
 `validate` runs the spec's validation check, which walks nested blocks with

@@ -19,6 +19,18 @@ def succsAfter (s : σ) (acc : List (Name × TextPos)) :
   | .ok (ss, s') => .ok ((acc.reverse, ss), s')
   | .error e => .error e
 
+/-- The successors after the operands `acc`, from `s₁`, the cursor after a
+comma that no value follows: it reads the successor that `s₁` holds, so
+that the token is not lexed again. -/
+def succsAfterComma (s₁ : σ) (acc : List (Name × TextPos)) :
+    Except ParseError ((List (Name × TextPos) × List Succ) × σ) :=
+  match readSuccC s₁ with
+  | .ok (x, s₂) =>
+    match readMoreC readSuccC readSuccC_le s₂ [x] with
+    | .ok (ss, s') => .ok ((acc.reverse, ss), s')
+    | .error e => .error e
+  | .error e => .error e
+
 /-- `readMoreOperands`, on a cursor: the operands read so far are `acc`,
 last first. -/
 def readMoreOperandsC (s : σ) (acc : List (Name × TextPos)) :
@@ -27,7 +39,7 @@ def readMoreOperandsC (s : σ) (acc : List (Name × TextPos)) :
   | some (⟨.comma, _⟩, s₁) =>
     match _h₁ : uncons s₁ with
     | some (⟨.value v, p⟩, s₂) => readMoreOperandsC s₂ ((v, p) :: acc)
-    | _ => succsAfter s acc
+    | _ => succsAfterComma s₁ acc
   | _ => succsAfter s acc
 termination_by (view s).length
 decreasing_by exact Nat.lt_trans (length_lt _h₁) (length_lt _h)
@@ -55,6 +67,29 @@ theorem succsAfter_eq (s : σ) (acc : List (Name × TextPos))
     subst hv
     simp
 
+theorem succsAfterComma_eq {s s₁ : σ} {p : TextPos} (acc : List (Name × TextPos))
+    (h : uncons s = some (⟨.comma, p⟩, s₁))
+    (hn : ∀ v q s₂, uncons s₁ = some (⟨.value v, q⟩, s₂) → False) :
+    V (succsAfterComma s₁ acc) = (U (readMoreOperands (view s))).map
+      fun ((vs, ss), r) => ((acc.reverse ++ vs, ss), r) := by
+  rw [U_readMoreOperands_succs ?_, view_of_uncons h, readMore]
+  · unfold succsAfterComma
+    rcases agree (readSuccC_eq s₁) with ⟨e, hx, hy⟩ | ⟨x, s₂, r, hr, hx, hy, hv⟩
+    · rw [hx, hy]; rfl
+    · rw [hx, hy]
+      subst hv
+      simp only [okBind]
+      rcases agree_map (readMoreC_eq readSuccC readSuccC_le readSucc readSuccC_eq s₂ [x]) with
+        ⟨e, hx', hy'⟩ | ⟨ss, s₃, r', hr', hx', hy', hv'⟩
+      · rw [hx', hy']; rfl
+      · rw [hx', hy']
+        subst hv'
+        simp
+  · intro p' v q rest he
+    rw [view_of_uncons h] at he
+    simp only [List.cons.injEq] at he
+    exact not_head (hn v) q rest he.2
+
 theorem readMoreOperandsC_eq (s : σ) (acc : List (Name × TextPos)) :
     V (readMoreOperandsC s acc) = (U (readMoreOperands (view s))).map
       fun ((vs, ss), r) => ((acc.reverse ++ vs, ss), r) := by
@@ -62,12 +97,7 @@ theorem readMoreOperandsC_eq (s : σ) (acc : List (Name × TextPos)) :
   | case1 s acc p s₁ h v q s₂ h₁ ih =>
     rw [ih, view_of_uncons h, view_of_uncons h₁, readMoreOperands]
     rcases readMoreOperands (view s₂) with e | ⟨⟨vs, ss⟩, r, hr⟩ <;> simp
-  | case2 s acc p s₁ h hn =>
-    apply succsAfter_eq
-    intro p' v q rest he
-    rw [view_of_uncons h] at he
-    simp only [List.cons.injEq] at he
-    exact not_head (hn v) q rest he.2
+  | case2 s acc p s₁ h hn => exact succsAfterComma_eq acc h hn
   | case3 s acc hn =>
     apply succsAfter_eq
     intro p' v q rest he

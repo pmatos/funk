@@ -8,6 +8,9 @@ inside, each with its parts read so far, last first:
 * a frame of blocks belongs to a region, or to a function's body at the
   bottom of the stack;
 * a frame of ops belongs to a block, whose label and arguments it holds;
+  it looks at the next token with `startsOpC` before it reads an op with
+  `opHeadC`, so that at a block's end it leaves the token, and the frame
+  below takes it, without lexing past it;
 * a frame of regions belongs to an op, whose head it holds.
 
 When a frame's next token does not continue it, the loop completes its
@@ -50,6 +53,56 @@ theorem readOpLocC_lt {s s' : σ} {loc : LocRef} (h : readOpLocC s = .ok (loc, s
   · rw [failC_eq] at h
     cases hv : view s <;> rw [hv] at h <;> cases h
 
+/-- Whether the next token starts an op: a value, its first result, or a
+word, its name. It looks at the token and does not take it. -/
+def startsOpC (s : σ) : Bool :=
+  match uncons s with
+  | some (⟨.value _, _⟩, _) => true
+  | some (⟨.word _, _⟩, _) => true
+  | _ => false
+
+/-- The head of the op that starts at `s`, with a value or a word. -/
+def opHeadC (s : σ) : Except ParseError (OpHead × σ) :=
+  match uncons s with
+  | some (⟨.value n, p⟩, s₁) => opWithResultsHeadC n p s₁
+  | some (⟨.word w, p⟩, s₁) => opBodyHeadC [] w p s₁
+  | _ => failC s "an op"
+
+theorem opHeadC_lt {s s' : σ} {hd : OpHead} (h : opHeadC s = .ok (hd, s')) :
+    (view s').length < (view s).length := by
+  unfold opHeadC at h
+  split at h
+  · rename_i n p s₁ hs
+    have := opWithResultsHeadC_le h
+    have := length_lt hs
+    omega
+  · rename_i w p s₁ hs
+    have := opBodyHeadC_le h
+    have := length_lt hs
+    omega
+  · rw [failC_eq] at h
+    cases hv : view s <;> rw [hv] at h <;> cases h
+
+theorem opHeadC_cases {s : σ} (hs : startsOpC s = true) :
+    (∃ n p s₁, uncons s = some (⟨.value n, p⟩, s₁) ∧ opHeadC s = opWithResultsHeadC n p s₁) ∨
+      (∃ w p s₁, uncons s = some (⟨.word w, p⟩, s₁) ∧ opHeadC s = opBodyHeadC [] w p s₁) := by
+  unfold startsOpC at hs
+  split at hs
+  · rename_i n p s₁ h
+    exact .inl ⟨n, p, s₁, h, by unfold opHeadC; rw [h]⟩
+  · rename_i w p s₁ h
+    exact .inr ⟨w, p, s₁, h, by unfold opHeadC; rw [h]⟩
+  · cases hs
+
+theorem startsOpC_false {s : σ} (hs : ¬startsOpC s = true) :
+    (∀ n p s₁, uncons s = some (⟨.value n, p⟩, s₁) → False) ∧
+      (∀ w p s₁, uncons s = some (⟨.word w, p⟩, s₁) → False) := by
+  constructor
+  · intro n p s₁ h
+    exact hs (by unfold startsOpC; rw [h])
+  · intro w p s₁ h
+    exact hs (by unfold startsOpC; rw [h])
+
 /-- Reads the blocks, ops and regions that the frames `fs` leave. -/
 def blocksLoop (s : σ) (fs : List BFrame) : Except ParseError (List SBlock × σ) :=
   match fs with
@@ -69,16 +122,11 @@ def blocksLoop (s : σ) (fs : List BFrame) : Except ParseError (List SBlock × �
         | .error e => .error e
       | _ => .ok ([], s)
   | .ops l params done :: fs =>
-    match _h : uncons s with
-    | some (⟨.value n, p⟩, s₁) =>
-      match _hh : opWithResultsHeadC n p s₁ with
+    if _hs : startsOpC s then
+      match _hh : opHeadC s with
       | .ok (hd, s₂) => blocksLoop s₂ (.regions hd [] :: .ops l params done :: fs)
       | .error e => .error e
-    | some (⟨.word w, p⟩, s₁) =>
-      match _hh : opBodyHeadC [] w p s₁ with
-      | .ok (hd, s₂) => blocksLoop s₂ (.regions hd [] :: .ops l params done :: fs)
-      | .error e => .error e
-    | _ =>
+    else
       match fs with
       | .blocks bs :: fs => blocksLoop s (.blocks (⟨l, params, done.reverse⟩ :: bs) :: fs)
       | _ => .ok ([], s)
@@ -100,11 +148,7 @@ decreasing_by
     omega
   · have := expectC_lt _he
     omega
-  · have := opWithResultsHeadC_le _hh
-    have := length_lt _h
-    omega
-  · have := opBodyHeadC_le _hh
-    have := length_lt _h
+  · have := opHeadC_lt _hh
     omega
   · omega
   · have := length_lt _h

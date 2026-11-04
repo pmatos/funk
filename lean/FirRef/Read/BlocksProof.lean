@@ -55,42 +55,39 @@ theorem blocksLoop_eq (s : σ) (fs : List BFrame) : V (blocksLoop s fs) = bRun (
     rw [U_readBlocks_nil (fun l => not_head (hn l))]
     rcases fs with _ | ⟨_ | _ | _, fs⟩ <;>
       first | rfl | exact absurd rfl h0 | exact absurd rfl (hr _ _ _)
-  | case8 s l params done fs n p s₁ h hd s₂ hh ih =>
-    rw [ih, view_of_uncons h]
-    simp only [bRun]
-    rw [U_readOps_value, U_readOpWithResults, ← opWithResultsHeadC_eq, hh]
-    b_norm
-  | case9 s l params done fs n p s₁ h e hh =>
-    rw [view_of_uncons h]
-    simp only [bRun]
-    rw [U_readOps_value, U_readOpWithResults, ← opWithResultsHeadC_eq, hh]
-    rfl
-  | case10 s l params done fs w p s₁ h hd s₂ hh ih =>
-    rw [ih, view_of_uncons h]
-    simp only [bRun]
-    rw [U_readOps_word, U_readOpBody, ← opBodyHeadC_eq, hh]
-    b_norm
-  | case11 s l params done fs w p s₁ h e hh =>
-    rw [view_of_uncons h]
-    simp only [bRun]
-    rw [U_readOps_word, U_readOpBody, ← opBodyHeadC_eq, hh]
-    rfl
-  | case12 s l params done bs fs hv hw ih =>
+  | case8 s l params done fs hs hd s₂ hh ih =>
+    rw [ih]
+    rcases opHeadC_cases hs with ⟨n, p, s₁, h, ho⟩ | ⟨w, p, s₁, h, ho⟩ <;> rw [ho] at hh <;>
+      rw [view_of_uncons h] <;> simp only [bRun]
+    · rw [U_readOps_value, U_readOpWithResults, ← opWithResultsHeadC_eq, hh]
+      b_norm
+    · rw [U_readOps_word, U_readOpBody, ← opBodyHeadC_eq, hh]
+      b_norm
+  | case9 s l params done fs hs e hh =>
+    rcases opHeadC_cases hs with ⟨n, p, s₁, h, ho⟩ | ⟨w, p, s₁, h, ho⟩ <;> rw [ho] at hh <;>
+      rw [view_of_uncons h] <;> simp only [bRun]
+    · rw [U_readOps_value, U_readOpWithResults, ← opWithResultsHeadC_eq, hh]
+      rfl
+    · rw [U_readOps_word, U_readOpBody, ← opBodyHeadC_eq, hh]
+      rfl
+  | case10 s l params done hs bs fs ih =>
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
     simp only [bRun]
-    rw [U_readOps_nil (fun n => not_head (hv n)) (fun w => not_head (hw w))]
+    rw [U_readOps_nil (fun n => not_head ((startsOpC_false hs).1 n))
+      (fun w => not_head ((startsOpC_false hs).2 w))]
     b_norm
-  | case13 s l params done fs hv hw hb =>
+  | case11 s l params done fs hs hb =>
     simp only [bRun]
-    rw [U_readOps_nil (fun n => not_head (hv n)) (fun w => not_head (hw w))]
+    rw [U_readOps_nil (fun n => not_head ((startsOpC_false hs).1 n))
+      (fun w => not_head ((startsOpC_false hs).2 w))]
     rcases fs with _ | ⟨_ | _ | _, fs⟩ <;> first | rfl | exact absurd rfl (hb _ _)
-  | case14 s hd done fs pos s₁ h ih =>
+  | case12 s hd done fs pos s₁ h ih =>
     rw [ih, view_of_uncons h]
     simp only [bRun]
     rw [U_readRegions_lbrace]
     b_norm
-  | case15 s hd rs loc s₁ l params os fs hn hl ih =>
+  | case13 s hd rs loc s₁ l params os fs hn hl ih =>
     change readOpLocC s = _ at hl
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
@@ -99,14 +96,14 @@ theorem blocksLoop_eq (s : σ) (fs : List BFrame) : V (blocksLoop s fs) = bRun (
     simp only [okBind]
     rw [← readOpLocC_eq, hl]
     b_norm
-  | case16 s hd rs fs loc s₁ ho hn hl =>
+  | case14 s hd rs fs loc s₁ ho hn hl =>
     change readOpLocC s = _ at hl
     simp only [bRun]
     rw [U_readRegions_nil (not_head hn)]
     simp only [okBind]
     rw [← readOpLocC_eq, hl]
     rcases fs with _ | ⟨_ | _ | _, fs⟩ <;> first | rfl | exact absurd rfl (ho _ _ _ _)
-  | case17 s hd rs fs e hn hl =>
+  | case15 s hd rs fs e hn hl =>
     change readOpLocC s = _ at hl
     simp only [bRun]
     rw [U_readRegions_nil (not_head hn)]

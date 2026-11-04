@@ -50,10 +50,11 @@ termination_by b.size - i
 /-- The line of the byte `b[n]` and the offset of the first byte of that
 line, from the line feeds before it: `line` and `start` are those of the
 byte `b[i]`, and the bytes from `i` on are counted without a copy of
-them. Its only call to itself is a tail call. -/
+them. Its only call to itself is a tail call. It reads only bytes of `b`,
+and `parseBytes` gives it an `n` no larger than `b.size`. -/
 def lineOf (b : ByteArray) (n i line start : Nat) : Nat × Nat :=
-  if i < n then
-    if b[i]? = some 10 then lineOf b n (i + 1) (line + 1) (i + 1)
+  if h : i < n ∧ i < b.size then
+    if b[i]'h.2 = 10 then lineOf b n (i + 1) (line + 1) (i + 1)
     else lineOf b n (i + 1) line start
   else (line, start)
 termination_by n - i

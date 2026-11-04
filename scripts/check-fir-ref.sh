@@ -173,7 +173,7 @@ case "$1" in
         # 2^16777214 - 1, and its minimum have 5,050,445 digits. fir-ref run
         # computes the maximum, whose length and last nine digits are checked
         # here, fir-ref fmt reprints a module with both constants, and
-        # fir-ref run returns them. Each takes up to 5 seconds of CPU time,
+        # fir-ref run returns them. Each takes about 5 seconds of CPU time,
         # and runs under a soft limit of 30; the spec's printInt, quadratic
         # in the number of digits, takes hours.
         printf 'func @max() -> i16777215 {\n^e:\n  %%a: i16777215 = const -1 @0\n' >"$tmp/max.fir"

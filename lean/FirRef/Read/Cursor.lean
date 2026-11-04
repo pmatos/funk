@@ -10,7 +10,7 @@ themselves is a tail call, and they keep what is left to do on an explicit
 stack of frames.
 
 They take their tokens from a cursor: a list of tokens, or a lexer that
-reads each token from the text when a reader asks for it, so that no list
+reads each token from the text as the readers reach it, so that no list
 of tokens exists. `Cursor.view` is the tokens that a cursor holds, as a
 list. Proofs and measures of termination use it, and code never calls it.
 Each reader is proved to give what the spec's reader gives on the view of

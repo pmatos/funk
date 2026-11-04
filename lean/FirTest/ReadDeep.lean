@@ -55,6 +55,12 @@ def flatOpsText (n : Nat) : String :=
     String.join ((List.range n).map fun i => s!"  %c{i}: i32 = const {i} @0\n") ++
     "  ret @0\n}\n" ++ locsText
 
+/-- A function whose blocks branch: an op with an operand, then successors
+with and without arguments. -/
+def branchText (succ : String) : String :=
+  "func @f(%c: i1) {\n^e:\n  cond_br %c, ^a(%c), " ++ succ ++ " @0\n^a(%x: i1):\n" ++
+    "  br ^b @0\n^b:\n  ret @0\n}\n" ++ locsText
+
 /-- An error's line, column and reason. -/
 def errorShown (e : ParseError) : Nat × Nat × String := (e.pos.line, e.pos.col, e.reason)
 
@@ -111,17 +117,17 @@ def endLexError : String := flatOpsText 1000 ++ "// a\x07\n"
 #guard readTextError endLexError = lexError endLexError
 
 /-- Texts that the readers reject, at their start, in the middle and at
-their end, some after a comment with characters of several bytes, and
-texts that the lexer rejects. -/
+their end, some after a comment with characters of several bytes, in an
+op's successors, and texts that the lexer rejects. -/
 def badTexts : List String :=
   ["", "}", "func", "func @f( {", "func @f() {\n^e:\n  ret @0\n", deepRegionsText 3 ++ "}",
     "func @f() {\n^e:\n  %a: i32 = const 1\n}\n" ++ locsText, deepAttrText 3 ++ "locs", "\"abc",
     "@99999999999", "func @f() -> i32 {\n^e:\n  ret 1 @0\n}\n" ++ locsText ++ "x", "- 1",
     "// a\x07b\n" ++ locsText, "func @f() {\n// é" ++ String.singleton (Char.ofNat 0x1F600) ++ "x",
-    "func @f() {\n// é\n}"]
+    "func @f() {\n// é\n}", branchText "%c", branchText "^b(", branchText "^b(%c,"]
 
 #guard badTexts.all fun t => readTextError t = specReadError t && (readTextError t).isSome
-#guard [deepRegionsText 3, deepItemsText 3, deepAttrText 3, flatOpsText 3].all fun t =>
+#guard [deepRegionsText 3, deepItemsText 3, deepAttrText 3, flatOpsText 3, branchText "^b"].all fun t =>
   readTextError t = specReadError t && (readTextError t).isNone
 
 /--
