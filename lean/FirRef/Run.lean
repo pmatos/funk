@@ -3,6 +3,7 @@ import Fir
 import FirRef.Utf8
 import FirRef.Report
 import FirRef.Sample
+import FirRef.RunModes
 
 /-!
 What `fir-ref run` does with a file: it parses it with the core dialect,
@@ -194,6 +195,46 @@ def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf × N
       { out := resultJson "outcomes" [("choices", toString choices),
           ("outcomes", jsonArray (distinct (ps.map (jsonObject ·.1.1))))],
         status := if ps.any (·.1.2) then 1 else 0 }
+
+/-! # The modes, by the machine
+
+`runBytes` below calls the spec's `Core.scripted`, `Core.exhaustive` and
+`Core.sampled`. The theorems here make Lean compile those calls as calls of
+`FirRef.Machine`'s walks of the run (ADR-2026-11-04-2132), which take no
+stack per step, per level of calls or per choice. They name the core
+dialect, so they live in `fir-ref`'s command line, not in
+`FirRef.RunModes` (G0, ADR-2026-11-03-0600).
+-/
+
+/-- `Core.scripted`, by the machine. -/
+def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
+    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  Machine.scripted M read f args fuel cs
+
+@[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
+  funext σ read M f args fuel cs
+  exact (Machine.scripted_eq M read f args fuel cs).symm
+
+/-- `Core.exhaustive`, by the machine. -/
+def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+    Option (List (RunLeaf × Nat)) :=
+  Machine.exhaustive M f args fuel budget
+
+@[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
+  funext M f args fuel budget
+  exact (Machine.exhaustive_eq M f args fuel budget).symm
+
+/-- `Core.sampled`, by the machine. -/
+def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+    RunLeaf × List ChoiceTree.Chosen :=
+  Machine.sampled M draw f args fuel g
+
+@[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
+  funext γ draw M f args fuel g
+  exact (Machine.sampled_eq M draw f args fuel g).symm
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
