@@ -26,10 +26,10 @@ repos:
         files: ^(docs/adrs/|scripts/check_adr_ids\.py$)
       - id: adr-ids-test
         name: The adr-ids check passes its tests
-        entry: python scripts/test_check_adr_ids.py
+        entry: python scripts/run_unittests.py adr-ids-test scripts/test_check_adr_ids.py
         language: python
         pass_filenames: false
-        files: ^scripts/(test_)?check_adr_ids\.py$
+        files: ^scripts/((test_)?check_adr_ids|run_unittests)\.py$
       # Every ADR citation in every tracked text file names an ADR, by the
       # spec checker's grammar and cases (ADR-2026-11-05-1709). It runs on
       # every commit: a deleted or renamed ADR breaks citations in files the
@@ -56,10 +56,10 @@ repos:
         files: ^(lean/|scripts/check_g0\.py$)
       - id: g0-test
         name: The G0 check passes its tests
-        entry: python scripts/test_check_g0.py
+        entry: python scripts/run_unittests.py g0-test scripts/test_check_g0.py
         language: python
         pass_filenames: false
-        files: ^(lean/|scripts/(test_)?check_g0\.py$)
+        files: ^(lean/|scripts/((test_)?check_g0|run_unittests)\.py$)
       # The spec renders the ADRs as its appendix and checks every ADR
       # citation in lean/, the top-level files of docs/spec/ and docs/adrs/
       # (ADR-2026-10-30-1439).
@@ -104,10 +104,10 @@ repos:
         files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$|scripts/verus_report\.py$)
       - id: verus-report-test
         name: The verus-proof hook's script and report reader pass their tests
-        entry: python -m unittest discover -s scripts -p "test_*verus*.py"
+        entry: python scripts/run_unittests.py verus-report-test -m unittest discover -s scripts -p "test_*verus*.py"
         language: python
         pass_filenames: false
-        files: ^(crates/[^/]+/Cargo\.toml$|rust-toolchain\.toml$|scripts/((test_)?verus_report\.py|test_check_verus\.py|(check-verus|rust-env)\.sh)$)
+        files: ^(crates/[^/]+/Cargo\.toml$|rust-toolchain\.toml$|scripts/((test_)?verus_report\.py|test_check_verus\.py|run_unittests\.py|(check-verus|rust-env)\.sh)$)
       # Unsafe code only where Verus proves it, and no assumption outside the
       # trusted base that ADR-2026-11-03-0808 lists.
       - id: unsafe-code
@@ -118,10 +118,10 @@ repos:
         files: (\.rs$|(^|/)Cargo\.toml$|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
       - id: unsafe-code-test
         name: The unsafe-code check passes its tests
-        entry: python -m unittest discover -s scripts -p "test_*unsafe*.py"
+        entry: python scripts/run_unittests.py unsafe-code-test -m unittest discover -s scripts -p "test_*unsafe*.py"
         language: python
         pass_filenames: false
-        files: ^(crates/funk-start-fds/|(crates/(funk|funk-ir)/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items|(test_)?unsafe_[a-z]+)\.py$)
+        files: ^(crates/funk-start-fds/|(crates/(funk|funk-ir)/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items|run_unittests|(test_)?unsafe_[a-z]+)\.py$)
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test
@@ -150,10 +150,10 @@ repos:
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-harness\.sh$|rust-env\.sh$|harness/))
       - id: fir-harness-test
         name: The differential harness passes its tests
-        entry: python -m unittest discover -s scripts/harness -p test_*.py
+        entry: python scripts/run_unittests.py fir-harness-test -m unittest discover -s scripts/harness -p test_*.py
         language: python
         pass_filenames: false
-        files: ^scripts/harness/
+        files: ^scripts/(harness/|run_unittests\.py$)
       # The corpus's coverage matrix (ADR-2026-11-03-0557): the committed
       # docs/coverage/README.md is the one that coverage.py makes, and
       # every cell has a test.
@@ -175,18 +175,26 @@ repos:
         files: ^(\.pre-commit-config\.yaml|\.github/workflows/.*|scripts/check_ci_hooks\.py)$
       - id: ci-hooks-test
         name: The ci-hooks check passes its tests
-        entry: python scripts/test_check_ci_hooks.py
+        entry: python scripts/run_unittests.py ci-hooks-test scripts/test_check_ci_hooks.py
         language: python
         additional_dependencies: [pyyaml==6.0.3]
         pass_filenames: false
-        files: ^(\.pre-commit-config\.yaml|\.github/workflows/.*|scripts/(test_)?check_ci_hooks\.py)$
+        files: ^(\.pre-commit-config\.yaml|\.github/workflows/.*|scripts/((test_)?check_ci_hooks|run_unittests)\.py)$
       # The test hooks' scripts write their counts to the job summary in CI.
       - id: suite-summary-test
         name: The test suites' summary writer passes its tests
-        entry: python scripts/test_suite_summary.py
+        entry: python scripts/run_unittests.py suite-summary-test scripts/test_suite_summary.py
         language: python
         pass_filenames: false
-        files: ^(rust-toolchain\.toml|scripts/((test_)?suite_summary\.py|check-rust\.sh|rust-env\.sh))$
+        files: ^(rust-toolchain\.toml|scripts/((test_)?suite_summary\.py|run_unittests\.py|check-rust\.sh|rust-env\.sh))$
+      # The Python test hooks above run their tests through run_unittests.py,
+      # which writes their counts to the job summary in CI (#150).
+      - id: run-unittests-test
+        name: The Python test hooks' runner passes its tests
+        entry: python scripts/run_unittests.py run-unittests-test scripts/test_run_unittests.py
+        language: python
+        pass_filenames: false
+        files: ^scripts/((test_)?run_unittests|suite_summary)\.py$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
