@@ -18,8 +18,9 @@ check recurses in core's compiled code, whose frames are small, and the
 elaborator's stack is large: the spec's check passes them too, and aborts
 only when `lean` runs with a `--tstack` of 65,536 KiB or less on the
 entries, or of 16,384 KiB or less on the references
-(ADR-2026-11-05-0745). The stack is tested by running `fir-ref validate`
-with `LEAN_STACK_SIZE_KB=256`.
+(ADR-2026-11-05-0745). `scripts/check-fir-ref.sh` tests the stack: it runs
+`fir-ref validate` on such a table and such a location with
+`LEAN_STACK_SIZE_KB=256`.
 -/
 
 namespace FirTest

@@ -55,12 +55,12 @@ with `@[csimp]`, and the spec keeps its definition.
   core's compiled code, whose frames are small, so the spec's check passes
   them too. Run by `lean` on 2026-11-05, it passed with the default stack
   and aborted with `--tstack` of 65,536 KiB on the entries and of 16,384 KiB
-  on the references. The stack is checked by running `fir-ref validate`
-  with `LEAN_STACK_SIZE_KB=256` on both texts, which needs readers that
-  take no stack per entry: on `main`, the spec's readers abort first, and
-  `fir-ref fmt --check` and `fir-ref validate` both abort on 10,000
-  entries. That check lands in `scripts/check-fir-ref.sh` once the readers
-  of #47 do (PR #133).
+  on the references. So `scripts/check-fir-ref.sh test` checks the stack:
+  `fir-ref validate`, with `LEAN_STACK_SIZE_KB=256`, accepts a table of
+  1,000,000 entries and a fused location of 1,000,000 references. The
+  readers of #47 (PR #133) read both texts on that stack; with them alone,
+  `fir-ref fmt --check` accepted both, and `fir-ref validate` aborted on
+  both.
 
 ## Alternatives
 
