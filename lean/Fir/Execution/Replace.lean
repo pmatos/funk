@@ -55,6 +55,12 @@ box refines: on arguments that refine others, `g` on them is refined by
 refined by `g'` on those, by the hypothesis. So the previous section
 gives the theorem for each `f` other than `@g`.
 
+Monotonicity is asked only of the old module's functions: the engine
+runs ops of the target that it also finds in the source, and a call of
+`@g` is a black box, whose new body it does not run. So a dialect whose
+ops are monotone only at valid op instances meets it for every valid
+module, whatever the new body (`Func.runs_replaceBody_isRefinedBy_of_lawful`).
+
 The black box needs its `bound`: on each argument vector, `g'` diverges,
 or none of its runs with `bound` steps or more runs out of fuel. Each
 argument vector has such a budget, since a run that runs out of fuel
@@ -205,15 +211,15 @@ theorem exists_common_bound {A : Type} {L : List A} (hL : ∀ a, a ∈ L) (Q : A
 replacing the body of its function `@g` with one under which `@g`, run
 in the new module, refines `@g` in the old, refines every function of the
 module, calls and recursion included. It asks that every terminator and
-every op with no callee be monotone, that the refinement of values be
-reflexive and transitive, and that `@g` have finitely many argument
-vectors. -/
-theorem Func.runs_replaceBody_isRefinedBy
-    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
+every op with no callee of the old module's functions be monotone, that
+the refinement of values be reflexive and transitive, and that `@g` have
+finitely many argument vectors. -/
+theorem Func.runs_replaceBody_isRefinedBy {M : Module d}
+    (hmono : ∀ g ∈ M.funcs, g.OpsMonotone)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    {M : Module d} (hnd : (M.funcs.map (·.name)).Nodup) {g : Func d} (hg : g ∈ M.funcs)
+    (hnd : (M.funcs.map (·.name)).Nodup) {g : Func d} (hg : g ∈ M.funcs)
     (b : Region d) (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
     (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
@@ -233,7 +239,7 @@ theorem Func.runs_replaceBody_isRefinedBy
   have bb : BlackBox M (M.replaceBody g.name b) bound g (g.replaceBody g.name b) :=
     { params := rfl
       refines := fun a a' ha => Behaviour.isRefinedBy_trans hobs
-        (Func.runs_args_isRefinedBy hmono M g ha) (h a')
+        (Func.runs_args_isRefinedBy M hmono g (hmono g hg) ha) (h a')
       bounded := hbound }
   have hcalls : CallsRefined M (M.replaceBody g.name b) bound := by
     intro x
@@ -249,7 +255,7 @@ theorem Func.runs_replaceBody_isRefinedBy
       | some k =>
         have hn : k.name = x := by simpa using List.find?_some hk
         simp only [Option.map_some, Func.replaceBody_of_ne (hn ▸ hx : k.name ≠ g.name)]
-  exact fun a => Func.runs_isRefinedBy_of_calls hmono hcalls f
+  exact fun a => Func.runs_isRefinedBy_of_calls hmono hcalls f (hmono f hf)
     (HVector.forall₂_refl (fun v => hrefl v) a)
 
 end Fir

@@ -39,11 +39,15 @@ dialect meets:
 * the symbols of a valid module are unique.
 
 The general theorems ask monotonicity of every terminator and every op
-with no callee, at every op instance, valid or not. The lawful class
-`LawfulDialectPoison` covers only the instances that validation accepts
-(ADR-2026-11-02-1515), so it does not give that by itself: the core
+with no callee among the ops of the modules' functions and of the
+function that runs (`Func.OpsMonotone`, ADR-2026-11-05-1715). The core
 dialect meets it with `Core.Op.monotone_all`, which holds at every width,
-`i0` included, and not through its lawful instance.
+`i0` included, so for every function of every module, valid or not
+(`Core.opsMonotone_all`). The lawful class `LawfulDialectPoison` covers
+only the instances that validation accepts (ADR-2026-11-02-1515), so it
+gives it for the functions of valid modules
+(`Func.runs_args_isRefinedBy_of_lawful`); these theorems ask for no
+valid module, so they use the ops' own obligations.
 
 Refined arguments need no validity: the theorem holds for every function
 of every core module. For a function of a valid module, no path of either
@@ -90,6 +94,11 @@ theorem Op.monotone_all : (op : Op) →
   | .ret ts, _ => ret_monotone ts
   | .call .., h => by rcases h with h | h <;> cases h
 
+/-- Every terminator and every op with no callee of every core function is
+monotone, valid or not. -/
+theorem opsMonotone_all (f : Func CoreDialect) : f.OpsMonotone :=
+  fun _ _ o _ h => Op.monotone_all o.op h
+
 /-- Every value of a core type: poison and each bit vector of `iN`, and
 none of `ptr`. -/
 def Ty.values : (t : Ty) → List ⟦t⟧
@@ -119,7 +128,7 @@ refines its behaviour on those others, calls and recursion included. -/
 theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (funcRuns M f a) ⊑ observable (funcRuns M f a') :=
-  Func.runs_args_isRefinedBy Op.monotone_all M f h
+  Func.runs_args_isRefinedBy M (fun g _ => opsMonotone_all g) f (opsMonotone_all f) h
 
 variable {M : Module CoreDialect}
 
@@ -132,8 +141,8 @@ theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g �
     (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) :
     funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) (f.replaceBody g.name b) :=
-  Func.runs_replaceBody_isRefinedBy Op.monotone_all Ty.isRefinedBy_refl Ty.isRefinedBy_trans
-    hM.symbolsUnique hg b ⟨argVectors _, mem_argVectors⟩ h hf
+  Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
+    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _, mem_argVectors⟩ h hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined by itself in the module with `@g`'s new body. -/

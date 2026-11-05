@@ -36,6 +36,7 @@ import FirTest.Calls
 import FirTest.RunsCalls
 import FirTest.RefineCalls
 import FirTest.Lawful
+import FirTest.LawfulRefine
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

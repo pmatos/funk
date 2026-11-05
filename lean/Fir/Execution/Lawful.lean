@@ -1,4 +1,5 @@
 import Fir.Execution.Calls
+import Fir.Execution.Replace
 
 /-!
 # Valid modules run on valid op instances
@@ -22,15 +23,27 @@ for every valid module, because a valid module holds no other instance:
 * no path of such a function's run is stuck, whatever its ops do
   (`Func.neverStuck_of_inModule`): that needs no property of the ops.
 
-Refinement asks more than the class gives. The general theorems of the
+Refinement follows from the class too. The general theorems of the
 sections on refined arguments and on congruence in the callee follow the
 target's run into its callees, and ask that every terminator and every op
-with no callee be monotone at every op instance, not only at those of the
-modules they compare. The class covers only valid instances, so it does
-not give that by itself. The core dialect meets it with its ops' own
+with no callee be monotone only among the ops that the run can reach: the
+ops of the function that runs and of the source module's functions
+(`Func.OpsMonotone`, ADR-2026-11-05-1715). So:
+
+* a dialect whose terminators and ops with no callee are monotone at
+  every valid op instance meets that for every valid function
+  (`Func.Valid.opsMonotone`): monotonicity is needed only at valid
+  instances;
+* a lawful dialect gets both function-level refinement theorems for
+  every function of a valid module by the class alone: on arguments that
+  refine others (`Func.runs_args_isRefinedBy_of_lawful`), and on
+  replacing a callee's body, whatever the new body
+  (`Func.runs_replaceBody_isRefinedBy_of_lawful`).
+
+The core dialect meets the general theorems' hypothesis with its ops' own
 obligations, which hold at every width (`Core.Op.monotone_all`), so
-refinement holds for every core module (the section on refinement through
-core calls).
+refinement holds for every core module, valid or not (the section on
+refinement through core calls).
 -/
 
 namespace Fir
@@ -54,6 +67,20 @@ theorem Func.Valid.typesValid {ctx : ModuleContext d} {f : Func d} (hv : f.Valid
     obtain ⟨p, hp, rfl⟩ := List.mem_map.1 ht
     exact hdef p (Func.mem_defs_result hb ho hp)
 
+section
+
+variable [TyDenote d.Ty] [TyRefinement d.Ty] [DialectCall d] [DialectDenote d SetM]
+
+/-- Every terminator and every op with no callee of a valid function is
+monotone, when every such op is at every valid op instance. -/
+theorem Func.Valid.opsMonotone
+    (hmono : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
+      OpMonotone op)
+    {ctx : ModuleContext d} {f : Func d} (hv : f.Valid ctx) : f.OpsMonotone :=
+  fun _ hb o ho => hmono o.op (hv.typesValid hb ho)
+
+end
+
 variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty] [DialectPoison d]
   [DialectCall d] [DialectDenote d SetM] [LawfulDialectPoison d] {ctx : ModuleContext d}
   {M : Module d}
@@ -67,5 +94,36 @@ theorem Func.progress_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ctx)
   Func.progress_of_inModule hv hm
     (fun g hg _ hb o ho hc => LawfulDialectPoison.total o.op ((hv g hg).typesValid hb ho) hc)
     hf args
+
+open SetM in
+/-- Refined arguments, by the lawful class alone: a function's behaviour
+on arguments that refine others, a poison by any value, refines its
+behaviour on those others, for every function of a module whose functions
+are all valid, calls and recursion included. -/
+theorem Func.runs_args_isRefinedBy_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func d}
+    (hf : f ∈ M.funcs) {a a' : HVector toType (f.params.map (·.2))}
+    (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
+    observable (f.runs M a) ⊑ observable (f.runs M a') :=
+  Func.runs_args_isRefinedBy M (fun g hg => (hv g hg).opsMonotone LawfulDialectPoison.monotone) f
+    ((hv f hf).opsMonotone LawfulDialectPoison.monotone) ha
+
+/-- Congruence in the callee, by the lawful class alone: in a valid
+module, replacing the body of its function `@g` with one under which
+`@g`, run in the new module, refines `@g` in the old, refines every
+function of the module, calls and recursion included, whatever the new
+body. It asks that the refinement of values be reflexive and transitive,
+and that `@g` have finitely many argument vectors. -/
+theorem Func.runs_replaceBody_isRefinedBy_of_lawful
+    (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
+    (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
+    (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
+    (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
+    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
+    {f : Func d} (hf : f ∈ M.funcs) :
+    f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
+  Func.runs_replaceBody_isRefinedBy
+    (fun g hg => (hM.funcs g hg).opsMonotone LawfulDialectPoison.monotone) hrefl htrans
+    hM.symbolsUnique hg b hfin h hf
 
 end Fir
