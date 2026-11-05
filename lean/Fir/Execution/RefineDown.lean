@@ -174,15 +174,17 @@ theorem AllowedBelow.of_not {B N : Nat}
 
 /-- A path of a call's callee in the target that runs out of fuel or
 returns is allowed at `N₀` by the source's callee: the same function, by
-the induction `ih`, or a black box. -/
+the induction `ih`, or a black box. The induction is asked only of a
+function of the source module, whose ops are monotone, from the ops of
+its entry block. -/
 theorem CallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
-    (hc : CallsRefined M M' bound)
+    (hc : CallsRefined M M' bound) (hmono : ∀ g ∈ M.funcs, g.OpsMonotone)
     {s : Name} {g₀ : Func d} (hg' : M'.func? s = some g₀) {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {p' : List (Operation d) × Env d} (hen' : g₀.enter args'.toDVals = .ok p') {n N₀ : Nat}
     (hn : bound + (bound + 1) * (N₀ + 1) ≤ n)
-    (ih : ∀ (env env' : Env d), env.IsRefinedBy env' → ∀ e',
-      (Func.runOps (m := SetM) M' n g₀ env' p'.1).run e' →
+    (ih : g₀.OpsMonotone → MonotoneOps p'.1 → ∀ (env env' : Env d), env.IsRefinedBy env' →
+      ∀ e', (Func.runOps (m := SetM) M' n g₀ env' p'.1).run e' →
         AllowedBelow (bound + 1) (fun N => Func.runOps (m := SetM) M N g₀ env p'.1) N₀ e')
     {e' : Ev (Except Stuck (Result (List (DVal d) × Nat)))}
     (he' : (Func.runOps (m := SetM) M' n g₀ p'.2 p'.1).run e')
@@ -191,7 +193,9 @@ theorem CallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
       AllowedBelow (bound + 1) (fun N => Func.runOps (m := SetM) M N g p.2 p.1) N₀ e' := by
   rcases hc s with hsame | ⟨g, g', hg, hg'', bb⟩
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-    exact ⟨g₀, (p'.1, genv), hsame ▸ hg', hen, ih genv p'.2 hgenv e' he'⟩
+    have hg : M.func? s = some g₀ := hsame ▸ hg'
+    have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
+    exact ⟨g₀, (p'.1, genv), hg, hen, ih hf (hf.enter hen') genv p'.2 hgenv e' he'⟩
   · rw [hg''] at hg'
     cases hg'
     obtain ⟨p, hen, hm⟩ := bb.allowedBelow hr hn hen' he' hne hub
@@ -200,19 +204,19 @@ theorem CallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
 /-- Every path of the target's run of ops that runs out of fuel or
 returns, at a budget of at least `(bound + 1) * (N + 1)`, is allowed by
 the source's run at `N`, from environments of which the target's refines
-the source's, when every terminator and every op with no callee is
-monotone, and every call names the same function in both modules or a
-black box. -/
-theorem Func.runOps_allowedBelow
-    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
-    {M M' : Module d} {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
-    ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)) (N : Nat),
-      env.IsRefinedBy env' → (bound + 1) * (N + 1) ≤ n →
+the source's, when every call names the same function in both modules or
+a black box, and every terminator and every op with no callee is
+monotone, among the ops of the source module's functions, of the
+function `f` that runs, and of the ops `os` it runs. -/
+theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsMonotone)
+    {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
+    ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)) (N : Nat), f.OpsMonotone →
+      MonotoneOps os → env.IsRefinedBy env' → (bound + 1) * (N + 1) ≤ n →
       ∀ e', (Func.runOps (m := SetM) M' n f env' os).run e' →
         AllowedBelow (bound + 1) (fun N => Func.runOps (m := SetM) M N f env os) N e' := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-    intro f env env' os N henv hN e' he'
+    intro f env env' os N hf hops henv hN e' he'
     by_cases hgood : Ev.NotStuck e' ∧ ∀ r, e' ≠ .ub r
     case neg => exact AllowedBelow.of_not hgood
     obtain ⟨hne, hnub⟩ := hgood
@@ -221,14 +225,16 @@ theorem Func.runOps_allowedBelow
         Func.StepPath M N f env o os (.ub r) →
         (Func.runOps (m := SetM) M (N + 1) f env (o :: os)).run (.ub r) :=
       fun {_ r _ _} h => (Func.stepPath_iff (e := .ub r) (fun _ h => nomatch h)).2 h
-    match n, os, N, he' with
-    | 0, _, _, _ => omega
-    | _ + 1, _, 0, _ => exact AllowedBelow.of_exhausted (Func.run_runOps_zero.2 rfl) _
-    | n + 1, [], _ + 1, he' => exact absurd he' (Func.run_runOps_nil hne)
-    | n + 1, o :: os, N₀ + 1, he' =>
+    match n, os, N, hops, he' with
+    | 0, _, _, _, _ => omega
+    | _ + 1, _, 0, _, _ => exact AllowedBelow.of_exhausted (Func.run_runOps_zero.2 rfl) _
+    | n + 1, [], _ + 1, _, he' => exact absurd he' (Func.run_runOps_nil hne)
+    | n + 1, o :: os, N₀ + 1, hops, he' =>
       have hb : bound + (bound + 1) * (N₀ + 1) ≤ n := by rw [Nat.mul_succ] at hN; omega
       have hb' : (bound + 1) * (N₀ + 1) ≤ n := by omega
       have ihn := ih n (Nat.lt_succ_self n)
+      have hmo := hops o List.mem_cons_self
+      have hops' : MonotoneOps os := fun o' h => hops o' (List.mem_cons_of_mem _ h)
       have step : ∀ {c : Nat → ExceptT Stuck SetM (Result (List (DVal d) × Nat))},
           (∀ N x, Ev.NotStuck x → (c N).run x → Func.StepPath M N f env o os x) →
           AllowedBelow (bound + 1) c N₀ e' →
@@ -242,7 +248,7 @@ theorem Func.runOps_allowedBelow
       | callUB _ _ _ _ _ _ _ => exact absurd rfl (hnub _)
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
@@ -252,17 +258,17 @@ theorem Func.runOps_allowedBelow
             HVector.toDVals_isRefinedBy hr, hb'⟩)
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (.goto _), he₀, rfl =>
           obtain ⟨env₁, hj₁, henv₁⟩ := henv.jump hj
           exact step (fun N x _ h => .goto hreg hargs hT hos he₀ hj₁ h)
-            (ihn _ _ _ _ _ henv₁ hb' _ he)
+            (ihn _ _ _ _ _ hf (hf.jump hj) henv₁ hb' _ he)
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
@@ -270,11 +276,12 @@ theorem Func.runOps_allowedBelow
           have hvs := HVector.toDVals_isRefinedBy hrs
           have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
           exact step (fun N x _ h => .denote hreg hargs hT hc he₀ hlen h)
-            (ihn _ _ _ _ _ (henv.zip_append _ hvs) hb' _ he)
+            (ihn _ _ _ _ _ hf hops' (henv.zip_append _ hvs) hb' _ he)
       | callExh hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hg' hr (p' := (_, _)) hen' hb
-          (fun env env' h e' he' => ihn _ env env' _ N₀ h hb' e' he') hx (fun _ h => nomatch h)
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr (p' := (_, _)) hen' hb
+          (fun hgm hbm env env' h e' he' => ihn _ env env' _ N₀ hgm hbm h hb' e' he') hx
+          (fun _ h => nomatch h)
           (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩
         · exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
@@ -283,8 +290,9 @@ theorem Func.runOps_allowedBelow
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         rename_i vs' k'
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hg' hr (p' := (_, _)) hen' hb
-          (fun env env' h e' he' => ihn _ env env' _ N₀ h hb' e' he') hx (fun _ h => nomatch h)
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr (p' := (_, _)) hen' hb
+          (fun hgm hbm env env' h e' he' => ihn _ env env' _ N₀ hgm hbm h hb' e' he') hx
+          (fun _ h => nomatch h)
           (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩ | ⟨vs, k, hx₁, hvs, hk⟩
         · exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
@@ -295,7 +303,8 @@ theorem Func.runOps_allowedBelow
         have hk'n := Func.runOps_left_le M' n _ _ _ _ _ hx
         have hkN := Func.runOps_left_le M N₀ _ _ _ _ _ hx₁
         rw [Nat.min_eq_left hk'n] at he
-        have hm := ih k' (Nat.lt_succ_of_le hk'n) _ _ _ _ k (henv.zip_append _ hvs) hk _ he
+        have hm := ih k' (Nat.lt_succ_of_le hk'n) _ _ _ _ k hf hops' (henv.zip_append _ hvs) hk _
+          he
         refine AllowedBelow.of_step (fun x hx h => (Func.stepPath_iff hx).2
           (.callRet hreg hargs hT hc hg hen hx₁ hty hlen (by rwa [Nat.min_eq_left hkN]))) ?_ hm
         rintro ⟨N₂, r, h⟩

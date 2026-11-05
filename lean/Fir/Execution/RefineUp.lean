@@ -6,14 +6,23 @@ import Fir.Execution.BlackBox
 Every return and every UB of a run of ops in the target module is allowed
 by the source's run of the same ops at some budget, from environments of
 which the target's refines the source's (`Func.runOps_allowed`), when
-every op that runs by its own rule, a terminator or an op with no
-callee, is monotone, and every call names the same function in both
-modules or a black box (`CallsRefined`). Calls and recursion are
-included.
+every call names the same function in both modules or a black box
+(`CallsRefined`), and every op that runs by its own rule, a terminator
+or an op with no callee, is monotone, among the ops of the source
+module's functions and of the function that runs (`Func.OpsMonotone`).
+Calls and recursion are included.
+
+Monotonicity is asked only of the ops that the run can reach, not of
+every op instance of the dialect. So a dialect whose ops are monotone
+only at valid op instances meets it for every function of a valid module
+(`Func.Valid.opsMonotone`, ADR-2026-11-05-1715).
 
 The proof is by strong induction on the target's budget, for every
 function at once, and follows the target's path step by step
-(`Func.StepPath`):
+(`Func.StepPath`). Its invariant is that the ops it runs are ops of the
+function that runs, whose ops are monotone: the ops of one of its
+blocks, which a jump keeps, as it goes to a block of the same function
+(`Func.OpsMonotone.jump`).
 
 * An op's operands are found in the source's environment too, refined
   (`Env.IsRefinedBy.operands`). What the op does on the target's
@@ -25,7 +34,9 @@ function at once, and follows the target's path step by step
 * A call of the same function in both enters it at the same op, in
   environments of which the target's refines the source's
   (`Func.enter_isRefinedBy`), and the induction covers the callee, on
-  fewer steps. A call of a black box is allowed by
+  fewer steps. The callee is a function of the source module, so its
+  ops are monotone, and it starts at the ops of its entry block
+  (`Func.OpsMonotone.enter`). A call of a black box is allowed by
   the black box's behaviours (`BlackBox.allowed`).
 * When the source's callee returns at the budget `N₁`, values that the
   target's refine, and the rest of the source's run is allowed at the
@@ -40,6 +51,30 @@ open SetM
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d SetM] [TyRefinement d.Ty]
+
+omit [DecidableEq d.Ty] in
+/-- Every op of `os` that runs by its own rule, a terminator or an op
+with no callee, is monotone. -/
+def MonotoneOps (os : List (Operation d)) : Prop :=
+  ∀ o ∈ os, isTerminator o.op = true ∨ callee? o.op = none → OpMonotone o.op
+
+omit [DecidableEq d.Ty] in
+/-- Every op of the function `f` that runs by its own rule is monotone. -/
+def Func.OpsMonotone (f : Func d) : Prop :=
+  ∀ b ∈ f.blocks, MonotoneOps b.body
+
+/-- A run of `f` starts at the ops of one of its blocks. -/
+theorem Func.OpsMonotone.enter {f : Func d} (hf : f.OpsMonotone) {dvs : List (DVal d)}
+    {p : List (Operation d) × Env d} (hen : f.enter dvs = .ok p) : MonotoneOps p.1 := by
+  obtain ⟨e, he, -, -, rfl⟩ := Func.enter_eq_ok hen
+  exact hf e (List.mem_of_mem_head? he)
+
+/-- A jump of `f` goes to the ops of one of its blocks. -/
+theorem Func.OpsMonotone.jump {f : Func d} (hf : f.OpsMonotone) {env : Env d}
+    {succs : List Succ} {i : Nat} {b : Block d} {env₁ : Env d}
+    (hj : f.jump env succs i = .ok (b, env₁)) : MonotoneOps b.body := by
+  obtain ⟨s, vs, -, hb, -⟩ := Func.jump_eq_ok hj
+  exact hf b (Func.block?_some hb).1
 
 omit [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [DialectDenote d SetM] in
 /-- UB at some budget allows every path. -/
@@ -81,13 +116,15 @@ theorem Allowed.of_step {src c : Nat → ExceptT Stuck SetM (Result (List (DVal 
 
 /-- A return or UB of a call's callee in the target is allowed by the
 source's callee: the same function, by the induction `ih`, or a black
-box. -/
+box. The induction is asked only of a function of the source module,
+whose ops are monotone, from the ops of its entry block. -/
 theorem CallsRefined.callee_allowed {M M' : Module d} {bound : Nat} (hc : CallsRefined M M' bound)
-    {s : Name} {g₀ : Func d} (hg' : M'.func? s = some g₀) {ts : List d.Ty}
+    (hmono : ∀ g ∈ M.funcs, g.OpsMonotone) {s : Name} {g₀ : Func d} (hg' : M'.func? s = some g₀)
+    {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {p' : List (Operation d) × Env d} (hen' : g₀.enter args'.toDVals = .ok p') {n : Nat}
-    (ih : ∀ (env env' : Env d), env.IsRefinedBy env' → ∀ e',
-      (Func.runOps (m := SetM) M' n g₀ env' p'.1).run e' →
+    (ih : g₀.OpsMonotone → MonotoneOps p'.1 → ∀ (env env' : Env d), env.IsRefinedBy env' →
+      ∀ e', (Func.runOps (m := SetM) M' n g₀ env' p'.1).run e' →
         Allowed (fun N => Func.runOps (m := SetM) M N g₀ env p'.1) e')
     {e' : Ev (Except Stuck (Result (List (DVal d) × Nat)))}
     (he' : (Func.runOps (m := SetM) M' n g₀ p'.2 p'.1).run e')
@@ -96,7 +133,9 @@ theorem CallsRefined.callee_allowed {M M' : Module d} {bound : Nat} (hc : CallsR
       Allowed (fun N => Func.runOps (m := SetM) M N g p.2 p.1) e' := by
   rcases hc s with hsame | ⟨g, g', hg, hg'', bb⟩
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-    exact ⟨g₀, (p'.1, genv), hsame ▸ hg', hen, ih genv p'.2 hgenv e' he'⟩
+    have hg : M.func? s = some g₀ := hsame ▸ hg'
+    have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
+    exact ⟨g₀, (p'.1, genv), hg, hen, ih hf (hf.enter hen') genv p'.2 hgenv e' he'⟩
   · rw [hg''] at hg'
     cases hg'
     obtain ⟨p, hen, hm⟩ := bb.allowed hr hen' he' hne hexh
@@ -104,18 +143,19 @@ theorem CallsRefined.callee_allowed {M M' : Module d} {bound : Nat} (hc : CallsR
 
 /-- Every return and UB of the target's run of ops is allowed by the
 source's at some budget, from environments of which the target's refines
-the source's, when every terminator and every op with no callee is
-monotone, and every call names the same function in both modules or a
-black box. -/
-theorem Func.runOps_allowed
-    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
-    {M M' : Module d} {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
-    ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)), env.IsRefinedBy env' →
+the source's, when every call names the same function in both modules or
+a black box, and every terminator and every op with no callee is
+monotone, among the ops of the source module's functions, of the
+function `f` that runs, and of the ops `os` it runs. -/
+theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsMonotone)
+    {bound : Nat} (hcalls : CallsRefined M M' bound) (n : Nat) :
+    ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)), f.OpsMonotone →
+      MonotoneOps os → env.IsRefinedBy env' →
       ∀ e', (Func.runOps (m := SetM) M' n f env' os).run e' →
         Allowed (fun N => Func.runOps (m := SetM) M N f env os) e' := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-    intro f env env' os henv e' he'
+    intro f env env' os hf hops henv e' he'
     by_cases hgood : Ev.NotStuck e' ∧ e' ≠ .ok (.ok .fuelExhausted)
     case neg => exact Allowed.of_not hgood
     obtain ⟨hne, hexh⟩ := hgood
@@ -123,11 +163,13 @@ theorem Func.runOps_allowed
         Func.StepPath M N f env o os (.ub r) →
         (Func.runOps (m := SetM) M (N + 1) f env (o :: os)).run (.ub r) :=
       fun {_ r _ _} h => (Func.stepPath_iff (e := .ub r) (fun _ h => nomatch h)).2 h
-    match n, os, he' with
-    | 0, _, he' => exact absurd (Func.run_runOps_zero.1 he') hexh
-    | n + 1, [], he' => exact absurd he' (Func.run_runOps_nil hne)
-    | n + 1, o :: os, he' =>
+    match n, os, hops, he' with
+    | 0, _, _, he' => exact absurd (Func.run_runOps_zero.1 he') hexh
+    | n + 1, [], _, he' => exact absurd he' (Func.run_runOps_nil hne)
+    | n + 1, o :: os, hops, he' =>
       have ihn := ih n (Nat.lt_succ_self n)
+      have hmo := hops o List.mem_cons_self
+      have hops' : MonotoneOps os := fun o' h => hops o' (List.mem_cons_of_mem _ h)
       have step : ∀ {c : Nat → ExceptT Stuck SetM (Result (List (DVal d) × Nat))},
           (∀ N x, Ev.NotStuck x → (c N).run x → Func.StepPath M N f env o os x) →
           Allowed c e' → Allowed (fun N => Func.runOps (m := SetM) M N f env (o :: os)) e' :=
@@ -141,12 +183,12 @@ theorem Func.runOps_allowed
       cases (Func.stepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok .ret, he₀, _ =>
@@ -155,45 +197,46 @@ theorem Func.runOps_allowed
             HVector.toDVals_isRefinedBy hr⟩
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (.goto _), he₀, rfl =>
           obtain ⟨env₁, hj₁, henv₁⟩ := henv.jump hj
-          exact step (fun N x _ h => .goto hreg hargs hT hos he₀ hj₁ h) (ihn _ _ _ _ henv₁ _ he)
+          exact step (fun N x _ h => .goto hreg hargs hT hos he₀ hj₁ h)
+            (ihn _ _ _ _ hf (hf.jump hj) henv₁ _ he)
       | denoteUB hreg hargs' hT hc hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmono o.op (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
         | .ok rs, he₀, hrs =>
           have hvs := HVector.toDVals_isRefinedBy hrs
           have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
           exact step (fun N x _ h => .denote hreg hargs hT hc he₀ hlen h)
-            (ihn _ _ _ _ (henv.zip_append _ hvs) _ he)
+            (ihn _ _ _ _ hf hops' (henv.zip_append _ hvs) _ he)
       | callUB hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hg' hr (p' := (_, _)) hen'
-          (fun env env' h e' he' => ihn _ env env' _ h e' he') hx (fun _ h => nomatch h)
-          (fun h => nomatch h)
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr (p' := (_, _)) hen'
+          (fun hgm hbm env env' h e' he' => ihn _ env env' _ hgm hbm h e' he') hx
+          (fun _ h => nomatch h) (fun h => nomatch h)
         obtain ⟨N, r, hN⟩ := hm
         exact Allowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
       | callExh _ _ _ _ _ _ _ => exact absurd rfl hexh
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hg' hr (p' := (_, _)) hen'
-          (fun env env' h e' he' => ihn _ env env' _ h e' he') hx (fun _ h => nomatch h)
-          (fun h => nomatch h)
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr (p' := (_, _)) hen'
+          (fun hgm hbm env env' h e' he' => ihn _ env env' _ hgm hbm h e' he') hx
+          (fun _ h => nomatch h) (fun h => nomatch h)
         rcases hm with ⟨N, r, hN⟩ | ⟨N₁, vs, k, hx₁, hvs⟩
         · exact Allowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
         have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
         have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-        have hm := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _
+        have hm := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _ hf hops'
           (henv.zip_append _ hvs) _ he
         exact Allowed.of_step N₁ (fun N₂ x hx hxe h =>
           Func.call_cont hreg hargs hT hc hg hen hx₁ hty hlen hx hxe h) hm

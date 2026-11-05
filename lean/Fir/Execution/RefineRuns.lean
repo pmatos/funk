@@ -6,9 +6,12 @@ import Fir.Execution.RefineDown
 The first of #20's function-level theorems: on arguments that refine
 others, a poison by any value, a function's observable behaviour refines
 its behaviour on those others (`Func.runs_args_isRefinedBy`). It holds for
-every function of every module of every dialect whose terminators and
-ops with no callee are all monotone, calls and recursion included; for
-the core dialect it is `Core.args_isRefinedBy`. A call passes its
+every function of every module, calls and recursion included, when the
+terminators and the ops with no callee of the function and of the
+module's functions are monotone (`Func.OpsMonotone`); for the core
+dialect it is `Core.args_isRefinedBy`. A lawful dialect meets that for
+every function of a valid module, by the class alone
+(`Func.runs_args_isRefinedBy_of_lawful`). A call passes its
 arguments to its callee, so a call on arguments that refine others
 refines the call on those others. This is the counterpart, at function
 level, of monotonicity (`OpMonotone`), which speaks only of ops that run
@@ -49,12 +52,13 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 
 /-- A function's behaviour in the target module, on arguments that refine
 others, refines its behaviour in the source module on those others, when
-every terminator and every op with no callee is monotone, and every call
-names the same function in both modules or a black box. -/
-theorem Func.runs_isRefinedBy_of_calls
-    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
-    {M M' : Module d} {bound : Nat} (hcalls : CallsRefined M M' bound) (f : Func d)
-    {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
+every call names the same function in both modules or a black box, and
+every terminator and every op with no callee of the function and of the
+source module's functions is monotone. -/
+theorem Func.runs_isRefinedBy_of_calls {M M' : Module d}
+    (hmono : ∀ g ∈ M.funcs, g.OpsMonotone) {bound : Nat} (hcalls : CallsRefined M M' bound)
+    (f : Func d) (hf : f.OpsMonotone) {a a' : HVector toType (f.params.map (·.2))}
+    (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.runs M a) ⊑ observable (f.runs M' a') := by
   have start : ∀ {p' : List (Operation d) × Env d}, f.enter a'.toDVals = .ok p' →
       ∃ genv, f.enter a.toDVals = .ok (p'.1, genv) ∧ genv.IsRefinedBy p'.2 :=
@@ -64,14 +68,15 @@ theorem Func.runs_isRefinedBy_of_calls
   | .ret vs', ⟨n, hn⟩ =>
     obtain ⟨p', hen', k', hx⟩ := Func.runs_ret_inv hn
     obtain ⟨genv, hen, henv⟩ := start hen'
-    rcases Func.runOps_allowed hmono hcalls n f genv p'.2 p'.1 henv _ hx with
+    rcases Func.runOps_allowed hmono hcalls n f genv p'.2 p'.1 hf (hf.enter hen') henv _ hx with
       ⟨N, r, h⟩ | ⟨N, vs, k, h, hvs⟩
     · exact ⟨.ub r, ⟨N, Func.runs_of_runOps hen h⟩, trivial⟩
     · exact ⟨.ret vs, ⟨N, Func.runs_of_runOps hen h⟩, hvs⟩
   | .ub r', ⟨n, hn⟩ =>
     obtain ⟨p', hen', hx⟩ := Func.runs_ub_inv hn
     obtain ⟨genv, hen, henv⟩ := start hen'
-    obtain ⟨N, r, h⟩ := Func.runOps_allowed hmono hcalls n f genv p'.2 p'.1 henv _ hx
+    obtain ⟨N, r, h⟩ := Func.runOps_allowed hmono hcalls n f genv p'.2 p'.1 hf (hf.enter hen')
+      henv _ hx
     exact ⟨.ub r, ⟨N, Func.runs_of_runOps hen h⟩, trivial⟩
   | .fuelExhausted, ht =>
     by_cases hU : ∃ N r, (f.runs M a N).outcomes (.ub r)
@@ -80,20 +85,20 @@ theorem Func.runs_isRefinedBy_of_calls
     refine ⟨.fuelExhausted, fun N => ?_, trivial⟩
     obtain ⟨p', hen', hx⟩ := Func.runs_exh_inv (ht ((bound + 1) * (N + 1)))
     obtain ⟨genv, hen, henv⟩ := start hen'
-    rcases Func.runOps_allowedBelow hmono hcalls _ f genv p'.2 p'.1 N henv (Nat.le_refl _) _ hx
-      with h | ⟨N', r, h⟩
+    rcases Func.runOps_allowedBelow hmono hcalls _ f genv p'.2 p'.1 N hf (hf.enter hen') henv
+      (Nat.le_refl _) _ hx with h | ⟨N', r, h⟩
     · exact Func.runs_of_runOps hen h
     · exact absurd ⟨N', r, Func.runs_of_runOps hen h⟩ hU
 
 /-- Refined arguments: a function's behaviour on arguments that refine
 others, a poison by any value, refines its behaviour on those others, in
 every module, calls and recursion included, when every terminator and
-every op with no callee is monotone. -/
-theorem Func.runs_args_isRefinedBy
-    (hmono : ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op)
-    (M : Module d) (f : Func d) {a a' : HVector toType (f.params.map (·.2))}
+every op with no callee of the function and of the module's functions is
+monotone. -/
+theorem Func.runs_args_isRefinedBy (M : Module d) (hmono : ∀ g ∈ M.funcs, g.OpsMonotone)
+    (f : Func d) (hf : f.OpsMonotone) {a a' : HVector toType (f.params.map (·.2))}
     (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.runs M a) ⊑ observable (f.runs M a') :=
-  Func.runs_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl) f ha
+  Func.runs_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl) f hf ha
 
 end Fir

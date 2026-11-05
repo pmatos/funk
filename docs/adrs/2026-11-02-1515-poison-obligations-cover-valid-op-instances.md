@@ -1,6 +1,6 @@
 # The poison obligations cover only op instances whose types validation accepts
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1715
 
 ## Context
 
