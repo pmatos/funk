@@ -1,7 +1,11 @@
 import VersoManual
 import Fir
+import FirSpecSite.ReadableElab
+import FirSpec.Core.Ops
+import FirSpec.Execution.CallSteps
 
 open Verso.Genre Manual
+open FirSpecSite
 
 set_option pp.rawOnError true
 
@@ -20,6 +24,13 @@ directory, and the prose beside them explains them. This document renders
 both from the same source on every change, so the readable specification
 cannot drift from the formal one. Where the two seem to disagree, the Lean
 definitions are normative.
+
+Some sections show each Lean declaration as a readable block: what it says,
+in words and in mathematical notation, in the style of the WebAssembly
+specification. The Lean, with its statements and proofs, is hidden under
+each block and opens with a click. The build checks every block against the
+Lean it explains, and fails when the Lean changes under it
+(ADR-2026-11-05-2012).
 
 The chapters follow the WebAssembly specification:
 
@@ -63,7 +74,7 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Types "Core types" (level := 2)}
 
-{includeLiterate "." Fir.Core.Ops "Core ops" (level := 2)}
+{includeReadable "." Fir.Core.Ops "Core ops" FirSpec.Core.Ops (level := 2)}
 
 {includeLiterate "." Fir.Core.Signature "Core signatures" (level := 2)}
 
@@ -179,7 +190,7 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
 
-{includeLiterate "." Fir.Execution.CallSteps "What a call step needs" (level := 2)}
+{includeReadable "." Fir.Execution.CallSteps "What a call step needs" FirSpec.Execution.CallSteps (level := 2)}
 
 {includeLiterate "." Fir.Execution.Calls "Progress with calls" (level := 2)}
 

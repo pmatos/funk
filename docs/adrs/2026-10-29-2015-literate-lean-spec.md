@@ -1,6 +1,6 @@
 # The spec is literate Lean, rendered with Verso
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-2012
 
 ## Context
 
