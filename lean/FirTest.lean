@@ -10,6 +10,7 @@ import FirTest.Interpreter
 import FirTest.Modes
 import FirTest.Sample
 import FirTest.RunSteps
+import FirTest.Lookup
 import FirTest.Bitwise
 import FirTest.Width
 import FirTest.PoisonOp
