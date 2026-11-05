@@ -114,6 +114,13 @@ if __name__ == "__main__":
     unittest.main()
 """
 
+UNCOMPILABLE = """
+import unittest
+
+def (:
+    pass
+"""
+
 # A test that runs a suite of its own, as a test of a test runner might.
 NESTED = """
 import sys, unittest
@@ -237,6 +244,21 @@ class Runner(unittest.TestCase):
         self.assertSameRun(old, new)
         self.assertEqual(new.returncode, 1)
         self.assertIn("| 1 | 0 | 0 | 1 | 0 |", self.rows())
+
+    def test_a_file_that_does_not_compile(self):
+        path = self.write("test_uncompilable.py", UNCOMPILABLE)
+        old, new = self.both([path])
+        self.assertSameRun(old, new)
+        self.assertEqual(new.returncode, 1)
+        self.assertIn("The tests did not run: SyntaxError", self.rows())
+
+    def test_discover_from_a_missing_directory(self):
+        args = ["-m", "unittest", "discover", "-s", "gone", "-p", "test_*.py"]
+        old, new = self.both(args)
+        self.assertEqual(new.returncode, old.returncode)
+        self.assertEqual(new.returncode, 1)
+        self.assertIn("ImportError", new.stderr)
+        self.assertIn("The tests did not run: ImportError", self.rows())
 
     def test_no_tests_exits_as_unittest_does(self):
         path = self.write("test_empty.py", EMPTY)

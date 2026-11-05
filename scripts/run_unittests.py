@@ -140,7 +140,19 @@ def print_from(error: BaseException, path: str) -> None:
     tb = error.__traceback__
     while tb is not None and tb.tb_frame.f_code.co_filename != path:
         tb = tb.tb_next
-    traceback.print_exception(type(error), error, tb or error.__traceback__)
+    # A file that does not compile has no frame of its own: python prints
+    # the error alone.
+    if tb is None and not isinstance(error, SyntaxError):
+        tb = error.__traceback__
+    traceback.print_exception(type(error), error, tb)
+
+
+def report(summary: str, hook: str, status, error: str) -> None:
+    """Writes the row of counts when there is a job summary to write to."""
+    if summary:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        summarise(summary, hook, status, error)
 
 
 def main(argv: list[str]) -> int:
@@ -163,14 +175,13 @@ def main(argv: list[str]) -> int:
     except SystemExit as done:
         status = done.code
     except Exception as e:
+        status, error = 1, f"The tests did not run: {type(e).__name__}: {e}"
         if args[0] == "-m":
+            # python prints the traceback and exits 1, as `python -m` does.
+            report(summary, hook, status, error)
             raise
         print_from(e, os.path.abspath(args[0]))
-        status, error = 1, f"The tests did not run: {type(e).__name__}: {e}"
-    if summary:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        summarise(summary, hook, status, error)
+    report(summary, hook, status, error)
     return status
 
 

@@ -23,7 +23,9 @@ Facts:
   `python -m unittest` puts the working directory there, and `discover -s
   DIR` adds `DIR`.
 - `unittest.main()` picks the exit status: 1 when a test failed or erred,
-  or a module did not import; 5 on Python 3.12 and later when no test ran.
+  and in discover mode also when a module did not import; 5 on Python 3.12
+  and later when no test ran. A test file that does not import or compile
+  never reaches it: `python FILE` exits 1, and 2 when the file is missing.
 - Some tests run scripts while `GITHUB_STEP_SUMMARY` is set. On `main` at
   `be55ab3` each script that writes to the summary runs with the variable
   removed or pointed at a test's own file, so the seven hooks wrote no row:
@@ -38,8 +40,10 @@ Facts:
 - **The same tests, the same verdict.** The runner runs the tests in its
   own process with the `sys.argv`, `sys.path[0]` and `__main__` module that
   `python` would have given them, and exits with the status that their
-  `unittest.main()` chose. It wraps unittest's text runner to keep the
-  result, and changes nothing that it prints.
+  `unittest.main()` chose; when a test file does not import or does not
+  exist, it exits 1 or 2, as `python FILE` does. It wraps unittest's text
+  runner to keep the result, and changes nothing that the tests print.
+  When the tests do not run at all, its row says why.
 - **The summary.** When `GITHUB_STEP_SUMMARY` is set, the runner removes it
   while the tests run, so nothing they run writes to the summary, then
   writes one row through `scripts/suite_summary.py`, titled
