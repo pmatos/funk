@@ -41,12 +41,22 @@ trap 'rm -rf "$tmp"' EXIT
 cargo run --quiet --locked -p funk-ir --example fir_texts -- "$tmp/generated"
 
 status=0
-python3 scripts/harness/main.py --funk "$target_dir/debug/funk" \
-    --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref" \
-    --generated "$tmp/generated" tests/fir || status=$?
+harness=(python3 scripts/harness/main.py --funk "$target_dir/debug/funk"
+    --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref"
+    --generated "$tmp/generated" tests/fir)
+if [[ -z "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    "${harness[@]}" || status=$?
+else
+    "${harness[@]}" | tee "$tmp/harness.out" || status=$?
+fi
 invalid=0
 python3 scripts/harness/check_invalid.py --funk "$target_dir/debug/funk" \
     --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref" || invalid=$?
+# In CI, the counts also go to the job summary (ADR-2026-11-05-1408).
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]] &&
+    ! python3 -I scripts/suite_summary.py harness "$tmp/harness.out" "$status" "$invalid"; then
+    status=$((status ? status : 1))
+fi
 if [[ $status -eq 0 ]]; then
     status=$invalid
 fi

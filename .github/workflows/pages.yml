@@ -28,8 +28,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Copied from ci.yml, which saves the cache restored here; change both
-      # files together. docs/spec/.lake/build is never cached.
+      # Copied from the lean job of ci.yml, which saves the cache restored
+      # here, as its cross job does; change all three together.
+      # docs/spec/.lake/build is never cached.
       - name: Install elan
         env:
           ELAN_VERSION: v4.2.4

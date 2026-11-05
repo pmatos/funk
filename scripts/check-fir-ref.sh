@@ -55,12 +55,14 @@ fir_ref=$repo_root/lean/.lake/build/bin/fir-ref
 case "$1" in
     test)
         status=0
-        "$fir_ref" fmt --check tests/fir/canonical/*.fir tests/fir/llvm/*.fir || status=1
+        reprinted=all mismatched=0
+        "$fir_ref" fmt --check tests/fir/canonical/*.fir tests/fir/llvm/*.fir ||
+            status=1 reprinted="not all"
         for text in tests/fir/noncanonical/*.fir; do
             canonical=tests/fir/canonical/$(basename "$text")
             if ! "$fir_ref" fmt "$text" | cmp -s - "$canonical"; then
                 echo "$text does not print as $canonical" >&2
-                status=1
+                status=1 mismatched=$((mismatched + 1))
             fi
         done
         tmp=$(mktemp -d)
@@ -298,6 +300,17 @@ case "$1" in
         # fir-ref run runs functions and prints their results (#10, #14 to
         # #20); check-fir-ref-run.sh holds those checks.
         scripts/check-fir-ref-run.sh "$fir_ref" || status=1
+        # In CI, the counts also go to the job summary (ADR-2026-11-05-1408).
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+            same=(tests/fir/canonical/*.fir tests/fir/llvm/*.fir)
+            other=(tests/fir/noncanonical/*.fir)
+            python3 -I scripts/suite_summary.py lean lean || status=1
+            python3 -I scripts/suite_summary.py counts "fir-ref on the texts of tests/fir/" \
+                "canonical texts=${#same[@]}" "reprinted byte for byte=$reprinted" \
+                "non-canonical texts=${#other[@]}" \
+                "printed as their canonical sibling=$((${#other[@]} - mismatched))" \
+                "texts validated=${#corpus[@]}" "accepted=$accepted" || status=1
+        fi
         exit "$status"
         ;;
     round-trip)
@@ -312,6 +325,14 @@ case "$1" in
             grep -v '"verdict":"accepted"' <<<"$verdicts" >&2 || true
             echo "fir-ref validate rejects the texts above, which funk verify accepts" >&2
             exit 1
+        fi
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+            texts=("$out"/*.fir)
+            made=$(find "$out" -name 'generated-*.fir' | wc -l)
+            python3 -I scripts/suite_summary.py counts "Texts that Rust prints and Lean reprints" \
+                "texts=${#texts[@]}" "from tests/fir/=$((${#texts[@]} - made))" \
+                "from the generator=$made" "reprinted byte for byte=${#texts[@]}" \
+                "accepted by fir-ref validate=${#texts[@]}"
         fi
         ;;
 esac

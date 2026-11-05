@@ -147,6 +147,30 @@ repos:
         language: python
         pass_filenames: false
         files: ^(tests/fir/|docs/coverage/|scripts/harness/)
+      # CI runs each hook above and below in exactly one job of
+      # .github/workflows/, and its required check needs every job
+      # (ADR-2026-11-05-1408).
+      - id: ci-hooks
+        name: CI runs every hook in exactly one job
+        entry: python scripts/check_ci_hooks.py
+        language: python
+        additional_dependencies: [pyyaml==6.0.3]
+        pass_filenames: false
+        files: ^(\.pre-commit-config\.yaml|\.github/workflows/.*|scripts/check_ci_hooks\.py)$
+      - id: ci-hooks-test
+        name: The ci-hooks check passes its tests
+        entry: python scripts/test_check_ci_hooks.py
+        language: python
+        additional_dependencies: [pyyaml==6.0.3]
+        pass_filenames: false
+        files: ^(\.pre-commit-config\.yaml|\.github/workflows/.*|scripts/(test_)?check_ci_hooks\.py)$
+      # The test hooks' scripts write their counts to the job summary in CI.
+      - id: suite-summary-test
+        name: The test suites' summary writer passes its tests
+        entry: python scripts/test_suite_summary.py
+        language: python
+        pass_filenames: false
+        files: ^(rust-toolchain\.toml|scripts/((test_)?suite_summary\.py|check-rust\.sh|rust-env\.sh))$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
