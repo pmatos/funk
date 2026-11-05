@@ -39,9 +39,9 @@ checks (ADR-2026-11-03-1617).
 Addendum, 2026-11-05: the close-out of #5 checked this audit again on
 `main` at `28b6f37`, after all 43 sub-issues of #5 had closed, and found
 every "Done when" item met; the
-[closing comment on #5](https://github.com/pmatos/funk/issues/5) gives
-its findings. The figures below stay those of `ca5fd9f`. At `28b6f37`,
-`scripts/check-harness.sh` ends with
+[rulings comment](https://github.com/pmatos/funk/issues/5#issuecomment-6506908304)
+on #5 records its result. The figures below stay those of `ca5fd9f`.
+At `28b6f37`, `scripts/check-harness.sh` ends with
 `20818 checks: 20818 passed, 0 failed, 0 invalid`: 277 corpus texts
 (273 modules and 4 non-canonical inputs), 877 modules that Rust printed
 (600 from its generator and the 277 texts), 496 must-reject texts,
