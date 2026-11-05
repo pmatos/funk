@@ -29,8 +29,8 @@ fuelExhausted   \mathsf{fuel\_exhausted}
 
 * $`\mathsf{ret}~o`: the run returns, and an observer sees the observation
   $`o`.
-* $`\mathsf{ub}~\mathit{reason}`: the run hits immediate UB. The reason is
-  for people, and refinement ignores it.
+* $`\mathsf{ub}~\mathit{reason}`: the run hits {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[immediate UB]. The
+  reason is for people, and refinement ignores it.
 * $`\mathsf{fuel\_exhausted}` (`fuelExhausted` in the Lean): the run used
   up its budget of steps before it ended. In an observable behaviour,
   below, it stands for a run that never ends.

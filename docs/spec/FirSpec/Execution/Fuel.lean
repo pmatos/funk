@@ -61,8 +61,8 @@ its behaviour, and a behaviour with fewer outcomes refines more sources.
 :::
 
 :::readable Fir.observable_eq_at (pin := Fir.observable) (fingerprint := "3307528036184768448")
-*Theorem: at a budget that cannot run out of fuel, one run shows the whole
-observable behaviour.* Let $`R` be fuel-monotone, and let $`N` be a budget
+*Theorem: for a fuel-monotone run, the run at a budget that cannot run out
+of fuel shows exactly the observable behaviour.* Let $`R` be fuel-monotone, and let $`N` be a budget
 at which $`R` cannot run out of fuel:
 $`\mathsf{fuel\_exhausted} \notin \mathrm{out}(R_N)`. Then for every
 outcome $`t`,

@@ -15,10 +15,11 @@ fails when the Lean changes under it.
 #doc (Manual) "Semantics the obligations reject: readable blocks" =>
 
 :::readable Fir.Core.Unlawful.add_typesValid Fir.Core.Unlawful.sdiv_typesValid (pin := Fir.TypesValid) (fingerprint := "5393438447920550166")
-*Theorem: $`\mathsf{add}_1` and $`\mathsf{sdiv}_8` are valid op
-instances.* $`\mathsf{add}` at $`\mathsf{i1}` with no flags, and
-$`\mathsf{sdiv}` at $`\mathsf{i8}` without $`\mathsf{exact}`, have operand
-and result types that validation accepts
+*Theorem: $`\mathsf{add}_1` with no flags and $`\mathsf{sdiv}_8` without
+$`\mathsf{exact}` are valid op instances.* $`\mathsf{add}` at
+$`\mathsf{i1}` with no flags, and $`\mathsf{sdiv}` at $`\mathsf{i8}`
+without $`\mathsf{exact}`, have operand and result types that validation
+accepts
 ({ref "The-fir-specification--Validation--The-general-rules"}[the general rules]).
 
 The obligations speak only of valid op instances, so each rejection below
@@ -31,7 +32,7 @@ function.
 every operand vector, has the empty set of ways to end, and so does every
 terminator's exit.
 
-*Theorem: such a semantics is not lawful.* Totality asks that
+*Theorem: such a semantics is not {ref "The-fir-specification--Execution--Poison-classes"}[lawful].* Totality asks that
 $`\mathsf{add}_1` have some outcome on the operands
 $`(\mathsf{poison}, \mathsf{poison})`, and here it has none. A semantics
 like this would drop every path of every run, and an empty behaviour
@@ -44,8 +45,8 @@ on an operand vector some element of which is poison, and returns some
 result on every other operand vector. Every terminator's exit is UB.
 
 *Theorem: such a semantics is not lawful.* Its $`\mathsf{add}_1` is UB on
-$`(\mathsf{poison}, \mathsf{poison})`. The clause "UB only by the op's own
-rules" then asks for operands with no poison on which $`\mathsf{add}_1` is
+$`(\mathsf{poison}, \mathsf{poison})`. The {ref "The-fir-specification--Execution--Poison-classes"}[clause] "UB only by the
+op's own rules" then asks for operands with no poison on which $`\mathsf{add}_1` is
 UB too, and there are none: on them it returns a result. This semantics
 turns every poison operand into UB, which would undo the deferral that
 poison exists for.
@@ -63,6 +64,7 @@ $`\mathsf{sdiv}` follows this rule, and every other op, and every exit, is
 UB.
 
 *Theorem: $`\mathsf{sdiv}_8` under the rejected rule is not monotone.*
+{ref "The-fir-specification--Execution--Poison-classes"}[Monotonicity] fails here:
 $`(\mathrm{min}_8, -1)` refines $`(\mathsf{poison}, -1)`, since poison is
 refined by every value. On $`(\mathrm{min}_8, -1)` the rule is UB, but on
 $`(\mathsf{poison}, -1)` it gives only poison, which does not allow UB.
@@ -90,7 +92,7 @@ $`\vec{v}`.
 every operand vector, and every terminator's exit, is immediate UB.
 
 *Theorem: under it, every core op propagates poison.* Both clauses of
-propagation hold for every op $`o`: no operand vector gives a result, so
+{ref "The-fir-specification--Execution--Poison-classes"}[propagation] hold for every op $`o`: no operand vector gives a result, so
 poison out holds with nothing to check, and the UB on a poison operand is
 matched by the UB on the vector that replaces each poison by zero.
 

@@ -15,7 +15,7 @@ when the Lean changes under it.
 #doc (Manual) "Poison classes: readable blocks" =>
 
 :::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
-*Definition: a poison class.* How an op treats poison operands.
+*Definition: a poison class.* How an op treats {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[poison] operands.
 
 ```grammar Fir.PoisonClass
 \mathit{class}
@@ -156,7 +156,8 @@ when validation accepts its operand and result types
 ({ref "The-fir-specification--Validation--The-general-rules"}[the general rules]).
 A lawful dialect meets five clauses:
 
-* a poison value of a valid type is refined by every value of that type;
+* a poison value of a valid type is {ref "The-fir-specification--Execution--Values-and-refinement"}[refined] by every value of that
+  type;
 * every valid op instance $`o` with
   $`\mathrm{class}(o) = \mathsf{propagates}` propagates poison,
 * and returns a result on defined operands;

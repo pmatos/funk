@@ -51,8 +51,8 @@ poison.
 *Theorem: $`\mathsf{const}` and $`\mathsf{poison}` propagate poison and are
 monotone, whatever the semantics of the core ops.* For every width $`w`
 and value $`c`, the ops $`\mathsf{const}_w~c` and $`\mathsf{poison}_w`
-propagate poison, and are monotone, under any meaning that the core ops
-are given.
+propagate poison, and are {ref "The-fir-specification--Execution--Poison-classes"}[monotone], under any meaning that the
+core ops are given.
 
 Neither op has operands. So no operand vector holds a poison, and both
 clauses of propagation hold with nothing to check. And the only operand
