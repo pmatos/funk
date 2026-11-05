@@ -1,7 +1,7 @@
 # `fir-ref run FILE @FUNC ARG...` runs one function and prints its result as one JSON object
 
 Status: accepted; extended by ADR-2026-10-30-2217 and ADR-2026-10-30-2218;
-refined by ADR-2026-11-03-1847
+refined by ADR-2026-11-03-1847 and ADR-2026-11-05-0806
 
 ## Context
 

@@ -10,6 +10,7 @@
 # fuel (#20). On a 256 KiB stack, that loop and that call run out of a
 # million steps in each mode (#47). It runs functions on poison arguments,
 # and rejects poison where it is not an argument of an integer type (#123).
+# It rejects an argument that is a long comment, on a 256 KiB stack (#135).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -191,6 +192,14 @@ runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
     @double 9223372036854775808 || status=1
+# An argument is lexed over positions, with no stack per character: a
+# comment of 100,000 characters is no value, alone or after one, on a
+# 256 KiB stack (#135).
+long="// $(head -c 100000 /dev/zero | tr '\0' x)"
+for arg in "$long" "1 $long"; do
+    LEAN_STACK_SIZE_KB=256 runs $c/add.fir 2 "fir-ref: $arg is not a value of type i64" \
+        @double "$arg" || status=1
+done
 # poison is an argument of any iN (#123), but not of ptr, and not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1
