@@ -12,12 +12,15 @@ before a loop, values of blocks that do not dominate the read, and a
 caller's name from a callee, in loops long enough that lookups move values
 into the map. A text cannot define a name twice, so `renamed` writes one
 name of a parsed module as another, for parameters, results and block
-arguments that share a name. Each run is checked in each
-mode against the result it must give, and against the spec's own walk of
-the spec's tree of the run, which `Core.scripted`, `Core.exhaustive` and
-`Core.sampled` stand for but which `fir-ref` no longer runs. The last
-checks look `Bindings` up directly, to show that lookups move `young` into
-`old` and that every name keeps its value.
+arguments that share a name. Each run is checked in scripted mode against
+the result it must give, and against the spec's own walk of the spec's
+tree of the run, which `Core.scripted`, `Core.exhaustive` and
+`Core.sampled` stand for but which `fir-ref` no longer runs. `@long`,
+`@after`, `@undefined` and `@flips`, which makes choices, are checked in
+exhaustive and sampled modes too, against the spec's walk, and `@long` and
+`@flips` in exhaustive mode against their result. The last checks look
+`Bindings` up directly, to show that lookups move `young` into `old`, that
+every name keeps its value, and which lookups cost nothing.
 -/
 
 namespace FirTest
@@ -208,6 +211,14 @@ def bothGive (m : Option (Module CoreDialect)) (func : String) (args : List Stri
   | some m => runBy false m func args mode == r && runBy true m func args mode == r
   | none => false
 
+/-- The machine and the spec's tree give the same report on the function
+`func` of the module, if there is one. -/
+def sameBy (m : Option (Module CoreDialect)) (func : String) (args : List String)
+    (mode : Mode) : Bool :=
+  match m with
+  | some m => runBy false m func args mode == runBy true m func args mode
+  | none => false
+
 /-! # Values from before a loop, and arguments bound on each jump
 
 `@long` loops `%n` times, reads `%one` and `%n` from before the loop on
@@ -218,6 +229,9 @@ for lookups to move values into the map. -/
 #guard bothGive unrenamed "@long" ["1", "2", "1"] (returns ["2", "6", "0"])
 #guard bothGive unrenamed "@long" ["1", "2", "400"] (returns ["2", "405", "399"])
 #guard bothGive unrenamed "@pairs" ["400"] (returns ["2"])
+#guard bothGive unrenamed "@long" ["1", "2", "400"] (outcomes [ret ["2", "405", "399"]] 0)
+  (.exhaustive 16)
+#guard sameBy unrenamed "@long" ["1", "2", "400"] (.sampled 5)
 
 /-! # Names defined twice
 
@@ -250,6 +264,10 @@ The latest definition wins, and of the names of one bind, the first. -/
 #guard bothGive (renamed "k" "flag") "@after" ["400", "true", "7"]
   (stuckBy "%flag does not have the operand's type")
 #guard bothGive unrenamed "@undefined" ["400"] (stuckBy "%nope is not defined")
+#guard sameBy unrenamed "@after" ["400", "true", "7"] (.exhaustive 16)
+#guard sameBy (renamed "k" "flag") "@after" ["400", "true", "7"] (.sampled 5)
+#guard sameBy unrenamed "@undefined" ["400"] (.exhaustive 16)
+#guard sameBy unrenamed "@undefined" ["400"] (.sampled 5)
 
 /-! # Choices after lookups move values into the map
 
@@ -259,10 +277,7 @@ the bindings at the choice. -/
 #guard bothGive unrenamed "@flips" ["400"] (outcomes [ret ["0"], ret ["1"], ret ["2"]] 2)
   (.exhaustive 16)
 #guard bothGive unrenamed "@flips" ["400"] (returns ["1"] 2) (.scripted ["false", "true"])
-#guard match unrenamed with
-  | some m =>
-    runBy false m "@flips" ["400"] (.sampled 5) == runBy true m "@flips" ["400"] (.sampled 5)
-  | none => false
+#guard sameBy unrenamed "@flips" ["400"] (.sampled 5)
 
 /-! # Lookups move `young` into `old` -/
 
@@ -287,16 +302,23 @@ def valuesOf (b : Bindings CoreDialect) (n : Nat) : List String :=
     | some v => valueText v
     | none => "none"
 
--- Forty lookups of the oldest value pass about 4,000 entries, more than
--- `rent` times the 101 entries of `young`, so `young` moves into `old`;
+-- Forty lookups of the oldest value pass about 8,000 entries, more than
+-- `rent` times the 201 entries of `young`, so `young` moves into `old`;
 -- every name keeps its value, and `%v0` its latest.
-#guard match lookUp (bound 100) "v99" 40 with
-  | .ok b => b.young.isEmpty && valuesOf b 100 == valuesOf (bound 100) 100 &&
+#guard match lookUp (bound 200) "v199" 40 with
+  | .ok b => b.young.isEmpty && valuesOf b 200 == valuesOf (bound 200) 200 &&
       valuesOf b 3 == ["0", "1", "2", "none"]
   | .error _ => false
--- Lookups among the first entries pass them for free.
-#guard match lookUp (bound 100) "v1" 1000 with
-  | .ok b => b.young.length == 101 && b.debt == 0
+-- Thirty lookups do not pass enough entries to move `young`.
+#guard match lookUp (bound 200) "v199" 30 with
+  | .ok b => b.young.length == 201 && b.debt == 30 * 199
+  | .error _ => false
+-- Lookups that pass at most `deep` entries cost nothing.
+#guard match lookUp (bound 200) "v128" 1000 with
+  | .ok b => b.young.length == 201 && b.debt == 0
+  | .error _ => false
+#guard match lookUp (bound 200) "v129" 1 with
+  | .ok b => b.debt == 129
   | .error _ => false
 
 end FirTest

@@ -18,7 +18,8 @@ stack per step.
 Each step of the machine is one case of `Func.runOps`'s definition. It
 calls the dialect's rules as the spec does, and keeps the values that the
 run has defined in `FirRef.Bindings`, in place of the spec's list `Env`, so
-that looking a name up does not take time for each value defined after it
+that the lookups of a run take time near linear in the values it binds and
+the lookups it makes, not in the values defined after each operand
 (ADR-2026-11-05-0442). `Bindings.args`, `bindResults`, `bind`, `jump` and
 `enter` are `Env.operands`, `Env.bind`, `Func.jump` and `Func.enter` on
 bindings, proved to fit them in `FirRef.BindingsSteps`.

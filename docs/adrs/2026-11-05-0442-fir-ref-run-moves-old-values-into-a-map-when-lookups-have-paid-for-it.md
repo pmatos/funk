@@ -18,8 +18,15 @@ steps ([#47](https://github.com/pmatos/funk/issues/47), stage 6).
 the latest of two definitions of a name, the first of two names that one
 bind defines, a value of a block that does not dominate the read, block
 arguments bound again on each jump, and a callee that sees none of its
-caller's names. No input may get slower than before: the human held stage
-3 of #47 rather than accept a CPU cost.
+caller's names. The human held stage 3 of #47 rather than accept a CPU
+cost, so this stage set out to make no input slower than before. On
+2026-11-05 the human ruled that performance on the Lean side is not a
+concern, up to ten times slower than the Rust side but never hours on a
+simple example, and that this stage merges with the slower inputs it
+leaves, without a search for a better design (#47,
+[comment](https://github.com/pmatos/funk/issues/47#issuecomment-6652389282);
+PR #140,
+[comment](https://github.com/pmatos/funk/pull/140#issuecomment-6652389604)).
 
 A map that binds each name once costs about 0.65 to 0.85 µs to insert into
 at a million names (`Std.TreeMap` and `Std.HashMap`, measured), and the
@@ -35,12 +42,14 @@ Putting every value into a map would double that run's steps.
   values in front of `young`, as the spec does. A lookup searches `young`,
   then `old`.
 - **Lookups pay rent, and `young` moves when they have paid for it.** A
-  lookup passes the first `free` = 8 entries of `young` for nothing. Past
-  those, the entries it passes are a debt. When the debt exceeds `rent` =
-  32 times the length of `young`, `young` moves into `old` (`settle`), the
-  latest value of each name winning. `rent` and `free` set how `fir-ref`
-  spends its time; they are not rules of fir or thresholds of a check, and
-  any values give the same results.
+  lookup that passes at most `deep` = 128 entries of `young` costs
+  nothing; one that passes more adds every entry it passed to a debt.
+  When the debt exceeds `rent` = 32 times the length of `young`, `young`
+  moves into `old` (`settle`), the latest value of each name winning.
+  `Bindings.args` looks each operand of an op up once and pays for all of
+  them at once. `rent` and `deep` set how `fir-ref` spends its time; they
+  are not rules of fir or thresholds of a check, and any values give the
+  same results.
 - **Each operation is proved to fit the spec's.** `Bindings.args`, `bind`,
   `bindResults`, `jump` and `enter` stand for `Env.operands`, `Env.bind`,
   `Func.jump` and `Func.enter`, with the same errors and messages, and
@@ -66,9 +75,16 @@ Putting every value into a map would double that run's steps.
 - **A `Std.HashMap` for `old`.** In exhaustive mode the paths after a
   choice share their bindings, and a shared hash map copies its whole
   bucket array on its first insert. A persistent tree copies one path.
-- **Move `young` into `old` on the first lookup that passes more than
-  `free` entries.** One lookup of the first of a million values would then
-  cost a million inserts instead of one search.
+- **Debt from the ninth entry (`free` = 8), as first built.** Calls whose
+  ops read values 9 to 64 back ran 12% to 45% slower than on the spec's
+  list: their lookups moved `young` into `old` again and again, and a
+  search of the map costs more than a walk of a few dozen entries.
+- **A larger `rent`.** It moves the slower inputs to more reads without
+  making them faster, and slows the shapes this stage fixes: at 1,024, a
+  loop of 1,000,000 steps took 4.9 times as long as at 32.
+- **One move shared by the paths after a choice**, through a map that the
+  bindings at the choice compute when a path first needs it. Not built:
+  the human ruled that the slower inputs below are accepted as they are.
 - **Change the spec's `Env`.** The spec keeps its readable definitions,
   which its proofs are about (ADR-2026-10-30-1450).
 
@@ -78,25 +94,30 @@ Putting every value into a map would double that run's steps.
   the lookups it makes: lookups pass each entry of `young` about `rent`
   times on average before it moves, and it moves once, into a map of at
   most one value per name, whose inserts and lookups take time logarithmic
-  in its size. A block of 100,000 `add` ops that read the parameter runs in
-  0.51 s, and a loop of 1,000,000 steps that reads values from before it
-  in 0.48 s. Runs whose ops read recent values cost what they cost before,
-  or less.
-- One lookup can still search all of `young`, as on the spec's list,
-  until lookups have paid for the move. In exhaustive mode the paths after
-  a choice share `young`, and each path that moves it pays for its own
-  move.
-- Some inputs are slower than on the spec's list. A run that binds many
-  values, reads one of the oldest just often enough to move `young`, and
-  then stops pays for a move that it never uses. 1,000,000 `const` ops
-  followed by 34 reads of the first take 6.71 s, not 6.08 s (+10%). The
-  move pays for itself from about 50 reads. Every index built on demand
-  has such inputs, since a run can stop right after building it. A
-  larger `rent` does not help: at 128 the worst case was +11%, because a
-  pass over `young` of a million parsed values costs about 7% more than
-  on the spec's list, and the difference grows with each extra pass
-  before the move. Whether to accept this cost is for the human to
-  decide, on #47.
+  in its size. A block of 100,000 `add` ops that read the parameter runs
+  in about 0.5 s, and a loop of 1,000,000 steps that reads values from
+  before it in about 1 s. Runs whose ops read values at most `deep` back,
+  calls among them, cost what they cost before, or less.
+- Some inputs are slower than on the spec's list, as the human accepted. A
+  run that reads one of its oldest values just often enough to move
+  `young` into `old`, and then stops, pays for a move that it never uses;
+  every index built on demand has such inputs. Measured against the
+  spec's list (CPU time):
+  - one function of 100,000 to 1,000,000 `const` ops, then 33 to 40
+    reads of the first: up to 15% slower; from about 48 reads the move
+    pays for itself;
+  - a callee that binds more than `deep` values, reads its first 33 to
+    64 times and returns, called again and again: up to 1.6 times as long
+    at 1,000 values and up to 2.1 times at 10,000;
+  - exhaustive mode: the paths after a choice share `young`, and each path
+    that moves it pays for its own move. 10,000 to 100,000 `const` ops,
+    eight one-bit choices (256 paths) and 33 to 64 reads of the first on
+    each path take 1.4 to 2.6 times as long;
+  - in exhaustive mode, each path's first bind copies its bindings'
+    record, which the spec's list does not: a run of 65,536 short paths
+    takes about 2% longer. A long search counts what it passes, four
+    entries at a time, so it runs about 2% more instructions than
+    `List.lookup`; its time stayed within ±4% of the spec's.
 - Each environment is one more object of five words: a recursion one
   million calls deep takes 194 MB, not 156 MB.
 - A change to `Env.operands`, `Env.bind`, `Func.jump` or `Func.enter`

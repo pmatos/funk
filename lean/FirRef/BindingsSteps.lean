@@ -49,33 +49,18 @@ theorem Fits.error {α : Type} {e : Stuck} {r : Except Stuck (α × Env d)}
 
 theorem value_fits {b : Bindings d} {env : Env d} (h : Agrees b env) (x : Name) :
     Fits (b.value x) ((env.value x).map (·, env)) := by
-  have hg := h x
-  have hf := find_fst x b.young 0
-  unfold get at hg
+  have hg := (look_val b x).trans (h x)
   unfold value Env.value
-  generalize find x b.young 0 = q at hf ⊢
-  obtain ⟨r, k⟩ := q
-  dsimp only at hf ⊢
-  subst hf
-  have hp : Agrees (b.pay k) env := fun y => (get_pay b k y).trans (h y)
-  cases hy : b.young.lookup x with
-  | some v =>
-    rw [hy, Option.some_or] at hg
+  revert hg
+  cases look b x with
+  | hit v k =>
+    intro hg
     rw [← hg]
-    exact ⟨rfl, hp⟩
-  | none =>
-    rw [hy, Option.none_or] at hg
-    dsimp only
-    cases ho : b.old[x]? with
-    | some v =>
-      rw [ho] at hg
-      rw [← hg]
-      exact ⟨rfl, hp⟩
-    | none =>
-      rw [ho] at hg
-      rw [← hg]
-      rfl
-
+    exact ⟨rfl, fun y => (get_pay b _ y).trans (h y)⟩
+  | miss =>
+    intro hg
+    rw [← hg]
+    rfl
 
 theorem agrees_push {b : Bindings d} {env : Env d} (h : Agrees b env) (l : Env d) (c : Nat) :
     Agrees { b with young := l.reverse.reverseAux b.young, count := c } (l ++ env) := fun x => by
@@ -202,41 +187,40 @@ theorem operands_fits : ∀ {b : Bindings d} {env : Env d} (_ : Agrees b env)
         · simp only [ht, dite_false]
           rfl
 
-theorem nearOperands_some {b : Bindings d} {env : Env d} (h : Agrees b env) :
-    ∀ (ts : List d.Ty) (xs : List Name) {vs : HVector toType ts},
-      b.nearOperands ts xs = some vs → env.operands ts xs = .ok vs
-  | [], [], _, hn => by
-    simp only [nearOperands, Option.some.injEq] at hn
-    subst hn
+theorem lookOperands_ok {b : Bindings d} {env : Env d} (h : Agrees b env) :
+    ∀ (ts : List d.Ty) (xs : List Name) (c : Nat) {vs : HVector toType ts} {c' : Nat},
+      b.lookOperands ts xs c = .ok vs c' → env.operands ts xs = .ok vs
+  | [], [], _, _, _, hn => by
+    simp only [lookOperands, Looked.ok.injEq] at hn
+    obtain ⟨rfl, -⟩ := hn
     rfl
-  | [], _ :: _, _, hn => by simp [nearOperands] at hn
-  | _ :: _, [], _, hn => by simp [nearOperands] at hn
-  | t :: ts, x :: xs, vs, hn => by
-    simp only [nearOperands] at hn
-    revert hn
-    cases hx : near x b.young free with
-    | none => intro hn; cases hn
-    | some p =>
+  | [], _ :: _, _, _, _, hn => by simp [lookOperands] at hn
+  | _ :: _, [], _, _, _, hn => by simp [lookOperands] at hn
+  | t :: ts, x :: xs, c, vs, c', hn => by
+    have hg := (look_val b x).trans (h x)
+    simp only [lookOperands] at hn
+    revert hn hg
+    cases look b x with
+    | miss => intro hn; cases hn
+    | hit p k =>
       obtain ⟨t', v⟩ := p
-      have hl := near_some x b.young free hx
+      intro hn hg
       have hev : env.value x = .ok ⟨t', v⟩ := by
         unfold Env.value
-        rw [← h x]
-        simp [get, hl]
+        rw [← hg]
         rfl
-      intro hn
       simp only [Env.operands, hev, ok_bind]
       by_cases ht : t' = t
       · subst ht
         simp only [dite_true] at hn ⊢
         revert hn
-        cases hr : b.nearOperands ts xs with
-        | none => intro hn; cases hn
-        | some vs' =>
+        cases hr : b.lookOperands ts xs (c + cost k) with
+        | fail => intro hn; cases hn
+        | ok vs' c'' =>
           intro hn
-          simp only [Option.some.injEq] at hn
-          subst hn
-          rw [nearOperands_some h ts xs hr]
+          simp only [Looked.ok.injEq] at hn
+          obtain ⟨rfl, -⟩ := hn
+          rw [lookOperands_ok h ts xs _ hr]
           rfl
       · simp only [ht, dite_false] at hn
         cases hn
@@ -244,11 +228,11 @@ theorem nearOperands_some {b : Bindings d} {env : Env d} (h : Agrees b env) :
 theorem args_fits {b : Bindings d} {env : Env d} (h : Agrees b env) (ts : List d.Ty)
     (xs : List Name) : Fits (b.args ts xs) ((env.operands ts xs).map (·, env)) := by
   unfold args
-  cases hn : b.nearOperands ts xs with
-  | some vs =>
-    rw [nearOperands_some h ts xs hn]
-    exact ⟨rfl, h⟩
-  | none => exact operands_fits h ts xs
+  cases hn : b.lookOperands ts xs 0 with
+  | ok vs c =>
+    rw [lookOperands_ok h ts xs 0 hn]
+    exact ⟨rfl, fun y => (get_pay b c y).trans (h y)⟩
+  | fail => exact operands_fits h ts xs
 
 omit [DecidableEq d.Ty] in
 theorem values_fits : ∀ {b : Bindings d} {env : Env d} (_ : Agrees b env) (xs : List Name)

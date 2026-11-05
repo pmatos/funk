@@ -14,15 +14,16 @@ the spec's list gives it, in two parts:
   read recent values costs what it costs on the spec's list.
 * `old`, a persistent map that binds each name once.
 
-A lookup searches `young`, then `old`. It passes the first `free` entries
-of `young` for nothing; past those, the entries it passes are a debt, and
-when the debt exceeds `rent` times the length of `young`, `young` moves
-into `old` (`settle`). So a run pays to move a value into `old` only after
-lookups have passed it about `rent` times on average, the time that all
-lookups spend in `young` is linear in the number of values bound and
-lookups made, whoever defined what, and each value moves into `old` once,
-where an insert or a lookup takes time logarithmic in its size. `rent` and `free` are how `fir-ref` spends its time, not
-rules of fir: any values give the same results.
+A lookup searches `young`, then `old`. A lookup that passes at most
+`deep` entries of `young` costs nothing; one that passes more adds every
+entry it passed to a debt, and when the debt exceeds `rent` times the
+length of `young`, `young` moves into `old` (`settle`). So a run pays to
+move a value into `old` only after lookups have passed it about `rent`
+times on average, the time that all lookups spend in `young` is linear in
+the number of values bound and lookups made, whoever defined what, and
+each value moves into `old` once, where an insert or a lookup takes time
+logarithmic in its size. `rent` and `deep` are how `fir-ref` spends its
+time, not rules of fir: any values give the same results.
 
 `get` says what bindings give each name, `Agrees` that they give every name
 what a spec environment gives it, and `toEnv` is such an environment.
@@ -42,7 +43,7 @@ structure Bindings (d : Dialect) [TyDenote d.Ty] where
   /-- The length of `young`. -/
   count : Nat
   /-- The entries of `young` passed by the lookups that passed more than
-  `free` of them, since `young` last moved into `old`. -/
+  `deep` of them, since `young` last moved into `old`. -/
   debt : Nat
   /-- One value for each name, older than those of `young`. -/
   old : Std.TreeMap Name (DVal d) compare
@@ -58,36 +59,58 @@ def ofEnv (env : Env d) : Bindings d := ⟨env, env.length, 0, ∅⟩
 `young` moves into `old`. -/
 def rent : Nat := 32
 
-/-- How many entries of `young` a lookup passes for free. -/
-def free : Nat := 8
+/-- How many entries of `young` a lookup may pass at no cost. -/
+def deep : Nat := 128
 
 /-- `young` moved into `old`. -/
 def settle (b : Bindings d) : Bindings d :=
   ⟨[], 0, 0, b.young.foldr (fun p m => m.insert p.1 p.2) b.old⟩
 
-/-- The value of `x` in `l`, and `k` plus the entries before it. -/
-def find (x : @& Name) : @& List (Name × DVal d) → Nat → Option (DVal d) × Nat
-  | [], k => (none, k)
-  | (y, v) :: l, k => if x == y then (some v, k) else find x l (k + 1)
+/-- Where a lookup of a name ends. -/
+inductive Found (d : Dialect) [TyDenote d.Ty] where
+  /-- At the name's value, after passing `k` entries of `young`. -/
+  | hit (v : DVal d) (k : USize)
+  /-- Without a value. -/
+  | miss
 
-/-- The value of `x` among the first `n` entries of `l`, if it is there. -/
-def near (x : @& Name) : @& List (Name × DVal d) → Nat → Option (DVal d)
-  | [], _ => none
-  | _, 0 => none
-  | (y, v) :: l, n + 1 => if x == y then some v else near x l n
+/-- The search of `l` for `x`, after `k` entries passed. It counts the
+entries it passes four at a time, so that a long search costs little more
+than `List.lookup`. -/
+def find (x : @& Name) : @& List (Name × DVal d) → USize → Found d
+  | [], _ => .miss
+  | (y, v) :: l, k =>
+    if x == y then .hit v k else match l with
+    | [] => .miss
+    | (y, v) :: l =>
+      if x == y then .hit v (k + 1) else match l with
+      | [] => .miss
+      | (y, v) :: l =>
+        if x == y then .hit v (k + 2) else match l with
+        | [] => .miss
+        | (y, v) :: l => if x == y then .hit v (k + 3) else find x l (k + 4)
 
-/-- `b` after a lookup passed `k` entries of `young`. -/
-@[inline] def pay (b : Bindings d) (k : Nat) : Bindings d :=
-  if k ≤ free then b
-  else if rent * b.count < b.debt + k then b.settle else { b with debt := b.debt + k }
+/-- The lookup of `x`: in `young`, then in `old`, after passing all of
+`young`. -/
+@[inline] def look (b : @& Bindings d) (x : @& Name) : Found d :=
+  match find x b.young 0 with
+  | .miss => match b.old[x]? with
+    | some v => .hit v b.count.toUSize
+    | none => .miss
+  | r => r
+
+/-- What a lookup that passed `k` entries of `young` adds to the debt. -/
+@[inline] def cost (k : USize) : Nat := if k.toNat ≤ deep then 0 else k.toNat
+
+/-- `b` after lookups that add `c` to the debt. -/
+@[inline] def pay (b : Bindings d) (c : Nat) : Bindings d :=
+  if c = 0 then b
+  else if rent * b.count < b.debt + c then b.settle else { b with debt := b.debt + c }
 
 /-- The value of the name `x`: its latest definition. -/
 @[inline] def value (b : Bindings d) (x : Name) : Except Stuck (DVal d × Bindings d) :=
-  match find x b.young 0 with
-  | (some v, k) => pure (v, b.pay k)
-  | (none, k) => match b.old[x]? with
-    | some v => pure (v, b.pay k)
-    | none => stuck s!"%{x} is not defined"
+  match look b x with
+  | .hit v k => pure (v, b.pay (cost k))
+  | .miss => stuck s!"%{x} is not defined"
 
 /-- The names of `rs` bound to the values `vs`, in reverse, in front of
 `acc`, if they have the same length. -/
@@ -133,26 +156,32 @@ def operands (b : Bindings d) : (ts : List d.Ty) → List Name →
     else stuck s!"%{x} does not have the operand's type"
   | _, _ => stuck "an op has a number of operands other than its op instance takes"
 
-/-- The values of the names `xs`, one for each type of `ts`, when each is
-among the first entries of `young`. -/
-def nearOperands (b : @& Bindings d) : (ts : List d.Ty) → List Name → Option (HVector toType ts)
-  | [], [] => some .nil
-  | t :: ts, x :: xs => match near x b.young free with
-    | some ⟨t', v⟩ =>
-      if h : t' = t then match nearOperands b ts xs with
-        | some vs => some (.cons (h ▸ v) vs)
-        | none => none
-      else none
-    | none => none
-  | _, _ => none
+/-- What `lookOperands` gives: values, with what their lookups add to the
+debt, or nothing. -/
+inductive Looked (d : Dialect) [TyDenote d.Ty] (ts : List d.Ty) where
+  | ok (vs : HVector toType ts) (c : Nat)
+  | fail
 
-/-- `operands`, quicker when each name is among the first entries of
-`young`. -/
+/-- The values of the names `xs`, one for each type of `ts`, with `c` plus
+what their lookups add to the debt, if each name has a value of its type. -/
+def lookOperands (b : @& Bindings d) : (ts : List d.Ty) → List Name → Nat → Looked d ts
+  | [], [], c => .ok .nil c
+  | t :: ts, x :: xs, c => match look b x with
+    | .hit ⟨t', v⟩ k =>
+      if h : t' = t then match lookOperands b ts xs (c + cost k) with
+        | .ok vs c => .ok (.cons (h ▸ v) vs) c
+        | .fail => .fail
+      else .fail
+    | .miss => .fail
+  | _, _, _ => .fail
+
+/-- `operands`, which looks each name up once and pays for all the lookups
+at once; on an error, `operands` gives the error. -/
 @[inline] def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
     Except Stuck (HVector toType ts × Bindings d) :=
-  match nearOperands b ts xs with
-  | some vs => pure (vs, b)
-  | none => b.operands ts xs
+  match lookOperands b ts xs 0 with
+  | .ok vs c => pure (vs, b.pay c)
+  | .fail => b.operands ts xs
 
 /-- The values of the names `xs`, after `acc`, the last first. -/
 def values (b : Bindings d) : List Name → List (DVal d) → Except Stuck (List (DVal d) × Bindings d)
@@ -247,24 +276,26 @@ theorem agrees_toEnv (b : Bindings d) : Agrees b b.toEnv := fun x => (lookup_toE
 theorem agrees_ofEnv (env : Env d) : Agrees (ofEnv env) env := fun x => by
   simp [get, ofEnv]
 
-theorem find_fst (x : Name) : ∀ (l : List (Name × DVal d)) (k : Nat), (find x l k).1 = l.lookup x
-  | [], _ => rfl
-  | (y, v) :: l, k => by
-    simp only [find, List.lookup]
-    cases x == y with
-    | true => rfl
-    | false => exact find_fst x l (k + 1)
+/-- The value that a lookup found. -/
+def Found.val : Found d → Option (DVal d)
+  | .hit v _ => some v
+  | .miss => none
 
-theorem near_some (x : Name) {v : DVal d} :
-    ∀ (l : List (Name × DVal d)) (n : Nat), near x l n = some v → l.lookup x = some v
-  | [], _, h => by simp [near] at h
-  | _ :: _, 0, h => by simp [near] at h
-  | (y, w) :: l, n + 1, h => by
-    simp only [near] at h
-    simp only [List.lookup]
-    cases hb : x == y with
-    | true => simp only [hb, ite_true] at h ⊢; exact h
-    | false => simp only [hb] at h ⊢; exact near_some x l n h
+theorem find_val (x : Name) (l : List (Name × DVal d)) (k : USize) :
+    (find x l k).val = l.lookup x := by
+  fun_induction find x l k <;> simp only [Found.val, List.lookup] at * <;> (repeat' split) <;>
+    simp_all
+
+theorem look_val (b : Bindings d) (x : Name) : (look b x).val = b.get x := by
+  have hf := find_val x b.young 0
+  unfold look get
+  revert hf
+  cases find x b.young 0 with
+  | hit v k => intro hf; rw [← hf]; rfl
+  | miss =>
+    intro hf
+    rw [← hf]
+    cases b.old[x]? <;> rfl
 
 theorem get_foldr (x : Name) (m : Std.TreeMap Name (DVal d) compare) :
     ∀ l : List (Name × DVal d),
@@ -282,7 +313,7 @@ theorem get_settle (b : Bindings d) (x : Name) : b.settle.get x = b.get x := by
   simp only [settle, get, List.lookup_nil, Option.none_or]
   exact get_foldr x b.old b.young
 
-theorem get_pay (b : Bindings d) (k : Nat) (x : Name) : (b.pay k).get x = b.get x := by
+theorem get_pay (b : Bindings d) (c : Nat) (x : Name) : (b.pay c).get x = b.get x := by
   unfold pay
   split
   · rfl
