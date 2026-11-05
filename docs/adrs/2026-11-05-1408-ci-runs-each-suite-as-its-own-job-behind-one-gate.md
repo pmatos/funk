@@ -24,7 +24,7 @@ Facts:
 - The single job took 19 min 36 s on run 42035177701; its hooks took
   18 min 51 s. `fir-spec` took 11 min 27 s, `fir-harness` 2 min 27 s,
   `fir-ref-test` 1 min 46 s, `rust-test` 1 min 29 s and `verus-proof`
-  1 min 9 s; the others took 33 s together.
+  1 min 9 s; the other 33 hooks took about half a minute together.
 
 ## Decision
 
@@ -104,7 +104,9 @@ Facts:
 - A pull request shows each suite as its own check, and the job summary
   lists the counts.
 - The suites run in parallel: a run takes as long as its slowest job, not
-  the sum of the suites.
+  the sum of the suites. The first run of this layout, 42044135666, took
+  10 min 32 s: `lean` 10 min 23 s, `cross` 5 min 57 s, `rust` 3 min 14 s
+  and `static` 1 min 13 s.
 - `lean/` is built twice per run, and toolchains are restored in more than
   one job, so a run uses more runner minutes.
 - A new hook needs a step in one job of `ci.yml`, and a new job a place in

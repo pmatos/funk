@@ -26,6 +26,7 @@ import os
 import re
 import shlex
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 import yaml
@@ -94,10 +95,9 @@ def workflow_problems(name: str, workflow: dict, stages: dict, runs: dict) -> li
                     if "--all-files" not in words:
                         found.append(f"{where} runs {hook} without --all-files")
                 else:
-                    at = words.index("--hook-stage") if "--hook-stage" in words else -1
-                    if at < 0 or words[at + 1 : at + 2] not in [
-                        [s] for s in hook_stages
-                    ]:
+                    pairs = pairwise(words)
+                    stage = next((b for a, b in pairs if a == "--hook-stage"), None)
+                    if stage not in hook_stages:
                         found.append(
                             f"{where} runs {hook} without --hook-stage and one of"
                             f" its stages, {', '.join(hook_stages)}"

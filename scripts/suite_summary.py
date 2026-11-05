@@ -37,7 +37,7 @@ HARNESS_RESULT = re.compile(
 # Lean commands counted at the start of a line, once comments and string
 # and character literals are gone.
 LEAN_CHECKS = {
-    "#guard": re.compile(r"^[ \t]*#guard(?![\w_])", re.MULTILINE),
+    "#guard": re.compile(r"^[ \t]*#guard(?!\w)", re.MULTILINE),
     "#guard_msgs": re.compile(r"^[ \t]*#guard_msgs\b", re.MULTILINE),
     "theorems": re.compile(
         r"^[ \t]*(?:@\[[^\]\n]*\]\s*)?(?:(?:private|protected)\s+)?theorem\b",
