@@ -21,11 +21,19 @@ text = true
 name = "FirSpec"
 needs = ["firSources"]
 
+# The cases of ADR citations, which FirSpecSite's tests read with include_str and
+# the adr-citations hook's tests also read (ADR-2026-11-05-1709).
+[[input_file]]
+name = "citationCases"
+path = "FirSpecSite/citation-cases.json"
+text = true
+
 # The appendix of ADRs and the links of ADR citations, which firspec adds to the
 # document when it renders it (ADR-2026-10-30-1439). Its tests run when it builds.
 [[lean_lib]]
 name = "FirSpecSite"
 globs = ["FirSpecSite.*"]
+needs = ["citationCases"]
 
 [[lean_exe]]
 name = "firspec"

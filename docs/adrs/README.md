@@ -41,6 +41,8 @@ the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
 - The spec build fails on a citation of an ADR that does not exist, and on
   Markdown the appendix cannot show: raw HTML, images, horizontal rules,
   strikethrough, task lists and hard line breaks.
+- The `adr-citations` hook fails on a citation of an ADR that does not
+  exist in any tracked text file, outside code (ADR-2026-11-05-1709).
 
 ## Template
 

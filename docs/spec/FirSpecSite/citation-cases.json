@@ -1,0 +1,236 @@
+{
+  "about": "ADR citation cases that the spec's checker (docs/spec/FirSpecSite/Tests.lean) and the adr-citations hook (scripts/test_check_adr_citations.py) both pass: citations lists each citation outside code as LINE:COLUMN and its text, and errors the messages of a check of the file a.md, given the ids of known.",
+  "known": [
+    "2026-10-29-2006",
+    "2026-10-29-2015",
+    "2026-10-29-2017",
+    "2026-10-30-1031",
+    "2026-10-30-1046",
+    "2026-11-03-010730"
+  ],
+  "cases": [
+    {
+      "about": "A citation ends at the last digit of its id.",
+      "text": "see ADR-2026-10-30-1031.",
+      "citations": [
+        "1:5 ADR-2026-10-30-1031"
+      ],
+      "errors": []
+    },
+    {
+      "about": "Six digits are a whole id of their own, not ADR-2026-10-30-1031 and more.",
+      "text": "see ADR-2026-10-30-103112.",
+      "citations": [
+        "1:5 ADR-2026-10-30-103112"
+      ],
+      "errors": [
+        "a.md:1:5: ADR-2026-10-30-103112 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "A six-digit id is cited whole.",
+      "text": "ADR-2026-11-03-010730 and ADR-2026-11-03-0107",
+      "citations": [
+        "1:1 ADR-2026-11-03-010730",
+        "1:27 ADR-2026-11-03-0107"
+      ],
+      "errors": [
+        "a.md:1:27: ADR-2026-11-03-0107 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "Citations follow each other.",
+      "text": "ADR-2026-10-30-1031, ADR-2026-10-30-1046",
+      "citations": [
+        "1:1 ADR-2026-10-30-1031",
+        "1:22 ADR-2026-10-30-1046"
+      ],
+      "errors": []
+    },
+    {
+      "about": "Five digits are malformed.",
+      "text": "ADR-2026-10-30-10311",
+      "citations": [
+        "1:1 ADR-2026-10-30-10311"
+      ],
+      "errors": [
+        "a.md:1:1: ADR-2026-10-30-10311 is not an ADR id, which ends in HHMM or HHMMSS"
+      ]
+    },
+    {
+      "about": "Seven digits are malformed.",
+      "text": "ADR-2026-10-30-1031123",
+      "citations": [
+        "1:1 ADR-2026-10-30-1031123"
+      ],
+      "errors": [
+        "a.md:1:1: ADR-2026-10-30-1031123 is not an ADR id, which ends in HHMM or HHMMSS"
+      ]
+    },
+    {
+      "about": "Placeholders are not citations.",
+      "text": "ADR-YYYY-MM-DD-HHMM and ADR-… and ADR-2026-10-30-",
+      "citations": [],
+      "errors": []
+    },
+    {
+      "about": "Punctuation around a citation is not part of it.",
+      "text": "(S1, ADR-2026-10-29-2006; ADR-2026-10-29-2017)",
+      "citations": [
+        "1:6 ADR-2026-10-29-2006",
+        "1:27 ADR-2026-10-29-2017"
+      ],
+      "errors": []
+    },
+    {
+      "about": "A citation can start inside a word and ends at its last digit.",
+      "text": "xADR-2026-10-30-1031y ADR-2026-10-30-1031.5 ADR-2026-10-30-1031-slug",
+      "citations": [
+        "1:2 ADR-2026-10-30-1031",
+        "1:23 ADR-2026-10-30-1031",
+        "1:45 ADR-2026-10-30-1031"
+      ],
+      "errors": []
+    },
+    {
+      "about": "Only upper-case ADR- starts a citation.",
+      "text": "adr-2026-10-30-1031 Adr-2026-10-30-1031",
+      "citations": [],
+      "errors": []
+    },
+    {
+      "about": "A date that is not real names no ADR.",
+      "text": "ADR-2026-02-30-1200 and ADR-2026-10-30-2460",
+      "citations": [
+        "1:1 ADR-2026-02-30-1200",
+        "1:25 ADR-2026-10-30-2460"
+      ],
+      "errors": [
+        "a.md:1:1: ADR-2026-02-30-1200 names no ADR in docs/adrs/",
+        "a.md:1:25: ADR-2026-10-30-2460 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "Only ASCII digits are digits.",
+      "text": "ADR-\uff12026-10-30-1031 and ADR-2026-10-30-103\u0661",
+      "citations": [
+        "1:25 ADR-2026-10-30-103"
+      ],
+      "errors": [
+        "a.md:1:25: ADR-2026-10-30-103 is not an ADR id, which ends in HHMM or HHMMSS"
+      ]
+    },
+    {
+      "about": "Columns count characters, not bytes.",
+      "text": "→ ADR-… ADR-2026-10-30-1031 ADR-2026-10-30-9999",
+      "citations": [
+        "1:9 ADR-2026-10-30-1031",
+        "1:29 ADR-2026-10-30-9999"
+      ],
+      "errors": [
+        "a.md:1:29: ADR-2026-10-30-9999 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "A code span is quoted, not cited.",
+      "text": "`ADR-2026-10-30-103112` and ADR-2026-10-30-1031",
+      "citations": [
+        "1:29 ADR-2026-10-30-1031"
+      ],
+      "errors": []
+    },
+    {
+      "about": "A code span closes at a run of backticks of its own length.",
+      "text": "``a ` ADR-2026-10-30-1031`` ADR-2026-10-30-1046",
+      "citations": [
+        "1:29 ADR-2026-10-30-1046"
+      ],
+      "errors": []
+    },
+    {
+      "about": "A longer run of backticks does not close a code span.",
+      "text": "`a`` ADR-2026-10-30-9999 ` ADR-2026-10-30-9998",
+      "citations": [
+        "1:28 ADR-2026-10-30-9998"
+      ],
+      "errors": [
+        "a.md:1:28: ADR-2026-10-30-9998 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "An unclosed backtick opens no code span.",
+      "text": "an unclosed ` ADR-2026-10-30-1031",
+      "citations": [
+        "1:15 ADR-2026-10-30-1031"
+      ],
+      "errors": []
+    },
+    {
+      "about": "A fenced code block is quoted, fences included.",
+      "text": "x\n```\nADR-2026-10-30-1031\n```\nADR-2026-10-30-1046",
+      "citations": [
+        "5:1 ADR-2026-10-30-1046"
+      ],
+      "errors": []
+    },
+    {
+      "about": "A tilde fence, indented by spaces, opens a block until the next fence.",
+      "text": "  ~~~ ADR-2026-10-30-9999\nADR-2026-10-30-9998\n~~~\nADR-2026-10-30-9997",
+      "citations": [
+        "4:1 ADR-2026-10-30-9997"
+      ],
+      "errors": [
+        "a.md:4:1: ADR-2026-10-30-9997 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "A tab before backticks makes no fence.",
+      "text": "\t```\nADR-2026-10-30-9999",
+      "citations": [
+        "2:1 ADR-2026-10-30-9999"
+      ],
+      "errors": [
+        "a.md:2:1: ADR-2026-10-30-9999 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "A line that starts with three backticks is a fence, even if it closes them.",
+      "text": "```x``` ADR-2026-10-30-9999\nADR-2026-10-30-9998",
+      "citations": [],
+      "errors": []
+    },
+    {
+      "about": "Lines end at a line feed; a carriage return is a character.",
+      "text": "a\r\nADR-2026-10-30-9999\r\n  ADR-2026-10-29-2099",
+      "citations": [
+        "2:1 ADR-2026-10-30-9999",
+        "3:3 ADR-2026-10-29-2099"
+      ],
+      "errors": [
+        "a.md:2:1: ADR-2026-10-30-9999 names no ADR in docs/adrs/",
+        "a.md:3:3: ADR-2026-10-29-2099 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "Each citation that names no ADR is located.",
+      "text": "ok ADR-2026-10-29-2015\n  ADR-2026-10-29-2099 `ADR-2026-10-29-2098`",
+      "citations": [
+        "1:4 ADR-2026-10-29-2015",
+        "2:3 ADR-2026-10-29-2099"
+      ],
+      "errors": [
+        "a.md:2:3: ADR-2026-10-29-2099 names no ADR in docs/adrs/"
+      ]
+    },
+    {
+      "about": "A malformed citation is located.",
+      "text": "ADR-2026-10-29-20150",
+      "citations": [
+        "1:1 ADR-2026-10-29-20150"
+      ],
+      "errors": [
+        "a.md:1:1: ADR-2026-10-29-20150 is not an ADR id, which ends in HHMM or HHMMSS"
+      ]
+    }
+  ]
+}
