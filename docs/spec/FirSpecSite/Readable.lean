@@ -36,6 +36,7 @@ def readableCss : String := "
 details.fir-lean { margin: 0.6em 0 0.3em 0; }
 details.fir-lean > summary {
   cursor: pointer;
+  font-family: var(--verso-structure-font-family);
   color: #4a6380;
   font-size: 0.9em;
   user-select: none;

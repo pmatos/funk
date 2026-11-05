@@ -134,9 +134,11 @@ def readable : DirectiveExpanderOf ReadableConfig
     unless config.fingerprint.val == now do
       throwErrorAt config.fingerprint.syntax m!"the Lean that this readable block explains has changed: its fingerprint is now \"{now}\", and the block was checked against \"{config.fingerprint.val}\". Read the block again against the Lean, correct it, then set (fingerprint := \"{now}\").{← signatures names}"
     modifyEnv (grammarExt.setState · (some #[]))
-    let blocks ← contents.mapM elabBlock
-    let boxes := (grammarExt.getState (← getEnv)).getD #[]
-    modifyEnv (grammarExt.setState · none)
+    let (blocks, boxes) ← try
+        let blocks ← contents.mapM elabBlock
+        pure (blocks, (grammarExt.getState (← getEnv)).getD #[])
+      finally
+        modifyEnv (grammarExt.setState · none)
     checkGrammars names boxes
     modifyEnv (readableExt.addEntry · (← getMainModule, mod, names))
     ``(Verso.Doc.Block.other (FirSpecSite.Block.readable $(quote names)) #[$blocks,*])
