@@ -1,6 +1,6 @@
 # `fir-ref` runs implementations of the spec's functions that are proved equal to them and registered with `@[csimp]`
 
-Status: accepted; refined by ADR-2026-11-03-1810
+Status: accepted; refined by ADR-2026-11-03-1810 and ADR-2026-11-04-2132
 
 ## Context
 
