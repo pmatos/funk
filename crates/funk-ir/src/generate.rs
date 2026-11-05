@@ -17,6 +17,9 @@
 //! (`calls.rs`). A division may be by zero, and a loop or a recursion may never
 //! end: that is UB or a run out of fuel, not invalid, and no check runs these
 //! modules. The generator is deterministic: one seed gives one module.
+//!
+//! [`wellformed`] builds on it a generator of well-formed modules that are
+//! not all valid, for the round trips over that larger set (#146).
 
 use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
@@ -26,6 +29,7 @@ use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Ty
 
 mod blocks;
 mod calls;
+pub mod wellformed;
 
 use calls::Callee;
 

@@ -29,6 +29,9 @@
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
 #               generator makes valid modules, which funk verify accepts.
+#               Rust also prints well-formed modules that validation
+#               mostly rejects (#146); fir-ref fmt reprints each one, with
+#               no validation first, and the bytes must match.
 set -euo pipefail
 
 if [[ $# -ne 1 || ( "$1" != test && "$1" != round-trip ) ]]; then
@@ -326,13 +329,21 @@ case "$1" in
             echo "fir-ref validate rejects the texts above, which funk verify accepts" >&2
             exit 1
         fi
+        cargo run --quiet --locked -p funk-ir --example fir_wellformed_texts -- "$out/wellformed"
+        if ! "$fir_ref" fmt --check "$out"/wellformed/*.fir; then
+            echo "fir-ref does not print the well-formed texts above as Rust prints them" >&2
+            exit 1
+        fi
         if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
             texts=("$out"/*.fir)
             made=$(find "$out" -name 'generated-*.fir' | wc -l)
+            wellformed=("$out"/wellformed/*.fir)
             python3 -I scripts/suite_summary.py counts "Texts that Rust prints and Lean reprints" \
                 "texts=${#texts[@]}" "from tests/fir/=$((${#texts[@]} - made))" \
                 "from the generator=$made" "reprinted byte for byte=${#texts[@]}" \
-                "accepted by fir-ref validate=${#texts[@]}"
+                "accepted by fir-ref validate=${#texts[@]}" \
+                "well-formed generated texts, not validated=${#wellformed[@]}" \
+                "well-formed texts reprinted byte for byte=${#wellformed[@]}"
         fi
         ;;
 esac
