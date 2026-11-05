@@ -11,6 +11,36 @@ directory is the Verso document that renders them:
 [`FirSpec.lean`](FirSpec.lean) gives the order of the chapters and the prose
 that belongs to no definition.
 
+## The readable layer
+
+Some sections show readable blocks, prose for a newcomer with notation in
+the WebAssembly specification's style, in place of each declaration, and
+hide the Lean under each one in a `<details>` (ADR-2026-11-05-2012). The
+blocks of the module `Fir.X.Y` are the Verso document
+`FirSpec/X/Y.lean`, and `FirSpec.lean` renders the section with
+`{includeReadable "." Fir.X.Y "Title" FirSpec.X.Y (level := 2)}`.
+
+A readable block names the declarations it explains, pins with
+`(pin := …)` each further definition its prose restates, such as
+`Fir.HasPath` here, and pins their fingerprint:
+
+```
+:::readable Fir.HasPath.bind (pin := Fir.HasPath) (fingerprint := "12286075038897393730")
+*Theorem: a sequence has a path when its parts have one.* ...
+:::
+```
+
+The build fails when a declaration's statement, body or constructors
+change, or a pinned definition's body, printing the new signatures and
+fingerprint: read the block again against the Lean, correct it, then pin
+the new fingerprint. It also fails
+when a declaration of the module has no block, and when a ```` ```grammar ````
+box misses a constructor or shows one twice. To move a section, write its
+document, pin each block with the fingerprint the first build prints, and
+switch its `{includeLiterate}` to `{includeReadable}`.
+
+## Appendix and build
+
 The document ends with an appendix that renders every ADR in
 [`docs/adrs/`](../adrs), and every ADR citation in the spec and the ADRs,
 such as ADR-2026-10-29-2015, links to the ADR's page. The library in
