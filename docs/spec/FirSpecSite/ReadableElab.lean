@@ -8,11 +8,14 @@ What keeps the readable layer from drifting from the Lean
 (ADR-2026-11-05-2012). Each check fails the elaboration of the document,
 and so the spec build, naming the place and what to do:
 
-* `:::readable N₁ … Nₖ (fingerprint := "…")` explains the declarations
-  `N₁ … Nₖ` of one module of `fir`. Each must exist, and the fingerprint
-  of what they say must be the one the block pins: a change to a
-  statement, a definition or a constructor fails the build until the block
-  is read again and its pin updated.
+* `:::readable N₁ … Nₖ (pin := P₁) … (fingerprint := "…")` explains the
+  declarations `N₁ … Nₖ` of one module of `fir`. Each must exist, and the
+  fingerprint of what they say must be the one the block pins: a change to
+  a statement, a definition or a constructor fails the build until the
+  block is read again and its pin updated. The fingerprint covers only
+  each declaration's own terms, so a block whose prose restates a
+  definition that they merely refer to, from any module, adds it with
+  `(pin := P)`; its body then counts too.
 * A ```` ```grammar T ```` box inside a readable block shows the
   constructors of the inductive type `T`, or the fields of the structure
   `T`, which the block must explain. The boxes of a block together show
@@ -64,6 +67,7 @@ def alternatives (env : Environment) (t : Name) : Option (Array String) :=
 
 structure ReadableConfig where
   names : List (ArgParse.WithSyntax Name)
+  pins : List (ArgParse.WithSyntax Name)
   fingerprint : ArgParse.WithSyntax String
 
 section
@@ -71,6 +75,7 @@ variable [Monad m] [MonadInfoTree m] [MonadLiftT CoreM m] [MonadEnv m] [MonadErr
 
 instance : FromArgs ReadableConfig m where
   fromArgs := ReadableConfig.mk <$> .many (.positional `name (ValDesc.name.withSyntax))
+    <*> .many (.named `pin (ValDesc.name.withSyntax) false)
     <*> .named `fingerprint (ValDesc.string.withSyntax) false
 
 structure GrammarConfig where
@@ -81,11 +86,22 @@ instance : FromArgs GrammarConfig m where
 
 end
 
-/-- The signatures of `names`, to show in a message. -/
+/--
+The signatures of `names`, to show in a message: for an inductive type,
+also each constructor's, and for a structure, each field default.
+-/
 def signatures (names : Array Name) : MetaM MessageData := do
+  let env ← getEnv
   let mut out := m!""
   for n in names do
     out := out ++ m!"\n  {(← PrettyPrinter.ppSignature n).fmt}"
+    if let some (.inductInfo v) := env.find? n then
+      for c in v.ctors do
+        out := out ++ m!"\n    | {(← PrettyPrinter.ppSignature c).fmt}"
+    if isStructure env n then
+      for f in getStructureFields env n do
+        if let some (.defnInfo d) := env.find? (n ++ f ++ `_default) then
+          out := out ++ m!"\n    {f} := {← Meta.ppExpr d.value}"
   return out
 
 /-- Checks that the grammar boxes `boxes` of a readable block for `names` show each constructor once. -/
@@ -121,18 +137,25 @@ def readable : DirectiveExpanderOf ReadableConfig
     let mut mod? : Option Name := none
     for n in config.names do
       unless env.contains n.val do
-        throwErrorAt n.syntax "{n.val} is not a Lean declaration; name each declaration in full, such as Fir.HasPath.bind"
+        throwErrorAt n.syntax "{n.val} is not a Lean declaration: it may have been renamed or removed in lean/. Read the block again against the Lean and name each declaration in full, such as Fir.HasPath.bind"
       let m := moduleOf? env n.val
       if mod?.isSome && m != mod? then
         throwErrorAt n.syntax "{n.val} is from {m}, but the block's first declaration is from {mod?}; a readable block explains declarations of one module"
       mod? := m
     let some mod := mod?
       | throwError "{names} are not from an imported module of fir"
-    let now := match fingerprint env names with
+    let pins := config.pins.toArray.map (·.val)
+    for p in config.pins do
+      unless env.contains p.val do
+        throwErrorAt p.syntax "{p.val} is not a Lean declaration: it may have been renamed or removed in lean/. Read the block again against the Lean and pin each definition in full, such as Fir.HasPath"
+      if names.contains p.val || (pins.filter (· == p.val)).size > 1 then
+        throwErrorAt p.syntax "{p.val} is already covered by this block; name or pin each declaration once"
+    let now := match fingerprint env (names ++ pins) with
       | .ok f => f
       | .error _ => ""
+    -- Logged, not thrown, so that a grammar box that misses a new constructor is reported in the same build.
     unless config.fingerprint.val == now do
-      throwErrorAt config.fingerprint.syntax m!"the Lean that this readable block explains has changed: its fingerprint is now \"{now}\", and the block was checked against \"{config.fingerprint.val}\". Read the block again against the Lean, correct it, then set (fingerprint := \"{now}\").{← signatures names}"
+      logErrorAt config.fingerprint.syntax m!"the Lean that this readable block explains has changed: its fingerprint is now \"{now}\", and the block was checked against \"{config.fingerprint.val}\". Read the block again against the Lean, correct it, then set (fingerprint := \"{now}\").{← signatures (names ++ pins)}"
     modifyEnv (grammarExt.setState · (some #[]))
     let (blocks, boxes) ← try
         let blocks ← contents.mapM elabBlock

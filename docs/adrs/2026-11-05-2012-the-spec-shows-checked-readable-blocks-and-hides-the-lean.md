@@ -38,8 +38,11 @@ must not drift from it.
     explains, each of which must exist, and pins a fingerprint of what they
     say: a theorem's statement, a definition's type and body, an inductive
     type's constructors and a structure's fields and defaults. It is a hash
-    of Lean's terms, so a new proof keeps it. When the Lean changes, the
-    build fails, prints the declarations' new signatures and the new
+    of Lean's terms, so a new proof keeps it. A definition that these only
+    refer to counts by its name, so a block whose prose restates such a
+    definition, from any module, adds it with `(pin := P)`, and the
+    fingerprint covers its body too. When the Lean changes, the build
+    fails, prints the declarations' new signatures and the new
     fingerprint, and asks for the block to be read again.
   - A ```` ```grammar T ```` box in a readable block tags each alternative
     with the constructors it shows. The boxes of a block must show every
@@ -72,7 +75,11 @@ must not drift from it.
 
 - A change to what a declaration says fails the spec build until its
   readable block is read again and its fingerprint updated in the same
-  PR. Updating the pin without reading the block is possible, but it is a
+  PR.
+- The pin covers only the declarations a block names or pins. Prose that
+  leans on a definition the block neither names nor pins is not checked:
+  a change to that definition's body builds. Writing a block includes
+  pinning each definition its prose restates. Updating the pin without reading the block is possible, but it is a
   visible line of the diff next to the prose.
 - A new declaration in a module on the readable layer needs a readable
   block before the build passes.

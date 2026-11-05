@@ -48,6 +48,7 @@ details.fir-lean[open] {
   padding-top: 0.3em;
 }
 .fir-grammar { overflow-x: auto; margin: 0.8em 0; }
+.fir-readable .katex-display { overflow-x: auto; overflow-y: hidden; }
 "
 
 /- A readable block: prose that explains the Lean declarations `names`. -/

@@ -20,18 +20,20 @@ blocks of the module `Fir.X.Y` are the Verso document
 `FirSpec/X/Y.lean`, and `FirSpec.lean` renders the section with
 `{includeReadable "." Fir.X.Y "Title" FirSpec.X.Y (level := 2)}`.
 
-A readable block names the declarations it explains and pins their
-fingerprint:
+A readable block names the declarations it explains, pins with
+`(pin := …)` each further definition its prose restates, such as
+`Fir.HasPath` here, and pins their fingerprint:
 
 ```
-:::readable Fir.HasPath.bind (fingerprint := "13996799831989033988")
+:::readable Fir.HasPath.bind (pin := Fir.HasPath) (fingerprint := "12286075038897393730")
 *Theorem: a sequence has a path when its parts have one.* ...
 :::
 ```
 
 The build fails when a declaration's statement, body or constructors
-change, printing the new signature and fingerprint: read the block again
-against the Lean, correct it, then pin the new fingerprint. It also fails
+change, or a pinned definition's body, printing the new signatures and
+fingerprint: read the block again against the Lean, correct it, then pin
+the new fingerprint. It also fails
 when a declaration of the module has no block, and when a ```` ```grammar ````
 box misses a constructor or shows one twice. To move a section, write its
 document, pin each block with the fingerprint the first build prints, and

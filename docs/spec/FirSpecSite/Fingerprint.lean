@@ -12,7 +12,11 @@ a declaration says, not how it is proved:
 
 It is a hash of Lean's terms, which does not depend on the names of bound
 variables or on layout, so a change to a proof or to the spelling of a
-binder keeps it, and any change to what the declaration means changes it.
+binder keeps it. Any change to the declaration's own statement, body,
+constructors or field defaults changes it. A definition that the
+declaration only refers to counts by its name: a change to that
+definition's body does not change the fingerprint. A readable block that
+restates such a definition pins it as well, with `(pin := …)`.
 -/
 
 open Lean

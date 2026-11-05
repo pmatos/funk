@@ -32,6 +32,14 @@ each block and opens with a click. The build checks every block against the
 Lean it explains, and fails when the Lean changes under it
 (ADR-2026-11-05-2012).
 
+Readable blocks use the notation of the WebAssembly specification.
+$`A ::= B \mid C` gives the alternatives of $`A`, one per row of a grammar
+box, and a box whose first alternative is $`\dots` continues the
+alternatives of the boxes above it. $`A^?` is an optional $`A`, and $`A^*`
+a possibly empty sequence of $`A`. A subscript, as in $`\mathsf{add}_N`,
+gives the width in bits of the integers that an op works on, and
+$`\mathsf{i}N` is the type of $`N`-bit integers.
+
 The chapters follow the WebAssembly specification:
 
 * _Abstract syntax_ gives the terms of fir: dialects, types, ops, blocks,
