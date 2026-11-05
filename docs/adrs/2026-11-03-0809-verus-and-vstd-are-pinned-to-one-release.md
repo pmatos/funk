@@ -1,6 +1,6 @@
 # Verus is pinned to one release, and vstd to the version it ships
 
-Status: accepted; refined by ADR-2026-11-05-1408
+Status: accepted; refined by ADR-2026-11-05-1408 and ADR-2026-11-05-1954
 
 ## Context
 
