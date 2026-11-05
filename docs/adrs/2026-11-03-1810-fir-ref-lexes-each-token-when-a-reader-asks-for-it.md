@@ -18,7 +18,9 @@ pulled from a lexer over the text's `String` positions, so that no list of
 tokens exists; or tokens stored compactly, in an `Array` read by index.
 The first version of this decision parsed a block of 1,000,000 ops in
 about twice the CPU time of the spec's lexer and readers. The human held
-it for a faster one, keeping the spec's order of errors.
+it for a faster one, keeping the spec's order of errors. This version is
+faster than the spec's lexer and readers on accepted texts, but slower on
+a text with a late lexer error, a cost the human accepted on 2026-11-05.
 
 ## Decision
 
@@ -117,7 +119,10 @@ it for a faster one, keeping the spec's order of errors.
   1.59 s and 2.85 s. So a lexer error past about the first fifth of a
   text costs more than on `main`. A reader error at the first token takes
   2.21 s and 1.09 s; in the middle, 2.19 to 2.24 s and 1.90 s; at the end,
-  2.35 to 2.38 s and 2.23 to 2.51 s, about the same.
+  2.35 to 2.38 s and 2.23 to 2.51 s, about the same. The human accepted
+  this cost on 2026-11-05: "Performance is not a deal breaker for the lean
+  side of things." Lexing only from where the readers stopped stays an
+  alternative not taken, and nothing is filed for it.
 - A change to the spec's lexer or readers breaks these proofs, and so the
   build, until the implementations follow it. A reader that takes a token
   in some branches and leaves it in others, written plainly, lexes the
