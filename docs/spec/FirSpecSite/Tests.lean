@@ -15,16 +15,40 @@ private instance [BEq ε] [BEq α] : BEq (Except ε α) where
     | .error a, .error b => a == b
     | _, _ => false
 
-/-! Citations end at the last digit of the id, and only ids of four or six digits are well formed. -/
+/-!
+The citation grammar and the check of a text pass every case of `citation-cases.json`, which
+the `adr-citations` hook's tests also read, so the two definitions cannot drift
+(ADR-2026-11-05-1709). Lake rebuilds this module when the table changes.
+-/
 
-#guard (citations "see ADR-2026-10-30-1031.").map (·.id) == #["2026-10-30-1031"]
-#guard (citations "see ADR-2026-10-30-103112.").map (·.id) == #["2026-10-30-103112"]
+private def caseTable : String := include_str "citation-cases.json"
+
+/-- One line per case of the table that the grammar or the check gets wrong. -/
+private def caseFailures : Except String (Array String) := do
+  let table ← Lean.Json.parse caseTable
+  let known ← table.getObjValAs? (Array String) "known"
+  let mut out := #[]
+  for entry in ← table.getObjValAs? (Array Lean.Json) "cases" do
+    let text ← entry.getObjValAs? String "text"
+    let cites ← entry.getObjValAs? (Array String) "citations"
+    let errors ← entry.getObjValAs? (Array String) "errors"
+    let cs := text.toList.toArray
+    let found := (citationsIn (blankCode cs)).map fun c =>
+      let (line, col) := lineColumn cs c.start
+      s!"{line}:{col} {c.text}"
+    unless found == cites do
+      out := out.push s!"{text.quote}: citations {found}, expected {cites}"
+    let got := checkText (known.contains ·) "a.md" text
+    unless got == errors do
+      out := out.push s!"{text.quote}: errors {got}, expected {errors}"
+  return out
+
+#eval show IO Unit from do
+  let failures ← IO.ofExcept caseFailures
+  unless failures.isEmpty do
+    throw <| IO.userError ("citation-cases.json:\n" ++ "\n".intercalate failures.toList)
+
 #guard (citations "ADR-2026-10-30-1031, ADR-2026-10-30-1046").map (·.start) == #[0, 21]
-#guard (citations "ADR-2026-10-30-10311").map (·.wellFormed) == #[false]
-#guard (citations "ADR-2026-10-30-1031123").map (·.wellFormed) == #[false]
-#guard (citations "ADR-YYYY-MM-DD-HHMM and ADR-… and ADR-2026-10-30-").isEmpty
-#guard (citations "(S1, ADR-2026-10-29-2006; ADR-2026-10-29-2017)").map (·.text) ==
-  #["ADR-2026-10-29-2006", "ADR-2026-10-29-2017"]
 
 #guard segments "see ADR-2026-10-29-2015." ==
   #[.text "see ", .cite ⟨4, 23, "2026-10-29-2015", true⟩, .text "."]
@@ -35,24 +59,9 @@ private instance [BEq ε] [BEq α] : BEq (Except ε α) where
 #guard adrIdOfFileName? "2026-10-30-10311-adr.md" == none
 #guard adrIdOfFileName? "README.md" == none
 
-/-! Code is quoted, not cited. -/
-
-private def prose (s : String) : Array String :=
-  (citationsIn (blankCode s.toList.toArray)).map (·.text)
-
-#guard prose "`ADR-2026-10-30-103112` and ADR-2026-10-30-1031" == #["ADR-2026-10-30-1031"]
-#guard prose "``a ` ADR-2026-10-30-1031`` ADR-2026-10-30-1046" == #["ADR-2026-10-30-1046"]
-#guard prose "an unclosed ` ADR-2026-10-30-1031" == #["ADR-2026-10-30-1031"]
-#guard prose "x\n```\nADR-2026-10-30-1031\n```\nADR-2026-10-30-1046" == #["ADR-2026-10-30-1046"]
-
-/-! The check of the sources locates each citation that names no ADR. -/
+/-! The linking tests below know one ADR. -/
 
 private def known : String → Bool := (#["2026-10-29-2015"].contains ·)
-
-#guard checkText known "a.md" "ok ADR-2026-10-29-2015\n  ADR-2026-10-29-2099 `ADR-2026-10-29-2098`" ==
-  #["a.md:2:3: ADR-2026-10-29-2099 names no ADR in docs/adrs/"]
-#guard checkText known "a.lean" "ADR-2026-10-29-20150" ==
-  #["a.lean:1:1: ADR-2026-10-29-20150 is not an ADR id, which ends in HHMM or HHMMSS"]
 
 /-! Linking turns each citation into a cross-reference to the ADR's tag. -/
 
