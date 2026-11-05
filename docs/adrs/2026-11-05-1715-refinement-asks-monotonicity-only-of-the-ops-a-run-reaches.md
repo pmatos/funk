@@ -69,6 +69,8 @@ This refines ADR-2026-11-02-1515, whose Consequences left this open.
   that it would need a valid new body; it does not, because the engine
   never runs it: a call of `@g` is a black box, whose behaviour the
   hypothesis gives.
-- Every caller of the engine passes one more hypothesis, `hf`, for the
-  function that runs. Every theorem keeps its axioms: `propext`,
-  `Classical.choice` and `Quot.sound` at most.
+- A caller of `Func.runs_isRefinedBy_of_calls` or
+  `Func.runs_args_isRefinedBy` passes one more hypothesis, `hf`, for the
+  function that runs. `Func.runs_replaceBody_isRefinedBy` derives it from
+  `hmono`, so its callers pass nothing new. Every theorem keeps its
+  axioms: `propext`, `Classical.choice` and `Quot.sound` at most.
