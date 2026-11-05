@@ -22,19 +22,21 @@ each referred to by a name, a string, stored without its sigil: the value
 `%x`, the label `^loop` and the symbol `@f` of the text are stored as `x`,
 `loop` and `f`. Names are stored as the producer wrote them
 (ADR-2026-10-29-2014), and a term refers to a value only by its name: which
-value a name stands for, and its type, are rules of validation.
+value a name stands for, and its type, are rules of
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[validation].
 :::
 
 :::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "5512839615627060427")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
-$$`\begin{array}{rcl} \mathit{letter} & ::= & \mathtt{A} \mid \dots \mid \mathtt{Z} \\ & \mid & \mathtt{a} \mid \dots \mid \mathtt{z} \\ \mathit{wordstart} & ::= & \mathit{letter} \mid \mathtt{\_} \\ \mathit{namechar} & ::= & \mathit{wordstart} \mid \mathtt{0} \mid \dots \mid \mathtt{9} \mid \mathtt{.} \\ \mathit{name} & ::= & \mathit{namechar}~\mathit{namechar}^* \\ \mathit{word} & ::= & \mathit{wordstart}~\mathit{namechar}^* \end{array}`
+$$`\begin{array}{rcl} \mathit{letter} & ::= & \mathtt{A} \mid \dots \mid \mathtt{Z} \\ & \mid & \mathtt{a} \mid \dots \mid \mathtt{z} \\ \mathit{start} & ::= & \mathit{letter} \mid \mathtt{\_} \\ \mathit{char} & ::= & \mathit{start} \mid \mathtt{.} \\ & \mid & \mathtt{0} \mid \dots \mid \mathtt{9} \\ \mathit{name} & ::= & \mathit{char}~\mathit{char}^* \\ \mathit{word} & ::= & \mathit{start}~\mathit{char}^* \end{array}`
 
-The letters and digits are those of ASCII. So `0` and `acc.1` are names,
-and `acc.1` is a word but `0` is not. The Lean gives each class as a test
-on characters or strings: `isLetter`, `isWordStart`, `isNameChar`, `isName`
-and `isWord`.
+Here $`\mathit{char}` is a name character, and $`\mathit{start}` a
+character that may start a word. The letters and digits are those of
+ASCII. So `0` and `acc.1` are names, and `acc.1` is a word but `0` is not.
+The Lean gives each class as a test on characters or strings: `isLetter`,
+`isWordStart`, `isNameChar`, `isName` and `isWord`.
 
 These classes decide what the text can write.
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
@@ -60,9 +62,11 @@ the successor is written `^ℓ(%x, …)`.
 
 Blocks take arguments instead of φ-nodes (ADR-2026-10-29-2010): a jump
 passes one value for each argument of its target, and the target's
-arguments receive them. Validation requires a successor to name a block of
-its function other than the entry block, and to pass one value of the right
-type for each of that block's arguments.
+arguments receive them.
+{ref "The-fir-specification--Validation--The-general-rules"}[Validation]
+requires a successor to name a block of its function other than the entry
+block, and to pass one value of the right type for each of that block's
+arguments.
 :::
 
 :::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "7976569321417610658")
@@ -134,8 +138,10 @@ written `func @s(%x: t, …) -> t, … { … }`, with its blocks between the
 braces, and with no arrow when it returns nothing.
 
 The parameters are the arguments of the entry block, the first block of
-$`\mathsf{body}`; validation requires the entry block to declare none of
-its own. A function is isolated from above (ADR-2026-10-29-2011): nothing
+$`\mathsf{body}`;
+{ref "The-fir-specification--Validation--The-general-rules"}[validation]
+requires the entry block to declare none of its own. A function is
+isolated from above (ADR-2026-10-29-2011): nothing
 in it refers to a value outside it, and it reaches other functions only by
 their symbols (ADR-2026-10-29-2012). So a function can be checked, run and
 transformed on its own.

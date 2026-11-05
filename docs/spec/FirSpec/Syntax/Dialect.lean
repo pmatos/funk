@@ -30,7 +30,9 @@ $`f(a_1)` followed by a vector for $`a_2 \dots a_n`. The Lean calls it
 
 The values of an op's operands, and of its results, travel in one, as in
 LeanMLIR, a formalization of MLIR in Lean. Since the list of types is part
-of the vector's type, the semantics of an op receives exactly one operand
+of the vector's type, the
+{ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics]
+of an op receives exactly one operand
 value for each operand type, each of its type: a wrong number or a wrong
 type is ruled out before anything runs.
 :::

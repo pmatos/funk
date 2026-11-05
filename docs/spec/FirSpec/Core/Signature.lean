@@ -46,8 +46,8 @@ $$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{pois
 So $`\mathsf{select}_N` takes its $`\mathsf{i1}` condition first, a
 $`\mathsf{ret}` takes the values it returns as its operands, and a
 $`\mathsf{call}` takes its callee's arguments and gives its callee's
-results. The Lean spells the two halves `Op.sig` and `Op.returnTypes`, and
-$`\mathsf{cond\_br}` `condBr`.
+results. The Lean calls the two halves `sig` and `returnTypes`, and spells
+$`\mathsf{cond\_br}` as `condBr`.
 
 These types are what
 {ref "The-fir-specification--Validation--The-general-rules"}[validation]
@@ -69,7 +69,7 @@ under the next block.
 :::
 
 :::readable Fir.Core.op (fingerprint := "1597957136772372945")
-*Definition: an op with no regions.* The examples and checks of this
+*Definition: a shorthand for an op with no regions.* The examples and checks of this
 specification write a core op with a shorthand. It takes the op's results
 $`(x : t)^*`, its op instance $`o`, its operands $`y^*`, and, when they are
 given, its location reference $`r` and its successors $`\mathit{succ}^*`,

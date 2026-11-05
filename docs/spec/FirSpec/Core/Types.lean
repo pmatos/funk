@@ -31,7 +31,8 @@ $`N_{\max} = 2^{24} - 1 = 16{,}777{,}215` bits, the limit of MLIR; the Lean
 calls it `maxWidth`.
 
 * $`\mathsf{i}N` is the type of vectors of $`N` bits. An integer type has
-  no sign: the ops say how they read the bits, as $`\mathsf{sdiv}` and
+  no sign: the {ref "The-fir-specification--Abstract-syntax--Core-ops"}[ops]
+  say how they read the bits, as $`\mathsf{sdiv}` and
   $`\mathsf{udiv}`, or $`\mathsf{icmp}~\mathsf{slt}` and
   $`\mathsf{icmp}~\mathsf{ult}`, do, and one bit pattern is read both ways
   (ADR-2026-10-29-2007).
