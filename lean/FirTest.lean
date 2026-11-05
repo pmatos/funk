@@ -22,6 +22,7 @@ import FirTest.Decode
 import FirTest.Read
 import FirTest.ValidateOps
 import FirTest.Validate
+import FirTest.Dominance
 import FirTest.Sum
 import FirTest.Toy
 import FirTest.Mixed

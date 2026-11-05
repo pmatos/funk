@@ -17,7 +17,11 @@
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
 #               with 2 on an argument that is not UTF-8 and when it cannot
-#               write its output. check-fir-ref-run.sh checks fir-ref run.
+#               write its output. It accepts two functions of a million
+#               blocks, each block using the value of the block before it:
+#               a chain within 180 seconds of CPU time, and a chain of
+#               checks that may each leave for one shared exit within 240
+#               (#55). check-fir-ref-run.sh checks fir-ref run.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -168,6 +172,42 @@ case "$1" in
             esac
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
+        done
+        # Two functions of a million blocks, each block using the value of the
+        # block before it (#55): a chain, and a chain of checks that may each
+        # leave for one shared exit, the shape on which Cooper, Harvey and
+        # Kennedy's lifting alone takes quadratic time. The spec's check
+        # searches the graph once per such use, in time quadratic in the
+        # number of blocks: hours here. fir-ref builds the dominator tree once
+        # and takes 19 to 27, and 25 to 30, seconds of CPU time on a lightly
+        # loaded host, and up to 75 and 88 under heavy load. Past the soft
+        # limit it ends with SIGXCPU, status 152.
+        awk -v end="$ending" 'BEGIN {
+            printf "func @f() {\n^b0:\n  %%v0: i32 = const 0 @0\n"
+            for (i = 1; i < 1000000; i++)
+                printf "  br ^b%d @0\n^b%d:\n  %%v%d: i32 = freeze %%v%d @0\n", i, i, i, i - 1
+            printf "  ret @0\n%s", end
+        }' >"$tmp/chain.fir"
+        awk -v end="$ending" 'BEGIN {
+            printf "func @f(%%c: i1) -> i32 {\n^e:\n  %%v0: i32 = const 0 @0\n  br ^c1 @0\n"
+            for (i = 1; i < 999999; i++) {
+                printf "^c%d:\n  %%v%d: i32 = freeze %%v%d @0\n", i, i, i - 1
+                printf "  cond_br %%c, ^%s, ^j @0\n", i < 999998 ? "c" (i + 1) : "j"
+            }
+            printf "^j:\n  ret %%v0 @0\n%s", end
+        }' >"$tmp/exits.fir"
+        for check in "chain:180:a chain of a million blocks" \
+            "exits:240:a million blocks that may each leave for one exit"; do
+            IFS=: read -r name limit what <<<"$check"
+            rc=0
+            (ulimit -c 0 && ulimit -S -t "$limit" && exec "$fir_ref" validate "$tmp/$name.fir") \
+                >"$tmp/$name.json" || rc=$?
+            if [[ $rc -ne 0 ]] || ! grep -q '"verdict":"accepted"' "$tmp/$name.json"; then
+                why=""
+                if [[ $rc -eq 152 ]]; then why=" within $limit seconds of CPU time"; fi
+                echo "fir-ref validate does not accept $what$why" >&2
+                status=1
+            fi
         done
         # The widest constants (#41): the signed maximum of i16777215,
         # 2^16777214 - 1, and its minimum have 5,050,445 digits. fir-ref run
