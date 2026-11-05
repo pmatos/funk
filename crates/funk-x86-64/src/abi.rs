@@ -23,13 +23,53 @@ pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8,
 /// `i128` result; [`results`] says where the others go.
 pub const RESULT_REG: Reg = Reg::Rax;
 
-/// An argument of an outgoing call: the slot that holds it, relative to
+/// An argument of a funk call: the slot that holds it, relative to
 /// `%rbp`, and how many eightbytes it has: 2 for an `i128`, whose high half
 /// is in the slot above ([`Mem::high`]), and 1 for any other value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Arg {
     pub slot: Mem,
     pub words: usize,
+}
+
+/// Stores a function's incoming arguments in their frame slots after the
+/// standard prologue has established `%rbp`. `args` gives the declared
+/// parameters in order, each of one or two eightbytes. `hidden` is the slot
+/// for the result-area address, when results return in memory; it arrives
+/// first, in `%rdi`, and shifts the parameters along the shared layout.
+///
+/// Every eightbyte is stored as it arrives, without extension, low half
+/// first for an `i128`. Stack arguments are read above the saved `%rbp`
+/// and return address, through `%rax`; `%rsp` does not change. Destination
+/// slots must be valid frame slots. An unencodable incoming stack offset
+/// returns the zero-based index into `args` for the caller's diagnostic;
+/// earlier stores remain in `asm`.
+pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Result<(), usize> {
+    let skip = usize::from(hidden.is_some());
+    let words = passed(skip, args.iter().map(|a| a.words));
+    let incoming = layout(&words);
+    if let Some(slot) = hidden {
+        asm.ins("movq", format_args!("{}, {slot}", ARG_REGS[0].q()));
+    }
+    for (i, (arg, locs)) in args
+        .iter()
+        .zip(incoming.args.into_iter().skip(skip))
+        .enumerate()
+    {
+        for (loc, to) in locs.into_iter().zip([arg.slot, arg.slot.high()]) {
+            match loc {
+                Loc::Reg(reg) => asm.ins("movq", format_args!("{}, {to}", reg.q())),
+                Loc::Stack(at) => {
+                    let from = Mem {
+                        disp: stack_arg_offset(at).ok_or(i)?,
+                    };
+                    asm.ins("movq", format_args!("{from}, %rax"));
+                    asm.ins("movq", format_args!("%rax, {to}"));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Emits a complete outgoing call to the funk function `callee`, given
@@ -184,3 +224,7 @@ mod tests {
 #[cfg(test)]
 #[path = "abi/call_tests.rs"]
 mod call_tests;
+
+#[cfg(test)]
+#[path = "abi/incoming_tests.rs"]
+mod incoming_tests;

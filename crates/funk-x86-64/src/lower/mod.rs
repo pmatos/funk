@@ -41,7 +41,7 @@ use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 pub use call::callee;
 pub use div::{HELPER_STACK, helper};
 
-use crate::abi::{self, Loc, layout, stack_arg_offset, symbol};
+use crate::abi::{self, Arg, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
@@ -313,9 +313,7 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
     // The address of the function's result area, when its results go in
     // memory, arrives first, as an argument of one eightbyte, and its
     // parameters after it (ADR-2026-11-03-0109).
-    let hidden = cx.frame.results_address();
-    let mut incoming = Vec::with_capacity(f.params.len() + 1);
-    incoming.extend(hidden.map(|slot| ("the address of the result area".to_string(), slot)));
+    let mut incoming = Vec::with_capacity(f.params.len());
     for d in &f.params {
         let Some(slot) = cx.frame.slot(&d.name) else {
             out.push(at(
@@ -326,28 +324,18 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
             ));
             return None;
         };
-        incoming.push((format!("parameter %{}", d.name), slot));
+        incoming.push(Arg {
+            slot,
+            words: width::words(&d.ty),
+        });
     }
-    let words = abi::passed(
-        usize::from(hidden.is_some()),
-        f.params.iter().map(|d| width::words(&d.ty)),
-    );
-    for ((what, slot), locs) in incoming.iter().zip(layout(&words).args) {
-        for (loc, to) in locs.into_iter().zip([*slot, slot.high()]) {
-            match loc {
-                Loc::Reg(reg) => cx.asm.ins("movq", format_args!("{}, {to}", reg.q())),
-                Loc::Stack(on_stack) => {
-                    let Some(disp) = stack_arg_offset(on_stack) else {
-                        let why = format!("{what} is out of the reach of %rbp");
-                        out.push(at(f, entry, None, why));
-                        return None;
-                    };
-                    let from = Mem { disp };
-                    cx.asm.ins("movq", format_args!("{from}, %rax"));
-                    cx.asm.ins("movq", format_args!("%rax, {to}"));
-                }
-            }
-        }
+    if let Err(i) = abi::receive(&mut cx.asm, &incoming, cx.frame.results_address()) {
+        let why = format!(
+            "parameter %{} is out of the reach of %rbp",
+            f.params[i].name
+        );
+        out.push(at(f, entry, None, why));
+        return None;
     }
     for (k, b) in f.body.blocks.iter().enumerate() {
         cx.next = f.body.blocks.get(k + 1).map(|n| n.label.as_str());
