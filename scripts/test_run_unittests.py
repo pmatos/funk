@@ -246,6 +246,13 @@ class Runner(unittest.TestCase):
         old, new = self.both(["-m", "unittest", "discover", "-s", "t"])
         self.assertSameRun(old, new)
 
+    def test_a_missing_file(self):
+        old, new = self.both(["t/test_gone.py"])
+        self.assertEqual(new.returncode, old.returncode)
+        self.assertEqual(new.returncode, 2)
+        self.assertIn("can't open file", new.stderr)
+        self.assertIn("There is no test file t/test_gone.py.", self.rows())
+
     def test_skipped_only_is_a_run(self):
         path = self.write("test_skipped.py", SKIPPED_ONLY)
         old, new = self.both([path])

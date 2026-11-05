@@ -154,6 +154,10 @@ def main(argv: list[str]) -> int:
     try:
         if args[0] == "-m":
             run_unittest(args[2:])
+        elif not os.path.isfile(args[0]):
+            full = os.path.abspath(args[0])
+            print(f"python: can't open file {full!r}: no such file", file=sys.stderr)
+            status, error = 2, f"There is no test file {args[0]}."
         else:
             run_file(args[0], args[1:])
     except SystemExit as done:
