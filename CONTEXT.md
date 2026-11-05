@@ -276,7 +276,8 @@ its semantics never drops a path of a run. An op with a callee, such as
 The obligation of every valid op instance that runs by its own rule that
 refining its operands refines what it does. It makes refinement
 compositional: a part replaced by one that refines it refines the whole
-function.
+function. Refinement asks it only of the ops a run can reach, so for a
+valid module the valid instances are enough (ADR-2026-11-05-1715).
 
 ### The oracle
 
