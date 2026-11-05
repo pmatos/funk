@@ -155,7 +155,7 @@ def problems(root: Path, fixtures) -> tuple[list[str], int]:
     for path in tracked:
         text = read_text(root / path)
         if text is None or "ADR-" not in text:
-            continue
+            text = ""
         errors = check_text(known, path, text)
         if path in fixtures:
             if not errors:

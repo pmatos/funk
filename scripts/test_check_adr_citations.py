@@ -143,12 +143,15 @@ class Repository(unittest.TestCase):
         write(self.repo, "u.py", "ADR-2026-10-30-1031\n")
         self.add("t.py", "u.py")
         self.assertEqual(self.check({"t.py": ""}), ([], 2))
-        found, _ = self.check({"t.py": "", "u.py": "", "gone.py": ""})
-        self.assertEqual(len(found), 2)
+        write(self.repo, "v.py", "no citation\n")
+        self.add("v.py")
+        found, _ = self.check({"t.py": "", "u.py": "", "v.py": "", "gone.py": ""})
+        self.assertEqual(len(found), 3)
         self.assertTrue(found[0].startswith("u.py: in FIXTURES"))
         self.assertIn("remove it from the list", found[0])
-        self.assertTrue(found[1].startswith("gone.py: in FIXTURES"))
-        self.assertIn("not tracked", found[1])
+        self.assertTrue(found[1].startswith("v.py: in FIXTURES"))
+        self.assertTrue(found[2].startswith("gone.py: in FIXTURES"))
+        self.assertIn("not tracked", found[2])
 
     def test_script_reports_and_exits(self):
         for path in FIXTURES:
