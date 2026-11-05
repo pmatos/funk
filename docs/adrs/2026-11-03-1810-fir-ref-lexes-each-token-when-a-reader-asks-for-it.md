@@ -83,6 +83,15 @@ it for a faster one, keeping the spec's order of errors.
   closure per token cost more than they save: `fmt --check` of the block
   of 1,000,000 ops took 7.2 s of CPU, against 5.6 s with the spec's lexer
   and readers, in the same batch.
+- **Keep the lexer's error in the cursor and, on a reader error, lex only
+  from where the readers stopped.** Every token before that point was
+  lexed without an error, so only the rest needs `lexCheck`. On the block
+  of 1,000,000 ops this would save about 1 s, the cost of `lexCheck`, on a
+  text rejected at its end. It was not taken: `lookP` turns a lexer
+  error into the end of the cursor, so the cursor does not keep the error;
+  the readers would have to return their cursor with their error, which
+  changes the type of every reader and every proof about them; and
+  `readText_eq` would need the lexer's run split at a state.
 
 ## Consequences
 
@@ -100,10 +109,15 @@ it for a faster one, keeping the spec's order of errors.
   byte per input byte each, then the read tree and the module; `fmt
   --check` adds the printed text and its bytes. A file that is not UTF-8
   is located with a loop over its bytes, without a list of them.
-- A text rejected late is slower: the readers read it, then `lexCheck`
-  lexes it again. With a lexer error at the end of the block of ops,
-  `main` takes 1.59 s and this `fir-ref` 2.86 s; with a reader error at
-  its end, 2.43 s and 2.92 s.
+- A text rejected late can be slower than on `main`: the readers read it
+  up to the error, then `lexCheck` lexes it again from the start. On the
+  block of 1,000,000 ops (`fmt --check`, median of five to seven runs, in
+  two batches), a lexer error at byte 1 takes 0.36 s on `main` and 0.05 s
+  here; in the middle, 0.97 s and 1.12 to 1.46 s; at the end, 1.27 to
+  1.59 s and 2.85 s. So a lexer error past about the first fifth of a
+  text costs more than on `main`. A reader error at the first token takes
+  2.21 s and 1.09 s; in the middle, 2.19 to 2.24 s and 1.90 s; at the end,
+  2.35 to 2.38 s and 2.23 to 2.51 s, about the same.
 - A change to the spec's lexer or readers breaks these proofs, and so the
   build, until the implementations follow it. A reader that takes a token
   in some branches and leaves it in others, written plainly, lexes the

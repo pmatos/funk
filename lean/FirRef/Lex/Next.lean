@@ -52,6 +52,9 @@ def lexTokenP (c : Char) (i : s.Pos) (p : TextPos) : Except ParseError (Tok × s
     .ok (.word (String.ofList (c :: w)), skipWhileP isNameChar i, p.advance (1 + w.length))
   else errorAt p ("unexpected character " ++ codePoint c)
 
+-- One proof splits every branch of `lexTokenP` and of `lexToken` and closes
+-- some with `simp_all`. It runs out of the default 200,000 heartbeats and
+-- passes with 400,000; 1,000,000 leaves room for a change of toolchain.
 set_option maxHeartbeats 1000000 in
 theorem lexTokenP_eq (c : Char) (i : s.Pos) (p : TextPos) :
     (lexTokenP c i p).map (fun x => (x.1, chars x.2.1, x.2.2)) =
