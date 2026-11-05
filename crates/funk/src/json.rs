@@ -1,6 +1,6 @@
 //! A small JSON writer for funk's reports.
 
-use std::fmt::Write;
+use std::fmt::{self, Write};
 
 use funk_ir::text::is_escaped;
 
@@ -65,22 +65,36 @@ impl Json {
 /// carries no hidden characters.
 fn write_str(out: &mut String, s: &str) {
     out.push('"');
-    for c in s.chars() {
-        match c {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\t' => out.push_str("\\t"),
-            '\r' => out.push_str("\\r"),
-            c if is_escaped(c) => {
+    let _ = escape(out, s);
+    out.push('"');
+}
+
+/// Writes the characters of `s` as they appear inside a JSON string. Runs
+/// of characters that need no escape are written whole.
+pub fn escape(out: &mut impl Write, s: &str) -> fmt::Result {
+    let mut unwritten = 0;
+    for (i, c) in s.char_indices() {
+        let short = match c {
+            '"' => Some("\\\""),
+            '\\' => Some("\\\\"),
+            '\n' => Some("\\n"),
+            '\t' => Some("\\t"),
+            '\r' => Some("\\r"),
+            c if is_escaped(c) => None,
+            _ => continue,
+        };
+        out.write_str(&s[unwritten..i])?;
+        unwritten = i + c.len_utf8();
+        match short {
+            Some(e) => out.write_str(e)?,
+            None => {
                 for unit in c.encode_utf16(&mut [0; 2]) {
-                    let _ = write!(out, "\\u{unit:04x}");
+                    write!(out, "\\u{unit:04x}")?;
                 }
             }
-            c => out.push(c),
         }
     }
-    out.push('"');
+    out.write_str(&s[unwritten..])
 }
 
 #[cfg(test)]
