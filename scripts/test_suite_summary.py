@@ -71,13 +71,13 @@ class Summary(unittest.TestCase):
         status, out = self.run_main("cargo-test", str(log), "101")
         self.assertEqual(status, 0)
         self.assertIn(
-            "Rust tests (cargo test): 3 test targets, 5 tests run, 4 passed,"
+            "Rust tests (cargo test): 3 test runs, 5 tests run, 4 passed,"
             " 1 failed, 1 ignored\n",
             out,
         )
         text = self.summary.read_text(encoding="utf-8")
         self.assertIn("### Rust tests (cargo test)\n", text)
-        self.assertIn("| Test targets | Tests run | Passed | Failed | Ignored |", text)
+        self.assertIn("| Test runs | Tests run | Passed | Failed | Ignored |", text)
         self.assertIn("| 3 | 5 | 4 | 1 | 1 |", text)
         self.assertIn("cargo test exited with status 101.", text)
 
@@ -211,7 +211,7 @@ class CheckRust(unittest.TestCase):
             done = self.run_script(status, summary)
             self.assertEqual(done.returncode, status, done.stderr)
             self.assertIn("test d ... FAILED\n", done.stdout)
-            self.assertIn("Rust tests (cargo test): 3 test targets,", done.stdout)
+            self.assertIn("Rust tests (cargo test): 3 test runs,", done.stdout)
         text = summary.read_text(encoding="utf-8")
         self.assertEqual(text.count("| 3 | 5 | 4 | 1 | 1 |"), 2)
         self.assertEqual(text.count("cargo test exited with status 101."), 1)

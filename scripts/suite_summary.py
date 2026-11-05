@@ -74,8 +74,9 @@ def write(
 
 
 def cargo_test(text: str) -> list[int] | None:
-    """Test targets, tests run, passed, failed and ignored, summed over the
-    `test result:` line of each test target and doc-test run."""
+    """Test runs (one per `test result:` line), tests run, passed, failed
+    and ignored, summed over those lines. A crate's doc-tests can print two:
+    one for the merged doc-tests and one for those that run alone."""
     found = CARGO_RESULT.findall(ANSI.sub("", text))
     if not found:
         return None
@@ -147,7 +148,7 @@ def main(argv: list[str]) -> int:
     command, args = (argv[0], argv[1:]) if argv else ("", [])
     if command == "cargo-test" and len(args) == 2:
         counts = cargo_test(Path(args[0]).read_text(encoding="utf-8", errors="replace"))
-        header = ["test targets", "tests run", "passed", "failed", "ignored"]
+        header = ["test runs", "tests run", "passed", "failed", "ignored"]
         note = exited("cargo test", args[1])
         if counts is None:
             write("Rust tests (cargo test)", header, [], note or "No test ran.")

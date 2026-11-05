@@ -7,6 +7,8 @@ Every check is a hook of .pre-commit-config.yaml, and the workflows of
 `run`. It fails when:
 
 - a hook is run by no step, or by more than one;
+- a hook of the `pre-commit` stage runs outside ci.yml, whose jobs the
+  gate needs: pages.yml, for one, runs only on main;
 - a step runs a hook that the config does not have, or runs pre-commit
   without an id right after `run`;
 - a hook of the `pre-commit` stage runs without `--all-files`, or a hook
@@ -33,6 +35,7 @@ import yaml
 
 GATE = "pre-commit"
 WORKFLOWS = Path(".github/workflows")
+CI = WORKFLOWS / "ci.yml"
 
 
 def hook_stages(config: dict) -> dict[str, list[str]]:
@@ -136,14 +139,20 @@ def problems(repo: Path) -> tuple[list[str], dict[str, list[str]]]:
         found += workflow_problems(name, workflow, stages, runs)
         if path.name == "ci.yml":
             found += gate_problems(workflow)
-    if repo / WORKFLOWS / "ci.yml" not in paths:
-        found.append(f"{WORKFLOWS}/ci.yml is missing")
-    for hook in stages:
+    if repo / CI not in paths:
+        found.append(f"{CI} is missing")
+    for hook, its_stages in stages.items():
         where = runs.get(hook, [])
+        gated = not its_stages or "pre-commit" in its_stages
         if not where:
             found.append(f"no CI job runs the hook {hook}")
         elif len(where) > 1:
             found.append(f"the hook {hook} runs more than once: in {'; '.join(where)}")
+        elif gated and not where[0].startswith(f"{CI}, "):
+            found.append(
+                f"the hook {hook} runs in {where[0]}, not in a job of ci.yml"
+                " that the gate needs"
+            )
     return found, runs
 
 

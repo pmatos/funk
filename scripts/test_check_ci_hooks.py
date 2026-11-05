@@ -114,6 +114,19 @@ class CheckCiHooks(unittest.TestCase):
         found = self.found(ci(a=job("lint", "tests"), **{"pre-commit": gate("a")}))
         self.assertIn("the hook lint runs more than once", found[0])
 
+    def test_a_hook_only_in_another_workflow_fails(self):
+        self.workflow("other.yml", {"jobs": {"x": job("tests")}})
+        found = self.found(ci(a=job("lint"), **{"pre-commit": gate("a")}))
+        self.assertEqual(
+            found,
+            [
+                (
+                    "the hook tests runs in .github/workflows/other.yml, job x,"
+                    " not in a job of ci.yml that the gate needs"
+                )
+            ],
+        )
+
     def test_an_unknown_hook(self):
         found = self.found(
             ci(a=job("lint", "tests", "gone"), **{"pre-commit": gate("a")})

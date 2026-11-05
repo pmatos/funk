@@ -57,15 +57,16 @@ Facts:
   so the ruleset does not change.
 - **The `ci-hooks` hook** (`scripts/check_ci_hooks.py`) reads the config
   and every workflow. It fails when a hook runs in no step or in more than
-  one, when a step runs an id that is not a hook or no id, when a hook runs
-  without `--all-files` (a hook of other stages: without its
-  `--hook-stage`), when anything sets `SKIP`, and when the gate does not
-  need every other job of `ci.yml` or does not always run.
+  one, when a hook of the `pre-commit` stage runs outside `ci.yml` (whose
+  jobs the gate needs), when a step runs an id that is not a hook or no
+  id, when a hook runs without `--all-files` (a hook of other stages:
+  without its `--hook-stage`), when anything sets `SKIP`, and when the gate
+  does not need every other job of `ci.yml` or does not always run.
 - **Counts.** When `GITHUB_STEP_SUMMARY` is set, as in CI, the test scripts
   write their counts to the job summary through `scripts/suite_summary.py`
   and print them to the log:
-  - `rust-test`: test targets, tests run, passed, failed and ignored, from
-    each `test result:` line of `cargo test`.
+  - `rust-test`: test runs (one per `test result:` line of `cargo test`),
+    tests run, passed, failed and ignored.
   - `fir-ref-test`: for each Lean library, the `#guard`, `#guard_msgs`,
     `theorem` and `example` commands that building `lean/` checked,
     counted in the sources without comments and literals; and the
@@ -97,7 +98,8 @@ Facts:
 - **Python test counts in the summary.** The Python test hooks run
   `unittest` from their `entry`, so their counts ("Ran N tests") reach the
   log through `--verbose`, but not the summary: that needs a changed hook
-  entry or test, which #148 leaves to the human.
+  entry or test, or step logic outside pre-commit, which #150 leaves to the
+  human.
 
 ## Consequences
 
@@ -113,8 +115,11 @@ Facts:
   the gate's `needs`; `ci-hooks` fails until both are there.
 - `--verbose` makes the logs long: they hold the output of `cargo test`,
   the Lean build and the harness.
-- This refines ADR-2026-10-28-0724 and ADR-2026-10-30-1329, which say that
-  CI runs `pre-commit run --all-files`, and ADR-2026-10-29-2135,
-  ADR-2026-10-30-1030 and ADR-2026-11-03-0809, which say that the
-  `pre-commit` job installs elan, Rust and Verus: the suite jobs install
-  them now.
+- This refines ADR-2026-10-28-0724, ADR-2026-10-30-1329 and
+  ADR-2026-10-30-1250, which say that CI runs `pre-commit run --all-files`;
+  ADR-2026-10-29-2135, ADR-2026-10-30-1030, ADR-2026-11-03-0809,
+  ADR-2026-10-30-1229 and ADR-2026-10-30-2049, which say that the CI job
+  installs elan, Rust, Verus and binutils: the suite jobs install them now;
+  and ADR-2026-10-30-1031, whose `pages.yml` copies the Lean setup steps of
+  `ci.yml`: `ci.yml` now holds two copies, in the `lean` and `cross` jobs,
+  and the comments say to change all three together.

@@ -1,6 +1,6 @@
 # fir's Lean code is tested by `#guard` checks and by `fir-ref` over the shared texts, and `fir-ref` is built by `build-spec.sh --lean`
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1408
 
 ## Context
 
