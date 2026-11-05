@@ -115,18 +115,29 @@ jobs:
           key: pre-commit-rust-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
       # The rust-* hooks build, lint and test the Cargo workspace with the
       # toolchain that rust-toolchain.toml pins (ADR-2026-10-30-1030). The
-      # cross job copies the next three steps; change both together.
+      # cross job copies the next five steps, all but the save; change both
+      # together. An installer's restore and install steps both hold its
+      # pins: a bump edits both (ADR-2026-11-05-1954).
+      - name: Restore the rustup installer
+        id: rustup-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          RUSTUP_VERSION: 1.29.2
+          RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
+        with:
+          path: ${{ runner.temp }}/rustup-init
+          key: rustup-installer-${{ runner.os }}-${{ env.RUSTUP_VERSION }}-${{ env.RUSTUP_SHA256 }}
       - name: Install rustup
         env:
           RUSTUP_VERSION: 1.29.2
           RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
-        run: |
-          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" \
-            "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/x86_64-unknown-linux-gnu/rustup-init"
-          echo "$RUSTUP_SHA256  $RUNNER_TEMP/rustup-init" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/rustup-init"
-          "$RUNNER_TEMP/rustup-init" -y --no-modify-path --profile minimal --default-toolchain none
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        run: scripts/ci-install.sh rustup
+      - name: Save the rustup installer
+        if: steps.rustup-installer.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/rustup-init
+          key: ${{ steps.rustup-installer.outputs.cache-primary-key }}
       # Only the pinned toolchain: the runner image ships its own stable one.
       # The cache archives each matched directory whole, so the exclusion
       # works on the toolchain directories, not on their parent. This job
@@ -145,17 +156,26 @@ jobs:
       # The verus-proof hook proves the unsafe code with Verus, which runs on
       # the Rust toolchain above (ADR-2026-11-03-0809). scripts/check-verus.sh
       # pins the same release; change both together.
+      - name: Restore the Verus installer
+        id: verus-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          VERUS_VERSION: 0.2026.11.02.8bf68ee
+          VERUS_SHA256: f3a0119292df8855e4435da8130bee1873b0e6a60c306accf81a08ea687bba3c
+        with:
+          path: ${{ runner.temp }}/verus.zip
+          key: verus-installer-${{ runner.os }}-${{ env.VERUS_VERSION }}-${{ env.VERUS_SHA256 }}
       - name: Install Verus
         env:
           VERUS_VERSION: 0.2026.11.02.8bf68ee
           VERUS_SHA256: f3a0119292df8855e4435da8130bee1873b0e6a60c306accf81a08ea687bba3c
-        run: |
-          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/verus.zip" \
-            "https://github.com/verus-lang/verus/releases/download/release/$VERUS_VERSION/verus-$VERUS_VERSION-x86-linux.zip"
-          echo "$VERUS_SHA256  $RUNNER_TEMP/verus.zip" | sha256sum -c -
-          unzip -q "$RUNNER_TEMP/verus.zip" -d "$RUNNER_TEMP/verus"
-          "$RUNNER_TEMP/verus/verus-x86-linux/verus" --version
-          echo "$RUNNER_TEMP/verus/verus-x86-linux" >> "$GITHUB_PATH"
+        run: scripts/ci-install.sh verus
+      - name: Save the Verus installer
+        if: steps.verus-installer.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/verus.zip
+          key: ${{ steps.verus-installer.outputs.cache-primary-key }}
       # funk build runs GNU as and ld, and the rust-test hook runs what it
       # builds (ADR-2026-10-30-1229). The runner image ships binutils; this
       # step installs it on an image that does not. The cross job copies it.
@@ -191,19 +211,29 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       # The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
-      # pages.yml and the cross job copy the next three steps; change all
-      # three together.
+      # pages.yml and the cross job copy the next five steps, all but the
+      # save; change all three together. Both elan steps hold its pins: a
+      # bump edits both (ADR-2026-11-05-1954).
+      - name: Restore the elan installer
+        id: elan-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        with:
+          path: ${{ runner.temp }}/elan.tar.gz
+          key: elan-installer-${{ runner.os }}-${{ env.ELAN_VERSION }}-${{ env.ELAN_SHA256 }}
       - name: Install elan
         env:
           ELAN_VERSION: v4.2.4
           ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
-        run: |
-          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/elan.tar.gz" \
-            "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
-          echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
-          tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
-          "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+        run: scripts/ci-install.sh elan
+      - name: Save the elan installer
+        if: steps.elan-installer.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/elan.tar.gz
+          key: ${{ steps.elan-installer.outputs.cache-primary-key }}
       - name: Restore the Lean toolchain and Verso build
         id: lean-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -248,18 +278,22 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-cross-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-      # Copied from the lean job; change both, and pages.yml, together.
+      # Copied from the lean job, which saves the elan installer; change
+      # both, and pages.yml, together.
+      - name: Restore the elan installer
+        id: elan-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        with:
+          path: ${{ runner.temp }}/elan.tar.gz
+          key: elan-installer-${{ runner.os }}-${{ env.ELAN_VERSION }}-${{ env.ELAN_SHA256 }}
       - name: Install elan
         env:
           ELAN_VERSION: v4.2.4
           ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
-        run: |
-          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/elan.tar.gz" \
-            "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
-          echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
-          tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
-          "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+        run: scripts/ci-install.sh elan
       - name: Restore the Lean toolchain and Verso build
         id: lean-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -270,18 +304,22 @@ jobs:
           key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
       - name: Install the Lean toolchain
         run: elan toolchain install "$(cat lean/lean-toolchain)"
-      # Copied from the rust job; change both together.
+      # Copied from the rust job, which saves the rustup installer; change
+      # both together.
+      - name: Restore the rustup installer
+        id: rustup-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          RUSTUP_VERSION: 1.29.2
+          RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
+        with:
+          path: ${{ runner.temp }}/rustup-init
+          key: rustup-installer-${{ runner.os }}-${{ env.RUSTUP_VERSION }}-${{ env.RUSTUP_SHA256 }}
       - name: Install rustup
         env:
           RUSTUP_VERSION: 1.29.2
           RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
-        run: |
-          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" \
-            "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/x86_64-unknown-linux-gnu/rustup-init"
-          echo "$RUSTUP_SHA256  $RUNNER_TEMP/rustup-init" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/rustup-init"
-          "$RUNNER_TEMP/rustup-init" -y --no-modify-path --profile minimal --default-toolchain none
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        run: scripts/ci-install.sh rustup
       - name: Restore the Rust toolchain
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
