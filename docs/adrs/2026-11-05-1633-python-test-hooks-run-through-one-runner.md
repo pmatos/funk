@@ -60,8 +60,8 @@ Facts:
 
 ## Alternatives
 
-- **Each test file writes its counts.** The 22 test files would each repeat
-  the same code, and the human ruled out test changes.
+- **Each test file writes its counts.** Every test file (22 on `be55ab3`)
+  would repeat the same code, and the human ruled out test changes.
 - **Steps in `ci.yml` read the log.** Logic would leave
   `.pre-commit-config.yaml`, which AGENTS.md keeps as the one list of
   checks.
