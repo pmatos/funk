@@ -42,10 +42,10 @@ repos:
         always_run: true
       - id: adr-citations-test
         name: The adr-citations check passes its tests and the shared cases
-        entry: python scripts/test_check_adr_citations.py
+        entry: python scripts/run_unittests.py adr-citations-test scripts/test_check_adr_citations.py
         language: python
         pass_filenames: false
-        files: ^(scripts/(test_)?check_adr_(citations|ids)\.py|docs/spec/FirSpecSite/citation-cases\.json)$
+        files: ^(scripts/((test_)?check_adr_(citations|ids)|run_unittests)\.py|docs/spec/FirSpecSite/citation-cases\.json)$
       # G0's source check on the Lean side (ADR-2026-11-03-0600). The Rust
       # side is crates/funk-ir/tests/g0.rs, which rust-test runs.
       - id: g0
