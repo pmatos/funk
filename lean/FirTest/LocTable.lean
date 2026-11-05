@@ -6,12 +6,12 @@ location of 1,000,000 references (#136). Through `FirTest.Validate`, this
 module imports `FirRef.Fast`, as `fir-ref` does, so `LocTable.problems` runs
 as `FirRef.locTableProblems`, which takes no stack per entry or reference.
 Most checks have errors at the start, in the middle and at the end: a
-reference out of order, a repeated one, a location that refers to itself,
-to an entry after it or to one that the table does not hold, and a number
-of `2^32` or more. The checks run on the table alone, through
-`Module.problems`, through `decide`, and through `FirRef.reportModule`,
-what `fir-ref validate` runs once a text parses. The last check pins the
-axioms of the theorem to Lean's standard ones.
+reference out of order, a repeated one, a location that refers to itself
+or to one that the table does not hold, and a number of `2^32` or more.
+The checks run on the table alone, through `Module.problems`, through
+`decide`, and through `FirRef.reportModule`, what `fir-ref validate` runs
+once a text parses. The last check pins the axioms of the theorem to Lean's
+standard ones.
 
 These checks test the answers at this size, not the stack. The spec's
 check recurses in core's compiled code, whose frames are small, and the

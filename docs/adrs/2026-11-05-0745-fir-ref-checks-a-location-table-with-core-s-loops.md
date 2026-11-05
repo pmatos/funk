@@ -4,10 +4,12 @@ Status: accepted
 
 ## Context
 
-fir has no nesting limit, and no limit on the size of a location table
-(ADR-2026-10-30-1549): `fir-ref validate` must give its verdict on any
-table. ADR-2026-10-30-1742 made its walk of nested blocks take no stack per
-level. The check of the location table, `LocTable.problems`
+fir has no nesting limit (ADR-2026-10-30-1549), and the spec limits only
+the numbers of a location table (N3, `Location.limit`), not how many
+entries it has or how many references a fused location holds:
+`fir-ref validate` must give its verdict on any table.
+ADR-2026-10-30-1742 made its walk of nested blocks take no stack per level.
+The check of the location table, `LocTable.problems`
 ([`CheckModule.lean`](../../lean/Fir/Validation/CheckModule.lean)), walks
 flat lists only, yet compiled it took stack in two places
 ([#136](https://github.com/pmatos/funk/issues/136)):
@@ -78,9 +80,11 @@ with `@[csimp]`, and the spec keeps its definition.
 - `fir-ref validate` checks a location table with no stack per entry or
   per reference, and gives the spec's answer, byte for byte. Its CPU time
   does not change.
-- `List.zip` and a decision of `∀ x ∈ l, p x` by its instance take stack
-  per element of `l` in compiled code. Code in `lean/FirRef/` that walks a
-  list whose length the input sets uses `List.zipWith` and `List.all`
-  instead.
+- In compiled code, `List.zip`, and a decision of `∀ x ∈ l, p x` or
+  `∃ x ∈ l, p x` by core's instances (`List.decidableBAll`,
+  `List.decidableBEx`), take stack per element of `l`. Code in
+  `lean/FirRef/` that walks a list whose length the input sets calls none
+  of them: it uses `List.zipWith`, `List.all` and `List.any`, or a loop of
+  its own that takes no stack per element.
 - A change to `LocTable.problems` breaks `problems_eq_locTableProblems`,
   and so the build, until `locTableProblems` follows it.
