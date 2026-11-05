@@ -168,8 +168,9 @@ are on `main`:
   ([ADR-2026-11-03-1615](adrs/2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md)).
 - A `fir-ref` that gives its verdict on a text nested to any depth and
   runs a function for any number of steps, with no stack per level of
-  nesting, per step or per level of calls, and that prints in time
-  linear in the text it writes
+  nesting, per step or per level of calls, that reads an operand in time
+  that does not grow with the values defined after it, and that prints in
+  time linear in the text it writes
   ([#47](https://github.com/pmatos/funk/issues/47)). It runs
   implementations of the spec's parser, readers, decoder, printer,
   validation walk and interpreter that are proved equal to them and
@@ -178,7 +179,8 @@ are on `main`:
   [ADR-2026-10-30-1742](adrs/2026-10-30-1742-validation-check-at-any-depth.md),
   [ADR-2026-11-03-1810](adrs/2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md),
   [ADR-2026-11-04-2132](adrs/2026-11-04-2132-fir-ref-run-walks-a-machine-with-explicit-call-frames.md),
-  [ADR-2026-11-05-0025](adrs/2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md)).
+  [ADR-2026-11-05-0025](adrs/2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md),
+  [ADR-2026-11-05-0442](adrs/2026-11-05-0442-fir-ref-run-moves-old-values-into-a-map-when-lookups-have-paid-for-it.md)).
   On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt`
   and `fir-ref validate` on texts nested a million levels deep and on a
   block of a million ops, and `scripts/check-fir-ref-run.sh` checks
