@@ -100,10 +100,10 @@ theorem Func.mem_sites (f : Func d) (all : List (Block d)) (x : Name) (s : DefSi
 /-!
 # Uses and successors
 
-A definition dominates a use as `Func.DominatesUse` says: a parameter
-always, a block argument when its block dominates the use's, and an op's
-result when it comes earlier in the use's block, or when its block is
-another block that dominates the use's. A use is in scope when the function
+A definition dominates a use as the rules say: a parameter always, a block
+argument when its block dominates the use's, and an op's result when it
+comes earlier in the use's block, or when its block is another block that
+dominates the use's. A use is in scope when the function
 defines the value among its top-level blocks and each definition dominates
 the use.
 -/
@@ -207,7 +207,8 @@ variable [DialectSignature d] [DialectValidation d] [DecidableDialectValidation 
 /-!
 # Ops
 
-The check of an op follows `Func.OpValid`, rule by rule, in its order.
+The check of an op follows the rule of a valid op, premise by premise, in
+its order.
 -/
 
 /-- The problems of the op `o` at index `i` of block `b` of function `f`,

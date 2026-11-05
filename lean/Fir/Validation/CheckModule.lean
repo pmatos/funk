@@ -1,8 +1,8 @@
 import Fir.Validation.CheckFuncs
 
 /-!
-The check of a module follows `Module.Valid`: its symbols, its location
-table, then each function, in the context of the module. It builds the
+The check of a module follows the rule of a valid module: its symbols, its
+location table, then each function, in the context of the module. It builds the
 module's symbol table and the set of its location references once, as hash
 tables, and every function looks them up.
 

@@ -8,24 +8,15 @@ successors obey the rules below, and each op obeys its dialect's rule.
 
 # Ops
 
-An op in block `b` at index `i` of function `f` is valid when:
+An op is checked where it stands: at an index of a block of a function, in
+the context of its module. The rules below give, in order:
 
-* it owns no region. Region rules come with the first dialect whose ops have
-  regions (H6); no core op has one;
-* each operand is a value the function defines, and the operand types are
-  the op instance's operand types;
-* the result types are the op instance's result types;
-* it is a terminator exactly when it is the last op of its block, and it has
-  as many successors as its op instance says; an op that is not a terminator
-  has none, whatever its dialect says;
-* each of its successors is valid: it names a block of the function other
-  than the entry, and passes one value of the right type for each of that
-  block's arguments (`Func.SuccValid`, below);
-* each value it uses, an operand or a value that it passes to a successor,
-  is in scope: defined in the function and dominating the use;
-* each symbol it refers to names a function of the module;
-* its dialect's own rule holds;
-* its location reference is a key of the module's location table (H8).
+* the context of a function: what the rules read of its module;
+* a valid successor: a branch passes one value of the right type for each
+  argument of its target, which is not the entry block;
+* a valid op: its types, its place in its block, its successors, the values
+  it uses, the symbols it refers to, its dialect's own rule and its
+  location.
 -/
 
 namespace Fir
@@ -68,21 +59,10 @@ def Func.OpValid (ctx : ModuleContext d) (f : Func d) (b : Block d) (i : Nat)
 /-!
 # Functions
 
-A function is valid when:
-
-* its body has an entry block, and the entry block declares no arguments of
-  its own: its arguments are the function's parameters;
-* every block is reachable from the entry (ADR-2026-10-30-0817);
-* the labels of its blocks are unique;
-* the names of its values are unique: each value has one definition, as SSA
-  requires;
-* each value name and each label is one or more name characters, as the
-  text writes them (`isName`), so every valid module can be written;
-* every type it states is valid for its dialect;
-* every block holds at least one op, and every op is valid.
-
-A function's symbol may be any string: the text quotes it when it is not a
-word.
+A function is valid when its entry block declares no arguments, every block
+is reachable from the entry, its labels and value names are unique and can
+be written in the text, every type it states is valid, and every block
+holds at least one op, each of them valid.
 -/
 
 /-- A function is valid in the context of its module. -/
@@ -105,7 +85,7 @@ Each entry of the table has a distinct reference, and the entries are in
 increasing order of reference, so one table has one spelling. A location
 that is built from others refers only to entries before it, so no location
 refers to itself, directly or not. A fused location fuses at least two.
-Every reference, line and column is below `Location.limit`.
+Every reference, line and column is below 2^32.
 
 A source range starts at line 1 or later, and does not end before it starts.
 When both of its columns are known (not 0) and it starts and ends on one
@@ -145,18 +125,12 @@ structure Module.Valid (m : Module d) : Prop where
 # Valid op instances
 
 An op instance's types are its operand types and its result types. They
-are _valid_ when validation accepts each of them (`TypesValid`), as it
-accepts the types of every value that a valid function defines. For the
-core dialect that is `iN` with `1 ≤ N ≤ maxWidth`, never `ptr`. It reads
-no context: it is a property of the op instance alone, where an op's own
-rule (`validOp`) reads the module's symbols and the function's result
-types.
-
-Every op of a valid function is a valid op instance
-(`Func.Valid.typesValid`, in the section on what the lawful class gives),
-since the general rules check its operand and result types against the
-types of the values it uses and defines. The poison obligations speak
-only of valid op instances (ADR-2026-11-02-1515).
+are _valid_ when validation accepts each of them, as it accepts the types
+of every value that a valid function defines. For the core dialect that is
+_iN_ with 1 ≤ _N_ ≤ 16,777,215, never _ptr_. Every op of a valid function
+has an op instance with valid types, as the section on what the lawful
+class gives proves, and the poison obligations speak only of such op
+instances (ADR-2026-11-02-1515).
 -/
 
 /-- Validation accepts the types of the op instance `op`: each of its

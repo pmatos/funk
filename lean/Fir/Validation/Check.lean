@@ -4,10 +4,10 @@ import Fir.Text.Lexical
 /-!
 The rules of validation are propositions. The _validation check_ decides
 them: it lists the rules that a module breaks, each as a _problem_ said in
-words, and the list is empty exactly when the module is valid
-(`Module.problems_eq_nil_iff`). It is written once for every dialect, so for
-the core dialect it covers every op. `fir-ref validate` runs it (#10), and
-`funk verify` (#9) must give the same verdict on every module.
+words, and the list is empty exactly when the module is valid, as the
+section on checking modules proves. It is written once for every dialect,
+so for the core dialect it covers every op. `fir-ref validate` runs it, and
+`funk verify` must give the same verdict on every module.
 
 A problem says what is wrong for people, and where: the function, the block,
 the index of the op in its block and the op's location reference, each when
@@ -20,18 +20,18 @@ character, whatever the module.
 # Decidable dialect rules
 
 The general rules can be decided for every dialect, given a way to compare
-its types. A dialect's own rules, `validTy` and `validOp`, are propositions
-that the dialect states, and the check must decide them too. So the check
-asks of a dialect two things, and nothing more:
+its types. A dialect's own rules, which of its types are valid and whether
+an op obeys its op rule, are propositions that the dialect states, and the
+check must decide them too. So the check asks of a dialect two things, and
+nothing more:
 
-* `DecidableEq d.Ty`, to compare the types of operands, results and block
-  arguments with those that the op instances and blocks expect;
-* an instance of `DecidableDialectValidation d`, below, which decides its
-  two rules.
+* that its types can be compared for equality, to compare the types of
+  operands, results and block arguments with those that the op instances
+  and blocks expect;
+* that its two rules can be decided, as the first definition below says.
 
-The core dialect gives both: its types derive `DecidableEq`, and its rules
-are decided in the section on the core dialect's decidable rules.
-ADR-2026-10-30-1740 records why the check asks for these and no more.
+The core dialect gives both: its types can be compared, and the last
+section of this chapter decides its rules. ADR-2026-10-30-1740 records why the check asks for these and no more.
 -/
 
 namespace Fir

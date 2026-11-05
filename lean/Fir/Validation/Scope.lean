@@ -1,8 +1,9 @@
 import Fir.Syntax.Module
 
 /-!
-Validation decides which terms are fir programs. Like the Wasm spec, it is a
-judgement over the abstract syntax, separate from it: the terms of the
+Validation decides which terms are fir programs. As in the WebAssembly
+specification, it is a judgement over the abstract syntax, separate from it:
+the terms of the
 previous chapter can say things that make no sense, such as using a value
 that is never defined, and validation rules them out. Execution gives a
 meaning to valid modules only: the interpreter runs any module, but only
@@ -10,13 +11,13 @@ the runs of a valid one mean something (ADR-2026-10-30-1856).
 
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
-from above and locations. Each dialect adds rules for its own ops and types
-through the class `DialectValidation`, defined below; the core dialect's
-rules have a section of their own. A text that does not decode is
-rejected before validation, by the parser (see the text format chapter).
+from above and locations. Each dialect adds rules for its own ops and types,
+as the last definition of this section says; the core dialect's rules have
+a section of their own. A text that does not decode is rejected before
+validation, by the parser (see the text format chapter).
 
 The rules are propositions. The validation check, at the end of this
-chapter, decides them, and `fir-ref validate` runs it (#10).
+chapter, decides them, and `fir-ref validate` runs it.
 
 # Names and their types
 
@@ -83,8 +84,8 @@ def Operation.uses (o : Operation d) : List Name :=
 # Symbols
 
 A module is a symbol table: each function's name is a symbol, and ops refer
-to functions only through symbols (H3). The type of a function is its
-parameter types and its result types.
+to functions only through symbols (ADR-2026-10-29-2012). The type of a
+function is its parameter types and its result types.
 -/
 
 /-- The type of a function: what it takes and what it returns. -/
