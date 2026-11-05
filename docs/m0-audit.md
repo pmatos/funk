@@ -36,6 +36,25 @@ The LLVM ports write LLVM's poison constant with `poison`, not
 `shl %n, %n` (ADR-2026-11-03-1619). `poison` is a core word for the G0
 checks (ADR-2026-11-03-1617).
 
+Addendum, 2026-11-05: the close-out of #5 checked this audit again on
+`main` at `28b6f37`, after all 43 sub-issues of #5 had closed, and found
+every "Done when" item met; the
+[closing comment on #5](https://github.com/pmatos/funk/issues/5) gives
+its findings. The figures below stay those of `ca5fd9f`. At `28b6f37`,
+`scripts/check-harness.sh` ends with
+`20818 checks: 20818 passed, 0 failed, 0 invalid`: 277 corpus texts
+(273 modules and 4 non-canonical inputs), 877 modules that Rust printed
+(600 from its generator and the 277 texts), 496 must-reject texts,
+11,427 differential tests and 7,741 interpreter-only tests. The core op
+set has 25 ops, and the coverage matrix 783 cells, each with a test.
+`.github/workflows/ci.yml` runs `pre-commit run --all-files` at line
+109, and CI run 42014416532 passed every hook at `28b6f37`. #117 added
+four hooks in PR #118: `verus-proof`, `verus-report-test`, `unsafe-code`
+and `unsafe-code-test` (ADR-2026-11-03-0808, ADR-2026-11-03-0809). S7's
+ADR is now refined by ADR-2026-10-29-2030, and H8's by
+ADR-2026-11-05-1131, which records the human's choice 16, the spelling
+of a source range.
+
 ## The Lean criteria
 
 #23 asks that Lean have, with no `sorry`, the five items of the first
@@ -251,12 +270,14 @@ requires the checks `pre-commit` and `PR title` on every merge. CI run
 
 ## What stays open
 
-- #5 stays open. Its other open sub-issues are #41, #47 and #55,
-  performance and depth work that the human parked on 2026-10-30 (no
-  depth is an M0 acceptance bar), and #117 (Verus), which is not part of
-  #23.
+Nothing, as of #5's close-out on 2026-11-05, at `28b6f37`. This section
+listed three points, and none stays open:
+
+- #41, #47 and #55, the performance and depth work, and #117 (Verus),
+  which this section listed as #5's other open sub-issues, are closed:
+  by PRs #125, #144, #131 and #118. #5 has no open sub-issue.
 - The 20-deep cap on differential recursion stays, as #107 restated it.
-- A question for the human, not part of #23: whether `tests/fir/llvm/`
-  may get an exception from the `typos` check, so that the three
-  functions of LLVM's `rem.ll` whose names it rejects can be ported
-  (ADR-2026-11-03-0644).
+  It is a rule of the corpus (`tests/fir/README.md`), not open work.
+- The human answered the question on the `typos` check in #124: no
+  exception for `tests/fir/llvm/`. PR #127 ported the three functions of
+  LLVM's `rem.ll` under the corrected spelling (ADR-2026-11-03-1614).
