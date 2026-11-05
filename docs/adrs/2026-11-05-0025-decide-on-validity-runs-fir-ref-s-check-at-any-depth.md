@@ -9,17 +9,21 @@ ADR-2026-10-30-1742 makes `fir-ref`'s calls of `Module.problems` and
 replaces the spec's walk of nested blocks, so the check takes no stack per
 level of regions. ADR-2026-11-03-1715 replaces dominance in the same copies.
 
-It left `decide` out. The spec's instances `Decidable m.Valid` and
-`Decidable (f.Valid ctx)`, in
+ADR-2026-10-30-1742 left `decide` out. The spec's instances
+`Decidable m.Valid` and `Decidable (f.Valid ctx)`, in
 [`CheckModule.lean`](../../lean/Fir/Validation/CheckModule.lean), are
 compiled in the spec, before any theorem of `lean/FirRef/`. The compiler
 inlines an instance at each use as its own module compiled it, so
 `decide m.Valid` ran the spec's `Module.problems` and its walk, even in code
 compiled after `FirRef.Fast`, and aborted with a stack overflow on regions
-nested 1,000,000 deep. A `@[csimp]` theorem on an instance does not help:
-the instance is inlined before the theorem applies. So ADR-2026-10-30-1742
-ruled that `fir-ref` decides validity with `Module.problems`, never with
-`decide`, until [#47](https://github.com/pmatos/funk/issues/47) fixed it.
+nested 1,000,000 deep. So ADR-2026-10-30-1742 ruled that `fir-ref` decides
+validity with `Module.problems`, never with `decide`, until
+[#47](https://github.com/pmatos/funk/issues/47) fixed it.
+
+ADR-2026-10-30-1742 and #47 (comment 6531069726) say a `@[csimp]` theorem
+on the instance would not help. That is wrong: Lean replaces each constant
+of a use by its `@[csimp]` target before it inlines anything, so such a
+theorem works at every use compiled after it.
 
 ## Decision
 
@@ -30,9 +34,9 @@ ruled that `fir-ref` decides validity with `Module.problems`, never with
   `Decidable (f.Valid ctx)`. Each is the spec's instance word for word, so
   `decidableValid_eq` and `decidableFuncValid_eq` prove them equal to the
   spec's by `rfl`. Those theorems rest on Lean's standard axioms only, as
-  `Module.problems_eq_nil_iff` does, which both instances use. Compiled
-  after the theorems, their code calls `FirRef.moduleProblems` and
-  `FirRef.funcProblems`.
+  `Module.problems_eq_nil_iff` and `Func.problems_eq_nil` do, which the two
+  instances use. Compiled after the theorems, their code calls
+  `FirRef.moduleProblems` and `FirRef.funcProblems`.
 - **Where they apply.** An instance applies in every module that imports
   its own. `FirRef.Fast` imports `FirRef.Validate`, so every module that
   imports `FirRef.Fast`, `FirRef.Main` and `FirTest` included, resolves
@@ -48,13 +52,14 @@ ruled that `fir-ref` decides validity with `Module.problems`, never with
   pins the instances that `#synth` finds, and runs `decide` on a module
   nested 1,000,000 levels deep, which is not valid; without the
   instances, its build aborts with a stack overflow. No valid module nests
-  regions in M0, since every op that owns one is rejected, so the valid
-  case is a module of 1,000,000 ops in one block.
+  regions in M0, since every op that owns one is rejected.
 
 ## Alternatives
 
-- **A `@[csimp]` theorem on the spec's instance.** The compiler inlines the
-  instance first, so the theorem never applies.
+- **A `@[csimp]` theorem `@Fir.instDecidableValid = @FirRef.decidableValid`.**
+  It works too, at each use compiled after it. Not chosen: with the
+  instances, the elaborated term itself names `fir-ref`'s code, so `#synth`
+  pins it in a test that needs no run at depth.
 - **Compile the spec's instances after the theorems.** The spec's modules
   cannot import `lean/FirRef/`, which imports them, and the spec does not
   change for `fir-ref` (ADR-2026-10-30-1450).

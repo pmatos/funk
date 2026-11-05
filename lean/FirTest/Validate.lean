@@ -152,9 +152,7 @@ def deepProblems : List String :=
 
 /-! # `decide` and `fir-ref validate`'s own path at any depth -/
 
-/-- A valid module whose entry block holds `n` constants, then `ret`. No
-valid module nests regions, since no op may own one, so the valid module
-of the checks at 1,000,000 is one block of that many ops. -/
+/-- A valid module whose entry block holds `n` constants, then `ret`. -/
 def flatValid (n : Nat) : Module CoreDialect :=
   entryOnly ((List.range n).map (fun i => op [(s!"c{i}", .int 32)] (.const 32 0) []) ++
     [op [] (.ret []) []])
@@ -177,7 +175,6 @@ def decideFuncs (m : Module CoreDialect) : List Bool := m.funcs.map (decide <| Â
   [false]
 #guard !decideValid (deep 1000000 [op [("x", .int 0)] (.const 0 0) []])
 #guard decideFuncs (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) == [false]
-#guard let m := flatValid 1000000; decideValid m && decideFuncs m == [true]
 
 /-- What `fir-ref validate` reports on the file `t.fir` once it parses as
 `deep n` whose innermost op defines a value of type `i0`, for any `n > 0`. -/

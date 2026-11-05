@@ -24,8 +24,7 @@ once per function, so the copies here call that one (#55).
 
 The spec's instances `Decidable m.Valid` and `Decidable (f.Valid ctx)` are
 compiled before these theorems too, and `decide` inlines an instance as its
-own module compiled it, so they run the spec's walk, and a `@[csimp]`
-theorem on them would come too late. `decidableValid` and
+own module compiled it, so they run the spec's walk. `decidableValid` and
 `decidableFuncValid` are the same instances, word for word, compiled after
 the theorems and proved equal to the spec's by `rfl`. Their priority puts
 them first wherever this module is imported, so there `decide m.Valid` and
