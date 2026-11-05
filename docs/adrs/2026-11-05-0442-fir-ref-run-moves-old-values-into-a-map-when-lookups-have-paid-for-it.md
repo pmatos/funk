@@ -86,6 +86,17 @@ Putting every value into a map would double that run's steps.
   until lookups have paid for the move. In exhaustive mode the paths after
   a choice share `young`, and each path that moves it pays for its own
   move.
+- Some inputs are slower than on the spec's list. A run that binds many
+  values, reads one of the oldest just often enough to move `young`, and
+  then stops pays for a move that it never uses. 1,000,000 `const` ops
+  followed by 34 reads of the first take 6.71 s, not 6.08 s (+10%). The
+  move pays for itself from about 50 reads. Every index built on demand
+  has such inputs, since a run can stop right after building it. A
+  larger `rent` does not help: at 128 the worst case was +11%, because a
+  pass over `young` of a million parsed values costs about 7% more than
+  on the spec's list, and the difference grows with each extra pass
+  before the move. Whether to accept this cost is for the human to
+  decide, on #47.
 - Each environment is one more object of five words: a recursion one
   million calls deep takes 194 MB, not 156 MB.
 - A change to `Env.operands`, `Env.bind`, `Func.jump` or `Func.enter`
