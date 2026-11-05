@@ -1,6 +1,6 @@
 # funk-ir walks nested IR with explicit stacks
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1713
 
 ## Context
 

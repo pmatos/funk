@@ -4,16 +4,19 @@
 //! ADR-2026-10-30-1326).
 
 mod build;
+mod canonical;
 mod json;
 mod report;
 mod streams;
 
-use std::fs::{File, OpenOptions};
-use std::io::Write;
+use std::fmt::Display;
+use std::fs::{File, OpenOptions, Permissions};
+use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use funk_ir::{Module, Registry, print, text::parse_bytes, verify};
+use canonical::{JsonText, Printed, is_canonical};
+use funk_ir::{Module, Registry, text::parse_bytes, verify};
 use json::Json;
 use report::{Kind, Problem, Report, Verdict};
 
@@ -194,15 +197,17 @@ fn verify_file(file: &str, reg: &Registry) -> Report {
     }
 }
 
-/// The canonical text of a file that parsed, and whether the file holds it.
+/// A file that parsed: its module, and whether the file holds its
+/// canonical text, when funk needs to know.
 struct Formatted {
-    text: String,
-    canonical: bool,
+    module: Module,
+    canonical: Option<bool>,
 }
 
 /// Formats one file. Returns the report and, if the file parsed, its
-/// canonical text.
-fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Formatted>) {
+/// module. Only plain `fmt` without `--json` does not need to know whether
+/// the file is canonical.
+fn fmt_file(file: &str, mode: FmtMode, json: bool, reg: &Registry) -> (Report, Option<Formatted>) {
     let bytes = match read(file) {
         Ok(b) => b,
         Err(why) => {
@@ -221,26 +226,33 @@ fn fmt_file(file: &str, mode: FmtMode, reg: &Registry) -> (Report, Option<Format
             );
         }
     };
-    let text = print(&m);
-    let canonical = text.as_bytes() == bytes.as_slice();
+    let canonical = (mode != FmtMode::Print || json).then(|| is_canonical(&m, &bytes));
     let mut report = file_report(file, Verdict::Accepted, Vec::new());
-    report.extra.push(("canonical", Json::Bool(canonical)));
+    if let Some(c) = canonical {
+        report.extra.push(("canonical", Json::Bool(c)));
+    }
     if mode == FmtMode::Write
-        && !canonical
-        && let Err(why) = replace(file, &text)
+        && canonical == Some(false)
+        && let Err(why) = replace(file, &m)
     {
         report.verdict = Verdict::IoError;
         report.problems.push(Problem::Io(why));
     }
-    (report, Some(Formatted { text, canonical }))
+    (
+        report,
+        Some(Formatted {
+            module: m,
+            canonical,
+        }),
+    )
 }
 
-/// Replaces the contents of `file` with `text` all at once: writes a new
-/// temporary file next to it, gives it the file's permissions, then renames
-/// it over the file, so a failed write leaves the file as it was. A file
-/// that funk may not write is left alone, as is anything already at a
-/// temporary name.
-fn replace(file: &str, text: &str) -> Result<(), String> {
+/// Replaces the contents of `file` with the canonical text of `m` all at
+/// once: streams the text into a new temporary file next to it, gives it the
+/// file's permissions, then renames it over the file, so a failed write
+/// leaves the file as it was. A file that funk may not write is left alone,
+/// as is anything already at a temporary name.
+fn replace(file: &str, m: &Module) -> Result<(), String> {
     let cannot = |e: &dyn std::fmt::Display| format!("cannot write {file}: {e}");
     let target = std::fs::canonicalize(file).map_err(|e| cannot(&e))?;
     let meta = std::fs::metadata(&target).map_err(|e| cannot(&e))?;
@@ -251,17 +263,34 @@ fn replace(file: &str, text: &str) -> Result<(), String> {
         .write(true)
         .open(&target)
         .map_err(|e| cannot(&e))?;
-    let (tmp, mut out) = create_temp(&target).map_err(|e| cannot(&e))?;
-    let written = out
-        .write_all(text.as_bytes())
-        .and_then(|()| out.set_permissions(meta.permissions()))
-        .and_then(|()| out.sync_all())
+    let (tmp, out) = create_temp(&target).map_err(|e| cannot(&e))?;
+    let written = write_temp(out, m, meta.permissions())
         .map_err(|e| format!("cannot write {}: {e}", tmp.display()))
         .and_then(|()| std::fs::rename(&tmp, &target).map_err(|e| cannot(&e)));
     if written.is_err() {
         let _ = std::fs::remove_file(&tmp);
     }
     written
+}
+
+/// Writes the canonical text of `m` to the temporary file `out`, gives it
+/// `permissions` and syncs it.
+fn write_temp(out: File, m: &Module, permissions: Permissions) -> io::Result<()> {
+    let mut buffered = BufWriter::new(out);
+    write!(buffered, "{}", Printed(m))?;
+    let out = buffered
+        .into_inner()
+        .map_err(io::IntoInnerError::into_error)?;
+    out.set_permissions(permissions)?;
+    out.sync_all()
+}
+
+/// Writes `text` to `out` through a buffer, so that a text written in many
+/// small pieces costs few writes.
+fn stream(out: &mut impl Write, text: impl Display) -> io::Result<()> {
+    let mut buffered = BufWriter::with_capacity(1 << 16, out);
+    write!(buffered, "{text}")?;
+    buffered.flush()
 }
 
 /// Creates a new file next to `target`, named after it, readable only by
@@ -334,12 +363,14 @@ fn run_commands(args: &[String], stderr: &mut impl Write) -> Result<u8, OutputEr
     let reg = Registry::core();
     let mut status = 0;
     for file in &a.files {
-        let (mut report, formatted) = match (a.command.as_str(), &a.output) {
+        let (report, formatted) = match (a.command.as_str(), &a.output) {
             ("verify", _) => (verify_file(file, &reg), None),
             ("build", Some(out)) => (build::build_file(file, out, &reg), None),
-            _ => fmt_file(file, a.mode, &reg),
+            _ => fmt_file(file, a.mode, a.json, &reg),
         };
-        let not_canonical = formatted.as_ref().is_some_and(|f| !f.canonical);
+        let not_canonical = formatted
+            .as_ref()
+            .is_some_and(|f| f.canonical == Some(false));
         status = status.max(match report.verdict {
             Verdict::Accepted if a.mode == FmtMode::Check && not_canonical => 1,
             Verdict::Accepted => 0,
@@ -347,18 +378,21 @@ fn run_commands(args: &[String], stderr: &mut impl Write) -> Result<u8, OutputEr
             Verdict::IoError | Verdict::ToolError => 2,
         });
         if a.json {
-            if a.mode == FmtMode::Print
-                && let Some(f) = &formatted
-            {
-                report.extra.push(("text", Json::str(f.text.clone())));
+            match &formatted {
+                Some(f) if a.mode == FmtMode::Print => {
+                    let head = report.json_open();
+                    let text = JsonText(&f.module);
+                    stream(&mut stdout, format_args!("{head},\"text\":\"{text}\"}}\n"))
+                }
+                _ => writeln!(stdout, "{}", report.json()),
             }
-            writeln!(stdout, "{}", report.json()).map_err(to_stdout)?;
+            .map_err(to_stdout)?;
         } else {
             for p in &report.problems {
                 writeln!(stderr, "{}", p.text(file)).map_err(to_stderr)?;
             }
-            match (a.mode, formatted) {
-                (FmtMode::Print, Some(f)) => stdout.write_all(f.text.as_bytes()),
+            match (a.mode, &formatted) {
+                (FmtMode::Print, Some(f)) => stream(&mut stdout, Printed(&f.module)),
                 (FmtMode::Check, Some(_)) if not_canonical => writeln!(stdout, "{file}"),
                 _ => Ok(()),
             }

@@ -116,114 +116,130 @@ impl<T: Display> Display for Commas<'_, T> {
     }
 }
 
-fn indent(out: &mut String, n: usize) {
-    out.extend(std::iter::repeat_n(' ', n));
+/// Spaces for indentation, written in chunks of at most this many.
+const SPACES: &str = "                                                                ";
+
+fn indent(out: &mut impl Write, mut n: usize) -> fmt::Result {
+    while n > 0 {
+        let k = n.min(SPACES.len());
+        out.write_str(&SPACES[..k])?;
+        n -= k;
+    }
+    Ok(())
 }
 
 /// A block or an op at indentation `n`, with the blocks and ops of its
 /// regions at any depth: each region's blocks two spaces deeper than its op,
 /// and each block's ops two spaces deeper than the block.
-fn write_part(out: &mut String, root: Part<'_>, mut n: usize) {
+fn write_part(out: &mut impl Write, root: Part<'_>, mut n: usize) -> fmt::Result {
     for step in walk(root) {
         match step {
-            Step::Enter(Part::Op(op)) => write_op_head(out, n, op),
+            Step::Enter(Part::Op(op)) => write_op_head(out, n, op)?,
             Step::Enter(Part::Region(_)) => {
-                out.push_str(" {\n");
+                out.write_str(" {\n")?;
                 n += 2;
             }
             Step::Enter(Part::Block(b)) => {
-                write_block_head(out, n, b);
+                write_block_head(out, n, b)?;
                 n += 2;
             }
-            Step::Leave(Part::Op(op)) => {
-                let _ = writeln!(out, " {}", op.loc);
-            }
+            Step::Leave(Part::Op(op)) => writeln!(out, " {}", op.loc)?,
             Step::Leave(Part::Region(_)) => {
                 n -= 2;
-                indent(out, n);
-                out.push('}');
+                indent(out, n)?;
+                out.write_char('}')?;
             }
             Step::Leave(Part::Block(_)) => n -= 2,
         }
     }
+    Ok(())
 }
 
 /// An op up to its regions, at indentation `n`.
-fn write_op_head(out: &mut String, n: usize, op: &Op) {
-    indent(out, n);
+fn write_op_head(out: &mut impl Write, n: usize, op: &Op) -> fmt::Result {
+    indent(out, n)?;
     if !op.results.is_empty() {
-        let _ = write!(out, "{} = ", Commas(&op.results));
+        write!(out, "{} = ", Commas(&op.results))?;
     }
-    out.push_str(&op.name);
+    out.write_str(&op.name)?;
     for a in &op.attrs {
-        let _ = write!(out, " {a}");
+        write!(out, " {a}")?;
     }
     let mut sep = " ";
     for x in &op.operands {
-        let _ = write!(out, "{sep}%{x}");
+        write!(out, "{sep}%{x}")?;
         sep = ", ";
     }
     for s in &op.succs {
-        let _ = write!(out, "{sep}{s}");
+        write!(out, "{sep}{s}")?;
         sep = ", ";
     }
+    Ok(())
 }
 
 /// A block's label and arguments, at indentation `n`.
-fn write_block_head(out: &mut String, n: usize, b: &Block) {
-    indent(out, n);
-    out.push('^');
-    out.push_str(&b.label);
+fn write_block_head(out: &mut impl Write, n: usize, b: &Block) -> fmt::Result {
+    indent(out, n)?;
+    out.write_char('^')?;
+    out.write_str(&b.label)?;
     if !b.params.is_empty() {
-        let _ = write!(out, "({})", Commas(&b.params));
+        write!(out, "({})", Commas(&b.params))?;
     }
-    out.push_str(":\n");
+    out.write_str(":\n")
 }
 
 /// A function: an item of kind `func`, with no attributes.
-fn write_func(out: &mut String, f: &Func) {
-    let _ = write!(out, "func {}({})", print_symbol(&f.name), Commas(&f.params));
+fn write_func(out: &mut impl Write, f: &Func) -> fmt::Result {
+    write!(out, "func {}({})", print_symbol(&f.name), Commas(&f.params))?;
     if !f.results.is_empty() {
-        let _ = write!(out, " -> {}", Commas(&f.results));
+        write!(out, " -> {}", Commas(&f.results))?;
     }
-    out.push_str(" {\n");
+    out.write_str(" {\n")?;
     for b in &f.body.blocks {
-        write_part(out, Part::Block(b), 0);
+        write_part(out, Part::Block(b), 0)?;
     }
-    out.push_str("}\n");
+    out.write_str("}\n")
 }
 
-fn write_locs(out: &mut String, t: &LocTable) {
-    out.push_str("locs {\n");
+fn write_locs(out: &mut impl Write, t: &LocTable) -> fmt::Result {
+    out.write_str("locs {\n")?;
     for (r, l) in &t.entries {
-        let _ = writeln!(out, "  {r} = {l}");
+        writeln!(out, "  {r} = {l}")?;
     }
-    out.push_str("}\n");
+    out.write_str("}\n")
+}
+
+/// Writes the canonical text of a module (`Module.print`) to `out`, piece
+/// by piece, so the text is never held whole. It stops at the first error
+/// of `out`, which a sink may return to end the text early.
+pub fn write_module(out: &mut impl Write, m: &Module) -> fmt::Result {
+    for item in &m.items {
+        match item {
+            Item::Func(f) => write_func(out, f)?,
+        }
+        out.write_char('\n')?;
+    }
+    write_locs(out, &m.locs)
+}
+
+/// Runs `write` on a new `String`, which never fails to take a write.
+fn to_string(write: impl FnOnce(&mut String) -> fmt::Result) -> String {
+    let mut out = String::new();
+    write(&mut out).expect("a String takes every write");
+    out
 }
 
 /// The canonical text of a module (`Module.print`).
 pub fn print(m: &Module) -> String {
-    let mut out = String::new();
-    for item in &m.items {
-        match item {
-            Item::Func(f) => write_func(&mut out, f),
-        }
-        out.push('\n');
-    }
-    write_locs(&mut out, &m.locs);
-    out
+    to_string(|out| write_module(out, m))
 }
 
 /// The canonical text of one op at indentation `n`, with its line feed.
 pub fn print_op(op: &Op, n: usize) -> String {
-    let mut out = String::new();
-    write_part(&mut out, Part::Op(op), n);
-    out
+    to_string(|out| write_part(out, Part::Op(op), n))
 }
 
 /// The canonical text of one function, with its line feed.
 pub fn print_func(f: &Func) -> String {
-    let mut out = String::new();
-    write_func(&mut out, f);
-    out
+    to_string(|out| write_func(out, f))
 }

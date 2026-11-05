@@ -181,6 +181,14 @@ impl Report {
         fields.extend(self.extra.iter().cloned());
         Json::Obj(fields).render()
     }
+
+    /// The JSON report without the brace that closes it, for a caller that
+    /// streams one more field after it.
+    pub fn json_open(&self) -> String {
+        let mut json = self.json();
+        json.pop();
+        json
+    }
 }
 
 #[cfg(test)]
