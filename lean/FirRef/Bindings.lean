@@ -18,9 +18,10 @@ A lookup searches `young`, then `old`. It passes the first `free` entries
 of `young` for nothing; past those, the entries it passes are a debt, and
 when the debt exceeds `rent` times the length of `young`, `young` moves
 into `old` (`settle`). So a run pays to move a value into `old` only after
-lookups have passed it about `rent` times, and the time that all lookups
-take is linear in the number of values bound and lookups made, whoever
-defined what. `rent` and `free` are how `fir-ref` spends its time, not
+lookups have passed it about `rent` times on average, the time that all
+lookups spend in `young` is linear in the number of values bound and
+lookups made, whoever defined what, and each value moves into `old` once,
+where an insert or a lookup takes time logarithmic in its size. `rent` and `free` are how `fir-ref` spends its time, not
 rules of fir: any values give the same results.
 
 `get` says what bindings give each name, `Agrees` that they give every name
@@ -40,8 +41,8 @@ structure Bindings (d : Dialect) [TyDenote d.Ty] where
   young : List (Name × DVal d)
   /-- The length of `young`. -/
   count : Nat
-  /-- The entries of `young` that lookups have passed, past the first
-  `free` of each, since `young` last moved into `old`. -/
+  /-- The entries of `young` passed by the lookups that passed more than
+  `free` of them, since `young` last moved into `old`. -/
   debt : Nat
   /-- One value for each name, older than those of `young`. -/
   old : Std.TreeMap Name (DVal d) compare

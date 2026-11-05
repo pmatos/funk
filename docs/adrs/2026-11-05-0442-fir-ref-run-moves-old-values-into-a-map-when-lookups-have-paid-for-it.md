@@ -74,10 +74,11 @@ Putting every value into a map would double that run's steps.
 
 ## Consequences
 
-- The lookups of a path take time linear in the values it binds and the
-  lookups it makes: each entry of `young` is passed about `rent` times at
-  most before it moves, and moves once, into a map of at most one value
-  per name. A block of 100,000 `add` ops that read the parameter runs in
+- The lookups of a path take time near linear in the values it binds and
+  the lookups it makes: lookups pass each entry of `young` about `rent`
+  times on average before it moves, and it moves once, into a map of at
+  most one value per name, whose inserts and lookups take time logarithmic
+  in its size. A block of 100,000 `add` ops that read the parameter runs in
   0.51 s, and a loop of 1,000,000 steps that reads values from before it
   in 0.48 s. Runs whose ops read recent values cost what they cost before,
   or less.
