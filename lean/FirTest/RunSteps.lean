@@ -97,13 +97,19 @@ above the bottom, and nine at the bottom, `@flip`'s four included. -/
 
 /-! # The theorems' axioms -/
 
-/-- info: 'FirRef.scripted_eq_runScripted' depends on axioms: [propext, Quot.sound] -/
+/--
+info: 'FirRef.scripted_eq_runScripted' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
 #guard_msgs in #print axioms FirRef.scripted_eq_runScripted
 
-/-- info: 'FirRef.exhaustive_eq_runExhaustive' depends on axioms: [propext, Quot.sound] -/
+/--
+info: 'FirRef.exhaustive_eq_runExhaustive' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
 #guard_msgs in #print axioms FirRef.exhaustive_eq_runExhaustive
 
-/-- info: 'FirRef.sampled_eq_runSampled' depends on axioms: [propext, Quot.sound] -/
+/--
+info: 'FirRef.sampled_eq_runSampled' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
 #guard_msgs in #print axioms FirRef.sampled_eq_runSampled
 
 end FirTest
