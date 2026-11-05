@@ -4,7 +4,8 @@
 //! [`parse`] reads a text in two steps: it reads the tokens by the one
 //! grammar that covers every dialect, then decodes what the grammar leaves
 //! generic through the [`Registry`]. [`print`] writes the one canonical
-//! spelling. `parse(print(m)) == m` for every well-formed module, and
+//! spelling, and [`write_module`] writes it to any sink.
+//! `parse(print(m)) == m` for every well-formed module, and
 //! `print(parse(t)) == t` for every text printed from one
 //! (ADR-2026-10-30-0815).
 
@@ -19,7 +20,7 @@ use std::fmt;
 
 pub use chars::{allowed_outside_strings, is_escaped, print_symbol, quote};
 pub(crate) use print::Commas;
-pub use print::{print, print_func, print_op};
+pub use print::{print, print_func, print_op, write_module};
 
 use crate::ir::Module;
 use crate::registry::Registry;
