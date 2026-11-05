@@ -204,6 +204,12 @@ def seven : String :=
 #guard match FirRef.parseBytes (d := CoreDialect) ("// é\n".toUTF8 ++ ⟨#[0xc3]⟩) with
   | .error e => e.pos == ⟨2, 1⟩
   | .ok _ => false
+#guard match FirRef.parseBytes (d := CoreDialect) ("ab".toUTF8 ++ ⟨#[0x80]⟩) with
+  | .error e => e.pos == ⟨1, 3⟩
+  | .ok _ => false
+#guard match FirRef.parseBytes (d := CoreDialect) ("a\n\nbé\nxyz".toUTF8 ++ ⟨#[0xe0, 0x80]⟩) with
+  | .error e => e.pos == ⟨4, 4⟩
+  | .ok _ => false
 #guard (FirRef.parseBytes (d := CoreDialect) seven.toUTF8).toBool
 
 end FirTest
