@@ -6,7 +6,9 @@ Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
 several results and none, fuel, each stuck case that a text reaches, calls
-without end, `poison` arguments (#123), and argument errors. Most of these
+without end, `poison` arguments (#123), and argument errors, among them a
+comment of a million characters (#135), with the axioms of
+`argAttr_eq_argAttrP`, which reads an argument over positions. Most of these
 runs make no choice, in scripted mode with no choices, the default;
 `FirTest.Modes` tests the modes on runs that choose.
 
@@ -160,6 +162,16 @@ def addI8 (a : String) : RunReport := runText (addAt "i8") "@f" ["1", a]
   runText (addAt "i1") "@f" ["true", a] == fails 2 ("fir-ref: " ++ a ++ " is not a value of type i1")
 #guard runText (body "func @p(%x: ptr)" ["^e:", "  ret @0"]) "@p" ["0"] ==
   fails 2 "fir-ref: 0 is not a value of type ptr"
+-- An argument is lexed over positions, so a comment of a million characters
+-- is no value, alone or after one (#135).
+#guard ["//", "// one", "1 2", "-", "//\x01", "// " ++ "".pushn 'x' 1000000,
+    "1 // " ++ "".pushn 'x' 1000000].all
+  fun a => addI8 a == fails 2 ("fir-ref: " ++ shown a ++ " is not a value of type i8")
+
+/--
+info: 'FirRef.argAttr_eq_argAttrP' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in #print axioms FirRef.argAttr_eq_argAttrP
 
 /-! # Poison arguments
 
