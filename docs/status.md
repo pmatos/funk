@@ -171,9 +171,9 @@ are on `main`:
   nesting, per step or per level of calls, and that prints in time
   linear in the text it writes
   ([#47](https://github.com/pmatos/funk/issues/47)). It runs
-  implementations of the spec's readers, decoder, printer, validation
-  walk and interpreter that are proved equal to them and registered with
-  `@[csimp]`, on Lean's standard axioms only
+  implementations of the spec's lexer, readers, decoder, printer,
+  validation walk and interpreter that are proved equal to them and
+  registered with `@[csimp]`, on Lean's standard axioms only
   ([ADR-2026-10-30-1450](adrs/2026-10-30-1450-fir-ref-runs-proved-implementations.md),
   [ADR-2026-10-30-1742](adrs/2026-10-30-1742-validation-check-at-any-depth.md),
   [ADR-2026-11-03-1810](adrs/2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md),

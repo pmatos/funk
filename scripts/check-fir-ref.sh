@@ -178,10 +178,11 @@ case "$1" in
         done
         # Depth (#47): fir has no nesting limit (ADR-2026-10-30-1549). The
         # spec's readers, decoder and printer take 128 to 384 MB of stack on
-        # a text nested a million levels deep. fir-ref takes no stack per
-        # level, so on a 256 KiB stack it gives each text below its verdict,
-        # never an abort. The nested texts do not parse: an attribute applied
-        # a million levels deep, functions nested in functions, and regions
+        # a text nested a million levels deep, and 64 to 256 MB on a block
+        # of a million ops. fir-ref takes no stack per level or per op, so
+        # on a 256 KiB stack it gives each text below its verdict, never an
+        # abort. The nested texts do not parse: an attribute applied a
+        # million levels deep, functions nested in functions, and regions
         # whose innermost op reads an undefined value, since regions that
         # parse cannot be printed at that depth. The block of a million ops
         # above is canonical and valid.
