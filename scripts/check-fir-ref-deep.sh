@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Checks fir-ref at depth (#47). check-fir-ref.sh test calls it with the
+# fir-ref that it builds: scripts/check-fir-ref-deep.sh FIR_REF. On a 256
+# KiB stack, fir-ref fmt and validate give texts nested a million levels
+# deep in attributes, in items and in regions, and a block of a million
+# ops, their verdicts, never an abort.
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 FIR_REF" >&2
+    exit 2
+fi
+fir_ref=$1
+
+repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
+cd "$repo_root"
+
+# fir-ref runs code from this repository; keep CI tokens away.
+unset GH_TOKEN GITHUB_TOKEN
+
+status=0
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# fir has no nesting limit (ADR-2026-10-30-1549). The spec's readers,
+# decoder and printer take 128 to 384 MB of stack on a text nested a
+# million levels deep, and 64 to 256 MB on a block of a million ops.
+# fir-ref takes no stack per level or per op, so on a 256 KiB stack it
+# gives each text below its verdict, never an abort. The nested texts do
+# not parse: an attribute applied a million levels deep, functions nested
+# in functions, and regions whose innermost op reads an undefined value,
+# since regions that parse cannot be printed at that depth. The block of a
+# million ops, the one that check-fir-ref.sh reprints, is canonical and
+# valid.
+ending='}\n\nlocs {\n  @0 = unknown\n}\n'
+awk -v end="$ending" 'BEGIN {
+    printf "func @f() {\n^e:\n  ret "
+    for (i = 0; i < 1000000; i++) printf "h("
+    printf "x"
+    for (i = 0; i < 1000000; i++) printf ")"
+    printf " @0\n%s", end
+}' >"$tmp/deep-attrs.fir"
+awk -v end="$ending" 'BEGIN {
+    for (i = 0; i < 1000000; i++) printf "func @a() {\n"
+    for (i = 1; i < 1000000; i++) printf "}\n"
+    printf "%s", end
+}' >"$tmp/deep-items.fir"
+awk -v end="$ending" 'BEGIN {
+    printf "func @f() {\n^e:\n"
+    for (i = 0; i < 1000000; i++) printf "br {\n^b:\n"
+    printf "ret %%x @0\n"
+    for (i = 0; i < 1000000; i++) printf "} @0\n"
+    printf "%s", end
+}' >"$tmp/deep-regions.fir"
+awk -v end="$ending" 'BEGIN {
+    printf "func @f() {\n^e:\n"
+    for (i = 0; i < 1000000; i++) printf "  %%c%d: i32 = const %d @0\n", i, i
+    printf "  ret @0\n%s", end
+}' >"$tmp/ops.fir"
+# deep NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB stack, fir-ref fmt
+# --check and validate give $tmp/NAME.fir, WHAT, the parse error at LINE
+# and COLUMN with MESSAGE, or, without one, accept it, and print exactly
+# that verdict.
+deep() {
+    local file=$tmp/$1.fir what=$2 verdict=accepted diags='' want_rc=0 fail=0
+    local cmd rc out err want_out want_err
+    shift 2
+    if [[ $# -gt 0 ]]; then
+        verdict=parse-error want_rc=1
+        printf -v diags '{"kind":"parse-error","message":"%s","line":%s,"column":%s}' \
+            "$3" "$1" "$2"
+    fi
+    for cmd in "fmt --check" validate; do
+        want_out='' want_err=''
+        if [[ $cmd == validate ]]; then
+            printf -v want_out '{"file":"%s","verdict":"%s","diagnostics":[%s]}' \
+                "$file" "$verdict" "$diags"
+        elif [[ $# -gt 0 ]]; then
+            want_err="$file:$1:$2: parse error: $3"
+        fi
+        rc=0
+        # shellcheck disable=SC2086 # CMD is a command and its option.
+        out=$(ulimit -c 0; LEAN_STACK_SIZE_KB=256 exec "$fir_ref" $cmd "$file" \
+            2>"$tmp/deep.err") || rc=$?
+        err=$(<"$tmp/deep.err")
+        if [[ $rc -ne $want_rc || $out != "$want_out" || $err != "$want_err" ]]; then
+            echo "On a 256 KiB stack, fir-ref $cmd on $what exits with $rc," \
+                "prints '$out' and '$err' on standard error; expected" \
+                "$want_rc, '$want_out' and '$want_err'" >&2
+            fail=1
+        fi
+    done
+    return "$fail"
+}
+attr_error="op ret does not decode: the dialect has no op with this name and these"
+attr_error+=" attributes, operand types and result types"
+deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" || status=1
+deep deep-items "functions nested a million levels deep" 2 1 \
+    "a func's body holds blocks, not items" || status=1
+deep deep-regions "regions nested a million levels deep" 2000003 5 \
+    "value %x is not defined in @f" || status=1
+deep ops "a block of a million ops" || status=1
+exit "$status"

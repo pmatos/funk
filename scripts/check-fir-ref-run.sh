@@ -7,8 +7,10 @@
 # and select (#16), runs loops with br and cond_br, a branch on poison and a
 # loop that never ends (#19), and runs calls: a function named by a quoted
 # symbol returns its callee's result, and a call without end runs out of
-# fuel (#20). It runs functions on poison arguments, and rejects poison
-# where it is not an argument of an integer type (#123).
+# fuel (#20). On a 256 KiB stack, that loop and that call run out of a
+# million steps in each mode (#47). It runs functions on poison arguments,
+# and rejects poison where it is not an argument of an integer type (#123).
+# It rejects an argument that is a long comment, on a 256 KiB stack (#135).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -157,6 +159,20 @@ runs "$tmp/loops.fir" 0 "$exhausted" --fuel 1000 @spin || status=1
 } >"$tmp/call.fir"
 runs "$tmp/call.fir" 0 "$exhausted" --fuel 100 @f 1 || status=1
 runs "$tmp/call.fir" 0 "${ret}[\"42\"]$none" '@"1"' 21 || status=1
+# fir-ref run takes no stack per step or per level of calls (#47): on a
+# 256 KiB stack, @spin and @f above, a loop and a recursion that never
+# end, run out of a budget of a million steps in each mode, never abort.
+while read -r want mode; do
+    for run in "loops.fir @spin" "call.fir @f 1"; do
+        # shellcheck disable=SC2086 # MODE and RUN are lists of words.
+        (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/${run%% *}" 0 "$want" \
+            --fuel 1000000 $mode ${run#* }) || status=1
+    done
+done <<END
+$exhausted
+{"kind":"outcomes","choices":0,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive
+{"kind":"fuel-exhausted","choices":0,"sequence":[]} --seed 7
+END
 # freeze of poison makes a choice: %a + 1 overflows i2 at 1
 # (ADR-2026-10-30-2218).
 printf 'func @f(%%a: i2) -> i2 {\n^e:\n  %%m: i2 = const 1 @0\n' >"$tmp/freeze.fir"
@@ -176,6 +192,14 @@ runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
     @double 9223372036854775808 || status=1
+# An argument is lexed over positions, with no stack per character: a
+# comment of 100,000 characters is no value, alone or after one, on a
+# 256 KiB stack (#135).
+long="// $(head -c 100000 /dev/zero | tr '\0' x)"
+for arg in "$long" "1 $long"; do
+    LEAN_STACK_SIZE_KB=256 runs $c/add.fir 2 "fir-ref: $arg is not a value of type i64" \
+        @double "$arg" || status=1
+done
 # poison is an argument of any iN (#123), but not of ptr, and not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1

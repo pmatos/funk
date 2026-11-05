@@ -37,10 +37,12 @@ fit the run.
 
 Arguments, choices and values are spelled as constants are in text: `true`
 and `false` at `i1`, and signed decimal at every other width, read with the
-spec's lexer and checked with `Core.Op.decode`. A value or an argument may
-also be `poison`, at any `iN`, so that a run may start from poison, as the
-runs of `Core.FuncRuns` do (#123). A choice may not: `freeze` chooses a
-value of its type.
+spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
+lexer here as `argAttrP`, which lexes at most two tokens over the text's
+positions, with no stack per character (`argAttr_eq_argAttrP`). A value or
+an argument may also be `poison`, at any `iN`, so that a run may start from
+poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
+`freeze` chooses a value of its type.
 -/
 
 namespace FirRef
@@ -77,13 +79,11 @@ def valueText : DVal CoreDialect → String
   | ⟨.ptr, v⟩ => nomatch (v : Empty)
 
 /-- The constant that the text `s` spells at the type `iN`: the spec's
-lexer reads `s` as one token, `Core.Op.decode` reads that as a `const`, and
+lexer reads `s` as one token (`argAttr`, which `fir-ref` runs as
+`argAttrP`, over positions), `Core.Op.decode` reads that as a `const`, and
 the token is spelled exactly `s`, with nothing around it. -/
 def constOf (w : Nat) (s : String) : Option (BitVec w) := do
-  let attr ← match Text.lex s with
-    | .ok [⟨.int i, _⟩, ⟨.eof, _⟩] => some (Attr.int i)
-    | .ok [⟨.word x, _⟩, ⟨.eof, _⟩] => some (Attr.word x)
-    | _ => none
+  let attr ← argAttr s
   if attr.print != s then none
   match Core.Op.decode "const" [attr] [] [.int w] with
   | some (.const w' v) => if h : w' = w then some (h ▸ v) else none

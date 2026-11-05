@@ -8,8 +8,8 @@ equal to the spec's `Text.decodeModule` and registered with `@[csimp]`, and
 `FirRef.Utf8`, as `fir-ref` does, so the checks below run those
 implementations, and so do the parser's checks in `FirTest.Parse`.
 
-The syntax trees are built here, not read from text, since the spec's
-readers still take stack per level of nesting. The checks on regions nested
+The syntax trees are built here, not read from text, so that these checks
+test the decoder alone; `FirTest.ReadDeep` reads deep texts. The checks on regions nested
 1,000,000 levels deep, on a type 1,000,000 levels deep, on a block of
 3,000,000 ops and on an op with 3,000,000 operands need the decoder's loops
 and its copy of `decodeType`: without `decodeModule_eq_decodeModule`, the

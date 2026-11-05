@@ -10,6 +10,7 @@ import FirTest.Interpreter
 import FirTest.Modes
 import FirTest.Sample
 import FirTest.RunSteps
+import FirTest.Lookup
 import FirTest.Bitwise
 import FirTest.Width
 import FirTest.PoisonOp
@@ -20,8 +21,10 @@ import FirTest.Loops
 import FirTest.Lex
 import FirTest.Decode
 import FirTest.Read
+import FirTest.ReadDeep
 import FirTest.ValidateOps
 import FirTest.Validate
+import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.Sum
 import FirTest.Toy
