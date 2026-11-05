@@ -171,7 +171,7 @@ are on `main`:
   nesting, per step or per level of calls, and that prints in time
   linear in the text it writes
   ([#47](https://github.com/pmatos/funk/issues/47)). It runs
-  implementations of the spec's lexer, readers, decoder, printer,
+  implementations of the spec's parser, readers, decoder, printer,
   validation walk and interpreter that are proved equal to them and
   registered with `@[csimp]`, on Lean's standard axioms only
   ([ADR-2026-10-30-1450](adrs/2026-10-30-1450-fir-ref-runs-proved-implementations.md),
@@ -179,9 +179,9 @@ are on `main`:
   [ADR-2026-11-03-1810](adrs/2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md),
   [ADR-2026-11-04-2132](adrs/2026-11-04-2132-fir-ref-run-walks-a-machine-with-explicit-call-frames.md),
   [ADR-2026-11-05-0025](adrs/2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md)).
-  On a 256 KiB stack, `scripts/check-fir-ref.sh` checks `fir-ref fmt` and
-  `fir-ref validate` on texts nested a million levels deep and on a block
-  of a million ops, and `fir-ref run` on a loop and a recursion of a
-  million steps.
+  On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt`
+  and `fir-ref validate` on texts nested a million levels deep and on a
+  block of a million ops, and `scripts/check-fir-ref-run.sh` checks
+  `fir-ref run` on a loop and a recursion of a million steps.
 
 The epic's open sub-issues list the parts of M0 that do not exist yet.

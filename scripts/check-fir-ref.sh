@@ -12,7 +12,8 @@
 #               nested 3,000 deep within 8 seconds of CPU time (#47), and
 #               that fir-ref run and fmt write the signed maximum and
 #               minimum of i16777215, of 5,050,445 digits, within 30
-#               seconds of CPU time each (#41).
+#               seconds of CPU time each (#41). check-fir-ref-deep.sh
+#               checks fir-ref fmt and validate at depth (#47).
 #               fir-ref validate accepts every text of tests/fir/, and
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
@@ -21,10 +22,7 @@
 #               blocks, each block using the value of the block before it:
 #               a chain within 180 seconds of CPU time, and a chain of
 #               checks that may each leave for one shared exit within 240
-#               (#55). On a 256 KiB stack, fir-ref fmt and validate give
-#               texts nested a million levels deep in attributes, in items
-#               and in regions, and the block of a million ops, their
-#               verdicts (#47). check-fir-ref-run.sh checks fir-ref run.
+#               (#55). check-fir-ref-run.sh checks fir-ref run.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -176,79 +174,10 @@ case "$1" in
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
         done
-        # Depth (#47): fir has no nesting limit (ADR-2026-10-30-1549). The
-        # spec's readers, decoder and printer take 128 to 384 MB of stack on
-        # a text nested a million levels deep, and 64 to 256 MB on a block
-        # of a million ops. fir-ref takes no stack per level or per op, so
-        # on a 256 KiB stack it gives each text below its verdict, never an
-        # abort. The nested texts do not parse: an attribute applied a
-        # million levels deep, functions nested in functions, and regions
-        # whose innermost op reads an undefined value, since regions that
-        # parse cannot be printed at that depth. The block of a million ops
-        # above is canonical and valid.
-        awk -v end="$ending" 'BEGIN {
-            printf "func @f() {\n^e:\n  ret "
-            for (i = 0; i < 1000000; i++) printf "h("
-            printf "x"
-            for (i = 0; i < 1000000; i++) printf ")"
-            printf " @0\n%s", end
-        }' >"$tmp/deep-attrs.fir"
-        awk -v end="$ending" 'BEGIN {
-            for (i = 0; i < 1000000; i++) printf "func @a() {\n"
-            for (i = 1; i < 1000000; i++) printf "}\n"
-            printf "%s", end
-        }' >"$tmp/deep-items.fir"
-        awk -v end="$ending" 'BEGIN {
-            printf "func @f() {\n^e:\n"
-            for (i = 0; i < 1000000; i++) printf "br {\n^b:\n"
-            printf "ret %%x @0\n"
-            for (i = 0; i < 1000000; i++) printf "} @0\n"
-            printf "%s", end
-        }' >"$tmp/deep-regions.fir"
-        # deep NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB stack, fir-ref
-        # fmt --check and validate give $tmp/NAME.fir, WHAT, the parse error
-        # at LINE and COLUMN with MESSAGE, or, without one, accept it, and
-        # print exactly that verdict.
-        deep() {
-            local file=$tmp/$1.fir what=$2 verdict=accepted diags='' want_rc=0 fail=0
-            local cmd rc out err want_out want_err
-            shift 2
-            if [[ $# -gt 0 ]]; then
-                verdict=parse-error want_rc=1
-                printf -v diags '{"kind":"parse-error","message":"%s","line":%s,"column":%s}' \
-                    "$3" "$1" "$2"
-            fi
-            for cmd in "fmt --check" validate; do
-                want_out='' want_err=''
-                if [[ $cmd == validate ]]; then
-                    printf -v want_out '{"file":"%s","verdict":"%s","diagnostics":[%s]}' \
-                        "$file" "$verdict" "$diags"
-                elif [[ $# -gt 0 ]]; then
-                    want_err="$file:$1:$2: parse error: $3"
-                fi
-                rc=0
-                # shellcheck disable=SC2086 # CMD is a command and its option.
-                out=$(ulimit -c 0; LEAN_STACK_SIZE_KB=256 exec "$fir_ref" $cmd "$file" \
-                    2>"$tmp/deep.err") || rc=$?
-                err=$(<"$tmp/deep.err")
-                if [[ $rc -ne $want_rc || $out != "$want_out" || $err != "$want_err" ]]; then
-                    echo "On a 256 KiB stack, fir-ref $cmd on $what exits with $rc," \
-                        "prints '$out' and '$err' on standard error; expected" \
-                        "$want_rc, '$want_out' and '$want_err'" >&2
-                    fail=1
-                fi
-            done
-            return "$fail"
-        }
-        attr_error="op ret does not decode: the dialect has no op with this name and these"
-        attr_error+=" attributes, operand types and result types"
-        deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" ||
-            status=1
-        deep deep-items "functions nested a million levels deep" 2 1 \
-            "a func's body holds blocks, not items" || status=1
-        deep deep-regions "regions nested a million levels deep" 2000003 5 \
-            "value %x is not defined in @f" || status=1
-        deep ops "a block of a million ops" || status=1
+        # On a 256 KiB stack, fir-ref fmt and validate give texts nested a
+        # million levels deep, and a block of a million ops, their verdicts
+        # (#47); check-fir-ref-deep.sh holds those checks.
+        scripts/check-fir-ref-deep.sh "$fir_ref" || status=1
         # Two functions of a million blocks, each block using the value of the
         # block before it (#55): a chain, and a chain of checks that may each
         # leave for one shared exit, the shape on which Cooper, Harvey and
