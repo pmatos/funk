@@ -169,8 +169,12 @@ are on `main`:
 
 These parts of M0 do not exist yet:
 
-- A `fir-ref` that reads texts nested to any depth: today its readers
-  overflow their stack on texts nested millions of levels deep
+- A `fir-ref` that gives a verdict on texts nested to any depth: it now
+  reads, decodes and prints them with no stack per level, but `decide` on
+  validity still takes stack per level of regions, `fir-ref run` reads an
+  operand in time that grows with the values defined after it, four paths
+  stay quadratic in an integer's digits, and the acceptance checks are
+  still to come
   ([#47](https://github.com/pmatos/funk/issues/47)).
 
 The epic's sub-issues list the open work in full.

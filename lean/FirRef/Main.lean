@@ -13,17 +13,17 @@ with the spec's printer, `Module.print`. Its command line follows `funk`'s
 fir has no nesting limit (#36), so `fir-ref` must give a verdict at any
 depth. It runs implementations of the spec's functions that take no stack
 per level, each proved equal to its spec function and registered with
-`@[csimp]` (ADR-2026-10-30-1450). The printer's and the decoder's are done:
-`Module.print` runs as `FirRef.printModule`, in time linear in the text
-apart from the digits of long integers, which `FirRef.printDecimal` splits
-at powers of ten (#41), and `Fir.parse` as
-`FirRef.parse`, which decodes with `FirRef.decodeModule`. The
-spec's readers still recurse once per level on the main thread that Lean's
-runtime gives a program, so a text nested millions of levels deep overflows
-its stack until the next stage of #47 replaces them too. `validate` runs the
-spec's validation check, which walks nested blocks with `FirRef.allBlocks`
-(ADR-2026-10-30-1742). `run` runs the spec's interpreter in its tree of
-choices, in scripted, exhaustive or sampled mode (`FirRef.Run`).
+`@[csimp]` (ADR-2026-10-30-1450). `Module.print` runs as
+`FirRef.printModule`, in time linear in the text apart from the digits of
+long integers, which `FirRef.printDecimal` splits at powers of ten (#41),
+and `Fir.parse` as `FirRef.parse`, which lexes each token once, from the
+text's positions, as its readers reach it, lexes the whole text again only
+when they fail, to find a lexer error, and decodes with
+`FirRef.decodeModule` (ADR-2026-11-03-1810).
+`validate` runs the spec's validation check, which walks nested blocks with
+`FirRef.allBlocks` (ADR-2026-10-30-1742). `run` runs the spec's interpreter
+in its tree of choices, in scripted, exhaustive or sampled mode
+(`FirRef.Run`).
 -/
 
 namespace FirRef
