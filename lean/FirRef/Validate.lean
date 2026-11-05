@@ -20,10 +20,16 @@ by `rfl`, and two more `@[csimp]` theorems make `fir-ref` call the copies.
 The rest of the check, `Func.problemsIn`, takes the list of blocks as an
 argument and walks only lists. `FirRef.Dominance`, imported first, replaces
 it with a copy that decides dominance with a dominator tree built at most
-once per function, so the copies here call that one (#55). The spec's
-instances `Decidable m.Valid` and `Decidable (f.Valid ctx)` are compiled
-before these theorems too, and `decide` inlines them, so `fir-ref` decides
-validity with `Module.problems`, never with `decide`.
+once per function, so the copies here call that one (#55).
+
+The spec's instances `Decidable m.Valid` and `Decidable (f.Valid ctx)` are
+compiled before these theorems too, and `decide` inlines an instance as its
+own module compiled it, so they run the spec's walk. `decidableValid` and
+`decidableFuncValid` are the same instances, word for word, compiled after
+the theorems and proved equal to the spec's by `rfl`. Their priority puts
+them first wherever this module is imported, so there `decide m.Valid` and
+`decide (f.Valid ctx)` run `moduleProblems` and `funcProblems`, at any
+depth (ADR-2026-11-05-0025).
 -/
 
 namespace FirRef
@@ -120,5 +126,28 @@ def moduleProblems (m : Module d) : List Problem :=
   m.funcs.flatMap (·.problems lk)
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
+
+/-! # `decide` on validity -/
+
+/-- `Decidable m.Valid`, compiled after `problems_eq_moduleProblems`: the
+spec's instance, word for word, so its code calls `moduleProblems`. Its
+priority puts it before the spec's wherever this module is imported. -/
+instance (priority := high) decidableValid (m : Module d) : Decidable m.Valid :=
+  decidable_of_iff _ m.problems_eq_nil_iff
+
+/-- `Decidable (f.Valid ctx)`, compiled after `problems_eq_funcProblems`, as
+`decidableValid` is. -/
+instance (priority := high) decidableFuncValid (ctx : ModuleContext d) (f : Func d) :
+    Decidable (f.Valid ctx) :=
+  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys)⟩)
+    ⟨rfl, by simp⟩)
+
+/-- `decidableValid` is the spec's instance, so `decide` gives the same
+answer with either. -/
+theorem decidableValid_eq : @decidableValid = @Fir.instDecidableValid := rfl
+
+/-- `decidableFuncValid` is the spec's instance, so `decide` gives the same
+answer with either. -/
+theorem decidableFuncValid_eq : @decidableFuncValid = @Fir.instDecidableValid_1 := rfl
 
 end FirRef

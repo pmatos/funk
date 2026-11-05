@@ -82,6 +82,15 @@ def report (file verdict : String) (diagnostics : List String) : String :=
 def ioErrorReport (file why : String) : String :=
   report file "io-error" [diagnostic "io-error" why]
 
+/-- The report on a file whose text parses as the module `m`, and its exit
+status: 0 when `m` is valid, 1 when it is not. `fir-ref` checks `m` with
+`Module.problems`, which runs `FirRef.moduleProblems` here, since this module
+is compiled after `FirRef.Fast`. -/
+def reportModule (file : String) (m : Module CoreDialect) : String × UInt32 :=
+  match m.problems with
+  | [] => (report file "accepted" [], 0)
+  | ps => (report file "validation-error" (ps.map (problemJson (firsts m.locs))), 1)
+
 /-- The report on the bytes of a file, and its exit status: 0 when the file
 is accepted, 1 when it is rejected. -/
 def validateBytes (file : String) (bytes : ByteArray) : String × UInt32 :=
@@ -89,9 +98,6 @@ def validateBytes (file : String) (bytes : ByteArray) : String × UInt32 :=
   | .error e =>
     (report file "parse-error" [diagnostic "parse-error" e.reason
       [("line", toString e.pos.line), ("column", toString e.pos.col)]], 1)
-  | .ok m =>
-    match m.problems with
-    | [] => (report file "accepted" [], 0)
-    | ps => (report file "validation-error" (ps.map (problemJson (firsts m.locs))), 1)
+  | .ok m => reportModule file m
 
 end FirRef
