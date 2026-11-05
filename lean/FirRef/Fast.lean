@@ -3,6 +3,7 @@ import FirRef.PrintAttr
 import FirRef.PrintModule
 import FirRef.Parse
 import FirRef.Dominance
+import FirRef.LocTable
 import FirRef.Validate
 import FirRef.Lex.Arg
 

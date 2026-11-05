@@ -22,7 +22,9 @@
 #               blocks, each block using the value of the block before it:
 #               a chain within 180 seconds of CPU time, and a chain of
 #               checks that may each leave for one shared exit within 240
-#               (#55). check-fir-ref-run.sh checks fir-ref run.
+#               (#55). On a 256 KiB stack, it accepts a location table of
+#               a million entries and a fused location of a million
+#               references (#136). check-fir-ref-run.sh checks fir-ref run.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -126,6 +128,31 @@ case "$1" in
             echo "fir-ref validate exits with $rc, not 2 and silent, on a closed pipe" >&2
             status=1
         fi
+        # A location table of a million entries, and a fused location of a
+        # million references (#136): fir-ref validate accepts both on a 256
+        # KiB stack. The spec's check of the table takes a frame per entry
+        # and per reference, and aborts there with "Stack overflow detected".
+        awk 'BEGIN {
+            printf "locs {\n"
+            for (i = 0; i < 1000000; i++) printf "  @%d = unknown\n", i
+            printf "}\n"
+        }' >"$tmp/entries.fir"
+        awk 'BEGIN {
+            printf "locs {\n  @0 = unknown\n  @1 = unknown\n  @2 = fused(@0"
+            for (i = 1; i < 1000000; i++) printf ", @%d", i % 2
+            printf ")\n}\n"
+        }' >"$tmp/refs.fir"
+        for check in "entries:a location table of a million entries" \
+            "refs:a fused location of a million references"; do
+            name=${check%%:*}
+            rc=0
+            (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 exec "$fir_ref" validate "$tmp/$name.fir") \
+                >"$tmp/$name.json" 2>&1 || rc=$?
+            if [[ $rc -ne 0 ]] || ! grep -q '"verdict":"accepted"' "$tmp/$name.json"; then
+                echo "fir-ref validate does not accept ${check#*:} on a 256 KiB stack" >&2
+                status=1
+            fi
+        done
         # Large canonical texts (#47). On a block of a million ops and on a
         # function of a million blocks, the spec's printer, quadratic in a
         # block's length, takes over 400 seconds: the wall-clock limit
