@@ -16,8 +16,7 @@
 # loop-i128 runs those natively too, and scale crosses 2^64 within 20
 # calls.
 # A run of more than 20,000 steps runs at a budget of 1,000 steps
-# instead, and expects fuel-exhausted: fir-ref's run takes stack for
-# each step (#47).
+# instead, and expects fuel-exhausted, which keeps the run short.
 tests = [
   { func = "@fact", args = ["0"] },
   { func = "@fact", args = ["1"] },

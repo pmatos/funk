@@ -9,7 +9,7 @@
 # The backend does not lower i7, so each test is interpreter-only and
 # states the result that fir-ref must give. A run of more than 20,000
 # steps runs at a budget of 1,000 steps instead, and expects
-# fuel-exhausted: fir-ref's run takes stack for each step (#47).
+# fuel-exhausted, which keeps the run short.
 # fact on 5 takes 45 steps, its callees' included: eight for each level
 # that calls and five for the last. At a budget of 45 it returns, and at
 # 44 it runs out of fuel.

@@ -1,6 +1,6 @@
 # Every op has a required source location
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1131
 
 ## Context
 
