@@ -54,6 +54,8 @@ jobs:
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run suite-summary-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
+        run: uvx pre-commit@4.6.2 run run-unittests-test --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run check-added-large-files --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run check-case-conflict --all-files --verbose --show-diff-on-failure
