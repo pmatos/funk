@@ -1,6 +1,6 @@
 # funk build writes AT&T assembly and runs GNU as and ld
 
-Status: accepted; refined by ADR-2026-11-03-0414
+Status: accepted; refined by ADR-2026-11-03-0414 and ADR-2026-11-05-1408
 
 ## Context
 

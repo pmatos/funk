@@ -97,10 +97,13 @@ commands until it succeeds. Start agents in another worktree with
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.
-- Run `pre-commit run --all-files` before pushing. CI runs exactly that, so a
-  local pass predicts a CI pass.
+- Run `pre-commit run --all-files` before pushing. CI runs the same hooks on
+  every file, one job per suite, so a local pass predicts a CI pass
+  (ADR-2026-11-05-1408).
 - Every check lives in `.pre-commit-config.yaml`, which keeps local and CI one
-  list. Add new linters and formatters there, not in a workflow.
+  list. Add new linters and formatters there, not in a workflow, and give each
+  new hook a step in one job of `.github/workflows/ci.yml`: the `ci-hooks`
+  hook fails until it has one.
 
 ## File-size budget
 

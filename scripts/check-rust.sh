@@ -18,7 +18,20 @@ source scripts/rust-env.sh
 case "$1" in
     fmt) exec cargo fmt --all --check ;;
     clippy) exec cargo clippy --workspace --all-targets --locked -- -D warnings ;;
-    test) exec cargo test --workspace --locked ;;
+    test)
+        if [[ -z "${GITHUB_STEP_SUMMARY:-}" ]]; then
+            exec cargo test --workspace --locked
+        fi
+        # In CI, the counts also go to the job summary (ADR-2026-11-05-1408).
+        log=$(mktemp)
+        trap 'rm -f "$log"' EXIT
+        status=0
+        cargo test --workspace --locked | tee "$log" || status=$?
+        if ! python3 -I scripts/suite_summary.py cargo-test "$log" "$status"; then
+            status=$((status ? status : 1))
+        fi
+        exit "$status"
+        ;;
     *)
         echo "Usage: $0 fmt|clippy|test" >&2
         exit 2

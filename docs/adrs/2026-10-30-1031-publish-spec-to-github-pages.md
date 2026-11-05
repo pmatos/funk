@@ -1,6 +1,6 @@
 # The rendered spec is published to GitHub Pages from every push to main
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1408
 
 ## Context
 
