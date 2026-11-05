@@ -80,8 +80,9 @@ Putting every value into a map would double that run's steps.
   list: their lookups moved `young` into `old` again and again, and a
   search of the map costs more than a walk of a few dozen entries.
 - **A larger `rent`.** It moves the slower inputs to more reads without
-  making them faster, and slows the shapes this stage fixes: at 1,024, a
-  loop of 1,000,000 steps took 4.9 times as long as at 32.
+  making them faster, and slows the shapes this stage fixes: with the
+  first version, at 1,024, a loop of 1,000,000 steps took 4.9 times as
+  long as at 32.
 - **One move shared by the paths after a choice**, through a map that the
   bindings at the choice compute when a path first needs it. Not built:
   the human ruled that the slower inputs below are accepted as they are.
@@ -95,29 +96,31 @@ Putting every value into a map would double that run's steps.
   times on average before it moves, and it moves once, into a map of at
   most one value per name, whose inserts and lookups take time logarithmic
   in its size. A block of 100,000 `add` ops that read the parameter runs
-  in about 0.5 s, and a loop of 1,000,000 steps that reads values from
-  before it in about 1 s. Runs whose ops read values at most `deep` back,
-  calls among them, cost what they cost before, or less.
+  in under a second, and a loop of 1,000,000 steps that reads values from
+  before it in about 1.3 s; their instructions grow tenfold for each
+  tenfold. Runs whose ops read values at most `deep` back, calls among
+  them, cost what they cost before, or less.
 - Some inputs are slower than on the spec's list, as the human accepted. A
   run that reads one of its oldest values just often enough to move
   `young` into `old`, and then stops, pays for a move that it never uses;
   every index built on demand has such inputs. Measured against the
   spec's list (CPU time):
   - one function of 100,000 to 1,000,000 `const` ops, then 33 to 40
-    reads of the first: up to 15% slower; from about 48 reads the move
+    reads of the first: 5% to 15% slower; from about 48 reads the move
     pays for itself;
   - a callee that binds more than `deep` values, reads its first 33 to
     64 times and returns, called again and again: up to 1.6 times as long
-    at 1,000 values and up to 2.1 times at 10,000;
+    at 1,000 and at 10,000 values;
   - exhaustive mode: the paths after a choice share `young`, and each path
     that moves it pays for its own move. 10,000 to 100,000 `const` ops,
     eight one-bit choices (256 paths) and 33 to 64 reads of the first on
-    each path take 1.4 to 2.6 times as long;
+    each path take up to 2.6 times as long;
   - in exhaustive mode, each path's first bind copies its bindings'
-    record, which the spec's list does not: a run of 65,536 short paths
-    takes about 2% longer. A long search counts what it passes, four
-    entries at a time, so it runs about 2% more instructions than
-    `List.lookup`; its time stayed within ±4% of the spec's.
+    record, which the spec's list does not: runs of thousands of short
+    paths take up to 3% more cycles. A long search counts what it passes,
+    four entries at a time, so it runs about 2% more instructions per
+    entry than `List.lookup`; its time stayed between 5% faster and 4%
+    slower than the spec's.
 - Each environment is one more object of five words: a recursion one
   million calls deep takes 194 MB, not 156 MB.
 - A change to `Env.operands`, `Env.bind`, `Func.jump` or `Func.enter`
