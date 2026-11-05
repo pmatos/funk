@@ -1,4 +1,4 @@
-import FirRef.Machine
+import FirRef.MachineTree
 
 /-!
 `fir-ref run` walks the spec's tree of a run in one of three modes, the
@@ -295,11 +295,14 @@ theorem map_shift_zero : ∀ l : List (Leaf d ε × Nat), l.map (shift 0) = l
 theorem run_tree (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     (f.run M (m := ChoiceTree ε) args fuel).run = match f.enter args.toDVals with
       | .error e => .pure (.error e)
-      | .ok (body, env) => tree M (.ops fuel f env body) [] := by
+      | .ok (body, env) => tree M (.ops fuel f (Bindings.ofEnv env) body) [] := by
   unfold Func.run
   cases f.enter args.toDVals with
   | error e => rfl
-  | ok p => rfl
+  | ok p =>
+    show _ = (kont M [] (Func.runOps M fuel f (Bindings.ofEnv p.2).toEnv p.1)).run
+    rw [runOps_congr fuel f _ p.2 p.1 (same_toEnv (Bindings.agrees_ofEnv p.2))]
+    rfl
 
 /-! # The modes on a function's run -/
 
@@ -310,7 +313,7 @@ def scripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (f : Fu
     Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
   match f.enter args.toDVals with
   | .error e => (ChoiceTree.pure (.error e) : ChoiceTree ε _).script read cs 0
-  | .ok (body, env) => scriptFrom M read (.ops fuel f env body, []) cs 0
+  | .ok (body, env) => scriptFrom M read (.ops fuel f (Bindings.ofEnv env) body, []) cs 0
 
 /-- Scripted mode by the machine is the spec's `ChoiceTree.script` on the
 tree of the run. -/
@@ -322,7 +325,7 @@ theorem scripted_eq {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) 
   rw [run_tree M f args fuel]
   cases f.enter args.toDVals with
   | error e => rfl
-  | ok p => exact scriptFrom_eq M read (.ops fuel f p.2 p.1, []) cs 0
+  | ok p => exact scriptFrom_eq M read (.ops fuel f (Bindings.ofEnv p.2) p.1, []) cs 0
 
 /-- Sampled mode on the run of the function `f` of the module `M` on `args`
 with `fuel` steps, by the machine. -/
@@ -331,7 +334,7 @@ def sampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (f : Func d
     Leaf d ε × List ChoiceTree.Chosen :=
   match f.enter args.toDVals with
   | .error e => (.ok (.error e), [])
-  | .ok (body, env) => sampleFrom M draw (.ops fuel f env body, []) g []
+  | .ok (body, env) => sampleFrom M draw (.ops fuel f (Bindings.ofEnv env) body, []) g []
 
 /-- Sampled mode by the machine is the spec's `ChoiceTree.sample` on the
 tree of the run. -/
@@ -352,7 +355,8 @@ def exhaustive (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel 
     Option (List (Leaf d ε × Nat)) :=
   match f.enter args.toDVals with
   | .error e => some [(.ok (.error e), 0)]
-  | .ok (body, env) => exploreFrom M [.state (.ops fuel f env body, []) budget 0] []
+  | .ok (body, env) =>
+    exploreFrom M [.state (.ops fuel f (Bindings.ofEnv env) body, []) budget 0] []
 
 /-- Exhaustive mode by the machine is the spec's `ChoiceTree.explore` on
 the tree of the run. -/
@@ -365,11 +369,11 @@ theorem exhaustive_eq (f : Func d) (args : HVector toType (f.params.map (·.2)))
   cases f.enter args.toDVals with
   | error e => rfl
   | ok p =>
-    show exploreFrom M [.state (.ops fuel f p.2 p.1, []) budget 0] [] =
-      (tree M (.ops fuel f p.2 p.1) []).explore budget
+    show exploreFrom M [.state (.ops fuel f (Bindings.ofEnv p.2) p.1, []) budget 0] [] =
+      (tree M (.ops fuel f (Bindings.ofEnv p.2) p.1) []).explore budget
     rw [exploreFrom_eq M, ChoiceTree.collect]
     simp only [explored, exploredState]
-    cases (tree (ε := ε) M (.ops fuel f p.2 p.1) []).explore budget <;>
+    cases (tree (ε := ε) M (.ops fuel f (Bindings.ofEnv p.2) p.1) []).explore budget <;>
       simp [ChoiceTree.collect, map_shift_zero]
 
 end Machine
