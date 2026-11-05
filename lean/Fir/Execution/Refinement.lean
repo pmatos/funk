@@ -12,7 +12,7 @@ An outcome of the source allows an outcome of the target when:
 
 A target behaviour refines a source behaviour when every target outcome is
 allowed by some source outcome. So if the source can hit UB on some choice,
-every target behaviour refines it (S4, ADR-2026-10-29-2008).
+every target behaviour refines it (ADR-2026-10-29-2008).
 
 An empty target behaviour, with no outcome at all, refines every source,
 and a target that loses some of its paths refines more sources than it

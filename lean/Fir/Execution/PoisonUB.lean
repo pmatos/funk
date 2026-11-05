@@ -2,15 +2,15 @@
 This section explains, in plain words, why fir has two kinds of undefined
 behaviour, how they differ, and what `freeze` does. It defines nothing: the
 rules it explains are the op rules of the abstract syntax chapter and the
-definitions of this chapter, which follow S1 (ADR-2026-10-29-2006) and
-ADR-2026-10-30-0818.
+definitions of this chapter, which follow the poison semantics of
+ADR-2026-10-29-2006 and ADR-2026-10-30-0818.
 
 # Two kinds of failure
 
 _Immediate UB is an event._ It happens at one moment of a run: when an op
 whose rules say "immediate UB" runs, such as a division by zero. From that
 moment the run has no meaning at all. A source run that hits immediate UB
-allows the target to do anything (S4, ADR-2026-10-29-2008).
+allows the target to do anything (ADR-2026-10-29-2008).
 
 _Poison is a value._ Some failures do not stop the run. An `add nsw` that
 overflows produces poison, and the run goes on. Poison flows into the ops
@@ -110,7 +110,8 @@ interpreter models `freeze` of poison as a choice.
 poison condition gives poison in a `select`, which can be computed early
 like any other value, and immediate UB in a `cond_br`. This asymmetry makes
 some rewrites sound in one direction only. Each of the two below is
-forbidden: #16 tests the `and` rewrite, and #19 the `cond_br` one.
+forbidden: the Lean tests of comparison and selection check the `and`
+rewrite, and those of branches the `cond_br` one.
 
 * _A `select` becomes a branch only with its condition frozen._ Turning a
   `cond_br` and its two arms into a `select` is sound: where the source

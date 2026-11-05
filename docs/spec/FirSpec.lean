@@ -2,7 +2,16 @@ import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
 import FirSpec.Core.Ops
+import FirSpec.Core.Poison
+import FirSpec.Core.Unlawful
+import FirSpec.Core.Values
+import FirSpec.Execution.Behaviour
 import FirSpec.Execution.CallSteps
+import FirSpec.Execution.Effects
+import FirSpec.Execution.Fuel
+import FirSpec.Execution.Propagation
+import FirSpec.Execution.Refinement
+import FirSpec.Execution.Values
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -116,25 +125,25 @@ functions, blocks and ops.
 
 # Execution
 
-{includeLiterate "." Fir.Execution.Values "Values and refinement" (level := 2)}
+{includeReadable "." Fir.Execution.Values "Values and refinement" FirSpec.Execution.Values (level := 2)}
 
 {includeLiterate "." Fir.Execution.PoisonUB "Poison and immediate UB" (level := 2)}
 
-{includeLiterate "." Fir.Execution.Effects "Effects and op semantics" (level := 2)}
+{includeReadable "." Fir.Execution.Effects "Effects and op semantics" FirSpec.Execution.Effects (level := 2)}
 
-{includeLiterate "." Fir.Execution.Behaviour "Outcomes and behaviours" (level := 2)}
+{includeReadable "." Fir.Execution.Behaviour "Outcomes and behaviours" FirSpec.Execution.Behaviour (level := 2)}
 
-{includeLiterate "." Fir.Execution.Fuel "Fuel and progress" (level := 2)}
+{includeReadable "." Fir.Execution.Fuel "Fuel and progress" FirSpec.Execution.Fuel (level := 2)}
 
-{includeLiterate "." Fir.Execution.Refinement "Refinement" (level := 2)}
+{includeReadable "." Fir.Execution.Refinement "Refinement" FirSpec.Execution.Refinement (level := 2)}
 
-{includeLiterate "." Fir.Execution.Propagation "Poison classes" (level := 2)}
+{includeReadable "." Fir.Execution.Propagation "Poison classes" FirSpec.Execution.Propagation (level := 2)}
 
-{includeLiterate "." Fir.Core.Values "Core values" (level := 2)}
+{includeReadable "." Fir.Core.Values "Core values" FirSpec.Core.Values (level := 2)}
 
-{includeLiterate "." Fir.Core.Poison "Core poison classes" (level := 2)}
+{includeReadable "." Fir.Core.Poison "Core poison classes" FirSpec.Core.Poison (level := 2)}
 
-{includeLiterate "." Fir.Core.Unlawful "Semantics the obligations reject" (level := 2)}
+{includeReadable "." Fir.Core.Unlawful "Semantics the obligations reject" FirSpec.Core.Unlawful (level := 2)}
 
 {includeLiterate "." Fir.Execution.Interpreter "The interpreter" (level := 2)}
 

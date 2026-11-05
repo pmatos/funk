@@ -1,13 +1,14 @@
 import Fir.Syntax.Module
 
 /-!
-The interpreter is a monadic definitional interpreter with fuel (S7,
-ADR-2026-10-29-2009), written once against an abstract monad. It never names
-a concrete monad. Each dialect states the effects its ops need as class
-constraints on the monad, and a monad that has those effects can run them
-(ADR-2026-10-29-2030). The core dialect needs two, below. Calls need a third,
-the call effect at the end of this section, which the run itself provides,
-since a call shares the run's fuel budget.
+The interpreter is written once, for every dialect, and it counts its steps
+against a budget, its fuel (ADR-2026-10-29-2009). It does not fix how the
+effects of ops are carried out. Each dialect states the effects its ops
+need, and any way of running a program that provides those effects can run
+its ops (ADR-2026-10-29-2030). The core dialect needs two, below: choosing
+arbitrary bits, and immediate UB. Calls need a third, the call effect at the
+end of this section, which the run itself provides, since a call shares the
+run's fuel budget.
 
 # Effects
 -/
@@ -32,10 +33,10 @@ class MonadUB (m : Type → Type) where
 /-!
 # The semantics of an op
 
-Each dialect gives its ops their meaning through one class, in the shape of
-LeanMLIR's `DialectDenote` (ADR-2026-10-29-2030). An op that is not a
-terminator maps its operand values to its result values. A terminator says
-where control goes next.
+Each dialect gives its ops their meaning in one place, in the shape that
+LeanMLIR gives it (ADR-2026-10-29-2030). An op that is not a terminator maps
+its operand values to its result values. A terminator says where control
+goes next.
 -/
 
 /--
@@ -71,12 +72,12 @@ class DialectDenote (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
 # The call effect
 
 A call runs another function of the module, by its symbol, as `call @g`
-does (#20). It is an effect of the run, not of the monad, for two reasons:
-`denote` sees only the op and its operands, not the module, so it cannot
-find the callee; and all calls share the run's fuel budget, which is the
-interpreter's (ADR-2026-11-02-0836). So a dialect does not give a call its
-meaning through `denote`. It names the function that the op calls, and the
-interpreter runs that function:
+does. It is an effect of the run, not one that a dialect provides, for two
+reasons: an op's meaning sees only the op and its operands, not the module,
+so it cannot find the callee; and all calls share the run's fuel budget,
+which is the interpreter's (ADR-2026-11-02-0836). So a dialect does not give
+a call a meaning of its own. It names the function that the op calls, and
+the interpreter runs that function:
 
 * the call's operands are the callee's arguments, and the values that the
   callee returns are the call's results;
@@ -89,9 +90,9 @@ interpreter runs that function:
   ends the whole run so, and a callee that is stuck leaves its caller
   stuck.
 
-An op that calls no function runs through `denote`. In the core dialect,
-`call @g` calls `@g`, and no other op calls a function: ticket #20 names
-the callee of `call`, and so gives `call` its meaning.
+An op that calls no function runs by the meaning its dialect gives it. In
+the core dialect, `call @g` calls `@g`, and no other op calls a function:
+naming the callee of `call` is what gives `call` its meaning.
 -/
 
 /--

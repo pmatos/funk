@@ -7,20 +7,20 @@ import Fir.Core.Check
 
 The poison obligations are propositions, so a check that they reject a
 semantics is a theorem, as a check that validation rejects a function is.
-Each semantics below is a candidate `DialectDenote CoreDialect SetM` that
-breaks one rule of this chapter, and a theorem shows that the obligations
-reject it.
+Each semantics below is a candidate meaning for the core ops, in the set
+monad, that breaks one rule of this chapter, and a theorem shows that the
+obligations reject it.
 
-* `noOutcome`: no op has any outcome. Totality rejects it.
-* `poisonIsUB`: every op is immediate UB when an operand is poison, and
+* _No outcome_: no op has any outcome. Totality rejects it.
+* _Poison is UB_: every op is immediate UB when an operand is poison, and
   returns some result otherwise. Its `add` turns a poison operand into UB,
   which would undo the deferral that poison exists for. The clause "UB only
   by the op's own rules" rejects it: on operands with no poison, this `add`
   is never UB.
-* `oldSDiv`: `sdiv` by the rule that the human rejected, under which a
-  poison dividend by `-1` gives poison. Monotonicity rejects it: refining
-  the poison to the signed minimum turns a result into UB.
-* `alwaysUB`: every op is UB on every operand vector. It meets the poison
+* _The rejected rule for `sdiv`_: `sdiv` by a rule that fir rejected, under
+  which a poison dividend by `-1` gives poison. Monotonicity rejects it:
+  refining the poison to the signed minimum turns a result into UB.
+* _Always UB_: every op is UB on every operand vector. It meets the poison
   clauses, and the obligation that a propagating op returns a result on
   some defined operands rejects it.
 
@@ -127,8 +127,8 @@ Exceptions are exempt from that obligation, so an exception that is always
 UB, such as a future `unreachable`, stays allowed.
 
 The obligations still do not fix what an op computes, such as `add` of two
-values giving their sum. The semantics of each op family (#10, #14 to #20)
-does.
+values giving their sum. The execution rules of each op family, in the
+sections from arithmetic rules to call rules, do.
 -/
 
 /-- Each poison replaced by the value `0`. -/

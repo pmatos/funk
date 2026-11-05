@@ -7,17 +7,18 @@ import Fir.Validation.Rules
 A poison operand gives a poison result, unless the op says otherwise
 (ADR-2026-10-30-0818). That rule is a property that each op must have, so it
 is checked, not only stated. Every op of every dialect declares its _poison
-class_ through the class `DialectPoison` (G0):
+class_, so that a dialect added for new hardware states it too
+(ADR-2026-10-29-2016):
 
-* `propagates`: when any operand is poison, every result the op returns is
+* _Propagates_: when any operand is poison, every result the op returns is
   poison, and the op hits immediate UB only by its own rules.
-* `exception`: the op states its own rule for poison operands, in its prose
+* _Exception_: the op states its own rule for poison operands, in its prose
   and in its execution rules. `select` and `freeze` are exceptions, and so
   are the ops that only pass values on: terminators, which pass them to
   block arguments or return them, and calls.
 
-An op that propagates poison carries a proof obligation, `PropagatesPoison`,
-stated over its semantics in the set monad. It has two clauses:
+An op that propagates poison carries a proof obligation, stated over its
+semantics in the set monad. It has two clauses:
 
 * _Poison out._ From an operand vector that holds a poison, every result
   vector the op returns holds only poison.
@@ -114,31 +115,30 @@ Two more obligations hold for every op that runs by its own rule,
 whatever its poison class, and a third for every op that propagates
 poison.
 
-* _Totality_ (`OpTotal`). On every operand vector, an op that is not a
-  terminator has some outcome: a result or UB. So does the exit of a
-  terminator. An op whose semantics maps a case to the empty set would drop
-  that path from every run that reaches it, and a run with fewer outcomes
-  refines more sources.
-* _Monotonicity_ (`OpMonotone`). Refining the operands refines what the op
-  does. If each operand of `args'` refines the one of `args`, a poison
-  being refined by any value, then every way the op may end on `args'` is
-  allowed by some way it may end on `args`. As for behaviours, UB allows
-  anything, and a result vector is allowed by one that it refines position
-  by position. Where a terminator goes refines only by being the same.
-* _A result on defined operands_ (`ReturnsOnDefined`). An op that
-  propagates poison returns a result on some operand vector with no poison.
-  Without it, an op that is UB on every operand vector, the defined ones
-  included, would meet the poison clauses: for it, UB is the op's own rule,
-  so UB on a poison operand is too. Exceptions are exempt, so an exception
-  that is always UB, such as a future `unreachable`, stays allowed.
+* _Totality._ On every operand vector, an op that is not a terminator has
+  some outcome: a result or UB. So does the exit of a terminator. An op
+  whose semantics maps a case to the empty set would drop that path from
+  every run that reaches it, and a run with fewer outcomes refines more
+  sources.
+* _A result on defined operands._ An op that propagates poison returns a
+  result on some operand vector with no poison. Without it, an op that is
+  UB on every operand vector, the defined ones included, would meet the
+  poison clauses: for it, UB is the op's own rule, so UB on a poison
+  operand is too. Exceptions are exempt, so an exception that is always
+  UB, such as a future `unreachable`, stays allowed.
+* _Monotonicity._ Refining the operands refines what the op does. If each
+  operand of one vector refines the one of another, a poison being refined
+  by any value, then every way the op may end on the first is allowed by
+  some way it may end on the second. As for behaviours, UB allows anything,
+  and a result vector is allowed by one that it refines position by
+  position. Where a terminator goes refines only by being the same.
 
-Totality and monotonicity look only at what runs: the `denote` of an op that
-is not a terminator, and the `exit` of a terminator. So they cover only
-the ops that the interpreter runs by these rules: terminators, and ops
-with no callee (`callee? op = none`). An op with a callee runs its callee,
-never its `denote` (the call effect), so it has no rule at op level, and
-no op-level obligation: its meaning is its callee's run
-(ADR-2026-11-02-1514).
+Totality and monotonicity look only at what runs: the meaning of an op that
+is not a terminator, and the exit of a terminator. So they cover only the
+ops that the interpreter runs by these rules: terminators, and ops with no
+callee. An op with a callee runs its callee, never a rule of its own (the
+call effect), so it has no rule at op level, and no op-level obligation:
+its meaning is its callee's run (ADR-2026-11-02-1514).
 
 Monotonicity is what makes refinement compositional. A run only passes
 values from op to op, and from a caller to its callee and back, so when
@@ -148,10 +148,10 @@ function with a part that refines it, such as an op's result with a value
 that refines it or a callee with a function that refines it, then refines
 the whole function, and its proof need only look at the part it changes.
 For calls this is proved at function level: a function's behaviour on
-refined arguments refines its behaviour on the original ones
-(`Func.runs_args_isRefinedBy`), and replacing a callee's body refines
-every caller when the callee, run in the new module, refines the old one
-(`Func.runs_replaceBody_isRefinedBy`).
+refined arguments refines its behaviour on the original ones (the section
+on refined arguments), and replacing a callee's body refines every caller
+when the callee, run in the new module, refines the old one (the section on
+replacing a callee).
 This is also why a function refines another only if it does so on every
 argument vector, poison included: a caller may pass poison. And it explains
 the division rule: if `sdiv` by `-1` gave poison for a poison dividend, then
@@ -168,19 +168,19 @@ the paragraph above says, and so do progress and no stuck path, by an
 induction over the callee's run (the section on progress with calls).
 
 The obligations speak only of valid op instances: those whose operand and
-result types validation accepts (`TypesValid`, in the validation chapter;
-ADR-2026-11-02-1515). Validation rejects every other instance in every
-function, so no valid program runs one, and every op of a valid function
-is a valid instance (`Func.Valid.typesValid`). An instance that validation
-rejects may break an obligation without harm: at `i0`, which the core
-dialect's validation rejects, every divisor is zero, so no division
-returns a result on defined operands (`Core.div_zero_width`).
+result types validation accepts (the general rules, in the validation
+chapter; ADR-2026-11-02-1515). Validation rejects every other instance in
+every function, so no valid program runs one, and every op of a valid
+function is a valid instance. An instance that validation rejects may break
+an obligation without harm: at `i0`, which the core dialect's validation
+rejects, every divisor is zero, so no division returns a result on defined
+operands (the section on division obligations).
 
 Monotonicity uses the dialect's refinement of values, and the obligations
 tie it to poison: a poison value is refined by every value of its type.
 
-A dialect meets every obligation of this section by giving an instance of
-`LawfulDialectPoison`.
+A dialect meets every obligation of this section by showing that it is a
+lawful dialect, the last definition below.
 -/
 
 /-- One way to end allows another: UB allows anything, and a result allows
