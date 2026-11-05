@@ -12,7 +12,8 @@
 #               nested 3,000 deep within 8 seconds of CPU time (#47), and
 #               that fir-ref run and fmt write the signed maximum and
 #               minimum of i16777215, of 5,050,445 digits, within 30
-#               seconds of CPU time each (#41).
+#               seconds of CPU time each (#41). check-fir-ref-deep.sh
+#               checks fir-ref fmt and validate at depth (#47).
 #               fir-ref validate accepts every text of tests/fir/, and
 #               gives a module with an unreachable block, a text that does
 #               not parse and a missing file their verdicts (#10); it exits
@@ -200,6 +201,10 @@ case "$1" in
             echo "fir-ref does not reprint ${check#*:}$why" >&2
             status=1
         done
+        # On a 256 KiB stack, fir-ref fmt and validate give texts nested a
+        # million levels deep, and a block of a million ops, their verdicts
+        # (#47); check-fir-ref-deep.sh holds those checks.
+        scripts/check-fir-ref-deep.sh "$fir_ref" || status=1
         # Two functions of a million blocks, each block using the value of the
         # block before it (#55): a chain, and a chain of checks that may each
         # leave for one shared exit, the shape on which Cooper, Harvey and
