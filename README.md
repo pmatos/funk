@@ -85,24 +85,25 @@ func @sum(%n: i32) -> i32 {
 
 ## Status
 
-The roadmap plans seven milestones, and each one is a
-[GitHub milestone](https://github.com/pmatos/funk/milestones). M0 is in
-progress. M1 to M6 have not started.
+The roadmap plans eight milestones, and each one is a
+[GitHub milestone](https://github.com/pmatos/funk/milestones). M0 is done.
+M1 has started, and M2 to M7 have not.
 
 | Milestone | Goal |
 | --- | --- |
 | M0 | fir compiler with a basic x86-64 backend |
-| M1 | Full x86-64 backend |
-| M2 | [Vow](https://github.com/vow-lang/vow) frontend |
-| M3 | C and C++ frontend |
-| M4 | Compile the Linux kernel |
-| M5 | JIT compilation |
-| M6 | x86 to arm64 binary translation |
+| M1 | Complete the fir IR |
+| M2 | Full x86-64 backend |
+| M3 | [Vow](https://github.com/vow-lang/vow) frontend |
+| M4 | C and C++ frontend |
+| M5 | Compile the Linux kernel |
+| M6 | JIT compilation |
+| M7 | x86 to arm64 binary translation |
 
-Issue [#5](https://github.com/pmatos/funk/issues/5) is the M0 epic. Its
-sub-issues track the work of M0, one issue for each piece.
-[`docs/status.md`](docs/status.md) lists the parts of M0 that are on
-`main` and the parts that do not exist yet.
+Issue [#177](https://github.com/pmatos/funk/issues/177) is the M1 epic. Its
+sub-issues track the work of M1, one issue for each piece. Issue
+[#5](https://github.com/pmatos/funk/issues/5) was the M0 epic.
+[`docs/status.md`](docs/status.md) lists what is on `main` today.
 
 ## Repository layout
 
@@ -110,7 +111,7 @@ sub-issues track the work of M0, one issue for each piece.
 | --- | --- |
 | `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose, `fir-ref` and the Lean tests |
 | `docs/spec/` | The Lean package `firspec`: the Verso document that renders the spec |
-| `docs/roadmap.md` | The roadmap: milestones M0 to M6 |
+| `docs/roadmap.md` | The roadmap: milestones M0 to M7 |
 | `docs/status.md` | What exists on `main` today, and what does not |
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |

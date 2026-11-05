@@ -56,7 +56,7 @@ immediate UB, and obligations met by a stand-in would say nothing about
 calls. A stand-in that is UB would also be refined by every computation,
 so a statement that reads it as a source, such as a rewrite rule proved
 op by op, would hold for every rewrite of a call. Such statements leave
-out the ops with a callee, as the obligations do; M1's rewrite rules will
+out the ops with a callee, as the obligations do; M2's rewrite rules will
 too (#96).
 
 The facts about calls are stated about the runs of functions instead,

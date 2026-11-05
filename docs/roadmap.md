@@ -69,12 +69,17 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
 | Milestone | Goal | GitHub |
 | --- | --- | --- |
 | M0 | fir compiler with a basic x86-64 backend | [milestone 1](https://github.com/pmatos/funk/milestone/1) |
-| M1 | Full x86-64 backend | [milestone 2](https://github.com/pmatos/funk/milestone/2) |
-| M2 | Vow frontend | [milestone 3](https://github.com/pmatos/funk/milestone/3) |
-| M3 | C and C++ frontend | [milestone 4](https://github.com/pmatos/funk/milestone/4) |
-| M4 | Compile the Linux kernel | [milestone 5](https://github.com/pmatos/funk/milestone/5) |
-| M5 | JIT compilation | [milestone 6](https://github.com/pmatos/funk/milestone/6) |
-| M6 | x86 to arm64 binary translation | [milestone 7](https://github.com/pmatos/funk/milestone/7) |
+| M1 | Complete the fir IR | [milestone 8](https://github.com/pmatos/funk/milestone/8) |
+| M2 | Full x86-64 backend | [milestone 2](https://github.com/pmatos/funk/milestone/2) |
+| M3 | Vow frontend | [milestone 3](https://github.com/pmatos/funk/milestone/3) |
+| M4 | C and C++ frontend | [milestone 4](https://github.com/pmatos/funk/milestone/4) |
+| M5 | Compile the Linux kernel | [milestone 5](https://github.com/pmatos/funk/milestone/5) |
+| M6 | JIT compilation | [milestone 6](https://github.com/pmatos/funk/milestone/6) |
+| M7 | x86 to arm64 binary translation | [milestone 7](https://github.com/pmatos/funk/milestone/7) |
+
+The milestones were renumbered on 2026-11-05, when the IR got a milestone of
+its own ahead of the backend (ADR-2026-11-05-2255). In an ADR, issue or
+comment written before then, M1 to M6 mean today's M2 to M7.
 
 ### M0: fir compiler with a basic x86-64 backend
 
@@ -174,53 +179,97 @@ generated from the same source as the formal definitions, round trips hold in
 Rust and across Rust and Lean under fuzzing, native results refine the Lean
 results on the whole corpus, and CI runs all of it.
 
-### M1: Full x86-64 backend
+### M1: Complete the fir IR
+
+**Goal.** Settle fir before we build a real backend or a frontend on it. The
+IR is the contract that every backend, pass and frontend is built against, so
+it is decided, specified and checked first. M1 takes fir from M0's integer
+core to an IR that real programs and the M3 to M5 frontends can lower to:
+decided, in the spec (formal and readable), run by `fir-ref`, held by
+`funk-ir`, and checked by the differential harness. Epic:
+[#177](https://github.com/pmatos/funk/issues/177).
+
+**Scope.** Each item goes through every layer at once, as M0's op families
+did: its decision as an ADR, its rules in the spec (which are the Lean
+semantics), `fir-ref`, the Rust IR, verifier, parser and printer, the corpus,
+and the naive backend, which lowers each new op the simplest correct way so
+that the harness checks it natively. Making that code good is M2's job.
+
+1. **The M0 close-out audit.** The issues it filed come first: the readable
+   spec (#161), random differential testing (#165) and the rest of the list
+   on the IR epic.
+2. **Memory (S3).** The memory model, with several memories and address
+   spaces as G0 asks; `ptr` gets its ops; loads and stores; and what a run
+   shows an observer once memory exists (S4).
+3. **Effect classes (H7).** Which ops read, write or call, beyond "pure" and
+   "call", so passes and the backend know what they may reorder.
+4. **Globals and external functions (H3).** Module-level globals by symbol,
+   and declarations of functions that funk did not compile, with the
+   sign- and zero-extension markers that ADR-2026-11-02-1021 waits for. An
+   observer then also sees external calls, as S4 already says.
+5. **Floating point (S5)**, with the default rounding mode.
+6. **Aggregates**, as far as calling conventions and the frontends need them.
+7. **Dialects and extensions (H4, H5).** How a dialect adds ops, types,
+   attributes and kinds of item, made real with a second dialect in tree, so
+   that G0's openness is tested, not only promised.
+
+**Out of M1.** Concurrency (S6), exceptions and unwinding, vectors, contract
+ops, structured control flow (H6) and the rest of the deferred list below stay
+with the milestones that need them. S8 stays with M2's optimizer track.
+
+**Done when** every M1 decision is an accepted ADR; the spec covers each item,
+formal and readable; `fir-ref` runs it; the Rust tools agree with `fir-ref` on
+the whole corpus and on random programs; native results from the naive backend
+refine `fir-ref`'s; the G0 checks pass with the second dialect; and CI runs all
+of it.
+
+### M2: Full x86-64 backend
 
 **Goal.** Grow the naive backend into a real one that handles real-world
-programs. We improve one piece at a time, checking each against the Lean
-interpreter before starting the next:
+programs, on the IR that M1 settled (epic
+[#164](https://github.com/pmatos/funk/issues/164)). We improve one piece at a
+time, checking each against the Lean interpreter before starting the next:
 
 1. **Real register allocation**, replacing spill-everything.
-2. **Memory, loads and stores.** This needs the memory model (S3) decided
-   first, then added to the Lean semantics, the spec and the IR.
-3. **Proper instruction selection** and broader instruction coverage.
-4. **Instruction scheduling.** Last, because a correct backend does not need
+2. **Proper instruction selection** and broader instruction coverage,
+   memory and floating point included.
+3. **Instruction scheduling.** Last, because a correct backend does not need
    it.
 
-Calling conventions grow with the IR: aggregates, varargs and whatever the
-memory model brings in. As hand-written passes multiply, per-compile refinement
+Calling conventions grow with the IR: aggregates, varargs and what the memory
+model brought in. As hand-written passes multiply, per-compile refinement
 checks (SMT, S8) start to matter here.
 
-**Optimizer track.** M1 also starts the mid-end, as a track that runs beside
+**Optimizer track.** M2 also starts the mid-end, as a track that runs beside
 the backend work: rewrite rules proven in Lean and emitted as Rust matchers by
 a generator, a growing rule library, verified DCE and CSE, an aegraph view of
 pure ops (H7), and location propagation by the rewrite engine (H8). Each rule
-or pass is checked against the Lean semantics before it lands, and S8 and H7
-must be decided before the first pass that depends on them.
+or pass is checked against the Lean semantics before it lands, and S8 must be
+decided before the first pass that depends on it.
 
-### M2: Vow frontend
+### M3: Vow frontend
 
 A frontend for [Vow](https://github.com/vow-lang/vow) that lowers to fir, so
 Vow programs compile to x86-64 through funk. Vow runs on Cranelift today, so
 moving it to funk is how we dogfood the toolchain.
 
-### M3: C and C++ frontend
+### M4: C and C++ frontend
 
 A C and C++ frontend that lowers to fir, compiling C and C++ to x86-64 through
 funk.
 
-### M4: Compile the Linux kernel
+### M5: Compile the Linux kernel
 
 Build the Linux kernel with the funk C frontend and the funk toolchain.
 
-### M5: JIT compilation
+### M6: JIT compilation
 
 Compile fir to native code in memory at runtime. Useful on its own, and the
-base for M6.
+base for M7.
 
-### M6: x86 to arm64 binary translation
+### M7: x86 to arm64 binary translation
 
-An x86 assembly frontend that lowers to fir, with the M5 JIT targeting arm64,
+An x86 assembly frontend that lowers to fir, with the M6 JIT targeting arm64,
 in the style of FEX-Emu. This needs an arm64 backend, which no milestone covers
 yet.
 
@@ -236,13 +285,13 @@ before the first step that does, as the table says.
 
 | ID | Decision | Likely needed by |
 | --- | --- | --- |
-| S3 | Memory model (Foundational; G0: several memories and address spaces) | Before M1's memory step |
-| S5 | Floating point | M1 or the first frontend that needs it |
-| S6 | Concurrency | M3 at the latest (C and C++ atomics) |
+| S3 | Memory model (Foundational; G0: several memories and address spaces) | M1 |
+| S5 | Floating point | M1 |
+| S6 | Concurrency | M4 at the latest (C and C++ atomics) |
 | S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
-| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Before M2 adds frontend-level ops |
+| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | M1 |
 | H6 | Structured control flow | When a frontend or pass needs it |
-| H7 | Effect classes beyond "pure" and "call" (Foundational) | Before M1's memory step |
+| H7 | Effect classes beyond "pure" and "call" (Foundational) | M1 |
 | P2 | Public API shape | Before external users build on funk |
 
 For S8 the record proposes three stages: a hand-written Rust SMT encoder,
@@ -254,19 +303,19 @@ can come back without a break:
 
 | Left out of v0 | Likely needed by |
 | --- | --- |
-| Exceptions and unwinding | M3 (C++) |
-| Vectors and SIMD | M1 or M4, and M6 (SSE and AVX) |
-| Contract ops (`assume`, `assert`, `requires`, `ensures`) | M2 (Vow) |
+| Exceptions and unwinding | M4 (C++) |
+| Vectors and SIMD | M2 or M5, and M7 (SSE and AVX) |
+| Contract ops (`assume`, `assert`, `requires`, `ensures`) | M3 (Vow) |
 | Garbage-collected or managed memory | A frontend that needs it |
-| Non-default FP rounding and FP exceptions | M3 or M4 |
+| Non-default FP rounding and FP exceptions | M4 or M5 |
 | A binary format | When text parsing becomes a bottleneck |
 
-M4 will also need inline assembly and volatile accesses, which the record does
+M5 will also need inline assembly and volatile accesses, which the record does
 not cover yet.
 
 ## Open gaps
 
-- **arm64 backend.** M6 needs one, and no milestone covers it.
+- **arm64 backend.** M7 needs one, and no milestone covers it.
 - **Non-CPU targets.** G0 keeps the door open for GPUs, NPUs, TPUs and more,
   but no milestone targets one yet.
 - **Wasm and LLVM IR frontends.** The record used a Wasm frontend as its first
