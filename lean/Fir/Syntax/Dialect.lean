@@ -1,14 +1,24 @@
 /-!
-fir is built from dialects (G0, ADR-2026-10-29-2016). A dialect supplies its
-types and its ops, and the rest of the spec is written once for every
-dialect. Nothing in fir is a closed list of all ops or all types: the core
-dialect of M0 is one instance of the classes below, and an extension dialect
-for a GPU or a quantum processor would be another.
+fir is built from dialects, so that it can reach any kind of hardware
+(ADR-2026-10-29-2016). A dialect supplies its types and its ops, and the
+rest of the spec is written once for every dialect. Nothing in fir is a
+closed list of all ops or all types: the core dialect is one dialect, and a
+dialect for a GPU or a quantum processor would be another.
 
-The classes keep the shape of LeanMLIR's (ADR-2026-10-29-2030), so that the
-semantics of one op ports between the two mechanically. The terms that use
-them are fir's own, and are extrinsically typed: a value is referred to by
-its name, and typing is a separate validation judgement.
+The definitions below keep the shape of those of LeanMLIR, a formalization
+of MLIR in Lean (ADR-2026-10-29-2030), so that the semantics of an op ports
+between the two mechanically. The terms that use them are fir's own, and
+they are extrinsically typed: a value is referred to by its name, and its
+type is checked by validation, apart from the terms.
+
+This section gives, in order:
+
+* a vector of values of given types, which carries an op's operands and
+  results;
+* a dialect: its op instances and its types;
+* the values of a type;
+* the signature of a dialect: the types of each op's operands and results,
+  and which ops end a block.
 -/
 
 namespace Fir

@@ -2,16 +2,20 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 
 /-!
-A module holds functions. A function is a control-flow graph of blocks (E0,
-ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
+A module holds functions. A function is a control-flow graph of blocks
+(ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
-dialect (G0): results, an op instance of its dialect, operands, successors,
-regions and a location reference.
+dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
+results, an op instance of its dialect, operands, successors, regions and a
+location reference.
 
 The terms are extrinsically typed. Values are referred to by name, and the
-names are stored as the producer wrote them (P3, ADR-2026-10-29-2014). Typing,
-scoping and dominance are rules of the validation chapter, not of these
-types: a term can be ill-formed, and validation says which terms are valid.
+names are stored as the producer wrote them (ADR-2026-10-29-2014). Typing,
+scoping and dominance are rules of the validation chapter, not of the
+terms: a term can be ill-formed, and validation says which terms are valid.
+
+This section gives names first, then the terms from the inside out: a
+successor, an op with blocks and regions, a function, an item and a module.
 -/
 
 namespace Fir
@@ -50,6 +54,13 @@ def isWord (s : String) : Bool :=
   match s.toList with
   | c :: cs => isWordStart c && cs.all isNameChar
   | [] => false
+
+/-!
+# Terms
+
+The terms of fir, from the inside out: a successor, an op with the blocks
+and regions it may own, a function, an item and a module.
+-/
 
 /--
 A successor of a terminator: the block that control may go to, and the
