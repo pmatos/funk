@@ -9,8 +9,14 @@ location tables and functions, of the reports of `fir-ref validate`
 `FirRef.Report`, this module imports `FirRef.Fast`, as `fir-ref` does, so
 the checks below run `FirRef.moduleProblems`, which walks nested blocks with
 `FirRef.allBlocks`. The check on regions nested 1,000,000 levels deep needs
-it: the spec's `Func.allBlocks` overflows the stack there. The last checks
-pin the axioms of the theorems to Lean's standard ones.
+it: the spec's `Func.allBlocks` overflows the stack there. At that depth,
+`decide m.Valid` and `decide (f.Valid ctx)` run the same check through
+`FirRef.decidableValid` and `FirRef.decidableFuncValid`, which `#synth`
+finds before the spec's instances; with the spec's instances, they
+overflow the stack too. `FirRef.reportModule`, what `fir-ref validate`
+runs on a text once it parses, is checked at that depth as well, so the
+build fails if `FirRef.Report` stops reaching the fast check. The last
+checks pin the axioms of the theorems to Lean's standard ones.
 -/
 
 namespace FirTest
@@ -144,6 +150,50 @@ def deepProblems : List String :=
   ["the op owns a region: no op may own one yet",
    "the op has 0 successors, and its op instance has 1"]
 
+/-! # `decide` and `fir-ref validate`'s own path at any depth -/
+
+/-- A valid module whose entry block holds `n` constants, then `ret`. No
+valid module nests regions, since no op may own one, so the valid module
+of the checks at 1,000,000 is one block of that many ops. -/
+def flatValid (n : Nat) : Module CoreDialect :=
+  entryOnly ((List.range n).map (fun i => op [(s!"c{i}", .int 32)] (.const 32 0) []) ++
+    [op [] (.ret []) []])
+
+/-- `decide m.Valid`, as code compiled after `FirRef.Fast` runs it. -/
+def decideValid (m : Module CoreDialect) : Bool := decide m.Valid
+
+/-- `decide (f.Valid ctx)` for each function `f` of `m`, in the context of
+`m`. -/
+def decideFuncs (m : Module CoreDialect) : List Bool := m.funcs.map (decide <| ·.Valid m.context)
+
+/-- info: FirRef.decidableValid (flatValid 3) -/
+#guard_msgs in #synth Decidable (flatValid 3).Valid
+
+/-- info: FirRef.decidableFuncValid (flatValid 3).context (empty "f") -/
+#guard_msgs in #synth Decidable ((empty "f").Valid (flatValid 3).context)
+
+#guard decideValid (flatValid 3) && decideFuncs (flatValid 3) == [true]
+#guard !decideValid (deep 3 [op [] (.ret []) []]) && decideFuncs (deep 3 [op [] (.ret []) []]) ==
+  [false]
+#guard !decideValid (deep 1000000 [op [("x", .int 0)] (.const 0 0) []])
+#guard decideFuncs (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) == [false]
+#guard let m := flatValid 1000000; decideValid m && decideFuncs m == [true]
+
+/-- What `fir-ref validate` reports on the file `t.fir` once it parses as
+`deep n` whose innermost op defines a value of type `i0`, for any `n > 0`. -/
+def deepReport : String × UInt32 :=
+  ("{\"file\":\"t.fir\",\"verdict\":\"validation-error\",\"diagnostics\":[{\"kind\":" ++
+    "\"validation-error\",\"message\":\"the type of %x is not valid\",\"func\":\"f\"," ++
+    "\"block\":null,\"op\":null,\"loc\":null},{\"kind\":\"validation-error\",\"message\":" ++
+    "\"the op owns a region: no op may own one yet\",\"func\":\"f\",\"block\":\"e\"," ++
+    "\"op\":0,\"loc\":{\"ref\":0,\"location\":\"unknown\"}}]}", 1)
+
+#guard FirRef.reportModule "t.fir" (deep 3 [op [("x", .int 0)] (.const 0 0) []]) == deepReport
+#guard FirRef.reportModule "t.fir" (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) ==
+  deepReport
+#guard FirRef.reportModule "t.fir" (flatValid 3) ==
+  ("{\"file\":\"t.fir\",\"verdict\":\"accepted\",\"diagnostics\":[]}", 0)
+
 /-! # The axioms of the proofs -/
 
 /--
@@ -155,6 +205,16 @@ info: 'Fir.Module.problems_eq_nil_iff' depends on axioms: [propext, Classical.ch
 info: 'FirRef.allBlocks_eq_allBlocks' depends on axioms: [propext, Quot.sound]
 -/
 #guard_msgs in #print axioms FirRef.allBlocks_eq_allBlocks
+
+/--
+info: 'FirRef.decidableValid_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in #print axioms FirRef.decidableValid_eq
+
+/--
+info: 'FirRef.decidableFuncValid_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in #print axioms FirRef.decidableFuncValid_eq
 
 /--
 info: 'Fir.Core.Rejects.deadBlock_problems' depends on axioms: [propext, Classical.choice, Quot.sound]

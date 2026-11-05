@@ -1,6 +1,6 @@
 # `fir-ref` validates at any depth by replacing the spec's one walk of nested blocks
 
-Status: accepted; refined by ADR-2026-11-03-1715
+Status: accepted; refined by ADR-2026-11-03-1715 and ADR-2026-11-05-0025
 
 ## Context
 
