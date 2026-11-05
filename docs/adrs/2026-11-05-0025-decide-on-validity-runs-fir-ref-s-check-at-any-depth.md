@@ -33,11 +33,12 @@ ruled that `fir-ref` decides validity with `Module.problems`, never with
   `Module.problems_eq_nil_iff` does, which both instances use. Compiled
   after the theorems, their code calls `FirRef.moduleProblems` and
   `FirRef.funcProblems`.
-- **Where they apply.** `FirRef.Fast` imports `FirRef.Validate`, so every
-  module compiled after it, `FirRef.Main` and `FirTest` included, resolves
+- **Where they apply.** An instance applies in every module that imports
+  its own. `FirRef.Fast` imports `FirRef.Validate`, so every module that
+  imports `FirRef.Fast`, `FirRef.Main` and `FirTest` included, resolves
   `decide m.Valid`, `if m.Valid then …` and `decide (f.Valid ctx)` to them,
-  and runs `fir-ref`'s check at any depth. In a module that does not import
-  `FirRef.Fast`, `decide` still runs the spec's walk, as every call of a
+  and runs `fir-ref`'s check at any depth. In a module that imports
+  neither, `decide` still runs the spec's walk, as every call of a
   replaced spec function does there (ADR-2026-10-30-1450).
 - **The rule of ADR-2026-10-30-1742 changes.** `fir-ref` may decide
   validity with `decide`, in a module that imports `FirRef.Fast`.
