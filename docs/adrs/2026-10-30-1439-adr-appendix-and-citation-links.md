@@ -1,6 +1,6 @@
 # The spec renders every ADR in an appendix and links every ADR citation to it
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-05-1709
 
 ## Context
 
