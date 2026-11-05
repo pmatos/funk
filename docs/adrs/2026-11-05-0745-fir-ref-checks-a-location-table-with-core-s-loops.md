@@ -35,8 +35,8 @@ with `@[csimp]`, and the spec keeps its definition.
   the proposition that `List.decidableBAll` decides. `List.zipWith`
   compiles to core's loop `List.zipWithTR`, and `List.all` is a loop.
   Every other step is a loop already: `List.map`, `List.filterMap`,
-  `List.flatMap` and `++` through core's `@[csimp]` theorems,
-  `Std.HashSet.ofList` and `List.length` through core's own loops.
+  `List.flatMap`, `List.length` and `++` through core's `@[csimp]`
+  theorems, and `Std.HashSet.ofList` through a loop of core's.
 - **`problems_eq_locTableProblems : @LocTable.problems =
   @locTableProblems`** is proved by `simp only` with the definition of
   `List.zip` and the lemmas `Bool.and_eq_true`, `decide_eq_true_eq` and
@@ -53,9 +53,9 @@ with `@[csimp]`, and the spec keeps its definition.
   `FirRef.reportModule`. They check the answers at that size, not the
   stack: the elaborator's stack is large, and the spec's recursions run in
   core's compiled code, whose frames are small, so the spec's check passes
-  them too. Run by `lean` on 2026-11-05, it passed with the default stack
-  and aborted with `--tstack` of 65,536 KiB on the entries and of 16,384 KiB
-  on the references. So `scripts/check-fir-ref.sh test` checks the stack:
+  them too. Run by `lean` on 2026-11-05, it passed with the default stack,
+  and aborted with a `--tstack` of 65,536 KiB or less on the entries, and
+  of 16,384 KiB or less on the references. So `scripts/check-fir-ref.sh test` checks the stack:
   `fir-ref validate`, with `LEAN_STACK_SIZE_KB=256`, accepts a table of
   1,000,000 entries and a fused location of 1,000,000 references. The
   readers of #47 (PR #133) read both texts on that stack; with them alone,

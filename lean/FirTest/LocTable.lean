@@ -61,9 +61,9 @@ def flawedMessages (n : Nat) : List String :=
    s!"location table: @{n - 1} refers to @{n}, which the table does not hold",
    "location table: @4294967296 holds a reference, line or column of 2^32 or more"]
 
-/-- `@2` fuses `n` references with errors at the start, in the middle and at
-the end: to `@3`, which the table does not hold, to `@2` itself, and to
-`@4294967296`. -/
+/-- `2 * n + 3` references for `@2` to fuse, with errors at the start, in the
+middle and at the end: to `@3`, which the table does not hold, to `@2`
+itself, and to `@4294967296`. -/
 def flawedRefs (n : Nat) : List LocRef :=
   3 :: alternating n ++ 2 :: alternating n ++ [4294967296]
 
