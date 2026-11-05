@@ -117,7 +117,7 @@ jobs:
           RUSTUP_VERSION: 1.29.2
           RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/rustup-init" \
+          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" \
             "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/x86_64-unknown-linux-gnu/rustup-init"
           echo "$RUSTUP_SHA256  $RUNNER_TEMP/rustup-init" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/rustup-init"
@@ -146,7 +146,7 @@ jobs:
           VERUS_VERSION: 0.2026.11.02.8bf68ee
           VERUS_SHA256: f3a0119292df8855e4435da8130bee1873b0e6a60c306accf81a08ea687bba3c
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/verus.zip" \
+          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/verus.zip" \
             "https://github.com/verus-lang/verus/releases/download/release/$VERUS_VERSION/verus-$VERUS_VERSION-x86-linux.zip"
           echo "$VERUS_SHA256  $RUNNER_TEMP/verus.zip" | sha256sum -c -
           unzip -q "$RUNNER_TEMP/verus.zip" -d "$RUNNER_TEMP/verus"
@@ -194,7 +194,7 @@ jobs:
           ELAN_VERSION: v4.2.4
           ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/elan.tar.gz" \
+          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/elan.tar.gz" \
             "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
           echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
@@ -250,7 +250,7 @@ jobs:
           ELAN_VERSION: v4.2.4
           ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/elan.tar.gz" \
+          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/elan.tar.gz" \
             "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz"
           echo "$ELAN_SHA256  $RUNNER_TEMP/elan.tar.gz" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/elan.tar.gz" -C "$RUNNER_TEMP"
@@ -272,7 +272,7 @@ jobs:
           RUSTUP_VERSION: 1.29.2
           RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/rustup-init" \
+          curl -sSfL --retry 5 --retry-delay 10 --retry-all-errors -o "$RUNNER_TEMP/rustup-init" \
             "https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/x86_64-unknown-linux-gnu/rustup-init"
           echo "$RUSTUP_SHA256  $RUNNER_TEMP/rustup-init" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/rustup-init"
