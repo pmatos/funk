@@ -15,32 +15,33 @@ on some operands with no poison, and is total and monotone:
   and a zero divisor in its place is UB too. It is UB on a poison dividend
   only when the divisor is zero, or when the op is signed and the divisor
   is `-1`; then the signed minimum in its place is UB too.
-* _Totality._ A division ends in exactly one way on every two operands:
-  with a result or with UB.
 * _Monotonicity._ A defined value is refined only by itself, so only a
   poison operand can be refined to something else. A poison divisor is UB,
   which allows anything. A poison dividend by a divisor that makes it UB
   allows anything too. By any other divisor it gives poison, which every
   result refines, and the refined dividend, poison or a value, gives a
-  result there, never UB. This is the case that the rejected rule broke
-  (`Core.Unlawful.oldSDiv_unlawful`).
+  result there, never UB. This is the case that the rejected rule broke,
+  as the section on semantics that the obligations reject shows.
+* _Totality._ A division ends in exactly one way on every two operands:
+  with a result or with UB.
 
-The proofs are about `divEv`, once for the four ops, with any name, any
-signedness and any result on two values, so they hold with and without
-`exact`. `ruleOfEv` carries them to each op's semantics.
+The proofs are about the rule that the four ops share, once, with any
+name, any signedness and any result on two values, so they hold with and
+without `exact`. The rule that turns a way to end into an op's rule then
+carries them to each op's semantics.
 
 # A width of zero
 
-`i0` is not a type: validation rejects it. Lean's op instances, though,
-include `udiv 0 false`. `BitVec 0` has one value, `0`, so at width zero
-every divisor is zero and every division is UB. No division at width
-zero returns a result on defined operands, as `div_zero_width` shows. So
-the four ops return a result on defined operands at every width above
-zero, and only there.
+`i0` is not a type: validation rejects it. The op instances of the Lean,
+though, include `udiv` at width zero. There is one vector of zero bits,
+`0`, so at width zero every divisor is zero and every division is UB. No
+division at width zero returns a result on defined operands, as the last
+theorem below shows. So the four ops return a result on defined operands
+at every width above zero, and only there.
 
-This is why the lawful class `LawfulDialectPoison` speaks only of op
-instances whose types validation accepts (`TypesValid`): the human ruled
-on #69 to narrow the class rather than change the rule for a zero divisor
+This is why a lawful dialect is asked to meet the obligations only on op
+instances whose types validation accepts: the human ruled to narrow the
+class rather than change the rule for a zero divisor
 (ADR-2026-11-02-1515). Validation accepts `iN` only for `N ≥ 1`, so the
 four ops meet the class at every width it covers, and division at `i0`
 keeps its rule.

@@ -30,6 +30,19 @@ import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
+import FirSpec.Core.ArithLaws
+import FirSpec.Core.WrapLaws
+import FirSpec.Core.FreezeLaws
+import FirSpec.Core.BitwiseLaws
+import FirSpec.Core.WidthLaws
+import FirSpec.Core.DivLaws
+import FirSpec.Core.CompareLaws
+import FirSpec.Core.ControlLaws
+import FirSpec.Core.BranchLaws
+import FirSpec.Execution.Morphism
+import FirSpec.Execution.ChoiceTree
+import FirSpec.Execution.Modes
+import FirSpec.Core.Modes
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -195,31 +208,31 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
 
-{includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
+{includeReadable "." Fir.Core.ArithLaws "Constant obligations" FirSpec.Core.ArithLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.WrapLaws "Arithmetic obligations" (level := 2)}
+{includeReadable "." Fir.Core.WrapLaws "Arithmetic obligations" FirSpec.Core.WrapLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.FreezeLaws "Freeze obligations" (level := 2)}
+{includeReadable "." Fir.Core.FreezeLaws "Freeze obligations" FirSpec.Core.FreezeLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" (level := 2)}
+{includeReadable "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" FirSpec.Core.BitwiseLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.WidthLaws "Width change obligations" (level := 2)}
+{includeReadable "." Fir.Core.WidthLaws "Width change obligations" FirSpec.Core.WidthLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.DivLaws "Division obligations" (level := 2)}
+{includeReadable "." Fir.Core.DivLaws "Division obligations" FirSpec.Core.DivLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.CompareLaws "Comparison and selection obligations" (level := 2)}
+{includeReadable "." Fir.Core.CompareLaws "Comparison and selection obligations" FirSpec.Core.CompareLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+{includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.BranchLaws "Branch obligations" (level := 2)}
+{includeReadable "." Fir.Core.BranchLaws "Branch obligations" FirSpec.Core.BranchLaws (level := 2)}
 
-{includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
+{includeReadable "." Fir.Execution.Morphism "Monad morphisms" FirSpec.Execution.Morphism (level := 2)}
 
-{includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
+{includeReadable "." Fir.Execution.ChoiceTree "Choice trees" FirSpec.Execution.ChoiceTree (level := 2)}
 
-{includeLiterate "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" (level := 2)}
+{includeReadable "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" FirSpec.Execution.Modes (level := 2)}
 
-{includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
+{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
 
 {includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
 

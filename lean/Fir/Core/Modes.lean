@@ -5,25 +5,24 @@ import Fir.Execution.Modes
 # The core dialect's exhaustive, scripted and sampled runs
 
 `fir-ref run` runs the core dialect's rules in the tree of choices. Each op
-runs its rule, `Core.Op.denote?` or `Core.Op.exit?`, the same rule that the
-set monad's instance runs; an op without rules ends its path with no
-outcome, for that op, as the set monad gives it none (ADR-2026-10-30-1855).
-`fir-ref` reports such a path as an error.
+runs its rule, the same rule that the set monad's semantics runs; an op
+without rules ends its path with no outcome, for that op, as the set monad
+gives it none (ADR-2026-10-30-1855). `fir-ref` reports such a path as an
+error.
 
-The tree's semantics of each op denotes the set monad's, `mapsDenote`: the
-rules are written once for any monad, and `toSet` keeps `pure`, `bind`,
-the choice effect and UB. So the soundness theorems of exhaustive and
-scripted runs hold for every core function, on every argument vector, at
-every fuel budget: `exhaustive_outcomes` and `scripted_outcomes`.
-`fir-ref` computes `exhaustive`, `scripted` and `sampled` below, and
-nothing else, to report a run. Sampled mode's values fit the run
-(`sampled_fits`), so it inherits scripted mode's theorem:
-`sampled_outcomes`.
+Each op's semantics in the tree has the set monad's as its set: the rules
+are written once for any monad, and the set of a tree keeps the steps of
+a computation, the choice effect and UB. So the theorems of exhaustive and
+scripted modes hold for every core function, on every argument vector, at
+every fuel budget. `fir-ref` computes the exhaustive, scripted and sampled
+modes defined below, and nothing else, to report a run. The values that
+sampled mode chose fit the run, so it inherits scripted mode's theorems.
 
 The theorems hold on every argument vector of the function's parameter
 types, poison included, and `fir-ref run` takes `poison` as an argument of
-any `iN` (#123). A run on a poison argument is refined by the run with any
-value in its place, calls and recursion included (`Core.args_isRefinedBy`).
+any `iN`. A run on a poison argument is refined by the run with any value
+in its place, calls and recursion included, as the section on refinement
+through core calls proves.
 So the harness runs native code, which holds no poison, on poison
 stand-ins in place of each poison argument, and judges each result
 against the outcomes that `fir-ref` lists for the run on the poison

@@ -9,13 +9,12 @@ interpreter in a monad that it can walk instead, the _tree of choices_
 (ADR-2026-10-29-2017, ADR-2026-10-30-2217). A computation in it is a tree. A leaf says how a
 path ends: with a result, with immediate UB, or with no outcome at all,
 the empty set that an op without execution rules has
-(ADR-2026-10-30-1855). A node is a choice of `w` bits, with one subtree
+(ADR-2026-10-30-1855). A node is a choice of _w_ bits, with one subtree
 for each value the bits may take.
 
-The tree's meaning is a set: `ChoiceTree.toSet` maps each tree to the set
-of the ways its paths end. That map is a monad morphism, so a run of the
-interpreter in the tree maps to its run in the set monad, by the previous
-section. `fir-ref`'s three modes walk the tree: exhaustive mode visits every
+The tree's meaning is a set: each tree maps to the set of the ways its
+paths end. That map is a monad morphism, so a run of the interpreter in
+the tree maps to its run in the set monad, by the previous section. `fir-ref`'s three modes walk the tree: exhaustive mode visits every
 path, scripted mode follows the one path that a choice sequence names, and
 sampled mode draws one.
 -/

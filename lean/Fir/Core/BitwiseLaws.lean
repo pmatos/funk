@@ -10,7 +10,7 @@ poison, and is total and monotone.
 
 None of them is ever UB, so the clause "UB only by the op's own rules"
 holds at once. Each rule gives poison on a poison operand, so it is
-`Strict`, as the section on the arithmetic obligations defines it, and so
+strict, as the section on the arithmetic obligations defines it, and so
 it is monotone: a poison operand gives a poison result, which every result
 refines, and defined operands are refined only by themselves. A shift by
 `N` or more gives poison on two defined operands as well; that changes
