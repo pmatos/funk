@@ -3,8 +3,6 @@ import Fir.Text.Print
 import Fir.Text.Decode
 
 /-!
-# An example
-
 The function `@sum` adds the integers from `0` up to, but not including,
 `%n`, and `@sum10` calls it. In the canonical text:
 
@@ -137,11 +135,24 @@ def sumModule : Module CoreDialect where
 /-!
 # More printing checks
 
-An op with a region, a symbol that is not a word, and an applied attribute
-with no arguments. No core op has a region, so the region below is only
-there to check the printer's layout, which is the same for every dialect.
-Every printed text ends with a line feed, even that of a module with no
-items.
+These checks run on every build. An op with a region prints its blocks two
+spaces deeper than the op: a `br` that owns one region, whose one block
+`^inner` holds `ret @0`, with the location reference `@7`, prints at
+indentation 2 as
+
+```
+  br {
+    ^inner:
+      ret @0
+  } @7
+```
+
+No core op has a region, so this region is only there to check the
+printer's layout, which is the same for every dialect. A function
+whose symbol is not a word prints as `func @"1"() {`, and a call to it as
+`call @"a b" @0`. The attribute `h` applied to nothing prints as `h()`, not
+`h`. Every printed text ends with a line feed, even that of a module with
+no items, which prints as `locs {` and `}` on two lines.
 -/
 
 #guard Operation.print 2 { op [] .br [] 7 with regions := [⟨[⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
@@ -159,8 +170,8 @@ items.
 /-!
 # Reading it back
 
-The parser reads the text of the module, and printing what it reads gives
-the same text, byte for byte.
+On every build, the parser reads the text of the module, and printing what
+it reads gives the same text, byte for byte.
 -/
 
 #guard match parse (d := CoreDialect) sumModule.print with

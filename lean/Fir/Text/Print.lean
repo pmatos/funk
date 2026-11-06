@@ -1,11 +1,10 @@
 import Fir.Text.Grammar
 
 /-!
-# The canonical printer
-
-The printer fixes the one spelling of every module: `print(parse(t)) == t`
-holds for every text `t` that it prints from a well-formed module (see the
-next section). Its layout is:
+The printer fixes the one spelling of every module: printing what the
+parser reads from a text gives that text back, for every text that the
+printer writes from a well-formed module (see the next section). Its layout
+is:
 
 * single spaces between tokens, a space after each comma and after the colon
   of a definition (`%x: T`), and none inside parentheses, before an item's
@@ -20,6 +19,10 @@ next section). Its layout is:
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
   spaces.
+
+This section gives the printer from the inside out: attributes, locations,
+definitions and successors, ops with their blocks and regions, functions
+and items, and last the location table and the module.
 -/
 
 namespace Fir

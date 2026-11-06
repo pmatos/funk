@@ -3,13 +3,13 @@ import Fir.Text.ReadLocs
 
 /-!
 The last step decodes what the grammar leaves generic, through the dialect's
-`DialectText` instance. Each item is decoded from its kind, each type with
-`decodeTy`, and each op with `decodeOp`, from its name, its attributes and
-the types of its operands and results. The types of the operands are found
-where the values are defined, so a function is decoded in two passes. The
-first reads every definition of the function, at any depth, and builds its
-_scope_: each value it defines, with its type. The second decodes each op
-in that scope.
+text. Each item is decoded from its kind, each type with the dialect's
+reader of types, and each op with its reader of ops, from its name, its
+attributes and the types of its operands and results. The types of the
+operands are found where the values are defined, so a function is decoded
+in two passes. The first reads every definition of the function, at any
+depth, and builds its _scope_: each value it defines, with its type. The
+second decodes each op in that scope.
 
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-30-0815):
@@ -32,8 +32,11 @@ then its blocks in order: each block's arguments, then each op's results and
 the blocks of its regions. So a text with several errors is rejected at the
 first of them in that order. `funk` follows the same order, except that it
 rejects an op whose name no dialect has before it looks up the op's
-operands; `decodeOp` takes the name, the attributes and the types together,
-so this parser looks up the operands first.
+operands; the dialect's reader of ops takes the name, the attributes and
+the types together, so this parser looks up the operands first.
+
+This section gives the scope and the first pass, then the second pass, a
+function, an item and a module, and last the parser as a whole.
 -/
 
 namespace Fir.Text

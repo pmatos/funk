@@ -55,6 +55,17 @@ import FirSpec.Execution.Morphism
 import FirSpec.Execution.ChoiceTree
 import FirSpec.Execution.Modes
 import FirSpec.Core.Modes
+import FirSpec.Text.Lexical
+import FirSpec.Text.Grammar
+import FirSpec.Core.Text
+import FirSpec.Text.Print
+import FirSpec.Text.RoundTrip
+import FirSpec.Core.TextLaws
+import FirSpec.Text.Lex
+import FirSpec.Text.Read
+import FirSpec.Text.ReadLocs
+import FirSpec.Text.Decode
+import FirSpec.Text.Example
 import FirSpec.Text.LexAccepted
 import FirSpec.Text.ReadAccepted
 import FirSpec.Text.ReadAcceptedBlocks
@@ -299,27 +310,27 @@ functions, blocks and ops.
 
 # Text format
 
-{includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}
+{includeReadable "." Fir.Text.Lexical "Tokens" FirSpec.Text.Lexical (level := 2)}
 
-{includeLiterate "." Fir.Text.Grammar "Grammar" (level := 2)}
+{includeReadable "." Fir.Text.Grammar "Grammar" FirSpec.Text.Grammar (level := 2)}
 
-{includeLiterate "." Fir.Core.Text "The core dialect in text" (level := 2)}
+{includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 
-{includeLiterate "." Fir.Text.Print "The canonical printer" (level := 2)}
+{includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
 
-{includeLiterate "." Fir.Text.RoundTrip "Round trips" (level := 2)}
+{includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
-{includeLiterate "." Fir.Core.TextLaws "The core dialect's text is lawful" (level := 2)}
+{includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
 
-{includeLiterate "." Fir.Text.Lex "The parser" (level := 2)}
+{includeReadable "." Fir.Text.Lex "The parser" FirSpec.Text.Lex (level := 2)}
 
-{includeLiterate "." Fir.Text.Read "Reading the grammar" (level := 2)}
+{includeReadable "." Fir.Text.Read "Reading the grammar" FirSpec.Text.Read (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadLocs "Reading the location table and the module" (level := 2)}
+{includeReadable "." Fir.Text.ReadLocs "Reading the location table and the module" FirSpec.Text.ReadLocs (level := 2)}
 
-{includeLiterate "." Fir.Text.Decode "Decoding" (level := 2)}
+{includeReadable "." Fir.Text.Decode "Decoding" FirSpec.Text.Decode (level := 2)}
 
-{includeLiterate "." Fir.Text.Example "Example" (level := 2)}
+{includeReadable "." Fir.Text.Example "Example" FirSpec.Text.Example (level := 2)}
 
 {includeLiterate "." Fir.Text.Tokens "Lexing printed text" (level := 2)}
 
