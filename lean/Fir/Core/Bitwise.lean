@@ -3,40 +3,34 @@ import Fir.Core.Values
 /-!
 # Bitwise ops and shifts
 
-Ticket #15 gives the bitwise ops `and`, `or` and `xor`, and the shifts
+This section gives the bitwise ops `and`, `or` and `xor`, and the shifts
 `shl`, `lshr` and `ashr`, their rules. Each takes two values of `iN` and
 gives one. None of them has flags, and none is ever immediate UB. All six
 propagate poison (ADR-2026-10-30-0818): a poison operand gives poison.
 
-* `and`, `or` and `xor` work on each bit alone: bit `i` of the result is
-  the and, the or or the exclusive or of bit `i` of each operand. At `i1`
-  they are the boolean ops on `false` and `true`.
-* `shl a, n` moves the bits of `a` up by `n` places and fills the low
-  places with zeros: it gives `a · 2^n` modulo `2^N`.
-* `lshr a, n` moves them down by `n` places and fills the high places with
-  zeros: it gives `a`, read as unsigned, divided by `2^n` and rounded
-  down.
-* `ashr a, n` moves them down by `n` places and fills the high places with
-  copies of the sign bit: it gives `a`, read as signed, divided by `2^n`
-  and rounded towards minus infinity.
-
-The second operand of a shift is its amount, read as unsigned. An amount
-of `N` or more gives poison, and so does a poison amount, as in LLVM. An
-amount whose top bit is set reads as `2^(N-1)` or more, which is never
-less than `N`, so it gives poison too (`shiftValues_msb`): no amount is
-read as signed, and none shifts the other way. At `i1` the amounts are
-`false`, which is `0` and gives the value itself, and `true`, which is `1`,
-that is `N`, and gives poison.
+* `and`, `or` and `xor` work on each bit alone: bit i of the result is the
+  and, the or or the exclusive or of bit i of each operand. At `i1` they
+  are the boolean ops on `false` and `true`.
+* The second operand of a shift is its amount, read as unsigned. An amount
+  of N or more gives poison, and so does a poison amount, as in LLVM. One
+  rule checks the amount for all three shifts.
+* `shl a, n` moves the bits of `a` up by n places and fills the low places
+  with zeros: it gives a times 2^n, modulo 2^N. `lshr a, n` moves them down
+  and fills the high places with zeros: it gives a, read as unsigned,
+  divided by 2^n and rounded down. `ashr a, n` moves them down and fills
+  the high places with copies of the sign bit: it gives a, read as signed,
+  divided by 2^n and rounded towards minus infinity.
+* An amount whose top bit is set reads as 2^(N-1) or more, which is never
+  less than N, so it gives poison too: no amount is read as signed, and
+  none shifts the other way. At `i1` the amounts are `false`, which is 0
+  and gives the value itself, and `true`, which is 1, that is N, and gives
+  poison.
 
 Poison is refined by every value, so native code may give any value for a
-shift by `N` or more. A backend may compile a shift to one x86-64 shift
+shift by N or more. A backend may compile a shift to one x86-64 shift
 instruction, which masks the amount and so gives some value. A shift by
-less than `N` must give exactly the value of its rule, at every width,
-`i1` included.
-
-The bitwise ops are Lean's own `&&&`, `|||` and `^^^` on `BitVec N`. The
-shifts are Lean's `<<<`, `>>>` and `BitVec.sshiftRight`, and one rule,
-`shiftValues`, checks the amount for all three.
+less than N must give exactly the value of its rule, at every width, `i1`
+included.
 -/
 
 namespace Fir.Core
@@ -90,11 +84,13 @@ theorem shiftValues_msb (s : BitVec w → Nat → BitVec w) (a : PoisonOr (BitVe
     have hw : w - 1 < 2 ^ (w - 1) := Nat.lt_two_pow_self
     exact ite_eq_right (by omega)
 
-/-! # Tests
+/-!
+# Tests
 
-The boundary values of each width: `0`, `1`, all ones (`-1`), the signed
-minimum and the signed maximum; and the shift amounts `0`, `1`, `N - 1`,
-`N`, more than `N`, and amounts whose top bit is set. -/
+The boundary values of each width: 0, 1, all ones (-1), the signed
+minimum and the signed maximum; and the shift amounts 0, 1, N - 1, N, more
+than N, and amounts whose top bit is set.
+-/
 
 /-- A truth table at `i1`: pairs of values, each with its result. -/
 abbrev Table1 := List (BitVec 1 × BitVec 1 × BitVec 1)

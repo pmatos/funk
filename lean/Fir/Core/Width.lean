@@ -3,39 +3,34 @@ import Fir.Core.Values
 /-!
 # Width changes
 
-Ticket #17 gives the width changes `zext`, `sext` and `trunc` their rules.
-Each takes one value of `iM` and gives one value of `iN`:
+This section gives the width changes `zext`, `sext` and `trunc` their
+rules. Each takes one value of `iM` and gives one value of `iN`:
 
-* `zext m n` zero-extends: the result's low `M` bits are the operand's,
-  and its high `N - M` bits are zero. Read as unsigned integers, the
-  operand and the result are equal, so `zext` of the `i8` value `-1` to
-  `i32` is `255`.
-* `sext m n` sign-extends: the result's low `M` bits are the operand's,
-  and each of its high `N - M` bits is a copy of the operand's top bit.
-  Read as two's-complement signed integers, the operand and the result are
-  equal, so `sext` of the `i8` value `-1` to `i32` is `-1`. At `i1`, `true`
-  is `-1` read as signed and `1` read as unsigned, so `sext` of `true`
-  gives `-1` and `zext` of `true` gives `1`.
-* `trunc m n` keeps the operand's low `N` bits and drops its high `M - N`
-  bits. Read as unsigned integers, the result is the operand modulo `2^N`,
-  so `trunc` of the `i32` value `255` to `i8` is `-1`, and `trunc` to `i1`
-  gives the operand's lowest bit.
+* `zext` zero-extends: the result's low M bits are the operand's, and its
+  high N - M bits are zero. Read as unsigned integers, the operand and the
+  result are equal, so `zext` of the `i8` value -1 to `i32` is 255.
+* `sext` sign-extends: the result's low M bits are the operand's, and each
+  of its high N - M bits is a copy of the operand's top bit. Read as
+  two's-complement signed integers, the operand and the result are equal,
+  so `sext` of the `i8` value -1 to `i32` is -1. At `i1`, `true` is -1 read
+  as signed and 1 read as unsigned, so `sext` of `true` gives -1 and `zext`
+  of `true` gives 1.
+* `trunc` keeps the operand's low N bits and drops its high M - N bits.
+  Read as unsigned integers, the result is the operand modulo 2^N, so
+  `trunc` of the `i32` value 255 to `i8` is -1, and `trunc` to `i1` gives
+  the operand's lowest bit.
 
 None of them is ever UB, and none gives poison on a value. A poison
 operand gives poison: the three ops propagate poison
 (ADR-2026-10-30-0818).
 
-The rules use Lean's own `BitVec.setWidth`, which pads with zeros to a
-wider width and keeps the low bits at a narrower one, and
-`BitVec.signExtend`, which gives the operand's signed value modulo `2^N`.
 Validation admits `zext` and `sext` only when they widen, and `trunc` only
-when it narrows (the core rules of validation). Lean still needs a value
-at the other pairs of widths, which no valid module holds, and the
-definitions give one: `zext` and `trunc` are both `setWidth`, so to the
-same width they give the operand, and `sext` to a narrower width keeps
-the operand's low bits. The three ops meet their obligations at every
-pair of widths, valid or not, as the section on width change obligations
-proves.
+when it narrows (the core rules of validation). The rules still give a
+value at the other pairs of widths, which no valid module holds: to the
+same width, all three give the operand, and `sext` to a narrower width
+keeps the operand's low bits. The three ops meet their obligations at
+every pair of widths, valid or not, as the section on width change
+obligations proves.
 -/
 
 namespace Fir.Core
