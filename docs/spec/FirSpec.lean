@@ -96,6 +96,15 @@ import FirSpec.Text.LexLayout
 import FirSpec.Text.LexPrint
 import FirSpec.Text.LexModule
 import FirSpec.Text.LexWellFormed
+import FirSpec.Text.LexAccepted
+import FirSpec.Text.ReadAccepted
+import FirSpec.Text.ReadAcceptedBlocks
+import FirSpec.Text.ReadAcceptedItems
+import FirSpec.Text.ReadAcceptedModule
+import FirSpec.Text.DecodeAcceptedScope
+import FirSpec.Text.DecodeAccepted
+import FirSpec.Text.DecodeAcceptedModule
+import FirSpec.Text.ParseWellFormed
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -393,23 +402,23 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.PrintParse "The round trip, proved" FirSpec.Text.PrintParse (level := 2)}
 
-{includeLiterate "." Fir.Text.LexAccepted "What the lexer accepts" (level := 2)}
+{includeReadable "." Fir.Text.LexAccepted "What the lexer accepts" FirSpec.Text.LexAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAccepted "What the grammar accepts" (level := 2)}
+{includeReadable "." Fir.Text.ReadAccepted "What the grammar accepts" FirSpec.Text.ReadAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" FirSpec.Text.ReadAcceptedBlocks (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedItems "Accepted items" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedItems "Accepted items" FirSpec.Text.ReadAcceptedItems (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedModule "An accepted location table" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedModule "An accepted location table" FirSpec.Text.ReadAcceptedModule (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" FirSpec.Text.DecodeAcceptedScope (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAccepted "What the second pass accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAccepted "What the second pass accepts" FirSpec.Text.DecodeAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAcceptedModule "What decoding accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAcceptedModule "What decoding accepts" FirSpec.Text.DecodeAcceptedModule (level := 2)}
 
-{includeLiterate "." Fir.Text.ParseWellFormed "Parsed modules are well formed" (level := 2)}
+{includeReadable "." Fir.Text.ParseWellFormed "Parsed modules are well formed" FirSpec.Text.ParseWellFormed (level := 2)}
 
 # Architecture decision records
 %%%

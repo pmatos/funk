@@ -8,31 +8,31 @@ import Fir.Text.RoundTrip
 The grammar step reads tokens into a syntax tree. On tokens that can be
 written, the tree it gives can be written too, part by part:
 
-* a definition's value is a name, and its type is written as a type
-  (`SDef.Writable`);
-* an op's results can be written, its name is a word, its attributes can be
-  written, its successors' labels and arguments are names, its regions can
-  be written and its location reference is below `2^32` (`SOp.Writable`);
-* a block's label is a name, and its arguments and ops can be written
-  (`SBlock.WritableList`);
+* a successor's label, and each value it passes, is a name, and each
+  number of a location is below 2³²;
+* a definition's value is a name, and its type is written as a type;
+* an op's results can be written, its name is a word, its attributes and
+  successors can be written, its regions can be written and its location
+  reference is below 2³²; a block's label is a name, and its arguments
+  and ops can be written;
 * an item's parameters can be written, its result types are written as
-  types, and the blocks of its body can be written (`SItem.Writable`);
-* each number of the location table is below `2^32` (`LocTable.InLimits`).
+  types, and the blocks of its body can be written; a module's items can
+  be written, and each number of its location table is below 2³².
 
 An op's operands are not in this list: decoding finds each of them among
 the definitions of its function, whose names are names. An item's kind and
 attributes are not in it either, since decoding accepts only a `func`
-without attributes. A `func` whose body holds items is rejected unless it
-holds none, so nothing is asked of the items of a body (`SBody.Writable`).
+without attributes. A `func` whose body is a list of items is rejected
+unless that list is empty, so nothing is asked of the items of a body.
 
 Each reader takes what it needs from the tokens it reads. A name comes from
 a value or a label token, a word from a word token, a reference from a
 location reference token, and the lexer's step says that each of those
-tokens can be written. `ReadsWritable read P ts` says that on tokens `ts`
-that can be written, `read` gives what `P` holds of and leaves tokens that
-can be written. The tokens a reader leaves are a suffix of `ts`, but its
-type says only that there are no more of them than in `ts`. So the type
-does not say that they can be written, and each lemma states it.
+tokens can be written. A reader gives a property on some tokens when, if
+they can be written, what it reads has the property and the tokens it
+leaves can be written. The tokens that a reader leaves are a suffix of the
+tokens it was given, but a reader's definition records only that there are
+no more of them, so each lemma shows that they can be written.
 -/
 
 namespace Fir

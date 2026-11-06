@@ -1,38 +1,49 @@
 import Fir.Text.LexTokens
 
 /-!
-# Every token read can be written
+# Why every parsed module is well formed
 
-The round trip, `printThenParse`, reads back what the printer writes. This
-section and the ones after it prove a converse for every text that the
-parser accepts, whoever wrote it, with comments and any spacing: if
-`Fir.parse t = .ok m`, then `m` is well formed (`parse_wellFormed`, in the
-section "Parsed modules are well formed"). With the round trip, printing
-what the parser reads is then idempotent on every text that it accepts.
+The round trip shows that parsing the printed form of a well-formed module
+gives the module back. These nine sections, from this one to the one on
+parsed modules, prove a converse: every module that the parser gives is
+well formed, whatever text it read, whoever wrote it, with comments, with
+any spacing, or without its final line feed.
+
+It matters because a well-formed module is exactly one whose printed form
+says everything it holds. Without this result, the parser could accept a
+text and give a module that the printer cannot write faithfully: one that
+defines a value twice, that names a value with something other than a
+name, or that holds a location number that does not fit in 32 bits.
+Printing such a module would give a text that reads back as another module,
+or not at all. With this result and the round trip, printing what the
+parser reads is idempotent on every text that it accepts: formatting a
+text twice gives what formatting it once gives, and every tool that reads
+fir text gets a module that it can write back as it is.
 
 The proof follows the parser's three steps, as the round trip's does
-(ADR-2026-11-03-0028). Each step gives what the next one needs:
+(ADR-2026-11-03-0028), and each step gives what the next one needs:
 
-1. every token that the lexer reads, but `eof`, can be written
-   (`lex_writable`, below);
-2. on tokens that can be written, `readModule` gives a tree that can be
-   written (`readModule_writable`);
-3. a tree that can be written decodes to a well-formed module
-   (`decodeModule_wellFormed`).
+1. the lexer reads only tokens that can be written: value names and labels
+   made of one or more name characters, words that start with a letter or
+   `_`, and location references below 2³². This section proves it;
+2. on tokens that can be written, the grammar reads a tree that can be
+   written: the sections on what the grammar accepts, on accepted ops,
+   blocks and regions, on accepted items, and on an accepted location
+   table;
+3. a tree that can be written decodes to a well-formed module: the
+   sections on what the first pass accepts, on what the second pass
+   accepts, and on what decoding accepts.
 
-A token can be written when `Tok.Writable` holds of it: a value name or a
-label is a name, a word is a word, and a location reference is below
-`2^32`. The lexer reads no other token. A value or a label is `%` or `^`
-and the name characters after it, and `lexToken` rejects it when there are
-none. A word starts with a letter or `_` and takes in every name character
-after it. A location reference of `2^32` or more is an error at the number
-(`lexAt`). Symbols, integers, strings and punctuation can all be written.
-Whitespace and comments give no token at all.
+The section on parsed modules joins the three steps.
 
-Each lemma is about one function of the lexer, and says that a token it
-reads can be written. `bind_eq_ok` takes a step of a reader apart: when a
-step and what follows it succeed, the step succeeded. The proofs of all
-three steps use it, through the tactic `bind_step`.
+# Every token read can be written
+
+The lexer reads no token that cannot be written. A value or a label is `%`
+or `^` and the name characters after it, and the lexer rejects it when
+there are none. A word starts with a letter or `_` and takes in every name
+character after it. A location reference of 2³² or more is an error at
+the number. Symbols, integers, strings and punctuation can all be written,
+and whitespace and comments give no token at all.
 -/
 
 namespace Fir.Text
