@@ -11,14 +11,33 @@ implementation, tests, docs, ADRs, reviews and PRs. Leave everything so that
 the next agent, starting cold, can continue from the repository alone.
 
 Take a question to the human only when it is a direction call that the spec,
-roadmap and ADRs do not settle (label the issue `human-ready`). How to build,
-test or split the work is yours to decide and record.
+roadmap and ADRs do not settle (label the issue `human-ready`). Within the
+agreed ticket scope, how to build, test or split the work is yours to decide
+and record.
+
+## Direction questions and standing rules
+
+- An unanswered direction question waits. Record it in a `human-ready` issue.
+  Never choose an answer because a timeout expires or the human is
+  unavailable. Continue work that does not depend on the answer.
+- Routine implementation choices, such as naming and test details, may
+  proceed within the ticket's scope and must be recorded.
+- Ask the human before starting a new performance or scale ticket, or
+  introducing new tooling or checking machinery, including hooks and
+  verifiers. Existing authorized checks and routine implementation choices
+  can proceed.
+
+These rules apply to every agent, including orchestrators. The human approved
+them in #171; ADR-2026-11-06-0744 records the decision.
 
 ## Impossible is nothing
 
 That is our mantra. We are ambitious: we do not shy away from large amounts of
 work, and we set out to achieve what looks impossible. In practice:
 
+- Ambition means completing the agreed scope. Finish everything the ticket
+  asks for. File additional work separately and obtain the human's ruling
+  before widening the ticket.
 - Size is never a reason to cut scope. Never call a task "too large", and never
   take "the simple road" when it gives up part of the goal.
 - Large work gets a plan, not a smaller target. Break it into issues and a
