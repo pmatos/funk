@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with calls: readable blocks" =>
 
-:::readable Fir.Core.Op.eq_call_of_callee (fingerprint := "7458160130701323696")
+:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "6238840022199865495")
 *Theorem: a core op that calls a function is $`\mathsf{call}` of that
 function.* For every core op $`o` and symbol $`g`: if
 $`\mathrm{callee}(o) = g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`

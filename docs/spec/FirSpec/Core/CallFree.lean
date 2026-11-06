@@ -33,7 +33,7 @@ never uses its semantics, and goes on by its callee's run
 (ADR-2026-11-02-1514).
 :::
 
-:::readable Fir.Core.Op.exit_goto (fingerprint := "3426063647311522304")
+:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (fingerprint := "15640704933673048215")
 *Theorem: a core terminator that jumps goes to a successor that it has,
 and gives no results.* For every core op $`o` that is a terminator, every
 operand vector $`v^*` and every $`i`: if $`\mathrm{exit}_o(v^*)`, run in
@@ -43,7 +43,7 @@ $`\mathsf{br}` and $`\mathsf{cond\_br}` jump, each to one of its
 successors, and neither has results.
 :::
 
-:::readable Fir.Core.Op.exit_ret (fingerprint := "14017408660836184700")
+:::readable Fir.Core.Op.exit_ret (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (fingerprint := "6283352926071173515")
 *Theorem: the only core op whose exit returns is $`\mathsf{ret}`.* For
 every core op $`o` and operand vector $`v^*`: if $`\mathrm{exit}_o(v^*)`,
 run in the set monad, may end with $`\mathsf{ret}`, then $`o` is
@@ -51,7 +51,7 @@ $`\mathsf{ret}~t^*` for some types $`t^*`. $`\mathsf{br}` always jumps,
 and $`\mathsf{cond\_br}` jumps, or hits UB on a poison condition.
 :::
 
-:::readable Fir.Core.Op.callee_none (fingerprint := "3901991526911757198")
+:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "8972171092564716841")
 *Theorem: a core op other than $`\mathsf{call}` calls no function.* For
 every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
