@@ -37,7 +37,8 @@ complement. The text after "UB" is the reason the run gives, which is for
 people: refinement ignores it.
 
 These are the core ops whose failure hardware cannot defer: x86-64's
-division instructions trap on it. A divisor of zero is UB, and so is a
+division instructions trap on a zero divisor and on the signed minimum
+by $`-1`. A divisor of zero is UB, and so is a
 poison divisor, which might be zero. A signed division of the signed
 minimum by $`-1` is UB: its quotient, $`2^{N-1}`, does not fit. So is a
 poison dividend by $`-1`, which might be the signed minimum; the rule that
@@ -53,7 +54,7 @@ this definition is a function to its ending.
 :::readable Fir.Core.sdivWith Fir.Core.udivWith (pin := Fir.Core.divEv) (pin := BitVec.sdiv) (pin := BitVec.srem) (pin := BitVec.udiv) (pin := BitVec.umod) (fingerprint := "803816091463886245")
 *Definition: the rules of $`\mathsf{sdiv}` and $`\mathsf{udiv}`.* For every
 width $`N`, with or without the flag $`\mathsf{exact}`, each ends as the
-table above says, $`\mathsf{sdiv}` as a signed op and $`\mathsf{udiv}` as
+cases of how a division ends say, $`\mathsf{sdiv}` as a signed op and $`\mathsf{udiv}` as
 an unsigned one, with these results $`q(a, b)`:
 
 $$`\begin{aligned} q_{\mathsf{sdiv}}(a, b) &= \mathrm{trunc}(\hat{a} / \hat{b}) \bmod 2^N \\ q_{\mathsf{udiv}}(a, b) &= \lfloor a / b \rfloor \end{aligned}`
@@ -75,7 +76,7 @@ is UB without it.
 
 :::readable Fir.Core.sremValues Fir.Core.uremValues (pin := Fir.Core.divEv) (pin := BitVec.srem) (pin := BitVec.umod) (fingerprint := "5856221874484006570")
 *Definition: the rules of $`\mathsf{srem}` and $`\mathsf{urem}`.* For every
-width $`N`, each ends as the table above says, $`\mathsf{srem}` as a
+width $`N`, each ends as the cases of how a division ends say, $`\mathsf{srem}` as a
 signed op and $`\mathsf{urem}` as an unsigned one, with these results:
 
 $$`\begin{aligned} q_{\mathsf{srem}}(a, b) &= (\hat{a} - \hat{b} \cdot t) \bmod 2^N \\ q_{\mathsf{urem}}(a, b) &= a - b \cdot \lfloor a / b \rfloor \end{aligned}`
