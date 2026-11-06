@@ -55,17 +55,21 @@ checks every op against: each operand must be a value of the operand's
 type, and each result is declared with the result's type.
 :::
 
-:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (fingerprint := "7876777940044617574")
+:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "8748253835453307600")
 *Definition: the core terminators and their successors.* $`\mathsf{br}`,
 $`\mathsf{cond\_br}` and $`\mathsf{ret}~t^*` are the terminators of the core
 dialect, the ops that end a block. $`\mathsf{br}` has one successor and
 $`\mathsf{cond\_br}` two; no other core op has any, so $`\mathsf{ret}`
 leaves the function instead of going to a block.
 
-With the operand and result types above, these make up the
+With the operand and result types above, these give the
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] of the
-core dialect. Its Lean is the last declaration of this section, hidden
-under the next block.
+core dialect: $`\mathrm{sig}_{\mathrm{core}}(o)` and
+$`\mathrm{res}_{\mathrm{core}}(o)` are the two halves of the table above,
+$`\mathrm{term}_{\mathrm{core}}(o)` is true exactly for $`\mathsf{br}`,
+$`\mathsf{cond\_br}` and $`\mathsf{ret}~t^*`, and
+$`\mathrm{nsucc}_{\mathrm{core}}(o)` is 1 for $`\mathsf{br}`, 2 for
+$`\mathsf{cond\_br}` and 0 otherwise.
 :::
 
 :::readable Fir.Core.op (fingerprint := "1597957136772372945")
@@ -84,4 +88,7 @@ the examples, such as
 {ref "The-fir-specification--Validation--A-rejected-function"}[a rejected function]
 and the {ref "The-fir-specification--Text-format--Example"}[example] of the
 text format.
+
+The Lean under this block ends with the core dialect's signature, which
+assembles the four functions above.
 :::

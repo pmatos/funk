@@ -6,11 +6,9 @@ checks that each op's reference has an entry and that the table is well
 formed, so they never change what a program means. Parsers and printers
 keep them, and round trips preserve them.
 
-An op does not hold its location directly. It holds a _location reference_,
-a number, and the module's _location table_ gives the location that each
-number stands for. In text, the reference is written `@N` at the end of the
-op, and the table is the `locs { ... }` block that ends the module. Ops that
-share a location share one entry, which keeps op lines short.
+An op does not hold its location directly: it holds a location reference,
+and the module's location table, both defined below, gives the location
+that the reference stands for.
 
 This section gives, in order: location references, locations, the location
 table, and the numbers of a location with their limit.

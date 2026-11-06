@@ -2,6 +2,8 @@ import VersoManual
 import Fir.Syntax.Dialect
 import Fir.Core.Values
 import Fir.Validation.Rules
+import Fir.Execution.Effects
+import Fir.Execution.Interpreter
 import FirSpecSite.ReadableElab
 
 open Verso.Genre Manual
@@ -16,7 +18,7 @@ changes under it.
 
 #doc (Manual) "Dialects: readable blocks" =>
 
-:::readable Fir.HVector (fingerprint := "12162099509990058066")
+:::readable Fir.HVector (pin := Fir.DialectDenote) (fingerprint := "5494653853977177333")
 *Definition: a vector of values of given types.* Let $`a_1 \dots a_n` be a
 list of types, and let $`f` give each type $`a` a set of values $`f(a)`. A
 _heterogeneous vector_ for $`a_1 \dots a_n` holds one value of $`f(a_i)`
@@ -29,12 +31,10 @@ $`f(a_1)` followed by a vector for $`a_2 \dots a_n`. The Lean calls it
 `HVector`.
 
 The values of an op's operands, and of its results, travel in one, as in
-LeanMLIR, a formalization of MLIR in Lean. Since the list of types is part
-of the vector's type, the
+LeanMLIR. Since the list of types is part of the vector's type, the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics]
-of an op receives exactly one operand
-value for each operand type, each of its type: a wrong number or a wrong
-type is ruled out before anything runs.
+of an op receives exactly one operand value for each operand type, each of
+its type: a wrong number or a wrong type is ruled out before anything runs.
 :::
 
 :::readable Fir.Dialect (fingerprint := "7801125833974356758")
@@ -48,17 +48,16 @@ instance, and $`\mathsf{add}` at $`\mathsf{i64}` is another. So the types of
 an op instance's operands and results follow from the op instance alone, and
 the dialect's signature, below, gives them.
 
-The dialect is why fir can reach any kind of hardware
-(ADR-2026-10-29-2016). The terms, validation, execution and the text format
-are each written once, for a dialect $`D` that they take as a parameter.
-Nothing in fir is a closed list of all ops or all types: the core dialect is
-one dialect, and a dialect for a GPU would be another. A dialect does not
-say which effects its ops have, such as choosing a value; its semantics asks
-for them in the
+The terms, validation, execution and the text format are each written
+once, for a dialect $`D` that they take as a parameter, so nothing in fir is
+a closed list of all ops or all types (ADR-2026-10-29-2016). A dialect does
+not say which effects its ops have, such as picking arbitrary bits, which
+$`\mathsf{freeze}` of poison needs (the choice effect,
+ADR-2026-10-29-2017); its semantics asks for them in the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[execution chapter].
 :::
 
-:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (fingerprint := "11240588567006984445")
+:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (pin := Fir.DVal) (pin := Fir.Env) (fingerprint := "3498837778756605827")
 *Definition: the values of a type.* A dialect $`D` gives each of its types
 $`t \in \mathrm{Ty}_D` the set of its values, written
 $`\llbracket t \rrbracket`. The Lean calls this map `toType`.

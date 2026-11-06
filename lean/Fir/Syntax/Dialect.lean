@@ -1,15 +1,15 @@
 /-!
 fir is built from dialects, so that it can reach any kind of hardware
-(ADR-2026-10-29-2016). A dialect supplies its types and its ops, and the
-rest of the spec is written once for every dialect. Nothing in fir is a
-closed list of all ops or all types: the core dialect is one dialect, and a
-dialect for a GPU or a quantum processor would be another.
+(ADR-2026-10-29-2016). A dialect supplies its types and its ops: the core
+dialect is one dialect, and a dialect for a GPU or a quantum processor would
+be another.
 
 The definitions below keep the shape of those of LeanMLIR, a formalization
 of MLIR in Lean (ADR-2026-10-29-2030), so that the semantics of an op ports
-between the two mechanically. The terms that use them are fir's own, and
-they are extrinsically typed: a value is referred to by its name, and its
-type is checked by validation, apart from the terms.
+between the two mechanically. The _terms_ are the syntax trees of programs:
+modules, functions, blocks and ops. They are fir's own, and they are
+extrinsically typed: a term does not carry its type; validation assigns and
+checks types separately.
 
 This section gives, in order:
 

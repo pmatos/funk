@@ -2,7 +2,7 @@ import Fir.Syntax.Dialect
 
 /-!
 The core dialect is the small, CPU-shaped dialect of fir's first milestone,
-M0. Its types are the integers `iN` and the reserved type `ptr`
+M0. Its types are the integer types and the reserved pointer type
 (ADR-2026-10-29-2007). They are one dialect's types, not the whole type
 system of fir: another dialect brings its own (ADR-2026-10-29-2016).
 -/

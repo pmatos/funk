@@ -42,8 +42,8 @@ calls it `maxWidth`.
 The grammar allows types that no program may hold. The
 {ref "The-fir-specification--Validation--Core-rules"}[core rules] of
 validation accept $`\mathsf{i}N` only when $`1 \le N \le N_{\max}`, so
-$`\mathsf{i0}` is not a type, and reject $`\mathsf{ptr}` everywhere. The
-text format reads no integer type wider than $`N_{\max}`.
+$`\mathsf{i0}` is never a valid type, and reject $`\mathsf{ptr}`
+everywhere. The text format reads no integer type wider than $`N_{\max}`.
 
 These are the types of one dialect, not the whole type system of fir: a
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect] brings its

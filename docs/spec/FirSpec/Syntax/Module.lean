@@ -2,6 +2,7 @@ import VersoManual
 import Fir.Syntax.Module
 import Fir.Validation.Rules
 import Fir.Text.Lexical
+import Fir.Text.Print
 import FirSpecSite.ReadableElab
 
 open Verso.Genre Manual
@@ -16,14 +17,17 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::readable Fir.Name (fingerprint := "17987575212195285839")
-*Definition: a name.* In the terms, a value, a block label and a symbol are
-each referred to by a name, a string, stored without its sigil: the value
-`%x`, the label `^loop` and the symbol `@f` of the text are stored as `x`,
-`loop` and `f`. Names are stored as the producer wrote them
-(ADR-2026-10-29-2014), and a term refers to a value only by its name: which
-value a name stands for, and its type, are rules of
+:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "3856370532284756557")
+*Definition: the strings that refer to values, labels and symbols.* In
+the syntax trees of a program, a value, a block label and a symbol are each
+referred to by a string, stored without its sigil: the value `%x`, the label
+`^loop` and the symbol `@f` of the text are stored as `x`, `loop` and `f`.
+The Lean calls this string `Name`. The strings are stored as the producer
+wrote them (ADR-2026-10-29-2014), and a program refers to a value only by
+its string: which value the string stands for, and its type, are rules of
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[validation].
+Validation restricts the strings of values and labels to the names defined
+next; a symbol may be any string.
 :::
 
 :::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "5512839615627060427")
@@ -40,12 +44,13 @@ The Lean gives each class as a test on characters or strings: `isLetter`,
 
 These classes decide what the text can write.
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
-requires every value name and every label of a function to be a name, so
-that every valid module can be written. A symbol may be any string: the
-text writes it bare after `@` when it is a word, and quoted otherwise.
+requires the string of every value and every label of a function to be a
+name, so that every valid module can be written. A symbol may be any
+string: the text writes it bare after `@` when it is a word, and quoted
+otherwise.
 :::
 
-:::readable Fir.Succ (pin := Fir.Func.SuccValid) (fingerprint := "12486445854936667256")
+:::readable Fir.Succ (pin := Fir.Func.SuccValid) (pin := Fir.Succ.print) (fingerprint := "16157009433262250404")
 *Definition: a successor.* A successor of a terminator is a block that
 control may go to, with the values that it passes to that block's
 arguments:
@@ -58,22 +63,24 @@ label,args \{\mathsf{label}~\ell,~\mathsf{args}~x^*\}
 As in the WebAssembly specification, $`\{\mathsf{f}_1~A_1, \dots\}` is a
 record, with a field $`\mathsf{f}_i` that holds an $`A_i` for each $`i`.
 Here and below, $`\ell` is a block label and $`x` a value name. In text,
-the successor is written `^ℓ(%x, …)`.
+the successor is written `^ℓ(%x, …)`, or `^ℓ` when it passes no values.
 
 Blocks take arguments instead of φ-nodes (ADR-2026-10-29-2010): a jump
 passes one value for each argument of its target, and the target's
 arguments receive them.
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
 requires a successor to name a block of its function other than the entry
-block, and to pass one value of the right type for each of that block's
-arguments.
+block, the first block of the function, and to pass one value of the right
+type for each of that block's arguments.
 :::
 
 :::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "7976569321417610658")
-*Definition: ops, blocks and regions.* An op in place, in a block, is one
-operation of fir. A block is a label, typed arguments and a list of ops. A
-region is a list of blocks. The three are defined together, since an op may
-own regions:
+*Definition: operations, blocks and regions.* An _operation_ is one use of
+an op in a block: it names the op's results, gives its op instance, names
+its operands, and holds its successors, regions and location reference. A
+block is a label, typed arguments and a list of operations. A region is a
+list of blocks. The three are defined together, since an op may own
+regions:
 
 ```grammar Fir.Operation
 \mathit{operation}
@@ -113,16 +120,16 @@ $`\mathsf{add}_{32}~\mathsf{nsw}`, whose operands are $`\mathit{acc}~i`,
 with no successors, no regions and the location reference 3.
 
 A block's $`\mathsf{params}` are its arguments, and its $`\mathsf{body}`
-its ops. The first block of a region is its _entry_. Every op has this one
-shape, whatever its dialect, so that a dialect adds ops without new syntax
-(ADR-2026-10-29-2016), and a function is a control-flow graph of blocks
-(ADR-2026-10-29-2005). What makes these terms well formed is
+its operations. The first block of a region is its _entry_. Every op has
+this one shape, whatever its dialect, so that a dialect adds ops without
+new syntax (ADR-2026-10-29-2016), and a function is a control-flow graph of
+blocks (ADR-2026-10-29-2005). What makes these terms well formed is
 {ref "The-fir-specification--Validation--The-general-rules"}[validation]:
 among other rules, every block holds at least one op, and its last op, and
 only that one, is a terminator.
 :::
 
-:::readable Fir.Func (pin := Fir.Func.Valid) (fingerprint := "11214330262943607426")
+:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "3439561308575619521")
 *Definition: a function.* A function is a symbol, typed parameters, the
 types of its results, and a region, its body:
 
@@ -163,7 +170,7 @@ item, and a new alternative here. How dialects add kinds of item is not
 decided yet, so fir defines only functions.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (fingerprint := "15450050718820610701")
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "10891783193603547263")
 *Definition: a module.* A module is its items, then its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]:
 

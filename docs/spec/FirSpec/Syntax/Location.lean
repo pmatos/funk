@@ -16,7 +16,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Locations: readable blocks" =>
 
-:::readable Fir.LocRef (fingerprint := "11401156343561318334")
+:::readable Fir.LocRef (pin := Fir.printLocRef) (fingerprint := "9162630897479780355")
 *Definition: a location reference.* A location reference $`r` is a natural
 number, written $`\mathtt{@}r` in text. It is a key of the module's location
 table, defined below, which gives the location that $`r` stands for.
@@ -70,7 +70,7 @@ easy to drop by accident in a pass (ADR-2026-10-29-2013). Locations never
 change what a program means: no rule of execution reads them.
 :::
 
-:::readable Fir.LocTable (pin := Fir.LocTable.Valid) (pin := Fir.Location.WellFormed) (fingerprint := "9976675594473860050")
+:::readable Fir.LocTable (pin := Fir.LocTable.Valid) (pin := Fir.LocTable.print) (pin := Fir.Location.WellFormed) (fingerprint := "6615053154589121912")
 *Definition: a location table.* A module's location table is a sequence of
 entries $`(r = \mathit{loc})^*`, each a location reference $`r` and the
 location $`\mathit{loc}` it stands for. In text it is the block
@@ -103,7 +103,7 @@ $$`\begin{aligned} & \mathrm{nums}(\mathsf{range}~\mathit{file}~l_1~c_1~l_2~c_2)
 A table $`T` is _within limits_ when every key, and every number of every
 location, is below $`2^{32}`:
 
-$$`\begin{aligned} \forall (r = \mathit{loc}) \in T.\ & r < 2^{32} \\ \wedge\ & \forall n \in \mathrm{nums}(\mathit{loc}).\ n < 2^{32} \end{aligned}`
+$$`\begin{aligned} & \forall (r = \mathit{loc}) \in T.\ r < 2^{32} \\ & \quad \wedge\ \forall n \in \mathrm{nums}(\mathit{loc}).\ n < 2^{32} \end{aligned}`
 
 The Lean spells $`\mathrm{nums}` as `numbers`, and calls the limit
 `limit` and the condition `InLimits`. The limit lets every

@@ -2,11 +2,11 @@ import Fir.Core.Types
 import Fir.Syntax.Dialect
 
 /-!
-The M0 op set: constants, integer arithmetic, bitwise ops and shifts,
-comparison and selection, width changes, `freeze` and `poison`, branches
-and calls. Each
-op below is an op instance: it carries its attributes and the widths it is
-used at, so that its operand and result types follow from it.
+The core dialect's ops: constants, integer arithmetic, bitwise ops and
+shifts, comparison and selection, width changes, `freeze` and `poison`,
+branches and calls. Each op below is an op instance: it carries its
+attributes and the widths it is used at, so that its operand and result
+types follow from it.
 
 This chapter gives the ops and their signatures. What each op computes, and
 when it yields poison or immediate UB, is stated in prose here and defined in

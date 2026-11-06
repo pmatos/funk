@@ -7,8 +7,9 @@ result types of every core op, and says which ops end a block and how many
 successors they have.
 
 This section gives, in order: the core dialect, the types of each op's
-operands and results, the terminators and their successors, a shorthand
-that the examples use to write an op, and the signature that these make up.
+operands and results, the terminators and their successors with the
+signature that these make up, and a shorthand that the examples use to
+write an op.
 -/
 
 namespace Fir
