@@ -325,6 +325,13 @@ choice budget, seeded runs of sampled mode check that it gives no other.
 A test that runs a module on `fir-ref` and as native code, and checks that the
 native result refines the `fir-ref` result.
 
+**judgement**:
+How the harness classifies a test: passed, failed or invalid, with a reason.
+A differential test passes when native results refine the reference outcomes;
+an interpreter-only test passes when its outcome matches what it expects.
+An invalid test proves nothing and never counts as a pass.
+_Avoid_: verdict (a verdict says whether a text parses and validates)
+
 **poison stand-in**:
 A defined value of `iN` that native code runs a differential test on in
 place of a poison argument: one of the type's boundary bit patterns, 0, 1,
