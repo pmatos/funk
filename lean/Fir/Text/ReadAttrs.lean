@@ -29,10 +29,9 @@ location table is below `2^32`, since the reader of lines and columns reads
 only those. The readers take any token of the right kind, so a value name
 or a label that is not a name, an op name or an attribute's word that is
 not a word, and an op's location reference of `2^32` each read back as
-themselves: the lexer, not the grammar, rejects those. The references
-inside the location table are bounded by the condition that bounds its
-lines and columns, that the table is within the limits, although no reader
-checks them.
+themselves: the lexer, not the grammar, rejects those. No reader checks
+the location references inside the table, but a table within limits keeps
+them below `2^32` too.
 -/
 
 namespace Fir.Text

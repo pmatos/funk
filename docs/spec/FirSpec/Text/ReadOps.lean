@@ -45,13 +45,14 @@ starts the next block. Neither starts an op.
 
 :::readable Fir.Operation.tokensAfterName Fir.Operation.treeWith (pin := Fir.DialectText) (pin := Fir.Region.tokensList) (pin := Fir.Succ.tokens) (fingerprint := "7109299546903148067")
 *Definitions: an op's tokens after its name, and its tree with given
-results and name.* For an op $`o` with the op instance $`p`, its tokens
+results and name.* For an op $`o` with the op instance $`\iota`, its tokens
 after its name are, in order:
 
-* the tokens of its attributes, $`\mathrm{opattrs}(p)`;
+* the tokens of its attributes, $`\mathrm{opattrs}(\iota)`;
 * the tokens of its operands and successors, separated by commas;
-* the tokens of its regions, and $`\mathsf{locref}~r` for its location
-  reference $`r`.
+* the tokens of its regions, and the
+  {ref "The-fir-specification--Text-format--The-parser"}[token]
+  $`\mathsf{locref}~r` for its location reference $`r`.
 
 The tree of $`o` with the results $`d^*` and the name $`w` is the
 {ref "The-fir-specification--Text-format--The-tree-that-the-grammar-reads"}[tree of $`o`]
@@ -63,9 +64,9 @@ state what it gives in these terms.
 :::readable Fir.Operation.tokens_eq (pin := Fir.Operation.tokens) (fingerprint := "4503156691049850776")
 *Theorem: an op's tokens are its results, its name, then the rest.* For
 every dialect with a
-text format and every op $`o` with the op instance $`p`, the tokens of $`o`
+text format and every op $`o` with the op instance $`\iota`, the tokens of $`o`
 are the tokens of its results followed by `=`, when it has results, then
-$`\mathsf{word}~\mathrm{opname}(p)`, then its tokens after its name.
+$`\mathsf{word}~\mathrm{opname}(\iota)`, then its tokens after its name.
 :::
 
 :::readable Fir.readOpBody_reads (pin := Fir.Text.readOpBody) (fingerprint := "17585542946757790440")

@@ -80,11 +80,11 @@ $$`\begin{aligned} & \mathrm{tree}(x : T) = \{\mathsf{name}~x,~\mathsf{pos}~p_0,
 :::readable Fir.Operation.tree Fir.Region.treeList Fir.Block.treeList Fir.Operation.treeList (pin := Fir.Operation) (pin := Fir.Block) (pin := Fir.Region) (pin := Fir.DialectText) (fingerprint := "8847471298669668753")
 *Definitions: the trees of ops, regions and blocks.* The tree of an
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[op]
-with the op instance $`p` holds:
+with the op instance $`\iota` holds:
 
 * the trees of its results;
-* its name $`\mathrm{opname}(p)` and its attributes
-  $`\mathrm{opattrs}(p)`, as the dialect writes them, with the name at
+* its name $`\mathrm{opname}(\iota)` and its attributes
+  $`\mathrm{opattrs}(\iota)`, as the dialect writes them, with the name at
   $`p_0`;
 * each operand at $`p_0`;
 * its successors, the trees of its regions, and its location reference.
@@ -138,11 +138,11 @@ as written is $`\mathrm{tyattr}(T)`.
 :::readable Fir.SOp.erase_eq_tree (fingerprint := "8455489951576911098")
 *Theorem: what an op that erases to an op's tree holds.* For every dialect
 with a text format, if an op as written $`s` erases to the tree of an op
-$`o` with the op instance $`p`, then:
+$`o` with the op instance $`\iota`, then:
 
 * the results of $`s` erase to the trees of the results of $`o`;
-* the name of $`s` is $`\mathrm{opname}(p)`, and its attributes are
-  $`\mathrm{opattrs}(p)`;
+* the name of $`s` is $`\mathrm{opname}(\iota)`, and its attributes are
+  $`\mathrm{opattrs}(\iota)`;
 * the names of the operands of $`s`, without their positions, are the
   operands of $`o`;
 * the successors of $`s` are those of $`o`;

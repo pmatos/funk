@@ -10,15 +10,17 @@ has one for each. The lexer reads the printed text of a module as the
 module's tokens. The grammar reads those tokens, at any positions, as the
 module's tree, up to positions. Decoding gives the module back from any
 tree that erases to its tree. Each step needs only part of what
-well-formedness says, and a well-formed module has all of it. So
-`parse(print(m)) == m` for every well-formed module `m` of every dialect
-whose text is lawful: the parser meets the round trip print then parse.
+well-formedness says, and a well-formed module has all of it. So parsing
+the printed text of a well-formed module gives the module back, for every
+dialect whose text is lawful: the parser meets the round trip print then
+parse.
 
-The second round trip, `print(parse(t)) == t` for every text `t` printed
-from a well-formed module, follows. So does injectivity: two well-formed
-modules that print the same text are the same module. Every valid module
-is well formed, so both hold for valid modules too. The core dialect's text
-is lawful, so all of it holds for the core dialect.
+The second round trip, that printing the module parsed from a text printed
+from a well-formed module gives that text back, follows. So does
+injectivity: two well-formed modules that print the same text are the
+same module. Every valid module is well formed, so both hold for valid
+modules too. The core dialect's text is lawful, so all of it holds for the
+core dialect.
 
 # What a new dialect or a new core op needs
 

@@ -108,9 +108,9 @@ a definition matters only to an error, and there is none.
 :::readable Fir.Text.Defines (pin := Fir.Text.Scope) (fingerprint := "10896383341858368157")
 *Definition: a pass adds definitions.* Let $`\mathit{define}` be a pass,
 which adds to a scope what it reads from some part of a tree, or fails,
-and let $`\mathit{tree}` be a part without positions and $`y^*` a list of
-values with their types. The pass _adds_ $`y^*` for $`\mathit{tree}`
-when, for every part $`a` that erases to $`\mathit{tree}` and every scope
+and let $`\tau` be a part without positions and $`y^*` a list of
+values with their types. The pass _adds_ $`y^*` for $`\tau`
+when, for every part $`a` that erases to $`\tau` and every scope
 $`\mathit{sc}` that holds a list $`L`, if the names of $`L` followed by
 $`y^*` are distinct, then the pass on $`\mathit{sc}` and $`a` succeeds with
 a scope that holds $`L` followed by $`y^*`.
@@ -161,12 +161,12 @@ on the blocks, ops and regions, from the lemmas above.
 *Theorem: every type that a well-formed function defines decodes back.* For
 every dialect with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
-function $`f` and every value $`y : T` of $`\mathrm{defs}(f)`, the values
-that $`f` defines with their types, at any depth,
+function $`f`, and every value $`y : T` of $`\mathrm{defs}(f)`, that is,
+every value that $`f` defines at any depth with its type:
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
 :::
 
-:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "1693793384844509225")
+:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "4990254789688537331")
 *Theorem: the first pass on a well-formed function gives each value its
 type.* For every dialect with
 signatures and a text format, every well-formed function $`f`, parameters

@@ -23,7 +23,7 @@ $`K` succeeds with a result that has $`P`. The proof below uses it to take
 the reader of an item one part at a time.
 :::
 
-:::readable Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (fingerprint := "10566353448406851408")
+:::readable Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "3701847938582390133")
 *Theorem: a function reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], every
 function $`f` such that $`\mathrm{tyattr}(t)` is written as a type for
@@ -37,7 +37,8 @@ before any token, up to positions.
 
 Here $`\mathrm{types}(f)` is every type that the text of $`f` states: its
 result types, and the type of each value it defines, at any depth. The
-tokens after `func` are $`\mathsf{sym}~s`, `(`, the parameters, `)`, then
+tokens after `func` are the {ref "The-fir-specification--Text-format--The-parser"}[token]
+$`\mathsf{sym}~s`, `(`, the parameters, `)`, then
 `->` and the result types when there are any, then `{`, the blocks and
 `}`. At each choice the reader looks at the next token: a value after the
 `(` starts parameters and a `)` means none; a `->` starts result types; and

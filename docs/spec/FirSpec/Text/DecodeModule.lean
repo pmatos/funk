@@ -22,13 +22,13 @@ at a time with it.
 
 :::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "10737967661857746415")
 *Theorem: result types decode back.* For every dialect with a
-{ref "The-fir-specification--Text-format--Grammar"}[text format], every
-decoder $`g` of a type written at a position that is the
-{ref "The-fir-specification--Text-format--Decoding"}[decoder of types],
-and all types as written $`(a_1, q_1), \dots, (a_n, q_n)` and types
+{ref "The-fir-specification--Text-format--Grammar"}[text format], all
+types as written $`(a_1, q_1), \dots, (a_n, q_n)` and types
 $`t_1, \dots, t_n`: if $`a_i = \mathrm{tyattr}(t_i)` and
 $`\mathrm{decodety}(\mathrm{tyattr}(t_i)) = t_i` for each $`i`, then
-decoding each $`(a_i, q_i)` with $`g`, in order, gives $`t_1, \dots, t_n`.
+decoding each $`(a_i, q_i)` with the
+{ref "The-fir-specification--Text-format--Decoding"}[decoder of types], in
+order, gives $`t_1, \dots, t_n`.
 :::
 
 :::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "11330118856080397004")
@@ -74,7 +74,8 @@ the tree of $`m`, decoding $`s` gives $`m`:
 
 $$`\begin{aligned} & \mathrm{erase}(s) = \mathrm{tree}(m) \implies \\ & \quad \mathrm{decodemodule}(s) = \mathsf{ok}(m) \end{aligned}`
 
-This is the third step of the round trip. Decoding reads positions only to
+Here $`\mathrm{decodemodule}` is the decoder of a module. This is the
+third step of the round trip. Decoding reads positions only to
 report errors, and on such a tree it reports none, so the positions of
 $`s` do not matter.
 :::

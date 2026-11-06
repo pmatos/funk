@@ -7,7 +7,7 @@ The parser reads a text in three steps: the lexer reads it as tokens, the
 grammar reads the tokens as a tree, and decoding turns the tree into a
 module. The proof that parsing the printed text of a well-formed module
 gives the module back has one step for each, and this section and the
-eleven after it give the last two:
+eleven after it give the last two, and put all three together:
 
 * Lexing printed text, in the sections before this one, reads the printed
   text of a module as exactly the module's tokens, then `eof`.

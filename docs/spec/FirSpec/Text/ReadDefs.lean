@@ -30,7 +30,10 @@ of $`x : T` before any token but `(`, up to positions.
 *Theorem: a definition reads back.* For every dialect with a text format
 and every definition $`x : T` such that $`\mathrm{tyattr}(T)` is written as
 a type, the reader of a definition reads its tokens,
-$`\mathsf{value}~x~\texttt{:}~\mathrm{tokens}(\mathrm{tyattr}(T))`, as the
+$`\mathsf{value}~x~\texttt{:}~\mathrm{tokens}(\mathrm{tyattr}(T))`
+(written as in the
+{ref "The-fir-specification--Text-format--The-parser"}[parser]),
+as the
 tree of $`x : T` before any token but `(`, up to positions. A `(` after the
 type would apply a type that is a word.
 :::

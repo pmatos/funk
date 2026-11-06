@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::readable Fir.readItems_reads (pin := Fir.Text.readItems) (pin := Fir.Item.tokens) (fingerprint := "11048211213210926204")
+:::readable Fir.readItems_reads (pin := Fir.Text.readItems) (pin := Fir.Item.tokens) (pin := Fir.Func.types) (fingerprint := "2526066823815534157")
 *Theorem: a module's items read back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format] and every
 list of items such that, for the function $`f` of each item,
@@ -34,7 +34,8 @@ module $`m` such that:
 
 * for each function $`f` of $`m` and each type $`t` of
   $`\mathrm{types}(f)`, $`\mathrm{tyattr}(t)` is written as a type, and
-* the location table of $`m` is within the limits,
+* the location table of $`m` is
+  {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits],
 
 on any tokens that hold the
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[tokens of $`m`]
@@ -45,9 +46,11 @@ to the tree of $`m`:
 
 $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof} \implies \\ & \exists\, s.\ \mathrm{readmodule}(\mathit{ts}) = \mathsf{ok}(s) \\ & \quad \wedge\ \mathrm{erase}(s) = \mathrm{tree}(m) \end{aligned}`
 
-This is the second step of the round trip. It asks of the module only what
-the readers check: the readers of types and of lines and columns are the
-only ones that reject a token of the right kind.
+Here $`\mathrm{readmodule}` is the reader of a module. This is the second
+step of the round trip. Of all the readers, only the readers of types and
+of lines and columns reject a token of the right kind, and the two
+conditions cover them. Being within limits also bounds the location
+references, which no reader checks.
 :::
 
 :::readable Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (fingerprint := "12684728694162639599")
@@ -57,7 +60,8 @@ with signatures and a text format, every
 module $`m` and all tokens $`\mathit{ts}` that hold the tokens of $`m` and
 then $`\mathsf{eof}`, at any positions, the reader of a module gives a tree
 that erases to the tree of $`m`. A well-formed module writes each type as a
-type, and its location table is within the limits.
+type, and its location table is
+{ref "The-fir-specification--Abstract-syntax--Locations"}[within limits].
 :::
 
 :::readable Fir.Module.WellFormed.read_print (pin := Fir.Text.lex) (pin := Fir.Module.print) (fingerprint := "10943986515388161621")

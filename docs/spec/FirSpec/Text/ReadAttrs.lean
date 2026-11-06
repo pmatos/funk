@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The grammar step: readable blocks" =>
 
-:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (fingerprint := "3025326747254618080")
+:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "13801516949283659392")
 *Definition: a reader reads tokens back.* A
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader]
 takes a list of tokens, each with its position, and gives what it read and
@@ -33,6 +33,14 @@ their positions, $`\mathrm{first}(v)` the first token of $`v`, $`a` what
 the reader read and $`r` the tokens it left. As in the
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[tokens of a construct],
 $`u~v` is $`u` followed by $`v`.
+
+Tokens are written as in the
+{ref "The-fir-specification--Text-format--The-parser"}[parser]:
+$`\mathsf{value}~x` is the value `%x`, $`\mathsf{label}~\ell` the label `^ℓ`,
+$`\mathsf{sym}~s` a symbol, $`\mathsf{locref}~r` the location reference
+`@r`, $`\mathsf{word}~w` a word and $`\mathsf{int}~n` an integer. A
+punctuation token, such as `(` or `=`, is written as itself, and
+$`\mathsf{eof}` stands for the end of the text.
 
 The positions are any, so what the reader reads holds positions that the
 statement cannot know: $`f` is almost always $`\mathrm{erase}`, from the
@@ -63,17 +71,19 @@ the first token of $`u~v`, if any.
 :::
 
 :::readable Fir.Text.expect_cons (pin := Fir.Text.expect) (fingerprint := "16554779249017004235")
-*Theorem: the reader of one token reads it.* For every token $`t`, reason
-and position, the reader that expects $`t` reads $`t` at the front of any
-tokens and leaves the tokens after it.
+*Theorem: the reader of one token reads it.* For every token $`t`, the
+reader that expects $`t`, whatever reason and position it would report on
+a mismatch, reads $`t` at the front of any tokens and leaves the tokens
+after it.
 :::
 
 :::readable Fir.Text.Reads.more (pin := Fir.Text.readMore) (fingerprint := "9589081820413550885")
 *Theorem: the rest of a list reads back when each element does.* Let $`\mathit{item}` be a reader,
 and $`S` and $`S'` sets of tokens such that the comma is in $`S`, and every
 token of $`S'` is in $`S` and is not a comma. For every list
-$`x_1, \dots, x_n`, if $`\mathit{item}` reads the tokens $`u_i` as
-$`g(x_i)` before $`S` for each $`i`, up to $`f`, then the
+$`x_1, \dots, x_n`, every map $`g`, and tokens $`u_i` written for each
+$`x_i`: if $`\mathit{item}` reads $`u_i` as $`g(x_i)` before $`S`, up to
+$`f`, for each $`i`, then the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of the rest of a list]
 built on $`\mathit{item}` reads $`\texttt{,}~u_1~\dots~\texttt{,}~u_n` as
 $`g(x_1), \dots, g(x_n)` before $`S'`, up to $`f` on each element.
@@ -129,7 +139,8 @@ up to positions:
 
 $$`\mathrm{reads}_{\mathrm{erase}}(\mathrm{readtype}, \mathrm{tokens}(a), (a, p_0), \overline{\texttt{(}})`
 
-Here $`\overline{\texttt{(}}` is the set of every token but `(`, and
+Here $`\mathrm{readtype}` is the reader of a type,
+$`\overline{\texttt{(}}` is the set of every token but `(`, and
 $`p_0` the empty position. The reader of a type takes only a word or an
 applied word, so the condition on $`a` is needed.
 :::

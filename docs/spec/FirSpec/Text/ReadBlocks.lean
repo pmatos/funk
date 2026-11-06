@@ -38,7 +38,8 @@ of blocks as their trees before `}`, up to positions:
   and the reader of blocks reads the tokens of $`b^*` as their trees before
   `}`.
 
-A block's tokens are $`\mathsf{label}~\ell`, then its arguments in
+A block's tokens are the {ref "The-fir-specification--Text-format--The-parser"}[token]
+$`\mathsf{label}~\ell`, then its arguments in
 parentheses when it has any, then `:`, then its ops. Its ops end at the
 label of the next block, or at the `}` after the last.
 :::
