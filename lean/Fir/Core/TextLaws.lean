@@ -4,25 +4,30 @@ import Fir.Core.Validation
 import Fir.Text.RoundTrip
 
 /-!
-The core dialect meets the seven laws of `LawfulDialectText`, for all 25 of
-its ops and every type. The laws are proved for every op instance, valid or
-not: every width, `0` included, every predicate, every combination of
-flags, `true` and `false` at `i1`, and `ret` and `call` with any number of
-operands and results. A type reads back from how it is written, and is
-written as a type, for every valid type, `i1` to `i16777215`, as the class
-asks; and every type that reads back is written as it was read.
+The core dialect's text is lawful: it meets the seven laws of a lawful
+text, for all 25 of its ops and every type. The laws are proved for every
+op instance, valid or not: every width, `0` included, every predicate, every
+combination of flags, `true` and `false` at `i1`, and `ret` and `call` with
+any number of operands and results. A type reads back from how it is
+written, and is written as a type, for every valid type, `i1` to
+`i16777215`, as the laws ask; and every type that reads back is written as
+it was read.
 
-With the laws, `validIsWellFormed` gives `ValidIsWellFormed` for the core
-dialect: every valid core module is well formed, so it can be written and
-read back. With the round trip, `Core.printThenParse`, it follows that two
-different valid core modules never print the same text (`Core.print_injective`).
+With the laws, every valid core module is well formed, by the last theorem
+of the previous section, so it can be written and read back. With the round
+trip, proved later in this chapter, it follows that two different valid
+core modules never print the same text.
 
-The round trip, `printThenParse`, covers every dialect whose text is lawful
-at once, and uses nothing of a dialect but these laws. So a change to the
-core op set, such as a new op or a new flag, extends the proof below, case
-by case, and does not rework the proof of `PrintThenParse`; the section
-"What a new dialect or a new core op needs", beside `printThenParse` in
-"The round trip, proved", says how the round trip extends.
+The round trip covers every dialect whose text is lawful at once, and uses
+nothing of a dialect but these laws. So a change to the core op set, such as
+a new op or a new flag, extends the proofs below, case by case, and does not
+rework the proof of the round trip; the part "What a new dialect or a new core
+op needs" of the section "The round trip, proved", later in this chapter,
+says how the round trip extends.
+
+This section proves, in order: facts about attributes; that each op instance
+reads back from its spelling, and only from it; the same for types; that
+ops and types are written as tokens; and the laws.
 -/
 
 namespace Fir.Core
