@@ -62,7 +62,7 @@ ub   \mathsf{ub}~\mathit{reason}
 ```
 :::
 
-:::readable Fir.SetM (fingerprint := "15663224179749922145")
+:::readable Fir.SetM (pin := Fir.SetM.instMonad) (pin := Fir.SetM.instMonadChoice) (pin := Fir.SetM.instMonadUB) (fingerprint := "1177755487130324875")
 *Definition: the set monad.* $`\mathsf{freeze}` of poison may choose any value,
 so one function on one input can run in many ways. The interpreter
 computes all of them at once by reading each computation as the set of
@@ -73,10 +73,10 @@ interpreter runs in it to compute a function's behaviour.
 The ways to build computations read as follows. A computation that ends
 at once with $`a` is the set $`\{\mathsf{ok}~a\}`. To run $`x`, then run
 $`g` on the value that $`x` ends with, written
-$`x \mathbin{>\!\!>\!\!=} g`, collects every way $`g\,a` may end for each
+$`x \mathbin{>\!\!>\!\!=} g`, collects every way $`g(a)` may end for each
 value $`a` that $`x` may end with, and every UB of $`x`:
 
-$$`\begin{aligned} x \mathbin{>\!\!>\!\!=} g = {} & \{ e \mid \exists a.\ \mathsf{ok}~a \in x \,\wedge\, e \in g\,a \} \\ \cup {} & \{ \mathsf{ub}~r \mid \mathsf{ub}~r \in x \} \end{aligned}`
+$$`\begin{aligned} x \mathbin{>\!\!>\!\!=} g = {} & \{ e \mid \exists a.\ \mathsf{ok}~a \in x \,\wedge\, e \in g(a) \} \\ \cup {} & \{ \mathsf{ub}~r \mid \mathsf{ub}~r \in x \} \end{aligned}`
 
 The two effects of the core dialect are
 
@@ -93,9 +93,9 @@ follows it never runs.
 reaches a case that validation rules out, such as a use of a value that
 was never defined, or an operand of the wrong type. It carries a reason,
 for people. A stuck path is neither an outcome nor UB: `fir-ref` reports
-it as stuck, and the obligations of the
+it as stuck. The obligations of the
 {ref "The-fir-specification--Execution--Fuel-and-progress"}[next section]
-show that a valid module never gets stuck.
+state that a valid module never gets stuck, and later sections prove it.
 :::
 
 :::readable Fir.Run (fingerprint := "13360745407864905462")
@@ -114,14 +114,19 @@ the interpreter computes.
 
 :::readable Fir.Run.outcomes Fir.Run.IsStuck (fingerprint := "6991509419242234263")
 *Definition: the outcomes of a run, and a stuck run.* The outcomes
-$`\mathrm{out}(R)` of a run $`R` at one budget are the ends of its paths
-that are outcomes: for each outcome $`t`, a return, UB or running out of
-fuel,
+$`\mathrm{out}(R)` of a run $`R` at one budget are the ends of its paths,
+as in the previous definition, with the stuck ends left out: a return, UB
+or running out of fuel is an outcome of $`R` when some path of $`R` ends
+with it.
 
-$$`t \in \mathrm{out}(R) \iff t \in R`
+$$`\begin{aligned} \mathsf{ret}~o \in \mathrm{out}(R) & \iff \mathsf{ret}~o \in R \\ \mathsf{ub}~r \in \mathrm{out}(R) & \iff \mathsf{ub}~r \in R \end{aligned}`
 
-A stuck path is not an outcome. The run is _stuck_ when some path of it
-ends stuck: $`\exists s.\ \mathsf{stuck}~s \in R`.
+$$`\begin{aligned} & \mathsf{fuel\_exhausted} \in \mathrm{out}(R) \\ \iff\ & \mathsf{fuel\_exhausted} \in R \end{aligned}`
+
+No outcome comes from a path that ends $`\mathsf{stuck}~s`. The run is
+_stuck_ when some path of it ends stuck: $`\exists s.\ \mathsf{stuck}~s \in R`.
+Outcomes and stuck are kept apart so that refinement compares only
+outcomes, while a stuck run is reported on its own.
 :::
 
 :::readable Fir.Behaviour (fingerprint := "8033448681392590586")

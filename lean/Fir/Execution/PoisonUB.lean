@@ -109,9 +109,9 @@ interpreter models `freeze` of poison as a choice.
 `select %c, %a, %b` is a value, while `cond_br %c, ^a, ^b` is a jump. So a
 poison condition gives poison in a `select`, which can be computed early
 like any other value, and immediate UB in a `cond_br`. This asymmetry makes
-some rewrites sound in one direction only. Each of the two below is
-forbidden: the Lean tests of comparison and selection check the `and`
-rewrite, and those of branches the `cond_br` one.
+some rewrites sound in one direction only. In each of the two cases below,
+one direction of the rewrite is forbidden: the Lean tests of comparison and
+selection check the `and` rewrite, and those of branches the `cond_br` one.
 
 * _A `select` becomes a branch only with its condition frozen._ Turning a
   `cond_br` and its two arms into a `select` is sound: where the source

@@ -18,13 +18,9 @@ class_, so that a dialect added for new hardware states it too
   block arguments or return them, and calls.
 
 An op that propagates poison carries a proof obligation, stated over its
-semantics in the set monad. It has two clauses:
-
-* _Poison out._ From an operand vector that holds a poison, every result
-  vector the op returns holds only poison.
-* _UB only by the op's own rules._ If the op may hit UB on an operand vector
-  that holds a poison, it may also hit UB on some operand vector that puts a
-  defined value in place of each poison and agrees with it everywhere else.
+semantics in the set monad and defined below. It has two clauses: _poison
+out_, a poison operand gives only poison results, and _UB only by the op's
+own rules_.
 
 The second clause is LLVM's principle for poison and UB (LangRef, "Poison
 Values"; Alive2 agrees): a poison operand is immediate UB wherever some value
@@ -111,27 +107,16 @@ structure PropagatesPoison (op : d.Op) : Prop where
 /-!
 # More obligations
 
-Two more obligations hold for every op that runs by its own rule,
-whatever its poison class, and a third for every op that propagates
-poison.
+Three more obligations: totality and monotonicity for every op that runs
+by its own rule, whatever its poison class, and, between them, a result on
+defined operands for every op that propagates poison. Each is defined
+below, with why it is needed.
 
-* _Totality._ On every operand vector, an op that is not a terminator has
-  some outcome: a result or UB. So does the exit of a terminator. An op
-  whose semantics maps a case to the empty set would drop that path from
-  every run that reaches it, and a run with fewer outcomes refines more
-  sources.
-* _A result on defined operands._ An op that propagates poison returns a
-  result on some operand vector with no poison. Without it, an op that is
-  UB on every operand vector, the defined ones included, would meet the
-  poison clauses: for it, UB is the op's own rule, so UB on a poison
-  operand is too. Exceptions are exempt, so an exception that is always
-  UB, such as a future `unreachable`, stays allowed.
-* _Monotonicity._ Refining the operands refines what the op does. If each
-  operand of one vector refines the one of another, a poison being refined
-  by any value, then every way the op may end on the first is allowed by
-  some way it may end on the second. As for behaviours, UB allows anything,
-  and a result vector is allowed by one that it refines position by
-  position. Where a terminator goes refines only by being the same.
+* _Totality_: on every operand vector, the op has some outcome.
+* _A result on defined operands_: the op returns a result on some operand
+  vector with no poison. Exceptions are exempt, so an exception that is
+  always UB, such as a future `unreachable`, stays allowed.
+* _Monotonicity_: refining the operands refines what the op does.
 
 Totality and monotonicity look only at what runs: the meaning of an op that
 is not a terminator, and the exit of a terminator. So they cover only the

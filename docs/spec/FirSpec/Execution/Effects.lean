@@ -63,8 +63,11 @@ $`r_1, \dots, r_k`, as its
   immediate UB. The interpreter runs an op that is not a terminator by it.
 * $`\mathrm{exit}_o(v_1, \dots, v_n)` is a computation that ends with an
   $`\mathit{exit}`: where control goes. The interpreter runs a terminator
-  by it. The values passed to a successor are its successor arguments, and
-  a return returns the terminator's operands.
+  by it. On $`\mathsf{goto}~i`, the values passed to the target block are
+  the ones the terminator lists for its successor $`i`, one for each
+  argument of that block
+  ({ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors]);
+  on $`\mathsf{ret}`, the function returns the terminator's operands.
 
 The interpreter gives an op only values of its operand types. It checks
 each operand's type before it runs the op, and the path is

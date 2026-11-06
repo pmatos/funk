@@ -53,10 +53,12 @@ $`\mathrel{R}` between two values of one type:
 *Theorem: a relation that holds of every value with itself holds of every
 vector with itself, position by position.* If $`x \mathrel{R} x` for every
 value $`x`, then $`\vec{v}` and $`\vec{v}` are related by $`\mathrel{R}`
-position by position, for every vector $`\vec{v}`.
+position by position, for every vector $`\vec{v}`. The proofs of
+monotonicity, below, use it to show that a vector of results refines
+itself, as for $`\mathsf{const}`, which has no operands.
 :::
 
-:::readable Fir.HVector.IsFilledBy Fir.PoisonOut Fir.UBByOwnRules Fir.PropagatesPoison (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "10196239734673711012")
+:::readable Fir.HVector.IsFilledBy Fir.PoisonOut Fir.UBByOwnRules Fir.PropagatesPoison (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.Forall₂) (fingerprint := "5327225852687059508")
 *Definition: the obligation of an op that propagates poison.* Below,
 $`\mathrm{denote}_o(\vec{v})` is the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[meaning]
@@ -105,7 +107,8 @@ for a single op instead of a whole run.
 
 *Theorem: a computation refines itself when the relation is reflexive.* If
 $`a \mathrel{R} a` for every $`a`, then every computation $`x` refines
-$`x` by $`\mathrel{R}`.
+$`x` by $`\mathrel{R}`. Monotonicity, below, comes down to this for an op
+with no operands, whose only operand vector is the empty one.
 :::
 
 :::readable Fir.OpTotal (fingerprint := "146139999336173069")
@@ -119,7 +122,7 @@ every run that reaches it, and a run with fewer outcomes refines more
 sources.
 :::
 
-:::readable Fir.ReturnsOnDefined (fingerprint := "3148575808058836725")
+:::readable Fir.ReturnsOnDefined (pin := Fir.HVector.Any) (fingerprint := "9248791201291918091")
 *Definition: a result on defined operands.* An op $`o` _returns a result on
 defined operands_ when some operand vector $`\vec{v}` with no poison
 element has a result: $`\mathsf{ok}~\vec{w} \in \mathrm{denote}_o(\vec{v})`
@@ -158,12 +161,12 @@ A lawful dialect meets five clauses:
 
 * a poison value of a valid type is {ref "The-fir-specification--Execution--Values-and-refinement"}[refined] by every value of that
   type;
-* every valid op instance $`o` with
-  $`\mathrm{class}(o) = \mathsf{propagates}` propagates poison,
-* and returns a result on defined operands;
-* every valid op instance $`o` that runs by its own rule, that is, a
-  terminator, or an op with no callee, is total,
-* and monotone.
+* every valid op instance $`o` whose class is $`\mathsf{propagates}`
+  propagates poison;
+* every such instance returns a result on defined operands;
+* every valid op instance that runs by its own rule, that is, a
+  terminator, or an op with no callee, is total;
+* every such instance is monotone.
 
 An op with a callee is left out of the last two: it runs its callee, never
 a rule of its own, and its counterparts hold at function level. An

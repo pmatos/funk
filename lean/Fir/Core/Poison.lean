@@ -50,11 +50,13 @@ congruence in the callee: replacing a callee's body refines every caller
 when the callee, run in the new module, refines the old one.
 
 Below, the poison class of each core op, and which core values are poison.
-Then, for every semantics, a poison core value is refined by every value
-of its type, and `const` and `poison` meet their poison clauses and are
-monotone. Their totality and their results on defined operands follow from
-their rules, with the obligations of `add` and `ret`, in the sections after
-the interpreter.
+Then a poison core value is refined by every value of its type. Last,
+`const` and `poison` meet their poison clauses and are monotone whatever
+the core ops mean: the meaning of the core ops, their execution rules, is
+given after the interpreter, and these theorems take it as a parameter.
+Their totality and their results on defined operands follow from their
+rules, with the obligations of `add` and `ret`, in the sections after the
+interpreter.
 -/
 
 namespace Fir.Core

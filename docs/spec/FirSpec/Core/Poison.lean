@@ -54,6 +54,13 @@ and value $`c`, the ops $`\mathsf{const}_w~c` and $`\mathsf{poison}_w`
 propagate poison, and are {ref "The-fir-specification--Execution--Poison-classes"}[monotone], under any meaning that the
 core ops are given.
 
+The meaning of the core ops is given separately, by their execution rules
+in the sections after the interpreter. The theorems here take it as a
+parameter, so they hold for fir's meaning, and also for the candidate
+meanings that the
+{ref "The-fir-specification--Execution--Semantics-the-obligations-reject"}[next section]
+rejects.
+
 Neither op has operands. So no operand vector holds a poison, and both
 clauses of propagation hold with nothing to check. And the only operand
 vector is the empty one, which only refines itself, so monotonicity asks

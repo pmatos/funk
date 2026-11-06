@@ -77,6 +77,15 @@ instance : MonadUB SetM where
 
 end SetM
 
+/-!
+Execution gives valid modules their meaning, but `fir-ref run` also runs
+modules that have not been validated. So a path of a run can also end
+_stuck_, defined below. A valid module never gets stuck
+(ADR-2026-10-29-2030): no path of its runs is stuck, and they have an
+outcome at every budget. These are the no-stuck and progress obligations of
+the next section.
+-/
+
 /-- Why a path of a run is stuck: it reached a case that validation rules
 out. The reason is for people. -/
 structure Stuck where
@@ -121,18 +130,6 @@ exhaust every budget has one infinite sequence of choices along which it
 never ends. The core dialect's one choice, a choice of _w_ bits, has 2 to
 the power _w_ options. An effect that a dialect adds must keep this
 assumption, or come with its own definition of divergence.
-
-Execution gives valid modules their meaning, but `fir-ref run` also runs
-modules that have not been validated. So each path of a run ends with a
-result, with UB, or _stuck_, when it reaches a case that validation rules
-out, such as an undefined value or an operand of the wrong type. Stuck is part of each
-path, not a layer around the whole set, because which paths get stuck can
-depend on choices: in a module that has not been validated, `freeze` and
-then `cond_br` can lead to a block that uses an undefined value on one path
-only. A stuck path is not an outcome, and never UB; `fir-ref` reports it as
-stuck. A valid module never gets stuck (ADR-2026-10-29-2030): no path of
-its runs is stuck, and they have an outcome at every budget. These are the
-no-stuck and progress obligations of the next section.
 -/
 
 /-- A behaviour: a set of outcomes. -/

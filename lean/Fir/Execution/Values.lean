@@ -32,13 +32,10 @@ inductive PoisonOr (α : Type) where
 /-!
 # Refinement
 
-Refinement is fir's correctness relation (ADR-2026-10-29-2008): a target
-is correct for a source when each of its observable behaviours is allowed by
-the source. The relation is written _a_ ⊑ _b_, read "_a_ is refined by _b_":
-_b_ does nothing that _a_ does not allow. It is defined level by level:
-values and lists of values here, then outcomes, behaviours and functions in
-the section on refinement. Each level is defined from the one below it, in
-the same shape as LeanMLIR's refinement (ADR-2026-10-29-2030).
+Refinement is fir's correctness relation (ADR-2026-10-29-2008), defined
+below for values and lists of values, and in the section on refinement for
+whole functions. Each level is defined from the one below it, in the same
+shape as LeanMLIR's refinement (ADR-2026-10-29-2030).
 -/
 
 /-- Heterogeneous refinement: `a ⊑ b` says that `b` refines `a`. -/

@@ -5,40 +5,32 @@ import Fir.Execution.Behaviour
 
 Three obligations tie the interpreter's runs to the behaviours above. The
 run of each function of a module, on each argument vector of its parameter
-types, is defined in the section on the runs of a function. All three
-obligations hold for every function of every valid core module, on every
-argument vector, calls, recursion, branches and loops included. The
+types, is defined in the section "The runs of a function, and fuel
+monotonicity". All three obligations hold for every function of every
+valid core module, on every argument vector, calls, recursion, branches
+and loops included. The
 section on core functions without calls proves them for a function with no
 `call` op, and the section on core functions with calls for all of them.
 
-* _Fuel monotonicity._ More fuel never changes how a run that returns or
-  hits UB ends. A return or UB that a run reaches at some budget, it
-  reaches at every larger budget. One that it reaches at a larger budget,
-  it reaches at a smaller one too, unless it can run out of fuel there.
-  Then the observable behaviour does not depend on how the interpreter
-  counts fuel, and refinement between two functions does not depend on how
-  many steps each takes.
-* _Progress._ At every budget, a run has some outcome. An empty behaviour
-  refines every source (see the next section), so a run with no outcome at
-  all would pass for a correct one. Progress rules out only that: a run
-  that has an outcome on one path may still lose others.
-* _No stuck path._ No path of a run is stuck, at any budget. Which paths
-  get stuck can depend on choices, so a run could be stuck on some paths
-  and have outcomes on others. Those paths would be missing from its
-  behaviour, and a behaviour with fewer outcomes refines more sources. With
-  this obligation, with every op that runs by its own rule total (the
-  totality obligation, in the section on poison classes), and with an
-  interpreter whose own steps never drop a path, as the section on the
-  interpreter explains, every path of a valid function's run ends in an
-  outcome.
+* _Fuel monotonicity_: more fuel never changes how a run that returns or
+  hits UB ends.
+* _Progress_: at every budget, a run has some outcome.
+* _No stuck path_: no path of a run is stuck, at any budget.
+
+Each is defined below, with why it is needed. With no stuck path, with
+every op that runs by its own rule total (the totality obligation, in the
+section on poison classes), and with an interpreter whose own steps never
+drop a path, as the section on the interpreter explains, every path of a
+valid function's run ends in an outcome.
 
 The proofs are general. Fuel monotonicity holds for every function of every
 module, of every dialect, calls included, whatever its ops do (the section
-on the runs of a function, and fuel monotonicity): only the interpreter
+"The runs of a function, and fuel monotonicity"): only the interpreter
 counts fuel, and a callee gives back to its caller the steps it leaves
-(ADR-2026-11-02-0836). Of a function that reaches an op without rules it
-holds only vacuously on the paths that reach the op, and says nothing of
-how such a function behaves (ADR-2026-10-30-1855).
+(ADR-2026-11-02-0836). For a function that reaches an op to which its
+dialect gives no execution rule (ADR-2026-10-30-1855), fuel monotonicity
+holds only vacuously on the paths that reach that op, and says nothing
+about how the function behaves there.
 
 Progress and the no-stuck obligation hold for every valid function that
 runs within itself: no op calls a function, a terminator that jumps names

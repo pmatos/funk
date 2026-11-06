@@ -84,7 +84,8 @@ $$`(t, v) \sqsubseteq (t', v') \iff t = t' \,\wedge\, v \sqsubseteq_t v'`
 *Theorem: typed values refine transitively when values do.* If, for every
 type $`t`, $`\sqsubseteq_t` is transitive, then so is the refinement of
 typed values: $`x \sqsubseteq y` and $`y \sqsubseteq z` give
-$`x \sqsubseteq z`.
+$`x \sqsubseteq z`. With the theorem on lists below, it makes the
+refinement of what a function returns transitive.
 :::
 
 :::readable Fir.List.IsRefinedBy Fir.List.isRefinedBy_trans (fingerprint := "15616140829063086083")
@@ -97,9 +98,12 @@ A function returns a list of values, so this is how what it returns is
 compared.
 
 *Theorem: lists refine transitively when their elements do.* If the
-refinement of elements is transitive, then $`as \sqsubseteq bs` and
-$`bs \sqsubseteq cs` give $`as \sqsubseteq cs`, for lists of one kind of
-element.
+refinement of elements is transitive, then
+$`[a_1, \dots, a_n] \sqsubseteq [b_1, \dots, b_n]` and
+$`[b_1, \dots, b_n] \sqsubseteq [c_1, \dots, c_n]` give
+$`[a_1, \dots, a_n] \sqsubseteq [c_1, \dots, c_n]`, for lists of one kind
+of element. This is what makes refinement of returned lists, and so of a
+pipeline of passes, transitive.
 :::
 
 :::readable Fir.PoisonOr.poison_isRefinedBy Fir.PoisonOr.isRefinedBy_refl Fir.PoisonOr.isRefinedBy_trans (fingerprint := "5762587255094126963")
