@@ -156,6 +156,7 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os hf hops henv e' he'
+    classical
     by_cases hgood : Ev.NotStuck e' ∧ e' ≠ .ok (.ok .fuelExhausted)
     case neg => exact Allowed.of_not hgood
     obtain ⟨hne, hexh⟩ := hgood

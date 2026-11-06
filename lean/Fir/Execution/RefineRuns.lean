@@ -79,6 +79,7 @@ theorem Func.runs_isRefinedBy_of_calls {M M' : Module d}
       henv _ hx
     exact ⟨.ub r, ⟨N, Func.runs_of_runOps hen h⟩, trivial⟩
   | .fuelExhausted, ht =>
+    classical
     by_cases hU : ∃ N r, (f.runs M a N).outcomes (.ub r)
     · obtain ⟨N, r, h⟩ := hU
       exact ⟨.ub r, ⟨N, h⟩, trivial⟩
