@@ -5,13 +5,13 @@ import Fir.Text.LexPrint
 
 The printer writes every op on a line of its own, and every block, region,
 item and the location table end with a line feed or a `}`. So each of them
-is read before whatever follows it (`SpellsAny`), and a module is read
-piece by piece, from its first item to the end of its location table.
+is read before whatever follows it, and a module is read piece by piece,
+from its first item to the end of its location table.
 
-The result is `lex_print`: for every module whose tokens can be written,
-the lexer reads its printed text as exactly `Module.tokens`, then `eof`,
-positions aside. The grammar step of #11 starts from there: it reads
-`Module.tokens`, at any positions, with `readModule`.
+The result is the last theorem below: for every module whose tokens can be
+written, the lexer reads its printed text as exactly the module's tokens,
+then the end of the text, positions aside. The grammar step of the parser
+starts from there: it reads those tokens, at any positions.
 -/
 
 namespace Fir
