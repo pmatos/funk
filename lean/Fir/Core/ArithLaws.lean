@@ -4,21 +4,34 @@ import Fir.Core.Poison
 /-!
 # Constants are lawful
 
-`const` meets the obligations of the poison classes section, for the core
-dialect's semantics. It propagates poison (ADR-2026-10-30-0818), so it meets
-the poison clauses, returns a result on some operands with no poison, and is
-total and monotone. `const` meets its poison clauses and is monotone whatever
-its semantics, as the core poison classes section proves; its rule gives the
-rest.
+This section and the eight after it prove that each core op meets its
+_obligations_: the conditions that the poison classes section asks of every
+valid op of a lawful dialect. An op that propagates poison must give only poison
+when an operand is poison, may be UB on a poison operand only where some
+value in its place would be UB too, and must return a result on some
+operands with no poison. Every op that runs by a rule of its own, which is
+every core op but `call`, must also be total, with some outcome on every
+operand vector, and monotone, so that refining its operands refines what it
+does. With every obligation met, the core dialect is lawful, and refinement
+is compositional: run on arguments that refine others, every function's
+behaviour refines its behaviour on those others, calls and recursion
+included, as the section on refinement through core calls proves. Each
+proof is about fir's execution rules, read in the set monad.
+
+`const` propagates poison (ADR-2026-10-30-0818). The core poison classes
+section proves that it meets its poison clauses and is monotone whatever
+its semantics. Below, its rule gives the rest: it returns a result on
+operands with no poison, and it is total.
 
 `poison` meets them the same way (ADR-2026-11-03-1615). Its one operand
 vector is the empty one, which holds no poison, and on it `poison` returns
 its result, the poison of its type: a result on defined operands, which is
 all that obligation asks, and an outcome, which is all that totality asks.
 
-The sum without flags gives poison on a poison operand, and on operands
-that refine others it gives a sum that refines theirs. The next section
-proves `add`, with and without its flags, lawful, with `sub` and `mul`.
+Last, two facts of the sum without flags: it gives poison on a poison
+operand, and on operands that refine others it gives a sum that refines
+theirs. The next section proves `add`, with and without its flags, lawful,
+with `sub` and `mul`.
 -/
 
 namespace Fir.Core

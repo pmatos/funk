@@ -7,11 +7,13 @@ The interpreter is written once, for any monad. Its meaning is the run in
 the set monad, but `fir-ref` cannot compute a set: it runs the interpreter
 in a monad whose computations it can walk (ADR-2026-10-29-2017). This
 section ties the two. A _monad morphism_ maps the computations of one monad
-to those of another, and keeps `pure`, `bind` and `map`. When it maps each
-op's computation in the first monad to the op's computation in the second,
-it maps the interpreter's run in the first to its run in the second. The
-interpreter is written against an abstract monad, so it cannot tell the two
-apart: this is the theorem `Func.run_map`.
+to those of another, and keeps the steps that runs are built from: ending
+at once with a value, running one computation then another, and applying
+a function to a result. When it maps each op's computation in the first
+monad to the op's computation in the second, it maps the interpreter's run
+in the first to its run in the second. The interpreter is written against
+an abstract monad, so it cannot tell the two apart: this is the last
+theorem below.
 
 `fir-ref`'s exhaustive, scripted and sampled modes rely on it: they run
 the interpreter in the tree of choices of the next section, and the morphism
