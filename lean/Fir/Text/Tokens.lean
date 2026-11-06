@@ -3,24 +3,36 @@ import Fir.Text.Lex
 /-!
 # The tokens of a printed module
 
-The proof that parsing a printed module gives the module back (#11) follows
-the parser's three steps. Its first step is about the lexer: the printer
-writes a module as a list of tokens, each in its one spelling, with
-whitespace between them, and the lexer reads exactly those tokens back.
-This section gives that list. The sections after it prove that the lexer
-reads it back (`lex_print`) for every module whose tokens can be written,
-so for every well-formed and every valid module. The grammar step reads the
-list, and only it, into a syntax tree.
+This part proves that the lexer reads back what the printer writes: for
+every module whose tokens can all be written, lexing its printed text gives
+exactly its tokens, then the end of the text. It is the first step of the
+proof that parsing a printed module gives the module back, which follows
+the parser's three steps. With it, the rest of that proof deals with a list
+of tokens, never with characters, spaces or line feeds: the grammar step
+reads that list, and only it, into a syntax tree.
 
-Each token has one spelling, `Tok.spell`, the one that the printer writes.
-A token can be written when its name or word is one (`Tok.Writable`): a
-value name or a label is a name, a word is a word, and a location reference
-is below `2^32`. Every symbol, integer and string can be written. The end of
-the text, `eof`, is no token of the printed text: the lexer adds it.
+The part goes in eight steps, one section each:
 
-The tokens of each construct are listed in the order that the printer
-writes them, function by function: `Attr.tokens` for `Attr.print`,
-`Operation.tokens` for `Operation.print`, and so on up to `Module.tokens`.
+* this section gives the one spelling of each token, which tokens can be
+  written, and the tokens of every construct, in the order that the printer
+  writes them;
+* digits and their values: the lexer reads back the decimal and
+  hexadecimal digits that the printer writes for a number;
+* maximal munch: a token is read back whole from its spelling, whatever
+  follows it, as long as what follows does not start with a name character;
+* escapes and quoted symbols: strings and symbols are read back with their
+  escapes, so every token that can be written is read back from its
+  spelling;
+* spaces, line feeds and lists: the lexer drops the printer's layout, and
+  reads a list element by element;
+* attributes, locations and names: each of these, printed, is read back as
+  its tokens;
+* ops, functions and the module: so is each larger construct, and so the
+  whole module, which is the result;
+* writable tokens: every token of a well-formed module, and so of every
+  valid module, can be written.
+
+The end of the text is no token of the printed text: the lexer adds it.
 Whitespace, indentation and line feeds have no tokens.
 -/
 
