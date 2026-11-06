@@ -3,28 +3,27 @@ import Fir.Core.Arith
 /-!
 # Subtraction, multiplication and the wrap flags
 
-Ticket #14 gives `sub` and `mul` their rules, and `add`, `sub` and `mul`
-their flags. Without flags, each op gives its exact result modulo `2^N`:
-it wraps, as two's complement does, and it is never UB. A poison operand
+This section gives `sub` and `mul` their rules, and `add`, `sub` and `mul`
+their flags. Without flags, each op gives its exact result modulo 2^N: it
+wraps, as two's complement does, and it is never UB. A poison operand
 gives poison: the three ops propagate poison (ADR-2026-10-30-0818).
 
 A flag is a promise about the exact result, and a broken promise gives
-poison, not UB (S1, ADR-2026-10-29-2006):
+poison, not UB (ADR-2026-10-29-2006):
 
 * `nuw`: the operands, read as unsigned integers, give an exact result
-  that fits in `N` bits, from `0` to `2^N - 1`. A sum that carries out, a
-  difference below zero and a product of `2^N` or more break it.
+  that fits in N bits, from 0 to 2^N - 1. A sum that carries out, a
+  difference below zero and a product of 2^N or more break it.
 * `nsw`: the operands, read as two's-complement signed integers, give an
-  exact result that fits in `N` bits, from `-2^(N-1)` to `2^(N-1) - 1`.
+  exact result that fits in N bits, from -2^(N-1) to 2^(N-1) - 1.
 
-The tests are Lean's own, `BitVec.uaddOverflow` and its five siblings,
-which compute the exact result as a natural number or an integer. At `i1`
-the signed values are `0` and `-1`, written `false` and `true`, so
+With both flags, a result is poison when either promise is broken. At
+`i1` the signed values are 0 and -1, written `false` and `true`, so
 `add nsw true, true`, `sub nsw false, true` and `mul nsw true, true` give
-poison: their exact results, `-2`, `1` and `1`, do not fit. With both flags, a result is poison when
-either promise is broken. One rule, `wrapValues`, serves all three ops at
-every width: it takes the op's result without flags and the op's two
-tests.
+poison: their exact results, -2, 1 and 1, do not fit. One rule serves all
+three ops at every width: it takes the op's result without flags and the
+op's two tests of whether the exact result overflows, read as unsigned
+and as signed.
 -/
 
 namespace Fir.Core
