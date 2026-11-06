@@ -50,7 +50,8 @@ $`C` be sources, each a run of ops at every budget.
 * Let $`N_0` and $`k` be numbers. If, for every budget $`N`, every end
   $`x` of $`C_N` that is neither stuck nor $`\mathsf{fuel\_exhausted}`
   gives $`x + k \in S_{N_0 + N + 1}`, then every end that $`C` allows,
-  $`S` allows.
+  $`S` allows. Here $`x + k` is $`x` with $`k` more steps left when it
+  is a return, and $`x` otherwise.
 
 Here a source _allows_ an end of the target as the section on
 {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black boxes]
@@ -65,13 +66,16 @@ more steps.
 :::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "17587604883499326604")
 *Theorem: the source's callee allows what the target's callee does.* Let
 the target module $`M'` run each call as the source $`M` does, with the
-bound $`\beta`: each symbol names the same function in both, or a black
-box. Let every function of $`M` have monotone ops. Let the symbol $`s`
+bound $`\beta`: each symbol names the same function in both, or a
+{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function of $`M` have monotone ops. Let the
+symbol $`s`
 name the function $`g_0` in $`M'`, let $`a \sqsubseteq a'`, position by
 position, be vectors of values of the same types, and let entering $`g_0`
 with $`a'` start at the ops $`p'^*` in the environment $`G'`. Suppose that
 the induction gives this, for these ops: if $`g_0` and $`p'^*` have
-monotone ops, then for all environments $`E \sqsubseteq E'`, every end of
+monotone ops, then for all
+{ref "The-fir-specification--Execution--Refined-environments"}[environments]
+$`E \sqsubseteq E'`, every end of
 $`\mathrm{run}_{M'}(n, g_0, E', p'^*)` is allowed by the source
 $`N \mapsto \mathrm{run}_M(N, g_0, E, p'^*)`. Then for every end $`e'` of
 $`\mathrm{run}_{M'}(n, g_0, G', p'^*)` that is neither stuck nor
@@ -91,11 +95,12 @@ what its target does.
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in
-both, or a black box. Let every function of $`M` have monotone ops. Then
-for every budget $`n`, every function $`f` with monotone ops, all
-environments $`E \sqsubseteq E'` and every list of ops $`o^*` with
-monotone ops, every end $`e'` of the target's run
-$`\mathrm{run}_{M'}(n, f, E', o^*)` is allowed by the source
+both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function of $`M` have monotone
+ops. Then for every budget $`n`, every function $`f` with monotone ops,
+all {ref "The-fir-specification--Execution--Refined-environments"}[environments]
+$`E \sqsubseteq E'` and every list of ops $`o^*` with monotone ops,
+every end $`e'` of the target's run $`\mathrm{run}_{M'}(n, f, E', o^*)`
+is {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[allowed] by the source
 $`N \mapsto \mathrm{run}_M(N, f, E, o^*)`:
 
 * if $`e' = \mathsf{ret}~(u'^*, k')`, the source hits UB at some budget,

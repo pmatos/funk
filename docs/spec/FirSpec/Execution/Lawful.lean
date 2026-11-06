@@ -64,8 +64,8 @@ that section proves.
 :::
 
 :::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "12246780387192884151")
-*Theorem: refined arguments, by the lawful class alone.* In every lawful
-dialect, let every function of the module $`M` be valid in a context
+*Theorem: refined arguments, by the lawful class alone.* In every
+{ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect, let every function of the module $`M` be valid in a context
 $`C`. Then for every function $`f` of $`M` and all argument vectors $`a`
 and $`a'` of its parameter types with $`a_i \sqsubseteq a'_i` for each
 $`i`, a poison replaced by any value for example:
@@ -75,14 +75,14 @@ $$`\mathrm{obs}(F_M(a)) \sqsubseteq \mathrm{obs}(F_M(a'))`
 where $`F_M(a)` is the runs of $`f` in $`M` on $`a`. Calls and recursion
 are included. The class makes every terminator and every op with no
 callee monotone at valid op instances, so every function of $`M` has
-monotone ops, and the theorem of
+{ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops], and the theorem of
 {ref "The-fir-specification--Execution--Refined-arguments"}[refined arguments]
 applies.
 :::
 
 :::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "2470441501711249044")
 *Theorem: congruence in the callee, by the lawful class alone.* In every
-lawful dialect whose refinement of values is reflexive and transitive,
+{ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect whose refinement of values is reflexive and transitive,
 let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
 $`g` a function of $`M` with the symbol $`s` whose parameter types have

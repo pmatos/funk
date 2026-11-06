@@ -81,14 +81,16 @@ steps, which keeps the ratio.
 :::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "8634306296257500461")
 *Theorem: the source's callee allows what the target's callee does, at a
 budget.* Let the target module $`M'` run each call as the source $`M`
-does, with the bound $`\beta`, and let every function of $`M` have
+does, with the bound $`\beta`, each symbol naming the same function in
+both or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 Let the symbol $`s` name the function $`g_0` in $`M'`, let
 $`a \sqsubseteq a'`, position by position, be vectors of values of the
 same types, and let entering $`g_0` with $`a'` start at $`p'^*` in $`G'`.
 Let $`\beta + (\beta + 1) \cdot (N_0 + 1) \leq n`. Suppose that the
 induction gives this, for these ops: if $`g_0` and $`p'^*` have monotone
-ops, then for all environments $`E \sqsubseteq E'`, every end of
+ops, then for all {ref "The-fir-specification--Execution--Refined-environments"}[environments]
+$`E \sqsubseteq E'`, every end of
 $`\mathrm{run}_{M'}(n, g_0, E', p'^*)` is allowed at $`N_0` with the
 ratio $`\beta + 1` by $`m \mapsto \mathrm{run}_M(m, g_0, E, p'^*)`. Then
 for every end $`e'` of $`\mathrm{run}_{M'}(n, g_0, G', p'^*)` that is
@@ -105,9 +107,11 @@ previous theorem.
 *Theorem: every path of the target that runs out of fuel or returns is
 allowed by the source at a budget.* Let the target module $`M'` run each
 call as the source $`M` does, with the bound $`\beta`: each symbol names
-the same function in both, or a black box. Let every function of $`M`
-have monotone ops. Then for every budget $`n`, every function $`f` with
-monotone ops, all environments $`E \sqsubseteq E'`, every list of ops
+the same function in both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function
+of $`M` have
+{ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
+Then for every budget $`n`, every function $`f` with monotone ops, all
+{ref "The-fir-specification--Execution--Refined-environments"}[environments] $`E \sqsubseteq E'`, every list of ops
 $`o^*` with monotone ops, and every budget $`N` with
 
 $$`(\beta + 1) \cdot (N + 1) \leq n`

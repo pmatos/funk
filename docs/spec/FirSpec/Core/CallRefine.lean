@@ -94,7 +94,8 @@ Here $`M[s \leftarrow b]` is $`M` with the body $`b` in place of the body
 of its function $`s`, as in the section on
 {ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee],
 whose general theorem this is. The core dialect meets its hypotheses:
-every core function has monotone ops, the refinement of core values is
+every core function has
+{ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops], the refinement of core values is
 reflexive and transitive, every core type has finitely many values, and
 the symbols of a valid module are unique.
 
