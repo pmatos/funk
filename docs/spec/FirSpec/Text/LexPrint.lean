@@ -29,6 +29,11 @@ can all be written:
 
 $$`\mathrm{spells}(\mathrm{print}(a), \mathrm{tokens}(a))`
 
+where $`\mathrm{print}(a)` is the text that the
+{ref "The-fir-specification--Text-format--The-canonical-printer"}[printer] writes for $`a`, and
+$`\mathrm{spells}` is the relation of the section on
+{ref "The-fir-specification--Text-format--Maximal-munch"}[maximal munch].
+
 The printer writes a word, an integer, a string and a symbol as the
 spelling of its one token, and an application $`h(a_1, \dots, a_n)` as the
 word $`h`, then `(`, the printed arguments with `, ` between them, and
@@ -44,7 +49,7 @@ $`\mathit{loc}` whose tokens can all be written:
 
 $$`\mathrm{spells}(\mathrm{print}(\mathit{loc}), \mathrm{tokens}(\mathit{loc}))`
 
-The printer writes a location as `unknown`, `"file":l:c to l:c`,
+The printer writes a location as `unknown`, `"file":line:col to line:col`,
 `name("n")`, `callsite(@r at @r)`, `fused(@r, …)` or `derived(@r)`. A
 range has no space around its colons: after the quoted file, a `:` is
 punctuation, and after a line, the `:` that follows is not a name

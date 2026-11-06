@@ -19,7 +19,8 @@ when the Lean changes under it.
 token_, $`\mathrm{boundary}(c)`, when they are empty or their first
 character is not a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name character]:
-a letter, a digit, `_` or `.`. A name, a word or a number that such
+a letter, a digit, `_` or `.`. That is, they may come right after a token
+without joining it. A name, a word or a number that such
 characters follow ends where they start, since the lexer reads every name
 character that follows one as part of it.
 :::
@@ -51,13 +52,16 @@ $$`\begin{aligned} & \mathrm{spells}(s, t) \iff \forall c, u. \\ & \quad \mathrm
 This is maximal munch seen from the printer's side: the printer never
 writes a name character directly after a value, a label, a symbol written
 as a word, a location reference, a word or an integer, so each of them is
-read back whole. The rest of this part proves $`\mathrm{spells}` for the
-text of every token, then of every construct.
+read back whole. The sections that follow, up to the one on
+{ref "The-fir-specification--Text-format--Ops___-functions-and-the-module"}[ops, functions and the module],
+prove $`\mathrm{spells}` for the text of every token, then of every
+construct.
 :::
 
 :::readable Fir.Text.ok_bind Fir.Text.boundary_cons (fingerprint := "16699646170285060169")
-*Lemmas: proof plumbing.* A step that succeeds with $`a`, followed by $`f`,
-is $`f` applied to $`a`; and a character that is not a name character, then
+*Lemmas: proof plumbing.* The lexer's readers return either a result or
+an error. Reading that returns $`a` and then continues with $`f` is just
+$`f` applied to $`a`; and a character that is not a name character, then
 any characters, is at the end of a token. The proofs below rewrite with
 both.
 :::
@@ -213,7 +217,7 @@ number $`n` whose decimal digits are $`d~l`, and characters $`c` with
 $`\mathrm{boundary}(c)`: $`\mathrm{reads}(d, l~c, \mathsf{int}~n, c)`.
 :::
 
-:::readable Fir.Text.readsToken_neg (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (fingerprint := "14051053255598936565")
+:::readable Fir.Text.readsToken_neg (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (pin := Nat.toDigits) (fingerprint := "693349049737830638")
 *Theorem: a negative integer is read as an integer token.* For every
 natural number $`m`, with $`d~l` the decimal digits of $`m + 1`, and
 characters $`c` with $`\mathrm{boundary}(c)`:
@@ -222,7 +226,7 @@ negative integer is $`-(m+1)` for some $`m`, and is spelled `-` then the
 digits of its magnitude, which do not start with `0`.
 :::
 
-:::readable Fir.Text.readsToken_locRef (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "3336394283689462252")
+:::readable Fir.Text.readsToken_locRef (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (pin := Fir.Location.limit) (fingerprint := "15769275252843987607")
 *Theorem: a location reference below 2³² is read.* For every natural
 number $`r < 2^{32}` whose decimal digits are $`d~l`, and characters $`c`
 with $`\mathrm{boundary}(c)`, the

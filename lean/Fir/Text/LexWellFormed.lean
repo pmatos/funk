@@ -4,13 +4,14 @@ import Fir.Text.LexModule
 # Well-formed modules lex
 
 Every token of a well-formed module can be written: its op names and the
-words of its attributes and types are words, its location references, on
-ops and inside locations, fit in 32 bits, since its location table is
-within the limits, and its value names and labels are names. An operand is
-a name because its function defines it, and every definition is a name. So
-the lexer reads the printed text of every well-formed module as its
-tokens, and, since every valid module of a dialect with lawful text is well
-formed, of every valid module of such a dialect.
+words of its attributes and types are words, its location references fit
+in 32 bits, on ops because each op is well formed, and inside locations
+because its location table is within the limits, and its value names and
+labels are names. An operand is a name because its function defines it,
+and every definition is a name. So the lexer reads the printed text of
+every well-formed module as its tokens, and, since every valid module of a
+dialect with lawful text is well formed, of every valid module of such a
+dialect.
 -/
 
 namespace Fir

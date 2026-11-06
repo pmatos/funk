@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (fingerprint := "9738098526108531557")
+:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
 *Definition: the spelling of a token.* Every
 {ref "The-fir-specification--Text-format--The-parser"}[token] $`t` has one
 spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
@@ -58,8 +58,10 @@ $`\mathrm{writable}(t)`, in these cases:
 
 A module stores names as plain strings, so a value could be named `a b`;
 printed, it would read back as two tokens. The proofs that follow assume
-that every token of a module can be written, and the last section of this
-part shows that every well-formed module meets this.
+that every token of a module can be written, and the last of these
+sections,
+{ref "The-fir-specification--Text-format--Writable-tokens"}[writable tokens],
+shows that every well-formed module meets this.
 :::
 
 :::readable Fir.Attr.tokens Fir.Attr.tokens.tokensList (fingerprint := "15613669296790130417")

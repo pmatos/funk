@@ -18,7 +18,8 @@ when the Lean changes under it.
 *Lemmas: proof plumbing.* For every test $`P` on tokens, separator $`x`
 whose tokens all pass $`P`, and lists of tokens $`t_1, \dots, t_n` whose
 tokens all pass $`P`, every token of $`t_1~x~t_2~\dots~x~t_n` passes
-$`P`; and the token $`\texttt{,}` can be written. Together they show that
+$`P`; and the token $`\texttt{,}`
+{ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written]. Together they show that
 a list written with commas can be written when its elements can.
 :::
 
@@ -39,12 +40,14 @@ turns the condition on a list into one on each of its elements.
 :::
 
 :::readable Fir.Attr.IsType.writable (pin := Fir.Attr.IsType) (fingerprint := "9361101271589670088")
-*Theorem: a type is an attribute that can be written.* Every attribute
-that is written as a type, a word or a word applied to attributes, can be
-written.
+*Theorem: a type is an attribute that can be written.* An attribute is
+written as a type when it is a word, or a word applied to attributes, and
+it can be written. So every attribute written as a type can be written:
+the theorem only unfolds that definition, so that the proofs can use the
+condition on a type where they need the one on an attribute.
 :::
 
-:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (fingerprint := "17110460244969573528")
+:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "7629404678764208315")
 *Theorem: a location whose numbers are in range has tokens that can be
 written.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
@@ -54,7 +57,7 @@ written. Its words, such as `fused` and `at`, are words, and its location
 references are below $`2^{32}`.
 :::
 
-:::readable Fir.LocTable.InLimits.tokens (pin := Fir.LocTable.InLimits) (fingerprint := "5286697287027179995")
+:::readable Fir.LocTable.InLimits.tokens (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (fingerprint := "17364402634687887420")
 *Theorem: a location table within the limits has tokens that can be
 written.* For every location table whose keys, and the numbers of whose
 locations, are all below $`2^{32}`, every token of the table can be
@@ -107,7 +110,7 @@ and every well-formed function $`f`:
   is empty.
 :::
 
-:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (fingerprint := "8662024117921634914")
+:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "3606856485907590430")
 *Theorems: the blocks, ops and regions of a well-formed function have
 tokens that can be written.* For every dialect with signatures and a text
 format, and every well-formed function $`f`:

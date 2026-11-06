@@ -3,15 +3,16 @@ import Fir.Text.Lex
 /-!
 # The tokens of a printed module
 
-This part proves that the lexer reads back what the printer writes: for
-every module whose tokens can all be written, lexing its printed text gives
-exactly its tokens, then the end of the text. It is the first step of the
+These eight sections, from this one to the one on writable tokens, prove
+that the lexer reads back what the printer writes: for every module whose
+tokens can all be written, lexing its printed text gives exactly its
+tokens, then the end of the text. This is the first step of the
 proof that parsing a printed module gives the module back, which follows
 the parser's three steps. With it, the rest of that proof deals with a list
 of tokens, never with characters, spaces or line feeds: the grammar step
 reads that list, and only it, into a syntax tree.
 
-The part goes in eight steps, one section each:
+They go in eight steps, one section each:
 
 * this section gives the one spelling of each token, which tokens can be
   written, and the tokens of every construct, in the order that the printer
@@ -30,7 +31,7 @@ The part goes in eight steps, one section each:
 * ops, functions and the module: so is each larger construct, and so the
   whole module, which is the result;
 * writable tokens: every token of a well-formed module, and so of every
-  valid module, can be written.
+  valid module of a dialect with lawful text, can be written.
 
 The end of the text is no token of the printed text: the lexer adds it.
 Whitespace, indentation and line feeds have no tokens.

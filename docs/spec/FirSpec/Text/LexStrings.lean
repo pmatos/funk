@@ -14,18 +14,18 @@ when the Lean changes under it.
 
 #doc (Manual) "Escapes and quoted symbols: readable blocks" =>
 
-:::readable Fir.Text.unicodeEscape_toDigits (pin := Fir.Text.unicodeEscape) (fingerprint := "6147162471208547824")
-*Theorem: the printer's `\u{h}` escape reads back as its character.* Let
+:::readable Fir.Text.unicodeEscape_toDigits (pin := Fir.Text.unicodeEscape) (pin := Nat.toDigits) (fingerprint := "15463218578782466095")
+*Theorem: the printer's `\u{…}` escape reads back as its character.* Let
 $`c` be a character that a string
 {ref "The-fir-specification--Text-format--Tokens"}[escapes], other than the
-line feed and the tab. At every position, the lexer's reader of a `\u{h}`
+line feed and the tab. At every position, the lexer's reader of a `\u{…}`
 escape, given the lowercase hexadecimal digits of the code point of $`c`
 with no leading zero, gives $`c`. It checks that the digits have no
 leading zero and stand for a character that must be escaped this way; the
 printer's digits pass both checks.
 :::
 
-:::readable Fir.Text.escapeChar_quote Fir.Text.escapeChar_backslash Fir.Text.escapeChar_lf Fir.Text.escapeChar_tab Fir.Text.escapeChar_unicode Fir.Text.escapeChar_self (pin := Fir.Text.escapeChar) (fingerprint := "12486796923177104632")
+:::readable Fir.Text.escapeChar_quote Fir.Text.escapeChar_backslash Fir.Text.escapeChar_lf Fir.Text.escapeChar_tab Fir.Text.escapeChar_unicode Fir.Text.escapeChar_self (pin := Fir.Text.escapeChar) (pin := Nat.toDigits) (fingerprint := "8288077872388925399")
 *Theorems: how one character of a string is spelled.* Inside a string, the
 printer spells:
 
@@ -85,8 +85,8 @@ not a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word],
 and characters $`c`: `@`, then $`s` quoted, then $`c` is read as
 $`\mathsf{sym}~s`, leaving $`c`. For every character $`a` that starts a
-word, characters $`l` that are each a name character, and $`c` with
-$`\mathrm{boundary}(c)`: `@`, then $`a~l`, then $`c` is read as
+word, characters $`l` that are each a name character, and $`c`
+{ref "The-fir-specification--Text-format--Maximal-munch"}[at the end of a token], $`\mathrm{boundary}(c)`: `@`, then $`a~l`, then $`c` is read as
 $`\mathsf{sym}~(a~l)`, leaving $`c`.
 
 The lexer rejects a quoted symbol whose name is a word, since a word is
@@ -105,8 +105,8 @@ take apart.
 *Theorem: a token that is read whole spells itself.* Let $`a` be none of a
 space, a tab, a line feed and `/`, $`s` characters and $`t` a token. If,
 for all characters $`c` with $`\mathrm{boundary}(c)`, the token that starts
-with $`a`, followed by $`s~c`, is read as $`t`, leaving $`c`, then
-$`\mathrm{spells}(a~s, t)`.
+with $`a`, followed by $`s~c`, is read as $`t`, leaving $`c`, then $`a~s`
+{ref "The-fir-specification--Text-format--Maximal-munch"}[spells] $`t`: $`\mathrm{spells}(a~s, t)`.
 :::
 
 :::readable Fir.Text.spells_nat (fingerprint := "2232630879042954436")
@@ -121,7 +121,8 @@ $`t` that
 
 $$`\mathrm{writable}(t) \implies \mathrm{spells}(\mathrm{spell}(t), t)`
 
-So the spelling of $`t`, followed by any characters at the end of a token
+So the
+{ref "The-fir-specification--Text-format--Lexing-printed-text"}[spelling] of $`t`, followed by any characters at the end of a token
 that lex to $`u`, lexes to $`t~u`. This is the fact about single tokens
 that the next sections build on: a printed construct is its tokens'
 spellings, with spaces and line feeds between them.

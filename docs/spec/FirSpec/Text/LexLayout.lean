@@ -18,11 +18,11 @@ when the Lean changes under it.
 *Definition and theorem: spelling tokens before any characters.* The
 characters $`s` spell the tokens $`t` _before any characters_,
 $`\mathrm{spells}_{\mathrm{any}}(s, t)`, when $`s` followed by any
-characters that lex to $`u` lexes to $`t~u`:
+characters that {ref "The-fir-specification--Text-format--Maximal-munch"}[lex to] $`u` lexes to $`t~u`:
 
 $$`\begin{aligned} \mathrm{spells}_{\mathrm{any}}(s, t) \iff\ & \forall c, u.\ \mathrm{lexes}(c, u) \\ & \implies \mathrm{lexes}(s~c, t~u) \end{aligned}`
 
-It is $`\mathrm{spells}` without the condition that $`c` be
+It is the relation {ref "The-fir-specification--Text-format--Maximal-munch"}[spells] without the condition that $`c` be
 {ref "The-fir-specification--Text-format--Maximal-munch"}[at the end of a token],
 and holds for text that ends with punctuation or whitespace. Every line,
 block, region, item and module that the printer writes ends with a line
@@ -106,10 +106,12 @@ the proofs use.
 
 :::readable Fir.Text.Spells.tok_any (fingerprint := "558933299089106731")
 *Theorem: a token in front of a text that is read before any characters.*
-For every token $`t` that can be written, characters $`s` and tokens $`u`:
+For every token $`t` that
+{ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written], characters $`s` and tokens $`u`:
 if $`\mathrm{spells}_{\mathrm{any}}(s, u)`, and $`s~c` is at the end of a
 token for all characters $`c`, then
-$`\mathrm{spells}_{\mathrm{any}}(\mathrm{spell}(t)~s, t~u)`.
+$`\mathrm{spells}_{\mathrm{any}}(\mathrm{spell}(t)~s, t~u)`, where
+$`\mathrm{spell}(t)` is the spelling of $`t`.
 :::
 
 :::readable Fir.Text.spells_word (fingerprint := "4950589787715188689")
@@ -128,14 +130,15 @@ $`\mathrm{lexes}(p~c, t~u)`. The cases for `(`, `)`, `{`, `}`, `:`, `=`
 and `->` follow.
 :::
 
-:::readable Fir.Text.Lexes.tok Fir.Text.Lexes.word Fir.Text.Lexes.value Fir.Text.Lexes.label Fir.Text.Lexes.sym Fir.Text.Lexes.locRef Fir.Text.Lexes.nat Fir.Text.Lexes.quote Fir.Text.Lexes.lit (fingerprint := "606311062853272660")
+:::readable Fir.Text.Lexes.tok Fir.Text.Lexes.word Fir.Text.Lexes.value Fir.Text.Lexes.label Fir.Text.Lexes.sym Fir.Text.Lexes.locRef Fir.Text.Lexes.nat Fir.Text.Lexes.quote Fir.Text.Lexes.lit (pin := Fir.Location.limit) (fingerprint := "3545800998462862719")
 *Theorems: a token, read from the first character.* For every token $`t`
-that can be written, whose spelling is the characters $`p`, and all
+that {ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written], whose spelling is the characters $`p`, and all
 characters $`c` with $`\mathrm{boundary}(c)` and tokens $`u` with
 $`\mathrm{lexes}(c, u)`: $`\mathrm{lexes}(p~c, t~u)`. The cases that the
 proofs use, under the same conditions on $`c` and $`u`:
 
-* a word $`w` lexes to $`\mathsf{word}~w`;
+* a word $`w` lexes to $`\mathsf{word}~w`, which covers the words that
+  the printer writes as they are, such as `func`, `locs` and `to`;
 * for a name $`x`, `%` then $`x` lexes to $`\mathsf{value}~x`, and `^`
   then $`x` to $`\mathsf{label}~x`;
 * for every string $`s`, the printer's spelling of the symbol $`s` lexes
@@ -144,9 +147,7 @@ proofs use, under the same conditions on $`c` and $`u`:
   reference $`r` lexes to $`\mathsf{locref}~r`;
 * for every natural number $`n`, its decimal digits lex to
   $`\mathsf{int}~n`: a line or a column of a location;
-* for every string $`s`, $`s` quoted lexes to $`\mathsf{str}~s`;
-* a word $`w` whose characters are $`p` lexes to $`\mathsf{word}~w`, for
-  a word that the printer writes as it is, such as `func`.
+* for every string $`s`, $`s` quoted lexes to $`\mathsf{str}~s`.
 
 These read a printed text piece by piece from its first character.
 :::

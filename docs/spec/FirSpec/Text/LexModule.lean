@@ -21,7 +21,8 @@ characters.* For every dialect with a
 list of definitions $`d^*`, if the tokens below can all be written: the
 text that the printer writes before an op's name, which is empty when
 $`d^*` is empty, and otherwise the printed definitions $`d^*` then ` = `,
-spells before any characters the empty list of tokens, or the tokens of
+{ref "The-fir-specification--Text-format--Spaces___-line-feeds-and-lists"}[spells before any characters]
+the empty list of tokens, or the tokens of
 $`d^*` then $`\texttt{=}`.
 :::
 
@@ -30,7 +31,7 @@ $`d^*` then $`\texttt{=}`.
 tokens.* For every dialect with a text format, op instance $`o`, operands
 $`x_1, \dots, x_m` and successors $`s_1, \dots, s_k`, if their tokens below
 can all be written: the text that the printer writes for them spells
-$`\mathsf{word}~\mathrm{name}(o)`, the tokens of the attributes of $`o`,
+$`\mathsf{word}~n` for the name $`n` of $`o`, the tokens of the attributes of $`o`,
 then, when $`m + k > 0`, the uses and the successors' tokens with
 $`\texttt{,}` between them. The text is the name of $`o` and its printed
 attributes with a space between each, then, when $`m + k > 0`, a space,
@@ -40,8 +41,8 @@ and the uses `%`$`x_i` and the printed successors with `, ` between them.
 :::readable Fir.boundary_regions (pin := Fir.Region.printList) (fingerprint := "10175431880597102562")
 *Theorem: an op's regions, then a space, are at the end of a token.* For
 every dialect with a text format, indentation $`n`, list of regions and
-characters $`c`: the printed regions, then a space, then $`c`, are at the
-end of a token. A printed region starts with ` {`, so either way the text
+characters $`c`: the printed regions, then a space, then $`c`, are
+{ref "The-fir-specification--Text-format--Maximal-munch"}[at the end of a token]. A printed region starts with ` {`, so either way the text
 starts with a space; this is what lets an op's last attribute, operand or
 successor be read whole before it.
 :::
