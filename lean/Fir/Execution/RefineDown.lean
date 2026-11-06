@@ -146,6 +146,7 @@ theorem BlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     | .ub r, ⟨N, hN⟩, _ => exact ofUB hN
     | .fuelExhausted, _, hle => exact hle.elim
     | .ret vs, ⟨N₁, hN₁⟩, hvs =>
+      classical
       by_cases hex : (g.runs M (args.cast hsig) N₀).outcomes .fuelExhausted
       · exact ofExh hex
       have hfm := Func.fuelMonotone M g (args.cast hsig)
@@ -217,6 +218,7 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os N hf hops henv hN e' he'
+    classical
     by_cases hgood : Ev.NotStuck e' ∧ ∀ r, e' ≠ .ub r
     case neg => exact AllowedBelow.of_not hgood
     obtain ⟨hne, hnub⟩ := hgood

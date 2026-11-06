@@ -69,6 +69,7 @@ theorem getElem?_foldl_insertIfNew (l : List (α × β)) (m : Std.HashMap α β)
   | nil => simp
   | cons p l ih =>
     rw [List.foldl_cons, ih, Std.HashMap.getElem?_insertIfNew, List.find?_cons]
+    classical
     by_cases h : p.1 = k
     · subst h
       cases hm : m[p.1]? with
@@ -88,6 +89,7 @@ theorem mem_getD_foldl_grouped (l : List (α × List β)) (m : Std.HashMap α (L
   | nil => simp
   | cons p l ih =>
     rw [List.foldl_cons, ih, Std.HashMap.getD_insert]
+    classical
     by_cases h : p.1 = k
     · subst h; simp; grind
     · have : (p.1 == k) = false := by simpa using h

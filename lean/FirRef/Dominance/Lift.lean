@@ -201,6 +201,7 @@ theorem move_lifted {pm : Std.HashMap Name Name} (h : Lifted g e pre R pm) {b q 
       exact (h.ancestor_above hq hp.1).trans ((h.above y hb hye).mono hqp)
     · rw [hpar y hyb]; exact h.above y hy hye
   · intro c hc z hzc hn
+    classical
     by_cases hzc' : Ancestor (parentIn pm) e z c
     · obtain ⟨h1, h2, h3, h4⟩ := ancestor_lost hs hpar hpb hbe hqR hqb hzc' hn
       exact h.avoids_down (hlost z h1 h2 h4) (ancestor_of_move hbe hq hpar hpb h3) hc
@@ -304,6 +305,7 @@ theorem pot_pass (L : List Name) (hL : ∀ b ∈ L, b ∈ order) (pm : Std.HashM
   | cons b L ih =>
     simp only [List.foldl_cons]
     have ih' := ih (fun b' hb' => hL b' (List.mem_cons_of_mem _ hb'))
+    classical
     by_cases hf : Fires pre P e pm b
     · have hlt := pot_lift_lt (hL b (List.mem_cons_self ..)) hf
       have hle := (ih' (lift pre P e pm b)).1
