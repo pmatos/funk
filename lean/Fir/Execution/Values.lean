@@ -3,16 +3,16 @@ import Fir.Syntax.Dialect
 /-!
 Execution gives every valid module its meaning. Its definitions are the
 reference interpreter, `fir-ref`: the only interpreter of fir, a test oracle
-that never ships inside a compiler (S7, ADR-2026-10-29-2009). Its general
+that never ships inside a compiler (ADR-2026-10-29-2009). Its general
 part, below, fixes what a run can end with, what a function shows to an
 observer, and when one function correctly replaces another. The interpreter
 itself, and the rules of each op, come in the sections after it.
 
 # Poison
 
-fir has one deferred-UB value, poison, and no `undef` (S1,
-ADR-2026-10-29-2006). Some failures, such as an `add nsw` that overflows, do
-not make the op undefined. They make its result poison instead. Using poison
+fir has one deferred-UB value, poison, and no `undef`: that is the poison
+semantics of ADR-2026-10-29-2006. Some failures, such as an `add nsw` that
+overflows, do not make the op undefined. They make its result poison instead. Using poison
 is not UB in itself, but some uses are, such as branching on it. The next
 section explains poison and immediate UB in plain words.
 -/
@@ -32,12 +32,10 @@ inductive PoisonOr (α : Type) where
 /-!
 # Refinement
 
-Refinement is fir's correctness relation (S4, ADR-2026-10-29-2008): a target
-is correct for a source when each of its observable behaviours is allowed by
-the source. The relation is written `a ⊑ b`, read "`a` is refined by `b`":
-`b` does nothing that `a` does not allow. It is defined level by level, from
-values up to behaviours and functions, through one class whose shape
-follows LeanMLIR's `HRefinement`.
+Refinement is fir's correctness relation (ADR-2026-10-29-2008), defined
+below for values and lists of values, and in the section on refinement for
+whole functions. Each level is defined from the one below it, in the same
+shape as LeanMLIR's refinement (ADR-2026-10-29-2030).
 -/
 
 /-- Heterogeneous refinement: `a ⊑ b` says that `b` refines `a`. -/
