@@ -3,8 +3,6 @@ import Fir.Text.Print
 import Fir.Text.Decode
 
 /-!
-# An example
-
 The function `@sum` adds the integers from `0` up to, but not including,
 `%n`, and `@sum10` calls it. In the canonical text:
 

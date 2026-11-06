@@ -1,23 +1,23 @@
 import Fir.Text.RoundTrip
 
 /-!
-The parser, `Fir.parse`, reads a text into a module of any dialect, in
-three steps. It reads the characters into tokens, below. It then reads the
-tokens by the grammar of a module, which is the same for every dialect,
-into a syntax tree that leaves types, attributes and ops generic. Last, it
-decodes that tree through the dialect: each type with `decodeTy`, and each
-op with `decodeOp`, from its name, its attributes and the types of its
-operands and results. Each step stops at its first error, and the steps
-run in the order of `funk`'s (ADR-2026-10-30-1032), so the two parsers
-reject a text with one error at the same position. A text with several
-errors is rejected at the first error of the earliest step; the two parsers
-may then report different errors, which ADR-2026-10-30-1032 allows.
+The parser reads a text into a module of any dialect, in three steps. It
+reads the characters into tokens, below. It then reads the tokens by the
+grammar of a module, which is the same for every dialect, into a syntax
+tree that leaves types, attributes and ops generic. Last, it decodes that
+tree through the dialect: each type with the dialect's reader of types, and
+each op with its reader of ops, from its name, its attributes and the types
+of its operands and results. Each step stops at its first error, and the
+steps run in the order of `funk`'s (ADR-2026-10-30-1032), so the two
+parsers reject a text with one error at the same position. A text with
+several errors is rejected at the first error of the earliest step; the two
+parsers may then report different errors, which ADR-2026-10-30-1032 allows.
 
 Each step is a total function: it never loops and never fails for want of
 fuel, and the proof that parsing a printed module gives the module back
-(#11) unfolds it case by case. The parser has no code for any particular
-op, type or dialect, so it reads every op of every dialect; the core
-dialect is one instance of `DialectText`.
+unfolds it case by case. The parser has no code for any particular op, type
+or dialect, so it reads every op of every dialect; the core dialect is one
+instance of a dialect's text.
 
 # Reading tokens
 
@@ -25,9 +25,12 @@ The lexer reads the characters of a text from first to last, and gives each
 token the position where it starts: its line from 1, and its column in UTF-8
 bytes from 1, as a location counts them. Whitespace and comments are
 dropped. Every character outside strings, in comments too, must be one that
-`allowedOutsideStrings` accepts. The list of tokens always ends with `eof`,
-at the position where the text ends, so that an error found there has a
-position too.
+a text may hold outside strings. The list of tokens always ends with the end
+token, at the position where the text ends, so that an error found there has
+a position too.
+
+This part gives the tokens and their positions, then reads strings, then
+numbers, names and symbols, and last the tokens of a whole text.
 -/
 
 namespace Fir.Text
@@ -100,7 +103,7 @@ def hexValue (ds : List Char) : Nat :=
 # Strings
 
 A string holds any character but `"`, `\` and the characters that it
-escapes. Each escape has one spelling, the one that `escapeChar` writes. A
+escapes. Each escape has one spelling, the one that the printer writes. A
 string that is not in its one spelling is an error at the start of the
 escape, or at the character that should have been escaped.
 -/
@@ -175,7 +178,7 @@ def lexString (cs : List Char) (p start : TextPos) : Except ParseError (String �
 A number has no leading zeros, and no token that holds a name or a number
 runs into a name character: maximal munch reads a name character after it as
 part of it, so `@1x`, `007` and `1.5` are errors at the number. A location
-reference is below `2^32` (N3); an integer has no limit here, since the
+reference is below 2³² (ADR-2026-11-03-1000); an integer has no limit here, since the
 dialect that reads it bounds it.
 -/
 

@@ -2,42 +2,46 @@ import Fir.Core.Signature
 import Fir.Text.Grammar
 
 /-!
-# The core dialect in text
-
 How each core op instance and type is written. An op is written as its name
 and its attributes; its widths come from the types of its operands and
 results, which are written where those values are defined.
 
 * `const` has one attribute, its value: `%c: i32 = const -1 @1`,
-  `%t: i1 = const true @1`.
-* `add`, `sub` and `mul` have their flags as attributes:
-  `%s: i32 = add nuw nsw %a, %b @1`.
-* `sdiv` and `udiv` have `exact` when it is set: `%q: i32 = sdiv exact %a, %b @1`.
+  `%t: i1 = const true @1`. An `i1` constant is written `true` or `false`,
+  as in LLVM and MLIR. Every other constant is written as its bits read as
+  a two's-complement signed integer, in decimal, so `i8` constants run from
+  `-128` to `127`. Each bit pattern has one spelling: `const 1` and
+  `const -1` at `i1` are errors.
+* `add`, `sub` and `mul` have their flags as attributes, in a fixed order,
+  `nuw` before `nsw`, each at most once: `%s: i32 = add nuw nsw %a, %b @1`.
+* `sdiv` and `udiv` have `exact` when it is set:
+  `%q: i32 = sdiv exact %a, %b @1`.
 * `icmp` has one attribute, its predicate, from `eq` to `uge`, as LLVM
   writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
-  `.`, which is reserved for dialect names (H4).
+  `.`, which is kept for the names of dialects.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
-* `condBr` is written `cond_br`: `cond_br %c, ^then, ^else(%x) @1`.
+* The conditional branch is written `cond_br`:
+  `cond_br %c, ^then, ^else(%x) @1`.
 * `poison` has no attributes and no operands, so its name comes right
-  before its location: `%p: i32 = poison @1`. Its result is one `iN`, as
+  before its location: `%p: i32 = poison @1`. Its result is one integer, as
   for `const`.
 * Every other op is written with the name it has in the op set, and no
   attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`.
-* An `i1` constant is written `true` or `false`, as in LLVM and MLIR.
-  Every other constant is written as its bits read as a two's-complement
-  signed integer, in decimal, so `i8` constants run from `-128` to `127`.
-  Each bit pattern has one spelling: `const 1` and `const -1` at `i1` are
-  errors.
-* The values of `fir-ref`'s arguments, the values in its JSON output and
-  the values of a scripted choice sequence are spelled the same way: `true`
-  and `false` at `i1`, and signed decimal at every other width. An argument
-  and a value in the output may also be `poison`, at any `iN`: `fir-ref run`
-  runs a function on a poison argument, as the runs of every function do
-  (#123). A choice may not, since `freeze` chooses a value of its type.
-* Flags are written in a fixed order, `nuw` before `nsw`, each at most once.
-* `iN` is written `i` and `N` in decimal with no leading zeros, such as
-  `i32`, and `ptr` is written `ptr`. A width above `maxWidth` is a parse
-  error (N3).
+* The integer type of width N is written `i` and N in decimal with no
+  leading zeros, such as `i32`, and the pointer type is written `ptr`. A
+  width above 16,777,215, the widest the core dialect has, is a parse error
+  (ADR-2026-11-03-1000).
+
+The values of `fir-ref`'s arguments, the values in its JSON output and the
+values of a scripted choice sequence are spelled the same way: `true` and
+`false` at `i1`, and signed decimal at every other width. An argument and a
+value in the output may also be `poison`, at any integer type: `fir-ref run`
+runs a function on a poison argument, as the runs of every function do. A
+choice may not, since `freeze` chooses a value of its type.
+
+This section gives, in order: the names of the predicates and the ops, the
+attributes of an op, how an op and a type are read back, the core
+dialect's text as a whole, and the samples that check it.
 -/
 
 namespace Fir.Core

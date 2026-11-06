@@ -2,14 +2,12 @@ import Fir.Text.Print
 import Fir.Validation.Rules
 
 /-!
-# Round trips
-
-Two properties tie the parser to the printer (P3, ADR-2026-10-29-2014, as
+Two properties tie the parser to the printer (ADR-2026-10-29-2014, as
 refined by ADR-2026-10-30-0815):
 
-* `parse(print(m)) == m` for every well-formed module `m`;
-* `print(parse(t)) == t` for every text `t` printed from a well-formed
-  module.
+* parsing the text of a well-formed module gives the module back;
+* printing what the parser reads from the text of a well-formed module
+  gives that text back.
 
 The second follows from the first. A module is well formed when its printed
 form says everything it holds: every name, word and attribute can be written
@@ -21,20 +19,24 @@ the parser rejects its printed form with a located reason, as the grammar
 section says.
 
 Validation implies well-formedness: every valid module can be written and
-read back, so two different valid modules never print the same text. This
-is `ValidIsWellFormed`, an obligation of every dialect. Validation checks
-the names, labels, operand types, successors and location references of a
-module, and the writability laws of `LawfulDialectText` cover what the
-dialect writes, so the obligation holds for every lawful dialect: the
-theorem `validIsWellFormed`, below. The parser is `Fir.parse`, in the
-sections that follow. `printThenParse`, at the end of the chapter, proves
-the first property for it, for every dialect whose text is lawful, and
-`Core.lawfulDialectText` proves the laws of `LawfulDialectText` for the core
-dialect, which give `ValidIsWellFormed` for it, `Core.validIsWellFormed`.
+read back, so two different valid modules never print the same text. Every
+dialect owes this. Validation checks the names, labels, operand types,
+successors and location references of a module, and the laws of a lawful
+text cover what the dialect writes, so it holds for every dialect whose
+text is lawful: the last theorem of this section. The sections that follow
+define the parser, and the section "The round trip, proved", at the end of
+the chapter, proves the first property for it, for every dialect whose text
+is lawful. The next section proves that the core dialect's text is lawful,
+so every valid core module is well formed.
 
 The conditions look at every block and op of a function, at any depth: the
 blocks of the regions of its ops too. A valid function's ops own no region,
 so its blocks at any depth are its blocks.
+
+This section gives, in order: the ops of a function at any depth, and the
+blocks of ops without regions; what makes an op, a function and a module
+well formed; positions, errors and parsers; the two round trips and how
+they relate; and the theorems that valid modules are well formed.
 -/
 
 namespace Fir
