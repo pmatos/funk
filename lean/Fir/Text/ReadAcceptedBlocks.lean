@@ -5,19 +5,18 @@ import Fir.Text.ReadAccepted
 
 On tokens that can be written, the readers of blocks, ops and regions give
 blocks, ops and regions that can be written, at any depth. An op's name
-comes from a word token and its results from `readDefs`; its attributes,
-successors and location reference come from the readers of the previous
-section, and its regions from `readRegions`. A block's label comes from a
-label token.
+comes from a word token and its results from the reader of definitions;
+its attributes, successors and location reference come from the readers of
+the section on what the grammar accepts, and its regions from the reader of
+regions. A block's label comes from a label token.
 
-The five readers call one another, to any depth. They are proved together
-by their functional induction principle, `readBlocks.induct`, which Lean
-derives from the readers' own recursion. Each case of the principle is one
-reader on one shape of tokens, and takes what the readers it calls do on
-the tokens left to them as hypotheses: the structure that
+The five readers call one another, to any depth. They are proved together,
+by induction that follows the readers' own recursion. Each case of the
+induction is one reader on one shape of tokens, and takes what the readers
+it calls do on the tokens left to them as hypotheses: the structure that
 ADR-2026-11-03-0028 records for the round trip's lemmas, which
-ADR-2026-11-03-0328 applies to this proof. No case unfolds a reader that it
-calls.
+ADR-2026-11-03-0328 applies to this proof. No case looks inside a reader
+that it calls.
 -/
 
 namespace Fir.Text

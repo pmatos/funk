@@ -3,17 +3,17 @@ import Fir.Text.DecodeAccepted
 /-!
 # Functions, items and the module as decoded
 
-`decodeFunc` joins the two passes. The first pass names each value once,
-and its scope gives each value the type that `Func.typeOf` gives it, since
-the scope's definitions are a permutation of `Func.defs`. So the scope can
-be replaced by `Func.typeOf` in what the second pass accepts, and each
-decoded function is well formed (`decodeFunc_wellFormed`). Its result types
-decode as types do, from attributes written as types.
+Decoding a function joins the two passes. The first pass names each value
+once, and its scope gives each value the type that the function gives it,
+since the scope's definitions are the function's definitions in another
+order. So the scope can be replaced by the function's own types in what the
+second pass accepts, and each decoded function is well formed. Its result
+types decode as types do, from attributes written as types.
 
-`decodeItem` decodes only a `func` with no attributes, whose body holds
-blocks or holds nothing, and `decodeModule` keeps the location table as it
-was read. So a module decoded from a tree that can be written is well
-formed: the decoding step, `decodeModule_wellFormed`.
+An item decodes only as a `func` with no attributes, whose body holds
+blocks or holds nothing, and decoding a module keeps the location table as
+it was read. So a module decoded from a tree that can be written is well
+formed: the decoding step.
 -/
 
 namespace Fir

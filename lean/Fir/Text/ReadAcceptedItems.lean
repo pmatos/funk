@@ -4,15 +4,15 @@ import Fir.Text.ReadAcceptedBlocks
 # Items as read
 
 On tokens that can be written, the readers of items give items that can be
-written. An item's parameters come from `readDefs`, its result types from
-`readType`, and its body from `readBlocks`, or from `readItems` when it
-starts with a word. Nothing is asked of its kind, its symbol or its
-attributes: decoding accepts only a `func` with no attributes, whatever its
-symbol.
+written. An item's parameters come from the reader of definitions, its
+result types from the reader of types, and its body from the reader of
+blocks, or from the reader of items when it starts with a word. Nothing is
+asked of its kind, its symbol or its attributes: decoding accepts only a
+`func` with no attributes, whatever its symbol.
 
-`readItems` and `readItem` call one another, for the items of a body. They
-are proved together by their functional induction principle,
-`readItems.induct`, as the readers of blocks are.
+The reader of items and the reader of one item call one another, for the
+items of a body. They are proved together, by induction that follows their
+own recursion, as the readers of blocks are.
 -/
 
 namespace Fir.Text
