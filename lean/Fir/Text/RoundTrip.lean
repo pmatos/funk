@@ -24,8 +24,8 @@ dialect owes this. Validation checks the names, labels, operand types,
 successors and location references of a module, and the laws of a lawful
 text cover what the dialect writes, so it holds for every dialect whose
 text is lawful: the last theorem of this section. The sections that follow
-define the parser, and the section "The round trip, proved", at the end of
-the chapter, proves the first property for it, for every dialect whose text
+define the parser, and the section "The round trip, proved", later in this
+chapter, proves the first property for it, for every dialect whose text
 is lawful. The next section proves that the core dialect's text is lawful,
 so every valid core module is well formed.
 

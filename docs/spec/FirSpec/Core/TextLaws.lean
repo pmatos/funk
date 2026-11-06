@@ -41,7 +41,7 @@ $`\mathsf{icmp}` use them.
 
 :::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "683726526858554718")
 *Theorems: the two cases of a constant.* For every width $`W \neq 1` and
-every $`W`-bit value $`v`, $`\mathrm{const}_W(v)` is the integer $`v`
+every $`W`-bit value $`v`, $`\mathrm{constattr}_W(v)` is the integer $`v`
 read as signed; and every 1-bit value is 1 or 0. They split the proofs for
 $`\mathsf{const}` into its two spellings.
 :::
@@ -93,7 +93,7 @@ decimal digits of $`N`. The proofs about types below read the width back
 through it.
 :::
 
-:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decode (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "12968835017158459841")
+:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "18360801033847354976")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
@@ -116,7 +116,7 @@ as a type. These are the last three laws: what the core dialect writes fits
 the grammar.
 :::
 
-:::readable Fir.Core.lawfulDialectText Fir.Core.validIsWellFormed (fingerprint := "9020761176459250666")
+:::readable Fir.Core.lawfulDialectText Fir.Core.validIsWellFormed (pin := Fir.instLawfulDialectTextCoreDialect) (fingerprint := "2917827488444584806")
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the

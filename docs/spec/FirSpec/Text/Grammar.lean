@@ -53,8 +53,8 @@ grammar. A word applied to no attributes, `h()`, is not the word `h`.
 :::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "1789584298090586371")
 *Definition: how Lean shows an attribute.* For tests and debugging, Lean
 shows an attribute as the Lean term that builds it. This is written out by
-hand, since the one Lean would derive is a partial function, and no
-definition of the spec is partial (ADR-2026-10-30-1452). It plays no part
+hand, since the one Lean would derive is not proved to terminate (Lean marks it
+partial), and no definition of the spec is partial (ADR-2026-10-30-1452). It plays no part
 in the text format.
 :::
 
@@ -133,8 +133,8 @@ $`r^*`:
 7. if $`t` is valid, $`\mathrm{tyattr}(t)` is written as a type.
 
 The first four make each op instance and each valid type have exactly one
-spelling. A type that is not valid, such as a width beyond the text's
-limit, need not read back. The last three say that what the dialect writes
+spelling. A type that is not valid, such as a core integer type wider
+than 16,777,215, need not read back. The last three say that what the dialect writes
 fits the grammar. With them, every valid module of the dialect is well
 formed, and the round trip, proved in the sections that follow, rests on
 these laws alone, for every dialect.

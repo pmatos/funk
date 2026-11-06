@@ -15,15 +15,15 @@ it was read.
 
 With the laws, every valid core module is well formed, by the last theorem
 of the previous section, so it can be written and read back. With the round
-trip, proved at the end of the chapter, it follows that two different valid
+trip, proved later in this chapter, it follows that two different valid
 core modules never print the same text.
 
 The round trip covers every dialect whose text is lawful at once, and uses
 nothing of a dialect but these laws. So a change to the core op set, such as
 a new op or a new flag, extends the proofs below, case by case, and does not
-rework the proof of the round trip; the section "What a new dialect or a new
-core op needs", beside the round trip in "The round trip, proved", says how
-the round trip extends.
+rework the proof of the round trip; the part "What a new dialect or a new core
+op needs" of the section "The round trip, proved", later in this chapter,
+says how the round trip extends.
 
 This section proves, in order: facts about attributes; that each op instance
 reads back from its spelling, and only from it; the same for types; that

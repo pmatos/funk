@@ -14,8 +14,9 @@ kind of item needs no change to the grammar, but the parser must learn to
 decode it. A float or a nested symbol reference needs new tokens: a change
 to the tokens of the previous section.
 
-* An item's kind says what it is. M0 has one kind, `func`, so its items
-  read as they always have: `func @sum(%n: i32) -> i32 { ... }`. A `func`
+* An item's kind says what it is. M0, the first milestone that this
+  specification covers, has one kind, `func`, so its items are written as
+  `func @sum(%n: i32) -> i32 { ... }`. A `func`
   has no attributes, and its body is its blocks. A later kind, such as a
   nested module, a global or an external declaration, uses the same
   production: its attributes say what a function's header cannot, and a

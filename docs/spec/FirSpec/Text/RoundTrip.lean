@@ -31,7 +31,7 @@ proofs below replace "every block at any depth" of a valid function by its
 blocks.
 :::
 
-:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (fingerprint := "889730987198463215")
+:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "440130193823260376")
 *Definition: an op that can be written and read back.* Let $`f` be a
 function and $`o` an op with the op instance $`p`. The op $`o` is _well
 formed_ in $`f` when:
@@ -56,7 +56,7 @@ op back: it finds the types of the operands where they are defined, and
 gives them to the dialect with the op's name and attributes.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Module.WellFormed (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Module.funcs) (fingerprint := "7872986500634341995")
+:::readable Fir.Func.WellFormed Fir.Module.WellFormed (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "15885481420375707893")
 *Definition: a well-formed function, and a well-formed module.* A function
 $`f` is _well formed_ when:
 
@@ -132,7 +132,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (fingerprint := "9390762706277760282")
+:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "2423456635398959889")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The parser: readable blocks" =>
 
-:::readable Fir.Text.Tok (fingerprint := "12528244488067754483")
+:::readable Fir.Text.Tok (pin := Fir.Location.limit) (fingerprint := "10478793237488592436")
 *Definition: a token.* The lexer reads a text into these tokens, from the
 {ref "The-fir-specification--Text-format--Tokens"}[tokens section]:
 
@@ -39,7 +39,7 @@ are read whole: a location reference below $`2^{32}`, and an integer of
 any size.
 :::
 
-:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (fingerprint := "3751236187582952347")
+:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (pin := Fir.Text.hex) (fingerprint := "6110927321418021566")
 *Definition: a token at its position, and the parts of an error.* A token
 of the lexer's output is a token with the
 {ref "The-fir-specification--Text-format--Round-trips"}[position] where it
@@ -56,7 +56,8 @@ hexadecimal with at least four digits.
 :::
 
 :::readable Fir.Text.length_dropWhile_le Fir.Text.Left (fingerprint := "6601872693856412026")
-*Definition and theorem: what follows a token is never longer.* For every
+*Definition and theorem: what a reader leaves is never longer than what it
+was given.* For every
 test $`f` on characters and list of characters $`l`, dropping the
 characters at the start of $`l` that pass $`f` leaves at most
 $`|l|` characters. Each reader returns the characters after what it read
@@ -117,7 +118,7 @@ that a constant of millions of digits, as wide types allow, is read in
 about the time of a few products, not in time quadratic in its length.
 :::
 
-:::readable Fir.Text.lexAt Fir.Text.lexInt (pin := Fir.Location.limit) (pin := Fir.isWord) (pin := Fir.isWordStart) (fingerprint := "18044435039582034324")
+:::readable Fir.Text.lexAt Fir.Text.lexInt (pin := Fir.Location.limit) (pin := Fir.isWord) (pin := Fir.isWordStart) (pin := Fir.isNameChar) (fingerprint := "5941601449031920245")
 *Definition: reading what follows `@`, and an integer.* After `@`, the
 lexer reads:
 
@@ -133,7 +134,7 @@ An integer is its digits, read as above, and is negative when a `-` comes
 before them. Its value has no limit: the dialect that reads it bounds it.
 :::
 
-:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "15943290798590331776")
+:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (fingerprint := "1931958670576985994")
 *Definition: reading one token.* The lexer reads the token that starts with
 the character $`c`, which is not whitespace and does not start a comment:
 
@@ -155,7 +156,7 @@ follows it, and a number that a name character follows is an error, so
 each token is the longest one that the text starts with: maximal munch.
 :::
 
-:::readable Fir.Text.notLineFeed Fir.Text.firstDisallowed Fir.Text.lexFrom Fir.Text.lex (fingerprint := "2730281715704157579")
+:::readable Fir.Text.notLineFeed Fir.Text.firstDisallowed Fir.Text.lexFrom Fir.Text.lex (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "16125086146743415106")
 *Definition: the tokens of a text.* The lexer reads the characters of a
 text from the first, at line 1 and column 1, and keeps the position:
 

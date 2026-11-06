@@ -52,7 +52,7 @@ reader an order of characters other than the one a parser reads, as the
 Trojan Source attack does with bidirectional controls in comments.
 :::
 
-:::readable Fir.Text.escapeChar Fir.Text.quote (pin := Fir.Text.unicodeEscape) (pin := Fir.Text.lexEscape) (fingerprint := "6967927386097184355")
+:::readable Fir.Text.escapeChar Fir.Text.quote (pin := Fir.Text.unicodeEscape) (pin := Fir.Text.lexEscape) (pin := Fir.Text.hex) (fingerprint := "475873319601185174")
 *Definition: the one spelling of a string.* A string is written between
 double quotes, and holds any Unicode text:
 
@@ -66,11 +66,12 @@ block.
 Each character $`c` of the string has one spelling,
 $`\mathrm{esc}(c)`:
 
-$$`\mathrm{esc}(c) = \begin{cases} \texttt{\textbackslash"} & \text{if } c = \texttt{"} \\ \texttt{\textbackslash\textbackslash} & \text{if } c = \texttt{\textbackslash} \\ \texttt{\textbackslash n} & \text{if } c = \mathrm{LF} \\ \texttt{\textbackslash t} & \text{if } c = \mathrm{TAB} \\ \texttt{\textbackslash u\{}\,\mathrm{hex}(c)\,\texttt{\}} & \text{else if escaped} \\ c & \text{otherwise} \end{cases}`
+$$`\mathrm{esc}(c) = \begin{cases} \texttt{\textbackslash"} & \text{if } c = \texttt{"} \\ \texttt{\textbackslash\textbackslash} & \text{if } c = \texttt{\textbackslash} \\ \texttt{\textbackslash n} & \text{if } c = \mathrm{LF} \\ \texttt{\textbackslash t} & \text{if } c = \mathrm{TAB} \\ \texttt{\textbackslash u\{}\,h\,\texttt{\}} & \text{else if escaped} \\ c & \text{otherwise} \end{cases}`
 
 where $`\mathrm{LF}` is the line feed, $`\mathrm{TAB}` the tab, and
-$`\mathrm{hex}(c)` the code point of $`c` in lowercase
-hexadecimal with no leading zeros. The string $`s = c_1 \dots c_n` is
+$`h = \mathrm{hex}(\mathrm{cp}(c))`: $`\mathrm{cp}(c)` is the code point
+of $`c`, and $`\mathrm{hex}` gives its lowercase hexadecimal digits, as in
+the previous block. The string $`s = c_1 \dots c_n` is
 written
 
 $$`\mathrm{quote}(s) = \texttt{"}\,\mathrm{esc}(c_1) \dots \mathrm{esc}(c_n)\,\texttt{"}`
@@ -84,7 +85,7 @@ errors, and each string has exactly one spelling, as the canonical text
 needs.
 :::
 
-:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "17101658456052515936")
+:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "7802717031587735127")
 *Definition: the tokens, and the one spelling of an integer and of a
 symbol.* The tokens of a text are these:
 
@@ -98,9 +99,9 @@ digit other than 0.
 
 * A value is `%` and a name, so `%0` and `%acc.1` are values. A block label
   is a name after `^`.
-* A symbol names a function or another global. It is written $`\mathrm{sym}(s)`:
+* A symbol names a function or another global. It is written $`\mathrm{printsym}(s)`:
 
-  $$`\mathrm{sym}(s) = \begin{cases} \texttt{@}\,s & s \text{ a word} \\ \texttt{@}\,\mathrm{quote}(s) & \text{otherwise} \end{cases}`
+  $$`\begin{aligned} & \mathrm{printsym}(s) = \\ & \quad \begin{cases} \texttt{@}\,s & s \text{ a word} \\ \texttt{@}\,\mathrm{quote}(s) & \text{otherwise} \end{cases} \end{aligned}`
 
   so `@sum`, but `@"1"` and `@"_ZN3foo$LT$E"`. A name that is a word is
   never quoted, so each symbol has one spelling, and the parser rejects
@@ -112,7 +113,7 @@ digit other than 0.
   dialect's name before the names of its ops; no word of the core dialect
   contains one.
 * An integer is written in decimal with no leading zeros and no `+`, and
-  with `-` when it is negative: $`\mathrm{int}(i)`. `-0` is not an
+  with `-` when it is negative: $`\mathrm{printint}(i)`. `-0` is not an
   integer, and the only other token with `-` is `->`.
 
 Numbers have limits, so that every implementation can hold them in integers

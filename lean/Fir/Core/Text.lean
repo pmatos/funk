@@ -33,11 +33,14 @@ results, which are written where those values are defined.
   (ADR-2026-11-03-1000).
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
-values of a scripted choice sequence are spelled the same way: `true` and
-`false` at `i1`, and signed decimal at every other width. An argument and a
-value in the output may also be `poison`, at any integer type: `fir-ref run`
-runs a function on a poison argument, as the runs of every function do. A
-choice may not, since `freeze` chooses a value of its type.
+choices that scripted mode follows (see the section "Exhaustive, scripted
+and sampled modes") are spelled the same way: `true` and `false` at `i1`,
+and signed decimal at every other width. An argument and a value in the
+output may also be `poison`, at any integer type: `fir-ref run` accepts a
+poison argument, since the runs of a function that the execution chapter
+defines include runs on poison arguments, so differential tests cover them
+too. A choice may not be `poison`, since `freeze` chooses a value of its
+type.
 
 This section gives, in order: the names of the predicates and the ops, the
 attributes of an op, how an op and a type are read back, the core

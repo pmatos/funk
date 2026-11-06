@@ -19,9 +19,9 @@ changes under it.
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`,
 $`\mathrm{print}(a)`, is:
 
-$$`\begin{aligned} \mathrm{print}(\mathsf{word}~w) &= w \\ \mathrm{print}(\mathsf{int}~i) &= \mathrm{int}(i) \\ \mathrm{print}(\mathsf{str}~s) &= \mathrm{quote}(s) \\ \mathrm{print}(\mathsf{sym}~s) &= \mathrm{sym}(s) \\ \mathrm{print}(\mathsf{app}~h~a_1 \dots a_n) &= h\,\texttt{(}\,\mathrm{print}(a_1)\texttt{,} \\ &\quad \dots\texttt{,}~\mathrm{print}(a_n)\,\texttt{)} \end{aligned}`
+$$`\begin{aligned} \mathrm{print}(\mathsf{word}~w) &= w \\ \mathrm{print}(\mathsf{int}~i) &= \mathrm{printint}(i) \\ \mathrm{print}(\mathsf{str}~s) &= \mathrm{quote}(s) \\ \mathrm{print}(\mathsf{sym}~s) &= \mathrm{printsym}(s) \\ \mathrm{print}(\mathsf{app}~h~a_1 \dots a_n) &= h\,\texttt{(}\,\mathrm{print}(a_1)\texttt{,} \\ &\quad \dots\texttt{,}~\mathrm{print}(a_n)\,\texttt{)} \end{aligned}`
 
-where $`\mathrm{int}(i)`, $`\mathrm{quote}(s)` and $`\mathrm{sym}(s)` are
+where $`\mathrm{printint}(i)`, $`\mathrm{quote}(s)` and $`\mathrm{printsym}(s)` are
 the one spelling of an integer, a string and a symbol, from the
 {ref "The-fir-specification--Text-format--Tokens"}[tokens section]. The
 arguments of an applied attribute are separated by a comma and a space, and
@@ -84,7 +84,7 @@ result, one attribute, two operands and the location reference 3.
 $`s`, the parameters $`p^*`, the result types $`t_1, \dots, t_n` and the
 body $`b^*` is written:
 
-* `func`, a space, $`\mathrm{sym}(s)`, then its parameters' definitions in
+* `func`, a space, $`\mathrm{printsym}(s)`, then its parameters' definitions in
   parentheses, with no space before them: `func @sum(%n: i32)`;
 * when $`n > 0`, ` -> ` and the result types, separated by a comma and a
   space;

@@ -20,7 +20,7 @@ record:
 
 ```grammar Fir.Text.SDef
 \mathit{sdef}
-name,pos,ty,tyPos \begin{array}{l} \{\mathsf{name}~x,~\mathsf{pos}~p, \\ \enspace \mathsf{ty}~a,~\mathsf{type\_pos}~q\,\} \end{array}
+name,pos,ty,tyPos \begin{array}{l} \{\mathsf{name}~x,~\mathsf{pos}~p, \\ \enspace \mathsf{ty}~a,~\mathsf{ty\_pos}~q\,\} \end{array}
 ```
 
 As in the
@@ -30,7 +30,7 @@ that holds an $`A_i` for each $`i`. Here $`x` is the value's name and $`p` its
 {ref "The-fir-specification--Text-format--Round-trips"}[position],
 $`a` the type as written, an
 {ref "The-fir-specification--Text-format--Grammar"}[attribute], and $`q`
-the type's position ($`\mathsf{type\_pos}` is `tyPos` in the Lean). Decoding
+the type's position ($`\mathsf{ty\_pos}` is `tyPos` in the Lean). Decoding
 rejects a type, or a value defined twice, at these positions.
 :::
 
@@ -141,8 +141,8 @@ type. A list of definitions is one or more of them, separated by commas.
 
 :::readable Fir.Text.readSuccArgs Fir.Text.readSucc Fir.Text.readMoreOperands Fir.Text.readOperands Fir.Text.readOpLoc (fingerprint := "7501897801903139219")
 *Definition: reading operands, successors and the location reference.* A
-successor is a label, followed, when its block has arguments, by the
-values it passes, in parentheses and separated by commas. An op's operands
+successor is a label, followed, when `(` follows it, by one or more values
+that it passes, separated by commas, and `)`. An op's operands
 and successors are read together, separated by commas: first the operands,
 each a value with its position, as long as a comma and a value follow;
 then the successors. An op may have operands only, successors only, both

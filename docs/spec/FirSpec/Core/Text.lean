@@ -38,12 +38,12 @@ $`\mathsf{cond\_br}`, which the Lean spells `condBr` and the text
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{const}_N(c) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
 
-* $`\mathrm{const}_N(c)` is the word `true` or `false` when $`N = 1`, as
+* $`\mathrm{constattr}_N(c)` is the word `true` or `false` when $`N = 1`, as
   $`c` is 1 or 0, and otherwise the integer that the $`N` bits of $`c` give
   when read as a two's-complement signed integer;
 * $`\mathrm{flags}(\mathit{fl})` is the word `nuw` when the flag
@@ -81,8 +81,8 @@ $`\mathsf{i}W` are integer types.
 * `const`: from `true` or `false`, no operands and the result type
   $`\mathsf{i1}`, it is $`\mathsf{const}_1~1` or $`\mathsf{const}_1~0`.
   From an integer $`v`, no operands and the result type $`\mathsf{i}W`
-  with $`W \neq 1`, it is $`\mathsf{const}_W~v`, when $`v` is the value of
-  some $`W`-bit integer read as signed.
+  with $`W \neq 1`, it is $`\mathsf{const}_W~c`, where $`c` is the
+  $`W`-bit constant whose signed reading is $`v`, when there is one.
 * `icmp`: from the name of a predicate $`p`, the operand types
   $`\mathsf{i}A~\mathsf{i}B` with $`A = B`, and the result type
   $`\mathsf{i1}`, it is $`\mathsf{icmp}_A~p`.
@@ -125,8 +125,9 @@ are in range, and whether a width change changes the width, are left to
 :::readable Fir.Core.Ty.attr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (fingerprint := "2785724965273753220")
 *Definition: how a core type is written, and read back.* The
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[integer type]
-$`\mathsf{i}N` is written as the word `i` followed by $`N` in decimal, and
-the pointer type as the word `ptr`.
+$`\mathsf{i}N` is written $`\mathrm{tyattr}(\mathsf{i}N)`, the word `i`
+followed by $`N` in decimal, and $`\mathrm{tyattr}` of the pointer type is
+the word `ptr`.
 
 $`\mathrm{decodety}(a)` reads a type back. It is the pointer type when $`a`
 is the word `ptr`. It is $`\mathsf{i}N` when $`a` is a word made of `i` and
@@ -136,7 +137,7 @@ undefined otherwise, so `i032`, `u8` and `i16777216` do not decode. `i0`
 decodes, and validation rejects it.
 :::
 
-:::readable Fir.Core.samples (fingerprint := "13403930055516411032")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "2188211750398099125")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the blocks
 above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
@@ -146,9 +147,9 @@ and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
 holds each of the 25 core ops at least once, with each of the ten
 predicates, at widths from 1 to 128, with and without each flag, and
-$`\mathsf{ret}` with and without operands. Checks run on every build test
+$`\mathsf{ret}` with and without operands. On every build, checks test
 that each of them reads back from its own name, attributes and types, and
 that misspellings such as `i032`, flags in the wrong order and `const 1`
 at `i1` do not. The proof for every op instance, of every width, is in the
-{ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[next section but two].
+section {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[The core dialect's text is lawful].
 :::
