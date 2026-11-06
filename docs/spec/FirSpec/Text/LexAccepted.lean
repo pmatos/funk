@@ -25,9 +25,10 @@ this lemma.
 :::
 
 :::readable Fir.Text.mem_takeWhile Fir.Text.isName_takeWhile Fir.Text.isWord_takeWhile (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isWordStart) (fingerprint := "1045717097886148641")
-*Lemmas: a run of name characters is a name.* For every test $`p` on
-characters and every list of characters, each character of the longest
-prefix of the list whose characters all pass $`p` passes $`p`. So, for
+*Lemmas: a leading run of name characters is a name, or a word.* For
+every test $`p` on characters and every list of characters, each
+character of the longest prefix of the list whose characters all pass
+$`p` passes $`p`. So, for
 every list of characters:
 
 * when the longest run of
@@ -94,6 +95,7 @@ before:
 $$`\mathrm{lex}(t) = \mathsf{ok}(\mathit{ts}) \implies \mathrm{writable}(\mathit{ts})`
 
 Here $`\mathrm{lex}(t) = \mathsf{ok}(\mathit{ts})` says that the lexer
-reads $`t` without an error, and gives $`\mathit{ts}`. This is the first of the parser's three steps: the grammar step starts
-from tokens that can be written.
+reads $`t` without an error, and gives $`\mathit{ts}`. This is the first
+of the parser's three steps: the grammar step starts from tokens that can
+be written.
 :::
