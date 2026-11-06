@@ -3,27 +3,39 @@ import Fir.Text.ReadLocs
 /-!
 # The syntax tree of a module
 
-The proof that parsing a printed module gives the module back (#11) has one
-step for each step of the parser. The first, `lex_print`, reads the printed
-text as the module's tokens, `Module.tokens`. The second, in this section
-and the ones after it, reads those tokens by the grammar: `readModule` gives
-the module's own syntax tree, `Module.tree`, up to positions. The third
-decodes that tree.
+The parser reads a text in three steps: the lexer reads it as tokens, the
+grammar reads the tokens as a tree, and decoding turns the tree into a
+module. The proof that parsing the printed text of a well-formed module
+gives the module back has one step for each, and this section and the
+eleven after it give the last two:
+
+* Lexing printed text, in the sections before this one, reads the printed
+  text of a module as exactly the module's tokens, then `eof`.
+* The grammar step reads those tokens, at any positions, as the module's
+  own tree, up to positions. This section defines that tree. The next
+  seven read it back: what it means for a reader to read tokens back, then
+  definitions and successors, ops, blocks and regions, a function, the
+  location table, and the whole module.
+* The decoding step gives the module back from any tree that is the
+  module's tree up to positions. Three sections take it: the first pass,
+  which builds the scope of a function; the second pass, which decodes its
+  blocks and ops; and the module.
+* The last section, the round trip, proved, puts the three steps together.
 
 The tree of a module is how the grammar sees it. Each item is a `func` with
 its symbol, its parameters, its result types and no attributes, and its body
-is its blocks, `SBody.blocks`, even when it has none: a function's tokens
-after its `{` start with a label or are its `}`, never a word, so `readItem`
-reads its body as blocks. Each op is its results, its name and attributes as
-the dialect writes them (`opName`, `opAttrs`), its operands, its successors,
-its regions and its location reference. Each type is the attribute that
-writes it, `tyAttr`. The location table is the module's own.
+is its blocks, even when it has none: a function's tokens after its `{`
+start with a label or are its `}`, never a word, so the grammar reads its
+body as blocks. Each op is its results, its name and attributes as the
+dialect writes them, its operands, its successors, its regions and its
+location reference. Each type is the attribute that writes it. The location
+table is the module's own.
 
-The tree that `readModule` gives holds the position of each part that
+The tree that the grammar reads holds the position of each part that
 decoding can reject, taken from the tokens. A module has no positions, so
-the tree of a module puts `TextPos.zero` at each of them, and `SModule.erase`
-does the same to the tree that `readModule` gives. The reader's result is
-stated as the equality of the two: `SModule.erase s = Module.tree m`.
+the tree of a module puts the empty position at each of them, and erasing
+the positions of the tree that the grammar reads does the same. The grammar
+step is stated as the equality of the two.
 -/
 
 namespace Fir
