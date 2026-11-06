@@ -1,111 +1,7 @@
 import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
-import FirSpec.Syntax.Dialect
-import FirSpec.Syntax.Location
-import FirSpec.Syntax.Module
-import FirSpec.Core.Types
-import FirSpec.Core.Ops
-import FirSpec.Core.Signature
-import FirSpec.Core.Poison
-import FirSpec.Core.Unlawful
-import FirSpec.Core.Values
-import FirSpec.Execution.Behaviour
-import FirSpec.Execution.CallSteps
-import FirSpec.Execution.Effects
-import FirSpec.Execution.Fuel
-import FirSpec.Execution.Propagation
-import FirSpec.Execution.Refinement
-import FirSpec.Execution.Values
-import FirSpec.Execution.SetRuns
-import FirSpec.Execution.Monotone
-import FirSpec.Execution.Environment
-import FirSpec.Execution.Progress
-import FirSpec.Execution.Scoped
-import FirSpec.Execution.Jumps
-import FirSpec.Execution.Calls
-import FirSpec.Validation.Scope
-import FirSpec.Validation.Dominance
-import FirSpec.Validation.Rules
-import FirSpec.Core.Validation
-import FirSpec.Core.Rejects
-import FirSpec.Validation.Check
-import FirSpec.Validation.Tables
-import FirSpec.Validation.Search
-import FirSpec.Validation.Graph
-import FirSpec.Validation.CheckOps
-import FirSpec.Validation.CheckFuncs
-import FirSpec.Validation.CheckModule
-import FirSpec.Core.Check
-import FirSpec.Core.Runs
-import FirSpec.Core.CallFree
-import FirSpec.Core.ValidRuns
-import FirSpec.Text.Tree
-import FirSpec.Text.ReadAttrs
-import FirSpec.Text.ReadDefs
-import FirSpec.Text.ReadOps
-import FirSpec.Text.ReadBlocks
-import FirSpec.Text.ReadFunc
-import FirSpec.Text.ReadTable
-import FirSpec.Text.ReadModule
-import FirSpec.Text.DecodeScope
-import FirSpec.Text.DecodeBlocks
-import FirSpec.Text.DecodeModule
-import FirSpec.Text.PrintParse
-import FirSpec.Execution.Interpreter
-import FirSpec.Core.Arith
-import FirSpec.Core.Wrap
-import FirSpec.Core.Freeze
-import FirSpec.Core.Bitwise
-import FirSpec.Core.Width
-import FirSpec.Core.Div
-import FirSpec.Core.Compare
-import FirSpec.Core.Control
-import FirSpec.Core.Branch
-import FirSpec.Core.Call
-import FirSpec.Core.Semantics
-import FirSpec.Core.ArithLaws
-import FirSpec.Core.WrapLaws
-import FirSpec.Core.FreezeLaws
-import FirSpec.Core.BitwiseLaws
-import FirSpec.Core.WidthLaws
-import FirSpec.Core.DivLaws
-import FirSpec.Core.CompareLaws
-import FirSpec.Core.ControlLaws
-import FirSpec.Core.BranchLaws
-import FirSpec.Execution.Morphism
-import FirSpec.Execution.ChoiceTree
-import FirSpec.Execution.Modes
-import FirSpec.Core.Modes
-import FirSpec.Execution.RunPaths
-import FirSpec.Execution.EnvRefine
-import FirSpec.Execution.BlackBox
-import FirSpec.Execution.RefineUp
-import FirSpec.Execution.RefineDown
-import FirSpec.Execution.RefineRuns
-import FirSpec.Execution.Replace
-import FirSpec.Core.CallRefine
-import FirSpec.Execution.Lawful
-import FirSpec.Core.Lawful
-import FirSpec.Text.Lexical
-import FirSpec.Text.Grammar
-import FirSpec.Core.Text
-import FirSpec.Text.Print
-import FirSpec.Text.RoundTrip
-import FirSpec.Core.TextLaws
-import FirSpec.Text.Lex
-import FirSpec.Text.Read
-import FirSpec.Text.ReadLocs
-import FirSpec.Text.Decode
-import FirSpec.Text.Example
-import FirSpec.Text.Tokens
-import FirSpec.Text.LexNumbers
-import FirSpec.Text.LexTokens
-import FirSpec.Text.LexStrings
-import FirSpec.Text.LexLayout
-import FirSpec.Text.LexPrint
-import FirSpec.Text.LexModule
-import FirSpec.Text.LexWellFormed
+import FirSpec.ReadableDocs
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -403,23 +299,23 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.PrintParse "The round trip, proved" FirSpec.Text.PrintParse (level := 2)}
 
-{includeLiterate "." Fir.Text.LexAccepted "What the lexer accepts" (level := 2)}
+{includeReadable "." Fir.Text.LexAccepted "What the lexer accepts" FirSpec.Text.LexAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAccepted "What the grammar accepts" (level := 2)}
+{includeReadable "." Fir.Text.ReadAccepted "What the grammar accepts" FirSpec.Text.ReadAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" FirSpec.Text.ReadAcceptedBlocks (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedItems "Accepted items" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedItems "Accepted items" FirSpec.Text.ReadAcceptedItems (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAcceptedModule "An accepted location table" (level := 2)}
+{includeReadable "." Fir.Text.ReadAcceptedModule "An accepted location table" FirSpec.Text.ReadAcceptedModule (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" FirSpec.Text.DecodeAcceptedScope (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAccepted "What the second pass accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAccepted "What the second pass accepts" FirSpec.Text.DecodeAccepted (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeAcceptedModule "What decoding accepts" (level := 2)}
+{includeReadable "." Fir.Text.DecodeAcceptedModule "What decoding accepts" FirSpec.Text.DecodeAcceptedModule (level := 2)}
 
-{includeLiterate "." Fir.Text.ParseWellFormed "Parsed modules are well formed" (level := 2)}
+{includeReadable "." Fir.Text.ParseWellFormed "Parsed modules are well formed" FirSpec.Text.ParseWellFormed (level := 2)}
 
 # Architecture decision records
 %%%

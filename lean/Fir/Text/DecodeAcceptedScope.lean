@@ -9,21 +9,20 @@ a function's scope: it adds each definition of the function, at any depth,
 and rejects a value that is already in the scope, at its second definition.
 So when the pass succeeds, the function names each value once.
 
-`Adds define decode defs a` says what the first pass does with a part `a` of
-the tree, a list of blocks, ops or regions. When the pass adds `a` to a
-scope that holds the definitions `L`, with no name twice, and the second
-pass decodes `a` as `x`, the scope it gives holds `L ++ defs x`, with no
-name twice. `defs` is `Block.scopeDefs`, `Operation.scopeDefs` or
-`Region.scopeDefs`: the definitions of the decoded blocks, ops or regions,
-in the order that the first pass reads them. Both passes decode each
-definition with `decodeDef`, so the first pass adds exactly the definitions
-that the second gives the function. `Func.scopeDefs_perm` then makes them,
-with the parameters, a permutation of `Func.defs`, as in the round trip.
+What the first pass adds is stated for a part of the tree: a list of
+blocks, ops or regions. When the pass adds the part to a scope that holds
+some values with their types, no name twice, and the second pass decodes
+the part, the scope it gives holds those values followed by the definitions
+of what the second pass gives, still no name twice. Those definitions are
+listed in the order that the first pass reads them. Both passes decode each
+definition in the same way, so the first pass adds exactly the definitions
+that the second gives the function. With the parameters, they are the
+function's definitions in another order, as the round trip shows.
 
 As in the round trip's proof (ADR-2026-11-03-0028), the lemmas for blocks,
 ops and regions take what the pass does with the parts they hold as
-hypotheses, and three short mutual theorems tie them together by
-structural recursion on the tree.
+hypotheses, and three short theorems, proved together by recursion on the
+tree, tie them together.
 -/
 
 namespace Fir.Text

@@ -5,23 +5,22 @@ import Fir.Text.DecodeAcceptedScope
 
 The second pass of decoding decodes each block and op of a function in the
 scope that the first pass built. On a tree that can be written, it gives
-blocks and ops that the scope accepts (`Block.AcceptedIn`,
-`Operation.AcceptedIn`): what `Func.OpWellFormed` asks of each op, with the
-scope in place of `Func.typeOf`, and definitions that can be written and
-decode back to themselves (`WritableDef`).
+blocks and ops that the scope accepts: what a well-formed function asks of
+each op, with the scope in place of the type that the function gives each
+value, and definitions that can be written and decode back to themselves.
 
-Two laws of `LawfulDialectText` turn what decoding read into what it gives.
-`encode_decodeTy` says that a type that decodes from an attribute is
-written as that attribute, so a type written as a type decodes back to
-itself. `encode_decodeOp` says that the op instance that `decodeOp` gives
-has the name, the attributes, the operand types and the result types that
-it was given. Its name and attributes came from the tree, so they can be
-written; its operand types came from the scope, through `operandTypes`; and
-its result types are those of the op's results.
+Two laws of a lawful text turn what decoding read into what it gives. The
+first says that a type that decodes from an attribute is written as that
+attribute, so a type written as a type decodes back to itself. The second
+says that the op instance that the dialect decodes from a name, attributes,
+operand types and result types has that name, those attributes and those
+types. Its name and attributes came from the tree, so they can be written;
+its operand types came from the scope; and its result types are those of
+the op's results.
 
 As for the first pass, the lemmas for blocks, ops and regions take what the
-pass does with the parts they hold as hypotheses, and three short mutual
-theorems tie them together by structural recursion on the tree.
+pass does with the parts they hold as hypotheses, and three short theorems,
+proved together by recursion on the tree, tie them together.
 -/
 
 namespace Fir.Text

@@ -17,7 +17,8 @@ Some sections show readable blocks, prose for a newcomer with notation in
 the WebAssembly specification's style, in place of each declaration, and
 hide the Lean under each one in a `<details>` (ADR-2026-11-05-2012). The
 blocks of the module `Fir.X.Y` are the Verso document
-`FirSpec/X/Y.lean`, and `FirSpec.lean` renders the section with
+`FirSpec/X/Y.lean`, which [`FirSpec/ReadableDocs.lean`](FirSpec/ReadableDocs.lean)
+imports, and `FirSpec.lean` renders the section with
 `{includeReadable "." Fir.X.Y "Title" FirSpec.X.Y (level := 2)}`.
 
 A readable block names the declarations it explains, pins with
@@ -36,8 +37,9 @@ fingerprint: read the block again against the Lean, correct it, then pin
 the new fingerprint. It also fails
 when a declaration of the module has no block, and when a ```` ```grammar ````
 box misses a constructor or shows one twice. To move a section, write its
-document, pin each block with the fingerprint the first build prints, and
-switch its `{includeLiterate}` to `{includeReadable}`.
+document, import it in `FirSpec/ReadableDocs.lean`, pin each block with the
+fingerprint the first build prints, and switch its `{includeLiterate}` to
+`{includeReadable}`.
 
 ## Appendix and build
 
