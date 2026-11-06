@@ -7,36 +7,34 @@ import Fir.Core.TextLaws
 
 The parser reads a text in three steps, and the proof of the round trip
 has one for each. The lexer reads the printed text of a module as the
-module's tokens, `Module.tokens` (`lex_print`). The grammar reads those
-tokens, at any positions, as the module's tree, `Module.tree`, up to
-positions (`readModule_tokens`). Decoding gives the module back from any
-tree that erases to its tree (`Module.WellFormed.decodeModule_eq`). Each
-step needs only part of what `Module.WellFormed` says, and a well-formed
-module has all of it. So `parse(print(m)) == m` for every well-formed
-module `m` of every dialect whose text is lawful: `printThenParse`, the
-spec's `PrintThenParse` for the parser `Fir.parse`.
+module's tokens. The grammar reads those tokens, at any positions, as the
+module's tree, up to positions. Decoding gives the module back from any
+tree that erases to its tree. Each step needs only part of what
+well-formedness says, and a well-formed module has all of it. So parsing
+the printed text of a well-formed module gives the module back, for every
+dialect whose text is lawful: the parser meets the round trip print then
+parse.
 
-The second round trip, `print(parse(t)) == t` for every text `t` printed
-from a well-formed module, follows: `parseThenPrint`. So does injectivity:
-two well-formed modules that print the same text are the same module
-(`Module.WellFormed.print_injective`). Every valid module is well formed
-(`validIsWellFormed`), so both hold for valid modules too. With
-`Core.lawfulDialectText`, all of it holds for the core dialect.
+The second round trip, that printing the module parsed from a text printed
+from a well-formed module gives that text back, follows. So does
+injectivity: two well-formed modules that print the same text are the
+same module. Every valid module is well formed, so both hold for valid
+modules too. The core dialect's text is lawful, so all of it holds for the
+core dialect.
 
 # What a new dialect or a new core op needs
 
-The proof uses nothing of a dialect but the seven laws of
-`LawfulDialectText`, so it covers every lawful dialect at once:
+The proof uses nothing of a dialect but the seven laws of lawful text, so
+it covers every lawful dialect at once:
 
-* a new dialect gets the round trip by proving its own `LawfulDialectText`;
+* a new dialect gets the round trip by proving the laws for its own text;
 * a change to the core op set, such as a new op or a new flag, extends the
-  proof of `LawfulDialectText CoreDialect`, `Core.lawfulDialectText`, case
-  by case.
+  proof of the core dialect's laws, case by case.
 
-Neither reworks the proof of `PrintThenParse`. A new kind of item (H4, H5)
-is a change to the printer and the parser themselves, since a new
-constructor of `Item` must be printed and `decodeItem` must learn to decode
-it, and so it extends the lemmas for items of each step of this proof.
+Neither reworks the proof of the round trip. A new kind of item is a change
+to the printer and the parser themselves, since it must be printed and the
+decoder of items must learn to decode it, and so it extends the lemmas for
+items of each step of this proof.
 -/
 
 namespace Fir

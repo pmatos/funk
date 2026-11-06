@@ -4,32 +4,34 @@ import Fir.Text.LexWellFormed
 /-!
 # Reading printed tokens
 
-The grammar step of the proof reads a module's tokens, `Module.tokens`, at
-any positions, with the readers of the grammar sections. Most readers read
-as long as a token follows that continues what they read: `readAttrs` while
-an attribute follows, `readMore` while a comma follows, `readOps` while a
-value or a word follows, and so on. A word followed by `(` is an applied
-attribute or type. So whether a reader reads a construct's tokens as the
-construct depends on the token after them, as maximal munch does for the
-lexer, and each lemma says which tokens may follow. The printer puts one
-there that stops the reader: a comma, a parenthesis, a brace, `=`, a label,
-a location reference or the word `locs`.
+The grammar step of the proof reads a module's tokens, at any positions,
+with the readers of the grammar sections. Most readers read as long as a
+token follows that continues what they read: the reader of attributes while
+an attribute follows, the reader of the rest of a list while a comma
+follows, the reader of ops while a value or a word follows, and so on. A
+word followed by `(` is an applied attribute or type. So whether a reader
+reads a construct's tokens as the construct depends on the token after
+them, as maximal munch does for the lexer, and each lemma says which tokens
+may follow. The printer puts one there that stops the reader: a comma, a
+parenthesis, a brace, `=`, a label, a location reference or the word
+`locs`.
 
-`Reads read f x toks stop` says that on any tokens that hold `toks`, then
-tokens whose first, if any, satisfies `stop`, `read` gives a result that `f`
-maps to `x`, and leaves exactly the tokens after `toks`. The positions of
-the tokens are any: `f` erases the ones the result holds.
+A reader reads some tokens back as a value, before some set of tokens, when
+on any tokens that hold them, then tokens whose first, if any, is in that
+set, it gives that value and leaves exactly the tokens after them. The
+positions of the tokens are any, so the value is compared once the
+positions that the reader read are erased.
 
 The grammar step needs nothing of a module's names, words or numbers but
-two things. Each type it writes is written as a word or an applied word
-(`Attr.IsType`), since `readType` reads only those; and each line and
-column of its location table is below `2^32`, since `readNat` reads only
-those. The readers take any token of the right kind, so a value name or a
-label that is not a name, an op name or an attribute's word that is not a
-word, and an op's location reference of `2^32` each read back as
-themselves: the lexer, not the grammar, rejects those. The references
-inside the location table are bounded by the hypothesis that gives the
-lines and columns, `LocTable.InLimits`, although no reader checks them.
+two things. Each type it writes is written as a word or an applied word,
+since the reader of types reads only those; and each line and column of its
+location table is below `2^32`, since the reader of lines and columns reads
+only those. The readers take any token of the right kind, so a value name
+or a label that is not a name, an op name or an attribute's word that is
+not a word, and an op's location reference of `2^32` each read back as
+themselves: the lexer, not the grammar, rejects those. No reader checks
+the location references inside the table, but a table within limits keeps
+them below `2^32` too.
 -/
 
 namespace Fir.Text

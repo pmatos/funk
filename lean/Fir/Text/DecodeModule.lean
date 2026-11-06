@@ -4,17 +4,17 @@ import Fir.Text.DecodeBlocks
 # Decoding the tree of a module
 
 A module's tree decodes item by item, and each item of a module's tree is a
-`func` with no attributes whose body is its blocks. So `decodeItem` takes
-its branch for blocks, the only one that printed text reaches: `readModule`
-reads every function body of a printed module as `SBody.blocks`, the empty
-`{ }` included, never as `SBody.items []`. `decodeFunc` then decodes the
-result types, builds the scope with the first pass, decodes the parameters,
-and decodes the blocks in the scope with the second pass.
+`func` with no attributes whose body is its blocks. So the decoder of items
+takes its branch for blocks, the only one that printed text reaches: the
+grammar reads every function body of a printed module as blocks, the empty
+`{ }` included, never as an empty list of items. Decoding a function then
+decodes the result types, builds the scope with the first pass, decodes the
+parameters, and decodes the blocks in the scope with the second pass.
 
-The result is `Module.WellFormed.decodeModule_eq`: on any tree that erases
-to the tree of a well-formed module, at any positions, `decodeModule` gives
-the module back. Decoding reads positions only to report errors, and on
-the tree of a well-formed module it reports none.
+The result is the decoding step: on any tree that erases to the tree of a
+well-formed module, at any positions, decoding gives the module back.
+Decoding reads positions only to report errors, and on the tree of a
+well-formed module it reports none.
 -/
 
 namespace Fir

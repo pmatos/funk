@@ -3,12 +3,14 @@ import Fir.Text.ReadDefs
 /-!
 # Reading the printed location table
 
-Each location's tokens read back as the location, whatever follows them:
-every kind of location ends with a token that its reader reads alone, a
-number, a `)` or the word `unknown`. A source range reads back when its
-lines and columns are below `2^32`, the limit that `readNat` checks and
-that `LocTable.InLimits` gives. The table's entries read back before its
-`}`, and the table before any token.
+A line or a column reads back when it is below `2^32`, and a location
+reference always. Each location's tokens read back as the location,
+whatever follows them: every kind of location ends with a token that its
+reader reads alone, a number, a `)` or the word `unknown`. A source range
+reads back when its lines and columns are below `2^32`, the limit that the
+reader of lines and columns checks, and that a table within the limits
+meets. The table's entries read back before its `}`, and the table before
+any token.
 -/
 
 namespace Fir.Text
