@@ -34,7 +34,9 @@ of digits fast to read; this theorem says that they change no value.
 
 :::readable Fir.Text.digitsValue_toDigits (pin := Nat.toDigits) (pin := Fir.Text.digitsValue) (fingerprint := "11066089495097601701")
 *Theorem: the digits of a number read back as the number.* For every
-natural number $`n`, let $`\mathrm{digits}_{10}(n)` be its decimal digits,
+natural number $`n`, with $`\mathrm{val}_{10}` the
+{ref "The-fir-specification--Text-format--The-parser"}[lexer's] reading of
+decimal digits, let $`\mathrm{digits}_{10}(n)` be its decimal digits,
 most significant first, with no leading zero (one `0` for zero). Then
 
 $$`\mathrm{val}_{10}(\mathrm{digits}_{10}(n)) = n`

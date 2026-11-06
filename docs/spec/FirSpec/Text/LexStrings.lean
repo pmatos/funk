@@ -71,7 +71,8 @@ $`s` and leaves $`c`.
 :::
 
 :::readable Fir.Text.readsToken_str (pin := Fir.Text.lexToken) (fingerprint := "16263822023326641052")
-*Theorem: a string token is read.* For every string $`s` and characters
+*Theorem: a string token is read.* For every
+{ref "The-fir-specification--Text-format--Tokens"}[string] $`s` and characters
 $`c`, the token that starts with `"`, followed by the spellings of the
 characters of $`s`, `"` and $`c`, is read as $`\mathsf{str}~s`, leaving
 $`c`. Unlike a name, a string ends at its closing quote, so $`c` may be
@@ -93,7 +94,8 @@ written bare; the printer quotes a symbol only when its name is not one.
 :::
 
 :::readable Fir.Text.isWord_iff (fingerprint := "7543824082579312445")
-*Lemma: what a word is, as a statement.* A string is a word exactly when
+*Lemma: what a word is, as a statement.* A string is a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word] exactly when
 it is a character that starts a word followed by characters that are each
 a name character. It turns the word test into a statement the proofs can
 take apart.

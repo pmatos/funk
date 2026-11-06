@@ -117,7 +117,8 @@ word: the reader takes exactly the printed name.
 :::
 
 :::readable Fir.Text.isName_iff (fingerprint := "3433924943955704327")
-*Lemma: what a name is, as a statement.* A string is a name exactly when it
+*Lemma: what a name is, as a statement.* A string is a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name] exactly when it
 has a character and each of its characters is a name character. This turns
 the name test into a statement the proofs can use.
 :::
@@ -131,7 +132,8 @@ decide questions about characters by arithmetic on code points.
 
 :::readable Fir.Text.isNameChar_iff Fir.Text.isWordStart_iff (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (fingerprint := "13655858174497020320")
 *Theorems: the name characters, and the characters that start a word, by
-code point.* A character is a name character exactly when its code point
+code point.* A character is a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name character] exactly when its code point
 is from 65 to 90 (`A` to `Z`), from 97 to 122 (`a` to `z`), 95 (`_`),
 from 48 to 57 (`0` to `9`) or 46 (`.`). It starts a word exactly when its
 code point is from 65 to 90, from 97 to 122, or 95.
@@ -166,7 +168,8 @@ character as a word.
 
 :::readable Fir.Text.readsToken_name (pin := Fir.Text.lexToken) (fingerprint := "18409507457798329378")
 *Theorem: a value or a label is read up to the end of its name.* Let
-$`\sigma` be `%` or `^`, $`x` a name, and $`c` characters with
+$`\sigma` be `%` or `^`, $`x` a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name], and $`c` characters with
 $`\mathrm{boundary}(c)`. Then $`\mathrm{reads}(\sigma, x~c, t, c)`, where
 $`t` is $`\mathsf{value}~x` when $`\sigma` is `%`, and
 $`\mathsf{label}~x` when it is `^`.
@@ -174,7 +177,8 @@ $`\mathsf{label}~x` when it is `^`.
 
 :::readable Fir.Text.readsToken_word (pin := Fir.Text.lexToken) (fingerprint := "3064419926229029853")
 *Theorem: a word is read up to the end of a token.* Let $`a` be a
-character that starts a word, $`l` characters that are each a name
+character that starts a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word], $`l` characters that are each a name
 character, and $`c` characters with $`\mathrm{boundary}(c)`. Then
 $`\mathrm{reads}(a, l~c, \mathsf{word}~(a~l), c)`: the word $`a~l` is
 read, and $`c` is left.
@@ -221,7 +225,9 @@ digits of its magnitude, which do not start with `0`.
 :::readable Fir.Text.readsToken_locRef (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "3336394283689462252")
 *Theorem: a location reference below 2³² is read.* For every natural
 number $`r < 2^{32}` whose decimal digits are $`d~l`, and characters $`c`
-with $`\mathrm{boundary}(c)`: $`\mathrm{reads}(\texttt{@}, d~l~c, \mathsf{locref}~r, c)`.
+with $`\mathrm{boundary}(c)`, the
+{ref "The-fir-specification--Abstract-syntax--Locations"}[location reference]
+$`r` is read: $`\mathrm{reads}(\texttt{@}, d~l~c, \mathsf{locref}~r, c)`.
 The lexer rejects a larger reference, which is why it must be below the
 limit to be written.
 :::
