@@ -6,33 +6,29 @@ import Fir.Execution.Calls
 
 The three obligations of the section on fuel and progress hold for every
 function of every valid core module, on every argument vector of its
-parameter types, poison included, calls and recursion included:
-`Core.fuelMonotone`, `Core.progress` and `Core.neverStuck`. A function may
-call itself, or another function that calls it back, and branches and
-loops are included. They follow from the general theorems of the previous
-sections:
+parameter types, poison included, calls and recursion included. A
+function may call itself, or another function that calls it back, and
+branches and loops are included. They follow from the general theorems of
+the previous sections:
 
-* fuel monotonicity holds for every function of every module
-  (`Func.fuelMonotone`);
-* every function of a valid core module runs within the module
-  (`Core.inModule_of_valid`). Validation's rule for `call @g` asks that
-  the module's symbol table give `@g` the type of the call, its operand
-  types and its result types, which is what a call needs; `br`,
-  `cond_br` and `ret` keep to the rules of their terminators, as for a
-  function without calls. So no path of its run is stuck
-  (`Func.neverStuck_of_inModule`);
-* every core terminator and every core op with no callee is total
-  (`Core.Op.total_all`), by the obligations of its family: every core op
-  but `call`. So its run has an outcome at every budget
-  (`Func.progress_of_inModule`). `call` needs no rule of its own: its way
-  to go on is its callee's run, which the induction on the budget in the
-  section on progress with calls covers (`Module.calls_hasPath`).
+* fuel monotonicity holds for every function of every module;
+* _every core terminator and every core op with no callee is total_:
+  these are every core op but `call`, each total by the obligations of its
+  family. `call` needs no rule of its own: its way to go on is its
+  callee's run, which the induction on the budget in the section on
+  progress with calls covers;
+* _every core function valid in the context of a module runs within that
+  module_. Validation's rule for `call @g` asks that the module's symbol
+  table give `@g` the type of the call, its operand types and its result
+  types, which is what a call needs; `br`, `cond_br` and `ret` keep to the
+  rules of their terminators, as for a function without calls. So no path
+  of its run is stuck, and, with the ops of the previous point total, its
+  run has an outcome at every budget.
 
-The theorems for core functions without calls (`Core.callFree_fuelMonotone`,
-`Core.callFree_progress`, `Core.callFree_neverStuck`) keep their
-statements. A function without calls runs within itself, so they need
-only its own validity, in any context, where these need the validity of
-its whole module, whose functions it may call.
+The theorems for core functions without calls keep their statements. A
+function without calls runs within itself, so they need only its own
+validity, in any context, where these need the validity of its whole
+module, whose functions it may call.
 -/
 
 namespace Fir.Core

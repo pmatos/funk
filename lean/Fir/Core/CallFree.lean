@@ -11,31 +11,27 @@ import Fir.Execution.Jumps
 # Every core function without calls
 
 The three obligations of the section on fuel and progress hold for every
-valid function of the core dialect that has no `call` op (`CallFree`), on
-every argument vector of its parameter types, poison included:
-`Core.callFree_fuelMonotone`, `Core.callFree_progress` and
-`Core.callFree_neverStuck`. Branches and loops are included. They follow
-from the general theorems of the previous sections:
+valid function of the core dialect that has no `call` op, on every
+argument vector of its parameter types, poison included. Branches and
+loops are included. They follow from the general theorems of the previous
+sections:
 
-* fuel monotonicity holds for every function of every module
-  (`Func.fuelMonotone`);
-* every valid core function without a `call` op runs within itself
-  (`Core.local_of_valid`): none of its ops calls a function; `br` and
-  `cond_br` go only to successors they have (`Core.br_goto_lt`,
-  `Core.condBr_goto_lt`) and give no results; and `ret`, the only core op
-  whose exit returns, returns values of the function's result types, by
-  its validation rule. So no path of its run is stuck
-  (`Func.neverStuck_of_local`);
-* every core op but `call` is total, by the obligations that each family
-  proves of its ops (`Core.Op.total`). So such a function's run has an
-  outcome at every budget (`Func.progress_of_local`).
+* fuel monotonicity holds for every function of every module;
+* _every core op but `call` is total_, by the obligations that each family
+  proves of its ops;
+* _every valid core function without calls runs within itself_: none of
+  its ops calls a function; `br` and `cond_br` go only to successors they
+  have and give no results; and `ret`, the only core op whose exit
+  returns, returns values of the function's result types, by its
+  validation rule. So no path of its run is stuck, and, its ops being
+  total, its run has an outcome at every budget.
 
 A function with a `call` op is left out here: its run runs other
 functions of its module, so these theorems, which ask only that the
 function itself be valid, cannot cover it. They came first, while `call`
-had no rules (ADR-2026-10-30-1855). The section on every valid core
-function extends them to calls and recursion, for every function of a
-valid module (`Core.fuelMonotone`, `Core.progress`, `Core.neverStuck`).
+had no rules (ADR-2026-10-30-1855). The section on core functions with
+calls extends them to calls and recursion, for every function of a valid
+module.
 -/
 
 namespace Fir.Core

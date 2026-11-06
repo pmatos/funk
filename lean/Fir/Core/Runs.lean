@@ -7,34 +7,31 @@ import Fir.Execution.Progress
 /-!
 # The tracer subset's three obligations
 
-The runs of the function `f` of a core module `M` are `Core.funcRuns M f`:
-on each argument vector of its parameter types, poison included, its run in
-the set monad at each budget. They are a `Core.FuncRuns`, so the refinement
-of core functions is about them.
+The runs of a function of a core module are its runs in the set monad on
+each argument vector of its parameter types, poison included, at each
+budget. They are the runs of a core function in the sense of refinement,
+so the refinement of core functions is about them.
 
-Ticket #10 proves the three obligations of the section on fuel and
-progress for every valid function whose ops are in its tracer subset, and
-every argument vector: `Core.tracer_fuelMonotone`, `Core.tracer_progress`
-and `Core.tracer_neverStuck`. The tracer subset is `const`, `add` without
-flags and `ret` (`Core.Op.InTracer`).
+The three obligations of the section on fuel and progress hold for every
+valid function whose ops are in the tracer subset, on every argument
+vector. The tracer subset is the ops of the roadmap's tracer bullet, the
+one tiny program that went first through every layer: `const`, `add`
+without flags and `ret`.
 
 The proofs are the general theorems of the previous sections, applied to
 the core dialect. Fuel monotonicity holds for every function of every
-module (`Func.fuelMonotone`). Progress and the no-stuck obligation hold for
-every valid function whose ops run straight to a return and are total
-(`Func.progress`, `Func.neverStuck`). A function of the tracer subset runs
-straight: no op of the subset calls a function, `const` and `add` are not
-terminators, and `ret` returns, by its rule, values of the function's
-result types, by its validation rule. Each of the three ops is total
-(`Core.const_total`, `Core.add_total`, `Core.ret_total`).
+module. Progress and no stuck path hold for every valid function whose
+ops run straight to a return and are total. A valid function of the
+tracer subset runs straight: no op of the subset calls a function,
+`const` and `add` are not terminators, and `ret` returns its operands,
+which its validation rule makes values of the function's result types.
+Each of the three ops is total.
 
-Every valid core function without a `call` op meets the three
-obligations too, branches and loops included, as the section on core
-functions without calls proves (`Core.callFree_fuelMonotone`,
-`Core.callFree_progress`, `Core.callFree_neverStuck`), and so does every
-function of every valid core module, calls and recursion included, as the
-section on every valid core function proves (`Core.fuelMonotone`,
-`Core.progress`, `Core.neverStuck`).
+Every valid core function without a `call` op meets the three obligations
+too, branches and loops included, as the section on core functions
+without calls proves, and so does every function of every valid core
+module, calls and recursion included, as the section on core functions
+with calls proves.
 -/
 
 namespace Fir.Core

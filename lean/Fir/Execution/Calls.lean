@@ -4,51 +4,50 @@ import Fir.Execution.CallSteps
 # Progress and no stuck path, with calls and recursion
 
 A valid function's run is never stuck, and has an outcome at every budget,
-when every function of its module is valid and runs within the module
-(`Func.InModule`): its terminators keep to the rules of the section on
-jumps and loops, and each op that calls a function names one of the
-module, of the right type.
+when every function of its module is valid and runs within the module:
+its terminators keep to the rules of the section on jumps and loops, and
+each op that calls a function names one of the module, of the right type.
 
-* An op that calls a function, as its dialect's `callee?` says, names a
-  symbol that the module's symbol table gives the type of the call: the
-  call's operand types as its parameter types, and the call's result
-  types as its result types. A dialect's own validation rule for a call
-  must ask this, as the core rule for `call` does.
+* An op that calls a function, as its dialect says, names a symbol that
+  the module's symbol table gives the type of the call: the call's operand
+  types as its parameter types, and the call's result types as its result
+  types. A dialect's own validation rule for a call must ask this, as the
+  core rule for `call` does.
 * A terminator that jumps names a successor that it has and gives no
   results, and a terminator that returns returns values of the function's
-  result types, as for a function that runs within itself
-  (`Func.Local`), which runs within every module (`Func.Local.inModule`).
+  result types, as for a function that runs within itself, which runs
+  within every module.
 
 Calls, recursion and mutual recursion are included: a run may call any
 function of the module, itself among them, as often as its fuel allows.
 
-The proof is by strong induction on the budget, for every function of the
-module at once, from any op of any of its blocks on. Its invariant is the
-one of the section on jumps, `Env.Scoped`. A call is the one new step:
+The proof is by induction on the budget, for every function of the module
+at once, from any op of any of its blocks on. Its invariant is the one of
+the section on jumps: before an op, the environment holds every value in
+scope at the op. A call is the one new step, and the section on what a
+call step needs gives its parts:
 
-* the module's symbol table names the callee, so the run finds it
-  (`Module.func?_of_symbols`), and it is a function of the module;
-* the call's operands have the callee's parameter types, so the callee's
-  run starts at its entry block, with its parameters bound to them
-  (`Func.enter_ok`), and its environment holds every value in scope there
-  (`Env.scoped_entry`);
+* _the callee is found_ by the module's symbol table, and it is a function
+  of the module;
+* _the callee starts_ at its entry block, with its parameters bound to the
+  call's operands, which have the callee's parameter types, and _at the
+  start of a function, binding its parameters holds every value in scope_;
 * the callee runs with fewer steps than the caller had, so the induction
   covers its run, however deep the calls go: no path of it is stuck, and
   it has one;
-* each value that the callee returns has the callee's result type, which
-  the interpreter checks before it returns (`Func.runOps_returns`), so it
-  has the call's result type, and the call's results bind
-  (`Func.scoped_results`);
+* _a function returns values of its result types_, which the interpreter
+  checks before it returns, so the callee returns values of the call's
+  result types, and _an op's results join the scope_;
 * the caller goes on with the steps that the callee leaves, fewer again
   than it had, so the induction covers the rest of its run.
 
-`NeverStuck` needs nothing more of the ops' semantics. `Progress` needs
-each op that runs by its own rule, a terminator or an op with no callee,
-to be total (`OpTotal`), so that each step has a way to go on. An op with
-a callee goes on by its callee's run, which the induction covers, and
-needs no rule of its own (ADR-2026-11-02-1514). A callee's run that ends
-with UB or out of fuel ends its caller's run so, and that is a way for it
-to end.
+Showing that no path is stuck needs nothing more of the ops' semantics.
+Progress needs each op that runs by its own rule, a terminator or an op
+with no callee, to be total, so that each step has a way to go on. An op
+with a callee goes on by its callee's run, which the induction covers,
+and needs no rule of its own (ADR-2026-11-02-1514). A callee's run that
+ends with UB or out of fuel ends its caller's run so, and that is a way
+for it to end.
 -/
 
 namespace Fir
