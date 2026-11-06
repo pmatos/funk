@@ -36,7 +36,8 @@ sym  \mathsf{sym}~s
 app  \mathsf{app}~h~\mathit{attr}^*
 ```
 
-Here $`w` and $`h` are words, $`i` an integer and $`s` a string. In text,
+Here $`w`, $`h` and $`s` are strings and $`i` an integer; $`w` and $`h`
+can be written only when they are words, as the next blocks say. In text,
 $`\mathsf{word}~w` is written $`w`, such as `nsw` or `i32`;
 $`\mathsf{int}~i` is the integer $`i`; $`\mathsf{str}~s` is the string
 $`s`, quoted; $`\mathsf{sym}~s` is a reference to the symbol $`s`, such as
