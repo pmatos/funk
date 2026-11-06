@@ -2,12 +2,12 @@ import Fir.Validation.Tables
 
 /-!
 Reachability and dominance are about paths in a function's graph, and a path
-can be of any length, so the check finds them with a search. `search` keeps
-the nodes it has seen and a list of nodes still to visit. It visits a node
-at most once, so it ends, and it finds exactly the nodes that some path
-reaches (`contains_search_iff`). Validation asks two kinds of question of
-it: which blocks the entry reaches, and which it reaches without passing
-through a given block.
+can be of any length, so the check finds them with a search. The search
+keeps the nodes it has seen and a list of nodes still to visit. It visits a
+node at most once, so it ends, and it finds exactly the nodes that some
+path reaches, as the last theorem below shows. Validation asks two kinds of
+question of it: which blocks the entry reaches, and which it reaches
+without passing through a given block.
 
 The graph is a table from each node to the nodes it has edges to. A node
 that is not a key of the table has no edges.

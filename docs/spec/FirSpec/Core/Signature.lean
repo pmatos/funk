@@ -81,7 +81,7 @@ and builds the op
 
 $$`\begin{aligned} \{&\mathsf{results}~(x : t)^*,~\mathsf{op}~o, \\ &\mathsf{operands}~y^*,~\mathsf{succs}~\mathit{succ}^*, \\ &\mathsf{regions}~\epsilon,~\mathsf{loc}~r\} \end{aligned}`
 
-with no regions ($`\epsilon` is the empty sequence). When they are not
+with no regions. When they are not
 given, the location reference is 0 and there are no successors. Nothing
 in the rules uses it; it is stated so that a reader can follow the ops of
 the examples, such as

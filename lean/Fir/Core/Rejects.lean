@@ -21,8 +21,9 @@ func @f() -> i32 {
 }
 ```
 
-The decidable check behind `fir-ref validate` (#10), and `funk verify` (#9),
-must reject it too, with the reason that `^dead` is unreachable.
+The validation check, which `fir-ref validate` runs and whose verdict
+`funk verify` must match, rejects it too, with the reason that `^dead` is
+unreachable: the last section of this chapter shows it.
 -/
 
 namespace Fir.Core.Rejects

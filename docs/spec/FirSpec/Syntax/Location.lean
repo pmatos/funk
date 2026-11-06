@@ -93,8 +93,7 @@ The table is a plain sequence; validation asks more of it
 :::readable Fir.Location.refs Fir.Location.numbers Fir.Location.limit Fir.LocTable.InLimits (pin := Fir.LocTable.Valid) (fingerprint := "13134142017632528915")
 *Definition: the numbers of a location, and their limit.* The references
 that a location is built from, $`\mathrm{refs}(\mathit{loc})`, and the
-numbers that it holds, $`\mathrm{nums}(\mathit{loc})`, are these sequences
-($`\epsilon` is the empty sequence):
+numbers that it holds, $`\mathrm{nums}(\mathit{loc})`, are these sequences:
 
 $$`\begin{aligned} \mathrm{refs}(\mathsf{callsite}~r_1~r_2) &= r_1~r_2 \\ \mathrm{refs}(\mathsf{fused}~r^*) &= r^* \\ \mathrm{refs}(\mathsf{derived}~r) &= r \\ \mathrm{refs}(\mathit{loc}) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
