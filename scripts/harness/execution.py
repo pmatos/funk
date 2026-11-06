@@ -8,9 +8,10 @@ from pathlib import Path
 
 import tools
 from corpus import Test
+from differential import Runs
 
 
-class ProcessRuns:
+class ProcessRuns(Runs):
     def __init__(self, fir_ref: str, path: Path, test: Test, exe: Path | str):
         self.fir_ref = fir_ref
         self.path = path

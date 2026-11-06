@@ -5,7 +5,7 @@ from collections import deque
 from dataclasses import replace
 
 from corpus import Test
-from differential import evaluate
+from differential import Runs, evaluate
 from refine import FAILED, FUEL_EXHAUSTED, INVALID, PASSED, RETURN, STUCK, UB, Outcome
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 
@@ -25,7 +25,7 @@ DECLARING = replace(POISON, results=(DECLARED,))
 VECTORS = [("0",), ("1",), ("-1",), ("-128",), ("127",)]
 
 
-class RecordedRuns:
+class RecordedRuns(Runs):
     """The in-memory adapter: each requested run consumes one response."""
 
     def __init__(self, *responses, unavailable=None):
