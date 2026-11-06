@@ -197,6 +197,7 @@ theorem exists_common_bound {A : Type} {L : List A} (hL : ∀ a, a ∈ L) (Q : A
   | nil => exact ⟨0, fun _ h => nomatch h⟩
   | cons a L' ih =>
     obtain ⟨B, hB⟩ := ih
+    classical
     by_cases hd : ∀ m, Q a m
     · exact ⟨B, fun c hc => (List.mem_cons.1 hc).elim (fun h => h ▸ .inl hd) (hB c)⟩
     · obtain ⟨m₀, hm₀⟩ := Classical.not_forall.1 hd
