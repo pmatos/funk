@@ -4,7 +4,7 @@ import Fir.Text.ReadDefs
 # Reading ops
 
 An op's tokens read back as the op's tree, whatever follows them: the op
-ends with its location reference, which `readOpLoc` reads alone. Ops read
+ends with its location reference, which its reader reads alone. Ops read
 back before a label or a `}`, which start no op. Each type that a
 definition states must be written as a type.
 

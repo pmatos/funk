@@ -30,6 +30,18 @@ import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
+import FirSpec.Text.Tree
+import FirSpec.Text.ReadAttrs
+import FirSpec.Text.ReadDefs
+import FirSpec.Text.ReadOps
+import FirSpec.Text.ReadBlocks
+import FirSpec.Text.ReadFunc
+import FirSpec.Text.ReadTable
+import FirSpec.Text.ReadModule
+import FirSpec.Text.DecodeScope
+import FirSpec.Text.DecodeBlocks
+import FirSpec.Text.DecodeModule
+import FirSpec.Text.PrintParse
 import FirSpec.Execution.Interpreter
 import FirSpec.Core.Arith
 import FirSpec.Core.Wrap
@@ -357,29 +369,29 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.LexWellFormed "Writable tokens" FirSpec.Text.LexWellFormed (level := 2)}
 
-{includeLiterate "." Fir.Text.Tree "The tree that the grammar reads" (level := 2)}
+{includeReadable "." Fir.Text.Tree "The tree that the grammar reads" FirSpec.Text.Tree (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadAttrs "The grammar step" (level := 2)}
+{includeReadable "." Fir.Text.ReadAttrs "The grammar step" FirSpec.Text.ReadAttrs (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadDefs "Definitions and successors read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadDefs "Definitions and successors read back" FirSpec.Text.ReadDefs (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadOps "Ops read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadOps "Ops read back" FirSpec.Text.ReadOps (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadBlocks "Blocks and regions read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadBlocks "Blocks and regions read back" FirSpec.Text.ReadBlocks (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadFunc "A function read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadFunc "A function read back" FirSpec.Text.ReadFunc (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadTable "The location table read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadTable "The location table read back" FirSpec.Text.ReadTable (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadModule "The module read back" (level := 2)}
+{includeReadable "." Fir.Text.ReadModule "The module read back" FirSpec.Text.ReadModule (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeScope "The decoding step" (level := 2)}
+{includeReadable "." Fir.Text.DecodeScope "The decoding step" FirSpec.Text.DecodeScope (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeBlocks "Blocks and ops decoded back" (level := 2)}
+{includeReadable "." Fir.Text.DecodeBlocks "Blocks and ops decoded back" FirSpec.Text.DecodeBlocks (level := 2)}
 
-{includeLiterate "." Fir.Text.DecodeModule "The module decoded back" (level := 2)}
+{includeReadable "." Fir.Text.DecodeModule "The module decoded back" FirSpec.Text.DecodeModule (level := 2)}
 
-{includeLiterate "." Fir.Text.PrintParse "The round trip, proved" (level := 2)}
+{includeReadable "." Fir.Text.PrintParse "The round trip, proved" FirSpec.Text.PrintParse (level := 2)}
 
 {includeLiterate "." Fir.Text.LexAccepted "What the lexer accepts" (level := 2)}
 
