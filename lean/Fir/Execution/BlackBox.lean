@@ -4,26 +4,27 @@ import Fir.Execution.EnvRefine
 /-!
 # Two modules, compared call by call
 
-Both refinement theorems of #20 compare the runs of a function in a source
-module `M` with its runs in a target module `M'`: in the same module, on
-arguments that refine others; and in a module where one callee has a new
-body. Their proofs share one engine. It follows a path of the target's run
-and finds a way that the source's run allows it. Each op runs alike in
-both, on operands of which the target's refine the source's: what it does
-on them is allowed by what it does on the source's, since every op that
-runs by its own rule is monotone (`OpMonotone`). A call is where the two
-modules may differ. Each symbol names, in both, the same function, whose
-run the engine follows in turn, or a _black box_ (`BlackBox`): a function
-`g` of `M` and a function `g'` of `M'`, of the same parameter types, such
-that
+The two refinement theorems for whole functions compare the runs of a
+function in a source module with its runs in a target module: in the
+same module, on arguments that refine others; and in a module where one
+callee has a new body. Their proofs share one engine. It follows a path
+of the target's run, and finds a way that the source's run _allows_ it:
+the source hits UB at some budget, which allows anything, or, for a
+return, returns at some budget values that the target's refine.
 
-* on arguments that refine others, the observable behaviour of `g'`
-  refines that of `g`: a fact about their whole runs, which the engine
-  does not look inside;
-* on each argument vector, `g'` diverges, or none of its runs with
-  `bound` steps or more runs out of fuel.
+Each op runs alike in both, on operands of which the target's refine the
+source's: what it does on them is allowed by what it does on the
+source's, since every op that runs by its own rule is monotone. A call is
+where the two modules may differ. Each symbol names, in both, the same
+function, whose run the engine follows in turn, or a _black box_: a
+function of the source and a function of the target, of the same
+parameter types, such that
 
-`CallsRefined M M' bound` says that every symbol is one or the other.
+* on arguments that refine others, the observable behaviour of the
+  target's function refines that of the source's: a fact about their
+  whole runs, which the engine does not look inside;
+* on each argument vector, the target's function diverges, or runs out of
+  fuel at no budget from a fixed bound on.
 
 Behaviours say nothing of steps. A black box's target may return after a
 thousand steps where its source returns after one, or the other way
@@ -32,17 +33,15 @@ it could if every call named the same function. It compares budgets in
 two ways, each by induction on the target's budget, in the next two
 sections:
 
-* a return or UB of the target is _allowed_ by the source at some budget
-  (`Allowed`): the source hits UB at some budget, which allows anything,
-  or returns values that the target's refine. A caller's budget is its
-  callee's plus its rest's: with more fuel, a run does the same thing
-  and leaves more steps (`Func.runOps_ahead`, `Func.call_cont`);
-* running out of fuel, which needs the black box's `bound`.
+* a return or UB of the target is allowed by the source at some budget.
+  A caller's budget is its callee's plus its rest's: with more fuel, a
+  run does the same thing and leaves more steps;
+* running out of fuel needs the black box's bound.
 
 A black-box call that the target runs is allowed by the source's call:
-the target's callee starts on arguments of `g'`'s parameter types, so the
-source's are of `g`'s, and the source's callee ends in a way that the
-black box allows (`BlackBox.allowed`).
+the target's callee starts on arguments of its parameter types, so the
+source's are of the source callee's, and the source's callee ends in a
+way that the black box allows.
 -/
 
 namespace Fir

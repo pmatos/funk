@@ -30,6 +30,16 @@ import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
+import FirSpec.Execution.RunPaths
+import FirSpec.Execution.EnvRefine
+import FirSpec.Execution.BlackBox
+import FirSpec.Execution.RefineUp
+import FirSpec.Execution.RefineDown
+import FirSpec.Execution.RefineRuns
+import FirSpec.Execution.Replace
+import FirSpec.Core.CallRefine
+import FirSpec.Execution.Lawful
+import FirSpec.Core.Lawful
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -243,25 +253,25 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
 
-{includeLiterate "." Fir.Execution.RunPaths "The ways a step goes on" (level := 2)}
+{includeReadable "." Fir.Execution.RunPaths "The ways a step goes on" FirSpec.Execution.RunPaths (level := 2)}
 
-{includeLiterate "." Fir.Execution.EnvRefine "Refined environments" (level := 2)}
+{includeReadable "." Fir.Execution.EnvRefine "Refined environments" FirSpec.Execution.EnvRefine (level := 2)}
 
-{includeLiterate "." Fir.Execution.BlackBox "Calls as black boxes" (level := 2)}
+{includeReadable "." Fir.Execution.BlackBox "Calls as black boxes" FirSpec.Execution.BlackBox (level := 2)}
 
-{includeLiterate "." Fir.Execution.RefineUp "Returns and UB, followed back" (level := 2)}
+{includeReadable "." Fir.Execution.RefineUp "Returns and UB, followed back" FirSpec.Execution.RefineUp (level := 2)}
 
-{includeLiterate "." Fir.Execution.RefineDown "Running out of fuel, followed back" (level := 2)}
+{includeReadable "." Fir.Execution.RefineDown "Running out of fuel, followed back" FirSpec.Execution.RefineDown (level := 2)}
 
-{includeLiterate "." Fir.Execution.RefineRuns "Refined arguments" (level := 2)}
+{includeReadable "." Fir.Execution.RefineRuns "Refined arguments" FirSpec.Execution.RefineRuns (level := 2)}
 
-{includeLiterate "." Fir.Execution.Replace "Replacing a callee" (level := 2)}
+{includeReadable "." Fir.Execution.Replace "Replacing a callee" FirSpec.Execution.Replace (level := 2)}
 
-{includeLiterate "." Fir.Core.CallRefine "Refinement through core calls" (level := 2)}
+{includeReadable "." Fir.Core.CallRefine "Refinement through core calls" FirSpec.Core.CallRefine (level := 2)}
 
-{includeLiterate "." Fir.Execution.Lawful "What the lawful class gives" (level := 2)}
+{includeReadable "." Fir.Execution.Lawful "What the lawful class gives" FirSpec.Execution.Lawful (level := 2)}
 
-{includeLiterate "." Fir.Core.Lawful "The core dialect's poison obligations" (level := 2)}
+{includeReadable "." Fir.Core.Lawful "The core dialect's poison obligations" FirSpec.Core.Lawful (level := 2)}
 
 # Text format
 

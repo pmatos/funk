@@ -7,20 +7,17 @@ Refined arguments refine a run because the run only passes values on: it
 looks them up by name, checks their types and hands them to ops, to
 successors and to callees. An environment is refined by another when both
 bind the same names in the same order, each to a value that the other's
-value refines (`Env.IsRefinedBy`). A typed value refines only a value of
-its own type, so each check of the interpreter decides alike on both. The
-lemmas below follow a step from the refining environment back to the
-refined one:
+value refines. A typed value refines only a value of its own type, so
+each check of the interpreter decides alike on both. The facts below
+follow a step from the refining environment back to the refined one:
 
+* binding values that refine others keeps the relation;
 * a value, or the operands of an op, found in the refining environment
-  are found in the refined one, refined (`Env.IsRefinedBy.value`,
-  `Env.IsRefinedBy.operands`);
+  are found in the refined one, refined;
 * a jump goes to the same block, and binds environments of which one
-  refines the other (`Env.IsRefinedBy.jump`);
+  refines the other;
 * a function entered on values that refine others starts at the same op,
-  in an environment that refines the other's (`Func.enter_isRefinedBy`);
-* binding values that refine others keeps the relation
-  (`Env.IsRefinedBy.zip_append`).
+  in an environment that refines the other's.
 -/
 
 namespace Fir

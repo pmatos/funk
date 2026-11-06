@@ -3,77 +3,74 @@ import Fir.Execution.RefineRuns
 /-!
 # Congruence in the callee
 
-The second of #20's function-level theorems: replacing a callee's body
-refines every caller when the callee, run in the new module, refines the
-old one, recursion included
-(`Func.runs_replaceBody_isRefinedBy`; `Core.replaceBody_isRefinedBy` for
-the core dialect).
+The second of the two refinement theorems for whole functions: replacing
+a callee's body refines every caller when the callee, run in the new
+module, refines the old one, recursion included. The section on
+refinement through core calls states it for the core dialect.
 
-_What replacing a callee means._ The module `M.replaceBody s b` is `M`
-with the body `b` in place of the body of its function `@s`
-(`Module.replaceBody`). Every function keeps its symbol, its parameters
-and its result types, and every other function keeps its body. A caller
-reaches a callee only by its symbol (ADR-2026-10-29-2012), so this
-replaces the callee `@s` for every caller at once. The symbol table, and
-so the context of validation, stays the same
-(`Module.context_replaceBody`): the new module is valid when the old one
-is and the new function is valid in that context
-(`Module.valid_replaceBody`).
+_What replacing a callee means._ Replacing the body of the function `@s`
+of a module gives the same module with a new body in place of the body of
+`@s`. Every function keeps its symbol, its parameters and its result
+types, and every other function keeps its body. A caller reaches a callee
+only by its symbol (ADR-2026-10-29-2012), so this replaces the callee
+`@s` for every caller at once. The symbol table, and so the context of
+validation, stays the same: the new module is valid when the old one is
+and the new function is valid in that context.
 
-_The statement._ In a module `M` whose symbols are unique, as they are in
-every valid module, let `@g` be a function of `M`, let `M'` be
-`M.replaceBody g.name b`, and let `g'` be `@g` with the body `b`. If the
-runs of `g'` in `M'` refine the runs of `g` in `M`, as
-`FuncRuns.IsRefinedBy` asks of two functions, then each function `f` of
-`M` is refined by its counterpart in `M'`: `f` itself, or `g'` when `f` is
-`@g` (ADR-2026-11-02-1350).
+_The statement._ In a module whose symbols are unique, as they are in
+every valid module, let `@g` be a function of the module, and replace its
+body: the new function is `@g` with the new body. If the runs of the new
+function in the new module refine the runs of `@g` in the old, as
+refinement of functions asks, then each function of the old module is
+refined by its counterpart in the new one: itself, or the new function
+when it is `@g` (ADR-2026-11-02-1350).
 
-The hypothesis compares `g'` in the new module with `g` in the old. A
-callee that calls back, itself or its callers, calls the new body in
-`M'`, so only its runs in `M'` say what a call of it does there. A weaker
-hypothesis, that `g'` run in the old module refines `g`, would make the
-theorem false. If `g` returns `0`, the body `call @g` refines it in `M`,
-where it calls the old `@g`; in `M'` it calls itself, and never returns,
-which does not refine a return. The hypothesis can be met when `@g`
-calls back into the module, as the tests show, so recursion through the
-replaced callee is included, and so are callers that call themselves.
+The hypothesis compares the new function in the new module with `@g` in
+the old. A callee that calls back, itself or its callers, calls the new
+body in the new module, so only its runs there say what a call of it does
+there. A weaker hypothesis, that the new function run in the old module
+refines `@g`, would make the theorem false. If `@g` returns `0`, the body
+`call @g` refines it in the old module, where it calls the old `@g`; in
+the new module it calls itself, and never returns, which does not refine
+a return. The hypothesis can be met when `@g` calls back into the module,
+as the tests show, so recursion through the replaced callee is included,
+and so are callers that call themselves.
 
-The comparison is between real behaviours when `g'` is valid in the old
-module's context. Then `M'` is valid when `M` is
-(`Module.valid_replaceBody`), and for the core dialect no path of a run
-in either module is stuck, and each run has an outcome at every budget
-(`Core.neverStuck`, `Core.progress`). A body that gets stuck at once,
-such as one whose entry block declares arguments, meets the hypothesis
-with an empty behaviour, which refines every source (the section on
-refinement), and every caller's paths through `@g` are then dropped.
+The comparison is between real behaviours when the new function is valid
+in the old module's context. Then the new module is valid when the old
+one is, and for the core dialect no path of a run in either module is
+stuck, and each run has an outcome at every budget (the section on core
+functions with calls). A body that gets stuck at once, such as one whose
+entry block declares arguments, meets the hypothesis with an empty
+behaviour, which refines every source (the section on refinement), and
+every caller's paths through `@g` are then dropped.
 
-_The proof._ Every call of the symbol `@g` is a black box, whose source is
-`g` in `M` and whose target is `g'` in `M'`, and every other symbol names
-the same function in both modules (`Module.func?_replaceBody`). The black
-box refines: on arguments that refine others, `g` on them is refined by
-`g` on the refined ones (the section on refined arguments), which is
-refined by `g'` on those, by the hypothesis. So the previous section
-gives the theorem for each `f` other than `@g`.
+_The proof._ Every call of the symbol `@g` is a black box, whose source
+is `@g` in the old module and whose target is the new function in the new
+module, and every other symbol names the same function in both modules.
+The black box refines: on arguments that refine others, `@g` on them is
+refined by `@g` on the refined ones (the section on refined arguments),
+which is refined by the new function on those, by the hypothesis. So the
+previous section gives the theorem for each function other than `@g`.
 
-Monotonicity is asked only of the old module's functions: the engine
-runs ops of the target that it also finds in the source, and a call of
-`@g` is a black box, whose new body it does not run. So a dialect whose
-ops are monotone only at valid op instances meets it for every valid
-module, whatever the new body (`Func.runs_replaceBody_isRefinedBy_of_lawful`).
+Monotonicity is asked only of the old module's functions: the engine runs
+ops of the target that it also finds in the source, and a call of `@g` is
+a black box, whose new body it does not run. So a dialect whose ops are
+monotone only at valid op instances meets it for every valid module,
+whatever the new body (the section on what the lawful class gives).
 
-The black box needs its `bound`: on each argument vector, `g'` diverges,
-or none of its runs with `bound` steps or more runs out of fuel. Each
-argument vector has such a budget, since a run that runs out of fuel
-with more steps runs out with fewer (`Func.runs_exhausted_down`). One
-budget serves them all when `@g`'s parameter types have finitely many
-argument vectors (`exists_common_bound`), as every core type has. The
-proof needs this (ADR-2026-11-02-1426). Without it, one budget may not
-bound them all: a caller whose arguments to `@g` grow without limit can
-make `g'` run longer and longer before it returns. A dialect whose
-choices each have finitely many options, as the section on observable
-behaviour assumes, but which has a type of infinitely many values,
-would need another argument, such as König's lemma over the tree of
-choices.
+The black box needs its bound: on each argument vector, the new function
+diverges, or from some budget on never runs out of fuel. Each argument
+vector has such a budget, since a run that runs out of fuel with more
+steps runs out with fewer. One budget serves them all when the parameter
+types of `@g` have finitely many argument vectors, as every core type
+has. The proof needs this (ADR-2026-11-02-1426). Without it, one budget
+may not bound them all: a caller whose arguments to `@g` grow without
+limit can make the new function run longer and longer before it returns.
+A dialect whose choices each have finitely many options, as the section
+on outcomes and behaviours assumes, but which has a type of infinitely
+many values, would need another argument, such as König's lemma over the
+tree of choices.
 -/
 
 namespace Fir

@@ -4,34 +4,36 @@ import Fir.Execution.Environment
 /-!
 # A run of ops, one step at a time
 
-The refinement theorems of the next sections compare two runs path by
-path: they follow each path of one run, and find a path of the other that
-allows it. This section says, once, every way in which a path of
-`Func.runOps` goes on from its first op, so that those proofs need not
-unfold the interpreter.
+A compiler rewrites a program one function at a time: it simplifies a
+callee, inlines it, or passes a defined value where the source passed
+poison. Each rewrite is correct when the new code refines the old. The
+sections from here to the core dialect's poison obligations prove that
+refinement goes through calls: a call on arguments that refine others
+refines the call on those others, and replacing a callee by a body that
+refines it refines every caller, recursion included. So a pass can be
+checked one function at a time, and the whole program stays correct.
 
-A path of the run of the ops `o :: os` with `n + 1` steps that does not
-end stuck takes one of eight ways (`Func.StepPath`), and the run has the
-path exactly when one of them holds (`Func.stepPath_iff`). In each, `o`
-owns no region and its operands are found, and then:
+Those proofs compare two runs path by path: they follow each path of one
+run, and find a path of the other that allows it. This section says,
+once, every way in which a path of a run of ops goes on from its first
+op, so that the proofs need not unfold the interpreter:
 
-* `o` is a terminator, the last op of its block, and its exit hits UB,
-  returns, or jumps to a block, where the run goes on with `n` steps;
-* `o` calls no function, and its `denote` hits UB, or gives results that
-  bind, and the run goes on with `n` steps;
-* `o` calls a function, which the run finds in the module and enters, and
-  the callee hits UB, runs out of fuel, or returns values of the call's
+* A path that does not end stuck, with fuel left and an op to run, takes
+  one of eight ways. In each, the op owns no region and its operands are
+  found. Then the op is a terminator, the last op of its block, whose
+  exit hits UB, returns, or jumps to a block, where the run goes on with
+  one step less; or it runs by its own rule, which hits UB, or gives
+  results that bind, and the run goes on with one step less; or it calls
+  a function, which the run finds in the module and enters, and the
+  callee hits UB, runs out of fuel, or returns values of the call's
   result types, which bind, and the run goes on with the steps that the
   callee leaves.
-
-A run with no fuel runs out of fuel, and a block with no op left is stuck
-(`Func.run_runOps_zero`, `Func.run_runOps_nil`).
-
-One more fact follows: a run that runs out of fuel with `j` more steps
-runs out of fuel with fewer (`Func.runOps_exhausted_down`). It takes the
-same path, and runs out sooner. On a call, the callee with fewer steps
-runs out of fuel too, or returns with `j` fewer steps left
-(`Func.runOps_ahead`), and the caller then goes on with `j` fewer.
+* A run with no fuel runs out of fuel, and a block with no op left is
+  stuck.
+* A run that runs out of fuel runs out of fuel with fewer steps too. It
+  takes the same path, and runs out sooner. On a call, the callee with
+  fewer steps runs out of fuel too, or returns leaving as many fewer
+  steps, and the caller then goes on with fewer.
 -/
 
 namespace Fir

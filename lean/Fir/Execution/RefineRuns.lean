@@ -3,28 +3,26 @@ import Fir.Execution.RefineDown
 /-!
 # A call on arguments that refine others
 
-The first of #20's function-level theorems: on arguments that refine
-others, a poison by any value, a function's observable behaviour refines
-its behaviour on those others (`Func.runs_args_isRefinedBy`). It holds for
+The first of the two refinement theorems for whole functions: on
+arguments that refine others, a poison by any value, a function's
+observable behaviour refines its behaviour on those others. It holds for
 every function of every module, calls and recursion included, when the
 terminators and the ops with no callee of the function and of the
-module's functions are monotone (`Func.OpsMonotone`); for the core
-dialect it is `Core.args_isRefinedBy`. A lawful dialect meets that for
-every function of a valid module, by the class alone
-(`Func.runs_args_isRefinedBy_of_lawful`). A call passes its
-arguments to its callee, so a call on arguments that refine others
-refines the call on those others. This is the counterpart, at function
-level, of monotonicity (`OpMonotone`), which speaks only of ops that run
-by their own rule: an op with a callee has no rule at op level
-(ADR-2026-11-02-1514).
+module's functions are monotone. The section on refinement through core
+calls states it for the core dialect, and the section on what the lawful
+class gives for every function of a valid module of a lawful dialect, by
+the class alone. A call passes its arguments to its callee, so a call on
+arguments that refine others refines the call on those others. This is
+the counterpart, for a whole function, of monotonicity, which speaks only
+of ops that run by their own rule: an op with a callee has no rule of its
+own (ADR-2026-11-02-1514).
 
 Both function-level theorems are instances of one. Take a function of a
-source module `M`, and the same function of a target module `M'` whose
-calls name the same functions as `M`'s or black boxes (`CallsRefined`).
-On arguments that refine others, its behaviour in `M'` refines its
-behaviour in `M` (`Func.runs_isRefinedBy_of_calls`). Refined arguments are
-the case where `M'` is `M`: every call names the same function, and there
-is no black box.
+source module, and the same function of a target module whose calls name
+the same functions as the source's, or black boxes. On arguments that
+refine others, its behaviour in the target refines its behaviour in the
+source. Refined arguments are the case where the target is the source:
+every call names the same function, and there is no black box.
 
 Each outcome of the target is allowed by one of the source:
 
@@ -32,15 +30,16 @@ Each outcome of the target is allowed by one of the source:
   or returns at some budget values that the target's refine (the section
   on returns and UB).
 * Divergence, when the target runs out of fuel at every budget. If the
-  source hits UB at some budget, it allows anything. If not, then at each
-  budget `N` the target runs out of fuel at `(bound + 1) * (N + 1)`, on a
-  path that the source at `N` allows (the section on divergence): the
-  source runs out of fuel at `N`. So the source diverges.
+  source hits UB at some budget, it allows anything. If not, then for
+  each budget of the source, the target runs out of fuel at a large
+  enough budget, on a path that the source allows at its budget (the
+  section on running out of fuel): the source runs out of fuel there. So
+  the source diverges.
 
 The theorem asks nothing of validity: it compares outcomes, and a stuck
 path is none. It means most for valid modules, whose runs have no stuck
-path and an outcome at every budget (`Core.neverStuck`, `Core.progress`),
-so that neither behaviour is empty or misses a path.
+path and an outcome at every budget (the section on core functions with
+calls), so that neither behaviour is empty or misses a path.
 -/
 
 namespace Fir

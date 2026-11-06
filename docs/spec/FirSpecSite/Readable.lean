@@ -41,7 +41,7 @@ details.fir-lean > summary {
   font-size: 0.9em;
   user-select: none;
 }
-details.fir-lean > summary code { font-size: 1em; }
+details.fir-lean > summary code { font-size: 1em; overflow-wrap: anywhere; }
 details.fir-lean[open] > summary { margin-bottom: 0.5em; }
 details.fir-lean[open] {
   border-top: 1px dashed #b8c7d6;
