@@ -98,6 +98,7 @@ theorem observable_eq_at {run : Nat → Run O} (hm : FuelMonotone run) {N : Nat}
 /-- With progress, a run's observable behaviour has some outcome. -/
 theorem observable_nonempty {run : Nat → Run O} (hp : Progress run) :
     ∃ t, observable run t := by
+  classical
   by_cases h : ∀ n, (run n).outcomes .fuelExhausted
   · exact ⟨.fuelExhausted, h⟩
   · obtain ⟨n, hn⟩ := Classical.not_forall.mp h
