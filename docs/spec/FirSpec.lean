@@ -17,6 +17,13 @@ import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
+import FirSpec.Execution.SetRuns
+import FirSpec.Execution.Monotone
+import FirSpec.Execution.Environment
+import FirSpec.Execution.Progress
+import FirSpec.Execution.Scoped
+import FirSpec.Execution.Jumps
+import FirSpec.Execution.Calls
 import FirSpec.Validation.Scope
 import FirSpec.Validation.Dominance
 import FirSpec.Validation.Rules
@@ -30,6 +37,9 @@ import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
+import FirSpec.Core.Runs
+import FirSpec.Core.CallFree
+import FirSpec.Core.ValidRuns
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -221,27 +231,27 @@ functions, blocks and ops.
 
 {includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
 
-{includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
+{includeReadable "." Fir.Execution.SetRuns "Reading a run path by path" FirSpec.Execution.SetRuns (level := 2)}
 
-{includeLiterate "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" (level := 2)}
+{includeReadable "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" FirSpec.Execution.Monotone (level := 2)}
 
-{includeLiterate "." Fir.Execution.Environment "The environment of a run" (level := 2)}
+{includeReadable "." Fir.Execution.Environment "The environment of a run" FirSpec.Execution.Environment (level := 2)}
 
-{includeLiterate "." Fir.Execution.Progress "Progress and no stuck path" (level := 2)}
+{includeReadable "." Fir.Execution.Progress "Progress and no stuck path" FirSpec.Execution.Progress (level := 2)}
 
-{includeLiterate "." Fir.Execution.Scoped "Scope along a run" (level := 2)}
+{includeReadable "." Fir.Execution.Scoped "Scope along a run" FirSpec.Execution.Scoped (level := 2)}
 
-{includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
+{includeReadable "." Fir.Execution.Jumps "Progress with jumps and loops" FirSpec.Execution.Jumps (level := 2)}
 
 {includeReadable "." Fir.Execution.CallSteps "What a call step needs" FirSpec.Execution.CallSteps (level := 2)}
 
-{includeLiterate "." Fir.Execution.Calls "Progress with calls" (level := 2)}
+{includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 2)}
 
-{includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
+{includeReadable "." Fir.Core.Runs "The runs of core functions" FirSpec.Core.Runs (level := 2)}
 
-{includeLiterate "." Fir.Core.CallFree "Core functions without calls" (level := 2)}
+{includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 2)}
 
-{includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
+{includeReadable "." Fir.Core.ValidRuns "Core functions with calls" FirSpec.Core.ValidRuns (level := 2)}
 
 {includeLiterate "." Fir.Execution.RunPaths "The ways a step goes on" (level := 2)}
 

@@ -5,9 +5,8 @@ import Fir.Execution.Progress
 # Progress and no stuck path, with jumps and loops
 
 A valid function's run is never stuck, and has an outcome at every budget,
-when the function runs within itself (`Func.Local`): no op calls a
-function, and its terminators keep to the rules that validation makes of
-them.
+when the function runs within itself: no op calls a function, and its
+terminators keep to the rules that validation makes of them.
 
 * A terminator that jumps names a successor that it has, and gives no
   results, since the interpreter binds none for it. Validation does not
@@ -16,24 +15,23 @@ them.
 * A terminator that returns returns values of the function's result types.
 
 Branches and loops are included: a run may jump to any block, as often as
-its fuel allows. A function that runs straight (`Func.Straight`) runs
-within itself (`Func.Straight.local`), so these theorems extend those of
-the section on progress and no stuck path. A call runs another function:
-the section on progress with calls and recursion extends these theorems
-to calls (`Func.neverStuck_of_inModule`, `Func.progress_of_inModule`).
+its fuel allows. A function that runs straight runs within itself, so
+these theorems extend those of the section on progress and no stuck path.
+A call runs another function: the section on progress with calls extends
+these theorems to calls and recursion.
 
 The proof is by induction on the budget, from any op of any block of the
-function on. Its invariant is `Env.Scoped`: before an op, the environment
-holds a value of its type for each value in scope at the op. So the op's
-operands are found with their types, and the other checks pass by the
-rules of validation, as for a function that runs straight. On a jump, the
-values that the successor passes are in scope too, so they are found, and
-they have the types of the target block's arguments, by validation. The
-invariant then holds at the target's first op (the section on the values
-in scope at each op), and the run goes on there with one step less.
+function on. Its invariant is that before an op, the environment holds a
+value of its type for each value in scope at the op. So the op's operands
+are found with their types, and the other checks pass by the rules of
+validation, as for a function that runs straight. On a jump, the values
+that the successor passes are in scope too, so they are found, and they
+have the types of the target block's arguments, by validation. The
+invariant then holds at the target's first op (the section on scope along
+a run), and the run goes on there with one step less.
 
-`NeverStuck` needs nothing more of the ops' semantics. `Progress` needs
-each op to be total (`OpTotal`), so that each step has a way to go on.
+No stuck path needs nothing more of the ops' semantics. Progress needs
+each op to be total, so that each step has a way to go on.
 -/
 
 namespace Fir

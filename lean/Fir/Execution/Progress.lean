@@ -9,28 +9,27 @@ import Fir.Validation.Rules
 A valid function's run is never stuck, and has an outcome at every budget,
 when its ops run straight to a return: no op calls a function, and each
 terminator returns, never jumps, and returns values of the function's
-result types (`Func.Straight`). The tracer subset of #10, `const`, `add`
-without flags and `ret`, is such a set of ops. Branches and calls need
+result types. The ops of the roadmap's tracer bullet, `const`, `add`
+without flags and `ret`, are such a set of ops. Branches and calls need
 more: a jump lands in a block whose values are defined on another path,
 and a call runs another function. The next two sections extend these
-theorems to jumps and loops (`Func.neverStuck_of_local`,
-`Func.progress_of_local`), and the sections after them to calls and
-recursion (`Func.neverStuck_of_inModule`, `Func.progress_of_inModule`).
+theorems to jumps and loops, and the sections after them to calls and
+recursion.
 
 The proof follows the run through the entry block, the only block that
-such a function runs. Before its op at index `i`, the run's environment
-holds, for each parameter and each result of the ops before `i`, a value
-of the type that the function gives it (`Env.Holds`). Validation makes
-each operand of the op one of those names: the only definitions that
-dominate a use in the entry block are the parameters and the results of
-the ops before it. So the operands are found with their types, the op's
-results bind, and the invariant holds before the next op. The other
-checks pass by the rules of validation: no op owns a region, an op that is
-not a terminator has a next op, and nothing follows the terminator.
+such a function runs. Before its op at index i, the run's environment
+holds, for each parameter and each result of the ops before i, a value of
+the type that the function gives it. Validation makes each operand of the
+op one of those names: the only definitions that dominate a use in the
+entry block are the parameters and the results of the ops before it. So
+the operands are found with their types, the op's results bind, and the
+invariant holds before the next op. The other checks pass by the rules of
+validation: no op owns a region, an op that is not a terminator has a next
+op, and nothing follows the terminator.
 
-`NeverStuck` needs nothing of the ops' semantics beyond that: an op that
-may end in many ways is never stuck in any of them. `Progress` needs each
-op to be total (`OpTotal`), so that each step has a way to go on.
+No stuck path needs nothing of the ops' semantics beyond that: an op that
+may end in many ways is never stuck in any of them. Progress needs each op
+to be total, so that each step has a way to go on.
 -/
 
 namespace Fir

@@ -6,26 +6,26 @@ import Fir.Execution.Refinement
 # Runs at every budget
 
 The runs of a function of a module are its runs in the set monad, on each
-argument vector of its parameter types, at each budget: `Func.runs`, a
-`FuncRuns`. Their observable behaviour is what the function does.
+argument vector of its parameter types, at each budget. Their observable
+behaviour is what the function does.
 
 They are fuel-monotone, for every function of every module of every
-dialect, whatever its ops do (`Func.fuelMonotone`). Of a function that
-reaches an op without rules, this holds only vacuously on the paths that
-reach the op (ADR-2026-10-30-1855). The proof needs no property of the ops,
-because the interpreter alone counts the fuel: an op never sees it, and a
-call hands its callee the steps that the caller has left and goes on with
-what the callee gives back. It rests on two facts, each proved by induction
-on the budget:
+dialect, whatever its ops do. Of a function that reaches an op without
+rules, this holds only vacuously on the paths that reach the op
+(ADR-2026-10-30-1855). The proof needs no property of the ops, because the
+interpreter alone counts the fuel: an op never sees it, and a call hands
+its callee the steps that the caller has left and goes on with what the
+callee gives back. It rests on two facts, each proved by induction on the
+budget:
 
-* a run gives back at most the steps it was given (`Func.runOps_left_le`),
-  so a caller goes on with exactly the steps its callee leaves;
-* a run with `j` more steps does the same thing (`Func.runOps_ahead`).
-  Each of its returns is a return of the smaller run that leaves `j` more
-  steps, or the smaller run can run out of fuel. Each of the smaller
-  run's returns leaves `j` more steps in it, and the two hit the same UB.
-  A call keeps this: its callee, run with `j` more steps, gives back `j`
-  more, so its caller goes on with `j` more.
+* _A run gives back at most the fuel it was given_, so a caller goes on
+  with exactly the steps its callee leaves.
+* _A run with more steps of fuel is ahead by as many steps._ Each of its
+  returns is a return of the smaller run that leaves that many fewer
+  steps, or the smaller run can run out of fuel. Each of the smaller run's
+  returns leaves that many more steps in it, and the two hit the same UB.
+  A call keeps this: its callee, run with more steps, gives back as many
+  more, so its caller goes on with as many more.
 -/
 
 namespace Fir
