@@ -16,8 +16,8 @@ constant obligations to the branch obligations:
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
   defined one (ADR-2026-11-03-1615). The four divisions do only at a
-  width above zero, and validation accepts `iN` only for `N ≥ 1`, so they
-  do at every valid width. This is the one obligation that needs the
+  width above zero, and validation accepts `iN` only for N of at least
+  1, so they do at every valid width. This is the one obligation that needs the
   instance to be valid (ADR-2026-11-02-1515).
 * _Poison is refined by every value._ A poison `iN` is refined by every
   value of `iN`, at every width; `ptr`, which validation rejects, has no

@@ -9,8 +9,9 @@ callee, inlines it, or passes a defined value where the source passed
 poison. Each rewrite is correct when the new code refines the old. The
 sections from here to the core dialect's poison obligations prove that
 refinement goes through calls: a call on arguments that refine others
-refines the call on those others, and replacing a callee by a body that
-refines it refines every caller, recursion included. So a pass can be
+refines the call on those others, and replacing a callee by a body that,
+run in the new module, refines the old callee refines every caller,
+recursion included. So a pass can be
 checked one function at a time, and the whole program stays correct.
 
 Those proofs compare two runs path by path: they follow each path of one

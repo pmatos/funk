@@ -18,8 +18,10 @@ when the Lean changes under it.
 *Theorem: every op of a valid function is a valid op instance.* In every
 dialect with its validation rules, let the function $`f` be
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]
-in a context $`C`. Then every op of every block of $`f` has an op instance
-whose types validation accepts: each of its operand types and each of its
+in a context $`C`. Then every op of every block of $`f` has an
+{ref "The-fir-specification--Abstract-syntax--Dialects"}[op instance]
+{ref "The-fir-specification--Validation--The-general-rules"}[whose types validation accepts]:
+each of its operand types and each of its
 result types is a valid type of the dialect.
 
 Validation checks each operand's type against the type of the value it

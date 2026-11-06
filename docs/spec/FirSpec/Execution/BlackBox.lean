@@ -115,7 +115,8 @@ $`N_2` more, as the section on
 proves; the rest then runs with $`k + N_2` steps, which is $`k` more than
 it needed, and ends the same way, leaving $`k` more. A call adds the
 budgets of its parts, which the refinement proofs use to put a source's
-budget together from its callee's and its rest's.
+budget together from its callee's budget and that of the rest of the
+caller's ops after the call.
 :::
 
 :::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "1560621121885559639")
@@ -130,7 +131,7 @@ that a return leaves. So:
   in some environment $`G`, and is a path of $`\mathrm{run}_M(N, g, G, p^*)`
   with the steps left dropped;
 * in particular, when the
-  {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[runs of g]
+  {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[runs] of $`g`
   at $`N` on $`a` return $`u^*`, hit $`\mathsf{ub}~r`, or run out of
   fuel, $`g` starts, at $`p^*` in $`G`, and $`\mathrm{run}_M(N, g, G, p^*)`
   returns $`u^*` with some steps $`k` left, hits $`\mathsf{ub}~r`, or runs

@@ -10,10 +10,11 @@ of its own (ADR-2026-11-02-1514). The obligations' counterparts for calls
 hold for whole functions, for the functions of every core module, calls
 and recursion included:
 
-* _Refined arguments._ On arguments that refine others, a poison by any
-  value, a function's observable behaviour refines its behaviour on those
-  others. So a call on arguments that refine others refines the call on
-  those others: its callee runs on them.
+* _Refined arguments._ On arguments that refine others, such as a poison
+  replaced by any value of its type, a function's observable behaviour
+  refines its behaviour on those others. So a call on arguments that
+  refine others refines the call on those others: its callee runs on
+  them.
 * _Congruence in the callee._ In a valid module, replacing the body of a
   function `@g` with one under which `@g`, run in the new module, refines
   `@g` in the old, refines every function of the module. A function other
@@ -27,7 +28,7 @@ meets:
 * every core terminator and every core op with no callee is monotone,
   each by the obligation that its family proves, at every width: every
   core op but `call`, whose way to go on is its callee's run;
-* every core type has finitely many values: poison and the `2 ^ N` bit
+* every core type has finitely many values: poison and the 2^N bit
   vectors of `iN`, and none of `ptr`. So every list of types has finitely
   many argument vectors;
 * the refinement of core values is reflexive and transitive;

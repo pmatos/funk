@@ -3,13 +3,13 @@ import Fir.Execution.BlackBox
 /-!
 # Every return and UB of the target, allowed
 
-Every return and every UB of a run of ops in the target module is allowed
-by the source's run of the same ops at some budget, from environments of
-which the target's refines the source's, when every call names the same
-function in both modules or a black box, and every op that runs by its
-own rule, a terminator or an op with no callee, is monotone, among the
-ops of the source module's functions and of the function that runs.
-Calls and recursion are included.
+Let every call name the same function in both modules or a black box.
+Let every op that runs by its own rule, a terminator or an op with no
+callee, be monotone, among the ops of the source module's functions and
+of the function that runs. Then every return and every UB of the
+target's run of ops, from an environment that refines the source's, is
+allowed by the source's run of the same ops at some budget. Calls and
+recursion are included.
 
 Monotonicity is asked only of the ops that the run can reach, not of
 every op instance of the dialect. So a dialect whose ops are monotone

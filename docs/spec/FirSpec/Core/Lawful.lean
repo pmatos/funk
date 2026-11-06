@@ -37,13 +37,13 @@ $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 
-:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.ReturnsOnDefined) (fingerprint := "14321839175809465724")
+:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "9040044559324611093")
 *Theorems: a valid core op instance with an operand of type
 $`\mathsf{i}N` has $`N > 0`, and each valid core op that propagates poison returns a
 result on defined operands.*
 
 * If a core op instance is
-  {ref "The-fir-specification--Execution--What-the-lawful-class-gives"}[valid],
+  {ref "The-fir-specification--Validation--The-general-rules"}[valid],
   its types accepted by validation, and has an operand of type
   $`\mathsf{i}N`, then $`N > 0`: validation accepts $`\mathsf{i}N` only for
   $`1 \leq N \leq 16{,}777{,}215`.
@@ -59,7 +59,7 @@ gives that width. This is the one obligation that needs the op instance
 to be valid (ADR-2026-11-02-1515).
 :::
 
-:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (fingerprint := "7227133413299548094")
+:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "17861867244019309743")
 *Theorem: the core dialect is lawful.* Every core op instance whose types
 validation accepts meets the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations]:

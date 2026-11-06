@@ -8,12 +8,12 @@ a callee's body refines every caller when the callee, run in the new
 module, refines the old one, recursion included. The section on
 refinement through core calls states it for the core dialect.
 
-_What replacing a callee means._ Replacing the body of the function `@s`
+_What replacing a callee means._ Replacing the body of the function `@g`
 of a module gives the same module with a new body in place of the body of
-`@s`. Every function keeps its symbol, its parameters and its result
+`@g`. Every function keeps its symbol, its parameters and its result
 types, and every other function keeps its body. A caller reaches a callee
 only by its symbol (ADR-2026-10-29-2012), so this replaces the callee
-`@s` for every caller at once. The symbol table, and so the context of
+`@g` for every caller at once. The symbol table, and so the context of
 validation, stays the same: the new module is valid when the old one is
 and the new function is valid in that context.
 

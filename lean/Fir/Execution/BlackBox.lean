@@ -23,8 +23,8 @@ parameter types, such that
 * on arguments that refine others, the observable behaviour of the
   target's function refines that of the source's: a fact about their
   whole runs, which the engine does not look inside;
-* on each argument vector, the target's function diverges, or runs out of
-  fuel at no budget from a fixed bound on.
+* on each argument vector, the target's function diverges, or never runs
+  out of fuel at any budget of at least a fixed bound.
 
 Behaviours say nothing of steps. A black box's target may return after a
 thousand steps where its source returns after one, or the other way
@@ -34,8 +34,9 @@ two ways, each by induction on the target's budget, in the next two
 sections:
 
 * a return or UB of the target is allowed by the source at some budget.
-  A caller's budget is its callee's plus its rest's: with more fuel, a
-  run does the same thing and leaves more steps;
+  A caller's budget is its callee's budget plus that of the rest of the
+  caller's ops after the call: with more fuel, a run does the same thing
+  and leaves more steps;
 * running out of fuel needs the black box's bound.
 
 A black-box call that the target runs is allowed by the source's call:

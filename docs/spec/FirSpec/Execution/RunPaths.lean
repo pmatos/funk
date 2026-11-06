@@ -69,8 +69,9 @@ $`\mathrm{denote}_o(v^*)` may end:
    $`\mathrm{run}_M(n, f, [x^* \mapsto w^*] \cdot E, o'^*)`.
 
 When $`o` is not a terminator and calls the symbol $`s`, the module has
-the function $`g = \mathrm{lookup}_M(s)`, entering it with $`v^*` starts
-at the ops $`p^*` in the environment $`G`, and its run
+the function $`g = \mathrm{lookup}_M(s)`, entering it,
+$`\mathrm{enter}_g(v^*)`, starts at the ops $`p^*` in the environment
+$`G`, and its run
 $`\mathrm{run}_M(n, g, G, p^*)` may end:
 
 6. with $`\mathsf{ub}~r`, and the path ends with $`\mathsf{ub}~r`;
@@ -82,7 +83,10 @@ $`\mathrm{run}_M(n, g, G, p^*)` may end:
 
 Here $`[x^* \mapsto w^*] \cdot E` binds each name to its value in front
 of $`E`, and $`\mathrm{lookup}_M`, $`\mathrm{exit}_o`,
-$`\mathrm{denote}_o` and entering a function are as in the interpreter.
+$`\mathrm{denote}_o` and $`\mathrm{enter}_g` are as in the
+{ref "The-fir-specification--Execution--The-interpreter"}[interpreter],
+which also says why a caller goes on with $`\min(k, n)` steps: a run
+leaves at most the steps it was given, so this is $`k`.
 
 *Theorem:* for every end $`e` that is not stuck,
 

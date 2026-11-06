@@ -111,7 +111,7 @@ exactly when $`E(x)` is a value $`v` of the type $`t`, and the operands
 of the types $`t^*` named $`x^*` are found as $`v^*`.
 :::
 
-:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (fingerprint := "9548252040869927291")
+:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (pin := Fir.Func.block?) (fingerprint := "17995951777421580479")
 *Theorems: a jump from the refining environment goes where the jump from
 the refined one goes.* Let $`E \sqsubseteq E'`, in a dialect whose types
 can be compared for equality. If, for a function $`f`
@@ -144,9 +144,9 @@ the function $`f` with $`u'^*` starts at the ops $`p^*` in the environment
 $`G'`, then entering $`f` with $`u^*` starts at the same ops $`p^*`, in an
 environment $`G` with $`G \sqsubseteq G'`.
 
-It rests on a plumbing lemma that says what entering does: entering $`f` with $`u^*` starts
-at $`p^*` in $`G` exactly when $`f` has a first block $`e`, which
-declares no arguments; the types of $`u^*` are the parameter types of
+It rests on a plumbing lemma that says what entering does: if entering
+$`f` with $`u^*` starts at $`p^*` in $`G`, then $`f` has a first block
+$`e`, which declares no arguments; the types of $`u^*` are the parameter types of
 $`f`; $`p^*` is the body of $`e`; and $`G` binds the parameters of $`f`
 to $`u^*`.
 

@@ -7,13 +7,13 @@ A target that diverges runs out of fuel at every budget, and the source
 must then diverge too, or hit UB at some budget. The previous section
 cannot show it: a path that runs out of fuel holds no value to follow,
 and a black box's target may spend its steps in a callee that the source
-runs in one. So this section relates budgets. Let B be the black box's
-bound plus one. A path of the target's run of ops that runs out of fuel
-or returns, at a budget of at least B times one more than the source's,
-is allowed by the source at its budget: the source runs out of fuel
-there, or hits UB at some budget, or, on a return, returns there values
-that the target's refine, and leaves at most a Bth of the steps that the
-target leaves.
+runs in one. So this section relates budgets. Let _B_ be the black box's
+bound plus one, and let the target's budget be at least _B_ times one
+more than the source's. Then a path of the target's run of ops that runs
+out of fuel or returns is allowed by the source at its budget: the source
+runs out of fuel there, or hits UB at some budget, or, on a return,
+returns there values that the target's refine, while the target leaves
+at least _B_ times the steps that the source leaves, plus _B_.
 
 The proof is by strong induction on the target's budget. Each op takes
 one step in both runs, a call of the same function included, whose callee
@@ -22,13 +22,14 @@ the induction covers. A black-box call is where the budgets part:
 * If its target diverges on the call's arguments, the black box gives
   that its source diverges on the source's, or hits UB. So the source's
   callee runs out of fuel at any budget, or hits UB at some budget.
-* Otherwise its target runs out of fuel at no budget from the bound on,
-  so a run of it that returns takes at most the bound's steps: with the
-  call's own step, at most B steps of the target for the source's one or
-  more. The source's callee runs out of fuel at its budget, or, by fuel
-  monotonicity, returns at it what the black box allows.
+* Otherwise its target never runs out of fuel at any budget of at least
+  the bound, so a run of it that returns takes at most the bound's steps:
+  with the call's own step, at most _B_ steps of the target for the
+  source's one or more. The source's callee runs out of fuel at its
+  budget, or, by fuel monotonicity, returns at it what the black box
+  allows.
 
-So a path of the target with B steps for each of the source's reaches a
+So a path of the target with _B_ steps for each of the source's reaches a
 point where the source runs out of fuel or hits UB, or keeps that ratio
 to its end.
 -/

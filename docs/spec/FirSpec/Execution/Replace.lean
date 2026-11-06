@@ -40,7 +40,7 @@ $`s`, region $`b` and function $`f`:
 * when it is $`s`, $`f[s \leftarrow b]` is $`f` with the body $`b`;
 * for every symbol $`x`, $`\mathrm{lookup}_{M[s \leftarrow b]}(x)` is
   $`\mathrm{lookup}_M(x)` with its body replaced when its symbol is $`s`,
-  and none when that is none.
+  and undefined exactly when $`\mathrm{lookup}_M(x)` is undefined.
 
 Here $`\mathrm{lookup}_M(x)` is the first function of $`M` whose symbol is
 $`x`, the one that a
@@ -97,9 +97,9 @@ fuel at every budget, or from some budget on never does.
 *Theorem: one bound serves finitely many argument vectors.* Let the list
 $`L` hold every element of a set $`A`, and let $`Q(a, m)` be a property of
 an element $`a \in A` and a number $`m` that passes to smaller numbers:
-$`m \leq m'` and $`Q(a, m')` give $`Q(a, m)`. Then there is a $`B` such
+$`m \leq m'` and $`Q(a, m')` give $`Q(a, m)`. Then there is a $`\beta` such
 that for every $`a \in A`, either $`Q(a, m)` holds for every $`m`, or it
-holds for no $`m \geq B`.
+holds for no $`m \geq \beta`.
 
 With $`Q(a, m)` "the new callee runs out of fuel at $`m` on $`a`", this
 gives the black box its bound when the callee's parameter types have
@@ -131,8 +131,8 @@ $`M'` refine the runs of $`f` in $`M`: $`f` itself, or $`g'` when $`f`
 is $`g`. Calls and recursion are included (ADR-2026-11-02-1350).
 
 This is what makes a compiler's pass over one function sound for the
-whole program: replace a callee by a body that refines it, and every
-caller is refined.
+whole program: replace a callee by a body that, run in the new module,
+refines it, and every caller is refined.
 
 The hypothesis compares $`g'` in the new module with $`g` in the old. A
 callee that calls back, itself or its callers, calls the new body in

@@ -4,11 +4,11 @@ import Fir.Execution.RefineDown
 # A call on arguments that refine others
 
 The first of the two refinement theorems for whole functions: on
-arguments that refine others, a poison by any value, a function's
-observable behaviour refines its behaviour on those others. It holds for
-every function of every module, calls and recursion included, when the
-terminators and the ops with no callee of the function and of the
-module's functions are monotone. The section on refinement through core
+arguments that refine others, such as a poison replaced by any value of
+its type, a function's observable behaviour refines its behaviour on
+those others. It holds for every function of every module, calls and
+recursion included, when the terminators and the ops with no callee of
+the function and of the module's functions are monotone. The section on refinement through core
 calls states it for the core dialect, and the section on what the lawful
 class gives for every function of a valid module of a lawful dialect, by
 the class alone. A call passes its arguments to its callee, so a call on
