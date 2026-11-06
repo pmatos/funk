@@ -2,16 +2,21 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 
 /-!
-A module holds functions. A function is a control-flow graph of blocks (E0,
-ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
+A module holds functions. A function is a control-flow graph of blocks
+(ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
-dialect (G0): results, an op instance of its dialect, operands, successors,
-regions and a location reference.
+dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
+results, an op instance of its dialect, operands, successors, regions and a
+location reference.
 
-The terms are extrinsically typed. Values are referred to by name, and the
-names are stored as the producer wrote them (P3, ADR-2026-10-29-2014). Typing,
-scoping and dominance are rules of the validation chapter, not of these
-types: a term can be ill-formed, and validation says which terms are valid.
+The terms, the syntax trees of programs, carry no types. Values are
+referred to by name, and the names are stored as the producer wrote them
+(ADR-2026-10-29-2014). Typing, scoping and dominance are rules of the
+validation chapter, not of the terms: a term can be ill-formed, and
+validation says which terms are valid.
+
+This section gives names first, then the terms from the inside out: a
+successor, an op with blocks and regions, a function, an item and a module.
 -/
 
 namespace Fir
@@ -25,12 +30,8 @@ abbrev Name := String
 /-!
 # Names
 
-A value name or a block label is one or more _name characters_: ASCII
-letters, digits, `_` and `.`, so `0` and `acc.1` are names. A _word_ is a
-name that starts with a letter or `_`. Validation requires every value name
-and label of a function to be a name, so that the text can write it. A
-symbol may be any string: the text writes it bare when it is a word, and
-quoted otherwise.
+What may name a value, a label or a symbol, and which names the text
+writes bare.
 -/
 
 /-- An ASCII letter. -/
@@ -50,6 +51,13 @@ def isWord (s : String) : Bool :=
   match s.toList with
   | c :: cs => isWordStart c && cs.all isNameChar
   | [] => false
+
+/-!
+# Terms
+
+The terms of fir, from the inside out: a successor, an op with the blocks
+and regions it may own, a function, an item and a module.
+-/
 
 /--
 A successor of a terminator: the block that control may go to, and the
