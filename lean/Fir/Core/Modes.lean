@@ -22,11 +22,11 @@ The theorems hold on every argument vector of the function's parameter
 types, poison included, and `fir-ref run` takes `poison` as an argument of
 any `iN`. A run on a poison argument is refined by the run with any value
 in its place, calls and recursion included, as the section on refinement
-through core calls proves.
-So the harness runs native code, which holds no poison, on poison
-stand-ins in place of each poison argument, and judges each result
-against the outcomes that `fir-ref` lists for the run on the poison
-(ADR-2026-11-03-1847).
+through core calls proves. So the differential test harness, which
+checks compiled code against `fir-ref`, runs native code, which holds no
+poison, on poison stand-ins in place of each poison argument, and judges
+each result against the outcomes that `fir-ref` lists for the run on the
+poison (ADR-2026-11-03-1847).
 -/
 
 namespace Fir.Core

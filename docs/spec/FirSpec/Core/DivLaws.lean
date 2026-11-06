@@ -20,23 +20,24 @@ changes under it.
 poison.* The four division ops share one
 {ref "The-fir-specification--Execution--Division-rules"}[rule]:
 $`\mathrm{div}_{s,q}(a, b)` is the way a division of $`a` by $`b` ends,
-where $`s` says whether the op reads its operands as signed and $`q` is
-its result on two values, a divisor that is not zero, and no signed
-minimum divided by $`-1`. The rule also takes the op's name, for its UB
+where $`s` says whether the op reads its operands as signed, and $`q`
+gives its result on two values when the divisor is not zero and the
+division is not the signed minimum by $`-1`. The rule also takes the op's name, for its UB
 reasons.
 
-For every name, $`s` and $`q`, and all
+For every name, $`s` and $`q`, every width $`w`, and all
 $`a, b \in \llbracket \mathsf{i}w \rrbracket` of which one is poison: if
 $`\mathrm{div}_{s,q}(a, b) = \mathsf{ok}~r`, then $`r = \mathsf{poison}`.
 :::
 
 :::readable Fir.Core.divEv_fill (pin := Fir.Core.divEv) (fingerprint := "14536795940362131326")
 *Theorem: on a poison operand, a division that is UB is UB with values in
-place of each poison.* For every name, $`s` and $`q`, and all $`a, b \in \llbracket \mathsf{i}w \rrbracket`
-of which one is poison, if $`\mathrm{div}_{s,q}(a, b) = \mathsf{ub}~r`,
+place of each poison.* For every name, $`s` and $`q`, every width $`w`,
+and all $`a, b \in \llbracket \mathsf{i}w \rrbracket` of which one is
+poison, if $`\mathrm{div}_{s,q}(a, b) = \mathsf{ub}~r`,
 there are vectors $`x` and $`y` of $`w` bits such that $`a` is poison or
-$`x`, $`b` is poison or $`y`, and $`\mathrm{div}_{s,q}(x, y)` is UB, for
-some reason.
+$`x`, $`b` is poison or $`y`, and $`\mathrm{div}_{s,q}(x, y) = \mathsf{ub}~r'`
+for some reason $`r'`.
 
 A poison divisor is UB because it might be zero, so $`y = 0` does it. A
 poison dividend is UB only by a divisor that is zero, or $`-1` for a
@@ -54,7 +55,8 @@ $`e` {ref "The-fir-specification--Execution--Poison-classes"}[allows] $`e`.
 
 :::readable Fir.Core.divEv_isRefinedBy (pin := Fir.Core.divEv) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "3429884219294839487")
 *Theorem: refining the operands of a division refines how it ends.* For
-every name, $`s` and $`q`, and all $`a, b, a', b' \in \llbracket \mathsf{i}w \rrbracket` with
+every name, $`s` and $`q`, every width $`w`, and all
+$`a, b, a', b' \in \llbracket \mathsf{i}w \rrbracket` with
 $`a \sqsubseteq a'` and $`b \sqsubseteq b'`, the way
 $`\mathrm{div}_{s,q}(a, b)` ends allows the way
 $`\mathrm{div}_{s,q}(a', b')` ends: UB allows anything, and a result
@@ -85,8 +87,10 @@ $`0`, so every divisor is zero.
 ends in one way and never chooses, so its rule is a function $`g` from two
 operands to a way to end, and the
 {ref "The-fir-specification--Execution--Division-rules"}[division rules]
-make it an op rule $`\mathrm{rule}_g`, which ends with a one-element result
-vector or with UB. In the set monad, for all operands $`a, b` and every
+make it an op rule $`\mathrm{rule}_g`. Where $`g` gives the value $`v`,
+the rule ends with the one-element result vector $`(v)`, whose one
+element is $`v`, as $`()` is the empty one; where $`g` gives UB, it ends
+with UB. In the set monad, for all operands $`a, b` and every
 way $`e` to end:
 
 $$`\begin{aligned} & e \in \mathrm{rule}_g(a, b) \iff \\ & \quad (\exists v.\ g(a, b) = \mathsf{ok}~v \wedge e = \mathsf{ok}~(v)) \\ & \quad \lor (\exists r.\ g(a, b) = \mathsf{ub}~r \wedge e = \mathsf{ub}~r) \end{aligned}`
@@ -102,8 +106,8 @@ $`\mathrm{div}_{s,q}` meets the two clauses of an op that
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison],
 on every operand vector $`(a, b)` some element of which is poison:
 
-* _Poison out_: if it ends with the result vector $`\vec{w}`, every
-  element of $`\vec{w}` is poison.
+* _Poison out_: if it ends with the result vector $`\vec{r}`, every
+  element of $`\vec{r}` is poison.
 * _UB only by the op's own rules_: if it ends with UB, some vector that
   fills $`(a, b)` makes it end with UB too.
 

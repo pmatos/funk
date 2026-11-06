@@ -28,7 +28,8 @@ one way, with the result $`c`:
 
 $$`\mathrm{denote}_{\mathsf{const}_w~c}() = \{ \mathsf{ok}~(c) \}`
 
-That one way is the result on defined operands that the first obligation
+Here $`(c)` is the result vector whose one element is $`c`, as $`()` is
+the empty one. That one way is the result on defined operands that the first obligation
 asks for, and the outcome that totality asks for on every operand vector.
 The section on
 {ref "The-fir-specification--Execution--Core-poison-classes"}[core poison classes]

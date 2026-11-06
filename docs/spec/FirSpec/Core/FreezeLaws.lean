@@ -17,9 +17,9 @@ when the Lean changes under it.
 :::readable Fir.Core.freeze_denote (pin := Fir.Core.freezeValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "14590619122918508930")
 *Theorem: what $`\mathsf{freeze}` may give.* For every width $`w`, every
 $`a \in \llbracket \mathsf{i}w \rrbracket` and every way $`e` to end,
-$`\mathsf{freeze}_w` on $`a` may end with $`e` exactly when $`e` is a
-result $`\mathsf{ok}~(b)` for some vector $`b` of $`w` bits such that $`a`
-is poison or $`a = b`:
+$`\mathsf{freeze}_w` on $`a` may end with $`e` exactly when $`e` is
+$`\mathsf{ok}~(b)`, with the result vector $`(b)` whose one element is
+$`b`, for some $`b` of $`w` bits such that $`a` is poison or $`a = b`:
 
 $$`\begin{aligned} & e \in \mathrm{denote}_{\mathsf{freeze}_w}(a) \\ \iff\ & \exists b.\ e = \mathsf{ok}~(b) \\ & \quad \wedge\, (a = \mathsf{poison} \,\lor\, a = b) \end{aligned}`
 

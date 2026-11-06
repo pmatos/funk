@@ -13,10 +13,10 @@ holds at once. Each rule gives poison on a poison operand, so it is
 strict, as the section on the arithmetic obligations defines it, and so
 it is monotone: a poison operand gives a poison result, which every result
 refines, and defined operands are refined only by themselves. A shift by
-`N` or more gives poison on two defined operands as well; that changes
+_N_ or more gives poison on two defined operands as well; that changes
 neither argument, since a defined amount is refined only by itself. Each
-returns a result on the defined operands `0` and `0`: a shift by `0` gives
-its value, and at any width a poison result is a result too.
+returns a result on the defined operands 0 and 0: a shift by 0 gives its
+value, and at any width a poison result is a result too.
 -/
 
 namespace Fir.Core

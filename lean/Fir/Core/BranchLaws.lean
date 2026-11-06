@@ -30,9 +30,10 @@ successors a terminator has, and no obligation of the poison classes
 section says which successors its exit may name. So the no-stuck
 obligation of a valid function with branches needs one more fact of each
 op: every successor that its exit may name is one it has. Below, `br`
-goes only to its one successor, and `cond_br` only to one of its two. The proofs that every valid core function
-without a `call` op runs within itself, and that every function of a valid
-core module runs within the module, rest on these two facts.
+goes only to its one successor, and `cond_br` only to one of its two.
+The proofs that every valid core function without a `call` op runs within
+itself, and that every function of a valid core module runs within the
+module, rest on these two facts.
 -/
 
 namespace Fir.Core

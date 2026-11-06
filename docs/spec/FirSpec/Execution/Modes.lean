@@ -28,8 +28,9 @@ noOutcome   \mathsf{no\_outcome}~e
 
 A leaf $`\ell` with an outcome stands for a way to end of the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad],
-$`\mathrm{end}(\ell)`: $`\mathsf{ok}~a` for $`\mathsf{ok}~a`, and
-$`\mathsf{ub}~r` for $`\mathsf{ub}~r`. A leaf $`\mathsf{no\_outcome}~e`
+$`\mathrm{end}(\ell)`: the leaf $`\mathsf{ok}~a` stands for the way to
+end $`\mathsf{ok}~a`, and the leaf $`\mathsf{ub}~r` for the way to end
+$`\mathsf{ub}~r`. A leaf $`\mathsf{no\_outcome}~e`
 stands for none.
 :::
 
@@ -46,11 +47,14 @@ subtree.
 :::readable Fir.ChoiceTree.collect Fir.ChoiceTree.collect_mem Fir.ChoiceTree.collect_some (fingerprint := "13934233481898007141")
 *Definition and theorems: joining the lists of each element.* A helper of
 exhaustive mode. For a function $`g` that gives each element a list, or
-fails, $`\mathrm{collect}_g` joins, in order, the lists that $`g` gives
-each element of a list, and fails when $`g` fails on one. It keeps its
-work in an accumulator, so a long list costs no stack. The theorems say
-that what it gives holds exactly the members of the lists $`g` gives, and
-that it gives something only when $`g` gives a list for every element.
+fails, $`\mathrm{collect}_g(\mathit{xs}, \mathit{acc})` gives the
+starting list $`\mathit{acc}` reversed, then, in order, the lists that
+$`g` gives each element of the list $`\mathit{xs}`, and fails when $`g`
+fails on one. It keeps its work in the accumulator $`\mathit{acc}`, so a
+long list costs no stack; exhaustive mode starts it from the empty list.
+The theorems say that what it gives holds exactly the members of
+$`\mathit{acc}` and of the lists $`g` gives, and that it gives something
+only when $`g` gives a list for every element.
 :::
 
 :::readable Fir.ChoiceTree.explore (fingerprint := "9497081801497781709")
@@ -97,8 +101,9 @@ lists gives one: exactly when every element has one.
 *Definition: why a choice sequence does not fit a run.* A _choice
 sequence_ gives one value for each choice that a run makes, in order. It
 _fits_ when it has exactly as many values as the run makes choices, and
-each value reads as a value of its choice's width. Choices are counted
-from zero. A sequence that does not fit is an error of its own, a
+each value reads as a value of its choice's width; on a path that ends
+with no outcome, values left over are ignored, as scripted mode below
+shows. Choices are counted from zero. A sequence that does not fit is an error of its own, a
 _misfit_, and never an outcome:
 
 ```grammar Fir.ChoiceTree.Misfit
@@ -122,18 +127,21 @@ the path of the tree $`t` that the choice sequence $`\mathit{cs}` names,
 after $`n` choices already made, and gives the leaf it reaches with the
 number of choices made, or a misfit. A function $`\mathrm{read}(w, s)`,
 which it takes as a parameter, reads the value $`s` as $`w` bits, or does
-not.
+not. Here $`[]` is the empty sequence, $`s :: \mathit{cs}` is the
+sequence whose first value is $`s`, followed by $`\mathit{cs}`, and
+$`|\mathit{cs}|` is the length of $`\mathit{cs}`. On a leaf, and on a
+node $`t = \mathsf{choose}~w~(b \mapsto t_b)` whose first value reads:
 
-* At $`\mathsf{no\_outcome}~e`, the walk ends with that leaf, whatever is
-  left of $`\mathit{cs}`.
-* At $`\mathsf{pure}~a` or $`\mathsf{ub}~r`, it ends with that leaf if
-  $`\mathit{cs}` is empty, and with $`\mathsf{long}~n~(n + |\mathit{cs}|)`
-  otherwise.
-* At $`\mathsf{choose}~w~(b \mapsto t_b)`, it takes the first value $`s`
-  of $`\mathit{cs}`; if $`\mathrm{read}(w, s)` gives $`b`, it goes on in
-  $`t_b` with the rest, after $`n + 1` choices. If $`\mathit{cs}` is empty
-  it ends with $`\mathsf{short}~n~w`, and if $`s` does not read, with
-  $`\mathsf{unread}~n~w~s`.
+$$`\begin{aligned} & \mathrm{script}(\mathsf{no\_outcome}~e, \mathit{cs}, n) \\ & \quad = (\mathsf{no\_outcome}~e, n) \\ & \mathrm{script}(\mathsf{pure}~a, [], n) = (\mathsf{ok}~a, n) \\ & \mathrm{script}(\mathsf{ub}~r, [], n) = (\mathsf{ub}~r, n) \\ & \mathrm{script}(t, s :: \mathit{cs}, n) \\ & \quad = \mathrm{script}(t_b, \mathit{cs}, n + 1) \\ & \qquad \text{when } \mathrm{read}(w, s) = b \end{aligned}`
+
+So a path with no outcome ends whatever is left of $`\mathit{cs}`. In
+every other case it gives a misfit:
+
+* At $`\mathsf{pure}~a` or $`\mathsf{ub}~r` with $`\mathit{cs}` not
+  empty, $`\mathsf{long}~n~(n + |\mathit{cs}|)`.
+* At $`t` with $`\mathit{cs}` empty, $`\mathsf{short}~n~w`.
+* At $`t` with $`s :: \mathit{cs}` where $`\mathrm{read}(w, s)` does not
+  read, $`\mathsf{unread}~n~w~s`.
 :::
 
 :::readable Fir.ChoiceTree.script_toSet (fingerprint := "14008406745184919625")
@@ -145,8 +153,8 @@ $`\ell` and $`\mathrm{end}(\ell) = e`, then $`e \in \mathrm{set}(t)`.
 
 :::readable Fir.ChoiceTree.Chosen Fir.ChoiceTree.readChosen (fingerprint := "6023394624286113321")
 *Definition: a chosen value, and reading it back.* A value that a path
-chose is a pair $`(v, b)` of a width $`v` and a vector $`b` of $`v` bits.
-Read as $`w` bits, it gives $`b` when $`v = w`, and does not read
+chose is a pair $`(u, b)` of a width $`u` and a vector $`b` of $`u` bits.
+Read as $`w` bits, it gives $`b` when $`u = w`, and does not read
 otherwise.
 :::
 
@@ -155,10 +163,14 @@ otherwise.
 the tree $`t`, drawing each choice as the path reaches it, and gives the
 leaf it reaches with the values it chose, in order. A function
 $`\mathrm{draw}(w, g)`, which it takes as a parameter, gives $`w` bits and
-the next state of the generator $`g`. At a leaf, the walk ends with no
-values. At $`\mathsf{choose}~w~(b \mapsto t_b)`, it draws
-$`(b, g') = \mathrm{draw}(w, g)`, samples $`t_b` from $`g'`, and puts
-$`(w, b)` before the values that gives.
+the next state of the generator $`g`. At a leaf it ends with no values,
+and at a node $`t = \mathsf{choose}~w~(b \mapsto t_b)` it draws $`w` bits
+and puts them before the values that the rest of the path chose:
+
+$$`\begin{aligned} & \mathrm{sample}(\mathsf{pure}~a, g) = (\mathsf{ok}~a, []) \\ & \mathrm{sample}(\mathsf{ub}~r, g) = (\mathsf{ub}~r, []) \\ & \mathrm{sample}(\mathsf{no\_outcome}~e, g) \\ & \quad = (\mathsf{no\_outcome}~e, []) \\ & \mathrm{sample}(t, g) = (\ell, (w, b) :: \mathit{cs}) \end{aligned}`
+
+where $`(b, g') = \mathrm{draw}(w, g)` and
+$`(\ell, \mathit{cs}) = \mathrm{sample}(t_b, g')`.
 :::
 
 :::readable Fir.ChoiceTree.sample_script (fingerprint := "3654315093681788309")
@@ -202,8 +214,9 @@ $`\mathsf{no\_outcome}~e` stays so. `fir-ref` reports each path this way.
 below. Each outcome $`o` is a way a run's computation may end,
 $`\mathrm{ev}(o)`, and $`o` is an outcome of a run $`R` exactly when
 $`\mathrm{ev}(o) \in R`. A leaf stands for $`\mathrm{ev}(o)` exactly when
-its path end is $`\mathsf{outcome}~o`, and for a stuck end exactly when
-its path end is stuck.
+its path end is $`\mathsf{outcome}~o`, and it stands for the way to end
+$`\mathsf{stuck}~s`, for some $`s`, exactly when its path end is
+$`\mathsf{stuck}~s` for some $`s`.
 :::
 
 :::readable Fir.Func.run_toSet (fingerprint := "2626380901206003918")

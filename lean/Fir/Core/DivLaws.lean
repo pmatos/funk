@@ -32,19 +32,19 @@ carries them to each op's semantics.
 
 # A width of zero
 
-`i0` is not a type: validation rejects it. The op instances of the Lean,
-though, include `udiv` at width zero. There is one vector of zero bits,
-`0`, so at width zero every divisor is zero and every division is UB. No
+`i0` is not a type: validation rejects it. The rule of each division op,
+though, is defined at every width, zero included. There is one vector of
+zero bits, 0, so at width zero every divisor is zero and every division
+is UB. No
 division at width zero returns a result on defined operands, as the last
 theorem below shows. So the four ops return a result on defined operands
 at every width above zero, and only there.
 
 This is why a lawful dialect is asked to meet the obligations only on op
-instances whose types validation accepts: the human ruled to narrow the
-class rather than change the rule for a zero divisor
-(ADR-2026-11-02-1515). Validation accepts `iN` only for `N ≥ 1`, so the
-four ops meet the class at every width it covers, and division at `i0`
-keeps its rule.
+instances whose types validation accepts: fir narrows the class rather
+than change the rule for a zero divisor (ADR-2026-11-02-1515). Validation
+accepts `iN` only for `N ≥ 1`, so the four ops meet the class at every
+width it covers, and division at `i0` keeps its rule.
 -/
 
 namespace Fir.Core

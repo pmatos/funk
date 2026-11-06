@@ -23,7 +23,7 @@ There, each core op runs its
 same rule, written once for any monad, that the set monad's semantics
 runs. Where an op has no rule, as $`\mathsf{call}` has none, since its
 meaning is its callee's run, the tree ends the path with
-$`\mathsf{no\_outcome}~o`, naming the op $`o`, as the set monad gives it
+$`\mathsf{no\_outcome}~p`, naming the op $`p`, as the set monad gives it
 no way to end (ADR-2026-10-30-1855).
 `fir-ref` reports such a path as an error.
 
@@ -48,11 +48,11 @@ way and never choose, so their trees are single leaves.
 
 :::readable Fir.Core.mapsDenote (pin := Fir.MonadMorphism.MapsDenote) (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "7901270225191683949")
 *Theorem: every core op has the same meaning in both monads.* For every
-core op $`o` and operand vector $`\vec{v}`, the set of
-$`\mathrm{denote}^{\mathrm{tree}}_o(\vec{v})` is
-$`\mathrm{denote}^{\mathrm{set}}_o(\vec{v})`, and the set of
-$`\mathrm{exit}^{\mathrm{tree}}_o(\vec{v})` is
-$`\mathrm{exit}^{\mathrm{set}}_o(\vec{v})`: the map from trees to their
+core op $`p` and operand vector $`\vec{v}`, the set of
+$`\mathrm{denote}^{\mathrm{tree}}_p(\vec{v})` is
+$`\mathrm{denote}^{\mathrm{set}}_p(\vec{v})`, and the set of
+$`\mathrm{exit}^{\mathrm{tree}}_p(\vec{v})` is
+$`\mathrm{exit}^{\mathrm{set}}_p(\vec{v})`: the map from trees to their
 sets {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps the semantics]
 of the core ops.
 

@@ -35,8 +35,8 @@ of binary ops, and gives the monotonicity of the width changes below.
 *Theorem: the width changes are strict.* For all widths $`M` and $`N`,
 the {ref "The-fir-specification--Execution--Width-change-rules"}[rules] of
 $`\mathsf{zext}`, $`\mathsf{sext}` and $`\mathsf{trunc}` from
-$`\mathsf{i}M` to $`\mathsf{i}N` give poison on poison. On a value, they
-put zeros above its bits, put copies of its top bit above them, or keep
+$`\mathsf{i}M` to $`\mathsf{i}N` give poison on poison. On a value, at
+the widths validation accepts, they put zeros above its bits, put copies of its top bit above them, or keep
 its low $`N` bits.
 :::
 

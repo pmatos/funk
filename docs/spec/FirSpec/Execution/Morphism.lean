@@ -52,11 +52,11 @@ with the same error after it.
 :::
 
 :::readable Fir.MonadMorphism.except_liftExcept Fir.MonadMorphism.except_lift (fingerprint := "18399010535387011980")
-*Theorem: steps that cannot choose translate to themselves.* Two steps in
-the proofs below. A step that ends at once, with an error or with a
-value, is the same after the translation that keeps errors. And a
-computation of $`m` that never ends with an error, seen as one that may,
-translates to its translation by $`\varphi`, seen the same way.
+*Theorem: lifted steps translate as they are.* Two steps in the proofs
+below. A step that ends at once, with an error or with a value, is
+unchanged by the translation that keeps errors. And a computation $`x` of
+$`m`, lifted to one whose paths may also end with an error, translates to
+$`\varphi(x)`, lifted the same way.
 :::
 
 :::readable Fir.MonadMorphism.MapsDenote (pin := Fir.DialectDenote) (fingerprint := "2618859953134783425")
@@ -89,7 +89,8 @@ $$`\varphi_E(\mathrm{run}^m_{M,f}(\vec{v}, k)) = \mathrm{run}^n_{M,f}(\vec{v}, k
 
 where $`\mathrm{run}^m_{M,f}(\vec{v}, k)` is the run of $`f` on $`\vec{v}`
 with $`k` steps of fuel, read in $`m`. The first theorem says the same of
-a run of any list of ops of $`f`, from any environment, calls included;
+a run of any list of ops, for any function $`f` and environment, calls
+included;
 the second, about a whole function, follows from it.
 
 The interpreter is written once, for any monad, so the proof translates it

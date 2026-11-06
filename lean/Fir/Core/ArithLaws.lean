@@ -13,10 +13,10 @@ operands with no poison. Every op that runs by a rule of its own, which is
 every core op but `call`, must also be total, with some outcome on every
 operand vector, and monotone, so that refining its operands refines what it
 does. With every obligation met, the core dialect is lawful, and refinement
-is compositional: a pass that refines one value refines every function that
-uses it, calls included, as the section on the core dialect's poison
-obligations proves. Each proof is about fir's execution rules, read in the
-set monad.
+is compositional: run on arguments that refine others, every function's
+behaviour refines its behaviour on those others, calls and recursion
+included, as the section on refinement through core calls proves. Each
+proof is about fir's execution rules, read in the set monad.
 
 `const` propagates poison (ADR-2026-10-30-0818). The core poison classes
 section proves that it meets its poison clauses and is monotone whatever

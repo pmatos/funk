@@ -33,7 +33,8 @@ ADR-2026-10-30-2218's.
 
 Below come, in order: the leaves that a walk reports, exhaustive mode and
 its theorems, scripted mode and its theorem, sampled mode and its
-theorem, and then the same theorems for a run of the interpreter.
+theorem, and then, for a run of the interpreter, how its paths end and
+exhaustive and scripted mode's theorems.
 -/
 
 namespace Fir
