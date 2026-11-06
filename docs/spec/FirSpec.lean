@@ -78,6 +78,14 @@ import FirSpec.Text.Read
 import FirSpec.Text.ReadLocs
 import FirSpec.Text.Decode
 import FirSpec.Text.Example
+import FirSpec.Text.Tokens
+import FirSpec.Text.LexNumbers
+import FirSpec.Text.LexTokens
+import FirSpec.Text.LexStrings
+import FirSpec.Text.LexLayout
+import FirSpec.Text.LexPrint
+import FirSpec.Text.LexModule
+import FirSpec.Text.LexWellFormed
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -335,21 +343,21 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.Example "Example" FirSpec.Text.Example (level := 2)}
 
-{includeLiterate "." Fir.Text.Tokens "Lexing printed text" (level := 2)}
+{includeReadable "." Fir.Text.Tokens "Lexing printed text" FirSpec.Text.Tokens (level := 2)}
 
-{includeLiterate "." Fir.Text.LexNumbers "Digits and their values" (level := 2)}
+{includeReadable "." Fir.Text.LexNumbers "Digits and their values" FirSpec.Text.LexNumbers (level := 2)}
 
-{includeLiterate "." Fir.Text.LexTokens "Maximal munch" (level := 2)}
+{includeReadable "." Fir.Text.LexTokens "Maximal munch" FirSpec.Text.LexTokens (level := 2)}
 
-{includeLiterate "." Fir.Text.LexStrings "Escapes and quoted symbols" (level := 2)}
+{includeReadable "." Fir.Text.LexStrings "Escapes and quoted symbols" FirSpec.Text.LexStrings (level := 2)}
 
-{includeLiterate "." Fir.Text.LexLayout "Spaces, line feeds and lists" (level := 2)}
+{includeReadable "." Fir.Text.LexLayout "Spaces, line feeds and lists" FirSpec.Text.LexLayout (level := 2)}
 
-{includeLiterate "." Fir.Text.LexPrint "Attributes, locations and names" (level := 2)}
+{includeReadable "." Fir.Text.LexPrint "Attributes, locations and names" FirSpec.Text.LexPrint (level := 2)}
 
-{includeLiterate "." Fir.Text.LexModule "Ops, functions and the module" (level := 2)}
+{includeReadable "." Fir.Text.LexModule "Ops, functions and the module" FirSpec.Text.LexModule (level := 2)}
 
-{includeLiterate "." Fir.Text.LexWellFormed "Writable tokens" (level := 2)}
+{includeReadable "." Fir.Text.LexWellFormed "Writable tokens" FirSpec.Text.LexWellFormed (level := 2)}
 
 {includeReadable "." Fir.Text.Tree "The tree that the grammar reads" FirSpec.Text.Tree (level := 2)}
 

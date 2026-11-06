@@ -4,16 +4,15 @@ import Fir.Text.LexStrings
 # Reading the printer's layout
 
 The printer puts tokens side by side, or separates them with spaces, line
-feeds and indentation. This section gives the lemmas that read such a text
-one piece at a time, from its first character: whitespace is dropped
-(`Lexes.space`, `Lexes.lf`, `Lexes.spaces`), each token is read by
-`Tok.spells`, and lists written with `", "` or `" "` between their elements
-are read element by element (`spells_commaSep`, `spells_spaceSep`).
+feeds and indentation. This section reads such a text one piece at a time,
+from its first character: whitespace is dropped, each token is read from
+its spelling, and a list written with a comma and a space, or a space,
+between its elements is read element by element.
 
 Text that ends with punctuation or a line feed is read before any
-characters at all, not only before the end of a token (`SpellsAny`). Every
-line, block, region, item and module ends with one, so they are read before
-whatever follows them.
+characters at all, not only before the end of a token. Every line, block,
+region, item and module ends with one, so each is read before whatever
+follows it.
 -/
 
 namespace Fir.Text
@@ -122,7 +121,7 @@ theorem spells_word {w : String} (hw : isWord w = true) : Spells w.toList [.word
 /-! # Reading from the first character
 
 The printer's text is read piece by piece from its first character. Each
-lemma below reads one piece before characters `cs` that lex to `us`. -/
+theorem below reads one piece before characters that lex to some tokens. -/
 
 theorem Lexes.punct {t : Tok} (ht : t.IsPunct) {pre cs : List Char} {us : List Tok}
     (he : t.spell.toList = pre) (h : Lexes cs us) : Lexes (pre ++ cs) (t :: us) :=
