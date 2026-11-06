@@ -26,7 +26,9 @@ $`E`
 a name when it binds it to a value of the type that $`f` gives it, and
 looking a name up gives the value of its latest binding, or is stuck when
 there is none. A jump looks up the values that its successor passes this
-way.
+way. Here, as in every block of this section, the dialect is one that the
+interpreter can run in the set monad, as for
+{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
 :::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "17829918576368849041")
@@ -72,8 +74,9 @@ This is how the invariant goes from one op to the next.
 :::
 
 :::readable Fir.Func.jump_ok (pin := Fir.Func.jump) (fingerprint := "5130593395890871916")
-*Theorem: a terminator with no results jumps to a successor it has, and
-the run holds every value in scope there.* Let $`f` be valid in a module
+*Theorem: from an environment that holds every value in scope, a jump
+from a terminator with no results to a successor it has succeeds, and
+lands holding every value in scope at its target.* Let $`f` be valid in a module
 context, $`b` a block of $`\mathrm{blocks}(f)`, and $`o` the op at index
 $`i` of $`b`, for $`i` less than the number of ops of $`b`, and let:
 

@@ -15,18 +15,19 @@ build fails when the Lean changes under it.
 #doc (Manual) "The environment of a run: readable blocks" =>
 
 :::readable Fir.find?_of_nodup Fir.Func.typeOf_of_mem (pin := Fir.Func.typeOf) (fingerprint := "12310842176801363216")
-*Theorem: in a function whose value names are distinct, a name has the
-type of its definition.* Let the names of the definitions
+*Theorem: in a list of pairs whose first parts are distinct, a key's
+first pair is the pair the list holds for it; so in a function whose
+value names are distinct, a name has the type of its definition.* Let the names of the definitions
 $`\mathrm{defs}(f)` of a function $`f` be distinct, and let $`x : t` be one
 of them. Then $`\mathrm{type}_f(x) = t`.
 
 Here $`\mathrm{defs}(f)` is the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[definitions]
 of $`f`, each a value name with its type, and $`\mathrm{type}_f(x)` is the
-type of the first definition of $`x` among them. The theorem rests on a
-fact of lists: in a list of pairs whose first parts are distinct, the
-first pair whose first part is $`x` is the pair $`(x, t)` that the list
-holds. A
+type of the first definition of $`x` among them. The second fact rests on
+the first: in a list of pairs whose first parts are distinct, the first
+pair whose first part is $`x` is the pair $`(x, t)` that the list holds.
+A
 {ref "The-fir-specification--Validation--The-general-rules"}[valid function]
 has distinct names, so the type it gives a name is the type of the name's
 only definition.

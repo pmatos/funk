@@ -119,7 +119,9 @@ checks before and after it runs an op: a region, which no rule runs, an
 operand that is not bound or has the wrong type, a count of results
 other than the op gives, an op after a terminator, or a block that ends
 without one, each makes the path stuck. Here $`\mathrm{sig}(o)` is the
-operand types of the op instance of $`o`.
+operand types of the op instance of $`o`. In this block and those below,
+the dialect is one that the interpreter can run in the set monad, as for
+{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
 :::readable Fir.Func.Straight (fingerprint := "17264026091780647438")

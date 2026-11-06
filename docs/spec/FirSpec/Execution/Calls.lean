@@ -42,7 +42,9 @@ The first is what a call needs: its callee is a function of the module,
 which takes the call's operands and gives its results. A dialect's own
 validation rule for a call must ask it, as the
 {ref "The-fir-specification--Validation--Core-rules"}[core rule] for
-$`\mathsf{call}` does.
+$`\mathsf{call}` does. Here, as in every block of this section, the
+dialect is one that the interpreter can run in the set monad, as for
+{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
 :::readable Fir.Func.Local.inModule (pin := Fir.Func.Local) (fingerprint := "1227078464402482988")
