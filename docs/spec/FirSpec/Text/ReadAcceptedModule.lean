@@ -18,10 +18,10 @@ fails when the Lean changes under it.
 *Theorems: a line, a column and a reference as read are below
 $`2^{32}`.* For every list of tokens:
 
-* for every name of what is read, such as "a line", which an error
-  message uses, the reader of a line or a column
+* the reader of a line or a column
   {ref "The-fir-specification--Text-format--What-the-grammar-accepts"}[gives]
-  that the number it reads is below $`2^{32}`. The lexer does not bound
+  that the number it reads is below $`2^{32}`, whatever the label that its
+  error messages use, such as "a line". The lexer does not bound
   an integer token, so the reader checks it: it reads an integer token
   $`n \ge 0` only when $`n < 2^{32}`, and is an error at the number
   otherwise;

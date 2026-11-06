@@ -1,5 +1,6 @@
 import VersoManual
 import Fir.Text.ReadAcceptedItems
+import Fir.Text.Decode
 import FirSpecSite.ReadableElab
 
 open Verso.Genre Manual
@@ -14,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Accepted items: readable blocks" =>
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (fingerprint := "12167934584008722082")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "16901067163233167972")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]
@@ -29,14 +30,19 @@ induction that follows their own recursion, as for blocks. Case by case:
 
 * at the top of the module, the word `locs` ends the items, and nothing is
   read;
-* an item, then the items after it, gives what each of the two gives;
-* no word, so no item, reads nothing;
-* one item reads its symbol, `(`, its parameters with the reader of
-  definitions, or none, `)`, its result types after `->` with the reader
-  of types, or none, its attributes, `{`, its body and `}`; a body that
-  starts with a word holds items, on which the case of the reader of
-  items gives that the tokens left can be written, and any other body
-  holds blocks that can be written, by the theorem of the previous section;
+* when the next token is a word, other than `locs` at the top of the
+  module, that word is an item's kind: the reader reads that item and then
+  the items after it, and each of the two gives that what it reads can be
+  written;
+* when the next token is not a word, there is no item, and the reader
+  reads nothing;
+* the reader of one item reads its symbol, `(`, its parameters with the
+  reader of definitions, or none, `)`, its result types after `->` with
+  the reader of types, or none, its attributes, `{`, its body and `}`; a
+  body that starts with a word holds items, on which the case of the
+  reader of items gives that the tokens left can be written, and any other
+  body holds blocks that can be written, by the theorem of the previous
+  section;
 * an item without its symbol is an error.
 
 Nothing is asked of an item's kind, its symbol or its attributes: decoding

@@ -17,9 +17,11 @@ build fails when the Lean changes under it.
 :::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "7430246370871112945")
 *Lemma: proof plumbing.* For every list of attributes each of which can
 be {ref "The-fir-specification--Text-format--Grammar"}[written], the list
-can be written. The condition on a list is stated from its first element
-on; this lemma turns "each attribute" into it, so that what the reader of
-an op's attributes gives fits the condition on an op.
+can be written. The condition on a list of attributes is defined element
+by element: the first attribute can be written, and so can the rest of
+the list. This lemma shows that a list meets it when every attribute in it
+can be written, which is what the reader of an op's attributes gives, so
+that it fits the condition on an op.
 :::
 
 :::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "17238551784082129617")

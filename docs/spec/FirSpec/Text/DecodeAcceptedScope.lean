@@ -75,17 +75,18 @@ text. The first pass over blocks
 them, against the second pass over blocks, with the definitions of the
 decoded blocks in the order of the first pass:
 
-* it adds no blocks;
+* it adds the empty list of blocks: the first pass adds nothing, and the
+  second pass gives no definitions;
 * for every label, list of arguments, list of ops and list of blocks
   $`B`: when it adds the ops and the blocks $`B`, it adds the block with
   that label, those arguments and those ops, followed by $`B`.
 
-In the same way, the first pass over ops adds no ops, and adds an op
-followed by the ops $`O`, whatever its name, attributes, operands,
-successors and location reference, when it adds the op's regions and the
-ops $`O`; and the first pass over regions adds no regions, and adds a
-region followed by the regions $`R` when it adds the region's blocks and
-the regions $`R`.
+In the same way, the first pass over ops adds the empty list of ops, and
+adds an op followed by the ops $`O`, whatever its name, attributes,
+operands, successors and location reference, when it adds the op's
+regions and the ops $`O`; and the first pass over regions adds the empty
+list of regions, and adds a region followed by the regions $`R` when it
+adds the region's blocks and the regions $`R`.
 
 The order is that of the
 {ref "The-fir-specification--Text-format--The-decoding-step"}[first pass]:
@@ -96,7 +97,7 @@ an op's operands. Each theorem takes what the pass does with the parts it
 holds as hypotheses, as the round trip's lemmas do (ADR-2026-11-03-0028).
 :::
 
-:::readable Fir.Text.SBlock.adds Fir.Text.SOp.adds Fir.Text.SRegion.adds (pin := Fir.Text.Adds) (fingerprint := "3501004511695524439")
+:::readable Fir.Text.SBlock.adds Fir.Text.SOp.adds Fir.Text.SRegion.adds (pin := Fir.Text.Adds) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "16051247237858677610")
 *Theorems: the first pass, at any depth.* Let $`d` be a dialect with a
 text. For every list of blocks as read, the first pass over blocks adds
 it, against the second pass over blocks, with the definitions of the

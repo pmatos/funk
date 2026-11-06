@@ -15,13 +15,11 @@ when the Lean changes under it.
 #doc (Manual) "What the lexer accepts: readable blocks" =>
 
 :::readable Fir.Text.bind_eq_ok (fingerprint := "17647912058474426905")
-*Lemma: proof plumbing.* For every computation $`x` that ends with a
-result or an error, every $`f` that maps a result of $`x` to such a
-computation, and every result $`b`: if running $`x`, then $`f` on its
-result, ends with $`b`, then $`x` ends with some result $`a`, and $`f(a)`
-ends with $`b`. A reader of the parser is a chain of such steps, and the
-proofs of the parser's three steps take it apart one step at a time with
-this lemma.
+*Lemma: proof plumbing.* A chain of two steps, each of which ends with a
+result or an error, ends with a result $`b` only when the first step ends
+with some result $`a` and the second step, run on $`a`, ends with $`b`.
+The proofs below take the parser's readers apart one step at a time with
+it.
 :::
 
 :::readable Fir.Text.mem_takeWhile Fir.Text.isName_takeWhile Fir.Text.isWord_takeWhile (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isWordStart) (fingerprint := "1045717097886148641")
@@ -45,11 +43,12 @@ words.
 
 :::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "6050580012468359362")
 *Theorems: every token that the lexer reads can be written.* For every
-character $`c`, the characters after it, and position: every token that
+character $`c`, the characters after it, and position in the text, which
+only its error messages use: every token that
 the reader of one {ref "The-fir-specification--Text-format--The-parser"}[token]
 reads from $`c` on
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written].
-So does every integer that it reads after a first digit, with or without a
+So can every integer that it reads after a first digit, with or without a
 `-` before it, and every token that it reads after `@`. Case by case:
 
 * a value or a label is `%` or `^` and the longest run of name characters
@@ -67,7 +66,7 @@ all, and the end of the text, $`\mathsf{eof}`, is added by the loop that
 calls it.
 :::
 
-:::readable Fir.Text.TokensWritable (fingerprint := "17403735823257984506")
+:::readable Fir.Text.TokensWritable (pin := Fir.Text.lexFrom) (fingerprint := "2498256053963689202")
 *Definition: a list of tokens that can be written.* A list of tokens
 $`\mathit{ts}` _can be written_, written $`\mathrm{writable}(\mathit{ts})`,
 when each of its tokens is $`\mathsf{eof}` or can be written. The lexer

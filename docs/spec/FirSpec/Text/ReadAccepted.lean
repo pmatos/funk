@@ -1,5 +1,6 @@
 import VersoManual
 import Fir.Text.ReadAccepted
+import Fir.Text.Decode
 import FirSpecSite.ReadableElab
 
 open Verso.Genre Manual
@@ -21,7 +22,7 @@ _can be written_ when its label is a name, and so is each value that it
 passes. These are the names that the printer writes after `^` and `%`.
 :::
 
-:::readable Fir.Location.InLimits (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (fingerprint := "8064974736438955309")
+:::readable Fir.Location.InLimits (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "14594947355850245201")
 *Definition: a location within the limits.* A
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
 _within the limits_ when each of the numbers it holds is below $`2^{32}`:
@@ -39,7 +40,7 @@ its type is
 word, or a word applied to attributes, that can be written.
 :::
 
-:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (fingerprint := "10546228824836095786")
+:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "4991093508923232133")
 *Definition: ops, regions and blocks as read that can be written.* These
 conditions are on the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[tree]
@@ -66,7 +67,7 @@ the definitions of its function, whose names are names, and rejects one
 that is not there.
 :::
 
-:::readable Fir.Text.SBody.Writable Fir.Text.SItem.Writable Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (fingerprint := "16805586890288858486")
+:::readable Fir.Text.SBody.Writable Fir.Text.SItem.Writable Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "1337409852049701888")
 *Definition: items and modules as read that can be written.* The body of
 an item as read can be written when it holds blocks that can be written,
 or when it holds items, whatever they are. An item as read can be written
@@ -78,7 +79,7 @@ each key and each number of each location, is below $`2^{32}`.
 
 Nothing is asked of an item's kind, symbol or attributes, nor of the items
 inside a body: decoding accepts only a `func` without attributes, whatever
-its symbol, and rejects a body that holds items unless it holds none.
+its symbol, and rejects a body made of items unless it has no items.
 :::
 
 :::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "13344365767966384269")
@@ -114,10 +115,11 @@ $$`\begin{aligned} & \mathrm{writable}(\mathit{ts}) \wedge \mathit{read}(\mathit
 
 for every $`a` and $`r`. Here $`\mathsf{ok}(a, r)` is the result of a
 reader that reads $`a` and leaves $`r`. The tokens that a reader leaves
-are a suffix of $`\mathit{ts}`, so they can be written too, but the type
-of a reader says only that there are no more of them than in
-$`\mathit{ts}`. So the definition asks for it, and each lemma below shows
-it.
+are always a suffix of $`\mathit{ts}`, so they can be written too; but a
+reader's definition records only that there are no more of them than in
+$`\mathit{ts}`, which is what shows that the parser ends, not that they
+are a suffix of it. So the definition asks for it, and each lemma below
+shows it.
 :::
 
 :::readable Fir.Text.expect_writable Fir.Text.keyword_writable Fir.Text.readMore_writable (pin := Fir.Text.expect) (pin := Fir.Text.keyword) (pin := Fir.Text.readMore) (fingerprint := "9387520422673248992")
@@ -168,7 +170,7 @@ Each word comes from a word token, which is a word.
   each of them can be written.
 :::
 
-:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (fingerprint := "4400268588701210955")
+:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "8610404709604926096")
 *Theorems: successors and an op's location reference as read can be
 written.* For every list of tokens:
 

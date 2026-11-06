@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the second pass accepts: readable blocks" =>
 
-:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (fingerprint := "17118176371775235432")
+:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "6047679517239721726")
 *Definition: a definition that can be written and read back.* Let $`d` be
 a dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].
 A value $`x` with its type $`t` _can be written and read back_ when $`x`
@@ -128,30 +128,36 @@ $$`\begin{aligned} & W(a) \implies \forall x.\ \mathrm{decode}(a) = \mathsf{ok}(
 :::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "4351980553499127475")
 *Theorems: the second pass, part by part.* Let $`d` be a dialect with a
 signature and a text, $`\mathit{sc}` a scope and $`g` a function's
-symbol. Each pass below decodes in $`\mathit{sc}`, for $`g`, and
-{ref "The-fir-specification--Text-format--What-the-second-pass-accepts"}[takes]
-its parts from "can be written" to "accepted by $`\mathit{sc}` at any
-depth":
+symbol. Each pass below decodes in $`\mathit{sc}`, for $`g`. The passes
+over blocks, over ops and over regions each
+{ref "The-fir-specification--Text-format--What-the-second-pass-accepts"}[take]
+the empty list of their parts from "can be written" to "accepted by
+$`\mathit{sc}` at any depth", since there is nothing to accept. For a list
+that is not empty:
 
-* the second pass over blocks takes no blocks there;
 * when $`d` also has validation rules and its text is lawful: for every
   label, list of arguments, list of ops and list of blocks $`B` as read,
-  when the pass over ops takes those ops there and the pass over blocks
-  takes $`B` there, the pass over blocks takes the block with that label,
-  those arguments and those ops, followed by $`B`, there;
-* the second pass over ops takes no ops there;
+  when the pass over ops takes those ops from "can be written" to
+  "accepted by $`\mathit{sc}` at any depth" and the pass over blocks
+  takes $`B` there too, the pass over blocks takes the block with that
+  label, those arguments and those ops, followed by $`B`, there as well;
 * when $`d` also has validation rules and its text is lawful: for every op
   as read and list of ops $`O` as read, when the pass over regions takes
-  the op's regions there and the pass over ops takes $`O` there, the pass
-  over ops takes the op followed by $`O` there;
-* the second pass over regions takes no regions there;
+  the op's regions from "can be written" to "accepted by $`\mathit{sc}`
+  at any depth" and the pass over ops takes $`O` there too, the pass over
+  ops takes the op followed by $`O` there as well;
 * for every list of blocks and list of regions $`R` as read, when the
-  pass over blocks takes those blocks there and the pass over regions
-  takes $`R` there, the pass over regions takes the region of those
-  blocks, followed by $`R`, there.
+  pass over blocks takes those blocks from "can be written" to "accepted
+  by $`\mathit{sc}` at any depth" and the pass over regions takes $`R`
+  there too, the pass over regions takes the region of those blocks,
+  followed by $`R`, there as well.
 
-For an op, a law of a lawful text says that the op instance $`p` that
-$`\mathrm{decodeop}(n, a^*, t^*, r^*)` gives has $`\mathrm{opname}(p) = n`,
+For an op, the second pass asks the dialect's text for the op instance
+$`\mathrm{decodeop}(n, a^*, t^*, r^*)` that it decodes from the name
+$`n`, the attributes $`a^*`, the operand types $`t^*` and the result
+types $`r^*`, when there is one. A law of a
+{ref "The-fir-specification--Text-format--Grammar"}[lawful text] says
+that the op instance $`p` that it gives has $`\mathrm{opname}(p) = n`,
 $`\mathrm{opattrs}(p) = a^*`, $`\mathrm{sig}(p) = t^*` and
 $`\mathrm{ret}(p) = r^*`. Its name $`n` and attributes $`a^*` come from
 the tree, so they can be written; the operand types $`t^*` come from the

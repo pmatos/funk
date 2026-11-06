@@ -17,16 +17,17 @@ when the Lean changes under it.
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "7523009022168863131")
 *Lemma: result types as read decode back to themselves.* Let $`d` be a
 dialect with a signature, validation rules and a text, whose text is
-{ref "The-fir-specification--Text-format--Grammar"}[lawful], and let
-$`\mathit{dec}` decode an attribute at a position as a type in the same
-way as the decoder of a type does. For every list of attributes, each with
-its position, and list of types $`\mathit{ts}`: when $`\mathit{dec}`
-decodes each attribute of the list, giving $`\mathit{ts}`, and each
-attribute is written as a type, then for each type $`t` of
+{ref "The-fir-specification--Text-format--Grammar"}[lawful]. For every
+list of attributes, each with its position, and list of types
+$`\mathit{ts}`: when the decoder of a type decodes each attribute of the
+list, giving $`\mathit{ts}`, and each attribute is written as a type, then for each type $`t` of
 $`\mathit{ts}`, $`\mathrm{tyattr}(t)` is written as a type and
 $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`. It is the
 {ref "The-fir-specification--Text-format--What-the-second-pass-accepts"}[theorem for one type],
-applied to a function's result types.
+applied to a function's result types. It is stated for any function that
+gives what the decoder of a type gives on every attribute and position,
+which is the same decoder written another way, so that the decoder of a
+function can pass its own.
 :::
 
 :::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12979592862157029703")

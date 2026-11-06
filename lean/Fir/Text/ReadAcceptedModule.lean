@@ -3,9 +3,9 @@ import Fir.Text.ReadAcceptedItems
 /-!
 # The location table and the module as read
 
-Every number that the location table holds is below `2^32`. Its
-references, the keys of its entries and the references inside `callsite`,
-`fused` and `derived` locations, come from location reference tokens, which
+Every number that the location table holds is below 2³². Its
+references, the keys of its entries and the references inside callsite,
+fused and derived locations, come from location reference tokens, which
 the lexer bounds. Its lines and columns come from integer tokens, which the
 lexer does not bound: the reader of a line or a column checks each of them
 where it stands.

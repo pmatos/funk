@@ -19,7 +19,7 @@ idempotent on every text that the parser accepts: formatting a text and
 formatting the result again give the same text. Both hold for the core
 dialect, whose text is lawful.
 
-# What each field rests on
+# What each condition rests on
 
 Each condition of a well-formed module is a check that the parser makes.
 The lexer's step, the grammar's step and the two passes of decoding carry
@@ -56,14 +56,14 @@ asks:
     instance's result types;
   * its successors' labels and arguments are names: the readers of
     successors take them from label and value tokens;
-  * its location reference is below `2^32`: the reader of an op takes it
+  * its location reference is below 2³²: the reader of an op takes it
     from a location reference token, and the lexer rejects a reference of
-    `2^32` or more.
+    2³² or more.
 
 Of the module, a well-formed module also asks that every number of its
-location table be below `2^32`: its references come from location
+location table be below 2³²: its references come from location
 reference tokens, and the reader of a line or a column rejects one of
-`2^32` or more.
+2³² or more.
 
 So the parser has a check for every condition, and no text that it accepts
 gives a module that is not well formed. A change to the parser that drops
