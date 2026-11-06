@@ -4,36 +4,34 @@ import Fir.Execution.Lawful
 /-!
 # Every valid core op instance meets the obligations
 
-The core dialect is lawful: `LawfulDialectPoison CoreDialect` holds
-(`Core.lawfulDialectPoison`). Each field is proved for every core op
-instance whose types validation accepts, from the obligations that each
-op family proves (#10 and #14 to #19):
+The core dialect is lawful: it meets the poison obligations. Each of them
+is proved for every core op instance whose types validation accepts, from
+the obligations that each op family proves, in the sections from the
+constant obligations to the branch obligations:
 
-* _Poison is refined by every value._ A poison `iN` is refined by every
-  value of `iN` (`Core.Ty.poison_isRefinedBy`), at every width; `ptr`,
-  which validation rejects, has no values.
 * _Propagation._ Each of the 19 ops that propagate poison does, at every
-  width (`Core.Op.propagates_all`): `const`, `poison`, the arithmetic, the
-  four divisions, the bitwise ops and shifts, `icmp` and the width
-  changes.
+  width: `const`, `poison`, the arithmetic, the four divisions, the
+  bitwise ops and shifts, `icmp` and the width changes.
 * _A result on defined operands._ Each of them returns a result on some
-  operand vector with no poison (`Core.Op.returnsOnDefined_valid`).
-  `poison` does on the empty vector, where its result is poison: the
-  field asks for a result, not for a defined one (ADR-2026-11-03-1615). The
-  four divisions do only at a width above zero (`Core.div_zero_width`),
-  and validation accepts `iN` only for `N ≥ 1`, so they do at every valid
-  width. This is the one field that needs the instance to be valid
-  (ADR-2026-11-02-1515).
+  operand vector with no poison. `poison` does on the empty vector, where
+  its result is poison: the obligation asks for a result, not for a
+  defined one (ADR-2026-11-03-1615). The four divisions do only at a
+  width above zero, and validation accepts `iN` only for N of at least
+  1, so they do at every valid width. This is the one obligation that needs the
+  instance to be valid (ADR-2026-11-02-1515).
+* _Poison is refined by every value._ A poison `iN` is refined by every
+  value of `iN`, at every width; `ptr`, which validation rejects, has no
+  values.
 * _Totality and monotonicity._ Every core terminator and every core op
-  with no callee is total and monotone, at every width
-  (`Core.Op.total_all`, `Core.Op.monotone_all`): every core op but `call`,
-  which the obligations leave out, since its meaning is its callee's run
-  (ADR-2026-11-02-1514).
+  with no callee is total and monotone, at every width: every core op but
+  `call`, which the obligations leave out, since its meaning is its
+  callee's run (ADR-2026-11-02-1514).
 
 So every generic theorem that asks for a lawful dialect holds for the core
 dialect. For example, every function of a valid core module has an
-outcome at every budget by the class alone (`Func.progress_of_lawful`), as
-`Core.progress` shows by the ops' own obligations.
+outcome at every budget by the class alone (the section on what the
+lawful class gives), as the section on core functions with calls shows by
+the ops' own obligations.
 -/
 
 namespace Fir.Core
