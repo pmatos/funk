@@ -1,26 +1,14 @@
 """The harness's checks: the verdicts of both tools on every text, and the
 tests of the corpus's modules."""
 
-from functools import partial
 from pathlib import Path
 
 import corpus
-import sets
-import standins
+import differential
 import tools
-from refine import (
-    FAILED,
-    FUEL_EXHAUSTED,
-    INVALID,
-    PASSED,
-    POISON,
-    UB,
-    Judgement,
-    expected,
-    show_values,
-)
+from execution import ProcessRuns
+from refine import FAILED, PASSED, Judgement, expected
 from report import Report
-from sets import BudgetExceeded, Outcomes
 from tools import ACCEPTED, Verdict
 
 
@@ -106,178 +94,23 @@ class Harness:
         why = tools.build_failure(tools.run(cmd))
         return exe if why is None else f"is not built: funk build gives {why}"
 
-    def run_ref(
-        self, path: Path, t: corpus.Test, *options: str, args=None
-    ) -> tools.Ran:
-        """Runs `fir-ref run` on a test, with more options, and on `args` in
-        place of the test's arguments when they are given."""
-        fuel = ["--fuel", str(t.fuel), *options, "--"]
-        given = t.args if args is None else args
-        return tools.run([self.fir_ref, "run", *fuel, str(path), t.func, *given])
-
     def test(
         self, path: Path, t: corpus.Test, types: dict, exe: Path | str, params=None
     ):
-        """Runs one test. `exe` is the module's executable, or why there is
-        none, and `params` the parameter types of the test's function."""
+        """Run one test and emit its report; differential judgement owns its runs."""
+        runs = ProcessRuns(self.fir_ref, path, t, exe)
         if t.expect is not None:
-            choices = [] if t.choices is None else ["--choices", ",".join(t.choices)]
-            ref = tools.path(self.run_ref(path, t, *choices))
+            ref = runs.scripted(t.args, t.choices)
             j = (
                 Judgement(FAILED)
                 if isinstance(ref, str)
                 else expected(ref.outcome, t.expect)
             )
-            self.report.add(j.status, t.show(), f"fir-ref {show(ref)}" + why(j))
+            detail = f"fir-ref {show(ref)}" + (f": {j.why}" if j.why else "")
+            self.report.add(j.status, t.show(), detail)
             return
-        ref = tools.outcomes(self.run_ref(path, t, "--exhaustive"))
-        detail = f"fir-ref {show(ref)}"
-        if t.results:
-            n = len(t.results)
-            detail += f", and the test declares {n} result{'s' if n != 1 else ''}"
-        checked = "the set is the declared results"
-        # `pre` judges the test whatever native code returns; otherwise
-        # `judge` judges each native result, and `recheck` judges again a
-        # vector of stand-ins whose result does not pass.
-        pre, judge, recheck = None, None, None
-        if isinstance(ref, str):
-            pre = Judgement(FAILED)
-        elif t.func not in types:
-            pre = Judgement(FAILED, f"cannot read the result types of {t.func}")
-        elif isinstance(ref, BudgetExceeded):
-            if not t.results:
-                pre = Judgement(
-                    INVALID,
-                    "with no set to judge by, the test proves nothing unless it"
-                    " declares its results, each with a witness",
-                )
-            else:
-                pre = self.declared(path, t, None)
-                judge = partial(sets.judge_declared, t.results, types=types[t.func])
-                recheck = partial(self.recheck, path, t)
-                checked = f"{len(sets.SEEDS)} seeded runs give declared results"
-        else:
-            if t.results:
-                pre = sets.problem(ref.outcomes) or self.declared(path, t, ref)
-            judge = partial(sets.judge_set, ref, types=types[t.func])
-        shown, j = self.native(t, exe, params, pre, judge, recheck)
-        detail += f"; native code {shown}"
-        if t.results and j.status == PASSED:
-            j = Judgement(PASSED, f"each witness gives its result, and {checked}")
-        self.report.add(j.status, t.show(), detail + why(j))
-
-    def native(self, t: corpus.Test, exe: Path | str, params, pre, judge, recheck):
-        """Runs native code on a differential test: what to show of it, and
-        the judgement, `pre` when it judges the test by itself and otherwise
-        `judge` on the native result. A test whose arguments hold poison
-        runs native code on each vector of stand-ins (`standins.py`), and
-        passes when each result passes; `recheck`, when given, judges again
-        the first vector whose result does not."""
-        verdict = partial(either, pre, judge)
-        if not isinstance(exe, Path):
-            return exe, verdict(exe)
-        if POISON not in t.args:
-            native = self.run_native(exe, t.func, t.args)
-            return returned(native), verdict(native)
-        vectors = standins.vectors(t.args, params)
-        if isinstance(vectors, str):
-            shown = f"is not run: {vectors}"
-            return shown, verdict(shown)
-        if pre is not None:
-            # The test is judged whatever native code returns; one run
-            # shows what it does.
-            native = self.run_native(exe, t.func, vectors[0])
-            return f"{returned(native)} on {' '.join(vectors[0])}", pre
-        each = f"{len(vectors)} argument vectors with stand-ins for poison"
-        shown = None
-        for args in vectors:
-            native = self.run_native(exe, t.func, args)
-            j = judge(native)
-            on = f"{returned(native)} on {' '.join(args)}"
-            if j.status == INVALID:
-                # UB or fuel exhausted in the set, whatever native code returns.
-                return on, j
-            if j.status != PASSED:
-                if recheck is not None:
-                    j = recheck(args, j)
-                return f"{on}, one of {each}", j
-            shown = shown or f"{on}, and passes on all {each}"
-        return shown, j
-
-    def recheck(self, path: Path, t: corpus.Test, args, j: Judgement) -> Judgement:
-        """Judges again a test past the choice budget whose native result on
-        the vector `args` fails `j`. Seeded runs only sample the run on
-        poison, and stand-ins reach the boundary values where UB lives, so
-        `fir-ref` runs on the vector itself: exhaustively, or past the budget
-        on each seed. UB there needs UB in the run on poison
-        (`Core.args_isRefinedBy`), which allows any result, so the test is
-        invalid. A path out of fuel makes it invalid too: its result depends
-        on the budget. Otherwise `j` stands, with `fir-ref`'s outcome on the
-        vector."""
-        on = " ".join(args)
-        ref = tools.outcomes(self.run_ref(path, t, "--exhaustive", args=args))
-        found = []
-        if isinstance(ref, Outcomes):
-            found = [("fir-ref", o) for o in ref.outcomes]
-        elif isinstance(ref, BudgetExceeded):
-            for seed in sets.SEEDS:
-                got = tools.path(self.run_ref(path, t, "--seed", str(seed), args=args))
-                if not isinstance(got, str):
-                    found.append((f"fir-ref --seed {seed}", got.outcome))
-        for who, o in found:
-            if o.kind == UB:
-                return Judgement(
-                    INVALID,
-                    f"on {on}, {who} {o.show()}, so the run on poison hits UB"
-                    " too, or runs out of fuel, on a path that the seeded runs"
-                    " miss: UB allows any result, so the test proves nothing",
-                )
-        for who, o in found:
-            if o.kind == FUEL_EXHAUSTED:
-                return Judgement(
-                    INVALID,
-                    f"on {on}, {who} runs out of fuel, so the result depends on"
-                    " the fuel budget: raise the test's budget",
-                )
-        return Judgement(j.status, f"{j.why}; on {on}, fir-ref {show(ref)}")
-
-    def run_native(self, exe: Path, func: str, args) -> tuple[str, ...] | str:
-        """What a built executable returns on a function and its arguments,
-        or how it fails."""
-        return tools.native_values(tools.run_native([str(exe), func, *args]))
-
-    def declared(self, path: Path, t: corpus.Test, ref) -> Judgement | None:
-        """Checks a test's declared results: each witness gives its result,
-        and the run's set, `ref` when exhaustive mode lists it, or else each
-        seeded run, holds only declared results."""
-        for i, r in enumerate(t.results, 1):
-            got = tools.path(self.run_ref(path, t, "--choices", ",".join(r.witness)))
-            j = sets.witness(i, r, got)
-            if j is not None:
-                return j
-        if ref is not None:
-            return sets.undeclared(ref, t.results)
-        for seed in sets.SEEDS:
-            got = tools.path(self.run_ref(path, t, "--seed", str(seed)))
-            j = sets.sample(seed, got, t.results)
-            if j is not None:
-                return j
-        return None
-
-
-def either(pre: Judgement | None, judge, native) -> Judgement:
-    """`pre` when it judges the test by itself, and otherwise `judge` on
-    the native result."""
-    return pre or judge(native)
-
-
-def returned(native) -> str:
-    """What native code did: the values it returned, or how it failed."""
-    return native if isinstance(native, str) else "returns " + show_values(native)
-
-
-def why(j: Judgement) -> str:
-    return f": {j.why}" if j.why else ""
+        result = differential.evaluate(t, types.get(t.func), params, runs)
+        self.report.add(result.judgement.status, t.show(), result.detail)
 
 
 def messages(a, b) -> str:
