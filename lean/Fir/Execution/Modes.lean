@@ -8,31 +8,33 @@ ADR-2026-10-31-0002):
 
 * _Exhaustive mode_ visits every path, so it finds every way the run may
   end. The number of paths doubles with each bit chosen, so it takes a
-  budget on the total number of bits that one path may choose. When some
-  path would choose more, it says so and gives no set, and only then:
-  this is `ChoiceTree.explore_isSome_iff`. Within its budget, it gives
-  exactly the run's set of outcomes: this is `ChoiceTree.explore_toSet`
-  for any tree, and `Func.explore_outcomes` for a run of the interpreter.
+  budget on the total number of bits that one path may choose. Within its
+  budget, it gives exactly the run's set of outcomes, for any tree and for
+  a run of the interpreter. When some path would choose more, it says so
+  and gives no set, and only then.
 * _Scripted mode_ follows one path: the one that a _choice sequence_ names,
   one value for each choice the run makes, in order. A sequence _fits_ the
   run when it gives exactly as many values as the run makes choices, and
   each value reads as a value of its choice's width. One that does not fit
   is an error of its own, a _misfit_, never an outcome. On a sequence that
-  fits, scripted mode gives a member of the run's set of outcomes: this is
-  `ChoiceTree.script_toSet`, and `Func.script_outcomes` for a run.
+  fits, scripted mode gives a member of the run's set of outcomes.
 * _Sampled mode_ is scripted mode with no sequence given up front: it
   draws each choice as the run makes it, from a generator, and reports the
   values it drew. Those values are a sequence that fits the run, and
-  scripted mode on them follows the same path: this is
-  `ChoiceTree.sample_script`. So sampled mode, too, gives a member of the
-  run's set of outcomes, whatever the generator.
+  scripted mode on them follows the same path. So sampled mode, too, gives
+  a member of the run's set of outcomes, whatever the generator.
 
 All three modes report how many choices a path made, so that a run that
 makes no choice is known to have one outcome. The choice budget is not the
-fuel budget: each mode runs the interpreter at one fuel budget `n`, so the
-theorems speak of `(run n).outcomes`, as the section on outcomes and
-behaviours says. `fir-ref`'s command line and JSON are
+fuel budget: each mode runs the interpreter at one fuel budget _n_, so the
+theorems speak of the outcomes of the run at budget _n_, as the section on
+outcomes and behaviours says. `fir-ref`'s command line and JSON are
 ADR-2026-10-30-2218's.
+
+Below come, in order: the leaves that a walk reports, exhaustive mode and
+its theorems, scripted mode and its theorem, sampled mode and its
+theorem, and then, for a run of the interpreter, how its paths end and
+exhaustive and scripted mode's theorems.
 -/
 
 namespace Fir
@@ -271,10 +273,10 @@ end ChoiceTree
 /-!
 # A run's paths
 
-A run of the interpreter computes in `ExceptT Stuck m`, so a leaf of its
-tree holds a result, or says that the path is stuck. `fir-ref` reports
-each path as one of the run's outcomes, as stuck, or as ending with no
-outcome.
+A run of the interpreter may also end a path stuck, beside the ways its
+monad has to end it, so a leaf of its tree holds a result, or says that
+the path is stuck. `fir-ref` reports each path as one of the run's
+outcomes, as stuck, or as ending with no outcome.
 -/
 
 /-- How one path of a run ends: with an outcome, stuck, or with no

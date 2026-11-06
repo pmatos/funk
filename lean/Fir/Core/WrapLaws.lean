@@ -12,9 +12,12 @@ None of them is ever UB, so the clause "UB only by the op's own rules"
 holds at once. A poison operand gives poison whatever the flags, since a
 flag is checked only on two values. Each is monotone because a poison
 operand gives a poison result, which every result refines, and defined
-operands are refined only by themselves. The proofs rest on two facts of
-any binary rule that gives poison on a poison operand, as these three do:
-it gives poison there, and so it is monotone.
+operands are refined only by themselves.
+
+The proofs rest on _strict_ rules: a binary rule is strict when a poison
+operand gives poison. Below, first, a strict rule keeps refinement. Then
+the rules of `add`, `sub` and `mul` are strict without flags, and the
+flags keep them strict. Last, each of the three ops is lawful.
 -/
 
 namespace Fir.Core
