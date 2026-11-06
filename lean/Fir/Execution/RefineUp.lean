@@ -3,46 +3,43 @@ import Fir.Execution.BlackBox
 /-!
 # Every return and UB of the target, allowed
 
-Every return and every UB of a run of ops in the target module is allowed
-by the source's run of the same ops at some budget, from environments of
-which the target's refines the source's (`Func.runOps_allowed`), when
-every call names the same function in both modules or a black box
-(`CallsRefined`), and every op that runs by its own rule, a terminator
-or an op with no callee, is monotone, among the ops of the source
-module's functions and of the function that runs (`Func.OpsMonotone`).
-Calls and recursion are included.
+Let every call name the same function in both modules or a black box.
+Let every op that runs by its own rule, a terminator or an op with no
+callee, be monotone, among the ops of the source module's functions and
+of the function that runs. Then every return and every UB of the
+target's run of ops, from an environment that refines the source's, is
+allowed by the source's run of the same ops at some budget. Calls and
+recursion are included.
 
 Monotonicity is asked only of the ops that the run can reach, not of
 every op instance of the dialect. So a dialect whose ops are monotone
 only at valid op instances meets it for every function of a valid module
-(`Func.Valid.opsMonotone`, ADR-2026-11-05-1715).
+(ADR-2026-11-05-1715), as the section on what the lawful class gives
+proves.
 
 The proof is by strong induction on the target's budget, for every
-function at once, and follows the target's path step by step
-(`Func.StepPath`). Its invariant is that the ops it runs are ops of the
-function that runs, whose ops are monotone: the ops of one of its
-blocks, which a jump keeps, as it goes to a block of the same function
-(`Func.OpsMonotone.jump`).
+function at once, and follows the target's path by the ways a step goes
+on. Its invariant is that the ops it runs are ops of the function that
+runs, whose ops are monotone: the ops of one of its blocks, which a jump
+keeps, as it goes to a block of the same function.
 
-* An op's operands are found in the source's environment too, refined
-  (`Env.IsRefinedBy.operands`). What the op does on the target's
-  operands is allowed by what it does on the source's: UB there allows
-  anything; otherwise the source gives results that the target's refine,
-  or goes to the same place. So the source's environment after the op is
-  refined by the target's, and the induction covers the rest, with one
-  step less.
+* An op's operands are found in the source's environment too, refined.
+  What the op does on the target's operands is allowed by what it does on
+  the source's: UB there allows anything; otherwise the source gives
+  results that the target's refine, or goes to the same place. So the
+  source's environment after the op is refined by the target's, and the
+  induction covers the rest, with one step less.
 * A call of the same function in both enters it at the same op, in
-  environments of which the target's refines the source's
-  (`Func.enter_isRefinedBy`), and the induction covers the callee, on
-  fewer steps. The callee is a function of the source module, so its
-  ops are monotone, and it starts at the ops of its entry block
-  (`Func.OpsMonotone.enter`). A call of a black box is allowed by
-  the black box's behaviours (`BlackBox.allowed`).
-* When the source's callee returns at the budget `N₁`, values that the
-  target's refine, and the rest of the source's run is allowed at the
-  budget `N₂`, the source's run at `N₁ + N₂ + 1` is allowed: its callee,
-  with `N₂` more steps, returns the same and leaves `N₂` more, so its rest
-  runs with `N₂` steps or more, and does the same (`Func.call_cont`).
+  environments of which the target's refines the source's, and the
+  induction covers the callee, on fewer steps. The callee is a function
+  of the source module, so its ops are monotone, and it starts at the ops
+  of its entry block. A call of a black box is allowed by the black box's
+  behaviours.
+* When the source's callee returns, at one budget, values that the
+  target's refine, and the rest of the source's run is allowed at
+  another, the source's run is allowed at their sum plus one: its callee,
+  with more steps, returns the same and leaves as many more, so its rest
+  runs with at least the steps it needed, and does the same.
 -/
 
 namespace Fir

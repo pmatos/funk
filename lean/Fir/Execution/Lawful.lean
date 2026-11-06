@@ -4,46 +4,36 @@ import Fir.Execution.Replace
 /-!
 # Valid modules run on valid op instances
 
-The lawful class `LawfulDialectPoison` speaks only of op instances whose
-types validation accepts (`TypesValid`, ADR-2026-11-02-1515), and its
-totality and monotonicity only of those that run by their own rule: a
-terminator, or an op with no callee (ADR-2026-11-02-1514). That is enough
-for every valid module, because a valid module holds no other instance:
+The lawful class, which holds the poison obligations of a dialect, speaks
+only of op instances whose types validation accepts
+(ADR-2026-11-02-1515), and its totality and monotonicity only of those
+that run by their own rule: a terminator, or an op with no callee
+(ADR-2026-11-02-1514). That is enough for every valid module, because a
+valid module holds no other instance:
 
-* every op of a valid function is a valid op instance
-  (`Func.Valid.typesValid`). Validation checks each operand's type
-  against the type of the value it names, and each result's type is the
-  type of a value that the function defines, and every type that a valid
-  function states is valid;
-* so the class gives the totality that progress with calls asks of every
-  terminator and every op with no callee of the module
-  (`Module.calls_hasPath`). A function of a module whose functions are all
-  valid and run within the module has an outcome at every budget, on every
-  argument vector, calls and recursion included (`Func.progress_of_lawful`);
-* no path of such a function's run is stuck, whatever its ops do
-  (`Func.neverStuck_of_inModule`): that needs no property of the ops.
-
-Refinement follows from the class too. The general theorems of the
-sections on refined arguments and on congruence in the callee follow the
-target's run into its callees, and ask that every terminator and every op
-with no callee be monotone only among the ops that the run can reach: the
-ops of the function that runs and of the source module's functions
-(`Func.OpsMonotone`, ADR-2026-11-05-1715). So:
-
-* a dialect whose terminators and ops with no callee are monotone at
-  every valid op instance meets that for every valid function
-  (`Func.Valid.opsMonotone`): monotonicity is needed only at valid
-  instances;
+* every op of a valid function is a valid op instance. Validation checks
+  each operand's type against the type of the value it names, and each
+  result's type is the type of a value that the function defines, and
+  every type that a valid function states is valid;
+* so a dialect whose terminators and ops with no callee are monotone at
+  every valid op instance gives monotone ops to every valid function. The
+  general refinement theorems follow the target's run into its callees,
+  and ask monotonicity only of the ops that the run can reach: the ops of
+  the function that runs and of the source module's functions
+  (ADR-2026-11-05-1715);
+* the class gives the totality that progress with calls asks of every
+  terminator and every op with no callee of the module. A function of a
+  module whose functions are all valid and run within the module has an
+  outcome at every budget, on every argument vector, calls and recursion
+  included. No path of such a function's run is stuck either, whatever
+  its ops do, as the section on progress with calls proves;
 * a lawful dialect gets both function-level refinement theorems for
   every function of a valid module by the class alone: on arguments that
-  refine others (`Func.runs_args_isRefinedBy_of_lawful`), and on
-  replacing a callee's body, whatever the new body
-  (`Func.runs_replaceBody_isRefinedBy_of_lawful`).
+  refine others, and on replacing a callee's body, whatever the new body.
 
 The core dialect meets the general theorems' hypothesis with its ops' own
-obligations, which hold at every width (`Core.Op.monotone_all`), so
-refinement holds for every core module, valid or not (the section on
-refinement through core calls).
+obligations, which hold at every width, so refinement holds for every
+core module, valid or not (the section on refinement through core calls).
 -/
 
 namespace Fir
