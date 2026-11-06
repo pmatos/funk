@@ -2,9 +2,14 @@ import Fir.Core.Ops
 import Fir.Syntax.Module
 
 /-!
-The core dialect is the first instance of the dialect classes. Its signature
-gives the operand and result types of every M0 op, and says which ops end a
-block and how many successors they have.
+The core dialect is fir's first dialect. Its signature gives the operand and
+result types of every core op, and says which ops end a block and how many
+successors they have.
+
+This section gives, in order: the core dialect, the types of each op's
+operands and results, the terminators and their successors with the
+signature that these make up, and a shorthand that the examples use to
+write an op.
 -/
 
 namespace Fir

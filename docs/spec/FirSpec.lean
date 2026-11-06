@@ -1,7 +1,12 @@
 import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
+import FirSpec.Syntax.Dialect
+import FirSpec.Syntax.Location
+import FirSpec.Syntax.Module
+import FirSpec.Core.Types
 import FirSpec.Core.Ops
+import FirSpec.Core.Signature
 import FirSpec.Execution.CallSteps
 import FirSpec.Validation.Scope
 import FirSpec.Validation.Dominance
@@ -95,17 +100,17 @@ The abstract syntax is parameterized over the dialect. A dialect supplies its
 op instances and its types; a module of any dialect is made of the same
 functions, blocks and ops.
 
-{includeLiterate "." Fir.Syntax.Dialect "Dialects" (level := 2)}
+{includeReadable "." Fir.Syntax.Dialect "Dialects" FirSpec.Syntax.Dialect (level := 2)}
 
-{includeLiterate "." Fir.Syntax.Location "Locations" (level := 2)}
+{includeReadable "." Fir.Syntax.Location "Locations" FirSpec.Syntax.Location (level := 2)}
 
-{includeLiterate "." Fir.Syntax.Module "Modules, functions, blocks and ops" (level := 2)}
+{includeReadable "." Fir.Syntax.Module "Modules, functions, blocks and ops" FirSpec.Syntax.Module (level := 2)}
 
-{includeLiterate "." Fir.Core.Types "Core types" (level := 2)}
+{includeReadable "." Fir.Core.Types "Core types" FirSpec.Core.Types (level := 2)}
 
 {includeReadable "." Fir.Core.Ops "Core ops" FirSpec.Core.Ops (level := 2)}
 
-{includeLiterate "." Fir.Core.Signature "Core signatures" (level := 2)}
+{includeReadable "." Fir.Core.Signature "Core signatures" FirSpec.Core.Signature (level := 2)}
 
 # Validation
 
