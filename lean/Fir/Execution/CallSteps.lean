@@ -8,28 +8,28 @@ and loops does not take. The section after this one proves that it is never
 stuck and always has a way to go on, for a call in a valid function whose
 module names its callee. It rests on these facts:
 
+* _A sequence has a path when its parts have one._ A path of a callee's
+  run that ends with UB or stuck ends its caller's run so, so a caller's
+  run has a path whenever its callee's has one and the caller has one
+  after each return of the callee.
 * _The callee is found._ When the module's symbol table gives a symbol a
   type, the module has a function of that symbol and that type, which the
-  run finds by the same search (`Module.func?_of_symbols`), and it is a
-  function of the module.
+  run finds by the same search, and it is a function of the module.
+* _A function returns values of its result types._ The interpreter checks
+  the types of the values that a function returns before it returns them,
+  so every return of a run of a function's ops returns values of the
+  function's result types, whatever its ops do. A call whose types are its
+  callee's then receives values of its own result types.
 * _The callee starts._ A run of a function on values of its parameter
   types starts at its entry block, with its parameters bound to them, when
-  its entry block declares no arguments (`Func.enter_ok`). Only the
-  parameters are in scope at that block's first op, so the run's
-  environment holds every value in scope there (`Env.scoped_entry`).
-* _The callee returns values of its result types._ The interpreter checks
-  the types of the values that a function returns before it returns them,
-  so every return of a run of a function's ops has the function's result
-  types (`Func.runOps_returns`), whatever its ops do. A call whose types
-  are its callee's then receives values of its own result types.
-* _The call's results bind._ After an op binds its results to values of
-  their types, the environment holds every value in scope at the next op
-  (`Func.scoped_results`), as the section on scope proves of an op that
-  is not a call.
-* _A callee's run with a path._ A path of a callee's run that ends with
-  UB, stuck or out of fuel ends its caller's run so, so a caller's run has
-  a path whenever its callee's has one and it has one after each return
-  of the callee (`HasPath.bind`).
+  its entry block declares no arguments.
+* _At the start of a function, binding its parameters holds every value in
+  scope._ Only the parameters are in scope at the entry block's first op,
+  so the run's environment holds every value in scope there.
+* _An op's results join the scope._ After an op binds its results to
+  values of their types, the environment holds every value in scope at the
+  next op, as the section on scope along a run proves of an op that is not
+  a call.
 -/
 
 namespace Fir

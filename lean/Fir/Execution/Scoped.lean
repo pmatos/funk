@@ -6,33 +6,33 @@ import Fir.Validation.Rules
 
 A run that jumps reaches a block with an environment that another block
 built. What it may find there follows from validation: before the op at
-index `i` of the block labelled `l`, the run's environment holds, for each
-value in scope at that op (`Func.InScope`), a value of the type that the
-function gives it (`Env.Scoped`). Every operand of the op, and every value
-that it passes to a successor, is in scope, so the run finds each of them
-with its type.
+index i of the block labelled l, the run's environment holds, for each
+value in scope at that op, a value of the type that the function gives
+it. Every operand of the op, and every value that it passes to a
+successor, is in scope, so the run finds each of them with its type.
 
 Three steps keep the invariant, each by the rules of scope and dominance:
 
-* _At the entry._ Only the parameters are in scope at the entry block's
-  first op: no block dominates the entry but itself, and the entry block
-  declares no arguments. The run starts with each parameter bound to its
-  argument.
-* _From an op to the next._ A value in scope at the next op is a result of
-  this op, which the run has just bound, or was in scope at this op.
-* _Along a jump._ A value in scope at the first op of the target block is
-  an argument of that block, which the jump has just bound, or it is
-  defined in another block that dominates the target. A block other than
-  the target that dominates it dominates every block that jumps to it, so
-  the value was in scope at the terminator that jumped, unless it is a
-  result of that terminator. The interpreter binds no result of a
-  terminator, so this asks that a terminator that jumps has none, as no
-  core terminator has.
+* _At the entry: only the parameters are in scope at the first op of the
+  entry block._ No block dominates the entry but itself, and the entry
+  block declares no arguments. The run starts with each parameter bound to
+  its argument.
+* _From an op to the next: a value in scope at the next op is a result of
+  this op, or was in scope at this op._ The run has just bound the
+  results of this op.
+* _Along a jump: a value in scope at the first op of a jump's target is an
+  argument of the target, or was in scope at the op that jumps._ The jump
+  has just bound the target's arguments. A value defined in another block
+  that dominates the target is defined in a block that dominates every
+  block that jumps to it, so the value was in scope at the terminator that
+  jumped, unless it is a result of that terminator. The interpreter binds
+  no result of a terminator, so this asks that a terminator that jumps has
+  none, as no core terminator has.
 
 A step binds its names in front of the environment. A lookup of a name
 that it binds finds the new value, and a lookup of any other name finds
 what it found before, so the proof needs no fact that the new names are
-fresh.
+new.
 -/
 
 namespace Fir

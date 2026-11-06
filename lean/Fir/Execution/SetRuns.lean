@@ -4,14 +4,15 @@ import Fir.Execution.Behaviour
 # How each step of a run ends
 
 The proofs of the next sections read a run in the set monad path by path.
-A computation of `ExceptT Stuck SetM` is the set of the ways its paths
-end: with a result, stuck, or with UB. The lemmas below say how each
-building block of the interpreter ends. A path of `x >>= g` either goes
-through a result `a` of `x` and ends as a path of `g a` ends, or ends where
-`x` is stuck or hits UB.
+A computation of a run is the set of the ways its paths may end: with a
+result, stuck, or with immediate UB. The facts below say how each piece
+from which the interpreter builds a run ends. A path of a sequence, a
+computation and then a second one on its result, goes through a result of
+the first and ends as a path of the second ends, or ends where the first
+is stuck or hits UB.
 
-Two properties of a computation follow its binds: that no path is stuck
-(`NoStuck`), and that it has a path at all (`HasPath`).
+Two properties of a computation follow a sequence, step by step: that no
+path of it is stuck, and that it has a path at all.
 -/
 
 namespace Fir.SetM

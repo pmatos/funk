@@ -1,110 +1,7 @@
 import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
-import FirSpec.Syntax.Dialect
-import FirSpec.Syntax.Location
-import FirSpec.Syntax.Module
-import FirSpec.Core.Types
-import FirSpec.Core.Ops
-import FirSpec.Core.Signature
-import FirSpec.Core.Poison
-import FirSpec.Core.Unlawful
-import FirSpec.Core.Values
-import FirSpec.Execution.Behaviour
-import FirSpec.Execution.CallSteps
-import FirSpec.Execution.Effects
-import FirSpec.Execution.Fuel
-import FirSpec.Execution.Propagation
-import FirSpec.Execution.Refinement
-import FirSpec.Execution.Values
-import FirSpec.Validation.Scope
-import FirSpec.Validation.Dominance
-import FirSpec.Validation.Rules
-import FirSpec.Core.Validation
-import FirSpec.Core.Rejects
-import FirSpec.Validation.Check
-import FirSpec.Validation.Tables
-import FirSpec.Validation.Search
-import FirSpec.Validation.Graph
-import FirSpec.Validation.CheckOps
-import FirSpec.Validation.CheckFuncs
-import FirSpec.Validation.CheckModule
-import FirSpec.Core.Check
-import FirSpec.Text.Tree
-import FirSpec.Text.ReadAttrs
-import FirSpec.Text.ReadDefs
-import FirSpec.Text.ReadOps
-import FirSpec.Text.ReadBlocks
-import FirSpec.Text.ReadFunc
-import FirSpec.Text.ReadTable
-import FirSpec.Text.ReadModule
-import FirSpec.Text.DecodeScope
-import FirSpec.Text.DecodeBlocks
-import FirSpec.Text.DecodeModule
-import FirSpec.Text.PrintParse
-import FirSpec.Execution.Interpreter
-import FirSpec.Core.Arith
-import FirSpec.Core.Wrap
-import FirSpec.Core.Freeze
-import FirSpec.Core.Bitwise
-import FirSpec.Core.Width
-import FirSpec.Core.Div
-import FirSpec.Core.Compare
-import FirSpec.Core.Control
-import FirSpec.Core.Branch
-import FirSpec.Core.Call
-import FirSpec.Core.Semantics
-import FirSpec.Core.ArithLaws
-import FirSpec.Core.WrapLaws
-import FirSpec.Core.FreezeLaws
-import FirSpec.Core.BitwiseLaws
-import FirSpec.Core.WidthLaws
-import FirSpec.Core.DivLaws
-import FirSpec.Core.CompareLaws
-import FirSpec.Core.ControlLaws
-import FirSpec.Core.BranchLaws
-import FirSpec.Execution.Morphism
-import FirSpec.Execution.ChoiceTree
-import FirSpec.Execution.Modes
-import FirSpec.Core.Modes
-import FirSpec.Execution.RunPaths
-import FirSpec.Execution.EnvRefine
-import FirSpec.Execution.BlackBox
-import FirSpec.Execution.RefineUp
-import FirSpec.Execution.RefineDown
-import FirSpec.Execution.RefineRuns
-import FirSpec.Execution.Replace
-import FirSpec.Core.CallRefine
-import FirSpec.Execution.Lawful
-import FirSpec.Core.Lawful
-import FirSpec.Text.Lexical
-import FirSpec.Text.Grammar
-import FirSpec.Core.Text
-import FirSpec.Text.Print
-import FirSpec.Text.RoundTrip
-import FirSpec.Core.TextLaws
-import FirSpec.Text.Lex
-import FirSpec.Text.Read
-import FirSpec.Text.ReadLocs
-import FirSpec.Text.Decode
-import FirSpec.Text.Example
-import FirSpec.Text.Tokens
-import FirSpec.Text.LexNumbers
-import FirSpec.Text.LexTokens
-import FirSpec.Text.LexStrings
-import FirSpec.Text.LexLayout
-import FirSpec.Text.LexPrint
-import FirSpec.Text.LexModule
-import FirSpec.Text.LexWellFormed
-import FirSpec.Text.LexAccepted
-import FirSpec.Text.ReadAccepted
-import FirSpec.Text.ReadAcceptedBlocks
-import FirSpec.Text.ReadAcceptedItems
-import FirSpec.Text.ReadAcceptedModule
-import FirSpec.Text.DecodeAcceptedScope
-import FirSpec.Text.DecodeAccepted
-import FirSpec.Text.DecodeAcceptedModule
-import FirSpec.Text.ParseWellFormed
+import FirSpec.ReadableDocs
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -296,27 +193,27 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
 
-{includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
+{includeReadable "." Fir.Execution.SetRuns "Reading a run path by path" FirSpec.Execution.SetRuns (level := 2)}
 
-{includeLiterate "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" (level := 2)}
+{includeReadable "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" FirSpec.Execution.Monotone (level := 2)}
 
-{includeLiterate "." Fir.Execution.Environment "The environment of a run" (level := 2)}
+{includeReadable "." Fir.Execution.Environment "The environment of a run" FirSpec.Execution.Environment (level := 2)}
 
-{includeLiterate "." Fir.Execution.Progress "Progress and no stuck path" (level := 2)}
+{includeReadable "." Fir.Execution.Progress "Progress and no stuck path" FirSpec.Execution.Progress (level := 2)}
 
-{includeLiterate "." Fir.Execution.Scoped "Scope along a run" (level := 2)}
+{includeReadable "." Fir.Execution.Scoped "Scope along a run" FirSpec.Execution.Scoped (level := 2)}
 
-{includeLiterate "." Fir.Execution.Jumps "Progress with jumps and loops" (level := 2)}
+{includeReadable "." Fir.Execution.Jumps "Progress with jumps and loops" FirSpec.Execution.Jumps (level := 2)}
 
 {includeReadable "." Fir.Execution.CallSteps "What a call step needs" FirSpec.Execution.CallSteps (level := 2)}
 
-{includeLiterate "." Fir.Execution.Calls "Progress with calls" (level := 2)}
+{includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 2)}
 
-{includeLiterate "." Fir.Core.Runs "The runs of core functions" (level := 2)}
+{includeReadable "." Fir.Core.Runs "The runs of core functions" FirSpec.Core.Runs (level := 2)}
 
-{includeLiterate "." Fir.Core.CallFree "Core functions without calls" (level := 2)}
+{includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 2)}
 
-{includeLiterate "." Fir.Core.ValidRuns "Core functions with calls" (level := 2)}
+{includeReadable "." Fir.Core.ValidRuns "Core functions with calls" FirSpec.Core.ValidRuns (level := 2)}
 
 {includeReadable "." Fir.Execution.RunPaths "The ways a step goes on" FirSpec.Execution.RunPaths (level := 2)}
 
