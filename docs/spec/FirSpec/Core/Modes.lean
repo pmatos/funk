@@ -128,7 +128,7 @@ $`\mathrm{draw}`, module $`M`, function $`f`, arguments $`\vec{v}`, fuel
 $`k` and generator $`g`, let $`\mathrm{sampled}(M, f, \vec{v}, k, g)`
 give the leaf $`\ell` and the values $`\mathit{cs}`. Then scripted mode on
 $`\mathit{cs}`, reading chosen values back, reaches $`\ell` after
-$`|\mathit{cs}|` choices:
+$`|\mathit{cs}|` choices, the length of $`\mathit{cs}`:
 
 $$`\mathrm{scripted}(M, f, \vec{v}, k, \mathit{cs}) = (\ell,\ |\mathit{cs}|)`
 
