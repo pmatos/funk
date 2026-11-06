@@ -3,9 +3,13 @@ import Fir.Text.Read
 /-!
 The location table has a fixed syntax, the same for every dialect, so the
 grammar step reads it in full. Its numbers are checked against their limits
-(N3) where they stand: a line or a column of `2^32` or more is an error at
-the number. Whether the table is well formed, with its references in order
-and each location built from earlier ones, is a rule of validation.
+(ADR-2026-11-03-1000) where they stand: a line or a column of 2³² or more is
+an error at the number. Whether the table is well formed, with its
+references in order and each location built from earlier ones, is a rule of
+validation.
+
+This section reads the numbers of a location, a location, and the table,
+and then a whole module.
 -/
 
 namespace Fir.Text
