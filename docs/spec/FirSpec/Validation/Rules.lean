@@ -47,17 +47,18 @@ no predecessors, and its arguments are the function's parameters.
 :::readable Fir.Func.OpValid (pin := Fir.Operation.uses) (pin := Fir.DialectSignature) (fingerprint := "5008303483154810361")
 *Definition: a valid op.* Let $`o` be the op at index $`i` of the block
 $`b` of the function $`f`, checked in the module context $`C`, let $`l`
-be the label of $`b`, and let $`p` be its
-{ref "The-fir-specification--Abstract-syntax--Dialects"}[op instance]. The
-op is valid when every premise of this rule holds:
+be the label of $`b`, let $`p` be its
+{ref "The-fir-specification--Abstract-syntax--Dialects"}[op instance], and
+let $`d` be the dialect of $`p`. The op is valid when every premise of this
+rule holds:
 
 $$`\dfrac{\begin{array}{c} \mathrm{regions}(o) = \epsilon \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ \mathrm{term}(p) \iff i + 1 = |\mathrm{body}(b)| \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \\ \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ f \vdash s~\text{valid} \ \text{ for each } s \in \mathrm{succs}(o) \\ \mathrm{inscope}_f(x, l, i) \text{ for each } x \in \mathrm{uses}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f)) \vdash_d p~\text{valid} \\ \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f, b, i \vdash o~\text{valid}}`
 
 Here $`\mathrm{regions}(o)`, $`\mathrm{operands}(o)`, $`\mathrm{results}(o)`,
 $`\mathrm{succs}(o)` and $`\mathrm{loc}(o)` are the parts of the op
-$`o`, $`\mathrm{body}(b)` is the ops of $`b`, and
-$`\mathrm{type}_f(\mathrm{operands}(o))` is the type of each operand, in
-turn. Line by line, the premises say:
+$`o`, $`\mathrm{body}(b)` is the ops of $`b`, $`\mathrm{results}(f)` is the
+result types of $`f`, and $`\mathrm{type}_f(\mathrm{operands}(o))` is the
+type of each operand, in turn. In words, the premises say:
 
 * The op owns no region. Region rules come with the first dialect whose
   ops have regions; no core op has one.
@@ -69,7 +70,7 @@ turn. Line by line, the premises say:
 * It has as many successors as its op instance says,
   $`\mathrm{nsucc}(p)`, and none at all when it is not a terminator,
   whatever its dialect says.
-* Each successor is valid, as the previous block says.
+* Each successor is valid, by the rule for a valid successor above.
 * Each value it uses, an operand or a value passed to a successor, is
   {ref "The-fir-specification--Validation--Dominance"}[in scope] at the op.
 * Each symbol it refers to names a function of the module.
@@ -79,17 +80,20 @@ turn. Line by line, the premises say:
   (ADR-2026-10-29-2013).
 
 $`\mathrm{sig}`, $`\mathrm{ret}`, $`\mathrm{term}` and $`\mathrm{nsucc}` are
-the dialect's signature of an op instance; $`\mathrm{refs}_d` and
+the dialect's
+{ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] of an op
+instance: its operand types, its result types, whether it is a terminator,
+and its number of successors. $`\mathrm{refs}_d` and
 $`\vdash_d` are what the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect adds to validation].
 :::
 
-:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.Func.types) (fingerprint := "12710676458430442819")
+:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "8677148196043600336")
 *Definition: a valid function.* The function $`f` is valid in the module
 context $`C` when every premise of this rule holds, where
-$`B = \mathrm{blocks}(f)`:
+$`B = \mathrm{blocks}(f)` and $`d` is the dialect of $`f`:
 
-$$`\dfrac{\begin{array}{c} B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \text{each name in } \mathrm{defs}(f) \text{ is a name} \\ \text{each label in } \mathrm{allblocks}(f) \text{ is a name} \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \end{array}}{C \vdash f~\text{valid}}`
+$$`\dfrac{\begin{array}{c} B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \end{array}}{C \vdash f~\text{valid}}`
 
 In words:
 
@@ -97,10 +101,11 @@ In words:
   own: its arguments are the function's parameters.
 * Every block is reachable from the entry (ADR-2026-10-30-0817). This is
   stricter than LLVM, which accepts blocks the entry cannot reach.
-* No two blocks share a label, and no two definitions share a name: each
-  value has one definition, as SSA requires.
-* Every value name and every label, at any depth, is a
-  {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name]:
+* No two top-level blocks share a label, and no two definitions share a
+  name: each value has one definition, as SSA requires.
+* Every value name and every label, at any depth, is spelled with name
+  characters: $`\mathrm{isname}(x)` holds when $`x` is a
+  {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name],
   one or more of the ASCII letters, the digits, `_` and `.`. So every valid
   function can be written in the text.
 * Every type that the function states, its result types and the type of

@@ -42,7 +42,8 @@ $$`\frac{\mathrm{reach}(S, x) \qquad y \in \mathrm{next}(x) \qquad \mathrm{ok}(y
 With $`\mathrm{ok}` always true it is
 {ref "The-fir-specification--Validation--Dominance"}[reachability]; with
 $`\mathrm{ok}(y)` true for every $`y \neq a` it is reachability around the
-node $`a`.
+node $`a`. Where the test matters, $`\mathrm{reach}_{\mathrm{ok}}(S, y)`
+names it.
 :::
 
 :::readable Fir.unseen Fir.unseen_insert_lt (fingerprint := "11856536830479484098")
@@ -51,7 +52,8 @@ hash table $`g` from each node to its successors, and a set $`\mathit{seen}`
 of nodes, $`\mathrm{unseen}(g, \mathit{seen})` is the number of keys of
 $`g` that are not in $`\mathit{seen}`.
 
-*Theorem:* if $`x` is a key of $`g` and is not in $`\mathit{seen}`, then
+*Theorem:* for nodes whose equality test agrees with equality, as the test
+of labels does, if $`x` is a key of $`g` and is not in $`\mathit{seen}`, then
 adding $`x` to $`\mathit{seen}` lowers the count:
 
 $$`\mathrm{unseen}(g, \mathit{seen} \cup \{x\}) < \mathrm{unseen}(g, \mathit{seen})`
@@ -73,14 +75,17 @@ takes the nodes of $`\mathit{work}` in turn:
 When no work is left, the result is $`\mathit{seen}`. Every step either
 adds a node not yet seen, so that $`\mathrm{unseen}` falls, or shortens
 the work with $`\mathrm{unseen}` unchanged, so the search ends on every
-graph. It is a depth-first search that visits each node at most once.
+graph. It is a depth-first search that visits each node at most once. Like
+the measure, it asks that the nodes' equality test agrees with equality, as
+the test of labels does, and so does every theorem about it below.
 Below, $`g[x]^*` is the successors that $`g` gives $`x`, or the empty list
 when $`x` is not a key of $`g`.
 :::
 
 :::readable Fir.search_mono Fir.search_covers (fingerprint := "2643118911616308034")
 *Theorems: the search keeps what it has seen, and sees every node of its
-work that it may visit.* For every graph $`g`, test $`\mathrm{ok}`, set
+work that it may visit.* For nodes whose equality test agrees with
+equality, and for every graph $`g`, test $`\mathrm{ok}`, set
 $`\mathit{seen}` and list $`\mathit{work}`:
 
 * every node $`z` of $`\mathit{seen}` is in the result;
@@ -111,8 +116,8 @@ So the search never finds a node that no path reaches.
 :::
 
 :::readable Fir.contains_search_iff (fingerprint := "14131843461188492695")
-*Theorem: the search finds exactly the nodes that a path reaches.* For every
-graph $`g`, test $`\mathrm{ok}`, list $`S` of start nodes and key $`y` of
+*Theorem: the search finds exactly the nodes that a path reaches.* For
+nodes whose equality test agrees with equality, and for every graph $`g`, test $`\mathrm{ok}`, list $`S` of start nodes and key $`y` of
 $`g`, the search from $`S` with nothing seen finds $`y` exactly when a path
 reaches it:
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's rules, decided: readable blocks" =>
 
-:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (fingerprint := "1655391152182424330")
+:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "637337370968257790")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with
 $`C`, the check of the function `@f` of the section on
@@ -26,7 +26,7 @@ check of a function decides its validity. It is a theorem about every
 module that holds the function, where a test could try only some.
 
 The check runs on core modules because the core dialect's own rules can be
-decided, case by case, as the Lean before the theorem says. Whether a core
+decided, case by case. Whether a core
 type is valid compares $`N` with 1 and $`2^{24} - 1` for $`\mathsf{i}N`,
 and is false for $`\mathsf{ptr}`. Whether a core op obeys the
 {ref "The-fir-specification--Validation--Core-rules"}[core rules] in an op
@@ -35,7 +35,7 @@ dialect is a
 {ref "The-fir-specification--Validation--The-validation-check"}[decidable dialect].
 :::
 
-:::readable Fir.Core.Rejects.deadModule (fingerprint := "4533100774199469150")
+:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "8256747208012650833")
 *Definition: the rejected function, alone in a module.* The module holds
 the function `@f` and nothing else, and its location table has the one
 entry `@0 = unknown`, which every op of `@f` refers to. A check run when

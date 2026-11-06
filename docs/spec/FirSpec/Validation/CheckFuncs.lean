@@ -51,7 +51,8 @@ gives, in this order:
   before it;
 * "value `%x` is defined more than once" for each name that repeats one
   before it among the parameters and the definitions of the blocks;
-* a problem for each value name and each label that is not a name;
+* a problem for each value name and each label that is not spelled with
+  name characters;
 * "a result type of the function is not valid" for each result type that
   its dialect rejects, and a problem for each definition whose type it
   rejects;
@@ -66,8 +67,8 @@ the list $`\mathrm{allblocks}(f)`.
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 
-* $`C \vdash f~\text{valid}` holds exactly when all nine of its premises
-  hold, so the check can test them one by one;
+* $`C \vdash f~\text{valid}` holds exactly when all of its premises hold,
+  so the check can test them one by one;
 * the search from the entry finds every top-level block exactly when every
   top-level block is reachable;
 * when the lookup agrees with $`C`, the check of every op of every

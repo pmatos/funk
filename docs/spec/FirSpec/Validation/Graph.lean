@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reachability and dominance, decided: readable blocks" =>
 
-:::readable Fir.Func.graph Fir.Func.start (pin := Fir.Block.succLabels) (pin := Fir.Func.entryLabel?) (fingerprint := "5727426197188553083")
+:::readable Fir.Func.graph Fir.Func.start (pin := Fir.Block.succLabels) (pin := Fir.Func.entryLabel?) (pin := Fir.grouped) (fingerprint := "13429173844377504314")
 *Definition: a function's graph as a table, and where its paths start.*
 $`\mathrm{graph}(f)` is the hash table that gives the label of each block
 $`b` of $`\mathrm{blocks}(f)` the labels $`\mathrm{targets}(b)` that $`b`
@@ -63,13 +63,12 @@ table.* For every function $`f` and labels $`a` and $`l`, with
 $`\mathrm{reach}` following the edges of the table,
 $`\mathrm{next}(x) = \mathrm{graph}(f)[x]^*`:
 
-$$`\mathrm{reachable}_f(l) \iff \mathrm{reach}(\mathrm{start}(f), l)`
+$$`\begin{aligned} & \mathrm{reachable}_f(l) \\ \iff\ & \mathrm{reach}_{\top}(\mathrm{start}(f), l) \end{aligned}`
 
-with every node allowed, and
+$$`\begin{aligned} & \mathrm{reachable}_{f \setminus a}(l) \\ \iff\ & \mathrm{reach}_{\neq a}(\mathrm{start}(f), l) \end{aligned}`
 
-$$`\mathrm{reachable}_{f \setminus a}(l) \iff \mathrm{reach}(\mathrm{start}(f), l)`
-
-with every node allowed but $`a`.
+The subscript of $`\mathrm{reach}` is its test $`\mathrm{ok}`: $`\top`
+allows every node, and $`{\neq a}` allows every node but $`a`.
 
 They move each question about the function's paths into a question that
 the search answers.

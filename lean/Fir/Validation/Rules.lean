@@ -14,9 +14,9 @@ the context of its module. The rules below give, in order:
 * the context of a function: what the rules read of its module;
 * a valid successor: a branch passes one value of the right type for each
   argument of its target, which is not the entry block;
-* a valid op: its types, its place in its block, its successors, the values
-  it uses, the symbols it refers to, its dialect's own rule and its
-  location.
+* a valid op: it owns no region; its types, its place in its block, its
+  successors, the values it uses, the symbols it refers to, its dialect's
+  own rule and its location.
 -/
 
 namespace Fir
@@ -85,7 +85,7 @@ Each entry of the table has a distinct reference, and the entries are in
 increasing order of reference, so one table has one spelling. A location
 that is built from others refers only to entries before it, so no location
 refers to itself, directly or not. A fused location fuses at least two.
-Every reference, line and column is below 2^32.
+Every reference, line and column is below 2³².
 
 A source range starts at line 1 or later, and does not end before it starts.
 When both of its columns are known (not 0) and it starts and ends on one
@@ -127,7 +127,7 @@ structure Module.Valid (m : Module d) : Prop where
 An op instance's types are its operand types and its result types. They
 are _valid_ when validation accepts each of them, as it accepts the types
 of every value that a valid function defines. For the core dialect that is
-_iN_ with 1 ≤ _N_ ≤ 16,777,215, never _ptr_. Every op of a valid function
+`iN` with 1 ≤ N ≤ 16,777,215, never `ptr`. Every op of a valid function
 has an op instance with valid types, as the section on what the lawful
 class gives proves, and the poison obligations speak only of such op
 instances (ADR-2026-11-02-1515).

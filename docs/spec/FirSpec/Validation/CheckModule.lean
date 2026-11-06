@@ -35,9 +35,10 @@ about. The check gives, in this order:
 * for each entry, in order: "holds a reference, line or column of 2^32 or
   more" when the entry is out of limits; "is not well formed", with the
   reason, when its location is not; and for each reference $`x` that its
-  location is built from and that is not the reference of an earlier entry,
-  "refers to `@x`, which does not come before it" or "refers to `@x`, which
-  the table does not hold".
+  location is built from, unless $`x` is below $`r` and is the reference of
+  an entry of the table, "refers to `@x`, which does not come before it"
+  when the table holds $`x`, or "refers to `@x`, which the table does not
+  hold" when it does not.
 
 It looks references up in a hash set of the table's references, built once.
 :::
@@ -73,7 +74,7 @@ about the check of a function apply to every function of $`M`, checked
 with the lookup of $`M`.
 :::
 
-:::readable Fir.Module.problems (fingerprint := "17074574925051665595")
+:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "16400290938143800205")
 *Definition: the check of a module.* The check of the module $`M`,
 $`\mathrm{problems}(M)`, builds the lookup of $`M` once, and gives, in this
 order:
@@ -103,6 +104,5 @@ the rules need no second, informal reading to be implemented.
 
 So validity can be decided: whether a module is valid, by its check, and
 whether a function is valid in a module context $`C`, by the check of the
-function with a lookup made from $`C` itself. The Lean of both closes this
-block's hidden Lean.
+function with a lookup made from $`C` itself.
 :::

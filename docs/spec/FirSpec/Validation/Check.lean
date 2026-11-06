@@ -26,8 +26,7 @@ check runs the two algorithms wherever the rules ask them.
 The check also compares types, so it asks that the dialect's types can be
 compared for equality. Then so can its function types: $`t^* \to r^*`
 equals $`t'^* \to r'^*` exactly when $`t^* = t'^*` and $`r^* = r'^*`, which
-the check of a $`\mathsf{call}` uses. The Lean that hands these
-algorithms to the check is hidden under the next block.
+the check of a $`\mathsf{call}` uses.
 :::
 
 :::readable Fir.Problem (fingerprint := "15591333563506851913")
@@ -45,7 +44,7 @@ about a label that names more than one block has that of the first such
 block. Tools compare whether a module has problems, never their words.
 :::
 
-:::readable Fir.valueRef Fir.labelRef (pin := Fir.isName) (pin := Fir.Text.quote) (fingerprint := "10555243390733741834")
+:::readable Fir.valueRef Fir.labelRef (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Text.quote) (fingerprint := "14969068081634259249")
 *Definition: how a problem writes a value and a label.* A problem writes
 the value $`x` as the text does: `%x` when $`x` is a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name],

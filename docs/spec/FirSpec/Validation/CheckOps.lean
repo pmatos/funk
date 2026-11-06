@@ -44,7 +44,7 @@ $`f`, with the tables built from $`\mathit{all}`:
 
 * when $`\mathit{all}` is $`\mathrm{allblocks}(f)`, the scope gives every
   name $`x` the type $`\mathrm{type}_f(x)`, and is undefined where
-  $`\mathrm{type}_f` is; stated once for each name and once as one function;
+  $`\mathrm{type}_f` is;
 * for every list $`\mathit{all}` and label $`l`, the blocks table gives
   $`l` the block $`\mathrm{block}_f(l)`, and is undefined where it is;
 * for every list $`\mathit{all}`, the first label of the start is
@@ -101,6 +101,10 @@ table:
 * otherwise it gives one problem for each site of $`x` that does not
   dominate the use, saying why.
 
+The check takes a function that turns a message into a problem placed at
+the op: its function, block, index and location. A _way of placing a
+problem_ is such a function, and the theorem holds for every one.
+
 *Theorem:* for every function $`f`, every way of placing a problem at the
 op, every index $`i`, name $`x`, and label $`l` of a block of
 $`\mathrm{blocks}(f)`, with the tables built from $`\mathrm{allblocks}(f)`,
@@ -121,6 +125,9 @@ successor $`l(x_1, \dots, x_n)` gives:
 * otherwise, "successor `^l` does not pass one value of the right type for
   each argument of the block" unless the scope gives
   $`x_1, \dots, x_n` exactly the types of the arguments of that block.
+
+Like the check of a use, it takes a way of placing a problem at the op,
+and the theorem holds for every one.
 
 *Theorem:* for every function $`f` whose dialect's types can be compared,
 every way of placing a problem and every successor, with the tables built
@@ -166,8 +173,8 @@ $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vd
 
 :::readable Fir.eq_beq_iff Fir.or_isEmpty_eq_true (fingerprint := "9153842687865872429")
 *Theorems: two facts about truth values.* For every truth value $`a` and
-numbers $`n` and $`m`, $`a` equals the truth of $`n = m` exactly when
-$`a` is true just when $`n = m`. For every truth value $`a` and list $`l`
+numbers $`n` and $`m`, $`a` is the truth value of the test $`n = m`
+exactly when this holds: $`a` is true if and only if $`n = m`. For every truth value $`a` and list $`l`
 of successors, "$`a` or $`l` is empty" is true exactly when $`l` is empty
 whenever $`a` is false. The proof that the check of an op decides its rule
 uses them for the premises about terminators and successors.

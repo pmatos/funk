@@ -23,17 +23,19 @@ $`\mathsf{ptr}` is never valid.
 
 $$`\frac{1 \le N \le 2^{24} - 1}{\vdash \mathsf{i}N~\text{valid}}`
 
-No rule concludes $`\vdash \mathsf{ptr}~\text{valid}`. $`\mathsf{i0}` is not
-a type, since it would hold no bits. $`\mathsf{ptr}` is reserved: fir has no
+The general rules write $`\vdash_d` for the rules of the dialect $`d`; for
+the core dialect this section drops the subscript. No rule
+concludes $`\vdash \mathsf{ptr}~\text{valid}`. $`\mathsf{i0}` is never
+valid, since it would hold no bits. $`\mathsf{ptr}` is reserved: fir has no
 values of type $`\mathsf{ptr}` until the memory model gives them a meaning.
 :::
 
 :::readable Fir.Core.Op.symbolRefs (fingerprint := "14722312557016654371")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
-refers to the symbol $`f` of its callee. No other core op refers to a
-symbol.
+refers to the symbol $`f` of its callee: its list of symbols is the
+one-element sequence $`(f)`. No other core op refers to a symbol.
 
-$$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = f`
+$$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f)`
 
 $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 
@@ -71,6 +73,5 @@ the op, and $`\mathrm{symtab}_C` the module's
 
 Every other op has no rule beyond its signature. These three definitions
 are what the core dialect
-{ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation];
-the Lean that says so is the last item hidden under this block.
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
 :::

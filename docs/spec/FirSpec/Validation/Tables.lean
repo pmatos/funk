@@ -22,7 +22,8 @@ the pairs in order, and an insertion keeps a key's value when the table
 already has one. Below, $`h[k]` is the value that the hash table $`h` gives
 the key $`k`, and is undefined when $`k` is not a key of $`h`.
 
-*Theorem:* for every list $`l` and key $`k`, $`\mathrm{firsts}(l)[k]` is
+*Theorem:* for keys whose equality test agrees with equality, as the test
+of names does, and for every list $`l` and key $`k`, $`\mathrm{firsts}(l)[k]` is
 the value of the first pair of $`l` whose key is $`k`, and is undefined
 when no pair has the key $`k`. That is the answer a search of $`l` from its
 start gives, so the check can look a value's type up in constant time and
@@ -42,7 +43,8 @@ $`\mathrm{grouped}(l)` is the hash table that gives each key all the values
 of all its pairs. Below, $`h[k]^*` is the list that the table $`h` gives
 the key $`k`, or the empty list when $`k` is not a key of $`h`.
 
-*Theorems:* for every list $`l`, key $`k` and value $`v`,
+*Theorems:* for keys whose equality test agrees with equality, as the test
+of names does, and for every list $`l`, key $`k` and value $`v`,
 
 * $`v` is in $`\mathrm{grouped}(l)[k]^*` exactly when some pair
   $`(k, \mathit{vs})` of $`l` has $`v` in $`\mathit{vs}`;
@@ -64,8 +66,9 @@ $`\mathrm{repeats}(l)` is the elements of the list $`l` that equal an
 earlier element of $`l`, in order, once for each time they repeat. It walks
 $`l` once, keeping the elements it has seen in a hash set.
 
-*Theorem:* for every list $`l`, $`\mathrm{repeats}(l)` is empty exactly
-when the elements of $`l` are distinct.
+*Theorem:* for elements whose equality test agrees with equality, as the
+test of names does, and for every list $`l`, $`\mathrm{repeats}(l)` is
+empty exactly when the elements of $`l` are distinct.
 
 The check reports each repeated label and each value defined twice from
 this list, and the theorem says that it reports none exactly when the

@@ -14,13 +14,13 @@ changes under it.
 
 #doc (Manual) "A rejected function: readable blocks" =>
 
-:::readable Fir.Core.Rejects.deadBlock (fingerprint := "3101141813421394724")
+:::readable Fir.Core.Rejects.deadBlock (pin := Fir.Core.op) (fingerprint := "15564015379985173766")
 *Definition: a function with a block that no branch reaches.* The function
-`@f` above, which the Lean names `deadBlock`, takes no parameters and
-returns one $`\mathsf{i32}`. Its entry block `^entry` returns the
-constant 0, and its second block `^dead` returns the constant 1.
-Neither block has a successor, so nothing jumps to `^dead`. Every
-op uses the location reference 0.
+`@f` above, which the theorems below call $`f`, takes no parameters and
+returns one $`\mathsf{i32}`. Its entry block `^entry` returns the constant
+0, and its second block `^dead` returns the constant 1. Neither block has a
+successor, so nothing jumps to `^dead`. Every op uses the location
+reference 0.
 :::
 
 :::readable Fir.Core.Rejects.deadBlock_reachable (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "15574699308439038797")
