@@ -43,10 +43,11 @@ words.
 
 :::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "6050580012468359362")
 *Theorems: every token that the lexer reads can be written.* For every
-character $`c`, the characters after it, and position in the text, which
-only its error messages use: every token that
-the reader of one {ref "The-fir-specification--Text-format--The-parser"}[token]
-reads from $`c` on
+character $`c`, the characters after it, and position in the text, from
+which the reader counts where the next token starts and which its error
+messages cite: every token that the reader of one
+{ref "The-fir-specification--Text-format--The-parser"}[token] reads from
+$`c` on
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written].
 So can every integer that it reads after a first digit, with or without a
 `-` before it, and every token that it reads after `@`. Case by case:
