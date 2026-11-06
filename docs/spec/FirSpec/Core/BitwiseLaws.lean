@@ -45,7 +45,8 @@ execution rules, $`\mathsf{and}_w` meets every obligation of an op that
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison]:
 
 * _Poison out_: on two operands of which one is poison, every result it
-  gives is poison, since its rule is strict.
+  gives is poison, since its rule is
+  {ref "The-fir-specification--Execution--Arithmetic-obligations"}[strict].
 * _UB only by the op's own rules_: it is never UB, so the clause holds
   with nothing to check.
 * _A result on defined operands_: on $`0` and $`0` it gives a result.

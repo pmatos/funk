@@ -190,7 +190,7 @@ noOutcome   \mathsf{no\_outcome}~e
 ```
 
 A leaf of a run's tree holds a return, a run out of fuel or a stuck path,
-or is UB or has no outcome. $`\mathrm{pathEnd}(\ell)` reads it so: a
+or is UB or has no outcome. $`\mathrm{path\_end}(\ell)` reads it so: a
 return $`\mathsf{ret}~o`, running out of fuel, and UB $`\mathsf{ub}~r` are
 the outcomes $`\mathsf{ret}~o`, $`\mathsf{fuel\_exhausted}` and
 $`\mathsf{ub}~r`; a stuck path is $`\mathsf{stuck}~s`; and
@@ -228,9 +228,9 @@ for the morphism from trees to sets.
 dialect and the hypothesis of the previous theorem, let $`R_k` be the run
 of $`f` in the set monad at fuel $`k`, and let exhaustive mode on the run's
 tree, with the choice budget $`B`, give the list $`L`. Then for every
-outcome $`o`,
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome] $`o`,
 
-$$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \in L.\ \mathrm{pathEnd}(\ell) = \mathsf{outcome}~o \end{aligned}`
+$$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \in L.\ \mathrm{path\_end}(\ell) = \mathsf{outcome}~o \end{aligned}`
 
 *Theorem: exhaustive mode finds a stuck path exactly when there is one.*
 With the same hypotheses, $`R_k` is stuck exactly when some leaf of $`L`
@@ -248,10 +248,10 @@ run.* With the dialect and the hypothesis of the theorems above, let
 scripted mode on the run's tree, with any $`\mathrm{read}` and choice
 sequence $`\mathit{cs}`, starting from no choices made, reach the leaf
 $`\ell`, with no misfit. If
-$`\mathrm{pathEnd}(\ell) = \mathsf{outcome}~o`, then
+$`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
 $`o \in \mathrm{out}(R_k)`.
 
 *Theorem: scripted mode finds a stuck path only when there is one.* With
-the same hypotheses, if $`\mathrm{pathEnd}(\ell) = \mathsf{stuck}~s`, then
+the same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`, then
 $`R_k` is stuck.
 :::

@@ -30,7 +30,8 @@ $`\mathrm{icmp}_p(a, b) \sqsubseteq \mathrm{icmp}_p(a', b')`.
 
 These are the facts that the proofs that $`\mathsf{icmp}` is lawful need
 of its rule. Its result is an $`\mathsf{i1}`, not an $`\mathsf{i}w`, so
-the strict rules of the arithmetic obligations do not apply as stated.
+the {ref "The-fir-specification--Execution--Arithmetic-obligations"}[strict rules]
+of binary ops, which keep the width, do not apply as they are stated.
 :::
 
 :::readable Fir.Core.icmp_propagatesPoison Fir.Core.icmp_returnsOnDefined Fir.Core.icmp_total Fir.Core.icmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.icmpValues) (fingerprint := "320971036739618040")

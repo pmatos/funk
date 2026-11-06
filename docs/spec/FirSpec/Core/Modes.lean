@@ -87,9 +87,13 @@ report a run.
 every module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and
 choice budget $`B`, let $`R_k` be the run of $`f` on $`\vec{v}` in the
 set monad, at fuel $`k`. If $`\mathrm{exhaustive}(M, f, \vec{v}, k, B)`
-gives the list $`L`, then for every outcome $`o`,
+gives the list $`L`, then for every
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome] $`o`,
+with $`\mathrm{path\_end}` the
+{ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[path end]
+of a leaf,
 
-$$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \in L.\ \mathrm{pathEnd}(\ell) = \mathsf{outcome}~o \end{aligned}`
+$$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \in L.\ \mathrm{path\_end}(\ell) = \mathsf{outcome}~o \end{aligned}`
 
 *Theorem: it lists a stuck path exactly when the run has one.* With the
 same hypotheses, $`R_k` is stuck exactly when some leaf of $`L` has the
@@ -101,11 +105,11 @@ path end $`\mathsf{stuck}~s`, for some $`s`.
 core run.* For every $`\mathrm{read}`, module $`M`, function $`f`,
 arguments $`\vec{v}`, fuel $`k` and choice sequence $`\mathit{cs}`, if
 $`\mathrm{scripted}(M, f, \vec{v}, k, \mathit{cs})` reaches the leaf
-$`\ell`, with no misfit, and $`\mathrm{pathEnd}(\ell) = \mathsf{outcome}~o`,
+$`\ell`, with no misfit, and $`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`,
 then $`o \in \mathrm{out}(R_k)`.
 
 *Theorem: it reports a stuck path only when the run has one.* With the
-same hypotheses, if $`\mathrm{pathEnd}(\ell) = \mathsf{stuck}~s`, then
+same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`, then
 $`R_k` is stuck.
 :::
 
@@ -137,11 +141,11 @@ reports.
 generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`,
 arguments $`\vec{v}`, fuel $`k` and generator $`g`, if the leaf $`\ell`
 that $`\mathrm{sampled}(M, f, \vec{v}, k, g)` gives has
-$`\mathrm{pathEnd}(\ell) = \mathsf{outcome}~o`, then
+$`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
 $`o \in \mathrm{out}(R_k)`.
 
 *Theorem: it reports a stuck path only when the run has one.* With the
-same hypotheses, if $`\mathrm{pathEnd}(\ell) = \mathsf{stuck}~s`, then
+same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`, then
 $`R_k` is stuck. Both follow from scripted mode's theorems, since the
 values sampled mode chose fit the run.
 :::
