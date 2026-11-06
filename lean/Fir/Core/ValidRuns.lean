@@ -12,10 +12,11 @@ branches and loops are included. They follow from the general theorems of
 the previous sections:
 
 * fuel monotonicity holds for every function of every module;
-* _every core terminator and every core op with no callee is total_, by
-  the obligations of its family: every core op but `call`. `call` needs no
-  rule of its own: its way to go on is its callee's run, which the
-  induction on the budget in the section on progress with calls covers;
+* _every core terminator and every core op with no callee is total_:
+  these are every core op but `call`, each total by the obligations of its
+  family. `call` needs no rule of its own: its way to go on is its
+  callee's run, which the induction on the budget in the section on
+  progress with calls covers;
 * _every core function valid in the context of a module runs within that
   module_. Validation's rule for `call @g` asks that the module's symbol
   table give `@g` the type of the call, its operand types and its result

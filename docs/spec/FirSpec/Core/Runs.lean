@@ -40,7 +40,7 @@ x86-64 backend. They were the first ops given execution rules, and the
 first for which the three obligations were proved.
 :::
 
-:::readable Fir.Core.straight_of_tracer (pin := Fir.Func.Straight) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.isTerminator) (pin := Fir.Core.Op.exit?) (fingerprint := "13634536643120248624")
+:::readable Fir.Core.straight_of_tracer (pin := Fir.Func.Straight) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.isTerminator) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.sig) (fingerprint := "18149741285960406664")
 *Theorem: a valid function of the tracer subset runs straight.* Let $`f`
 be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a

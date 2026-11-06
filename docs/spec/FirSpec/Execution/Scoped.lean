@@ -26,8 +26,9 @@ proofs below use it to show that two blocks with one label are one block.
 arguments of a block and the results of its ops are definitions of the
 function.*
 
-* Each block of a list of blocks is among the blocks of the list at any
-  depth, $`\mathrm{allblocks}`.
+* Each block of a list $`bs` of blocks is in $`\mathrm{allblocks}(bs)`,
+  which lists the blocks of $`bs` at any depth as $`\mathrm{allblocks}(f)`
+  does for the body of a function.
 * For each block $`b` of $`\mathrm{blocks}(f)`, each argument $`y : t` of
   $`b` is in $`\mathrm{defs}(f)`.
 * For each block $`b` of $`\mathrm{blocks}(f)` and each op $`o` of $`b`,
@@ -48,7 +49,7 @@ is the first block of $`\mathrm{blocks}(f)` whose label is $`l`, the
 block that a jump to $`l` goes to.
 :::
 
-:::readable Fir.Func.dominates_of_edge (pin := Fir.Func.Dominates) (fingerprint := "6661983799789299018")
+:::readable Fir.Func.dominates_of_edge (pin := Fir.Func.Dominates) (pin := Fir.Func.ReachesAvoiding) (fingerprint := "13316419248458071617")
 *Theorem: a block that dominates a block other than itself dominates
 every block that jumps to it.* If $`a \mathrel{\mathrm{dom}_f} l'`,
 $`a \neq l'` and $`l \to_f l'` is an edge, then

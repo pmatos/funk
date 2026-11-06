@@ -38,9 +38,8 @@ computation ends:
   or hits UB.
 * A check of the interpreter, such as looking a name up in the
   environment, has one answer and makes no choice: a value $`a`, or stuck
-  for a reason $`s`. Made a computation of the run, it ends with that
-  answer and in no other way: it is $`\{\mathsf{ok}~a\}` or
-  $`\{\mathsf{stuck}~s\}`.
+  for a reason $`s`. Made a computation of the run, read as one whose ends
+  are its answers, it ends with that answer and in no other way: it is $`\{\mathsf{ok}~a\}` or $`\{\mathsf{stuck}~s\}`.
 * The semantics of an op is a computation of the set monad: it may end
   with a value or with UB, and is never stuck. Made a computation of the
   run, it ends with $`\mathsf{ok}~a` exactly when the op's computation may

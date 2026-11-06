@@ -30,8 +30,8 @@ have the types of the target block's arguments, by validation. The
 invariant then holds at the target's first op (the section on scope along
 a run), and the run goes on there with one step less.
 
-No stuck path needs nothing more of the ops' semantics. Progress needs
-each op to be total, so that each step has a way to go on.
+Showing that no path is stuck needs nothing more of the ops' semantics.
+Progress needs each op to be total, so that each step has a way to go on.
 -/
 
 namespace Fir

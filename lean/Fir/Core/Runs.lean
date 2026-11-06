@@ -23,9 +23,9 @@ the core dialect. Fuel monotonicity holds for every function of every
 module. Progress and no stuck path hold for every valid function whose
 ops run straight to a return and are total. A valid function of the
 tracer subset runs straight: no op of the subset calls a function,
-`const` and `add` are not terminators, and `ret` returns, by its rule,
-values of the function's result types, by its validation rule. Each of
-the three ops is total.
+`const` and `add` are not terminators, and `ret` returns its operands,
+which its validation rule makes values of the function's result types.
+Each of the three ops is total.
 
 Every valid core function without a `call` op meets the three obligations
 too, branches and loops included, as the section on core functions

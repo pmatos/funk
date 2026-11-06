@@ -26,9 +26,7 @@ $`E`
 a name when it binds it to a value of the type that $`f` gives it, and
 looking a name up gives the value of its latest binding, or is stuck when
 there is none. A jump looks up the values that its successor passes this
-way. Here, as in every block of this section, the dialect is one that the
-interpreter can run in the set monad, as for
-{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
+way.
 :::
 
 :::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "17829918576368849041")
@@ -119,7 +117,9 @@ interpreter binds no result of a terminator. Validation fixes how many
 successors a terminator has, not which one its exit picks, and does not
 rule out results of a terminator for every dialect: in M0 that is the
 dialect's obligation (ADR-2026-11-02-2248), and no core terminator has
-any.
+any. Here, and in the blocks below, the dialect is one that the
+interpreter can run in the set monad, as for
+{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
 :::readable Fir.Func.Straight.local (pin := Fir.Func.Straight) (fingerprint := "16264839822882521456")

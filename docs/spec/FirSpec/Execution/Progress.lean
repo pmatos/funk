@@ -24,9 +24,9 @@ after its entry block.
 *Theorem: a function's definitions start with its parameters, then its
 entry block's arguments and the results of its entry block's ops.* Let
 $`e` be the first block of the function $`f`, with the ops
-$`o_1, \dots, o_m`. Then, for some list $`D` of further definitions,
+$`o_0, \dots, o_{m-1}`. Then, for some list $`D` of further definitions,
 
-$$`\begin{aligned} \mathrm{defs}(f) = {} & \mathrm{params}(f) \cdot \mathrm{args}(e) \\ & \cdot \mathrm{results}(o_1) \cdots \mathrm{results}(o_m) \\ & \cdot D \end{aligned}`
+$$`\begin{aligned} \mathrm{defs}(f) = {} & \mathrm{params}(f) \cdot \mathrm{args}(e) \\ & \cdot \mathrm{results}(o_0) \cdots \mathrm{results}(o_{m-1}) \\ & \cdot D \end{aligned}`
 
 Here $`\mathrm{defs}(f)` is the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[definitions]
@@ -119,9 +119,7 @@ checks before and after it runs an op: a region, which no rule runs, an
 operand that is not bound or has the wrong type, a count of results
 other than the op gives, an op after a terminator, or a block that ends
 without one, each makes the path stuck. Here $`\mathrm{sig}(o)` is the
-operand types of the op instance of $`o`. In this block and those below,
-the dialect is one that the interpreter can run in the set monad, as for
-{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
+operand types of the op instance of $`o`.
 :::
 
 :::readable Fir.Func.Straight (fingerprint := "17264026091780647438")
@@ -146,7 +144,9 @@ runs straight. The
 {ref "The-fir-specification--Execution--Progress-with-jumps-and-loops"}[jumps and loops]
 and the
 {ref "The-fir-specification--Execution--Progress-with-calls"}[calls] come
-in later sections.
+in later sections. Here, and in the blocks below, the dialect is one that
+the interpreter can run in the set monad, as for
+{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
 :::readable Fir.Func.straight_noStuck Fir.Func.straight_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "7188831905626722678")

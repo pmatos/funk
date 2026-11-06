@@ -27,9 +27,9 @@ invariant holds before the next op. The other checks pass by the rules of
 validation: no op owns a region, an op that is not a terminator has a next
 op, and nothing follows the terminator.
 
-No stuck path needs nothing of the ops' semantics beyond that: an op that
-may end in many ways is never stuck in any of them. Progress needs each op
-to be total, so that each step has a way to go on.
+Showing that no path is stuck needs nothing of the ops' semantics beyond
+that: an op that may end in many ways is never stuck in any of them.
+Progress needs each op to be total, so that each step has a way to go on.
 -/
 
 namespace Fir

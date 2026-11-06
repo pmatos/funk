@@ -180,13 +180,14 @@ $`v^*` of values of its parameter types, budget $`n` and end $`e`,
 $`e` is an end of $`\mathrm{runs}_M(f)(v^*)_n` exactly when one of these
 holds:
 
-* entering $`f` with $`v^*` starts at the ops $`o^*` in the environment
-  $`E`, and $`e = \mathrm{drop}(e')` for an end $`e'` of
+* for some ops $`o^*` and environment $`E`, entering $`f` with $`v^*`
+  starts at the ops $`o^*` in the environment $`E`, and
+  $`e = \mathrm{drop}(e')` for an end $`e'` of
   $`\mathrm{run}_M(n, f, E, o^*)`;
-* entering $`f` with $`v^*` is stuck for a reason $`s`, and
+* for some reason $`s`, entering $`f` with $`v^*` is stuck for $`s`, and
   $`e = \mathsf{stuck}~s`.
 
-$$`\begin{aligned} & e \in \mathrm{runs}_M(f)(v^*)_n \\ \iff\ & \bigl(\mathrm{enter}_f(v^*) = \mathsf{ok}(o^*, E) \\ & \quad \wedge\, \exists e' \in \mathrm{run}_M(n, f, E, o^*). \\ & \qquad e = \mathrm{drop}(e')\bigr) \\ \vee\ & \bigl(\mathrm{enter}_f(v^*) = \mathsf{stuck}~s \\ & \quad \wedge\, e = \mathsf{stuck}~s\bigr) \end{aligned}`
+$$`\begin{aligned} & e \in \mathrm{runs}_M(f)(v^*)_n \\ \iff\ & \bigl(\exists o^*, E.\ \mathrm{enter}_f(v^*) = \mathsf{ok}(o^*, E) \\ & \quad \wedge\, \exists e' \in \mathrm{run}_M(n, f, E, o^*). \\ & \qquad e = \mathrm{drop}(e')\bigr) \\ \vee\ & \bigl(\exists s.\ \mathrm{enter}_f(v^*) = \mathsf{stuck}~s \\ & \quad \wedge\, e = \mathsf{stuck}~s\bigr) \end{aligned}`
 
 Here $`\mathrm{enter}_f(v^*)` is where the run of $`f` on the values
 $`v^*`, with their types, starts: the ops of its entry block, in the

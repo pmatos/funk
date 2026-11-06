@@ -15,19 +15,19 @@ build fails when the Lean changes under it.
 #doc (Manual) "The environment of a run: readable blocks" =>
 
 :::readable Fir.find?_of_nodup Fir.Func.typeOf_of_mem (pin := Fir.Func.typeOf) (fingerprint := "12310842176801363216")
-*Theorem: in a list of pairs whose first parts are distinct, a key's
-first pair is the pair the list holds for it; so in a function whose
-value names are distinct, a name has the type of its definition.* Let the names of the definitions
-$`\mathrm{defs}(f)` of a function $`f` be distinct, and let $`x : t` be one
-of them. Then $`\mathrm{type}_f(x) = t`.
+*Theorem: in a list with distinct first parts, the first pair for $`x`
+is the pair $`(x, t)` that the list holds; so a name of a function with
+distinct value names has the type of its definition.* If the first parts
+of a list of pairs are distinct and $`(x, t)` is in the list, the first
+pair whose first part is $`x` is $`(x, t)`. So, if the names of the definitions $`\mathrm{defs}(f)` of a
+function $`f` are distinct and $`x : t` is one of them, then
+$`\mathrm{type}_f(x) = t`.
 
 Here $`\mathrm{defs}(f)` is the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[definitions]
 of $`f`, each a value name with its type, and $`\mathrm{type}_f(x)` is the
-type of the first definition of $`x` among them. The second fact rests on
-the first: in a list of pairs whose first parts are distinct, the first
-pair whose first part is $`x` is the pair $`(x, t)` that the list holds.
-A
+type of the first definition of $`x` among them, so the second fact is
+the first applied to $`\mathrm{defs}(f)`. A
 {ref "The-fir-specification--Validation--The-general-rules"}[valid function]
 has distinct names, so the type it gives a name is the type of the name's
 only definition.
@@ -86,9 +86,9 @@ keeps what an environment holds.* Let $`p^* = (x_1 : t_1) \dots (x_n : t_n)`
 be names with types, and $`w_1, \dots, w_n` typed values of the types
 $`t_1, \dots, t_n`.
 
-* Each pair $`(x, w)` of the pairing
-  $`(x_1, w_1), \dots, (x_n, w_n)` gives $`x : t` in $`p^*`, where $`t` is
-  the type of $`w`.
+* For each pair $`(x, w)` of the pairing
+  $`(x_1, w_1), \dots, (x_n, w_n)`, $`x : t` is one of $`p^*`, where $`t`
+  is the type of $`w`.
 * Let the function $`f` give each $`x_i` the type $`t_i`, let
   $`\mathrm{holds}_f(E, X)`, and let no name of $`X` be one of
   $`x_1, \dots, x_n`. Then the environment

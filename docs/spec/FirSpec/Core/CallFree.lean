@@ -33,7 +33,7 @@ never uses its semantics, and goes on by its callee's run
 (ADR-2026-11-02-1514).
 :::
 
-:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (fingerprint := "15640704933673048215")
+:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (fingerprint := "811314631310089144")
 *Theorem: a core terminator that jumps goes to a successor that it has,
 and gives no results.* For every core op $`o` that is a terminator, every
 operand vector $`v^*` and every $`i`: if $`\mathrm{exit}_o(v^*)`, run in
@@ -57,7 +57,7 @@ every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
 :::
 
-:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (fingerprint := "14261480067600738904")
+:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "2302951735759268727")
 *Theorem: every valid core function without calls runs within itself.*
 Let $`f` be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a
