@@ -12,18 +12,11 @@ name character. Punctuation ends where it is, so it may be followed by
 anything, and the printer writes `(` and `:` directly before a word or a
 number, as in `h(i32)` and `"f":2:3`.
 
-Three predicates on characters say this:
-
-* `Boundary cs`: `cs` is empty or does not start with a name character;
-* `Lexes cs ts`: `cs` lexes to `ts`, then `eof`, from any position and after
-  any tokens already read;
-* `Spells s ts`: `s`, followed by any `cs` with `Boundary cs`, lexes to
-  `ts`, then the tokens of `cs`.
-
-`Tok.spells` proves `Spells` for the spelling of every token that can be
-written. This section covers the tokens that hold no string: punctuation,
-names, words, numbers and location references. The next covers strings and
-symbols.
+The first three blocks below say this: characters at the end of a token,
+characters that lex to tokens, and characters that spell tokens. The
+theorems after them read each token that holds no string: punctuation,
+names, words, numbers and location references. The next section covers
+strings and symbols, and puts every token together.
 -/
 
 namespace Fir.Text

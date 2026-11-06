@@ -41,7 +41,7 @@ details.fir-lean > summary {
   font-size: 0.9em;
   user-select: none;
 }
-details.fir-lean > summary code { font-size: 1em; }
+details.fir-lean > summary code { font-size: 1em; overflow-wrap: anywhere; }
 details.fir-lean[open] > summary { margin-bottom: 0.5em; }
 details.fir-lean[open] {
   border-top: 1px dashed #b8c7d6;
@@ -118,12 +118,23 @@ partial def flattenConcat (bs : Array (Block Manual)) : Array (Block Manual) :=
     | .concat inner => flattenConcat inner
     | b => #[b]
 
-/-- The blocks that show one piece of a Lean module's code. -/
+/--
+The blocks that show one piece of a Lean module's code. A doc comment that
+Lean keeps as Markdown, such as the one on a `local macro`, shows as a
+docstring too; Markdown that does not load shows as a problem.
+-/
 def codeBlocks : VersoLiterate.Code → Array (Block Manual)
   | .highlighted hl => #[loadBlock (.other (.highlighted hl) #[])]
   | .verso i declName? doc =>
     #[LoadLiterate.docstring i declName?
       (doc.text.map loadBlock ++ doc.subsections.map (LoadLiterate.part 0 ∘ loadPart))]
+  | c@(.markdown ..) =>
+    -- Verso loads Markdown only through a whole module, so load a module of this one piece.
+    let item : ModuleItem' := { range := none, kind := .anonymous, defines := #[], code := #[c] }
+    let one : LitMod := { name := .anonymous, contents := #[item] }
+    match VersoLiterate.modToPage (g := Manual) one #[] "" none with
+    | .ok doc => doc.toPart.content
+    | .error e => #[.other (Block.readableError s!"a Markdown doc comment does not load: {e}") #[]]
   | _ => #[]
 
 /--
@@ -186,8 +197,8 @@ partial def readablePage (mod : LitMod) (title : Array (Inline Manual)) (titleSt
               p := pushPart p' p
             stack := stack.push p
             p := loadPart sec
-      | .markdown .. | .markdownModDoc .. =>
-        errors := errors.push s!"{mod.name}: Markdown docs cannot be shown in a readable section"
+      | .markdownModDoc .. =>
+        errors := errors.push s!"{mod.name}: Markdown module docs cannot be shown in a readable section"
       | _ => pure ()
     unless item.defines.isEmpty do
       match owner item with

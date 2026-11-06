@@ -7,29 +7,29 @@ A target that diverges runs out of fuel at every budget, and the source
 must then diverge too, or hit UB at some budget. The previous section
 cannot show it: a path that runs out of fuel holds no value to follow,
 and a black box's target may spend its steps in a callee that the source
-runs in one. So this section relates budgets. With `B = bound + 1`, a path
-of the target's run of ops at a budget `n` of at least `B * (N + 1)` that
-runs out of fuel or returns is allowed by the source at the budget `N`
-(`AllowedBelow`, `Func.runOps_allowedBelow`): the source runs out of fuel
-at `N`, or hits UB at some budget, or, on a return, returns at `N` values
-that the target's refine, and leaves at most a `B`th of the steps that
-the target leaves.
+runs in one. So this section relates budgets. Let _B_ be the black box's
+bound plus one, and let the target's budget be at least _B_ times one
+more than the source's. Then a path of the target's run of ops that runs
+out of fuel or returns is allowed by the source at its budget: the source
+runs out of fuel there, or hits UB at some budget, or, on a return,
+returns there values that the target's refine, while the target leaves
+at least _B_ times the steps that the source leaves, plus _B_.
 
 The proof is by strong induction on the target's budget. Each op takes
 one step in both runs, a call of the same function included, whose callee
-the induction covers. A black-box call is where the budgets part
-(`BlackBox.allowedBelow`):
+the induction covers. A black-box call is where the budgets part:
 
 * If its target diverges on the call's arguments, the black box gives
   that its source diverges on the source's, or hits UB. So the source's
   callee runs out of fuel at any budget, or hits UB at some budget.
-* Otherwise none of its target's runs with `bound` steps or more runs out
-  of fuel, so a run of it that returns takes at most `bound` steps: with
-  the call's own step, at most `B` steps of the target for the source's
-  one or more. The source's callee runs out of fuel at its budget, or,
-  by fuel monotonicity, returns at it what the black box allows.
+* Otherwise its target never runs out of fuel at any budget of at least
+  the bound, so a run of it that returns takes at most the bound's steps:
+  with the call's own step, at most _B_ steps of the target for the
+  source's one or more. The source's callee runs out of fuel at its
+  budget, or, by fuel monotonicity, returns at it what the black box
+  allows.
 
-So a path of the target with `B` steps for each of the source's reaches a
+So a path of the target with _B_ steps for each of the source's reaches a
 point where the source runs out of fuel or hits UB, or keeps that ratio
 to its end.
 -/
@@ -146,6 +146,7 @@ theorem BlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     | .ub r, ⟨N, hN⟩, _ => exact ofUB hN
     | .fuelExhausted, _, hle => exact hle.elim
     | .ret vs, ⟨N₁, hN₁⟩, hvs =>
+      classical
       by_cases hex : (g.runs M (args.cast hsig) N₀).outcomes .fuelExhausted
       · exact ofExh hex
       have hfm := Func.fuelMonotone M g (args.cast hsig)
@@ -217,6 +218,7 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os N hf hops henv hN e' he'
+    classical
     by_cases hgood : Ev.NotStuck e' ∧ ∀ r, e' ≠ .ub r
     case neg => exact AllowedBelow.of_not hgood
     obtain ⟨hne, hnub⟩ := hgood

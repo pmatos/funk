@@ -4,16 +4,15 @@ import Fir.Validation.Scope
 fir is in SSA form: every value has one definition, and that definition
 dominates each of its uses. Dominance is a property of the function's
 control-flow graph, whose nodes are the blocks and whose edges go from a
-block to the successors of its ops (`Block.succLabels`). In a valid
-function only the terminator has successors, so they are its
-terminator's.
+block to the successors of its ops. In a valid function only the
+terminator has successors, so they are its terminator's.
 
 The graph, reachability and dominance below are over a function's top-level
 blocks. How values are scoped in the regions of an op, and how dominance
-reaches into them, is left to H6, with the first dialect whose ops have
-regions; no core op has one. H6 also reconciles the two views of a function
-that validation uses: the top-level blocks here, and every block at any
-depth for names and their types.
+reaches into them, is left for the first dialect whose ops have regions; no
+core op has one. That dialect will also reconcile the two views of a
+function that validation uses: the top-level blocks here, and every block
+at any depth for names and their types.
 
 # The control-flow graph
 -/
@@ -61,9 +60,9 @@ Every block of a valid function is reachable from its entry
 the entry cannot reach. Producers, frontends and passes alike, delete such
 blocks before validation.
 
-So dominance has its standard meaning everywhere. A block `a` dominates a
-block `b` when every path from the entry to `b` passes through `a`.
-Equivalently, `b` cannot be reached once `a` is removed. Every block
+So dominance has its standard meaning everywhere. A block _a_ dominates a
+block _b_ when every path from the entry to _b_ passes through _a_.
+Equivalently, _b_ cannot be reached once _a_ is removed. Every block
 dominates itself, and the entry dominates every block. Since every block is
 reachable, every use has a path from the entry through its definition, and
 no group of blocks can define values in a cycle, each using the other's.

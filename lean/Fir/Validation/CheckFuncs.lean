@@ -1,11 +1,12 @@
 import Fir.Validation.CheckOps
 
 /-!
-The check of a function follows `Func.Valid`, rule by rule, in its order.
-It walks the function's blocks at any depth once, with `Func.allBlocks`, and
-gives that list to `Func.problemsIn`, which looks at no other nested part of
-the function. So a tool that has its own way to list the blocks, such as one
-that takes no stack per level of nesting, runs the same check with it.
+The check of a function follows the rule of a valid function, premise by
+premise, in its order. It lists the function's blocks at any depth once,
+and gives that list to the check proper, which looks at no other nested
+part of the function. So a tool that has its own way to list the blocks,
+such as one that takes no stack per level of nesting, runs the same check
+with it.
 -/
 
 namespace Fir

@@ -4,108 +4,99 @@ import Fir.Validation.Scope
 /-!
 # Running a function
 
-The interpreter runs a function of a module, of any dialect (G0). It is a
-monadic definitional interpreter with fuel (S7, ADR-2026-10-29-2009),
-written once against an abstract monad `m`. It runs each op through its
-dialect's `DialectDenote d m`, so the effects that ops need are the
-dialect's constraints on `m`, and the interpreter itself needs only a
-monad. It adds two effects of its own. A path that reaches a case that
-validation rules out ends stuck, so it computes in `ExceptT Stuck m`. In
-the set monad that is the spec's `Run`: the set of the ways a run may end,
-each path with a result, with UB or stuck. And it runs the calls, the call
-effect of the previous sections, since a call needs the module and the
-run's fuel.
+The interpreter runs a function of a module, of any dialect: it is written
+once, for every dialect (ADR-2026-10-29-2016). It is a definitional
+interpreter with fuel (ADR-2026-10-29-2009): a recursive function that
+follows the program op by op, and counts its steps against a budget. It
+runs each op by the semantics that its dialect gives it, in whatever way
+of computing provides the effects that the dialect needs, such as choosing
+bits or immediate UB. It adds two effects of its own: a path can be stuck,
+when it reaches a case that validation rules out, and an op can call a
+function of the module. In the set of the ways a run may end, a run of the
+interpreter is a run in the sense of the outcomes: each path ends with a
+result, with UB, stuck, or out of fuel.
 
 A run keeps an _environment_: the value of every name it has defined so
-far. It starts with the function's parameters bound to the arguments, then
-runs the entry block op by op.
+far. It starts with the function's parameters bound to the arguments, and
+runs the entry block op by op:
 
+* A terminator says where control goes. On `ret` the run returns the
+  terminator's operands, any number of them (ADR-2026-10-30-0816). On a
+  jump to a successor, it binds the arguments of the block that the
+  successor names to the values that the successor passes
+  (ADR-2026-10-29-2010), and runs that block.
 * An op that is not a terminator and calls no function takes its operands
-  from the environment, and its dialect's `denote` gives its results,
+  from the environment, and its dialect's semantics gives its results,
   which join the environment.
-* An op that is not a terminator and calls a function, as its dialect's
-  `callee?` says, passes its operands to the callee, which the run looks
-  up in the module by its symbol. The values that the callee returns are
-  its results.
-* A terminator's `exit` says where control goes. On `ret` the run returns
-  the terminator's operands, any number of them (ADR-2026-10-30-0816). On
-  `goto i` it binds the arguments of the block that the `i`th successor
-  names to the values the successor passes (H1, ADR-2026-10-29-2010), and
-  runs that block.
+* An op that is not a terminator and calls a function, as its dialect
+  says, passes its operands to the callee, which the run looks up in the
+  module by its symbol. The values that the callee returns are its
+  results.
 
 Every op takes one step of fuel, the terminator and the call included. A
-run with no fuel left before an op ends with `fuelExhausted`. A run gives
-back the steps of fuel it leaves when it returns. A callee runs with the
-steps that its caller has left after the call's own step, and the caller
-goes on with the steps the callee gives back, so the caller and all its
-callees share one budget (ADR-2026-11-02-0836). The fuel is the
-interpreter's argument, and each run gives back at most the steps it was
-given (`Func.runOps_left_le`), so every run ends, however deep its calls
-go: a run that recurses without end runs out of fuel.
+run with no fuel left before an op runs out of fuel. A callee runs on the
+steps that its caller has left, and gives back the steps it leaves, so the
+caller and all its callees share one budget (ADR-2026-11-02-0836). A run
+gives back at most the steps it was given, so every run ends, however deep
+its calls go: a run that recurses without end runs out of fuel.
 
-The interpreter checks what it needs in order to take each step, and a few
-more rules of validation. A path that fails a check is stuck, with a reason
-for people. Validation makes each of these checks of a valid function:
+The interpreter checks what it needs in order to take each step, and a
+path that fails a check is stuck, with a reason for people. Validation
+makes each of these checks of a valid function:
 
-* an operand is defined, and defined before the op runs, as the scope rule
-  `Func.InScope` asks;
-* an operand's value has the op's operand type, as `Func.OpValid` asks of
-  the operand types;
-* an op has as many operands as its op instance takes and as many results
-  as it gives;
-* a block ends with a terminator, and nothing follows its terminator;
+* an operand is defined before the op runs, as the scope rule asks;
+* an operand's value has the op's operand type, and an op has as many
+  operands as its op instance takes and as many results as it gives;
 * a successor names a block of the function, and passes one value of the
   right type for each of that block's arguments;
-* a call names a function of the module, passes one value of the right type
-  for each of its parameters, and receives values of its own result types,
-  which the dialect's own validation rule must ask, as the core rule for
-  `call` does;
-* an op owns no region: no op of M0 has one, and how regions run is left to
-  H6, so validation rejects them;
-* the function has an entry block, which declares no arguments.
+* a call names a function of the module, which the dialect's own
+  validation rule must ask, as the core rule for `call` does;
+* the function has an entry block, which declares no arguments;
+* a call passes one value of the right type for each of its callee's
+  parameters, and receives values of its own result types, which the
+  dialect's own validation rule must ask, as the core rule for `call`
+  does;
+* an op owns no region: no op of the core dialect has one, and how
+  regions run is not designed yet, so validation rejects them;
+* a block ends with a terminator, and nothing follows its terminator.
 
-Two checks hold a dialect's `exit` to the rules that validation makes of
-its terminators. A terminator's `exit` may say `goto i` only for a
-successor `i` that the terminator has, and validation fixes only how many
-it has. A terminator may return only values of the function's result
-types, which the dialect's own rule must ask, as the core rule for `ret`
-does. So `NeverStuck` for `br` and `cond_br` needs their `exit` to name
-only successors they have, which #19 proves of each: `Core.br_goto_lt` and
-`Core.condBr_goto_lt`. One more condition is no check of its own: a
-terminator that jumps gives no results. The interpreter binds none for it,
-while validation puts them in scope in the blocks that its block
-dominates, so a use of one would be stuck. No core terminator has results.
-That condition is the dialect's obligation, not a rule of validation,
-until M4 designs exceptions and unwinding (ADR-2026-11-02-2248).
+Two checks hold a dialect's terminators to the rules that validation
+makes of them. A terminator's rule may jump only to a successor that the
+terminator has, while validation fixes only how many it has; the branch
+obligations prove it of `br` and `cond_br`. And a terminator may return
+only values of the function's result types, which the dialect's own rule
+must ask, as the core rule for `ret` does. One more condition is no check
+of its own: a terminator that jumps gives no results. The interpreter
+binds none for it, while validation puts them in scope in the blocks that
+its block dominates, so a use of one would be stuck. No core terminator
+has results. That condition is the dialect's obligation, not a rule of
+validation, until exceptions and unwinding are designed
+(ADR-2026-11-02-2248).
 
-These checks are not all of validation. The interpreter checks that a value
-is defined, not that its definition dominates its use, and it checks no
-other rule of validation than those above. So a run of a function that
-validation rejects may end with an outcome, which means nothing: only a
-valid function's runs mean something (ADR-2026-10-30-1856). No path of a
-valid function's run is stuck. That is proved for every function of a
-module whose functions are all valid, meet the conditions above on their
-terminators, and call only functions of the module, of the types of their
-calls (`Func.InModule`), jumps, loops, calls and recursion included, so
-for every function of every valid core module (see "Fuel and progress").
+These checks are not all of validation. The interpreter checks that a
+value is defined, not that its definition dominates its use. So a run of a
+function that validation rejects may end with an outcome, which means
+nothing: only a valid function's runs mean something (ADR-2026-10-30-1856).
+No path of a valid function's run is stuck. That is proved for every
+function of a module whose functions are all valid, meet the conditions
+above on their terminators, and call only functions of the module, of the
+types of their calls: jumps, loops, calls and recursion included, so for
+every function of every valid core module (see the sections on progress).
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
-path with a result, or ends it stuck; the only computations that branch are
-the ops', which the interpreter lifts into `ExceptT Stuck m` whole. A path
-is lost only where an op has no outcome, which the totality obligation,
-`OpTotal`, rules out for every op that the interpreter runs by its own
-rule: a terminator, or an op with no callee. An op with a callee runs its
-callee, never its `denote`.
+path with a result, or ends it stuck; only an op's semantics can branch.
+A path is lost only where an op has no outcome, which the totality
+obligation rules out for every op that the interpreter runs by its own
+rule: a terminator, or an op that calls no function. An op that calls a
+function runs its callee, never its own semantics.
 
 Effects belong to the dialect, so the interpreter does not change when a
-dialect needs a new one. `freeze`'s rule calls `choose`, and the divisions'
-rules and `cond_br`'s call `ub`, so the core dialect's semantics asks for
-`MonadChoice m` and `MonadUB m`, and `fir-ref`'s exhaustive, scripted and
-sampled modes run this interpreter in the tree of choices, which has both.
-The call effect is the one exception, and it is written once here for
-every dialect: a dialect says only which of its ops call which function
-(`DialectCall`). In the core dialect, `call @g` calls `@g`, which #20
-named without a change to the interpreter.
+dialect needs a new one. The core dialect's `freeze` chooses bits, and its
+divisions and `cond_br` may end with immediate UB, so `fir-ref`'s
+exhaustive, scripted and sampled modes run this interpreter in a tree of
+choices, which has both effects. The call effect is the one exception,
+and it is written once here for every dialect: a dialect says only which
+of its ops call which function. In the core dialect, `call @g` calls `@g`.
 -/
 
 namespace Fir
@@ -238,8 +229,12 @@ def Func.run (M : Module d) (f : Func d) (args : HVector toType (f.params.map (Â
   | .ret (vs, _) => pure (.ret vs)
   | .fuelExhausted => pure .fuelExhausted
 
-/-- In the set monad, the run of a function is the spec's `Run`, whose
-observation is the list of the values it returns. -/
+/-!
+A check made when the spec is built: in the set of the ways a run may end,
+the run of a function is a run in the sense of the outcomes, whose
+observation is the list of the values it returns.
+-/
+
 example [DialectDenote d SetM] (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (Â·.2))) (fuel : Nat) : Run (List (DVal d)) :=
   f.run M (m := SetM) args fuel

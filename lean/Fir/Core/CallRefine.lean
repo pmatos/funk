@@ -5,60 +5,54 @@ import Fir.Execution.Replace
 /-!
 # Calls refine as their arguments and callees do
 
-`call` is a poison exception with no rule at op level, and no op-level
-obligation (ADR-2026-11-02-1514). The obligations' counterparts for calls
-hold at function level, for the functions of every core module, calls and
-recursion included:
+`call` is a poison exception with no rule of its own, and no obligation
+of its own (ADR-2026-11-02-1514). The obligations' counterparts for calls
+hold for whole functions, for the functions of every core module, calls
+and recursion included:
 
-* _Refined arguments_ (`Core.args_isRefinedBy`). On arguments that refine
-  others, a poison by any value, a function's observable behaviour
+* _Refined arguments._ On arguments that refine others, such as a poison
+  replaced by any value of its type, a function's observable behaviour
   refines its behaviour on those others. So a call on arguments that
   refine others refines the call on those others: its callee runs on
   them.
-* _Congruence in the callee_ (`Core.replaceBody_isRefinedBy`). In a valid
-  module, replacing the body of a function `@g` with one under which
-  `@g`, run in the new module, refines `@g` in the old, as
-  `FuncRuns.IsRefinedBy` asks of two `Core.FuncRuns`, refines every
-  function of the module. A function other than `@g`, a caller of it or
-  not, is refined by itself in the new module
-  (`Core.caller_isRefinedBy`).
+* _Congruence in the callee._ In a valid module, replacing the body of a
+  function `@g` with one under which `@g`, run in the new module, refines
+  `@g` in the old, refines every function of the module. A function other
+  than `@g`, a caller of it or not, is refined by itself in the new
+  module.
 
 They follow from the general theorems of the sections on refined
-arguments and on congruence in the callee, whose hypotheses the core
-dialect meets:
+arguments and on replacing a callee, whose hypotheses the core dialect
+meets:
 
-* every core terminator and every core op with no callee is monotone
-  (`Core.Op.monotone_all`), each by the obligation that its family
-  proves, at every width: every core op but `call`, whose way to go on
-  is its callee's run;
-* the refinement of core values is reflexive and transitive
-  (`Core.Ty.isRefinedBy_refl`, `Core.Ty.isRefinedBy_trans`);
-* every core type has finitely many values: poison and the `2 ^ N` bit
+* every core terminator and every core op with no callee is monotone,
+  each by the obligation that its family proves, at every width: every
+  core op but `call`, whose way to go on is its callee's run;
+* every core type has finitely many values: poison and the 2^N bit
   vectors of `iN`, and none of `ptr`. So every list of types has finitely
-  many argument vectors (`Core.mem_argVectors`);
+  many argument vectors;
+* the refinement of core values is reflexive and transitive;
 * the symbols of a valid module are unique.
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
-function that runs (`Func.OpsMonotone`, ADR-2026-11-05-1715). The core
-dialect meets it with `Core.Op.monotone_all`, which holds at every width,
-`i0` included, so for every function of every module, valid or not
-(`Core.opsMonotone_all`). The lawful class `LawfulDialectPoison` covers
+function that runs (ADR-2026-11-05-1715). The core dialect meets it with
+its ops' own obligations, which hold at every width, `i0` included, so
+for every function of every module, valid or not. The lawful class covers
 only the instances that validation accepts (ADR-2026-11-02-1515), so it
-gives it for the functions of valid modules
-(`Func.runs_args_isRefinedBy_of_lawful`); these theorems ask for no
-valid module, so they use the ops' own obligations.
+gives it only for the functions of valid modules (the section on what the
+lawful class gives); these theorems ask for no valid module, so they use
+the ops' own obligations.
 
 Refined arguments need no validity: the theorem holds for every function
 of every core module. For a function of a valid module, no path of either
-run is stuck and both have an outcome at every budget (`Core.neverStuck`,
-`Core.progress`), so the theorem compares real behaviours. Congruence in
-the callee compares real behaviours when the new function is valid in
-the old module's context: then the new module is valid
-(`Module.valid_replaceBody`), and neither module's runs have a stuck
-path. A body that gets stuck at once, such as one whose entry block
-declares arguments, meets the hypothesis with an empty behaviour, which
-refines every source.
+run is stuck and both have an outcome at every budget (the section on
+core functions with calls), so the theorem compares real behaviours.
+Congruence in the callee compares real behaviours when the new function
+is valid in the old module's context: then the new module is valid, and
+neither module's runs have a stuck path. A body that gets stuck at once,
+such as one whose entry block declares arguments, meets the hypothesis
+with an empty behaviour, which refines every source.
 -/
 
 namespace Fir.Core

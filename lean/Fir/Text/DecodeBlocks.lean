@@ -5,23 +5,23 @@ import Fir.Text.DecodeScope
 
 The second pass of decoding reads a function's blocks in the scope that the
 first pass built, at any depth. A block keeps its label, and its arguments
-decode as its definitions. An op's operand types are found in the scope, its
-results decode as its definitions, and `decodeOp` gives its op instance from
-its name, its attributes, the operand types and the result types. Its
-operands, successors and location reference are kept as they are written,
-and its regions decode as blocks do.
+decode as its definitions. An op's operand types are found in the scope,
+its results decode as its definitions, and the dialect's decoder of ops
+gives its op instance from its name, its attributes, the operand types and
+the result types. Its operands, successors and location reference are kept
+as they are written, and its regions decode as blocks do.
 
 So an op of a module's tree decodes back to the op when three things hold,
-which `Operation.DecodesIn` collects: in the scope, its operands have the
-types of the op instance's signature (`sig`); its results have the types
-that the op instance returns (`returnTypes`); and each result's type
-decodes back to itself. Then `decodeOp_encode`, a law of `LawfulDialectText`,
-gives the op instance. A well-formed function has all three for each of its
-ops, in the scope of the first pass, since the scope gives each value the
-type that `Func.typeOf` gives it.
+which together say that the op decodes in the scope: in the scope, its
+operands have the types of the op instance's signature; its results have
+the types that the op instance returns; and each result's type decodes back
+to itself. Then a law of lawful text gives the op instance. A well-formed
+function has all three for each of its ops, in the scope of the first pass,
+since that scope gives each value the type of its definition in the
+function.
 
 The lemmas for blocks, ops and regions take what the decoders they call do
-as hypotheses, and the last three lemmas tie them together by structural
+as hypotheses, and the last three theorems tie them together by structural
 recursion on the blocks, ops and regions, at any depth.
 -/
 

@@ -2,21 +2,22 @@ import Fir.Core.Types
 import Fir.Syntax.Dialect
 
 /-!
-The M0 op set: constants, integer arithmetic, bitwise ops and shifts,
-comparison and selection, width changes, `freeze` and `poison`, branches
-and calls. Each
-op below is an op instance: it carries its attributes and the widths it is
-used at, so that its operand and result types follow from it.
+The core dialect's ops: constants, integer arithmetic, bitwise ops and
+shifts, comparison and selection, width changes, `freeze` and `poison`,
+branches and calls. Each op below is an op instance: it carries its
+attributes and the widths it is used at, so that its operand and result
+types follow from it.
 
 This chapter gives the ops and their signatures. What each op computes, and
 when it yields poison or immediate UB, is stated in prose here and defined in
-Lean in the execution rules of its op family (#10 and #14 to #20). The
-execution chapter explains poison and immediate UB in plain words.
+Lean in the execution rules of its op family, in the sections _Arithmetic
+rules_ to _Call rules_ of the execution chapter. The execution chapter
+explains poison and immediate UB in plain words.
 
 # Poison and UB in short
 
-These rules follow S1 (ADR-2026-10-29-2006) and LLVM, as ADR-2026-10-30-0818
-records them:
+These rules follow the poison semantics of ADR-2026-10-29-2006 and LLVM, as
+ADR-2026-10-30-0818 records them:
 
 * A poison operand gives a poison result, unless the op says otherwise. The
   ops that say otherwise are `select`, `freeze`, the terminators and `call`;

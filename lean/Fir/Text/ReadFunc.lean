@@ -4,20 +4,20 @@ import Fir.Text.ReadBlocks
 # Reading a printed function
 
 A function's tokens after its kind read back as its tree, whatever follows
-them. `readItem` reads them with `match`es of its own: its parameters are
-read as definitions when a value follows the `(`, and as none when `)`
-does; its results after `->` when one follows the `)`; and its body as
-items when a word follows the `{`, and as blocks otherwise. A function's
-parameters, results and blocks decide which branch the printed tokens
-take, and the proof splits each `match` and rules out the other branch.
-`bind_reads` proves each part on its own: what the part reads, then what
-the rest of `readItem` does with it.
+them. The reader of an item chooses on the next token at three places: it
+reads the parameters as definitions when a value follows the `(`, and as
+none when `)` does; the results after `->` when one follows the `)`; and
+the body as items when a word follows the `{`, and as blocks otherwise. A
+function's parameters, results and blocks decide which way the printed
+tokens go, and the proof follows that way and rules out the other. A lemma
+on one step followed by another lets it prove each part on its own: what
+the part reads, then what the rest of the reader does with it.
 
 The tokens after the `{` start with a block's label, or are the `}` when
-the function has no block, and never with a word. So `readItem` reads every
-printed body as blocks, `SBody.blocks`, the empty one included, which is
-how `Func.tree` writes it. No attribute is read, since a `{` follows the
-results.
+the function has no block, and never with a word. So the reader of an item
+reads every printed body as blocks, the empty one included, which is how
+the tree of a function writes it. No attribute is read, since a `{` follows
+the results.
 -/
 
 namespace Fir

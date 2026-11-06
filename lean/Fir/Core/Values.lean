@@ -2,13 +2,9 @@ import Fir.Core.Signature
 import Fir.Execution.Refinement
 
 /-!
-The values of the core dialect. A value of `iN` is poison or an `N`-bit
-vector: `⟦iN⟧ = PoisonOr (BitVec N)`. Lean's `BitVec N` exists for every `N`,
-so the semantics treats every width alike (S2, ADR-2026-10-29-2007).
-
-`ptr` has no values in M0: validation rejects every value of type `ptr`,
-because their meaning waits for the memory model (S3). Its denotation is the
-empty type until then.
+The values of the core dialect, defined below, how they refine, and what
+an observer sees of a core function's return. `ptr` has no values in M0,
+until the memory model is decided.
 -/
 
 namespace Fir

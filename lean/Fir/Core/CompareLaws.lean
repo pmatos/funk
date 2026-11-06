@@ -14,9 +14,9 @@ meets two: it is total and monotone.
 Neither op is ever UB: each has one outcome, a result, on every operand
 vector, so each is total, and the clause "UB only by the op's own rules"
 holds of `icmp` at once. `icmp` returns a result on the defined operands
-`0` and `0`. It is
-monotone because a poison operand gives a poison result, which every
-result refines, and defined operands are refined only by themselves.
+0 and 0. It is monotone because a poison operand gives a poison result,
+which every result refines, and defined operands are refined only by
+themselves.
 
 `select` is monotone for a reason of its own. A poison condition gives
 poison, which every result refines. A defined condition is refined only by

@@ -30,40 +30,33 @@ Six ops are exceptions, each with its own rule:
 * `br`, `ret` and `call` pass values on as they are, poison included: to
   block arguments, to the caller, or to the callee and back.
 
-The core dialect's execution rules landed with its op families, and the
-obligations with them. Ticket #10 gave the semantics of the tracer subset,
-`const`, `add` and `ret`, with the instance of
-`DialectDenote CoreDialect SetM`, and proved the obligations of those three
-ops: `PropagatesPoison` for `add`, a result on defined operands for
-`const` and `add`, and totality and monotonicity for all three. Each family
-ticket then proved the obligations of its ops: #14 for `add` with its
-flags, `sub`, `mul` and `freeze`, #15 for the bitwise ops and shifts, #16
-for `icmp` and `select`, #17 for the width changes, #18 for the
-divisions, #19 for the branches and #122 for `poison`. `call` has no
-op-level obligation, as below.
-The last ticket, #20, gave `LawfulDialectPoison CoreDialect`
-(`Core.lawfulDialectPoison`, in the section on the core dialect's poison
-obligations). The exceptions' rules are tested by their tickets: `freeze`
-by #14, `select` by #16, the branches and block arguments by #19, `call`
-by #20.
+Each op family has its execution rules and the proofs of its obligations in
+sections of their own, after the interpreter: the sections from arithmetic
+rules to call rules give the rules, and the sections from constant
+obligations to branch obligations prove that each op meets the obligations
+of its class. The section on the core dialect's poison obligations puts
+them together: the core dialect is lawful. Tests check the rules
+of the exceptions. `call` has no op-level obligation, as below.
 
 `call` gets its meaning from the call effect, which the interpreter runs
-with the fuel budget that the caller has left (ADR-2026-11-02-0836): #20
-names the callee of `call @g`, `@g`. The set monad has no module and no
-such effect, so `call` has no rule there, and no op-level obligation: the
+with the fuel budget that the caller has left (ADR-2026-11-02-0836): the
+callee of `call @g` is `@g`. The set monad has no module and no such
+effect, so `call` has no rule there, and no op-level obligation: the
 obligations ask totality and monotonicity only of terminators and of ops
 with no callee (ADR-2026-11-02-1514). Their counterparts for calls hold at
 function level (the section on refinement through core calls): a call on
-arguments that refine others refines the call on those others
-(`Core.args_isRefinedBy`), and congruence in the callee: replacing a
-callee's body refines every caller when the callee, run in the new
-module, refines the old one (`Core.replaceBody_isRefinedBy`).
+arguments that refine others refines the call on those others, and
+congruence in the callee: replacing a callee's body refines every caller
+when the callee, run in the new module, refines the old one.
 
-Below, for every semantics, a poison core value is refined by every value
-of its type, and `const` and `poison` meet their poison clauses and are
-monotone. Their totality and their results on defined operands follow from
-their rules, with the obligations of `add` and `ret`, in the sections after
-the interpreter.
+Below, the poison class of each core op, and which core values are poison.
+Then a poison core value is refined by every value of its type. Last,
+`const` and `poison` meet their poison clauses and are monotone whatever
+the core ops mean: the meaning of the core ops, their execution rules, is
+given after the interpreter, and these theorems take it as a parameter.
+Their totality and their results on defined operands follow from their
+rules, with the obligations of `add` and `ret`, in the sections after the
+interpreter.
 -/
 
 namespace Fir.Core
