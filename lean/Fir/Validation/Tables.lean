@@ -6,14 +6,16 @@ The check looks names up in hash tables, so that it takes time close to
 linear in the size of a module, and it walks every list in a loop that takes
 no stack per element. Dominance is the exception to the time: the check
 decides it with a search of the function's graph for each use whose
-definition is in another block, so that part is quadratic in the worst case. The four tools below are those tables and loops, each
-with the theorem that says what it computes in terms of plain lists:
+definition is in another block, so that part is quadratic in the worst
+case. The four tools below are those tables and loops, each with the
+theorems that say what it computes in terms of plain lists:
 
-* `firsts` keeps the first value of each key, as `List.find?` finds it;
-* `grouped` collects every value of each key;
-* `repeats` lists each element that repeats an earlier one, so it is empty
-  exactly when the list has no duplicates (`List.Nodup`);
-* `sameLists` compares two lists.
+* the first value of each key, as a search from the start of the list
+  finds it;
+* every value of each key;
+* the elements that repeat an earlier one, which are none exactly when the
+  list has no duplicates;
+* comparing two lists.
 -/
 
 namespace Fir

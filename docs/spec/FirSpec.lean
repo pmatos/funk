@@ -12,6 +12,19 @@ import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
+import FirSpec.Validation.Scope
+import FirSpec.Validation.Dominance
+import FirSpec.Validation.Rules
+import FirSpec.Core.Validation
+import FirSpec.Core.Rejects
+import FirSpec.Validation.Check
+import FirSpec.Validation.Tables
+import FirSpec.Validation.Search
+import FirSpec.Validation.Graph
+import FirSpec.Validation.CheckOps
+import FirSpec.Validation.CheckFuncs
+import FirSpec.Validation.CheckModule
+import FirSpec.Core.Check
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -47,7 +60,15 @@ box, and a box whose first alternative is $`\dots` continues the
 alternatives of the boxes above it. $`A^?` is an optional $`A`, and $`A^*`
 a possibly empty sequence of $`A`. A subscript, as in $`\mathsf{add}_N`,
 gives the width in bits of the integers that an op works on, and
-$`\mathsf{i}N` is the type of $`N`-bit integers.
+$`\mathsf{i}N` is the type of $`N`-bit integers. $`\epsilon` is the empty
+sequence, and $`|s|` the length of the sequence $`s`.
+
+Validation, as in the WebAssembly specification, is written with inference
+rules. A rule $`\frac{P_1 \quad \dots \quad P_n}{J}` says that when its
+premises $`P_1, \dots, P_n`, above the line, hold, its conclusion $`J`,
+below the line, holds; a rule with no premise holds outright. A relation
+given by rules is the least one that they close. A judgement such as
+$`C \vdash f~\text{valid}` says that $`f` is valid in the context $`C`.
 
 The chapters follow the WebAssembly specification:
 
@@ -97,31 +118,31 @@ functions, blocks and ops.
 
 # Validation
 
-{includeLiterate "." Fir.Validation.Scope "Scope and symbols" (level := 2)}
+{includeReadable "." Fir.Validation.Scope "Scope and symbols" FirSpec.Validation.Scope (level := 2)}
 
-{includeLiterate "." Fir.Validation.Dominance "Dominance" (level := 2)}
+{includeReadable "." Fir.Validation.Dominance "Dominance" FirSpec.Validation.Dominance (level := 2)}
 
-{includeLiterate "." Fir.Validation.Rules "The general rules" (level := 2)}
+{includeReadable "." Fir.Validation.Rules "The general rules" FirSpec.Validation.Rules (level := 2)}
 
-{includeLiterate "." Fir.Core.Validation "Core rules" (level := 2)}
+{includeReadable "." Fir.Core.Validation "Core rules" FirSpec.Core.Validation (level := 2)}
 
-{includeLiterate "." Fir.Core.Rejects "A rejected function" (level := 2)}
+{includeReadable "." Fir.Core.Rejects "A rejected function" FirSpec.Core.Rejects (level := 2)}
 
-{includeLiterate "." Fir.Validation.Check "The validation check" (level := 2)}
+{includeReadable "." Fir.Validation.Check "The validation check" FirSpec.Validation.Check (level := 2)}
 
-{includeLiterate "." Fir.Validation.Tables "Tables" (level := 2)}
+{includeReadable "." Fir.Validation.Tables "Tables" FirSpec.Validation.Tables (level := 2)}
 
-{includeLiterate "." Fir.Validation.Search "Searching a graph" (level := 2)}
+{includeReadable "." Fir.Validation.Search "Searching a graph" FirSpec.Validation.Search (level := 2)}
 
-{includeLiterate "." Fir.Validation.Graph "Reachability and dominance, decided" (level := 2)}
+{includeReadable "." Fir.Validation.Graph "Reachability and dominance, decided" FirSpec.Validation.Graph (level := 2)}
 
-{includeLiterate "." Fir.Validation.CheckOps "Checking ops" (level := 2)}
+{includeReadable "." Fir.Validation.CheckOps "Checking ops" FirSpec.Validation.CheckOps (level := 2)}
 
-{includeLiterate "." Fir.Validation.CheckFuncs "Checking functions" (level := 2)}
+{includeReadable "." Fir.Validation.CheckFuncs "Checking functions" FirSpec.Validation.CheckFuncs (level := 2)}
 
-{includeLiterate "." Fir.Validation.CheckModule "Checking modules" (level := 2)}
+{includeReadable "." Fir.Validation.CheckModule "Checking modules" FirSpec.Validation.CheckModule (level := 2)}
 
-{includeLiterate "." Fir.Core.Check "The core dialect's rules, decided" (level := 2)}
+{includeReadable "." Fir.Core.Check "The core dialect's rules, decided" FirSpec.Core.Check (level := 2)}
 
 # Execution
 

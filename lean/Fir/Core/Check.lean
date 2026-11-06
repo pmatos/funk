@@ -2,12 +2,12 @@ import Fir.Core.Rejects
 import Fir.Validation.CheckModule
 
 /-!
-The validation check needs a dialect's types to have decidable equality, and
-its two rules to be decidable. The core dialect's types derive
-`DecidableEq`, and its rules are decided below, case by case. With them,
-the check covers every one of the 25 core ops: the general rules check each
+The validation check needs a dialect's types to be comparable for equality,
+and its two rules to be decidable. The core dialect's types can be
+compared, and its rules are decided below, case by case. With them, the
+check covers every one of the 25 core ops: the general rules check each
 op's operand and result types, its place in its block, its successors and
-its uses against its signature, and `Op.Valid` adds the rules of `ret`,
+its uses against its signature, and the core rules add the rules of `ret`,
 `call`, `zext`, `sext` and `trunc`.
 -/
 
@@ -32,10 +32,10 @@ end Fir
 /-!
 # The rejected function, checked
 
-The check finds a problem in the function `deadBlock` of the previous
-section, in any module, since it decides validation and validation rejects
-that function. Its one problem names the block that the entry does not
-reach, `^dead`.
+The check finds a problem in the function `@f` of the section on a rejected
+function, in any module, since it decides validation and validation
+rejects that function. Its one problem names the block that the entry does
+not reach, `^dead`.
 -/
 
 namespace Fir.Core.Rejects
