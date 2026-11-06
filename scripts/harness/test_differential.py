@@ -287,8 +287,9 @@ class Differential(unittest.TestCase):
             def exhaustive(self, args):
                 raise OSError("cannot start fir-ref")
 
+        runs = CannotStart()
         with self.assertRaisesRegex(OSError, "cannot start fir-ref"):
-            evaluate(TEST, ("i8",), (), CannotStart())
+            evaluate(TEST, ("i8",), (), runs)
 
 
 if __name__ == "__main__":
