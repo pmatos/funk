@@ -6,29 +6,29 @@ import Fir.Text.Tree
 # The scope that decoding builds
 
 The last step of the parser decodes the tree that the grammar reads, and
-the last step of #11's proof shows that it gives the module back: on any
-tree that erases to the tree of a well-formed module, `decodeModule` gives
-the module. Decoding a function takes two passes, and this section is about
-the first. It reads every definition of the function, at any depth, and
-builds the function's scope: each value it defines, with its type.
+the last step of the proof shows that it gives the module back: on any
+tree that erases to the tree of a well-formed module, decoding gives the
+module. Decoding a function takes two passes, and this section is about the
+first. It reads every definition of the function, at any depth, and builds
+the function's scope: each value it defines, with its type.
 
 The first pass reads the parameters, then each block's arguments, then for
-each op its results and then the blocks of its regions. `Block.scopeDefs`
-lists the definitions of blocks in that order. `Func.defs` lists all of a
-block's op results before the blocks of their regions, so the two lists
-differ, but only in order: each is a permutation of the other
-(`Block.scopeDefs_perm`, `Func.scopeDefs_perm`).
+each op its results and then the blocks of its regions. The definitions of
+a function, as validation lists them, put all of a block's op results
+before the blocks of their regions, so the two lists differ, but only in
+order: each is a permutation of the other.
 
-`Scope.Holds sc L` says that the scope `sc` gives each value of `L` its
-type, and gives no other value a type. Each definition the pass reads adds
-one value to the scope. Since a well-formed function names each value once,
-the pass never finds a value twice, and the scope it builds holds exactly
-the function's definitions. The type of each value is then the one that
-`Func.typeOf` gives it (`Func.WellFormed.scope`), whatever the order.
+A scope holds a list of values with their types when it gives each value of
+the list its type, and no other value a type. Each definition the pass
+reads adds one value to the scope. Since a well-formed function names each
+value once, the pass never finds a value twice, and the scope it builds
+holds exactly the function's definitions. The type of each value is then
+the type of its definition in the function, whatever the order.
 
 Like the readers' lemmas of the grammar step, the lemmas for blocks, ops
 and regions take what the passes they call do as hypotheses, and three
-short mutual theorems tie them together by structural recursion.
+short theorems, proved together, tie them together by structural
+recursion.
 -/
 
 namespace Fir

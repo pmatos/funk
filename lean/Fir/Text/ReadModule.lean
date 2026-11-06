@@ -5,19 +5,17 @@ import Fir.Text.ReadTable
 # Reading a printed module
 
 A module's items read back before the word `locs`, which starts its
-location table, and the table before `eof`. Each item of M0 is a function,
-which the previous section reads.
+location table, and the table before `eof`. Each item is a function, the
+only kind of item so far, which the previous sections read.
 
-The result is `readModule_tokens`: on any tokens with the module's
-`Module.tokens`, then `eof`, at any positions, `readModule` gives a tree
+The result is the grammar step: on any tokens that hold the module's
+tokens, then `eof`, at any positions, the reader of a module gives a tree
 that is the module's tree once its positions are erased. It needs only that
 each type the module writes is written as a type, and that its location
-table is within the limits. A well-formed module has both
-(`Module.WellFormed.readModule_tokens`), so with `lex_print` the first two
-steps of the parser read its printed text as its tree
-(`Module.WellFormed.read_print`). The last step decodes that tree, and
-gives the module back (`Module.WellFormed.decodeModule_eq`, in the sections
-that follow).
+table is within the limits. A well-formed module has both, so with lexing
+printed text the first two steps of the parser read its printed text as its
+tree, and so do they for a valid module. The last step decodes that tree,
+and gives the module back, in the sections that follow.
 -/
 
 namespace Fir
