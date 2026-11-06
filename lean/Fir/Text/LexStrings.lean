@@ -3,16 +3,16 @@ import Fir.Text.LexTokens
 /-!
 # Reading printed strings and symbols
 
-`quote` writes each character of a string in its one spelling, with
-`escapeChar`, and the lexer reads each spelling back as the character: `\"`,
-`\\`, `\n` and `\t` as themselves, `\u{h}` as the escaped character whose
-code point `h` writes, and every other character as itself
-(`lexStringFrom_escapeChar`). So a quoted string reads back as the string,
-whatever it holds (`lexStringFrom_quote`). A symbol is written bare when its
-name is a word, and quoted otherwise, which is when the lexer accepts it
-quoted.
+The printer writes each character of a string in its one spelling, and the
+lexer reads each spelling back as the character: `\"` and `\\` as a quote
+and a backslash, `\n` and `\t` as a line feed and a tab, `\u{`, digits
+and `}` as the escaped character whose code point the digits write, and
+every other character as itself. So a quoted string reads back as the
+string, whatever it holds. A symbol is written bare when its name is a
+word, and quoted otherwise, which is when the lexer accepts it quoted.
 
-With these, every token that can be written spells itself (`Tok.spells`).
+With these, every token that can be written spells itself: the last theorem
+of this section.
 -/
 
 namespace Fir.Text
