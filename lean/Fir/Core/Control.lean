@@ -3,9 +3,9 @@ import Fir.Core.Values
 /-!
 # Return
 
-The terminators' execution rules say where control goes when a block ends.
-Ticket #10 gives `ret` its rule, and #19 gives `br` and `cond_br` theirs,
-in the next section.
+The terminators' execution rules say where control goes when a block
+ends. This section gives `ret` its rule, and the next gives `br` and
+`cond_br` theirs.
 
 `ret` sends control back to the caller, and the interpreter returns its
 operands as they are, any number of them (ADR-2026-10-30-0816). Poison is
