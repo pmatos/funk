@@ -13,8 +13,8 @@ None of them is ever UB, so the clause "UB only by the op's own rules"
 holds at once. Each is monotone because a poison operand gives a poison
 result, which every result refines, and a defined operand is refined only
 by itself. The proofs rest on two facts of any rule on one value that
-gives poison on poison, as these three do: it gives poison there, and so
-it is monotone.
+gives poison on poison, a _strict_ rule, as these three are: it gives
+poison there, and so it is monotone.
 -/
 
 namespace Fir.Core
