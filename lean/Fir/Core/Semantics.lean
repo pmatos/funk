@@ -13,73 +13,64 @@ import Fir.Core.Text
 /-!
 # The core dialect's semantics
 
-`DialectDenote CoreDialect SetM` gives every core op its meaning in the set
-monad. It is one instance over all 25 core ops, which sends each op to the
-rule of its family. The rules are written once, for any monad that has
-the effects they ask for: `Op.denote?` for the ops that are not
-terminators, and `Op.exit?` for the terminators. `freeze` asks for the
-choice effect, and the divisions and `cond_br` for the UB effect. So this
-instance and the tree of choices that `fir-ref run` computes in share
-them.
+This section gives every core op its meaning in the set of the ways a run
+may end, by sending each op to the rule of its family. The rules are
+written once, for every way of computing that has the effects they ask
+for: one table for the ops that are not terminators, and one for the
+terminators. `freeze` asks for the choice effect, and the divisions and
+`cond_br` for the UB effect, so the spec and the tree of choices that
+`fir-ref run` computes in share them.
 
-# Ops without rules
+* Each op that is not a terminator has the rule of its family, from the
+  arithmetic rules to the width change rules. `call` has none: its meaning
+  is its callee's run.
+* Each terminator has the rule of the control-flow rules or the branch
+  rules.
+* An op has rules when one of the two tables gives it one, or when it
+  calls a function. Every core op has rules: each family gave its ops
+  theirs, and the call rules name the callee of `call`.
 
-An op has no rules when its dialect's semantics gives it none. In the
-core dialect, that is when `Op.hasRules` is false: `Op.denote?` and
-`Op.exit?` give it `none`, and it calls no function. Every core op has its
-rules: each op family gave its ops theirs, and #20, the last, named the
-callee of `call`. `call`'s meaning is its callee's run, so `Op.denote?`
-gives `none` for it too, and it is not an op without rules (the section
-on calls below). ADR-2026-10-30-1855 decided what an op without rules
-does while its family had not landed, and the spec keeps that rule for
-every dialect:
+An op has no rules when its dialect's semantics gives it none.
+ADR-2026-10-30-1855 decided what such an op does while its family had not
+landed, and the spec keeps that rule for every dialect:
 
-* In the spec, it has no outcome: on every operand vector, its `denote` or
-  its `exit` is the empty set. That is not a stand-in semantics. The
-  totality obligation `OpTotal` rejects it, as it rejects
-  `Core.Unlawful.noOutcome`, so a dialect's `LawfulDialectPoison` cannot
-  be proved while one of its valid op instances that runs by its own rule
-  (a terminator, or an op with no callee) lacks its rules, unless one of
-  its operand types has no value. No core op lacks them, and
-  `Core.lawfulDialectPoison` proves `LawfulDialectPoison CoreDialect`.
-* Only totality, `ReturnsOnDefined`, progress and the lawful class reject
-  it. `PropagatesPoison` and `OpMonotone` hold of such an op, and
-  `NeverStuck` and `FuelMonotone` of a function that reaches one, since the
-  empty set meets every bound on what may happen; and such a function
-  refines every source. So none of these statements is claimed of an op
-  without rules, or of a function that reaches one. The general
-  theorems `Func.fuelMonotone`, `Func.neverStuck` and
-  `Func.neverStuck_of_local` cover such a function too, but only vacuously
-  on the paths that reach the op: they say nothing of how it behaves.
-* A run that reaches such an op has no way to end on that path; when
-  every path does, `Progress` fails. So `Progress` and `NeverStuck` were
-  proved first for every valid core function without a `call` op, while
-  `call` had no rules (`Core.callFree_progress`, `Core.callFree_neverStuck`),
-  and are proved now for every function of every valid core module, calls
-  and recursion included (`Core.progress`, `Core.neverStuck`).
+* In the spec, it has no outcome: on every operand vector, its meaning is
+  the empty set. That is not a stand-in semantics. The totality obligation
+  rejects it, as it rejects the semantics with no outcome in the section
+  on semantics the obligations reject. So a dialect's poison obligations
+  cannot be proved while one of its valid op instances that runs by its
+  own rule (a terminator, or an op that calls no function) lacks its
+  rules, unless one of its operand types has no value. No core op lacks
+  them, and the core dialect's poison obligations are proved.
+* Only totality, a result on defined operands, progress and the poison
+  obligations as a whole, which include totality, reject such an op. The
+  other properties hold of it trivially, because a computation with no
+  outcome meets every bound on what may happen: poison propagation and
+  monotonicity on their own hold of the op, no stuck path and fuel
+  monotonicity hold of any function that reaches it, and such a function
+  refines every source. So none of these statements
+  is claimed of an op without rules, or of a function that reaches one.
+  The general theorems of fuel monotonicity and no stuck path cover such a
+  function too, but only vacuously on the paths that reach the op: they
+  say nothing of how it behaves.
+* A run that reaches such an op has no way to end on that path; when every
+  path does, progress fails. So progress and no stuck path were proved
+  first for every valid core function without a `call` op, while `call`
+  had no rules, and are proved now for every function of every valid core
+  module, calls and recursion included.
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules, as an error
   (ADR-2026-10-30-1856).
 
-Each family's rules are in its own section, and `Op.denote?` and
-`Op.exit?` send each op to them; the obligations of each family are
-proved in sections of their own after this one, from "Constant
-obligations" (`Fir/Core/ArithLaws.lean`) to "Branch obligations"
-(`Fir/Core/BranchLaws.lean`). `call` names its callee instead, below.
-
-# Calls
-
 `call` takes its meaning from the call effect, which the interpreter runs
-(ADR-2026-11-02-0836), not from `denote`. The instance
-`DialectCall CoreDialect` says which core ops call a function: `call @g`
-calls `@g` (`Core.Op.callTarget?`, in the section on calls). The interpreter
-runs the callee of every op that has one before it looks at `denote`, so
-`call` has no rule here: `Op.denote?` gives `none` for it, and in the set
-monad its `denote` has no outcome, which no run reaches. It has no
-op-level obligation either: the poison obligations ask totality and
-monotonicity only of terminators and of ops with no callee
-(ADR-2026-11-02-1514). `Op.hasRules` counts `call` as an op with rules,
-since its callee's run is its meaning.
+(ADR-2026-11-02-0836). The interpreter runs the callee of every op that
+has one before it looks at the op's own meaning, so `call` has no rule
+here, and its meaning in the set of the ways a run may end has no
+outcome, which no run reaches. It has no op-level obligation either: the
+poison obligations ask totality and monotonicity only of terminators and
+of ops that call no function (ADR-2026-11-02-1514). The obligations of
+each family are proved in sections of their own after this one, from the
+constant obligations to the branch obligations.
 -/
 
 namespace Fir.Core
