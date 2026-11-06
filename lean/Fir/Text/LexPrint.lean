@@ -3,11 +3,10 @@ import Fir.Text.LexLayout
 /-!
 # Reading printed attributes, locations and definitions
 
-Each printer function below writes the tokens of the matching token
-function, in its one layout: `Attr.print` writes `Attr.tokens`,
-`Location.print` writes `Location.tokens`, and so on. Each lemma assumes
-only that the tokens can be written, and reads the text one piece at a
-time, as the printer writes it.
+The printer writes each construct below as the spellings of its tokens, in
+its one layout: an attribute, a location, a definition, a use of a value and
+a successor. Each theorem assumes only that the tokens can be written, and
+reads the text one piece at a time, as the printer writes it.
 -/
 
 namespace Fir

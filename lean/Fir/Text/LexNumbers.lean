@@ -3,17 +3,16 @@ import Fir.Text.Tokens
 /-!
 # Reading printed numbers
 
-The printer writes a natural number with `Nat.toDigits 10`, through
-`toString`, and the code point of an escaped character with
-`Nat.toDigits 16`, through `hex`. The lexer reads the digits back with
-`digitsValue` and `hexValue`. This section proves that each reads back the
-number that was written, and that the digits have the shape the lexer
-expects: decimal or lowercase hexadecimal digits, with no leading zero.
+The printer writes a natural number in decimal, for an integer, a line, a
+column or a location reference, and the code point of an escaped character
+in lowercase hexadecimal. This section proves that the lexer reads each back
+as the number that was written, and that the digits have the shape the
+lexer expects: decimal or lowercase hexadecimal digits, with no leading
+zero.
 
-`digitsValue` reads a long number in two halves, joined by one product.
-That changes only how long it takes: it gives the value of a left-to-right
-reading, `Nat.ofDigitChars 10`, for every list of digits
-(`digitsValue_eq_ofDigitChars`).
+The lexer reads a long decimal number in two halves, joined by one product.
+That changes only how long it takes: the first theorem below shows that it
+gives the value of a left-to-right reading, for every list of digits.
 -/
 
 namespace Fir.Text
