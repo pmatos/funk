@@ -72,7 +72,9 @@ promises.
 *Definition: jumping to a successor.* Let a terminator of the function
 $`f` have the
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors]
-$`s_0, \dots, s_{m-1}`, and let its rule say $`\mathsf{goto}~i`. In the environment $`E`, the jump finds where the run
+$`s_0, \dots, s_{m-1}`, and let its
+{ref "The-fir-specification--Execution--Effects-and-op-semantics"}[rule]
+say $`\mathsf{goto}~i`. In the environment $`E`, the jump finds where the run
 goes on, by these steps; the first that fails makes the path stuck, with
 the reason in brackets:
 
@@ -122,8 +124,8 @@ and nothing else.
 :::
 
 :::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (fingerprint := "16914946586688321552")
-*Definition: running the ops of a block.* For every dialect, in any monad
-in which the dialect's ops have their
+*Definition: running the ops of a block.* For every dialect, for every way
+of computing in which the dialect's ops have their
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics],
 $`\mathrm{run}_M(n, f, E, o^*)` runs the ops $`o^*` of a block of the
 function $`f` of the module $`M`, then the blocks that control goes to, in
@@ -155,12 +157,14 @@ check that fails makes the path stuck:
    steps.
 5. When $`o` is not a terminator and $`\mathrm{callee}(o)` is the symbol
    $`s`, take
-   $`g = \mathrm{lookup}_M(s)`, enter $`g` with $`v^*`, and run its entry
+   $`g = \mathrm{lookup}_M(s)` (stuck when no function of $`M` has the
+   symbol $`s`), enter $`g` with $`v^*`, and run its entry
    block with $`n` steps:
    * when the callee runs out of fuel, so does the caller;
    * when it returns typed values with $`k` steps left, check that their
      types are the result types of $`o`, bind the names of the results of
-     $`o` to them, and run $`o'^*` with $`\min(k, n)` steps.
+     $`o` to them (their counts must agree), and run $`o'^*` with
+     $`\min(k, n)` steps.
 
 Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o` and $`\mathrm{callee}(o)`
 are what the dialect says of $`o`; looking operands up, jumping, looking a
@@ -182,8 +186,9 @@ $`\mathit{fuel}` steps. A return gives the values returned, each with its
 type, and drops the steps left, which matter only to a caller; running
 out of fuel stays so, and a path that is stuck or ends with UB stays so.
 
-In the set monad, this run is a
-{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[run]
-in the sense of the outcomes: the set of the ways it may end, each with the
-list of values returned, out of fuel, with UB or stuck.
+In the
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad],
+this run is a run in the sense of the outcomes: the set of the ways it
+may end, each with the list of values returned, out of fuel, with UB or
+stuck.
 :::

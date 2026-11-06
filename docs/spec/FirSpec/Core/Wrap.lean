@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Wrap flag rules: readable blocks" =>
 
-:::readable Fir.Core.subValues Fir.Core.mulValues (fingerprint := "12782547302385275056")
+:::readable Fir.Core.subValues Fir.Core.mulValues (pin := BitVec.sub) (pin := BitVec.mul) (fingerprint := "186644350761562636")
 *Definition: the rules of $`\mathsf{sub}` and $`\mathsf{mul}` without
 flags.* For every width $`N`, $`\mathsf{sub}_N` of two vectors of bits is
 their difference modulo $`2^N`, and $`\mathsf{mul}_N` their product modulo
@@ -35,7 +35,7 @@ Like $`\mathsf{add}`, both wrap as two's complement does, are never UB, and
 :::readable Fir.Core.wrapValues (pin := Fir.Core.WrapFlags) (fingerprint := "8525004174366977493")
 *Definition: an op with wrap flags.* Take a set $`\phi` of
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[wrap flags], two
-tests $`o_u` and $`o_s` on pairs of vectors of $`N` bits, and a rule $`g`
+overflow tests $`o_u` and $`o_s` on pairs of vectors of $`N` bits, and a rule $`g`
 on two values of $`\mathsf{i}N`. On two vectors $`a` and $`b`, the op with
 the flags $`\phi` gives poison when a flag is broken, and $`g(a, b)`
 otherwise. On a poison operand it gives $`g(a, b)`. It is written

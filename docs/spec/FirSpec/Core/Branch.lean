@@ -50,9 +50,9 @@ function to its ending.
 :::
 
 :::readable Fir.Core.exitOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (pin := Fir.Exit) (fingerprint := "15251266884827550953")
-*Definition: a terminator's rule that may end with UB, in any monad.* Let
-$`e` be a way a terminator ends: going to an exit $`x`, or immediate UB
-with a reason $`r`. In any monad with the
+*Definition: a terminator's rule that may end with UB, for every way of
+computing.* Let $`e` be a way a terminator ends: going to an exit $`x`, or
+immediate UB with a reason $`r`. For every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
 the rule of $`e` is the computation that gives $`x` in the first case, and
 $`\mathrm{ub}(r)` in the second. It turns the rule of

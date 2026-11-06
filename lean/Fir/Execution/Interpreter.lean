@@ -49,7 +49,8 @@ makes each of these checks of a valid function:
   operands as its op instance takes and as many results as it gives;
 * a successor names a block of the function, and passes one value of the
   right type for each of that block's arguments;
-* a call names a function of the module;
+* a call names a function of the module, which the dialect's own
+  validation rule must ask, as the core rule for `call` does;
 * the function has an entry block, which declares no arguments;
 * a call passes one value of the right type for each of its callee's
   parameters, and receives values of its own result types, which the

@@ -33,7 +33,7 @@ never poison, and $`\mathsf{poison}_N` is poison on every run, which is how
 a program writes LLVM's poison constant. Neither is ever UB.
 :::
 
-:::readable Fir.Core.addValues (fingerprint := "10285737714882356039")
+:::readable Fir.Core.addValues (pin := BitVec.add) (fingerprint := "6425417634766469116")
 *Definition: the rule of $`\mathsf{add}` without flags.* For every width
 $`N`, $`\mathsf{add}_N` of two vectors of bits is their sum modulo
 $`2^N`, and $`\mathsf{add}_N` of a poison operand, in either place, is

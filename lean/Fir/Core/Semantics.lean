@@ -43,10 +43,12 @@ landed, and the spec keeps that rule for every dialect:
   rules, unless one of its operand types has no value. No core op lacks
   them, and the core dialect's poison obligations are proved.
 * Only totality, a result on defined operands, progress and the poison
-  obligations reject it. Poison propagation and monotonicity hold of such
-  an op, and no stuck path and fuel monotonicity of a function that
-  reaches one, since the empty set meets every bound on what may happen;
-  and such a function refines every source. So none of these statements
+  obligations as a whole, which include totality, reject such an op. The
+  other properties hold of it trivially, because a computation with no
+  outcome meets every bound on what may happen: poison propagation and
+  monotonicity on their own hold of the op, no stuck path and fuel
+  monotonicity hold of any function that reaches it, and such a function
+  refines every source. So none of these statements
   is claimed of an op without rules, or of a function that reaches one.
   The general theorems of fuel monotonicity and no stuck path cover such a
   function too, but only vacuously on the paths that reach the op: they

@@ -22,7 +22,8 @@ With both flags, a result is poison when either promise is broken. At
 `add nsw true, true`, `sub nsw false, true` and `mul nsw true, true` give
 poison: their exact results, -2, 1 and 1, do not fit. One rule serves all
 three ops at every width: it takes the op's result without flags and the
-op's two tests of whether the exact result fits.
+op's two tests of whether the exact result overflows, read as unsigned
+and as signed.
 -/
 
 namespace Fir.Core

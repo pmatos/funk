@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Bitwise and shift rules: readable blocks" =>
 
-:::readable Fir.Core.andValues Fir.Core.orValues Fir.Core.xorValues (fingerprint := "18443471682623529939")
+:::readable Fir.Core.andValues Fir.Core.orValues Fir.Core.xorValues (pin := BitVec.and) (pin := BitVec.or) (pin := BitVec.xor) (fingerprint := "487211523789888471")
 *Definition: the rules of $`\mathsf{and}`, $`\mathsf{or}` and
 $`\mathsf{xor}`.* For every width $`N`, each op works on two vectors of
 bits one bit at a time, and a poison operand, in either place, gives

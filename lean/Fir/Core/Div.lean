@@ -20,8 +20,8 @@ UB (ADR-2026-10-30-0818). The first rule below gives the cases, in order:
 * Otherwise a poison dividend gives poison. That includes `udiv` and
   `urem` by all ones, which have no -1 case.
 
-The human ruled the poison dividend by -1 on 2026-10-30. UB there keeps
-every division monotone, and lets a backend emit a bare `idiv` or `div`,
+ADR-2026-10-30-0818 makes a poison dividend by -1 immediate UB. UB there
+keeps every division monotone, and lets a backend emit a bare `idiv` or `div`,
 with no guard. The rejected rule, a poison result, is not monotone, as the
 section on semantics the obligations reject shows.
 

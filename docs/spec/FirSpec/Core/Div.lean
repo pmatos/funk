@@ -63,7 +63,8 @@ With $`\mathsf{exact}`, the result is poison instead when the division
 leaves a remainder: when $`\mathsf{srem}` or $`\mathsf{urem}`, below, would
 not give 0.
 
-Here $`\mathrm{trunc}(x)` rounds $`x` towards zero, $`\hat{a}` and
+Here $`\mathrm{trunc}(x)` rounds $`x` towards zero (it is not the op
+$`\mathsf{trunc}`), $`\hat{a}` and
 $`\hat{b}` are $`\mathrm{signed}_N(a)` and $`\mathrm{signed}_N(b)`, the
 integers that $`a` and $`b` write in two's complement, and $`k \bmod 2^N` the
 vector of $`N` bits that writes the remainder of $`k` divided by $`2^N`, as
@@ -89,9 +90,9 @@ leaves $`-1`, and 7 by $`-2` leaves 1.
 :::
 
 :::readable Fir.Core.ruleOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (fingerprint := "4529996667052300154")
-*Definition: a rule that may end with UB, in any monad.* Let $`g` give, on
-two values $`a` and $`b` of $`\mathsf{i}N`, a result or immediate UB with a
-reason. In any monad with the
+*Definition: a rule that may end with UB, for every way of computing.* Let
+$`g` give, on two values $`a` and $`b` of $`\mathsf{i}N`, a result or
+immediate UB with a reason. For every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
 the rule of $`g` takes the operands $`(a, b)`. When $`g(a, b)` ends with
 the result $`v`, it gives $`v`; when $`g(a, b)` ends with UB with the reason
@@ -100,6 +101,6 @@ $`r`, it is $`\mathrm{ub}(r)`, which ends the run with immediate UB.
 The divisions are written once as functions to their ending, which tests
 can compare; this definition turns each into the rule that the
 {ref "The-fir-specification--Execution--Core-op-semantics"}[core op semantics]
-gives the op, in every monad with the UB effect: the spec's set of the
-ways a run may end, and the tree of choices that `fir-ref` walks, alike.
+gives the op, for every way of computing with the UB effect: the spec's
+set of the ways a run may end, and the tree of choices that `fir-ref` walks, alike.
 :::

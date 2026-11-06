@@ -15,8 +15,8 @@ when the Lean changes under it.
 #doc (Manual) "Core op semantics: readable blocks" =>
 
 :::readable Fir.Core.Op.denote? (fingerprint := "7653001876836925693")
-*Definition: the rule of each core op that is not a terminator.* In any
-monad with the
+*Definition: the rule of each core op that is not a terminator.* For
+every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
 each core op that is not a terminator, other than $`\mathsf{call}`, has the
 rule of its family, which takes its operand values and gives its one
@@ -45,13 +45,14 @@ result:
 
 $`\mathsf{call}` and the terminators have none here: a call's meaning is
 the run of its callee, and a terminator's rule says where control goes.
-The rules are written once, for every monad with these effects, so the
-spec's set of the ways a run may end and the tree of choices that
-`fir-ref run` walks share them.
+The rules are written once, for every way of computing with these
+effects, so the spec's set of the ways a run may end and the tree of
+choices that `fir-ref run` walks share them.
 :::
 
 :::readable Fir.Core.Op.exit? (fingerprint := "14161872408466095758")
-*Definition: the rule of each core terminator.* In any monad with the
+*Definition: the rule of each core terminator.* For every way of
+computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
 the terminators $`\mathsf{br}` and $`\mathsf{cond\_br}` have the
 {ref "The-fir-specification--Execution--Branch-rules"}[branch rules], and
@@ -62,14 +63,15 @@ Every op that is not a terminator has none here.
 :::
 
 :::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7015844231653859016")
-*Definition: an op has rules.* A core op has rules when it has a rule as
-an op that is not a terminator, or as a terminator, both read in the set
-monad, or when it calls a function, whose run is its meaning. Every core op
+*Definition: an op has rules.* A core op has rules when one of the two
+blocks above gives it a rule, as an op that is not a terminator or as a
+terminator, or when it calls a function, whose run is its meaning. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
 set of flags and $`\mathsf{icmp}` with each predicate among them, and
 $`\mathsf{call}` counts through its callee.
 
-*Definition: the core dialect's semantics.* In the set monad, the
+*Definition: the core dialect's semantics.* In the
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[meaning]
 of a core op $`o` on the operand values $`v^*` is its rule:
 
