@@ -4,18 +4,17 @@ import Fir.Core.Text
 /-!
 # Comparison and selection
 
-Ticket #16 gives `icmp` and `select` their rules. Neither is ever UB.
+This section gives `icmp` and `select` their rules. Neither is ever UB.
 
-`icmp p` takes two values of `iN` and gives an `i1`: `true` when the
-predicate `p` holds of them, and `false` when it does not. `eq` and `ne`
-compare the bits. The `s` predicates read both operands as
+`icmp` takes a predicate and two values of `iN`, and gives an `i1`: `true`
+when the predicate holds of them, and `false` when it does not. `eq` and
+`ne` compare the bits. The `s` predicates read both operands as
 two's-complement signed integers, and the `u` predicates read them as
 unsigned integers, so one pair of bit patterns can be in one order for
-`slt` and in the other for `ult`. At `i8`, `-1` is less than `1` read as
-signed, but it is `255` read as unsigned, which is greater. At `i1`,
-`true` is `-1` read as signed and `1` read as unsigned, so
-`icmp slt true, false` gives `true` and `icmp ult true, false` gives
-`false`.
+`slt` and in the other for `ult`. At `i8`, -1 is less than 1 read as
+signed, but it is 255 read as unsigned, which is greater. At `i1`, `true`
+is -1 read as signed and 1 read as unsigned, so `icmp slt true, false`
+gives `true` and `icmp ult true, false` gives `false`.
 
 `icmp` propagates poison (ADR-2026-10-30-0818): a poison operand gives a
 poison `i1`. So `icmp eq %p, %p` of a poison `%p` is poison, not `true`.
@@ -34,11 +33,6 @@ chooses. That is why `select %c, %x, false` is not `and %c, %x`, as the
 section on poison and immediate UB explains: when `%c` is `false`, the
 `select` gives `false` whatever `%x` is, and the `and` gives poison when
 `%x` is poison.
-
-The predicates are `==` on bits and Lean's own `BitVec.slt`, `BitVec.sle`,
-`BitVec.ult` and `BitVec.ule`, which compare `BitVec.toInt` and
-`BitVec.toNat`. `sgt`, `sge`, `ugt` and `uge` are `slt`, `sle`, `ult` and
-`ule` with the operands swapped. `true` is the `i1` value `1`.
 -/
 
 namespace Fir.Core
@@ -70,12 +64,14 @@ def selectValues :
   | .value c, a, b => if c = 1 then a else b
   | .poison, _, _ => .poison
 
-/-! # Tests
+/-!
+# Tests
 
 Each predicate on pairs of values at `i1`, `i7`, `i8`, `i33`, `i64` and
-`i128`, among them the boundary values `0`, `1`, all ones (`-1`), the
-signed minimum and the signed maximum, and pairs whose signed order is not
-their unsigned order. -/
+`i128`, among them the boundary values 0, 1, all ones (-1), the signed
+minimum and the signed maximum, and pairs whose signed order is not their
+unsigned order.
+-/
 
 /-- What the ten predicates give, in the order of `Pred.all`, on two values
 that are in the order `s` read as signed and in the order `u` read as

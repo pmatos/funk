@@ -3,12 +3,12 @@ import Fir.Text.Lex
 /-!
 The second step reads the tokens by the grammar of a module into a syntax
 tree. The tree has no node for any particular op or kind of item, as the
-grammar has none (G0): an item is its kind, symbol, parameters, results,
-attributes and body, and an op is its results, name, attributes, operands,
-successors, regions and location reference. Types and attributes stay
-generic terms, as the grammar writes them. The tree keeps the position of
-each part that decoding can reject: an item's kind and attributes, a type, a
-definition, an op's name and each operand.
+grammar has none (ADR-2026-10-29-2016): an item is its kind, symbol,
+parameters, results, attributes and body, and an op is its results, name,
+attributes, operands, successors, regions and location reference. Types
+and attributes stay generic terms, as the grammar writes them. The tree
+keeps the position of each part that decoding can reject: an item's kind
+and attributes, a type, a definition, an op's name and each operand.
 
 Location tables have a fixed syntax, so they are read in full, in the next
 section, with the module that they end.
@@ -18,6 +18,11 @@ tokens after it. Those are a suffix of what it was given, never more, so the
 readers that call one another for nested attributes, regions and items
 always end. A reader that finds a token it does not expect fails there,
 naming what it expected.
+
+This section gives the tree, then what a reader returns and the readers
+that the others are built from, and then the readers of attributes and
+types, of definitions, operands and successors, of blocks, ops and regions,
+and of items.
 -/
 
 namespace Fir.Text

@@ -30,6 +30,42 @@ import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
+import FirSpec.Execution.Interpreter
+import FirSpec.Core.Arith
+import FirSpec.Core.Wrap
+import FirSpec.Core.Freeze
+import FirSpec.Core.Bitwise
+import FirSpec.Core.Width
+import FirSpec.Core.Div
+import FirSpec.Core.Compare
+import FirSpec.Core.Control
+import FirSpec.Core.Branch
+import FirSpec.Core.Call
+import FirSpec.Core.Semantics
+import FirSpec.Core.ArithLaws
+import FirSpec.Core.WrapLaws
+import FirSpec.Core.FreezeLaws
+import FirSpec.Core.BitwiseLaws
+import FirSpec.Core.WidthLaws
+import FirSpec.Core.DivLaws
+import FirSpec.Core.CompareLaws
+import FirSpec.Core.ControlLaws
+import FirSpec.Core.BranchLaws
+import FirSpec.Execution.Morphism
+import FirSpec.Execution.ChoiceTree
+import FirSpec.Execution.Modes
+import FirSpec.Core.Modes
+import FirSpec.Text.Lexical
+import FirSpec.Text.Grammar
+import FirSpec.Core.Text
+import FirSpec.Text.Print
+import FirSpec.Text.RoundTrip
+import FirSpec.Core.TextLaws
+import FirSpec.Text.Lex
+import FirSpec.Text.Read
+import FirSpec.Text.ReadLocs
+import FirSpec.Text.Decode
+import FirSpec.Text.Example
 import FirSpec.Text.Tokens
 import FirSpec.Text.LexNumbers
 import FirSpec.Text.LexTokens
@@ -179,55 +215,55 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.Unlawful "Semantics the obligations reject" FirSpec.Core.Unlawful (level := 2)}
 
-{includeLiterate "." Fir.Execution.Interpreter "The interpreter" (level := 2)}
+{includeReadable "." Fir.Execution.Interpreter "The interpreter" FirSpec.Execution.Interpreter (level := 2)}
 
-{includeLiterate "." Fir.Core.Arith "Arithmetic rules" (level := 2)}
+{includeReadable "." Fir.Core.Arith "Arithmetic rules" FirSpec.Core.Arith (level := 2)}
 
-{includeLiterate "." Fir.Core.Wrap "Wrap flag rules" (level := 2)}
+{includeReadable "." Fir.Core.Wrap "Wrap flag rules" FirSpec.Core.Wrap (level := 2)}
 
-{includeLiterate "." Fir.Core.Freeze "The freeze rule" (level := 2)}
+{includeReadable "." Fir.Core.Freeze "The freeze rule" FirSpec.Core.Freeze (level := 2)}
 
-{includeLiterate "." Fir.Core.Bitwise "Bitwise and shift rules" (level := 2)}
+{includeReadable "." Fir.Core.Bitwise "Bitwise and shift rules" FirSpec.Core.Bitwise (level := 2)}
 
-{includeLiterate "." Fir.Core.Width "Width change rules" (level := 2)}
+{includeReadable "." Fir.Core.Width "Width change rules" FirSpec.Core.Width (level := 2)}
 
-{includeLiterate "." Fir.Core.Div "Division rules" (level := 2)}
+{includeReadable "." Fir.Core.Div "Division rules" FirSpec.Core.Div (level := 2)}
 
-{includeLiterate "." Fir.Core.Compare "Comparison and selection rules" (level := 2)}
+{includeReadable "." Fir.Core.Compare "Comparison and selection rules" FirSpec.Core.Compare (level := 2)}
 
-{includeLiterate "." Fir.Core.Control "Control-flow rules" (level := 2)}
+{includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 2)}
 
-{includeLiterate "." Fir.Core.Branch "Branch rules" (level := 2)}
+{includeReadable "." Fir.Core.Branch "Branch rules" FirSpec.Core.Branch (level := 2)}
 
-{includeLiterate "." Fir.Core.Call "Call rules" (level := 2)}
+{includeReadable "." Fir.Core.Call "Call rules" FirSpec.Core.Call (level := 2)}
 
-{includeLiterate "." Fir.Core.Semantics "Core op semantics" (level := 2)}
+{includeReadable "." Fir.Core.Semantics "Core op semantics" FirSpec.Core.Semantics (level := 2)}
 
-{includeLiterate "." Fir.Core.ArithLaws "Constant obligations" (level := 2)}
+{includeReadable "." Fir.Core.ArithLaws "Constant obligations" FirSpec.Core.ArithLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.WrapLaws "Arithmetic obligations" (level := 2)}
+{includeReadable "." Fir.Core.WrapLaws "Arithmetic obligations" FirSpec.Core.WrapLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.FreezeLaws "Freeze obligations" (level := 2)}
+{includeReadable "." Fir.Core.FreezeLaws "Freeze obligations" FirSpec.Core.FreezeLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" (level := 2)}
+{includeReadable "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" FirSpec.Core.BitwiseLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.WidthLaws "Width change obligations" (level := 2)}
+{includeReadable "." Fir.Core.WidthLaws "Width change obligations" FirSpec.Core.WidthLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.DivLaws "Division obligations" (level := 2)}
+{includeReadable "." Fir.Core.DivLaws "Division obligations" FirSpec.Core.DivLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.CompareLaws "Comparison and selection obligations" (level := 2)}
+{includeReadable "." Fir.Core.CompareLaws "Comparison and selection obligations" FirSpec.Core.CompareLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.ControlLaws "Control-flow obligations" (level := 2)}
+{includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 2)}
 
-{includeLiterate "." Fir.Core.BranchLaws "Branch obligations" (level := 2)}
+{includeReadable "." Fir.Core.BranchLaws "Branch obligations" FirSpec.Core.BranchLaws (level := 2)}
 
-{includeLiterate "." Fir.Execution.Morphism "Monad morphisms" (level := 2)}
+{includeReadable "." Fir.Execution.Morphism "Monad morphisms" FirSpec.Execution.Morphism (level := 2)}
 
-{includeLiterate "." Fir.Execution.ChoiceTree "Choice trees" (level := 2)}
+{includeReadable "." Fir.Execution.ChoiceTree "Choice trees" FirSpec.Execution.ChoiceTree (level := 2)}
 
-{includeLiterate "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" (level := 2)}
+{includeReadable "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" FirSpec.Execution.Modes (level := 2)}
 
-{includeLiterate "." Fir.Core.Modes "The core dialect's modes" (level := 2)}
+{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
 
 {includeLiterate "." Fir.Execution.SetRuns "Reading a run path by path" (level := 2)}
 
@@ -273,27 +309,27 @@ functions, blocks and ops.
 
 # Text format
 
-{includeLiterate "." Fir.Text.Lexical "Tokens" (level := 2)}
+{includeReadable "." Fir.Text.Lexical "Tokens" FirSpec.Text.Lexical (level := 2)}
 
-{includeLiterate "." Fir.Text.Grammar "Grammar" (level := 2)}
+{includeReadable "." Fir.Text.Grammar "Grammar" FirSpec.Text.Grammar (level := 2)}
 
-{includeLiterate "." Fir.Core.Text "The core dialect in text" (level := 2)}
+{includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 
-{includeLiterate "." Fir.Text.Print "The canonical printer" (level := 2)}
+{includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
 
-{includeLiterate "." Fir.Text.RoundTrip "Round trips" (level := 2)}
+{includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
-{includeLiterate "." Fir.Core.TextLaws "The core dialect's text is lawful" (level := 2)}
+{includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
 
-{includeLiterate "." Fir.Text.Lex "The parser" (level := 2)}
+{includeReadable "." Fir.Text.Lex "The parser" FirSpec.Text.Lex (level := 2)}
 
-{includeLiterate "." Fir.Text.Read "Reading the grammar" (level := 2)}
+{includeReadable "." Fir.Text.Read "Reading the grammar" FirSpec.Text.Read (level := 2)}
 
-{includeLiterate "." Fir.Text.ReadLocs "Reading the location table and the module" (level := 2)}
+{includeReadable "." Fir.Text.ReadLocs "Reading the location table and the module" FirSpec.Text.ReadLocs (level := 2)}
 
-{includeLiterate "." Fir.Text.Decode "Decoding" (level := 2)}
+{includeReadable "." Fir.Text.Decode "Decoding" FirSpec.Text.Decode (level := 2)}
 
-{includeLiterate "." Fir.Text.Example "Example" (level := 2)}
+{includeReadable "." Fir.Text.Example "Example" FirSpec.Text.Example (level := 2)}
 
 {includeReadable "." Fir.Text.Tokens "Lexing printed text" FirSpec.Text.Tokens (level := 2)}
 
