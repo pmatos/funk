@@ -17,6 +17,10 @@ function outcomeRow(o) {
   return el("li", { class: `o-${o.kind}` }, ...body);
 }
 
+function whole(id) {
+  return $(id).value.trim() || $(id).defaultValue;
+}
+
 function count(n, thing) {
   return `${n} ${thing}${n === 1 ? "" : "s"}`;
 }
@@ -40,12 +44,12 @@ function reference(r) {
     ];
   }
   const parts = [title, el("ul", { class: "outcomes" }, outcomeRow(r.outcome))];
-  const drew = r.sequence ? `: ${r.sequence.join(", ")}` : "";
+  const drew = r.sequence?.length ? `: ${r.sequence.join(", ")}` : "";
   parts.push(el("p", { class: "note" }, `This path made ${count(r.choices, "choice")}${drew}.`));
   return parts;
 }
 
-const HEADLINE = {
+export const HEADLINE = {
   passed: "Native code refines fir-ref.",
   failed: "Native code does not refine fir-ref.",
   invalid: "This run cannot be judged.",
@@ -104,13 +108,8 @@ export class Runner {
 
   inputs(values = []) {
     const fn = this.functions.find((f) => f.name === $("func").value);
-    const wrap = $("args");
-    if (!fn) {
-      wrap.replaceChildren();
-      return;
-    }
-    wrap.replaceChildren(
-      ...fn.params.map((type, i) =>
+    $("args").replaceChildren(
+      ...(fn?.params ?? []).map((type, i) =>
         el(
           "label",
           { class: "field" },
@@ -145,16 +144,14 @@ export class Runner {
   }
 
   applySaved() {
-    const run = this.saved[Number($("saved").value)];
-    if ($("saved").value === "" || !run) return;
+    const run = this.saved[$("saved").value];
+    if (!run) return;
     $("func").value = run.func;
     this.inputs(run.args);
-    if (run.fuel !== null && run.fuel !== undefined) $("fuel").value = run.fuel;
-    if (run.choices) {
-      $("mode").value = "scripted";
-      $("choices").value = run.choices.join(",");
-      this.showMode();
-    }
+    $("fuel").value = run.fuel ?? $("fuel").defaultValue;
+    $("mode").value = run.choices ? "scripted" : "exhaustive";
+    $("choices").value = run.choices ? run.choices.join(",") : "";
+    this.showMode();
   }
 
   clear() {
@@ -166,15 +163,15 @@ export class Runner {
       text: this.text(),
       func: $("func").value,
       args: [...document.querySelectorAll("#args .arg")].map((i) => i.value.trim()),
-      fuel: Number($("fuel").value),
+      fuel: Number(whole("fuel")),
       mode: $("mode").value,
     };
-    if (req.mode === "exhaustive") req.bits = Number($("bits").value);
+    if (req.mode === "exhaustive") req.bits = Number(whole("bits"));
     if (req.mode === "scripted") {
       const typed = $("choices").value.trim();
       req.choices = typed === "" ? [] : typed.split(",").map((c) => c.trim());
     }
-    if (req.mode === "seed") req.seed = Number($("seed").value);
+    if (req.mode === "seed") req.seed = whole("seed");
     return req;
   }
 
@@ -188,6 +185,7 @@ export class Runner {
     try {
       const req = this.request();
       const ref = await post("/api/run", req);
+      if (text !== this.text()) return;
       this.results.replaceChildren(...reference(ref));
       const compared = await post("/api/compare", req);
       if (text === this.text()) {
@@ -195,7 +193,10 @@ export class Runner {
         this.onNative(compared);
       }
     } catch (e) {
-      this.results.replaceChildren(el("p", { class: "verdict v-parse-error" }, e.message));
+      if (text === this.text()) {
+        this.results.replaceChildren(el("p", { class: "verdict v-parse-error" }, e.message));
+        this.onNative({ status: "unavailable", detail: "" });
+      }
       this.onError(e);
     } finally {
       this.running = false;

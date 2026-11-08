@@ -41,13 +41,11 @@ export class Chain {
 
 function diagnostic(d, lines, goto) {
   const line = lineOf(lines, d);
-  const where = line === null ? "" : `Line ${line}: `;
-  const body = `${where}${d.message}`;
-  if (line === null) return el("li", {}, body);
+  if (line === null) return el("li", {}, d.message);
   return el(
     "li",
     {},
-    el("button", { class: "link", type: "button", onclick: () => goto(line, d.column ?? 1) }, body),
+    el("button", { class: "link", type: "button", onclick: () => goto(line, d.column ?? 1) }, `Line ${line}: ${d.message}`),
   );
 }
 
@@ -101,11 +99,12 @@ export function updateChain(chain, a) {
     skipped: ["idle", "not run"],
   };
   chain.set("round", ...round[a.roundTrip.status]);
-  const asm = a.assembly.verdict;
-  if (asm === "accepted") chain.set("asm", "ok", "lowered");
-  else if (asm === "unsupported") chain.set("asm", "warn", "cannot lower");
-  else if (asm === "skipped") chain.set("asm", "idle", "not run");
-  else chain.set("asm", "bad", "failed");
+  const asm = {
+    accepted: ["ok", "lowered"],
+    unsupported: ["warn", "cannot lower"],
+    skipped: ["idle", "not run"],
+  };
+  chain.set("asm", ...(asm[a.assembly.verdict] ?? ["bad", "failed"]));
 }
 
 export function diagnosticMarks(a, lines) {

@@ -11,20 +11,18 @@ export function el(tag, props = {}, ...children) {
 
 export const $ = (id) => document.getElementById(id);
 
-export async function post(path, body) {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+async function request(path, init) {
+  const response = await fetch(path, init);
   const value = await response.json();
   if (!response.ok) throw new Error(value.error);
   return value;
 }
 
-export async function get(path) {
-  const response = await fetch(path);
-  const value = await response.json();
-  if (!response.ok) throw new Error(value.error);
-  return value;
-}
+export const get = (path) => request(path);
+
+export const post = (path, body) =>
+  request(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });

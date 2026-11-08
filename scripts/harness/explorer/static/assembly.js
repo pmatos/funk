@@ -32,13 +32,7 @@ export class Assembly {
   constructor({ onOp }) {
     this.root = $("asm");
     this.rows = [];
-    this.root.addEventListener("click", (e) => {
-      const row = e.target.closest("[data-index]");
-      if (row) {
-        const op = this.rows[Number(row.dataset.index)].op;
-        if (op) onOp(op);
-      }
-    });
+    this.onOp = onOp;
   }
 
   message(text) {
@@ -49,18 +43,18 @@ export class Assembly {
   show(text) {
     this.rows = parse(text);
     this.root.replaceChildren(
-      ...this.rows.map((row, i) =>
+      ...this.rows.map((row) =>
         el(
           "div",
-          { class: `asm-line${row.comment !== null ? " asm-op" : ""}${row.op ? " linked" : ""}` },
+          {
+            class: `asm-line${row.comment !== null ? " asm-op" : ""}${row.op ? " linked" : ""}`,
+            onclick: () => row.op && this.onOp(row.op),
+          },
           ...(row.comment !== null ? [row.line] : asmLine(row.line)),
           "\n",
         ),
       ),
     );
-    [...this.root.children].forEach((node, i) => {
-      node.dataset.index = i;
-    });
   }
 
   select(op) {

@@ -2,13 +2,15 @@
 
 import http.client
 import json
+import socket
 import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from explorer import examples
-from explorer.server import LOOPBACK, MOST_BODY, Explorer
+from explorer.server import LOOPBACK, MOST_BODY, Explorer, Handler
 
 TEXT = "func @f() {\n}\n"
 
@@ -131,6 +133,32 @@ class ServerTest(unittest.TestCase):
     def test_a_module_past_the_size_limit_is_refused(self):
         status, _ = self.post("/api/analyze", {"text": "x" * (MOST_BODY + 1)})
         self.assertEqual(status, 413)
+
+    def test_a_silent_connection_does_not_hold_up_the_others(self):
+        with mock.patch.object(Handler, "timeout", 0.1):
+            idle = socket.create_connection((LOOPBACK, self.port))
+            self.addCleanup(idle.close)
+            conn = http.client.HTTPConnection(LOOPBACK, self.port, timeout=5)
+            self.addCleanup(conn.close)
+            conn.request("GET", "/")
+            self.assertEqual(conn.getresponse().status, 200)
+
+    def test_a_seed_sent_as_text_keeps_every_digit(self):
+        seed = (1 << 64) - 1
+        body = {"text": TEXT, "func": "@f", "mode": "seed", "seed": str(seed)}
+        self.assertEqual(self.post("/api/run", body)[0], 200)
+        self.assertEqual(self.tools.calls[0][1]["seed"], seed)
+
+    def test_a_seed_that_is_not_a_whole_number_in_range_is_refused(self):
+        for seed in ("", "1.5", "-1", str(1 << 64), "9" * 5000):
+            body = {"text": TEXT, "func": "@f", "mode": "seed", "seed": seed}
+            self.assertEqual(self.post("/api/run", body)[0], 400, seed)
+
+    def test_a_comparison_gets_the_budget_of_the_run(self):
+        body = {"text": TEXT, "func": "@f", "bits": 32}
+        self.post("/api/compare", body)
+        self.assertEqual(self.tools.calls[0][1]["bits"], 32)
+        self.assertEqual(self.post("/api/compare", {**body, "bits": 65})[0], 400)
 
     def test_a_run_gets_defaults_and_a_mode(self):
         self.post("/api/run", {"text": TEXT, "func": "@f"})

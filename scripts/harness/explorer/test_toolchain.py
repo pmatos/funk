@@ -97,9 +97,7 @@ class AnalyzeTest(Stand):
         self.assertEqual(a["agreement"]["agree"], True)
         self.assertEqual(a["roundTrip"]["status"], "same")
         self.assertEqual(a["assembly"]["text"], "f:\n\tret\n")
-        self.assertEqual(
-            a["functions"], [{"name": "@f", "params": ["i8"], "results": ["i8"]}]
-        )
+        self.assertEqual(a["functions"], [{"name": "@f", "params": ["i8"]}])
 
     def test_rust_and_lean_disagreeing_is_reported(self):
         rejected = json.dumps(
@@ -117,6 +115,13 @@ class AnalyzeTest(Stand):
         self.lean_script(reprint=TEXT + "\n")
         a = self.chain().analyze(TEXT)
         self.assertEqual(a["roundTrip"]["status"], "differs")
+
+    def test_a_tool_that_gives_no_report_still_has_a_list_of_diagnostics(self):
+        self.lean = self.script("fir-ref-silent", "pass\n")
+        a = self.chain().analyze(TEXT)
+        self.assertEqual(a["lean"]["verdict"], "tool-error")
+        self.assertEqual(a["lean"]["diagnostics"], [])
+        self.assertIsNone(a["agreement"]["agree"])
 
     def test_an_invalid_module_has_no_assembly(self):
         rejected = json.dumps(
@@ -168,6 +173,23 @@ class CompareTest(Stand):
         self.assertEqual(got["status"], "unavailable")
         self.assertEqual(got["native"], [])
         self.assertIn("not i7", got["detail"])
+
+    def test_the_budget_of_the_run_decides_whether_there_is_a_set(self):
+        self.lean = self.script(
+            "fir-ref-budget",
+            """
+            import sys
+            if sys.argv[1] == "validate":
+                print('{"verdict":"accepted","diagnostics":[]}')
+            elif "--choice-bits" in sys.argv:
+                print('{"kind":"outcomes","choices":32,"outcomes":[{"kind":"return","values":["2"]}]}')
+            else:
+                print('{"kind":"choice-budget-exceeded","budget":16}')
+            """,
+        )
+        self.assertEqual(self.chain().compare(TEXT, CALL)["status"], "invalid")
+        got = self.chain().compare(TEXT, {**CALL, "bits": 32})
+        self.assertEqual(got["status"], "passed")
 
     def test_a_reference_run_that_fails_is_not_called_a_refinement_failure(self):
         self.lean = self.script(

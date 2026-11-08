@@ -2,7 +2,7 @@ import { $, el, get, post } from "./dom.js";
 import { Assembly } from "./assembly.js";
 import { Chain, assemblyMessage, diagnosticMarks, renderChecks, updateChain } from "./checks.js";
 import { Editor, lineOfOp, opAt } from "./editor.js";
-import { Runner } from "./run.js";
+import { HEADLINE, Runner } from "./run.js";
 
 const DEBOUNCE = 300;
 const FIRST = ["canonical", "freeze-i8"];
@@ -53,10 +53,12 @@ function showNative(c) {
     unavailable: ["idle", "not run"],
   };
   chain.set("native", ...(kinds[c.status] ?? ["warn", c.status]));
-  alarm("native", c.status === "failed" ? `Native code does not refine fir-ref. ${c.detail}` : null);
+  alarm("native", c.status === "failed" ? `${HEADLINE.failed} ${c.detail}` : null);
 }
 
 function edited() {
+  analysis = null;
+  $("format").disabled = true;
   runner.clear();
   chain.set("native", "idle", "press Run");
   alarm("native", null);
@@ -73,7 +75,7 @@ function show(a) {
   if (a.assembly.verdict === "accepted") assembly.show(a.assembly.text);
   else assembly.message(assemblyMessage(a));
   $("format").disabled = !(a.format.verdict === "accepted" && !a.format.canonical);
-  runner.setFunctions(a.functions, a.rust.verdict === "accepted" && a.lean.verdict === "accepted");
+  runner.setFunctions(a.format.verdict === "accepted" ? a.functions : runner.functions, a.rust.verdict === "accepted" && a.lean.verdict === "accepted");
   alarm(
     "disagree",
     a.agreement.agree === false
@@ -100,7 +102,7 @@ async function analyze() {
     alarm("server", `The explorer could not check this module. ${e.message}`);
   } finally {
     busy = false;
-    if (again || text !== editor.text) {
+    if (again) {
       again = false;
       analyze();
     }
@@ -117,10 +119,7 @@ async function load(group, name) {
 }
 
 async function start() {
-  chain.set("rust", "idle", "checking");
-  chain.set("lean", "idle", "checking");
-  chain.set("round", "idle", "checking");
-  chain.set("asm", "idle", "checking");
+  for (const id of ["rust", "lean", "round", "asm"]) chain.set(id, "idle", "checking");
   chain.set("native", "idle", "press Run");
   const groups = await get("/api/examples");
   const select = $("example");

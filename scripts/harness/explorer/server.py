@@ -12,13 +12,22 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+import corpus
+
 from . import examples
 
 LOOPBACK = "127.0.0.1"
 MOST_BODY = 1 << 20
+# How much of a refused body is read, so that the refusal reaches the browser
+# and is not lost to a connection reset.
+MOST_DISCARDED = 1 << 26
+# The seconds that a client may leave its connection silent. The server serves
+# one connection at a time, so a silent one holds up all the others.
+READ_TIMEOUT = 5
 MOST_FUEL = 1 << 40
 MOST_BITS = 64
 MOST_ARGS = 4096
+MOST_SEED = (1 << 64) - 1
 STATIC = Path(__file__).parent / "static"
 TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -53,6 +62,18 @@ def _count(value, what: str, limit: int) -> int:
     return value
 
 
+def _seed(value) -> int:
+    """A seed, which the page sends as text: a JSON number would round it."""
+    if isinstance(value, str) and value.isascii() and value.isdigit():
+        value = int(value) if len(value) <= len(str(MOST_SEED)) else -1
+    return _count(value, "seed", MOST_SEED)
+
+
+def _bits(body: dict) -> int | None:
+    bits = body.get("bits")
+    return None if bits is None else _count(bits, "bits", MOST_BITS)
+
+
 def module_text(body: dict) -> str:
     text = body.get("text")
     if not isinstance(text, str):
@@ -72,7 +93,7 @@ def call(body: dict) -> dict:
     return {
         "func": func,
         "args": _strings(body.get("args", []), "args"),
-        "fuel": _count(body.get("fuel", 1_000_000), "fuel", MOST_FUEL),
+        "fuel": _count(body.get("fuel", corpus.DEFAULT_FUEL), "fuel", MOST_FUEL),
     }
 
 
@@ -85,11 +106,14 @@ def run_request(body: dict) -> dict:
     if mode == "scripted":
         req["choices"] = _strings(body.get("choices", []), "choices")
     if mode == "seed":
-        req["seed"] = _count(body.get("seed"), "seed", (1 << 64) - 1)
+        req["seed"] = _seed(body.get("seed"))
     if mode == "exhaustive":
-        bits = body.get("bits")
-        req["bits"] = None if bits is None else _count(bits, "bits", MOST_BITS)
+        req["bits"] = _bits(body)
     return req
+
+
+def compare_request(body: dict) -> dict:
+    return {**call(body), "bits": _bits(body)}
 
 
 class Explorer(HTTPServer):
@@ -109,6 +133,7 @@ class Explorer(HTTPServer):
 class Handler(BaseHTTPRequestHandler):
     server_version = "fir-explorer"
     sys_version = ""
+    timeout = READ_TIMEOUT
 
     def log_message(self, format, *args):
         pass
@@ -164,6 +189,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._send(HTTPStatus.OK, TYPES[file.suffix], file.read_bytes())
 
+    def _discard(self, length: int):
+        left = min(length, MOST_DISCARDED)
+        while left > 0:
+            chunk = self.rfile.read(min(left, 1 << 16))
+            if not chunk:
+                return
+            left -= len(chunk)
+
     def _body(self) -> dict | None:
         origin = {f"http://{h}" for h in self.server.hosts()}
         if self.headers.get("Origin") not in origin:
@@ -178,6 +211,7 @@ class Handler(BaseHTTPRequestHandler):
             length = -1
         if not 0 <= length <= MOST_BODY:
             self.close_connection = True
+            self._discard(length)
             self._refuse(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "the module is too long")
             return None
         try:
@@ -205,7 +239,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/run":
                 result = chain.run(text, run_request(body))
             elif path == "/api/compare":
-                result = chain.compare(text, call(body))
+                result = chain.compare(text, compare_request(body))
             else:
                 self._refuse(HTTPStatus.NOT_FOUND, "no such action")
                 return

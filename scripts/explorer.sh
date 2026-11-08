@@ -7,9 +7,7 @@ set -euo pipefail
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 cd "$repo_root"
 
-# The explorer compiles and runs what is typed into it; keep tokens away.
-unset GH_TOKEN GITHUB_TOKEN
-
+# It unsets CI tokens too: the explorer runs what is typed into it.
 # shellcheck source=scripts/rust-env.sh
 source scripts/rust-env.sh
 if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then

@@ -50,8 +50,8 @@ class Harness:
         ok = (
             isinstance(a, Verdict)
             and isinstance(b, Verdict)
-            and a.verdict == b.verdict == reject.verdict
-            and a.position == b.position
+            and a.agrees(b)
+            and a.verdict == reject.verdict
         )
         detail = f"funk verify: {show(a)}; fir-ref validate: {show(b)}"
         if ok:
@@ -90,9 +90,7 @@ class Harness:
         out = self.work / f"build-{self.builds}"
         out.mkdir()
         exe = out / "exe"
-        cmd = [self.funk, "build", "--json", "-o", str(exe), str(module.path)]
-        why = tools.build_failure(tools.run(cmd))
-        return exe if why is None else f"is not built: funk build gives {why}"
+        return tools.build(self.funk, module.path, exe)
 
     def test(
         self, path: Path, t: corpus.Test, types: dict, exe: Path | str, params=None

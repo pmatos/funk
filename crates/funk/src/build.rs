@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-use funk_ir::Registry;
+use funk_ir::{Diagnostic, Module, Registry};
 use funk_x86_64::{BuildError, build, compile, object_path};
 
 use crate::json::Json;
@@ -31,11 +31,7 @@ pub fn build_file(file: &str, output: &str, reg: &Registry) -> Report {
             report.extra.push(("executable", path(&outputs.executable)));
             report
         }
-        Err(BuildError::Unsupported(ds)) => file_report(
-            file,
-            Verdict::Unsupported,
-            Problem::located(Kind::Unsupported, ds, &m.locs),
-        ),
+        Err(BuildError::Unsupported(ds)) => unsupported(file, ds, &m),
         Err(BuildError::Tool(why)) => {
             file_report(file, Verdict::ToolError, vec![Problem::Tool(why)])
         }
@@ -56,15 +52,17 @@ pub fn asm_file(file: &str, reg: &Registry) -> (Report, Option<String>) {
             report.extra.push(("text", Json::str(&program.module)));
             (report, Some(program.module))
         }
-        Err(ds) => (
-            file_report(
-                file,
-                Verdict::Unsupported,
-                Problem::located(Kind::Unsupported, ds, &m.locs),
-            ),
-            None,
-        ),
+        Err(ds) => (unsupported(file, ds, &m), None),
     }
+}
+
+/// The report on a module that the backend cannot lower.
+fn unsupported(file: &str, ds: Vec<Diagnostic>, m: &Module) -> Report {
+    file_report(
+        file,
+        Verdict::Unsupported,
+        Problem::located(Kind::Unsupported, ds, &m.locs),
+    )
 }
 
 /// Whether `input` and `output` are one file. An output that does not
