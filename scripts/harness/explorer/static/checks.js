@@ -89,7 +89,8 @@ export function renderChecks(a, lines, goto) {
 }
 
 export function updateChain(chain, a) {
-  const accepts = (r) => (r.verdict === "accepted" ? ["ok", "accepts"] : r.verdict === "tool-error" ? ["warn", "no report"] : ["bad", "rejects"]);
+  const verdicts = { accepted: ["ok", "accepts"], "tool-error": ["warn", "no report"] };
+  const accepts = (r) => verdicts[r.verdict] ?? ["bad", "rejects"];
   chain.set("rust", ...accepts(a.rust));
   chain.set("lean", ...accepts(a.lean));
   const round = {

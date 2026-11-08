@@ -65,7 +65,8 @@ def workspace(text: str):
     """A private directory that holds `text` as the module to work on."""
     with tempfile.TemporaryDirectory(prefix="fir-explorer-") as d:
         root = Path(d)
-        (root / MODULE).write_bytes(text.encode("utf-8"))
+        with open(root / MODULE, "wb") as module:
+            module.write(text.encode("utf-8"))
         yield root
 
 

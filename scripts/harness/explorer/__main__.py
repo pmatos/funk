@@ -11,7 +11,7 @@ from pathlib import Path
 
 import tools
 
-from .server import LOOPBACK, Explorer
+from .server import LOOPBACK, Explorer, origin
 from .toolchain import Toolchain
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -52,7 +52,8 @@ def main() -> int:
     except OSError as e:
         print(f"The explorer cannot use port {args.port}: {e}", file=sys.stderr)
         return 1
-    print(f"fir explorer: http://{LOOPBACK}:{server.server_address[1]}/", flush=True)
+    host = f"{LOOPBACK}:{server.server_address[1]}"
+    print(f"fir explorer: {origin(host)}/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

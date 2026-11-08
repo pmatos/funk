@@ -66,6 +66,12 @@ function edited() {
   timer = setTimeout(analyze, DEBOUNCE);
 }
 
+function validatorAlarm({ agree, why }) {
+  if (agree === false) return `Rust and Lean disagree. ${why}.`;
+  if (agree === null) return `A validator failed. ${why}.`;
+  return null;
+}
+
 function show(a) {
   analysis = a;
   const lines = editor.lines;
@@ -76,14 +82,7 @@ function show(a) {
   else assembly.message(assemblyMessage(a));
   $("format").disabled = !(a.format.verdict === "accepted" && !a.format.canonical);
   runner.setFunctions(a.format.verdict === "accepted" ? a.functions : runner.functions, a.rust.verdict === "accepted" && a.lean.verdict === "accepted");
-  alarm(
-    "disagree",
-    a.agreement.agree === false
-      ? `Rust and Lean disagree. ${a.agreement.why}.`
-      : a.agreement.agree === null
-        ? `A validator failed. ${a.agreement.why}.`
-        : null,
-  );
+  alarm("disagree", validatorAlarm(a.agreement));
   alarm("round", a.roundTrip.status === "differs" ? "Lean does not reprint Rust's text byte for byte." : null);
 }
 
@@ -104,7 +103,7 @@ async function analyze() {
     busy = false;
     if (again) {
       again = false;
-      analyze();
+      void analyze();
     }
   }
 }
@@ -131,7 +130,7 @@ async function start() {
   }
   select.addEventListener("change", () => {
     const [group, name] = select.value.split("/");
-    load(group, name);
+    load(group, name).catch((e) => alarm("server", `The explorer could not load this example. ${e.message}`));
   });
   $("format").addEventListener("click", () => {
     if (analysis?.format?.text) {
@@ -148,4 +147,8 @@ async function start() {
   }
 }
 
-start().catch((e) => alarm("server", `The explorer could not start. ${e.message}`));
+try {
+  await start();
+} catch (e) {
+  alarm("server", `The explorer could not start. ${e.message}`);
+}

@@ -3,6 +3,22 @@ import { firLine } from "./highlight.js";
 
 const SYMBOL_OF_FUNC = /^func (@"(?:[^"\\]|\\.)*"|@[^\s(]+)\(/;
 
+function blockStart(lines, from, block) {
+  const head = `^${block}`;
+  for (let i = from; i < lines.length && lines[i] !== "}"; i++) {
+    if (lines[i] === head || lines[i].startsWith(`${head}(`) || lines[i].startsWith(`${head}:`)) return i;
+  }
+  return -1;
+}
+
+function nthOp(lines, block, op) {
+  let seen = -1;
+  for (let i = block + 1; i < lines.length && lines[i] !== "}"; i++) {
+    if (lines[i].trim() !== "" && ++seen === op) return i + 1;
+  }
+  return block + 1;
+}
+
 /** Finds the line (from 1) that a diagnostic points at, or null. */
 export function lineOf(lines, d) {
   if (Number.isInteger(d.line)) return d.line;
@@ -11,19 +27,9 @@ export function lineOf(lines, d) {
   const start = lines.findIndex((l) => heads.some((h) => l.startsWith(h)));
   if (start < 0) return null;
   if (typeof d.block !== "string") return start + 1;
-  const head = `^${d.block}`;
-  for (let i = start + 1; i < lines.length && lines[i] !== "}"; i++) {
-    if (lines[i] !== head && !lines[i].startsWith(`${head}(`) && !lines[i].startsWith(`${head}:`)) {
-      continue;
-    }
-    if (!Number.isInteger(d.op)) return i + 1;
-    let seen = -1;
-    for (let j = i + 1; j < lines.length && lines[j] !== "}"; j++) {
-      if (lines[j].trim() !== "" && ++seen === d.op) return j + 1;
-    }
-    return i + 1;
-  }
-  return start + 1;
+  const block = blockStart(lines, start + 1, d.block);
+  if (block < 0) return start + 1;
+  return Number.isInteger(d.op) ? nthOp(lines, block, d.op) : block + 1;
 }
 
 /** Which op a line of canonical text holds, for finding its assembly. */
@@ -113,7 +119,7 @@ export class Editor {
   showLine(line) {
     this.focusLine = line;
     this.paint();
-    const height = parseFloat(getComputedStyle(this.source).lineHeight);
+    const height = Number.parseFloat(getComputedStyle(this.source).lineHeight);
     const top = (line - 1) * height;
     const view = this.source.clientHeight;
     if (top < this.source.scrollTop || top > this.source.scrollTop + view - height) {

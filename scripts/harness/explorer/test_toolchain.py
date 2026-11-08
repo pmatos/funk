@@ -87,14 +87,15 @@ class Stand(unittest.TestCase):
             """,
         )
 
-    def chain(self) -> Toolchain:
-        return Toolchain(self.funk, self.lean)
+
+def toolchain(stand: Stand) -> Toolchain:
+    return Toolchain(stand.funk, stand.lean)
 
 
 class AnalyzeTest(Stand):
     def test_agreeing_tools_report_every_pane(self):
-        a = self.chain().analyze(TEXT)
-        self.assertEqual(a["agreement"]["agree"], True)
+        a = toolchain(self).analyze(TEXT)
+        self.assertIs(a["agreement"]["agree"], True)
         self.assertEqual(a["roundTrip"]["status"], "same")
         self.assertEqual(a["assembly"]["text"], "f:\n\tret\n")
         self.assertEqual(a["functions"], [{"name": "@f", "params": ["i8"]}])
@@ -107,18 +108,18 @@ class AnalyzeTest(Stand):
             }
         )
         self.lean_script(validate=rejected)
-        a = self.chain().analyze(TEXT)
+        a = toolchain(self).analyze(TEXT)
         self.assertIs(a["agreement"]["agree"], False)
         self.assertIn("validation-error", a["agreement"]["why"])
 
     def test_lean_reprinting_other_bytes_is_reported(self):
         self.lean_script(reprint=TEXT + "\n")
-        a = self.chain().analyze(TEXT)
+        a = toolchain(self).analyze(TEXT)
         self.assertEqual(a["roundTrip"]["status"], "differs")
 
     def test_a_tool_that_gives_no_report_still_has_a_list_of_diagnostics(self):
         self.lean = self.script("fir-ref-silent", "pass\n")
-        a = self.chain().analyze(TEXT)
+        a = toolchain(self).analyze(TEXT)
         self.assertEqual(a["lean"]["verdict"], "tool-error")
         self.assertEqual(a["lean"]["diagnostics"], [])
         self.assertIsNone(a["agreement"]["agree"])
@@ -132,14 +133,14 @@ class AnalyzeTest(Stand):
         )
         self.funk_script(verify=rejected)
         self.lean_script(validate=rejected)
-        a = self.chain().analyze("nope")
+        a = toolchain(self).analyze("nope")
         self.assertEqual(a["assembly"]["verdict"], "skipped")
         self.assertIs(a["agreement"]["agree"], True)
 
 
 class RunTest(Stand):
     def test_each_mode_decodes(self):
-        chain = self.chain()
+        chain = toolchain(self)
         every = chain.run(TEXT, {**CALL, "mode": "exhaustive", "bits": 8})
         self.assertEqual(every["kind"], "outcomes")
         self.assertEqual(every["outcomes"][0]["values"], ["2"])
@@ -151,25 +152,25 @@ class RunTest(Stand):
     def test_an_invalid_module_is_not_run(self):
         rejected = json.dumps({"verdict": "parse-error", "diagnostics": []})
         self.lean_script(validate=rejected)
-        got = self.chain().run(TEXT, {**CALL, "mode": "seed", "seed": 1})
+        got = toolchain(self).run(TEXT, {**CALL, "mode": "seed", "seed": 1})
         self.assertEqual(got["kind"], "error")
 
 
 class CompareTest(Stand):
     def test_a_native_result_in_the_set_refines(self):
-        got = self.chain().compare(TEXT, CALL)
+        got = toolchain(self).compare(TEXT, CALL)
         self.assertEqual(got["status"], "passed")
         self.assertEqual(got["native"][0]["result"], {"values": ["2"]})
 
     def test_a_planted_wrong_native_result_does_not_refine(self):
         self.funk_script(native='print(\'{"values":["9"]}\')')
-        got = self.chain().compare(TEXT, CALL)
+        got = toolchain(self).compare(TEXT, CALL)
         self.assertEqual(got["status"], "failed")
         self.assertIn("9", got["detail"])
 
     def test_a_module_the_backend_cannot_lower_says_why(self):
         self.funk_script(build=False)
-        got = self.chain().compare(TEXT, CALL)
+        got = toolchain(self).compare(TEXT, CALL)
         self.assertEqual(got["status"], "unavailable")
         self.assertEqual(got["native"], [])
         self.assertIn("not i7", got["detail"])
@@ -187,8 +188,8 @@ class CompareTest(Stand):
                 print('{"kind":"choice-budget-exceeded","budget":16}')
             """,
         )
-        self.assertEqual(self.chain().compare(TEXT, CALL)["status"], "invalid")
-        got = self.chain().compare(TEXT, {**CALL, "bits": 32})
+        self.assertEqual(toolchain(self).compare(TEXT, CALL)["status"], "invalid")
+        got = toolchain(self).compare(TEXT, {**CALL, "bits": 32})
         self.assertEqual(got["status"], "passed")
 
     def test_a_reference_run_that_fails_is_not_called_a_refinement_failure(self):
@@ -203,14 +204,14 @@ class CompareTest(Stand):
                 sys.exit(2)
             """,
         )
-        got = self.chain().compare(TEXT, {**CALL, "args": ["nope"]})
+        got = toolchain(self).compare(TEXT, {**CALL, "args": ["nope"]})
         self.assertEqual(got["status"], "unavailable")
         self.assertIn("bad argument", got["detail"])
 
     def test_a_program_that_never_ends_is_stopped_and_reported(self):
         self.funk_script(native="import time; time.sleep(60)")
         with mock.patch.object(tools, "TIMEOUT", 1):
-            got = self.chain().compare(TEXT, CALL)
+            got = toolchain(self).compare(TEXT, CALL)
         self.assertEqual(got["status"], "failed")
         self.assertIn("does not end within 1 seconds", got["detail"])
 
@@ -221,5 +222,5 @@ class CompareTest(Stand):
         ):
             tempfile.tempdir = None
             self.addCleanup(setattr, tempfile, "tempdir", None)
-            self.chain().compare(TEXT, CALL)
+            toolchain(self).compare(TEXT, CALL)
             self.assertEqual(os.listdir(d), [])

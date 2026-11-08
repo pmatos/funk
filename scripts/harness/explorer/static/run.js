@@ -93,7 +93,7 @@ export class Runner {
     this.ready = false;
     $("run").addEventListener("submit", (e) => {
       e.preventDefault();
-      this.run();
+      void this.run();
     });
     $("mode").addEventListener("change", () => this.showMode());
     $("func").addEventListener("change", () => this.inputs());
@@ -114,7 +114,7 @@ export class Runner {
           "label",
           { class: "field" },
           `Argument ${i + 1}, ${type}`,
-          el("input", { type: "text", spellcheck: false, autocomplete: "off", value: values[i] ?? "0", className: "arg" }),
+          el("input", { type: "text", spellcheck: false, autocomplete: "off", value: values[i] ?? (type === "i1" ? "false" : "0"), className: "arg" }),
         ),
       ),
     );

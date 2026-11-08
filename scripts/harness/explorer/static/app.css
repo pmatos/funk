@@ -32,7 +32,7 @@ body {
 
 :focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
 
-[hidden] { display: none !important; }
+.field[hidden] { display: none; }
 
 .bar {
   display: flex;

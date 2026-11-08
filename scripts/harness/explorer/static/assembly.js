@@ -10,7 +10,7 @@ export function parse(text) {
   let op = null;
   for (const line of text.replace(/\n$/, "").split("\n")) {
     const comment = /^\s*# (.*)$/.exec(line);
-    if (comment && comment[1].startsWith("@")) {
+    if (comment?.[1].startsWith("@")) {
       func = comment[1];
       op = null;
     } else if (comment) {

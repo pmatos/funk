@@ -17,6 +17,7 @@ import corpus
 from . import examples
 
 LOOPBACK = "127.0.0.1"
+SCHEME = "http"
 MOST_BODY = 1 << 20
 # How much of a refused body is read, so that the refusal reaches the browser
 # and is not lost to a connection reset.
@@ -40,6 +41,11 @@ HEADERS = {
     "Referrer-Policy": "no-referrer",
     "Cache-Control": "no-store",
 }
+
+
+def origin(host: str) -> str:
+    """The origin of the page, which is served only on the loopback address."""
+    return f"{SCHEME}://{host}"
 
 
 class BadRequest(Exception):
@@ -120,9 +126,11 @@ class Explorer(HTTPServer):
     def __init__(self, port: int, toolchain, corpus_root: Path):
         super().__init__((LOOPBACK, port), Handler)
         self.toolchain = toolchain
-        self.corpus_root = corpus_root
+        self.examples = examples.load(corpus_root)
         self.files = {
-            p.name: p for p in STATIC.iterdir() if p.suffix in TYPES and p.is_file()
+            p.name: (TYPES[p.suffix], p.read_bytes())
+            for p in STATIC.iterdir()
+            if p.suffix in TYPES and p.is_file()
         }
 
     def hosts(self) -> set[str]:
@@ -136,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
     timeout = READ_TIMEOUT
 
     def log_message(self, format, *args):
-        pass
+        """Keeps the terminal for the address; requests hold the user's code."""
 
     def _send(self, status: HTTPStatus, kind: str, data: bytes):
         self.send_response(status)
@@ -166,14 +174,11 @@ class Handler(BaseHTTPRequestHandler):
         if url.path == "/favicon.ico":
             self._send(HTTPStatus.NO_CONTENT, "image/x-icon", b"")
         elif url.path == "/api/examples":
-            self._json(examples.catalogue(self.server.corpus_root))
+            self._json({g: list(e) for g, e in self.server.examples.items()})
         elif url.path == "/api/example":
             q = parse_qs(url.query)
-            found = examples.example(
-                self.server.corpus_root,
-                q.get("group", [""])[0],
-                q.get("name", [""])[0],
-            )
+            group = self.server.examples.get(q.get("group", [""])[0], {})
+            found = group.get(q.get("name", [""])[0])
             if found is None:
                 self._refuse(HTTPStatus.NOT_FOUND, "no such example")
             else:
@@ -183,11 +188,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def _static(self, path: str):
         name = "index.html" if path == "/" else path.removeprefix("/")
-        file = self.server.files.get(name)
-        if file is None:
+        found = self.server.files.get(name)
+        if found is None:
             self._refuse(HTTPStatus.NOT_FOUND, "no such page")
             return
-        self._send(HTTPStatus.OK, TYPES[file.suffix], file.read_bytes())
+        self._send(HTTPStatus.OK, *found)
 
     def _discard(self, length: int):
         left = min(length, MOST_DISCARDED)
@@ -198,8 +203,7 @@ class Handler(BaseHTTPRequestHandler):
             left -= len(chunk)
 
     def _body(self) -> dict | None:
-        origin = {f"http://{h}" for h in self.server.hosts()}
-        if self.headers.get("Origin") not in origin:
+        if self.headers.get("Origin") not in map(origin, self.server.hosts()):
             self._refuse(HTTPStatus.FORBIDDEN, "this request comes from another page")
             return None
         if self.headers.get_content_type() != "application/json":

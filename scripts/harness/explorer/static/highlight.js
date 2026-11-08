@@ -22,10 +22,12 @@ export function firLine(text) {
 }
 
 export function asmLine(text) {
-  const label = /^(\.?[\w$.]+):(.*)$/.exec(text);
-  if (label) return [el("span", { class: "t-label" }, `${label[1]}:`), label[2]];
-  const op = /^(\s*)(\.?[a-z][\w.]*)(.*)$/.exec(text);
-  if (!op) return [text];
-  const directive = op[2].startsWith(".");
-  return [op[1], el("span", { class: directive ? "t-directive" : "t-word" }, op[2]), op[3]];
+  const body = text.trimStart();
+  const indent = text.slice(0, text.length - body.length);
+  const space = body.search(/\s/);
+  const word = space < 0 ? body : body.slice(0, space);
+  const rest = body.slice(word.length);
+  if (indent === "" && word.endsWith(":")) return [el("span", { class: "t-label" }, word), rest];
+  if (!/^\.?[a-z]/.test(word)) return [text];
+  return [indent, el("span", { class: word.startsWith(".") ? "t-directive" : "t-word" }, word), rest];
 }

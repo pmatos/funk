@@ -8,13 +8,6 @@ GROUPS = ("canonical", "llvm")
 MOST_RUNS = 16
 
 
-def catalogue(corpus_root: Path) -> dict[str, list[str]]:
-    return {
-        group: sorted(p.stem for p in (corpus_root / group).glob("*.fir"))
-        for group in GROUPS
-    }
-
-
 def _saved_runs(path: Path, group: str) -> list[dict]:
     if not path.exists():
         return []
@@ -25,12 +18,20 @@ def _saved_runs(path: Path, group: str) -> list[dict]:
     ]
 
 
-def example(corpus_root: Path, group: str, name: str) -> dict | None:
-    """One example, or None unless the catalogue lists it."""
-    if group not in GROUPS or name not in catalogue(corpus_root)[group]:
-        return None
-    base = corpus_root / group / name
+def _example(fir: Path, group: str) -> dict:
     return {
-        "text": base.with_suffix(".fir").read_text(encoding="utf-8"),
-        "runs": _saved_runs(base.with_suffix(".toml"), group),
+        "text": fir.read_text(encoding="utf-8"),
+        "runs": _saved_runs(fir.with_suffix(".toml"), group),
+    }
+
+
+def load(corpus_root: Path) -> dict[str, dict[str, dict]]:
+    """Every example, by group and name, read once at start-up so that a
+    request only ever picks from what is already in memory."""
+    return {
+        group: {
+            fir.stem: _example(fir, group)
+            for fir in sorted((corpus_root / group).glob("*.fir"))
+        }
+        for group in GROUPS
     }
