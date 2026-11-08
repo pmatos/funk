@@ -33,6 +33,7 @@ use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Ty
 mod blocks;
 mod bounded;
 mod calls;
+mod planted;
 pub mod program;
 pub mod soup;
 pub mod wellformed;
@@ -290,6 +291,10 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
 /// functions of the module that a call may name.
 struct Body<'k> {
     widths: Widths,
+    /// Every value it makes must stay defined.
+    safe: bool,
+    /// How many more calls `bounded.rs` may add on this path.
+    calls_left: u32,
     keys: &'k [LocRef],
     funcs: &'k [Callee],
     values: Vec<(String, Type)>,
@@ -339,6 +344,9 @@ impl Body<'_> {
     /// their flags, a bitwise op or a shift of two, a division or remainder
     /// of two, `freeze` of one, `poison`, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
+        if self.safe {
+            return self.defined(rng, &t);
+        }
         let same = self.of_type(&t);
         let casts = self.casts_to(&t);
         let i1 = int_type(1);
@@ -407,6 +415,8 @@ fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef], widths: Widt
     let mut f = Func::new(me.name.clone());
     let mut body = Body {
         widths,
+        safe: false,
+        calls_left: 0,
         keys,
         funcs,
         values: Vec::new(),

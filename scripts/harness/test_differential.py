@@ -331,6 +331,42 @@ class GeneratedRuns(unittest.TestCase):
         result, _ = self.judge(ONE, ("8",))
         self.assertEqual(result.judgement.status, FAILED)
 
+    def judge_defined(self, *responses):
+        runs = RecordedRuns(*responses)
+        test = replace(TEST, defined=True)
+        return evaluate_generated(test, ["i8"], [], runs), runs
+
+    def assert_defined_run_fails(self, ref, why):
+        result, runs = self.judge_defined(ref)
+        self.assertEqual(result.judgement.status, FAILED)
+        self.assertIn(why, result.judgement.why)
+        self.assertIsNone(result.interpreter_only)
+        self.assertEqual([c[0] for c in runs.calls], ["exhaustive"])
+
+    def test_ub_in_a_run_built_to_stay_defined_fails(self):
+        ub = Outcomes(0, (Outcome(UB, reason="sdiv by zero"),))
+        self.assert_defined_run_fails(ub, "holds UB")
+
+    def test_running_out_of_fuel_in_a_defined_run_fails(self):
+        ref = Outcomes(0, (Outcome(FUEL_EXHAUSTED),))
+        self.assert_defined_run_fails(ref, "runs out of fuel")
+
+    def test_going_past_the_budget_in_a_defined_run_fails(self):
+        self.assert_defined_run_fails(WIDE, "chooses past the budget")
+
+    def test_a_choice_in_a_defined_run_fails(self):
+        ref = Outcomes(1, (returned("7"),))
+        self.assert_defined_run_fails(ref, "makes a choice")
+
+    def test_poison_from_a_defined_run_fails(self):
+        ref = Outcomes(0, (returned("poison"),))
+        self.assert_defined_run_fails(ref, "returns poison")
+
+    def test_a_run_built_to_stay_defined_reaches_native_code(self):
+        result, runs = self.judge_defined(ONE, ("7",))
+        self.assertEqual(result.judgement.status, PASSED)
+        self.assertEqual([c[0] for c in runs.calls], ["exhaustive", "native"])
+
     def test_a_corpus_run_with_ub_stays_invalid(self):
         ub = Outcomes(0, (Outcome(UB, reason="sdiv by zero"),))
         result = evaluate(TEST, ["i8"], [], RecordedRuns(ub, ("7",)))

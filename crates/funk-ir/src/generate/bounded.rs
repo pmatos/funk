@@ -16,6 +16,11 @@
 //! The rest are the generator's own ops, and they may call earlier bounded
 //! functions. An op may still make poison, and a division or a branch on it
 //! may hit UB: that makes a run interpreter-only, not invalid.
+//!
+//! A function named with [`SAFE_PREFIX`] holds only ops that stay defined,
+//! calls only functions like itself, and makes at most one call on each
+//! path through an iteration, which bounds its steps. Its runs must return
+//! defined values.
 
 use super::blocks::value;
 use super::calls::{self, Callee};
@@ -23,36 +28,48 @@ use super::{BACKEND_WIDTHS, Body, Rng, Widths, constant};
 use crate::dialects::core::{PREDICATES, int_type, int_width};
 use crate::ir::{Attr, Block, Func, FuncType, Int, LocRef, Module, Op, Type};
 
+/// The start of the name of a function built to stay defined.
+pub const SAFE_PREFIX: &str = "safe.";
+
 const COUNTER_WIDTHS: [u32; 5] = [8, 16, 32, 64, 128];
 const MASKS: [&str; 3] = ["3", "7", "15"];
 const LOOP_PREDICATES: [&str; 3] = ["slt", "ult", "ne"];
 
-/// Adds one to three bounded functions, or pairs of them, to `module`.
+/// Adds one to three bounded functions, or pairs of them, to `module`. The
+/// first is built to stay defined, and so is each later one half the time.
 pub(super) fn add(rng: &mut Rng, mut module: Module, keys: &[LocRef]) -> Module {
-    let mut done: Vec<Callee> = Vec::new();
+    let (mut all, mut safe_ones): (Vec<Callee>, Vec<Callee>) = (Vec::new(), Vec::new());
     for k in 0..1 + rng.below(3) {
+        let safe = k == 0 || rng.one_in(2);
+        let prefix = if safe { SAFE_PREFIX } else { "bounded." };
+        let done = if safe { &safe_ones } else { &all };
+        let mut made = Vec::new();
         match rng.below(4) {
             0 | 1 => {
-                let me = signature(rng, format!("bounded.loop{k}"));
-                module = module.func(counted_loop(rng, &me, &done, keys));
-                done.push(me);
+                let me = signature(rng, format!("{prefix}loop{k}"));
+                module = module.func(counted_loop(rng, &me, done, keys, safe));
+                made.push(me);
             }
             2 => {
-                let me = signature(rng, format!("bounded.self{k}"));
-                module = module.func(recursion(rng, &me, &me.name, &done, keys));
-                done.push(me);
+                let me = signature(rng, format!("{prefix}self{k}"));
+                module = module.func(recursion(rng, &me, &me.name, done, keys, safe));
+                made.push(me);
             }
             _ => {
-                let a = signature(rng, format!("bounded.even{k}"));
+                let a = signature(rng, format!("{prefix}even{k}"));
                 let b = Callee {
-                    name: format!("bounded.odd{k}"),
+                    name: format!("{prefix}odd{k}"),
                     ty: a.ty.clone(),
                 };
-                module = module.func(recursion(rng, &a, &b.name, &done, keys));
-                module = module.func(recursion(rng, &b, &a.name, &done, keys));
-                done.extend([a, b]);
+                module = module.func(recursion(rng, &a, &b.name, done, keys, safe));
+                module = module.func(recursion(rng, &b, &a.name, done, keys, safe));
+                made.extend([a, b]);
             }
         }
+        if safe {
+            safe_ones.extend(made.iter().cloned());
+        }
+        all.extend(made);
     }
     module
 }
@@ -69,9 +86,12 @@ fn start<'k>(
     me: &Callee,
     done: &'k [Callee],
     keys: &'k [LocRef],
+    safe: bool,
 ) -> (Func, Body<'k>) {
     let mut body = Body {
         widths: Widths::Backend,
+        safe,
+        calls_left: 0,
         keys,
         funcs: done,
         values: Vec::new(),
@@ -137,7 +157,8 @@ impl Body<'_> {
     /// One to three ops: new values, or calls of earlier bounded functions.
     fn work(&mut self, rng: &mut Rng) {
         for _ in 0..1 + rng.below(3) {
-            if !self.funcs.is_empty() && rng.one_in(3) {
+            if !self.funcs.is_empty() && self.calls_left > 0 && rng.one_in(3) {
+                self.calls_left -= 1;
                 calls::call(rng, self);
             } else {
                 let t = int_type(*rng.pick(&BACKEND_WIDTHS));
@@ -169,7 +190,7 @@ impl Body<'_> {
     /// A new value of type `t` from recent values, by an op that gives no
     /// poison on defined operands: no flags, a shift amount below the
     /// width, and a divisor from 1 to 7.
-    fn defined(&mut self, rng: &mut Rng, t: &Type) -> String {
+    pub(super) fn defined(&mut self, rng: &mut Rng, t: &Type) -> String {
         let w = int_width(t).expect("an integer type");
         let a = self.operand(rng, t);
         let b = self.operand(rng, t);
@@ -217,6 +238,11 @@ impl Body<'_> {
         }
     }
 
+    /// Allows the calls of one path through an iteration.
+    fn allow_calls(&mut self) {
+        self.calls_left = if self.safe { 1 } else { 6 };
+    }
+
     fn take_block(&mut self, label: &str, params: &[(String, Type)], term: Op) -> Block {
         let mut b = Block::new(label);
         for (x, t) in params {
@@ -241,8 +267,8 @@ impl Body<'_> {
 
 /// A loop that counts from 0 up to the bound, with accumulators as block
 /// arguments of its header.
-fn counted_loop(rng: &mut Rng, me: &Callee, done: &[Callee], keys: &[LocRef]) -> Func {
-    let (f, mut body) = start(rng, me, done, keys);
+fn counted_loop(rng: &mut Rng, me: &Callee, done: &[Callee], keys: &[LocRef], safe: bool) -> Func {
+    let (f, mut body) = start(rng, me, done, keys, safe);
     let (counter, t) = body.values[0].clone();
     let n = body.bound(rng, &counter, &t);
     let zero = body.int(rng, "0", &t);
@@ -271,6 +297,7 @@ fn counted_loop(rng: &mut Rng, me: &Callee, done: &[Callee], keys: &[LocRef]) ->
     let head = body.take_block("head", &params, test);
     let after_head = body.values.clone();
 
+    body.allow_calls();
     body.work(rng);
     let mut blocks = Vec::new();
     let latch_params = if rng.one_in(2) {
@@ -335,8 +362,15 @@ fn diamond(
 
 /// A recursion that goes down from the bound to 0, calling `callee`, which
 /// has `me`'s type: `me` itself, or the function it alternates with.
-fn recursion(rng: &mut Rng, me: &Callee, callee: &str, done: &[Callee], keys: &[LocRef]) -> Func {
-    let (f, mut body) = start(rng, me, done, keys);
+fn recursion(
+    rng: &mut Rng,
+    me: &Callee,
+    callee: &str,
+    done: &[Callee],
+    keys: &[LocRef],
+    safe: bool,
+) -> Func {
+    let (f, mut body) = start(rng, me, done, keys, safe);
     let (counter, t) = body.values[0].clone();
     let d = body.bound(rng, &counter, &t);
     let zero = body.int(rng, "0", &t);
@@ -348,6 +382,7 @@ fn recursion(rng: &mut Rng, me: &Callee, callee: &str, done: &[Callee], keys: &[
     let entry = body.take_block("entry", &[], test);
     let after_entry = body.values.clone();
 
+    body.allow_calls();
     body.work(rng);
     let ret = body.ret(rng, me);
     let base = body.take_block("base", &[], ret);
@@ -368,6 +403,7 @@ fn recursion(rng: &mut Rng, me: &Callee, callee: &str, done: &[Callee], keys: &[
         body.values.push((n, u.clone()));
     }
     body.ops.push(call);
+    body.allow_calls();
     body.work(rng);
     let ret = body.ret(rng, me);
     let rec = body.take_block("rec", &[], ret);

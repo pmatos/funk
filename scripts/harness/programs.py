@@ -67,6 +67,7 @@ class Tally:
     """What became of the runs of generated programs."""
 
     compared: int = 0
+    defined: int = 0
     planted: int = 0
     interpreter_only: dict[str, int] = field(default_factory=dict)
     failed_seeds: set[str] = field(default_factory=set)
@@ -80,7 +81,8 @@ class Tally:
         )
         return (
             f"{self.compared} of {self.differential()} runs compared with native"
-            f" code, {self.planted} planted runs ended as planted"
+            f" code ({self.defined} built to stay defined), {self.planted} planted"
+            " runs ended as planted"
             + (f"; interpreter-only {reasons}" if reasons else "")
         )
 
@@ -118,7 +120,7 @@ def check_program(h: Harness, fir: Path, tally: Tally, errors: list[str]):
     """Runs every test of the program `fir`."""
     name = fir.name
     failed_before = h.report.counts[FAILED] + h.report.counts[INVALID]
-    tests = corpus.read_tests(fir.with_suffix(".toml"), name, errors)
+    tests = corpus.read_tests(fir.with_suffix(".toml"), name, errors, generated=True)
     if h.accepted(name, fir, quiet=True):
         text = fir.read_text(encoding="utf-8")
         types, params = corpus.result_types(text), corpus.param_types(text)
@@ -132,6 +134,7 @@ def check_program(h: Harness, fir: Path, tally: Tally, errors: list[str]):
             if r.judgement.status == PASSED:
                 if r.interpreter_only is None:
                     tally.compared += 1
+                    tally.defined += t.defined
                 else:
                     why = r.interpreter_only
                     tally.interpreter_only[why] = tally.interpreter_only.get(why, 0) + 1

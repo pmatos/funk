@@ -13,6 +13,7 @@ use crate::dialects::core::int_type;
 use crate::ir::{Attr, FuncType, Op};
 
 /// A function of the module: its symbol and its type.
+#[derive(Clone)]
 pub(super) struct Callee {
     pub name: String,
     pub ty: FuncType,

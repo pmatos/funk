@@ -53,6 +53,8 @@ class Test:
     expect: object = None
     choices: tuple[str, ...] | None = None
     results: tuple[Declared, ...] = ()
+    # A generated run built to stay defined (ADR-2026-11-08-2115).
+    defined: bool = False
 
     def show(self) -> str:
         fuel = [] if self.fuel == DEFAULT_FUEL else ["--fuel", str(self.fuel)]
@@ -188,15 +190,20 @@ def read_toml(path: Path, errors: list[str]) -> dict | None:
 
 
 def read_tests(
-    path: Path, module: str, errors: list[str], commits: set[str] | None = None
+    path: Path,
+    module: str,
+    errors: list[str],
+    commits: set[str] | None = None,
+    generated: bool = False,
 ) -> list[Test]:
     """The tests of a sidecar. With `commits`, the sidecar is a ported
-    module's, and its source's commit joins `commits`."""
+    module's, and its source's commit joins `commits`. `generated` allows
+    what only a generated program's sidecar has."""
     data = read_toml(path, errors)
     if data is None:
         return []
     ported = commits is not None
-    found, problems = parse_tests(data, module, ported)
+    found, problems = parse_tests(data, module, ported, generated)
     errors += [f"{path}: {p}" for p in problems]
     if ported and source_problem(data.get("source")) is None:
         commits.add(data["source"]["commit"])
@@ -221,7 +228,7 @@ def is_strings(value) -> bool:
 
 
 def parse_tests(
-    data: dict, module: str, ported: bool = False
+    data: dict, module: str, ported: bool = False, generated: bool = False
 ) -> tuple[list[Test], list[str]]:
     """The tests of a sidecar: `tests`, a list of tables with `func` and
     optionally `args`, `fuel`, `expect`, `choices` and `results`. A ported
@@ -237,7 +244,7 @@ def parse_tests(
         return [], problems + ["tests is a list of tests"]
     found = []
     for i, t in enumerate(items, 1):
-        why = test_problem(t, ported)
+        why = test_problem(t, ported, generated)
         if why:
             problems.append(f"test {i}: {why}")
             continue
@@ -258,6 +265,7 @@ def parse_tests(
                 expect,
                 None if choices is None else tuple(choices),
                 results,
+                t.get("defined", False),
             )
         )
     return found, problems
@@ -288,13 +296,19 @@ def source_problem(source) -> str | None:
     return None
 
 
-def test_problem(t, ported: bool = False) -> str | None:
+def test_problem(t, ported: bool = False, generated: bool = False) -> str | None:
     if not isinstance(t, dict):
         return "a test is a table"
     allowed = ("func", "args", "fuel", "expect", "choices", "results")
-    keys = unknown_keys(t, allowed + (("from",) if ported else ()))
+    allowed += ("from",) if ported else ()
+    allowed += ("defined",) if generated else ()
+    keys = unknown_keys(t, allowed)
     if keys:
         return f"unknown key {keys[0]}"
+    if not isinstance(t.get("defined", False), bool):
+        return "defined is true or false"
+    if t.get("defined") and t.get("expect") is not None:
+        return "defined goes with no expect: it is a differential test"
     if ported and not (isinstance(t.get("from"), str) and t["from"]):
         return (
             "from names the function, or the CHECK lines, of the LLVM test"

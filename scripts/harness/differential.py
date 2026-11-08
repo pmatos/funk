@@ -73,7 +73,9 @@ def evaluate_generated(test: Test, result_types, param_types, runs: Runs) -> Eva
 
     A run that may hit UB or run out of fuel, or that chooses past the
     budget, is interpreter-only: it passes with fir-ref's report and native
-    code does not run. Any other run is judged as a differential test.
+    code does not run. A run built to stay defined fails instead, since the
+    generator is a second opinion on it. Any other run is judged as a
+    differential test.
     """
     return _Run(test, result_types, param_types, runs, generated=True).evaluate()
 
@@ -92,6 +94,12 @@ class _Run:
         t = self.test
         self.ref = self.runs.exhaustive(t.args)
         detail = f"fir-ref {_show(self.ref)}"
+        wrong = _not_defined(self.ref) if t.defined else None
+        if wrong is not None:
+            return Evaluation(
+                Judgement(FAILED, f"the run is built to stay defined, but {wrong}"),
+                detail + f": the run is built to stay defined, but {wrong}",
+            )
         why = _interpreter_only(self.ref) if self.generated else None
         if why is not None:
             shown = f"{detail}; native code is not run: {why}"
@@ -236,6 +244,23 @@ def _interpreter_only(ref) -> str | None:
         return "its set of outcomes holds UB"
     if any(o.kind == FUEL_EXHAUSTED for o in ref.outcomes):
         return "a path runs out of fuel"
+    return None
+
+
+def _not_defined(ref) -> str | None:
+    """How fir-ref's report contradicts a run built to stay defined, if it
+    does: such a run makes no choice and returns defined values."""
+    if isinstance(ref, str):
+        return None
+    why = _interpreter_only(ref)
+    if why is not None:
+        return why
+    if not isinstance(ref, Outcomes) or any(o.kind == STUCK for o in ref.outcomes):
+        return None
+    if ref.choices != 0:
+        return "it makes a choice"
+    if any(POISON in o.values for o in ref.outcomes):
+        return "it returns poison"
     return None
 
 

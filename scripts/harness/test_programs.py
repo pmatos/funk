@@ -1,7 +1,9 @@
 """Tests of the run of generated programs: its counts and `fir-ref fmt`."""
 
+import tomllib
 import unittest
 
+import corpus
 import programs
 import tools
 
@@ -25,6 +27,33 @@ class Share(unittest.TestCase):
         t = programs.Tally(compared=2, planted=1, interpreter_only={"a reason": 3})
         self.assertIn("2 of 5 runs", t.show())
         self.assertIn("3: a reason", t.show())
+
+
+class Sidecar(unittest.TestCase):
+    def parse(self, line, generated):
+        data = tomllib.loads(f"tests = [{line}]")
+        return corpus.parse_tests(data, "m.fir", generated=generated)
+
+    def test_a_generated_run_may_be_built_to_stay_defined(self):
+        tests, problems = self.parse('{ func = "@f", defined = true }', True)
+        self.assertEqual(problems, [])
+        self.assertTrue(tests[0].defined)
+
+    def test_a_run_is_not_built_to_stay_defined_by_default(self):
+        tests, _ = self.parse('{ func = "@f" }', True)
+        self.assertFalse(tests[0].defined)
+
+    def test_the_corpus_has_no_such_key(self):
+        _, problems = self.parse('{ func = "@f", defined = true }', False)
+        self.assertIn("unknown key defined", problems[0])
+
+    def test_defined_is_a_boolean(self):
+        _, problems = self.parse('{ func = "@f", defined = 1 }', True)
+        self.assertIn("defined is true or false", problems[0])
+
+    def test_defined_does_not_go_with_expect(self):
+        _, problems = self.parse('{ func = "@f", defined = true, expect = "ub" }', True)
+        self.assertIn("defined goes with no expect", problems[0])
 
 
 class Fmt(unittest.TestCase):

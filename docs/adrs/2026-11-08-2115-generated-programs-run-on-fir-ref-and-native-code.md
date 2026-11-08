@@ -22,6 +22,15 @@ which gives poison, and most values never reached a `ret`.
   (`bounded.rs`), and ones planted to end in UB or out of fuel.
 - Bounded functions mostly use ops that stay defined and feed what they
   return, so that a wrong result shows as a wrong value.
+- The first bounded function of each program, and half of the others, are
+  built to stay defined: no op that makes poison or UB on defined operands,
+  calls only of functions like themselves, and 1,000,000 steps of fuel, more
+  than they can take. If `fir-ref` reports UB, poison, a choice or a run out
+  of fuel on one of their runs, the run fails. The generator is the second
+  opinion, since UB allows native code anything.
+- Each kind of UB is planted with a near miss, one operand away, whose result
+  the generator states: a division by zero or by poison, the signed minimum
+  by -1, poison by -1, and `cond_br` on poison.
 - A run's arguments hold no `poison`, since each one multiplies native runs.
   Poison comes from ops.
 - `scripts/check-random-programs.sh`, the `fir-random` hook, runs seeds 0 to
@@ -41,8 +50,11 @@ which gives poison, and most values never reached a `ret`.
 
 ## Consequences
 
-- An interpreter-only run that is not planted checks only that `fir-ref`
-  reports an outcome and is not stuck: there is no second oracle for it.
+- A false UB in a purely random function goes unnoticed: such a run is
+  interpreter-only, and only the proof of `fir-ref`'s machine and the
+  corpus's hand-written tests stand behind it. A second interpreter would
+  cover it, but the semantics lives only in Lean, so that is a direction
+  call.
 - Bounded recursion is at most 15 deep per function. Random functions recurse
   until they return or fuel stops them, so a run that returns very deep could
   overflow the native stack and fail although the code is right. A run of
