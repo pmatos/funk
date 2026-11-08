@@ -75,7 +75,7 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
             let t = if !body.values.is_empty() && rng.one_in(2) {
                 rng.pick(&body.values).1.clone()
             } else {
-                int_type(width(rng))
+                int_type(width(rng, body.widths))
             };
             body.define(rng, t);
         }
@@ -104,7 +104,7 @@ fn arg_type(rng: &mut Rng, body: &Body<'_>) -> Type {
     if !body.values.is_empty() && rng.one_in(2) {
         rng.pick(&body.values).1.clone()
     } else {
-        int_type(width(rng))
+        int_type(width(rng, body.widths))
     }
 }
 

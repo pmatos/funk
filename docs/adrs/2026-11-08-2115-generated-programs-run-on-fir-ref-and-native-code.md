@@ -1,0 +1,47 @@
+# Every pull request runs 500 generated programs on fir-ref and as native code
+
+Status: accepted
+
+## Context
+
+All differential tests came from hand-written texts (#165). The module
+generator only served validation: its widths are mostly ones that the
+backend cannot lower, and nothing ran its modules. M1 and M2 will add much
+backend code, where bugs appear.
+
+A first version only limited the generator to backend widths. Nearly every
+run that returned did so within 30 steps, and a planted wrong `ashr` at
+`i16` passed 500 programs: shift amounts were almost always out of range,
+which gives poison, and most values never reached a `ret`.
+
+## Decision
+
+- `generate::program` makes a program: a module of the backend's widths, and
+  argument vectors for each function, often at boundary values. Its
+  functions are random ones, bounded ones that iterate and then end
+  (`bounded.rs`), and ones planted to end in UB or out of fuel.
+- Bounded functions mostly use ops that stay defined and feed what they
+  return, so that a wrong result shows as a wrong value.
+- A run's arguments hold no `poison`, since each one multiplies native runs.
+  Poison comes from ops.
+- `scripts/check-random-programs.sh`, the `fir-random` hook, runs seeds 0 to
+  499 and the regression seeds. That took 38 seconds locally.
+- A planted run must end as planted on `fir-ref`.
+- Any other run is judged by `differential.evaluate_generated`. It is
+  interpreter-only, and passes with no native run, when `fir-ref`'s set holds
+  UB or a run out of fuel, or when the run chooses past 10 bits. A generated
+  run cannot declare its results, and nothing else can judge these runs.
+  Otherwise it is a differential test by the corpus's rules, and a stuck
+  path fails in every case.
+- Runs have 20,000 steps of fuel, and planted fuel runs 1,000.
+- At least half of the runs without an expected ending must reach native
+  code, in a run of 200 or more, or the hook fails. A change to the generator
+  cannot leave the check empty.
+
+## Consequences
+
+- An interpreter-only run that is not planted checks only that `fir-ref`
+  reports an outcome and is not stuck: there is no second oracle for it.
+- Runs that exceed the native stack are avoided, not handled: bounded
+  recursion is at most 15 deep per function.
+- A change to the generator changes which program each seed means.

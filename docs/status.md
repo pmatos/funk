@@ -109,6 +109,14 @@ are on `main`:
   makes, or for a recursive function up to the process's stack limit
   (`ulimit -s`), and a run that outgrows its stack says so in one line
   ([ADR-2026-11-02-1132](adrs/2026-11-02-1132-a-run-s-stack-covers-its-calls.md)).
+- Generated programs and fuzzing
+  ([#165](https://github.com/pmatos/funk/issues/165)).
+  `./scripts/check-random-programs.sh` runs 500 generated programs on
+  `fir-ref` and as native code on every pull request
+  ([ADR-2026-11-08-2115](adrs/2026-11-08-2115-generated-programs-run-on-fir-ref-and-native-code.md)).
+  A nightly workflow runs fresh seeds and fuzzes the Rust parser and verifier
+  ([ADR-2026-11-08-2116](adrs/2026-11-08-2116-fresh-seeds-run-only-in-a-manual-stage-nightly-hook.md),
+  [ADR-2026-11-08-2117](adrs/2026-11-08-2117-fuzz-the-rust-parser-and-verifier-without-a-sanitizer.md)).
 - The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
   `./scripts/check-harness.sh` checks that `funk verify` and
   `fir-ref validate` give the same verdict on every text of

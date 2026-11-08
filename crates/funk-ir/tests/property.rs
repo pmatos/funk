@@ -6,7 +6,7 @@
 //! with an error.
 
 use funk_ir::dialects::core::{BITWISE_OPS, PREDICATES, SHIFT_OPS};
-use funk_ir::generate::{self, Rng};
+use funk_ir::generate::{self, Rng, soup};
 use funk_ir::text::quote;
 use funk_ir::{Attr, Location, Module, Registry, parse, print, verify};
 
@@ -309,11 +309,7 @@ fn layout_that_is_not_canonical_parses_to_the_same_module() {
 /// Parses `text`; if it parses, checks that its module round-trips and that
 /// verifying it does not panic.
 fn parse_never_panics(text: &str, reg: &Registry) {
-    if let Ok(m) = parse(text, reg) {
-        let printed = print(&m);
-        assert_eq!(parse(&printed, reg).as_ref(), Ok(&m), "{text:?}");
-        let _ = verify(&m, reg);
-    }
+    funk_ir::fuzz::verifies_without_panic(text.as_bytes(), reg);
 }
 
 #[test]
@@ -352,76 +348,11 @@ fn the_parser_never_panics_on_mutated_texts() {
 fn the_parser_never_panics_on_random_token_soup() {
     let reg = Registry::core();
     let mut rng = Rng::new(1);
-    const TOKENS: [&str; 60] = [
-        "func",
-        "@f",
-        "@\"x y\"",
-        "@1",
-        "@4294967296",
-        "(",
-        ")",
-        "{",
-        "}",
-        "%a",
-        "%b",
-        ": i32",
-        ": i1",
-        "=",
-        "const",
-        "add",
-        "sub",
-        "mul",
-        "nuw",
-        "nsw",
-        "freeze",
-        "poison",
-        "and",
-        "or",
-        "xor",
-        "shl",
-        "lshr",
-        "ashr",
-        "zext",
-        "sext",
-        "trunc",
-        ": i64",
-        "sdiv",
-        "udiv",
-        "srem",
-        "urem",
-        "exact",
-        "icmp",
-        "slt",
-        "uge",
-        "select",
-        "icmp.slt",
-        "ret",
-        "br",
-        "cond_br",
-        "^loop(",
-        "^loop",
-        "true",
-        "-1",
-        "1",
-        "^entry",
-        ":",
-        ",",
-        "->",
-        "locs",
-        "unknown",
-        "\"s\"",
-        "fused(",
-        "// c\n",
-        "\n",
-    ];
     for _ in 0..20_000 {
-        let n = rng.below(40);
-        let text: Vec<&str> = (0..n).map(|_| *rng.pick(&TOKENS)).collect();
-        parse_never_panics(&text.join(" "), &reg);
+        parse_never_panics(&soup::token_soup(&mut rng), &reg);
     }
     for _ in 0..5_000 {
-        let bytes: Vec<u8> = (0..rng.below(64)).map(|_| rng.next_u64() as u8).collect();
-        let _ = funk_ir::text::parse_bytes(&bytes, &reg);
+        let _ = funk_ir::text::parse_bytes(&soup::random_bytes(&mut rng), &reg);
     }
 }
 

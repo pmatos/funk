@@ -136,6 +136,8 @@ locs {
 - `scripts/check-harness.sh`, the differential harness and the
   `fir-harness` hook, runs everything above, and checks that both tools
   accept every module of the Rust generator.
+- `scripts/harness/fuzz_to_corpus.py` adds an input that crashed a fuzzer,
+  once the bug is fixed (ADR-2026-11-08-2117).
 - `scripts/harness/coverage.py`, the `coverage-matrix` hook, writes the
   coverage matrix from the tests and fails when the committed one is
   stale or a cell has no test. Run it with `--write` after changing a

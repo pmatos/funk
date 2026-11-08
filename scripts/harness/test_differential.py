@@ -5,7 +5,7 @@ from collections import deque
 from dataclasses import replace
 
 from corpus import Test
-from differential import Runs, evaluate
+from differential import Runs, evaluate, evaluate_generated
 from refine import FAILED, FUEL_EXHAUSTED, INVALID, PASSED, RETURN, STUCK, UB, Outcome
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 
@@ -290,6 +290,51 @@ class Differential(unittest.TestCase):
         runs = CannotStart()
         with self.assertRaisesRegex(OSError, "cannot start fir-ref"):
             evaluate(TEST, ("i8",), (), runs)
+
+
+class GeneratedRuns(unittest.TestCase):
+    """A generated run declares nothing, so what fir-ref reports routes it."""
+
+    def judge(self, *responses):
+        runs = RecordedRuns(*responses)
+        return evaluate_generated(TEST, ["i8"], [], runs), runs
+
+    def assert_interpreter_only(self, ref, why):
+        result, runs = self.judge(ref)
+        self.assertEqual(result.judgement.status, PASSED)
+        self.assertEqual(result.interpreter_only, why)
+        self.assertEqual([c[0] for c in runs.calls], ["exhaustive"])
+
+    def test_a_set_with_ub_is_interpreter_only(self):
+        ub = Outcomes(1, (returned("7"), Outcome(UB, reason="sdiv by zero")))
+        self.assert_interpreter_only(ub, "its set of outcomes holds UB")
+
+    def test_a_path_out_of_fuel_is_interpreter_only(self):
+        ref = Outcomes(0, (Outcome(FUEL_EXHAUSTED),))
+        self.assert_interpreter_only(ref, "a path runs out of fuel")
+
+    def test_a_run_past_the_budget_is_interpreter_only(self):
+        self.assert_interpreter_only(WIDE, "it chooses past the budget")
+
+    def test_a_stuck_path_fails_even_beside_ub(self):
+        ref = Outcomes(1, (Outcome(STUCK, reason="x"), Outcome(UB, reason="y")))
+        result, _ = self.judge(ref, ("7",))
+        self.assertEqual(result.judgement.status, FAILED)
+        self.assertIsNone(result.interpreter_only)
+
+    def test_a_defined_run_is_compared_with_native_code(self):
+        result, _ = self.judge(ONE, ("7",))
+        self.assertEqual(result.judgement.status, PASSED)
+        self.assertIsNone(result.interpreter_only)
+
+    def test_a_wrong_native_value_fails(self):
+        result, _ = self.judge(ONE, ("8",))
+        self.assertEqual(result.judgement.status, FAILED)
+
+    def test_a_corpus_run_with_ub_stays_invalid(self):
+        ub = Outcomes(0, (Outcome(UB, reason="sdiv by zero"),))
+        result = evaluate(TEST, ["i8"], [], RecordedRuns(ub, ("7",)))
+        self.assertEqual(result.judgement.status, INVALID)
 
 
 if __name__ == "__main__":

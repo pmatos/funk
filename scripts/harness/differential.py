@@ -3,7 +3,8 @@
 The corpus runner supplies function types and an adapter for tool runs; it
 does not coordinate witnesses, samples, poison stand-ins or rechecks.
 The rules remain those of ADR-2026-10-30-2135, ADR-2026-10-31-0003 and
-ADR-2026-11-03-1847. Process mechanics belong to `execution.py`.
+ADR-2026-11-03-1847, and for a generated run ADR-2026-11-08-2115. Process
+mechanics belong to `execution.py`.
 """
 
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ from refine import (
     INVALID,
     PASSED,
     POISON,
+    STUCK,
     UB,
     Judgement,
     show_values,
@@ -52,6 +54,8 @@ class Evaluation:
     detail: str
     # Why fir-ref gave no result for the test, when it did not.
     reference_failure: str | None = None
+    # Why a generated run is not compared with native code, when it is not.
+    interpreter_only: str | None = None
 
 
 def evaluate(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
@@ -64,17 +68,34 @@ def evaluate(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
     return _Run(test, result_types, param_types, runs).evaluate()
 
 
+def evaluate_generated(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
+    """Judge a run of a generated program, which cannot declare its results.
+
+    A run that may hit UB or run out of fuel, or that chooses past the
+    budget, is interpreter-only: it passes with fir-ref's report and native
+    code does not run. Any other run is judged as a differential test.
+    """
+    return _Run(test, result_types, param_types, runs, generated=True).evaluate()
+
+
 class _Run:
-    def __init__(self, test: Test, result_types, param_types, runs: Runs):
+    def __init__(
+        self, test: Test, result_types, param_types, runs: Runs, generated: bool = False
+    ):
         self.test = test
         self.types = result_types
         self.params = param_types
         self.runs = runs
+        self.generated = generated
 
     def evaluate(self) -> Evaluation:
         t = self.test
         self.ref = self.runs.exhaustive(t.args)
         detail = f"fir-ref {_show(self.ref)}"
+        why = _interpreter_only(self.ref) if self.generated else None
+        if why is not None:
+            shown = f"{detail}; native code is not run: {why}"
+            return Evaluation(Judgement(PASSED), shown, interpreter_only=why)
         if t.results:
             n = len(t.results)
             detail += f", and the test declares {n} result{'s' if n != 1 else ''}"
@@ -201,6 +222,21 @@ class _Run:
                     " the fuel budget: raise the test's budget",
                 )
         return Judgement(j.status, f"{j.why}; on {on}, fir-ref {_show(ref)}")
+
+
+def _interpreter_only(ref) -> str | None:
+    """Why fir-ref's report on a generated run leaves native code nothing to
+    be compared with, if it does. A stuck path never makes a run
+    interpreter-only: it fails, as in the corpus."""
+    if isinstance(ref, BudgetExceeded):
+        return "it chooses past the budget"
+    if not isinstance(ref, Outcomes) or any(o.kind == STUCK for o in ref.outcomes):
+        return None
+    if any(o.kind == UB for o in ref.outcomes):
+        return "its set of outcomes holds UB"
+    if any(o.kind == FUEL_EXHAUSTED for o in ref.outcomes):
+        return "a path runs out of fuel"
+    return None
 
 
 def _show(result) -> str:

@@ -26,6 +26,7 @@
 #![doc(test(attr(forbid(unsafe_code))))]
 
 pub mod dialects;
+pub mod fuzz;
 pub mod generate;
 pub mod ir;
 pub mod registry;
