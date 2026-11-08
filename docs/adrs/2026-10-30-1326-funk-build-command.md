@@ -1,6 +1,6 @@
 # funk build writes OUTPUT.o and OUTPUT all or nothing, and adds the verdicts unsupported and tool-error
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-08-1805
 
 ## Context
 

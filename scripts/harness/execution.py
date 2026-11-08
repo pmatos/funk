@@ -12,11 +12,19 @@ from differential import Runs
 
 
 class ProcessRuns(Runs):
-    def __init__(self, fir_ref: str, path: Path, test: Test, exe: Path | str):
+    def __init__(
+        self,
+        fir_ref: str,
+        path: Path,
+        test: Test,
+        exe: Path | str,
+        bits: int | None = None,
+    ):
         self.fir_ref = fir_ref
         self.path = path
         self.test = test
         self.exe = exe
+        self.bits = bits
         self.unavailable = None if isinstance(exe, Path) else exe
 
     def _reference(self, args: tuple[str, ...], *options: str) -> tools.Ran:
@@ -35,7 +43,8 @@ class ProcessRuns(Runs):
         )
 
     def exhaustive(self, args: tuple[str, ...]):
-        return tools.outcomes(self._reference(args, "--exhaustive"))
+        budget = [] if self.bits is None else ["--choice-bits", str(self.bits)]
+        return tools.outcomes(self._reference(args, "--exhaustive", *budget))
 
     def scripted(self, args: tuple[str, ...], choices: tuple[str, ...] | None):
         options = [] if choices is None else ["--choices", ",".join(choices)]

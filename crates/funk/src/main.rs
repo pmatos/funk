@@ -1,7 +1,7 @@
 //! `funk`, the driver: `funk fmt` prints fir in its canonical form,
-//! `funk verify` checks it, and `funk build` compiles it to x86-64. Each
-//! reports as text, or as JSON with `--json` (ADR-2026-10-30-1032,
-//! ADR-2026-10-30-1326).
+//! `funk verify` checks it, `funk asm` prints the x86-64 assembly of its
+//! functions, and `funk build` compiles it to x86-64. Each reports as text,
+//! or as JSON with `--json` (ADR-2026-10-30-1032, ADR-2026-10-30-1326).
 
 mod build;
 mod canonical;
@@ -24,6 +24,7 @@ const USAGE: &str = "\
 usage: funk fmt [--check | --write] [--json] FILE...
        funk verify [--json] FILE...
        funk build [--json] -o OUTPUT FILE
+       funk asm [--json] FILE
 
   fmt      Parse each FILE and print it in canonical form. fmt does not
            validate: a module that parses has a canonical form.
@@ -34,6 +35,9 @@ usage: funk fmt [--check | --write] [--json] FILE...
            object file OUTPUT.o and the executable OUTPUT, which runs one
            function: OUTPUT @FUNCTION ARG... prints {\"values\":[...]}.
              -o OUTPUT  the executable to write
+  asm      Parse, validate and lower FILE for x86-64 Linux, and print the
+           assembly of its functions. With --json, the report holds it
+           as \"text\".
 
   --json   Report one JSON object per FILE on stdout, with its verdict
            (accepted, parse-error, validation-error, unsupported,
@@ -43,7 +47,7 @@ usage: funk fmt [--check | --write] [--json] FILE...
   -V, --version  Print funk's version.
 
 Exit status: 0 when every FILE is accepted (and, with --check, canonical,
-or with build, built), 1 when one is rejected, not canonical or
+or with build or asm, lowered), 1 when one is rejected, not canonical or
 unsupported, 2 on a usage, I/O, assembler or linker error.";
 
 /// What `funk fmt` does with a canonical text.
@@ -98,7 +102,7 @@ fn parse_args(args: &[String]) -> Result<Request, String> {
         return Ok(Request::Version);
     }
     let (command, rest) = args.split_first().ok_or("missing command")?;
-    if command != "fmt" && command != "verify" && command != "build" {
+    if !["fmt", "verify", "build", "asm"].contains(&command.as_str()) {
         return Err(format!("unknown command {command}"));
     }
     let mut a = Args {
@@ -138,13 +142,11 @@ fn parse_args(args: &[String]) -> Result<Request, String> {
     if a.files.is_empty() {
         return Err("no FILE given; use - for standard input".into());
     }
-    if command == "build" {
-        if a.files.len() > 1 {
-            return Err("build takes one FILE".into());
-        }
-        if a.output.is_none() {
-            return Err("build needs -o OUTPUT, the executable to write".into());
-        }
+    if (command == "build" || command == "asm") && a.files.len() > 1 {
+        return Err(format!("{command} takes one FILE"));
+    }
+    if command == "build" && a.output.is_none() {
+        return Err("build needs -o OUTPUT, the executable to write".into());
     }
     if a.mode == FmtMode::Write && a.files.iter().any(|f| f == "-") {
         return Err("--write cannot rewrite standard input".into());
@@ -363,8 +365,14 @@ fn run_commands(args: &[String], stderr: &mut impl Write) -> Result<u8, OutputEr
     let reg = Registry::core();
     let mut status = 0;
     for file in &a.files {
+        let mut assembly = None;
         let (report, formatted) = match (a.command.as_str(), &a.output) {
             ("verify", _) => (verify_file(file, &reg), None),
+            ("asm", _) => {
+                let (report, text) = build::asm_file(file, &reg);
+                assembly = text;
+                (report, None)
+            }
             ("build", Some(out)) => (build::build_file(file, out, &reg), None),
             _ => fmt_file(file, a.mode, a.json, &reg),
         };
@@ -397,6 +405,9 @@ fn run_commands(args: &[String], stderr: &mut impl Write) -> Result<u8, OutputEr
                 _ => Ok(()),
             }
             .map_err(to_stdout)?;
+            if let Some(text) = &assembly {
+                stdout.write_all(text.as_bytes()).map_err(to_stdout)?;
+            }
         }
     }
     stdout.flush().map_err(to_stdout)?;

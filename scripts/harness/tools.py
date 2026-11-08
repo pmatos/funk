@@ -52,6 +52,11 @@ class Verdict:
             return self.verdict
         return f"{self.verdict} at {self.position[0]}:{self.position[1]}"
 
+    def agrees(self, other: "Verdict") -> bool:
+        """Whether two tools give one verdict, and for a parse error one
+        position."""
+        return self.verdict == other.verdict and self.position == other.position
+
 
 def run(cmd: list[str], preexec_fn=None) -> Ran:
     """Runs `cmd`; a given `preexec_fn` runs in the child before `cmd`
@@ -243,6 +248,12 @@ def verdict(ran: Ran) -> Verdict | str:
     if not isinstance(line, int) or not isinstance(col, int):
         return f"reports a parse error without its position: {ran.stdout.strip()}"
     return Verdict(v, (line, col), message)
+
+
+def build(funk: str, source, exe):
+    """Runs `funk build`: `exe` when it built, or why it did not."""
+    why = build_failure(run([funk, "build", "--json", "-o", str(exe), str(source)]))
+    return exe if why is None else f"is not built: funk build gives {why}"
 
 
 def build_failure(ran: Ran) -> str | None:

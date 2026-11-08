@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fir explorer</title>
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <h1>fir explorer</h1>
+    <label class="field">Example
+      <select id="example"></select>
+    </label>
+    <button id="format" type="button" disabled>Format</button>
+    <a class="spec" href="https://p.ocmatos.com/funk/" target="_blank" rel="noreferrer">Read the spec</a>
+  </header>
+
+  <ol id="chain" class="chain" aria-label="What the tools agree on"></ol>
+  <div id="alarm" class="alarm" role="alert" hidden></div>
+
+  <main class="panes">
+    <section class="pane" aria-labelledby="fir-title">
+      <h2 id="fir-title">fir</h2>
+      <div class="editor">
+        <div id="gutter" class="gutter" aria-hidden="true"></div>
+        <div class="code">
+          <pre id="shadow" class="shadow" aria-hidden="true"></pre>
+          <textarea id="source" class="source" spellcheck="false" autocomplete="off"
+            autocapitalize="off" wrap="off" aria-label="fir source"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" aria-labelledby="asm-title">
+      <h2 id="asm-title">x86-64 assembly</h2>
+      <div id="asm" class="asm"></div>
+    </section>
+
+    <section class="pane side" aria-labelledby="checks-title">
+      <h2 id="checks-title">Checks</h2>
+      <div id="checks" class="checks"></div>
+
+      <h2>Run a function</h2>
+      <form id="run" class="run">
+        <label class="field">Function <select id="func"></select></label>
+        <div id="args" class="args"></div>
+        <label class="field">Corpus run <select id="saved"></select></label>
+        <div class="row">
+          <label class="field">Fuel <input id="fuel" type="number" min="0" value="1000000"></label>
+          <label class="field">Choices
+            <select id="mode">
+              <option value="exhaustive">Try every choice</option>
+              <option value="scripted">Follow my choices</option>
+              <option value="seed">Draw from a seed</option>
+            </select>
+          </label>
+        </div>
+        <label id="bits-field" class="field">Most bits chosen on one path
+          <input id="bits" type="number" min="0" max="64" value="16"></label>
+        <label id="choices-field" class="field" hidden>Choices, separated by commas
+          <input id="choices" type="text" spellcheck="false" autocomplete="off"></label>
+        <label id="seed-field" class="field" hidden>Seed
+          <input id="seed" type="number" min="0" value="0"></label>
+        <button id="go" type="submit" disabled>Run</button>
+      </form>
+      <div id="results" class="results" aria-live="polite"></div>
+    </section>
+  </main>
+</body>
+</html>

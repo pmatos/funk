@@ -50,6 +50,8 @@ class Runs(Protocol):
 class Evaluation:
     judgement: Judgement
     detail: str
+    # Why fir-ref gave no result for the test, when it did not.
+    reference_failure: str | None = None
 
 
 def evaluate(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
@@ -86,7 +88,8 @@ class _Run:
                 else "the set is the declared results"
             )
             j = Judgement(PASSED, f"each witness gives its result, and {checked}")
-        return Evaluation(j, detail + (f": {j.why}" if j.why else ""))
+        failure = self.ref if isinstance(self.ref, str) else None
+        return Evaluation(j, detail + (f": {j.why}" if j.why else ""), failure)
 
     def _reference(self) -> Judgement | None:
         """Checks that decide the test before looking at any native result."""
