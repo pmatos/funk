@@ -25,7 +25,8 @@ which gives poison, and most values never reached a `ret`.
 - A run's arguments hold no `poison`, since each one multiplies native runs.
   Poison comes from ops.
 - `scripts/check-random-programs.sh`, the `fir-random` hook, runs seeds 0 to
-  499 and the regression seeds. That took 38 seconds locally.
+  499, the regression seeds and 500 random texts for `fir-ref fmt`. With its
+  tools already built, the hook took 39 seconds locally.
 - A planted run must end as planted on `fir-ref`.
 - Any other run is judged by `differential.evaluate_generated`. It is
   interpreter-only, and passes with no native run, when `fir-ref`'s set holds
@@ -42,6 +43,9 @@ which gives poison, and most values never reached a `ret`.
 
 - An interpreter-only run that is not planted checks only that `fir-ref`
   reports an outcome and is not stuck: there is no second oracle for it.
-- Runs that exceed the native stack are avoided, not handled: bounded
-  recursion is at most 15 deep per function.
+- Bounded recursion is at most 15 deep per function. Random functions recurse
+  until they return or fuel stops them, so a run that returns very deep could
+  overflow the native stack and fail although the code is right. A run of
+  10,000 fresh programs, 84,555 of its runs compared with native code, showed
+  none. If one appears, it is this limit, not a miscompile.
 - A change to the generator changes which program each seed means.

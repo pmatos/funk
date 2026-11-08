@@ -86,6 +86,21 @@ fn every_function_runs_on_arguments_of_its_types() {
 }
 
 #[test]
+fn no_run_is_made_twice() {
+    for (seed, p) in programs() {
+        let mut seen = HashSet::new();
+        for r in &p.runs {
+            assert!(
+                seen.insert((r.func.clone(), r.args.clone())),
+                "seed {seed}: {} {:?} runs twice",
+                r.func,
+                r.args
+            );
+        }
+    }
+}
+
+#[test]
 fn some_runs_are_planted_to_end_in_ub_and_some_to_run_out_of_fuel() {
     let (mut ub, mut fuel) = (0, 0);
     for (_, p) in programs() {

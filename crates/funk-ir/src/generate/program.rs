@@ -108,10 +108,16 @@ pub fn program(rng: &mut Rng) -> Program {
         } else {
             1 + rng.below(4)
         };
+        let mut seen: Vec<Vec<String>> = Vec::new();
         for _ in 0..vectors {
+            let args = arguments(rng, f);
+            if seen.contains(&args) {
+                continue;
+            }
+            seen.push(args.clone());
             runs.push(Run {
                 func: print_symbol(&f.name),
-                args: arguments(rng, f),
+                args,
                 fuel: FUEL,
                 expect: None,
             });
