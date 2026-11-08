@@ -20,10 +20,13 @@ fi
 
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 cd "$repo_root"
-unset GH_TOKEN GITHUB_TOKEN
 
 # shellcheck source=scripts/rust-env.sh
 source scripts/rust-env.sh
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
+    echo "The harness needs Python 3.11 or later, for tomllib." >&2
+    exit 1
+fi
 if ! cargo "+$toolchain" fuzz --version >/dev/null; then
     echo "check-fuzz: needs cargo-fuzz and the toolchain $toolchain" >&2
     exit 1
@@ -34,8 +37,10 @@ status=0
 texts=()
 for target in parse verify; do
     mkdir -p "fuzz/corpus/$target"
-    cargo "+$toolchain" fuzz run --sanitizer none "$target" -- "-max_total_time=$seconds" ||
-        status=$?
+    # New inputs go to the first directory; the corpus's modules only seed
+    # the run, so that it starts from texts that parse.
+    cargo "+$toolchain" fuzz run --sanitizer none "$target" "fuzz/corpus/$target" \
+        tests/fir/canonical -- "-max_total_time=$seconds" || status=$?
     texts+=(--texts "fuzz/corpus/$target")
 done
 python3 scripts/harness/programs.py --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref" \

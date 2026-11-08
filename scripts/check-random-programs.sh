@@ -8,7 +8,7 @@
 #   (nothing)      seeds 0 to 499, and those of
 #                  scripts/harness/regression_seeds.txt
 #   --fresh COUNT  COUNT programs from a new first seed, which it prints
-#   SEED...        replays exactly these seeds
+#   SEED...        replays exactly these seeds, each a program and a text
 set -euo pipefail
 
 usage() {
@@ -32,10 +32,6 @@ fi
 repo_root=$(git -C "$(dirname "${BASH_SOURCE[0]}")/.." rev-parse --show-toplevel)
 cd "$repo_root"
 
-# fir-ref, cargo and native code run code from this repository; keep CI
-# tokens away.
-unset GH_TOKEN GITHUB_TOKEN
-
 # shellcheck source=scripts/rust-env.sh
 source scripts/rust-env.sh
 if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
@@ -46,19 +42,21 @@ fi
 if [[ -n $fresh ]]; then
     first=$(python3 -c 'import secrets; print(secrets.randbelow(2**62))')
     count=$fresh
-    texts=$fresh
     extra=()
     echo "fresh seeds: $count programs from seed $first"
 elif [[ ${#seeds[@]} -gt 0 ]]; then
     first=0
     count=0
-    texts=0
     extra=("${seeds[@]}")
 else
     first=0
     count=$programs
-    texts=$programs
-    mapfile -t extra < <(grep -Ev '^(#|$)' scripts/harness/regression_seeds.txt || true)
+    seeds_file=scripts/harness/regression_seeds.txt
+    if [[ ! -r $seeds_file ]]; then
+        echo "$0: cannot read $seeds_file" >&2
+        exit 1
+    fi
+    mapfile -t extra < <(grep -Ev '^(#|$)' "$seeds_file" || true)
 fi
 
 scripts/build-spec.sh --lean
@@ -69,9 +67,7 @@ target_dir=$(cargo metadata --format-version 1 --no-deps --locked |
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 cargo run --quiet --locked -p funk-ir --example fir_programs -- \
-    "$tmp/programs" "$first" "$count" "${extra[@]}"
-mkdir -p "$tmp/texts"
-cargo run --quiet --locked -p funk-ir --example fir_soup_texts -- "$tmp/texts" "$first" "$texts"
+    "$tmp" "$first" "$count" "${extra[@]}"
 
 status=0
 check=(python3 scripts/harness/programs.py --funk "$target_dir/debug/funk"
@@ -81,7 +77,7 @@ check=(python3 scripts/harness/programs.py --funk "$target_dir/debug/funk"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     read -r checks passed failed invalid < <(sed -nE \
         's/^([0-9]+) checks: ([0-9]+) passed, ([0-9]+) failed, ([0-9]+) invalid$/\1 \2 \3 \4/p' \
-        "$tmp/out" | tail -1)
+        "$tmp/out" | tail -1) || true
     python3 -I scripts/suite_summary.py counts "Generated programs" \
         "checks=${checks:-0}" "passed=${passed:-0}" "failed=${failed:-0}" "invalid=${invalid:-0}" ||
         status=$((status ? status : 1))

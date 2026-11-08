@@ -22,7 +22,7 @@ Without it, it ran 2 million in 11 seconds.
   `funk-ir` forbids unsafe code, so a sanitizer has little to find, and a
   panic ends the run without one.
 - Every input that the fuzzers keep goes through `fir-ref fmt`, as do the
-  random texts of the `fir_soup_texts` example. It must print a canonical
+  random texts of the `fir_programs` example. It must print a canonical
   form or report a parse error at a position. An exit status alone does not
   count, since an uncaught exception also exits with 1.
 - `scripts/harness/fuzz_to_corpus.py` keeps a crash once the bug is fixed: a

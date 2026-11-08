@@ -65,45 +65,47 @@ def evaluate(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
     they could not be read. The returned detail is ready for the report;
     the caller owns the test's name, report counts and final exit status.
     """
-    return _Run(test, result_types, param_types, runs).evaluate()
+    return _Run(test, result_types, param_types, runs).compare(
+        runs.exhaustive(test.args)
+    )
 
 
-def evaluate_generated(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
+def evaluate_generated(
+    test: Test, result_types, param_types, runs: Runs, defined: bool = False
+) -> Evaluation:
     """Judge a run of a generated program, which cannot declare its results.
 
     A run that may hit UB or run out of fuel, or that chooses past the
     budget, is interpreter-only: it passes with fir-ref's report and native
-    code does not run. A run built to stay defined fails instead, since the
-    generator is a second opinion on it. Any other run is judged as a
+    code does not run. A run built to stay `defined` fails instead, since
+    the generator is a second opinion on it. Any other run is judged as a
     differential test.
     """
-    return _Run(test, result_types, param_types, runs, generated=True).evaluate()
+    ref = runs.exhaustive(test.args)
+    detail = f"fir-ref {_show(ref)}"
+    why = _interpreter_only(ref)
+    wrong = (why or _not_defined(ref)) if defined else None
+    if wrong is not None:
+        failure = f"the run is built to stay defined, but {wrong}"
+        return Evaluation(Judgement(FAILED, failure), f"{detail}: {failure}")
+    if why is not None:
+        shown = f"{detail}; native code is not run: {why}"
+        return Evaluation(Judgement(PASSED), shown, interpreter_only=why)
+    return _Run(test, result_types, param_types, runs).compare(ref)
 
 
 class _Run:
-    def __init__(
-        self, test: Test, result_types, param_types, runs: Runs, generated: bool = False
-    ):
+    def __init__(self, test: Test, result_types, param_types, runs: Runs):
         self.test = test
         self.types = result_types
         self.params = param_types
         self.runs = runs
-        self.generated = generated
 
-    def evaluate(self) -> Evaluation:
+    def compare(self, ref) -> Evaluation:
+        """Judge the test on fir-ref's report `ref` on its arguments."""
         t = self.test
-        self.ref = self.runs.exhaustive(t.args)
+        self.ref = ref
         detail = f"fir-ref {_show(self.ref)}"
-        wrong = _not_defined(self.ref) if t.defined else None
-        if wrong is not None:
-            return Evaluation(
-                Judgement(FAILED, f"the run is built to stay defined, but {wrong}"),
-                detail + f": the run is built to stay defined, but {wrong}",
-            )
-        why = _interpreter_only(self.ref) if self.generated else None
-        if why is not None:
-            shown = f"{detail}; native code is not run: {why}"
-            return Evaluation(Judgement(PASSED), shown, interpreter_only=why)
         if t.results:
             n = len(t.results)
             detail += f", and the test declares {n} result{'s' if n != 1 else ''}"
@@ -250,11 +252,6 @@ def _interpreter_only(ref) -> str | None:
 def _not_defined(ref) -> str | None:
     """How fir-ref's report contradicts a run built to stay defined, if it
     does: such a run makes no choice and returns defined values."""
-    if isinstance(ref, str):
-        return None
-    why = _interpreter_only(ref)
-    if why is not None:
-        return why
     if not isinstance(ref, Outcomes) or any(o.kind == STUCK for o in ref.outcomes):
         return None
     if ref.choices != 0:

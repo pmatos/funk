@@ -1,6 +1,6 @@
 //! Random texts for the parsers: tokens of fir in any order, and random
 //! bytes. The Rust property tests parse them, and `fir-ref fmt` reads them
-//! through the `fir_soup_texts` example (#165).
+//! through the `fir_programs` example (#165).
 
 use super::Rng;
 

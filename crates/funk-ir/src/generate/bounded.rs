@@ -24,20 +24,20 @@
 
 use super::blocks::value;
 use super::calls::{self, Callee};
-use super::{BACKEND_WIDTHS, Body, Rng, Widths, constant};
-use crate::dialects::core::{PREDICATES, int_type, int_width};
-use crate::ir::{Attr, Block, Func, FuncType, Int, LocRef, Module, Op, Type};
+use super::{BACKEND_WIDTHS, Body, Rng, Widths, constant, start};
+use crate::dialects::core::{DIVISION_OPS, PREDICATES, SHIFT_OPS, int_type, int_width};
+use crate::ir::{Attr, Block, Func, LocRef, Module, Op, Type};
 
 /// The start of the name of a function built to stay defined.
 pub const SAFE_PREFIX: &str = "safe.";
 
-const COUNTER_WIDTHS: [u32; 5] = [8, 16, 32, 64, 128];
-const MASKS: [&str; 3] = ["3", "7", "15"];
+const MASKS: [i128; 3] = [3, 7, 15];
 const LOOP_PREDICATES: [&str; 3] = ["slt", "ult", "ne"];
 
 /// Adds one to three bounded functions, or pairs of them, to `module`. The
 /// first is built to stay defined, and so is each later one half the time.
-pub(super) fn add(rng: &mut Rng, mut module: Module, keys: &[LocRef]) -> Module {
+/// Returns the module and the names of those built to stay defined.
+pub(super) fn add(rng: &mut Rng, mut module: Module, keys: &[LocRef]) -> (Module, Vec<String>) {
     let (mut all, mut safe_ones): (Vec<Callee>, Vec<Callee>) = (Vec::new(), Vec::new());
     for k in 0..1 + rng.below(3) {
         let safe = k == 0 || rng.one_in(2);
@@ -71,43 +71,16 @@ pub(super) fn add(rng: &mut Rng, mut module: Module, keys: &[LocRef]) -> Module 
         }
         all.extend(made);
     }
-    module
+    (module, safe_ones.into_iter().map(|c| c.name).collect())
 }
 
 /// A signature whose first parameter is the counter.
 fn signature(rng: &mut Rng, name: String) -> Callee {
     let mut me = calls::signature(rng, name, Widths::Backend);
-    me.ty.params.insert(0, int_type(*rng.pick(&COUNTER_WIDTHS)));
+    me.ty
+        .params
+        .insert(0, int_type(*rng.pick(&BACKEND_WIDTHS[1..])));
     me
-}
-
-fn start<'k>(
-    rng: &mut Rng,
-    me: &Callee,
-    done: &'k [Callee],
-    keys: &'k [LocRef],
-    safe: bool,
-) -> (Func, Body<'k>) {
-    let mut body = Body {
-        widths: Widths::Backend,
-        safe,
-        calls_left: 0,
-        keys,
-        funcs: done,
-        values: Vec::new(),
-        ops: Vec::new(),
-        taken: Vec::new(),
-    };
-    let mut f = Func::new(me.name.clone());
-    for t in &me.ty.params {
-        let n = body.fresh_name(rng);
-        body.values.push((n.clone(), t.clone()));
-        f = f.param(n, t.clone());
-    }
-    for t in &me.ty.results {
-        f = f.result(t.clone());
-    }
-    (f, body)
 }
 
 impl Body<'_> {
@@ -116,7 +89,7 @@ impl Body<'_> {
     }
 
     /// Adds `op`, with one new result of type `t`, and returns the result.
-    fn result_of(&mut self, rng: &mut Rng, op: Op, t: &Type) -> String {
+    pub(super) fn result_of(&mut self, rng: &mut Rng, op: Op, t: &Type) -> String {
         let n = self.fresh_name(rng);
         self.ops.push(op.result(n.clone(), t.clone()));
         self.values.push((n.clone(), t.clone()));
@@ -124,11 +97,11 @@ impl Body<'_> {
     }
 
     /// A constant of a small value, spelled for `t`: 0 or 1 at `i1`.
-    fn int(&mut self, rng: &mut Rng, digits: &str, t: &Type) -> String {
-        let v = match (int_width(t) == Some(1), digits) {
-            (true, "0") => Attr::word("false"),
+    fn int(&mut self, rng: &mut Rng, v: i128, t: &Type) -> String {
+        let v = match (int_width(t) == Some(1), v) {
+            (true, 0) => Attr::word("false"),
             (true, _) => Attr::word("true"),
-            _ => Attr::Int(Int::parse(digits).expect("a canonical integer")),
+            _ => Attr::int(v),
         };
         let op = Op::new("const", self.loc(rng)).attr(v);
         self.result_of(rng, op, t)
@@ -149,8 +122,8 @@ impl Body<'_> {
 
     /// The counter parameter, masked to a small bound.
     fn bound(&mut self, rng: &mut Rng, counter: &str, t: &Type) -> String {
-        let digits = *rng.pick(&MASKS);
-        let mask = self.int(rng, digits, t);
+        let mask = *rng.pick(&MASKS);
+        let mask = self.int(rng, mask, t);
         self.binary(rng, "and", counter, &mask, t)
     }
 
@@ -184,7 +157,7 @@ impl Body<'_> {
             let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
             return self.result_of(rng, op, t);
         }
-        have[have.len().saturating_sub(4)..][rng.below(have.len().min(4) as u64) as usize].clone()
+        rng.pick(&have[have.len().saturating_sub(4)..]).clone()
     }
 
     /// A new value of type `t` from recent values, by an op that gives no
@@ -209,17 +182,17 @@ impl Body<'_> {
                 self.result_of(rng, op, t)
             }
             8 | 9 => {
-                let top = self.int(rng, &(w - 1).to_string(), t);
+                let top = self.int(rng, i128::from(w - 1), t);
                 let amount = self.binary(rng, "and", &b, &top, t);
-                let name = *rng.pick(&["shl", "lshr", "ashr"]);
+                let name = *rng.pick(&SHIFT_OPS);
                 self.binary(rng, name, &a, &amount, t)
             }
             10 => {
-                let seven = self.int(rng, "7", t);
+                let seven = self.int(rng, 7, t);
                 let low = self.binary(rng, "and", &b, &seven, t);
-                let one = self.int(rng, "1", t);
+                let one = self.int(rng, 1, t);
                 let divisor = self.binary(rng, "or", &low, &one, t);
-                let name = *rng.pick(&["sdiv", "udiv", "srem", "urem"]);
+                let name = rng.pick(&DIVISION_OPS).0;
                 self.binary(rng, name, &a, &divisor, t)
             }
             13 => {
@@ -243,7 +216,7 @@ impl Body<'_> {
         self.calls_left = if self.safe { 1 } else { 6 };
     }
 
-    fn take_block(&mut self, label: &str, params: &[(String, Type)], term: Op) -> Block {
+    pub(super) fn take_block(&mut self, label: &str, params: &[(String, Type)], term: Op) -> Block {
         let mut b = Block::new(label);
         for (x, t) in params {
             b = b.param(x.clone(), t.clone());
@@ -268,10 +241,10 @@ impl Body<'_> {
 /// A loop that counts from 0 up to the bound, with accumulators as block
 /// arguments of its header.
 fn counted_loop(rng: &mut Rng, me: &Callee, done: &[Callee], keys: &[LocRef], safe: bool) -> Func {
-    let (f, mut body) = start(rng, me, done, keys, safe);
+    let (f, mut body) = start(rng, me, done, keys, Widths::Backend, safe);
     let (counter, t) = body.values[0].clone();
     let n = body.bound(rng, &counter, &t);
-    let zero = body.int(rng, "0", &t);
+    let zero = body.int(rng, 0, &t);
     let mut types = me.ty.results.clone();
     if types.is_empty() || rng.one_in(2) {
         types.push(int_type(*rng.pick(&BACKEND_WIDTHS)));
@@ -307,7 +280,7 @@ fn counted_loop(rng: &mut Rng, me: &Callee, done: &[Callee], keys: &[LocRef], sa
     };
     body.work(rng);
     let nexts: Vec<String> = types.iter().map(|u| body.defined(rng, u)).collect();
-    let one = body.int(rng, "1", &t);
+    let one = body.int(rng, 1, &t);
     let next = body.binary(rng, "add", &i, &one, &t);
     let mut args = vec![next.as_str()];
     args.extend(nexts.iter().map(String::as_str));
@@ -337,9 +310,9 @@ fn diamond(
     types: &[Type],
     blocks: &mut Vec<Block>,
 ) -> Vec<(String, Type)> {
-    let one = body.int(rng, "1", t);
+    let one = body.int(rng, 1, t);
     let low = body.binary(rng, "and", i, &one, t);
-    let zero = body.int(rng, "0", t);
+    let zero = body.int(rng, 0, t);
     let even = body.compare(rng, "eq", &low, &zero);
     let branch = Op::new("cond_br", body.loc(rng))
         .operand(even)
@@ -370,10 +343,10 @@ fn recursion(
     keys: &[LocRef],
     safe: bool,
 ) -> Func {
-    let (f, mut body) = start(rng, me, done, keys, safe);
+    let (f, mut body) = start(rng, me, done, keys, Widths::Backend, safe);
     let (counter, t) = body.values[0].clone();
     let d = body.bound(rng, &counter, &t);
-    let zero = body.int(rng, "0", &t);
+    let zero = body.int(rng, 0, &t);
     let go = body.compare(rng, "sgt", &d, &zero);
     let test = Op::new("cond_br", body.loc(rng))
         .operand(go)
@@ -388,16 +361,15 @@ fn recursion(
     let base = body.take_block("base", &[], ret);
 
     body.values = after_entry;
-    let one = body.int(rng, "1", &t);
+    let one = body.int(rng, 1, &t);
     let next = body.binary(rng, "sub", &d, &one, &t);
-    let ty: FuncType = me.ty.clone();
     let mut call = Op::new("call", body.loc(rng))
         .attr(Attr::Sym(callee.to_string()))
         .operand(next);
-    for u in &ty.params[1..] {
+    for u in &me.ty.params[1..] {
         call = call.operand(value(rng, &mut body, u));
     }
-    for u in &ty.results {
+    for u in &me.ty.results {
         let n = body.fresh_name(rng);
         call = call.result(n.clone(), u.clone());
         body.values.push((n, u.clone()));

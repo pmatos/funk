@@ -1,11 +1,16 @@
 """Tests of the run of generated programs: its counts and `fir-ref fmt`."""
 
+import io
+import tempfile
 import tomllib
 import unittest
+from pathlib import Path
+from unittest import mock
 
 import corpus
 import programs
 import tools
+from report import Report
 
 
 class Share(unittest.TestCase):
@@ -30,35 +35,38 @@ class Share(unittest.TestCase):
 
 
 class Sidecar(unittest.TestCase):
-    def parse(self, line, generated):
-        data = tomllib.loads(f"tests = [{line}]")
-        return corpus.parse_tests(data, "m.fir", generated=generated)
+    def parse(self, line):
+        return programs.parse_runs(tomllib.loads(f"tests = [{line}]"), "m.fir")
 
     def test_a_generated_run_may_be_built_to_stay_defined(self):
-        tests, problems = self.parse('{ func = "@f", defined = true }', True)
+        runs, problems = self.parse('{ func = "@f", defined = true }')
         self.assertEqual(problems, [])
-        self.assertTrue(tests[0].defined)
+        self.assertTrue(runs[0][1])
 
     def test_a_run_is_not_built_to_stay_defined_by_default(self):
-        tests, _ = self.parse('{ func = "@f" }', True)
-        self.assertFalse(tests[0].defined)
+        runs, _ = self.parse('{ func = "@f" }')
+        self.assertFalse(runs[0][1])
 
     def test_the_corpus_has_no_such_key(self):
-        _, problems = self.parse('{ func = "@f", defined = true }', False)
+        data = tomllib.loads('tests = [{ func = "@f", defined = true }]')
+        _, problems = corpus.parse_tests(data, "m.fir")
         self.assertIn("unknown key defined", problems[0])
 
     def test_defined_is_a_boolean(self):
-        _, problems = self.parse('{ func = "@f", defined = 1 }', True)
+        _, problems = self.parse('{ func = "@f", defined = 1 }')
         self.assertIn("defined is true or false", problems[0])
 
     def test_defined_does_not_go_with_expect(self):
-        _, problems = self.parse('{ func = "@f", defined = true, expect = "ub" }', True)
+        _, problems = self.parse('{ func = "@f", defined = true, expect = "ub" }')
         self.assertIn("defined goes with no expect", problems[0])
 
 
 class Fmt(unittest.TestCase):
     def test_a_text_that_parses_is_clean(self):
         self.assertIsNone(programs.fmt_problem(tools.Ran(0, "text\n", "")))
+
+    def test_a_clean_exit_that_prints_nothing_is_a_failure(self):
+        self.assertIn("prints nothing", programs.fmt_problem(tools.Ran(0, "", "")))
 
     def test_a_parse_error_at_a_position_is_clean(self):
         ran = tools.Ran(1, "", "/tmp/a.fir:3:4: parse error: unexpected token\n")
@@ -73,6 +81,14 @@ class Fmt(unittest.TestCase):
 
     def test_a_timeout_is_a_failure(self):
         self.assertIn("does not end", programs.fmt_problem(tools.Ran(None, "", "")))
+
+    def test_a_failing_random_text_names_its_seed_to_replay(self):
+        out = io.StringIO()
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "soup-7.fir").write_text("x")
+            with mock.patch.object(tools, "run", return_value=tools.Ran(-11, "", "")):
+                programs.check_texts("fir-ref", Path(d), Report(out))
+        self.assertIn("scripts/check-random-programs.sh 7", out.getvalue())
 
 
 if __name__ == "__main__":

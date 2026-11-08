@@ -16,7 +16,7 @@ pub fn parse_round_trips(data: &[u8], reg: &Registry) -> Option<Module> {
 
 /// Parses `data` and verifies what parses. A panic here is a bug.
 pub fn verifies_without_panic(data: &[u8], reg: &Registry) {
-    if let Some(m) = parse_round_trips(data, reg) {
+    if let Ok(m) = parse_bytes(data, reg) {
         let _ = verify(&m, reg);
     }
 }

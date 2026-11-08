@@ -24,7 +24,7 @@
 
 use super::{Body, Rng, calls, name, width};
 use crate::dialects::core::int_type;
-use crate::ir::{Block, Func, Op, Type};
+use crate::ir::{Func, Op, Type};
 
 /// The blocks of `f`, whose parameters `body` holds, with their branches
 /// and the `ret` of `f`'s results that ends the last one.
@@ -83,17 +83,13 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
             Some(targets) => branch(rng, body, targets, &labels, &params),
             None => ret(rng, body, &f),
         };
-        let mut block = Block::new(labels[k].clone());
-        for (x, t) in &params[k] {
-            block = block.param(x.clone(), t.clone());
-        }
-        block.ops = std::mem::take(&mut body.ops);
+        let block = body.take_block(&labels[k], &params[k], term);
         let mut ds = params[k].clone();
         for op in &block.ops {
             ds.extend(op.results.iter().map(|d| (d.name.clone(), d.ty.clone())));
         }
         defs.push(ds);
-        f = f.block(block.op(term));
+        f = f.block(block);
     }
     f
 }

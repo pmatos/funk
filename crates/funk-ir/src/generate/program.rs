@@ -113,7 +113,7 @@ fn toml_string(s: &str) -> String {
 pub fn program(rng: &mut Rng) -> Program {
     let module = module_of(rng, Widths::Backend);
     let keys: Vec<LocRef> = module.locs.entries.iter().map(|(r, _)| *r).collect();
-    let mut module = bounded::add(rng, module, &keys);
+    let (mut module, safe_names) = bounded::add(rng, module, &keys);
     let mut runs = Vec::new();
     for f in module.funcs() {
         let vectors = if f.params.is_empty() {
@@ -121,7 +121,7 @@ pub fn program(rng: &mut Rng) -> Program {
         } else {
             1 + rng.below(4)
         };
-        let safe = f.name.starts_with(SAFE_PREFIX);
+        let safe = safe_names.contains(&f.name);
         let mut seen: Vec<Vec<String>> = Vec::new();
         for _ in 0..vectors {
             let args = arguments(rng, f);

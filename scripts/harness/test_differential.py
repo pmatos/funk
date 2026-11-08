@@ -333,8 +333,7 @@ class GeneratedRuns(unittest.TestCase):
 
     def judge_defined(self, *responses):
         runs = RecordedRuns(*responses)
-        test = replace(TEST, defined=True)
-        return evaluate_generated(test, ["i8"], [], runs), runs
+        return evaluate_generated(TEST, ["i8"], [], runs, defined=True), runs
 
     def assert_defined_run_fails(self, ref, why):
         result, runs = self.judge_defined(ref)

@@ -6,12 +6,17 @@ Usage: fuzz_to_corpus.py --funk FUNK [--rule RULE] [--corpus DIR] ARTIFACT
 `funk verify` decides where ARTIFACT goes in the corpus. A text that it
 rejects joins `reject/fuzz.toml`, with RULE saying which rule it breaks. A
 valid module's canonical form becomes `canonical/fuzz-HASH.fir`. A crash
-that still happens exits with 2: fix the bug first.
+that still happens exits with 2: fix the bug first. `funk verify` cannot see
+the `parse` fuzzer's round trip, so a text that parses must also format to
+a text that formats to itself.
 """
 
 import argparse
 import hashlib
+import re
 import sys
+import tempfile
+from itertools import groupby
 from pathlib import Path
 
 import tools
@@ -22,26 +27,45 @@ PRINTABLE = range(0x20, 0x7F)
 def toml_text(data: bytes) -> str:
     """`data` as the `text` of a must-reject table: a list of basic strings
     for its printable runs and of numbers for its other bytes."""
-    pieces, run = [], ""
-    for b in data:
-        if b in PRINTABLE:
-            run += {0x22: '\\"', 0x5C: "\\\\"}.get(b, chr(b))
-            continue
-        if run:
-            pieces.append(f'"{run}"')
-            run = ""
-        pieces.append(f"0x{b:02x}")
-    if run:
-        pieces.append(f'"{run}"')
+    pieces = []
+    for printable, run in groupby(data, key=lambda b: b in PRINTABLE):
+        if printable:
+            pieces.append(basic_string(bytes(run).decode("ascii")))
+        else:
+            pieces.extend(f"0x{b:02x}" for b in run)
     return "[" + ", ".join(pieces) + "]"
 
 
-def reject_table(verdict: str, rule: str, data: bytes) -> str:
-    quoted = rule.replace("\\", "\\\\").replace('"', '\\"')
+def basic_string(text: str) -> str:
+    """`text` as a TOML basic string."""
+    quoted = text.replace("\\", "\\\\").replace('"', '\\"')
     return (
-        f'[[reject]]\nverdict = "{verdict}"\nrule = "{quoted}"\n'
+        '"' + re.sub(r"[\x00-\x1f\x7f]", lambda m: f"\\u{ord(m[0]):04x}", quoted) + '"'
+    )
+
+
+def reject_table(verdict: str, rule: str, data: bytes) -> str:
+    return (
+        f'[[reject]]\nverdict = "{verdict}"\nrule = {basic_string(rule)}\n'
         f"text = {toml_text(data)}\n"
     )
+
+
+def round_trip(funk: str, artifact: Path) -> tuple[str, str | None]:
+    """What `funk fmt` prints of `artifact`, and why that does not format to
+    itself, if it does not."""
+    first = tools.run([funk, "fmt", str(artifact)])
+    if first.status != 0:
+        return "", tools.failure(first)
+    with tempfile.TemporaryDirectory(prefix="fuzz-to-corpus.") as work:
+        printed = Path(work) / "printed.fir"
+        printed.write_text(first.stdout, encoding="utf-8")
+        again = tools.run([funk, "fmt", str(printed)])
+    if again.status != 0:
+        return "", f"what it prints does not parse: {tools.failure(again)}"
+    if again.stdout != first.stdout:
+        return "", "what it prints does not format to itself"
+    return first.stdout, None
 
 
 def keep(funk: str, artifact: Path, corpus: Path, rule: str | None) -> tuple[int, str]:
@@ -49,16 +73,18 @@ def keep(funk: str, artifact: Path, corpus: Path, rule: str | None) -> tuple[int
     v = tools.verdict(tools.run([funk, "verify", "--json", str(artifact)]))
     if not isinstance(v, tools.Verdict):
         return 2, f"funk verify still fails on {artifact}: {v}"
+    if v.verdict not in (tools.ACCEPTED, tools.PARSE_ERROR, tools.VALIDATION_ERROR):
+        return 2, f"funk verify gives {v.verdict} on {artifact}"
+    canonical = ""
+    if v.verdict != tools.PARSE_ERROR:
+        canonical, why = round_trip(funk, artifact)
+        if why:
+            return 2, f"funk fmt still fails on {artifact}: {why}"
     if v.verdict == tools.ACCEPTED:
-        ran = tools.run([funk, "fmt", str(artifact)])
-        if ran.status != 0:
-            return 2, f"funk fmt fails on {artifact}: {tools.failure(ran)}"
         name = hashlib.sha256(artifact.read_bytes()).hexdigest()[:16]
         path = corpus / "canonical" / f"fuzz-{name}.fir"
-        path.write_text(ran.stdout, encoding="utf-8")
+        path.write_text(canonical, encoding="utf-8")
         return 0, f"wrote {path}"
-    if v.verdict not in (tools.PARSE_ERROR, tools.VALIDATION_ERROR):
-        return 2, f"funk verify gives {v.verdict} on {artifact}"
     if not rule:
         return 2, f"{artifact} is a {v.verdict}: say which rule it breaks with --rule"
     path = corpus / "reject" / "fuzz.toml"

@@ -58,6 +58,6 @@ which gives poison, and most values never reached a `ret`.
 - Bounded recursion is at most 15 deep per function. Random functions recurse
   until they return or fuel stops them, so a run that returns very deep could
   overflow the native stack and fail although the code is right. A run of
-  10,000 fresh programs, 84,555 of its runs compared with native code, showed
+  10,000 fresh programs, 83,053 of its runs compared with native code, showed
   none. If one appears, it is this limit, not a miscompile.
 - A change to the generator changes which program each seed means.

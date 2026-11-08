@@ -92,21 +92,28 @@ class Harness:
         exe = out / "exe"
         return tools.build(self.funk, module.path, exe)
 
+    def interpreter_only(self, path: Path, t: corpus.Test) -> str:
+        """Runs a test with `expect` on fir-ref alone, adds it to the report
+        and returns its status."""
+        runs = ProcessRuns(self.fir_ref, path, t, "is not built")
+        ref = runs.scripted(t.args, t.choices)
+        j = (
+            Judgement(FAILED)
+            if isinstance(ref, str)
+            else expected(ref.outcome, t.expect)
+        )
+        detail = f"fir-ref {show(ref)}" + (f": {j.why}" if j.why else "")
+        self.report.add(j.status, t.show(), detail)
+        return j.status
+
     def test(
         self, path: Path, t: corpus.Test, types: dict, exe: Path | str, params=None
     ):
         """Run one test and emit its report; differential judgement owns its runs."""
-        runs = ProcessRuns(self.fir_ref, path, t, exe)
         if t.expect is not None:
-            ref = runs.scripted(t.args, t.choices)
-            j = (
-                Judgement(FAILED)
-                if isinstance(ref, str)
-                else expected(ref.outcome, t.expect)
-            )
-            detail = f"fir-ref {show(ref)}" + (f": {j.why}" if j.why else "")
-            self.report.add(j.status, t.show(), detail)
+            self.interpreter_only(path, t)
             return
+        runs = ProcessRuns(self.fir_ref, path, t, exe)
         result = differential.evaluate(t, types.get(t.func), params, runs)
         self.report.add(result.judgement.status, t.show(), result.detail)
 

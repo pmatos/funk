@@ -1,4 +1,4 @@
-# Seeds of generated programs that once failed, one per line
+# Seeds that once failed, one per line: each names a program and a random text
 # (ADR-2026-11-08-2116). scripts/check-random-programs.sh runs them on every
 # pull request, after seeds 0 to 499. A seed names a program only for the
 # generator of its day, so also add the program to tests/fir/ as a test.

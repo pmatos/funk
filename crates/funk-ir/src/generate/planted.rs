@@ -17,16 +17,14 @@
 
 use super::program::{Expect, Run};
 use super::{BACKEND_WIDTHS, Rng};
-use crate::dialects::core::int_type;
-use crate::ir::{Attr, Block, Func, Int, LocRef, Op, Type};
+use crate::dialects::core::{DIVISION_OPS, int_type};
+use crate::ir::{Attr, Block, Func, LocRef, Op, Type};
 use crate::text::print_symbol;
 
 /// The fuel of a planted run.
 const FUEL: u64 = 1_000;
 
-const WIDTHS: [u32; 5] = [8, 16, 32, 64, 128];
 const SIGNED_DIVISIONS: [&str; 2] = ["sdiv", "srem"];
-const DIVISIONS: [&str; 4] = ["sdiv", "udiv", "srem", "urem"];
 
 fn planted(f: &Func, args: Vec<String>, expect: Expect) -> Run {
     Run {
@@ -46,10 +44,9 @@ struct Builder {
 }
 
 impl Builder {
-    fn constant(&self, name: &str, digits: &str) -> Op {
-        let v = Attr::Int(Int::parse(digits).expect("a canonical integer"));
+    fn constant(&self, name: &str, v: i128) -> Op {
         Op::new("const", self.loc)
-            .attr(v)
+            .attr(Attr::int(v))
             .result(name, self.t.clone())
     }
 
@@ -85,7 +82,7 @@ impl Builder {
             .operand("c")
             .succ("a", &[])
             .succ("b", &[]);
-        let arm = |label: &str, value: &str| {
+        let arm = |label: &str, value: i128| {
             let r = format!("r{label}");
             Block::new(label)
                 .op(self.constant(&r, value))
@@ -94,14 +91,14 @@ impl Builder {
         Func::new(name)
             .result(self.t.clone())
             .block(Block::new("entry").op(cond).op(test))
-            .block(arm("a", "1"))
-            .block(arm("b", "0"))
+            .block(arm("a", 1))
+            .block(arm("b", 0))
     }
 }
 
 /// A function whose every run hits UB, and its near miss, with their runs.
 pub(super) fn ub_and_near_miss(rng: &mut Rng, k: u64, loc: LocRef) -> Vec<(Func, Run)> {
-    let w = *rng.pick(&WIDTHS);
+    let w = *rng.pick(&BACKEND_WIDTHS[1..]);
     let b = Builder {
         loc,
         w,
@@ -117,7 +114,7 @@ pub(super) fn ub_and_near_miss(rng: &mut Rng, k: u64, loc: LocRef) -> Vec<(Func,
             kept
         }]
     };
-    let (bad, bad_args, good, good_args, values) = match rng.below(5) {
+    let (bad, good, values) = match rng.below(5) {
         0 => {
             let taken = rng.one_in(2);
             let c = Op::new("const", loc)
@@ -125,59 +122,41 @@ pub(super) fn ub_and_near_miss(rng: &mut Rng, k: u64, loc: LocRef) -> Vec<(Func,
                 .result("c", int_type(1));
             let p = Op::new("poison", loc).result("c", int_type(1));
             let value = if taken { "1" } else { "0" };
-            (
-                b.branch(ub.clone(), p),
-                vec![],
-                b.branch(near.clone(), c),
-                vec![],
-                vec![value.to_string()],
-            )
+            (b.branch(ub, p), b.branch(near, c), vec![value.to_string()])
         }
         1 => {
-            let op = *rng.pick(&DIVISIONS);
-            let bad = b.division(ub.clone(), vec![b.constant("d", "0")], op, "x", "d");
-            let good = b.division(near.clone(), vec![b.constant("d", "1")], op, "x", "d");
-            (
-                bad,
-                vec![x.clone()],
-                good,
-                vec![x.clone()],
-                zero_rem(op, x.clone()),
-            )
+            let op = rng.pick(&DIVISION_OPS).0;
+            let bad = b.division(ub, vec![b.constant("d", 0)], op, "x", "d");
+            let good = b.division(near, vec![b.constant("d", 1)], op, "x", "d");
+            (bad, good, zero_rem(op, x.clone()))
         }
         2 => {
-            let op = *rng.pick(&DIVISIONS);
-            let bad = b.division(ub.clone(), vec![b.poison("d")], op, "x", "d");
-            let ops = vec![b.poison("p"), b.constant("d", "1")];
-            let good = b.division(near.clone(), ops, op, "p", "d");
-            (
-                bad,
-                vec![x.clone()],
-                good,
-                vec![],
-                vec!["poison".to_string()],
-            )
+            let op = rng.pick(&DIVISION_OPS).0;
+            let bad = b.division(ub, vec![b.poison("d")], op, "x", "d");
+            let ops = vec![b.poison("p"), b.constant("d", 1)];
+            let good = b.division(near, ops, op, "p", "d");
+            (bad, good, vec!["poison".to_string()])
         }
         3 => {
             let op = *rng.pick(&SIGNED_DIVISIONS);
             let min = b.min();
-            let ops = |a: i128| vec![b.constant("a", &a.to_string()), b.constant("d", "-1")];
-            let bad = b.division(ub.clone(), ops(min), op, "a", "d");
-            let good = b.division(near.clone(), ops(min + 1), op, "a", "d");
-            let values = zero_rem(op, (!min).to_string());
-            (bad, vec![], good, vec![], values)
+            let ops = |a: i128| vec![b.constant("a", a), b.constant("d", -1)];
+            let bad = b.division(ub, ops(min), op, "a", "d");
+            let good = b.division(near, ops(min + 1), op, "a", "d");
+            (bad, good, zero_rem(op, (!min).to_string()))
         }
         _ => {
             let op = *rng.pick(&SIGNED_DIVISIONS);
-            let ops = vec![b.poison("a"), b.constant("d", "-1")];
-            let bad = b.division(ub.clone(), ops, op, "a", "d");
-            let ops = vec![b.constant("a", "5"), b.constant("d", "-1")];
-            let good = b.division(near.clone(), ops, op, "a", "d");
-            (bad, vec![], good, vec![], zero_rem(op, "-5".to_string()))
+            let ops = vec![b.poison("a"), b.constant("d", -1)];
+            let bad = b.division(ub, ops, op, "a", "d");
+            let ops = vec![b.constant("a", 5), b.constant("d", -1)];
+            let good = b.division(near, ops, op, "a", "d");
+            (bad, good, zero_rem(op, "-5".to_string()))
         }
     };
-    let bad_run = planted(&bad, bad_args, Expect::Ub);
-    let good_run = planted(&good, good_args, Expect::Values(values));
+    let args = |f: &Func| f.params.iter().map(|_| x.clone()).collect();
+    let bad_run = planted(&bad, args(&bad), Expect::Ub);
+    let good_run = planted(&good, args(&good), Expect::Values(values));
     vec![(bad, bad_run), (good, good_run)]
 }
 

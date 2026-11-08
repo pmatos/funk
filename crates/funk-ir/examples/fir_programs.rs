@@ -1,5 +1,6 @@
-//! Writes the programs that the differential harness runs (#165): for each
-//! seed, `program-SEED.fir` and its runs, `program-SEED.toml`.
+//! Writes what the differential harness runs (#165): for each seed,
+//! `programs/program-SEED.fir` and its runs, `programs/program-SEED.toml`,
+//! and a random text for `fir-ref fmt`, `texts/soup-SEED.fir`.
 //!
 //! Usage: `cargo run -p funk-ir --example fir_programs -- OUT_DIR FIRST COUNT [SEED...]`
 //!
@@ -8,16 +9,19 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use funk_ir::generate::Rng;
-use funk_ir::generate::program;
+use funk_ir::generate::{Rng, program, soup};
 use funk_ir::print;
 
 fn seed(s: &str) -> Result<u64, String> {
     s.parse().map_err(|_| format!("{s} is not a seed"))
 }
 
-fn write(path: &Path, text: &str) -> Result<(), String> {
-    std::fs::write(path, text).map_err(|e| format!("cannot write {}: {e}", path.display()))
+fn write(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    std::fs::write(path, bytes).map_err(|e| format!("cannot write {}: {e}", path.display()))
+}
+
+fn create(dir: &Path) -> Result<(), String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))
 }
 
 fn run(args: &[String]) -> Result<(), String> {
@@ -25,16 +29,28 @@ fn run(args: &[String]) -> Result<(), String> {
         return Err("usage: fir_programs OUT_DIR FIRST COUNT [SEED...]".into());
     };
     let (first, count) = (seed(first)?, seed(count)?);
-    let out = Path::new(out);
-    std::fs::create_dir_all(out).map_err(|e| format!("cannot create {}: {e}", out.display()))?;
     let extra = extra
         .iter()
         .map(|s| seed(s))
         .collect::<Result<Vec<_>, _>>()?;
+    let (programs, texts) = (
+        Path::new(out).join("programs"),
+        Path::new(out).join("texts"),
+    );
+    create(&programs)?;
+    create(&texts)?;
     for s in (first..first.saturating_add(count)).chain(extra) {
         let p = program::program(&mut Rng::new(s));
-        write(&out.join(format!("program-{s}.fir")), &print(&p.module))?;
-        write(&out.join(format!("program-{s}.toml")), &p.sidecar())?;
+        let fir = programs.join(format!("program-{s}.fir"));
+        write(&fir, print(&p.module).as_bytes())?;
+        write(&fir.with_extension("toml"), p.sidecar().as_bytes())?;
+        let mut rng = Rng::new(s);
+        let text = if rng.one_in(2) {
+            soup::token_soup(&mut rng).into_bytes()
+        } else {
+            soup::random_bytes(&mut rng)
+        };
+        write(&texts.join(format!("soup-{s}.fir")), &text)?;
     }
     Ok(())
 }

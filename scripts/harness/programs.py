@@ -28,9 +28,9 @@ from pathlib import Path
 import corpus
 import differential
 import tools
-from checks import Harness, show
+from checks import Harness
 from execution import ProcessRuns
-from refine import FAILED, INVALID, PASSED, Judgement, expected
+from refine import FAILED, INVALID, PASSED
 from report import Report
 
 # The most bits that one path of a generated run may choose. Each path
@@ -44,6 +44,7 @@ MIN_RUNS_FOR_SHARE = 200
 
 PARSE_ERROR_LINE = re.compile(r".*:\d+:\d+: parse error: ")
 SEED = re.compile(r"program-(\d+)\.fir")
+SOUP_SEED = re.compile(r"soup-(\d+)\.fir")
 
 
 def arguments(argv: list[str]) -> argparse.Namespace:
@@ -97,44 +98,73 @@ class Tally:
         )
 
 
+class QuietReport(Report):
+    """A report that leaves out every check that passed."""
+
+    def add(self, status: str, what: str, detail: str, quiet: bool = True):
+        super().add(status, what, detail, True)
+
+
+def parse_runs(
+    data: dict, module: str
+) -> tuple[list[tuple[corpus.Test, bool]], list[str]]:
+    """The runs of a program's sidecar, each with whether it is built to stay
+    defined, a key that only a generated program's sidecar has."""
+    flags, problems = [], []
+    items = data.get("tests")
+    for i, t in enumerate(items if isinstance(items, list) else [], 1):
+        defined = t.pop("defined", False) if isinstance(t, dict) else False
+        if not isinstance(defined, bool):
+            problems.append(f"test {i}: defined is true or false")
+        elif defined and t.get("expect") is not None:
+            problems.append(f"test {i}: defined goes with no expect")
+        flags.append(defined)
+    tests, more = corpus.parse_tests(data, module)
+    problems += more
+    return ([] if problems else list(zip(tests, flags))), problems
+
+
+def read_runs(path: Path, module: str, errors: list[str]):
+    """The runs of the sidecar at `path`; its problems join `errors`."""
+    data = corpus.read_toml(path, errors)
+    if data is None:
+        return []
+    runs, problems = parse_runs(data, module)
+    errors += [f"{path}: {p}" for p in problems]
+    return runs
+
+
 def run_generated(
-    h: Harness, path: Path, t: corpus.Test, types, params, exe
+    h: Harness, path: Path, t: corpus.Test, types, params, exe, defined: bool
 ) -> differential.Evaluation:
     """Runs one test of a program, and adds it to the report."""
     runs = ProcessRuns(h.fir_ref, path, t, exe, CHOICE_BITS)
-    result = differential.evaluate_generated(t, types.get(t.func), params, runs)
-    h.report.add(result.judgement.status, t.show(), result.detail, quiet=True)
+    result = differential.evaluate_generated(
+        t, types.get(t.func), params, runs, defined
+    )
+    h.report.add(result.judgement.status, t.show(), result.detail)
     return result
-
-
-def run_planted(h: Harness, path: Path, t: corpus.Test) -> str:
-    """Runs a test planted to end one way, and adds it to the report."""
-    ref = ProcessRuns(h.fir_ref, path, t, "is not built").scripted(t.args, t.choices)
-    j = Judgement(FAILED) if isinstance(ref, str) else expected(ref.outcome, t.expect)
-    detail = f"fir-ref {show(ref)}" + (f": {j.why}" if j.why else "")
-    h.report.add(j.status, t.show(), detail, quiet=True)
-    return j.status
 
 
 def check_program(h: Harness, fir: Path, tally: Tally, errors: list[str]):
     """Runs every test of the program `fir`."""
     name = fir.name
     failed_before = h.report.counts[FAILED] + h.report.counts[INVALID]
-    tests = corpus.read_tests(fir.with_suffix(".toml"), name, errors, generated=True)
-    if h.accepted(name, fir, quiet=True):
+    runs = read_runs(fir.with_suffix(".toml"), name, errors)
+    if h.accepted(name, fir):
         text = fir.read_text(encoding="utf-8")
         types, params = corpus.result_types(text), corpus.param_types(text)
-        exe = h.build(corpus.Module(name, fir, tests))
-        for t in tests:
+        exe = h.build(corpus.Module(name, fir, [t for t, _ in runs]))
+        for t, defined in runs:
             if t.expect is not None:
-                if run_planted(h, fir, t) == PASSED:
+                if h.interpreter_only(fir, t) == PASSED:
                     tally.planted += 1
                 continue
-            r = run_generated(h, fir, t, types, params.get(t.func), exe)
+            r = run_generated(h, fir, t, types, params.get(t.func), exe, defined)
             if r.judgement.status == PASSED:
                 if r.interpreter_only is None:
                     tally.compared += 1
-                    tally.defined += t.defined
+                    tally.defined += defined
                 else:
                     why = r.interpreter_only
                     tally.interpreter_only[why] = tally.interpreter_only.get(why, 0) + 1
@@ -156,16 +186,21 @@ def check_programs(args, work: Path, report: Report):
     why = tally.too_few_compared()
     if why:
         report.add(FAILED, "generated programs", why)
-    if tally.failed_seeds:
-        seeds = " ".join(sorted(tally.failed_seeds, key=int))
-        report.note(f"replay with: scripts/check-random-programs.sh {seeds}")
+    note_replay(report, tally.failed_seeds)
+
+
+def note_replay(report: Report, seeds: set[str]):
+    """Says how to run again the seeds that failed, if any did."""
+    if seeds:
+        shown = " ".join(sorted(seeds, key=int))
+        report.note(f"replay with: scripts/check-random-programs.sh {shown}")
 
 
 def fmt_problem(ran: tools.Ran) -> str | None:
     """Why `fir-ref fmt` did not end cleanly on a text, if it did not: it
     prints the canonical form, or a parse error at a position."""
     if ran.status == 0:
-        return None
+        return None if ran.stdout else "exits with 0 and prints nothing"
     first = ran.stderr.partition("\n")[0]
     if ran.status == 1 and PARSE_ERROR_LINE.match(first):
         return None
@@ -176,17 +211,20 @@ def check_texts(fir_ref: str, directory: Path, report: Report):
     texts = sorted(p for p in directory.iterdir() if p.is_file())
     if not texts:
         report.note(f"{directory} holds no text for fir-ref fmt")
+    failed_seeds = set()
     for p in texts:
         why = fmt_problem(tools.run([fir_ref, "fmt", str(p)]))
-        report.add(
-            FAILED if why else PASSED, f"fir-ref fmt {p.name}", why or "", quiet=True
-        )
+        report.add(FAILED if why else PASSED, f"fir-ref fmt {p.name}", why or "")
+        soup = SOUP_SEED.fullmatch(p.name)
+        if why and soup:
+            failed_seeds.add(soup.group(1))
+    note_replay(report, failed_seeds)
 
 
 def main(argv: list[str]) -> int:
     args = arguments(argv)
     sys.set_int_max_str_digits(0)
-    report = Report(sys.stdout)
+    report = QuietReport(sys.stdout)
     with tempfile.TemporaryDirectory(prefix="fir-programs.") as work:
         try:
             if args.programs is not None:

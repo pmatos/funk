@@ -402,20 +402,30 @@ impl Body<'_> {
             let w = int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))
         };
-        let n = self.fresh_name(rng);
-        self.ops.push(op.result(n.clone(), t.clone()));
-        self.values.push((n.clone(), t));
-        n
+        self.result_of(rng, op, &t)
     }
 }
 
 /// The `k`-th function of `funcs`, with the type chosen for it.
 fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef], widths: Widths) -> Func {
-    let me = &funcs[k];
+    let (f, mut body) = start(rng, &funcs[k], funcs, keys, widths, false);
+    blocks::build(rng, &mut body, f)
+}
+
+/// The function `me`, with its parameters and results but no blocks, and
+/// its body, which holds the parameters.
+fn start<'k>(
+    rng: &mut Rng,
+    me: &Callee,
+    funcs: &'k [Callee],
+    keys: &'k [LocRef],
+    widths: Widths,
+    safe: bool,
+) -> (Func, Body<'k>) {
     let mut f = Func::new(me.name.clone());
     let mut body = Body {
         widths,
-        safe: false,
+        safe,
         calls_left: 0,
         keys,
         funcs,
@@ -431,5 +441,5 @@ fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef], widths: Widt
     for t in &me.ty.results {
         f = f.result(t.clone());
     }
-    blocks::build(rng, &mut body, f)
+    (f, body)
 }

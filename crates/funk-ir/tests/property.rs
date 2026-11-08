@@ -309,7 +309,9 @@ fn layout_that_is_not_canonical_parses_to_the_same_module() {
 /// Parses `text`; if it parses, checks that its module round-trips and that
 /// verifying it does not panic.
 fn parse_never_panics(text: &str, reg: &Registry) {
-    funk_ir::fuzz::verifies_without_panic(text.as_bytes(), reg);
+    if let Some(m) = funk_ir::fuzz::parse_round_trips(text.as_bytes(), reg) {
+        let _ = verify(&m, reg);
+    }
 }
 
 #[test]
