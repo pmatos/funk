@@ -120,7 +120,7 @@ sub-issues track the work of M1, one issue for each piece. Issue
 | `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, must-reject texts, and cases ported from LLVM |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
-| `scripts/` | Scripts for the spec build, the Rust checks, the differential harness (`scripts/harness/`), the hooks and agent sessions |
+| `scripts/` | Scripts for the spec build, the Rust checks, the differential harness and the fir explorer (`scripts/harness/`), the hooks and agent sessions |
 | `.github/` | The CI and Pages workflows, the ruleset for `main` and the Dependabot settings |
 | `.pre-commit-config.yaml` | Every check, for the local hooks and for CI |
 | `.claude/settings.json` | Claude Code settings, which install the git hooks when a session starts |
@@ -173,12 +173,29 @@ time cargo runs. `funk fmt FILE` prints a file in its canonical form;
 them. `funk verify FILE` checks a file, and prints nothing when it is valid.
 `funk build -o OUTPUT FILE` compiles a file into the object file `OUTPUT.o`
 and the executable `OUTPUT`, which runs one function: `OUTPUT @FUNCTION ARG...`.
+`funk asm FILE` prints the assembly of its functions.
 `--json` reports one JSON line per file. `funk --help` lists the options.
 [ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) and
 [ADR-2026-10-30-1326](docs/adrs/2026-10-30-1326-funk-build-command.md)
 give the reports and exit codes, and
 [ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)
 how the executable is run.
+
+## Explore fir in a browser
+
+The fir explorer is a local web app, in the manner of Compiler Explorer. Write
+fir and see whether Rust and Lean accept it, its round trip, its x86-64
+assembly, the outcomes of a run on `fir-ref`, and whether native code refines
+them. It needs what the spec and funk need, and Python 3.11 or later:
+
+```sh
+./scripts/explorer.sh                # build the tools and start the explorer
+./scripts/explorer.sh --no-build     # start it with the tools already built
+```
+
+Then open <http://127.0.0.1:8017/>. It compiles and runs what you type, so it
+listens only on this machine. `--port` and `--timeout` change its port and the
+seconds that a tool or a native program may run.
 
 ## How to contribute
 

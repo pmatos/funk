@@ -1,10 +1,11 @@
 //! `funk build`: compiles one file with the x86-64 backend into an object
-//! file and an executable (ADR-2026-10-30-1326).
+//! file and an executable (ADR-2026-10-30-1326). `funk asm`: prints the
+//! assembly of the file's functions.
 
 use std::path::Path;
 
 use funk_ir::Registry;
-use funk_x86_64::{BuildError, build, object_path};
+use funk_x86_64::{BuildError, build, compile, object_path};
 
 use crate::json::Json;
 use crate::report::{Kind, Problem, Report, Verdict};
@@ -39,6 +40,30 @@ pub fn build_file(file: &str, output: &str, reg: &Registry) -> Report {
             file_report(file, Verdict::ToolError, vec![Problem::Tool(why)])
         }
         Err(BuildError::Io(why)) => file_report(file, Verdict::IoError, vec![Problem::Io(why)]),
+    }
+}
+
+/// Lowers `file`. Returns the report, which holds the assembly of its
+/// functions as `text`, and that assembly when the file was lowered.
+pub fn asm_file(file: &str, reg: &Registry) -> (Report, Option<String>) {
+    let m = match load(file, reg) {
+        Ok(m) => m,
+        Err(report) => return (report, None),
+    };
+    match compile(&m) {
+        Ok(program) => {
+            let mut report = file_report(file, Verdict::Accepted, Vec::new());
+            report.extra.push(("text", Json::str(&program.module)));
+            (report, Some(program.module))
+        }
+        Err(ds) => (
+            file_report(
+                file,
+                Verdict::Unsupported,
+                Problem::located(Kind::Unsupported, ds, &m.locs),
+            ),
+            None,
+        ),
     }
 }
 
