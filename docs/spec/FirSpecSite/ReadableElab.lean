@@ -23,6 +23,10 @@ and so the spec build, naming the place and what to do:
 * `{includeReadable "." M "Title" D (level := n)}` renders the module `M`
   as a section, with the readable blocks of the document module `D`. Every
   declaration of `M` must be explained by exactly one of them.
+* `:::moduleDocs (fingerprint := "…")` in the document module `D` pins the
+  fingerprint of all the declarations of `M`, for the `/-! -/` docs of `M`,
+  which render on the same page (ADR-2026-11-09-1345). A change to what the
+  module says fails the build until they are read again and the pin updated.
 -/
 
 open Lean Elab Term
@@ -52,6 +56,14 @@ elaborated show, by type. None outside a readable block.
 initialize grammarExt : EnvExtension (Option (Array (Name × Array String))) ←
   registerEnvExtension (pure none)
 
+/-- The pins of module docs, by document module. -/
+initialize moduleDocsExt :
+    SimplePersistentEnvExtension (Name × String) (Array (Name × String)) ←
+  registerSimplePersistentEnvExtension {
+    addEntryFn := Array.push
+    addImportedFn := fun as => as.foldl (· ++ ·) #[]
+  }
+
 /-- The module that declares `n`, if it is imported. -/
 def moduleOf? (env : Environment) (n : Name) : Option Name := do
   let idx ← env.getModuleIdxFor? n
@@ -77,6 +89,12 @@ instance : FromArgs ReadableConfig m where
   fromArgs := ReadableConfig.mk <$> .many (.positional `name (ValDesc.name.withSyntax))
     <*> .many (.named `pin (ValDesc.name.withSyntax) false)
     <*> .named `fingerprint (ValDesc.string.withSyntax) false
+
+structure ModuleDocsConfig where
+  fingerprint : String
+
+instance : FromArgs ModuleDocsConfig m where
+  fromArgs := ModuleDocsConfig.mk <$> .named `fingerprint ValDesc.string false
 
 structure GrammarConfig where
   type : ArgParse.WithSyntax Name
@@ -166,6 +184,18 @@ def readable : DirectiveExpanderOf ReadableConfig
     modifyEnv (readableExt.addEntry · (← getMainModule, mod, names))
     ``(Verso.Doc.Block.other (FirSpecSite.Block.readable $(quote names)) #[$blocks,*])
 
+/--
+The pin of the module docs of the Lean module that this document explains.
+It shows nothing, and the check is made when the section is included.
+-/
+@[directive]
+def moduleDocs : DirectiveExpanderOf ModuleDocsConfig
+  | config, contents => do
+    unless contents.isEmpty do
+      throwError "a moduleDocs pin holds no text; the module docs are in the Lean module"
+    modifyEnv (moduleDocsExt.addEntry · (← getMainModule, config.fingerprint))
+    ``(Verso.Doc.Block.concat #[])
+
 /-- A grammar box, in the notation of `FirSpecSite.Grammar`, inside a readable block. -/
 @[code_block]
 def grammar : CodeBlockExpanderOf GrammarConfig
@@ -206,6 +236,38 @@ def checkCoverage (lit : VersoLiterate.LitMod) (doc : Name) : TermElabM Unit := 
       unless items.any (·.defines.contains n) do
         throwError "{doc} explains {n}, which {lit.name} does not show as a declaration"
 
+/-- Whether the Lean module `lit` has `/-! -/` docs. -/
+def hasModuleDocs (lit : VersoLiterate.LitMod) : Bool :=
+  lit.contents.any fun item => item.code.any fun
+    | .modDoc _ | .markdownModDoc _ => true
+    | _ => false
+
+/--
+Checks the pin in the document module `doc` of the module docs of `lit`
+against all the declarations that the readable blocks of `doc` explain.
+Logged, not thrown, so that one build reports every stale pin.
+-/
+def checkModuleDocs (lit : VersoLiterate.LitMod) (doc : Name) : TermElabM Unit := do
+  let env ← getEnv
+  let pins := (moduleDocsExt.getState env).filter (·.1 == doc) |>.map (·.2)
+  if pins.size > 1 then
+    logError m!"{doc} pins the module docs of {lit.name} more than once"
+    return
+  unless hasModuleDocs lit do
+    unless pins.isEmpty do
+      logError m!"{doc} pins the module docs of {lit.name}, which has none; remove its moduleDocs directive"
+    return
+  let names := (readableExt.getState env).filter (·.1 == doc) |>.flatMap (·.2.2)
+  let now ← match moduleFingerprint env names with
+    | .ok f => pure f
+    | .error n => throwError "{n} is not a Lean declaration"
+  match pins[0]? with
+  | none =>
+    logError m!"{lit.name}: {doc} does not pin its module docs. Read the /-! -/ docs of the module against the Lean, correct them, then add to {doc} the directive :::moduleDocs (fingerprint := \"{now}\")"
+  | some pin =>
+    unless pin == now do
+      logError m!"{lit.name}: the Lean under its module docs has changed: {doc} pins \"{pin}\", and the fingerprint is now \"{now}\". Read the /-! -/ docs of the module again against the Lean, correct them, then set (fingerprint := \"{now}\") in the moduleDocs directive of {doc}."
+
 /-- The `VersoDoc` of the Lean module `mod` as a readable section, with the blocks of `doc`. -/
 def readableModule (path : StrLit) (mod : Ident) (title : StrLit) (doc : Ident) : TermElabM Name := do
   let titleParts ← stringToInlines title
@@ -220,6 +282,7 @@ def readableModule (path : StrLit) (mod : Ident) (title : StrLit) (doc : Ident) 
     | .ok lit => pure lit
     | .error e => throwErrorAt mod e
   withRef doc <| checkCoverage lit doc.getId
+  withRef doc <| checkModuleDocs lit doc.getId
   let docConst := docName doc.getId
   unless (← getEnv).contains docConst do
     throwErrorAt doc "{doc.getId} is not an imported Verso document"

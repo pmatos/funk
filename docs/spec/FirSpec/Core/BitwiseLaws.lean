@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Bitwise and shift obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15860657129012602685")
+:::
+
 :::readable Fir.Core.strict_andValues Fir.Core.strict_orValues Fir.Core.strict_xorValues (pin := Fir.Core.Strict) (pin := Fir.Core.andValues) (pin := Fir.Core.orValues) (pin := Fir.Core.xorValues) (fingerprint := "7956797132507196145")
 *Theorem: the rules of $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`
 are strict.* At every width, each of the three

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16778447892377274030")
+:::
+
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
 *Definition: whether a location is well formed, and why not.* Whether a
 location is

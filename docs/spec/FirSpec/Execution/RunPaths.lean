@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The ways a step goes on: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11491586926943817244")
+:::
+
 :::readable Fir.Ev.NotStuck (fingerprint := "8592670422160197782")
 *Definition: an end that is not stuck.* A path of a run ends with a
 result, with UB, or

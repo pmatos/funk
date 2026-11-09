@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Blocks and regions read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "14359386289347756802")
+:::
+
 :::readable Fir.head_blocks (pin := Fir.Block.tokensList) (fingerprint := "17423821835765405823")
 *Lemma: blocks start with a label.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], list of

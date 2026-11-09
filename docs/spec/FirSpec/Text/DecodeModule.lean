@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The module decoded back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11643379802254013298")
+:::
+
 :::readable Fir.bind_eq_of (fingerprint := "12224089499088332229")
 *Lemma: proof plumbing.* When a step succeeds with $`a`, that step followed
 by $`k` is $`k` run on $`a`. The proofs below follow the decoder one step

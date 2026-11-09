@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Branch obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9509901482889504764")
+:::
+
 :::readable Fir.Core.exitOfEv_iff (pin := Fir.Core.exitOfEv) (fingerprint := "2335364038614251743")
 *Theorem: a terminator rule made from a way to end ends that way.* A step
 in the proofs below. The

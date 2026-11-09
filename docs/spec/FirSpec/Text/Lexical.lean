@@ -16,6 +16,9 @@ changes under it.
 
 #doc (Manual) "Tokens: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12077581287172003301")
+:::
+
 :::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "8663668452183596108")
 *Definition: the characters that a string escapes, and the characters that
 a text may hold outside strings.* A character $`c` is _escaped_ when it is

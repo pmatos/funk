@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "What the lawful class gives: readable blocks" =>
 
+:::moduleDocs (fingerprint := "2582150824750587004")
+:::
+
 :::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "17332324743421552018")
 *Theorem: every op of a valid function is a valid op instance.* In every
 dialect with its validation rules, let the function $`f` be

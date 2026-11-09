@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "The parser: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5822860858962979440")
+:::
+
 :::readable Fir.Text.Tok (pin := Fir.Location.limit) (fingerprint := "10478793237488592436")
 *Definition: a token.* The lexer reads a text into these tokens, from the
 {ref "The-fir-specification--Text-format--Tokens"}[tokens section]:

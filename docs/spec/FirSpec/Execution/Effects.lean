@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Effects and op semantics: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8189947596634871092")
+:::
+
 :::readable Fir.MonadChoice (fingerprint := "4733032598783633289")
 *Definition: the choice effect.* A computation may choose bits:
 $`\mathrm{choose}(w)` gives $`w` arbitrary bits, a vector of $`w` bits that

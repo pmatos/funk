@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with calls: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15226715095221793585")
+:::
+
 :::readable Fir.Func.InModule (fingerprint := "12828239508909637856")
 *Definition: a function that runs within a module.* The ops of a function
 $`f` _run within the module $`M`_ when, for every op $`o` of every block

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
+:::moduleDocs (fingerprint := "384622119239323306")
+:::
+
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
 *Definition: a problem about a function, and about a block.* A
 {ref "The-fir-specification--Validation--The-validation-check"}[problem]

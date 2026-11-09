@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with jumps and loops: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5092494823803185153")
+:::
+
 :::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "13566937332335085816")
 *Theorem: the values of names that an environment holds are found, with
 their types.* If the environment $`E` holds the names

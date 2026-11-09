@@ -17,6 +17,9 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
+:::moduleDocs (fingerprint := "1086758024943119589")
+:::
+
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "3856370532284756557")
 *Definition: the strings that refer to values, labels and symbols.* In
 the syntax trees of a program, a value, a block label and a symbol are each

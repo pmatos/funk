@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8908722822994727884")
+:::
+
 :::readable Fir.Core.Op.denote? (fingerprint := "7653001876836925693")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the

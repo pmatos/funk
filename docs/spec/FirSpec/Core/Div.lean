@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Division rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11492776682742033790")
+:::
+
 :::readable Fir.Core.divEv (pin := Fir.Ev) (pin := BitVec.intMin) (fingerprint := "7816947079132740565")
 *Definition: how a division ends.* Take the name $`\mathit{op}` of a
 division or remainder op, whether it is signed, and a function $`q` that

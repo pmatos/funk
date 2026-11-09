@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel, followed back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12979570045138723279")
+:::
+
 :::readable Fir.AllowedBelow (pin := Fir.SomeUB) (fingerprint := "5689985325191484286")
 *Definition: a source that allows a path at a budget, with a ratio of
 steps.* Let $`B` be a number, $`S` a source, a run of ops at every budget

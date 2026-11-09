@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11710929400646233540")
+:::
+
 :::readable Fir.Core.Ty.Valid (pin := Fir.Core.maxWidth) (fingerprint := "17016236652456720613")
 *Definition: valid core types.* A
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[core type] is

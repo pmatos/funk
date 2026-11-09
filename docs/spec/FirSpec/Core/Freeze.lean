@@ -15,6 +15,9 @@ changes under it.
 
 #doc (Manual) "The freeze rule: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7274398011190664022")
+:::
+
 :::readable Fir.Core.freezeValue (pin := Fir.MonadChoice) (pin := Fir.SetM.instMonadChoice) (pin := Fir.ChoiceTree.instMonadChoice) (fingerprint := "1188688411120997030")
 *Definition: the rule of $`\mathsf{freeze}`.* For every width $`N`, for
 every way of computing with the

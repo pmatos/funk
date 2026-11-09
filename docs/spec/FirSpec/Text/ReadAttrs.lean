@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The grammar step: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5338463033325093932")
+:::
+
 :::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "13801516949283659392")
 *Definition: a reader reads tokens back.* A
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader]

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Escapes and quoted symbols: readable blocks" =>
 
+:::moduleDocs (fingerprint := "984651494282197179")
+:::
+
 :::readable Fir.Text.unicodeEscape_toDigits (pin := Fir.Text.unicodeEscape) (pin := Nat.toDigits) (fingerprint := "15463218578782466095")
 *Theorem: the printer's `\u{…}` escape reads back as its character.* Let
 $`c` be a character that a string

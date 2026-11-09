@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Values and refinement: readable blocks" =>
 
+:::moduleDocs (fingerprint := "13990253844739611933")
+:::
+
 :::readable Fir.PoisonOr (fingerprint := "17169256414108514350")
 *Definition: a value that may be poison.* For a set of values $`A`, the
 set $`A_{\mathsf{poison}}` holds every value of $`A`, and one more element,

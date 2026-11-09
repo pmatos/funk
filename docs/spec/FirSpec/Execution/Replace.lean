@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
+:::moduleDocs (fingerprint := "437735271719311545")
+:::
+
 :::readable Fir.Func.replaceBody Fir.Module.replaceBody (fingerprint := "5723528013114806774")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`

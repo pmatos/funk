@@ -15,6 +15,9 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7088173544698277502")
+:::
+
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
 *Definition: a successor that can be written.* A
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successor]

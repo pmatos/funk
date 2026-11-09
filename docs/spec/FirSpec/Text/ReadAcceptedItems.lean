@@ -15,6 +15,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Accepted items: readable blocks" =>
 
+:::moduleDocs (fingerprint := "690646653597719966")
+:::
+
 :::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "16901067163233167972")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,

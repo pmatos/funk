@@ -14,6 +14,9 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Comparison and selection obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "3474095909161458154")
+:::
+
 :::readable Fir.Core.icmpValues_poison Fir.Core.icmpValues_isRefinedBy (pin := Fir.Core.icmpValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "4056786543972866582")
 *Theorem: a poison operand of a comparison gives poison.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicate]

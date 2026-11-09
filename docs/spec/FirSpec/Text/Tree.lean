@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
+:::moduleDocs (fingerprint := "3888398671219957908")
+:::
+
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
 *Definition: the empty position.* $`p_0` is the
 {ref "The-fir-specification--Text-format--Round-trips"}[position] at line 0,

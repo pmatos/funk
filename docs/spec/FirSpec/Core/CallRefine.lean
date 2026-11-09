@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
+:::moduleDocs (fingerprint := "675530781314827510")
+:::
+
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
 *Theorems: every core op that runs by its own rule is monotone, and so
 every core function has monotone ops.* For every

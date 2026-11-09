@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7713207114250097375")
+:::
+
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
 *Definition: the blocks of a function, at the top level and at any depth.*
 The body of a

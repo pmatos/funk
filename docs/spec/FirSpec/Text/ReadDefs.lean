@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Definitions and successors read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6692181017167623637")
+:::
+
 :::readable Fir.Text.readDefType_reads (pin := Fir.Text.readDefType) (pin := Fir.Attr.IsType) (fingerprint := "9902619171847891488")
 *Theorem: the type of a definition reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], every

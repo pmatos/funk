@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Searching a graph: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12081133205208568887")
+:::
+
 :::readable Fir.length_filter_lt (fingerprint := "13639080189621108566")
 *Theorem: a stricter filter keeps fewer elements.* Let $`p` and $`q` be two
 tests on the elements of a list $`l`, such that every element that passes
