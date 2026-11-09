@@ -40,7 +40,7 @@ superseded, what holds of its successor.
 | [ADR-2026-10-30-1146](2026-10-30-1146-generic-ops-and-registry.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk-ir holds ops as generic data and checks them through a registry of dialects | this ADR, ADR-2026-11-09-1543 |
 | [ADR-2026-10-30-1232](2026-10-30-1232-funk-function-abi.md) | [x86-64-backend](../decisions/x86-64-backend.md) | A funk function is a System V AMD64 function, with a symbol made from its fir name | this ADR, ADR-2026-11-02-1021, ADR-2026-11-03-0108, ADR-2026-11-03-0109, ADR-2026-11-09-1547 |
 | [ADR-2026-10-30-1329](2026-10-30-1329-adr-ids-are-unique.md) | [process](../decisions/process.md) | ADR ids are unique: a taken minute adds the seconds, and a hook checks it | this ADR, ADR-2026-11-03-1612, ADR-2026-11-05-1408, ADR-2026-11-05-1633, ADR-2026-11-05-1954, ADR-2026-11-09-1645 |
-| [ADR-2026-10-30-1450](2026-10-30-1450-fir-ref-runs-proved-implementations.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref` runs implementations of the spec's functions that are proved equal to them and registered with `@[csimp]` | this ADR, ADR-2026-11-03-1810, ADR-2026-11-04-2132, ADR-2026-11-05-0442 |
+| [ADR-2026-10-30-1450](2026-10-30-1450-fir-ref-runs-proved-implementations.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref` runs implementations of the spec's functions that are proved equal to them and registered with `@[csimp]` | this ADR, ADR-2026-11-03-1810, ADR-2026-11-04-2132, ADR-2026-11-05-0442, ADR-2026-11-09-1941 |
 | [ADR-2026-10-30-1452](2026-10-30-1452-lean-axiom-check.md) | [spec-site](../decisions/spec-site.md) | The Lean build fails on sorry, non-standard axioms, unsafe, partial, implemented_by and extern | this ADR, ADR-2026-10-30-1837, ADR-2026-10-30-1838 |
 | [ADR-2026-10-30-1549](2026-10-30-1549-no-nesting-limit.md) | [semantics](../decisions/semantics.md) | fir has no nesting limit | this ADR |
 | [ADR-2026-10-30-1740](2026-10-30-1740-decidable-dialect-rules.md) | [validation](../decisions/validation.md) | The validation check asks a dialect for decidable equality on its types and for `DecidableDialectValidation` | this ADR |
@@ -91,6 +91,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-1603](2026-11-09-1603-a-closed-standard-stream-stays-on-dev-null-and-the-verus-tooling-waits-at-a-tag.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | A closed standard stream stays on /dev/null, and the Verus tooling waits at a tag | this ADR |
 | [ADR-2026-11-09-1610](2026-11-09-1610-adrs-have-a-tier-an-area-and-a-generated-index.md) | [process](../decisions/process.md) | ADRs carry a tier and an area, a generated index lists them, and area pages say what holds | this ADR |
 | [ADR-2026-11-09-1645](2026-11-09-1645-funk-s-speed-is-guarded-by-instruction-counts.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk's speed is guarded by instruction counts against a committed baseline | this ADR |
+| [ADR-2026-11-09-1941](2026-11-09-1941-a-new-fir-ref-fast-path-needs-the-depth-rule-or-a-clearly-too-slow-case.md) | [fir-ref](../decisions/fir-ref.md) | A new `fir-ref` fast path needs the depth rule or a case that is clearly too slow | this ADR |
 
 ## Implementation
 

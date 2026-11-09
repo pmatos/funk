@@ -132,6 +132,10 @@ spec's definitions. The evidence that `fir-ref` runs an implementation is in
 the C that Lean emits under `lean/.lake/build/ir/FirRef/`
 (ADR-2026-10-30-1450, ADR-2026-11-04-2132).
 
+A new fast path needs the depth rule or a case that is clearly too slow. The
+existing speed-only ones stay: each is proved equal to the spec, and removing
+one makes `fir-ref` far slower (ADR-2026-11-09-1941).
+
 ### Printing
 
 `FirRef.printAttr` stands for `Attr.print`, and `FirRef.printModule` stands
