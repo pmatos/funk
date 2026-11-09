@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Installs rustup, elan or Verus in a CI setup step (ADR-2026-11-05-1954).
-# Usage: scripts/ci-install.sh rustup|elan|verus
-# The step's env pins the installer: RUSTUP_VERSION and RUSTUP_SHA256,
-# ELAN_VERSION and ELAN_SHA256, or VERUS_VERSION and VERUS_SHA256. The
-# installer is downloaded to RUNNER_TEMP only when the step before restored
-# no copy from the cache, and its SHA-256 is checked in either case, before
-# it is used, so a bad cached file fails the step. The tool's directory is
-# appended to GITHUB_PATH.
+# Installs rustup or elan in a CI setup step (ADR-2026-11-05-1954).
+# Usage: scripts/ci-install.sh rustup|elan
+# The step's env pins the installer: RUSTUP_VERSION and RUSTUP_SHA256, or
+# ELAN_VERSION and ELAN_SHA256. The installer is downloaded to RUNNER_TEMP
+# only when the step before restored no copy from the cache, and its SHA-256
+# is checked in either case, before it is used, so a bad cached file fails
+# the step. The tool's directory is appended to GITHUB_PATH.
 set -euo pipefail
 
 # Downloads URL to FILE unless FILE exists, then checks FILE against SHA256.
@@ -37,15 +36,8 @@ case "${1-}" in
         "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
         echo "$HOME/.elan/bin" >>"$GITHUB_PATH"
         ;;
-    verus)
-        fetch "$RUNNER_TEMP/verus.zip" "$VERUS_SHA256" \
-            "https://github.com/verus-lang/verus/releases/download/release/$VERUS_VERSION/verus-$VERUS_VERSION-x86-linux.zip"
-        unzip -q "$RUNNER_TEMP/verus.zip" -d "$RUNNER_TEMP/verus"
-        "$RUNNER_TEMP/verus/verus-x86-linux/verus" --version
-        echo "$RUNNER_TEMP/verus/verus-x86-linux" >>"$GITHUB_PATH"
-        ;;
     *)
-        echo "Usage: $0 rustup|elan|verus" >&2
+        echo "Usage: $0 rustup|elan" >&2
         exit 2
         ;;
 esac

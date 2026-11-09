@@ -1,6 +1,6 @@
 # funk reads and writes its standard streams through files on duplicates of their descriptors
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-1540
 
 ## Context
 

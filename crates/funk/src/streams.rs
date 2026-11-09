@@ -6,29 +6,27 @@
 //! for reading, gives `EBADF` on every read or write, so through them funk
 //! would read an empty text or lose its output. On Unix, funk therefore
 //! reads and writes each one through a `File` on a duplicate of its
-//! descriptor, which reports `EBADF` like any other error. A descriptor
-//! that was closed when funk started fails every read and write
-//! (ADR-2026-11-02-2253): the standard library opened `/dev/null` on it.
+//! descriptor, which reports `EBADF` like any other error. The standard
+//! library opens `/dev/null` on a descriptor that was closed when funk
+//! started, so funk uses it as `/dev/null` (ADR-2026-11-09-1540).
 
 use std::io::{self, Read, Write};
-
-use funk_start_fds::{Stream, closed_at_start};
 
 /// The bytes of standard input.
 pub fn read_stdin() -> io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
-    open(Stream::Stdin, handle::stdin)?.read_to_end(&mut bytes)?;
+    handle::stdin()?.read_to_end(&mut bytes)?;
     Ok(bytes)
 }
 
 /// Standard output, buffered by line as the standard library's is.
 pub fn stdout() -> Output<impl Write> {
-    Output(open(Stream::Stdout, handle::stdout))
+    Output(handle::stdout())
 }
 
 /// Standard error, unbuffered as the standard library's is.
 pub fn stderr() -> Output<impl Write> {
-    Output(open(Stream::Stderr, handle::stderr))
+    Output(handle::stderr())
 }
 
 /// A standard stream that funk writes, or the error that keeps funk from
@@ -48,14 +46,6 @@ impl<W: Write> Write for Output<W> {
             Ok(w) => w.flush(),
             Err(_) => Ok(()),
         }
-    }
-}
-
-/// The handle of `stream`, unless the stream was closed when funk started.
-fn open<H>(stream: Stream, handle: fn() -> io::Result<H>) -> io::Result<H> {
-    match closed_at_start(stream) {
-        Some(e) => Err(e),
-        None => handle(),
     }
 }
 
