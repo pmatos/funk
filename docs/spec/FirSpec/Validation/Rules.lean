@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12881947488162813312")
+:::moduleDocs (fingerprint := "2186599415744927090")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -91,12 +91,12 @@ $`\vdash_d` are what the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect adds to validation].
 :::
 
-:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "8677148196043600336")
+:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "15966897255941960890")
 *Definition: a valid function.* The function $`f` is valid in the module
 context $`C` when every premise of this rule holds, where
 $`B = \mathrm{blocks}(f)` and $`d` is the dialect of $`f`:
 
-$$`\dfrac{\begin{array}{c} B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \end{array}}{C \vdash f~\text{valid}}`
+$$`\dfrac{\begin{array}{c} B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
 
 In words:
 
@@ -114,6 +114,9 @@ In words:
 * Every type that the function states, its result types and the type of
   every definition, is valid for its dialect.
 * Every block holds at least one op, and every op is valid.
+* The function obeys its dialect's
+  {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rule over a whole function],
+  in the context of the module's symbol table and through the identity view.
 
 A function's symbol may be any string: the text quotes it when it is not a
 word.

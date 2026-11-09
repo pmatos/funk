@@ -28,6 +28,7 @@ import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.Sum
 import FirTest.Toy
+import FirTest.UseOnce
 import FirTest.Mixed
 import FirTest.Runs
 import FirTest.ValidSum

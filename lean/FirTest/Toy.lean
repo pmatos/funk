@@ -89,6 +89,7 @@ instance : DialectValidation ToyDialect where
   validTy := Core.Ty.Valid
   symbolRefs _ := []
   validOp _ := Op.Valid
+  validFunc _ _ _ := True
 
 instance : DecidablePred Op.Valid := fun o => by
   cases o <;> unfold Op.Valid <;> infer_instance
@@ -96,6 +97,7 @@ instance : DecidablePred Op.Valid := fun o => by
 instance : DecidableDialectValidation ToyDialect where
   decValidTy t := inferInstanceAs (Decidable (Core.Ty.Valid t))
   decValidOp _ o := inferInstanceAs (Decidable (Op.Valid o))
+  decValidFunc _ _ _ := inferInstanceAs (Decidable True)
 
 /-! # Execution -/
 

@@ -27,6 +27,13 @@ lean_lib FirRef
 lean_exe «fir-ref» where
   root := `FirRef.Main
 
+/-- The cases that the use-once tests share with the Rust tests. `FirTest.UseOnce`
+includes the file, and Lake does not see an included file by itself. -/
+input_file useOnceCases where
+  path := ".." / "tests" / "dialects" / "use-once.cases"
+  text := true
+
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
-lean_lib FirTest
+lean_lib FirTest where
+  needs := #[`@/useOnceCases]

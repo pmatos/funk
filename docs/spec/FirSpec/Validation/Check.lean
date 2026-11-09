@@ -14,17 +14,23 @@ when the Lean changes under it.
 
 #doc (Manual) "The validation check: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7068713947128242094")
+:::moduleDocs (fingerprint := "2167333755786008956")
 :::
 
-:::readable Fir.DecidableDialectValidation (fingerprint := "1804797141064935170")
+:::readable Fir.DecidableDialectValidation (fingerprint := "1088891619841682136")
 *Definition: a dialect whose own rules can be decided.* A dialect $`d` is
 _decidable_ when there is an algorithm that tells, for every type $`t` of
-$`d`, whether $`\vdash_d t~\text{valid}`, and another that tells, for every
+$`d`, whether $`\vdash_d t~\text{valid}`, another that tells, for every
 op context $`C` and op instance $`\mathit{op}`, whether
-$`C \vdash_d \mathit{op}~\text{valid}`. These are the dialect's
+$`C \vdash_d \mathit{op}~\text{valid}`, and a third that tells, for every
+function context $`C`, view $`v` and function $`f`, whether
+$`C, v \vdash_d f~\text{valid}`. These are the dialect's
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rules]; the
-check runs the two algorithms wherever the rules ask them.
+check runs the three algorithms wherever the rules ask them.
+
+A function that breaks its dialect's rule over a whole function has no
+place of its own to report, so the check reports the rule at its entry block,
+with the location reference of that block's first op.
 
 The check also compares types, so it asks that the dialect's types can be
 compared for equality. Then so can its function types: $`t^* \to r^*`

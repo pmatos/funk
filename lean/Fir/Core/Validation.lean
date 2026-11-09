@@ -7,7 +7,7 @@ symbols core ops refer to, the rules of `ret` and `call`, which read the
 op's context, and the width rules of `zext`, `sext` and `trunc`
 (ADR-2026-10-30-0818). The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
-are all the rules of the core dialect.
+are all the rules of the core dialect. It has no rule over a whole function.
 -/
 
 namespace Fir.Core
@@ -53,5 +53,6 @@ instance : DialectValidation CoreDialect where
   validTy := Core.Ty.Valid
   symbolRefs := Core.Op.symbolRefs
   validOp := Core.Op.Valid
+  validFunc _ _ _ := True
 
 end Fir

@@ -1,0 +1,120 @@
+Cases for the use-once test dialect, shared by the two validators' tests:
+`lean/FirTest/UseOnce.lean` and `crates/funk-ir/tests/use_once.rs`. Each case
+starts with a line of three equals signs, `accept` or `reject`, and its name.
+The result of `toy.once` must be used exactly once in its function. Every
+case holds the function `@f`, and the first op of its entry block has the
+location reference `@1`, where both validators report a broken rule.
+
+=== accept used-once-by-a-core-op
+func @f(%n: i32) -> i32 {
+^entry:
+  %q: i32 = toy.once @1
+  %r: i32 = add %q, %n @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== accept used-once-by-a-toy-op
+func @f() {
+^entry:
+  %q: i32 = toy.once @1
+  toy.sink %q @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== accept passed-once-to-a-block
+func @f() -> i32 {
+^entry:
+  %q: i32 = toy.once @1
+  br ^next(%q) @0
+^next(%x: i32):
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== accept other-values-are-free
+func @f(%n: i32) -> i32 {
+^entry:
+  %a: i32 = add %n, %n @1
+  %b: i32 = add %a, %a @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("a")
+}
+=== reject never-used
+func @f() {
+^entry:
+  %q: i32 = toy.once @1
+  ret @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== reject used-twice-by-one-op
+func @f() -> i32 {
+^entry:
+  %q: i32 = toy.once @1
+  %r: i32 = add %q, %q @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== reject used-by-a-toy-op-and-a-core-op
+func @f() -> i32 {
+^entry:
+  %q: i32 = toy.once @1
+  toy.sink %q @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== reject passed-to-two-blocks
+func @f(%c: i1) -> i32 {
+^entry:
+  %q: i32 = toy.once @1
+  cond_br %c, ^a(%q), ^b(%q) @0
+^a(%x: i32):
+  ret %x @0
+^b(%y: i32):
+  ret %y @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}
+=== reject the-second-of-two-values
+func @f() -> i32 {
+^entry:
+  %p: i32 = toy.once @1
+  %q: i32 = toy.once @0
+  toy.sink %q @0
+  toy.sink %q @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+  @1 = name("q")
+}

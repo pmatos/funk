@@ -61,8 +61,9 @@ def Func.OpValid (ctx : ModuleContext d) (f : Func d) (b : Block d) (i : Nat)
 
 A function is valid when its entry block declares no arguments, every block
 is reachable from the entry, its labels and value names are unique and can
-be written in the text, every type it states is valid, and every block
-holds at least one op, each of them valid.
+be written in the text, every type it states is valid, every block holds at
+least one op, each of them valid, and the function obeys its dialect's own
+rule over a whole function.
 -/
 
 /-- A function is valid in the context of its module. -/
@@ -77,6 +78,7 @@ structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
   blocksNonEmpty : ∀ b ∈ f.blocks, b.body ≠ []
   ops : ∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d),
     b.body[i]? = some o → f.OpValid ctx b i o
+  dialect : validFunc (DialectView.id d) ⟨ctx.symbols⟩ f
 
 /-!
 # The location table

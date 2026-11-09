@@ -31,13 +31,14 @@ and nothing more (ADR-2026-10-30-1740):
 
 - `[DecidableEq d.Ty]`, the standard class.
 - An instance of `DecidableDialectValidation d`, from
-  `lean/Fir/Validation/Check.lean`. Its two fields decide `validTy t` for every
-  type and `validOp ctx o` for every context and op.
+  `lean/Fir/Validation/Check.lean`. Its fields decide `validTy t` for every
+  type, `validOp ctx o` for every context and op, and `validFunc` for every
+  function (ADR-2026-11-09-2257).
 
 A dialect's rules in `DialectValidation` stay propositions. A dialect that
 wants the check proves them decidable. The core dialect does so case by case
 in `lean/Fir/Core/Check.lean`. A new dialect derives `DecidableEq` for its
-types and decides its two rules. It then gets the check, and so `fir-ref
+types and decides its three rules. It then gets the check, and so `fir-ref
 validate` (ADR-2026-10-30-1740).
 
 The check agrees with the rules in both directions. `Module.problems_eq_nil_iff`
@@ -52,6 +53,25 @@ They name the value, the op's index and its block (ADR-2026-10-30-1740).
 The spec's check walks nested blocks once. `Func.problems` calls
 `Func.allBlocks` and passes the list to `Func.problemsIn`. `Func.problemsIn`
 reads no other nested part of a function (ADR-2026-10-30-1742).
+
+## A dialect's rule over a function
+
+A dialect may add a rule over a whole function, for what no op can see alone,
+such as a value that must be used exactly once. In Lean it is `validFunc`, and
+`Func.Valid` requires it. In `funk-ir` a dialect registers a `FuncSpec`, and
+`verify` runs every registered rule. The core dialect has no such rule
+(ADR-2026-11-09-2257).
+
+The Lean rule sees the function of the host dialect through a
+`DialectView`, which maps each host op and type to the dialect's own or to
+`none`. So a rule is written once and holds in any sum of dialects. It reads
+only the module's symbol table, and it must assume nothing about the function,
+because validation calls it on every function (ADR-2026-11-09-2257).
+
+A broken function rule is reported at the function's entry block, with the
+location of its first op. `tests/dialects/use-once.cases` holds the cases of a
+use-once toy dialect, which the Lean and Rust tests both read
+(ADR-2026-11-09-2257).
 
 ## How `fir-ref` runs the check
 
