@@ -60,6 +60,21 @@ func @odd(%n: i8) -> i1 {
   ret %o @0
 }
 
+func @deep(%n: i64, %x: i8) -> i8 {
+^entry:
+  %zero: i64 = const 0 @0
+  %more: i1 = icmp sgt %n, %zero @0
+  cond_br %more, ^rec, ^base @0
+^rec:
+  %one: i64 = const 1 @0
+  %m: i64 = sub %n, %one @0
+  %f: i8 = call @deep %m, %x @0
+  %p: i8 = add %f, %x @0
+  ret %p @0
+^base:
+  ret %x @0
+}
+
 locs {
   @0 = unknown
 }

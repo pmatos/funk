@@ -8,16 +8,14 @@
 # its callee runs on the steps that are left (ADR-2026-11-02-0836).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
-# A differential test recurses at most 20 deep. PR #93 set that cap
-# while a built executable's stack was its function's frame, its
-# wrapper's and 16 KiB, and the harness ran native code with no data
-# limit. Neither holds now, and no limit of either tool sets 20: a
-# recursive run's stack follows ulimit -s, 8 MiB by default
-# (ADR-2026-11-02-1132), the harness runs native code under a data
-# limit of 1 GiB (ADR-2026-11-02-2250), and fir-ref stops at its fuel.
-# The cap stays as it is; making deeper runs differential is a decision
-# of its own. A deeper run, such as fact on the signed maximum or even
-# on -1, is interpreter-only, and states the value that fir-ref returns.
+# deep counts %n down on an i64 and adds the i8 %x on the way back, so it
+# returns %x * (%n + 1) modulo 256, and recurses further than an i8 can
+# count. A differential test recurses as deep as native code's stack
+# allows (tests/fir/README.md): deep takes 80 bytes a level, so 100,000
+# calls fit the default 8 MiB stack, and about 104,000 is the most that
+# does. Fuel covers each deep run at eight steps a level. A run that also
+# keeps an interpreter-only test, such as fact on the signed maximum or
+# even on -1, states the value that fir-ref returns.
 # A run of more than 20,000 steps runs at a budget of 1,000 steps
 # instead, and expects fuel-exhausted, which keeps the run short.
 # fact on 5 takes 45 steps, its callees' included: eight for each level
@@ -66,4 +64,15 @@ tests = [
   { func = "@odd", args = ["20"] },
   { func = "@fact", args = ["5"], fuel = 45, expect = ["120"] },
   { func = "@fact", args = ["5"], fuel = 44, expect = "fuel-exhausted" },
+  { func = "@fact", args = ["127"] },
+  { func = "@even", args = ["-1"] },
+  { func = "@even", args = ["-128"] },
+  { func = "@even", args = ["127"] },
+  { func = "@odd", args = ["-1"] },
+  { func = "@odd", args = ["-128"] },
+  { func = "@odd", args = ["127"] },
+  { func = "@deep", args = ["1000", "3"] },
+  { func = "@deep", args = ["10000", "3"] },
+  { func = "@deep", args = ["100000", "3"], fuel = 2000000 },
+  { func = "@deep", args = ["100000", "-127"], fuel = 2000000 },
 ]

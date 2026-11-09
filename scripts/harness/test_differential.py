@@ -6,7 +6,17 @@ from dataclasses import replace
 
 from corpus import Test
 from differential import Runs, evaluate, evaluate_generated
-from refine import FAILED, FUEL_EXHAUSTED, INVALID, PASSED, RETURN, STUCK, UB, Outcome
+from refine import (
+    FAILED,
+    FUEL_EXHAUSTED,
+    INVALID,
+    PASSED,
+    RETURN,
+    STUCK,
+    UB,
+    Outcome,
+    OutOfStack,
+)
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 
 
@@ -64,6 +74,17 @@ class Differential(unittest.TestCase):
             result.detail, 'fir-ref returns ["7"]; native code returns ["7"]'
         )
         self.assertEqual(runs.calls, [("exhaustive", ()), ("native", ())])
+
+    def test_a_native_run_out_of_stack_is_invalid_and_says_so(self):
+        result = self.judge(RecordedRuns(ONE, OutOfStack(8388608)))
+        self.assertEqual(result.judgement.status, INVALID)
+        self.assertIn(
+            'fir-ref returns ["7"]; native code runs out of its 8388608 bytes of stack',
+            result.detail,
+        )
+        self.assertIn(
+            "native code outgrew its 8388608 bytes of stack", result.judgement.why
+        )
 
     def test_native_failure_is_judged_after_the_reference_run(self):
         runs = RecordedRuns(ONE, "is killed by signal 8")

@@ -3,7 +3,17 @@ of outcomes and hand-built reports of `fir-ref run`."""
 
 import unittest
 
-from refine import FAILED, FUEL_EXHAUSTED, INVALID, PASSED, RETURN, STUCK, UB, Outcome
+from refine import (
+    FAILED,
+    FUEL_EXHAUSTED,
+    INVALID,
+    PASSED,
+    RETURN,
+    STUCK,
+    UB,
+    Outcome,
+    OutOfStack,
+)
 from sets import (
     Declared,
     Outcomes,
@@ -85,6 +95,18 @@ class SetRule(unittest.TestCase):
 
 
 ZERO = Declared(("0",), ("5",))
+
+
+class NativeOutOfStack(unittest.TestCase):
+    def test_it_makes_a_test_on_a_set_invalid(self):
+        two = Outcomes(1, (ret("7"), ret("8")))
+        j = judge_set(two, OutOfStack(4096), ["i8"])
+        self.assertEqual((j.status, "4096 bytes" in j.why), (INVALID, True))
+
+    def test_it_makes_a_test_on_declared_results_invalid(self):
+        declared = (Declared(("7",), ("3",)),)
+        j = judge_declared(declared, OutOfStack(4096), ["i8"])
+        self.assertEqual((j.status, "4096 bytes" in j.why), (INVALID, True))
 
 
 class Declarations(unittest.TestCase):

@@ -6,8 +6,10 @@
 # scripts/harness/main.py, which checks that funk verify and fir-ref validate
 # give every text the same verdict, and runs every test of the corpus on
 # fir-ref and as native code. Then scripts/harness/check_invalid.py runs the
-# harness on the fixture corpus of scripts/harness/fixtures/invalid/ and
-# checks that it reports #18's frozen divisor invalid (ADR-2026-10-31-0208).
+# harness on each fixture corpus of scripts/harness/fixtures/ and checks that
+# it reports the fixture's test invalid: #18's frozen divisor
+# (ADR-2026-10-31-0208), and a recursion deeper than native code's stack
+# (ADR-2026-11-09-1602).
 set -euo pipefail
 
 if [[ $# -ne 0 ]]; then

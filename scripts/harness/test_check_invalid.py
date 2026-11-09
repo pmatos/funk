@@ -3,7 +3,7 @@ corpus, on hand-written reports."""
 
 import unittest
 
-from check_invalid import problem
+from check_invalid import OUT_OF_STACK, problem
 
 FROZEN = (
     "invalid canonical/div-frozen.fir @sdiv_frozen 7 127: fir-ref makes 1 choice"
@@ -77,6 +77,26 @@ class Problem(unittest.TestCase):
     def test_the_harness_must_exit_with_1(self):
         for status in (0, 2):
             self.assertIn(f"exits with {status}, not 1", problem(status, REPORT))
+
+
+class ProblemOutOfStack(unittest.TestCase):
+    NAME = "canonical/down.fir --fuel 9000000 @down 1000000"
+    LINE = (
+        f'invalid {NAME}: fir-ref returns ["1000000"]; native code runs out of'
+        " its 8388608 bytes of stack: native code outgrew its 8388608 bytes of"
+        " stack, so the test proves nothing: recurse less deep, or raise ulimit -s"
+    )
+
+    def test_the_test_invalid_for_outgrowing_the_stack_passes(self):
+        self.assertIsNone(problem(1, f"{self.LINE}\n", OUT_OF_STACK))
+
+    def test_a_mismatch_is_not_enough(self):
+        out = "failed  " + self.LINE.removeprefix("invalid ")
+        self.assertIn("does not report", problem(1, f"{out}\n", OUT_OF_STACK))
+
+    def test_the_reason_must_name_the_stack(self):
+        out = self.LINE.replace("outgrew its 8388608 bytes", "outgrew its 4096 bytes")
+        self.assertIn("not because", problem(1, f"{out}\n", OUT_OF_STACK))
 
 
 if __name__ == "__main__":
