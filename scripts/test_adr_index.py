@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from adr_index import AdrError, holds, parse_adr, render, run
+from adr_index import AREAS, AdrError, holds, parse_adr, render, run
 
 
 def adr_text(
@@ -150,11 +150,13 @@ class Rendering(unittest.TestCase):
             rows,
             [
                 (
-                    "| [ADR-2030-01-01-0002](2030-01-01-0002-a-slug.md) | process"
+                    "| [ADR-2030-01-01-0002](2030-01-01-0002-a-slug.md)"
+                    " | [process](../decisions/process.md)"
                     " | What fir is | this ADR |"
                 ),
                 (
-                    "| [ADR-2030-01-01-0001](2030-01-01-0001-a-slug.md) | fir-ref"
+                    "| [ADR-2030-01-01-0001](2030-01-01-0001-a-slug.md)"
+                    " | [fir-ref](../decisions/fir-ref.md)"
                     " | How a tool works | this ADR, ADR-2030-01-01-0002 |"
                 ),
             ],
@@ -193,6 +195,18 @@ class Running(unittest.TestCase):
         (self.adrs / name).write_text(text, encoding="utf-8")
         git(self.repo, "add", f"docs/adrs/{name}")
 
+    def add_page(self, name: str, text: str) -> None:
+        pages = self.repo / "docs" / "decisions"
+        pages.mkdir(parents=True, exist_ok=True)
+        (pages / name).write_text(text, encoding="utf-8")
+        git(self.repo, "add", f"docs/decisions/{name}")
+
+    def add_pages(self, *cited: str) -> None:
+        """Add one page per area, the process page citing the ids `cited`."""
+        for area in AREAS:
+            body = " ".join(f"ADR-{i}" for i in cited) if area == "process" else ""
+            self.add_page(f"{area}.md", f"# {area}\n\n{body}\n")
+
     def run_it(self, write: bool = False) -> tuple[int, str]:
         err = io.StringIO()
         return run(self.repo, write, err), err.getvalue()
@@ -200,6 +214,7 @@ class Running(unittest.TestCase):
     def test_write_then_a_check_passes(self):
         self.add("README.md", "# ADRs\n")
         self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
         self.assertEqual(self.run_it(write=True), (0, ""))
         self.assertEqual(self.run_it(), (0, ""))
         text = (self.adrs / "INDEX.md").read_text(encoding="utf-8")
@@ -219,6 +234,7 @@ class Running(unittest.TestCase):
 
     def test_an_untracked_adr_is_ignored(self):
         self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
         self.run_it(write=True)
         (self.adrs / "2030-01-01-0002-b.md").write_text("no tier\n", encoding="utf-8")
         self.assertEqual(self.run_it(), (0, ""))
@@ -228,6 +244,62 @@ class Running(unittest.TestCase):
         status, message = self.run_it()
         self.assertEqual(status, 1)
         self.assertIn("2030-01-01-0001-a.md", message)
+
+    def test_an_accepted_adr_no_page_cites_fails_and_is_named(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages()
+        status, message = self.run_it(write=True)
+        self.assertEqual(status, 1)
+        self.assertIn("ADR-2030-01-01-0001", message)
+        self.assertIn("process", message)
+
+    def test_a_superseded_adr_need_not_be_cited(self):
+        self.add(
+            "2030-01-01-0001-a.md", adr_text(status="superseded by ADR-2030-01-01-0002")
+        )
+        self.add("2030-01-01-0002-b.md", adr_text())
+        self.add_pages("2030-01-01-0002")
+        self.assertEqual(self.run_it(write=True), (0, ""))
+
+    def test_a_citation_in_code_does_not_count(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages()
+        self.add_page("process.md", "# p\n\n`ADR-2030-01-01-0001`\n")
+        self.assertEqual(self.run_it(write=True)[0], 1)
+
+    def test_a_citation_on_another_areas_page_does_not_count(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages()
+        self.add_page("semantics.md", "# s\n\nADR-2030-01-01-0001\n")
+        self.assertEqual(self.run_it(write=True)[0], 1)
+
+    def test_a_sibling_page_of_the_area_counts(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages()
+        self.add_page("process-more.md", "# p\n\nADR-2030-01-01-0001\n")
+        self.assertEqual(self.run_it(write=True), (0, ""))
+
+    def test_a_page_of_no_area_fails(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
+        self.add_page("notes.md", "# n\n")
+        status, message = self.run_it(write=True)
+        self.assertEqual(status, 1)
+        self.assertIn("notes.md", message)
+
+    def test_a_missing_area_page_fails(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_page("process.md", "# p\n\nADR-2030-01-01-0001\n")
+        status, message = self.run_it(write=True)
+        self.assertEqual(status, 1)
+        self.assertIn("semantics.md", message)
+
+    def test_an_untracked_page_does_not_count(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages()
+        pages = self.repo / "docs" / "decisions"
+        (pages / "process-x.md").write_text("ADR-2030-01-01-0001\n", encoding="utf-8")
+        self.assertEqual(self.run_it(write=True)[0], 1)
 
 
 if __name__ == "__main__":
