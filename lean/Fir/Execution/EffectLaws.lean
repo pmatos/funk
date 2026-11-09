@@ -60,7 +60,7 @@ class LawfulDialectEffects (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [Dialec
   neverUB : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
     (effects op).mayUB = false → NeverUB op
   makesNoPoison : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
-    (effects op).poison = false → MakesNoPoison op
+    (effects op).mayPoison = false → MakesNoPoison op
   notControl : ∀ op : d.Op, (effects op).control = false → isTerminator op = false
 
 end Fir

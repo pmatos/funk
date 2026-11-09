@@ -43,7 +43,7 @@ instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.
 CORE_EFFECTS_SAMPLE = """
 /-- The effects of each core op. -/
 def Op.effects : Op → Effects Mem
-  | .add _ f => { poison := f != {} }
+  | .add _ f => { mayPoison := f.nsw || f.nuw }
   | .ret _ | .br => { control := true }
 """
 
@@ -288,6 +288,13 @@ class Effects(unittest.TestCase):
                 ],
                 rest,
             )
+
+    def test_operators_in_values_are_not_cases(self):
+        text = CORE_EFFECTS_SAMPLE.replace(
+            "| .ret _ | .br => { control := true }",
+            "| .ret _ | .br => { control := true <| x |>.f }",
+        )
+        self.assertEqual(self.effects(text), [])
 
     def test_no_table_or_no_case_fails(self):
         self.assertEqual(

@@ -337,7 +337,7 @@ rule and does not declare that it may produce poison makes none. -/
 theorem makesNoPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
     [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
     [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
-    (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).poison = false) :
+    (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).mayPoison = false) :
     MakesNoPoison op :=
   LawfulDialectEffects.makesNoPoison op hv hc h
 
@@ -371,10 +371,16 @@ since the core dialect has neither memory nor a trace yet
   ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
   ["sdiv", "udiv", "srem", "urem", "cond_br"]
-#guard ((Core.samples.filter (·.effects.poison)).map Core.Op.name).eraseDups ==
+#guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==
   ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison"]
 #guard ((Core.samples.filter (·.effects.control)).map Core.Op.name).eraseDups ==
   ["br", "cond_br", "ret"]
+-- The sets that depend on an attribute, at each value of it.
+#guard [Core.Op.add 8 {}, .sub 8 {}, .mul 8 {}].all (·.effects == {})
+#guard (Core.WrapFlags.all.filter (· != {})).all fun f =>
+  [Core.Op.add 8 f, .sub 8 f, .mul 8 f].all (·.effects == { mayPoison := true })
+#guard [Core.Op.sdiv 8 false, .udiv 8 false, .srem 8, .urem 8].all (·.effects == { mayUB := true })
+#guard [Core.Op.sdiv 8 true, .udiv 8 true].all (·.effects == { mayUB := true, mayPoison := true })
 #guard Core.samples.all fun o => o.effects.reads == .these [] && o.effects.writes == .these [] &&
   o.effects.allocates == .these [] && !o.effects.observable
 

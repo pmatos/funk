@@ -99,7 +99,7 @@ theorem flags_none {f : WrapFlags} (h : (f != {}) = false) : f = {} := by
 
 /-- Every core op that does not declare that it may produce poison makes
 none: on operands with no poison, it gives a defined result. -/
-theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op).poison = false →
+theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayPoison = false →
     MakesNoPoison (d := CoreDialect) op
   | .const _ v, _ => fun _ _ _ _ h => by cases h; exact not_any_of_ne fun h => nomatch h
   | .add _ f, h | .sub _ f, h | .mul _ f, h => by

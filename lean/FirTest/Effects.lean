@@ -6,11 +6,11 @@ Tests of the core dialect's effects, of the instance
 
 * _The instance._ It gives `udiv` at `i8` no poison on defined operands,
   `add` without flags no UB, and `freeze` no control.
-* _Effects the core ops need._ An effect that a core op declares is one it
-  has, on some valid instance: `add` with `nsw` and `shl` give poison on
-  defined operands, `udiv` by zero and `cond_br` on poison are UB, and
-  `br` is a terminator. Leaving any of them out would make the obligations
-  false, so they cannot be dropped.
+* _Effects the core ops need._ For example, `add` with `nsw` and `shl` give
+  poison on defined operands, `udiv` by zero and `cond_br` on poison are
+  UB, and `br` is a terminator: leaving any of those effects out of their
+  sets would make the obligations false. `lean/FirTest/G0.lean` pins every
+  core op's set.
 -/
 
 namespace FirTest

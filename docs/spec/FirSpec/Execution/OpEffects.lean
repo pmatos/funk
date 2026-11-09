@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10379324528476661898")
+:::moduleDocs (fingerprint := "2807909622879852508")
 :::
 
 :::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
@@ -45,14 +45,14 @@ A set of memories $`M` _holds_ $`m` when $`M` lists $`m`, or
 $`M = \top`, every memory.
 :::
 
-:::readable Fir.Effects (fingerprint := "10655955460429694075")
+:::readable Fir.Effects (fingerprint := "8832704036850581480")
 *Definition: an effect set.* The effects of an op, a set drawn from:
 
 * $`\mathsf{reads}~M`, $`\mathsf{writes}~M` and
   $`\mathsf{allocates}~M`: the op may read, write, or allocate or free in
   the memories of $`M`;
 * $`\mathsf{mayUB}`: the op may end in immediate UB;
-* $`\mathsf{poison}`: on operands with no poison, a result of the op may
+* $`\mathsf{mayPoison}`: on operands with no poison, a result of the op may
   be poison;
 * $`\mathsf{observable}`: the op may add an event to the trace of the run;
 * $`\mathsf{control}`: the op is a terminator.
@@ -69,7 +69,7 @@ what an op declares when nothing narrower is known of it, as of an
 external call (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.MemSet.map Fir.Effects.map (fingerprint := "153682547792494418")
+:::readable Fir.MemSet.map Fir.Effects.map (fingerprint := "17615428717981311199")
 *Definition: renaming memories.* For a map $`f` from one dialect's
 memory names to another's, $`f(\{m_1, \dots, m_n\}) = \{f(m_1), \dots,
 f(m_n)\}` and $`f(\top) = \top`. An effect set is renamed by renaming the
@@ -78,16 +78,17 @@ other effects. A dialect's ops are seen so in a larger dialect that holds
 its memories among others.
 :::
 
-:::readable Fir.DialectEffects (pin := Fir.Effects) (fingerprint := "15007841825203163233")
+:::readable Fir.DialectEffects (pin := Fir.Effects) (fingerprint := "5406815133426605090")
 *Definition: the effect class.* Each dialect names its memories, and gives
 each of its ops $`o` a
 {ref "The-fir-specification--Execution--Poison-classes"}[poison class],
 $`\mathrm{class}(o)`, and a set of effects, $`\mathrm{eff}(o)`, the
-effects of the op's own rule. Every op declares both, so that a dialect
+effects of the op's own rule. An op with a callee also has its callee's
+effects, which $`\mathrm{eff}(o)` leaves out and a reader adds. Every op declares both, so that a dialect
 added for new hardware states them too (ADR-2026-10-29-2016,
 ADR-2026-11-09-1541).
 
 The poison class says how the op treats poison operands; the effect
-$`\mathsf{poison}` says whether a result may be poison when no operand is
+$`\mathsf{mayPoison}` says whether a result may be poison when no operand is
 (ADR-2026-11-09-2249).
 :::

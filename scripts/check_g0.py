@@ -277,6 +277,14 @@ def generic_files(root: Path = ROOT) -> list[str]:
     return sorted(rel for rel in found if is_generic(rel))
 
 
+def _in_operator(toks: list, k: int) -> bool:
+    """Whether the `|` at toks[k] is part of an operator such as `||`, `|>`
+    or `<|`, in a value, rather than the start of a case."""
+    before = toks[k - 1][1] if k > 0 else ""
+    after = toks[k + 1][1] if k + 1 < len(toks) else ""
+    return before in ("|", "<") or after in ("|", ">")
+
+
 def case_problems(root: Path, rel: str, definition: str, what: str) -> list[str]:
     """Return one message per case of the core table `definition` in `rel`
     that is not one op's constructor, such as a case for the rest. `what` is
@@ -292,7 +300,7 @@ def case_problems(root: Path, rel: str, definition: str, what: str) -> list[str]
     toks = tokens("\n".join(lines[start:end]))
     found, ops = [], 0
     for k, (kind, s, line) in enumerate(toks):
-        if (kind, s) != ("other", "|"):
+        if (kind, s) != ("other", "|") or _in_operator(toks, k):
             continue
         head = [t[1] for t in toks[k + 1 : k + 3]]
         if len(head) == 2 and head[0] == "." and toks[k + 2][0] == "name":

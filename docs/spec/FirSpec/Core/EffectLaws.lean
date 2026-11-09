@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15508511944423881020")
+:::moduleDocs (fingerprint := "14473149069114112062")
 :::
 
 :::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "5074657499700953264")
@@ -44,12 +44,12 @@ quotient, when it gives a result, gives a value.
 
 :::readable Fir.Core.flags_none (fingerprint := "9505051277240368478")
 *Theorem: an instance of $`\mathsf{add}`, $`\mathsf{sub}` or
-$`\mathsf{mul}` that does not declare $`\mathsf{poison}` has no flags.*
+$`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoison) (fingerprint := "5272947239862093274")
-*Theorem: each core op that does not declare $`\mathsf{poison}` makes no
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoison) (fingerprint := "4743314408651579304")
+*Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
 $`\mathsf{udiv}` without $`\mathsf{exact}`, $`\mathsf{srem}`,
@@ -67,7 +67,7 @@ $`\mathsf{cond\_br}` and $`\mathsf{ret}`, and each declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "10774615618187011126")
+:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "12820253841310700615")
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have: the three theorems above, for every
 core op instance. So a pass may rely on the core ops' effect sets

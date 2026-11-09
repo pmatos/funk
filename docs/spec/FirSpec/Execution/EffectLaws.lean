@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1108519962051275858")
+:::moduleDocs (fingerprint := "3013532393854837883")
 :::
 
 :::readable Fir.NeverUB (fingerprint := "7156262212872704501")
@@ -32,7 +32,7 @@ $`\mathsf{ok}~\vec{w} \in \mathrm{denote}_o(\vec{v})` has no poison
 element. A terminator gives no results, so it makes none.
 :::
 
-:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (fingerprint := "10380837906174336669")
+:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (fingerprint := "2766575171871511352")
 *Definition: a dialect lawful in its effects.* A dialect is _lawful in its
 effects_ when its effect declarations are sound: an effect that an op
 leaves out, it does not have. For every
@@ -40,7 +40,7 @@ leaves out, it does not have. For every
 instance $`o` that is a terminator or has no callee:
 
 * if $`\mathsf{mayUB} \notin \mathrm{eff}(o)`, then $`o` never ends in UB;
-* if $`\mathsf{poison} \notin \mathrm{eff}(o)`, then $`o` makes no poison.
+* if $`\mathsf{mayPoison} \notin \mathrm{eff}(o)`, then $`o` makes no poison.
 
 And for every op $`o`: if $`\mathsf{control} \notin \mathrm{eff}(o)`,
 then $`o` is not a terminator.

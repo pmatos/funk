@@ -25,7 +25,9 @@ have no trace.
   too, on a poison condition.
 
 `call`'s own rule does nothing but run its callee, so its own set is
-empty. A call has its callee's effects, which come from the callee's run.
+empty. That does not make a call pure: a call has its callee's effects too,
+which come from the callee's run, and a reader of a call's effects adds
+them.
 
 The proofs that each declaration is sound are in the section on the core
 dialect's effect obligations, after the rules.
@@ -43,10 +45,10 @@ on a division, may produce poison. -/
 def Op.effects : Op → Effects Mem
   | .const .. | .and _ | .or _ | .xor _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
   | .freeze _ | .call .. => {}
-  | .add _ f | .sub _ f | .mul _ f => { poison := f != {} }
-  | .sdiv _ x | .udiv _ x => { mayUB := true, poison := x }
+  | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
+  | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }
-  | .shl _ | .lshr _ | .ashr _ | .poison _ => { poison := true }
+  | .shl _ | .lshr _ | .ashr _ | .poison _ => { mayPoison := true }
   | .br | .ret _ => { control := true }
   | .condBr => { mayUB := true, control := true }
 

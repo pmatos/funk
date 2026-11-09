@@ -75,7 +75,7 @@ structure Effects (Mem : Type) where
   /-- The op may end in immediate UB. -/
   mayUB : Bool := false
   /-- On operands with no poison, a result of the op may be poison. -/
-  poison : Bool := false
+  mayPoison : Bool := false
   /-- The op may add an event to the trace of the run. -/
   observable : Bool := false
   /-- The op is a terminator. -/
@@ -104,7 +104,9 @@ class DialectEffects (d : Dialect) where
   Mem : Type
   /-- How the op treats poison operands. -/
   poisonClass : d.Op → PoisonClass
-  /-- The effects of the op's own rule. -/
+  /-- The effects of the op's own rule. An op with a callee runs its callee
+  and has its callee's effects too, which this set leaves out: a reader of
+  a call's effects adds the callee's. -/
   effects : d.Op → Effects Mem
 export DialectEffects (poisonClass effects)
 

@@ -129,6 +129,16 @@ instance [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩] : DialectCa
     | .inl o => callee? (d := ⟨Op₁, Ty⟩) o
     | .inr o => callee? (d := ⟨Op₂, Ty⟩) o
 
+/-- An op of the second dialect whose types are valid in the sum is a valid
+instance of its own dialect, when every type that the first dialect accepts
+the second accepts too. -/
+theorem typesValid_right [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
+    [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩] {o : Op₂}
+    (hv : TypesValid (d := SumDialect Ty Op₁ Op₂) (.inr o))
+    (hty : ∀ t : Ty, validTy (d := ⟨Op₁, Ty⟩) t → validTy (d := ⟨Op₂, Ty⟩) t) :
+    TypesValid (d := ⟨Op₂, Ty⟩) o :=
+  ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+
 /-- Two dialects whose valid op instances meet the poison obligations make
 a sum whose valid op instances meet them, when every type that the first
 dialect accepts the second accepts too: each op meets them as its own
@@ -146,18 +156,17 @@ theorem lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
   propagates
     | .inl o, hv, hc => ⟨(h₁.propagates o hv hc).1, (h₁.propagates o hv hc).2⟩
     | .inr o, hv, hc =>
-      have hv₂ := And.intro (fun t ht => hty t (hv.1 t ht)) (fun t ht => hty t (hv.2 t ht))
+      have hv₂ := typesValid_right hv hty
       ⟨(h₂.propagates o hv₂ hc).1, (h₂.propagates o hv₂ hc).2⟩
   returnsOnDefined
     | .inl o, hv, hc => h₁.returnsOnDefined o hv hc
-    | .inr o, hv, hc =>
-      h₂.returnsOnDefined o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩ hc
+    | .inr o, hv, hc => h₂.returnsOnDefined o (typesValid_right hv hty) hc
   total
     | .inl o, hv => h₁.total o hv
-    | .inr o, hv => h₂.total o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+    | .inr o, hv => h₂.total o (typesValid_right hv hty)
   monotone
     | .inl o, hv => h₁.monotone o hv
-    | .inr o, hv => h₂.monotone o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+    | .inr o, hv => h₂.monotone o (typesValid_right hv hty)
 
 /-- Two dialects lawful in their effects make a sum lawful in its effects,
 when every type that the first dialect accepts the second accepts too:
@@ -173,11 +182,11 @@ theorem lawfulEffects [TyDenote Ty] [TyPoison Ty]
     LawfulDialectEffects (SumDialect Ty Op₁ Op₂) where
   neverUB
     | .inl o, hv => h₁.neverUB o hv
-    | .inr o, hv => h₂.neverUB o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+    | .inr o, hv => h₂.neverUB o (typesValid_right hv hty)
   makesNoPoison
     | .inl o, hv => h₁.makesNoPoison o hv
     | .inr o, hv =>
-      h₂.makesNoPoison o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+      h₂.makesNoPoison o (typesValid_right hv hty)
   notControl
     | .inl o => h₁.notControl o
     | .inr o => h₂.notControl o
