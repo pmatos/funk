@@ -9,10 +9,13 @@ valid module's canonical form becomes `canonical/fuzz-HASH.fir`. A crash
 that still happens exits with 2: fix the bug first. `funk verify` cannot see
 the `parse` fuzzer's round trip, so a text that parses must also format to
 a text that formats to itself.
+
+ARTIFACT and DIR must be inside the working directory.
 """
 
 import argparse
 import hashlib
+import os
 import re
 import sys
 import tempfile
@@ -94,6 +97,16 @@ def keep(funk: str, artifact: Path, corpus: Path, rule: str | None) -> tuple[int
     return 0, f"added a {v.verdict} to {path}"
 
 
+def inside_working_directory(path: Path) -> Path:
+    """`path`, with its links resolved, if that is inside the working
+    directory. Agents run this tool, and it must not reach other files."""
+    resolved = os.path.realpath(path)
+    base = os.path.realpath(os.getcwd())
+    if resolved != base and not resolved.startswith(base + os.sep):
+        raise ValueError(f"{path} is outside the working directory")
+    return Path(resolved)
+
+
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(
         prog="fuzz_to_corpus", description=__doc__.split("\n")[0]
@@ -103,7 +116,12 @@ def main(argv: list[str]) -> int:
     p.add_argument("--corpus", type=Path, default=Path("tests/fir"), help="the corpus")
     p.add_argument("artifact", type=Path, help="the input that crashed a fuzzer")
     args = p.parse_args(argv)
-    status, what = keep(args.funk, args.artifact, args.corpus, args.rule)
+    try:
+        artifact = inside_working_directory(args.artifact)
+        corpus = inside_working_directory(args.corpus)
+    except ValueError as e:
+        p.error(str(e))
+    status, what = keep(args.funk, artifact, corpus, args.rule)
     print(what, file=sys.stderr if status else sys.stdout)
     return status
 

@@ -1,5 +1,7 @@
 """Tests of how an input that crashed a fuzzer joins the corpus."""
 
+import contextlib
+import io
 import tempfile
 import tomllib
 import unittest
@@ -95,6 +97,67 @@ class Keep(unittest.TestCase):
         self.assertEqual(status, 2)
         self.assertIn("format to itself", what)
         self.assertFalse((self.corpus / "reject/fuzz.toml").exists())
+
+
+class WorkingDirectory(unittest.TestCase):
+    def setUp(self):
+        d = tempfile.TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        self.root = Path(d.name).resolve()
+        self.cwd = self.root / "work"
+        self.cwd.mkdir()
+        (self.cwd / "crash").write_bytes(b"bad")
+        (self.cwd / "corpus").mkdir()
+        here = contextlib.chdir(self.cwd)
+        here.__enter__()
+        self.addCleanup(here.__exit__, None, None, None)
+
+    def main(self, artifact, corpus_dir="corpus"):
+        argv = ["--funk", "funk", "--corpus", str(corpus_dir), str(artifact)]
+        out = io.StringIO()
+        with (
+            mock.patch.object(fuzz_to_corpus, "keep", return_value=(0, "kept")) as keep,
+            contextlib.redirect_stdout(out),
+            contextlib.redirect_stderr(out),
+        ):
+            try:
+                status = fuzz_to_corpus.main(argv)
+            except SystemExit as e:
+                status = e.code
+        return status, keep
+
+    def test_paths_inside_it_are_kept(self):
+        status, keep = self.main("crash")
+        self.assertEqual(status, 0)
+        keep.assert_called_once_with(
+            "funk", self.cwd / "crash", self.cwd / "corpus", None
+        )
+
+    def test_an_artifact_outside_it_is_refused(self):
+        (self.root / "secret").write_bytes(b"key")
+        status, keep = self.main("../secret")
+        self.assertEqual(status, 2)
+        keep.assert_not_called()
+
+    def test_a_corpus_outside_it_is_refused(self):
+        status, keep = self.main("crash", self.root)
+        self.assertEqual(status, 2)
+        keep.assert_not_called()
+
+    def test_a_directory_that_only_shares_its_prefix_is_refused(self):
+        sibling = self.root / "work-other"
+        sibling.mkdir()
+        (sibling / "crash").write_bytes(b"bad")
+        status, keep = self.main(sibling / "crash")
+        self.assertEqual(status, 2)
+        keep.assert_not_called()
+
+    def test_a_link_that_leaves_it_is_refused(self):
+        (self.root / "secret").write_bytes(b"key")
+        (self.cwd / "link").symlink_to(self.root / "secret")
+        status, keep = self.main("link")
+        self.assertEqual(status, 2)
+        keep.assert_not_called()
 
 
 if __name__ == "__main__":

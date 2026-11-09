@@ -42,6 +42,7 @@ MIN_COMPARED = 0.5
 # Below this many runs, the share says nothing: a replay of one seed is one.
 MIN_RUNS_FOR_SHARE = 200
 
+PROGRAMS_CHECK = "generated programs"
 PARSE_ERROR_LINE = re.compile(r".*:\d+:\d+: parse error: ")
 SEED = re.compile(r"program-(\d+)\.fir")
 SOUP_SEED = re.compile(r"soup-(\d+)\.fir")
@@ -73,15 +74,26 @@ class Tally:
     interpreter_only: dict[str, int] = field(default_factory=dict)
     failed_seeds: set[str] = field(default_factory=set)
 
-    def differential(self) -> int:
+    def differential_runs(self) -> int:
         return self.compared + sum(self.interpreter_only.values())
+
+    def record(self, result: differential.Evaluation, defined: bool):
+        """Counts a differential run, if it passed."""
+        if result.judgement.status != PASSED:
+            return
+        why = result.interpreter_only
+        if why is None:
+            self.compared += 1
+            self.defined += defined
+        else:
+            self.interpreter_only[why] = self.interpreter_only.get(why, 0) + 1
 
     def show(self) -> str:
         reasons = ", ".join(
             f"{n}: {why}" for why, n in sorted(self.interpreter_only.items())
         )
         return (
-            f"{self.compared} of {self.differential()} runs compared with native"
+            f"{self.compared} of {self.differential_runs()} runs compared with native"
             f" code ({self.defined} built to stay defined), {self.planted} planted"
             " runs ended as planted"
             + (f"; interpreter-only {reasons}" if reasons else "")
@@ -89,7 +101,7 @@ class Tally:
 
     def too_few_compared(self) -> str | None:
         """Why the share of runs compared with native code is too low."""
-        runs = self.differential()
+        runs = self.differential_runs()
         if runs < MIN_RUNS_FOR_SHARE or self.compared / runs >= MIN_COMPARED:
             return None
         return (
@@ -161,13 +173,7 @@ def check_program(h: Harness, fir: Path, tally: Tally, errors: list[str]):
                     tally.planted += 1
                 continue
             r = run_generated(h, fir, t, types, params.get(t.func), exe, defined)
-            if r.judgement.status == PASSED:
-                if r.interpreter_only is None:
-                    tally.compared += 1
-                    tally.defined += defined
-                else:
-                    why = r.interpreter_only
-                    tally.interpreter_only[why] = tally.interpreter_only.get(why, 0) + 1
+            tally.record(r, defined)
     if h.report.counts[FAILED] + h.report.counts[INVALID] != failed_before:
         tally.failed_seeds.add(SEED.fullmatch(name).group(1))
 
@@ -175,17 +181,17 @@ def check_program(h: Harness, fir: Path, tally: Tally, errors: list[str]):
 def check_programs(args, work: Path, report: Report):
     programs = sorted(args.programs.glob("program-*.fir"))
     if not programs:
-        report.add(FAILED, "generated programs", f"{args.programs} holds none")
+        report.add(FAILED, PROGRAMS_CHECK, f"{args.programs} holds none")
     h = Harness(args.funk, args.fir_ref, work, report)
     tally, errors = Tally(), []
     for fir in programs:
         check_program(h, fir, tally, errors)
     for e in errors:
-        report.add(FAILED, "generated programs", e)
+        report.add(FAILED, PROGRAMS_CHECK, e)
     report.note(tally.show())
     why = tally.too_few_compared()
     if why:
-        report.add(FAILED, "generated programs", why)
+        report.add(FAILED, PROGRAMS_CHECK, why)
     note_replay(report, tally.failed_seeds)
 
 
