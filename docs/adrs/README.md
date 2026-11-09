@@ -53,7 +53,13 @@ The last line of each ADR's status paragraph is `Tier: TIER; area: AREA`
 [`INDEX.md`](INDEX.md) lists every ADR with its tier, area and what holds now.
 It is generated, so never edit it by hand. After changing an ADR's title, status
 or tier line, stage the ADR and run `python3 scripts/adr_index.py --write`. The
-`adr-index` hook fails when the index is stale or an ADR has no tier and area.
+`adr-index` hook fails when the index is stale, an ADR has no tier and area, or
+an accepted ADR is cited by no page of its area.
+
+Each area has a page in [`docs/decisions/`](../decisions/), `AREA.md`, that says
+what holds today and cites the ADRs it rests on. A page that outgrows the file
+size budget continues in a sibling, `AREA-TOPIC.md`. A PR that adds or refines a
+direction ADR updates its area page in the same PR.
 
 ## Published with the spec
 
