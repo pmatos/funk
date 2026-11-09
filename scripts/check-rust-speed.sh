@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Guards the speed of the Rust toolchain against regressions
 # (ADR-2026-11-09-1645). The pre-commit hook rust-speed calls it, locally and
-# in CI. It builds the release funk, generates large inputs into a temporary directory, counts the
-# instructions that funk fmt --check, verify and build run on each one under
-# cachegrind, and compares them with scripts/rust-speed-baseline.json through
-# scripts/rust_speed.py. Instruction counts do not depend on the host's load.
-# Children are not traced, so as and ld are not counted.
+# in CI. It builds the release funk, generates large inputs into a temporary
+# directory, counts the instructions that funk fmt --check, verify and build
+# run on each one under cachegrind, and compares them with
+# scripts/rust-speed-baseline.json through scripts/rust_speed.py. Instruction
+# counts do not depend on the host's load. Children are not traced, so as and
+# ld are not counted.
 set -euo pipefail
 
 if [[ $# -ne 0 ]]; then
