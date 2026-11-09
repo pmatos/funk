@@ -1,6 +1,6 @@
 # One start-up constructor records closed standard descriptors, the workspace's only unsafe code
 
-Status: accepted; refined by ADR-2026-11-03-0107 and ADR-2026-11-03-0808
+Status: superseded by ADR-2026-11-09-1603
 
 ## Context
 
@@ -28,7 +28,7 @@ scoped exception, to keep funk's verdicts identical to `fir-ref`'s.
 ## Decision
 
 - **One constructor.** The library crate
-  [`crates/funk-start-fds`](../../crates/funk-start-fds/src/lib.rs) puts one
+  [`crates/funk-start-fds`](https://github.com/pmatos/funk/blob/verus-tooling-m0/crates/funk-start-fds/src/lib.rs) puts one
   function in `.init_array`. It runs before the standard library's start-up
   code, calls `fcntl(fd, F_GETFD)` on descriptors 0, 1 and 2, and stores in
   an atomic the error of each that is closed, `EBADF`.
