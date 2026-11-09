@@ -116,7 +116,7 @@ sub-issues track the work of M1, one issue for each piece. Issue
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
 | `docs/agents/` | How agents use the issue tracker, the triage labels and the domain docs |
-| `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, `funk-start-fds`, which records the standard descriptors that were closed at start-up, and `funk`, the driver |
+| `crates/` | The Rust crates: `funk-ir`, the IR library, `funk-x86-64`, the x86-64 backend, and `funk`, the driver |
 | `tests/fir/` | The test corpus that the Rust and Lean sides share: canonical texts and their tests, inputs that format to them, must-reject texts, and cases ported from LLVM |
 | `Cargo.toml`, `Cargo.lock` | The Cargo workspace and its locked dependencies |
 | `rust-toolchain.toml` | The pinned Rust toolchain |
@@ -204,12 +204,11 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later, `elan`,
-`rustup`, Verus, GNU binutils on an x86-64 Linux host, and Python 3.11 or
+`rustup`, GNU binutils on an x86-64 Linux host, and Python 3.11 or
 later. Four checks need elan: `fir-spec` builds the spec, `fir-ref-test`
 runs the Lean tests, `fir-round-trip` has Lean reprint what Rust prints,
-and `fir-harness` runs the differential harness. Six need rustup:
-`rust-fmt`, `rust-clippy`, `rust-test` and `verus-proof` check the Rust
-code, and `fir-round-trip` and `fir-harness` run it. `rust-test` and
+and `fir-harness` runs the differential harness. Five need rustup:
+`rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and `fir-round-trip` and `fir-harness` run it. `rust-test` and
 `fir-harness` build native code, so they need binutils. Then install the
 git hooks:
 

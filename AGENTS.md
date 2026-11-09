@@ -107,12 +107,7 @@ commands until it succeeds. Start agents in another worktree with
   (the `rust-fmt`, `rust-clippy` and `rust-test` hooks; it installs the
   toolchain that `rust-toolchain.toml` pins), GNU binutils (`as` and
   `ld`) on an x86-64 Linux host, which `funk build` runs in the
-  `rust-test` hook, and Verus (the `verus-proof` hook): unzip the official
-  release zip that `scripts/check-verus.sh` pins, from
-  <https://github.com/verus-lang/verus/releases>, and put its directory on
-  `PATH`. The hook needs that zip, not a source build: a source build's
-  `cargo-verus` lacks the vstd compatibility row for its own release and
-  fails with "Components are incompatible".
+  `rust-test` hook.
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.
@@ -135,6 +130,14 @@ functions, types, tests or doc sections into a focused sibling file or module,
 keep a small entry point, and update imports, links and callers. Never minify,
 cram or shorten names to fit. Only generated or vendored files may be excluded,
 through the hook's `exclude` pattern.
+
+## Unsafe Rust
+
+`unsafe_code = "forbid"` applies to the whole workspace, and the workspace has
+no unsafe code. Any unsafe Rust needs a Verus proof, and lowering `forbid`
+needs a new ADR and a human ruling (ADR-2026-11-03-0808). The first unsafe code
+restores the Verus tooling from the tag `verus-tooling-m0` instead of
+rebuilding it (ADR-2026-11-09-1603).
 
 ## Working safely
 
