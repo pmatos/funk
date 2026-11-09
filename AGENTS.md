@@ -81,6 +81,12 @@ needs to know it; if not, write the doc comment. Each ADR carries a tier and an
 area, and [`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with what holds
 now (ADR-2026-11-09-1610).
 
+An agent starting cold reads the area pages in
+[`docs/decisions/`](docs/decisions/) first: each says what holds today, so no
+one has to follow "refined by" chains. A PR that adds or refines a direction ADR
+updates its area page in the same PR. The pages summarize the ADRs and never
+replace them. When a page and an ADR disagree, that is a bug in the page.
+
 ## Every change goes through a PR
 
 A ruleset on `main` ([`.github/rulesets/main.json`](.github/rulesets/main.json))
