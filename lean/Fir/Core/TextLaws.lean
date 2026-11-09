@@ -67,12 +67,9 @@ theorem constAttr_of_ne_one {w : Nat} (v : BitVec w) (h : w ≠ 1) :
   | 0, _ => rfl
   | _ + 2, _ => rfl
 
-/-- An `i1` constant is `1` or `0`. -/
-theorem bitVec_one_cases (v : BitVec 1) : v = 1 ∨ v = 0 := by
-  have h : v.toNat < 2 := v.isLt
-  rcases (by omega : v.toNat = 0 ∨ v.toNat = 1) with h0 | h1
-  · exact .inr (BitVec.eq_of_toNat_eq (by simp [h0]))
-  · exact .inl (BitVec.eq_of_toNat_eq (by simp [h1]))
+/-- An `i1` constant is `1` or `0`. The proof checks both values with
+`decide` (ADR-2026-11-09-1315). -/
+theorem bitVec_one_cases (v : BitVec 1) : v = 1 ∨ v = 0 := by revert v; decide
 
 /-! # Decoding what was encoded -/
 
