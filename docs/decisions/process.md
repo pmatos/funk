@@ -166,9 +166,8 @@ its own check. The suites run in parallel. The four jobs are:
 - `static`, "Static checks". Its hooks include `file-size-budget`, `adr-ids`,
   `g0` and `ci-hooks`. They also include `typos`, `ruff-check`, `shellcheck`,
   `actionlint` and `zizmor`. Only the `zizmor` step holds `GH_TOKEN`.
-- `rust`, "Rust suite". It holds `rust-fmt`, `rust-clippy`, `rust-test`,
-  `verus-proof`, `verus-report-test`, `unsafe-code` and `unsafe-code-test`. It
-  installs rustup, the pinned Rust toolchain, Verus and GNU binutils.
+- `rust`, "Rust suite". It holds `rust-fmt`, `rust-clippy` and `rust-test`. It
+  installs rustup, the pinned Rust toolchain and GNU binutils.
 - `lean`, "Lean suite". It holds `fir-spec` and `fir-ref-test`. It installs elan
   and the pinned Lean toolchain. It restores the Verso build and is the one job
   that saves it.
@@ -236,8 +235,8 @@ own key (ADR-2026-11-05-1408). The `rust` job saves the Rust toolchain, and
 four steps, without the save (ADR-2026-11-05-1954). Comments say to change all
 the copies together.
 
-CI caches each of its three installer downloads: `rustup-init`, `elan.tar.gz`
-and `verus.zip` (ADR-2026-11-05-1954). Each cache holds only the downloaded file
+CI caches each of its two installer downloads: `rustup-init` and `elan.tar.gz`
+(ADR-2026-11-05-1954). Each cache holds only the downloaded file
 in `RUNNER_TEMP`. The key is `<tool>-installer-<os>-<version>-<sha256>`, so a
 bump of either pin is a miss.
 
@@ -245,14 +244,14 @@ The pins stay in the workflow, twice in each copy. They are in the `env` of the
 step `Restore the <tool> installer` and of the step `Install <tool>`. A bump
 edits both.
 
-`scripts/ci-install.sh rustup|elan|verus` runs each install step. It downloads
+`scripts/ci-install.sh rustup|elan` runs each install step. It downloads
 the installer only when the restore step found no copy. It checks the file
 against its SHA-256 on every run, hit or miss, before using it. A cached file
 that fails fails the step on every run. That lasts until a bump changes the key
 or the cache entry is deleted.
 
-One job saves each cache: `rust` saves the rustup and Verus installers, and
-`lean` saves elan's. `cross` and `pages.yml` only restore. A save step runs only
+One job saves each cache: `rust` saves the rustup installer, and `lean` saves
+elan's. `cross` and `pages.yml` only restore. A save step runs only
 on a miss and only when its install step passed. So the cache holds only a file
 that passed its check. `pages.yml` deploys, so it never saves a cache.
 

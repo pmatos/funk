@@ -132,9 +132,15 @@ not the code under test. The limit is 1 GiB, `tools.DATA_LIMIT`, on both
 on the machine. A lower limit that the harness inherits stays in force. Raising
 `DATA_LIMIT` takes a new ADR.
 
-The limit changes no verdict rule. A run that cannot reserve its stack, or
-outgrows it, reads as a failure. The test is then invalid where `fir-ref` runs
-out of fuel, and fails where it returns.
+The limit changes no verdict rule. A run that cannot reserve its stack reads as
+a failure. The test is then invalid where `fir-ref` runs out of fuel, and fails
+where it returns.
+
+A run that outgrows its stack makes its test invalid (ADR-2026-11-09-1602).
+`tools.native_values` returns `refine.OutOfStack(N)` for exit status 2, empty
+standard output and exactly the runtime's stack message. fir has no depth limit,
+so the run proves nothing, and invalid keeps the harness red. A test that
+outgrows the machine's stack needs fewer calls or a larger `ulimit -s`.
 
 ## The fir explorer
 

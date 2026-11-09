@@ -9,8 +9,8 @@ disagree, the page has the bug (ADR-2026-11-09-1610).
 funk's Rust code is one virtual Cargo workspace (ADR-2026-10-30-1030). Every
 crate of the workspace sits under `crates/`. The library `funk-ir` holds the
 IR, op registry, builder, parser, printer, verifier and module generator. The
-crate `funk` is the binary. `funk-start-fds` holds the start-up constructor
-(ADR-2026-11-02-2253). `funk-x86-64` is the backend (ADR-2026-10-30-1228).
+crate `funk` is the binary. `funk-x86-64` is the backend
+(ADR-2026-10-30-1228).
 
 The workspace uses edition 2024 and resolver 3. Shared package fields and lints
 live in `[workspace.package]` and `[workspace.lints]`. `Cargo.lock` is
@@ -18,8 +18,7 @@ committed. The fir texts that the Lean side and the harness share live in
 `tests/fir/`, outside the crates. `funk-ir` has one module per layer: `ir`,
 `registry`, `dialects`, `text`, `verify` and `generate`.
 
-Inside the workspace, the only third-party dependency is vstd, on
-`funk-start-fds` alone, with the crates vstd brings (ADR-2026-11-03-0809). JSON
+The workspace depends on no third-party crates (ADR-2026-11-09-1603). JSON
 output, argument parsing, big integers and the generator's random numbers are
 small modules of funk's own (ADR-2026-10-30-1030).
 
@@ -41,14 +40,12 @@ touches Rust runs the whole test suite, so the tests must stay fast
 (ADR-2026-10-30-1030).
 
 In CI these hooks run in the `rust` job, "Rust suite". It is one of the suite
-jobs behind the required gate job `pre-commit` (ADR-2026-11-05-1408). The same
-job runs `verus-proof`, `verus-report-test`, `unsafe-code` and
-`unsafe-code-test`. It installs rustup, the pinned Rust toolchain, Verus and GNU
-binutils.
+jobs behind the required gate job `pre-commit` (ADR-2026-11-05-1408). It
+installs rustup, the pinned Rust toolchain and GNU binutils.
 
-`scripts/ci-install.sh` runs each installer step. It downloads `rustup-init` or
-the Verus zip only on a cache miss. It checks the file against the SHA-256
-written in the workflow on every run (ADR-2026-11-05-1954).
+`scripts/ci-install.sh` runs each installer step. It downloads `rustup-init`
+only on a cache miss. It checks the file against the SHA-256 written in the
+workflow on every run (ADR-2026-11-05-1954).
 `scripts/ensure-hooks.sh` warns when cargo is missing (ADR-2026-10-30-1030).
 
 ## The IR and the op registry
@@ -138,97 +135,26 @@ exact, and an `assert!` guards the bound. Correctness rests on tests against the
 quadratic code and on the coefficient bound. A change of base must recheck that
 bound.
 
-## Unsafe code and Verus
+## Unsafe code
 
-Unsafe Rust lives only in a verified module, whose trusted base is listed
-(ADR-2026-11-03-0808). The module must be in a crate with
-`[package.metadata.verus] verify = true`. There is one verified module,
-`crates/funk-start-fds/src/record.rs`. Its code is inside `verus!`, except the
-trusted pieces that Verus cannot take.
+`unsafe_code = "forbid"` applies to the whole workspace, and the workspace has
+no unsafe code (ADR-2026-11-09-1603). Each library root also holds
+`#![doc(test(attr(forbid(unsafe_code))))]`, because cargo does not pass
+`[lints]` to doctests (ADR-2026-11-03-0808).
 
-Verus proves `record`, the constructor. When it returns, slot `fd` of `CLOSED`
-holds the OS error that `fcntl(fd, F_GETFD)` failed with, for `fd` in 0 to 2.
-The slot holds 0 when the call did not fail with one. Every index is in bounds
-and nothing panics. Verus checks the module on x86-64 Linux, in CI.
+The rule stays: any unsafe Rust needs a Verus proof with a listed trusted base
+(ADR-2026-11-03-0808). Lowering `forbid` needs a new ADR and a human ruling.
 
-The trusted base is listed in ADR-2026-11-03-0808 and marked TRUSTED in the
-code. It is the `fcntl` extern block, `getfd`, `Slots`, `store`, `take_slots`,
-the `RECORD` static and the module's `#![allow(unsafe_code)]`.
+The tooling that enforced the rule is gone from the tree. The crate
+`funk-start-fds` went with it, and so did its hooks, its scripts, the Verus
+download in CI and the `vstd` dependency (ADR-2026-11-09-1603). The verified
+module, trusted base and digests of ADR-2026-11-03-0808 wait at the tag
+`verus-tooling-m0`, on commit `0f070ff`. So do the Verus and `vstd` pins of
+ADR-2026-11-03-0809.
 
-`scripts/unsafe_pins.py` keeps a digest of the trusted base, of the #117
-specification and of `record`. The check fails when a pinned text changes. Only
-`record_slots`' body and new items inside `verus!` change without a new pin.
-Verus checks both. `record_slots` may gain helpers inside `verus!` without a new
-ADR.
-
-Changing a pinned text, or adding a verified module, needs a new ADR and a human
-ruling. That ADR restates every digest. `ADR` in `scripts/check_unsafe_code.py`
-then points at it.
-
-`scripts/check_unsafe_code.py` reads every tracked Rust file and manifest by
-tokens. It catches careless or well-meaning changes. Review of the diff is the
-defence against a deliberately disguised change. The check over-approximates, so
-a name that it flags is renamed.
-
-In every crate, `unsafe` appears only on a trusted item. `unsafe_code` appears in
-an attribute only inside `forbid(...)` or `deny(...)`, besides the trusted one.
-`[workspace.lints]` keeps `unsafe_code = "forbid"`. A crate with no verified
-module inherits it or sets `forbid` itself. Each library root holds
-`#![doc(test(attr(forbid(unsafe_code))))]`, because cargo does not pass `[lints]`
-to doctests. No identifier starts with `verus_`.
-
-In a crate that uses vstd, words such as `assume`, `admit`, `axiom` and
-`external` appear only on a trusted item. So does the one allowed verifier
-attribute, `verifier::external_body`.
-
-A crate with a verified module sets `unsafe_code = "deny"` in its own
-`[lints.rust]` and has no `extern crate`. Only a verified module uses vstd or
-calls `verus!`.
-
-Inside a verified module, only inner attributes, `use`, constants and trusted
-items sit outside `verus!`. The module has no other macro call, no `cfg` and no
-`use ... as`.
-
-The `verus-proof` hook fails unless Verus proved each function that
-`scripts/verus_report.py` names for the crate. `unsafe-code-test` checks that
-the ADR names every trusted item and digest.
-
-### The start-up constructor
-
-Rust's start-up code opens `/dev/null` on each closed standard descriptor. Only
-code that runs before it can see that a descriptor is closed. The human ruled
-for this one scoped exception, to keep funk's verdicts identical to `fir-ref`'s
-(ADR-2026-11-02-2253).
-
-`funk-start-fds` puts one function in `.init_array`. It calls
-`fcntl(fd, F_GETFD)` on descriptors 0, 1 and 2 and stores the result in atomics.
-`closed_at_start(Stream)` returns what it recorded. The constructor is built on
-ELF Unix targets only. Elsewhere it compiles out and every descriptor reads as
-open. CI tests this on Linux only.
-
-`funk-start-fds` has its own `[lints]`, with `unsafe_code = "deny"` and the
-workspace's other lints. A lint added to `[workspace.lints]` is added there too.
-That is a convention, not a check (ADR-2026-11-03-0808). Every other crate,
-`funk` included, keeps `forbid`. This module is the workspace's only unsafe code.
-
-### The Verus pin
-
-Verus is pinned to one release, and vstd to the exact version it ships
-(ADR-2026-11-03-0809). `scripts/check-verus.sh` holds the pin. It fails when
-`verus` on `PATH` is another release or runs on another Rust than the pin. It
-runs the `cargo-verus` beside that `verus`. `scripts/ensure-hooks.sh` warns when
-Verus is missing.
-
-The `verus-proof` hook runs
-`cargo verus verify --workspace --locked --check-toolchain`, in `target/verus`.
-It verifies every crate that opts in, and vstd. `--check-toolchain` fails when vstd's version is not the release's.
-`Cargo.lock` pins what vstd brings.
-
-A bump is one PR. It moves the release and its SHA-256 in the workflow, the pin
-in `scripts/check-verus.sh` and vstd's version together. It also moves the Rust
-pin when the new release runs on another toolchain. Dependabot watches `cargo`
-but ignores vstd and the `verus_*` crates. An advisory against one of those needs
-a bump by hand.
+The first real unsafe code, likely the M6 JIT, restores the tooling from that
+tag instead of rebuilding it. Restoring it is work: its checkers name
+`funk-start-fds`, and its Verus pin must run on the Rust toolchain of that day.
 
 ## The funk command
 
@@ -342,9 +268,16 @@ duplicate of descriptor 0, 1 or 2, made by `try_clone_to_owned`. The reason is
 that the standard library's handles hide `EBADF`. New input and output goes
 through `streams`.
 
-Standard output is a `LineWriter`, and standard error is not buffered. A stream
-that `funk-start-fds` records as closed fails every read and write with `EBADF`.
-That covers standard input, standard output and standard error.
+Standard output is a `LineWriter`, and standard error is not buffered.
+
+A stream that was closed at start-up is `/dev/null` (ADR-2026-11-09-1603).
+Before `main`, Rust's standard library opens `/dev/null` on each of descriptors
+0 to 2 that is closed, and funk does not look behind that. A closed standard
+input reads as an empty text, so `-` is a parse error with exit 1. A closed
+standard output or standard error takes funk's writes, and funk exits with its
+verdict. `fir-ref` exits with 2 when it needs a closed stream, so the two tools
+differ here. The harness never closes a standard stream, so it never compares
+them.
 
 A standard input funk cannot read is `cannot read standard input: ...`, an
 `io-error` with exit 2. A standard output it cannot write ends the run with
