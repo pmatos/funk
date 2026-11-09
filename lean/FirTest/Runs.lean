@@ -8,7 +8,7 @@ progress and the no-stuck obligation.
 
 `call @g` calls `@g` (#20). The runs below show that a call charges its
 callee's steps to its caller's budget, so that a run that recurses without
-end runs out of fuel. Until #20, these tests gave `call` its callee with a
+end runs out of fuel. Before #20, these tests gave `call` its callee with a
 semantics of their own; they now run `fir-ref run`'s, the spec's.
 `FirTest.Calls` tests calls further.
 -/
