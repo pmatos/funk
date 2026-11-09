@@ -116,6 +116,10 @@ class Files(unittest.TestCase):
         with self.assertRaises(BadFile):
             parse_measured(measured_text().replace("1000", "x", 1))
 
+    def test_a_count_of_zero_is_rejected(self):
+        with self.assertRaises(BadFile):
+            parse_measured(measured_text(adds_fmt=0))
+
     def test_the_sizes_command_prints_adds_then_blocks(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "baseline.json"

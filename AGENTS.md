@@ -119,7 +119,8 @@ commands until it succeeds. Start agents in another worktree with
   commit until the environment is fixed.
 - Run `pre-commit run --all-files` before pushing. CI runs the same hooks on
   every file, one job per suite, so a local pass predicts a CI pass
-  (ADR-2026-11-05-1408).
+  (ADR-2026-11-05-1408). The one exception is `rust-speed`: only CI can fail
+  a count over its margin (ADR-2026-11-09-1645).
 - Every check lives in `.pre-commit-config.yaml`, which keeps local and CI one
   list. Add new linters and formatters there, not in a workflow, and give each
   new hook a step in one job of `.github/workflows/ci.yml`: the `ci-hooks`

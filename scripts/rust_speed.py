@@ -58,7 +58,7 @@ def parse_measured(text: str) -> dict[tuple[str, str], int]:
     measured: dict[tuple[str, str], int] = {}
     for line in text.splitlines():
         fields = line.split()
-        if len(fields) != 3 or not fields[2].isdecimal():
+        if len(fields) != 3 or not fields[2].isdecimal() or int(fields[2]) == 0:
             raise BadFile(f"malformed measurement: {line!r}")
         input_name, command, count = fields
         if (input_name, command) in measured:
@@ -122,6 +122,9 @@ def compare(baseline_path: str, measured_path: str, advisory: bool) -> int:
         return 0
     print(
         "Fix the slowdown, or raise the baseline and give the old and new numbers in the PR."
+    )
+    print(
+        "If this host's glibc or valgrind differs from the baseline's, the runner may have moved the counts."
     )
     return 1
 
