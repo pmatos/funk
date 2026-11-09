@@ -1,6 +1,6 @@
 # fir is a CFG, and effectful ops are ordered by their position in a block
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-1543
 
 ## Context
 
