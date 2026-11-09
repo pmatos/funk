@@ -62,6 +62,7 @@ instance : DialectValidation ProbeDialect where
   validTy := Core.Ty.Valid
   symbolRefs _ := []
   validOp _ _ := True
+  validFunc _ _ _ := True
 
 /-- A probe op states its own rule for poison. -/
 instance : DialectPoison ProbeDialect := ⟨fun _ => .exception⟩

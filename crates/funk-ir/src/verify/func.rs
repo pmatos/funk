@@ -4,7 +4,8 @@
 //! own, every block is reachable from the entry (ADR-2026-10-30-0817), its
 //! labels and value names are unique, every name and label is one or more
 //! name characters, every type it states is valid, every block holds an op,
-//! and every op is valid. Names and labels are checked at any depth, in the
+//! every op is valid, and the function obeys each registered dialect's rule
+//! over a whole function. Names and labels are checked at any depth, in the
 //! blocks of ops' regions too.
 
 use std::collections::{HashMap, HashSet};
@@ -15,7 +16,7 @@ use super::cfg::Cfg;
 use super::ops;
 use crate::ir::names::is_name;
 use crate::ir::{Block, Func, LocRef, Part, Region, SymbolTable, Type};
-use crate::registry::{Registry, TypeCheck};
+use crate::registry::{FuncContext, Registry, TypeCheck};
 
 /// What a function is checked against: its module's symbols and location
 /// references, and the registry.
@@ -157,6 +158,14 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
     for b in blocks {
         for (i, op) in b.ops.iter().enumerate() {
             ops::check(&scope, cx, b, i, op, out);
+        }
+    }
+    let func_cx = FuncContext {
+        symbols: cx.symbols,
+    };
+    for rule in cx.reg.func_rules() {
+        if let Err(why) = rule.check(&func_cx, f) {
+            out.push(at(f, blocks.first(), why));
         }
     }
 }

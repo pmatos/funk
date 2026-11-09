@@ -79,6 +79,13 @@ theorem problems_eq_nil_iff (d : Dialect) [DialectSignature d] [DialectValidatio
     m.problems = [] ↔ m.Valid :=
   m.problems_eq_nil_iff
 
+/-- A valid function obeys its dialect's own rule over a whole function, for
+every dialect. -/
+theorem validFunc_of_valid (d : Dialect) [DialectSignature d] [DialectValidation d]
+    {ctx : ModuleContext d} {f : Func d} (h : f.Valid ctx) :
+    validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
+  h.dialect
+
 /-! # Execution -/
 
 /-- The interpreter runs a function of any dialect, in any monad that has

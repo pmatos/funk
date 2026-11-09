@@ -26,6 +26,7 @@ namespace Fir
 instance : DecidableDialectValidation CoreDialect where
   decValidTy t := inferInstanceAs (Decidable (Core.Ty.Valid t))
   decValidOp ctx o := inferInstanceAs (Decidable (Core.Op.Valid ctx o))
+  decValidFunc _ _ _ := inferInstanceAs (Decidable True)
 
 end Fir
 

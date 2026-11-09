@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7713207114250097375")
+:::moduleDocs (fingerprint := "7805917909892943464")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -110,20 +110,40 @@ of result types. The core dialect reads the first for $`\mathsf{call}` and
 the second for $`\mathsf{ret}`.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "8784223345583083597")
+:::readable Fir.FuncContext Fir.DialectView Fir.DialectView.id (fingerprint := "5122442552274979552")
+*Definition: what a function rule sees.* A dialect's rule over a whole
+function reads the module's symbol table, and nothing else of the module: a
+_function context_ holds that table.
+
+A function may hold the ops of several dialects, and a rule about a value
+must count the uses of that value by all of them. So the dialect $`d` sees
+a function of a dialect $`h` that holds it through a _view_: a map from
+the ops of $`h` to those of $`d`, and a map from the types of $`h` to those
+of $`d`. Each map gives nothing for an op or a type of another dialect. The
+operands and the results of such an op stay visible. A dialect sees its own
+functions through the identity view.
+:::
+
+:::readable Fir.DialectValidation (fingerprint := "14691305273018662797")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds three things of its own:
+dialect $`d` adds four things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
   $`\mathit{op}` refers to; validation checks that each one names a
   function of the module;
 * its own rule for an op instance in an op context, written
-  $`C \vdash_d \mathit{op}~\text{valid}`, beyond the general rules.
+  $`C \vdash_d \mathit{op}~\text{valid}`, beyond the general rules;
+* its own rule for a whole function in a function context and through a
+  view, written $`C, v \vdash_d f~\text{valid}`, for what no rule of one
+  op can state, such as a value that must be used exactly once.
+  Validation calls this rule on every function, also on one that breaks
+  other rules, so the rule assumes nothing about the function.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
+The core dialect has no rule over a whole function.
 :::

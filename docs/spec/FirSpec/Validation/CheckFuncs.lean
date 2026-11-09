@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "384622119239323306")
+:::moduleDocs (fingerprint := "11396718151567096626")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -25,7 +25,7 @@ its block $`b` is placed at the symbol of $`f`, the label of $`b`, and the
 location reference of the first op of $`b`, when $`b` has an op.
 :::
 
-:::readable Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "4481162739556503460")
+:::readable Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "6428048307201822305")
 *Definition and theorem: the check of the entry block.* The check of the
 entry block gives "the function has no entry block" when the body has no
 block, and "the entry block `^e` declares arguments: its arguments are the
@@ -37,7 +37,15 @@ that declares no arguments, the first premise of the
 {ref "The-fir-specification--Validation--The-general-rules"}[rule of a valid function].
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "15594832736408228140")
+:::readable Fir.Func.ruleProblem (fingerprint := "11410949032950985230")
+*Definition: the problem of a broken function rule.* A function has no
+location of its own. So when a function breaks its dialect's own rule over a
+whole function, the problem "the function breaks a rule of its dialect"
+names the function and its entry block, and has the location reference of
+that block's first op. A function with no blocks has only its symbol.
+:::
+
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "2404998429050274037")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function
@@ -60,13 +68,15 @@ gives, in this order:
   its dialect rejects, and a problem for each definition whose type it
   rejects;
 * "block `^l` holds no ops" for each top-level block without ops;
-* the problems of each op of each top-level block, in order.
+* the problems of each op of each top-level block, in order;
+* "the function breaks a rule of its dialect" when the function breaks its
+  dialect's own rule over a whole function, at its entry block.
 
 The check of $`f` in its module, $`\mathrm{problems}(f)`, runs this with
 the list $`\mathrm{allblocks}(f)`.
 :::
 
-:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.types_all (fingerprint := "14390531816211634135")
+:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.types_all (fingerprint := "16203153610006954786")
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 

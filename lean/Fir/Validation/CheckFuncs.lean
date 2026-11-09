@@ -21,6 +21,15 @@ its first op. -/
 def Func.blockProblem (f : Func d) (b : Block d) (message : String) : Problem :=
   { message, func := f.name, block := b.label, loc := b.body.head?.map (·.loc) }
 
+/-- The problem of a function that breaks its dialect's function rule. A
+function has no location of its own, so the problem has that of the first op
+of its entry block. -/
+def Func.ruleProblem (f : Func d) : Problem :=
+  let message := "the function breaks a rule of its dialect"
+  match f.blocks with
+  | [] => f.problem message
+  | e :: _ => f.blockProblem e message
+
 /-- The problems of a function's entry block. -/
 def Func.entryProblems (f : Func d) : List Problem :=
   match f.blocks with
@@ -63,7 +72,8 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
   f.blocks.filterMap (fun b => if b.body ≠ [] then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
   f.blocks.flatMap (fun b => let n := b.body.length
-    b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b n i o)
+    b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b n i o) ++
+  (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem])
 
 /-- The problems of a function, in the context of its module. -/
 def Func.problems (lk : Lookup d) (f : Func d) : List Problem :=
@@ -79,9 +89,10 @@ theorem Func.valid_iff (ctx : ModuleContext d) (f : Func d) : f.Valid ctx ↔
     (∀ b ∈ f.allBlocks, isName b.label) ∧
     (∀ t ∈ f.types, validTy t) ∧
     (∀ b ∈ f.blocks, b.body ≠ []) ∧
-    (∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o) :=
-  ⟨fun ⟨a, b, c, d, e, f, g, h, i⟩ => ⟨a, b, c, d, e, f, g, h, i⟩,
-    fun ⟨a, b, c, d, e, f, g, h, i⟩ => ⟨a, b, c, d, e, f, g, h, i⟩⟩
+    (∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o) ∧
+    validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
+  ⟨fun ⟨a, b, c, d, e, f, g, h, i, j⟩ => ⟨a, b, c, d, e, f, g, h, i, j⟩,
+    fun ⟨a, b, c, d, e, f, g, h, i, j⟩ => ⟨a, b, c, d, e, f, g, h, i, j⟩⟩
 
 omit [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d] in
@@ -122,6 +133,6 @@ theorem Func.problems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d
   simp only [Func.problems, Func.problemsIn, List.append_eq_nil_iff, Func.entryProblems_eq_nil,
     List.filterMap_eq_nil_iff, ite_none_eq_none, List.map_eq_nil_iff, repeats_eq_nil,
     List.flatMap_eq_nil_iff, Func.defs, List.mem_append, or_imp, forall_and, Prod.forall,
-    and_assoc]
+    and_assoc, ite_nil_eq_nil, h.symbols]
 
 end Fir

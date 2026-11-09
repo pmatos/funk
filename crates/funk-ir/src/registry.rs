@@ -6,15 +6,15 @@
 //! parser and the verifier ask the registry what each op and type means. The
 //! traits mirror the spec's dialect classes: [`OpSpec::decode`] is
 //! `decodeOp` with the op's signature (`DialectText`, `DialectSignature`),
-//! [`OpSpec::check`] is `validOp`, and [`TypeSpec`] is `decodeTy` with
-//! `validTy` (`DialectValidation`).
+//! [`OpSpec::check`] is `validOp`, [`TypeSpec`] is `decodeTy` with `validTy`,
+//! and [`FuncSpec::check`] is `validFunc` (`DialectValidation`).
 
 use std::collections::HashMap;
 use std::fmt;
 
 use crate::dialects;
 use crate::ir::names::is_word;
-use crate::ir::{Attr, SymbolTable, Type};
+use crate::ir::{Attr, Func, SymbolTable, Type};
 
 /// What an op instance is used at: its attributes and the types of its
 /// operands and results. The parser finds the types where the values are
@@ -89,7 +89,25 @@ pub trait TypeSpec: Send + Sync {
     fn check(&self, ty: &Type) -> Option<TypeCheck>;
 }
 
-/// A dialect: a name, its ops and its types.
+/// What a dialect's function rule may look at beside the function: the
+/// module's symbol table (`FuncContext` in `lean/Fir/Validation/Scope.lean`).
+#[derive(Clone, Copy, Debug)]
+pub struct FuncContext<'a> {
+    /// The symbols of the module.
+    pub symbols: &'a SymbolTable<'a>,
+}
+
+/// A dialect's own rule over a whole function, for what no op can see
+/// alone, such as a value that must be used exactly once. A function holds
+/// every dialect's ops as data, so the rule sees the uses by all of them.
+pub trait FuncSpec: Send + Sync {
+    /// The rule, or why `func` breaks it. The verifier calls it on every
+    /// function, also on one that breaks other rules, so it must hold no
+    /// assumption about the function.
+    fn check(&self, cx: &FuncContext<'_>, func: &Func) -> Result<(), String>;
+}
+
+/// A dialect: a name, its ops, its types and its function rules.
 pub struct Dialect {
     /// The dialect's name.
     pub name: String,
@@ -97,15 +115,18 @@ pub struct Dialect {
     pub ops: Vec<Box<dyn OpSpec>>,
     /// The dialect's types.
     pub types: Vec<Box<dyn TypeSpec>>,
+    /// The dialect's rules over whole functions.
+    pub func_rules: Vec<Box<dyn FuncSpec>>,
 }
 
 impl Dialect {
-    /// A dialect with no ops and no types yet.
+    /// A dialect with no ops, no types and no function rules yet.
     pub fn new(name: impl Into<String>) -> Dialect {
         Dialect {
             name: name.into(),
             ops: Vec::new(),
             types: Vec::new(),
+            func_rules: Vec::new(),
         }
     }
 
@@ -118,6 +139,12 @@ impl Dialect {
     /// Adds a family of types.
     pub fn types(mut self, types: impl TypeSpec + 'static) -> Dialect {
         self.types.push(Box::new(types));
+        self
+    }
+
+    /// Adds a rule over whole functions.
+    pub fn func_rule(mut self, rule: impl FuncSpec + 'static) -> Dialect {
+        self.func_rules.push(Box::new(rule));
         self
     }
 }
@@ -145,12 +172,14 @@ impl fmt::Display for RegistryError {
 
 impl std::error::Error for RegistryError {}
 
-/// The registered dialects, their ops by name, and their types.
+/// The registered dialects, their ops by name, their types and their
+/// function rules.
 #[derive(Default)]
 pub struct Registry {
     dialects: Vec<String>,
     ops: HashMap<String, (usize, Box<dyn OpSpec>)>,
     types: Vec<Box<dyn TypeSpec>>,
+    func_rules: Vec<Box<dyn FuncSpec>>,
 }
 
 impl fmt::Debug for Registry {
@@ -200,6 +229,7 @@ impl Registry {
             self.ops.insert(op.name().to_string(), (index, op));
         }
         self.types.extend(dialect.types);
+        self.func_rules.extend(dialect.func_rules);
         Ok(())
     }
 
@@ -211,6 +241,11 @@ impl Registry {
     /// The dialect that registered the op named `name`.
     pub fn dialect_of(&self, name: &str) -> Option<&str> {
         self.ops.get(name).map(|(d, _)| self.dialects[*d].as_str())
+    }
+
+    /// The registered dialects' rules over whole functions.
+    pub fn func_rules(&self) -> impl Iterator<Item = &dyn FuncSpec> {
+        self.func_rules.iter().map(|r| r.as_ref())
     }
 
     /// What the registered dialects say about `ty`. A type that no dialect

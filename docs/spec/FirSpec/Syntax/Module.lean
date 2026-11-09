@@ -20,7 +20,7 @@ the Lean changes under it.
 :::moduleDocs (fingerprint := "1086758024943119589")
 :::
 
-:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "3856370532284756557")
+:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "9078334971116599343")
 *Definition: the strings that refer to values, labels and symbols.* In
 the syntax trees of a program, a value, a block label and a symbol are each
 referred to by a string, stored without its sigil: the value `%x`, the label
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "5512839615627060427")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "7311467072228554417")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -77,7 +77,7 @@ block, the first block of the function, and to pass one value of the right
 type for each of that block's arguments.
 :::
 
-:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "7976569321417610658")
+:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "7685077818017998768")
 *Definition: operations, blocks and regions.* An _operation_ is one use of
 an op in a block: it names the op's results, gives its op instance, names
 its operands, and holds its successors, regions and location reference. A
@@ -132,7 +132,7 @@ among other rules, every block holds at least one op, and its last op, and
 only that one, is a terminator.
 :::
 
-:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "3439561308575619521")
+:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "10507048764927280219")
 *Definition: a function.* A function is a symbol, typed parameters, the
 types of its results, and a region, its body:
 

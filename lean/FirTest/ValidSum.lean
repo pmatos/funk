@@ -161,6 +161,7 @@ theorem sum_valid : sum.Valid sumModule.context where
     rcases hb with rfl | rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := [("loop", "body")])
     (by simpa using sum_loop_dominates_body) (by decide +kernel)
+  dialect := trivial
 
 /-! # `@sum10` and the module -/
 
@@ -182,6 +183,7 @@ theorem sum10_valid : sum10.Valid sumModule.context where
     subst hb
     simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  dialect := trivial
 
 /-- The spec's example module is valid. -/
 theorem sumModule_valid : sumModule.Valid where

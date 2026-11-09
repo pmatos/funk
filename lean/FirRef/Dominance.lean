@@ -159,7 +159,8 @@ def problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Proble
   f.blocks.filterMap (fun b => if b.body ≠ [] then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
   f.blocks.flatMap (fun b => let n := b.body.length
-    b.body.zipIdx.flatMap fun (o, i) => opProblemsWith (domWith f.entryLabel? tree) lk f t b n i o)
+    b.body.zipIdx.flatMap fun (o, i) => opProblemsWith (domWith f.entryLabel? tree) lk f t b n i o) ++
+  (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem])
 
 @[csimp] theorem problemsIn_eq_problemsIn : @Func.problemsIn = @problemsIn := by
   funext d _ _ _ _ lk f all

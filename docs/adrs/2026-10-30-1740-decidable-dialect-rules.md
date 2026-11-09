@@ -1,6 +1,6 @@
 # The validation check asks a dialect for decidable equality on its types and for `DecidableDialectValidation`
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-2257
 Tier: direction; area: validation
 
 ## Context

@@ -8,7 +8,9 @@ the second adds ops over the first's types, as the toy dialect adds an op
 over the core dialect's integers. Each class of a dialect is lifted to the
 sum. An op of either side has the signature, the text, the rules, the poison
 class and the semantics that its own dialect gives it, and the types have the
-text and the validity that the first dialect gives them. The classes of the
+text and the validity that the first dialect gives them. A function of the
+sum obeys the function rule of each dialect, and each rule sees the whole
+function through its own view. The classes of the
 types themselves, such as `TyDenote`, are the shared types' own, so the sum
 needs no instance of them. Two dialects whose valid op instances meet the
 poison obligations make a sum whose valid op instances meet them, when
@@ -50,6 +52,17 @@ same symbol table, and the same result types. -/
 def sideContext (Op : Type) (ctx : OpContext (SumDialect Ty Op₁ Op₂)) : OpContext ⟨Op, Ty⟩ :=
   ⟨fun s => (ctx.symbols s).map fun t => ⟨t.params, t.results⟩, ctx.results⟩
 
+/-- How the first dialect of the sum sees a host of the sum: the sum's view,
+and the ops of the first side only. -/
+def leftView {host : Dialect} (v : DialectView (SumDialect Ty Op₁ Op₂) host) :
+    DialectView ⟨Op₁, Ty⟩ host :=
+  ⟨fun o => (v.op o).bind Sum.getLeft?, v.ty⟩
+
+/-- How the second dialect of the sum sees a host of the sum. -/
+def rightView {host : Dialect} (v : DialectView (SumDialect Ty Op₁ Op₂) host) :
+    DialectView ⟨Op₂, Ty⟩ host :=
+  ⟨fun o => (v.op o).bind Sum.getRight?, v.ty⟩
+
 instance [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩] :
     DialectSignature (SumDialect Ty Op₁ Op₂) where
   sig
@@ -74,6 +87,8 @@ instance [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
   validOp ctx
     | .inl o => validOp (sideContext Op₁ ctx) o
     | .inr o => validOp (sideContext Op₂ ctx) o
+  validFunc v ctx f :=
+    validFunc (d := ⟨Op₁, Ty⟩) (leftView v) ctx f ∧ validFunc (d := ⟨Op₂, Ty⟩) (rightView v) ctx f
 
 instance [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
     [DecidableDialectValidation ⟨Op₁, Ty⟩] [DecidableDialectValidation ⟨Op₂, Ty⟩] :
@@ -82,6 +97,8 @@ instance [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
   decValidOp ctx
     | .inl o => inferInstanceAs (Decidable (validOp (sideContext Op₁ ctx) o))
     | .inr o => inferInstanceAs (Decidable (validOp (sideContext Op₂ ctx) o))
+  decValidFunc v ctx f := inferInstanceAs (Decidable (validFunc (d := ⟨Op₁, Ty⟩) (leftView v) ctx f ∧
+    validFunc (d := ⟨Op₂, Ty⟩) (rightView v) ctx f))
 
 instance [DialectPoison ⟨Op₁, Ty⟩] [DialectPoison ⟨Op₂, Ty⟩] :
     DialectPoison (SumDialect Ty Op₁ Op₂) where

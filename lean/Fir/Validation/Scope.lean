@@ -12,8 +12,8 @@ module, but only the runs of a valid one mean something
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
-as the last definition of this section says; the core dialect's rules have
-a section of their own. A text that does not decode is rejected before
+and a rule over a whole function, as the last definition of this section
+says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
 The rules are propositions. The validation check, at the end of this
@@ -109,6 +109,26 @@ structure OpContext (d : Dialect) where
   results : List d.Ty
 
 /--
+What a dialect's function rule may look at beside the function: the module's
+symbol table.
+-/
+structure FuncContext (d : Dialect) where
+  symbols : Name → Option (FuncType d)
+
+/--
+How the dialect `d` sees a function of a dialect `host` that holds it. An op
+or a type of `host` is one of `d`'s, or is `none`: it belongs to another
+dialect of the host. A function rule must still count such an op, because
+the op's operands and results are visible whatever its dialect.
+-/
+structure DialectView (d host : Dialect) where
+  op : host.Op → Option d.Op
+  ty : host.Ty → Option d.Ty
+
+/-- A dialect's view of its own functions: every op and type is its own. -/
+def DialectView.id (d : Dialect) : DialectView d d := ⟨some, some⟩
+
+/--
 The rules a dialect adds to validation.
 
 * `validTy` says which of the dialect's types are valid.
@@ -118,11 +138,18 @@ The rules a dialect adds to validation.
   general rules below. For example, the core dialect requires that `ret`
   returns the function's result types and that `call` matches its callee's
   type.
+* `validFunc` is the dialect's own rule for a whole function, for what no op
+  can see alone, such as a value that must be used exactly once. The rule
+  sees the function of the `host` dialect that holds it, through a view, so
+  it also sees the uses by other dialects' ops. Validation calls it on every
+  function, also on one that breaks other rules, so it must hold no
+  assumption about the function.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
   symbolRefs : d.Op → List Name
   validOp : OpContext d → d.Op → Prop
-export DialectValidation (validTy symbolRefs validOp)
+  validFunc : {host : Dialect} → DialectView d host → FuncContext host → Func host → Prop
+export DialectValidation (validTy symbolRefs validOp validFunc)
 
 end Fir

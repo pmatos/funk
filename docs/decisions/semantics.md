@@ -30,8 +30,8 @@ registers its ops there. Types are extensible the same way
 G0 shaped the later decisions. Memory has several typed memories
 (ADR-2026-11-09-1542). Dialects add types and attributes, not only ops
 (ADR-2026-11-09-1543). A dialect need not lower to core (ADR-2026-11-09-1544).
-The verifier will need a hook for use-once values, which quantum dialects
-require (ADR-2026-10-29-2016).
+The verifier has a hook for use-once values, which quantum dialects require
+(ADR-2026-10-29-2016, ADR-2026-11-09-2257).
 
 Generic code sees every op alike and must not know the ops of any dialect. It
 reaches a dialect's ops only through the registry or the dialect's classes.
