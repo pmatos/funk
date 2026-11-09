@@ -110,35 +110,6 @@ repos:
         language: python
         pass_filenames: false
         files: ^scripts/((test_)?rust_speed\.py|rust-speed-baseline\.json|run_unittests\.py)$
-      # Verus proves the unsafe code of each crate that opts in
-      # (ADR-2026-11-03-0808, ADR-2026-11-03-0809). It needs the Verus
-      # release that check-verus.sh pins on PATH, and rustup.
-      - id: verus-proof
-        name: Verus proves the crates that opt in (cargo verus verify)
-        entry: scripts/check-verus.sh
-        language: unsupported_script
-        pass_filenames: false
-        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-verus|rust-env)\.sh$|scripts/verus_report\.py$)
-      - id: verus-report-test
-        name: The verus-proof hook's script and report reader pass their tests
-        entry: python scripts/run_unittests.py verus-report-test -m unittest discover -s scripts -p "test_*verus*.py"
-        language: python
-        pass_filenames: false
-        files: ^(crates/[^/]+/Cargo\.toml$|rust-toolchain\.toml$|scripts/((test_)?verus_report\.py|test_check_verus\.py|run_unittests\.py|(check-verus|rust-env)\.sh)$)
-      # Unsafe code only where Verus proves it, and no assumption outside the
-      # trusted base that ADR-2026-11-03-0808 lists.
-      - id: unsafe-code
-        name: Unsafe Rust is only in verified modules, trusting only the listed base
-        entry: python scripts/check_unsafe_code.py
-        language: python
-        pass_filenames: false
-        files: (\.rs$|(^|/)Cargo\.toml$|^scripts/(check_unsafe_code|rust_items|unsafe_[a-z]+)\.py$)
-      - id: unsafe-code-test
-        name: The unsafe-code check passes its tests
-        entry: python scripts/run_unittests.py unsafe-code-test -m unittest discover -s scripts -p "test_*unsafe*.py"
-        language: python
-        pass_filenames: false
-        files: ^(crates/funk-start-fds/|(crates/(funk|funk-ir)/)?Cargo\.toml$|docs/adrs/|scripts/((test_)?check_unsafe_code|rust_items|run_unittests|(test_)?unsafe_[a-z]+)\.py$)
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test

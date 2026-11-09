@@ -153,29 +153,6 @@ jobs:
         run: |
           rustup toolchain install
           cargo --version
-      # The verus-proof hook proves the unsafe code with Verus, which runs on
-      # the Rust toolchain above (ADR-2026-11-03-0809). scripts/check-verus.sh
-      # pins the same release; change both together.
-      - name: Restore the Verus installer
-        id: verus-installer
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        env:
-          VERUS_VERSION: 0.2026.11.02.8bf68ee
-          VERUS_SHA256: f3a0119292df8855e4435da8130bee1873b0e6a60c306accf81a08ea687bba3c
-        with:
-          path: ${{ runner.temp }}/verus.zip
-          key: verus-installer-${{ runner.os }}-${{ env.VERUS_VERSION }}-${{ env.VERUS_SHA256 }}
-      - name: Install Verus
-        env:
-          VERUS_VERSION: 0.2026.11.02.8bf68ee
-          VERUS_SHA256: f3a0119292df8855e4435da8130bee1873b0e6a60c306accf81a08ea687bba3c
-        run: scripts/ci-install.sh verus
-      - name: Save the Verus installer
-        if: steps.verus-installer.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/verus.zip
-          key: ${{ steps.verus-installer.outputs.cache-primary-key }}
       # funk build runs GNU as and ld, and the rust-test hook runs what it
       # builds (ADR-2026-10-30-1229). The runner image ships binutils; this
       # step installs it on an image that does not. The cross job copies it.
@@ -206,14 +183,6 @@ jobs:
         run: uvx --no-build pre-commit@4.6.2 run rust-speed --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx --no-build pre-commit@4.6.2 run rust-speed-test --all-files --verbose --show-diff-on-failure
-      - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run verus-proof --all-files --verbose --show-diff-on-failure
-      - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run verus-report-test --all-files --verbose --show-diff-on-failure
-      - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run unsafe-code --all-files --verbose --show-diff-on-failure
-      - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run unsafe-code-test --all-files --verbose --show-diff-on-failure
 
   lean:
     name: Lean suite

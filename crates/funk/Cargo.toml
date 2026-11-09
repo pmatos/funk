@@ -10,7 +10,6 @@ publish.workspace = true
 
 [dependencies]
 funk-ir = { path = "../funk-ir" }
-funk-start-fds = { path = "../funk-start-fds" }
 funk-x86-64 = { path = "../funk-x86-64" }
 
 [lints]
