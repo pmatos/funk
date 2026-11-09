@@ -1,6 +1,6 @@
 # funk-ir holds ops as generic data and checks them through a registry of dialects
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-1543
 
 ## Context
 

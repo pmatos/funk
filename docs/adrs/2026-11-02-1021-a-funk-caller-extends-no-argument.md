@@ -1,6 +1,6 @@
 # A call between funk functions passes each argument as its slot holds it, and extends none
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-1547
 
 ## Context
 

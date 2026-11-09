@@ -187,10 +187,11 @@ results on the whole corpus, and CI runs all of it.
 **Goal.** Settle fir before we build a real backend or a frontend on it. The
 IR is the contract that every backend, pass and frontend is built against, so
 it is decided, specified and checked first. M1 takes fir from M0's integer
-core to an IR that real programs and the M3 to M5 frontends can lower to:
-decided, in the spec (formal and readable), run by `fir-ref`, held by
-`funk-ir`, and checked by the differential harness. Epic:
-[#177](https://github.com/pmatos/funk/issues/177).
+core to an IR that the M3 to M5 frontends can lower their sequential code to,
+with concurrency, exceptions and contracts arriving through hooks M1 leaves in
+the format (ADR-2026-11-09-1548): decided, in the spec (formal and readable),
+run by `fir-ref`, held by `funk-ir`, and checked by the differential harness.
+Epic: [#177](https://github.com/pmatos/funk/issues/177).
 
 **Scope.** Each item goes through every layer at once, as M0's op families
 did: its decision as an ADR, its rules in the spec (which are the Lean
@@ -201,24 +202,34 @@ that the harness checks it natively. Making that code good is M2's job.
 1. **The M0 close-out audit.** The issues it filed come first: the readable
    spec (#161), random differential testing (#165) and the rest of the list
    on the IR epic.
-2. **Memory (S3).** The memory model, with several memories and address
-   spaces as G0 asks; `ptr` gets its ops; loads and stores; and what a run
-   shows an observer once memory exists (S4).
-3. **Effect classes (H7).** Which ops read, write or call, beyond "pure" and
-   "call", so passes and the backend know what they may reorder.
-4. **Globals and external functions (H3).** Module-level globals by symbol,
-   and declarations of functions that funk did not compile, with the
-   sign- and zero-extension markers that ADR-2026-11-02-1021 waits for. An
-   observer then also sees external calls, as S4 already says.
-5. **Floating point (S5)**, with the default rounding mode.
-6. **Aggregates**, as far as calling conventions and the frontends need them.
-7. **Dialects and extensions (H4, H5).** How a dialect adds ops, types,
-   attributes and kinds of item, made real with a second dialect in tree, so
-   that G0's openness is tested, not only promised.
+2. **Memory (S3, ADR-2026-11-09-1542).** Logical blocks in typed memories,
+   as G0 asks; `ptr` gets its ops; loads and stores, volatile ones included;
+   stack allocation; memory intrinsics (ADR-2026-11-09-1551); and what a run
+   shows an observer once memory exists (S4, ADR-2026-11-09-1540).
+3. **Effect classes (H7, ADR-2026-11-09-1541).** Each op's set of effects,
+   named by memory and proved sound, so passes and the backend know what they
+   may reorder.
+4. **Globals, external functions and calls (H3).** Module-level globals by
+   symbol (ADR-2026-11-09-1546); declarations of functions that funk did not
+   compile, variadic ones included, with sign- and zero-extension markers
+   (ADR-2026-11-09-1547); indirect calls, `unreachable` and proper tail calls
+   (ADR-2026-11-09-1548, ADR-2026-11-09-1553); and inline assembly, whose
+   native lowering waits for M4 (ADR-2026-11-09-1552). An observer sees
+   external calls, as S4 says.
+5. **Floating point (S5, ADR-2026-11-09-1549)**, over a generic family of
+   formats, with round to nearest even and three fast-math flags.
+6. **Aggregates (ADR-2026-11-09-1550)**, as layouts over memory for calling
+   conventions and the frontends.
+7. **Dialects and extensions (H4, H5; ADR-2026-11-09-1543,
+   ADR-2026-11-09-1544).** How a dialect adds ops, types, attributes and kinds
+   of item, made real with a GPU-kernel-shaped second dialect in tree
+   (ADR-2026-11-09-1545), so that G0's openness is tested, not only promised.
 
-**Out of M1.** Concurrency (S6), exceptions and unwinding, vectors, contract
-ops, structured control flow (H6) and the rest of the deferred list below stay
-with the milestones that need them. S8 stays with M2's optimizer track.
+**Out of M1.** Concurrency (S6), exceptions and unwinding, defining variadic
+functions, vectors, contract ops, structured control flow (H6) and the rest of
+the deferred list below stay with the milestones that need them; M1 leaves
+hooks for the first three (ADR-2026-11-09-1548). S8 stays with M2's optimizer
+track.
 
 **Done when** every M1 decision is an accepted ADR; the spec covers each item,
 formal and readable; `fir-ref` runs it; the Rust tools agree with `fir-ref` on
@@ -280,6 +291,8 @@ yet.
 
 Open in the fir v0 decision record, and out of M0 on purpose. Do not design
 around a guess for any of these. If work needs one, open a `human-ready` issue.
+The human decided S3, S5, H4, H5 and H7 for M1 on 2026-11-09; the table names
+their ADRs.
 
 S3, S8, H4 and H7 are marked Foundational in the record, which means decided
 before the code that depends on them. M0 has no memory, no optimization passes
@@ -288,14 +301,14 @@ before the first step that does, as the table says.
 
 | ID | Decision | Likely needed by |
 | --- | --- | --- |
-| S3 | Memory model (Foundational; G0: several memories and address spaces) | M1 |
-| S5 | Floating point | M1 |
+| S3 | Memory model (Foundational; G0: several memories and address spaces) | Decided: ADR-2026-11-09-1542 |
+| S5 | Floating point | Decided: ADR-2026-11-09-1549 |
 | S6 | Concurrency | M4 at the latest (C and C++ atomics) |
 | S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
-| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | M1 |
+| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Decided: ADR-2026-11-09-1543, ADR-2026-11-09-1544 |
 | H6 | Structured control flow | When a frontend or pass needs it |
-| H7 | Effect classes beyond "pure" and "call" (Foundational) | M1 |
-| P2 | Public API shape | Before external users build on funk |
+| H7 | Effect classes beyond "pure" and "call" (Foundational) | Decided: ADR-2026-11-09-1541 |
+| P2 | Public API shape | At the start of M3 (ADR-2026-11-09-1554) |
 
 For S8 the record proposes three stages: a hand-written Rust SMT encoder,
 tested against `fir-ref`; then an encoder written in Lean and proven against
@@ -313,8 +326,8 @@ can come back without a break:
 | Non-default FP rounding and FP exceptions | M4 or M5 |
 | A binary format | When text parsing becomes a bottleneck |
 
-M5 will also need inline assembly and volatile accesses, which the record does
-not cover yet.
+Inline assembly and volatile accesses, which the record did not cover, join M1
+(ADR-2026-11-09-1548).
 
 ## Open gaps
 
