@@ -5,6 +5,8 @@ import FirSpec.Core.Types
 import FirSpec.Core.Ops
 import FirSpec.Core.Signature
 import FirSpec.Core.Poison
+import FirSpec.Core.OpEffects
+import FirSpec.Core.EffectLaws
 import FirSpec.Core.Unlawful
 import FirSpec.Core.Values
 import FirSpec.Execution.Behaviour
@@ -12,6 +14,8 @@ import FirSpec.Execution.CallSteps
 import FirSpec.Execution.Effects
 import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
+import FirSpec.Execution.OpEffects
+import FirSpec.Execution.EffectLaws
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
 import FirSpec.Execution.SetRuns

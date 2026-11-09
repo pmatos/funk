@@ -48,6 +48,16 @@ theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) := validIsW
 -- Each op of the sum has its own dialect's poison class.
 #guard Core.samples.all (fun o => poisonClass (d := CoreToy) (.inl o) == Core.Op.poisonClass o) &&
   poisonClass (d := CoreToy) (.inr (.mask 8 3)) == .propagates
+/-- The effects of an op of the sum, on the memories of its two sides. -/
+def coreToyEffects (o : CoreToy.Op) : Effects (Core.Mem ⊕ Empty) := effects o
+
+-- The sum's ops have their own dialect's effects, on the sum's memories.
+#guard Core.samples.all (fun o => coreToyEffects (.inl o) == (Core.Op.effects o).map .inl) &&
+  coreToyEffects (.inr (.mask 8 3)) == {}
+
+/-- The sum of the core dialect and the toy dialect is lawful in its
+effects, since both are. -/
+instance : LawfulDialectEffects CoreToy := SumDialect.lawfulEffects fun _ h => h
 
 /-! # Running a mixed module
 
@@ -182,6 +192,12 @@ def mixedProblems (t : String) : Option (List Problem) :=
 
 /-- info: 'FirTest.SumDialect.lawfulPoison' does not depend on any axioms -/
 #guard_msgs in #print axioms SumDialect.lawfulPoison
+
+/-- info: 'FirTest.SumDialect.lawfulEffects' does not depend on any axioms -/
+#guard_msgs in #print axioms SumDialect.lawfulEffects
+
+/-- info: 'FirTest.Toy.lawfulDialectEffects' does not depend on any axioms -/
+#guard_msgs in #print axioms Toy.lawfulDialectEffects
 
 /-- info: 'FirTest.Toy.lawfulDialectText' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Toy.lawfulDialectText

@@ -92,6 +92,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-1610](2026-11-09-1610-adrs-have-a-tier-an-area-and-a-generated-index.md) | [process](../decisions/process.md) | ADRs carry a tier and an area, a generated index lists them, and area pages say what holds | this ADR |
 | [ADR-2026-11-09-1645](2026-11-09-1645-funk-s-speed-is-guarded-by-instruction-counts.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk's speed is guarded by instruction counts against a committed baseline | this ADR |
 | [ADR-2026-11-09-1941](2026-11-09-1941-a-new-fir-ref-fast-path-needs-the-depth-rule-or-a-clearly-too-slow-case.md) | [fir-ref](../decisions/fir-ref.md) | A new `fir-ref` fast path needs the depth rule or a case that is clearly too slow | this ADR |
+| [ADR-2026-11-09-2249](2026-11-09-2249-may-produce-poison-means-poison-from-operands-with-no-poison.md) | [semantics](../decisions/semantics.md) | May produce poison means a poison result from operands with no poison, and the poison class sits beside it | this ADR |
 | [ADR-2026-11-09-2257](2026-11-09-2257-a-dialect-s-function-rule-sees-the-host-function-through-a-view.md) | [validation](../decisions/validation.md) | A dialect's function rule sees the host function through a view | this ADR |
 
 ## Implementation

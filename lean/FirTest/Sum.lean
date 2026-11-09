@@ -7,8 +7,8 @@ the ops of the dialects `⟨Op₁, Ty⟩` and `⟨Op₂, Ty⟩`, which share the
 the second adds ops over the first's types, as the toy dialect adds an op
 over the core dialect's integers. Each class of a dialect is lifted to the
 sum. An op of either side has the signature, the text, the rules, the poison
-class and the semantics that its own dialect gives it, and the types have the
-text and the validity that the first dialect gives them. A function of the
+class, the effects and the semantics that its own dialect gives it, and the
+types have the text and the validity that the first dialect gives them. A function of the
 sum obeys the function rule of each dialect, and each rule sees the whole
 function through its own view. The classes of the
 types themselves, such as `TyDenote`, are the shared types' own, so the sum
@@ -100,11 +100,18 @@ instance [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
   decValidFunc v ctx f := inferInstanceAs (Decidable (validFunc (d := ⟨Op₁, Ty⟩) (leftView v) ctx f ∧
     validFunc (d := ⟨Op₂, Ty⟩) (rightView v) ctx f))
 
-instance [DialectPoison ⟨Op₁, Ty⟩] [DialectPoison ⟨Op₂, Ty⟩] :
-    DialectPoison (SumDialect Ty Op₁ Op₂) where
+/-- The memories of the sum: those of each side, kept apart. An op of either
+side has the effects that its own dialect gives it, on its own side's
+memories. -/
+instance [h₁ : DialectEffects ⟨Op₁, Ty⟩] [h₂ : DialectEffects ⟨Op₂, Ty⟩] :
+    DialectEffects (SumDialect Ty Op₁ Op₂) where
+  Mem := h₁.Mem ⊕ h₂.Mem
   poisonClass
     | .inl o => poisonClass (d := ⟨Op₁, Ty⟩) o
     | .inr o => poisonClass (d := ⟨Op₂, Ty⟩) o
+  effects
+    | .inl o => (effects (d := ⟨Op₁, Ty⟩) o).map .inl
+    | .inr o => (effects (d := ⟨Op₂, Ty⟩) o).map .inr
 
 instance [TyDenote Ty] [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
     {m : Type → Type} [DialectDenote ⟨Op₁, Ty⟩ m] [DialectDenote ⟨Op₂, Ty⟩ m] :
@@ -128,7 +135,7 @@ dialect accepts the second accepts too: each op meets them as its own
 dialect's op. -/
 theorem lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
     [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
-    [DialectPoison ⟨Op₁, Ty⟩] [DialectPoison ⟨Op₂, Ty⟩]
+    [DialectEffects ⟨Op₁, Ty⟩] [DialectEffects ⟨Op₂, Ty⟩]
     [DialectDenote ⟨Op₁, Ty⟩ SetM] [DialectDenote ⟨Op₂, Ty⟩ SetM]
     [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩]
     [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
@@ -151,6 +158,29 @@ theorem lawfulPoison [TyDenote Ty] [TyPoison Ty] [TyRefinement Ty]
   monotone
     | .inl o, hv => h₁.monotone o hv
     | .inr o, hv => h₂.monotone o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+
+/-- Two dialects lawful in their effects make a sum lawful in its effects,
+when every type that the first dialect accepts the second accepts too:
+each op meets the effect obligations as its own dialect's op. -/
+theorem lawfulEffects [TyDenote Ty] [TyPoison Ty]
+    [DialectSignature ⟨Op₁, Ty⟩] [DialectSignature ⟨Op₂, Ty⟩]
+    [DialectEffects ⟨Op₁, Ty⟩] [DialectEffects ⟨Op₂, Ty⟩]
+    [DialectDenote ⟨Op₁, Ty⟩ SetM] [DialectDenote ⟨Op₂, Ty⟩ SetM]
+    [DialectCall ⟨Op₁, Ty⟩] [DialectCall ⟨Op₂, Ty⟩]
+    [DialectValidation ⟨Op₁, Ty⟩] [DialectValidation ⟨Op₂, Ty⟩]
+    [h₁ : LawfulDialectEffects ⟨Op₁, Ty⟩] [h₂ : LawfulDialectEffects ⟨Op₂, Ty⟩]
+    (hty : ∀ t : Ty, validTy (d := ⟨Op₁, Ty⟩) t → validTy (d := ⟨Op₂, Ty⟩) t) :
+    LawfulDialectEffects (SumDialect Ty Op₁ Op₂) where
+  neverUB
+    | .inl o, hv => h₁.neverUB o hv
+    | .inr o, hv => h₂.neverUB o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+  makesNoPoison
+    | .inl o, hv => h₁.makesNoPoison o hv
+    | .inr o, hv =>
+      h₂.makesNoPoison o ⟨fun t ht => hty t (hv.1 t ht), fun t ht => hty t (hv.2 t ht)⟩
+  notControl
+    | .inl o => h₁.notControl o
+    | .inr o => h₂.notControl o
 
 variable [SumRoute Op₁ Op₂] [DialectText ⟨Op₁, Ty⟩] [DialectText ⟨Op₂, Ty⟩]
 

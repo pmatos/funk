@@ -101,9 +101,11 @@ instance : DecidableDialectValidation ToyDialect where
 
 /-! # Execution -/
 
-/-- `toy.mask` declares that it propagates poison, as its rule does: a
-poison operand gives a poison result, and it is never UB. -/
-instance : DialectPoison ToyDialect := ⟨fun _ => .propagates⟩
+/-- `toy.mask` declares its effects through the effect class: it propagates
+poison, as its rule does, and it is pure, since its rule gives a defined
+result on a defined operand and is never UB. The toy dialect has no memory,
+so its memories have no names. -/
+instance : DialectEffects ToyDialect := ⟨Empty, fun _ => .propagates, fun _ => {}⟩
 
 /-- `toy.mask w k`: the low `k` bits of a value, and poison of poison. -/
 def maskValue (w k : Nat) : PoisonOr (BitVec w) → PoisonOr (BitVec w)
@@ -129,6 +131,25 @@ instance : DialectDenote ToyDialect SetM where
 
 /-- No toy op calls a function. -/
 instance : DialectCall ToyDialect := ⟨fun _ => none⟩
+
+/-- The toy dialect is lawful in its effects: `toy.mask` is pure, and it is
+never UB, gives a defined result on a defined operand, and is not a
+terminator. -/
+theorem lawfulDialectEffects : LawfulDialectEffects ToyDialect where
+  neverUB
+    | .mask .., _, _, _ => fun
+      | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => (nomatch h)⟩
+  makesNoPoison
+    | .mask w k, _, _, _ => fun _ args hd _ hr => match args, hd, hr with
+      | .cons a .nil, hd, hr => by
+        cases a with
+        | poison => exact absurd (.inl rfl) hd
+        | value x =>
+          cases hr
+          rintro (h | h) <;> cases h
+  notControl _ _ := rfl
+
+instance : LawfulDialectEffects ToyDialect := lawfulDialectEffects
 
 /-! # The toy dialect's text is lawful -/
 

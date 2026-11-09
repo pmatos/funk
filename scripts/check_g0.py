@@ -21,9 +21,9 @@ files of the chapter end with the core dialect's corollaries of their
 results, so they may name it, but not write its words. Comments and
 commands such as `#guard` are not code, so this check skips them.
 
-It also checks that `Core.Op.poisonClass` lists each op by its
-constructor, with no case for the rest, so a new core op does not build
-until it declares its class.
+It also checks that `Core.Op.poisonClass` and `Core.Op.effects` list each
+op by its constructor, with no case for the rest, so a new core op does not
+build until it declares its class and its effects.
 """
 
 import re
@@ -34,6 +34,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE_TEXT = "lean/Fir/Core/Text.lean"
 CORE_POISON = "lean/Fir/Core/Poison.lean"
 POISON_DEF = "def Op.poisonClass"
+CORE_EFFECTS = "lean/Fir/Core/OpEffects.lean"
+EFFECTS_DEF = "def Op.effects"
 # The dialects' own files. A new dialect's directory is added here, with an
 # ADR that moves the line.
 DIALECT_DIRS = ("lean/Fir/Core/",)
@@ -275,13 +277,15 @@ def generic_files(root: Path = ROOT) -> list[str]:
     return sorted(rel for rel in found if is_generic(rel))
 
 
-def poison_problems(root: Path = ROOT) -> list[str]:
-    """Return one message per case of `Core.Op.poisonClass` that is not one
-    op's constructor, such as a case for the rest."""
-    lines = (root / CORE_POISON).read_text(encoding="utf-8").splitlines()
-    start = next((k for k, s in enumerate(lines) if s.startswith(POISON_DEF)), None)
+def case_problems(root: Path, rel: str, definition: str, what: str) -> list[str]:
+    """Return one message per case of the core table `definition` in `rel`
+    that is not one op's constructor, such as a case for the rest. `what` is
+    what the table gives each op."""
+    name = definition.removeprefix("def ")
+    lines = (root / rel).read_text(encoding="utf-8").splitlines()
+    start = next((k for k, s in enumerate(lines) if s.startswith(definition)), None)
     if start is None:
-        return [f"{CORE_POISON}: no `{POISON_DEF}`, so no op's class is checked"]
+        return [f"{rel}: no `{definition}`, so no op's {what} is checked"]
     end = start + 1
     while end < len(lines) and lines[end][:1].isspace():
         end += 1
@@ -294,13 +298,24 @@ def poison_problems(root: Path = ROOT) -> list[str]:
         if len(head) == 2 and head[0] == "." and toks[k + 2][0] == "name":
             ops += 1
         else:
-            where = f"{CORE_POISON}:{start + line}"
             found.append(
-                f"{where}: Op.poisonClass has a case that is not one op's constructor"
+                f"{rel}:{start + line}: {name} has a case that is not one op's constructor"
             )
     if not ops:
-        found.append(f"{CORE_POISON}:{start + 1}: Op.poisonClass lists no op")
+        found.append(f"{rel}:{start + 1}: {name} lists no op")
     return found
+
+
+def poison_problems(root: Path = ROOT) -> list[str]:
+    """Return one message per case of `Core.Op.poisonClass` that is not one
+    op's constructor."""
+    return case_problems(root, CORE_POISON, POISON_DEF, "class")
+
+
+def effects_problems(root: Path = ROOT) -> list[str]:
+    """Return one message per case of `Core.Op.effects` that is not one op's
+    constructor."""
+    return case_problems(root, CORE_EFFECTS, EFFECTS_DEF, "effect set")
 
 
 def problems(root: Path = ROOT) -> list[str]:
@@ -324,7 +339,7 @@ def problems(root: Path = ROOT) -> list[str]:
                 found.append(f"{rel}:{line}: {verb} the core dialect: {s}")
             elif kind == "str" and (s in words or INT_TYPE.fullmatch(s)):
                 found.append(f'{rel}:{line}: writes the core dialect\'s word "{s}"')
-    return found + poison_problems(root)
+    return found + poison_problems(root) + effects_problems(root)
 
 
 def main() -> int:
@@ -333,7 +348,7 @@ def main() -> int:
         return 0
     print(
         "Lean code written for every dialect names the core dialect, or a core"
-        " op declares no poison class (G0, ADR-2026-11-03-0600):",
+        " op declares no poison class or no effects (G0, ADR-2026-11-03-0600):",
         file=sys.stderr,
     )
     for message in found:
@@ -342,7 +357,7 @@ def main() -> int:
         "\nMove the core dialect's part into lean/Fir/Core/, and give the"
         " generic code what it needs\nthrough the dialect's classes, such as"
         " DialectText's decodeOp and opAttrs. List each core op\nin"
-        " Core.Op.poisonClass, with no case for the rest.",
+        " Core.Op.poisonClass and Core.Op.effects, with no case for the rest.",
         file=sys.stderr,
     )
     return 1

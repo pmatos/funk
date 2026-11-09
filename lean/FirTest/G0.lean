@@ -17,7 +17,7 @@ dialect.
 
 The section on behaviour models shows the seam where a dialect that needs
 probabilities plugs in. The last section checks that every core op declares
-its poison class.
+its poison class and its effects.
 -/
 
 namespace FirTest.G0
@@ -116,7 +116,7 @@ theorem neverStuck (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSign
 dialect whose ops meet the poison obligations, when its module's functions
 are valid and run within the module. -/
 theorem progress (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
-    [TyRefinement d.Ty] [DialectSignature d] [DialectValidation d] [DialectPoison d]
+    [TyRefinement d.Ty] [DialectSignature d] [DialectValidation d] [DialectEffects d]
     [DialectCall d] [DialectDenote d SetM] [LawfulDialectPoison d] {ctx : ModuleContext d}
     {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModule M)
     {f : Func d} (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
@@ -306,26 +306,59 @@ instance [BEq α] : BEq (Dist α) := inferInstanceAs (BEq (List (α × Rat)))
 #guard (WeightedTree.toDist (.flip (1/2) (.pure 0) (.flip (1/2) (.pure 1) (.pure 2))) : Dist Nat) ==
   ([(0, 1/2), (1, 1/4), (2, 1/4)] : List (Nat × Rat))
 
-/-! # Poison classes -/
+/-! # Poison classes and effects -/
 
 /-- Every op of every dialect has a poison class, the dialect's own. -/
-example (d : Dialect) [DialectPoison d] : d.Op → PoisonClass := poisonClass
+example (d : Dialect) [DialectEffects d] : d.Op → PoisonClass := poisonClass
+
+/-- Every op of every dialect has a set of effects, on the dialect's own
+memories. -/
+example (d : Dialect) [h : DialectEffects d] : d.Op → Effects h.Mem := effects
 
 /-- In every lawful dialect, a valid op whose class says it propagates
 poison does. -/
 theorem propagates (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
-    [DialectSignature d] [DialectPoison d] [DialectDenote d SetM] [DialectCall d]
+    [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
     [DialectValidation d] [LawfulDialectPoison d] (op : d.Op) (hv : TypesValid op)
     (h : poisonClass op = .propagates) : PropagatesPoison op :=
   LawfulDialectPoison.propagates op hv h
 
+/-- In every dialect lawful in its effects, a valid op that runs by its own
+rule and does not declare may-UB never ends in UB. -/
+theorem neverUB (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
+    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
+    (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).mayUB = false) :
+    NeverUB op :=
+  LawfulDialectEffects.neverUB op hv hc h
+
+/-- In every dialect lawful in its effects, a valid op that runs by its own
+rule and does not declare that it may produce poison makes none. -/
+theorem makesNoPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
+    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
+    (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).poison = false) :
+    MakesNoPoison op :=
+  LawfulDialectEffects.makesNoPoison op hv hc h
+
+/-- In every dialect lawful in its effects, an op that does not declare
+control is not a terminator. -/
+theorem notControl (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
+    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [LawfulDialectEffects d] (op : d.Op) (h : (effects op).control = false) :
+    isTerminator op = false :=
+  LawfulDialectEffects.notControl op h
+
 /-!
-The core dialect declares a class for each of its ops, case by case:
-`Core.Op.poisonClass` has no case for the rest, so a new core op does not
-build until it has one, and `scripts/check_g0.py` fails if a case for the
-rest comes back. Nineteen ops propagate poison and six are
-exceptions (ADR-2026-10-30-0818, ADR-2026-11-03-1615). The samples of the
-core ops name all 25, and the checks below pin the split on them.
+The core dialect declares a class and a set of effects for each of its ops,
+case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
+the rest, so a new core op does not build until it has both, and
+`scripts/check_g0.py` fails if a case for the rest comes back. Nineteen ops
+propagate poison and six are exceptions (ADR-2026-10-30-0818,
+ADR-2026-11-03-1615). The samples of the core ops name all 25, and the
+checks below pin both on them. No core op touches memory or is observable,
+since the core dialect has neither memory nor a trace yet
+(ADR-2026-11-09-1541).
 -/
 
 #guard (Core.samples.map Core.Op.name).eraseDups.length == 25
@@ -334,5 +367,15 @@ core ops name all 25, and the checks below pin the split on them.
    "ashr", "zext", "sext", "trunc", "poison", "icmp"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "call"]
+#guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
+  ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp"]
+#guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
+  ["sdiv", "udiv", "srem", "urem", "cond_br"]
+#guard ((Core.samples.filter (·.effects.poison)).map Core.Op.name).eraseDups ==
+  ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison"]
+#guard ((Core.samples.filter (·.effects.control)).map Core.Op.name).eraseDups ==
+  ["br", "cond_br", "ret"]
+#guard Core.samples.all fun o => o.effects.reads == .these [] && o.effects.writes == .these [] &&
+  o.effects.allocates == .these [] && !o.effects.observable
 
 end FirTest.G0

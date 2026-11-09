@@ -23,8 +23,11 @@ import Fir.Execution.Effects
 import Fir.Execution.Behaviour
 import Fir.Execution.Fuel
 import Fir.Execution.Refinement
+import Fir.Execution.OpEffects
 import Fir.Execution.Propagation
+import Fir.Execution.EffectLaws
 import Fir.Core.Values
+import Fir.Core.OpEffects
 import Fir.Core.Poison
 import Fir.Core.Unlawful
 import Fir.Execution.Interpreter
@@ -73,6 +76,7 @@ import Fir.Execution.Replace
 import Fir.Core.CallRefine
 import Fir.Execution.Lawful
 import Fir.Core.Lawful
+import Fir.Core.EffectLaws
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
