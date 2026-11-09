@@ -107,7 +107,8 @@ commands until it succeeds. Start agents in another worktree with
   (the `rust-fmt`, `rust-clippy` and `rust-test` hooks; it installs the
   toolchain that `rust-toolchain.toml` pins), GNU binutils (`as` and
   `ld`) on an x86-64 Linux host, which `funk build` runs in the
-  `rust-test` hook, and Verus (the `verus-proof` hook): unzip the official
+  `rust-test` hook, valgrind (the `rust-speed` hook) and Verus (the
+  `verus-proof` hook): unzip the official
   release zip that `scripts/check-verus.sh` pins, from
   <https://github.com/verus-lang/verus/releases>, and put its directory on
   `PATH`. The hook needs that zip, not a source build: a source build's

@@ -1,0 +1,10 @@
+{
+  "recorded_on": "arch",
+  "glibc": "glibc 2.44",
+  "valgrind": "valgrind-3.25.1",
+  "sizes": { "adds": 100000, "blocks": 20000 },
+  "instructions": {
+    "adds": { "fmt": 1405239126, "verify": 1733559573, "build": 2735480714 },
+    "blocks": { "fmt": 329796649, "verify": 453075558, "build": 664706371 }
+  }
+}

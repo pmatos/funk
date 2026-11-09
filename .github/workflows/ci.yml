@@ -187,12 +187,24 @@ jobs:
           fi
           as --version
           ld --version
+      # The rust-speed hook counts funk's instructions under cachegrind.
+      - name: Install valgrind
+        run: |
+          if ! command -v valgrind >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends valgrind
+          fi
+          valgrind --version
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run rust-fmt --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run rust-clippy --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run rust-test --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
+        run: uvx pre-commit@4.6.2 run rust-speed --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
+        run: uvx pre-commit@4.6.2 run rust-speed-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run verus-proof --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
