@@ -166,8 +166,9 @@ its own check. The suites run in parallel. The four jobs are:
 - `static`, "Static checks". Its hooks include `file-size-budget`, `adr-ids`,
   `g0` and `ci-hooks`. They also include `typos`, `ruff-check`, `shellcheck`,
   `actionlint` and `zizmor`. Only the `zizmor` step holds `GH_TOKEN`.
-- `rust`, "Rust suite". It holds `rust-fmt`, `rust-clippy` and `rust-test`. It
-  installs rustup, the pinned Rust toolchain and GNU binutils.
+- `rust`, "Rust suite". It holds `rust-fmt`, `rust-clippy`, `rust-test`,
+  `rust-speed` and `rust-speed-test`. It installs rustup, the pinned Rust
+  toolchain, GNU binutils and valgrind.
 - `lean`, "Lean suite". It holds `fir-spec` and `fir-ref-test`. It installs elan
   and the pinned Lean toolchain. It restores the Verso build and is the one job
   that saves it.

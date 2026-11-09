@@ -41,12 +41,29 @@ touches Rust runs the whole test suite, so the tests must stay fast
 
 In CI these hooks run in the `rust` job, "Rust suite". It is one of the suite
 jobs behind the required gate job `pre-commit` (ADR-2026-11-05-1408). It
-installs rustup, the pinned Rust toolchain and GNU binutils.
+installs rustup, the pinned Rust toolchain, GNU binutils and valgrind.
 
 `scripts/ci-install.sh` runs each installer step. It downloads `rustup-init`
 only on a cache miss. It checks the file against the SHA-256 written in the
 workflow on every run (ADR-2026-11-05-1954).
 `scripts/ensure-hooks.sh` warns when cargo is missing (ADR-2026-10-30-1030).
+
+### The speed guard
+
+The `rust-speed` hook counts funk's instructions under cachegrind and compares
+them with `scripts/rust-speed-baseline.json` (ADR-2026-11-09-1645). It builds
+the release `funk` and generates two large inputs. It runs `funk fmt --check`,
+`funk verify` and `funk build` on each. A count fails when it is more than 10%
+above the baseline.
+
+CI is the authority. The baseline comes from CI on `ubuntu-26.04`, and only a
+run in CI can fail. Counts depend on the host's glibc and valgrind, so elsewhere
+the hook prints the same table and passes. For this hook, a local pass does not
+predict a CI pass.
+
+A PR may raise the baseline only by saying so, with the old and new numbers in
+its body. The numbers to commit are the `measured` column of CI's table. The
+start of M2 decides absolute targets for each op.
 
 ## The IR and the op registry
 
