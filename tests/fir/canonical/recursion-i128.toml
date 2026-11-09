@@ -10,11 +10,12 @@
 # steps that are left (ADR-2026-11-02-0836).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
-# A differential test recurses at most 20 deep, as tests/fir/README.md
-# says of the corpus's calls. fact on 21 and more, past 2^64, is
-# interpreter-only, and states the value that fir-ref returns; fact in
-# loop-i128 runs those natively too, and scale crosses 2^64 within 20
-# calls.
+# A differential test recurses as deep as native code's stack allows
+# (tests/fir/README.md): scale takes 144 bytes a level, so 50,000 calls
+# fit the default 8 MiB stack, and about 58,000 is the most that does.
+# Fuel covers each deep run at eight steps a level. fact on 21 and more,
+# past 2^64, also has an interpreter-only test, which states the value
+# that fir-ref returns; scale crosses 2^64 within 20 calls.
 # A run of more than 20,000 steps runs at a budget of 1,000 steps
 # instead, and expects fuel-exhausted, which keeps the run short.
 tests = [
@@ -66,4 +67,17 @@ tests = [
   { func = "@scale", args = ["20", "18446744073709551617"] },
   { func = "@scale", args = ["20", "9223372036854775808"] },
   { func = "@scale", args = ["20", "1512366075204170947332355369683137040"] },
+  { func = "@fact", args = ["21"] },
+  { func = "@fact", args = ["25"] },
+  { func = "@fact", args = ["30"] },
+  { func = "@fact", args = ["33"] },
+  { func = "@fact", args = ["34"] },
+  { func = "@fact", args = ["35"] },
+  { func = "@fact", args = ["40"] },
+  { func = "@scale", args = ["1000", "3"] },
+  { func = "@scale", args = ["1000", "18446744073709551617"] },
+  { func = "@scale", args = ["10000", "3"] },
+  { func = "@scale", args = ["10000", "18446744073709551617"] },
+  { func = "@scale", args = ["50000", "3"], fuel = 1000000 },
+  { func = "@scale", args = ["50000", "18446744073709551617"], fuel = 1000000 },
 ]

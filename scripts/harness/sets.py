@@ -28,6 +28,7 @@ from refine import (
     UB,
     Judgement,
     Outcome,
+    OutOfStack,
     refines,
     show_values,
 )
@@ -113,6 +114,8 @@ def problem(outcomes) -> Judgement | None:
 
 def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
     """Native code's result refines one of `outcomes`."""
+    if isinstance(native, OutOfStack):
+        return native.judgement()
     if isinstance(native, str):
         return Judgement(FAILED, "native code fails where fir-ref returns")
     for o in outcomes:

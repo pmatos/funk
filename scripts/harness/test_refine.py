@@ -11,6 +11,7 @@ from refine import (
     STUCK,
     UB,
     Outcome,
+    OutOfStack,
     expected,
     is_value,
     refines,
@@ -75,6 +76,19 @@ class Refines(unittest.TestCase):
     def test_native_code_that_fails_does_not_refine_a_return(self):
         self.assertEqual(refines(ret("1"), "exits with 2", ["i8"]).status, FAILED)
         self.assertEqual(refines(ret(), "is killed by signal 11", []).status, FAILED)
+
+
+class NativeOutOfStack(unittest.TestCase):
+    def test_it_makes_the_test_invalid_and_is_no_mismatch(self):
+        j = refines(ret("6"), OutOfStack(8388608), ["i32"])
+        self.assertEqual(j.status, INVALID)
+        self.assertIn("native code outgrew its 8388608 bytes of stack", j.why)
+
+    def test_the_reference_s_own_verdict_comes_first(self):
+        fuel = refines(Outcome(FUEL_EXHAUSTED), OutOfStack(4096), ["i32"])
+        self.assertIn("fuel budget", fuel.why)
+        stuck = refines(Outcome(STUCK, reason="r"), OutOfStack(4096), ["i32"])
+        self.assertEqual(stuck.status, FAILED)
 
 
 class Expected(unittest.TestCase):

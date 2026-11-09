@@ -6,11 +6,12 @@ running anything.
 """
 
 import json
+import re
 import resource
 import subprocess
 from dataclasses import dataclass
 
-from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
+from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome, OutOfStack
 from sets import BudgetExceeded, Outcomes, Path
 
 TIMEOUT = 120
@@ -27,6 +28,9 @@ STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
 # The kinds of what `fir-ref run --exhaustive` prints (ADR-2026-10-30-2218).
 OUTCOMES = "outcomes"
 BUDGET_EXCEEDED = "choice-budget-exceeded"
+# The one line that a run that outgrows its stack writes, after its exit
+# status of 2 (ADR-2026-11-02-1132).
+RAN_OUT = re.compile(r".* ran out of the ([0-9]+) bytes of stack reserved for it\n")
 
 
 @dataclass(frozen=True)
@@ -212,10 +216,14 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
     return bad if ran.status != status else Outcomes(choices, tuple(found))
 
 
-def native_values(ran: Ran) -> tuple[str, ...] | str:
+def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
     """The values that a built executable prints (ADR-2026-10-30-1233):
-    `{"values":[...]}` and exit status 0, and nothing on standard error."""
+    `{"values":[...]}` and exit status 0, and nothing on standard error; or
+    that the run outgrew its stack (ADR-2026-11-09-1602)."""
     if ran.status != 0:
+        ran_out = RAN_OUT.fullmatch(ran.stderr)
+        if ran.status == 2 and not ran.stdout and ran_out:
+            return OutOfStack(int(ran_out.group(1)))
         return failure(ran)
     obj = one_json_line(ran.stdout)
     if obj is None:

@@ -7,7 +7,7 @@ import resource
 import sys
 import unittest
 
-from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome
+from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome, OutOfStack
 from sets import BudgetExceeded, Outcomes, Path
 from tools import (
     DATA_LIMIT,
@@ -192,6 +192,21 @@ class Native(unittest.TestCase):
         self.assertIsInstance(
             native_values(Ran(0, '{"values":[]}\n', "warning\n")), str
         )
+
+    def test_a_run_that_outgrows_its_stack(self):
+        message = "exe: @fact ran out of the 8388608 bytes of stack reserved for it\n"
+        self.assertEqual(native_values(Ran(2, "", message)), OutOfStack(8388608))
+
+    def test_only_the_runtime_s_own_report_is_out_of_stack(self):
+        message = "exe: @f ran out of the 4096 bytes of stack reserved for it\n"
+        for ran in (
+            Ran(1, "", message),
+            Ran(-11, "", message),
+            Ran(2, "{}\n", message),
+            Ran(2, "", message + "and more\n"),
+            Ran(2, "", "exe: cannot reserve 4096 bytes of stack for @f\n"),
+        ):
+            self.assertIsInstance(native_values(ran), str, ran)
 
 
 class DataLimit(unittest.TestCase):

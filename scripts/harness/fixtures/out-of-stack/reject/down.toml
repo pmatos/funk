@@ -1,0 +1,17 @@
+# A corpus holds must-reject texts, so this one holds one. Its check
+# passes when both tools reject it.
+
+[[reject]]
+verdict = "parse-error"
+rule = "call names its callee"
+text = '''
+func @f() -> i64 {
+^e:
+  %r: i64 = call @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -1,0 +1,8 @@
+# down counts %n down to zero and back up, so it returns %n, and it
+# recurses %n deep. Each level takes eight steps, and the last four. On
+# its 8 MiB stack native code holds about 100,000 levels, so at 1,000,000
+# it runs out, and fir-ref returns: the harness must report the test
+# invalid, not a mismatch (ADR-2026-11-09-1602).
+tests = [
+  { func = "@down", args = ["1000000"], fuel = 9000000 },
+]
