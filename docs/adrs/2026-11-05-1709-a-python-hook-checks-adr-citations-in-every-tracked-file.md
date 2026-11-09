@@ -1,6 +1,7 @@
 # A Python hook checks ADR citations in every tracked file, against the spec checker's cases
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

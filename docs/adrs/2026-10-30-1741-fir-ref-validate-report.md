@@ -1,6 +1,7 @@
 # `fir-ref validate` reports in the JSON schema of `funk verify --json`
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

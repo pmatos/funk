@@ -1,6 +1,7 @@
 # Blocks keep the order of the function's body, and a branch jumps to its block's label unless that block comes next
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

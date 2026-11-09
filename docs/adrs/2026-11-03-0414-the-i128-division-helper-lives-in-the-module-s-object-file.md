@@ -1,6 +1,7 @@
 # The i128 division helper is hand-written assembly that each module's object file carries, under local `__funk_rt_` symbols
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

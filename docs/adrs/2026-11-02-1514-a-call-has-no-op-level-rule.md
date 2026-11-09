@@ -1,6 +1,7 @@
 # A call has no op-level rule: its meaning is its callee's run
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

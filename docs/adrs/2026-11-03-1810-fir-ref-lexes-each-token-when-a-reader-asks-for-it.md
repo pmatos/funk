@@ -1,6 +1,7 @@
 # `fir-ref` lexes each token once, when its readers reach it, and lexes the whole text again only when they fail
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

@@ -1,6 +1,7 @@
 # The IR is completed in a milestone of its own, M1, before the full backend
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

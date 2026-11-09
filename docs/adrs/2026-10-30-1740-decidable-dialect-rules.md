@@ -1,6 +1,7 @@
 # The validation check asks a dialect for decidable equality on its types and for `DecidableDialectValidation`
 
 Status: accepted
+Tier: direction; area: validation
 
 ## Context
 

@@ -1,6 +1,7 @@
 # `fir-ref run` takes `poison` as an argument, and native code runs a differential test on stand-ins in its place
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

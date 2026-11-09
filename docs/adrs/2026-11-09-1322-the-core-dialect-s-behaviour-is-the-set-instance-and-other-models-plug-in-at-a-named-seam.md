@@ -1,6 +1,7 @@
 # The core dialect's behaviour is the set instance, and a dialect that needs probabilities supplies its own behaviour model at a named seam
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # `fir-ref` runs the interpreter in a tree of choices, which a monad morphism maps to the spec's set monad
 
 Status: accepted; refined by ADR-2026-11-02-0836
+Tier: implementation; area: fir-ref
 
 ## Context
 

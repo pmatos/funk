@@ -75,6 +75,12 @@ concise and written in clear terms: one decision each, plain words, short
 sentences, no filler; most fit on one screen. Naming, rules and template:
 [`docs/adrs/README.md`](docs/adrs/README.md).
 
+Implementation detail that only one module needs goes in that module's doc
+comment, not in a new ADR. Ask whether someone changing a different module
+needs to know it; if not, write the doc comment. Each ADR carries a tier and an
+area, and [`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with what holds
+now (ADR-2026-11-09-1610).
+
 ## Every change goes through a PR
 
 A ruleset on `main` ([`.github/rulesets/main.json`](.github/rulesets/main.json))

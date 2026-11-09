@@ -1,6 +1,7 @@
 # The Rust parser and verifier are fuzzed without a sanitizer
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

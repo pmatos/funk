@@ -1,6 +1,7 @@
 # Every block of a fir function is reachable from its entry
 
 Status: accepted
+Tier: direction; area: validation
 
 ## Context
 

@@ -1,6 +1,7 @@
 # The Python test hooks run their tests through one runner that writes their counts
 
 Status: accepted
+Tier: implementation; area: process
 
 ## Context
 

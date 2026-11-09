@@ -1,6 +1,7 @@
 # The core law files have no use for `bv_decide` today
 
 Status: accepted
+Tier: implementation; area: semantics
 
 ## Context
 

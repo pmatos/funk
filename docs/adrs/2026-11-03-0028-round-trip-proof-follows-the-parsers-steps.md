@@ -1,6 +1,7 @@
 # The round-trip proof follows the parser's three steps
 
 Status: accepted
+Tier: implementation; area: text-format
 
 ## Context
 

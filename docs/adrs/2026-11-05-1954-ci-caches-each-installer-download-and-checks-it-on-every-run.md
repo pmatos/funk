@@ -1,6 +1,7 @@
 # CI caches each installer it downloads, keyed on its pins, and checks the file's SHA-256 on every run
 
 Status: accepted
+Tier: implementation; area: process
 
 ## Context
 

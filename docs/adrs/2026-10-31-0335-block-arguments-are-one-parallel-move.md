@@ -1,6 +1,7 @@
 # A branch copies the values it passes into its block's arguments as one parallel move, with one register to break cycles
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

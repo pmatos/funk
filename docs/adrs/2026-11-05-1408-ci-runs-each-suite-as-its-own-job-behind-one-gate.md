@@ -1,6 +1,7 @@
 # CI runs each suite of hooks as its own job, and a gate job named pre-commit needs them all
 
 Status: accepted; refined by ADR-2026-11-05-1633, ADR-2026-11-05-1954 and ADR-2026-11-09-1645
+Tier: direction; area: process
 
 ## Context
 

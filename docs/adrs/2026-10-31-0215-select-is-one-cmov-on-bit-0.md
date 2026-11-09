@@ -1,6 +1,7 @@
 # select lowers to a test of its condition's bit 0 and one cmov, with no branch
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

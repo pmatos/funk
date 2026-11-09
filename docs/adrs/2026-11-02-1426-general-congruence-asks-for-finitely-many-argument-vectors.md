@@ -1,6 +1,7 @@
 # The general congruence theorem asks for finitely many argument vectors
 
 Status: accepted
+Tier: implementation; area: semantics
 
 ## Context
 

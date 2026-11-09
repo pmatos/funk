@@ -1,6 +1,7 @@
 # The i128 division routines are System V functions that clobber only caller-saved registers, and the stack figure counts them
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

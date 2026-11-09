@@ -1,6 +1,7 @@
 # The core dialect writes poison with `poison`, a constant op of class `propagates`
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

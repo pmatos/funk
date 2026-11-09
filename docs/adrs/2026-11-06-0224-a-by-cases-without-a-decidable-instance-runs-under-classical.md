@@ -1,6 +1,7 @@
 # A by_cases on a proposition without a Decidable instance runs under classical
 
 Status: accepted
+Tier: direction; area: spec-site
 
 ## Context
 

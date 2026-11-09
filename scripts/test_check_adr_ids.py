@@ -22,6 +22,7 @@ class Names(unittest.TestCase):
             problems(
                 adrs(
                     "README.md",
+                    "INDEX.md",
                     "2026-10-30-1031-publish-spec.md",
                     "2026-10-30-103112-generic-ops.md",
                     "2024-02-29-2359-leap-day.md",

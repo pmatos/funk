@@ -1,6 +1,7 @@
 # A word that names a core op is a core word in generic code, whatever else it means
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

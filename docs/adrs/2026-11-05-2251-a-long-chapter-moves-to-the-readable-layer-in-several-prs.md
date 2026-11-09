@@ -1,6 +1,7 @@
 # A long chapter moves to the readable layer in several PRs of consecutive sections
 
 Status: accepted
+Tier: implementation; area: spec-site
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Every rendered page of the spec names the commit it was built from
 
 Status: accepted
+Tier: implementation; area: spec-site
 
 ## Context
 

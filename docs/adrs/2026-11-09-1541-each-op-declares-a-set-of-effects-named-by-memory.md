@@ -1,6 +1,7 @@
 # Each op declares a set of effects, named by memory, and the spec proves the declaration sound
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

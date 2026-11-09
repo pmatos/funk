@@ -1,6 +1,7 @@
 # Agents wait for human rulings before changing agreed direction
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

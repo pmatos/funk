@@ -1,6 +1,7 @@
 # `fir-ref`'s command line follows `funk`'s
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

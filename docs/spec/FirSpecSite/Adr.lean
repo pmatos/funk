@@ -2,7 +2,7 @@ import VersoManual
 import FirSpecSite.Markdown
 
 /-!
-The appendix of ADRs. Each file in `docs/adrs/` but its `README.md` becomes
+The appendix of ADRs. Each ADR file in `docs/adrs/`, so not `README.md` or `INDEX.md`, becomes
 one page of the appendix, and the appendix opens with an index of them all.
 The files are read when the document is rendered, so the appendix always
 matches the commit it is built from.
@@ -76,7 +76,7 @@ per problem.
 -/
 def loadAdrs (root : System.FilePath) : IO (Except (Array String) (Array Adr)) := do
   let entries ← (root / adrDir).readDir
-  let names := entries.map (·.fileName) |>.filter (fun n => n.endsWith ".md" && n != "README.md")
+  let names := entries.map (·.fileName) |>.filter (fun n => n.endsWith ".md" && n != "README.md" && n != "INDEX.md")
   let names := names.qsort (· < ·)
   let mut errors := #[]
   let mut ids : Array (String × String) := #[]

@@ -1,6 +1,7 @@
 # The stand-in for `call` in the set monad is immediate UB
 
 Status: superseded by ADR-2026-11-02-1514
+Tier: implementation; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Functions are regions isolated from above
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

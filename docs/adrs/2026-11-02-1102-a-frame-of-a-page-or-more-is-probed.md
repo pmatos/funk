@@ -1,6 +1,7 @@
 # A frame of a page or more is probed
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

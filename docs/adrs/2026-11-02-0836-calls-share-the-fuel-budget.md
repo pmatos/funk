@@ -1,6 +1,7 @@
 # A callee runs with the fuel its caller has left, and gives back the rest
 
 Status: accepted; refined by ADR-2026-11-02-1156 and ADR-2026-11-02-1514
+Tier: direction; area: semantics
 
 ## Context
 

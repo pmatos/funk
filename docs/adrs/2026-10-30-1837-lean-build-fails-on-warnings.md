@@ -1,6 +1,7 @@
 # The Lean build in lean/ fails on any warning
 
 Status: accepted
+Tier: direction; area: spec-site
 
 ## Context
 

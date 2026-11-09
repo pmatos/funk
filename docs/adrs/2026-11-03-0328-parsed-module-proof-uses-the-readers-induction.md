@@ -1,6 +1,7 @@
 # The parsed-module proof proves the readers by their functional induction
 
 Status: accepted
+Tier: implementation; area: text-format
 
 ## Context
 

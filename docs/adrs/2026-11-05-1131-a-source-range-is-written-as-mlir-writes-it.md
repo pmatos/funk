@@ -1,6 +1,7 @@
 # A source range is written `"f":2:3 to 2:14`, as MLIR writes it, with an exclusive end and columns in UTF-8 bytes
 
 Status: accepted
+Tier: direction; area: text-format
 
 ## Context
 

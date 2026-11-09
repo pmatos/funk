@@ -1,6 +1,7 @@
 # fir's semantics is a monadic definitional interpreter in Lean, with fuel
 
 Status: accepted; refined by ADR-2026-10-29-2030
+Tier: direction; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # A module holds one abstraction level, a lowering must refine, and a dialect need not lower to core
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

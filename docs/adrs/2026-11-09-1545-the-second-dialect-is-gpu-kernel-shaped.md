@@ -1,6 +1,7 @@
 # The second dialect in tree is GPU-kernel-shaped, and M1 runs one work-item of a kernel at a time
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

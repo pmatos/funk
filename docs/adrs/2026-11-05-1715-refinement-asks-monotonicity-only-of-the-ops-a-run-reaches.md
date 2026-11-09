@@ -1,6 +1,7 @@
 # Refinement asks monotonicity only of the ops a run can reach
 
 Status: accepted
+Tier: implementation; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # fir's Lean code is pinned to a stable Lean release, has no dependencies, and is built by one script
 
 Status: accepted; extended by ADR-2026-10-30-1250 and ADR-2026-10-30-1439; refined by ADR-2026-11-05-1408 and ADR-2026-11-05-1954
+Tier: direction; area: spec-site
 
 ## Context
 

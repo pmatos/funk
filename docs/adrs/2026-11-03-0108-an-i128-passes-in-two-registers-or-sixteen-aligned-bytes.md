@@ -1,6 +1,7 @@
 # An i128 argument takes two registers or sixteen aligned bytes of the stack, and an i128 result comes back in RDX:RAX
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Every change reaches main as a squash-merged PR with a Conventional Commit title
 
 Status: accepted; refined by ADR-2026-11-03-1612
+Tier: direction; area: process
 
 ## Context
 

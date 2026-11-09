@@ -1,6 +1,7 @@
 # The differential cells of `poison` are filled by native runs, and its interpreter-only cells by tests that observe the poison
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Dialects extend fir through prefixed names, registered kinds of item and a dialect set that each module declares
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 
