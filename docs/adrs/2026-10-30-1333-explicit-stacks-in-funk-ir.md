@@ -1,6 +1,7 @@
 # funk-ir walks nested IR with explicit stacks
 
 Status: accepted; refined by ADR-2026-11-05-1713
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

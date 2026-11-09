@@ -2,6 +2,7 @@
 
 Status: accepted; refined by ADR-2026-11-02-1021, ADR-2026-11-03-0108,
 ADR-2026-11-03-0109 and ADR-2026-11-09-1547
+Tier: direction; area: x86-64-backend
 
 ## Context
 

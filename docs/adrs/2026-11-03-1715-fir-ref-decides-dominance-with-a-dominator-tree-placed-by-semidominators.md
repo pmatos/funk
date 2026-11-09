@@ -1,6 +1,7 @@
 # `fir-ref` decides dominance with a dominator tree placed by semidominators
 
 Status: accepted
+Tier: implementation; area: validation
 
 ## Context
 

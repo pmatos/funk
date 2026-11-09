@@ -1,6 +1,7 @@
 # `fir-ref run` reads an argument with at most two steps of its lexer over positions
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

@@ -44,6 +44,10 @@ jobs:
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run adr-ids-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
+        run: uvx --no-build pre-commit@4.6.2 run adr-index --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
+        run: uvx --no-build pre-commit@4.6.2 run adr-index-test --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run adr-citations --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run adr-citations-test --all-files --verbose --show-diff-on-failure

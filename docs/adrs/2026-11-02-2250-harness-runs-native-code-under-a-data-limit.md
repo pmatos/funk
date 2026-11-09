@@ -1,6 +1,7 @@
 # The harness runs the executable of a differential test, and only it, under a data limit of 1 GiB
 
 Status: accepted; refined by ADR-2026-11-09-1602
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Memory is logical blocks in typed memories, and a pointer becomes an integer only by explicit exposure
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

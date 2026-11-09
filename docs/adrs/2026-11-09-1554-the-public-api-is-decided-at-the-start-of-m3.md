@@ -1,6 +1,7 @@
 # The public API's shape is decided at the start of M3
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Ported LLVM cases write LLVM's poison constant with fir's op `poison`
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

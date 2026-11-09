@@ -1,6 +1,7 @@
 # The forbidden rewrite of `select` into `and` is tested by #16, and the one into `cond_br` by #19
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

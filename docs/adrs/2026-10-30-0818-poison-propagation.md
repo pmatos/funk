@@ -2,6 +2,7 @@
 
 Status: accepted; refined by ADR-2026-10-31-0524, ADR-2026-11-02-1514,
 ADR-2026-11-02-1515 and ADR-2026-11-03-1615
+Tier: direction; area: semantics
 
 ## Context
 

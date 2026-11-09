@@ -1,6 +1,7 @@
 # funk's speed is guarded by instruction counts against a committed baseline
 
 Status: accepted
+Tier: direction; area: rust-ir-and-tools
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Test cases ported from LLVM live in tests/fir/llvm/ beside LLVM's licence, and each names its source
 
 Status: accepted
+Tier: direction; area: testing-and-harness
 
 ## Context
 

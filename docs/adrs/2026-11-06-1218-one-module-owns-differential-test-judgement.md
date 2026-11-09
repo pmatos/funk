@@ -1,6 +1,7 @@
 # One module owns the complete judgement of a differential test
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

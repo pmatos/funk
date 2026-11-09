@@ -1,6 +1,7 @@
 # A funk function returns its results as System V returns a structure with one member per result
 
 Status: accepted
+Tier: direction; area: x86-64-backend
 
 ## Context
 

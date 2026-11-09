@@ -1,6 +1,7 @@
 # `fir-ref run --seed S` draws each choice from a generator seeded with S, and reports the values it drew
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

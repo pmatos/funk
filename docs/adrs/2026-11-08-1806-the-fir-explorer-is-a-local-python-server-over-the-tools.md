@@ -1,6 +1,7 @@
 # The fir explorer is a local Python server over funk and fir-ref
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

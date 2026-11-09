@@ -1,6 +1,7 @@
 # A call between funk functions passes each argument as its slot holds it, and extends none
 
 Status: accepted; refined by ADR-2026-11-09-1547
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

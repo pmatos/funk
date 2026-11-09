@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from check_adr_citations import FIXTURES, check_text, citations, line_column, problems
 
@@ -64,6 +65,9 @@ def run_script(cwd: Path):
 
 class Repository(unittest.TestCase):
     def setUp(self):
+        patcher = mock.patch.dict(os.environ, outside_env(), clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.repo = Path(self.tmp.name)
         git(self.repo, "init", "-q")

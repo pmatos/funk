@@ -1,6 +1,7 @@
 # `fir-ref` writes an integer by splitting it at powers of ten, in a module that `FirRef.PrintAttr` imports
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

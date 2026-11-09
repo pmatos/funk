@@ -1,6 +1,7 @@
 # The axiom check allows proofs by native evaluation
 
 Status: accepted
+Tier: direction; area: spec-site
 
 ## Context
 

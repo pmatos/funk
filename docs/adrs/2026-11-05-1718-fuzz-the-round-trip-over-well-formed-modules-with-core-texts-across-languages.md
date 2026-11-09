@@ -1,6 +1,7 @@
 # The round trip is fuzzed over well-formed modules, and across languages over those of the core dialect only
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

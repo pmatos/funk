@@ -1,6 +1,7 @@
 # `decide` on validity runs `fir-ref`'s check through instances of high priority
 
 Status: accepted
+Tier: implementation; area: validation
 
 ## Context
 

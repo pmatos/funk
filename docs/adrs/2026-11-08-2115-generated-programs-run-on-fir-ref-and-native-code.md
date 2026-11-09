@@ -1,6 +1,7 @@
 # Every pull request runs 500 generated programs on fir-ref and as native code
 
 Status: accepted
+Tier: direction; area: testing-and-harness
 
 ## Context
 

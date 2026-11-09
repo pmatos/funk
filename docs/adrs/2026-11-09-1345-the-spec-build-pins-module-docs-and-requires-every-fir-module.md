@@ -1,6 +1,7 @@
 # The spec build pins module docs and requires every fir module
 
 Status: accepted
+Tier: implementation; area: spec-site
 
 ## Context
 

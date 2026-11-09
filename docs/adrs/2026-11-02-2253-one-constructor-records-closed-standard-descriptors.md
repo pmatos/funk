@@ -1,6 +1,7 @@
 # One start-up constructor records closed standard descriptors, the workspace's only unsafe code
 
 Status: superseded by ADR-2026-11-09-1603
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

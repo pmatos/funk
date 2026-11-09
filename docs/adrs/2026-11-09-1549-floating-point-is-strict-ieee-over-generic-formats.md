@@ -1,6 +1,7 @@
 # Floating point is strict IEEE 754 over a generic family of formats, with nondeterministic NaNs and three fast-math flags
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

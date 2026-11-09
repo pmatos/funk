@@ -1,6 +1,7 @@
 # The x86-64 backend lowers `poison` to zero in every eightbyte
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

@@ -1,6 +1,7 @@
 # A proper tail call is an explicit terminator that validation checks, and a chain of them runs in bounded space
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

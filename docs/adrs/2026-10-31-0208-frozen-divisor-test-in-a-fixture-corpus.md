@@ -1,6 +1,7 @@
 # The frozen-divisor test lives in a fixture corpus outside `tests/fir/`, and `check-harness.sh` passes only when the harness reports it invalid for a zero divisor
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

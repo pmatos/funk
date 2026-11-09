@@ -1,6 +1,7 @@
 # `fir-ref` checks a location table with core's loops in place of `List.zip` and `List.decidableBAll`
 
 Status: accepted
+Tier: implementation; area: validation
 
 ## Context
 

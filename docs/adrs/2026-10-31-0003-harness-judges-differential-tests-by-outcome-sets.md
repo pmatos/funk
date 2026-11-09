@@ -1,6 +1,7 @@
 # The harness judges a differential test by its set of outcomes, and checks declared results by their witnesses and by seeded runs
 
 Status: accepted; extended by ADR-2026-10-31-0208 and ADR-2026-11-03-1847
+Tier: direction; area: testing-and-harness
 
 ## Context
 

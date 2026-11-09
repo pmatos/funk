@@ -1,6 +1,7 @@
 # The round trip covers well-formed modules, and text that does not decode is a parse error
 
 Status: accepted
+Tier: direction; area: text-format
 
 ## Context
 

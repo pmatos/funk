@@ -2,6 +2,7 @@
 
 Status: accepted; extended by ADR-2026-10-31-0003, ADR-2026-10-31-0208 and
 ADR-2026-11-02-2250; refined by ADR-2026-11-05-1408
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

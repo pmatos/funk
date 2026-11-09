@@ -1,6 +1,7 @@
 # The spec is literate Lean, rendered with Verso
 
 Status: accepted; refined by ADR-2026-11-05-2012
+Tier: direction; area: spec-site
 
 ## Context
 

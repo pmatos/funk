@@ -1,6 +1,7 @@
 # A run shows a trace of external calls and volatile accesses, and refinement holds for every world that answers them
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # A pull request merges only when it is up to date with main
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

@@ -1,6 +1,7 @@
 # In M0, a terminator that jumps gives no results by its dialect's obligation
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

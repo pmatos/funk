@@ -37,7 +37,7 @@ def problems(paths: list[str]) -> list[str]:
     by_id: dict[str, list[str]] = {}
     for path in sorted(paths):
         name = path.removeprefix(ADR_DIR)
-        if name == "README.md":
+        if name in ("README.md", "INDEX.md"):
             continue
         ident = adr_id(name)
         if ident is None:

@@ -1,6 +1,7 @@
 # `funk asm` prints the assembly of a module's functions
 
 Status: accepted
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

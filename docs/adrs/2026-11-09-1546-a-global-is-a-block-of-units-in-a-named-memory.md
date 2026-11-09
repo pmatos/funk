@@ -1,6 +1,7 @@
 # A global is a symbol for a block of units in a named memory, with a constant initializer and a linkage
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

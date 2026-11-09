@@ -1,6 +1,7 @@
 # A section whose module declares nothing keeps includeLiterate
 
 Status: accepted
+Tier: implementation; area: spec-site
 
 ## Context
 

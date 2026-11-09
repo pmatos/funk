@@ -1,6 +1,7 @@
 # A closed standard stream stays on /dev/null, and the Verus tooling waits at a tag
 
 Status: accepted
+Tier: direction; area: rust-ir-and-tools
 
 ## Context
 

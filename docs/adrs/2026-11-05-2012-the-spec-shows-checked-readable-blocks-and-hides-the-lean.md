@@ -1,6 +1,7 @@
 # The spec shows readable blocks checked against the Lean, and hides the Lean under them
 
 Status: accepted; refined by ADR-2026-11-05-2251 and ADR-2026-11-05-225128
+Tier: direction; area: spec-site
 
 ## Context
 

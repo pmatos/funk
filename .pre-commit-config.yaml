@@ -11,7 +11,7 @@ repos:
         language: python
         types: [text]
         # Generated or vendored files only; never exclude authored code.
-        exclude: (^|/)(package-lock\.json|[^/]*\.lock)$
+        exclude: (^|/)(package-lock\.json|[^/]*\.lock)$|^docs/adrs/INDEX\.md$
       - id: hidden-chars
         name: Text files hold no raw bidi controls, marks, BOM or separators
         entry: python scripts/check_hidden_chars.py
@@ -30,6 +30,20 @@ repos:
         language: python
         pass_filenames: false
         files: ^scripts/((test_)?check_adr_ids|run_unittests)\.py$
+      # The committed docs/adrs/INDEX.md is the one that adr_index.py makes,
+      # and every ADR has a tier and an area (ADR-2026-11-09-1610).
+      - id: adr-index
+        name: The ADR index is current, and every ADR has a tier and an area
+        entry: python scripts/adr_index.py
+        language: python
+        pass_filenames: false
+        files: ^(docs/adrs/|scripts/(adr_index|check_adr_ids)\.py$)
+      - id: adr-index-test
+        name: The adr-index check passes its tests
+        entry: python scripts/run_unittests.py adr-index-test scripts/test_adr_index.py
+        language: python
+        pass_filenames: false
+        files: ^scripts/((test_)?adr_index|check_adr_ids|run_unittests)\.py$
       # Every ADR citation in every tracked text file names an ADR, by the
       # spec checker's grammar and cases (ADR-2026-11-05-1709). It runs on
       # every commit: a deleted or renamed ADR breaks citations in files the

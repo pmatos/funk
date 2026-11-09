@@ -24,7 +24,36 @@ it on each PR's merge with `main` (ADR-2026-10-30-1329).
 - **Written for a cold reader.** Assume no access to the conversation that led
   here: say what was decided, why, and what it costs.
 - **Immutable once accepted.** To change a decision, write a new ADR and set the
-  old one's status to `superseded by ADR-…`. Fix typos freely.
+  old one's status to `superseded by ADR-…`. Fix typos freely. The status
+  paragraph, its `Tier:` line included, is metadata and may change.
+
+## When not to write one
+
+Write an ADR for a decision that binds more than one module, or that a future
+agent would otherwise rediscover or undo by accident. Implementation detail
+that only one module needs goes in that module's doc comment.
+
+To decide, ask whether someone changing a different module needs to know the
+decision. If not, and the reason fits in the doc comment beside the code, write
+the doc comment. Choices of how a single tool does one thing, such as a lookup
+structure or which flag a helper takes, belong there.
+
+## Tier and area
+
+The last line of each ADR's status paragraph is `Tier: TIER; area: AREA`
+(ADR-2026-11-09-1610).
+
+- The tier is `direction` when the ADR says what fir is or sets a rule that
+  every change follows, and `implementation` when it says how one tool does one
+  thing.
+- The area is one of `semantics`, `text-format`, `validation`, `fir-ref`,
+  `rust-ir-and-tools`, `x86-64-backend`, `testing-and-harness`, `spec-site` and
+  `process`.
+
+[`INDEX.md`](INDEX.md) lists every ADR with its tier, area and what holds now.
+It is generated, so never edit it by hand. After changing an ADR's title, status
+or tier line, stage the ADR and run `python3 scripts/adr_index.py --write`. The
+`adr-index` hook fails when the index is stale or an ADR has no tier and area.
 
 ## Published with the spec
 
@@ -50,6 +79,7 @@ the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
 # <The decision, stated as one sentence>
 
 Status: accepted
+Tier: direction; area: process
 
 ## Context
 

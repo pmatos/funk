@@ -1,6 +1,7 @@
 # A native run that outgrows its stack makes its differential test invalid
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 
