@@ -112,6 +112,11 @@ import FirSpec.Text.DecodeAcceptedScope
 import FirSpec.Text.DecodeAccepted
 import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
+import FirSpec.Sum.Names
+import FirSpec.Core.Names
+import FirSpec.Sum.Dialect
+import FirSpec.Sum.TextLaws
+import FirSpec.Sum.PoisonLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

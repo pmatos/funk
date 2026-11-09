@@ -113,3 +113,8 @@ import Fir.Text.DecodeAcceptedScope
 import Fir.Text.DecodeAccepted
 import Fir.Text.DecodeAcceptedModule
 import Fir.Text.ParseWellFormed
+import Fir.Sum.Names
+import Fir.Sum.Dialect
+import Fir.Sum.TextLaws
+import Fir.Sum.PoisonLaws
+import Fir.Core.Names

@@ -313,12 +313,12 @@ script and hook that needs `fir-ref` calls it, and none runs Lake itself.
 
 `fir-round-trip` needs both toolchains. `lean/.lake` is not cached in CI.
 
-`FirTest.SumDialect`, in `lean/FirTest/Sum.lean`, sums two dialects over shared
-types, for tests that mix core and toy ops (ADR-2026-10-30-2040). `decodeOp`
-routes by name alone. A name that starts with `toy.` goes to the test dialect.
-Every other name goes to the core dialect. Today this rule is test-only and lives
-in `lean/FirTest/`. H4's design moves the sum into the spec, routes ops, types and
-attributes by prefix, and keeps `toy.` for test dialects (ADR-2026-11-09-1543).
+The Lean tests that mix core and toy ops use the spec's sum of dialects,
+`CoreDialect ⊞ e` (ADR-2026-11-09-2306). The toy, use-once and probe test
+dialects are extensions of the core named `toy`, with no types of their own.
+Their shared helpers are in `lean/FirTest/OverCore.lean`. A name that starts
+with `toy.` goes to the test dialect, and every other name to the core
+(ADR-2026-11-09-1543).
 
 ## Tests ported from LLVM
 

@@ -1,4 +1,4 @@
-import Fir
+import FirTest.OverCore
 
 /-!
 A test-only dialect. It shows that a new dialect needs no change to the
@@ -6,15 +6,17 @@ interpreter, the parser or the printer (G0): it gives its op's signature,
 text, validation rule and execution rule as instances of the spec's
 classes, and nothing else.
 
-Its one op works on the core dialect's integers, so the toy dialect has no
-types of its own: `%m: iN = toy.mask K %x` keeps the low `K` bits of `%x`
+It extends the core dialect: its one op works on the core dialect's
+integers, which it names as its base's types, and it has no types of its
+own: `%m: iN = toy.mask K %x` keeps the low `K` bits of `%x`
 and clears the others. Its own rule asks `K ≤ N`, a rule beyond its
 signature, so `toy.mask 9` at `i8` decodes and validation rejects it, as
 `zext` from `i8` to `i8` decodes and validation rejects it. A poison operand
 gives poison.
 
-Test dialects name their ops `toy.` and a word (ADR-2026-10-30-1146), so a
-toy op never has the name of a core op.
+Its name is `toy` (ADR-2026-10-30-1146), so it writes its op as `toy.` and
+a word, and in the sum of the core and the toy dialect each word goes to its
+own side (ADR-2026-11-09-1543).
 -/
 
 namespace FirTest.Toy
@@ -32,17 +34,17 @@ namespace FirTest
 open Fir
 
 /-- The toy dialect: its op, over the core dialect's types. -/
-abbrev ToyDialect : Dialect := ⟨Toy.Op, Core.Ty⟩
+abbrev ToyDialect : Dialect := OverCore Toy.Op
 
 namespace Toy
 
 /-- The operand types of a toy op. -/
-def Op.sig : Op → List Core.Ty
-  | .mask w _ => [.int w]
+def Op.sig : Op → List (Core.Ty ⊕ Empty)
+  | .mask w _ => [.inl (.int w)]
 
 /-- The result types of a toy op. -/
-def Op.returnTypes : Op → List Core.Ty
-  | .mask w _ => [.int w]
+def Op.returnTypes : Op → List (Core.Ty ⊕ Empty)
+  | .mask w _ => [.inl (.int w)]
 
 instance : DialectSignature ToyDialect where
   sig := Op.sig
@@ -62,10 +64,10 @@ def Op.attrs : Op → List Attr
 
 /-- The toy op with this name and these attributes, at these operand and
 result types. -/
-def Op.decode (n : String) (as : List Attr) (ts rs : List Core.Ty) : Option Op :=
+def Op.decode (n : String) (as : List Attr) (ts rs : List (Core.Ty ⊕ Empty)) : Option Op :=
   if n = "toy.mask" then
     match as, ts, rs with
-    | [.int k], [.int a], [.int b] => if 0 ≤ k ∧ a = b then some (.mask a k.toNat) else none
+    | [.int k], [.inl (.int a)], [.inl (.int b)] => if 0 ≤ k ∧ a = b then some (.mask a k.toNat) else none
     | _, _, _ => none
   else none
 
@@ -75,8 +77,8 @@ instance : DialectText ToyDialect where
   opName := Op.name
   opAttrs := Op.attrs
   decodeOp := Op.decode
-  tyAttr := Core.Ty.attr
-  decodeTy := Core.Ty.decode
+  tyAttr := OverCore.tyAttr
+  decodeTy := OverCore.decodeTy
 
 /-! # Validation -/
 
@@ -86,7 +88,7 @@ def Op.Valid : Op → Prop
   | .mask w k => k ≤ w
 
 instance : DialectValidation ToyDialect where
-  validTy := Core.Ty.Valid
+  validTy := OverCore.ValidTy
   symbolRefs _ := []
   validOp _ := Op.Valid
   validFunc _ _ _ := True
@@ -95,7 +97,7 @@ instance : DecidablePred Op.Valid := fun o => by
   cases o <;> unfold Op.Valid <;> infer_instance
 
 instance : DecidableDialectValidation ToyDialect where
-  decValidTy t := inferInstanceAs (Decidable (Core.Ty.Valid t))
+  decValidTy t := inferInstanceAs (Decidable (OverCore.ValidTy t))
   decValidOp _ o := inferInstanceAs (Decidable (Op.Valid o))
   decValidFunc _ _ _ := inferInstanceAs (Decidable True)
 
@@ -140,7 +142,7 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
 
 /-- A toy op decodes only from its own name, attributes, operand types and
 result types. -/
-theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Core.Ty} {o : Op}
+theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List (Core.Ty ⊕ Empty)} {o : Op}
     (h : Op.decode n as ts rs = some o) :
     o.name = n ∧ o.attrs = as ∧ o.sig = ts ∧ o.returnTypes = rs := by
   unfold Op.decode at h
@@ -162,13 +164,23 @@ dialect's, so their laws are the core dialect's. -/
 theorem lawfulDialectText : LawfulDialectText ToyDialect where
   decodeOp_encode := Op.decode_encode
   encode_decodeOp _ _ _ _ _ h := Op.encode_decode h
-  decodeTy_encode := Core.Ty.decode_attr
-  encode_decodeTy _ _ h := Core.Ty.attr_decode h
+  decodeTy_encode := OverCore.decodeTy_attr
+  encode_decodeTy _ _ h := OverCore.attr_decodeTy h
   opName_isWord | .mask .. => (by decide : isWord "toy.mask")
   opAttrs_writable | .mask .. => ⟨trivial, trivial⟩
-  tyAttr_isType := Core.Ty.attr_isType
+  tyAttr_isType := OverCore.attr_isType
 
 instance : LawfulDialectText ToyDialect := lawfulDialectText
+
+/-! # The toy dialect's words -/
+
+/-- The toy dialect writes its op under its name, `toy`, its op's attribute
+is a number, and it has no type of its own. -/
+instance lawfulDialectName : LawfulDialectName CoreDialect (Ext Op) where
+  opName_named | .mask .. => (by decide : wordDialect "toy.mask" = some "toy")
+  opAttrs_mem | .mask .., _, h => by simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects] at h
+  tyAttr_named t := t.elim
+  tyAttr_mem t := t.elim
 
 end Toy
 
