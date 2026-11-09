@@ -92,4 +92,15 @@ on such a host."
     echo "$warning"
     echo "$warning" >&2
 fi
+# The rust-speed hook counts funk's instructions under cachegrind
+# (ADR-2026-11-09-1645).
+if ! command -v valgrind >/dev/null; then
+    warning="Warning: valgrind is not on PATH.
+The rust-speed hook needs it. A commit that changes the Rust crates, the
+Cargo files or the Rust toolchain runs it, and so does every
+'pre-commit run --all-files'. Install valgrind with your system's package
+manager."
+    echo "$warning"
+    echo "$warning" >&2
+fi
 echo "Repository hooks and environments are installed and verified."

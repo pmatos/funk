@@ -204,13 +204,14 @@ make. Agents do the rest: design, code, tests, docs, ADRs, reviews and pull
 requests. [`AGENTS.md`](AGENTS.md) gives the full rules.
 
 Before you work in a clone, install `pre-commit` 4.4.0 or later, `elan`,
-`rustup`, GNU binutils on an x86-64 Linux host, and Python 3.11 or
-later. Four checks need elan: `fir-spec` builds the spec, `fir-ref-test`
+`rustup`, GNU binutils on an x86-64 Linux host, valgrind, and Python 3.11
+or later. Four checks need elan: `fir-spec` builds the spec, `fir-ref-test`
 runs the Lean tests, `fir-round-trip` has Lean reprint what Rust prints,
-and `fir-harness` runs the differential harness. Five need rustup:
-`rust-fmt`, `rust-clippy` and `rust-test` check the Rust code, and `fir-round-trip` and `fir-harness` run it. `rust-test` and
-`fir-harness` build native code, so they need binutils. Then install the
-git hooks:
+and `fir-harness` runs the differential harness. Six need rustup:
+`rust-fmt`, `rust-clippy`, `rust-test` and `rust-speed` check the Rust
+code, and `fir-round-trip` and `fir-harness` run it. `rust-test` and
+`fir-harness` build native code, so they need binutils, and `rust-speed`
+needs valgrind to count instructions. Then install the git hooks:
 
 ```sh
 ./scripts/ensure-hooks.sh   # install the pre-commit and commit-msg hooks

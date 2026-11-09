@@ -93,6 +93,23 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-rust|rust-env)\.sh$)
+      # Counts funk's instructions on large inputs against a committed
+      # baseline (ADR-2026-11-09-1645). It needs valgrind. It reports on any
+      # host, and a count over the margin fails only in CI. pre-commit hides
+      # what a passing hook prints, so verbose keeps the report visible.
+      - id: rust-speed
+        name: funk's instruction counts stay within 10% of the baseline
+        entry: scripts/check-rust-speed.sh
+        language: unsupported_script
+        pass_filenames: false
+        verbose: true
+        files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/((check-rust-speed|rust-env)\.sh|rust_speed\.py|rust-speed-baseline\.json)$)
+      - id: rust-speed-test
+        name: The rust-speed comparison passes its tests
+        entry: python scripts/run_unittests.py rust-speed-test scripts/test_rust_speed.py
+        language: python
+        pass_filenames: false
+        files: ^scripts/((test_)?rust_speed\.py|rust-speed-baseline\.json|run_unittests\.py)$
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
       # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
       - id: fir-ref-test
