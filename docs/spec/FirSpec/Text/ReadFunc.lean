@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "A function read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "670105155365794810")
+:::
+
 :::readable Fir.bind_reads (fingerprint := "11770048284880457070")
 *Lemma: proof plumbing for one step followed by another.* Let $`X` be a
 step that may fail, and $`K` what runs on its result. If $`X` succeeds with

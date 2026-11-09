@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "An accepted location table: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6064928561908290930")
+:::
+
 :::readable Fir.Text.readNat_writable Fir.Text.readLocRef_writable (pin := Fir.Text.readNat) (pin := Fir.Text.readLocRef) (pin := Fir.Location.limit) (fingerprint := "5781592515716110835")
 *Theorems: a line, a column and a reference as read are below
 $`2^{32}`.* For every list of tokens:

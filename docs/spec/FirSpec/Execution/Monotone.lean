@@ -14,6 +14,9 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The runs of a function, and fuel monotonicity: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8482892094871252993")
+:::
+
 :::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "14347387819809307446")
 *Definition: the runs of a function.* Let $`f` be a function and $`M` a
 module, of a dialect that the interpreter can run in the set monad: its

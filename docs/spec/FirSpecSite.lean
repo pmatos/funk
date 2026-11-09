@@ -3,6 +3,7 @@ import FirSpecSite.Markdown
 import FirSpecSite.Adr
 import FirSpecSite.Link
 import FirSpecSite.Sources
+import FirSpecSite.Modules
 import FirSpecSite.Rendered
 
 /-!
@@ -26,7 +27,7 @@ def prepare (root : System.FilePath) (doc : Prt) : IO (Except (Array String) (Pr
   | .error errors => return .error errors
   | .ok adrs =>
     let ids := adrs.map (·.id)
-    let errors ← checkSources root ids
+    let errors := (← checkSources root ids) ++ (← checkModules root)
     unless errors.isEmpty do return .error errors
     match addAppendix doc adrs with
     | .error e => return .error #[e]

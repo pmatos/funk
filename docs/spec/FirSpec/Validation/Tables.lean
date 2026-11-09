@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Tables: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15493755081579078024")
+:::
+
 :::readable Fir.firsts Fir.getElem?_foldl_insertIfNew Fir.getElem?_firsts (fingerprint := "9794351328742573981")
 *Definition and theorems: the first value of each key.* For a list $`l` of
 pairs $`(k, v)` of a key and a value, $`\mathrm{firsts}(l)` is the hash

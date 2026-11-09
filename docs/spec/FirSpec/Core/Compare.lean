@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Comparison and selection rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16989213570490224332")
+:::
+
 :::readable Fir.Core.Pred.holds (pin := Fir.Core.Pred) (pin := BitVec.slt) (pin := BitVec.sle) (pin := BitVec.ult) (pin := BitVec.ule) (fingerprint := "18133733643993984354")
 *Definition: when a predicate holds.* For every width $`N`, each of the ten
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicates] holds

@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Wrap flag rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11311750401168170395")
+:::
+
 :::readable Fir.Core.subValues Fir.Core.mulValues (pin := BitVec.sub) (pin := BitVec.mul) (fingerprint := "186644350761562636")
 *Definition: the rules of $`\mathsf{sub}` and $`\mathsf{mul}` without
 flags.* For every width $`N`, $`\mathsf{sub}_N` of two vectors of bits is

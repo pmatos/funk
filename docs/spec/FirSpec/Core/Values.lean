@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Core values: readable blocks" =>
 
+:::moduleDocs (fingerprint := "2638130483104455301")
+:::
+
 :::readable Fir.Core.Ty.toType (pin := Fir.PoisonOr) (fingerprint := "11451694641911891388")
 *Definition: the values of the core types.* A value of
 $`\mathsf{i}N` is poison or a vector of $`N` bits, and $`\mathsf{ptr}` has

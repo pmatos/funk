@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The round trip, proved: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7816641951814192479")
+:::
+
 :::readable Fir.printThenParse Fir.parseThenPrint (pin := Fir.PrintThenParse) (pin := Fir.ParseThenPrint) (pin := Fir.parse) (fingerprint := "6498295009264724367")
 *Theorems: both round trips hold for the parser.* For every dialect with
 signatures, validation rules and a text format whose text is

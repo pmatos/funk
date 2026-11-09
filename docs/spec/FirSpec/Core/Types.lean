@@ -16,6 +16,9 @@ changes under it.
 
 #doc (Manual) "Core types: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11942781206603878332")
+:::
+
 :::readable Fir.Core.Ty Fir.Core.maxWidth (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.decode) (fingerprint := "6503499008212412967")
 *Definition: the core types.* A type of the core dialect is an integer type
 $`\mathsf{i}N`, for a width $`N`, or the type $`\mathsf{ptr}`:

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Dominance: readable blocks" =>
 
+:::moduleDocs (fingerprint := "17314137804290771650")
+:::
+
 :::readable Fir.Block.succLabels Fir.Func.Edge Fir.Func.entryLabel? (fingerprint := "14653745792150054030")
 *Definition: the control-flow graph of a function.* The nodes of the graph
 of a function $`f` are the labels of the blocks of

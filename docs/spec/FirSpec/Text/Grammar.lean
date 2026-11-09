@@ -15,6 +15,9 @@ changes under it. The grammar of a module opens the section.
 
 #doc (Manual) "Grammar: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16983865337719427217")
+:::
+
 A module is written by the grammar below, in the tokens of the
 {ref "The-fir-specification--Text-format--Tokens"}[previous section], with
 whitespace and comments between them. Words and punctuation in typewriter

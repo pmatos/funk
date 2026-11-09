@@ -17,6 +17,10 @@ constructors or field defaults changes it. A definition that the
 declaration only refers to counts by its name: a change to that
 definition's body does not change the fingerprint. A readable block that
 restates such a definition pins it as well, with `(pin := …)`.
+
+A section's module docs pin the fingerprint of all the declarations of their
+module, so that a change to what the module says fails the build until
+someone reads them again.
 -/
 
 open Lean
@@ -54,5 +58,9 @@ def fingerprint (env : Environment) (names : Array Name) : Except Name String :=
     let some x := declHash env n | throw n
     h := mixHash h x
   return toString h
+
+/-- The fingerprint of a module's declarations `names`, whatever their order. -/
+def moduleFingerprint (env : Environment) (names : Array Name) : Except Name String :=
+  fingerprint env (names.qsort Name.lt)
 
 end FirSpecSite

@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Parsed modules are well formed: readable blocks" =>
 
+:::moduleDocs (fingerprint := "717121213209667201")
+:::
+
 :::readable Fir.parse_wellFormed (pin := Fir.parse) (pin := Fir.Module.WellFormed) (fingerprint := "3712612152196595362")
 *Theorem: every module that the parser gives is well formed.* Let $`d` be
 a dialect with a signature, validation rules and a text, whose text is

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Constant obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6946184819928592071")
+:::
+
 :::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "2023729354523156256")
 *Theorem: $`\mathsf{const}` returns a result on defined operands, and is
 total.* For every width $`w` and every vector $`c` of $`w` bits, under

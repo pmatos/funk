@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Control-flow rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16500844709474852840")
+:::
+
 :::readable Fir.Core.retExit (pin := Fir.Exit) (fingerprint := "1168687934119480536")
 *Definition: the rule of $`\mathsf{ret}`.* $`\mathsf{ret}` sends control
 back to the caller, whatever its operands:

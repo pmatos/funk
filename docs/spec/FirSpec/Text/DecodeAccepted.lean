@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the second pass accepts: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15390018644585589724")
+:::
+
 :::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "6047679517239721726")
 *Definition: a definition that can be written and read back.* Let $`d` be
 a dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].

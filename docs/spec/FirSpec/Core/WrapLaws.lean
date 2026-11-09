@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Arithmetic obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "10798246534216229047")
+:::
+
 :::readable Fir.Core.Strict Fir.Core.Strict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "16972614351431241810")
 *Definition: a strict rule.* A rule $`g` that maps two values of
 $`\mathsf{i}N` to one is _strict_ when a poison operand gives poison:

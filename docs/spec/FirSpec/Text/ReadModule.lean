@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9415480017361798480")
+:::
+
 :::readable Fir.readItems_reads (pin := Fir.Text.readItems) (pin := Fir.Item.tokens) (pin := Fir.Func.types) (fingerprint := "2526066823815534157")
 *Theorem: a module's items read back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format] and every

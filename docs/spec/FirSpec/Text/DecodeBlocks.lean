@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Blocks and ops decoded back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "1746414198031631212")
+:::
+
 :::readable Fir.Text.Decodes (fingerprint := "4160001921508362595")
 *Definition: decoding gives a part back.* Let $`\mathit{decode}` be a step
 that decodes some part of a tree, or fails, $`\tau` a part without

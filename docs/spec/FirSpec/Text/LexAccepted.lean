@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "What the lexer accepts: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8588507338123107690")
+:::
+
 :::readable Fir.Text.bind_eq_ok (fingerprint := "17647912058474426905")
 *Lemma: proof plumbing.* A chain of two steps, each of which ends with a
 result or an error, ends with a result $`b` only when the first step ends

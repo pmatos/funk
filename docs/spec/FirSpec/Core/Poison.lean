@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16459690636392180747")
+:::
+
 :::readable Fir.Core.Op.poisonClass (fingerprint := "10406232888193993161")
 *Definition: the poison class of each core op.* Nineteen core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],

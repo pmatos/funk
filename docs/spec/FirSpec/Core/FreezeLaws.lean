@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Freeze obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12474189112956974592")
+:::
+
 :::readable Fir.Core.freeze_denote (pin := Fir.Core.freezeValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "14590619122918508930")
 *Theorem: what $`\mathsf{freeze}` may give.* For every width $`w`, every
 $`a \in \llbracket \mathsf{i}w \rrbracket` and every way $`e` to end,

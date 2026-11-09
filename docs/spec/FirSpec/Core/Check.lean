@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's rules, decided: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16393045539489324021")
+:::
+
 :::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "637337370968257790")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with

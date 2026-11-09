@@ -14,6 +14,9 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The environment of a run: readable blocks" =>
 
+:::moduleDocs (fingerprint := "11316202068607451051")
+:::
+
 :::readable Fir.find?_of_nodup Fir.Func.typeOf_of_mem (pin := Fir.Func.typeOf) (fingerprint := "12310842176801363216")
 *Theorem: in a list with distinct first parts, the first pair for $`x`
 is the pair $`(x, t)` that the list holds; so a name of a function with

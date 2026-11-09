@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reachability and dominance, decided: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5898655786998477867")
+:::
+
 :::readable Fir.Func.graph Fir.Func.start (pin := Fir.Block.succLabels) (pin := Fir.Func.entryLabel?) (pin := Fir.grouped) (fingerprint := "13429173844377504314")
 *Definition: a function's graph as a table, and where its paths start.*
 $`\mathrm{graph}(f)` is the hash table that gives the label of each block

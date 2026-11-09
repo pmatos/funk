@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Digits and their values: readable blocks" =>
 
+:::moduleDocs (fingerprint := "1478478681583041683")
+:::
+
 :::readable Fir.Text.digitsValue_eq_ofDigitChars (pin := Fir.Text.digitsValue) (pin := Nat.ofDigitChars) (fingerprint := "7578560943843579309")
 *Theorem: reading digits in two halves gives their value read from left to
 right.* For every list of characters $`d_1 \dots d_k`, the value that the

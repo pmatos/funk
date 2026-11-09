@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5124373538691367297")
+:::
+
 :::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
 *Lemmas: proof plumbing.* For every test $`P` on tokens, separator $`x`
 whose tokens all pass $`P`, and lists of tokens $`t_1, \dots, t_n` whose

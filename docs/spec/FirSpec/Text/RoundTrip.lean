@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12134967392215063291")
+:::
+
 :::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
 *Definition: every op of a function, at any depth.* $`\mathrm{allops}(f)`
 is the ops of each block of $`\mathrm{allblocks}(f)`, the

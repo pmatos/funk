@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
+:::moduleDocs (fingerprint := "1652572696080746610")
+:::
+
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
 *Definition: an attribute in text.* The text of an
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`,

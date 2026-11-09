@@ -14,6 +14,9 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8444641160636120334")
+:::
+
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
 *Wrap flags.* The ops $`\mathsf{add}`, $`\mathsf{sub}` and $`\mathsf{mul}`
 carry two flags. Each flag is a promise about the operands, and when the

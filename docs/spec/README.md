@@ -41,6 +41,16 @@ document, import it in `FirSpec/ReadableDocs.lean`, pin each block with the
 fingerprint the first build prints, and switch its `{includeLiterate}` to
 `{includeReadable}`.
 
+The `/-! -/` docs of a module render on its page, so each document also
+pins them with one `:::moduleDocs (fingerprint := "…")` directive, closed by
+`:::` on the next line. That fingerprint covers every declaration of the
+module, so a change to what the module declares fails this pin too. Read
+the module's docs again in `lean/Fir/`, correct them, then set the
+fingerprint that the build prints (ADR-2026-11-09-1345).
+
+The build also fails when a module under `lean/Fir` has no section in
+`FirSpec.lean`.
+
 ## Appendix and build
 
 The document ends with an appendix that renders every ADR in

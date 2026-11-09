@@ -15,6 +15,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Width change obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "4452560916230905096")
+:::
+
 :::readable Fir.Core.UnaryStrict Fir.Core.UnaryStrict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "2141592877862596573")
 *Definition: a strict rule on one value.* A rule $`g` that maps a value of
 $`\mathsf{i}M` to a value of $`\mathsf{i}N` is _strict_ when

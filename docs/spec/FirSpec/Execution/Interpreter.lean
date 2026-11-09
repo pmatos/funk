@@ -15,6 +15,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The interpreter: readable blocks" =>
 
+:::moduleDocs (fingerprint := "3251824520712610684")
+:::
+
 :::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "11457153560144753281")
 *Definition: the typed values of a vector.* For values $`v_1, \dots, v_n`
 of the types $`t_1, \dots, t_n`, the list of pairs

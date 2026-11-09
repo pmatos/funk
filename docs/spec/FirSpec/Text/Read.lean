@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
+:::moduleDocs (fingerprint := "10282466687769878317")
+:::
+
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
 *Definition: a definition as written.* A definition `%x: T` is read as the
 record:

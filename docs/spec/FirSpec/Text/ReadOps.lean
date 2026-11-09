@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Ops read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "10215080442699296661")
+:::
+
 :::readable Fir.lhs_tokens Fir.rhs_tokens (fingerprint := "3167030283771324845")
 *Lemmas: proof plumbing.* The
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[tokens of an op]

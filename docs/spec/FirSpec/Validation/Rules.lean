@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12881947488162813312")
+:::
+
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
 *Definition: the context of a function.* A function is checked in the
 context of its module, and the rules read two things of the module: its

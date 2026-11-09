@@ -15,6 +15,9 @@ changes under it.
 
 #doc (Manual) "Division obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6317374750478558262")
+:::
+
 :::readable Fir.Core.divEv_poison (pin := Fir.Core.divEv) (fingerprint := "4996376901287475333")
 *Theorem: on a poison operand, a division that gives a result gives
 poison.* The four division ops share one

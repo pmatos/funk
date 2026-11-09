@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Maximal munch: readable blocks" =>
 
+:::moduleDocs (fingerprint := "17944273216478993208")
+:::
+
 :::readable Fir.Text.Boundary (pin := Fir.isNameChar) (fingerprint := "8957515299771534444")
 *Definition: the end of a token.* Characters $`c` are _at the end of a
 token_, $`\mathrm{boundary}(c)`, when they are empty or their first

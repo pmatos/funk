@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "A rejected function: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6926709771103389692")
+:::
+
 :::readable Fir.Core.Rejects.deadBlock (pin := Fir.Core.op) (fingerprint := "15564015379985173766")
 *Definition: a function with a block that no branch reaches.* The function
 `@f` above, which the theorems below call $`f`, takes no parameters and

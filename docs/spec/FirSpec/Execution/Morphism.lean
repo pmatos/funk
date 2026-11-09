@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
+:::moduleDocs (fingerprint := "13684011806635327941")
+:::
+
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
 *Definition: a translation between two readings of computations.* The
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]

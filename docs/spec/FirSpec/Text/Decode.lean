@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8898706217334797839")
+:::
+
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "3535621606043965172")
 *Definition: the scope, and adding definitions to it.* The _scope_ of a
 function is a table that gives each value the function defines its type.

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6267169728559521535")
+:::
+
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
 *Definition and theorems: a vector seen at equal types.* Proof plumbing.
 A vector of values of the types $`t^*` can be seen as a vector of the

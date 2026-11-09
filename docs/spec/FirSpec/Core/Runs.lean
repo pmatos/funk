@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The runs of core functions: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8257165963732567689")
+:::
+
 :::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "10337998491495057787")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are

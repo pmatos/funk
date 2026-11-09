@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
+:::moduleDocs (fingerprint := "2122820304907451124")
+:::
+
 :::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "7508203294497242104")
 *Definition: a call, and a function without calls.* A core op _is a
 call_ when it is $`\mathsf{call}~g : t^* \to r^*`, for any symbol $`g`

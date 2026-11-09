@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Arithmetic rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "13558055072320394658")
+:::
+
 :::readable Fir.Core.constValue Fir.Core.poisonValue (pin := Fir.PoisonOr) (fingerprint := "13574323644244185487")
 *Definition: the rules of $`\mathsf{const}` and $`\mathsf{poison}`.* For
 every width $`N` and every vector $`c` of $`N` bits,

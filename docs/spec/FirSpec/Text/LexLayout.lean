@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Spaces, line feeds and lists: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9703505765654074537")
+:::
+
 :::readable Fir.Text.SpellsAny Fir.Text.Spells.nil (pin := Fir.Text.Lexes) (pin := Fir.Text.Spells) (fingerprint := "2470327400403327257")
 *Definition and theorem: spelling tokens before any characters.* The
 characters $`s` spell the tokens $`t` _before any characters_,

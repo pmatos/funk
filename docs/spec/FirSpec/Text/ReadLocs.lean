@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reading the location table and the module: readable blocks" =>
 
+:::moduleDocs (fingerprint := "4773866437845491469")
+:::
+
 :::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "14401333200745503308")
 *Definition: reading the numbers of a location.* A line or a column is an
 integer token that is not negative, and must be below $`2^{32}`: a larger
