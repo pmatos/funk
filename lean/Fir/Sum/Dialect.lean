@@ -26,8 +26,13 @@ the sum, by routing each op and each type to the side it belongs to:
   the base's, written into the sum's;
 * an op or a type of `e` has what `base.over e` gives it;
 * reading an op or a type sends its name to a side by its prefix: a name
-  that `e`'s name and a `.` start goes to `e`, and every other name to the
-  base. So the base never sees a word of `e`, and `e` sees its own words;
+  whose dialect is `e`'s name goes to `e`, and every other name to the
+  base. So the base never sees a word of `e`, and `e` sees its own words.
+  A name holds no `.`, so that `e`'s words name it;
+* an op's attributes go with the op, to the side that its name picks. They
+  are generic terms, read by the op's own dialect, so the sum does not
+  route them on their own. The dialect-set laws say which dialects their
+  words may name;
 * a function of the sum obeys the function rule of each side, and each
   rule sees the whole function through its own view.
 

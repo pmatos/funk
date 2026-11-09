@@ -118,6 +118,26 @@ theorem isFilledBy_ofSum {ts : List base.Ty}
 variable [TyRefinement base.Ty] [TyRefinement e.Ty]
 
 omit [TyPoison base.Ty] [TyPoison e.Ty] in
+/-- Values of the sum's types refine themselves when each side's do. -/
+theorem isRefinedBy_refl (hb : ∀ {t : base.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
+    (he : ∀ {t : e.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v) :
+    ∀ {t : (base ⊞ e).Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v
+  | .inl _, v => hb v
+  | .inr _, v => he v
+
+omit [TyPoison base.Ty] [TyPoison e.Ty] in
+/-- Values of the sum's types refine transitively when each side's do. -/
+theorem isRefinedBy_trans
+    (hb : ∀ {t : base.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
+    (he : ∀ {t : e.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w) :
+    ∀ {t : (base ⊞ e).Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w
+  | .inl _, _, _, _, h₁, h₂ => hb h₁ h₂
+  | .inr _, _, _, _, h₁, h₂ => he h₁ h₂
+
+omit [TyPoison base.Ty] [TyPoison e.Ty] in
 /-- Two vectors of the sum's types `.inl t` are related by the sum's
 refinement exactly when they are by the base's. -/
 theorem forall₂_refines_ofSum {ts : List base.Ty}

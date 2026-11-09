@@ -198,6 +198,13 @@ when every word goes to its own side. -/
 theorem lawful_iff : LawfulDialectText (base ⊞ e) ↔ Routes base e :=
   ⟨fun _ => routes_of_lawful, lawful⟩
 
+omit [LawfulDialectText base] [LawfulDialectText (base.over e)] in
+/-- The sum's text is lawful only when no op name belongs to both of its
+sides. -/
+theorem names_disjoint [LawfulDialectText (base ⊞ e)] (o₁ : base.Op) (o₂ : e.Op) :
+    opName o₁ ≠ opName (d := base.over e) o₂ := fun h =>
+  (routes_of_lawful (base := base) (e := e)).1 o₁ (h ▸ (routes_of_lawful (base := base)).2.1 o₂)
+
 /-!
 # Names route every word
 -/
@@ -232,7 +239,7 @@ omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText
     [LawfulDialectText (base.over e)] in
 /-- The words of the sum name only dialects of its set, when the base's do
 and `e` writes its own words under its name. -/
-theorem lawfulSet [DialectSet base] [LawfulDialectSet base] [LawfulDialectName base e] :
+instance lawfulSet [DialectSet base] [LawfulDialectSet base] [LawfulDialectName base e] :
     LawfulDialectSet (base ⊞ e) where
   opName_mem
     | .inl o, x, h => List.mem_append_left _ (LawfulDialectSet.opName_mem o x h)

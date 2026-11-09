@@ -157,17 +157,6 @@ theorem coreProbe_args {ctx : ModuleContext CoreProbe} {M : Module CoreProbe}
     observable (f.runs M a) ⊑ observable (f.runs M a') :=
   Func.runs_args_isRefinedBy_of_lawful hv hf ha
 
-/-- The values of the sum's types refine themselves, as the core's do. -/
-theorem isRefinedBy_refl : ∀ {t : CoreProbe.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v
-  | .inl _, v => Core.Ty.isRefinedBy_refl v
-  | .inr t, _ => t.elim
-
-/-- The values of the sum's types refine transitively, as the core's do. -/
-theorem isRefinedBy_trans : ∀ {t : CoreProbe.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
-    TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w
-  | .inl _, _, _, _, h₁, h₂ => Core.Ty.isRefinedBy_trans h₁ h₂
-  | .inr t, _, _, _, _, _ => t.elim
-
 /-- Every vector of values of the sum's types, which are the core's. -/
 def argVectors : (ts : List CoreProbe.Ty) → List (HVector toType ts)
   | [] => [.nil]
@@ -188,7 +177,11 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
     (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
     f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
-  Func.runs_replaceBody_isRefinedBy_of_lawful isRefinedBy_refl isRefinedBy_trans
+  Func.runs_replaceBody_isRefinedBy_of_lawful
+    (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
+      fun {t} => Empty.elim t)
+    (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
+      fun {t} => Empty.elim t)
     hM hg b ⟨argVectors _, mem_argVectors⟩ h hf
 
 /-! # Axioms -/

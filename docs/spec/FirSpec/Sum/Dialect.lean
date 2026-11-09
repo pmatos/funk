@@ -97,7 +97,8 @@ $$`\frac{\mathrm{base}(C) = C' \qquad C' \vdash_b p~\text{valid}}{C \vdash_{b \b
 So no base op is valid in a function whose result types the base cannot
 write. A base op there could not be judged: the base's $`\mathsf{ret}`
 must return the function's result types, and the base has no word for
-the extension's. This can be decided when the base's rule can.
+the extension's (ADR-2026-11-09-2353). This can be decided when the base's
+rule can.
 :::
 
 :::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "15944417547548400106")
@@ -141,7 +142,8 @@ names. Let $`n_e` be $`e`'s name.
   $`e`, and must be one of $`e`'s own types. Every other type is read by
   the base.
 
-So the base never sees a word of $`e`, and $`e` reads its own words.
+So the base never sees a word of $`e`, and $`e` reads its own words. An
+op's attributes go with the op to the side that its name picks.
 :::
 
 :::readable Fir.Dialect.sum.instDialectSet (fingerprint := "3705957954386165517")

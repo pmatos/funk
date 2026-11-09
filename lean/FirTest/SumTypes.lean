@@ -224,11 +224,14 @@ def flagText : String :=
 #guard (parseFlag (flagText.replace "ret %b @0\n}\n\nfunc" "ret %f @0\n}\n\nfunc"
     |>.replace "func @f(%a: i8) -> i1" "func @f(%a: i8) -> toy.flag")).toBool == false
 -- A function that returns a flag holds no valid core op, since the core
--- cannot write its result types: its `toy.test` is valid, but its `ret`
--- has no word for them.
-#guard match parseFlag ("func @h(%a: i8) -> toy.flag {\n^entry:\n  ret @0\n}\n\n" ++
+-- cannot write its result types: its `add` breaks the core's rule, and its
+-- `toy.flag` does not.
+#guard match parseFlag ("func @h(%a: i8) -> toy.flag {\n^entry:\n" ++
+    "  %s: i8 = add %a, %a @0\n  %f: toy.flag = toy.flag %s @0\n  ret @0\n}\n\n" ++
     "locs {\n  @0 = unknown\n}\n") with
-  | .ok m => !m.problems.isEmpty
+  | .ok m =>
+    m.problems.any (fun p => p.op == some 0 && p.message == "the op breaks its dialect's own rule") &&
+      !m.problems.any (·.op == some 1)
   | .error _ => false
 
 /-! # Sums of more than two dialects
@@ -267,7 +270,10 @@ example [DialectSet base] [DialectName e₁] [DialectName e₂] :
 
 end
 
--- The set of a three-dialect sum lists each added dialect's name, in order.
-#guard names (CoreDialect ⊞ Ext Empty ⊞ FlagExt) == ["toy", "toy"]
+-- The set of a nested sum lists each added dialect's name, in the order
+-- they are added. Both test dialects are named `toy`, so this sum is not
+-- lawful: a lawful sum of three dialects needs a dialect over the sum of
+-- the other two, which stage 2 of #227 lifts into place.
+#guard names (CoreDialect ⊞ Ext Empty ⊞ FlagExt) == [name (Ext Empty), name FlagExt]
 
 end FirTest

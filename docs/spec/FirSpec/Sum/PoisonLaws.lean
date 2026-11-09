@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A sum's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8670837255497717327")
+:::moduleDocs (fingerprint := "5911828060153534460")
 :::
 
 :::readable Fir.HVector.ofSum_toSum Fir.HVector.toSum_ofSum Fir.HVector.forall₂_ofSum Fir.HVector.any_ofSum Fir.HVector.all_toSum (fingerprint := "2660157476304062812")
@@ -32,6 +32,12 @@ UB. A vector
 of another, and refines another, at the base's types exactly when it does
 at the sum's. So refinement of what a base op may end with carries over to
 the sum.
+:::
+
+:::readable Fir.Dialect.sum.isRefinedBy_refl Fir.Dialect.sum.isRefinedBy_trans (fingerprint := "11919749328515497936")
+*Lemmas: refinement of summed values.* The values of the sum's types refine
+themselves, and refine transitively, when each side's do. The refinement
+theorems for calls ask both of a dialect's values.
 :::
 
 :::readable Fir.Dialect.sum.typesValid_inl Fir.Dialect.sum.typesValid_inr (fingerprint := "3072310842512042320")

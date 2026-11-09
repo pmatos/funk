@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The text of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1647065246816730817")
+:::moduleDocs (fingerprint := "15864023163966001912")
 :::
 
 :::readable Fir.Dialect.sum.mapM_getLeft_map Fir.Dialect.sum.eq_map_of_mapM_getLeft (fingerprint := "10425250833271113799")
@@ -38,7 +38,7 @@ $`e` _route_ when:
   does.
 :::
 
-:::readable Fir.Dialect.sum.routes_of_lawful Fir.Dialect.sum.lawful Fir.Dialect.sum.lawful_iff (fingerprint := "4344099059883593841")
+:::readable Fir.Dialect.sum.routes_of_lawful Fir.Dialect.sum.lawful Fir.Dialect.sum.lawful_iff Fir.Dialect.sum.names_disjoint (fingerprint := "1993604389849265224")
 *Theorem: when the text of a sum is lawful.* Let the base and $`e` over
 the base have
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text]. The text
@@ -49,7 +49,7 @@ wrote it, which reads it back by its own laws; and every op and type that
 the sum reads, it reads on one side, whose laws say how it is written. If
 the sum's text is lawful, reading back each word reaches the side that
 wrote it, and the reader decides that side by the word alone, so the words
-route.
+route. So a lawful sum has no op name on both of its sides.
 :::
 
 :::readable Fir.LawfulDialectName (fingerprint := "7419316199088341745")
@@ -74,7 +74,8 @@ then the words of the base and of $`e` route. The words of the sum then
 stay in its set, $`\mathrm{names}(b) \cdot n_e`.
 
 So a sum built on the core, one dialect at a time, each of a name not yet
-in the sum, has lawful text at every step.
+in the sum, has lawful text at every step. The second is an instance, so a
+nested sum finds the law for each level by itself.
 :::
 
 :::readable Fir.Dialect.sum.validIsWellFormed Fir.Dialect.sum.printThenParse Fir.Dialect.sum.parse_wellFormed (fingerprint := "2103531098174621293")

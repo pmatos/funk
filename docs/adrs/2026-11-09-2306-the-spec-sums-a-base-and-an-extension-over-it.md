@@ -36,10 +36,11 @@ core's `i8` would then also have two spellings. ADR-2026-11-09-2257 keeps
   first `.`, and a bare word to the core (`wordDialect`). Reading an op or a
   type sends a word of `e`'s name to `e`, and every other word to the base. A
   type is routed by its head word.
-- **What the base sees.** A base op sees only the symbols whose types are
-  all the base's, and the function's result types only when they are all
-  the base's. A base op in a function whose result types the base cannot
-  write is invalid.
+- **Attributes.** An op's attributes go with the op, to the side that its
+  name picks. They are generic terms, read by the op's own dialect, so the
+  sum does not route them on their own. The dialect-set laws below say
+  which dialects their words may name.
+- **What the base sees** of an op's context is ADR-2026-11-09-2353.
 - **Dialect sets.** `DialectSet d` lists the dialects whose names the words
   of `d` may use. The core's set is empty, and the set of `base ⊞ e` is the
   base's set and `e`'s name. `LawfulDialectSet` says that every op name,
@@ -67,17 +68,13 @@ This supersedes ADR-2026-10-30-2040.
 - **Each extension routes its own types.** The sum would then trust the
   extension to send the base's types back to the base. Routing in the sum
   keeps the base's own rules on its types.
-- **Show a base op the context with foreign result types dropped.** A base
-  `ret` could then return fewer values than the function declares, which no
-  rule would catch.
 
 ## Consequences
 
 - An extension that depends on a dialect other than the whole base before
   it needs its classes lifted into a larger base. Stage 2 of #227 adds that.
 - Core ops carry core types only. A value of an extension's own type cannot
-  pass through a core `br`, `ret` or `call`, and no core op is valid in a
-  function that returns such a value. Lifting this needs the core's control
-  ops to be generic in their types, which #227 does not cover.
+  pass through a core `br`, `ret` or `call`. Lifting this needs the core's
+  control ops to be generic in their types, which #227 does not cover.
 - A module does not yet declare its dialect set in the text. Stage 4 of #227
   adds the declaration and the check on both sides.

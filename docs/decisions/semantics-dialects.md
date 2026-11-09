@@ -29,7 +29,10 @@ belongs to the core. Reading an op or a type sends a word of `e`'s name to
 Each side's function rule sees the function through its own view
 (ADR-2026-11-09-2257). A base op sees only the symbols whose types are all
 the base's. It sees the function's result types only when they are all the
-base's, and otherwise it is invalid (ADR-2026-11-09-2306).
+base's, and otherwise it is invalid (ADR-2026-11-09-2353).
+
+An op's attributes go with the op, to the side that its name picks. The
+sum does not route them on their own (ADR-2026-11-09-2306).
 
 ## Dialect sets and laws
 
@@ -47,7 +50,8 @@ the base accepts (ADR-2026-11-09-2306).
 ## Limits
 
 Core ops carry core types only. A value of an extension's own type cannot
-pass through a core `br`, `ret` or `call` (ADR-2026-11-09-2306).
+pass through a core `br`, `ret` or `call` (ADR-2026-11-09-2306). No core op
+is valid in a function that returns such a value (ADR-2026-11-09-2353).
 
 An extension is written over the whole base before it. Lifting one into a
 larger base, and the per-module dialect set in the text, are later stages of

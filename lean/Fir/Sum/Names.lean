@@ -105,7 +105,7 @@ theorem Attr.mem_dialectsAll {as : List Attr} {x : String} :
 -/
 
 /-- The name of a dialect other than the core: the word before the `.` of
-each of its own words. -/
+each of its own words. It holds no `.`, or no word would name it. -/
 class DialectName (d : Dialect) where
   name : String
 export DialectName (name)

@@ -27,8 +27,6 @@ theorem toy_new : name (Ext Toy.Op) ∉ names CoreDialect := by simp [names, nam
 
 instance : LawfulDialectText CoreToy := Dialect.sum.lawful (Dialect.sum.routes_of_names toy_new)
 
-instance : LawfulDialectSet CoreToy := Dialect.sum.lawfulSet
-
 /-- Every valid module of the sum is well formed, as the spec proves of
 every sum whose dialect is new to its base. -/
 theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) :=
