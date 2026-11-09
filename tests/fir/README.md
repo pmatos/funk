@@ -64,8 +64,10 @@ tests = [
   values, each equal, or anything of its type where `fir-ref` returns
   poison. A run that makes no choice has one outcome. UB or fuel exhausted
   among the outcomes makes the test invalid, which counts as a failure:
-  raise the fuel budget, or make the test interpreter-only. Native code
-  takes no `poison`: it runs on each combination of stand-ins in its place,
+  raise the fuel budget, or make the test interpreter-only. A native run
+  that outgrows its stack makes the test invalid too: recurse less deep,
+  or raise `ulimit -s` (ADR-2026-11-09-1602). Native code takes no
+  `poison`: it runs on each combination of stand-ins in its place,
   the boundary bit patterns of its type, and each result must refine one
   of `fir-ref`'s outcomes on the poison
   ([ADR-2026-11-03-1847](../../docs/adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
@@ -228,14 +230,14 @@ factorial and Fibonacci, and even and odd, which call each other; and
 calls a callee that hits UB, which is UB of its caller; all at the same
 seven widths. A run that never ends is interpreter-only, since a
 differential test that runs out of fuel is invalid. A differential test
-recurses at most 20 deep, and a deeper run is interpreter-only too.
-PR #93 set that cap while a built executable's stack was its function's
-frame, its wrapper's and 16 KiB, and the harness ran native code with no
-data limit. Neither holds now, and no limit of either tool sets 20: a
-recursive run's stack follows `ulimit -s`, 8 MiB by default
-(ADR-2026-11-02-1132), the harness runs native code under a data limit
-of 1 GiB (ADR-2026-11-02-2250), and `fir-ref` stops at its fuel. The cap
-stays as it is; making deeper runs differential is a decision of its own.
+recurses as deep as native code's stack allows; fir has no depth limit
+of its own (ADR-2026-10-30-1549). A recursive run's stack follows
+`ulimit -s`, 8 MiB by default (ADR-2026-11-02-1132). `recursion-i8`,
+`recursion-i64` and `recursion-i128` recurse up to 100,000 calls on it,
+and their sidecars give the figures. A deeper run reports that it ran
+out of stack, and the harness reports its test invalid, not a mismatch
+(ADR-2026-11-09-1602): `scripts/harness/fixtures/out-of-stack/` checks
+that verdict.
 `call-args` passes seven and eight arguments of mixed widths, some on
 the stack;
 `call-results` calls functions with no result and with one, and

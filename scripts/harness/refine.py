@@ -6,7 +6,9 @@ where fir-ref returns poison. A test whose fir-ref result is UB or fuel
 exhausted proves nothing, so it is invalid, never a pass. A stuck run of a
 valid module is a failure (NeverStuck). An interpreter-only test passes
 when fir-ref gives the result it expects; an expected UB matches any reason.
-`sets.py` judges a run that makes choices by its set of outcomes.
+`sets.py` judges a run that makes choices by its set of outcomes. A native
+run that outgrows its stack proves nothing either, so it makes its test
+invalid, as a run out of fuel does on the other side (ADR-2026-11-09-1602).
 """
 
 import re
@@ -49,6 +51,24 @@ class Judgement:
     why: str = ""
 
 
+@dataclass(frozen=True)
+class OutOfStack:
+    """A native run that reported that it outgrew the bytes of stack it
+    reserved. That is a limit of the run, not a wrong result."""
+
+    size: int
+
+    def show(self) -> str:
+        return f"runs out of its {self.size} bytes of stack"
+
+    def judgement(self) -> Judgement:
+        return Judgement(
+            INVALID,
+            f"native code outgrew its {self.size} bytes of stack, so the test"
+            " proves nothing: recurse less deep, or raise ulimit -s",
+        )
+
+
 def show_values(values) -> str:
     return "[" + ", ".join(f'"{v}"' for v in values) + "]"
 
@@ -86,6 +106,8 @@ def refines(ref: Outcome, native, types) -> Judgement:
         )
     if ref.kind == STUCK:
         return Judgement(FAILED, "no run of a valid module is stuck")
+    if isinstance(native, OutOfStack):
+        return native.judgement()
     if isinstance(native, str):
         return Judgement(FAILED, "native code fails where fir-ref returns")
     if len(native) != len(ref.values):
