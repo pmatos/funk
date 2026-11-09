@@ -1,6 +1,7 @@
 # Copying, moving and setting memory are ops that keep pointer provenance
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

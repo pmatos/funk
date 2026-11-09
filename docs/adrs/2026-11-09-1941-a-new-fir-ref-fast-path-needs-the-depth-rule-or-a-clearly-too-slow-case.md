@@ -1,6 +1,7 @@
 # A new `fir-ref` fast path needs the depth rule or a case that is clearly too slow
 
 Status: accepted
+Tier: direction; area: fir-ref
 
 ## Context
 

@@ -1,6 +1,7 @@
 # fir is SSA with block arguments, not phis
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

@@ -1,6 +1,7 @@
 # One emitter owns outgoing funk calls and their stack accounting
 
 Status: accepted
+Tier: implementation; area: x86-64-backend
 
 ## Context
 

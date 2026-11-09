@@ -1,6 +1,7 @@
 # An external declaration gives a signature that may be variadic, and narrow integers may carry `sext` or `zext`
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

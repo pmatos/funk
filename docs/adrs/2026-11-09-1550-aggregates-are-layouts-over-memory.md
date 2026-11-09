@@ -1,6 +1,7 @@
 # In M1 aggregates are layouts over memory, not values
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

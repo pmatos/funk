@@ -1,6 +1,7 @@
 # Authored text files are at most 20,000 bytes
 
 Status: accepted; refined by ADR-2026-11-05-1408
+Tier: direction; area: process
 
 ## Context
 

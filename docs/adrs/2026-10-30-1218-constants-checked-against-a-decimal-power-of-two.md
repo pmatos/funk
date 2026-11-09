@@ -1,6 +1,7 @@
 # A constant near its width's limit is compared with 2^(w-1) in decimal, squared by funk-ir's own NTT
 
 Status: accepted
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

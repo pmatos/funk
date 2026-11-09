@@ -1,6 +1,7 @@
 # fir has no nesting limit
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

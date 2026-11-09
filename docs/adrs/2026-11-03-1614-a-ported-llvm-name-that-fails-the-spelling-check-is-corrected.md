@@ -1,6 +1,7 @@
 # A ported LLVM function whose name the spelling check rejects keeps its name, spelled correctly
 
 Status: accepted
+Tier: implementation; area: testing-and-harness
 
 ## Context
 

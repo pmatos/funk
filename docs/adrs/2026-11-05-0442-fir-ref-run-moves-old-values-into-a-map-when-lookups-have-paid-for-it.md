@@ -1,6 +1,7 @@
 # `fir-ref run` keeps recent values in a list and moves older ones into a map when lookups have paid for it
 
 Status: accepted
+Tier: implementation; area: fir-ref
 
 ## Context
 

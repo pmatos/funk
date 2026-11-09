@@ -1,6 +1,7 @@
 # Congruence in the callee compares the new callee in the new module with the old in the old
 
 Status: accepted
+Tier: implementation; area: semantics
 
 ## Context
 

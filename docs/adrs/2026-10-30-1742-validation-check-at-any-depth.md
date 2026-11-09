@@ -2,6 +2,7 @@
 
 Status: accepted; refined by ADR-2026-11-03-1715, ADR-2026-11-05-0025 and
 ADR-2026-11-05-0745
+Tier: implementation; area: validation
 
 ## Context
 

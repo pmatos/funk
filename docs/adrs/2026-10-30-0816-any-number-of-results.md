@@ -1,6 +1,7 @@
 # fir functions and calls return any number of values, in M0 too
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

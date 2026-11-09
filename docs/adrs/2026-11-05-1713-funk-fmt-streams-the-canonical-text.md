@@ -1,6 +1,7 @@
 # funk fmt streams the canonical text and never holds it whole
 
 Status: accepted
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

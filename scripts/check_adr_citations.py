@@ -27,6 +27,7 @@ from check_adr_ids import adr_id
 FIXTURES = {
     "docs/spec/FirSpecSite/Tests.lean": "the spec checker's tests of linking and rendering",
     "docs/spec/FirSpecSite/citation-cases.json": "the grammar's cases, which both checkers read",
+    "scripts/test_adr_index.py": "the adr-index tests, which invent ADRs",
     "scripts/test_check_adr_ids.py": "the adr-ids tests, which name clashing ids",
     "scripts/test_check_adr_citations.py": "this check's tests",
 }

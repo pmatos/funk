@@ -1,6 +1,7 @@
 # funk build writes OUTPUT.o and OUTPUT all or nothing, and adds the verdicts unsupported and tool-error
 
 Status: accepted; refined by ADR-2026-11-08-1805
+Tier: implementation; area: rust-ir-and-tools
 
 ## Context
 

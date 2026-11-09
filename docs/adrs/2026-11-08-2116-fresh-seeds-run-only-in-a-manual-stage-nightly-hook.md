@@ -1,6 +1,7 @@
 # Fresh seeds run only in a nightly workflow, through a manual-stage hook
 
 Status: accepted
+Tier: direction; area: testing-and-harness
 
 ## Context
 

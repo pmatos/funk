@@ -1,6 +1,7 @@
 # The harness judges a differential test by refinement: UB and fuel exhausted make it invalid, and stuck or a tool error fails it
 
 Status: accepted; extended by ADR-2026-10-31-0003
+Tier: direction; area: testing-and-harness
 
 ## Context
 

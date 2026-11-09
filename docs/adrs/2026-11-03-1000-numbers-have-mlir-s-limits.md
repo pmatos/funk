@@ -1,6 +1,7 @@
 # fir's numbers have MLIR's limits: widths up to 16,777,215, other numbers below 2^32
 
 Status: accepted
+Tier: direction; area: semantics
 
 ## Context
 

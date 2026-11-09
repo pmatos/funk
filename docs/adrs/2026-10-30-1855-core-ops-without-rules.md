@@ -2,6 +2,7 @@
 
 Status: accepted; refined by ADR-2026-11-02-0836, ADR-2026-11-02-1156 and
 ADR-2026-11-02-1514
+Tier: implementation; area: fir-ref
 
 ## Context
 
