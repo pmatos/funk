@@ -1,18 +1,21 @@
 """Compares funk's instruction counts with the committed baseline (#174).
 
-Usage: python3 -I scripts/rust_speed.py sizes BASELINE
-       python3 -I scripts/rust_speed.py compare BASELINE MEASURED [--advisory]
+Usage: python3 -I scripts/rust_speed.py sizes
+       python3 -I scripts/rust_speed.py compare [--advisory] < MEASURED
 
-sizes prints the input sizes that BASELINE was measured at: adds and blocks.
-compare reads MEASURED, one "input command count" per line, prints every
-count against the baseline, and exits with 1 when any count is more than
+The baseline is scripts/rust-speed-baseline.json. sizes prints the input
+sizes that it was measured at: adds and blocks. compare reads one
+"input command count" per line from standard input, prints every count
+against the baseline, and exits with 1 when any count is more than
 MARGIN_PERCENT above it. With --advisory it prints the same report and exits
 with 0: only CI is authoritative. It exits with 2 on a malformed file.
 """
 
 import json
 import sys
+from pathlib import Path
 
+BASELINE = Path(__file__).with_name("rust-speed-baseline.json")
 COMMANDS = ("fmt", "verify", "build")
 INPUTS = ("adds", "blocks")
 MARGIN_PERCENT = 10
@@ -26,14 +29,13 @@ def is_count(value) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
-def require_keys(path: str, label: str, value, keys: tuple[str, ...]) -> None:
+def require_keys(path: Path, label: str, value, keys: tuple[str, ...]) -> None:
     if not isinstance(value, dict) or sorted(value) != sorted(keys):
         raise BadFile(f"{path}: {label} must name exactly {', '.join(keys)}")
 
 
-def load_baseline(path: str) -> dict:
-    with open(path, encoding="utf-8") as file:
-        data = json.load(file)
+def load_baseline(path: Path) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise BadFile(f"{path}: expected a JSON object")
     for key in ("recorded_on", "glibc", "valgrind"):
@@ -102,10 +104,9 @@ def report(
     return table, over
 
 
-def compare(baseline_path: str, measured_path: str, advisory: bool) -> int:
-    baseline = load_baseline(baseline_path)
-    with open(measured_path, encoding="utf-8") as file:
-        measured = parse_measured(file.read())
+def compare(advisory: bool) -> int:
+    baseline = load_baseline(BASELINE)
+    measured = parse_measured(sys.stdin.read())
     print(
         f"Baseline: {baseline['recorded_on']}, {baseline['glibc']}, {baseline['valgrind']}. "
         f"Margin: {MARGIN_PERCENT}%."
@@ -131,14 +132,12 @@ def compare(baseline_path: str, measured_path: str, advisory: bool) -> int:
 
 def main(argv: list[str]) -> int:
     try:
-        if len(argv) == 2 and argv[0] == "sizes":
-            sizes = load_baseline(argv[1])["sizes"]
+        if argv == ["sizes"]:
+            sizes = load_baseline(BASELINE)["sizes"]
             print(*(sizes[name] for name in INPUTS))
             return 0
-        if argv[:1] == ["compare"] and (
-            len(argv) == 3 or (len(argv) == 4 and argv[3] == "--advisory")
-        ):
-            return compare(argv[1], argv[2], len(argv) == 4)
+        if argv in (["compare"], ["compare", "--advisory"]):
+            return compare(advisory=len(argv) == 2)
     except (BadFile, OSError, json.JSONDecodeError) as error:
         print(f"rust_speed: {error}", file=sys.stderr)
         return 2

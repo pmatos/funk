@@ -7,7 +7,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from rust_speed import (
+    BASELINE as COMMITTED_BASELINE,
+)
 from rust_speed import (
     BadFile,
     load_baseline,
@@ -59,19 +63,16 @@ class Compare(unittest.TestCase):
         self, measured: str, *flags: str, baseline=BASELINE
     ) -> tuple[int, str]:
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
-            (root / "counts").write_text(measured, encoding="utf-8")
+            path = Path(directory) / "baseline.json"
+            path.write_text(json.dumps(baseline), encoding="utf-8")
             out = io.StringIO()
-            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
-                status = main(
-                    [
-                        "compare",
-                        str(root / "baseline.json"),
-                        str(root / "counts"),
-                        *flags,
-                    ]
-                )
+            with (
+                mock.patch("rust_speed.BASELINE", path),
+                mock.patch("sys.stdin", io.StringIO(measured)),
+                contextlib.redirect_stdout(out),
+                contextlib.redirect_stderr(out),
+            ):
+                status = main(["compare", *flags])
         return status, out.getvalue()
 
     def test_equal_counts_pass(self):
@@ -125,14 +126,15 @@ class Files(unittest.TestCase):
             path = Path(directory) / "baseline.json"
             path.write_text(json.dumps(BASELINE), encoding="utf-8")
             out = io.StringIO()
-            with contextlib.redirect_stdout(out):
-                status = main(["sizes", str(path)])
+            with (
+                mock.patch("rust_speed.BASELINE", path),
+                contextlib.redirect_stdout(out),
+            ):
+                status = main(["sizes"])
         self.assertEqual((status, out.getvalue()), (0, "100 20\n"))
 
     def test_the_committed_baseline_is_well_formed(self):
-        baseline = load_baseline(
-            str(Path(__file__).with_name("rust-speed-baseline.json"))
-        )
+        baseline = load_baseline(COMMITTED_BASELINE)
         self.assertEqual(set(baseline["sizes"]), {"adds", "blocks"})
 
 

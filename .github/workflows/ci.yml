@@ -203,9 +203,9 @@ jobs:
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run rust-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run rust-speed --all-files --verbose --show-diff-on-failure
+        run: uvx --no-build pre-commit@4.6.2 run rust-speed --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
-        run: uvx pre-commit@4.6.2 run rust-speed-test --all-files --verbose --show-diff-on-failure
+        run: uvx --no-build pre-commit@4.6.2 run rust-speed-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run verus-proof --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
