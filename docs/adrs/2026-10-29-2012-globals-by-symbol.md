@@ -1,6 +1,6 @@
 # Globals are referenced by symbol only
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-09-1546 and ADR-2026-11-09-1548
 
 ## Context
 
