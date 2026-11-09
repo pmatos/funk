@@ -25,9 +25,9 @@ if ! command -v valgrind >/dev/null; then
     exit 1
 fi
 
-compare=(python3 -I "$repo_root/scripts/rust_speed.py")
+rust_speed=(python3 -I "$repo_root/scripts/rust_speed.py")
 baseline=$repo_root/scripts/rust-speed-baseline.json
-sizes=$("${compare[@]}" sizes "$baseline")
+sizes=$("${rust_speed[@]}" sizes "$baseline")
 read -r adds blocks <<<"$sizes"
 
 cargo build --quiet --release --locked -p funk
@@ -83,7 +83,7 @@ if [[ -z "${GITHUB_ACTIONS:-}" ]]; then
     mode=(--advisory)
 fi
 status=0
-"${compare[@]}" compare "$baseline" counts "${mode[@]}" || status=$?
+"${rust_speed[@]}" compare "$baseline" counts "${mode[@]}" || status=$?
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     mapfile -t rows < <(awk '{ print $1 "_" $2 "=" $3 }' counts)
     python3 -I "$repo_root/scripts/suite_summary.py" counts "funk's instruction counts" \

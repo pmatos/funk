@@ -26,6 +26,11 @@ def is_count(value) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
+def require_keys(path: str, label: str, value, keys: tuple[str, ...]) -> None:
+    if not isinstance(value, dict) or sorted(value) != sorted(keys):
+        raise BadFile(f"{path}: {label} must name exactly {', '.join(keys)}")
+
+
 def load_baseline(path: str) -> dict:
     with open(path, encoding="utf-8") as file:
         data = json.load(file)
@@ -35,18 +40,13 @@ def load_baseline(path: str) -> dict:
         if not isinstance(data.get(key), str):
             raise BadFile(f"{path}: {key} must be a string")
     sizes = data.get("sizes")
-    if not isinstance(sizes, dict) or sorted(sizes) != sorted(INPUTS):
-        raise BadFile(f"{path}: sizes must name exactly {', '.join(INPUTS)}")
+    require_keys(path, "sizes", sizes, INPUTS)
     if not all(is_count(size) for size in sizes.values()):
         raise BadFile(f"{path}: every size must be a positive integer")
     counts = data.get("instructions")
-    if not isinstance(counts, dict) or sorted(counts) != sorted(INPUTS):
-        raise BadFile(f"{path}: instructions must name exactly {', '.join(INPUTS)}")
+    require_keys(path, "instructions", counts, INPUTS)
     for input_name, row in counts.items():
-        if not isinstance(row, dict) or sorted(row) != sorted(COMMANDS):
-            raise BadFile(
-                f"{path}: {input_name} must name exactly {', '.join(COMMANDS)}"
-            )
+        require_keys(path, input_name, row, COMMANDS)
         if not all(is_count(count) for count in row.values()):
             raise BadFile(
                 f"{path}: every count of {input_name} must be a positive integer"
