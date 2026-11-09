@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Guards the speed of the Rust toolchain against regressions (#174). The
-# pre-commit hook rust-speed calls it, locally and in CI. It builds the
-# release funk, generates large inputs into a temporary directory, counts the
+# Guards the speed of the Rust toolchain against regressions
+# (ADR-2026-11-09-1645). The pre-commit hook rust-speed calls it, locally and
+# in CI. It builds the release funk, generates large inputs into a temporary directory, counts the
 # instructions that funk fmt --check, verify and build run on each one under
 # cachegrind, and compares them with scripts/rust-speed-baseline.json through
 # scripts/rust_speed.py. Instruction counts do not depend on the host's load.
@@ -81,4 +81,11 @@ mode=()
 if [[ -z "${GITHUB_ACTIONS:-}" ]]; then
     mode=(--advisory)
 fi
-"${compare[@]}" compare "$baseline" counts "${mode[@]}"
+status=0
+"${compare[@]}" compare "$baseline" counts "${mode[@]}" || status=$?
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    mapfile -t rows < <(awk '{ print $1 "_" $2 "=" $3 }' counts)
+    python3 -I "$repo_root/scripts/suite_summary.py" counts "funk's instruction counts" \
+        "${rows[@]}" || status=$((status ? status : 1))
+fi
+exit "$status"

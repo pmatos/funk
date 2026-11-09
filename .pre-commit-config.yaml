@@ -94,7 +94,8 @@ repos:
         pass_filenames: false
         files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-rust|rust-env)\.sh$)
       # Counts funk's instructions on large inputs against a committed
-      # baseline (#174). It reports on any host, and fails only in CI.
+      # baseline (ADR-2026-11-09-1645). It reports on any host, and fails only
+      # in CI.
       - id: rust-speed
         name: funk's instruction counts stay within 10% of the baseline
         entry: scripts/check-rust-speed.sh

@@ -187,7 +187,8 @@ jobs:
           fi
           as --version
           ld --version
-      # The rust-speed hook counts funk's instructions under cachegrind.
+      # The rust-speed hook counts funk's instructions under cachegrind
+      # (ADR-2026-11-09-1645).
       - name: Install valgrind
         run: |
           if ! command -v valgrind >/dev/null; then

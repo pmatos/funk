@@ -1,10 +1,21 @@
 {
-  "recorded_on": "arch",
-  "glibc": "glibc 2.44",
-  "valgrind": "valgrind-3.25.1",
-  "sizes": { "adds": 100000, "blocks": 20000 },
+  "recorded_on": "ubuntu-26.04",
+  "glibc": "glibc 2.43",
+  "valgrind": "valgrind-3.26.0",
+  "sizes": {
+    "adds": 100000,
+    "blocks": 20000
+  },
   "instructions": {
-    "adds": { "fmt": 1405239126, "verify": 1733559573, "build": 2735480714 },
-    "blocks": { "fmt": 329796649, "verify": 453075558, "build": 664706371 }
+    "adds": {
+      "fmt": 1431010602,
+      "verify": 1763891488,
+      "build": 2784607627
+    },
+    "blocks": {
+      "fmt": 336798809,
+      "verify": 463391286,
+      "build": 677432042
+    }
   }
 }
