@@ -31,7 +31,7 @@ class Parsing(unittest.TestCase):
         self.assertEqual(adr.title, "We do `x`")
         self.assertEqual(adr.tier, "direction")
         self.assertEqual(adr.area, "process")
-        self.assertEqual(adr.superseded_by, None)
+        self.assertIsNone(adr.superseded_by)
         self.assertEqual(adr.followed_by, [])
 
     def test_status_may_wrap_over_lines(self):
