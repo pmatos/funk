@@ -8,11 +8,12 @@
 //! each of its callee's results: none, one or several.
 
 use super::blocks::value;
-use super::{Body, Rng, width};
+use super::{Body, Rng, Widths, width};
 use crate::dialects::core::int_type;
 use crate::ir::{Attr, FuncType, Op};
 
 /// A function of the module: its symbol and its type.
+#[derive(Clone)]
 pub(super) struct Callee {
     pub name: String,
     pub ty: FuncType,
@@ -20,9 +21,12 @@ pub(super) struct Callee {
 
 /// The function `name`, with zero to three parameters and zero to three
 /// results, of any widths.
-pub(super) fn signature(rng: &mut Rng, name: String) -> Callee {
-    let types =
-        |rng: &mut Rng| -> Vec<_> { (0..rng.below(4)).map(|_| int_type(width(rng))).collect() };
+pub(super) fn signature(rng: &mut Rng, name: String, widths: Widths) -> Callee {
+    let types = |rng: &mut Rng| -> Vec<_> {
+        (0..rng.below(4))
+            .map(|_| int_type(width(rng, widths)))
+            .collect()
+    };
     let params = types(rng);
     let results = types(rng);
     Callee {

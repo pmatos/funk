@@ -18,6 +18,9 @@
 //! end: that is UB or a run out of fuel, not invalid, and no check runs these
 //! modules. The generator is deterministic: one seed gives one module.
 //!
+//! [`program`] builds on it the programs that the differential harness runs
+//! (#165).
+//!
 //! [`wellformed`] builds on it a generator of well-formed modules that are
 //! not all valid, for the round trips over that larger set (#146).
 
@@ -28,7 +31,11 @@ use crate::dialects::core::{
 use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 mod blocks;
+mod bounded;
 mod calls;
+mod planted;
+pub mod program;
+pub mod soup;
 pub mod wellformed;
 
 use calls::Callee;
@@ -72,8 +79,27 @@ impl Rng {
     }
 }
 
-/// A random valid module.
+/// The widths that the types of a generated module take.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Widths {
+    /// Any width, up to `MAX_WIDTH`.
+    Any,
+    /// Only the widths that the x86-64 backend lowers, so `funk build`
+    /// accepts the module.
+    Backend,
+}
+
+/// The widths that the x86-64 backend lowers.
+pub const BACKEND_WIDTHS: [u32; 6] = [1, 8, 16, 32, 64, 128];
+
+/// A random valid module, of any widths.
 pub fn module(rng: &mut Rng) -> Module {
+    module_of(rng, Widths::Any)
+}
+
+/// A random valid module whose types take `widths`. With
+/// [`Widths::Backend`] it has at least one function.
+pub fn module_of(rng: &mut Rng, widths: Widths) -> Module {
     let locs = loc_table(rng);
     let keys: Vec<LocRef> = locs.entries.iter().map(|(r, _)| *r).collect();
     let mut m = Module {
@@ -81,17 +107,21 @@ pub fn module(rng: &mut Rng) -> Module {
         locs,
     };
     let mut funcs: Vec<Callee> = Vec::new();
-    for _ in 0..rng.below(4) {
+    let count = match widths {
+        Widths::Any => rng.below(4),
+        Widths::Backend => 1 + rng.below(4),
+    };
+    for _ in 0..count {
         let name = loop {
             let s = symbol(rng);
             if funcs.iter().all(|f| f.name != s) {
                 break s;
             }
         };
-        funcs.push(calls::signature(rng, name));
+        funcs.push(calls::signature(rng, name, widths));
     }
     for k in 0..funcs.len() {
-        m = m.func(func(rng, &funcs, k, &keys));
+        m = m.func(func(rng, &funcs, k, &keys, widths));
     }
     m
 }
@@ -203,7 +233,10 @@ fn name(rng: &mut Rng, word: bool) -> String {
     s
 }
 
-fn width(rng: &mut Rng) -> u32 {
+fn width(rng: &mut Rng, widths: Widths) -> u32 {
+    if widths == Widths::Backend {
+        return *rng.pick(&BACKEND_WIDTHS);
+    }
     match rng.below(10) {
         0 | 1 => 1,
         2 => *rng.pick(&[8, 16, 32, 64]),
@@ -257,6 +290,11 @@ fn constant(rng: &mut Rng, w: u32) -> Attr {
 /// that define them, and every value name the function has taken, with the
 /// functions of the module that a call may name.
 struct Body<'k> {
+    widths: Widths,
+    /// Every value it makes must stay defined.
+    safe: bool,
+    /// How many more calls `bounded.rs` may add on this path.
+    calls_left: u32,
     keys: &'k [LocRef],
     funcs: &'k [Callee],
     values: Vec<(String, Type)>,
@@ -306,6 +344,9 @@ impl Body<'_> {
     /// their flags, a bitwise op or a shift of two, a division or remainder
     /// of two, `freeze` of one, `poison`, or a constant.
     fn define(&mut self, rng: &mut Rng, t: Type) -> String {
+        if self.safe {
+            return self.defined(rng, &t);
+        }
         let same = self.of_type(&t);
         let casts = self.casts_to(&t);
         let i1 = int_type(1);
@@ -361,18 +402,31 @@ impl Body<'_> {
             let w = int_width(&t).expect("an integer type");
             Op::new("const", loc).attr(constant(rng, w))
         };
-        let n = self.fresh_name(rng);
-        self.ops.push(op.result(n.clone(), t.clone()));
-        self.values.push((n.clone(), t));
-        n
+        self.result_of(rng, op, &t)
     }
 }
 
 /// The `k`-th function of `funcs`, with the type chosen for it.
-fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef]) -> Func {
-    let me = &funcs[k];
+fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef], widths: Widths) -> Func {
+    let (f, mut body) = start(rng, &funcs[k], funcs, keys, widths, false);
+    blocks::build(rng, &mut body, f)
+}
+
+/// The function `me`, with its parameters and results but no blocks, and
+/// its body, which holds the parameters.
+fn start<'k>(
+    rng: &mut Rng,
+    me: &Callee,
+    funcs: &'k [Callee],
+    keys: &'k [LocRef],
+    widths: Widths,
+    safe: bool,
+) -> (Func, Body<'k>) {
     let mut f = Func::new(me.name.clone());
     let mut body = Body {
+        widths,
+        safe,
+        calls_left: 0,
         keys,
         funcs,
         values: Vec::new(),
@@ -387,5 +441,5 @@ fn func(rng: &mut Rng, funcs: &[Callee], k: usize, keys: &[LocRef]) -> Func {
     for t in &me.ty.results {
         f = f.result(t.clone());
     }
-    blocks::build(rng, &mut body, f)
+    (f, body)
 }

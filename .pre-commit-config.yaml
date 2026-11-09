@@ -148,6 +148,30 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-harness\.sh$|rust-env\.sh$|harness/))
+      # Generated programs on fir-ref and as native code, and random texts
+      # through fir-ref fmt (ADR-2026-11-08-2115), on fixed seeds.
+      - id: fir-random
+        name: fir-ref and native code agree on generated programs
+        entry: scripts/check-random-programs.sh
+        language: unsupported_script
+        pass_filenames: false
+        files: ^(lean/|crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-random-programs\.sh$|rust-env\.sh$|harness/))
+      # The same script with fresh seeds, and the fuzzers. Only the nightly
+      # workflow runs them (ADR-2026-11-08-2116, ADR-2026-11-08-2117).
+      - id: fir-random-nightly
+        name: fir-ref and native code agree on fresh generated programs
+        entry: scripts/check-random-programs.sh --fresh 10000
+        language: unsupported_script
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+      - id: fir-fuzz
+        name: The Rust parser and verifier survive fuzzing
+        entry: scripts/check-fuzz.sh
+        language: unsupported_script
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
       - id: fir-harness-test
         name: The differential harness passes its tests
         entry: python scripts/run_unittests.py fir-harness-test -m unittest discover -s scripts/harness -p test_*.py

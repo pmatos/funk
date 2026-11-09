@@ -344,6 +344,8 @@ jobs:
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run fir-harness --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
+        run: uvx --no-build pre-commit@4.6.2 run fir-random --all-files --verbose --show-diff-on-failure
+      - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run fir-harness-test --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run coverage-matrix --all-files --verbose --show-diff-on-failure

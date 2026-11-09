@@ -1,0 +1,108 @@
+# The long checks that no pull request waits for (ADR-2026-11-08-2116):
+# generated programs from fresh seeds, and the fuzzers. Each is a hook of
+# the manual stage, so that every check stays in .pre-commit-config.yaml. A
+# failure fails this workflow and prints the seed to replay; nothing files
+# an issue.
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PRE_COMMIT_COLOR: always
+
+jobs:
+  long-checks:
+    name: Long checks
+    runs-on: ubuntu-26.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-nightly-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      # Copied from the lean job, which saves the elan installer; change
+      # both, and pages.yml, together.
+      - name: Restore the elan installer
+        id: elan-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        with:
+          path: ${{ runner.temp }}/elan.tar.gz
+          key: elan-installer-${{ runner.os }}-${{ env.ELAN_VERSION }}-${{ env.ELAN_SHA256 }}
+      - name: Install elan
+        env:
+          ELAN_VERSION: v4.2.4
+          ELAN_SHA256: 42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63
+        run: scripts/ci-install.sh elan
+      - name: Restore the Lean toolchain and Verso build
+        id: lean-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.elan/toolchains
+            docs/spec/.lake/packages
+          key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
+      - name: Install the Lean toolchain
+        run: elan toolchain install "$(cat lean/lean-toolchain)"
+      # Copied from the rust job, which saves the rustup installer; change
+      # both together.
+      - name: Restore the rustup installer
+        id: rustup-installer
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          RUSTUP_VERSION: 1.29.2
+          RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
+        with:
+          path: ${{ runner.temp }}/rustup-init
+          key: rustup-installer-${{ runner.os }}-${{ env.RUSTUP_VERSION }}-${{ env.RUSTUP_SHA256 }}
+      - name: Install rustup
+        env:
+          RUSTUP_VERSION: 1.29.2
+          RUSTUP_SHA256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4
+        run: scripts/ci-install.sh rustup
+      - name: Restore the Rust toolchain
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.rustup/toolchains/*
+            !~/.rustup/toolchains/stable-*
+          key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install
+          cargo --version
+      - name: Install the assembler and linker
+        run: |
+          if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends binutils
+          fi
+          as --version
+          ld --version
+      - name: Install the fuzzing toolchain
+        run: |
+          rustup toolchain install nightly-2026-10-01 --profile minimal
+          cargo +nightly-2026-10-01 install cargo-fuzz --version 0.13.2 --locked
+      - if: ${{ !cancelled() }}
+        run: uvx --no-build pre-commit@4.6.2 run fir-random-nightly --all-files --hook-stage manual --verbose
+      - if: ${{ !cancelled() }}
+        run: uvx --no-build pre-commit@4.6.2 run fir-fuzz --all-files --hook-stage manual --verbose
+      - name: Keep what crashed the fuzzers
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts
+          if-no-files-found: ignore

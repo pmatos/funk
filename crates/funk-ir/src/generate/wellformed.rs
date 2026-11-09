@@ -31,7 +31,7 @@
 //! [`toy_dialect`]. The generator is deterministic: one seed gives one
 //! module.
 
-use super::{Rng, constant, name, string, symbol, width};
+use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::int_type;
 use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
@@ -241,7 +241,7 @@ impl<'m> Shaper<'m> {
         if !self.values.is_empty() && rng.one_in(2) {
             rng.pick(&self.values).1.clone()
         } else {
-            int_type(width(rng))
+            int_type(width(rng, Widths::Any))
         }
     }
 
@@ -297,7 +297,7 @@ impl<'m> Shaper<'m> {
                 op
             }
             _ => {
-                let w = width(rng);
+                let w = width(rng, Widths::Any);
                 let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
                 let d = self.define(rng, int_type(w));
                 Op {
@@ -419,7 +419,7 @@ fn attr(rng: &mut Rng, depth: u32) -> Attr {
         0 | 1 => Attr::Str(string(rng)),
         2 => Attr::Word(name(rng, true)),
         3 => {
-            let w = width(rng);
+            let w = width(rng, Widths::Any);
             constant(rng, w)
         }
         4 => Attr::Sym(symbol(rng)),
