@@ -102,11 +102,11 @@ code. A kill at a limit is a lower bound.
 | Bindings map | 1,000,000 `add` ops | no counterpart | 3.73 s | killed at 1800 s | At least 480x |
 | Bindings map | 1,000,000-step loop | no counterpart | 1.16 s | killed at 1800 s | At least 1,500x |
 
-Dominance and PrintInt fail the retirement test. The Bindings map is not
-settled. It has no Rust job, so its test is "clearly too slow", and by the
-reading in the comment it is that at 1,000,000 values. Whether that size
-matters is the human's call, and the map stays until that call. The
-comment's estimate of hours at that size is extrapolated, not measured.
+Dominance and PrintInt fail the retirement test. The Bindings map has no
+Rust job, so its test is "clearly too slow", and by the reading in the comment
+it is that at 1,000,000 values. The human ruled on 2026-11-09 that the map
+stays. The comment's estimate of hours at that size is extrapolated, not
+measured.
 
 Not measured, as the comment says: only the named cases ran. The whole of
 `check-fir-ref.sh`, `check-fir-ref-run.sh` and `check-fir-ref-deep.sh` did
@@ -130,7 +130,9 @@ differences are noise. The memory-and-speed parts were not measured.
 
 - FirRef did not get smaller from this ADR: it has 55 files and 9,893 lines
   before and after it. The acceptance line of #169 asks for a FirRef smaller
-  by the retired parts, and this ADR retires none. So whether it alone closes
-  #169 is still a question for the human.
+  by the retired parts, and this ADR retires none. The human ruled on
+  2026-11-09 that this is enough: every fast path is proved equal to the spec's
+  definition, so keeping one costs no trust, and none of them can go without
+  making `fir-ref` slower.
 - Every M1 semantic change is still written twice over the same two copies.
 - The rule does not admit a new fast path for memory alone.
