@@ -20,15 +20,6 @@ def builtFrom : IO (Array Html) := do
   return #[{{<p class="fir-built-from"><small>"Built from commit " {{name}} "."</small></p>}}]
 
 /--
-The style of a section title's permalink icon. Verso positions the icon's link
-absolutely, so it takes no room in the line and sticks out past the end of a
-title that fills its line, and the page scrolls sideways on a narrow screen.
-In the flow of the line, the icon wraps with the title's last word instead.
--/
-def headingCss : String :=
-  ":is(h1, h2, h3, h4, h5, h6) > .permalink-widget.inline > a { position: static; }"
-
-/--
 Where `manualMain` writes the multi-page site, given the same options: the
 last `--output`, and none when the last of `--with-html-multi` and
 `--without-html-multi` turns it off.
@@ -61,7 +52,7 @@ def main (args : List String) : IO UInt32 := do
   | .ok (doc, ids) =>
     let config : RenderConfig := {
       extraContents := ← builtFrom
-      extraCss := {CSS.mk FirSpecSite.adrIndexCss, CSS.mk headingCss}
+      extraCss := {CSS.mk FirSpecSite.adrIndexCss, CSS.mk FirSpecSite.headingCss}
     }
     let status ← manualMain doc (options := args) (config := config)
     if status != 0 then return status
