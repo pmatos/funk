@@ -101,6 +101,11 @@ checks, `pre-commit` and `PR title`, are green.
 4. If the PR is behind `main`, merge `main` into it, or use GitHub's "Update
    branch", and wait for its checks on the new head. The ruleset blocks a PR
    that is behind `main` from merging (ADR-2026-11-03-1612).
+
+   `docs/adrs/INDEX.md` is generated, so never resolve a conflict in it by hand.
+   Resolve and stage every other conflict first. Then run
+   `python3 scripts/adr_index.py --write` and stage the result. Run earlier, the
+   script writes duplicate rows for an ADR that is still unmerged.
 5. Merge by squash once CI is green (auto-merge is fine). Never merge red.
 
 Format: `type(scope)!: summary`. Types: `feat`, `fix`, `perf`, `refactor`,
