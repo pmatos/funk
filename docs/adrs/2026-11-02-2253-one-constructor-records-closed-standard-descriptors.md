@@ -1,6 +1,6 @@
 # One start-up constructor records closed standard descriptors, the workspace's only unsafe code
 
-Status: superseded by ADR-2026-11-09-1540
+Status: superseded by ADR-2026-11-09-1603
 
 ## Context
 

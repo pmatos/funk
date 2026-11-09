@@ -1,6 +1,6 @@
 # Unsafe Rust needs a Verus proof whose trusted base is listed
 
-Status: accepted; refined by ADR-2026-11-09-1540
+Status: accepted; refined by ADR-2026-11-09-1603
 
 ## Context
 

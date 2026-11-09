@@ -8,7 +8,7 @@
 //! reads and writes each one through a `File` on a duplicate of its
 //! descriptor, which reports `EBADF` like any other error. The standard
 //! library opens `/dev/null` on a descriptor that was closed when funk
-//! started, so funk uses it as `/dev/null` (ADR-2026-11-09-1540).
+//! started, so funk uses it as `/dev/null` (ADR-2026-11-09-1603).
 
 use std::io::{self, Read, Write};
 

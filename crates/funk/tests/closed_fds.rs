@@ -1,5 +1,5 @@
 //! funk on a standard input, output or error that was closed when it
-//! started (ADR-2026-11-09-1540): the standard library opens `/dev/null` on
+//! started (ADR-2026-11-09-1603): the standard library opens `/dev/null` on
 //! each one before `main`, so funk behaves as it does on `/dev/null`.
 
 #![cfg(unix)]
