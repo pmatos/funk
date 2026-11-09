@@ -1,6 +1,6 @@
 # A proper tail call is an explicit terminator that validation checks, and a chain of them runs in bounded space
 
-Status: proposed
+Status: accepted
 
 ## Context
 
@@ -10,8 +10,9 @@ runs in constant stack. fir already has loops, so only a frontend that
 guarantees tail calls needs them. The spec has no notion of stack space:
 fuel counts steps, and fir has no depth limit. The human placed #100 in M1,
 as an explicit marker, on 2026-11-09
-([#204](https://github.com/pmatos/funk/issues/204)). This ADR proposes the
-design that #100 asks the human to accept.
+([#204](https://github.com/pmatos/funk/issues/204)), and accepted the
+design below the same day, to be revisited if implementation finds a
+blocker.
 
 ## Decision
 
@@ -43,4 +44,5 @@ design that #100 asks the human to accept.
 
 - Vow, or any frontend that guarantees tail calls, can rely on them.
 - The spec gains a measure of space for the first time.
-- The status becomes accepted when the human accepts the conditions above.
+- If implementing the conditions or the space promise meets a blocker, a
+  new ADR revises them.
