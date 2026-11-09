@@ -39,10 +39,11 @@ tier and area. `INDEX.md` is generated and over 20,000 bytes, so the
 file-size hook excludes it.
 
 `docs/decisions/` will hold one page per area in plain prose, each citing the
-ADRs it rests on. ADRs stay immutable, and the pages only summarize them. When
-a page and an ADR disagree, that is a bug in the page. The pages land after
-this ADR, and with them the index links each ADR to its page and the hook also
-fails on an accepted ADR that no area page cites.
+ADRs it rests on. A page that outgrows the file-size budget continues in a
+sibling, `AREA-TOPIC.md`. ADRs stay immutable, and the pages only summarize
+them. When a page and an ADR disagree, that is a bug in the page. The pages
+land after this ADR. With them, the index links each ADR to its page, and the
+hook also fails when no page of an accepted ADR's own area cites it.
 
 Implementation detail that only one module needs goes in that module's doc
 comment, not in a new ADR. `docs/adrs/README.md` says how to decide.
