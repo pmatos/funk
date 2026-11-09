@@ -1,4 +1,5 @@
 import FirTest.Interpreter
+import FirTest.OverCore
 
 /-!
 A test dialect with a type of its own, for the spec's sum of dialects
@@ -229,5 +230,44 @@ def flagText : String :=
     "locs {\n  @0 = unknown\n}\n") with
   | .ok m => !m.problems.isEmpty
   | .error _ => false
+
+/-! # Sums of more than two dialects
+
+A sum is a dialect, so a third dialect over it nests: every class of the
+spec's sum resolves for `base ⊞ e₁ ⊞ e₂` from the classes of its parts. -/
+
+section
+variable (base e₁ e₂ : Dialect)
+
+example [DialectSignature base] [DialectSignature (base.over e₁)]
+    [DialectSignature ((base ⊞ e₁).over e₂)] : DialectSignature (base ⊞ e₁ ⊞ e₂) :=
+  inferInstance
+
+example [DialectName e₁] [DialectName e₂] [DialectText base] [DialectText (base.over e₁)]
+    [DialectText ((base ⊞ e₁).over e₂)] : DialectText (base ⊞ e₁ ⊞ e₂) :=
+  inferInstance
+
+example [DialectValidation base] [DialectValidation (base.over e₁)]
+    [DialectValidation ((base ⊞ e₁).over e₂)] [DecidableDialectValidation base]
+    [DecidableDialectValidation (base.over e₁)]
+    [DecidableDialectValidation ((base ⊞ e₁).over e₂)] :
+    DecidableDialectValidation (base ⊞ e₁ ⊞ e₂) :=
+  inferInstance
+
+example [TyDenote base.Ty] [TyDenote e₁.Ty] [TyDenote e₂.Ty] : TyDenote (base ⊞ e₁ ⊞ e₂).Ty :=
+  inferInstance
+
+example [DecidableEq base.Ty] [DecidableEq e₁.Ty] [DecidableEq e₂.Ty] :
+    DecidableEq (base ⊞ e₁ ⊞ e₂).Ty :=
+  inferInstance
+
+example [DialectSet base] [DialectName e₁] [DialectName e₂] :
+    names (base ⊞ e₁ ⊞ e₂) = names base ++ [name e₁] ++ [name e₂] :=
+  rfl
+
+end
+
+-- The set of a three-dialect sum lists each added dialect's name, in order.
+#guard names (CoreDialect ⊞ Ext Empty ⊞ FlagExt) == ["toy", "toy"]
 
 end FirTest

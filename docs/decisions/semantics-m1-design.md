@@ -328,7 +328,8 @@ Every dialect other than the core writes its ops, types and attributes as
 `name.word`. Core words stay bare. A module's dialects combine as a sum routed
 by the prefix, for ops, types and attributes alike. The sum moves from
 `lean/FirTest/` into the spec. Test dialects keep the `toy.` prefix
-(ADR-2026-11-09-1543).
+(ADR-2026-11-09-1543). The sum is in the spec now, and semantics-dialects.md
+says what holds of it.
 
 A dialect declares the dialects it depends on, and may name their types. That is
 how an extension op takes a core value (ADR-2026-11-09-1543).
