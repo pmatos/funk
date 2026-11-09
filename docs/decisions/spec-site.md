@@ -216,8 +216,9 @@ declaration of those libraries, or of the root, that does one of these:
 - has an `implemented_by` or an `extern` attribute.
 
 So `sorry`, every other axiom, `unsafe`, `partial`, `implemented_by` and
-`@[extern]` are banned in `lean/` (ADR-2026-10-30-1838). Code that needs one of
-these cannot live in `lean/` without a new ADR (ADR-2026-10-30-1452).
+`@[extern]` are banned in `lean/` (ADR-2026-10-30-1838). Code that must be
+`partial`, `unsafe` or `extern` cannot live in `lean/` without a new ADR
+(ADR-2026-10-30-1452).
 
 Native evaluation is allowed, because the human ruled to trust Lean's compiler
 (ADR-2026-10-30-1838). This covers `native_decide`, `decide +native`, and

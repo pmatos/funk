@@ -51,7 +51,8 @@ image in the set monad, and its case in the morphism's proofs
 call path uses only `pure`, `bind` and `liftExcept` (ADR-2026-11-02-0836).
 
 `Core.Op.denote?` and `Core.Op.exit?` give each core op its family's rule, or
-`none` while its family has not landed. In `DialectDenote CoreDialect SetM`,
+`none` while its family has not landed. `call` gives `none` too, but its
+meaning is its callee's run (ADR-2026-11-02-1514). In `DialectDenote CoreDialect SetM`,
 an op without rules has no outcome: the empty set on every operand vector.
 Only totality, `ReturnsOnDefined`, progress and the lawful class reject a
 missing rule. `PropagatesPoison`, `OpMonotone`, `NeverStuck` and
@@ -143,10 +144,11 @@ after the theorem. The text grows in one accumulator, appended to in place
 (ADR-2026-11-03-1603).
 
 `scripts/check-fir-ref.sh test` checks the limit: it computes `2^16777214 - 1`
-and reprints a module with it. Four spec functions still take time quadratic
-in an integer's digits: `Tok.describe`, `lexAt`, `readNat` and `Ty.decode`.
-They meet a long integer only in a text that does not parse or decode
-(ADR-2026-11-03-1603).
+and reprints a module with it. Some spec functions still take time quadratic
+in an integer's digits: `Tok.describe`, `readNat` and `Ty.decode`. They meet a
+long integer only in a text that does not parse or decode
+(ADR-2026-11-03-1603). `fir-ref` does not run the spec's `lexAt`, because it
+lexes over positions (ADR-2026-11-03-1810).
 
 ### Lexing and reading
 
@@ -215,8 +217,10 @@ needs the same change in `fir-ref` (ADR-2026-10-30-1425). A change to
 ADR (ADR-2026-10-30-1741).
 
 The form is `fir-ref COMMAND ...`. In every command, a FILE of `-` is standard
-input, and `--` ends the options. A parse error is one line on standard
-error, `FILE:LINE:COL: parse error: REASON`. Bytes that are not UTF-8 are a
+input, and `--` ends the options. In `fmt` and `run`, a parse error is one line
+on standard error, `FILE:LINE:COL: parse error: REASON`. `fir-ref validate`
+reports it as a JSON diagnostic on standard output (ADR-2026-10-30-1741). Bytes
+that are not UTF-8 are a
 parse error at the first byte of the first sequence that is not well formed
 (ADR-2026-10-30-1425).
 

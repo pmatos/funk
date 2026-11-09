@@ -199,8 +199,8 @@ are plain `call`s, outside `abi::call` (ADR-2026-11-03-0415).
 
 In M0, fir has no item that declares a function defined elsewhere. So every fir
 `call` reaches a function of the module (ADR-2026-11-02-1021). M1's external
-declarations change that. Their design is in semantics-m1-design.md, and the
-backend does not implement it yet (ADR-2026-11-09-1547).
+declarations change that. Their design is in semantics-m1-design.md
+(ADR-2026-11-09-1547).
 
 C callees expect more of a narrow argument than a funk callee does. They read an
 `i8` or `i16` argument as extended to 32 bits, as the C type requires. They read
@@ -282,7 +282,7 @@ There is no guard (ADR-2026-11-03-0415).
 
 ## `select`, branches and block arguments
 
-`select` is one `cmov`, with no branch. It tests bit 0 with `testb $1, %cl`.
+Below `i128`, `select` is one `cmov`, with no branch. It tests bit 0 with `testb $1, %cl`.
 When the bit is clear, `cmovzq` moves in the second value from its slot. Nothing
 of the condition above bit 0 is read (ADR-2026-10-31-0215).
 

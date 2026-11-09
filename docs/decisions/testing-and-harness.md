@@ -151,7 +151,7 @@ the module, or `fir-ref` cannot run the call.
 It binds to the loopback address, with no option to change that. Every request
 must name a loopback `Host`. Every POST must carry the page's own `Origin` and be
 `application/json`. It serves one request at a time, because native runs use
-`preexec_fn`. Native runs keep the harness's data limit (ADR-2026-11-02-2250).
+`preexec_fn`. Native runs keep the harness's data limit (ADR-2026-11-08-1806).
 Each tool and native program has 10 seconds by default, set by `--timeout`.
 
 ## The test corpus
@@ -244,7 +244,9 @@ A generated run is judged differently from a corpus test:
 - Otherwise the run is a differential test by the corpus's rules.
 - A stuck path fails in every case.
 
-Runs have 20,000 steps of fuel. The hook also guards against an empty check. In
+Ordinary runs have 20,000 steps of fuel. Runs of the functions that stay
+defined have 1,000,000, and planted fuel runs have 1,000 (ADR-2026-11-08-2115).
+The hook also guards against an empty check. In
 a run of 200 or more, at least half of the runs without an expected ending must
 reach native code.
 
@@ -322,8 +324,11 @@ A sidecar has `source`, and each test has `from`. Each function's ops carry a
 location, a source range of the LLVM test file. Every module names one
 llvm-project commit, `7a941dfb2877a0b8cf30323fefa85ad019e0b0f5`. Moving to a
 newer commit means moving every module, or a new ADR. No LLVM file is in the
-repository, only the hand translations. `scripts/harness/corpus.py` checks all
-this. The ported modules are canonical texts, so every reader of the corpus reads
+repository, only the hand translations. `scripts/harness/corpus.py` checks that
+`LICENSE.TXT` and `README.md` are present, the licence's SHA-256, a sidecar for
+each module, a well-formed `source`, a `from` on each test, that no other file
+is there, and that at most one commit is named (ADR-2026-11-03-0643). The ported
+modules are canonical texts, so every reader of the corpus reads
 them.
 
 A case comes in when fir's M0 ops can express it and it tests an integer edge

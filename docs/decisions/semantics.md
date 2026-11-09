@@ -41,8 +41,9 @@ files, the x86-64 backend and the command lines of `funk` and `fir-ref`. It is
 also the tests and the corpus. The grammar's own words, such as `func`, are not per-op code
 (ADR-2026-11-03-0600).
 
-CI keeps this line. `crates/funk-ir/tests/g0.rs`, `scripts/check_g0.py` and
-`lean/FirTest/G0.lean` fail on per-op code in generic code. Each check covers a
+CI keeps this line. `crates/funk-ir/tests/g0.rs` and `scripts/check_g0.py` fail
+on per-op code in generic code. `lean/FirTest/G0.lean` breaks when generic code
+narrows to the core dialect. Each check covers a
 place unless the line excludes it, so a new file is checked
 (ADR-2026-11-03-0600).
 
@@ -252,8 +253,8 @@ set refinement does not show that a target keeps a distribution.
 The refinement engine asks monotonicity only of the ops a run can reach. Those
 are the ops of the source module's functions and of the function that runs. A
 lawful dialect gets both function-level refinement theorems for valid modules
-from the class alone. `Core.args_isRefinedBy` and `Core.replaceBody_isRefinedBy`
-hold for every core module, valid or not (ADR-2026-11-05-1715).
+from the class alone. `Core.args_isRefinedBy` holds for every core module, valid
+or not (ADR-2026-11-05-1715).
 
 Replacing a callee is replacing a body. Every function keeps its symbol, its
 parameters and its result types. Congruence assumes that the new `@g`, run in

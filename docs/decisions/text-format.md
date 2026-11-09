@@ -21,8 +21,10 @@ The text format is the interface between Lean and Rust. Rust prints a module.
 Lean parses and reprints it. The bytes must match (ADR-2026-10-29-2014).
 
 Every op of every dialect uses one grammar, so a new dialect needs no parser
-change (ADR-2026-10-29-2014). A new kind of item is different. It is a new
-`Item` constructor and a parser change (ADR-2026-11-03-0600).
+change (ADR-2026-10-29-2014). In M0, a new kind of item is a new `Item`
+constructor and a parser change (ADR-2026-11-03-0600). The M1 design registers
+kinds of item through the one grammar, so a new kind needs no parser change
+(ADR-2026-11-09-1543).
 
 Text is fir's only format in v0. A binary format is left out on purpose. It
 can come later if text parsing becomes a bottleneck (ADR-2026-10-29-2014).
@@ -171,8 +173,9 @@ permutation of `Func.defs` (ADR-2026-11-03-0028).
 
 A new dialect gets the round trip by proving its own `LawfulDialectText`. A
 change to the core op set extends `Core.lawfulDialectText`. Neither reworks
-`printThenParse`. A new kind of item extends the item lemma of each step
-(ADR-2026-11-03-0028).
+`printThenParse`. Today a new kind of item extends the item lemma of each step
+(ADR-2026-11-03-0028). The M1 design restates the round-trip proofs over sums
+of dialects and registered kinds of item (ADR-2026-11-09-1543).
 
 ### Parsed modules are well formed
 

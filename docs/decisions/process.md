@@ -54,8 +54,9 @@ M1 also gives the frontends what their sequential code needs
 
 Each item goes through every layer at once. That includes a naive backend
 lowering, so that the harness checks the item natively. Native lowering of inline
-assembly waits for M4 (ADR-2026-11-09-1552). semantics-m1-design.md has these
-designs.
+assembly waits for M4 (ADR-2026-11-09-1552). The second dialect has no lowering
+to core and no native backend in M1 (ADR-2026-11-09-1545).
+semantics-m1-design.md has these designs.
 
 These stay out of M1, with a hook in the format (ADR-2026-11-09-1548):
 
@@ -280,9 +281,10 @@ shows what holds of its successor. The `adr-index` hook fails when the index is
 stale or an ADR has no tier and area.
 
 `docs/decisions/` holds one page per area in plain prose, each citing the ADRs
-it rests on. ADRs stay immutable, and the pages only summarize them. With the
-pages, the index links each ADR to its page. The hook also fails on an accepted
-ADR that no area page cites.
+it rests on. A page that outgrows the file-size budget continues in a sibling,
+`AREA-TOPIC.md`. ADRs stay immutable, and the pages only summarize them. The
+index links each ADR to its page. The hook also fails when no page of an
+accepted ADR's own area cites it.
 
 Implementation detail that only one module needs goes in that module's doc
 comment, not in a new ADR. `docs/adrs/README.md` says how to decide.

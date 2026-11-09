@@ -60,8 +60,10 @@ and `loc`. The name is a string. Attributes and types are generic terms, as the
 text writes them. `loc` is a `LocRef`, not an `Option`, so no op exists without
 a location.
 
-`Item` follows the spec. It has one variant, `Func`, and is
-`#[non_exhaustive]`. A module is the symbol table of its own items.
+`Item` follows the spec. Today it has one variant, `Func`, and is
+`#[non_exhaustive]`. The M1 design registers more kinds of item
+(ADR-2026-11-09-1543), and `funk-ir` does not implement that yet. A module is
+the symbol table of its own items.
 
 A `Dialect` gives `OpSpec`s, one per op name, and `TypeSpec`s. `OpSpec::decode`
 takes an op's attributes and the types of its operands and results. It returns
@@ -357,4 +359,4 @@ the standard library's standard error, and exits with 2.
 ## Other tools
 
 testing-and-harness.md describes the fir explorer. Its native runs keep the
-harness's data limit (ADR-2026-11-02-2250).
+harness's data limit (ADR-2026-11-08-1806).
