@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9021584873318814260")
+:::
+
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
 *Theorems: flags read back from their spelling, and only from it.* With
 $`\mathrm{flags}`, $`\mathrm{decodeflags}` and $`\mathrm{decodeexact}` of

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined environments: readable blocks" =>
 
+:::moduleDocs (fingerprint := "13860081481177104000")
+:::
+
 :::readable Fir.DVal.type_eq_of_isRefinedBy Fir.DVals.types_eq_of_isRefinedBy Fir.DVals.length_eq_of_isRefinedBy (pin := Fir.instHRefinementDVal) (pin := Fir.List.IsRefinedBy) (fingerprint := "12804861348215119863")
 *Theorems: refinement keeps types and lengths.* In every dialect, with
 its refinement of values:

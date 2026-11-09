@@ -15,6 +15,9 @@ changes under it.
 
 #doc (Manual) "Core signatures: readable blocks" =>
 
+:::moduleDocs (fingerprint := "14634538406531335776")
+:::
+
 :::readable Fir.CoreDialect Fir.Core.i (fingerprint := "6975174900697461964")
 *Definition: the core dialect.* The core dialect is the
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect] whose op

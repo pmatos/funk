@@ -1,4 +1,5 @@
 import FirSpecSite
+import FirSpecSite.Fingerprint
 
 /-!
 Tests of the ADR appendix and of citation links. They run when the
@@ -216,5 +217,34 @@ private def page : String :=
 #guard (citedInPage page).map (fun c => (c.citation.id, c.href)) ==
   #[("2026-10-29-2015", some "adrs/ADR-2026-10-29-2015/#ADR-2026-10-29-2015"), ("2026-10-29-2017", none)]
 #guard attribute? "<a class=\"x\" href=\"y\">" "href" == some "y"
+
+/-! The fingerprint of a module's code does not depend on the order of its declarations. -/
+
+open Lean in
+#eval show CoreM Unit from do
+  let env ← getEnv
+  let print := moduleFingerprint env
+  unless print #[``Nat.add, ``Nat.succ] == print #[``Nat.succ, ``Nat.add] do
+    throwError "the order of the declarations changes a module's fingerprint"
+  if print #[``Nat.add, ``Nat.succ] == print #[``Nat.add] then
+    throwError "a module's fingerprint misses a declaration"
+  unless print #[`Nat.noSuchDeclaration] == .error `Nat.noSuchDeclaration do
+    throwError "a module's fingerprint accepts a name that is no declaration"
+
+/-! Every module under `lean/Fir` is included in the document. -/
+
+#guard moduleOfPath "lean/Fir/Core/Ops.lean" == "Fir.Core.Ops"
+
+#guard includedModules
+  "{includeReadable \".\" Fir.Core.Ops \"Core ops\" FirSpec.Core.Ops (level := 2)}\n\
+   prose that names Fir.Other\n\
+   {includeLiterate \".\" Fir.Execution.PoisonUB \"Poison\" (level := 2)}\n" ==
+  #["Fir.Core.Ops", "Fir.Execution.PoisonUB"]
+
+#guard notIncluded #["lean/Fir/A.lean", "lean/Fir/B/C.lean"]
+  "{includeReadable \".\" Fir.A \"A\" FirSpec.A (level := 2)}\n" == #["Fir.B.C"]
+
+#guard notIncluded #["lean/Fir/A.lean"]
+  "{includeLiterate \".\" Fir.A \"A\" (level := 2)}\n" == #[]
 
 end FirSpecSite.Tests

@@ -14,6 +14,9 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7842167633865265021")
+:::
+
 :::readable Fir.eq_cons_of_head? (fingerprint := "10406841056930139947")
 *Lemma: a list with a first element is that element followed by the
 rest.* The proofs below use it to name the blocks of a function that come

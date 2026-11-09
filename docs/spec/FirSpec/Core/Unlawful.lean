@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Semantics the obligations reject: readable blocks" =>
 
+:::moduleDocs (fingerprint := "2703410945654149105")
+:::
+
 :::readable Fir.Core.Unlawful.add_typesValid Fir.Core.Unlawful.sdiv_typesValid (pin := Fir.TypesValid) (fingerprint := "5393438447920550166")
 *Theorem: $`\mathsf{add}_1` with no flags and $`\mathsf{sdiv}_8` without
 $`\mathsf{exact}` are valid op instances.* $`\mathsf{add}` at

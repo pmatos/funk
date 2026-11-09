@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
+:::moduleDocs (fingerprint := "14252181689426036138")
+:::
+
 :::readable Fir.ChoiceTree (fingerprint := "6945210103657211533")
 *Definition: a tree of choices.* A tree of choices is a computation written
 out as a tree, so that a program can walk it. A path from the root to a

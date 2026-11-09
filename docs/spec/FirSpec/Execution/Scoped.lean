@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope along a run: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7789761743438093526")
+:::
+
 :::readable Fir.eq_of_nodup_map (fingerprint := "17771416556615606785")
 *Lemma: two members of a list are one when a key that is distinct on the
 list agrees on them.* If $`g` gives the members of a list distinct values,

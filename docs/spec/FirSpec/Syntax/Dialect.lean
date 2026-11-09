@@ -18,6 +18,9 @@ changes under it.
 
 #doc (Manual) "Dialects: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8343847725334882782")
+:::
+
 :::readable Fir.HVector (pin := Fir.DialectDenote) (fingerprint := "5494653853977177333")
 *Definition: a vector of values of given types.* Let $`a_1 \dots a_n` be a
 list of types, and let $`f` give each type $`a` a set of values $`f(a)`. A

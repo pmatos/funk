@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Reading a run path by path: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9355909806303777818")
+:::
+
 :::readable Fir.SetM.run_pure Fir.SetM.run_bind Fir.SetM.run_liftExcept Fir.SetM.run_lift (fingerprint := "4071084253136644651")
 *Theorem: how each way of building a computation ends.* The
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]

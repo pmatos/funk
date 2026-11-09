@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Width change rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15486588000683322125")
+:::
+
 :::readable Fir.Core.zextValue (pin := BitVec.setWidth) (fingerprint := "5245716347567910269")
 *Definition: the rule of $`\mathsf{zext}`.* For all widths $`M` and
 $`N`, $`\mathsf{zext}_{M \to N}` of a vector of $`M` bits is the vector of

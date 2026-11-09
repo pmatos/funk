@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6209201448781201091")
+:::
+
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
 *Definition: the spelling of a token.* Every
 {ref "The-fir-specification--Text-format--The-parser"}[token] $`t` has one

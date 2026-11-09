@@ -14,6 +14,9 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "What a call step needs: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8199756570576633762")
+:::
+
 :::readable Fir.HasPath.bind (pin := Fir.HasPath) (fingerprint := "12286075038897393730")
 *Theorem: a sequence has a path when its parts have one.* A run may end in
 more than one way, for example where $`\mathsf{freeze}` picks a value, so

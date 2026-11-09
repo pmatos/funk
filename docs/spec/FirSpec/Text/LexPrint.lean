@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Attributes, locations and names: readable blocks" =>
 
+:::moduleDocs (fingerprint := "4831530200266197532")
+:::
+
 :::readable Fir.toString_string (fingerprint := "8085136495838143184")
 *Lemma: a string, converted to a string, is itself.* The printer builds
 some text with a conversion to a string, and this lets the proofs read the

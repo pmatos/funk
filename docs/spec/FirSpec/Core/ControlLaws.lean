@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Control-flow obligations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "12863193526180513881")
+:::
+
 :::readable Fir.Core.ret_total Fir.Core.ret_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "8075508603752795612")
 *Theorem: $`\mathsf{ret}` is total and monotone.* For every list of
 result types $`t^*`, under fir's execution rules, $`\mathsf{ret}~t^*` is

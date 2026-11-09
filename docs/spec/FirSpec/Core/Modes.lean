@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
+:::moduleDocs (fingerprint := "9471557765715568977")
+:::
+
 :::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "17753302036347918519")
 *Definition: the core ops in the tree of choices.* `fir-ref run` runs the
 core dialect in the

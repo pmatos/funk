@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Outcomes and behaviours: readable blocks" =>
 
+:::moduleDocs (fingerprint := "2605771044880655497")
+:::
+
 :::readable Fir.Outcome (fingerprint := "2974526082486249930")
 *Definition: an outcome.* An outcome is how one run of a function ends,
 seen from outside. Each dialect fixes the kind of its observations, what an

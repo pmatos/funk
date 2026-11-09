@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments: readable blocks" =>
 
+:::moduleDocs (fingerprint := "15695279757290185778")
+:::
+
 :::readable Fir.Func.runs_isRefinedBy_of_calls (pin := Fir.CallsRefined) (pin := Fir.Func.OpsMonotone) (pin := Fir.Behaviour.IsRefinedBy) (pin := Fir.Outcome.IsRefinedBy) (pin := Fir.observable) (fingerprint := "17030029660348966586")
 *Theorem: on refined arguments, a function refines itself in a module
 that runs each call as the source does.* In every dialect, let the target

@@ -4,9 +4,11 @@ This file is the account of what exists on `main` today and what does
 not. The [README](../README.md#status) lists funk's milestones, and the
 [roadmap](roadmap.md) plans them.
 
-Issue [#5](https://github.com/pmatos/funk/issues/5) is the M0 epic. Its
-sub-issues track the work of M0, one issue for each piece. These parts of M0
-are on `main`:
+M0 is done. Issue [#5](https://github.com/pmatos/funk/issues/5) was its
+epic, and it closed on 2026-11-05 with every "Done when" item met. The
+[M0 audit](m0-audit.md) records the evidence. M1 has started, and issue
+[#177](https://github.com/pmatos/funk/issues/177) is its epic. These parts
+of funk are on `main`:
 
 - The decisions that M0 starts from, each recorded as an ADR.
 - A [spike report](spikes/leanmlir.md) that compared two ways to write
@@ -194,4 +196,5 @@ are on `main`:
   block of a million ops, and `scripts/check-fir-ref-run.sh` checks
   `fir-ref run` on a loop and a recursion of a million steps.
 
-The epic's open sub-issues list the parts of M0 that do not exist yet.
+The open sub-issues of [#177](https://github.com/pmatos/funk/issues/177) list
+the parts of M1 that do not exist yet.

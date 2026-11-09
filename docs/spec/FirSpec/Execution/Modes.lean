@@ -14,6 +14,9 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive, scripted and sampled modes: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6704798835371754640")
+:::
+
 :::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "18031745832792441965")
 *Definition: a leaf, and the way to end it stands for.* A walk of a
 {ref "The-fir-specification--Execution--Choice-trees"}[tree of choices]

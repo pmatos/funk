@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Fuel and progress: readable blocks" =>
 
+:::moduleDocs (fingerprint := "4507026230187520066")
+:::
+
 :::readable Fir.FuelMonotone (fingerprint := "8062891189301265866")
 *Definition: fuel monotonicity.* The interpreter counts its steps against
 a budget, its _fuel_, so that every run ends: a loop that would go on

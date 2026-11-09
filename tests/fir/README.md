@@ -279,8 +279,8 @@ callee that returns several values, at the same seven widths; at `i7`
 and `i33` every test is interpreter-only. `several-mixed` returns
 results of mixed widths and calls with six or more arguments whose
 results go in memory, so that some arguments go on the stack.
-`results` and `call-several`, interpreter-only until #31, are
-differential.
+`results` and `call-several` were interpreter-only before #31 and are
+differential now.
 
 The texts of #21 that came after #31 return an `i128` among several
 results, which goes in the result area at an offset that is a multiple

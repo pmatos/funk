@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "What decoding accepts: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7819339758642219677")
+:::
+
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "7523009022168863131")
 *Lemma: result types as read decode back to themselves.* Let $`d` be a
 dialect with a signature, validation rules and a text, whose text is

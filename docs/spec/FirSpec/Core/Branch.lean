@@ -14,6 +14,9 @@ changes under it.
 
 #doc (Manual) "Branch rules: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7244481746265561446")
+:::
+
 :::readable Fir.Core.brExit (pin := Fir.Exit) (fingerprint := "1268996599905063284")
 *Definition: the rule of $`\mathsf{br}`.* $`\mathsf{br}` goes to its
 successor with index 0, its only one, on every run:

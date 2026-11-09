@@ -14,6 +14,9 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Accepted ops, blocks and regions: readable blocks" =>
 
+:::moduleDocs (fingerprint := "8472785573976490432")
+:::
+
 :::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "7430246370871112945")
 *Lemma: proof plumbing.* For every list of attributes each of which can
 be {ref "The-fir-specification--Text-format--Grammar"}[written], the list

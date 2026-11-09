@@ -14,6 +14,9 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the first pass accepts: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6304069941811610365")
+:::
+
 :::readable Fir.Text.Scope.Holds.not_mem (pin := Fir.Text.Scope.Holds) (fingerprint := "3433405947972505279")
 *Lemma: a value that a scope does not contain is not in its list.* For
 every dialect, every

@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
+:::moduleDocs (fingerprint := "10417988435784509680")
+:::
+
 :::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "10369497456229509283")
 *Definition: the tables of a function.* Before it checks the ops of a
 function $`f`, the check builds five tables, once, from $`f` and a list

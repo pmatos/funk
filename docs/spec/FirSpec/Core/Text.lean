@@ -15,6 +15,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
+:::moduleDocs (fingerprint := "5137435498858895133")
+:::
+
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
 *Definition: the names of the predicates.* Each of the ten
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicates] of

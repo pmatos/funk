@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Poison classes: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6974688253723191427")
+:::
+
 :::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
 *Definition: a poison class.* How an op treats {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[poison] operands.
 

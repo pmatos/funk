@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The location table read back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "4937616668860296335")
+:::
+
 :::readable Fir.Text.readNat_cons (pin := Fir.Text.readNat) (pin := Fir.Location.limit) (fingerprint := "10446730023852332739")
 *Theorem: a line or a column in range reads back.* For every number
 $`n < 2^{32}`, the

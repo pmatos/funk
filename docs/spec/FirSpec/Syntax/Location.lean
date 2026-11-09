@@ -16,6 +16,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Locations: readable blocks" =>
 
+:::moduleDocs (fingerprint := "900412381282629784")
+:::
+
 :::readable Fir.LocRef (pin := Fir.printLocRef) (fingerprint := "9162630897479780355")
 *Definition: a location reference.* A location reference $`r` is a natural
 number, written $`\mathtt{@}r` in text. It is a key of the module's location

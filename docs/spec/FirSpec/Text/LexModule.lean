@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
+:::moduleDocs (fingerprint := "7495349875603717109")
+:::
+
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
 *Theorem: an op's results and its `=` spell their tokens before any
 characters.* For every dialect with a

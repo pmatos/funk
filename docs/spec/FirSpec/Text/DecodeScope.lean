@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "The decoding step: readable blocks" =>
 
+:::moduleDocs (fingerprint := "6171007526611993748")
+:::
+
 :::readable Fir.Block.scopeDefs Fir.Operation.scopeDefs Fir.Region.scopeDefs (fingerprint := "14018173596716500762")
 *Definitions: the definitions of blocks, ops and regions, in the order of
 the first pass.* The

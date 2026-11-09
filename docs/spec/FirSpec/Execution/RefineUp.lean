@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Returns and UB, followed back: readable blocks" =>
 
+:::moduleDocs (fingerprint := "16275544034918685054")
+:::
+
 :::readable Fir.MonotoneOps Fir.Func.OpsMonotone (pin := Fir.OpMonotone) (fingerprint := "11196719689786516999")
 *Definition: ops whose own rules are monotone.* A list of ops $`o^*` has
 _monotone ops_ when every op of it that runs by its own rule, a terminator

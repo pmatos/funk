@@ -83,6 +83,9 @@ comment written before then, M1 to M6 mean today's M2 to M7.
 
 ### M0: fir compiler with a basic x86-64 backend
 
+**Status.** Done. The epic closed on 2026-11-05 with every "Done when" item
+met, and [`m0-audit.md`](m0-audit.md) records the evidence.
+
 **Goal.** The first end-to-end slice: a tiny fir core with a formal semantics
 in Lean, a Rust library that parses, verifies and prints it with byte-exact
 round trips, and a naive x86-64 backend whose output is checked against the

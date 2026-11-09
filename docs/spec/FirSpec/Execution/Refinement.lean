@@ -14,6 +14,9 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement: readable blocks" =>
 
+:::moduleDocs (fingerprint := "17708591231383344787")
+:::
+
 :::readable Fir.Outcome.IsRefinedBy (fingerprint := "12394458454088004366")
 *Definition: one outcome allows another.* A source
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome]
