@@ -124,7 +124,7 @@ def body (header : String) (lines : List String) : String :=
 
 A function that calls itself without end runs out of fuel, in either mode:
 each call takes a step, and its callee runs on the steps that are left
-(#20). Until #20 gave `call` its meaning, `fir-ref` reported these runs
+(#20). Before #20 gave `call` its meaning, `fir-ref` reported these runs
 as an error, an op without rules (ADR-2026-10-30-1855); no core op is
 without rules now. `FirTest.Calls` tests calls that return. -/
 

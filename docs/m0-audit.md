@@ -22,8 +22,8 @@ file, [#119](https://github.com/pmatos/funk/pull/119), mends:
   read wider than the spec (item 1). #119 adds ADR-2026-11-03-1000.
 
 Line numbers are those of `ca5fd9f`; #119 changes none of the files they
-point into. Corpus counts include #119's tests. #5 stays open after #23
-closes: see the last section.
+point into. Corpus counts include #119's tests. #5 stayed open after #23
+closed, until 2026-11-05: see the last section.
 
 Addendum, 2026-11-03: [#122](https://github.com/pmatos/funk/issues/122)
 came after this audit and changes five of its facts; the evidence below
@@ -147,7 +147,8 @@ syntax at line 51, validation at 69, execution at 97, text format at
 211), then the ADRs as an appendix (293). The Lean definitions are the
 normative spec. It is complete enough to implement from:
 
-- every op of the M0 op set, 24 in all, has its text (`Core.lawfulDialectText`
+- every op of the M0 op set, 24 in all at `ca5fd9f` and 25 since #122
+  added `poison`, has its text (`Core.lawfulDialectText`
   covers each), its validation rule and its execution rule
   (`Core.lawfulDialectPoison` proves that every valid instance of every
   op but `call` is total; `call` runs its callee, ADR-2026-11-02-1514);
