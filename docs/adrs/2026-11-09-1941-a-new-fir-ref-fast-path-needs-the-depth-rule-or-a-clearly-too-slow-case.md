@@ -132,7 +132,4 @@ differences are noise. The memory-and-speed parts were not measured.
   by the retired parts, and this ADR retires none. So whether it alone closes
   #169 is still a question for the human.
 - Every M1 semantic change is still written twice over the same two copies.
-- A new fast path has to make its case from depth or from a clearly too
-  slow case. Being faster is not enough.
-- The rule does not admit a new fast path for memory alone. The existing
-  memory-and-speed path stays, since the rule applies only to new paths.
+- The rule does not admit a new fast path for memory alone.
