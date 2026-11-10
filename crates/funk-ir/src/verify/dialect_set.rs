@@ -16,7 +16,7 @@ use std::collections::HashSet;
 use super::Diagnostic;
 use crate::ir::names::{is_word, word_dialect};
 use crate::ir::tree::{Step, walk};
-use crate::ir::{Attr, Block, Func, Module, Part, Type};
+use crate::ir::{Attr, Func, Module, Part, Type};
 use crate::registry::Registry;
 use crate::text::quote;
 
@@ -59,35 +59,41 @@ pub(super) fn check_words(m: &Module, reg: &Registry, out: &mut Vec<Diagnostic>)
     }
 }
 
-/// The blocks of `f`, at any depth, in the spec's order (`Func.allBlocks`).
-fn blocks(f: &Func) -> impl Iterator<Item = &Block> {
-    f.body.parts().filter_map(|p| match p {
-        Part::Block(b) => Some(b),
-        Part::Region(_) | Part::Op(_) => None,
-    })
-}
-
-/// The first dialect, outside `declared`, that a word of `f` names.
+/// The first dialect, outside `declared`, that a word of `f` names. Every
+/// type comes before every op in the spec's order, so one walk of the
+/// blocks returns at the first type outside, and otherwise gives the first
+/// op word outside that it met.
 fn first_outside<'f>(f: &'f Func, declared: &[String]) -> Option<&'f str> {
     let outside = |w: &'f str| word_dialect(w).filter(|x| !declared.iter().any(|d| d == x));
-    let types = f
-        .results
-        .iter()
-        .chain(f.params.iter().map(|p| &p.ty))
-        .chain(blocks(f).flat_map(|b| {
-            b.params
-                .iter()
-                .chain(b.ops.iter().flat_map(|o| &o.results))
-                .map(|d| &d.ty)
-        }));
-    for ty in types {
-        if let Some(x) = in_type(ty, &outside) {
+    if let Some(x) = in_types(
+        f.results.iter().chain(f.params.iter().map(|p| &p.ty)),
+        &outside,
+    ) {
+        return Some(x);
+    }
+    let mut first_op = None;
+    for part in f.body.parts() {
+        let Part::Block(b) = part else { continue };
+        let defs = b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results));
+        if let Some(x) = in_types(defs.map(|d| &d.ty), &outside) {
             return Some(x);
         }
+        if first_op.is_none() {
+            first_op = b
+                .ops
+                .iter()
+                .find_map(|o| outside(&o.name).or_else(|| in_attrs(&o.attrs, &outside)));
+        }
     }
-    blocks(f)
-        .flat_map(|b| &b.ops)
-        .find_map(|o| outside(&o.name).or_else(|| in_attrs(&o.attrs, &outside)))
+    first_op
+}
+
+/// The first dialect that `outside` gives for a word of the types `tys`.
+fn in_types<'a>(
+    mut tys: impl Iterator<Item = &'a Type>,
+    outside: &impl Fn(&'a str) -> Option<&'a str>,
+) -> Option<&'a str> {
+    tys.find_map(|t| in_type(t, outside))
 }
 
 /// The first dialect that `outside` gives for a word of the type `ty`.

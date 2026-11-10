@@ -30,7 +30,8 @@
 //! adds [`TOY_OP`], which a registry knows once it registers
 //! [`toy_dialect`]. A module may name one to three dialects in its dialect
 //! set, drawn with repeats, which the round trips print and read back
-//! whatever dialects the reader holds. The generator is deterministic: one seed gives one module.
+//! whatever dialects the reader holds. The generator is deterministic: one
+//! seed gives one module.
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::{self, int_type};
