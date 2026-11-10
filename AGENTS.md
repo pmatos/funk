@@ -119,7 +119,9 @@ commands until it succeeds. Start agents in another worktree with
   (the `rust-fmt`, `rust-clippy` and `rust-test` hooks; it installs the
   toolchain that `rust-toolchain.toml` pins), GNU binutils (`as` and
   `ld`) on an x86-64 Linux host, which `funk build` runs in the
-  `rust-test` hook, and valgrind (the `rust-speed` hook).
+  `rust-test` hook, glibc's development files (`libc.so`; `libc6-dev` on
+  Debian and Ubuntu), which `funk build` links a program that calls C
+  with, and valgrind (the `rust-speed` hook).
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.

@@ -158,16 +158,27 @@ jobs:
           rustup toolchain install
           cargo --version
       # funk build runs GNU as and ld, and the rust-test hook runs what it
-      # builds (ADR-2026-10-30-1229). The runner image ships binutils; this
-      # step installs it on an image that does not. The cross job copies it.
-      - name: Install the assembler and linker
+      # builds (ADR-2026-10-30-1229). A program that calls C links with
+      # glibc's libc.so (ADR-2026-11-10-1303). The runner image ships both;
+      # this step installs them on an image that does not. The cross job
+      # copies the binutils part.
+      - name: Install the assembler, linker and C library
         run: |
+          missing=()
           if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
+            missing+=(binutils)
+          fi
+          # Debian's multiarch path, where libc6-dev puts libc.so.
+          if [ ! -e /usr/lib/x86_64-linux-gnu/libc.so ]; then
+            missing+=(libc6-dev)
+          fi
+          if [ "${#missing[@]}" -gt 0 ]; then
             sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends binutils
+            sudo apt-get install --yes --no-install-recommends "${missing[@]}"
           fi
           as --version
           ld --version
+          ldd --version | sed -n 1p
       # The rust-speed hook counts funk's instructions under cachegrind
       # (ADR-2026-11-09-1645).
       - name: Install valgrind
