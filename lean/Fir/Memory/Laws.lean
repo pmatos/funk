@@ -18,8 +18,9 @@ declares a write to it changes only what it stores (ADR-2026-11-09-1541).
 * A store changes no other allocation, and no unit of its own allocation
   outside the units it stores. It leaves every allocation's kind, size and
   liveness as they were, so it changes which accesses succeed in no way.
-* An allocation leaves every existing allocation as it was, and a free
-  changes no other allocation.
+* An allocation leaves every existing allocation as it was, and changes no
+  access through a pointer without provenance for the new allocation. A
+  free changes no other allocation.
 * After a free, every access to the freed allocation is UB.
 -/
 
@@ -158,6 +159,24 @@ theorem alloc_blocks_lt (M : Memory u) (k : AllocKind) (n : Nat) {a : AllocId}
 theorem alloc_blocks_new (M : Memory u) (k : AllocKind) (n : Nat) :
     (M.alloc k n).2.blocks[M.blocks.length]? = some ⟨k, List.replicate n .poison, true⟩ := by
   simp [alloc]
+
+/-- An allocation changes no access through a pointer without provenance
+for the new allocation: it lands where it landed before, in the same block,
+or fails for the same reason. -/
+theorem locate_alloc (M : Memory u) (k : AllocKind) (size : Nat) {p : Pointer}
+    (hp : p.prov ≠ some M.blocks.length) (n : Nat) :
+    (M.alloc k size).2.locate p n = M.locate p n := by
+  obtain ⟨prov, off⟩ := p
+  cases prov with
+  | none => rfl
+  | some a =>
+    have ha : a ≠ M.blocks.length := fun e => hp (by simp [e])
+    have hb : (M.alloc k size).2.blocks[a]? = M.blocks[a]? := by
+      rcases Nat.lt_or_gt_of_ne ha with h | h
+      · exact alloc_blocks_lt M k size h
+      · rw [List.getElem?_eq_none (by simp [alloc]; omega),
+          List.getElem?_eq_none (by omega)]
+    simp only [locate, hb]
 
 /-- Fresh memory holds poison: a load of `n` units in bounds of a new
 allocation gives `n` poisons. -/

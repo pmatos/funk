@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Memory laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3841386511490742844")
+:::moduleDocs (fingerprint := "18197862301104135903")
 :::
 
 :::readable Fir.Memory.Block.write_length (fingerprint := "6572027941022401979")
@@ -90,6 +90,13 @@ had before, and its first unit.
 allocation of $`n` units of kind $`k`, every allocation $`a < |M|` has the
 block it had, and the new allocation $`|M|` has the live block
 $`(k, \mathsf{poison}^n, \mathsf{true})`.
+:::
+
+:::readable Fir.Memory.Memory.locate_alloc (fingerprint := "205433964851235012")
+*Theorem: an allocation changes no other access.* After allocating in
+$`M`, every access through a pointer without provenance for the new
+allocation $`|M|` lands where it landed before, in the same block, or
+faults for the same reason.
 :::
 
 :::readable Fir.Memory.Memory.load_alloc (fingerprint := "4352129680637838304")

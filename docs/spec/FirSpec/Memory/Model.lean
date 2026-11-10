@@ -117,7 +117,9 @@ them in place of the units from $`o` on:
 
 $$`(k, \vec{x}, \ell)[o := \vec{y}] = (k,~ \vec{x}[0 \,..\, o]~\vec{y}~\vec{x}[o + |\vec{y}| \,..\,],~ \ell)`
 
-The kind and the liveness stay as they were.
+The kind and the liveness stay as they were, and so does the size when
+the units fit, $`o + |\vec{y}| \le |\vec{x}|`. A store writes only units
+that fit, as its access checks.
 :::
 
 :::readable Fir.Memory.Memory.empty (fingerprint := "4566367693092568579")
@@ -132,14 +134,20 @@ first unit:
 
 $$`\mathrm{alloc}_k(M, n) = \big((|M|, 0),~ M~(k, \mathsf{poison}^n, \mathsf{true})\big)`
 
-The new allocation's id is $`|M|`, which no allocation had before, so the
-pointer is the only one with its provenance.
+The new allocation's id is $`|M|`, which no allocation had before.
+Provenance comes only from allocations: a pointer has provenance for an
+allocation because the allocation gave it, or because it was computed from
+one that did. A pointer that names an id not yet allocated has none, and
+every access through it faults.
 :::
 
 :::readable Fir.Memory.Memory.free (fingerprint := "15821920455813180707")
 *Definition: freeing.* Freeing the allocation $`a` marks its block as not
 live, and changes nothing else. The block stays in the memory, so no id is
-reused.
+reused. Freeing never faults: freeing a block that is already freed, or an
+id the memory does not have, changes nothing. The run frees a call's stack
+allocations when it returns (ADR-2026-11-09-1548), and an external call
+frees a heap allocation.
 :::
 
 :::readable Fir.Memory.Memory.locate (fingerprint := "7962100636980851191")

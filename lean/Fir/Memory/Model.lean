@@ -22,13 +22,27 @@ A unit holds one of three things:
   and each holds its piece of the pointer, so that a pointer copied unit by
   unit keeps its provenance.
 
-The model gives four primitive accesses: allocating a block of a given size
-and kind, freeing a block, and loading and storing a run of units. A load or
-a store is immediate UB, a _fault_ below, when its pointer has no provenance
-for an allocation of the memory, when its allocation is freed, or when the
-units it touches are not all inside the allocation (ADR-2026-11-09-1542).
-How a value of a type becomes units, and how an op reaches these accesses,
-are left to the ops that use them.
+The model gives four primitive operations: allocating a block of a given
+size and kind, freeing a block, and loading and storing a run of units. Loads
+and stores are the accesses. An access is immediate UB, a _fault_ below, when
+its pointer has no provenance for an allocation of the memory, when its
+allocation is freed, or when the units it touches are not all inside the
+allocation (ADR-2026-11-09-1542). Allocating and freeing never fault: the
+run frees a call's stack allocations when the call returns
+(ADR-2026-11-09-1548), and a heap allocation is freed by an external call,
+which the world answers. How a value of a type becomes units, and how an op
+reaches these operations, are left to the ops that use them.
+
+A pointer of this model belongs to one memory, and its allocation id names an
+allocation of that memory alone. Which memory a pointer belongs to is its
+type's business, `ptr<N>`, not the model's.
+
+Provenance comes only from an allocation: a pointer has provenance for an
+allocation because the allocation gave it, or because it was computed from
+one that did. The model's laws hold of every pointer, but they speak of
+aliasing only for pointers made so. A pointer that names an id the memory
+has not yet allocated has no provenance for an allocation of the memory, so
+every access through it faults.
 
 The section after this one proves the laws that ops and passes rely on.
 -/
@@ -105,7 +119,9 @@ def Block.read (b : Block u) (o n : Nat) : List (MemUnit u) :=
   (b.units.drop o).take n
 
 /-- The block with its units from offset `o` on replaced by `us`. Its kind
-and liveness stay as they were. -/
+and liveness stay as they were, and so does its size when the units fit in
+it, from `o` to `o + |us|`. A store writes only units that fit, as its
+access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 
@@ -114,13 +130,16 @@ namespace Memory
 /-- The memory before anything is allocated. -/
 def empty : Memory u := ⟨[]⟩
 
-/-- Allocates a block of `n` units of kind `k`. Its units are poison, and
-the pointer to its first unit is the new allocation's only provenance. -/
+/-- Allocates a block of `n` units of kind `k`. Its units are poison, its id
+is one that no allocation had before, and it gives the pointer to its first
+unit. -/
 def alloc (M : Memory u) (k : AllocKind) (n : Nat) : Pointer × Memory u :=
   (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, List.replicate n .poison, true⟩]⟩)
 
 /-- Frees the allocation `a`: it stays in the memory, and no access may
-reach it again. Freeing changes nothing else. -/
+reach it again. Freeing changes nothing else. It never faults: freeing an
+allocation that is already freed, or that the memory does not have, changes
+nothing. -/
 def free (M : Memory u) (a : AllocId) : Memory u :=
   ⟨M.blocks.modify a fun b => { b with live := false }⟩
 

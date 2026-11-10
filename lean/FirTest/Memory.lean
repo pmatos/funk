@@ -10,12 +10,7 @@ namespace FirTest.Memory
 
 open Fir.Memory
 
-/-- Results of accesses compare by their result or their fault. -/
-instance {ε α : Type} [BEq ε] [BEq α] : BEq (Except ε α) where
-  beq
-    | .ok a, .ok b => a == b
-    | .error e, .error f => e == f
-    | _, _ => false
+deriving instance BEq for Except
 
 /-- A memory with one stack allocation of four bytes, and its pointer. -/
 def m1 : Pointer × Memory 8 := Memory.empty.alloc .stack 4
@@ -54,6 +49,21 @@ def b2 : MemUnit 8 := .bits 0x07
 #guard m2.2.load ⟨some 0, -1⟩ 1 == .error .outOfBounds
 #guard m2.2.store ⟨some 1, 1⟩ [b1, b2] == .error .outOfBounds
 #guard m2.2.load ⟨some 0, 4⟩ 0 == .ok []
+#guard m2.2.store ⟨none, 0⟩ [b1] == .error .noProvenance
+#guard (m2.2.free 0).store m1.1 [b1] == .error .freed
+
+-- When several faults apply, the first in the order of `locate` wins: a
+-- freed allocation accessed out of bounds is `freed`.
+#guard (m2.2.free 0).load ⟨some 0, 9⟩ 1 == .error .freed
+
+-- A pointer that names an id not yet allocated faults, and reaches the
+-- allocation that later takes the id: provenance comes from allocations.
+#guard Memory.empty.load (u := 8) ⟨some 0, 0⟩ 1 == .error .noProvenance
+
+-- Freeing never faults: a second free, or a free of an id the memory does
+-- not have, changes nothing.
+#guard ((m2.2.free 0).free 0).blocks == (m2.2.free 0).blocks
+#guard (m2.2.free 7).blocks == m2.2.blocks
 
 /-- The laws hold of the example: a load after a store gives what was
 stored. -/
