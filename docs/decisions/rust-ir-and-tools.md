@@ -74,10 +74,12 @@ and `loc`. The name is a string. Attributes and types are generic terms, as the
 text writes them. `loc` is a `LocRef`, not an `Option`, so no op exists without
 a location.
 
-`Item` follows the spec. Today it has one variant, `Func`, and is
-`#[non_exhaustive]`. The M1 design registers more kinds of item
-(ADR-2026-11-09-1543), and `funk-ir` does not implement that yet. A module is
-the symbol table of its own items.
+`Item` follows the spec and is `#[non_exhaustive]`: `Func`, `Module` for a
+nested module (ADR-2026-11-10-1510), and `Dialect` for an item of a kind
+that a dialect registers (ADR-2026-11-10-2224). A dialect registers such a
+kind with `Dialect::item_kind` and an `ItemKindSpec`, whose `check` is the
+kind's rule; registration puts the kind under the dialect's prefix and
+rejects a kind of the core. A module is the symbol table of its own items.
 
 A `Dialect` gives `OpSpec`s, one per op name, and `TypeSpec`s. `OpSpec::decode`
 takes an op's attributes and the types of its operands and results. It returns

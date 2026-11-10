@@ -10,9 +10,8 @@
 
 use std::fmt;
 
-use super::{FuncContext, written_under};
+use super::FuncContext;
 use crate::ir::DialectItem;
-use crate::ir::names::is_word;
 
 /// A kind of item and its rule.
 pub trait ItemKindSpec: Send + Sync {
@@ -55,33 +54,4 @@ impl fmt::Display for ItemKindError {
             ItemKindError::Duplicate(k) => write!(f, "kind of item {k} is already registered"),
         }
     }
-}
-
-/// Checks the kinds `kinds` of the dialect `dialect`, whose words are
-/// written under `prefix`, `None` for the core, against each other and
-/// against the kinds that `known` says are registered.
-pub(super) fn check_kinds(
-    dialect: &str,
-    prefix: Option<&str>,
-    kinds: &[Box<dyn ItemKindSpec>],
-    known: impl Fn(&str) -> bool,
-) -> Result<(), ItemKindError> {
-    let mut names: Vec<&str> = Vec::new();
-    for kind in kinds {
-        let kind = kind.name();
-        if !is_word(kind) {
-            return Err(ItemKindError::NotAWord(kind.to_string()));
-        }
-        if prefix.is_none() || !written_under(kind, prefix) {
-            return Err(ItemKindError::OutsideDialect {
-                dialect: dialect.to_string(),
-                kind: kind.to_string(),
-            });
-        }
-        if known(kind) || names.contains(&kind) {
-            return Err(ItemKindError::Duplicate(kind.to_string()));
-        }
-        names.push(kind);
-    }
-    Ok(())
 }

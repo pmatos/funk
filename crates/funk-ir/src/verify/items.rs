@@ -30,14 +30,17 @@ pub(super) fn check(
     }
     for p in i.params.iter().filter(|p| !is_name(&p.name)) {
         out.push(at(format!(
-            "the parameter %{} is not a name",
-            quote(&p.name)
+            "the parameter {} is not a name",
+            value_ref(&p.name)
         )));
     }
     let mut seen = HashSet::new();
     for p in &i.params {
         if !seen.insert(p.name.as_str()) {
-            out.push(at(format!("the item defines %{} more than once", p.name)));
+            out.push(at(format!(
+                "the item defines {} more than once",
+                value_ref(&p.name)
+            )));
         }
     }
     if i.types().any(|t| reg.check_type(t) != TypeCheck::Valid) {
@@ -59,6 +62,16 @@ pub(super) fn check(
             "no dialect registers the kind of item {}",
             quote(&i.kind)
         ))),
+    }
+}
+
+/// A value as the text writes it, as `valueRef` does: `%x`, or `%"x y"`
+/// when its name is not a name.
+fn value_ref(x: &str) -> String {
+    if is_name(x) {
+        format!("%{x}")
+    } else {
+        format!("%{}", quote(x))
     }
 }
 

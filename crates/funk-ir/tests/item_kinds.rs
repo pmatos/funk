@@ -10,8 +10,8 @@
 use funk_ir::dialects::core;
 use funk_ir::registry::{ItemKindError, RegistryError};
 use funk_ir::{
-    Attr, Dialect, DialectItem, FuncContext, Item, ItemKindSpec, Module, Registry, Type, TypeCheck,
-    TypeSpec, parse, print, verify,
+    Attr, Def, Dialect, DialectItem, FuncContext, Item, ItemKindSpec, Module, Registry, Type,
+    TypeCheck, TypeSpec, parse, print, verify,
 };
 
 const CASES: &str = include_str!("../../../tests/dialects/item-kinds.cases");
@@ -213,6 +213,28 @@ fn a_built_item_obeys_the_general_rules() {
             "the kind \"cell\" is not a word of a dialect",
             "an attribute of the item cannot be written",
             "no dialect registers the kind of item \"cell\"",
+        ]
+    );
+}
+
+#[test]
+fn a_value_that_is_not_a_name_is_quoted_as_the_text_writes_it() {
+    let mut cell = DialectItem::new("toy.cell", "c");
+    for _ in 0..2 {
+        cell.params.push(Def::new("a b", Type::word("i8")));
+    }
+    let mut m = Module::new().dialect("toy");
+    m.items.push(Item::Dialect(cell));
+    let ms: Vec<String> = verify(&m, &registry())
+        .into_iter()
+        .map(|d| d.message)
+        .collect();
+    assert_eq!(
+        ms[..3],
+        [
+            "the parameter %\"a b\" is not a name",
+            "the parameter %\"a b\" is not a name",
+            "the item defines %\"a b\" more than once",
         ]
     );
 }

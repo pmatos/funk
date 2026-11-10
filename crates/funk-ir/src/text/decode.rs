@@ -123,16 +123,11 @@ fn dialect_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     if !matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty()) {
         return err(s.kind_pos, "an item of a dialect's kind has an empty body");
     }
-    let scope = Scope {
-        types: HashMap::new(),
-        reg,
-        func: &s.name,
-    };
     for (t, pos) in &s.results {
-        scope.check_type(t, *pos)?;
+        decode_type(reg, t, *pos)?;
     }
     for (d, at) in &s.params {
-        scope.check_type(&d.ty, at.ty)?;
+        decode_type(reg, &d.ty, at.ty)?;
     }
     Ok(Item::Dialect(DialectItem {
         kind: std::mem::take(&mut s.kind),
@@ -227,12 +222,18 @@ struct Scope<'a> {
     func: &'a str,
 }
 
+/// Decodes the type `t`, which stands at `pos` (`decodeType`): a type that
+/// the registry calls malformed does not decode.
+fn decode_type(reg: &Registry, t: &Type, pos: TextPos) -> Result<(), ParseError> {
+    match reg.check_type(t) {
+        TypeCheck::Malformed(reason) => err(pos, format!("type {t} does not decode: {reason}")),
+        TypeCheck::Valid | TypeCheck::Invalid(_) => Ok(()),
+    }
+}
+
 impl Scope<'_> {
     fn check_type(&self, t: &Type, pos: TextPos) -> Result<(), ParseError> {
-        match self.reg.check_type(t) {
-            TypeCheck::Malformed(reason) => err(pos, format!("type {t} does not decode: {reason}")),
-            TypeCheck::Valid | TypeCheck::Invalid(_) => Ok(()),
-        }
+        decode_type(self.reg, t, pos)
     }
 
     fn define(&mut self, d: &Def, at: DefPos) -> Result<(), ParseError> {

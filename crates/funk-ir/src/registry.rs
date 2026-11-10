@@ -232,6 +232,39 @@ fn written_under(op: &str, prefix: Option<&str>) -> bool {
     }
 }
 
+/// Why a kind's word cannot be registered, for region kinds and kinds of
+/// item alike.
+enum KindFault<'a> {
+    NotAWord(&'a str),
+    OutsideDialect(&'a str),
+    Duplicate(&'a str),
+}
+
+/// Checks the words `kinds` of a dialect whose words are written under
+/// `prefix`, `None` for the core: each is a word of the dialect, never the
+/// core's, and none repeats one before it or one that `known` says is
+/// registered.
+fn check_kind_words<'a>(
+    kinds: impl Iterator<Item = &'a str>,
+    prefix: Option<&str>,
+    known: impl Fn(&str) -> bool,
+) -> Result<(), KindFault<'a>> {
+    let mut seen: Vec<&str> = Vec::new();
+    for kind in kinds {
+        if !is_word(kind) {
+            return Err(KindFault::NotAWord(kind));
+        }
+        if prefix.is_none() || !written_under(kind, prefix) {
+            return Err(KindFault::OutsideDialect(kind));
+        }
+        if known(kind) || seen.contains(&kind) {
+            return Err(KindFault::Duplicate(kind));
+        }
+        seen.push(kind);
+    }
+    Ok(())
+}
+
 /// A registered dialect: its name, its dependencies and its types.
 struct Registered {
     name: String,
@@ -324,27 +357,28 @@ impl Registry {
             }
             names.push(op_name);
         }
-        let mut kinds: Vec<&str> = Vec::new();
-        for kind in &dialect.region_kinds {
-            let kind = kind.name();
-            if !is_word(kind) {
-                return Err(RegistryError::KindNotAWord(kind.to_string()));
-            }
-            if prefix.is_none() || !written_under(kind, prefix) {
-                return Err(RegistryError::KindOutsideDialect {
+        let region_kinds = dialect.region_kinds.iter().map(|k| k.name());
+        check_kind_words(region_kinds, prefix, |k| self.kinds.contains_key(k)).map_err(
+            |f| match f {
+                KindFault::NotAWord(k) => RegistryError::KindNotAWord(k.to_string()),
+                KindFault::OutsideDialect(k) => RegistryError::KindOutsideDialect {
                     dialect: dialect.name.clone(),
-                    kind: kind.to_string(),
-                });
-            }
-            if self.kinds.contains_key(kind) || kinds.contains(&kind) {
-                return Err(RegistryError::DuplicateKind(kind.to_string()));
-            }
-            kinds.push(kind);
-        }
-        item_kind::check_kinds(name, prefix, &dialect.item_kinds, |k| {
-            self.item_kinds.contains_key(k)
-        })
-        .map_err(RegistryError::ItemKind)?;
+                    kind: k.to_string(),
+                },
+                KindFault::Duplicate(k) => RegistryError::DuplicateKind(k.to_string()),
+            },
+        )?;
+        let item_kinds = dialect.item_kinds.iter().map(|k| k.name());
+        check_kind_words(item_kinds, prefix, |k| self.item_kinds.contains_key(k)).map_err(|f| {
+            RegistryError::ItemKind(match f {
+                KindFault::NotAWord(k) => ItemKindError::NotAWord(k.to_string()),
+                KindFault::OutsideDialect(k) => ItemKindError::OutsideDialect {
+                    dialect: dialect.name.clone(),
+                    kind: k.to_string(),
+                },
+                KindFault::Duplicate(k) => ItemKindError::Duplicate(k.to_string()),
+            })
+        })?;
         let index = self.dialects.len();
         for op in dialect.ops {
             self.ops.insert(op.name().to_string(), (index, op));
