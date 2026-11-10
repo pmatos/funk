@@ -11,6 +11,9 @@ const SHT_SYMTAB: u32 = 2;
 /// The bytes of one entry of a symbol table.
 const SYM_SIZE: usize = 24;
 
+/// The bytes of a section header.
+const SH_SIZE: usize = 0x40;
+
 /// The names of the symbols that the ELF64 object file `object` references
 /// but does not define, in the order of its symbol table. An object that
 /// is not ELF64 little-endian, or whose headers point outside it, is an
@@ -19,30 +22,21 @@ pub fn undefined_symbols(object: &[u8]) -> Result<Vec<String>, String> {
     if object.get(..6) != Some(b"\x7fELF\x02\x01".as_slice()) {
         return Err("the object file is not ELF64 little-endian".into());
     }
-    let shoff = word(object, 0x28)?;
-    let shentsize = usize::from(half(object, 0x3a)?);
     let shnum = usize::from(half(object, 0x3c)?);
     let mut names = Vec::new();
     for i in 0..shnum {
-        let sh = i
-            .checked_mul(shentsize)
-            .and_then(|o| o.checked_add(shoff))
-            .ok_or_else(truncated)?;
-        if quarter(object, sh + 4)? != SHT_SYMTAB {
+        let sh = section(object, i)?;
+        if word(sh, 4)? != SHT_SYMTAB {
             continue;
         }
-        let symbols = slice(object, word(object, sh + 0x18)?, word(object, sh + 0x20)?)?;
-        let strtab = usize::try_from(quarter(object, sh + 0x28)?).map_err(|_| truncated())?;
-        let st = strtab
-            .checked_mul(shentsize)
-            .and_then(|o| o.checked_add(shoff))
-            .ok_or_else(truncated)?;
-        let strings = slice(object, word(object, st + 0x18)?, word(object, st + 0x20)?)?;
+        let symbols = contents(object, sh)?;
+        let strtab = usize::try_from(word(sh, 0x28)?).map_err(|_| truncated())?;
+        let strings = contents(object, section(object, strtab)?)?;
         for sym in symbols.as_chunks::<SYM_SIZE>().0.iter().skip(1) {
             if half(sym, 6)? != 0 {
                 continue;
             }
-            let name = usize::try_from(quarter(sym, 0)?).map_err(|_| truncated())?;
+            let name = usize::try_from(word(sym, 0)?).map_err(|_| truncated())?;
             let rest = strings.get(name..).ok_or_else(truncated)?;
             let end = rest.iter().position(|&b| b == 0).ok_or_else(truncated)?;
             if end > 0 {
@@ -51,6 +45,22 @@ pub fn undefined_symbols(object: &[u8]) -> Result<Vec<String>, String> {
         }
     }
     Ok(names)
+}
+
+/// The header of the `index`-th section of `object`.
+fn section(object: &[u8], index: usize) -> Result<&[u8], String> {
+    let shoff = xword(object, 0x28)?;
+    let shentsize = usize::from(half(object, 0x3a)?);
+    let at = index
+        .checked_mul(shentsize)
+        .and_then(|o| o.checked_add(shoff))
+        .ok_or_else(truncated)?;
+    slice(object, at, SH_SIZE)
+}
+
+/// The bytes of `object` that the section header `sh` points to.
+fn contents<'a>(object: &'a [u8], sh: &[u8]) -> Result<&'a [u8], String> {
+    slice(object, xword(sh, 0x18)?, xword(sh, 0x20)?)
 }
 
 fn truncated() -> String {
@@ -68,11 +78,11 @@ fn half(b: &[u8], at: usize) -> Result<u16, String> {
     bytes(b, at).map(u16::from_le_bytes)
 }
 
-fn quarter(b: &[u8], at: usize) -> Result<u32, String> {
+fn word(b: &[u8], at: usize) -> Result<u32, String> {
     bytes(b, at).map(u32::from_le_bytes)
 }
 
-fn word(b: &[u8], at: usize) -> Result<usize, String> {
+fn xword(b: &[u8], at: usize) -> Result<usize, String> {
     let w = u64::from_le_bytes(bytes(b, at)?);
     usize::try_from(w).map_err(|_| truncated())
 }
@@ -119,6 +129,8 @@ mod tests {
         header[0x28] = 0x40;
         header[0x3a] = 0x40;
         header[0x3c] = 1;
+        assert!(undefined_symbols(&header).is_err());
+        header[0x28..0x30].fill(0xff);
         assert!(undefined_symbols(&header).is_err());
     }
 }

@@ -20,7 +20,11 @@ buffers is lost when standard output is a pipe.
 - **When.** `funk build` reads the symbol table of the module's object
   file. When the object references a symbol that it does not define, the
   program links with the C library. Otherwise the link is ADR-2026-10-30-1229's,
-  unchanged: static, with nothing else, and the same entry file.
+  unchanged: static, with nothing else, and the same entry file. So the
+  module's object must define every routine of funk's own that it calls,
+  as it does the `i128` division routines (ADR-2026-11-03-0414): a call
+  from the module to a routine of the entry file would link with the C
+  library for nothing.
 - **Which library, and how.** The host's shared glibc, through `ld`
   alone: `ld -m elf_x86_64 --dynamic-linker /lib64/ld-linux-x86-64.so.2
   -e __funk_start MODULE.o ENTRY.o -lc`. No C compiler, no `crt1.o`.
@@ -39,6 +43,12 @@ buffers is lost when standard output is a pipe.
   exit handlers. Every other way out stays `exit_group`, the stack
   overflow's signal handler among them, so ADR-2026-10-30-1233's and
   ADR-2026-11-02-1132's exit statuses and messages hold.
+- **What standard output holds.** A run that ends with status 2 loses what
+  C's stdio still buffers, but not what it already wrote: C writes a full
+  buffer, or a line to a terminal, on its own. So after a stack overflow
+  standard output is empty only when the function wrote nothing that C
+  wrote out. Output from C's exit handlers comes after the values line,
+  and a failure to write it leaves the status at 0.
 
 ## Alternatives
 

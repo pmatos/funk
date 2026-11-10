@@ -273,7 +273,8 @@ __funk_rt_catch_overflow:
 # access to the stack is at most a page below one made before it
 # (ADR-2026-11-02-1102), so a run that outgrows its stack faults first in
 # the guard page. That fault is reported in one line, with exit status 2;
-# the buffered output is never written, so standard output stays empty.
+# the buffered output is never written, so standard output stays empty,
+# but for what the C library wrote out before the fault.
 # Any other SIGSEGV is not the runtime's to report, and SA_RESETHAND has
 # put the default action back. After any other fault the handler returns,
 # so the instruction faults again and ends the process with the fault's own

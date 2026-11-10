@@ -42,7 +42,9 @@ const RUNTIME: &str = concat!(include_str!("runtime.s"), include_str!("values.s"
 pub const LIBC: &str = "\t.set\t.Lfunk_libc, 1\n";
 
 /// The stack that the runtime's routines need below a wrapper, with room to
-/// spare: the deepest of them uses less than 256 bytes.
+/// spare: the deepest of them uses less than 256 bytes, or, with the C
+/// library, what its `fflush(NULL)` needs when a long values line flushes
+/// the runtime's buffer.
 const RUNTIME_STACK: u64 = 16 * 1024;
 
 /// The largest figure in the table: no machine can map more, and the

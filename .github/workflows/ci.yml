@@ -164,13 +164,17 @@ jobs:
       # copies the binutils part.
       - name: Install the assembler, linker and C library
         run: |
+          missing=()
           if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends binutils
+            missing+=(binutils)
           fi
+          # Debian's multiarch path, where libc6-dev puts libc.so.
           if [ ! -e /usr/lib/x86_64-linux-gnu/libc.so ]; then
+            missing+=(libc6-dev)
+          fi
+          if [ "${#missing[@]}" -gt 0 ]; then
             sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends libc6-dev
+            sudo apt-get install --yes --no-install-recommends "${missing[@]}"
           fi
           as --version
           ld --version

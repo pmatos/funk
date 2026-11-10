@@ -330,7 +330,8 @@ When the program links with glibc, the runtime also registers the loader's
 finalizer with `__cxa_atexit`. It calls `fflush(NULL)` before it writes
 standard output, so C's output comes before the values line, and a failed
 flush exits with 2. A successful run leaves through `exit(0)`. Every other exit
-stays `exit_group` (ADR-2026-11-10-1303).
+stays `exit_group`, which keeps what C already wrote out but loses what it
+still buffers (ADR-2026-11-10-1303).
 
 ### The run's stack
 

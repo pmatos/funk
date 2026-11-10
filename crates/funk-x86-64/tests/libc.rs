@@ -5,7 +5,7 @@
 //! function's assembly written by hand.
 
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Command, Output};
 
 use funk_ir::{Module, Registry, parse};
 use funk_x86_64::{build, build_program, compile};
@@ -35,6 +35,31 @@ greet:
 \t.section\t.note.GNU-stack,\"\",@progbits
 ";
 
+/// `greet(x)`: writes `lost` to a stream on `/dev/full`, which it leaves
+/// open with the bytes in its buffer, then returns 2. Standard output
+/// itself can be written.
+const GREET_TO_FULL: &str = "\t.text
+\t.globl\tgreet
+\t.type\tgreet, @function
+greet:
+\tpushq\t%rbp
+\tmovq\t%rsp, %rbp
+\tleaq\t.Lpath(%rip), %rdi
+\tleaq\t.Lmode(%rip), %rsi
+\tcall\tfopen
+\tmovq\t%rax, %rsi
+\tleaq\t.Llost(%rip), %rdi
+\tcall\tfputs
+\tmovl\t$2, %eax
+\tleave
+\tret
+\t.section\t.rodata
+.Lpath:\t.asciz\t\"/dev/full\"
+.Lmode:\t.asciz\t\"w\"
+.Llost:\t.asciz\t\"lost\"
+\t.section\t.note.GNU-stack,\"\",@progbits
+";
+
 /// The dynamic loader's path, which only an executable that it loads holds.
 const LOADER: &str = "ld-linux-x86-64.so.2";
 
@@ -52,10 +77,10 @@ fn fresh(name: &str) -> PathBuf {
     dir.join(name)
 }
 
-/// `greet` built with its body calling the C library's `printf`.
-fn greet_in_c(name: &str) -> PathBuf {
+/// `greet` built with its body written by hand as `body`.
+fn greet_in_c(name: &str, body: &str) -> PathBuf {
     let mut program = compile(&module(GREET)).unwrap();
-    program.module = GREET_IN_C.to_string();
+    program.module = body.to_string();
     let exe = fresh(name);
     build_program(&program, &exe).unwrap();
     exe
@@ -76,7 +101,7 @@ fn report(out: &Output) -> (Option<i32>, String, String) {
 
 #[test]
 fn a_function_that_calls_printf_runs_and_its_output_comes_first() {
-    let exe = greet_in_c("greet");
+    let exe = greet_in_c("greet", GREET_IN_C);
     assert!(holds(&exe, LOADER));
     let out = Command::new(&exe).args(["@greet", "41"]).output().unwrap();
     assert_eq!(
@@ -91,7 +116,7 @@ fn a_function_that_calls_printf_runs_and_its_output_comes_first() {
 
 #[test]
 fn a_bad_command_line_still_exits_with_2() {
-    let exe = greet_in_c("usage");
+    let exe = greet_in_c("usage", GREET_IN_C);
     let out = Command::new(&exe).args(["@greet"]).output().unwrap();
     assert_eq!(
         report(&out),
@@ -105,16 +130,8 @@ fn a_bad_command_line_still_exits_with_2() {
 
 #[test]
 fn output_that_the_c_library_cannot_write_exits_with_2() {
-    let exe = greet_in_c("full");
-    let full = std::fs::OpenOptions::new()
-        .write(true)
-        .open("/dev/full")
-        .unwrap();
-    let out = Command::new(&exe)
-        .args(["@greet", "1"])
-        .stdout(Stdio::from(full))
-        .output()
-        .unwrap();
+    let exe = greet_in_c("full", GREET_TO_FULL);
+    let out = Command::new(&exe).args(["@greet", "1"]).output().unwrap();
     assert_eq!(report(&out), (Some(2), String::new(), String::new()));
 }
 
