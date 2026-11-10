@@ -202,6 +202,7 @@ instance lawfulDialectName : LawfulDialectName CoreDialect (Ext Op) where
   opAttrs_mem | .mask .., _, h => by simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects] at h
   tyAttr_named t := t.elim
   tyAttr_mem t := t.elim
+  kind_named _ h := nomatch h
 
 /-! # The toy dialect is lawful -/
 

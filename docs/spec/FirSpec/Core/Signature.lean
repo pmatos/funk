@@ -30,7 +30,7 @@ specification is written in. The Lean writes $`\mathsf{i}N` as `i N`, a
 shorthand for the type `int N`.
 :::
 
-:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "12214296765711459229")
+:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "5706628440802508344")
 *Definition: the types of each core op's operands and results.* Each core op
 takes operands and gives results of fixed types, which follow from the op
 instance. As in the WebAssembly specification, $`[t_1^*] \to [t_2^*]`
@@ -58,7 +58,7 @@ checks every op against: each operand must be a value of the operand's
 type, and each result is declared with the result's type.
 :::
 
-:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "17603298922068699322")
+:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "11134669087793284921")
 *Definition: the core terminators and their successors.* $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}~t^*` and $`\mathsf{unreachable}` are
 the terminators of the core dialect, the ops that end a block.
@@ -73,7 +73,8 @@ $`\mathrm{res}_{\mathrm{core}}(o)` are the two halves of the table above,
 $`\mathrm{term}_{\mathrm{core}}(o)` is true exactly for $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}~t^*` and $`\mathsf{unreachable}`, and
 $`\mathrm{nsucc}_{\mathrm{core}}(o)` is 1 for $`\mathsf{br}`, 2 for
-$`\mathsf{cond\_br}` and 0 otherwise.
+$`\mathsf{cond\_br}` and 0 otherwise. No core op owns a region:
+$`\mathrm{kinds}_{\mathrm{core}}(o)` is empty for every op.
 :::
 
 :::readable Fir.Core.op (fingerprint := "1597957136772372945")

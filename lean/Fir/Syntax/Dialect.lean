@@ -68,9 +68,14 @@ results. `isTerminator` marks the ops that end a block, and `succCount` says
 how many successors an op has: a terminator chooses one of them, or returns.
 Only terminators have successors.
 
+`regionKinds` names the kind of each region that the op owns, in order. A
+kind is a word of a dialect, such as `toy.graph`, never the core's kind: a
+region of the core's kind inside an op would be structured control flow
+(H6), which M1 leaves out. An op that owns no region has none, which is the
+default, and no op of the core dialect owns one.
+
 Each op's effects come from the dialect's effect class (the section on
-effect sets). Region signatures come later, with the first dialect whose ops
-have regions (H6).
+effect sets).
 -/
 class DialectSignature (d : Dialect) where
   /-- The types of the op's operands. -/
@@ -81,6 +86,8 @@ class DialectSignature (d : Dialect) where
   isTerminator : d.Op → Bool
   /-- How many successors the op has. -/
   succCount : d.Op → Nat
-export DialectSignature (sig returnTypes isTerminator succCount)
+  /-- The kind of each region that the op owns. -/
+  regionKinds : d.Op → List String := fun _ => []
+export DialectSignature (sig returnTypes isTerminator succCount regionKinds)
 
 end Fir

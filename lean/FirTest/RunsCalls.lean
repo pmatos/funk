@@ -111,6 +111,7 @@ theorem factFn_valid : factFn.Valid recModule.context where
     simp only [factFn, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
     rcases hb with rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- `@even` is valid in its module: its `call` names `@odd` at its type. -/
@@ -132,6 +133,7 @@ theorem evenFn_valid : evenFn.Valid recModule.context where
     simp only [evenFn, parityFn, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
     rcases hb with rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- `@odd` is valid in its module: its `call` names `@even` at its type. -/
@@ -153,6 +155,7 @@ theorem oddFn_valid : oddFn.Valid recModule.context where
     simp only [oddFn, parityFn, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
     rcases hb with rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- The module of `@fact`, `@even` and `@odd` is valid. -/

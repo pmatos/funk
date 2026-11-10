@@ -13,7 +13,8 @@ and the reader decides the side by the word alone.
 Names make this hold for every sum. When the base's words name only
 dialects of its set, `e`'s name is not in that set, and `e` writes its own
 words under its name, every word goes to its own side
-(`Dialect.sum.routes_of_names`). So adding a dialect of a new name to a
+(`Dialect.sum.routes_of_names`), and every region kind goes to the rule of
+the side that registers it (`Dialect.sum.validRegion_ext`). So adding a dialect of a new name to a
 dialect with lawful text and a lawful set gives a dialect with lawful text
 and a lawful set, and adding any number of them, one at a time, does too.
 
@@ -212,8 +213,9 @@ theorem names_disjoint [LawfulDialectText (base ⊞ e)] (o₁ : base.Op) (o₂ :
 variable (base e) in
 /-- `e` writes its own words under its name, and names only dialects of
 its base's set besides its own: each op name and each valid type of its
-own names `e`, and every word of its ops' attributes and of its valid
-types names the base's dialects or `e`. -/
+own and each region kind that it registers names `e`, and every word of
+its ops' attributes and of its valid types names the base's dialects or
+`e`. -/
 class _root_.Fir.LawfulDialectName [DialectSet base] : Prop where
   opName_named : ∀ o : e.Op, wordDialect (opName (d := base.over e) o) = some (name e)
   opAttrs_mem : ∀ o : e.Op, ∀ x ∈ Attr.dialectsAll (opAttrs (d := base.over e) o),
@@ -222,6 +224,7 @@ class _root_.Fir.LawfulDialectName [DialectSet base] : Prop where
     (tyAttr (d := base.over e) (.inr t)).dialect? = some (name e)
   tyAttr_mem : ∀ t : e.Ty, validTy (d := base.over e) (.inr t) →
     ∀ x ∈ (tyAttr (d := base.over e) (.inr t)).dialects, x ∈ names base ++ [name e]
+  kind_named : ∀ k ∈ regionKindNames (d := base.over e), wordDialect k = some (name e)
 
 omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText base]
     [LawfulDialectText (base.over e)] in
@@ -252,6 +255,27 @@ instance lawfulSet [DialectSet base] [LawfulDialectSet base] [LawfulDialectName 
   tyAttr_mem
     | .inl t, hv, x, h => List.mem_append_left _ (LawfulDialectSet.tyAttr_mem t hv x h)
     | .inr t, hv, x, h => LawfulDialectName.tyAttr_mem t hv x h
+  kind_mem k hk x h := by
+    rcases List.mem_append.mp hk with hk | hk
+    · exact List.mem_append_left _ (LawfulDialectSet.kind_mem k hk x h)
+    · rw [show x = name e from Option.some.inj (h.symm.trans (LawfulDialectName.kind_named k hk))]
+      exact List.mem_append_right _ (List.mem_singleton_self _)
+
+omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText base]
+    [LawfulDialectText (base.over e)] in
+/-- A region of a kind that `e` registers obeys `e`'s rule in the sum, when
+the base's words name only dialects of its set, `e`'s name is new to it, and
+`e` writes its kinds under its name. -/
+theorem validRegion_ext [DialectSet base] [LawfulDialectSet base] [LawfulDialectName base e]
+    (hn : name e ∉ names base) {host : Dialect} (v : DialectView (base ⊞ e) host) {k : Name}
+    (hk : k ∈ regionKindNames (d := base.over e)) (ctx : FuncContext host) (f : Func host)
+    (r : Region host) :
+    validRegion (d := base ⊞ e) v k ctx f r ↔
+      validRegion (d := base.over e) (extView v) k ctx f r := by
+  have hb : k ∉ regionKindNames (d := base) := fun hb =>
+    hn (LawfulDialectSet.kind_mem k hb _ (LawfulDialectName.kind_named k hk))
+  show ValidRegion v k ctx f r ↔ _
+  simp [ValidRegion, hb]
 
 /-!
 # The round trip over sums

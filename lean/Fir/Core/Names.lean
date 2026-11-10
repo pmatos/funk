@@ -71,6 +71,7 @@ theorem lawfulDialectSet : LawfulDialectSet CoreDialect where
   opName_mem o x h := by simp [opName_bare o] at h
   opAttrs_mem o x h := by simp [opAttrs_bare o] at h
   tyAttr_mem t _ x h := by simp [tyAttr_bare t] at h
+  kind_mem _ h := nomatch h
 
 instance instLawfulDialectSet : LawfulDialectSet CoreDialect := lawfulDialectSet
 

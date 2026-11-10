@@ -64,7 +64,7 @@ found with their types, results of the op's result types, and a next op
 exactly when it is not a terminator. -/
 theorem Func.op_ready_of_scoped (hv : f.Valid ctx) (hb : b ∈ f.blocks) {i : Nat}
     (hi : i < b.body.length) {env : Env d} (hold : env.Scoped f b.label i) :
-    b.body[i].regions = [] ∧
+    b.body[i].ownsCoreRegion = false ∧
       (∃ args : HVector toType (sig b.body[i].op),
         env.operands (sig b.body[i].op) b.body[i].operands = .ok args) ∧
       b.body[i].results.map (·.2) = returnTypes b.body[i].op ∧
@@ -72,7 +72,7 @@ theorem Func.op_ready_of_scoped (hv : f.Valid ctx) (hb : b ∈ f.blocks) {i : Na
       (isTerminator b.body[i].op = false → i + 1 < b.body.length) := by
   obtain ⟨hreg, hoty, hrty, hterm, -, -, -, hscope, -⟩ :=
     hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)
-  refine ⟨hreg, Env.operands_ok _ _ hoty
+  refine ⟨hreg.noCoreRegion, Env.operands_ok _ _ hoty
     (hold.holds fun x hx => hscope x (List.mem_append_left _ hx)), hrty,
     fun hT => List.drop_eq_nil_of_le (by have := hterm.1 hT; omega), fun hT => ?_⟩
   have hne : i + 1 ≠ b.body.length := fun h => by rw [hterm.2 h] at hT; cases hT

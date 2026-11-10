@@ -73,6 +73,20 @@ lawful in its effects when `e` is, with `e`'s effects on `e`'s memories
 (ADR-2026-11-09-1541). So two extensions of the core, written apart, combine
 in one lawful sum (ADR-2026-11-10-1310).
 
+## Region kinds in sums
+
+A dialect registers region kinds, each with its rule. The sum registers the
+base's kinds and then `e`'s, and a region obeys the rule of the side that
+registers its kind, through that side's view. A lift registers `e`'s kinds
+with `e`'s rule. The laws of names ask that a dialect register only words of
+its own name, so no kind goes to the wrong side (ADR-2026-11-10-1941).
+
+The interpreter runs only the core's kind, a function's body. An op that
+owns regions of a dialect's kinds runs by its dialect's semantics, which
+sees its op instance and operands, not the regions. An op that owns a
+region of the core's kind is stuck, and no valid op does
+(ADR-2026-11-10-1941).
+
 ## Limits
 
 Core ops carry core types only. A value of an extension's own type cannot

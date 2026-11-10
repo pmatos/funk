@@ -30,12 +30,12 @@ is lawful. The next section proves that the core dialect's text is lawful,
 so every valid core module is well formed.
 
 The conditions look at every block and op of a function, at any depth: the
-blocks of the regions of its ops too. A valid function's ops own no region,
-so its blocks at any depth are its blocks.
+blocks of the regions of its ops too. Every op of a valid function is an op
+of its body or an op inside a region of an op, and validation gives each
+what the conditions ask.
 
-This section gives, in order: the ops of a function at any depth, and the
-blocks of ops without regions; what makes an op, a function and a module
-well formed; positions, errors and parsers; the two round trips and how
+This section gives, in order: the ops of a function at any depth; what
+makes an op, a function and a module well formed; positions, errors and parsers; the two round trips and how
 they relate; and the theorems that valid modules are well formed.
 -/
 
@@ -47,27 +47,6 @@ variable {d : Dialect}
 
 /-- Every op of a function, at any depth. -/
 def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
-
-/-- Ops that own no region have no blocks below them. -/
-theorem Operation.regionBlocks_eq_nil :
-    ∀ {os : List (Operation d)}, (∀ o ∈ os, o.regions = []) → Operation.regionBlocks os = []
-  | [], _ => by simp [Operation.regionBlocks]
-  | ⟨_, _, _, _, regions, _⟩ :: _, h => by
-    have hr : regions = [] := h _ (List.mem_cons_self ..)
-    subst hr
-    rw [Operation.regionBlocks, Region.allBlocks,
-      Operation.regionBlocks_eq_nil fun o ho => h o (List.mem_cons_of_mem _ ho)]
-    rfl
-
-/-- When no op of these blocks owns a region, they are all the blocks, at
-any depth. -/
-theorem Block.allBlocks_eq_self :
-    ∀ {bs : List (Block d)}, (∀ b ∈ bs, ∀ o ∈ b.body, o.regions = []) → Block.allBlocks bs = bs
-  | [], _ => by simp [Block.allBlocks]
-  | ⟨_, _, _⟩ :: _, h => by
-    rw [Block.allBlocks, Operation.regionBlocks_eq_nil (h _ (List.mem_cons_self ..)),
-      Block.allBlocks_eq_self fun b hb => h b (List.mem_cons_of_mem _ hb)]
-    rfl
 
 variable [DialectSignature d] [DialectText d]
 
@@ -187,9 +166,6 @@ variable [DialectValidation d] [LawfulDialectText d]
 valid location table is well formed. -/
 theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncType d)} {f : Func d}
     (hf : f.Valid ⟨syms, locs.map (·.1)⟩) (hl : LocTable.Valid locs) : f.WellFormed := by
-  have hall : f.allBlocks = f.blocks := Block.allBlocks_eq_self fun b hb o ho => by
-    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
-    exact (hf.ops b hb i o hi).1
   have hdef : ∀ x t, f.typeOf x = some t → isName x := by
     intro x t ht
     unfold Func.typeOf at ht
@@ -199,32 +175,42 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
       have hx : (p.1 == x) = true := List.find?_some (p := fun y : Name × d.Ty => y.1 == x) hp
       rw [← beq_iff_eq.mp hx]
       exact hf.names p (List.mem_of_find?_eq_some hp)
-  refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_, hf.bodyKind,
-    fun o ho r hr => ?_⟩
-  · exact ⟨LawfulDialectText.tyAttr_isType t (hf.types t ht),
-      LawfulDialectText.decodeTy_encode t (hf.types t ht)⟩
-  · simp only [Func.allOps, hall, List.mem_flatMap] at ho
+  have hgen : ∀ o ∈ f.allOps, f.RegionsValid ⟨syms, locs.map (·.1)⟩ o ∧
+      o.operands.map f.typeOf = (sig o.op).map some ∧ o.results.map (·.2) = returnTypes o.op ∧
+      (∀ s ∈ o.succs, isName s.label ∧ ∀ a ∈ s.args, isName a) ∧ o.loc ∈ locs.map (·.1) := by
+    intro o ho
+    simp only [Func.allOps, List.mem_flatMap] at ho
     obtain ⟨b, hb, ho⟩ := ho
-    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
-    obtain ⟨-, hops, hres, -, -, -, hsucc, -, -, -, hloc⟩ := hf.ops b hb i o hi
-    refine ⟨LawfulDialectText.opName_isWord _, LawfulDialectText.opAttrs_writable _, hops,
-      hres, fun s hs => ?_, ?_⟩
-    · obtain ⟨-, tgt, htgt, hargs⟩ := hsucc s hs
+    rcases Func.mem_allBlocks_cases hb with hb | ⟨b₀, hb₀, o₀, ho₀, r, hr, hbr⟩
+    · obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
+      obtain ⟨hreg, hops, hres, -, -, -, hsucc, -, -, -, hloc⟩ := hf.ops b hb i o hi
+      refine ⟨hreg, hops, hres, fun s hs => ?_, hloc⟩
+      obtain ⟨-, tgt, htgt, hargs⟩ := hsucc s hs
       refine ⟨?_, fun a ha => ?_⟩
       · have hl : (tgt.label == s.label) = true :=
           List.find?_some (p := fun b : Block d => b.label == s.label) htgt
         rw [← beq_iff_eq.mp hl]
-        exact hf.labels tgt (hall ▸ List.mem_of_find?_eq_some htgt)
+        exact hf.labels tgt (Block.mem_allBlocks (List.mem_of_find?_eq_some htgt))
       · have hm : f.typeOf a ∈ tgt.params.map (some ·.2) := hargs ▸ List.mem_map_of_mem ha
         obtain ⟨p, -, hp⟩ := List.mem_map.mp hm
         exact hdef a p.2 hp.symm
-    · obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ locs.map (·.1) from hloc)
-      exact hloc ▸ (hl.2.1 e he).1
-  · simp only [Func.allOps, hall, List.mem_flatMap] at ho
-    obtain ⟨b, hb, ho⟩ := ho
-    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
-    rw [(hf.ops b hb i o hi).1] at hr
-    exact absurd hr (List.not_mem_nil)
+    · have hin : o ∈ o₀.innerOps := by
+        simp only [Operation.innerOps, List.mem_flatMap]
+        exact ⟨r, hr, b, hbr, ho⟩
+      obtain ⟨hreg, hops, hres, -, -, hsucc, -, -, hloc⟩ := hf.inner b₀ hb₀ o₀ ho₀ o hin
+      refine ⟨hreg, hops, hres, fun s hs => ⟨(hsucc s hs).1, fun a ha => ?_⟩, hloc⟩
+      obtain ⟨t, ht⟩ := Option.isSome_iff_exists.mp ((hsucc s hs).2 a ha)
+      exact hdef a t ht
+  refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_, hf.bodyKind,
+    fun o ho r hr k hk => ?_⟩
+  · exact ⟨LawfulDialectText.tyAttr_isType t (hf.types t ht),
+      LawfulDialectText.decodeTy_encode t (hf.types t ht)⟩
+  · obtain ⟨-, hops, hres, hsucc, hloc⟩ := hgen o ho
+    refine ⟨LawfulDialectText.opName_isWord _, LawfulDialectText.opAttrs_writable _, hops,
+      hres, hsucc, ?_⟩
+    obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ locs.map (·.1) from hloc)
+    exact hloc ▸ (hl.2.1 e he).1
+  · exact ((hgen o ho).1.2 r hr k (Option.mem_def.mp hk)).1
 
 /-- The items of a valid symbol table are well formed when the tables
 nested in them are valid too, in a module whose location table is valid. -/

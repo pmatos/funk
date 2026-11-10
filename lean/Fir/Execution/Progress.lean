@@ -24,7 +24,7 @@ op one of those names: the only definitions that dominate a use in the
 entry block are the parameters and the results of the ops before it. So
 the operands are found with their types, the op's results bind, and the
 invariant holds before the next op. The other checks pass by the rules of
-validation: no op owns a region, an op that is not a terminator has a next
+validation: no op owns a region of the core's kind, an op that is not a terminator has a next
 op, and nothing follows the terminator.
 
 Showing that no path is stuck needs nothing of the ops' semantics beyond
@@ -168,7 +168,7 @@ next op exactly when it is not a terminator. -/
 theorem Func.op_ready (hv : f.Valid ctx) (he : f.blocks.head? = some e) (hep : e.params = [])
     {i : Nat} (hi : i < e.body.length) {env : Env d}
     (hold : env.Holds f ((f.defsBefore e i).map (·.1))) :
-    e.body[i].regions = [] ∧
+    e.body[i].ownsCoreRegion = false ∧
       (∃ args : HVector toType (sig e.body[i].op),
         env.operands (sig e.body[i].op) e.body[i].operands = .ok args) ∧
       e.body[i].results.map (·.2) = returnTypes e.body[i].op ∧
@@ -178,7 +178,7 @@ theorem Func.op_ready (hv : f.Valid ctx) (he : f.blocks.head? = some e) (hep : e
   have hmem : e ∈ f.blocks := ht ▸ List.mem_cons_self
   obtain ⟨hreg, hoty, hrty, hterm, -, -, -, hscope, -⟩ :=
     hv.ops e hmem i e.body[i] (List.getElem?_eq_getElem hi)
-  refine ⟨hreg, Env.operands_ok _ _ hoty fun x hx =>
+  refine ⟨hreg.noCoreRegion, Env.operands_ok _ _ hoty fun x hx =>
     hold x (Func.mem_defsBefore hv he hep (hscope x (List.mem_append_left _ hx))), hrty,
     fun hT => List.drop_eq_nil_of_le (by have := hterm.1 hT; omega), fun hT => ?_⟩
   have hne : i + 1 ≠ e.body.length := fun h => by rw [hterm.2 h] at hT; cases hT

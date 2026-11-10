@@ -203,8 +203,9 @@ fn regions_nest_to_any_depth() {
         let m = parse(&text, &reg).expect("the text parses");
         drop(text);
         let ds = verify(&m, &reg);
-        assert_eq!(ds.len(), 1, "{ds:?}");
-        assert!(ds[0].message.contains("owns a region"), "{ds:?}");
+        assert_eq!(ds.len(), DEPTH);
+        assert!(ds.iter().all(|d| d.message
+            == "the regions of toy.nest are not of the kinds that its registration states"));
         copies_and_compares(&m, region_text, DEPTH, |m| {
             let inner = innermost_block(&mut entry(m).ops[0].regions[0].blocks[0]);
             inner.label = "f".into();

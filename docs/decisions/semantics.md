@@ -228,8 +228,8 @@ It differs from LeanMLIR on purpose in four places (ADR-2026-10-29-2030):
   as class constraints on the monad, such as `choose w` and immediate UB.
 - The parser and printer are fir's own, over the extrinsic syntax.
 
-The term carries op regions from M0 on, empty for core ops. Region signatures
-and region semantics come later. The CFG is the core dialect's region kind.
+The term carries op regions from M0 on, empty for core ops. Kinds and rules
+of regions: ADR-2026-11-10-1941. The CFG is the core dialect's region kind.
 Extensions compose as ADR-2026-11-09-1543 and ADR-2026-11-09-1544 say. Verified
 rewrites (M2) mean fir's own refinement-based rewrite framework, or VeIR if S7
 is reopened (ADR-2026-10-29-2030).

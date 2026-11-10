@@ -31,6 +31,7 @@ import FirTest.Dominance
 import FirTest.OverCore
 import FirTest.Toy
 import FirTest.UseOnce
+import FirTest.RegionKinds
 import FirTest.Mixed
 import FirTest.SumTypes
 import FirTest.Bit

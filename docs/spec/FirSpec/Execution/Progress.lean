@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7842167633865265021")
+:::moduleDocs (fingerprint := "10206442675212705322")
 :::
 
 :::readable Fir.eq_cons_of_head? (fingerprint := "10406841056930139947")
@@ -102,14 +102,14 @@ $`\mathrm{ret}(o)` is the result types of the op instance of $`o`, as its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] says.
 :::
 
-:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "17657522360999363202")
+:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "15926848679554588473")
 *Theorem: what a run needs of an op of the entry block.* Let $`f` be valid
 in a module context, $`e` its entry block, which declares no arguments,
 and $`o` the op at index $`i` of $`e`, for $`i` less than the number of
 ops of $`e`. If the environment $`E` holds the names of
 $`\mathrm{before}_f(e, i)`, then:
 
-* $`o` owns no region;
+* $`o` owns no region of the core's kind;
 * looking the operands of $`o` up in $`E`, for the operand types
   $`\mathrm{sig}(o)`, succeeds;
 * the results of $`o` are declared with the types $`\mathrm{ret}(o)`;
@@ -118,7 +118,8 @@ $`\mathrm{before}_f(e, i)`, then:
 
 These are what the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]
-checks before and after it runs an op: a region, which no rule runs, an
+checks before and after it runs an op: a region of the core's kind, which
+no rule runs, an
 operand that is not bound or has the wrong type, a count of results
 other than the op gives, an op after a terminator, or a block that ends
 without one, each makes the path stuck. Here $`\mathrm{sig}(o)` is the

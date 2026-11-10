@@ -98,7 +98,7 @@ theorem opValid_of {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
   intro b hb i o ho
   obtain ⟨hi, rfl⟩ := List.getElem?_eq_some_iff.1 ho
   obtain ⟨hreg, hoty, hrty, hterm, hcount, hnone, hsucc, hscope, hsym, hop, hloc⟩ := h b hb i hi
-  refine ⟨List.isEmpty_iff.1 hreg, hoty, hrty, hterm, hcount, hnone, fun s hs => ?_,
+  refine ⟨Func.regionsValid_of_nil (List.isEmpty_iff.1 hreg) rfl, hoty, hrty, hterm, hcount, hnone, fun s hs => ?_,
     fun x hx => (hscope x hx).inScope hdom, hsym, hop, hloc⟩
   obtain ⟨hne, tgt, htgt, hty⟩ := hsucc s hs
   exact ⟨hne, tgt, Option.mem_toList.1 htgt, hty⟩
@@ -162,6 +162,7 @@ theorem sum_valid : sum.Valid sumModule.context where
     rcases hb with rfl | rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := [("loop", "body")])
     (by simpa using sum_loop_dominates_body) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-! # `@sum10` and the module -/
@@ -185,6 +186,7 @@ theorem sum10_valid : sum10.Valid sumModule.context where
     subst hb
     simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- The spec's example module is valid. -/

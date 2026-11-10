@@ -99,33 +99,15 @@ def opProblemsWith (dom : Name → Name → Bool) (lk : Lookup d) (f : Func d) (
   let at_ (message : String) : Problem :=
     { message, func := f.name, block := b.label, op := i, loc := o.loc }
   let last := i + 1 == n
-  (if o.regions.isEmpty then [] else [at_ "the op owns a region: no op may own one yet"]) ++
-  (if sameLists (o.operands.map (t.scope[·]?)) ((sig o.op).map some) then [] else
-    [at_ (if o.operands.length = (sig o.op).length then
-        "an operand of the op is not of the type that its op instance takes"
-      else "the op has " ++ toString o.operands.length ++ " operands, and its op instance " ++
-        "takes " ++ toString (sig o.op).length)]) ++
-  (if sameLists (o.results.map (·.2)) (returnTypes o.op) then [] else
-    [at_ (if o.results.length = (returnTypes o.op).length then
-        "a result of the op is not of the type that its op instance gives"
-      else "the op has " ++ toString o.results.length ++ " results, and its op instance " ++
-        "gives " ++ toString (returnTypes o.op).length)]) ++
+  let g := generalProblems lk f t at_ o
+  regionProblems lk f at_ o ++ g.1 ++
   (if isTerminator o.op == last then [] else
     [at_ (if last then "block " ++ labelRef b.label ++ " does not end with a terminator"
       else "the op ends a block, and is not the last op of " ++ labelRef b.label)]) ++
-  (if o.succs.length == succCount o.op then [] else
-    [at_ ("the op has " ++ toString o.succs.length ++ " successors, and its op instance has " ++
-      toString (succCount o.op))]) ++
-  (if isTerminator o.op || o.succs.isEmpty then [] else
-    [at_ "the op is not a terminator, and only terminators have successors"]) ++
+  succCountProblems at_ o ++
   o.succs.flatMap (succProblems t at_) ++
   o.uses.flatMap (useProblemsWith dom t at_ b.label i) ++
-  (symbolRefs o.op).filterMap (fun g => if (lk.symbols g).isSome then none else
-    some (at_ ("the op refers to " ++ Text.printSymbol g ++ ", which names no function"))) ++
-  (if validOp ⟨lk.symbols, f.results⟩ o.op then [] else
-    [at_ "the op breaks its dialect's own rule"]) ++
-  (if lk.hasLoc o.loc then [] else
-    [at_ ("location reference @" ++ toString o.loc ++ " is not in the location table")])
+  g.2
 
 theorem opProblemsWith_eq (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d)
     (n i : Nat) (o : Operation d) :
@@ -160,6 +142,7 @@ def problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Proble
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
   f.blocks.flatMap (fun b => let n := b.body.length
     b.body.zipIdx.flatMap fun (o, i) => opProblemsWith (domWith f.entryLabel? tree) lk f t b n i o) ++
+  all.flatMap (fun b => b.body.flatMap (·.innerProblems lk f t)) ++
   (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem])
 
 @[csimp] theorem problemsIn_eq_problemsIn : @Func.problemsIn = @problemsIn := by

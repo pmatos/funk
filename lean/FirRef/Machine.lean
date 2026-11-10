@@ -90,7 +90,8 @@ def advance (M : Module d) : Cur d ε → List (Frame d) → Stop d ε
   | .ops 0 _ _ _, _ => .leaf (.ok (.ok .fuelExhausted))
   | .ops (_ + 1) _ _ [], _ => .leaf (.ok (stuck "a block ends without a terminator"))
   | .ops (n + 1) f env (o :: os), st =>
-    if !o.regions.isEmpty then .leaf (.ok (stuck "an op owns a region, and no rule runs one"))
+    if o.ownsCoreRegion then
+      .leaf (.ok (stuck "an op owns a region of the core's kind, and no rule runs one"))
     else match env.args (sig o.op) o.operands with
     | .error e => .leaf (.ok (.error e))
     | .ok (args, env) =>

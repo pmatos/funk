@@ -40,8 +40,8 @@ pub use ir::{
     Op, Region, Succ, SymbolTable, Type,
 };
 pub use registry::{
-    Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, Registry, TypeCheck,
-    TypeSpec,
+    Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, RegionKindSpec, Registry,
+    TypeCheck, TypeSpec,
 };
 pub use text::{ParseError, TextPos, parse, print};
 pub use verify::{Diagnostic, verify};
