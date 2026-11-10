@@ -113,15 +113,6 @@ instance : DecidableDialectValidation FlagDialect where
 
 /-! # The flag dialect's text is lawful -/
 
-/-- A core type names no dialect. -/
-theorem core_dialect? (t : Core.Ty) : t.attr.dialect? = none := by
-  cases h : t.attr.dialect? with
-  | none => rfl
-  | some x =>
-    have := Attr.dialect?_mem h
-    rw [show t.attr = Fir.tyAttr (d := CoreDialect) t from rfl, Core.tyAttr_bare] at this
-    cases this
-
 /-- The flag dialect's text meets the seven laws. -/
 theorem lawfulDialectText : LawfulDialectText FlagDialect where
   decodeOp_encode
@@ -145,7 +136,7 @@ theorem lawfulDialectText : LawfulDialectText FlagDialect where
   decodeTy_encode
     | .inl t, hv => by
       change decodeTy t.attr = _
-      simp [decodeTy, core_dialect? t, Core.Ty.decode_attr t hv]
+      simp [decodeTy, OverCore.core_dialect? t, Core.Ty.decode_attr t hv]
     | .inr .flag, _ => by decide
   encode_decodeTy a t h := by
     change decodeTy a = some t at h

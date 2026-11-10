@@ -65,6 +65,16 @@ theorem tyAttr_dialects (t : Core.Ty ⊕ Empty) : (tyAttr t).dialects = [] := by
   | inl t => exact Core.tyAttr_bare t
   | inr e => exact e.elim
 
+/-- A core type names no dialect, so a dialect over the core reads it as
+the core's. -/
+theorem core_dialect? (t : Core.Ty) : t.attr.dialect? = none := by
+  cases h : t.attr.dialect? with
+  | none => rfl
+  | some x =>
+    have := Attr.dialect?_mem h
+    rw [show t.attr = Fir.tyAttr (d := CoreDialect) t from rfl, Core.tyAttr_bare] at this
+    cases this
+
 end OverCore
 
 end FirTest

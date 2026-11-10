@@ -1,4 +1,4 @@
-import FirTest.SumTypes
+import FirTest.OverCore
 
 /-!
 A test dialect named `bit`, with a type of its own, written over the core:
@@ -183,7 +183,7 @@ theorem lawfulDialectText : LawfulDialectText BitDialect where
   decodeTy_encode
     | .inl t, hv => by
       change decodeTy t.attr = _
-      simp [decodeTy, Flag.core_dialect? t, Core.Ty.decode_attr t hv]
+      simp [decodeTy, OverCore.core_dialect? t, Core.Ty.decode_attr t hv]
     | .inr .bit, _ => by decide
   encode_decodeTy a t h := by
     change decodeTy a = some t at h

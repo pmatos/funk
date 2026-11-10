@@ -35,17 +35,11 @@ omit [DialectSignature big] [DialectSignature (dep.over e)] in
 theorem lawfulName [DialectSet dep] [DialectSet big] [LawfulDialectName dep e]
     (hsub : ∀ x ∈ names dep, x ∈ names big) : LawfulDialectName big (e.lift dep ι) where
   opName_named o := LawfulDialectName.opName_named (base := dep) (e := e) o
-  opAttrs_mem o x h := by
-    have hx := LawfulDialectName.opAttrs_mem (base := dep) (e := e) o x h
-    rcases List.mem_append.mp hx with hx | hx
-    · exact List.mem_append_left _ (hsub x hx)
-    · exact List.mem_append_right _ hx
+  opAttrs_mem o x h := List.mem_append.mpr ((List.mem_append.mp
+    (LawfulDialectName.opAttrs_mem (base := dep) (e := e) o x h)).imp (hsub x) id)
   tyAttr_named t hv := LawfulDialectName.tyAttr_named (base := dep) (e := e) t hv
-  tyAttr_mem t hv x h := by
-    have hx := LawfulDialectName.tyAttr_mem (base := dep) (e := e) t hv x h
-    rcases List.mem_append.mp hx with hx | hx
-    · exact List.mem_append_left _ (hsub x hx)
-    · exact List.mem_append_right _ hx
+  tyAttr_mem t hv x h := List.mem_append.mpr ((List.mem_append.mp
+    (LawfulDialectName.tyAttr_mem (base := dep) (e := e) t hv x h)).imp (hsub x) id)
 
 variable [LawfulDialectText big] [LawfulDialectText (dep.over e)]
 
