@@ -123,7 +123,7 @@ def fneg (f : Format) (a : Nat) : Nat := pk f (un f a).neg
 /-- `|a|` in format `f`. -/
 def fabs (f : Format) (a : Nat) : Nat := pk f (un f a).abs
 
-/-- `a` unpacked and packed again, as a constant is. -/
+/-- `a` unpacked and packed again: its bits, unless it is a NaN. -/
 def fbits (f : Format) (a : Nat) : Nat := pk f (un f a)
 
 /-- How `a` and `b` compare in format `f`: `none` when they are unordered. -/

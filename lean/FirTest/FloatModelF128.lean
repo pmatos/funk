@@ -225,7 +225,7 @@ private abbrev q : Float.Model.Format := f128
 -- abs of a NaN is the canonical NaN
 #guard fabs q 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF == 0x7FFF8000000000000000000000000000
 
-/-! # Constants: unpacking and packing -/
+/-! # Unpacking and packing -/
 
 -- unpacking and packing s gives its bits back
 #guard fbits q 0x00000000000000000000000000000001 == 0x00000000000000000000000000000001
