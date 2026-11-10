@@ -35,11 +35,6 @@ impl MemSet {
             MemSet::Every => true,
         }
     }
-
-    /// Whether the set touches no memory.
-    pub fn is_none(&self) -> bool {
-        matches!(self, MemSet::These(ms) if ms.is_empty())
-    }
 }
 
 /// An op's set of effects. Each memory-named effect names the memories it
@@ -93,11 +88,6 @@ impl Effects {
         observable: true,
         control: true,
     };
-
-    /// Whether the set is empty.
-    pub fn is_pure(&self) -> bool {
-        *self == Effects::PURE
-    }
 }
 
 /// Writes a set of effects as the shared case files do: `pure`, or the
@@ -144,7 +134,7 @@ mod tests {
     #[test]
     fn sets_print_as_the_case_files_write_them() {
         assert_eq!(Effects::PURE.to_string(), "pure");
-        assert!(Effects::default().is_pure());
+        assert_eq!(Effects::default(), Effects::PURE);
         assert_eq!(
             Effects::ALL.to_string(),
             "reads(*),writes(*),allocates(*),may-ub,may-poison,observable,control"
@@ -156,7 +146,6 @@ mod tests {
         };
         assert_eq!(e.to_string(), "writes(a+b),may-ub");
         assert!(e.writes.has("b") && !e.writes.has("c") && !e.reads.has("a"));
-        assert!(MemSet::Every.has("c") && !MemSet::Every.is_none());
-        assert!(e.reads.is_none() && !e.writes.is_none());
+        assert!(MemSet::Every.has("c"));
     }
 }

@@ -21,6 +21,14 @@ use super::types::{CoreType, core_type};
 use crate::effects::Effects;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 
+/// The effects of `br` and `ret`: control alone (`Core.Op.effects`).
+fn control() -> Effects {
+    Effects {
+        control: true,
+        ..Effects::PURE
+    }
+}
+
 /// A terminator with `successors` successors.
 fn terminator(successors: usize) -> OpShape {
     OpShape {
@@ -62,10 +70,7 @@ impl OpSpec for Br {
 
     /// Control (`Core.Op.effects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects {
-            control: true,
-            ..Effects::PURE
-        }
+        control()
     }
 }
 
@@ -92,8 +97,7 @@ impl OpSpec for CondBr {
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
         Effects {
             may_ub: true,
-            control: true,
-            ..Effects::PURE
+            ..control()
         }
     }
 }
@@ -132,10 +136,7 @@ impl OpSpec for Ret {
 
     /// Control (`Core.Op.effects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects {
-            control: true,
-            ..Effects::PURE
-        }
+        control()
     }
 }
 
