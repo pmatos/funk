@@ -144,6 +144,7 @@ WHAT = {
         cells.ONE: "returns one value",
         cells.SEVERAL: "returns several values",
     },
+    "unreachable": {cells.NOTHING: "ends a block"},
     "call": {
         cells.NOTHING: "gives no result",
         cells.ONE: "gives one result",

@@ -7,8 +7,8 @@ import Fir.Execution.EffectLaws
 The core dialect's effect declarations are sound: it is lawful in its
 effects. Each effect that a core op leaves out, it does not have:
 
-* _No may-UB._ Every core op but the four divisions and `cond_br` never
-  ends in UB. Each rule that gives a result gives it at once, `freeze`
+* _No may-UB._ Every core op but the four divisions, `cond_br` and
+  `unreachable` never ends in UB. Each rule that gives a result gives it at once, `freeze`
   after choosing bits, and `br` and `ret` go to their successor or return.
 * _No may produce poison._ On operands with no poison, every op that does
   not declare it gives a defined result: `add`, `sub` and `mul` without
@@ -44,7 +44,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
         cases h), fun h => nomatch h⟩
   | .br, _ | .ret _, _ => fun _ _ => ⟨fun h => (nomatch h), fun _ h => (by cases h)⟩
   | .call .., _ => fun _ _ => ⟨fun _ h => h, fun h => nomatch h⟩
-  | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h => nomatch h
+  | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
+  | .unreachable, h => nomatch h
 
 /-! # No may produce poison -/
 
@@ -145,7 +146,7 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       cases he
       exact not_any_of_ne fun h => nomatch h
   | .call .., _ => fun _ _ _ _ hr => hr.elim
-  | .br, _ | .condBr, _ | .ret _, _ => fun h => nomatch h
+  | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
   | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h => nomatch h
 
 /-! # No control -/

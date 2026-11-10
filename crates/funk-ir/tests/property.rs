@@ -85,7 +85,19 @@ fn the_generator_makes_every_op_with_every_set_of_flags() {
             );
         }
     }
-    want.extend(["freeze", "poison", "br", "cond_br", "ret", "select", "call"].map(String::from));
+    want.extend(
+        [
+            "freeze",
+            "poison",
+            "br",
+            "cond_br",
+            "ret",
+            "unreachable",
+            "select",
+            "call",
+        ]
+        .map(String::from),
+    );
     want.extend(PREDICATES.map(|p| format!("icmp {p}")));
     want.extend(
         BITWISE_OPS

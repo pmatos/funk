@@ -1,5 +1,5 @@
-//! Control flow: `br`, `cond_br` and `ret` (`dialects/core/control.rs` in
-//! `funk-ir`).
+//! Control flow: `br`, `cond_br`, `ret` and `unreachable`
+//! (`dialects/core/control.rs` in `funk-ir`).
 //!
 //! A branch copies the values its successor passes into the slots of that
 //! block's arguments, as one parallel move (ADR-2026-10-31-0335), then
@@ -20,6 +20,10 @@
 //! one per half (ADR-2026-11-03-010730). It returns as two eightbytes: alone
 //! in `%rdx:%rax`, and among other results in the area
 //! (ADR-2026-11-03-0108, ADR-2026-11-03-0109).
+//!
+//! `unreachable` is `ud2`. A run that reaches it is UB in the source, so
+//! any code would do; `ud2` traps, so such a run stops at once instead of
+//! running into whatever code comes next.
 
 use funk_ir::{Op, Succ};
 
@@ -35,6 +39,7 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
         "br" => Some(br),
         "cond_br" => Some(cond_br),
         "ret" => Some(ret),
+        "unreachable" => Some(unreachable),
         _ => None,
     }
 }
@@ -149,5 +154,11 @@ fn ret(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let address = cx.frame.results_address();
     layout.give(&mut cx.asm, address, &from)?;
     frame::epilogue(&mut cx.asm);
+    Ok(())
+}
+
+/// `unreachable`.
+fn unreachable(cx: &mut Cx<'_>, _op: &Op) -> Result<(), Unlowered> {
+    cx.asm.ins0("ud2");
     Ok(())
 }

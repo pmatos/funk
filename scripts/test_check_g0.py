@@ -20,7 +20,7 @@ from check_g0 import (
 CORE_OPS = [
     "const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor",
     "shl", "lshr", "ashr", "icmp", "select", "zext", "sext", "trunc", "freeze", "poison",
-    "br", "cond_br", "ret", "call",
+    "br", "cond_br", "ret", "unreachable", "call",
 ]  # fmt: skip
 
 CORE_TEXT_SAMPLE = """

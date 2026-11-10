@@ -1,0 +1,157 @@
+# Must-reject texts of unreachable (#228, ADR-2026-11-09-1548). It decodes
+# with no attributes, no operands and no results: a text that breaks one
+# of these does not decode, and is a parse error at the op's name
+# (ADR-2026-10-30-0815). It has no successors and is a terminator, so a
+# text that gives it one, puts an op after it, or leaves a block that
+# only its place could reach, decodes and breaks a rule of validation.
+# Every value is defined and every successor names a block of the
+# function, so each text breaks nothing else, but where `rule` names two.
+
+[[reject]]
+verdict = "parse-error"
+rule = "unreachable takes no attributes: the word never is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable never @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "unreachable takes no attributes: an integer is not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable 0 @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "unreachable takes no operands: %a is one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "unreachable takes no operands: an i1 condition is not one either"
+text = '''
+func @f(%c: i1) -> i32 {
+^entry:
+  unreachable %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "unreachable defines no values"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  %r: i32 = unreachable @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "unreachable has no successors, not one"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "unreachable has no successors, not two"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable ^b, ^b @0
+^b:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the terminator is the last op of its block: unreachable is followed by ret"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "the terminator is the last op of its block: unreachable is followed by add, so the block also does not end with a terminator"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable @0
+  %b: i32 = add %a, %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every block is reachable from the entry: ^after follows unreachable, which goes nowhere"
+text = '''
+func @f(%a: i32) -> i32 {
+^entry:
+  unreachable @0
+^after:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

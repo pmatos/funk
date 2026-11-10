@@ -12,11 +12,13 @@
 //! the width changes `zext`, `sext` and `trunc` between valid pairs of widths,
 //! `sdiv` and `udiv` with and without `exact`, `srem`, `urem`, `icmp` with each
 //! predicate on two values of any one type, `select` at any type, the branches
-//! `br` and `cond_br`, `ret`, and `call` of any function of the module, the
-//! caller itself included, with any number of arguments and results
-//! (`calls.rs`). A division may be by zero, and a loop or a recursion may never
-//! end: that is UB or a run out of fuel, not invalid, and no check runs these
-//! modules. The generator is deterministic: one seed gives one module.
+//! `br` and `cond_br`, `ret`, `unreachable` in a trap block that a branch
+//! may go to, and `call` of any function of the module, the caller itself
+//! included, with any number of arguments and results (`calls.rs`). A
+//! division may be by zero, a run may reach `unreachable`, and a loop or a
+//! recursion may never end: that is UB or a run out of fuel, not invalid, and
+//! no check runs these modules. The generator is deterministic: one seed
+//! gives one module.
 //!
 //! [`program`] builds on it the programs that the differential harness runs
 //! (#165).

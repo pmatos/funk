@@ -58,7 +58,8 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .sext m n, _ => sext_propagatesPoison m n
   | .trunc m n, _ => trunc_propagatesPoison m n
   | .poison w, _ => poison_propagatesPoison w
-  | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .call .., h => nomatch h
+  | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .unreachable, h
+  | .call .., h => nomatch h
 
 /-- A valid core op instance with an operand of type `iN` has `N` above
 zero. -/
@@ -90,7 +91,7 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .sext m n, _, _ => sext_returnsOnDefined m n
   | .trunc m n, _, _ => trunc_returnsOnDefined m n
   | .poison w, _, _ => poison_returnsOnDefined w
-  | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h
+  | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h | .unreachable, _, h
   | .call .., _, h => nomatch h
 
 end Fir.Core

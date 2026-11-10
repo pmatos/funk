@@ -32,6 +32,7 @@ ADR-2026-10-30-0818 records them:
   signed minimum. Otherwise, a poison dividend gives poison.
 * `select` with a poison condition gives poison.
 * A branch on poison is immediate UB.
+* Reaching `unreachable` is immediate UB.
 
 The UB of a poison divisor, and of a poison dividend by `-1`, follows from
 one principle of LLVM's reference (LangRef, "Poison Values"; Alive2's
@@ -130,6 +131,9 @@ Control flow. These ops are the terminators:
   Branching on poison is immediate UB.
 * `ret ts`: returns its operands, of types `ts`, from the function: any
   number of values, each a value or poison (ADR-2026-10-30-0816).
+* `unreachable`: has no operands and no successors, and reaching it is
+  immediate UB (ADR-2026-11-09-1548). A producer puts it where control
+  never goes, such as after a call that never returns.
 
 Calls:
 
@@ -163,6 +167,7 @@ inductive Op where
   | br
   | condBr
   | ret (ts : List Ty)
+  | unreachable
   | call (f : String) (ts rs : List Ty)
   deriving Repr, DecidableEq
 

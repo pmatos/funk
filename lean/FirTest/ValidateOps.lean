@@ -33,7 +33,7 @@ def entryOnly (ops : List (Operation CoreDialect)) (params : List (Name × Ty) :
 
 /-! # Every op of the core dialect, in a valid function -/
 
-/-- A function that uses each of the 25 core ops validly. -/
+/-- A function that uses each of the 26 core ops validly. -/
 def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n^entry:\n" ++
   String.join (["%k: i32 = const 7", "%s1: i32 = add nuw nsw %a, %b", "%s2: i32 = sub %a, %b",
     "%s3: i32 = mul %a, %k", "%s4: i32 = sdiv exact %a, %b", "%s5: i32 = udiv %a, %b",
@@ -44,7 +44,8 @@ def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n
     "%t: i8 = trunc %a", "%f: i32 = freeze %sel", "%z: i32 = poison",
     "%r: i32 = call @all %a, %b, %c",
     "cond_br %c, ^x(%f), ^y"].map ("  " ++ · ++ " @0\n")) ++
-  "^x(%p: i32):\n  br ^y @0\n^y:\n  ret %a @0\n}\n")
+  "^x(%p: i32):\n  br ^y @0\n^y:\n  cond_br %lt, ^z, ^dead @0\n^z:\n  ret %a @0\n" ++
+  "^dead:\n  unreachable @0\n}\n")
 
 #guard valid everyOp
 
