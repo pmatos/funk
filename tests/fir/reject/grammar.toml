@@ -185,3 +185,35 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a dialect set names its dialects by words: 7 is not one"
+text = '''
+dialects 7
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a comma in a dialect set is followed by a name"
+text = '''
+dialects toy, @g
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

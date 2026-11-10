@@ -34,6 +34,7 @@ pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
         .map(|i| item(i, reg))
         .collect::<Result<_, _>>()?;
     Ok(Module {
+        dialects: s.dialects,
         items,
         locs: s.locs,
     })

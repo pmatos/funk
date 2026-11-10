@@ -117,3 +117,15 @@ import Fir.Text.DecodeAcceptedScope
 import Fir.Text.DecodeAccepted
 import Fir.Text.DecodeAcceptedModule
 import Fir.Text.ParseWellFormed
+import Fir.Sum.Names
+import Fir.Sum.Dialect
+import Fir.Sum.TextLaws
+import Fir.Sum.PoisonLaws
+import Fir.Sum.EffectLaws
+import Fir.Sum.Inclusion
+import Fir.Sum.Lift
+import Fir.Sum.LiftTextLaws
+import Fir.Sum.LiftPoisonLaws
+import Fir.Sum.LiftEffectLaws
+import Fir.Core.Names
+import Fir.Validation.DialectSet

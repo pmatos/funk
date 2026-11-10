@@ -89,7 +89,7 @@ abbrev Func.replaceBody (s : Name) (b : Region d) (f : Func d) : Func d :=
 /-- The module `M`, with the body `b` in place of the body of its function
 whose symbol is `s`: every other part of it is unchanged. -/
 def Module.replaceBody (M : Module d) (s : Name) (b : Region d) : Module d :=
-  ⟨M.items.map fun | .func f => .func (f.replaceBody s b), M.locs⟩
+  ⟨M.dialects, M.items.map fun | .func f => .func (f.replaceBody s b), M.locs⟩
 
 /-- The functions of `M` with a body replaced are those of `M`, each with
 its body replaced when its symbol is `s`. -/
@@ -163,6 +163,8 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
       exact h g hg hs
     · rw [Func.replaceBody_of_ne hs]
       exact hM.funcs g hg
+  dialectNames := hM.dialectNames
+  dialectsUnique := hM.dialectsUnique
 
 end
 

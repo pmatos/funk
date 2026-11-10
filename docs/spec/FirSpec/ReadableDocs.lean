@@ -116,6 +116,18 @@ import FirSpec.Text.DecodeAcceptedScope
 import FirSpec.Text.DecodeAccepted
 import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
+import FirSpec.Sum.Names
+import FirSpec.Validation.DialectSet
+import FirSpec.Core.Names
+import FirSpec.Sum.Dialect
+import FirSpec.Sum.TextLaws
+import FirSpec.Sum.PoisonLaws
+import FirSpec.Sum.EffectLaws
+import FirSpec.Sum.Inclusion
+import FirSpec.Sum.Lift
+import FirSpec.Sum.LiftTextLaws
+import FirSpec.Sum.LiftPoisonLaws
+import FirSpec.Sum.LiftEffectLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

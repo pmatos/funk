@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7495349875603717109")
+:::moduleDocs (fingerprint := "4529290017172724994")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -96,19 +96,27 @@ characters.* For every location table whose tokens can all be written:
   line feed, spells its tokens before any characters.
 :::
 
-:::readable Fir.Module.spellsItems Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "13998087619335513511")
+:::readable Fir.spellsDialects (pin := Fir.printDialects) (pin := Fir.dialectsTokens) (fingerprint := "11569368363644327681")
+*Theorem: a printed dialect set spells its tokens before any characters.*
+For every list of names whose tokens can all be written, so whose names are
+words, its printed form spells its tokens before any characters: nothing,
+when the list is empty, and otherwise the word `dialects`, a space, the
+names separated by a comma and a space, and two line feeds.
+:::
+
+:::readable Fir.Module.spellsItems Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "4621242517318431203")
 *Theorems: a printed module spells its tokens before any characters.* For
 every dialect with a text format:
 
 * every list of items whose tokens can all be written, each printed then
   followed by an empty line, spells before any characters the tokens of
   the items;
-* every module $`m` whose tokens can all be written, printed as its items
-  then its location table, spells $`\mathrm{tokens}(m)` before any
-  characters.
+* every module $`m` whose tokens can all be written, printed as its
+  dialect set, its items and then its location table, spells
+  $`\mathrm{tokens}(m)` before any characters.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "7587074315444239865")
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "7324819918049803602")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

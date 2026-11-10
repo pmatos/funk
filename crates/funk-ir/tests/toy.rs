@@ -1,14 +1,13 @@
 //! A test-only dialect, registered from outside `funk-ir`, shows that a new
 //! dialect needs no change to the IR, the parser or the printer (G0).
 //!
-//! Its ops are named `toy.` and a word, so they cannot collide with a core
-//! op: `.` is reserved for a dialect's name before its ops (H4), and no core
-//! op name contains one. That is the rule for test dialects
-//! (ADR-2026-10-30-1146), not a decision on H4.
+//! Its name is `toy`, so its ops and types are named `toy.` and a word, and
+//! the registry routes them to it by that prefix (ADR-2026-11-09-1543). It
+//! depends on the core, whose types its ops take.
 
 mod common;
 
-use funk_ir::dialects::core::{core_type, int_type, int_width};
+use funk_ir::dialects::core::{self, core_type, int_type, int_width};
 use funk_ir::{
     Attr, Dialect, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse,
     print, verify,
@@ -73,6 +72,7 @@ fn term(successors: usize) -> OpShape {
 
 fn toy() -> Dialect {
     Dialect::new("toy")
+        .depends_on(core::NAME)
         .types(ToyTypes)
         .op(ToyOp("toy.make", |o| {
             plain(
@@ -121,6 +121,8 @@ fn registry() -> Registry {
 }
 
 const TOY_MODULE: &str = "\
+dialects toy
+
 func @g(%n: i32, %c: i1) -> i32 {
 ^entry:
   %t: toy.tok = toy.make @1
@@ -191,9 +193,12 @@ fn an_op_or_type_that_no_dialect_decodes_is_a_parse_error() {
     );
 }
 
-/// A function `@f(%n: i32, %c: i1) -> i32` with this body.
+/// A function `@f(%n: i32, %c: i1) -> i32` with this body, in a module whose
+/// dialect set names `toy`.
 fn branches(body: &str) -> String {
-    format!("func @f(%n: i32, %c: i1) -> i32 {{\n{body}}}\n\nlocs {{\n  @0 = unknown\n}}\n")
+    format!(
+        "dialects toy\n\nfunc @f(%n: i32, %c: i1) -> i32 {{\n{body}}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+    )
 }
 
 fn diags(text: &str) -> Vec<String> {
@@ -279,7 +284,7 @@ fn a_symbol_that_an_op_refers_to_must_name_a_function() {
 
 #[test]
 fn a_dialect_rule_can_read_the_op_context() {
-    let text = "func @forbidden() {\n^entry:\n  %t: toy.tok = toy.make @0\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+    let text = "dialects toy\n\nfunc @forbidden() {\n^entry:\n  %t: toy.tok = toy.make @0\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
     assert!(
         diags(text)
             .iter()
@@ -330,7 +335,7 @@ fn errors_inside_regions_point_at_their_text() {
 
 #[test]
 fn types_are_extensible_and_checked() {
-    let text = "func @f(%v: toy.vec(0)) {\n^entry:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+    let text = "dialects toy\n\nfunc @f(%v: toy.vec(0)) {\n^entry:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
     assert!(
         diags(text)
             .iter()
@@ -338,30 +343,4 @@ fn types_are_extensible_and_checked() {
     );
     let ok = text.replace("toy.vec(0)", "toy.vec(3)");
     assert_eq!(diags(&ok), Vec::<String>::new());
-}
-
-#[test]
-fn registration_rejects_names_that_collide_or_cannot_be_written() {
-    struct Named(&'static str);
-    impl OpSpec for Named {
-        fn name(&self) -> &str {
-            self.0
-        }
-        fn decode(&self, _: &OpTypes<'_>) -> Result<OpShape, String> {
-            Ok(OpShape::default())
-        }
-    }
-    let mut r = Registry::core();
-    assert!(r.register(Dialect::new("dup").op(Named("add"))).is_err());
-    assert!(r.register(Dialect::new("bad").op(Named("toy op"))).is_err());
-    assert!(
-        r.register(Dialect::new("twice").op(Named("toy.a")).op(Named("toy.a")))
-            .is_err()
-    );
-    assert!(r.register(Dialect::new("core")).is_err());
-    assert!(
-        r.op("toy.a").is_none(),
-        "a failed registration changes nothing"
-    );
-    assert!(r.register(Dialect::new("fine").op(Named("toy.a"))).is_ok());
 }

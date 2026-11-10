@@ -28,11 +28,13 @@
 //! core ops, so `fir-ref`, which parses with the core dialect, reads it too:
 //! the cross-language round trip uses those modules. [`Dialects::CoreAndToy`]
 //! adds [`TOY_OP`], which a registry knows once it registers
-//! [`toy_dialect`]. The generator is deterministic: one seed gives one
-//! module.
+//! [`toy_dialect`]. A module may name one to three dialects in its dialect
+//! set, drawn with repeats, which the round trips print and read back
+//! whatever dialects the reader holds. The generator is deterministic: one
+//! seed gives one module.
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
-use crate::dialects::core::int_type;
+use crate::dialects::core::{self, int_type};
 use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
@@ -68,10 +70,11 @@ impl OpSpec for AnyOp {
     }
 }
 
-/// The test dialect `toy` with its one op, [`TOY_OP`]. Test dialects name
-/// their ops `toy.` and a word (ADR-2026-10-30-1146).
+/// The test dialect `toy` with its one op, [`TOY_OP`], over the core. Test
+/// dialects are named `toy`, so their ops are `toy.` and a word
+/// (ADR-2026-11-09-1543).
 pub fn toy_dialect() -> Dialect {
-    Dialect::new("toy").op(AnyOp)
+    Dialect::new("toy").depends_on(core::NAME).op(AnyOp)
 }
 
 /// A random well-formed module, which validation often rejects.
@@ -93,6 +96,12 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     }
     if rng.one_in(2) {
         locs::break_table(rng, &mut m.locs);
+    }
+    if rng.one_in(4) {
+        for _ in 0..=rng.below(3) {
+            m.dialects
+                .push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
+        }
     }
     m
 }

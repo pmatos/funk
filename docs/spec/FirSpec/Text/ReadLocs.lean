@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reading the location table and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4773866437845491469")
+:::moduleDocs (fingerprint := "7608560046184177135")
 :::
 
 :::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "14401333200745503308")
@@ -52,9 +52,18 @@ follows. The entries are kept in the order they are written; whether
 their references increase is checked by validation, not here.
 :::
 
-:::readable Fir.Text.readModule (fingerprint := "15156169022892696487")
-*Definition: reading a module.* A module is its items, read at the top
-level, then its location table, which must start with the word `locs`,
+:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "7744412623506532928")
+*Definition: reading a module's dialect set.* When the tokens start with
+the word `dialects`, the set is the word after it, then each word after a
+comma, as long as a comma follows; a token after `dialects` or after a
+comma that is not a word is an error, "expected the name of a dialect".
+Otherwise the set is empty, and nothing is read. A module that names no
+dialect writes no set, so this reads nothing of it.
+:::
+
+:::readable Fir.Text.readModule (fingerprint := "9621767571844513474")
+*Definition: reading a module.* A module is its dialect set, then its
+items, read at the top level, then its location table, which must start with the word `locs`,
 then the end of the text. Anything else after the items is an error,
 "expected an item or the location table", and anything after the table is
 an error, "expected the end of the text after the location table".

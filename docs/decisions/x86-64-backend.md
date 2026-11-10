@@ -41,7 +41,13 @@ Both end with `.note.GNU-stack`, so the stack is not executable.
 `as --64` assembles each file. `ld -m elf_x86_64 -static` links the two objects
 into a static executable with the entry point `__funk_start`. Both tools are
 told the target, so neither a configured default nor `LDEMULATION` changes the
-build. There is no libc, no C compiler and no dynamic linker.
+build. There is no C compiler (ADR-2026-10-30-1229).
+
+A module whose object file references a symbol it does not define links with
+the host's shared glibc instead: `ld --dynamic-linker
+/lib64/ld-linux-x86-64.so.2 ... -lc`, still entered at `__funk_start`. That
+needs glibc's development files. Any other module stays static, with no C
+library (ADR-2026-11-10-1303).
 
 `funk build -o OUTPUT FILE` writes `OUTPUT.o` and `OUTPUT`. The intermediate
 files go to a temporary directory, which funk removes. ADR-2026-10-30-1326 says
@@ -319,6 +325,13 @@ function. It passes each result, sign-extended, to the printer
 The runtime uses only `write`, `mmap`, `mprotect`, `rt_sigaction`, `exit_group`,
 `getrlimit`, `sysinfo`, `sigaltstack`, `rt_sigprocmask`, `rt_sigreturn`,
 `getpid` and `kill` (ADR-2026-10-30-1233, ADR-2026-11-02-1132).
+
+When the program links with glibc, the runtime also registers the loader's
+finalizer with `__cxa_atexit`. It calls `fflush(NULL)` before it writes
+standard output, so C's output comes before the values line, and a failed
+flush exits with 2. A successful run leaves through `exit(0)`. Every other exit
+stays `exit_group`, which keeps what C already wrote out but loses what it
+still buffers (ADR-2026-11-10-1303).
 
 ### The run's stack
 

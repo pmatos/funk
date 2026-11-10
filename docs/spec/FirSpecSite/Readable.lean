@@ -7,7 +7,8 @@ document in `docs/spec/FirSpec/` that holds one readable block per
 declaration of the module: prose for a newcomer, with notation in KaTeX.
 The module's own prose shows as before. Each declaration's Lean, its doc
 comment, its statement and its proof, shows hidden in an HTML `<details>`
-right under its readable block.
+right under its readable block, with the code that defines nothing placed
+by `leanOwners`.
 
 This module defines the blocks and puts a section together when the
 document is rendered. `FirSpecSite.ReadableElab` checks the readable blocks
@@ -72,7 +73,7 @@ block_extension Block.leanDetails (names : Array Name) where
     let names := names.toList.intersperse (Html.text true ", ") |>.toArray
     pure {{
       <details class="fir-lean">
-        <summary>"Lean: " {{names}}</summary>
+        <summary>{{if names.isEmpty then "Lean" else "Lean: "}} {{names}}</summary>
         {{← contents.mapM goB}}
       </details>
     }}
@@ -138,15 +139,76 @@ def codeBlocks : VersoLiterate.Code → Array (Block Manual)
   | _ => #[]
 
 /--
+The kinds of command that define nothing and set up the code after them.
+They open a scope or change what it holds, or, as `macro`, `syntax` and
+`elab` do, add syntax for the code after them, such as a tactic for the
+proofs that follow. A `notation` or an `infix` is not one of them: it names
+a definition made before it. Module docs count too, since they introduce
+what follows them.
+-/
+def leadingKinds : Array SyntaxNodeKind := #[
+  ``Lean.Parser.Command.moduleDoc, ``Lean.Parser.Command.namespace,
+  ``Lean.Parser.Command.section, ``Lean.Parser.Command.variable,
+  ``Lean.Parser.Command.open, ``Lean.Parser.Command.omit,
+  ``Lean.Parser.Command.include, ``Lean.Parser.Command.set_option,
+  ``Lean.Parser.Command.universe, ``Lean.Parser.Command.macro,
+  ``Lean.Parser.Command.macro_rules, ``Lean.Parser.Command.syntax,
+  ``Lean.Parser.Command.syntaxCat, ``Lean.Parser.Command.elab,
+  ``Lean.Parser.Command.elab_rules]
+
+/--
+For each item of a module, the item that defines something under whose
+readable block its Lean is hidden: itself, when it defines something.
+
+An item that defines nothing goes with the declaration before it, as an
+anonymous `instance`, an `example`, a `#guard`, an `infix`, an `export` or
+an `end` belongs to what it follows (#181). It goes with the declaration
+after it instead when it is of one of the `leadingKinds`, such as
+`variable` and `namespace`, when module docs stand between it and the
+declaration before it, or when no declaration comes before it.
+
+An item that goes back takes the items waiting before it back too, so
+each block's Lean keeps the module's order. So a `namespace` that opens
+the scope of an anonymous instance goes back with the instance; a
+declaration after them in the same scope then shows without it, though
+the line is still on the page.
+
+Items still waiting after the last declaration go with it, unless module
+docs stand between them. Then, as when the module defines nothing, their
+owner is `none`, and `readablePage` shows their Lean at the end of the
+last section, under the docs that introduce it. So no line is left out.
+-/
+def leanOwners (items : Array ModuleItem') : Array (Option Nat) := Id.run do
+  let mut owners := Array.replicate items.size none
+  let mut pending : Array Nat := #[]
+  -- The declaration before, with no module docs since.
+  let mut before : Option Nat := none
+  for h : i in [0:items.size] do
+    let item := items[i]
+    if !item.defines.isEmpty then
+      for k in pending.push i do owners := owners.set! k (some i)
+      pending := #[]
+      before := some i
+    else if leadingKinds.contains item.kind then
+      pending := pending.push i
+      if item.kind == ``Lean.Parser.Command.moduleDoc then before := none
+    else match before with
+      | some j =>
+        for k in pending.push i do owners := owners.set! k (some j)
+        pending := #[]
+      | none => pending := pending.push i
+  for k in pending do owners := owners.set! k before
+  return owners
+
+/--
 The section of the Lean module `mod`, titled `title`, with each declaration
 shown by its readable block from `readable`, and its Lean hidden under it.
 
 The module's own prose shows where it stands in the module. A readable
 block stands where the first declaration it explains stands. Its hidden Lean
-holds each declaration it explains, with the code before it that defines
-nothing, such as `variable` and `namespace`, so no line of the module is
-left out. The blocks of `readable` that are not readable blocks open the
-section.
+holds each declaration it explains, with the code around it that defines
+nothing, as `leanOwners` places it, so no line of the module is left out.
+The blocks of `readable` that are not readable blocks open the section.
 -/
 partial def readablePage (mod : LitMod) (title : Array (Inline Manual)) (titleString : String)
     (readable : VersoDoc Manual) : VersoDoc Manual := Id.run do
@@ -159,22 +221,14 @@ partial def readablePage (mod : LitMod) (title : Array (Inline Manual)) (titleSt
   let items := mod.contents
   let owner (item : ModuleItem') : Option Nat :=
     entries.findIdx? fun (names, _) => names.any item.defines.contains
-  -- The hidden Lean of each item that defines something.
+  -- The hidden Lean of each item that defines something, and of the items that none owns.
   let mut leanOf : Array (Array (Block Manual)) := Array.replicate items.size #[]
-  let mut pending : Array (Block Manual) := #[]
-  let mut lastDef : Option Nat := none
-  for h : i in [0:items.size] do
-    let item := items[i]
+  let mut unowned : Array (Block Manual) := #[]
+  for (item, place) in items.zip (leanOwners items) do
     let code := item.code.flatMap codeBlocks
-    if item.defines.isEmpty then
-      pending := pending ++ code
-    else
-      leanOf := leanOf.set! i (pending ++ code)
-      pending := #[]
-      lastDef := some i
-  if let some j := lastDef then
-    leanOf := leanOf.modify j (· ++ pending)
-    pending := #[]
+    match place with
+    | some j => leanOf := leanOf.modify j (· ++ code)
+    | none => unowned := unowned ++ code
   let mut errors : Array String := #[]
   let mut stack : Array (Part Manual) := #[]
   let mut p : Part Manual := {title, titleString, metadata := none, content := intro, subParts := #[]}
@@ -212,8 +266,8 @@ partial def readablePage (mod : LitMod) (title : Array (Inline Manual)) (titleSt
             if owner items[k] == some e then lean := lean ++ leanOf[k]!
           let details := Block.other (Block.leanDetails names) lean
           p := pushBlock p (.other (Block.readable names) (contents.push details))
-  unless pending.isEmpty do
-    p := pushBlock p (.other (Block.leanDetails #[]) pending)
+  unless unowned.isEmpty do
+    p := pushBlock p (.other (Block.leanDetails #[]) unowned)
   for h : e in [0:entries.size] do
     unless emitted[e]! do
       errors := errors.push s!"{mod.name}: the readable block for {entries[e].1} explains nothing it defines"

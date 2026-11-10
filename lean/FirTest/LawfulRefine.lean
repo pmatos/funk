@@ -1,5 +1,5 @@
 import Fir.Core.Lawful
-import FirTest.Sum
+import FirTest.OverCore
 
 /-!
 Tests of refinement for a dialect whose ops are monotone only at valid op
@@ -38,17 +38,17 @@ namespace FirTest
 open Fir
 
 /-- The probe dialect: its op, over the core dialect's types. -/
-abbrev ProbeDialect : Dialect := ⟨Probe.Op, Core.Ty⟩
+abbrev ProbeDialect : Dialect := OverCore Probe.Op
 
 namespace Probe
 
 /-- The operand types of a probe op. -/
-def Op.sig : Op → List Core.Ty
-  | .id w => [.int w]
+def Op.sig : Op → List (Core.Ty ⊕ Empty)
+  | .id w => [.inl (.int w)]
 
 /-- The result types of a probe op. -/
-def Op.returnTypes : Op → List Core.Ty
-  | .id w => [.int w]
+def Op.returnTypes : Op → List (Core.Ty ⊕ Empty)
+  | .id w => [.inl (.int w)]
 
 instance : DialectSignature ProbeDialect where
   sig := Op.sig
@@ -59,7 +59,7 @@ instance : DialectSignature ProbeDialect where
 /-- The probe dialect accepts the types that the core dialect accepts, and
 has no rule of its own. -/
 instance : DialectValidation ProbeDialect where
-  validTy := Core.Ty.Valid
+  validTy := OverCore.ValidTy
   symbolRefs _ := []
   validOp _ _ := True
   validFunc _ _ _ := True
@@ -91,7 +91,7 @@ instance : DialectCall ProbeDialect := ⟨fun _ => none⟩
 
 /-- A valid probe op instance has a width above zero. -/
 theorem pos_of_typesValid {w : Nat} (h : TypesValid (d := ProbeDialect) (.id w)) : 0 < w :=
-  (h.1 (.int w) List.mem_cons_self).1
+  (h.1 (.inl (.int w)) List.mem_cons_self).1
 
 /-- `id` is total at every width. -/
 theorem id_total (w : Nat) : OpTotal (d := ProbeDialect) (.id w) := fun
@@ -110,7 +110,9 @@ theorem id_monotone (w : Nat) : OpMonotone (d := ProbeDialect) (.id (w + 1)) := 
 /-- The probe dialect is lawful: its valid op instances are total and
 monotone, and it has no op that propagates poison. -/
 instance lawful : LawfulDialectPoison ProbeDialect where
-  poison_isRefinedBy _ := Core.Ty.poison_isRefinedBy
+  poison_isRefinedBy {t} := match t with
+    | .inl _ => fun _ => Core.Ty.poison_isRefinedBy
+    | .inr t => t.elim
   propagates _ _ h := nomatch h
   returnsOnDefined _ _ h := nomatch h
   total | .id w, _, _ => id_total w
@@ -123,14 +125,14 @@ instance lawful : LawfulDialectPoison ProbeDialect where
 end Probe
 
 /-- The sum of the core dialect and the probe dialect. -/
-abbrev CoreProbe : Dialect := SumDialect Core.Ty Core.Op Probe.Op
+abbrev CoreProbe : Dialect := CoreSum Probe.Op
 
-/-- The sum is lawful: both sides accept the same types. -/
-instance coreProbe_lawful : LawfulDialectPoison CoreProbe := SumDialect.lawfulPoison fun _ h => h
+/-- The sum is lawful: the probe dialect accepts the core's valid types. -/
+instance coreProbe_lawful : LawfulDialectPoison CoreProbe := Dialect.sum.lawfulPoison fun _ h => h
 
 /-- `id` at `i0` is not a valid op instance. -/
 theorem probe0_not_typesValid : ¬ TypesValid (d := CoreProbe) (.inr (.id 0)) :=
-  fun h => absurd (h.1 (.int 0) List.mem_cons_self).1 (by decide)
+  fun h => absurd (h.1 (.inl (.int 0)) List.mem_cons_self).1 (by decide)
 
 /-- `id` at `i0` is not monotone: on poison it gives a value, and on
 a value, which refines poison, it gives poison, which does not refine
@@ -157,6 +159,19 @@ theorem coreProbe_args {ctx : ModuleContext CoreProbe} {M : Module CoreProbe}
     observable (f.runs M a) ⊑ observable (f.runs M a') :=
   Func.runs_args_isRefinedBy_of_lawful hv hf ha
 
+/-- Every vector of values of the sum's types, which are the core's. -/
+def argVectors : (ts : List CoreProbe.Ty) → List (HVector toType ts)
+  | [] => [.nil]
+  | .inl t :: ts => t.values.flatMap fun v => (argVectors ts).map (.cons v)
+  | .inr t :: _ => t.elim
+
+/-- `argVectors ts` holds every vector of values of the types `ts`. -/
+theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (a : HVector toType ts), a ∈ argVectors ts
+  | [], .nil => List.mem_singleton_self _
+  | .inl _ :: _, .cons v a => List.mem_flatMap.2 ⟨v, Core.Ty.mem_values v,
+      List.mem_map_of_mem (mem_argVectors a)⟩
+  | .inr t :: _, _ => t.elim
+
 /-- Congruence in the callee, for every valid module of `CoreProbe`, by the
 lawful class alone, whatever the new body. -/
 theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func CoreProbe}
@@ -164,8 +179,12 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
     (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
     f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
-  Func.runs_replaceBody_isRefinedBy_of_lawful Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans
-    hM hg b ⟨Core.argVectors _, Core.mem_argVectors⟩ h hf
+  Func.runs_replaceBody_isRefinedBy_of_lawful
+    (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
+      fun {t} => Empty.elim t)
+    (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
+      fun {t} => Empty.elim t)
+    hM hg b ⟨argVectors _, mem_argVectors⟩ h hf
 
 /-! # Axioms -/
 

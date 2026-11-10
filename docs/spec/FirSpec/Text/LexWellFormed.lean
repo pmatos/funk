@@ -140,11 +140,12 @@ well-formed function can be written: `func`, its symbol, its parameters,
 its result types, which are written as types, and its blocks.
 :::
 
-:::readable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (fingerprint := "4040091488338471989")
+:::readable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (fingerprint := "4580283207050862616")
 *Theorem: a well-formed module has tokens that can be written.* For every
 dialect with signatures and a text format, every token of every
-well-formed module can be written. A well-formed module has well-formed
-functions, and a location table within the limits.
+well-formed module can be written. A well-formed module names its dialects
+by words, has well-formed functions, and has a location table within the
+limits.
 :::
 
 :::readable Fir.Module.WellFormed.lex_print (fingerprint := "8613579067497501645")

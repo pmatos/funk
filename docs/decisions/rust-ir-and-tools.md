@@ -84,7 +84,7 @@ takes an op's attributes and the types of its operands and results. It returns
 the op's `OpShape`, or why the op does not decode. `OpSpec::check` is the
 dialect's own rule. `TypeSpec::check` says whether a type decodes and whether it
 is valid. Registering rejects an op name that is not a word or is already
-registered.
+registered (ADR-2026-10-30-1146).
 
 No per-op code exists outside the dialect. The parser reads the one grammar,
 then decodes each op and type through the registry. A failure there is a parse
@@ -107,12 +107,19 @@ registered in `dialects/core/mod.rs`. A new dialect implements `OpSpec` and
 `TypeSpec` and registers. The IR, parser, printer and verifier then do not
 change.
 
-A test-only dialect names its ops and types `toy.` and a word, such as `toy.br`.
-A sum of the core and a test dialect routes each `toy.` name to the test
-dialect. Every other name goes to the core (ADR-2026-10-30-1146). H4 makes this
-the general rule. Every dialect but the core writes its ops, types and attributes
-as `name.word`, and test dialects keep `toy.` (ADR-2026-11-09-1543). That design
-is in semantics-m1-design.md, and `funk-ir` does not implement it yet.
+Every dialect but the core writes its ops, types and attributes as `name.word`,
+and test dialects are named `toy` (ADR-2026-11-09-1543). The registry routes by
+that prefix (ADR-2026-11-10-0042). A word belongs to the dialect named before
+its first `.`, and a bare word to the core. A dialect's name is a word with no
+`.`. Registering rejects an op that is not written under its dialect's name, so
+a core op is bare and a `toy` op is `toy.` and a word. A type goes only to the
+dialect its head word names, so no dialect can claim another's type.
+
+A dialect declares the dialects it depends on with `Dialect::depends_on`.
+Registering rejects a dependency that is not registered yet. The test dialects
+depend on the core. A module does not yet declare its dialect set, and the
+verifier does not yet reject a word from outside it: stage 4 of #227 adds both.
+The rest of the design is in semantics-m1-design.md.
 
 ### Nesting
 

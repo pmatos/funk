@@ -70,7 +70,7 @@ def gFn : Func CoreDialect where
       op [] (.ret [i 32]) ["r"] 0]⟩]⟩
 
 /-- The module of `@count` and `@g`. -/
-def ubModule : Module CoreDialect := ⟨[.func countFn, .func gFn], [(0, .unknown)]⟩
+def ubModule : Module CoreDialect := ⟨[], [.func countFn, .func gFn], [(0, .unknown)]⟩
 
 /-- `@g` hits UB on every argument, at two steps. -/
 theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
@@ -141,6 +141,8 @@ theorem ubModule_valid : ubModule.Valid where
     rcases hf with rfl | rfl
     · exact countFn_valid
     · exact gFn_valid
+  dialectNames := by simp [ubModule]
+  dialectsUnique := by simp [ubModule]
 
 /-- The new body of `@g`: it calls `@count` back on its argument. -/
 def gBody : Region CoreDialect := ⟨[

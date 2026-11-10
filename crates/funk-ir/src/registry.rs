@@ -8,12 +8,20 @@
 //! `decodeOp` with the op's signature (`DialectText`, `DialectSignature`),
 //! [`OpSpec::check`] is `validOp`, [`TypeSpec`] is `decodeTy` with `validTy`,
 //! and [`FuncSpec::check`] is `validFunc` (`DialectValidation`).
+//!
+//! A word belongs to the dialect named before its first `.`, and a bare word
+//! to the core (ADR-2026-11-09-1543, ADR-2026-11-10-0042). Registration
+//! checks that each op of a dialect is written under the dialect's name, so
+//! the map of op names routes each op to its dialect. A type goes to the
+//! dialect that its head word names, and only that dialect's [`TypeSpec`]s
+//! are asked about it, so no dialect can claim another's type.
 
 use std::collections::HashMap;
 use std::fmt;
 
 use crate::dialects;
-use crate::ir::names::is_word;
+use crate::dialects::core::NAME as CORE;
+use crate::ir::names::{is_word, word_dialect};
 use crate::ir::{Attr, Func, SymbolTable, Type};
 
 /// What an op instance is used at: its attributes and the types of its
@@ -55,7 +63,8 @@ pub struct OpContext<'a> {
 
 /// One op of a dialect. An op family's file implements it once per op.
 pub trait OpSpec: Send + Sync {
-    /// The op's name, such as `add`. It must be a word.
+    /// The op's name, such as `add` or `toy.br`: a bare word for the core,
+    /// and the dialect's name, a `.` and a word for any other dialect.
     fn name(&self) -> &str;
 
     /// Decodes the op instance used at `op`: its shape, or why no instance
@@ -82,7 +91,9 @@ pub enum TypeCheck {
     Malformed(String),
 }
 
-/// The types of a dialect. Two dialects must not claim the same type.
+/// The types of a dialect. The registry asks it only about types whose head
+/// word names its dialect: `name.word` for a dialect `name`, and a bare word
+/// for the core. So a spec of `toy` that claims `f32` is never asked.
 pub trait TypeSpec: Send + Sync {
     /// What the dialect says about `ty`, or `None` if `ty` is not one of its
     /// types.
@@ -107,10 +118,16 @@ pub trait FuncSpec: Send + Sync {
     fn check(&self, cx: &FuncContext<'_>, func: &Func) -> Result<(), String>;
 }
 
-/// A dialect: a name, its ops, its types and its function rules.
+/// A dialect: a name, the dialects it depends on, its ops, its types and its
+/// function rules.
 pub struct Dialect {
-    /// The dialect's name.
+    /// The dialect's name: a word with no `.`. Every dialect but the core
+    /// writes its ops and types as this name, a `.` and a word; the core
+    /// writes bare words.
     pub name: String,
+    /// The names of the dialects it depends on, whose types its ops may
+    /// take. Each must be registered before it.
+    pub deps: Vec<String>,
     /// The dialect's ops.
     pub ops: Vec<Box<dyn OpSpec>>,
     /// The dialect's types.
@@ -120,14 +137,24 @@ pub struct Dialect {
 }
 
 impl Dialect {
-    /// A dialect with no ops, no types and no function rules yet.
+    /// A dialect with no dependencies, ops, types or function rules yet.
     pub fn new(name: impl Into<String>) -> Dialect {
         Dialect {
             name: name.into(),
+            deps: Vec::new(),
             ops: Vec::new(),
             types: Vec::new(),
             func_rules: Vec::new(),
         }
+    }
+
+    /// Adds a dialect that this one depends on, unless it is already there.
+    pub fn depends_on(mut self, dialect: impl Into<String>) -> Dialect {
+        let dialect = dialect.into();
+        if !self.deps.contains(&dialect) {
+            self.deps.push(dialect);
+        }
+        self
     }
 
     /// Adds an op.
@@ -152,8 +179,25 @@ impl Dialect {
 /// Why a dialect could not be registered.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RegistryError {
+    /// The dialect's name is not a word with no `.`, so no word can name it.
+    DialectNameNotAPrefix(String),
     /// A dialect of this name is already registered.
     DuplicateDialect(String),
+    /// The dialect depends on one that is not registered.
+    MissingDependency {
+        /// The dialect being registered.
+        dialect: String,
+        /// The dependency that no registered dialect has as its name.
+        dependency: String,
+    },
+    /// The op's name does not name the dialect that registers it: a
+    /// prefixed dialect's ops are `name.word`, and the core's are bare.
+    OpOutsideDialect {
+        /// The dialect being registered.
+        dialect: String,
+        /// The op's name.
+        op: String,
+    },
     /// An op of this name is already registered.
     DuplicateOp(String),
     /// The op's name is not a word, so the text cannot write it.
@@ -163,7 +207,26 @@ pub enum RegistryError {
 impl fmt::Display for RegistryError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            RegistryError::DialectNameNotAPrefix(d) => {
+                write!(f, "dialect name {d:?} is not a word without a dot")
+            }
             RegistryError::DuplicateDialect(d) => write!(f, "dialect {d} is already registered"),
+            RegistryError::MissingDependency {
+                dialect,
+                dependency,
+            } => write!(
+                f,
+                "dialect {dialect} depends on {dependency}, which is not registered"
+            ),
+            RegistryError::OpOutsideDialect { dialect, op } if dialect == CORE => {
+                write!(f, "op {op} of the core is not a bare word")
+            }
+            RegistryError::OpOutsideDialect { dialect, op } => {
+                write!(
+                    f,
+                    "op {op} of dialect {dialect} is not written {dialect}.WORD"
+                )
+            }
             RegistryError::DuplicateOp(o) => write!(f, "op {o} is already registered"),
             RegistryError::OpNameNotAWord(o) => write!(f, "op name {o:?} is not a word"),
         }
@@ -172,22 +235,41 @@ impl fmt::Display for RegistryError {
 
 impl std::error::Error for RegistryError {}
 
+/// Whether `op` is written under `prefix`: a bare word for the core, whose
+/// prefix is `None`, and the prefix, a `.` and a word for any other dialect.
+fn written_under(op: &str, prefix: Option<&str>) -> bool {
+    match prefix {
+        None => word_dialect(op).is_none(),
+        Some(p) => op
+            .strip_prefix(p)
+            .and_then(|rest| rest.strip_prefix('.'))
+            .is_some_and(is_word),
+    }
+}
+
+/// A registered dialect: its name, its dependencies and its types.
+struct Registered {
+    name: String,
+    deps: Vec<String>,
+    types: Vec<Box<dyn TypeSpec>>,
+}
+
 /// The registered dialects, their ops by name, their types and their
 /// function rules.
 #[derive(Default)]
 pub struct Registry {
-    dialects: Vec<String>,
+    dialects: Vec<Registered>,
     ops: HashMap<String, (usize, Box<dyn OpSpec>)>,
-    types: Vec<Box<dyn TypeSpec>>,
     func_rules: Vec<Box<dyn FuncSpec>>,
 }
 
 impl fmt::Debug for Registry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let dialects: Vec<_> = self.dialects.iter().map(|d| &d.name).collect();
         let mut ops: Vec<_> = self.ops.keys().collect();
         ops.sort();
         f.debug_struct("Registry")
-            .field("dialects", &self.dialects)
+            .field("dialects", &dialects)
             .field("ops", &ops)
             .finish()
     }
@@ -207,29 +289,56 @@ impl Registry {
         r
     }
 
-    /// Registers a dialect, or fails without changing the registry.
+    /// The registered dialect named `name`.
+    fn dialect(&self, name: &str) -> Option<&Registered> {
+        self.dialects.iter().find(|d| d.name == name)
+    }
+
+    /// Registers a dialect, or fails without changing the registry. Its name
+    /// must be new and a word with no `.`, each dialect it depends on must
+    /// be registered, and each op must be a new word that names it.
     pub fn register(&mut self, dialect: Dialect) -> Result<(), RegistryError> {
-        if self.dialects.contains(&dialect.name) {
+        let name = dialect.name.as_str();
+        if !is_word(name) || name.contains('.') {
+            return Err(RegistryError::DialectNameNotAPrefix(dialect.name));
+        }
+        if self.dialect(name).is_some() {
             return Err(RegistryError::DuplicateDialect(dialect.name));
         }
+        if let Some(dep) = dialect.deps.iter().find(|d| self.dialect(d).is_none()) {
+            return Err(RegistryError::MissingDependency {
+                dialect: dialect.name.clone(),
+                dependency: dep.clone(),
+            });
+        }
+        let prefix = (name != CORE).then_some(name);
         let mut names: Vec<&str> = Vec::new();
         for op in &dialect.ops {
-            let name = op.name();
-            if !is_word(name) {
-                return Err(RegistryError::OpNameNotAWord(name.to_string()));
+            let op_name = op.name();
+            if !is_word(op_name) {
+                return Err(RegistryError::OpNameNotAWord(op_name.to_string()));
             }
-            if self.ops.contains_key(name) || names.contains(&name) {
-                return Err(RegistryError::DuplicateOp(name.to_string()));
+            if !written_under(op_name, prefix) {
+                return Err(RegistryError::OpOutsideDialect {
+                    dialect: dialect.name.clone(),
+                    op: op_name.to_string(),
+                });
             }
-            names.push(name);
+            if self.ops.contains_key(op_name) || names.contains(&op_name) {
+                return Err(RegistryError::DuplicateOp(op_name.to_string()));
+            }
+            names.push(op_name);
         }
         let index = self.dialects.len();
-        self.dialects.push(dialect.name);
         for op in dialect.ops {
             self.ops.insert(op.name().to_string(), (index, op));
         }
-        self.types.extend(dialect.types);
         self.func_rules.extend(dialect.func_rules);
+        self.dialects.push(Registered {
+            name: dialect.name,
+            deps: dialect.deps,
+            types: dialect.types,
+        });
         Ok(())
     }
 
@@ -240,7 +349,20 @@ impl Registry {
 
     /// The dialect that registered the op named `name`.
     pub fn dialect_of(&self, name: &str) -> Option<&str> {
-        self.ops.get(name).map(|(d, _)| self.dialects[*d].as_str())
+        self.ops
+            .get(name)
+            .map(|(d, _)| self.dialects[*d].name.as_str())
+    }
+
+    /// Whether a module's dialect set may name `name`: a registered dialect
+    /// other than the core, which every module holds and none names.
+    pub fn is_extension(&self, name: &str) -> bool {
+        name != CORE && self.dialect(name).is_some()
+    }
+
+    /// The dialects that the registered dialect `name` depends on.
+    pub fn dependencies(&self, name: &str) -> Option<&[String]> {
+        self.dialect(name).map(|d| d.deps.as_slice())
     }
 
     /// The registered dialects' rules over whole functions.
@@ -248,14 +370,19 @@ impl Registry {
         self.func_rules.iter().map(|r| r.as_ref())
     }
 
-    /// What the registered dialects say about `ty`. A type that no dialect
-    /// claims does not decode.
+    /// What the dialect that `ty`'s head word names says about `ty`. A type
+    /// that its dialect does not claim, or whose dialect is not registered,
+    /// does not decode.
     pub fn check_type(&self, ty: &Type) -> TypeCheck {
-        self.types
+        let name = word_dialect(&ty.name).unwrap_or(CORE);
+        let Some(d) = self.dialect(name) else {
+            return TypeCheck::Malformed(format!(
+                "{ty} is not a type: no dialect named {name} is registered"
+            ));
+        };
+        d.types
             .iter()
             .find_map(|t| t.check(ty))
-            .unwrap_or_else(|| {
-                TypeCheck::Malformed(format!("{} is not a type of any registered dialect", ty))
-            })
+            .unwrap_or_else(|| TypeCheck::Malformed(format!("{ty} is not a type of {name}")))
     }
 }

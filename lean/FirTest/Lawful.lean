@@ -1,6 +1,5 @@
 import Fir.Core.Lawful
 import FirTest.RunsCalls
-import FirTest.Sum
 
 /-!
 Tests of the instance `LawfulDialectPoison CoreDialect` and of the two
@@ -20,7 +19,8 @@ guards of the poison obligations, and the axioms of their proofs.
   recursion and mutual recursion is a valid op instance, and `@even`, which
   calls `@odd`, which calls it back, has an outcome at every budget by the
   lawful class alone (`Func.progress_of_lawful`). The sum of the core
-  dialect with itself is lawful (`SumDialect.lawfulPoison`).
+  dialect and a lawful extension is lawful, as `FirTest.LawfulRefine`
+  shows with the spec's `Dialect.sum.lawfulPoison`.
 -/
 
 namespace FirTest
@@ -108,11 +108,6 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
     (fun g hg => inModule_of_valid (recModule_valid.funcs g hg))
     (by simp [recModule, Module.funcs]) args
 
-/-- The sum of the core dialect with itself is lawful: both sides accept
-the same types. -/
-theorem coreCore_lawful : LawfulDialectPoison (SumDialect Core.Ty Core.Op Core.Op) :=
-  SumDialect.lawfulPoison fun _ h => h
-
 /-! # Axioms -/
 
 /-- info: 'Fir.Func.Valid.typesValid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -180,9 +175,6 @@ theorem coreCore_lawful : LawfulDialectPoison (SumDialect Core.Ty Core.Op Core.O
 
 /-- info: 'FirTest.even_progress_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.even_progress_of_lawful
-
-/-- info: 'FirTest.coreCore_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms FirTest.coreCore_lawful
 
 /-- info: 'Fir.Core.Unlawful.noOutcome_unlawful' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.Core.Unlawful.noOutcome_unlawful

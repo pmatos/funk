@@ -164,7 +164,7 @@ no items, which prints as `locs {` and `}` on two lines.
 
 #guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"
 
-#guard (Module.print (d := CoreDialect) ⟨[], []⟩) == "locs {\n}\n" &&
+#guard (Module.print (d := CoreDialect) ⟨[], [], []⟩) == "locs {\n}\n" &&
   sumModule.print.endsWith "\n"
 
 /-!

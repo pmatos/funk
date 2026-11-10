@@ -79,6 +79,19 @@ theorem problems_eq_nil_iff (d : Dialect) [DialectSignature d] [DialectValidatio
     m.problems = [] ↔ m.Valid :=
   m.problems_eq_nil_iff
 
+/-- The check of a module's dialect set decides its rule, for every dialect
+with a text and a dialect set: the set names dialects of the dialect's own
+set, and every word of the module names the core or a dialect of its set. -/
+theorem setProblems_eq_nil_iff (d : Dialect) [DialectText d] [DialectSet d] (m : Module d) :
+    m.setProblems = [] ↔ m.InDialectSet :=
+  m.setProblems_eq_nil_iff
+
+/-- `fir-ref`'s check of a module's dialect set is the spec's, for every
+dialect. -/
+theorem firRef_setProblems (d : Dialect) [DialectText d] [DialectSet d] (m : Module d) :
+    FirRef.moduleSetProblems m = m.setProblems := by
+  rw [FirRef.setProblems_eq_moduleSetProblems]
+
 /-- A valid function obeys its dialect's own rule over a whole function, for
 every dialect. -/
 theorem validFunc_of_valid (d : Dialect) [DialectSignature d] [DialectValidation d]

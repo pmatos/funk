@@ -61,8 +61,9 @@ impl Drop for SBody {
     }
 }
 
-/// `module ::= item* locs`.
+/// `module ::= dialects? item* locs`.
 pub(super) struct SModule {
+    pub dialects: Vec<String>,
     pub items: Vec<SItem>,
     pub locs: LocTable,
 }

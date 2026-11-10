@@ -2,7 +2,8 @@ import Fir.Validation.CheckFuncs
 
 /-!
 The check of a module follows the rule of a valid module: its symbols, its
-location table, then each function, in the context of the module. It builds
+location table, each function, in the context of the module, then its
+dialect set. It builds
 the module's symbol table and the set of its location references once, as
 hash tables, and every function looks them up.
 
@@ -101,14 +102,18 @@ def Module.problems (m : Module d) : List Problem :=
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   m.locs.problems ++
-  m.funcs.flatMap (·.problems lk)
+  m.funcs.flatMap (·.problems lk) ++
+  m.dialects.filterMap (fun x => if isWord x then none else
+    some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
+  (repeats m.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
 
 /-- The validation check decides `Module.Valid`: a module has no problems
 exactly when it is valid. -/
 theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid := by
   simp only [Module.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
-    LocTable.problems_eq_nil, List.flatMap_eq_nil_iff, Func.problems_eq_nil m.lookup_agrees]
-  exact ⟨fun ⟨⟨a, b⟩, c⟩ => ⟨a, b, c⟩, fun ⟨a, b, c⟩ => ⟨⟨a, b⟩, c⟩⟩
+    LocTable.problems_eq_nil, List.flatMap_eq_nil_iff, Func.problems_eq_nil m.lookup_agrees,
+    List.filterMap_eq_nil_iff, ite_none_eq_none]
+  exact ⟨fun ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, f⟩ => ⟨a, b, c, e, f⟩, fun ⟨a, b, c, e, f⟩ => ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, f⟩⟩
 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 

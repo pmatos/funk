@@ -35,6 +35,13 @@ and nothing more (ADR-2026-10-30-1740):
   type, `validOp ctx o` for every context and op, and `validFunc` for every
   function (ADR-2026-11-09-2257).
 
+A module's dialect set has a rule of its own, `Module.InDialectSet`, in
+`lean/Fir/Validation/DialectSet.lean`, beside `Module.Valid`. It reads the
+module's words through the dialect's text, so `Module.Valid` and the
+theorems about it need no text. Its check is `Module.setProblems`, and
+`fir-ref validate` and `funk verify` report `Module.problems`, then
+`Module.setProblems` (ADR-2026-11-10-1306).
+
 A dialect's rules in `DialectValidation` stay propositions. A dialect that
 wants the check proves them decidable. The core dialect does so case by case
 in `lean/Fir/Core/Check.lean`. A new dialect derives `DecidableEq` for its
@@ -72,6 +79,20 @@ A broken function rule is reported at the function's entry block, with the
 location of its first op. `tests/dialects/use-once.cases` holds the cases of a
 use-once toy dialect, which the Lean and Rust tests both read
 (ADR-2026-11-09-2257).
+
+## A base op in a sum of dialects
+
+In the spec's sum `base ⊞ e`, a base op is checked by the base's own rule.
+It sees only the symbols whose types are all the base's. It sees the
+function's result types only when they are all the base's. Otherwise no base
+op is valid in that function, `add` included. Dropping the types that the
+base cannot write would let a core `ret` return too few values
+(ADR-2026-11-09-2353).
+
+An extension lifted into a larger sum follows the same rule against what it
+depends on. Its op sees only the symbols whose types are all its own or its
+dependencies', and is valid only where the function's result types all are
+(ADR-2026-11-10-1310).
 
 ## How `fir-ref` runs the check
 

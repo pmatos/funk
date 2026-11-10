@@ -41,8 +41,17 @@ overflowing.
 
 ## Alternatives
 
-- **The effect is the class.** `propagates` would mean may produce poison.
-  It is unsound for `select` and says nothing true of `const`.
+- **The effect is the class.** `propagates` would mean may produce poison,
+  and `exception` would not. Under this ADR's obligation, no poison from
+  operands with no poison (`MakesNoPoison`), that is sound. Of the
+  exceptions, `select` gives poison only when an operand is poison, and
+  `freeze` never does. The terminators give no results, and `call` has its
+  callee's effects, so the obligation does not cover them. It would be
+  unsound only if leaving the effect out meant "never returns poison". But
+  it is imprecise: `const`, `icmp`, the bitwise ops, the width changes and
+  `add`, `sub` and `mul` without flags would all be marked as producing
+  poison, so an analysis that shows a value is not poison would learn
+  nothing from them.
 - **The effect means "a result may be poison".** Sound, but nearly every op
   has it, so passes could not use it.
 

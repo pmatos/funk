@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2186599415744927090")
+:::moduleDocs (fingerprint := "14621842834150240363")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -152,15 +152,19 @@ _valid_ when:
   to itself, directly or not.
 :::
 
-:::readable Fir.Module.context Fir.Module.Valid (fingerprint := "18021523410045563348")
+:::readable Fir.Module.context Fir.Module.Valid (fingerprint := "13918725921862657793")
 *Definition: a valid module.* The context of the module $`M`,
 $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M` and the
 references of its location table. $`M` is valid when:
 
-$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{funcs}(M) \text{ are distinct} \\ \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{ctx}(M) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(M) \end{array}}{\vdash M~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{funcs}(M) \text{ are distinct} \\ \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{ctx}(M) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(M) \\ \text{the names of } \mathrm{dialects}(M) \text{ are distinct words} \end{array}}{\vdash M~\text{valid}}`
 
-Here $`\mathrm{funcs}(M)` is the functions of $`M`, in order, and
-$`\mathrm{locs}(M)` its location table. Since symbols are distinct, the
+Here $`\mathrm{funcs}(M)` is the functions of $`M`, in order,
+$`\mathrm{locs}(M)` its location table, and $`\mathrm{dialects}(M)` its
+dialect set. Which dialects the set may name, and that the words of $`M`
+keep to it, is the rule of
+{ref "The-fir-specification--Sums-of-dialects--A-module___s-dialect-set"}[a module's dialect set],
+which reads words through the dialect's text. Since symbols are distinct, the
 symbol table gives each symbol the type of its one function, and a call
 names exactly one callee.
 :::

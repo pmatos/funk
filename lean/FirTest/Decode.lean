@@ -41,7 +41,7 @@ def sop (results : List SDef) (name : String) (operands : List (Name × TextPos)
 block that holds `ops`, and the location table of `@0`. -/
 def sfunc (params : List SDef) (results : List (Attr × TextPos)) (label : Name)
     (ops : List SOp) : SModule :=
-  ⟨[⟨"func", pos 1 1, "f", params, results, [], .blocks [⟨label, [], ops⟩]⟩], [(0, .unknown)]⟩
+  ⟨[], [⟨"func", pos 1 1, "f", params, results, [], .blocks [⟨label, [], ops⟩]⟩], [(0, .unknown)]⟩
 
 /-- `inner` inside `n` levels of regions: the block of each region holds a
 `br` that owns the next region, as in `nested`. -/
@@ -92,7 +92,7 @@ def bushy : Module CoreDialect :=
   let br : Operation CoreDialect := ⟨[], .br, [], [], [region "a", region "b"], 0⟩
   let body : List (Block CoreDialect) :=
     [⟨"e", [], [c "y", br, c "z", ret ["x"]]⟩, ⟨"e2", [], [ret []]⟩]
-  ⟨[.func ⟨"f", [("x", .int 8)], [], ⟨body⟩⟩], [(0, .unknown)]⟩
+  ⟨[], [.func ⟨"f", [("x", .int 8)], [], ⟨body⟩⟩], [(0, .unknown)]⟩
 
 -- Its text reads back in order through `FirRef.parse`.
 #guard roundTrips bushy.print && (bushy.print.splitOn "^").length == 7
@@ -107,7 +107,7 @@ def flatTree (n : Nat) : SModule :=
 
 /-- The number of ops in the first block of the first function. -/
 def opCount : Except ParseError (Module CoreDialect) → Nat
-  | .ok ⟨[.func ⟨_, _, _, ⟨[⟨_, _, os⟩]⟩⟩], _⟩ => os.length
+  | .ok ⟨_, [.func ⟨_, _, _, ⟨[⟨_, _, os⟩]⟩⟩], _⟩ => os.length
   | _ => 0
 
 -- A block of 3,000,000 ops.

@@ -8,6 +8,7 @@ use std::fmt::{self, Debug, Write};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Mutex;
 
+use funk_ir::dialects::core;
 use funk_ir::{
     Attr, Block, Dialect, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
 };
@@ -44,15 +45,17 @@ impl OpSpec for ToyNest {
 
 fn registry() -> Registry {
     let mut reg = Registry::core();
-    reg.register(Dialect::new("toy").op(ToyNest))
+    reg.register(Dialect::new("toy").depends_on(core::NAME).op(ToyNest))
         .expect("the toy dialect registers");
     reg
 }
 
 /// `@f` with `body` in its entry block, before `ret`, in a module whose
-/// table has `@0`.
+/// dialect set names `toy` and whose table has `@0`.
 fn module_text(body: &str) -> String {
-    format!("func @f() {{\n^e:\n{body}  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n")
+    format!(
+        "dialects toy\n\nfunc @f() {{\n^e:\n{body}  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+    )
 }
 
 /// A text of `depth` attributes, each applying `h` to the next.

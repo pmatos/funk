@@ -26,6 +26,13 @@ pub fn is_word(s: &str) -> bool {
     cs.next().is_some_and(is_word_start) && cs.all(is_name_char)
 }
 
+/// The dialect that the word `w` names: the part before its first `.`, or
+/// `None` for a bare word, which is the core's (ADR-2026-11-09-1543).
+/// `toy.a.b` names `toy`.
+pub fn word_dialect(w: &str) -> Option<&str> {
+    w.split_once('.').map(|(d, _)| d)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -35,5 +42,12 @@ mod tests {
         assert!(is_word("icmp") && is_word("gpu.launch") && is_word("_x"));
         assert!(!is_word("1f") && !is_word("") && !is_word("a-b"));
         assert!(is_name("0") && is_name("acc.1") && !is_name("") && !is_name("a b"));
+    }
+
+    #[test]
+    fn a_word_names_the_dialect_before_its_first_dot() {
+        assert_eq!(word_dialect("gpu.launch"), Some("gpu"));
+        assert_eq!(word_dialect("toy.a.b"), Some("toy"));
+        assert_eq!(word_dialect("add"), None);
     }
 }

@@ -13,8 +13,8 @@ too. The cases are in `tests/dialects/use-once.cases`, and
 `crates/funk-ir/tests/use_once.rs` reads the same file, so the two validators
 agree on each of them.
 
-Test dialects name their ops `toy.` and a word (ADR-2026-10-30-1146), which
-decides nothing about H4.
+It extends the core dialect, under the test dialects' name `toy`
+(ADR-2026-10-30-1146), in the spec's sum (ADR-2026-11-09-1543).
 -/
 
 namespace FirTest.UseOnce
@@ -32,16 +32,16 @@ namespace FirTest
 open Fir
 
 /-- The use-once dialect: its ops, over the core dialect's types. -/
-abbrev UseOnceDialect : Dialect := ⟨UseOnce.Op, Core.Ty⟩
+abbrev UseOnceDialect : Dialect := OverCore UseOnce.Op
 
 namespace UseOnce
 
 instance : DialectSignature UseOnceDialect where
   sig
     | .once _ => []
-    | .sink w => [.int w]
+    | .sink w => [.inl (.int w)]
   returnTypes
-    | .once w => [.int w]
+    | .once w => [.inl (.int w)]
     | .sink _ => []
   isTerminator _ := false
   succCount _ := 0
@@ -52,18 +52,18 @@ def Op.name : Op → String
   | .sink _ => "toy.sink"
 
 /-- The op with this name, at these operand and result types. -/
-def Op.decode (n : String) (as : List Attr) (ts rs : List Core.Ty) : Option Op :=
+def Op.decode (n : String) (as : List Attr) (ts rs : List (Core.Ty ⊕ Empty)) : Option Op :=
   match as, ts, rs with
-  | [], [], [.int w] => if n = "toy.once" then some (.once w) else none
-  | [], [.int w], [] => if n = "toy.sink" then some (.sink w) else none
+  | [], [], [.inl (.int w)] => if n = "toy.once" then some (.once w) else none
+  | [], [.inl (.int w)], [] => if n = "toy.sink" then some (.sink w) else none
   | _, _, _ => none
 
 instance : DialectText UseOnceDialect where
   opName := Op.name
   opAttrs _ := []
   decodeOp := Op.decode
-  tyAttr := Core.Ty.attr
-  decodeTy := Core.Ty.decode
+  tyAttr := OverCore.tyAttr
+  decodeTy := OverCore.decodeTy
 
 variable {host : Dialect}
 
@@ -87,22 +87,20 @@ instance (v : DialectView UseOnceDialect host) (f : Func host) : Decidable (Func
   infer_instance
 
 instance : DialectValidation UseOnceDialect where
-  validTy := Core.Ty.Valid
+  validTy := OverCore.ValidTy
   symbolRefs _ := []
   validOp _ _ := True
   validFunc v _ f := FuncValid v f
 
 instance : DecidableDialectValidation UseOnceDialect where
-  decValidTy t := inferInstanceAs (Decidable (Core.Ty.Valid t))
+  decValidTy t := inferInstanceAs (Decidable (OverCore.ValidTy t))
   decValidOp _ _ := inferInstanceAs (Decidable True)
   decValidFunc v _ f := inferInstanceAs (Decidable (FuncValid v f))
 
 end UseOnce
 
-instance : SumRoute Core.Op UseOnce.Op := ⟨isToyName⟩
-
 /-- The sum of the core dialect and the use-once dialect. -/
-abbrev CoreUseOnce : Dialect := SumDialect Core.Ty Core.Op UseOnce.Op
+abbrev CoreUseOnce : Dialect := CoreSum UseOnce.Op
 
 namespace UseOnce
 
@@ -129,7 +127,7 @@ def broken : Problem :=
 problem at the first op of the entry block. -/
 def Case.holds (c : Case) : Bool :=
   match (Fir.parse c.text : Except ParseError (Module CoreUseOnce)) with
-  | .ok m => m.problems == if c.accept then [] else [broken]
+  | .ok m => m.allProblems == if c.accept then [] else [broken]
   | .error _ => false
 
 #guard cases.length == 9

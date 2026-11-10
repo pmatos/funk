@@ -113,7 +113,7 @@ theorem calls_parse_print {m : Module CoreDialect} (h : Fir.parse calls = .ok m)
 /-- `FirTest.Mixed`'s module, written on two lines with no spaces where none
 are needed: a toy op whose result a core op uses. -/
 def mixedSpaced : String :=
-  "func @f(%a:i8)->i8,i8{^entry: %m:i8=toy.mask 3 %a @1 %s:i8=add %m,%a @0 ret %m,%s @0}\n" ++
+  "dialects toy func @f(%a:i8)->i8,i8{^entry: %m:i8=toy.mask 3 %a @1 %s:i8=add %m,%a @0 ret %m,%s @0}\n" ++
   "locs{@0=unknown @1=name(\"mask\")}"
 
 /-- Every module of the sum of the core and the toy dialect that the parser

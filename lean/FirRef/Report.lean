@@ -83,11 +83,12 @@ def ioErrorReport (file why : String) : String :=
   report file "io-error" [diagnostic "io-error" why]
 
 /-- The report on a file whose text parses as the module `m`, and its exit
-status: 0 when `m` is valid, 1 when it is not. `fir-ref` checks `m` with
-`Module.problems`, which runs `FirRef.moduleProblems` here, since this module
-is compiled after `FirRef.Fast`. -/
+status: 0 when `m` is valid and keeps to its dialect set, 1 when it does
+not. `fir-ref` checks `m` with `Module.problems` and `Module.setProblems`,
+which run `FirRef.moduleProblems` and `FirRef.moduleSetProblems` here,
+since this module is compiled after `FirRef.Fast`. -/
 def reportModule (file : String) (m : Module CoreDialect) : String × UInt32 :=
-  match m.problems with
+  match m.problems ++ m.setProblems with
   | [] => (report file "accepted" [], 0)
   | ps => (report file "validation-error" (ps.map (problemJson (firsts m.locs))), 1)
 

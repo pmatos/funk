@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10282466687769878317")
+:::moduleDocs (fingerprint := "14571224634880628722")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -89,14 +89,15 @@ no blocks. Only `func` items, with blocks, decode today; the tree reads
 other kinds so that a later kind needs no change to this step.
 :::
 
-:::readable Fir.Text.SModule (fingerprint := "16883316809715446607")
-*Definition: a module as written.* A module is read as its items, then its
+:::readable Fir.Text.SModule (fingerprint := "9705118001543986064")
+*Definition: a module as written.* A module is read as its dialect set,
+the names it writes after the word `dialects`, then its items, then its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table],
 which has a fixed syntax and is read in full:
 
 ```grammar Fir.Text.SModule
 \mathit{smodule}
-items,locs \begin{array}{l} \{\mathsf{items}~\mathit{sitem}^*, \\ \enspace \mathsf{locs}~\mathit{table}\,\} \end{array}
+dialects,items,locs \begin{array}{l} \{\mathsf{dialects}~\mathit{name}^*, \\ \enspace \mathsf{items}~\mathit{sitem}^*, \\ \enspace \mathsf{locs}~\mathit{table}\,\} \end{array}
 ```
 :::
 

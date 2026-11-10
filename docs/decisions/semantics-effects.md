@@ -63,5 +63,14 @@ callee, as the poison obligations do (ADR-2026-11-02-1514). The memory-named
 effects and observable have no obligation yet: M0's runs have no memory and no
 trace. The core dialect is lawful in its effects
 (`Core.lawfulDialectEffects`), and `lean/FirTest/G0.lean` restates the class
-and its obligations for every dialect. The toy test dialect declares its
-effects through the class and is lawful in them.
+and its obligations for every dialect.
+
+A sum of dialects gives each op its own side's effects, on the sum's
+memories, each side's kept apart. A lift gives each op of the extension its
+effects in the extension. The sum of dialects lawful in their effects is
+lawful in its effects, and so is a lift, under the conditions that make
+them lawful for poison (`Dialect.sum.lawfulEffects`,
+`Dialect.lift.lawfulEffects`; ADR-2026-11-09-2306, ADR-2026-11-10-1310). The
+toy and bit test dialects declare pure ops and are lawful in their effects,
+and so are their sums with the core. The probe test dialect declares every
+effect.

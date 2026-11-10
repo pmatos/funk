@@ -1,6 +1,6 @@
 # In the Lean tests, the sum of the core dialect and a test dialect sends op names that start with `toy.` to the test dialect
 
-Status: accepted; refined by ADR-2026-11-09-1543
+Status: superseded by ADR-2026-11-09-2306
 Tier: implementation; area: testing-and-harness
 
 ## Context

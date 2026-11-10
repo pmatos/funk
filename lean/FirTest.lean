@@ -26,10 +26,14 @@ import FirTest.ValidateOps
 import FirTest.Validate
 import FirTest.LocTable
 import FirTest.Dominance
-import FirTest.Sum
+import FirTest.OverCore
 import FirTest.Toy
 import FirTest.UseOnce
 import FirTest.Mixed
+import FirTest.SumTypes
+import FirTest.Bit
+import FirTest.DialectSet
+import FirTest.Deps
 import FirTest.Runs
 import FirTest.ValidSum
 import FirTest.RunsLoops

@@ -31,7 +31,7 @@ block holds an op that owns a region, and so on, `n` levels deep. -/
 def nested (n : Nat) : Module CoreDialect :=
   let ret : Operation CoreDialect := ⟨[], .ret [], [], [], [], 0⟩
   let body := Nat.repeat (fun os => [⟨[], .br, [], [], [⟨[⟨"b", [], os⟩]⟩], 0⟩]) n [ret]
-  ⟨[.func ⟨"f", [], [], ⟨[⟨"e", [], body⟩]⟩⟩], [(0, .unknown)]⟩
+  ⟨[], [.func ⟨"f", [], [], ⟨[⟨"e", [], body⟩]⟩⟩], [(0, .unknown)]⟩
 
 /-- The canonical text of `nested n`, line by line. -/
 def nestedText (n : Nat) : String :=

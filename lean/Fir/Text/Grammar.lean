@@ -24,6 +24,11 @@ to the tokens of the previous section.
   place of blocks. The word `locs` starts the location table, so no kind
   is named `locs`. One table ends the text, and every item refers into it,
   however deeply it is nested.
+* A module's dialect set starts the text, when it names a dialect: the word
+  `dialects`, then the names of the dialects, separated by commas, as in
+  `dialects toy, gpu` (ADR-2026-11-10-1306). So no kind is named
+  `dialects` either. The core is in every set and is never named, and a
+  module that names no dialect writes no set.
 * A function's parameters are written in its header, and are the arguments
   of its entry block. The entry block, like every block, is written with its
   label, as in `^entry:`.

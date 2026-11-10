@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12134967392215063291")
+:::moduleDocs (fingerprint := "17744331054923624846")
 :::
 
 :::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
@@ -59,7 +59,7 @@ op back: it finds the types of the operands where they are defined, and
 gives them to the dialect with the op's name and attributes.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Module.WellFormed (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "15885481420375707893")
+:::readable Fir.Func.WellFormed Fir.Module.WellFormed (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "4265873223270394096")
 *Definition: a well-formed function, and a well-formed module.* A function
 $`f` is _well formed_ when:
 
@@ -72,7 +72,8 @@ $`f` is _well formed_ when:
 * each op of $`\mathrm{allops}(f)` is well formed in $`f`.
 
 Its symbol may be any string, since a symbol that is not a word is quoted.
-A module is _well formed_ when each of its functions is, and its
+A module is _well formed_ when each dialect of its set is named by a word,
+each of its functions is well formed, and its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is within limits: every reference, line and column in it is below
 $`2^{32}`.
@@ -135,7 +136,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "12493718487392383675")
+:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "9943546898082679850")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -151,7 +152,8 @@ or a law of the text. Validation gives distinct value names that are names,
 labels that are names, valid types, ops that own no region, operand and
 result types that match the op instance, successors that name blocks of
 the function and pass values that it defines, and location references that
-are keys of the table, whose keys are below $`2^{32}`. The laws give op
+are keys of the table, whose keys are below $`2^{32}`, and a dialect set
+whose names are words. The laws give op
 names that are words, attributes that can be written, and valid types that
 are written as types and read back.
 :::

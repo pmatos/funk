@@ -2,9 +2,9 @@
 
 This page says what holds today about the meaning of fir. It summarizes the
 ADRs it cites and does not replace them. When this page and an ADR disagree,
-the page is wrong (ADR-2026-11-09-1610). semantics-m1-design.md has the decided
-M1 design, which the spec and tools do not implement yet. semantics-effects.md
-has op effects.
+the page is wrong (ADR-2026-11-09-1610). See semantics-m1-design.md for the
+M1 design not built yet, semantics-dialects.md for sums, and
+semantics-effects.md for op effects.
 
 ## Ground rule: fir reaches any hardware
 
