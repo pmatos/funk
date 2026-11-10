@@ -37,7 +37,8 @@ impl MemSet {
     }
 
     /// The join of two sets (`MemSet.join`): every memory, if either is, and
-    /// otherwise the memories of both, each once, in order.
+    /// otherwise the memories of `self`, then each memory of `other` that
+    /// `self` does not list.
     pub fn join(&self, other: &MemSet) -> MemSet {
         match (self, other) {
             (MemSet::Every, _) | (_, MemSet::Every) => MemSet::Every,

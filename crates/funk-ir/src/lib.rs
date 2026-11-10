@@ -44,6 +44,6 @@ pub use registry::{
     Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, Registry, TypeCheck,
     TypeSpec,
 };
-pub use summary::Summaries;
+pub use summary::{InFunc, Summaries};
 pub use text::{ParseError, TextPos, parse, print};
 pub use verify::{Diagnostic, verify};

@@ -28,7 +28,10 @@ fn cases() -> Vec<Case> {
                 if text.is_empty() && line.starts_with('@') {
                     let mut words: Vec<&str> = line.split(' ').collect();
                     let set = words.pop().expect("a summary line names a set");
-                    let path = words.iter().map(|w| &w[1..]).collect();
+                    let path = words
+                        .iter()
+                        .map(|w| w.strip_prefix('@').expect("a path is of symbols"))
+                        .collect();
                     sums.push((path, set));
                 } else {
                     text.push_str(line);
@@ -90,8 +93,10 @@ fn each_summary_is_the_one_lean_gives() {
         for (path, set) in &c.sums {
             let (func, outer) = path.split_last().expect("a path names a function");
             let s = Summaries::of(table(&m, outer), &reg);
-            assert!(s.has(func), "{}: @{func}", c.name);
-            assert_eq!(s.summary(func).to_string(), *set, "{}: {path:?}", c.name);
+            let sum = s
+                .summary(func)
+                .unwrap_or_else(|| panic!("{}: @{func}", c.name));
+            assert_eq!(sum.to_string(), *set, "{}: {path:?}", c.name);
         }
     }
 }
@@ -109,18 +114,19 @@ fn a_call_in_place_carries_its_callees_summary() {
     let s = Summaries::of(&m.items, &reg);
     let f: &Func = m.funcs().find(|f| f.name == "h").expect("@h");
     let ops = &f.body.blocks[0].ops;
-    assert_eq!(s.op_effects(&reg, f, &ops[0]).to_string(), "may-ub");
-    assert_eq!(s.op_effects(&reg, f, &ops[1]).to_string(), "may-poison");
-    assert_eq!(s.op_effects(&reg, f, &ops[2]).to_string(), "control");
-    assert_eq!(s.summary("nowhere"), Effects::PURE);
-    assert!(!s.has("nowhere"));
+    let in_h = s.in_func(&reg, f);
+    assert_eq!(in_h.op_effects(&ops[0]).to_string(), "may-ub");
+    assert_eq!(in_h.op_effects(&ops[1]).to_string(), "may-poison");
+    assert_eq!(in_h.op_effects(&ops[2]).to_string(), "control");
+    assert_eq!(s.summary("nowhere"), None);
     let lost = cases()
         .into_iter()
         .find(|c| c.name == "unknown-callee")
         .expect("the case exists");
     let m = parse(&lost.text, &reg).expect("the case parses");
     let f = m.funcs().next().expect("@f");
-    let e = Summaries::of(&m.items, &reg).op_effects(&reg, f, &f.body.blocks[0].ops[0]);
+    let s = Summaries::of(&m.items, &reg);
+    let e = s.in_func(&reg, f).op_effects(&f.body.blocks[0].ops[0]);
     assert_eq!(e, Effects::ALL.caller_view());
     assert_eq!(e.reads, MemSet::Every);
 }
@@ -143,6 +149,13 @@ fn a_long_chain_of_calls_has_its_last_callees_effects() {
     ));
     let m = parse(&text, &reg).expect("the chain parses");
     let s = Summaries::of(&m.items, &reg);
-    assert_eq!(s.summary("f0").to_string(), "may-ub");
-    assert_eq!(s.summary(&format!("f{}", n / 2)).to_string(), "may-ub");
+    assert_eq!(
+        s.summary("f0").map(Effects::to_string),
+        Some("may-ub".into())
+    );
+    let mid = format!("f{}", n / 2);
+    assert_eq!(
+        s.summary(&mid).map(Effects::to_string),
+        Some("may-ub".into())
+    );
 }

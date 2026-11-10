@@ -27,8 +27,8 @@ it may have, and so gives each op in place its effects with its callee's
 * _The summary_ of a function is the join of what a caller sees of each op
   of each function that it reaches, recursion included: a function that
   calls itself reaches nothing new. A call of a symbol that names no
-  function of the table has every effect, as nothing narrower is known of
-  it (ADR-2026-11-09-1541); validation rejects such a call.
+  function of the table has every effect but control, as nothing narrower
+  is known of it (ADR-2026-11-09-1541); validation rejects such a call.
 * _The effects of an op in place_ are those of its own rule, and, when it
   calls a function, the callee's summary.
 

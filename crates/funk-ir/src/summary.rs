@@ -135,6 +135,8 @@ impl Summaries {
                 }
                 sees = sees.join(&e.caller_view());
             }
+            calls.sort_unstable();
+            calls.dedup();
             own.push(sees);
             edges.push(calls);
         }
@@ -163,27 +165,48 @@ impl Summaries {
     }
 
     /// The summary of the function that `name` names (`SymbolTable.summary`),
-    /// or the empty set when it names no function of the table.
-    pub fn summary(&self, name: &str) -> Effects {
-        self.by_name.get(name).cloned().unwrap_or_default()
+    /// or `None` when it names no function of the table. Lean gives such a
+    /// symbol the empty summary, but a call of it has every effect but
+    /// control, so a caller that reads a summary here must not take `None`
+    /// for pure: [`InFunc::op_effects`] gives a call its effects.
+    pub fn summary(&self, name: &str) -> Option<&Effects> {
+        self.by_name.get(name)
     }
 
-    /// Whether `name` names a function of the table.
-    pub fn has(&self, name: &str) -> bool {
-        self.by_name.contains_key(name)
-    }
-
-    /// The effects of `op` in place in the function `f` of the table
-    /// (`SymbolTable.opEffects`): those of its own rule and, when it calls a
-    /// function, its callee's summary, or every effect but control when its
-    /// callee names no function of the table.
-    pub fn op_effects(&self, reg: &Registry, f: &Func, op: &Op) -> Effects {
-        let info = op_info(reg, &value_types(f), op);
-        match info.callee {
-            Some(c) if self.has(&c) => info.own.join(&self.summary(&c)),
-            Some(_) => info.own.join(&Effects::ALL.caller_view()),
-            None => info.own,
+    /// The effects of the ops of the function `f` of the table, in place:
+    /// the types of `f`'s values are found once, for every op asked about.
+    pub fn in_func<'a>(&'a self, reg: &'a Registry, f: &'a Func) -> InFunc<'a> {
+        InFunc {
+            summaries: self,
+            reg,
+            types: value_types(f),
         }
+    }
+}
+
+/// The effects of the ops of one function of a table, in place.
+pub struct InFunc<'a> {
+    summaries: &'a Summaries,
+    reg: &'a Registry,
+    types: HashMap<&'a str, &'a Type>,
+}
+
+impl InFunc<'_> {
+    /// The effects of `op` in place (`SymbolTable.opEffects`): those of its
+    /// own rule and, when it calls a function, its callee's summary, or every
+    /// effect but control when its callee names no function of the table. An
+    /// op that the registry cannot decode has every effect, control
+    /// included, since nothing narrower is known of it.
+    pub fn op_effects(&self, op: &Op) -> Effects {
+        let info = op_info(self.reg, &self.types, op);
+        let e = match info.callee {
+            Some(c) => match self.summaries.summary(&c) {
+                Some(s) => info.own.join(s),
+                None => info.own.join(&Effects::ALL.caller_view()),
+            },
+            None => info.own,
+        };
+        e.sorted()
     }
 }
 
