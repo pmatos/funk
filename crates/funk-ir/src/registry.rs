@@ -148,8 +148,7 @@ impl Dialect {
         }
     }
 
-    /// Adds a dialect that this one depends on.
-    /// A dependency named twice is kept once.
+    /// Adds a dialect that this one depends on, unless it is already there.
     pub fn depends_on(mut self, dialect: impl Into<String>) -> Dialect {
         let dialect = dialect.into();
         if !self.deps.contains(&dialect) {
