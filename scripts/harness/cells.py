@@ -17,7 +17,8 @@ has neither operands nor attributes, is a cell at each width of its result
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width. `ret` returns no value, one, or several; a `call` gives no result,
   one, or several; and so does the function that a test runs, `func`. One
-  value or several are cells at each width that a value has.
+  value or several are cells at each width that a value has. `unreachable`
+  passes nothing, so it is one cell.
 """
 
 from typing import NamedTuple
@@ -61,6 +62,7 @@ VALUES = (
     ("br", (NOTHING, PASSED)),
     ("cond_br", (NOTHING, PASSED)),
     ("ret", (NOTHING, ONE, SEVERAL)),
+    ("unreachable", (NOTHING,)),
     ("call", (NOTHING, ONE, SEVERAL)),
     ("func", (NOTHING, ONE, SEVERAL)),
 )
@@ -137,8 +139,8 @@ def of_op(op: Op) -> set[Cell]:
         return {Cell("casts", op.name, op.operands[0], op.results[0])}
     if op.name in ("br", "cond_br"):
         return set().union(*(results(op.name, s) for s in op.successors))
-    if op.name == "ret":
-        return results("ret", op.operands)
+    if op.name in ("ret", "unreachable"):
+        return results(op.name, op.operands)
     if op.name == "call":
         return results("call", op.results)
     raise CellError(f"{op.name} is not an op of the core dialect")

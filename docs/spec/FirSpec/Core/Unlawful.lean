@@ -103,5 +103,5 @@ matched by the UB on the vector that replaces each poison by zero.
 $`\mathsf{add}_1` to return a result on some operands with no poison, and
 here it never returns. Without that obligation, a semantics that makes
 every op UB would pass. Exceptions are exempt from it, so an exception
-that is always UB, such as a future $`\mathsf{unreachable}`, stays allowed.
+that is always UB, such as $`\mathsf{unreachable}`, stays allowed.
 :::

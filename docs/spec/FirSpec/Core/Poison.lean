@@ -14,17 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16459690636392180747")
+:::moduleDocs (fingerprint := "9764340168716061063")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "10406232888193993161")
+:::readable Fir.Core.Op.poisonClass (fingerprint := "9579307297950494261")
 *Definition: the poison class of each core op.* Nineteen core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
-and six are exceptions:
+and seven are exceptions:
 
 $$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc} \end{aligned}`
 
-$$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{call} \end{aligned}`
+$$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 
 The definition lists every op, with no case for the rest, so a new core op
 does not build until it declares its class (ADR-2026-11-03-0600).

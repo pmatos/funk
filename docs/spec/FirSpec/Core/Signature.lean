@@ -15,7 +15,7 @@ changes under it.
 
 #doc (Manual) "Core signatures: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14634538406531335776")
+:::moduleDocs (fingerprint := "17172137080388402663")
 :::
 
 :::readable Fir.CoreDialect Fir.Core.i (fingerprint := "6975174900697461964")
@@ -30,7 +30,7 @@ specification is written in. The Lean writes $`\mathsf{i}N` as `i N`, a
 shorthand for the type `int N`.
 :::
 
-:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "5073057038416471976")
+:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "5706628440802508344")
 *Definition: the types of each core op's operands and results.* Each core op
 takes operands and gives results of fixed types, which follow from the op
 instance. As in the WebAssembly specification, $`[t_1^*] \to [t_2^*]`
@@ -44,7 +44,7 @@ $`\mathsf{shl}_N`, $`\mathsf{lshr}_N` and $`\mathsf{ashr}_N`, and
 $`\mathit{cvtop}_{M \to N}` for any of $`\mathsf{zext}_{M \to N}`,
 $`\mathsf{sext}_{M \to N}` and $`\mathsf{trunc}_{M \to N}`:
 
-$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
+$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{unreachable} & [\,] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
 
 So $`\mathsf{select}_N` takes its $`\mathsf{i1}` condition first, a
 $`\mathsf{ret}` takes the values it returns as its operands, and a
@@ -58,19 +58,20 @@ checks every op against: each operand must be a value of the operand's
 type, and each result is declared with the result's type.
 :::
 
-:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "2789633845563632163")
+:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "11134669087793284921")
 *Definition: the core terminators and their successors.* $`\mathsf{br}`,
-$`\mathsf{cond\_br}` and $`\mathsf{ret}~t^*` are the terminators of the core
-dialect, the ops that end a block. $`\mathsf{br}` has one successor and
-$`\mathsf{cond\_br}` two; no other core op has any, so $`\mathsf{ret}`
-leaves the function instead of going to a block.
+$`\mathsf{cond\_br}`, $`\mathsf{ret}~t^*` and $`\mathsf{unreachable}` are
+the terminators of the core dialect, the ops that end a block.
+$`\mathsf{br}` has one successor and $`\mathsf{cond\_br}` two; no other
+core op has any, so $`\mathsf{ret}` leaves the function instead of going to
+a block, and $`\mathsf{unreachable}` goes nowhere.
 
 With the operand and result types above, these give the
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] of the
 core dialect: $`\mathrm{sig}_{\mathrm{core}}(o)` and
 $`\mathrm{res}_{\mathrm{core}}(o)` are the two halves of the table above,
 $`\mathrm{term}_{\mathrm{core}}(o)` is true exactly for $`\mathsf{br}`,
-$`\mathsf{cond\_br}` and $`\mathsf{ret}~t^*`, and
+$`\mathsf{cond\_br}`, $`\mathsf{ret}~t^*` and $`\mathsf{unreachable}`, and
 $`\mathrm{nsucc}_{\mathrm{core}}(o)` is 1 for $`\mathsf{br}`, 2 for
 $`\mathsf{cond\_br}` and 0 otherwise. No core op owns a region:
 $`\mathrm{kinds}_{\mathrm{core}}(o)` is empty for every op.

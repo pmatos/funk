@@ -284,3 +284,30 @@ locs {
     );
     assert!(ds[1].message.starts_with("block argument %x: "), "{ds:#?}");
 }
+
+/// `unreachable` (#228) is `ud2`, which traps: a run that reaches it is UB,
+/// and it stops there rather than run into the block placed after it.
+#[test]
+fn unreachable_is_ud2_and_nothing_falls_out_of_it() {
+    let asm = lowered(
+        "func @f(%c: i1, %a: i32) -> i32 {
+^entry:
+  cond_br %c, ^dead, ^ok @0
+^dead:
+  unreachable @0
+^ok:
+  ret %a @0
+}
+",
+    );
+    assert_has(
+        &asm,
+        &[
+            "jz\t.Lb0_ok",
+            ".Lb0_dead:",
+            "# unreachable @0",
+            "ud2",
+            ".Lb0_ok:",
+        ],
+    );
+}
