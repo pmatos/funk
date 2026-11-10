@@ -75,6 +75,10 @@ An access is immediate UB in each of these cases (ADR-2026-11-09-1542):
 - its allocation is freed;
 - its pointer has no provenance for that allocation.
 
+The spec now gives one memory of this model, for a unit of any width, in
+`lean/Fir/Memory/`, with its accesses and their laws. No op, type or run
+uses it yet (#231).
+
 `ptr.expose` turns a pointer into an integer and marks its allocation exposed.
 `ptr.from_int` turns an integer back into a pointer, with the provenance of an
 exposed allocation that contains the address. No other op converts between
