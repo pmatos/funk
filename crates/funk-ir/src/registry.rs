@@ -7,7 +7,8 @@
 //! traits mirror the spec's dialect classes: [`OpSpec::decode`] is
 //! `decodeOp` with the op's signature (`DialectText`, `DialectSignature`),
 //! [`OpSpec::check`] is `validOp`, [`TypeSpec`] is `decodeTy` with `validTy`,
-//! and [`FuncSpec::check`] is `validFunc` (`DialectValidation`).
+//! [`FuncSpec::check`] is `validFunc` (`DialectValidation`), and
+//! [`OpSpec::effects`] is `effects` (`DialectEffects`).
 //!
 //! A word belongs to the dialect named before its first `.`, and a bare word
 //! to the core (ADR-2026-11-09-1543, ADR-2026-11-10-0042). Registration
@@ -21,6 +22,7 @@ use std::fmt;
 
 use crate::dialects;
 use crate::dialects::core::NAME as CORE;
+use crate::effects::Effects;
 use crate::ir::names::{is_word, word_dialect};
 use crate::ir::{Attr, Func, SymbolTable, Type};
 
@@ -78,6 +80,13 @@ pub trait OpSpec: Send + Sync {
     fn check(&self, _cx: &OpContext<'_>, _op: &OpTypes<'_>) -> Result<(), String> {
         Ok(())
     }
+
+    /// The effects of the op instance used at `op`, which decodes: those of
+    /// its own rule (ADR-2026-11-09-1541). An op with a callee has its
+    /// callee's effects too, which this set leaves out. Every op declares
+    /// its set, so the method has no default, as `Core.Op.effects` has no
+    /// case for the rest.
+    fn effects(&self, op: &OpTypes<'_>) -> Effects;
 }
 
 /// What a dialect says about a type it decodes.
@@ -345,6 +354,17 @@ impl Registry {
     /// The registered op named `name`.
     pub fn op(&self, name: &str) -> Option<&dyn OpSpec> {
         self.ops.get(name).map(|(_, op)| op.as_ref())
+    }
+
+    /// The effects of the op named `name` at `op`, as the dialect that its
+    /// word names declares them, or `None` if no dialect registered it. An
+    /// op of a sum has its own side's effects in Lean (the sum's
+    /// `DialectEffects`), and the prefix routes it to that side here. Lean
+    /// keeps each side's memories apart in the sum; no registered dialect
+    /// has a memory yet, so how Rust keeps them apart lands with the first
+    /// one.
+    pub fn effects(&self, name: &str, op: &OpTypes<'_>) -> Option<Effects> {
+        self.op(name).map(|spec| spec.effects(op))
     }
 
     /// The dialect that registered the op named `name`.

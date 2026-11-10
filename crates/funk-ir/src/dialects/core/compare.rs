@@ -12,6 +12,7 @@
 use super::type_list;
 use super::types::int_width;
 use crate::Attr;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 
 /// The predicates of `icmp`, in the spec's order (`Pred.all`).
@@ -67,6 +68,11 @@ impl OpSpec for Icmp {
             type_list(op.results)
         ))
     }
+
+    /// Pure (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
+    }
 }
 
 /// `%r: iN = select %c, %a, %b`.
@@ -98,6 +104,12 @@ impl OpSpec for Select {
             type_list(op.operands),
             type_list(op.results)
         ))
+    }
+
+    /// Pure: it gives poison only for a poison condition or a poison
+    /// operand that it chooses (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

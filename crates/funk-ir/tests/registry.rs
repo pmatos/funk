@@ -5,7 +5,7 @@
 
 use funk_ir::dialects::core;
 use funk_ir::registry::RegistryError;
-use funk_ir::{Dialect, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec};
+use funk_ir::{Dialect, Effects, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec};
 
 struct Named(&'static str);
 
@@ -16,6 +16,10 @@ impl OpSpec for Named {
 
     fn decode(&self, _: &OpTypes<'_>) -> Result<OpShape, String> {
         Ok(OpShape::default())
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

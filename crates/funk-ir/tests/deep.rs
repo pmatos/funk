@@ -10,7 +10,7 @@ use std::sync::Mutex;
 
 use funk_ir::dialects::core;
 use funk_ir::{
-    Attr, Block, Dialect, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
+    Attr, Block, Dialect, Effects, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
 };
 
 const DEPTH: usize = 1_000_000;
@@ -40,6 +40,10 @@ impl OpSpec for ToyNest {
         } else {
             Err("toy.nest defines and uses no values".into())
         }
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

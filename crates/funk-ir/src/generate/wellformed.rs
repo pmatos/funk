@@ -35,6 +35,7 @@
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::{self, int_type};
+use crate::effects::Effects;
 use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
@@ -67,6 +68,11 @@ impl OpSpec for AnyOp {
 
     fn decode(&self, _op: &OpTypes<'_>) -> Result<OpShape, String> {
         Ok(OpShape::default())
+    }
+
+    /// Pure: it is not a terminator, and nothing runs it.
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

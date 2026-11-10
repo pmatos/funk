@@ -7,6 +7,7 @@
 
 use super::type_list;
 use super::types::int_width;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 
 /// `%f: iN = freeze %x`.
@@ -34,5 +35,10 @@ impl OpSpec for Freeze {
             type_list(op.operands),
             type_list(op.results)
         ))
+    }
+
+    /// Pure (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }

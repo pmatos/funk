@@ -12,6 +12,7 @@
 
 use super::types::int_width;
 use crate::Attr;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 
 /// `%c: iN = const v`.
@@ -48,6 +49,11 @@ impl OpSpec for Const {
             (_, other) => Err(format!("the value of a const is an integer, not {other}")),
         }
     }
+
+    /// Pure (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
+    }
 }
 
 /// `%p: iN = poison`.
@@ -74,5 +80,14 @@ impl OpSpec for Poison {
             ));
         }
         Ok(OpShape::default())
+    }
+
+    /// May produce poison: it gives poison from no operand
+    /// (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_poison: true,
+            ..Effects::PURE
+        }
     }
 }
