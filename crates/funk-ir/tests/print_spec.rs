@@ -4,7 +4,9 @@
 
 use funk_ir::dialects::core::int_type;
 use funk_ir::text::{print_func, print_op};
-use funk_ir::{Attr, Block, Func, LocRef, LocTable, Location, Module, Op, Region, print};
+use funk_ir::{
+    Attr, Block, Func, Item, LocRef, LocTable, Location, Module, NestedModule, Op, Region, print,
+};
 
 fn range(file: &str, l1: u32, c1: u32, l2: u32, c2: u32) -> Location {
     Location::Range {
@@ -175,4 +177,26 @@ fn an_applied_word_with_no_arguments_is_not_the_word() {
 fn every_text_ends_with_a_line_feed() {
     assert_eq!(print(&Module::new()), "locs {\n}\n");
     assert!(print(&sum_module()).ends_with('\n'));
+}
+
+#[test]
+fn a_nested_module_prints_its_body_two_spaces_deeper() {
+    let k = Func::new("k").block(Block::new("entry").op(Op::new("ret", LocRef(0))));
+    let mut m = Module::new();
+    m.items.push(Item::Module(NestedModule {
+        name: "dev".into(),
+        dialects: vec!["gpu".into()],
+        items: vec![Item::Func(k)],
+    }));
+    m.items.push(Item::Module(NestedModule::new("none")));
+    m.locs = LocTable {
+        entries: vec![(LocRef(0), Location::Unknown)],
+    };
+    assert_eq!(
+        print(&m),
+        concat!(
+            "module @dev() {\n  dialects gpu\n\n  func @k() {\n  ^entry:\n    ret @0\n  }\n\n}\n\n",
+            "module @none() {\n}\n\nlocs {\n  @0 = unknown\n}\n",
+        )
+    );
 }

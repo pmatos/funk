@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16638134667696922119")
+:::moduleDocs (fingerprint := "10061496186304799929")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -67,9 +67,9 @@ depends on the dialect: the name and attributes of an op stay as written
 until decoding.
 :::
 
-:::readable Fir.Text.SItem Fir.Text.SBody (fingerprint := "13498267438262677450")
+:::readable Fir.Text.SItem Fir.Text.SBody (fingerprint := "1906821671651604732")
 *Definition: an item, and its body, as written.* An item is read as the
-record below, and its body as blocks or items:
+record below, and its body as blocks, or as a dialect set and items:
 
 ```grammar Fir.Text.SItem
 \mathit{sitem}
@@ -79,15 +79,16 @@ kind,kindPos,name,params,results,attrs,body \begin{array}{l} \{\mathsf{kind}~k, 
 ```grammar Fir.Text.SBody
 \mathit{sbody}
 blocks \mathsf{blocks}~\mathit{sblock}^*
-items  \mathsf{items}~\mathit{sitem}^*
+items  \mathsf{items}~\mathit{name}^*~\mathit{sitem}^*
 ```
 
 An item keeps its kind $`k`, a word, with its position $`p`
 ($`\mathsf{kind\_pos}` is `kindPos` in the Lean), its symbol $`s`, its
 parameters, and each result type and attribute $`a` with its position
-$`q`. Its body is its blocks, or the items that it holds; an empty body is
-no blocks. Only `func` items, with blocks, decode today; the tree reads
-other kinds so that a later kind needs no change to this step.
+$`q`. Its body is its blocks, or the dialect set and the items that it
+holds; an empty body is no blocks. A `func` with blocks and a `module` with
+a dialect set and items decode; the tree reads other kinds so that a later
+kind needs no change to this step.
 :::
 
 :::readable Fir.Text.SModule (fingerprint := "9705118001543986064")
@@ -173,12 +174,22 @@ another, since an op may own regions:
   two never meet.
 :::
 
+:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "7135882020144580303")
+*Definition: reading a dialect set.* When the tokens start with the word
+`dialects`, the set is the word after it, then each word after a comma, as
+long as a comma follows; a token after `dialects` or after a comma that is
+not a word is an error, "expected the name of a dialect". Otherwise the set
+is empty, and nothing is read. A set starts a module, and a body of items
+(ADR-2026-11-10-1510). A set that names no dialect is not written, so this
+reads nothing of it.
+:::
+
 :::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "8229966294769205176")
 *Definition: reading items.* Items are read as long as a word, the item's
 kind, follows; at the top of the module, the word `locs` starts the
 location table instead. An item is its kind, then its symbol, then its
 parameters in parentheses, which may be none, then, when `->` follows, one
 or more result types separated by commas, then its attributes, then its
-body in braces. The body is items when it starts with a word, and blocks
-otherwise.
+body in braces. The body is a dialect set and items when it starts with a
+word, and blocks otherwise.
 :::

@@ -58,6 +58,7 @@ def Case.op (c : Case) : Option Core.Op :=
   | .ok m => m.items.findSome? fun
       | .func f => if f.name == "f" then f.body.blocks.head? >>= (·.body.head?) |>.map (·.op)
         else none
+      | _ => none
   | .error _ => none
 
 /-- Whether the pinned op parses and has, through the effect class, the set

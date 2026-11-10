@@ -39,7 +39,7 @@ and decoding gives $`m` back from
 The second follows from the first.
 :::
 
-:::readable Fir.Module.WellFormed.parse_print Fir.Module.WellFormed.print_injective Fir.Module.WellFormed.print_inj (pin := Fir.Module.print) (fingerprint := "1274864312960241175")
+:::readable Fir.Module.WellFormed.parse_print Fir.Module.WellFormed.print_injective Fir.Module.WellFormed.print_inj (pin := Fir.Module.print) (fingerprint := "8986024461800127046")
 *Theorems: a well-formed module reads back, and its text names it.* For
 every dialect with signatures, validation rules and a lawful text, and all
 well-formed modules $`m`, $`m_1` and $`m_2`:
@@ -52,7 +52,7 @@ The last two make the text a faithful name for a well-formed module: tools
 can compare such modules by comparing their text.
 :::
 
-:::readable Fir.Module.Valid.parse_print Fir.Module.Valid.print_injective (pin := Fir.Module.Valid) (fingerprint := "8290195163686354714")
+:::readable Fir.Module.Valid.parse_print Fir.Module.Valid.print_injective (pin := Fir.Module.Valid) (fingerprint := "12063138789887651199")
 *Theorems: a valid module reads back, and its text names it.* For every
 dialect with signatures, validation rules and a lawful text, and all
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]

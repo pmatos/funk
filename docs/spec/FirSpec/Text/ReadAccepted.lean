@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11435159496630329107")
+:::moduleDocs (fingerprint := "7033212644242088261")
 :::
 
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
@@ -70,20 +70,20 @@ the definitions of its function, whose names are names, and rejects one
 that is not there.
 :::
 
-:::readable Fir.Text.SBody.Writable Fir.Text.SItem.Writable Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "6351523543393346110")
-*Definition: items and modules as read that can be written.* The body of
+:::readable Fir.Text.SItem.Writable Fir.Text.SBody.Writable Fir.Text.SItem.WritableList Fir.Text.SItem.writable_iff Fir.Text.SItem.writableList_iff Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "3535357998527199")
+*Definition: items and modules as read that can be written.* An item as
+read can be written when each of its parameters can be written, each of its
+result types is written as a type, and its body can be written. The body of
 an item as read can be written when it holds blocks that can be written,
-or when it holds items, whatever they are. An item as read can be written
-when each of its parameters can be written, each of its result types is
-written as a type, and its body can be written. A module as read can be
-written when each name of its dialect set is a word, each of its items can
-be written, and every number of its
+or when it holds a dialect set whose names are words and items each of
+which can be written, at any depth. A module as read can be written when
+each name of its dialect set is a word, each of its items can be written,
+and every number of its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table],
 each key and each number of each location, is below $`2^{32}`.
 
-Nothing is asked of an item's kind, symbol or attributes, nor of the items
-inside a body: decoding accepts only a `func` without attributes, whatever
-its symbol, and rejects a body made of items unless it has no items.
+Nothing is asked of an item's kind, symbol or attributes: decoding accepts
+only a `func` and a `module` without attributes, whatever their symbol.
 :::
 
 :::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "13344365767966384269")

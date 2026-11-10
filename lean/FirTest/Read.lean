@@ -89,7 +89,7 @@ def sitemEq : SItem → SItem → Bool
 /-- Two item bodies are the same. -/
 def sbodyEq : SBody → SBody → Bool
   | .blocks bs, .blocks bs' => blocksEq bs bs'
-  | .items is, .items is' => sitemsEq is is'
+  | .items ds is, .items ds' is' => ds == ds' && sitemsEq is is'
   | _, _ => false
 
 /-- Two lists of items are the same. -/

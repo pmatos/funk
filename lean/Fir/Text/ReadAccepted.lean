@@ -77,16 +77,33 @@ def SOp.WritableList : List SOp → Prop
   | o :: os => o.Writable ∧ SOp.WritableList os
 end
 
-/-- The body of an item as read can be written, when it holds blocks.
-Decoding rejects a body that holds items, unless it holds none. -/
-def SBody.Writable : SBody → Prop
-  | .blocks bs => SBlock.WritableList bs
-  | .items _ => True
-
+mutual
 /-- An item as read can be written: its parameters, its result types and its
 body. -/
-def SItem.Writable (i : SItem) : Prop :=
-  (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable
+def SItem.Writable : SItem → Prop
+  | ⟨_, _, _, params, results, _, body⟩ =>
+    (∀ x ∈ params, x.Writable) ∧ (∀ r ∈ results, r.1.IsType) ∧ SBody.Writable body
+
+/-- The body of an item as read can be written: its blocks, or its dialect
+set and its items. -/
+def SBody.Writable : SBody → Prop
+  | .blocks bs => SBlock.WritableList bs
+  | .items ds is => (∀ x ∈ ds, isWord x) ∧ SItem.WritableList is
+
+/-- Items as read can be written. -/
+def SItem.WritableList : List SItem → Prop
+  | [] => True
+  | i :: is => i.Writable ∧ SItem.WritableList is
+end
+
+theorem SItem.writable_iff (i : SItem) : i.Writable ↔
+    (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable := by
+  obtain ⟨⟩ := i
+  rfl
+
+theorem SItem.writableList_iff : ∀ is : List SItem, SItem.WritableList is ↔ ∀ i ∈ is, i.Writable
+  | [] => by simp [SItem.WritableList]
+  | i :: is => by simp [SItem.WritableList, SItem.writableList_iff is]
 
 /-- A module as read can be written: its dialect set, its items, and its
 location table. -/
