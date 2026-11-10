@@ -26,8 +26,9 @@
 use std::collections::HashMap;
 
 use crate::effects::Effects;
-use crate::ir::{Func, Item, Op, Part, Type};
+use crate::ir::{Func, Item, Op, Type};
 use crate::registry::{OpTypes, Registry};
+use crate::verify::all_blocks;
 
 /// What a function's op says of itself: the effects of its own rule, and the
 /// symbol it calls.
@@ -39,14 +40,11 @@ struct OpInfo {
 /// The type of each value of `f`: its first definition, at any depth.
 fn value_types(f: &Func) -> HashMap<&str, &Type> {
     let mut types = HashMap::new();
-    let blocks = f.body.parts().filter_map(|p| match p {
-        Part::Block(b) => Some(b),
-        Part::Region(_) | Part::Op(_) => None,
-    });
-    let defs = f
-        .params
-        .iter()
-        .chain(blocks.flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))));
+    let defs = f.params.iter().chain(
+        all_blocks(&f.body)
+            .into_iter()
+            .flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
+    );
     for d in defs {
         types.entry(d.name.as_str()).or_insert(&d.ty);
     }
@@ -90,13 +88,7 @@ fn op_info(reg: &Registry, types: &HashMap<&str, &Type>, op: &Op) -> OpInfo {
 /// The ops of `f` at any depth, in the spec's order (`Func.allOps`): the ops
 /// of each block, each block before the blocks of its ops' regions.
 fn all_ops(f: &Func) -> impl Iterator<Item = &Op> {
-    f.body
-        .parts()
-        .filter_map(|p| match p {
-            Part::Block(b) => Some(b.ops.iter()),
-            Part::Region(_) | Part::Op(_) => None,
-        })
-        .flatten()
+    all_blocks(&f.body).into_iter().flat_map(|b| &b.ops)
 }
 
 /// The summaries of the functions of one symbol table.

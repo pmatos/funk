@@ -50,7 +50,7 @@ pub(super) struct Scope<'f> {
 
 /// Every block of a function, at any depth, in the spec's order
 /// (`Func.allBlocks`): each block, then the blocks of its ops' regions.
-pub(super) fn all_blocks(body: &Region) -> Vec<&Block> {
+pub(crate) fn all_blocks(body: &Region) -> Vec<&Block> {
     body.parts()
         .filter_map(|p| match p {
             Part::Block(b) => Some(b),
