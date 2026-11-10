@@ -272,8 +272,8 @@ end
 
 -- The set of a nested sum lists each added dialect's name, in the order
 -- they are added. Both test dialects are named `toy`, so this sum is not
--- lawful: a lawful sum of three dialects needs a dialect over the sum of
--- the other two, which stage 2 of #227 lifts into place.
+-- lawful. `FirTest.Deps` makes a lawful sum of three dialects with two
+-- names, lifting one extension into the sum of the core and the other.
 #guard names (CoreDialect ⊞ Ext Empty ⊞ FlagExt) == [name (Ext Empty), name FlagExt]
 
 end FirTest

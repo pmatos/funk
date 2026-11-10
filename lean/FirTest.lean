@@ -31,6 +31,8 @@ import FirTest.Toy
 import FirTest.UseOnce
 import FirTest.Mixed
 import FirTest.SumTypes
+import FirTest.Bit
+import FirTest.Deps
 import FirTest.Runs
 import FirTest.ValidSum
 import FirTest.RunsLoops

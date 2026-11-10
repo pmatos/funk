@@ -117,6 +117,10 @@ import FirSpec.Core.Names
 import FirSpec.Sum.Dialect
 import FirSpec.Sum.TextLaws
 import FirSpec.Sum.PoisonLaws
+import FirSpec.Sum.Inclusion
+import FirSpec.Sum.Lift
+import FirSpec.Sum.LiftTextLaws
+import FirSpec.Sum.LiftPoisonLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

@@ -47,15 +47,34 @@ holds when the base's set is lawful, `e` writes its words under its name, and
 for the sum. The sum of lawful dialects is lawful when `e` accepts every type
 the base accepts (ADR-2026-11-09-2306).
 
+## Lifting an extension
+
+An extension is written over the dialects it depends on. It joins any sum
+that holds them by a lift: `e.lift dep ι` is `e`, written over `dep`, with
+an inclusion `ι` of `dep`'s types in a larger base's. An inclusion maps
+types and their values each way. The base of a sum is included by
+`TyIncl.inl`, and inclusions extend over an extension and compose, so a
+dialect held anywhere in a nested sum is included (ADR-2026-11-10-1310).
+
+The lift has `e`'s ops and rules, `big`'s rules and text for `big`'s types,
+and `e`'s semantics on values moved across the inclusion. A lifted op sees
+only the symbols whose types `e` can write, and is valid only where it can
+write the function's result types (ADR-2026-11-10-1310).
+
+The lift of a lawful extension is lawful, for its text and for poison, when
+the inclusion is lawful and `e`'s name is new to the larger base. So two
+extensions of the core, written apart, combine in one lawful sum
+(ADR-2026-11-10-1310).
+
 ## Limits
 
 Core ops carry core types only. A value of an extension's own type cannot
 pass through a core `br`, `ret` or `call` (ADR-2026-11-09-2306). No core op
 is valid in a function that returns such a value (ADR-2026-11-09-2353).
 
-An extension is written over the whole base before it. Lifting one into a
-larger base, and the per-module dialect set in the text, are later stages of
-#227 (ADR-2026-11-09-2306).
+A module does not yet declare its dialect set in the text. That is a later
+stage of #227 (ADR-2026-11-10-1310).
 
 The Lean test dialects, toy, use-once and probe, are extensions of the core
-named `toy` (ADR-2026-11-09-2306).
+named `toy` (ADR-2026-11-09-2306). The bit dialect, named `bit`, makes a sum
+of three dialects with the core and the toy dialect (ADR-2026-11-10-1310).

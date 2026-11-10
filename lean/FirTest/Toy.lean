@@ -182,6 +182,45 @@ instance lawfulDialectName : LawfulDialectName CoreDialect (Ext Op) where
   tyAttr_named t := t.elim
   tyAttr_mem t := t.elim
 
+/-! # The toy dialect is lawful -/
+
+/-- `maskValue` keeps refinement. -/
+theorem maskValue_mono {w k : Nat} {a a' : PoisonOr (BitVec w)} (h : PoisonOr.IsRefinedBy a a') :
+    PoisonOr.IsRefinedBy (maskValue w k a) (maskValue w k a') := by
+  cases a <;> cases a' <;> simp_all [maskValue, PoisonOr.IsRefinedBy]
+
+/-- `toy.mask` is monotone. -/
+theorem mask_monotone (w k : Nat) : OpMonotone (d := ToyDialect) (.mask w k) := by
+  intro args args' h
+  refine ⟨fun _ => ?_, fun h => nomatch h⟩
+  match args, args', h with
+  | .cons _ .nil, .cons _ .nil, h =>
+    intro e he
+    subst he
+    exact ⟨_, rfl, maskValue_mono h.1, trivial⟩
+
+/-- The toy dialect is lawful: `toy.mask` propagates poison, returns a
+result on a defined operand, and is total and monotone, at every
+instance. -/
+instance lawfulPoison : LawfulDialectPoison ToyDialect where
+  poison_isRefinedBy {t} := match t with
+    | .inl _ => fun _ => Core.Ty.poison_isRefinedBy
+    | .inr t => t.elim
+  propagates
+    | .mask .., _, _ => {
+        poisonOut := fun
+          | .cons a .nil, .inl h, _, hden => by
+            cases hden
+            change a = .poison at h
+            subst h
+            exact ⟨rfl, trivial⟩
+        ubByOwnRules := fun | .cons _ .nil, _, _, hden => nomatch hden }
+  returnsOnDefined
+    | .mask .., _, _ => ⟨.cons (.value 0) .nil, (by rintro (h | h) <;> cases h), _, rfl⟩
+  total
+    | .mask .., _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+  monotone | .mask w k, _, _ => mask_monotone w k
+
 end Toy
 
 end FirTest
