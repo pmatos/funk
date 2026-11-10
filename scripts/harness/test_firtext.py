@@ -101,9 +101,10 @@ class Tests(unittest.TestCase):
 
     def test_nested_modules_hold_their_own_functions(self):
         text = (
+            "dialects toy\n\n"
             "func @g() {\n^e:\n  ret @0\n}\n\n"
             "module @dev() {\n  dialects toy\n\n"
-            "  func @g(%a: i8) {\n  ^e:\n    ret @0\n  }\n\n"
+            "  func @g(%a: i8) {\n  ^e:\n    x {\n    } @0\n    ret %b @0\n  }\n\n"
             "  module @inner() {\n  }\n\n}\n\n"
             "func @h() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
         )
@@ -115,6 +116,7 @@ class Tests(unittest.TestCase):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),
             ("global @g() {\n}\nlocs {\n}\n", "an item of kind global"),
+            ("module @m() {\n  func @f() {\n", "a nested module does not end"),
             ("func @f() {\n^e:\n  ret @0\n}\n", "expected word"),
             ("locs {\n}\nfunc", "text after the location table"),
             ('func @"f() {\n', "a string does not end"),

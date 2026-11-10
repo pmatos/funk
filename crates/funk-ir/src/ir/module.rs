@@ -209,8 +209,9 @@ impl Module {
     }
 }
 
-/// The items of one module, by symbol. When two items share a symbol, which
-/// validation rejects, the first one wins.
+/// The items of one symbol table, by symbol. When two items share a symbol,
+/// which validation rejects, the first function wins, or else the first
+/// item.
 #[derive(Clone, Debug)]
 pub struct SymbolTable<'m> {
     map: HashMap<&'m str, &'m Item>,
@@ -219,10 +220,16 @@ pub struct SymbolTable<'m> {
 impl<'m> SymbolTable<'m> {
     /// The symbol table of the items `items`: those of a module, or of a
     /// module nested in one.
+    ///
+    /// A symbol names its first function, as `SymbolTable.symbols` in
+    /// `lean/Fir/Validation/Scope.lean` does, and otherwise its first item.
     pub fn of(items: &'m [Item]) -> SymbolTable<'m> {
-        let mut map = HashMap::new();
+        let mut map: HashMap<&str, &Item> = HashMap::new();
         for item in items {
-            map.entry(item.name()).or_insert(item);
+            let first = map.entry(item.name()).or_insert(item);
+            if first.as_func().is_none() && item.as_func().is_some() {
+                *first = item;
+            }
         }
         SymbolTable { map }
     }
