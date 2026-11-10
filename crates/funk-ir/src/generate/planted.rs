@@ -51,6 +51,13 @@ impl Builder {
             .result(name, self.t.clone())
     }
 
+    /// `%c: i1 = const true` or `false`, as `taken` says.
+    fn condition(&self, taken: bool) -> Op {
+        Op::new("const", self.loc)
+            .attr(Attr::word(if taken { "true" } else { "false" }))
+            .result("c", int_type(1))
+    }
+
     fn poison(&self, name: &str) -> Op {
         Op::new("poison", self.loc).result(name, self.t.clone())
     }
@@ -99,16 +106,13 @@ impl Builder {
     /// A branch on the constant `taken`, whose first arm is `unreachable`
     /// and whose second returns 0.
     fn trap(&self, name: String, taken: bool) -> Func {
-        let c = Op::new("const", self.loc)
-            .attr(Attr::word(if taken { "true" } else { "false" }))
-            .result("c", int_type(1));
         let test = Op::new("cond_br", self.loc)
             .operand("c")
             .succ("dead", &[])
             .succ("ok", &[]);
         Func::new(name)
             .result(self.t.clone())
-            .block(Block::new("entry").op(c).op(test))
+            .block(Block::new("entry").op(self.condition(taken)).op(test))
             .block(Block::new("dead").op(Op::new("unreachable", self.loc)))
             .block(
                 Block::new("ok")
@@ -139,9 +143,7 @@ pub(super) fn ub_and_near_miss(rng: &mut Rng, k: u64, loc: LocRef) -> Vec<(Func,
     let (bad, good, values) = match rng.below(6) {
         0 => {
             let taken = rng.one_in(2);
-            let c = Op::new("const", loc)
-                .attr(Attr::word(if taken { "true" } else { "false" }))
-                .result("c", int_type(1));
+            let c = b.condition(taken);
             let p = Op::new("poison", loc).result("c", int_type(1));
             let value = if taken { "1" } else { "0" };
             (b.branch(ub, p), b.branch(near, c), vec![value.to_string()])

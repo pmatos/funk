@@ -1,7 +1,6 @@
 //! Control flow: `br`, `cond_br`, `ret` and `unreachable`
-//! (`lean/Fir/Core/Ops.lean`,
-//! `Op.decode` in `lean/Fir/Core/Text.lean`, `Op.Valid` in
-//! `lean/Fir/Core/Validation.lean`).
+//! (`lean/Fir/Core/Ops.lean`, `Op.decode` in `lean/Fir/Core/Text.lean`,
+//! `Op.Valid` in `lean/Fir/Core/Validation.lean`).
 //!
 //! These are the terminators. `br` jumps to its one successor and
 //! `cond_br` to the first of its two when its `i1` condition is `true`, the
