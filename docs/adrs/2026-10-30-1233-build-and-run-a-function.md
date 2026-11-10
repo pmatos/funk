@@ -1,6 +1,7 @@
 # A built executable runs one function: PROGRAM @FUNCTION ARG... prints {"values":[...]}
 
-Status: accepted; refined by ADR-2026-11-02-1132 and ADR-2026-11-03-0108
+Status: accepted; refined by ADR-2026-11-02-1132, ADR-2026-11-03-0108 and
+ADR-2026-11-10-1303
 Tier: implementation; area: x86-64-backend
 
 ## Context

@@ -18,16 +18,30 @@ pub fn assemble(source: &Path, object: &Path) -> Result<(), String> {
     run("the assembler, as", cmd)
 }
 
-/// Links `objects` into the static x86-64 executable `exe`, whose entry
-/// point is the runtime's `__funk_start`.
-pub fn link(objects: &[&Path], exe: &Path) -> Result<(), String> {
+/// The dynamic loader of x86-64 Linux, as the psABI names it.
+const DYNAMIC_LINKER: &str = "/lib64/ld-linux-x86-64.so.2";
+
+/// Links `objects` into the x86-64 executable `exe`, whose entry point is
+/// the runtime's `__funk_start`. Without `libc` it is static and links
+/// nothing else (ADR-2026-10-30-1229). With `libc` it is linked against the
+/// host's shared C library, `-lc`, and loaded by the dynamic loader
+/// (ADR-2026-11-10-1303).
+pub fn link(objects: &[&Path], exe: &Path, libc: bool) -> Result<(), String> {
     let mut cmd = Command::new("ld");
-    cmd.args(["-m", "elf_x86_64", "-static"])
-        .arg("-o")
+    cmd.args(["-m", "elf_x86_64"]);
+    if libc {
+        cmd.args(["--dynamic-linker", DYNAMIC_LINKER]);
+    } else {
+        cmd.arg("-static");
+    }
+    cmd.arg("-o")
         .arg(operand(exe))
         .arg("-e")
         .arg("__funk_start");
     cmd.args(objects.iter().map(|o| operand(o)));
+    if libc {
+        cmd.arg("-lc");
+    }
     run("the linker, ld", cmd)
 }
 

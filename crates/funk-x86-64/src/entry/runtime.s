@@ -19,6 +19,13 @@
 # getpid (39), kill (62), getrlimit (97), sysinfo (99), sigaltstack (131)
 # and exit_group (231). Every routine follows the System V AMD64 calling
 # convention.
+#
+# When the module calls into the C library, `funk build` links with it and
+# defines .Lfunk_libc before this file (ADR-2026-11-10-1303). Then the
+# runtime also registers the dynamic loader's finalizer with __cxa_atexit,
+# flushes the C library's streams with fflush(NULL) before it writes
+# standard output, so what the function wrote comes first, and leaves a
+# successful run through exit(0). Every other way out stays exit_group.
 
 	.text
 
@@ -29,6 +36,15 @@
 	.type	__funk_start, @function
 __funk_start:
 	xorl	%ebp, %ebp
+.ifdef .Lfunk_libc
+	testq	%rdx, %rdx		# the dynamic loader's finalizer, if any
+	jz	1f
+	movq	%rdx, %rdi
+	xorl	%esi, %esi
+	xorl	%edx, %edx
+	call	__cxa_atexit
+1:
+.endif
 	movl	$13, %edi		# SIGPIPE
 	leaq	.Lsig_ignore(%rip), %rsi
 	xorl	%edx, %edx
@@ -129,6 +145,9 @@ __funk_rt_main:
 	call	__funk_rt_out
 	call	__funk_rt_flush
 	xorl	%edi, %edi
+.ifdef .Lfunk_libc
+	call	exit
+.endif
 	jmp	__funk_rt_exit
 .Lusage:
 	leaq	.Lmsg_usage(%rip), %rdi
@@ -337,8 +356,21 @@ __funk_rt_out:
 	rep movsb
 	ret
 
-# __funk_rt_flush(): writes the buffer to standard output.
+# __funk_rt_flush(): writes the buffer to standard output. With the C
+# library, its streams go first; when they cannot be written, the program
+# exits with 2, as on any failed write.
 __funk_rt_flush:
+.ifdef .Lfunk_libc
+	subq	$8, %rsp
+	xorl	%edi, %edi
+	call	fflush
+	addq	$8, %rsp
+	testl	%eax, %eax
+	jz	1f
+	movl	$2, %edi
+	jmp	__funk_rt_exit
+1:
+.endif
 	movq	__funk_rt_out_len(%rip), %rdx
 	movq	$0, __funk_rt_out_len(%rip)
 	leaq	__funk_rt_out_buf(%rip), %rsi
