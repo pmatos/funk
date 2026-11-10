@@ -8,34 +8,56 @@ computes and rounds to nearest even, and packs the result.
 
 This module runs each operation that #229 builds on, for the format
 `float<e,m>` with `e` exponent bits and `m` explicit mantissa bits: unpack
-and pack, which a constant goes through, `add`, `sub`, `mul`, `div`, `fma`,
-`sqrt`, `neg`, `abs` and `compare`. It checks them on every input at
+and pack, `add`, `sub`, `mul`, `div`, `fma`, `sqrt`, `neg`, `abs` and
+`compare`. It checks them on every input at
 `float<2,1>`, the smallest format the model accepts, below, and
 `FirTest.FloatModelFma` checks `fma` there. The modules
 `FirTest.FloatModelF16`, `FirTest.FloatModelBf16` and
 `FirTest.FloatModelF128` check them on the hard inputs at `f16`, `bf16`
-and `f128`. Every expected bit pattern was computed apart from Lean's code,
-with exact rational arithmetic, and that reference agrees with the host's
-binary16, binary32 and binary64 arithmetic.
+and `f128`.
+
+Every expected bit pattern was computed apart from Lean's code, with exact
+rational arithmetic. A finite operand is the rational number it encodes. A
+finite nonzero result `x` is rounded at the quantum `q = 2^(k - m)`, where
+`k` is the larger of `⌊log₂ |x|⌋` and the smallest normal exponent: `x/q`
+goes to the nearest integer, a tie to the even one, and a result whose
+magnitude reaches `2^(emax + 1)` is an infinity. A square root takes the
+integer square root of `x/q²` and compares `x/q²` with the square of the
+midpoint. The special cases (zeros and their signs, infinities, NaNs) follow
+IEEE 754 §6 and §7, and every NaN result is the model's canonical NaN. That
+reference agrees with the host's binary16, binary32 and binary64 arithmetic,
+and with its binary64 `fma`, on every special value and on random inputs.
 
 What the check found:
 
 * Every operation gives the IEEE 754 result, rounded to nearest even, at
-  each format checked. The model has no case for binary32 or binary64:
-  each operation is written once, for any `Format`.
-* `Format` requires at least 2 exponent bits and 1 explicit mantissa bit.
-  Those are the IEEE-shaped formats, so fir must reject any other
-  `float<e,m>`.
+  each format checked, apart from the bits of a NaN below. The model has
+  no case for binary32 or binary64: each operation is written once, for
+  any `Format`.
+* `Format` requires at least 2 exponent bits and 1 explicit mantissa bit,
+  so fir must reject any `float<e,m>` with fewer. With `m = 1` the one
+  mantissa bit of a NaN is its quiet bit, so `float<e,1>`, `float<2,1>`
+  here included, has no signalling NaN, which IEEE 754 §3.4 encodes with
+  that bit clear and another set.
 * The model has one NaN, with no payload and no sign. `unpack` forgets a
   NaN's payload and sign, and `pack` writes the canonical NaN: the
   positive quiet NaN whose mantissa has only its top bit set. So `neg`
   and `abs` of a NaN give the canonical NaN, where IEEE 754's `negate` and
   `abs` would flip or clear the NaN's sign bit. fir lets a NaN result be
-  any NaN bit pattern (ADR-2026-11-09-1549), which allows both.
+  any NaN bit pattern (ADR-2026-11-09-1549), which allows both. Unpacking
+  and packing a NaN loses its payload, so a fir constant must keep its
+  bits rather than go through the model.
 * `compare` needs its operands in canonical form, and `unpack` gives that.
 * The model has no remainder, so #229 does not build `frem`. It has no
   conversion between formats either, which ADR-2026-11-09-1549 already
   leaves to the spec.
+* `UnpackedFloat.ofScientific`, which reads a decimal `m * 10^e`, is wrong
+  at some formats: it returns `+0` whenever `e < -(2^E + log₂ m)`, for `E`
+  exponent bits, whatever the mantissa width. At `float<2,100>`, whose
+  smallest subnormal is `2^-100`, it reads `10^-5` as `+0`; the last case
+  below pins that. #229 does not use it, since a constant is a bit
+  pattern, and at `f16`, `bf16`, `f32`, `f64` and `f128` the cut-off lies
+  below half the smallest subnormal.
 * Rounding a result far below the format's range shifts its mantissa
   right one bit at a time, and `add`, `sub` and `fma` align operands with
   far-apart exponents exactly. At `f128` that is tens of thousands of
@@ -233,5 +255,12 @@ def ordChar : Option Ordering → Char
   "<<<<<<<u<<<<<=>u",
   "<<<<<<<u<<<<<<=u",
   "uuuuuuuuuuuuuuuu"]
+
+/-! # A decimal that the model reads wrongly -/
+
+-- `10^-5` at `float<2,100>` is far above the smallest subnormal, `2^-100`,
+-- but the model reads it as `+0`. `10^-4` it reads as a number.
+#guard pk (fmt 2 100) (UnpackedFloat.ofScientific (fmt 2 100) 1 (-5)) == 0
+#guard pk (fmt 2 100) (UnpackedFloat.ofScientific (fmt 2 100) 1 (-4)) != 0
 
 end FirTest.FloatModel

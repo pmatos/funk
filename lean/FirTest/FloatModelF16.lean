@@ -8,9 +8,9 @@ with exact rational arithmetic, and each case's comment says what the
 result is. The symbols: `u` is an ulp of 1, `2^-10`, and `h` is `u/2`;
 `s` is the smallest subnormal, `S` the largest subnormal, `n` the
 smallest normal number, `M` the largest finite number, and `H` half an
-ulp of `M`. A NaN result is the model's one canonical NaN. `nanp` is a
-NaN with every bit set, and a signalling NaN has only the lowest bit of
-its mantissa set.
+ulp of `M`. A NaN result is the model's one canonical NaN. The NaN
+operand "with a payload and a sign" has every bit set, and the
+signalling NaN has only the lowest bit of its mantissa set.
 -/
 
 namespace FirTest.FloatModel
@@ -189,8 +189,10 @@ private abbrev q : Float.Model.Format := f16
 #guard fsqrt q 0x4080 == 0x3E00
 -- sqrt 2, rounded to nearest
 #guard fsqrt q 0x4000 == 0x3DA8
--- sqrt s, rounded to nearest
+-- sqrt s = 2^-12, exact
 #guard fsqrt q 0x0001 == 0x0C00
+-- sqrt 2s, rounded to nearest
+#guard fsqrt q 0x0002 == 0x0DA8
 -- sqrt M, rounded to nearest
 #guard fsqrt q 0x7BFF == 0x5BFF
 -- sqrt +0 = +0
