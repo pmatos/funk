@@ -52,7 +52,7 @@ def main (args : List String) : IO UInt32 := do
   | .ok (doc, ids) =>
     let config : RenderConfig := {
       extraContents := ← builtFrom
-      extraCss := {CSS.mk FirSpecSite.adrIndexCss}
+      extraCss := {CSS.mk FirSpecSite.adrIndexCss, CSS.mk FirSpecSite.headingCss}
     }
     let status ← manualMain doc (options := args) (config := config)
     if status != 0 then return status
