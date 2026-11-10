@@ -72,7 +72,26 @@ jobs:
       id-token: write # prove to Pages that this run is the deployer
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy-1.outputs.page_url || steps.deploy-2.outputs.page_url || steps.deploy-3.outputs.page_url }}
+    # GitHub's side sometimes never finishes syncing a deployment's files, and
+    # the action times out although the artifact is fine; a new attempt then
+    # deploys it. So the job tries up to three times, each attempt only if the
+    # one before failed. A deploy that works takes under two minutes, so each
+    # attempt waits five, not the action's default ten.
     steps:
-      - id: deployment
+      - id: deploy-1
+        continue-on-error: true
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 300000
+      - id: deploy-2
+        if: steps.deploy-1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 300000
+      - id: deploy-3
+        if: steps.deploy-2.outcome == 'failure'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 300000
