@@ -1,5 +1,6 @@
 import FirSpecSite
 import FirSpecSite.Fingerprint
+import FirSpecSite.Readable
 
 /-!
 Tests of the ADR appendix and of citation links. They run when the
@@ -246,5 +247,35 @@ open Lean in
 
 #guard notIncluded #["lean/Fir/A.lean"]
   "{includeLiterate \".\" Fir.A \"A\" (level := 2)}\n" == #[]
+
+/-!
+A readable section hides the Lean of an item that defines nothing under the
+block of the declaration it belongs to (#181).
+-/
+
+private def cmd (kind : String) (defines : Array Lean.Name := #[]) : VersoLiterate.ModuleItem' :=
+  { range := none, kind := (`Lean.Parser.Command).str kind, defines, code := #[] }
+
+private def decl (n : Lean.Name) := cmd "declaration" #[n]
+private def anonymous := cmd "declaration"
+
+-- An anonymous instance goes with the declaration before it, with the namespace between them.
+#guard leanOwners #[decl `SetM, cmd "namespace", anonymous, anonymous, cmd "end", decl `Stuck] ==
+  #[some 0, some 0, some 0, some 0, some 0, some 5]
+-- So do a `#guard`, an `example`, an `infix` and an `export`.
+#guard leanOwners #[decl `f, cmd "guardCmd", anonymous, cmd "mixfix", cmd "export", decl `g] ==
+  #[some 0, some 0, some 0, some 0, some 0, some 5]
+-- What opens a scope, or adds a tactic, goes with the declaration after it.
+#guard leanOwners #[decl `f, cmd "end", cmd "namespace", cmd "section", cmd "variable",
+    cmd "open", cmd "omit", cmd "include", cmd "set_option", cmd "universe", cmd "macro", decl `g] ==
+  #[some 0, some 0] ++ Array.replicate 10 (some 11)
+-- Module docs between a declaration and an item send the item to the next declaration.
+#guard leanOwners #[decl `f, cmd "moduleDoc", cmd "guardCmd", decl `g] ==
+  #[some 0, some 3, some 3, some 3]
+-- With no declaration before, an item goes with the next one; with none after, with the last one.
+#guard leanOwners #[cmd "namespace", anonymous, decl `f, cmd "moduleDoc", cmd "guardCmd"] ==
+  #[some 2, some 2, some 2, some 2, some 2]
+-- With no declaration at all, no item has an owner.
+#guard leanOwners #[cmd "namespace", anonymous] == #[none, none]
 
 end FirSpecSite.Tests
