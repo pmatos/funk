@@ -16,6 +16,10 @@ import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
 import FirSpec.Execution.OpEffects
 import FirSpec.Execution.EffectLaws
+import FirSpec.Execution.Summary
+import FirSpec.Execution.SummaryLaws
+import FirSpec.Execution.SummaryFixpoint
+import FirSpec.Execution.SummarySound
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
 import FirSpec.Execution.SetRuns

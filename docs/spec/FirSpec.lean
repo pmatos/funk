@@ -247,6 +247,14 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.EffectLaws "The core dialect's effect obligations" FirSpec.Core.EffectLaws (level := 2)}
 
+{includeReadable "." Fir.Execution.Summary "Function summaries" FirSpec.Execution.Summary (level := 2)}
+
+{includeReadable "." Fir.Execution.SummaryLaws "Joins and the walk" FirSpec.Execution.SummaryLaws (level := 2)}
+
+{includeReadable "." Fir.Execution.SummaryFixpoint "The summary is the least fixpoint" FirSpec.Execution.SummaryFixpoint (level := 2)}
+
+{includeReadable "." Fir.Execution.SummarySound "Function summaries are sound" FirSpec.Execution.SummarySound (level := 2)}
+
 # Text format
 
 {includeReadable "." Fir.Text.Lexical "Tokens" FirSpec.Text.Lexical (level := 2)}

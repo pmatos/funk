@@ -8,7 +8,8 @@
 //! `decodeOp` with the op's signature (`DialectText`, `DialectSignature`),
 //! [`OpSpec::check`] is `validOp`, [`TypeSpec`] is `decodeTy` with `validTy`,
 //! [`FuncSpec::check`] is `validFunc` (`DialectValidation`), and
-//! [`OpSpec::effects`] is `effects` (`DialectEffects`).
+//! [`OpSpec::effects`] is `effects` (`DialectEffects`) and
+//! [`OpSpec::callee`] is `callee?` (`DialectCall`).
 //!
 //! A word belongs to the dialect named before its first `.`, and a bare word
 //! to the core (ADR-2026-11-09-1543, ADR-2026-11-10-0042). Registration
@@ -88,6 +89,17 @@ pub trait OpSpec: Send + Sync {
     /// case for the rest. An op without `control` is not a terminator: its
     /// [`OpShape::terminator`] is false, as Lean's `notControl` proves.
     fn effects(&self, op: &OpTypes<'_>) -> Effects;
+
+    /// The symbol of the function that the op instance used at `op` calls,
+    /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
+    /// interpreter runs the callee of an op that is not a terminator, and
+    /// the op has its callee's effects too, which [`Summaries`] adds
+    /// (ADR-2026-11-10-2108).
+    ///
+    /// [`Summaries`]: crate::Summaries
+    fn callee(&self, _op: &OpTypes<'_>) -> Option<String> {
+        None
+    }
 }
 
 /// What a dialect says about a type it decodes.

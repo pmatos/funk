@@ -74,10 +74,15 @@ impl OpSpec for Call {
     }
 
     /// Empty: `call`'s own rule only runs its callee. A call has its
-    /// callee's effects too, which a reader of a call's effects adds
-    /// (`Core.Op.effects`).
+    /// callee's effects too, which [`Summaries`](crate::Summaries) adds
+    /// (`Core.Op.effects`, `SymbolTable.opEffects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
         Effects::PURE
+    }
+
+    /// `call @f` calls `@f`, as `Core.Op.callTarget?` says.
+    fn callee(&self, op: &OpTypes<'_>) -> Option<String> {
+        callee(op).ok().map(str::to_string)
     }
 }
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3930274354973762683")
+:::moduleDocs (fingerprint := "8848195731521877109")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -34,6 +34,13 @@ dominance are about $`\mathrm{blocks}(f)`, the blocks that branches connect.
 Names and their types are about $`\mathrm{allblocks}(f)`, so that a value
 defined in a nested block still has one type. The two lists differ only
 when an op owns a region, and no op of a valid function owns one yet.
+:::
+
+:::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
+*Definition: every op of a function, at any depth.* $`\mathrm{allops}(f)`
+is the ops of each block of $`\mathrm{allblocks}(f)`, the blocks of the
+function $`f` at any depth, in order. Well-formedness asks something of
+each of them, and a function's effects are those of each of them.
 :::
 
 :::readable Fir.Block.defs Fir.Func.defs Fir.Func.typeOf Fir.Func.types (fingerprint := "16013911283360544923")

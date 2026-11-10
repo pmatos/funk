@@ -14,15 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3650873460291634123")
-:::
-
-:::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
-*Definition: every op of a function, at any depth.* $`\mathrm{allops}(f)`
-is the ops of each block of $`\mathrm{allblocks}(f)`, the
-{ref "The-fir-specification--Validation--Scope-and-symbols"}[blocks of the function]
-$`f` at any depth, in order. Well-formedness asks
-something of each of them.
+:::moduleDocs (fingerprint := "4912345686199086277")
 :::
 
 :::readable Fir.Operation.regionBlocks_eq_nil Fir.Block.allBlocks_eq_self (pin := Fir.Operation.regionBlocks) (pin := Fir.Block.allBlocks) (fingerprint := "9773432489846029769")

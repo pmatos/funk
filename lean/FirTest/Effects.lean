@@ -9,8 +9,8 @@ Tests of the core dialect's effects, of the instance
 * _Effects the core ops need._ For example, `add` with `nsw` and `shl` give
   poison on defined operands, `udiv` by zero and `cond_br` on poison are
   UB, and `br` is a terminator: leaving any of those effects out of their
-  sets would make the obligations false. `lean/FirTest/G0.lean` pins every
-  core op's set.
+  sets would make the obligations false. `lean/FirTest/G0Effects.lean` pins
+  every core op's set.
 -/
 
 namespace FirTest

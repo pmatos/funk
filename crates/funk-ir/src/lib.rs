@@ -31,6 +31,7 @@ pub mod fuzz;
 pub mod generate;
 pub mod ir;
 pub mod registry;
+pub mod summary;
 pub mod text;
 pub mod verify;
 
@@ -43,5 +44,6 @@ pub use registry::{
     Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, Registry, TypeCheck,
     TypeSpec,
 };
+pub use summary::Summaries;
 pub use text::{ParseError, TextPos, parse, print};
 pub use verify::{Diagnostic, verify};
