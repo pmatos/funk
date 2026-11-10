@@ -3,7 +3,8 @@ import FirSpecSite.Fingerprint
 import FirSpecSite.Readable
 
 /-!
-Tests of the ADR appendix and of citation links. They run when the
+Tests of the ADR appendix, of citation links, of the module checks and of
+where a readable section hides each item's Lean. They run when the
 `FirSpecSite` library builds, so `scripts/build-spec.sh` runs them.
 -/
 
@@ -265,16 +266,20 @@ private def anonymous := cmd "declaration"
 -- So do a `#guard`, an `example`, an `infix` and an `export`.
 #guard leanOwners #[decl `f, cmd "guardCmd", anonymous, cmd "mixfix", cmd "export", decl `g] ==
   #[some 0, some 0, some 0, some 0, some 0, some 5]
--- What opens a scope, or adds a tactic, goes with the declaration after it.
+-- What opens a scope, or adds syntax, goes with the declaration after it.
 #guard leanOwners #[decl `f, cmd "end", cmd "namespace", cmd "section", cmd "variable",
-    cmd "open", cmd "omit", cmd "include", cmd "set_option", cmd "universe", cmd "macro", decl `g] ==
-  #[some 0, some 0] ++ Array.replicate 10 (some 11)
+    cmd "open", cmd "omit", cmd "include", cmd "set_option", cmd "universe", cmd "macro",
+    cmd "macro_rules", cmd "syntax", cmd "syntaxCat", cmd "elab", cmd "elab_rules", decl `g] ==
+  #[some 0, some 0] ++ Array.replicate 15 (some 16)
 -- Module docs between a declaration and an item send the item to the next declaration.
 #guard leanOwners #[decl `f, cmd "moduleDoc", cmd "guardCmd", decl `g] ==
   #[some 0, some 3, some 3, some 3]
 -- With no declaration before, an item goes with the next one; with none after, with the last one.
-#guard leanOwners #[cmd "namespace", anonymous, decl `f, cmd "moduleDoc", cmd "guardCmd"] ==
+#guard leanOwners #[cmd "namespace", anonymous, decl `f, cmd "guardCmd", cmd "namespace"] ==
   #[some 2, some 2, some 2, some 2, some 2]
+-- Module docs after the last declaration leave what follows them with no owner.
+#guard leanOwners #[decl `f, cmd "guardCmd", cmd "moduleDoc", cmd "guardCmd", cmd "end"] ==
+  #[some 0, some 0, none, none, none]
 -- With no declaration at all, no item has an owner.
 #guard leanOwners #[cmd "namespace", anonymous] == #[none, none]
 
