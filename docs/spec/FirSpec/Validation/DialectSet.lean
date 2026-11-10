@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A module's dialect set: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11037091894869912644")
+:::moduleDocs (fingerprint := "11077141747893955975")
 :::
 
 :::readable Fir.opDialects Fir.Func.wordDialects (fingerprint := "15713263119767034989")
@@ -29,38 +29,46 @@ and the type of each value it defines, and then those of each op of its
 blocks, at any depth.
 :::
 
-:::readable Fir.Module.InDialectSet (fingerprint := "16180865123344886961")
-*Definition: a module keeps to its dialect set.* A module $`m` of the
-dialect $`d` keeps to its dialect set $`\mathrm{set}(m)` when
+:::readable Fir.SymbolTable.InDialectSet Fir.Module.InDialectSet (fingerprint := "13360016989078555249")
+*Definition: a module keeps to its dialect sets.* A
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
+$`T` of a module of the dialect $`d` keeps to its dialect set
+$`\mathrm{dialects}(T)` when
 
-* every dialect $`x \in \mathrm{set}(m)` is in $`\mathrm{names}(d)`: the
-  module names only dialects that $`d` holds, and never the core, whose
+* every dialect $`x \in \mathrm{dialects}(T)` is in $`\mathrm{names}(d)`:
+  the table names only dialects that $`d` holds, and never the core, whose
   name is in no set;
-* for every function $`f` of $`m`, every dialect that the words of $`f`
-  name is in $`\mathrm{set}(m)`.
+* for every function $`f` of $`T`, every dialect that the words of $`f`
+  name is in $`\mathrm{dialects}(T)`.
 
-So a module that names no dialect writes only the core's words.
+A module $`m` keeps to its dialect sets when each of its tables does: its
+own, and that of each nested module, at any depth. A nested module's set is
+its own, not its parent's (ADR-2026-11-10-1510). So a table that names no
+dialect writes only the core's words, whatever its parent names, and a
+parent's set does not name the dialects of a nested module's set.
 :::
 
-:::readable Fir.Func.setProblems Fir.Module.setProblems (fingerprint := "11442657290716343393")
-*Definition: the check of a module's dialect set.* The check gives, in
-order: "the dialect set names $`x`, which is not a known dialect" for each
-dialect $`x` of the set that $`d` does not hold; then, for each function,
-one problem when its words name a dialect outside the set: "the function
-writes a word of the dialect $`x`, which the module's dialect set does not
-name", for the first such dialect $`x` in the order of the function's
-words.
+:::readable Fir.Func.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "16659464722050661835")
+*Definition: the check of a module's dialect sets.* The check of a table
+gives, in order: "the dialect set names $`x`, which is not a known dialect"
+for each dialect $`x` of its set that $`d` does not hold; then, for each of
+its functions, one problem when its words name a dialect outside the set:
+"the function writes a word of the dialect $`x`, which the module's dialect
+set does not name", for the first such dialect $`x` in the order of the
+function's words. The check of a module gives the problems of each of its
+tables, in order.
 :::
 
-:::readable Fir.Module.setProblems_eq_nil_iff (fingerprint := "1590659387001300546")
-*Theorem: the check decides the rule.* For every module $`m`, the check of
-its dialect set gives no problem exactly when $`m` keeps to its set:
+:::readable Fir.SymbolTable.setProblems_eq_nil_iff Fir.Module.setProblems_eq_nil_iff (fingerprint := "556859963236241723")
+*Theorem: the check decides the rule.* For every table $`T`, the check of
+its dialect set gives no problem exactly when $`T` keeps to its set, and so,
+for every module $`m`:
 
-$$`\mathrm{setProblems}(m) = [\,] \iff m \text{ keeps to its dialect set}`
+$$`\mathrm{setProblems}(m) = [\,] \iff m \text{ keeps to its dialect sets}`
 
 A function's one problem stands for every word outside the set: the check
 finds the first, and there is none exactly when every word is in the set.
-So whether a module keeps to its set can be decided.
+So whether a module keeps to its sets can be decided.
 :::
 
 :::readable Fir.Module.ValidInSet Fir.Module.allProblems (fingerprint := "1503219130715903302")

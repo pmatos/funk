@@ -23,6 +23,30 @@ passes may assume that every block is reachable. They may also assume that a
 definition comes before its uses on every path from the entry
 (ADR-2026-10-30-0817).
 
+## Nested modules
+
+A module holds a symbol table at each level of nesting: its own, and that
+of each nested module, at any depth. Each table is a dialect set and a
+list of items. Validation checks every table with one rule,
+`SymbolTable.Valid`, in `lean/Fir/Validation/Rules.lean`: each symbol names
+one item of the table, function or nested module; each function is valid
+against the table's own symbols; and the set names each dialect once, by a
+word. `Module.Valid` asks a valid location table and a valid table at each
+level. One location table serves every table (ADR-2026-11-10-1510).
+
+So a function and a module never share a symbol of one table, while a
+nested module may reuse a symbol of its parent's. A call names a function of
+its own table: never one of a nested module, of its parent, or a module.
+The rule of the dialect set, `Module.InDialectSet`, holds for each table
+against its own set (ADR-2026-11-10-1510).
+
+`Module.tables` lists the tables, the module's own first, each before the
+tables nested in it. Both validators report in that order: the location
+table's problems, each table's problems, then each table's dialect-set
+problems. A problem in a nested module names its function as one at the top
+level does; the report's schema has no field for the module
+(ADR-2026-10-30-1741).
+
 ## The spec's check
 
 The spec has an executable check, `Module.problems`, in
@@ -108,7 +132,7 @@ parts, and registered with `@[csimp]` by `rfl`. So `fir-ref`'s calls of the
 spec's two functions reach the copies and never the spec's walk
 (ADR-2026-10-30-1742).
 
-Three parts of the check are replaced:
+Four parts of the check are replaced:
 
 - **Nested blocks.** `FirRef.allBlocks` lists the same blocks as
   `Func.allBlocks`, with an explicit stack of frames. `allBlocks_eq_allBlocks`
@@ -117,6 +141,13 @@ Three parts of the check are replaced:
   (ADR-2026-11-03-1715).
 - **The location table.** `FirRef.locTableProblems` replaces
   `LocTable.problems` (ADR-2026-11-05-0745).
+- **Symbol tables.** `FirRef.tablesIn`, in `lean/FirRef/Tables.lean`, lists
+  the same tables as `Item.tablesIn`, with an explicit stack of lists of
+  items. `tablesIn_eq_tablesIn` proves them equal, and `@[csimp]` registers
+  it, as for blocks (ADR-2026-10-30-1742). `lean/FirTest/ValidateNested.lean`
+  checks modules nested 1,000,000 deep, and `scripts/check-fir-ref-deep.sh`
+  has `fir-ref validate` accept one on a 256 KiB stack
+  (ADR-2026-10-30-1549, ADR-2026-11-10-1510).
 
 Validation takes no stack per block or per level of regions
 (ADR-2026-11-03-1715). `lean/FirTest/Validate.lean` checks modules with regions

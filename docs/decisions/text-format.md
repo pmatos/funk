@@ -62,9 +62,8 @@ end of the text, serves every item at any depth (ADR-2026-11-10-1510).
 A nested module is a symbol table of its own, and its dialect set is its own:
 one that names no dialect uses the core alone, whatever its parent names. An
 op refers by symbol only to an item of its own table. `Module.funcs` is the
-functions of the top-level table (ADR-2026-11-10-1510). Validation rejects
-every nested module until #211's second stage gives it the rule of its own
-table.
+functions of the top-level table (ADR-2026-11-10-1510). Validation checks
+each table with the same rule: the page on validation says how.
 
 ## Region kinds
 

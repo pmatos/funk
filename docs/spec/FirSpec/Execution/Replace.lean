@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11345410964115044109")
+:::moduleDocs (fingerprint := "15158369514405866677")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "15166696025121488110")
@@ -72,16 +72,26 @@ symbol and its type; so is the context in which validation checks its
 functions, which is the symbol table and the keys of the location table.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "678618752020300758")
+:::readable Fir.Item.name_replaceBody Fir.Item.tablesIn_replaceBody (fingerprint := "3259367735023084775")
+*Theorems: replacing a body keeps the symbols and the nested tables.* For
+every symbol $`s`, region $`b` and item $`i`, the item with the body
+replaced has the symbol of $`i`. For every list of items, the items with
+the body replaced hold the same
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol tables]:
+a function holds none, and a nested module is unchanged.
+:::
+
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "16252025844297008974")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
 $`s` a symbol and $`b` a region, and let each function $`g` of $`M` with
 the symbol $`s`, given the body $`b`, be valid in the context of $`M`.
-Then $`M[s \leftarrow b]` is valid: its symbols are those of $`M`, so
-still unique; its items are still functions; its location table and its
-dialect set are those of $`M`; and each of its functions is valid in its
-context, which is that of $`M`.
+Then $`M[s \leftarrow b]` is valid: the symbols of its own table are those
+of $`M`, so still unique; its location table and its dialect set are those
+of $`M`; each of its functions is valid in its context, which is that of
+$`M`; and its nested modules, and so the tables they hold, are those of
+$`M`.
 
 So the new body needs to be checked alone, against the old module's
 symbol table; every other function was already valid there.

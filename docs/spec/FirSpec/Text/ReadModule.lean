@@ -116,7 +116,7 @@ gives the tokens of $`m`, then $`\mathsf{eof}`, and the theorem above
 reads them.
 :::
 
-:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "4073448004416756215")
+:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "8385933528482538159")
 *Theorem: the first two steps read a valid module's text as its tree.* For
 every dialect with signatures, validation rules and a text format whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful], and

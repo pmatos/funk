@@ -23,7 +23,7 @@ allow, or a width for a row that passes no value.
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `const` |  | 517 | 784 | 445 | 778 | 648 | 639 |
-| `add` |  | 205 | 359 | 311 | 288 | 434 | 534 |
+| `add` |  | 205 | 359 | 311 | 291 | 434 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
 | `add` | `nuw nsw` | 8 | 31 | 29 | 29 | 29 | 35 |
@@ -93,13 +93,13 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 817 |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 155 | 132 | 153 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2261 | 1466 | 1151 | 1544 | 1315 | 2372 |
+| `ret` | returns one value |  | 2261 | 1466 | 1151 | 1547 | 1315 | 2372 |
 | `ret` | returns several values |  | 280 | 431 | 265 | 246 | 396 | 538 |
 | `call` | gives no result | 32 |  |  |  |  |  |  |
-| `call` | gives one result |  | 89 | 84 | 80 | 85 | 93 | 130 |
+| `call` | gives one result |  | 89 | 84 | 80 | 87 | 93 | 130 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 189 | 279 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |
-| `func` | returns one value |  | 2261 | 1466 | 1151 | 1544 | 1315 | 2372 |
+| `func` | returns one value |  | 2261 | 1466 | 1151 | 1547 | 1315 | 2372 |
 | `func` | returns several values |  | 280 | 431 | 265 | 237 | 396 | 502 |
 
 ## Interpreter-only tests
@@ -109,7 +109,7 @@ allow, or a width for a row that passes no value.
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `const` |  | 287 | 475 | 337 | 215 | 284 | 465 | 208 | 134 |
-| `add` |  | 12 | 228 | 31 | 28 | 28 | 228 | 28 | 63 |
+| `add` |  | 12 | 228 | 31 | 28 | 29 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
 | `add` | `nuw nsw` | 4 | 29 | 8 | 6 | 6 | 29 | 6 | 5 |
@@ -185,11 +185,11 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 421 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 13 | 136 | 13 | 11 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 1337 | 1298 | 526 | 502 | 612 | 1336 | 524 | 799 |
+| `ret` | returns one value |  | 1337 | 1298 | 526 | 502 | 613 | 1336 | 524 | 799 |
 | `ret` | returns several values |  | 51 | 186 | 36 | 26 | 26 | 186 | 49 | 47 |
 | `call` | gives no result | 13 |  |  |  |  |  |  |  |  |
-| `call` | gives one result |  | 73 | 92 | 27 | 23 | 23 | 92 | 23 | 19 |
+| `call` | gives one result |  | 73 | 92 | 27 | 23 | 24 | 92 | 23 | 19 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 1337 | 1298 | 526 | 502 | 612 | 1336 | 524 | 799 |
+| `func` | returns one value |  | 1337 | 1298 | 526 | 502 | 613 | 1336 | 524 | 799 |
 | `func` | returns several values |  | 51 | 186 | 36 | 26 | 26 | 186 | 49 | 45 |

@@ -2,9 +2,10 @@ import FirTest.SumTypes
 
 /-!
 The dialect set of a module (ADR-2026-11-09-1543, ADR-2026-11-10-1306),
-on the shared cases of `tests/dialects/dialect-set.cases`, which
-`crates/funk-ir/tests/dialect_set.rs` reads too, so the two validators agree
-on each of them.
+on the shared cases of `tests/dialects/dialect-set.cases`, and the dialect
+sets of nested modules (ADR-2026-11-10-1510), on those of
+`tests/dialects/nested-modules.cases`. `crates/funk-ir/tests/dialect_set.rs`
+reads both too, so the two validators agree on each of them.
 
 The cases run in the sum of the core and a test dialect named `toy`: the
 flag dialect's type `toy.flag` and its ops `toy.flag` and `toy.test`, and
@@ -105,13 +106,19 @@ structure Case where
   name : String
   text : String
 
-/-- The cases of the shared file. -/
-def cases : List Case :=
-  ((include_str "../../tests/dialects/dialect-set.cases").splitOn "=== ").tail.filterMap fun piece =>
+/-- The cases of a shared file. -/
+def read (file : String) : List Case :=
+  (file.splitOn "=== ").tail.filterMap fun piece =>
     let lines := piece.splitOn "\n"
     match (lines.headD "").splitOn " " with
     | [verdict, name] => some ⟨verdict == "accept", name, "\n".intercalate lines.tail⟩
     | _ => none
+
+/-- The cases of the shared file on a module's dialect set. -/
+def cases : List Case := read (include_str "../../tests/dialects/dialect-set.cases")
+
+/-- The cases of the shared file on the dialect sets of nested modules. -/
+def nested : List Case := read (include_str "../../tests/dialects/nested-modules.cases")
 
 /-- Whether the check gives a case its verdict: it parses, prints as itself,
 and has no problem exactly when the case is accepted. -/
@@ -123,10 +130,13 @@ def Case.holds (c : Case) : Bool :=
 #guard cases.length == 13
 #guard (cases.filter (·.accept)).length == 6
 #guard (cases.filter (!·.holds)).map (·.name) == []
+#guard nested.length == 8
+#guard (nested.filter (·.accept)).length == 3
+#guard (nested.filter (!·.holds)).map (·.name) == []
 
 /-- The problems of the dialect set alone, of a case's text. -/
 def setProblems (name : String) : List Problem :=
-  match cases.find? (·.name == name) with
+  match (cases ++ nested).find? (·.name == name) with
   | some c =>
     match (Fir.parse c.text : Except ParseError (Module CoreTag)) with
     | .ok m => m.setProblems
@@ -140,6 +150,9 @@ def setProblems (name : String) : List Problem :=
       "which the module's dialect set does not name", func := some "f" }]
 #guard setProblems "attribute-outside-the-set" ==
   [{ message := "the function writes a word of the dialect gpu, " ++
+      "which the module's dialect set does not name", func := some "f" }]
+#guard setProblems "nested-does-not-inherit-the-set" ==
+  [{ message := "the function writes a word of the dialect toy, " ++
       "which the module's dialect set does not name", func := some "f" }]
 #guard setProblems "unknown-dialect" ==
   [{ message := "the dialect set names gpu, which is not a known dialect" }]

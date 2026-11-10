@@ -183,10 +183,10 @@ def ValidIsWellFormed [DialectValidation d] : Prop :=
 
 variable [DialectValidation d] [LawfulDialectText d]
 
-/-- A function valid in a module whose location table is valid is well
-formed. -/
-theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.context)
-    (hl : LocTable.Valid m.locs) : f.WellFormed := by
+/-- A function valid in a context whose location references are those of a
+valid location table is well formed. -/
+theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncType d)} {f : Func d}
+    (hf : f.Valid ⟨syms, locs.map (·.1)⟩) (hl : LocTable.Valid locs) : f.WellFormed := by
   have hall : f.allBlocks = f.blocks := Block.allBlocks_eq_self fun b hb o ho => by
     obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
     exact (hf.ops b hb i o hi).1
@@ -218,7 +218,7 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
       · have hm : f.typeOf a ∈ tgt.params.map (some ·.2) := hargs ▸ List.mem_map_of_mem ha
         obtain ⟨p, -, hp⟩ := List.mem_map.mp hm
         exact hdef a p.2 hp.symm
-    · obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ m.locs.map (·.1) from hloc)
+    · obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ locs.map (·.1) from hloc)
       exact hloc ▸ (hl.2.1 e he).1
   · simp only [Func.allOps, hall, List.mem_flatMap] at ho
     obtain ⟨b, hb, ho⟩ := ho
@@ -226,11 +226,31 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
     rw [(hf.ops b hb i o hi).1] at hr
     exact absurd hr (List.not_mem_nil)
 
+/-- The items of a valid symbol table are well formed when the tables
+nested in them are valid too, in a module whose location table is valid. -/
+theorem SymbolTable.Valid.itemsWellFormed {locs : LocTable} (hl : LocTable.Valid locs) :
+    ∀ (ds : List Name) (is : List (Item d)), SymbolTable.Valid (locs.map (·.1)) ⟨ds, is⟩ →
+      (∀ u ∈ Item.tablesIn is, u.Valid (locs.map (·.1))) → ∀ i ∈ is, i.WellFormed
+  | _, is, ht, hn, i, hi => by
+    cases i with
+    | func f => exact Func.Valid.wellFormed (ht.funcs f (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)) hl
+    | module n ds' js =>
+      have hsub := Item.mem_tablesIn hi
+      have hv := hn _ (hsub _ (List.mem_cons_self ..))
+      rw [Item.WellFormed, Item.wellFormedList_iff]
+      exact ⟨hv.dialectNames, SymbolTable.Valid.itemsWellFormed hl ds' js hv
+        fun u hu => hn u (hsub u (List.mem_cons_of_mem _ hu))⟩
+termination_by _ is => sizeOf is
+decreasing_by
+  have := List.sizeOf_lt_of_mem hi
+  simp only [Item.module.sizeOf_spec] at this
+  omega
+
 /-- Every valid module of a dialect with lawful text is well formed. -/
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
-  fun m hm => ⟨hm.dialectNames, fun i hi => by
-    cases i with
-    | func f => exact (hm.funcs f (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)).wellFormed hm.locs
-    | module => simpa [Item.func?] using hm.flat _ hi, hm.locs.2.1⟩
+  fun m hm => ⟨hm.dialectNames,
+    SymbolTable.Valid.itemsWellFormed hm.locs m.dialects m.items hm.table
+      (fun u hu => hm.tables u (List.mem_cons_of_mem _ hu)),
+    hm.locs.2.1⟩
 
 end Fir
