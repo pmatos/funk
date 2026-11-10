@@ -69,11 +69,17 @@ awk -v end="$ending" 'BEGIN {
     for (i = 0; i < 1000000; i++) printf "  %%c%d: i32 = const %d @0\n", i, i
     printf "  ret @0\n%s", end
 }' >"$tmp/ops.fir"
-# deep NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB stack, fir-ref fmt
-# --check and validate give $tmp/NAME.fir, WHAT, the parse error at LINE
-# and COLUMN with MESSAGE, or, without one, accept it, and print exactly
-# that verdict.
+# deep [--validate-only] NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB
+# stack, fir-ref fmt --check and validate give $tmp/NAME.fir, WHAT, the
+# parse error at LINE and COLUMN with MESSAGE, or, without one, accept it,
+# and print exactly that verdict. With --validate-only, only validate reads
+# it: a text whose canonical form is too large to print.
 deep() {
+    local cmds=("fmt --check" validate)
+    if [[ $1 == --validate-only ]]; then
+        cmds=(validate)
+        shift
+    fi
     local file=$tmp/$1.fir what=$2 verdict=accepted diags='' want_rc=0 fail=0
     local cmd rc out err want_out want_err
     shift 2
@@ -82,7 +88,7 @@ deep() {
         printf -v diags '{"kind":"parse-error","message":"%s","line":%s,"column":%s}' \
             "$3" "$1" "$2"
     fi
-    for cmd in "fmt --check" validate; do
+    for cmd in "${cmds[@]}"; do
         want_out='' want_err=''
         if [[ $cmd == validate ]]; then
             printf -v want_out '{"file":"%s","verdict":"%s","diagnostics":[%s]}' \
@@ -104,24 +110,6 @@ deep() {
     done
     return "$fail"
 }
-# On a 256 KiB stack, fir-ref validate accepts $tmp/valid-modules.fir:
-# modules nested a million levels deep, the innermost holding a function,
-# each with its own symbol table (ADR-2026-11-10-1510). The text is not
-# canonical, and its canonical form indents each level two spaces deeper,
-# so only validate reads it.
-valid_deep() {
-    local file=$tmp/valid-modules.fir rc=0 out err want
-    printf -v want '{"file":"%s","verdict":"accepted","diagnostics":[]}' "$file"
-    out=$(ulimit -c 0; LEAN_STACK_SIZE_KB=256 exec "$fir_ref" validate "$file" \
-        2>"$tmp/deep.err") || rc=$?
-    err=$(<"$tmp/deep.err")
-    if [[ $rc -ne 0 || $out != "$want" || -n $err ]]; then
-        echo "On a 256 KiB stack, fir-ref validate on modules nested a million" \
-            "levels deep exits with $rc, prints '$out' and '$err' on standard" \
-            "error; expected 0, '$want' and nothing" >&2
-        return 1
-    fi
-}
 attr_error="op ret does not decode: the dialect has no op with this name and these"
 attr_error+=" attributes, operand types and result types"
 deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" || status=1
@@ -132,5 +120,9 @@ deep deep-modules "modules nested a million levels deep" 2000001 1 \
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
-valid_deep || status=1
+# Valid modules nested a million levels deep, the innermost holding a
+# function, each a symbol table of its own (ADR-2026-11-10-1510). Their
+# canonical form indents each level two spaces deeper, so only validate
+# reads them.
+deep --validate-only valid-modules "valid modules nested a million levels deep" || status=1
 exit "$status"

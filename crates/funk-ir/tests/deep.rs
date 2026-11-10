@@ -242,8 +242,9 @@ fn items_nest_to_any_depth() {
 
 /// Nested modules (ADR-2026-11-10-1510) parse, verify, clone, compare, hash,
 /// debug-format and drop at any depth: each is a valid symbol table of its
-/// own, and a symbol named twice at the bottom is found. Their canonical text, indented two
-/// spaces deeper at each level, is printed 3,000 levels deep.
+/// own, and a symbol named twice at the bottom is found. Their canonical
+/// text, indented two spaces deeper at each level, is printed 3,000 levels
+/// deep.
 #[test]
 fn modules_nest_to_any_depth() {
     on_small_stack(|| {

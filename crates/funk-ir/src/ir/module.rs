@@ -200,7 +200,7 @@ impl Module {
     /// The module's own functions, in order. Those of a nested module are
     /// not among them.
     pub fn funcs(&self) -> impl Iterator<Item = &Func> {
-        self.items.iter().filter_map(Item::as_func)
+        self.table().funcs()
     }
 
     /// The symbol table of this module's own items.
