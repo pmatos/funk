@@ -5,8 +5,8 @@ Blocks hold ops, and ops hold regions of blocks, to any depth. `blocksLoop`
 reads blocks with an explicit stack of frames, one per construct it is
 inside, each with its parts read so far, last first:
 
-* a frame of blocks belongs to a region, or to a function's body at the
-  bottom of the stack;
+* a frame of blocks belongs to a region, whose kind it holds, or to a
+  function's body at the bottom of the stack;
 * a frame of ops belongs to a block, whose label and arguments it holds;
   it looks at the next token with `startsOpC` before it reads an op with
   `opHeadC`, so that at a block's end it leaves the token, and the frame
@@ -28,8 +28,9 @@ open Fir Fir.Text Cursor
 
 /-- What is left to read of a block, an op or a region. -/
 inductive BFrame where
-  /-- The blocks of a region or a function's body, those read last first. -/
-  | blocks (done : List SBlock)
+  /-- The blocks of a region of this kind or of a function's body, those
+  read last first. -/
+  | blocks (kind : Option Name) (done : List SBlock)
   /-- The ops of the block with this label and these arguments. -/
   | ops (label : Name) (params : List SDef) (done : List SOp)
   /-- The regions of the op with this head. -/
@@ -107,18 +108,18 @@ theorem startsOpC_false {s : σ} (hs : ¬startsOpC s = true) :
 def blocksLoop (s : σ) (fs : List BFrame) : Except ParseError (List SBlock × σ) :=
   match fs with
   | [] => .ok ([], s)
-  | .blocks done :: fs =>
+  | .blocks kind done :: fs =>
     match _h : uncons s with
     | some (⟨.label l, _⟩, s₁) =>
       match _hh : blockHeadC s₁ with
-      | .ok (params, s₂) => blocksLoop s₂ (.ops l params [] :: .blocks done :: fs)
+      | .ok (params, s₂) => blocksLoop s₂ (.ops l params [] :: .blocks kind done :: fs)
       | .error e => .error e
     | _ =>
       match fs with
       | [] => .ok (done.reverse, s)
       | .regions hd rs :: fs =>
         match _he : expectC .rbrace "a block or } to close the region" s with
-        | .ok ((), s₁) => blocksLoop s₁ (.regions hd (⟨done.reverse⟩ :: rs) :: fs)
+        | .ok ((), s₁) => blocksLoop s₁ (.regions hd (⟨kind, done.reverse⟩ :: rs) :: fs)
         | .error e => .error e
       | _ => .ok ([], s)
   | .ops l params done :: fs =>
@@ -128,11 +129,14 @@ def blocksLoop (s : σ) (fs : List BFrame) : Except ParseError (List SBlock × �
       | .error e => .error e
     else
       match fs with
-      | .blocks bs :: fs => blocksLoop s (.blocks (⟨l, params, done.reverse⟩ :: bs) :: fs)
+      | .blocks k bs :: fs => blocksLoop s (.blocks k (⟨l, params, done.reverse⟩ :: bs) :: fs)
       | _ => .ok ([], s)
   | .regions hd done :: fs =>
     match _h : uncons s with
-    | some (⟨.lbrace, _⟩, s₁) => blocksLoop s₁ (.blocks [] :: .regions hd done :: fs)
+    | some (⟨.lbrace, _⟩, s₁) =>
+      match _hk : uncons s₁ with
+      | some (⟨.word k, _⟩, s₂) => blocksLoop s₂ (.blocks (some k) [] :: .regions hd done :: fs)
+      | _ => blocksLoop s₁ (.blocks none [] :: .regions hd done :: fs)
     | u =>
       match _hl : opLocOf s u with
       | .ok (loc, s₁) =>
@@ -152,41 +156,44 @@ decreasing_by
     omega
   · omega
   · have := length_lt _h
+    have := length_lt _hk
+    omega
+  · have := length_lt _h
     omega
   · have := readOpLocC_lt (s := s) (by rw [readOpLocC, _h]; exact _hl)
     omega
 
-/-- What a frame completes: the blocks of a region or a body, a block, or
-an op. -/
+/-- What a frame completes: the blocks of a region of a kind or of a body,
+a block, or an op. -/
 inductive BDone where
-  | blocks (bs : List SBlock)
+  | blocks (kind : Option Name) (bs : List SBlock)
   | block (b : SBlock)
   | op (o : SOp)
 
 /-- Hands what a frame completed to the frames `fs`, which read on by the
 spec's readers. -/
 def bFinish : BDone → List Token → List BFrame → Except ParseError (List SBlock × List Token)
-  | .blocks bs, ts, [] => .ok (bs, ts)
-  | .blocks bs, ts, .regions hd rs :: fs => do
+  | .blocks _ bs, ts, [] => .ok (bs, ts)
+  | .blocks kind bs, ts, .regions hd rs :: fs => do
     let ((), r₁) ← U (expect .rbrace "a block or } to close the region" ts)
     let (more, r₂) ← U (readRegions r₁)
     let (loc, r₃) ← U (readOpLoc r₂)
-    bFinish (.op (hd.op ((⟨bs⟩ :: rs).reverse ++ more) loc)) r₃ fs
+    bFinish (.op (hd.op ((⟨kind, bs⟩ :: rs).reverse ++ more) loc)) r₃ fs
   | .op o, ts, .ops l ps os :: fs => do
     let (more, r) ← U (readOps ts)
     bFinish (.block ⟨l, ps, (o :: os).reverse ++ more⟩) r fs
-  | .block b, ts, .blocks bs :: fs => do
+  | .block b, ts, .blocks kind bs :: fs => do
     let (more, r) ← U (readBlocks ts)
-    bFinish (.blocks ((b :: bs).reverse ++ more)) r fs
+    bFinish (.blocks kind ((b :: bs).reverse ++ more)) r fs
   | _, ts, _ => .ok ([], ts)
 
 /-- What `blocksLoop` computes from the frames `fs`, by the spec's
 readers. -/
 def bRun (ts : List Token) : List BFrame → Except ParseError (List SBlock × List Token)
   | [] => .ok ([], ts)
-  | .blocks done :: fs => do
+  | .blocks kind done :: fs => do
     let (bs, r) ← U (readBlocks ts)
-    bFinish (.blocks (done.reverse ++ bs)) r fs
+    bFinish (.blocks kind (done.reverse ++ bs)) r fs
   | .ops l ps done :: fs => do
     let (os, r) ← U (readOps ts)
     bFinish (.block ⟨l, ps, done.reverse ++ os⟩) r fs

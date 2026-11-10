@@ -33,7 +33,7 @@ which is the same decoder written another way, so that the decoder of a
 function can pass its own.
 :::
 
-:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12979592862157029703")
+:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "13525234788551827041")
 *Theorem: a function decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every symbol, list of parameters as read,
@@ -58,10 +58,12 @@ proof joins the two:
   depth;
 * so each value of $`f` is a name; each label is a name; each type that
   the text of $`f` states, a result type or the type of a definition, is
-  written as a type and decodes back to itself; and each op of $`f`, with
-  $`\mathrm{type}_f` in place of the scope, is well formed in $`f`.
+  written as a type and decodes back to itself; each op of $`f`, with
+  $`\mathrm{type}_f` in place of the scope, is well formed in $`f`; the
+  body of $`f` is of the core's kind, as the decoder gives it; and each
+  region of an op of $`f` that names a kind names it by a word.
 
-These are the five conditions of a well-formed function.
+These are the seven conditions of a well-formed function.
 :::
 
 :::readable Fir.decodeItem_wellFormed Fir.mapM_decodeItem_wellFormed (pin := Fir.Text.decodeItem) (pin := Fir.Text.SItem.Writable) (fingerprint := "14306298540028625053")

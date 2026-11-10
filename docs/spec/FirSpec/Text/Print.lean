@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17641277585792641574")
+:::moduleDocs (fingerprint := "3900405696603947115")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
@@ -61,7 +61,7 @@ to the block $`\ell` that passes $`x_1, \dots, x_n` is written
 `^ℓ(%x₁, …, %xₙ)`, and `^ℓ` when $`n = 0`.
 :::
 
-:::readable Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "9036309039616151317")
+:::readable Fir.printKind Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "10544776060343288224")
 *Definition: an op, with its regions and their blocks, in text.* An op at
 the indentation $`n` is one line, made of, in order:
 
@@ -70,8 +70,9 @@ the indentation $`n` is one line, made of, in order:
 * the op's name, then each of its attributes, each after one space;
 * when the op has operands or successors, one space, then the operands as
   `%x`, then the successors, all separated by a comma and a space;
-* for each region of the op, ` {`, a line feed, the region's blocks at the
-  indentation $`n + 2`, then $`\mathrm{indent}(n)` and `}`;
+* for each region of the op, ` {`, then one space and the region's kind
+  when it names one, a line feed, the region's blocks at the indentation
+  $`n + 2`, then $`\mathrm{indent}(n)` and `}`;
 * one space, the op's location reference, and a line feed.
 
 A block with the label $`\ell` at the indentation $`n` is a line of

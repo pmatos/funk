@@ -99,6 +99,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-10-0042](2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk-ir's registry routes each word by its dialect prefix and checks names and dependencies at registration | this ADR |
 | [ADR-2026-11-10-1306](2026-11-10-1306-a-module-names-its-dialect-set-on-its-first-line.md) | [text-format](../decisions/text-format.md) | A module names its dialect set on a first line that starts with the word dialects | this ADR |
 | [ADR-2026-11-10-1310](2026-11-10-1310-an-extension-lifts-into-any-sum-that-holds-what-it-depends-on.md) | [semantics](../decisions/semantics.md) | An extension lifts into any sum that holds what it depends on, through an inclusion of types | this ADR |
+| [ADR-2026-11-10-1530](2026-11-10-1530-a-region-names-its-kind-by-a-word-after-its-opening-brace.md) | [text-format](../decisions/text-format.md) | A region names its kind by a word after its opening brace | this ADR |
 
 ## Implementation
 

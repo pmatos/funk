@@ -157,10 +157,10 @@ theorem adds_regions_nil : Adds (d := d) defineRegions decodeRegions Region.scop
 
 /-- The first pass adds a region's blocks' definitions, then those of the
 regions after it. -/
-theorem adds_regions_cons {bs : List SBlock} {srs : List SRegion}
+theorem adds_regions_cons {k : Option Name} {bs : List SBlock} {srs : List SRegion}
     (hb : Adds (d := d) defineBlocks decodeBlocks Block.scopeDefs bs)
     (hrs : Adds (d := d) defineRegions decodeRegions Region.scopeDefs srs) :
-    Adds (d := d) defineRegions decodeRegions Region.scopeDefs (⟨bs⟩ :: srs) := by
+    Adds (d := d) defineRegions decodeRegions Region.scopeDefs (⟨k, bs⟩ :: srs) := by
   intro sc sc' sc₂ g L x h₁ h₂ hsc hnd
   rw [defineRegions] at h₁
   bind_step h₁ with ⟨sc₁, e₁, e₂⟩
@@ -189,7 +189,7 @@ theorem SOp.adds : ∀ sos : List SOp, Adds (d := d) defineOps decodeOps Operati
 theorem SRegion.adds : ∀ srs : List SRegion,
     Adds (d := d) defineRegions decodeRegions Region.scopeDefs srs
   | [] => adds_regions_nil
-  | ⟨bs⟩ :: srs => adds_regions_cons (SBlock.adds bs) (SRegion.adds srs)
+  | ⟨_, bs⟩ :: srs => adds_regions_cons (SBlock.adds bs) (SRegion.adds srs)
 end
 
 end Fir.Text

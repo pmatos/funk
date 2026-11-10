@@ -53,8 +53,9 @@ structure SBlock where
   params : List SDef
   ops : List SOp
 
-/-- A region as written. -/
+/-- A region as written: the kind it names, if any, and its blocks. -/
 structure SRegion where
+  kind : Option Name
   blocks : List SBlock
 end
 
@@ -272,6 +273,12 @@ def readOpLoc : (ts : List Token) → Read LocRef ts
 # Blocks, ops and regions
 -/
 
+/-- Reads a region's kind, a word, when one follows the `{` that opens the
+region. No word is the core's kind. -/
+def readKind : (ts : List Token) → Read (Option Name) ts
+  | ⟨.word k, _⟩ :: rest => .ok (some k, ⟨rest, Nat.le_succ _⟩)
+  | ts => .ok (none, .here ts)
+
 mutual
 /-- Reads blocks as long as a label follows. -/
 def readBlocks : (ts : List Token) → Read (List SBlock) ts
@@ -328,13 +335,15 @@ def readOpBody (results : List SDef) (name : String) (namePos : TextPos) (ts : L
   pure (⟨results, name, namePos, attrs.map (·.1), operands, succs, regions, loc⟩, ⟨r₄, by omega⟩)
 termination_by 2 * ts.length + 1
 
-/-- Reads an op's regions, as long as a `{` follows. -/
+/-- Reads an op's regions, as long as a `{` follows. A word right after the
+`{` names the region's kind. -/
 def readRegions : (ts : List Token) → Read (List SRegion) ts
   | ⟨.lbrace, _⟩ :: rest => do
-    let (bs, ⟨r₁, h₁⟩) ← readBlocks rest
+    let (kind, ⟨r₀, h₀⟩) ← readKind rest
+    let (bs, ⟨r₁, h₁⟩) ← readBlocks r₀
     let ((), ⟨r₂, h₂⟩) ← expect .rbrace "a block or } to close the region" r₁
     let (rs, ⟨r₃, h₃⟩) ← readRegions r₂
-    pure (⟨bs⟩ :: rs, ⟨r₃, by simp; omega⟩)
+    pure (⟨kind, bs⟩ :: rs, ⟨r₃, by simp; omega⟩)
   | ts => .ok ([], .here ts)
 termination_by ts => 2 * ts.length
 end

@@ -102,9 +102,15 @@ impl Block {
 }
 
 impl Region {
-    /// A region of these blocks.
+    /// A region of the core's kind with these blocks.
     pub fn new(blocks: Vec<Block>) -> Region {
-        Region { blocks }
+        Region { kind: None, blocks }
+    }
+
+    /// The region with the kind `kind`, a word of a dialect.
+    pub fn with_kind(mut self, kind: impl Into<String>) -> Region {
+        self.kind = Some(kind.into());
+        self
     }
 }
 

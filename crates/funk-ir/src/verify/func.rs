@@ -1,12 +1,13 @@
 //! The rules of a function (`Func.Valid` in `lean/Fir/Validation/Rules.lean`).
 //!
-//! A function is valid when its entry block declares no arguments of its
-//! own, every block is reachable from the entry (ADR-2026-10-30-0817), its
-//! labels and value names are unique, every name and label is one or more
-//! name characters, every type it states is valid, every block holds an op,
-//! every op is valid, and the function obeys each registered dialect's rule
-//! over a whole function. Names and labels are checked at any depth, in the
-//! blocks of ops' regions too.
+//! A function is valid when its body is a region of the core's kind, its
+//! entry block declares no arguments of its own, every block is reachable
+//! from the entry (ADR-2026-10-30-0817), its labels and value names are
+//! unique, every name and label is one or more name characters, every type
+//! it states is valid, every block holds an op, every op is valid, and the
+//! function obeys each registered dialect's rule over a whole function.
+//! Names and labels are checked at any depth, in the blocks of ops' regions
+//! too.
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;
@@ -64,6 +65,15 @@ fn at(f: &Func, block: Option<&Block>, message: String) -> Diagnostic {
 }
 
 pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
+    if let Some(kind) = &f.body.kind {
+        out.push(at(
+            f,
+            None,
+            format!(
+                "the function's body is a region of kind {kind}: a function's body is a region of the core's kind"
+            ),
+        ));
+    }
     let blocks = &f.body.blocks;
     match blocks.first() {
         None => out.push(at(f, None, "the function has no entry block".into())),

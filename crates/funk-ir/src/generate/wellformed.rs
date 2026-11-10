@@ -7,7 +7,8 @@
 //! write and read back:
 //!
 //! - ops that own regions, at any depth up to three, whose blocks hold ops,
-//!   arguments and branches of their own;
+//!   arguments and branches of their own, and some of which name a kind
+//!   from [`REGION_KINDS`];
 //! - string attributes and applied attributes, `h()` and `h(1, "s", g(x))`
 //!   among them, on the toy op [`TOY_OP`], which decodes with any
 //!   attributes: no core op or type takes one;
@@ -47,6 +48,10 @@ pub const WELL_FORMED_MODULES: u64 = 600;
 
 /// The toy op: any attributes, operands, results and regions decode.
 pub const TOY_OP: &str = "toy.any";
+
+/// The kinds that generated regions name: words of a dialect, which the
+/// text writes after a region's `{`, whatever dialects the reader holds.
+pub const REGION_KINDS: [&str; 3] = ["toy.graph", "gpu.warp", "toy.a.b"];
 
 /// The dialects whose ops a generated module holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -274,11 +279,16 @@ impl<'m> Shaper<'m> {
         b
     }
 
-    /// Gives `op` one or two regions of up to three blocks each.
+    /// Gives `op` one or two regions of up to three blocks each, a third
+    /// of them of a kind from [`REGION_KINDS`].
     fn add_regions(&mut self, rng: &mut Rng, op: &mut Op, depth: u32) {
         for _ in 0..1 + rng.below(2) {
             let blocks = (0..rng.below(4)).map(|_| self.block(rng, depth)).collect();
-            op.regions.push(Region::new(blocks));
+            let mut region = Region::new(blocks);
+            if rng.one_in(3) {
+                region = region.with_kind(*rng.pick(&REGION_KINDS));
+            }
+            op.regions.push(region);
         }
     }
 

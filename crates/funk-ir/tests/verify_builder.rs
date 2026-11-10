@@ -42,6 +42,14 @@ fn with_ops(ops: Vec<Op>) -> Func {
 }
 
 #[test]
+fn a_function_body_is_a_region_of_the_core_kind() {
+    let mut f = with_ops(vec![]);
+    f.body.kind = Some("toy.graph".into());
+    let ds = rejects(f, "the function's body is a region of kind toy.graph");
+    assert_eq!(ds.len(), 1, "{ds:#?}");
+}
+
+#[test]
 fn a_well_built_function_is_valid() {
     let add = Op::new("add", L)
         .operand("a")

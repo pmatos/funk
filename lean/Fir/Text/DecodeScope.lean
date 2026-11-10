@@ -57,7 +57,7 @@ def Operation.scopeDefs : List (Operation d) → List (Name × d.Ty)
 that the first pass reads them. -/
 def Region.scopeDefs : List (Region d) → List (Name × d.Ty)
   | [] => []
-  | ⟨bs⟩ :: rs => Block.scopeDefs bs ++ Region.scopeDefs rs
+  | ⟨_, bs⟩ :: rs => Block.scopeDefs bs ++ Region.scopeDefs rs
 end
 
 mutual
@@ -90,7 +90,7 @@ theorem Operation.scopeDefs_perm : ∀ os : List (Operation d),
 theorem Region.scopeDefs_perm : ∀ rs : List (Region d),
     (Region.scopeDefs rs).Perm ((Region.allBlocks rs).flatMap Block.defs)
   | [] => by simp [Region.scopeDefs, Region.allBlocks]
-  | ⟨bs⟩ :: rs => by
+  | ⟨_, bs⟩ :: rs => by
     simp only [Region.scopeDefs, Region.allBlocks, List.flatMap_append]
     exact (Block.scopeDefs_perm bs).append (Region.scopeDefs_perm rs)
 end
@@ -289,13 +289,13 @@ theorem defineRegions_nil :
 /-- `defineRegions` adds a region's definitions and those of the regions
 after it, when `defineBlocks` adds the region's blocks' and
 `defineRegions` the other regions'. -/
-theorem defineRegions_cons {blocks : List (Block d)} {rs : List (Region d)}
+theorem defineRegions_cons {kind : Option Name} {blocks : List (Block d)} {rs : List (Region d)}
     (hb : Defines defineBlocks SBlock.eraseList (Block.treeList blocks) (Block.scopeDefs blocks))
     (hrs : Defines defineRegions SRegion.eraseList (Region.treeList rs) (Region.scopeDefs rs)) :
-    Defines defineRegions SRegion.eraseList (Region.treeList (⟨blocks⟩ :: rs))
-      (Region.scopeDefs (⟨blocks⟩ :: rs)) := by
+    Defines defineRegions SRegion.eraseList (Region.treeList (⟨kind, blocks⟩ :: rs))
+      (Region.scopeDefs (⟨kind, blocks⟩ :: rs)) := by
   intro srs h sc L hsc hnd
-  obtain ⟨⟨sbs⟩, srs', rfl, h₁, h₂⟩ := SRegion.eraseList_eq_cons h
+  obtain ⟨⟨_, sbs⟩, srs', rfl, -, h₁, h₂⟩ := SRegion.eraseList_eq_cons h
   simp only [Region.scopeDefs] at hnd ⊢
   have hnd₁ : ((L ++ Block.scopeDefs blocks ++ Region.scopeDefs rs).map (·.1)).Nodup := by
     simpa only [List.append_assoc] using hnd
@@ -341,7 +341,7 @@ theorem Region.defines : ∀ rs : List (Region d),
     (∀ y ∈ Region.scopeDefs rs, decodeTy (tyAttr y.2) = some y.2) →
     Defines defineRegions SRegion.eraseList (Region.treeList rs) (Region.scopeDefs rs)
   | [], _ => defineRegions_nil
-  | ⟨blocks⟩ :: rs, hty =>
+  | ⟨_, blocks⟩ :: rs, hty =>
     defineRegions_cons (Block.defines blocks fun y hy => hty y (by simp [Region.scopeDefs, hy]))
       (Region.defines rs fun y hy => hty y (by simp [Region.scopeDefs, hy]))
 end

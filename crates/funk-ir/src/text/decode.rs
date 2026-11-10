@@ -62,7 +62,7 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
         name: s.name,
         params: Vec::new(),
         results: Vec::new(),
-        body: Region { blocks },
+        body: Region::new(blocks),
     };
     func(f, s.params, s.results, &at, reg)
 }

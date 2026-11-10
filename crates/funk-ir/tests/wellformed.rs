@@ -136,6 +136,7 @@ fn table_is_valid(t: &LocTable) -> bool {
 struct Shapes {
     core_regions: usize,
     toy_regions: usize,
+    kinded_regions: usize,
     nested_regions: usize,
     strings: usize,
     applied: usize,
@@ -167,6 +168,13 @@ fn shapes(dialects: Dialects) -> Shapes {
         has(
             &mut n.toy_regions,
             owners.clone().any(|op| op.name == TOY_OP),
+        );
+        has(
+            &mut n.kinded_regions,
+            owners
+                .clone()
+                .flat_map(|op| &op.regions)
+                .any(|r| r.kind.is_some()),
         );
         let nested = owners
             .flat_map(|op| &op.regions)
@@ -238,6 +246,7 @@ fn the_generator_covers_what_validation_rejects() {
         let toy = dialects == Dialects::CoreAndToy;
         let common = [
             n.core_regions,
+            n.kinded_regions,
             n.nested_regions,
             n.fused_none,
             n.fused_one,

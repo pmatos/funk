@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15334796005753321278")
+:::moduleDocs (fingerprint := "15459920808307799559")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "3535621606043965172")
@@ -60,12 +60,13 @@ The op keeps its results, its operands by name, its successors as written
 and its location reference.
 :::
 
-:::readable Fir.Text.decodeFunc (fingerprint := "14894754879042099330")
+:::readable Fir.Text.decodeFunc (fingerprint := "6346781452528926707")
 *Definition: decoding a function.* A function is decoded from its symbol,
 its parameters, its result types and its blocks: first its result types,
 then the scope, built by the first pass from its parameters and then its
 blocks, then its parameters, and then its blocks by the second pass, in
-that scope. So its errors are found in that order.
+that scope. So its errors are found in that order. Its body is a region of
+the core's kind.
 :::
 
 :::readable Fir.Text.decodeItem Fir.Text.decodeModule (fingerprint := "18332817918151004258")

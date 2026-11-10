@@ -145,6 +145,14 @@ fn a_region_prints_two_spaces_deeper_than_its_op() {
 }
 
 #[test]
+fn a_region_names_its_kind_after_its_brace() {
+    let op = Op::new("br", LocRef(7))
+        .region(Region::new(vec![]).with_kind("toy.graph"))
+        .region(Region::new(vec![]));
+    assert_eq!(print_op(&op, 2), "  br { toy.graph\n  } {\n  } @7\n");
+}
+
+#[test]
 fn symbols_that_are_not_words_are_quoted() {
     let f = Func::new("1").block(
         Block::new("entry")

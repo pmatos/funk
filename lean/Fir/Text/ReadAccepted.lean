@@ -63,7 +63,7 @@ def SOp.Writable : SOp → Prop
 /-- Regions as read can be written. -/
 def SRegion.WritableList : List SRegion → Prop
   | [] => True
-  | ⟨bs⟩ :: rs => SBlock.WritableList bs ∧ SRegion.WritableList rs
+  | ⟨k, bs⟩ :: rs => (∀ w ∈ k, isWord w) ∧ SBlock.WritableList bs ∧ SRegion.WritableList rs
 
 /-- Blocks as read can be written. -/
 def SBlock.WritableList : List SBlock → Prop
@@ -376,5 +376,17 @@ theorem readOpLoc_writable (ts : List Token) :
   · cases h
     exact ⟨hw.locRef, hw.tail⟩
   · exact absurd h fail_ne_ok
+
+/-- A region's kind as read is a word, and leaves tokens that can be
+written. -/
+theorem readKind_writable (ts : List Token) :
+    ReadsWritable readKind (fun k => ∀ w ∈ k, isWord w) ts := by
+  intro hw k r h
+  unfold readKind at h
+  split at h
+  · cases h
+    exact ⟨fun w hw' => by cases hw'; exact hw.word, hw.tail⟩
+  · cases h
+    exact ⟨by simp, hw⟩
 
 end Fir.Text
