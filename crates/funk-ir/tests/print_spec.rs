@@ -180,10 +180,7 @@ fn a_nested_module_prints_its_body_two_spaces_deeper() {
         dialects: vec!["gpu".into()],
         items: vec![Item::Func(k)],
     }));
-    m.items.push(Item::Module(NestedModule {
-        name: "none".into(),
-        ..NestedModule::default()
-    }));
+    m.items.push(Item::Module(NestedModule::new("none")));
     m.locs = LocTable {
         entries: vec![(LocRef(0), Location::Unknown)],
     };

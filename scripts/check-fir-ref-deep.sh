@@ -2,8 +2,8 @@
 # Checks fir-ref at depth (#47). check-fir-ref.sh test calls it with the
 # fir-ref that it builds: scripts/check-fir-ref-deep.sh FIR_REF. On a 256
 # KiB stack, fir-ref fmt and validate give texts nested a million levels
-# deep in attributes, in items and in regions, and a block of a million
-# ops, their verdicts, never an abort.
+# deep in attributes, in functions, in modules and in regions, and a block
+# of a million ops, their verdicts, never an abort.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -27,7 +27,8 @@ trap 'rm -rf "$tmp"' EXIT
 # fir-ref takes no stack per level or per op, so on a 256 KiB stack it
 # gives each text below its verdict, never an abort. The nested texts do
 # not parse: an attribute applied a million levels deep, functions nested
-# in functions, and regions whose innermost op reads an undefined value,
+# in functions, modules nested in modules and followed by an item of an
+# unknown kind, and regions whose innermost op reads an undefined value,
 # since regions that parse cannot be printed at that depth. The block of a
 # million ops, the one that check-fir-ref.sh reprints, is canonical and
 # valid.
@@ -44,6 +45,11 @@ awk -v end="$ending" 'BEGIN {
     for (i = 1; i < 1000000; i++) printf "}\n"
     printf "%s", end
 }' >"$tmp/deep-items.fir"
+awk -v end="$ending" 'BEGIN {
+    for (i = 0; i < 1000000; i++) printf "module @a() {\n"
+    for (i = 0; i < 1000000; i++) printf "}\n"
+    printf "bad @b() {\n%s", end
+}' >"$tmp/deep-modules.fir"
 awk -v end="$ending" 'BEGIN {
     printf "func @f() {\n^e:\n"
     for (i = 0; i < 1000000; i++) printf "br {\n^b:\n"
@@ -96,6 +102,8 @@ attr_error+=" attributes, operand types and result types"
 deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" || status=1
 deep deep-items "functions nested a million levels deep" 2 1 \
     "a func's body holds blocks, not items" || status=1
+deep deep-modules "modules nested a million levels deep" 2000001 1 \
+    "unknown item kind bad: the kinds are func and module" || status=1
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1

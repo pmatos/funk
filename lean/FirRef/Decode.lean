@@ -6,9 +6,11 @@ import FirRef.Decode.Tree
 `decodeFunc` with its two passes replaced by the loops `defineFrames` and
 `decodeFrames`, which take no stack per level of regions and none per block
 or op, and with the copies of `decodeType`, `decodeDef` and `define`
-compiled after `print_eq_printAttr`. `decodeFuncItem`, `decodeItem`,
-`decodeItems` and `decodeModule` are the spec's, calling `decodeFunc`; they
-recurse once per level of nested modules. The theorem
+compiled after `print_eq_printAttr`. `decodeFuncItem` is the
+spec's, calling `decodeFunc`. `decodeLoop` decodes items with an explicit
+stack of frames, so it takes no stack per level of nested modules, and
+`decodeLoop_eq` proves that it computes what the spec's `decodeItems` does,
+errors included. The theorem
 `decodeModule_eq_decodeModule` proves `decodeModule` equal to the spec's,
 and `@[csimp]` makes Lean compile every later call of `Text.decodeModule` as
 a call of `decodeModule`.
@@ -51,54 +53,134 @@ theorem decodeFuncItem_eq : @decodeFuncItem = @Text.decodeFuncItem := by
   simp only [decodeFuncItem, Text.decodeFuncItem, decodeFunc_eq]
   rfl
 
+/-- What is left to decode of items, nested modules included. -/
+inductive DFrame (d : Dialect) where
+  /-- Items: those decoded so far, last first, and those left. -/
+  | items (done : List (Item d)) (todo : List SItem)
+  /-- The nested module with this symbol and dialect set, whose items are
+  those above. -/
+  | module (name : Name) (dialects : List Name)
+
 mutual
-/-- `Text.decodeItem`, with `decodeFuncItem`. It takes stack per level of
-nested modules. -/
-def decodeItem : SItem → Except ParseError (Item d)
-  | ⟨kind, kindPos, name, params, results, attrs, body⟩ =>
-    if kind = "func" then decodeFuncItem kindPos name params results attrs body
-    else if kind = "module" then do
-      moduleHeader params results attrs
-      match body with
-      | .blocks [] => pure (.module name [] [])
-      | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
-      | .items ds is => do pure (.module name ds (← decodeItems is))
+/-- A measure of an item as written that each step of `decodeLoop` lowers. -/
+def sitemWeight : SItem → Nat
+  | ⟨_, _, _, _, _, _, body⟩ => sbodyWeight body + 1
+
+/-- A measure of an item's body. -/
+def sbodyWeight : SBody → Nat
+  | .blocks _ => 0
+  | .items _ is => sitemsWeight is + 1
+
+/-- A measure of items as written. -/
+def sitemsWeight : List SItem → Nat
+  | [] => 0
+  | i :: is => sitemWeight i + sitemsWeight is + 1
+end
+
+/-- A measure of a frame. -/
+def DFrame.weight : DFrame d → Nat
+  | .items _ todo => sitemsWeight todo + 1
+  | .module .. => 1
+
+/-- A measure of a stack of frames. -/
+def dWeight : List (DFrame d) → Nat
+  | [] => 0
+  | f :: fs => f.weight + dWeight fs
+
+/-- `Text.decodeItems`, with an explicit stack of frames: a nested module
+pushes its items, and the frame of the module below them. Every call to
+itself is a tail call, so it takes no stack per level of nested modules. -/
+def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
+  | .items done [] :: [] => .ok done.reverse
+  | .items done [] :: .module name ds :: .items done' todo :: fs =>
+    decodeLoop (.items (.module name ds done.reverse :: done') todo :: fs)
+  | .items done (⟨kind, kindPos, name, params, results, attrs, body⟩ :: sis) :: fs =>
+    if kind = "func" then
+      match decodeFuncItem kindPos name params results attrs body with
+      | .ok i => decodeLoop (.items (i :: done) sis :: fs)
+      | .error e => .error e
+    else if kind = "module" then
+      match moduleHeader params results attrs with
+      | .error e => .error e
+      | .ok () =>
+        match body with
+        | .blocks [] => decodeLoop (.items (.module name [] [] :: done) sis :: fs)
+        | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
+        | .items ds is => decodeLoop (.items [] is :: .module name ds :: .items done sis :: fs)
     else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module")
+  | _ => .ok []
+termination_by fs => dWeight fs
+decreasing_by
+  all_goals
+    simp only [dWeight, DFrame.weight, sitemsWeight, sitemWeight, sbodyWeight]
+    omega
 
-/-- `Text.decodeItems`, with `decodeItem`. -/
-def decodeItems : List SItem → Except ParseError (List (Item d))
-  | [] => pure []
-  | i :: is => do
-    let i ← decodeItem i
-    pure (i :: (← decodeItems is))
-end
+/-- Hands the items `is`, decoded in full, to the frames `fs`, which decode
+on by the spec's decoder. -/
+def dFinish : List (Item d) → List (DFrame d) → Except ParseError (List (Item d))
+  | is, [] => .ok is
+  | is, .module name ds :: .items done todo :: fs => do
+    let more ← Text.decodeItems todo
+    dFinish ((.module name ds is :: done).reverse ++ more) fs
+  | _, _ => .ok []
 
-mutual
-theorem decodeItem_eq : ∀ si : SItem, decodeItem (d := d) si = Text.decodeItem si
-  | ⟨kind, kindPos, name, params, results, attrs, .items ds is⟩ => by
-    rw [decodeItem.eq_def, Text.decodeItem.eq_def]
-    simp only [decodeFuncItem_eq, decodeItems_eq is]
-  | ⟨kind, kindPos, name, params, results, attrs, .blocks bs⟩ => by
-    rw [decodeItem.eq_def, Text.decodeItem.eq_def]
-    simp only [decodeFuncItem_eq]
-    cases bs <;> rfl
+/-- What `decodeLoop` computes from the frames `fs`, by the spec's decoder. -/
+def dRun : List (DFrame d) → Except ParseError (List (Item d))
+  | .items done todo :: fs => do
+    let is ← Text.decodeItems todo
+    dFinish (done.reverse ++ is) fs
+  | _ => .ok []
 
-theorem decodeItems_eq : ∀ sis : List SItem, decodeItems (d := d) sis = Text.decodeItems sis
-  | [] => rfl
-  | si :: sis => by
-    rw [decodeItems.eq_def, Text.decodeItems.eq_def]
-    simp only [decodeItem_eq si, decodeItems_eq sis]
-end
+theorem decodeItems_nil : Text.decodeItems (d := d) [] = .ok [] := rfl
+
+theorem decodeItems_cons (si : SItem) (sis : List SItem) :
+    Text.decodeItems (d := d) (si :: sis) =
+      (do let i ← Text.decodeItem si; let is ← Text.decodeItems sis; pure (i :: is)) := by
+  rw [Text.decodeItems.eq_def]
+
+theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (params : List SDef)
+    (results attrs : List (Attr × TextPos)) (body : SBody) :
+    Text.decodeItem (d := d) ⟨kind, kindPos, name, params, results, attrs, body⟩ =
+      if kind = "func" then Text.decodeFuncItem kindPos name params results attrs body
+      else if kind = "module" then do
+        moduleHeader params results attrs
+        match body with
+        | .blocks [] => pure (.module name [] [])
+        | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
+        | .items ds is => do pure (.module name ds (← Text.decodeItems is))
+      else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module") := by
+  rw [Text.decodeItem.eq_def]
+  rfl
+
+theorem error_bind' {ε α β : Type} (e : ε) (k : α → Except ε β) :
+    (Except.error e >>= k) = Except.error e := rfl
+
+theorem decodeLoop_eq (fs : List (DFrame d)) : decodeLoop fs = dRun fs := by
+  fun_induction decodeLoop fs <;>
+    simp_all [dRun, dFinish, decodeItems_nil, decodeItems_cons, decodeItem_mk, decodeFuncItem_eq,
+      ok_bind, error_bind', errorAt]
+  -- The stacks that `decodeLoop` does not take apart give no items on both sides.
+  rename_i fs h₁ h₂ h₃
+  match fs, h₁, h₂, h₃ with
+  | [], _, _, _ => rfl
+  | .module .. :: _, _, _, _ => rfl
+  | .items _ [] :: [], h, _, _ => exact (h _ rfl).elim
+  | .items _ [] :: .items .. :: _, _, _, _ => rfl
+  | .items _ [] :: .module .. :: [], _, _, _ => rfl
+  | .items _ [] :: .module .. :: .module .. :: _, _, _, _ => rfl
+  | .items _ [] :: .module .. :: .items .. :: _, _, h, _ => exact (h _ _ _ _ _ _ rfl).elim
+  | .items _ (⟨_, _, _, _, _, _, _⟩ :: _) :: _, _, _, h => exact (h _ _ _ _ _ _ _ _ _ _ rfl).elim
 
 /-- A module decoded: `Text.decodeModule`, with no stack per level of
-regions and none per block or op. -/
+regions or of nested modules, and none per block or op. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do
-  pure ⟨m.dialects, ← decodeItems m.items, m.locs⟩
+  pure ⟨m.dialects, ← decodeLoop [.items [] m.items], m.locs⟩
 
 /-- `decodeModule` decodes as the spec's decoder does, errors included, so
 `fir-ref` runs it in place of `Text.decodeModule`. -/
 @[csimp] theorem decodeModule_eq_decodeModule : @Text.decodeModule = @decodeModule := by
   funext d _ m
-  simp only [decodeModule, Text.decodeModule, decodeItems_eq, decodeItems_eq_mapM]
+  simp only [decodeModule, Text.decodeModule, decodeLoop_eq, dRun, dFinish, ← decodeItems_eq_mapM]
+  cases decodeItems (d := d) m.items <;> rfl
 
 end FirRef

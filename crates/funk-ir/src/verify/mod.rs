@@ -122,8 +122,7 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
     for item in &m.items {
         if let Item::Module(n) = item {
             out.push(Diagnostic::module(format!(
-                "the nested module {} is not valid yet: validation checks nested modules from \
-                 the second stage of #211",
+                "the nested module {} is not valid yet",
                 print_symbol(&n.name)
             )));
         }

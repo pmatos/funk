@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9245121854493153049")
+:::moduleDocs (fingerprint := "16548835796344265610")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
@@ -77,13 +77,14 @@ about the check of a function apply to every function of $`M`, checked
 with the lookup of $`M`.
 :::
 
-:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "14599891662778690950")
+:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "11479613087675994705")
 *Definition: the check of a module.* The check of the module $`M`,
 $`\mathrm{problems}(M)`, builds the lookup of $`M` once, and gives, in this
 order:
 
 * "the symbol `@s` names more than one item", placed at $`s`, for each
-  symbol that repeats one before it;
+  symbol of a function of $`M` that repeats the symbol of a function before
+  it;
 * "the nested module `@s` is not valid yet", for each item of $`M` that is
   a nested module, in order;
 * the problems of the location table;

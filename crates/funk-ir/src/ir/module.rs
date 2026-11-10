@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 use super::attr::{Attr, Type};
 use super::location::{LocRef, LocTable};
+use super::nested::NestedModule;
 
 /// A definition of a value: its name, without `%`, and its type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -144,19 +145,6 @@ pub enum Item {
     Func(Func),
     /// A nested module: a symbol table of its own, with its own dialect set.
     Module(NestedModule),
-}
-
-/// A module nested in another, as an item of kind `module`
-/// (ADR-2026-11-10-1510). Its symbols and its dialect set are its own, not
-/// its parent's, and the module's one location table serves its ops too.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct NestedModule {
-    /// The module's symbol, without `@`. Any string.
-    pub name: String,
-    /// The module's own dialect set, in the order the text writes it.
-    pub dialects: Vec<String>,
-    /// The module's items, in order.
-    pub items: Vec<Item>,
 }
 
 impl Item {

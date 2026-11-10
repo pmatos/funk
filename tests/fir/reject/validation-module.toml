@@ -4,7 +4,7 @@
 
 [[reject]]
 verdict = "validation-error"
-rule = "a nested module's function has blocks: @g has none"
+rule = "a nested module is not valid yet: validation checks nested modules from stage 2 of #211"
 text = '''
 module @m() {
   func @g() {

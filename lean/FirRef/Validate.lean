@@ -128,8 +128,7 @@ def moduleProblems (m : Module d) : List Problem :=
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   m.items.filterMap (fun i => if i.func?.isSome then none else
-    some { message := "the nested module " ++ Text.printSymbol i.name ++
-      " is not valid yet: validation checks nested modules from the second stage of #211" }) ++
+    some { message := "the nested module " ++ Text.printSymbol i.name ++ " is not valid yet" }) ++
   m.locs.problems ++
   m.funcs.flatMap (·.problems lk) ++
   m.dialects.filterMap (fun x => if isWord x then none else

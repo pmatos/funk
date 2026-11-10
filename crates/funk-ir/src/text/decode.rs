@@ -16,6 +16,7 @@ use std::collections::HashMap;
 
 use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
+use crate::ir::tree::Nest;
 use crate::ir::{Def, Func, Item, Module, NestedModule, Op, Part, Region, Type};
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
@@ -35,9 +36,38 @@ pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
     })
 }
 
-/// Decodes items in order, each at any depth.
+/// Decodes items in order, each at any depth. Modules nest to any depth
+/// (ADR-2026-10-30-1333), so the lists of items that enclose the one being
+/// decoded wait on a stack, and a nested module's items are built in a
+/// [`Nest`]: each item is decoded whole before the next, depth first, as the
+/// spec's decoder does.
 fn items(s: Vec<SItem>, reg: &Registry) -> Result<Vec<Item>, ParseError> {
-    s.into_iter().map(|i| item(i, reg)).collect()
+    let mut built = Nest::new(s.len());
+    let mut todo = vec![s.into_iter()];
+    while let Some(rest) = todo.last_mut() {
+        match rest.next() {
+            Some(i) => match item(i, reg)? {
+                Decoded::Item(i) => built.push(i),
+                Decoded::Module(m, body) => {
+                    built.push(Item::Module(m));
+                    built.open(body.len());
+                    todo.push(body.into_iter());
+                }
+            },
+            None => {
+                todo.pop();
+                built.close_module();
+            }
+        }
+    }
+    Ok(built.finish())
+}
+
+/// An item decoded but for the items of a nested module, which the caller
+/// decodes.
+enum Decoded {
+    Item(Item),
+    Module(NestedModule, Vec<SItem>),
 }
 
 /// A `func` has no attributes and blocks in its body. A `module` has no
@@ -45,9 +75,9 @@ fn items(s: Vec<SItem>, reg: &Registry) -> Result<Vec<Item>, ParseError> {
 /// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
 /// function with no blocks or a module with no items. Every other item is
 /// of a kind the parser does not know.
-fn item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
     match s.kind.as_str() {
-        "func" => func_item(s, reg),
+        "func" => func_item(s, reg).map(Decoded::Item),
         "module" => {
             if let Some((_, at)) = s.params.first() {
                 return err(at.name, "a module has no parameters");
@@ -65,11 +95,12 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
                 }
                 SBody::Items(dialects, body) => (std::mem::take(dialects), std::mem::take(body)),
             };
-            Ok(Item::Module(NestedModule {
+            let m = NestedModule {
                 name: s.name,
                 dialects,
-                items: items(body, reg)?,
-            }))
+                items: Vec::new(),
+            };
+            Ok(Decoded::Module(m, body))
         }
         _ => err(
             s.kind_pos,

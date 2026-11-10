@@ -9,7 +9,9 @@ use std::collections::HashSet;
 
 use funk_ir::generate::Rng;
 use funk_ir::generate::wellformed::{self, Dialects, TOY_OP, WELL_FORMED_MODULES};
-use funk_ir::{Attr, Block, Func, LocTable, Location, Module, Op, Registry, parse, print, verify};
+use funk_ir::{
+    Attr, Block, Func, Item, LocTable, Location, Module, Op, Registry, parse, print, verify,
+};
 
 /// The core dialect and the toy dialect of the generator.
 fn registry() -> Registry {
@@ -148,6 +150,8 @@ struct Shapes {
     undefined_callees: usize,
     broken_tables: usize,
     missing_locs: usize,
+    nested_modules: usize,
+    modules_in_modules: usize,
     rejected: usize,
 }
 
@@ -222,6 +226,17 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.missing_locs,
             all.iter().any(|op| !keys.contains(&op.loc.0)),
         );
+        let modules = || {
+            m.items.iter().filter_map(|i| match i {
+                Item::Module(n) => Some(n),
+                _ => None,
+            })
+        };
+        has(&mut n.nested_modules, modules().next().is_some());
+        has(
+            &mut n.modules_in_modules,
+            modules().any(|n| n.items.iter().any(|i| matches!(i, Item::Module(_)))),
+        );
         has(&mut n.rejected, !verify(&m, &reg).is_empty());
     }
     n
@@ -247,7 +262,9 @@ fn the_generator_covers_what_validation_rejects() {
             n.undefined_callees,
             n.broken_tables,
             n.missing_locs,
+            n.nested_modules,
         ];
+        assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");
         let toy_only = [n.toy_regions, n.strings, n.applied, n.applied_to_none];
         if toy {

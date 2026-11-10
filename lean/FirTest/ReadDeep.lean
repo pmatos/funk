@@ -12,9 +12,10 @@ The spec's readers take stack per level of nesting. Here, in the
 elaborator, they overflow the stack on attributes or items nested 800,000
 levels deep and on regions nested 400,000 deep, and the build fails. The
 first checks read deeper texts, one for each loop of the readers:
-attributes and items nested 1,000,000 levels deep, through `Fir.parse`,
-with the decoder's verdict on each, and regions nested 600,000 deep, with
-`readText` alone. They pass only because the readers that `fir-ref` runs
+attributes, functions and modules nested 1,000,000 levels deep, through
+`Fir.parse`, with the decoder's verdict on each, and regions nested 600,000
+deep, with `readText` alone. The modules also need the decoder's loop,
+which takes no stack per level of nested modules. They pass only because the readers that `fir-ref` runs
 take no stack per level; through `Fir.parse`, they also need
 `parse_eq_parse`.
 
@@ -43,6 +44,12 @@ def deepRegionsText (n : Nat) : String :=
 /-- `n` functions, each in the body of the one before. -/
 def deepItemsText (n : Nat) : String :=
   String.join (List.replicate n "func @a() {\n") ++ String.join (List.replicate n "}\n") ++ locsText
+
+/-- `n` modules, each in the body of the one before, then an item of a
+kind that no dialect registers. -/
+def deepModulesText (n : Nat) : String :=
+  String.join (List.replicate n "module @a() {\n") ++ String.join (List.replicate n "}\n") ++
+    "bad @b() {\n}\n" ++ locsText
 
 /-- An op whose attribute is applied `n` levels deep. -/
 def deepAttrText (n : Nat) : String :=
@@ -96,6 +103,10 @@ def lexError (text : String) : Option (Nat × Nat × String) :=
     "operand types and result types")
 -- `itemsLoop`: the readers read the items whole, and the decoder rejects the first.
 #guard parseError (deepItemsText 1000000) = some (2, 1, "a func's body holds blocks, not items")
+-- `itemsLoop` and `decodeLoop`: the readers read the modules whole, and the
+-- decoder decodes them whole before it rejects the item after them.
+#guard parseError (deepModulesText 1000000) = some (2000001, 1,
+  "unknown item kind bad: the kinds are func and module")
 -- `blocksLoop`: the readers read the regions whole.
 #guard readTextError (deepRegionsText 600000) = none
 
@@ -127,7 +138,8 @@ def badTexts : List String :=
     "func @f() {\n// é\n}", branchText "%c", branchText "^b(", branchText "^b(%c,"]
 
 #guard badTexts.all fun t => readTextError t = specReadError t && (readTextError t).isSome
-#guard [deepRegionsText 3, deepItemsText 3, deepAttrText 3, flatOpsText 3, branchText "^b"].all fun t =>
+#guard [deepRegionsText 3, deepItemsText 3, deepModulesText 3, deepAttrText 3, flatOpsText 3,
+    branchText "^b"].all fun t =>
   readTextError t = specReadError t && (readTextError t).isNone
 
 /--

@@ -99,12 +99,6 @@ fn an_item_of_an_unknown_kind_is_rejected() {
         3,
         "blocks, not items",
     );
-    rejected_at(
-        &one_func("func @f() {\n  dialects toy\n}\n"),
-        1,
-        1,
-        "not a dialect set",
-    );
 }
 
 /// The texts of `lean/FirTest/Parse.lean`'s nested modules
@@ -130,6 +124,16 @@ fn nested_modules_round_trip() {
     for (text, printed) in cases {
         assert_eq!(print(&parse_ok(&one_func(text))), one_func(printed));
     }
+}
+
+#[test]
+fn a_func_whose_body_holds_a_dialect_set_is_rejected() {
+    rejected_at(
+        &one_func("func @f() {\n  dialects toy\n}\n"),
+        1,
+        1,
+        "not a dialect set",
+    );
 }
 
 #[test]

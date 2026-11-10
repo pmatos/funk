@@ -1,10 +1,11 @@
 import Fir.Validation.CheckFuncs
 
 /-!
-The check of a module follows the rule of a valid module: its symbols, that
-each item is a function, its location table, each function, in the context
-of the module, then its dialect set. It builds the module's symbol table and the set of its location references once, as
-hash tables, and every function looks them up.
+The check of a module follows the rule of a valid module: the symbols of
+its functions, that each item is a function, its location table, each
+function, in the context of the module, then its dialect set. It builds the
+module's symbol table and the set of its location references once, as hash
+tables, and every function looks them up.
 
 # The location table
 
@@ -101,8 +102,7 @@ def Module.problems (m : Module d) : List Problem :=
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   m.items.filterMap (fun i => if i.func?.isSome then none else
-    some { message := "the nested module " ++ Text.printSymbol i.name ++
-      " is not valid yet: validation checks nested modules from the second stage of #211" }) ++
+    some { message := "the nested module " ++ Text.printSymbol i.name ++ " is not valid yet" }) ++
   m.locs.problems ++
   m.funcs.flatMap (·.problems lk) ++
   m.dialects.filterMap (fun x => if isWord x then none else
