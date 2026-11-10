@@ -111,18 +111,73 @@ def threeText : String :=
 -- The toy op keeps its own rule in the sum of three: a mask of 9 bits at
 -- `i8` breaks it.
 #guard match parseThree (threeText.replace "toy.mask 3" "toy.mask 9") with
-  | .ok m => m.problems.any (fun p => p.op == some 0 &&
+  | .ok m => m.problems.any (fun p => p.func == some "f" && p.op == some 0 &&
       p.message == "the op breaks its dialect's own rule")
   | .error _ => false
 -- A function that returns a bit holds no valid core or toy op, since
--- neither can write its result types; the bit dialect's op is valid.
+-- neither can write its result types: the toy op and the core `ret` break
+-- their dialects' rules, and the bit dialect's op is valid.
 #guard match parseThree ("func @h(%a: i8) -> bit.bit {\n^entry:\n" ++
     "  %m: i8 = toy.mask 3 %a @0\n  %b: bit.bit = bit.low %m @0\n  ret @0\n}\n\n" ++
     "locs {\n  @0 = unknown\n}\n") with
   | .ok m =>
-    m.problems.any (fun p => p.op == some 0 && p.message == "the op breaks its dialect's own rule") &&
-      !m.problems.any (·.op == some 1)
+    let broken (i : Nat) := m.problems.any fun p =>
+      p.func == some "h" && p.op == some i && p.message == "the op breaks its dialect's own rule"
+    broken 0 && broken 2 && !m.problems.any (·.op == some 1)
   | .error _ => false
+
+/-! # Running a lifted op
+
+The bit dialect's op runs in the sum by its own rule, on values that cross
+the inclusion of the core's types. -/
+
+/-- `bit.low` at `i8` takes the low bit of 5 in the sum of three. -/
+example : DialectDenote.denote (m := SetM) (d := CoreToyBit) (.inr (.low 8)) (.cons (.value 5) .nil)
+    (.ok (.cons (.value true) .nil)) :=
+  .inl ⟨_, rfl, rfl⟩
+
+/-- `bit.int` gives a poison bit back as poison. -/
+example : DialectDenote.denote (m := SetM) (d := CoreToyBit) (.inr .int) (.cons .poison .nil)
+    (.ok (.cons .poison .nil)) :=
+  .inl ⟨_, rfl, rfl⟩
+
+/-! # Other inclusions
+
+The core is included in the sum of three by `inl` twice, and the types of
+an extension over the core and the bit dialect in those of the same
+extension over the sum of three by `over`. Instance search finds a lift by
+either. -/
+
+/-- The core's types, included in those of the sum of three. -/
+abbrev coreInThree : TyIncl CoreDialect.Ty CoreToyBit.Ty := coreInToy.comp TyIncl.inl
+
+#guard coreInThree.incl (.int 8) == .inl (.inl (.int 8))
+#guard coreInThree.proj (.inl (.inl (.int 8))) == some (.int 8)
+#guard coreInThree.proj (.inr .bit) == none
+
+-- The bit dialect, lifted into the sum of three by `coreInThree`, reads
+-- its op at the core's types there.
+#guard decodeOp (d := CoreToyBit.over (BitExt.lift CoreDialect coreInThree)) "bit.low" []
+  [.inl (.inl (.inl (.int 8)))] [.inr .bit] == some (.low 8)
+
+/-- The types of the sum of the core and the bit dialect, included in those
+of the sum of three. -/
+abbrev coreBitInThree : TyIncl (CoreDialect ⊞ BitExt).Ty CoreToyBit.Ty := coreInToy.over
+
+#guard coreBitInThree.incl (.inr .bit) == .inr .bit
+#guard coreBitInThree.proj (.inl (.inl (.int 8))) == some (.inl (.int 8))
+
+section
+variable (e : Dialect) [TyDenote e.Ty] [DialectName e]
+  [DialectSignature ((CoreDialect ⊞ BitExt).over e)] [DialectText ((CoreDialect ⊞ BitExt).over e)]
+  [DialectValidation ((CoreDialect ⊞ BitExt).over e)]
+
+example : DialectText (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree) := inferInstance
+
+example : DialectValidation (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree) :=
+  inferInstance
+
+end
 
 /-! # The theorems' axioms -/
 

@@ -62,10 +62,12 @@ and `e`'s semantics on values moved across the inclusion. A lifted op sees
 only the symbols whose types `e` can write, and is valid only where it can
 write the function's result types (ADR-2026-11-10-1310).
 
-The lift of a lawful extension is lawful, for its text and for poison, when
-the inclusion is lawful and `e`'s name is new to the larger base. So two
-extensions of the core, written apart, combine in one lawful sum
-(ADR-2026-11-10-1310).
+The sum of a larger base and the lift has lawful text when the base's text
+and set are lawful, `e`'s name is new to the base, and the set of what `e`
+depends on is in the base's set. The lift is lawful for poison when the base
+and `e` are, the inclusion is lawful, and `e` accepts each type it depends on
+whose inclusion the base accepts. So two extensions of the core, written
+apart, combine in one lawful sum (ADR-2026-11-10-1310).
 
 ## Limits
 

@@ -47,7 +47,7 @@ extension into such a sum.
   the first test dialect with a name other than `toy`, since two dialects
   of one name cannot share a sum.
 
-This refines ADR-2026-11-09-2306.
+This refines ADR-2026-11-09-2306 and ADR-2026-11-09-2353.
 
 ## Alternatives
 
@@ -66,5 +66,9 @@ This refines ADR-2026-11-09-2306.
 - The limits of ADR-2026-11-09-2306 and ADR-2026-11-09-2353 stay: core ops
   carry core types only, and an op that cannot write a function's result
   types is invalid in it.
+- A lifted op sees less than the same extension written over the whole
+  larger base would: in a function that returns a type of a dialect `e`
+  does not depend on, no op of `e` is valid. Relaxing this is relaxing
+  ADR-2026-11-09-2353, for base ops and lifted ops together.
 - A module does not yet declare its dialect set in the text. Stage 4 of #227
   adds the declaration and the check on both sides.
