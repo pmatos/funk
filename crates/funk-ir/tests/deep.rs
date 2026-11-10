@@ -8,6 +8,7 @@ use std::fmt::{self, Debug, Write};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Mutex;
 
+use funk_ir::dialects::core;
 use funk_ir::{
     Attr, Block, Dialect, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
 };
@@ -44,7 +45,7 @@ impl OpSpec for ToyNest {
 
 fn registry() -> Registry {
     let mut reg = Registry::core();
-    reg.register(Dialect::new("toy").depends_on("core").op(ToyNest))
+    reg.register(Dialect::new("toy").depends_on(core::NAME).op(ToyNest))
         .expect("the toy dialect registers");
     reg
 }

@@ -63,7 +63,8 @@ pub struct OpContext<'a> {
 
 /// One op of a dialect. An op family's file implements it once per op.
 pub trait OpSpec: Send + Sync {
-    /// The op's name, such as `add`. It must be a word.
+    /// The op's name, such as `add` or `toy.br`: a bare word for the core,
+    /// and the dialect's name, a `.` and a word for any other dialect.
     fn name(&self) -> &str;
 
     /// Decodes the op instance used at `op`: its shape, or why no instance
@@ -90,7 +91,9 @@ pub enum TypeCheck {
     Malformed(String),
 }
 
-/// The types of a dialect. Two dialects must not claim the same type.
+/// The types of a dialect. The registry asks it only about types whose head
+/// word names its dialect: `name.word` for a dialect `name`, and a bare word
+/// for the core. So a spec of `toy` that claims `f32` is never asked.
 pub trait TypeSpec: Send + Sync {
     /// What the dialect says about `ty`, or `None` if `ty` is not one of its
     /// types.
@@ -146,8 +149,12 @@ impl Dialect {
     }
 
     /// Adds a dialect that this one depends on.
+    /// A dependency named twice is kept once.
     pub fn depends_on(mut self, dialect: impl Into<String>) -> Dialect {
-        self.deps.push(dialect.into());
+        let dialect = dialect.into();
+        if !self.deps.contains(&dialect) {
+            self.deps.push(dialect);
+        }
         self
     }
 
@@ -229,6 +236,18 @@ impl fmt::Display for RegistryError {
 
 impl std::error::Error for RegistryError {}
 
+/// Whether `op` is written under `prefix`: a bare word for the core, whose
+/// prefix is `None`, and the prefix, a `.` and a word for any other dialect.
+fn written_under(op: &str, prefix: Option<&str>) -> bool {
+    match prefix {
+        None => word_dialect(op).is_none(),
+        Some(p) => op
+            .strip_prefix(p)
+            .and_then(|rest| rest.strip_prefix('.'))
+            .is_some_and(is_word),
+    }
+}
+
 /// A registered dialect: its name, its dependencies and its types.
 struct Registered {
     name: String,
@@ -300,7 +319,7 @@ impl Registry {
             if !is_word(op_name) {
                 return Err(RegistryError::OpNameNotAWord(op_name.to_string()));
             }
-            if word_dialect(op_name) != prefix {
+            if !written_under(op_name, prefix) {
                 return Err(RegistryError::OpOutsideDialect {
                     dialect: dialect.name.clone(),
                     op: op_name.to_string(),

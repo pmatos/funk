@@ -56,7 +56,7 @@ fn registration_rejects_names_that_collide_or_cannot_be_written() {
 #[test]
 fn a_dialect_writes_its_ops_under_its_own_name() {
     let mut r = Registry::core();
-    for op in ["fine.a", "toyx.a", "to.a"] {
+    for op in ["fine.a", "toyx.a", "to.a", "toy.", "toy.1", "toy..a"] {
         assert_eq!(
             r.register(toy().op(Named(op))),
             Err(RegistryError::OpOutsideDialect {
@@ -112,8 +112,13 @@ fn a_dependency_must_be_registered_first() {
     assert_eq!(r.dependencies("toy"), Some(&["core".to_string()][..]));
     assert_eq!(r.dependencies("core"), Some(&[][..]));
     assert_eq!(r.dependencies("gpu"), None);
-    let gpu = Dialect::new("gpu").depends_on("toy").depends_on("core");
+    let gpu = Dialect::new("gpu")
+        .depends_on("toy")
+        .depends_on("core")
+        .depends_on("toy");
     assert_eq!(r.register(gpu), Ok(()));
+    let deps = ["toy".to_string(), "core".to_string()];
+    assert_eq!(r.dependencies("gpu"), Some(&deps[..]));
     assert_eq!(
         r.register(Dialect::new("self").depends_on("self")),
         Err(RegistryError::MissingDependency {
