@@ -1,4 +1,4 @@
-# A module names its dialect set on its first line, and the validators reject a word of a dialect outside it
+# A module names its dialect set on a first line that starts with the word dialects
 
 Status: accepted
 Tier: direction; area: text-format
@@ -62,3 +62,5 @@ funk-ir's registry knows its dialects by name (ADR-2026-11-10-0042).
 - A kind of item is not yet a word of a dialect: every item is a core
   `func`. When dialects register kinds of item, their kind words join the
   rule.
+- ADR-2026-11-09-2306 is refined: a module now declares its dialect set in
+  the text, and both validators check its words against it.
