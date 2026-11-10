@@ -20,6 +20,11 @@ namespace Core
 /-- The core dialect's set is empty: its words are bare. -/
 instance instDialectSet : DialectSet CoreDialect := ⟨[]⟩
 
+/-- Every dialect's name is new to the core, whose set is empty: any
+dialect can be added to the core. -/
+theorem name_new (e : Dialect) [DialectName e] : name e ∉ names CoreDialect :=
+  List.not_mem_nil
+
 /-- The name of a core op names no dialect. -/
 theorem opName_bare (o : Op) : wordDialect (opName (d := CoreDialect) o) = none := by
   apply wordDialect_eq_none

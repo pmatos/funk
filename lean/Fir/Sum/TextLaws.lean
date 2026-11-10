@@ -259,23 +259,27 @@ instance lawfulSet [DialectSet base] [LawfulDialectSet base] [LawfulDialectName 
 
 variable [DialectSet base] [LawfulDialectSet base] [LawfulDialectName base e]
 
+/-- The sum's text is lawful when `e`'s name is new to its base. -/
+theorem lawful_of_names (hn : name e ∉ names base) : LawfulDialectText (base ⊞ e) :=
+  lawful (routes_of_names hn)
+
 /-- Every valid module of a sum is well formed, when `e`'s name is new to
 its base. -/
 theorem validIsWellFormed (hn : name e ∉ names base) : ValidIsWellFormed (d := base ⊞ e) :=
-  have := lawful (routes_of_names hn)
+  have := lawful_of_names hn
   Fir.validIsWellFormed
 
 /-- `parse(print(m)) == m` for every well-formed module of a sum, when
 `e`'s name is new to its base. -/
 theorem printThenParse (hn : name e ∉ names base) : PrintThenParse (d := base ⊞ e) Fir.parse :=
-  have := lawful (routes_of_names hn)
+  have := lawful_of_names hn
   Fir.printThenParse
 
 /-- Every module of a sum that the parser gives is well formed, when `e`'s
 name is new to its base. -/
 theorem parse_wellFormed (hn : name e ∉ names base) {t : String} {m : Module (base ⊞ e)}
     (h : Fir.parse t = .ok m) : m.WellFormed :=
-  have := lawful (routes_of_names hn)
+  have := lawful_of_names hn
   Fir.parse_wellFormed h
 
 end Dialect.sum

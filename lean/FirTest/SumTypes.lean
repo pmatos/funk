@@ -182,9 +182,9 @@ instance : LawfulDialectName CoreDialect FlagExt where
 end Flag
 
 /-- The flag dialect's name is new to the core. -/
-theorem flag_new : name FlagExt ∉ names CoreDialect := by simp [names, name]
+theorem flag_new : name FlagExt ∉ names CoreDialect := Core.name_new _
 
-instance : LawfulDialectText CoreFlag := Dialect.sum.lawful (Dialect.sum.routes_of_names flag_new)
+instance : LawfulDialectText CoreFlag := Dialect.sum.lawful_of_names flag_new
 
 /-- Every valid module of the sum is well formed. -/
 theorem coreFlag_validIsWellFormed : ValidIsWellFormed (d := CoreFlag) :=

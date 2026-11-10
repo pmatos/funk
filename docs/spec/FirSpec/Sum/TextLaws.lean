@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The text of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15864023163966001912")
+:::moduleDocs (fingerprint := "1403910908817431511")
 :::
 
 :::readable Fir.Dialect.sum.mapM_getLeft_map Fir.Dialect.sum.eq_map_of_mapM_getLeft (fingerprint := "10425250833271113799")
@@ -78,10 +78,10 @@ in the sum, has lawful text at every step. The second is an instance, so a
 nested sum finds the law for each level by itself.
 :::
 
-:::readable Fir.Dialect.sum.validIsWellFormed Fir.Dialect.sum.printThenParse Fir.Dialect.sum.parse_wellFormed (fingerprint := "2103531098174621293")
+:::readable Fir.Dialect.sum.lawful_of_names Fir.Dialect.sum.validIsWellFormed Fir.Dialect.sum.printThenParse Fir.Dialect.sum.parse_wellFormed (fingerprint := "16980967360285776458")
 *Theorems: the round trip over sums.* Let the base's words stay in its set,
 $`e` write its words under its name, and $`n_e \notin \mathrm{names}(b)`.
-Then for $`b \boxplus e`:
+Then $`b \boxplus e` has lawful text, and:
 
 * every valid module is
   {ref "The-fir-specification--Text-format--Round-trips"}[well formed];
