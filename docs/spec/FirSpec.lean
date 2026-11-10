@@ -61,6 +61,9 @@ The chapters follow the WebAssembly specification:
   exhaustive, scripted and sampled modes that `fir-ref run` walks, and
   the proofs about runs: fuel monotonicity, progress, no stuck path, and
   refinement through calls.
+* _Memory_ gives fir's model of memory: allocations as logical blocks of
+  abstract units, pointers with provenance, and the accesses that load,
+  store, allocate and free, with the laws they obey.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, the round-trip properties, and the
   parser, with the proofs that parsing a printed well-formed module gives
@@ -246,6 +249,16 @@ functions, blocks and ops.
 {includeReadable "." Fir.Core.Lawful "The core dialect's poison obligations" FirSpec.Core.Lawful (level := 2)}
 
 {includeReadable "." Fir.Core.EffectLaws "The core dialect's effect obligations" FirSpec.Core.EffectLaws (level := 2)}
+
+# Memory
+
+Memory is logical blocks in typed memories (ADR-2026-11-09-1542). This
+chapter gives one memory of that model, written once for a unit of any
+width, so that every memory of every dialect is an instance of it.
+
+{includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
+
+{includeReadable "." Fir.Memory.Laws "Memory laws" FirSpec.Memory.Laws (level := 2)}
 
 # Text format
 

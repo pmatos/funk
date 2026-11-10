@@ -46,6 +46,7 @@ import FirTest.Lawful
 import FirTest.LawfulRefine
 import FirTest.Effects
 import FirTest.EffectCases
+import FirTest.Memory
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
