@@ -21,10 +21,11 @@ The text format is the interface between Lean and Rust. Rust prints a module.
 Lean parses and reprints it. The bytes must match (ADR-2026-10-29-2014).
 
 Every op of every dialect uses one grammar, so a new dialect needs no parser
-change (ADR-2026-10-29-2014). In M0, a new kind of item is a new `Item`
+change (ADR-2026-10-29-2014). Today a new kind of item is a new `Item`
 constructor and a parser change (ADR-2026-11-03-0600). The M1 design registers
 kinds of item through the one grammar, so a new kind needs no parser change
-(ADR-2026-11-09-1543).
+(ADR-2026-11-09-1543). The kinds today are `func` and `module`
+(ADR-2026-11-10-1510).
 
 ## The dialect set
 
@@ -40,6 +41,30 @@ dialect that the reader holds, other than the core, and every word of the
 module must name the core or a dialect of its set: op names, attribute
 words and type words, at any depth. Both validators check this beside
 `Module.Valid`, as `Module.InDialectSet` (ADR-2026-11-10-1306).
+
+## Nested modules
+
+A `module` item is a module nested in another: `module @dev() { ... }`, with
+the parentheses that every item writes and no parameters, results or
+attributes. Its body is a module's text without the location table: an
+optional dialect set, `dialects gpu` and an empty line, then its items, each
+followed by an empty line. An empty body, `{ }`, is a module with no dialect
+and no items. A `module` with a header or with blocks does not decode, and
+neither does a `func` whose body holds a dialect set or items
+(ADR-2026-11-10-1510).
+
+The body is printed two spaces deeper than the `module` line, and its `}` at
+that line's indentation. An empty line has no spaces. A function at
+indentation `n` writes its header, labels and `}` at `n` and its ops at
+`n + 2`, so a top-level module prints as in M0. One location table, at the
+end of the text, serves every item at any depth (ADR-2026-11-10-1510).
+
+A nested module is a symbol table of its own, and its dialect set is its own:
+one that names no dialect uses the core alone, whatever its parent names. An
+op refers by symbol only to an item of its own table. `Module.funcs` is the
+functions of the top-level table (ADR-2026-11-10-1510). Validation rejects
+every nested module until #211's second stage gives it the rule of its own
+table.
 
 ## One format
 

@@ -92,8 +92,8 @@ theorem regionFn_wellFormed : regionFn.WellFormed where
 /-- The module of `@f` is well formed. -/
 theorem regionModule_wellFormed : regionModule.WellFormed where
   dialects := by simp [regionModule]
-  funcs f hf := by
-    simp only [regionModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [regionModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     exact regionFn_wellFormed
@@ -140,8 +140,8 @@ def emptyModule : Module CoreDialect := ⟨[], [.func emptyFn], [(0, .unknown)]�
 /-- The module of `@e` is well formed. -/
 theorem emptyModule_wellFormed : emptyModule.WellFormed where
   dialects := by simp [emptyModule]
-  funcs f hf := by
-    simp only [emptyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [emptyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -162,8 +162,8 @@ theorem emptyModule_parse_print : Fir.parse emptyModule.print = .ok emptyModule 
 levels deep. -/
 theorem nested_wellFormed : (nested 3).WellFormed where
   dialects := by simp [nested]
-  funcs f hf := by
-    simp only [nested, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [nested, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -179,8 +179,8 @@ callsite, derived, name and range locations, whose references, lines and
 columns go up to `2^32 - 1`. -/
 theorem tricky_wellFormed : tricky.WellFormed where
   dialects := by simp [tricky]
-  funcs f hf := by
-    simp only [tricky, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [tricky, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl <;> func_wellFormed
   locs := by unfold LocTable.InLimits; decide +kernel
@@ -215,8 +215,8 @@ def toyModule : Module ToyDialect := ⟨[], [.func toyFn], [(0, .unknown)]⟩
 /-- The module of `@m` is well formed. -/
 theorem toyModule_wellFormed : toyModule.WellFormed where
   dialects := by simp [toyModule]
-  funcs f hf := by
-    simp only [toyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [toyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -267,8 +267,8 @@ theorem mixedFn_wellFormed : mixedFn.WellFormed where
 /-- The mixed module is well formed. -/
 theorem mixedModule_wellFormed : mixedModule.WellFormed where
   dialects := by simp only [mixedModule, List.mem_singleton, forall_eq]; decide
-  funcs f hf := by
-    simp only [mixedModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [mixedModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     exact mixedFn_wellFormed

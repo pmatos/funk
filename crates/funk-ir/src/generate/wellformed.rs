@@ -87,7 +87,7 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     let symbols: Vec<String> = m.funcs().map(|f| f.name.clone()).collect();
     let keys: Vec<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
     for item in &mut m.items {
-        let Item::Func(f) = item;
+        let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
     }

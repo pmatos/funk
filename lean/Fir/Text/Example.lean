@@ -153,14 +153,26 @@ whose symbol is not a word prints as `func @"1"() {`, and a call to it as
 `call @"a b" @0`. The attribute `h` applied to nothing prints as `h()`, not
 `h`. Every printed text ends with a line feed, even that of a module with
 no items, which prints as `locs {` and `}` on two lines.
+
+A nested module prints its body two spaces deeper than its `module` line:
+its dialect set and its items, each followed by an empty line, with no
+spaces on an empty line. Its functions keep their own layout, at their
+depth. A nested module with an empty body prints as `{` and `}` on two
+lines (ADR-2026-11-10-1510).
 -/
 
 #guard Operation.print 2 { op [] .br [] 7 with regions := [⟨[⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
   "  br {\n    ^inner:\n      ret @0\n  } @7\n"
 
-#guard Func.print (d := CoreDialect)
+#guard Func.print (d := CoreDialect) 0
     ⟨"1", [], [], ⟨[⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
   "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
+
+#guard (Module.print (d := CoreDialect) ⟨[], [.module "dev" ["gpu"]
+    [.func ⟨"k", [], [], ⟨[⟨"entry", [], [op [] (.ret []) [] 0]⟩]⟩⟩], .module "none" [] []],
+    [(0, .unknown)]⟩) ==
+  "module @dev() {\n  dialects gpu\n\n  func @k() {\n  ^entry:\n    ret @0\n  }\n\n}\n\n" ++
+    "module @none() {\n}\n\nlocs {\n  @0 = unknown\n}\n"
 
 #guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"
 

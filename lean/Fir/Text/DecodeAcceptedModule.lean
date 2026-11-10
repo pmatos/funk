@@ -11,8 +11,9 @@ second pass accepts, and each decoded function is well formed. Its result
 types decode as types do, from attributes written as types.
 
 An item decodes only as a `func` with no attributes, whose body holds
-blocks or holds nothing, and decoding a module keeps the location table as
-it was read. So a module decoded from a tree that can be written is well
+blocks or holds nothing, or as a `module` with no parameters, results or
+attributes, whose body holds a dialect set and items, decoded in turn, or
+holds nothing. Decoding a module keeps the location table as it was read. So a module decoded from a tree that can be written is well
 formed: the decoding step.
 -/
 
@@ -85,41 +86,75 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
     rw [← k.operands]
     exact List.map_congr_left fun x _ => (hsc x).symm
 
-/-- An item decoded from a tree that can be written is a well-formed
-function. -/
-theorem decodeItem_wellFormed {si : SItem} {f : Func d} (h : decodeItem si = .ok (.func f))
-    (hw : si.Writable) : f.WellFormed := by
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
-  obtain ⟨hp, hr, hb⟩ := hw
-  by_cases hk : kind = "func"
-  · simp only [decodeItem, ne_eq, hk, not_true_eq_false, ↓reduceIte] at h
-    split at h
-    · cases h
-    · cases h
-    · bind_step h with ⟨f', e, h⟩
-      cases h
-      exact decodeFunc_wellFormed e hp hr trivial
-    · bind_step h with ⟨f', e, h⟩
-      cases h
-      exact decodeFunc_wellFormed e hp hr hb
-  · simp [decodeItem, hk, errorAt] at h
-
-/-- Items decoded from trees that can be written are well-formed
-functions. -/
-theorem mapM_decodeItem_wellFormed : ∀ {sis : List SItem} {items : List (Item d)},
-    sis.mapM decodeItem = .ok items → (∀ si ∈ sis, si.Writable) →
-      ∀ f, Item.func f ∈ items → f.WellFormed
-  | [], items, h, _ => by cases h; simp
-  | si :: sis, items, h, hw => by
-    rw [List.mapM_cons] at h
-    bind_step h with ⟨⟨f'⟩, h₁, h⟩
-    bind_step h with ⟨items', h₂, h⟩
+/-- A `func` decoded from a tree that can be written is well formed. -/
+theorem decodeFuncItem_wellFormed {kindPos : TextPos} {name : String} {params : List SDef}
+    {results attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
+    (h : decodeFuncItem kindPos name params results attrs body = .ok i)
+    (hp : ∀ x ∈ params, x.Writable) (hr : ∀ r ∈ results, r.1.IsType) (hb : body.Writable) :
+    i.WellFormed := by
+  unfold decodeFuncItem at h
+  split at h
+  · cases h
+  · cases h
+  · cases h
+  · bind_step h with ⟨f', e, h⟩
     cases h
-    intro f hf
-    rcases List.mem_cons.mp hf with hf | hf
-    · cases hf
-      exact decodeItem_wellFormed h₁ (hw si (.head _))
-    · exact mapM_decodeItem_wellFormed h₂ (fun si' hs' => hw si' (.tail _ hs')) f hf
+    exact decodeFunc_wellFormed e hp hr trivial
+  · bind_step h with ⟨f', e, h⟩
+    cases h
+    exact decodeFunc_wellFormed e hp hr hb
+
+-- The two theorems recurse together, so both take the dialect's lawful
+-- text, which only the first states it needs.
+set_option linter.unusedSectionVars false in
+mutual
+/-- An item decoded from a tree that can be written is well formed, at any
+depth. -/
+theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .ok i →
+    si.Writable → i.WellFormed
+  | ⟨kind, kindPos, name, params, results, attrs, .items ds sis⟩, i, h, hw => by
+    obtain ⟨hp, hr, hd, hs⟩ := hw
+    rw [decodeItem.eq_def] at h
+    dsimp only at h
+    by_cases hk : kind = "func"
+    · simp only [hk, ↓reduceIte] at h
+      exact decodeFuncItem_wellFormed h hp hr ⟨hd, hs⟩
+    · by_cases hm : kind = "module"
+      · simp only [hm, ↓reduceIte] at h
+        bind_step h with ⟨_, -, h⟩
+        bind_step h with ⟨is, e, h⟩
+        cases h
+        exact ⟨hd, decodeItems_wellFormed e hs⟩
+      · simp [hk, hm, errorAt] at h
+  | ⟨kind, kindPos, name, params, results, attrs, .blocks bs⟩, i, h, hw => by
+    obtain ⟨hp, hr, hb⟩ := hw
+    rw [decodeItem.eq_def] at h
+    dsimp only at h
+    by_cases hk : kind = "func"
+    · simp only [hk, ↓reduceIte] at h
+      exact decodeFuncItem_wellFormed h hp hr hb
+    · by_cases hm : kind = "module"
+      · simp only [hm, ↓reduceIte] at h
+        bind_step h with ⟨_, -, h⟩
+        cases bs with
+        | nil =>
+          cases h
+          exact ⟨by simp, trivial⟩
+        | cons => simp [errorAt] at h
+      · simp [hk, hm, errorAt] at h
+
+/-- Items decoded from trees that can be written are well formed. -/
+theorem decodeItems_wellFormed : ∀ {sis : List SItem} {is : List (Item d)},
+    decodeItems sis = .ok is → SItem.WritableList sis → Item.WellFormedList is
+  | [], is, h, _ => by cases h; trivial
+  | si :: sis, is, h, hw => by
+    rw [decodeItems.eq_def] at h
+    dsimp only at h
+    bind_step h with ⟨i, h₁, h⟩
+    bind_step h with ⟨is', h₂, h⟩
+    cases h
+    exact ⟨decodeItem_wellFormed h₁ hw.1, decodeItems_wellFormed h₂ hw.2⟩
+end
 
 /-- The decoding step: a module decoded from a tree that can be written is
 well formed. -/
@@ -128,9 +163,8 @@ theorem decodeModule_wellFormed {s : SModule} {m : Module d} (h : decodeModule s
   unfold decodeModule at h
   bind_step h with ⟨items, e, h⟩
   cases h
-  refine ⟨hw.1, fun f hf => ?_, hw.2.2⟩
-  simp only [Module.funcs, List.mem_map] at hf
-  obtain ⟨⟨f'⟩, hi, rfl⟩ := hf
-  exact mapM_decodeItem_wellFormed e hw.2.1 f' hi
+  rw [← decodeItems_eq_mapM] at e
+  exact ⟨hw.1, (Item.wellFormedList_iff _).mp
+    (decodeItems_wellFormed e ((SItem.writableList_iff _).mpr hw.2.1)), hw.2.2⟩
 
 end Fir

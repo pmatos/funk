@@ -16,7 +16,7 @@ use std::collections::HashMap;
 
 use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
-use crate::ir::{Def, Func, Item, Module, Op, Part, Region, Type};
+use crate::ir::{Def, Func, Item, Module, NestedModule, Op, Part, Region, Type};
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
@@ -28,34 +28,72 @@ fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
 
 /// Decodes a module read by the grammar.
 pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
-    let items = s
-        .items
-        .into_iter()
-        .map(|i| item(i, reg))
-        .collect::<Result<_, _>>()?;
     Ok(Module {
         dialects: s.dialects,
-        items,
+        items: items(s.items, reg)?,
         locs: s.locs,
     })
 }
 
-/// In M0 every item is a `func`, with no attributes and with blocks in its
-/// body. Every other item is of a kind the parser does not know.
+/// Decodes items in order, each at any depth.
+fn items(s: Vec<SItem>, reg: &Registry) -> Result<Vec<Item>, ParseError> {
+    s.into_iter().map(|i| item(i, reg)).collect()
+}
+
+/// A `func` has no attributes and blocks in its body. A `module` has no
+/// parameters, results or attributes, and its dialect set and items in its
+/// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
+/// function with no blocks or a module with no items. Every other item is
+/// of a kind the parser does not know.
 fn item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
-    if s.kind != "func" {
-        return err(
+    match s.kind.as_str() {
+        "func" => func_item(s, reg),
+        "module" => {
+            if let Some((_, at)) = s.params.first() {
+                return err(at.name, "a module has no parameters");
+            }
+            if let Some((_, pos)) = s.results.first() {
+                return err(*pos, "a module has no results");
+            }
+            if let Some((_, pos)) = s.attrs.first() {
+                return err(*pos, "a module has no attributes");
+            }
+            let (dialects, body) = match &mut s.body {
+                SBody::Blocks(blocks, _) if blocks.is_empty() => (Vec::new(), Vec::new()),
+                SBody::Blocks(..) => {
+                    return err(s.kind_pos, "a module's body holds items, not blocks");
+                }
+                SBody::Items(dialects, body) => (std::mem::take(dialects), std::mem::take(body)),
+            };
+            Ok(Item::Module(NestedModule {
+                name: s.name,
+                dialects,
+                items: items(body, reg)?,
+            }))
+        }
+        _ => err(
             s.kind_pos,
-            format!("unknown item kind {}: M0 has only func", s.kind),
-        );
+            format!(
+                "unknown item kind {}: the kinds are func and module",
+                s.kind
+            ),
+        ),
     }
+}
+
+/// An item of kind `func`.
+fn func_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     if let Some((_, pos)) = s.attrs.first() {
         return err(*pos, "a func has no attributes");
     }
     let (blocks, at) = match &mut s.body {
-        SBody::Items(items) => {
-            return err(items[0].kind_pos, "a func's body holds blocks, not items");
+        SBody::Items(dialects, _) if !dialects.is_empty() => {
+            return err(s.kind_pos, "a func's body holds blocks, not a dialect set");
         }
+        SBody::Items(_, items) => match items.first() {
+            Some(first) => return err(first.kind_pos, "a func's body holds blocks, not items"),
+            None => (Vec::new(), BodyPos::default()),
+        },
         SBody::Blocks(blocks, at) => (std::mem::take(blocks), std::mem::take(at)),
     };
     let f = Func {

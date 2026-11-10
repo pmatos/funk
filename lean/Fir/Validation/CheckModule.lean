@@ -1,10 +1,9 @@
 import Fir.Validation.CheckFuncs
 
 /-!
-The check of a module follows the rule of a valid module: its symbols, its
-location table, each function, in the context of the module, then its
-dialect set. It builds
-the module's symbol table and the set of its location references once, as
+The check of a module follows the rule of a valid module: its symbols, that
+each item is a function, its location table, each function, in the context
+of the module, then its dialect set. It builds the module's symbol table and the set of its location references once, as
 hash tables, and every function looks them up.
 
 # The location table
@@ -101,6 +100,9 @@ def Module.problems (m : Module d) : List Problem :=
   let lk := m.lookup
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
+  m.items.filterMap (fun i => if i.func?.isSome then none else
+    some { message := "the nested module " ++ Text.printSymbol i.name ++
+      " is not valid yet: validation checks nested modules from the second stage of #211" }) ++
   m.locs.problems ++
   m.funcs.flatMap (·.problems lk) ++
   m.dialects.filterMap (fun x => if isWord x then none else
@@ -113,7 +115,8 @@ theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid 
   simp only [Module.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
     LocTable.problems_eq_nil, List.flatMap_eq_nil_iff, Func.problems_eq_nil m.lookup_agrees,
     List.filterMap_eq_nil_iff, ite_none_eq_none]
-  exact ⟨fun ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, f⟩ => ⟨a, b, c, e, f⟩, fun ⟨a, b, c, e, f⟩ => ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, f⟩⟩
+  exact ⟨fun ⟨⟨⟨⟨⟨a, g⟩, b⟩, c⟩, e⟩, f⟩ => ⟨a, g, b, c, e, f⟩,
+    fun ⟨a, g, b, c, e, f⟩ => ⟨⟨⟨⟨⟨a, g⟩, b⟩, c⟩, e⟩, f⟩⟩
 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 

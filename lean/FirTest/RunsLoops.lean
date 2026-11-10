@@ -103,12 +103,13 @@ theorem forever_valid : forever.Valid foreverModule.context where
 /-- `@forever`'s module is valid. -/
 theorem foreverModule_valid : foreverModule.Valid where
   symbolsUnique := by decide
+  flat := by decide
   locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [foreverModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
     simp [Location.WellFormed, Location.refs]⟩
   funcs f hf := by
-    simp only [foreverModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [foreverModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     exact forever_valid

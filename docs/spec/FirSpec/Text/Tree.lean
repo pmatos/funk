@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16338383544870729772")
+:::moduleDocs (fingerprint := "5107490192914275251")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -48,13 +48,14 @@ list is erased element by element. The four definitions call one another,
 as an op may hold regions.
 :::
 
-:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "9664042224910379088")
+:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "2009820988942171414")
 *Definitions: items and their bodies without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[item as written]
 keeps its kind and its symbol, puts its kind at $`p_0`, erases its
 parameters, and puts each result type and each attribute at $`p_0`. A body
-of blocks erases its blocks, and a body of items erases its items.
+of blocks erases its blocks, and a body of items keeps its dialect set and
+erases its items.
 :::
 
 :::readable Fir.Text.SModule.erase (pin := Fir.Text.SModule) (fingerprint := "4321630760763797544")
@@ -97,7 +98,7 @@ holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.Item.tree (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "17692060576293912157")
+:::readable Fir.Func.tree Fir.moduleBody Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "9879907637118872792")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -107,8 +108,13 @@ function $`f` is the item of kind `func`, at $`p_0`, with:
 * as its body, the trees of the blocks of $`f`: a body of blocks, even
   when $`f` has none.
 
-The tree of an item is the tree of its function, since every item of M0 is
-a function.
+The tree of an item that is a function is the tree of its function. The
+tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
+the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
+$`s`, no parameters, results or attributes, and as its body the dialect set
+$`x^*` and the trees of $`i^*`; but when $`x^*` and $`i^*` are both empty,
+its body is no blocks, as the grammar reads an empty body. The trees of a
+list of items are the tree of each, in order.
 :::
 
 :::readable Fir.Module.tree (pin := Fir.Module) (fingerprint := "8609683091975040167")

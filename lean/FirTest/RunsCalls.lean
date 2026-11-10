@@ -155,12 +155,13 @@ theorem oddFn_valid : oddFn.Valid recModule.context where
 /-- The module of `@fact`, `@even` and `@odd` is valid. -/
 theorem recModule_valid : recModule.Valid where
   symbolsUnique := by decide
+  flat := by decide
   locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [recModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
     simp [Location.WellFormed, Location.refs]⟩
   funcs f hf := by
-    simp only [recModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [recModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl | rfl
     · exact factFn_valid

@@ -17,14 +17,17 @@ is:
 * each op on its own line, ending with a space and its location reference;
 * the dialect set first, when the module names a dialect, on a line of its
   own followed by an empty line;
+* a nested module's body, its dialect set and its items, two spaces deeper
+  than its `module` line, and its closing `}` at that line's indentation
+  (ADR-2026-11-10-1510). An empty line has no spaces;
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
   spaces.
 
 This section gives the printer from the inside out: attributes, locations,
-definitions and successors, ops with their blocks and regions, functions
-and items, and last the location table, the dialect set and the module.
+definitions and successors, ops with their blocks and regions, functions,
+the dialect set and items, and last the location table and the module.
 -/
 
 namespace Fir
@@ -100,31 +103,44 @@ def Operation.printList (n : Nat) : List (Operation d) → String
   | o :: os => Operation.print n o ++ Operation.printList n os
 end
 
-/-- A function, with its line feed: an item of kind `func`, with no
-attributes. -/
-def Func.print (f : Func d) : String :=
+/-- A function at indentation `n`, with its line feed: an item of kind
+`func`, with no attributes. Its header, its labels and its `}` are at `n`,
+and its ops two spaces deeper. -/
+def Func.print (n : Nat) (f : Func d) : String :=
   let results :=
     if f.results.isEmpty then "" else " -> " ++ ", ".intercalate (f.results.map (tyAttr · |>.print))
-  "func " ++ printSymbol f.name ++ "(" ++ printDefs f.params ++ ")" ++ results ++ " {\n" ++
-    Block.printList 0 f.body.blocks ++ "}\n"
+  indent n ++ "func " ++ printSymbol f.name ++ "(" ++ printDefs f.params ++ ")" ++ results ++
+    " {\n" ++ Block.printList n f.body.blocks ++ indent n ++ "}\n"
 
-/-- An item, with its line feed. -/
-def Item.print : Item d → String
-  | .func f => f.print
+/-- A dialect set at indentation `n`, `dialects a, b`, then an empty line,
+or nothing when it names no dialect. -/
+def printDialects (n : Nat) (ns : List Name) : String :=
+  if ns.isEmpty then "" else indent n ++ "dialects " ++ ", ".intercalate ns ++ "\n\n"
+
+mutual
+/-- An item at indentation `n`, with its line feed. A nested module is an
+item of kind `module`, with no parameters, results or attributes: its body,
+its dialect set and its items, is two spaces deeper, and its `}` at `n`. -/
+def Item.print (n : Nat) : Item d → String
+  | .func f => f.print n
+  | .module name ds is =>
+    indent n ++ "module " ++ printSymbol name ++ "() {\n" ++ printDialects (n + 2) ds ++
+      Item.printList (n + 2) is ++ indent n ++ "}\n"
+
+/-- Items at indentation `n`, each followed by an empty line. -/
+def Item.printList (n : Nat) : List (Item d) → String
+  | [] => ""
+  | i :: is => Item.print n i ++ "\n" ++ Item.printList n is
+end
 
 /-- The location table, which ends the module. -/
 def LocTable.print (t : LocTable) : String :=
   "locs {\n" ++ String.join (t.map fun (r, l) => "  " ++ printLocRef r ++ " = " ++ l.print ++ "\n") ++
     "}\n"
 
-/-- The dialect set of a module, `dialects a, b`, then an empty line, or
-nothing when the module names no dialect. -/
-def printDialects (ns : List Name) : String :=
-  if ns.isEmpty then "" else "dialects " ++ ", ".intercalate ns ++ "\n\n"
-
 /-- A module: its dialect set, its items, each followed by an empty line,
 then its table. -/
 def Module.print (m : Module d) : String :=
-  printDialects m.dialects ++ String.join (m.items.map (·.print ++ "\n")) ++ m.locs.print
+  printDialects 0 m.dialects ++ Item.printList 0 m.items ++ m.locs.print
 
 end Fir

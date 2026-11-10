@@ -15,17 +15,26 @@ when the Lean changes under it.
 
 #doc (Manual) "Accepted items: readable blocks" =>
 
-:::moduleDocs (fingerprint := "690646653597719966")
+:::moduleDocs (fingerprint := "5004954702079656391")
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "16901067163233167972")
+:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "7983149712947125447")
+*Theorems: the names of a dialect set as read are words.* For every list
+of tokens that can be written, the reader of a dialect's name gives a
+word, since it reads a word token, and the reader of a dialect set gives
+words only: the name after `dialects`, and each name after a comma, at the
+start of a module or of a body of items. Each leaves tokens that can be
+written.
+:::
+
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "18280148590814923405")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]
 {ref "The-fir-specification--Text-format--What-the-grammar-accepts"}[gives],
 on $`\mathit{ts}`, that each item it reads can be written: each of its
 parameters can be written, each of its result types is written as a
-type, and its body, when it holds blocks, can be written.
+type, and its body can be written, at any depth.
 
 The reader of items and the reader of one item call one another, for the
 items inside a body, so the proof shows what each gives, together, by
@@ -42,12 +51,13 @@ induction that follows their own recursion, as for blocks. Case by case:
 * the reader of one item reads its symbol, `(`, its parameters with the
   reader of definitions, or none, `)`, its result types after `->` with
   the reader of types, or none, its attributes, `{`, its body and `}`; a
-  body that starts with a word holds items, on which the case of the
-  reader of items gives that the tokens left can be written, and any other
-  body holds blocks that can be written, by the theorem of the previous
-  section;
+  body that starts with a word holds a dialect set, whose names are words,
+  and items, which the case of the reader of items gives can be written;
+  any other body holds blocks that can be written, by the theorem of the
+  previous section;
 * an item without its symbol is an error.
 
 Nothing is asked of an item's kind, its symbol or its attributes: decoding
-accepts only a `func` without attributes, whatever its symbol.
+accepts only a `func` and a `module` without attributes, whatever their
+symbol.
 :::

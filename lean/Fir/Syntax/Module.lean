@@ -2,8 +2,8 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 
 /-!
-A module holds functions. A function is a control-flow graph of blocks
-(ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
+A module holds items: functions, and modules nested in it. A function is a
+control-flow graph of blocks (ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
 dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
 results, an op instance of its dialect, operands, successors, regions and a
@@ -126,18 +126,19 @@ structure Func (d : Dialect) where
   body : Region d
 
 /--
-An item of a module. In M0 every item is a function.
+An item of a module: a function, or a nested module (ADR-2026-11-10-1510).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
-example a device module inside a host module. A nested module, a global or
-an external declaration would each be a new kind of item, and a new
-constructor here. The text format already writes every item with one
-generic production (N2), so a new kind needs no grammar change. How
-dialects and extensions add kinds of item is H4 and H5, which are not
-decided, so M0 defines only functions.
+example a device module inside a host module. A `module` item is such a
+table: its symbol, its own dialect set and its items. Its set is its own,
+not its parent's, and its symbols are its own: an op refers by symbol only
+to an item of its own table. The text format writes every item with one
+generic production (N2), so a nested module needs no new production, only
+the dialect set that may start its body.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
+  | module (name : Name) (dialects : List Name) (items : List (Item d))
 
 /--
 A module: its dialect set, its items, then its location table. In text the
@@ -152,8 +153,23 @@ structure Module (d : Dialect) where
   items : List (Item d)
   locs : LocTable
 
-/-- The functions of a module, in order. -/
+/-- The symbol of an item. -/
+def Item.name : Item d → Name
+  | .func f => f.name
+  | .module n .. => n
+
+/-- The function that an item is, if it is one. -/
+def Item.func? : Item d → Option (Func d)
+  | .func f => some f
+  | .module .. => none
+
+@[simp] theorem Item.func?_func (f : Func d) : (Item.func f).func? = some f := rfl
+@[simp] theorem Item.func?_module (n : Name) (ds : List Name) (is : List (Item d)) :
+    (Item.module n ds is).func? = none := rfl
+
+/-- The functions of a module's own table, in order. The functions of a
+nested module are not among them: they are its own. -/
 def Module.funcs (m : Module d) : List (Func d) :=
-  m.items.map fun | .func f => f
+  m.items.filterMap Item.func?
 
 end Fir

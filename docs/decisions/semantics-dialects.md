@@ -85,3 +85,7 @@ A module names its dialects other than the core on its first line,
 `dialects toy`. Its words must name only the core or those dialects, and it
 may name only dialects of the reader's set (ADR-2026-11-10-1306). A module
 that names none uses the core alone (ADR-2026-11-09-1543).
+
+A nested module, a `module` item, names its own set on the first line of its
+body. Its set is its own, not its parent's, so a host module can hold a
+device module whose dialects the host does not use (ADR-2026-11-10-1510).

@@ -1,10 +1,10 @@
 import FirRef.Read.ItemHeadC
 
 /-!
-Items hold items to any depth: `func @a() {func @b() {…}}`. `itemsLoop`
+Items hold items to any depth: `module @a() {module @b() {…}}`. `itemsLoop`
 reads items with an explicit stack of frames: a frame of items, the items
 read so far last first, and below each nested one a frame for the item
-whose body they are. An item whose body is blocks is read whole, by the
+whose body they are, with the dialect set that starts that body. An item whose body is blocks is read whole, by the
 blocks machine. Every call to itself is a tail call. `iRun` says what a
 stack means by the spec's readers, and `itemsLoop_eq` proves that the loop
 computes it, errors included.
@@ -18,8 +18,9 @@ open Fir Fir.Text Cursor
 inductive IFrame where
   /-- Items, those read last first; at the top of the module when `top`. -/
   | items (top : Bool) (done : List SItem)
-  /-- The item with this head, whose body is the items above. -/
-  | item (head : ItemHead)
+  /-- The item with this head, whose body is this dialect set and the items
+  above. -/
+  | item (head : ItemHead) (dialects : List Name)
 
 variable {σ : Type} [Cursor σ]
 
@@ -101,7 +102,9 @@ def itemsLoop (s : σ) (fs : List IFrame) : Except ParseError (List SItem × σ)
       | .ok (hd, s₂) =>
         match _hw : uncons s₂ with
         | some (⟨.word _, _⟩, _) =>
-          itemsLoop s₂ (.items false [] :: .item hd :: .items top done :: fs)
+          match _hd : readDialectsC s₂ with
+          | .ok (ds, s₃) => itemsLoop s₃ (.items false [] :: .item hd ds :: .items top done :: fs)
+          | .error e => .error e
         | _ =>
           match _hb : readBlocksC s₂ with
           | .ok (bs, s₃) =>
@@ -113,15 +116,17 @@ def itemsLoop (s : σ) (fs : List IFrame) : Except ParseError (List SItem × σ)
     | none =>
       match fs with
       | [] => .ok (done.reverse, s)
-      | .item hd :: .items top' done' :: fs =>
+      | .item hd ds :: .items top' done' :: fs =>
         match _he : expectC .rbrace "} to close the item's body" s with
-        | .ok ((), s₁) => itemsLoop s₁ (.items top' (hd.item (.items done.reverse) :: done') :: fs)
+        | .ok ((), s₁) =>
+          itemsLoop s₁ (.items top' (hd.item (.items ds done.reverse) :: done') :: fs)
         | .error e => .error e
       | _ => .ok ([], s)
   | _ => .ok ([], s)
 termination_by (view s).length
 decreasing_by
-  · have := itemHeadC_lt _hh
+  · have := readDialectsC_le _hd
+    have := itemHeadC_lt _hh
     have := length_lt (nextItem_some _h).1
     omega
   · have := expectC_lt _he
@@ -136,10 +141,10 @@ the spec's readers. -/
 def iFinish : List SItem → List Token → List IFrame →
     Except ParseError (List SItem × List Token)
   | is, ts, [] => .ok (is, ts)
-  | is, ts, .item hd :: .items top done :: fs => do
+  | is, ts, .item hd ds :: .items top done :: fs => do
     let ((), r₁) ← U (expect .rbrace "} to close the item's body" ts)
     let (more, r₂) ← U (readItems top r₁)
-    iFinish ((hd.item (.items is) :: done).reverse ++ more) r₂ fs
+    iFinish ((hd.item (.items ds is) :: done).reverse ++ more) r₂ fs
   | _, ts, _ => .ok ([], ts)
 
 /-- What `itemsLoop` computes from the frames `fs`, by the spec's

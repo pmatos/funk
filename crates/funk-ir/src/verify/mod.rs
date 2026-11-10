@@ -16,7 +16,7 @@ mod ops;
 use std::collections::HashSet;
 use std::fmt;
 
-use crate::ir::{Block, LocRef, Module};
+use crate::ir::{Block, Item, LocRef, Module};
 use crate::registry::Registry;
 use crate::text::print_symbol;
 
@@ -117,6 +117,15 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
             ));
             d.func = Some(item.name().to_string());
             out.push(d);
+        }
+    }
+    for item in &m.items {
+        if let Item::Module(n) = item {
+            out.push(Diagnostic::module(format!(
+                "the nested module {} is not valid yet: validation checks nested modules from \
+                 the second stage of #211",
+                print_symbol(&n.name)
+            )));
         }
     }
     let keys: HashSet<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();

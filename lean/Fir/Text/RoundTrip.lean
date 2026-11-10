@@ -92,13 +92,41 @@ structure Func.WellFormed (f : Func d) : Prop where
   types : ∀ t ∈ f.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
   ops : ∀ o ∈ f.allOps, f.OpWellFormed o
 
+mutual
+/-- An item can be written and read back: a function that can, or a nested
+module whose dialect set names each dialect by a word and whose items can. -/
+def Item.WellFormed : Item d → Prop
+  | .func f => f.WellFormed
+  | .module _ ds is => (∀ x ∈ ds, isWord x) ∧ Item.WellFormedList is
+
+/-- Each of these items can be written and read back. -/
+def Item.WellFormedList : List (Item d) → Prop
+  | [] => True
+  | i :: is => i.WellFormed ∧ Item.WellFormedList is
+end
+
+theorem Item.wellFormedList_iff : ∀ is : List (Item d),
+    Item.WellFormedList is ↔ ∀ i ∈ is, i.WellFormed
+  | [] => by simp [Item.WellFormedList]
+  | i :: is => by simp [Item.WellFormedList, Item.wellFormedList_iff is]
+
 /-- A module can be written and read back: each dialect of its set is named
-by a word, each of its functions can be written and read back, and each
-number in its location table is in range. -/
+by a word, each of its items can be written and read back, and each number
+in its location table is in range. -/
 structure Module.WellFormed (m : Module d) : Prop where
   dialects : ∀ x ∈ m.dialects, isWord x
-  funcs : ∀ f ∈ m.funcs, f.WellFormed
+  items : ∀ i ∈ m.items, i.WellFormed
   locs : m.locs.InLimits
+
+/-- Each function of a well-formed module is well formed. -/
+theorem Module.WellFormed.funcs {m : Module d} (h : m.WellFormed) : ∀ f ∈ m.funcs, f.WellFormed := by
+  intro f hf
+  obtain ⟨i, hi, he⟩ := List.mem_filterMap.mp hf
+  cases i with
+  | func g =>
+    cases he
+    exact h.items _ hi
+  | module => cases he
 
 /-- A position in a text: a line and a column, counted as in locations.
 Lines count from 1, and columns count UTF-8 bytes from 1. -/
@@ -190,6 +218,9 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
 
 /-- Every valid module of a dialect with lawful text is well formed. -/
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
-  fun _ hm => ⟨hm.dialectNames, fun f hf => (hm.funcs f hf).wellFormed hm.locs, hm.locs.2.1⟩
+  fun m hm => ⟨hm.dialectNames, fun i hi => by
+    cases i with
+    | func f => exact (hm.funcs f (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)).wellFormed hm.locs
+    | module => simpa [Item.func?] using hm.flat _ hi, hm.locs.2.1⟩
 
 end Fir
