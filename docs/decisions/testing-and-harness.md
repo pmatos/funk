@@ -318,7 +318,9 @@ The Lean tests that mix core and toy ops use the spec's sum of dialects,
 dialects are extensions of the core named `toy`, with no types of their own.
 Their shared helpers are in `lean/FirTest/OverCore.lean`. A name that starts
 with `toy.` goes to the test dialect, and every other name to the core
-(ADR-2026-11-09-1543).
+(ADR-2026-11-09-1543). The bit dialect, `lean/FirTest/Bit.lean`, is named
+`bit`, so that `lean/FirTest/Deps.lean` can sum the core, the toy dialect and
+the bit dialect, lifted into the sum of the other two (ADR-2026-11-10-1310).
 
 ## Tests ported from LLVM
 
