@@ -9,8 +9,8 @@
 
 use funk_ir::dialects::core::{self, int_width};
 use funk_ir::{
-    Block, Diagnostic, Dialect, Func, FuncContext, FuncSpec, LocRef, Op, OpShape, OpSpec, OpTypes,
-    Registry, parse, verify,
+    Block, Diagnostic, Dialect, Effects, Func, FuncContext, FuncSpec, LocRef, Op, OpShape, OpSpec,
+    OpTypes, Registry, parse, verify,
 };
 
 const CASES: &str = include_str!("../../../tests/dialects/use-once.cases");
@@ -28,6 +28,10 @@ impl OpSpec for Once {
             _ => Err("toy.once takes nothing and gives one integer".into()),
         }
     }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
+    }
 }
 
 struct Sink;
@@ -42,6 +46,10 @@ impl OpSpec for Sink {
             ([], [t], []) if int_width(t).is_some() => Ok(OpShape::default()),
             _ => Err("toy.sink takes one integer and gives nothing".into()),
         }
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

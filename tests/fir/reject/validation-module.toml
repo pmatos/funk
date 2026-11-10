@@ -4,6 +4,21 @@
 
 [[reject]]
 verdict = "validation-error"
+rule = "a nested module is not valid yet: validation checks nested modules from stage 2 of #211"
+text = '''
+module @m() {
+  func @g() {
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
 rule = "each symbol names one item: two functions are @f"
 text = '''
 func @f() {

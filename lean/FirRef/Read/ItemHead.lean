@@ -1,4 +1,5 @@
 import FirRef.Read.BlocksProof
+import FirRef.Read.Dialects
 
 /-!
 An item's head, everything from its symbol through the `{` of its body, is
@@ -58,8 +59,9 @@ def itemHeadS (kind : String) (p : TextPos) (ts : List Token) :
 def itemBodyS (ts : List Token) : Except ParseError (SBody × List Token) :=
   match ts with
   | ⟨.word w, q⟩ :: tl => do
-    let (is, r) ← U (readItems false (⟨.word w, q⟩ :: tl))
-    pure (SBody.items is, r)
+    let (ds, r) ← U (readDialects (⟨.word w, q⟩ :: tl))
+    let (is, r') ← U (readItems false r)
+    pure (SBody.items ds is, r')
   | ts' => do
     let (bs, r) ← U (readBlocks ts')
     pure (SBody.blocks bs, r)
@@ -127,7 +129,9 @@ theorem U_readItem (kind : String) (p : TextPos) (ts : List Token) :
     · split
       · simp only [itemBodyS]
         refine U_bind_of rfl ?_
-        rintro is r hr
+        rintro ds r hr
+        refine U_bind_of rfl ?_
+        rintro is r' hr'
         rfl
       · rename_i hn
         unfold itemBodyS

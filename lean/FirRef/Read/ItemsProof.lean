@@ -25,8 +25,9 @@ theorem itemBodyS_blocks {s : σ} (hn : ∀ w q s', uncons s = some (⟨.word w,
 theorem itemBodyS_word {s s' : σ} {w : String} {q : TextPos}
     (h : uncons s = some (⟨.word w, q⟩, s')) :
     itemBodyS (view s) = (do
-      let (is, r) ← U (readItems false (view s))
-      pure (SBody.items is, r)) := by
+      let (ds, r) ← U (readDialects (view s))
+      let (is, r') ← U (readItems false r)
+      pure (SBody.items ds is, r')) := by
   rw [view_of_uncons h]
   rfl
 
@@ -37,7 +38,7 @@ macro "i_norm" : tactic => `(tactic| simp only [iRun, iFinish, V_ok, V_error, ok
 
 theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (view s) fs := by
   fun_induction itemsLoop s fs with
-  | case1 s top done fs w₁ p s₁ h hd s₂ hh w pos snd hw ih =>
+  | case1 s top done fs w₁ p s₁ h hd s₂ hh w pos snd hw ds s₃ hdd ih =>
     rw [ih]
     obtain ⟨hs, hn⟩ := nextItem_some h
     rw [view_of_uncons hs]
@@ -46,7 +47,19 @@ theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (vi
     i_norm
     rw [itemBodyS_word hw]
     i_norm
-  | case2 s top done fs w p s₁ h hd s₂ hh bs s₃ hb s₄ he hn ih =>
+    rw [← readDialectsC_eq, hdd]
+    i_norm
+  | case2 s top done fs w₁ p s₁ h hd s₂ hh w pos snd hw e hdd =>
+    obtain ⟨hs, hn⟩ := nextItem_some h
+    rw [view_of_uncons hs]
+    simp only [iRun]
+    rw [U_readItems_word top w₁ p (view s₁) hn, U_readItem, ← itemHeadC_eq, hh]
+    i_norm
+    rw [itemBodyS_word hw]
+    i_norm
+    rw [← readDialectsC_eq, hdd]
+    rfl
+  | case3 s top done fs w p s₁ h hd s₂ hh bs s₃ hb s₄ he hn ih =>
     rw [ih]
     obtain ⟨hs, hn'⟩ := nextItem_some h
     rw [view_of_uncons hs]
@@ -59,7 +72,7 @@ theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (vi
     i_norm
     rw [← expectC_eq, he]
     i_norm
-  | case3 s top done fs w p s₁ h hd s₂ hh bs s₃ hb e he hn =>
+  | case4 s top done fs w p s₁ h hd s₂ hh bs s₃ hb e he hn =>
     obtain ⟨hs, hn'⟩ := nextItem_some h
     rw [view_of_uncons hs]
     simp only [iRun]
@@ -71,7 +84,7 @@ theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (vi
     i_norm
     rw [← expectC_eq, he]
     rfl
-  | case4 s top done fs w p s₁ h hd s₂ hh e hb hn =>
+  | case5 s top done fs w p s₁ h hd s₂ hh e hb hn =>
     obtain ⟨hs, hn'⟩ := nextItem_some h
     rw [view_of_uncons hs]
     simp only [iRun]
@@ -81,17 +94,17 @@ theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (vi
     i_norm
     rw [← readBlocksC_eq, hb]
     rfl
-  | case5 s top done fs w p s₁ h e hh =>
+  | case6 s top done fs w p s₁ h e hh =>
     obtain ⟨hs, hn'⟩ := nextItem_some h
     rw [view_of_uncons hs]
     simp only [iRun]
     rw [U_readItems_word top w p (view s₁) hn', U_readItem, ← itemHeadC_eq, hh]
     rfl
-  | case6 s top done h =>
+  | case7 s top done h =>
     simp only [iRun]
     rw [U_readItems_none h]
     i_norm
-  | case7 s top done h hd top' done' fs s₄ he ih =>
+  | case8 s top done h hd ds top' done' fs s₄ he ih =>
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
     simp only [iRun]
@@ -99,17 +112,17 @@ theorem itemsLoop_eq (s : σ) (fs : List IFrame) : V (itemsLoop s fs) = iRun (vi
     i_norm
     rw [← expectC_eq, he]
     i_norm
-  | case8 s top done h hd top' done' fs e he =>
+  | case9 s top done h hd ds top' done' fs e he =>
     simp only [iRun]
     rw [U_readItems_none h]
     i_norm
     rw [← expectC_eq, he]
     rfl
-  | case9 s top done fs h =>
+  | case10 s top done fs h =>
     simp only [iRun]
     rw [U_readItems_none h]
     i_norm
-  | case10 s fs hn =>
+  | case11 s fs hn =>
     rcases fs with _ | ⟨_ | _, fs⟩ <;> first | rfl | exact absurd rfl (hn _ _ _)
 
 /-- `readItems true`, on a cursor, with no stack per level. -/

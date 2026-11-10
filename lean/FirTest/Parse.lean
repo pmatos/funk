@@ -75,6 +75,15 @@ def seven : String :=
   "  %s: i8 = sub nuw nsw %a, %a @0\n  %f: i8 = freeze %s @0\n" ++
   "  cond_br %c, ^x(%f), ^y @0\n^x(%v: i8):\n  ret %v @0\n^y:\n  ret %a @0\n}\n"))
 #guard roundTrips (oneFunc "func @g() {\n^entry:\n  br {\n    ^inner:\n      ret @0\n  } @0\n}\n")
+-- Nested modules, with and without a dialect set, at depth, and empty
+-- (ADR-2026-11-10-1510).
+#guard roundTrips (oneFunc ("module @dev() {\n  dialects toy, gpu\n\n  func @k() {\n  ^e:\n" ++
+  "    ret @0\n  }\n\n  module @inner() {\n    func @j() {\n    ^e:\n      ret @0\n    }\n\n" ++
+  "  }\n\n}\n\nmodule @none() {\n}\n"))
+#guard printsAs (oneFunc "module @m() { dialects toy module @n() { } }\n")
+  (oneFunc "module @m() {\n  dialects toy\n\n  module @n() {\n  }\n\n}\n")
+#guard printsAs (oneFunc "module @m() { dialects toy }\n")
+  (oneFunc "module @m() {\n  dialects toy\n\n}\n")
 
 /-! # A number out of its range, at the number -/
 
@@ -104,7 +113,14 @@ def seven : String :=
 #guard rejectedAt (oneFunc "global @g() {\n}\n") 1 1 "unknown item kind global"
 #guard rejectedAt (oneFunc "func @f() inline {\n^e:\n  ret @0\n}\n") 1 11 "no attributes"
 #guard rejectedAt (oneFunc "func @f() {\n  func @g() {\n  }\n}\n") 2 3 "blocks, not items"
-#guard rejectedAt (oneFunc "module @m() {\n  func @g() {\n  }\n}\n") 1 1 "unknown item kind module"
+#guard rejectedAt (oneFunc "func @f() {\n  dialects toy\n}\n") 1 1 "not a dialect set"
+#guard rejectedAt (oneFunc "module @m(%a: i8) {\n}\n") 1 11 "a module has no parameters"
+#guard rejectedAt (oneFunc "module @m() -> i8 {\n}\n") 1 16 "a module has no results"
+#guard rejectedAt (oneFunc "module @m() inline {\n}\n") 1 13 "a module has no attributes"
+#guard rejectedAt (oneFunc "module @m() {\n^e:\n  ret @0\n}\n") 1 1 "holds items, not blocks"
+#guard rejectedAt (oneFunc "module @m() {\n  dialects\n}\n") 3 1 "the name of a dialect"
+#guard rejectedAt (oneFunc "module @m() {\n  global @g() {\n  }\n}\n") 2 3
+  "unknown item kind global"
 
 /-! # A type that does not decode -/
 

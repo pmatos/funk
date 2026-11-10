@@ -33,7 +33,13 @@ input_file useOnceCases where
   path := ".." / "tests" / "dialects" / "use-once.cases"
   text := true
 
+/-- The cases that the effect tests share with the Rust tests, which
+`FirTest.EffectCases` includes. -/
+input_file effectCases where
+  path := ".." / "tests" / "dialects" / "effects.cases"
+  text := true
+
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
 lean_lib FirTest where
-  needs := #[`@/useOnceCases]
+  needs := #[`@/useOnceCases, `@/effectCases]

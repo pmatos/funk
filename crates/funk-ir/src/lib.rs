@@ -26,6 +26,7 @@
 #![doc(test(attr(forbid(unsafe_code))))]
 
 pub mod dialects;
+pub mod effects;
 pub mod fuzz;
 pub mod generate;
 pub mod ir;
@@ -33,9 +34,10 @@ pub mod registry;
 pub mod text;
 pub mod verify;
 
+pub use effects::{Effects, MemSet};
 pub use ir::{
-    Attr, Block, Def, Func, FuncType, Int, Item, LocRef, LocTable, Location, Module, Op, Region,
-    Succ, SymbolTable, Type,
+    Attr, Block, Def, Func, FuncType, Int, Item, LocRef, LocTable, Location, Module, NestedModule,
+    Op, Region, Succ, SymbolTable, Type,
 };
 pub use registry::{
     Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, RegionKindSpec, Registry,

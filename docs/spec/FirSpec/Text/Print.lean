@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3900405696603947115")
+:::moduleDocs (fingerprint := "10255447765628156986")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
@@ -83,33 +83,42 @@ So `%s: i32 = add nsw %a, %b @3` is an op at the indentation 2 with one
 result, one attribute, two operands and the location reference 3.
 :::
 
-:::readable Fir.Func.print Fir.Item.print (pin := Fir.Text.printSymbol) (fingerprint := "5954500298775366958")
-*Definition: a function, and an item, in text.* A function with the symbol
-$`s`, the parameters $`p^*`, the result types $`t_1, \dots, t_n` and the
-body $`b^*` is written:
+:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "13951144100222046326")
+*Definition: a function, a dialect set, and items, in text.* A function at
+the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
+result types $`t_1, \dots, t_n` and the body $`b^*`, is written:
 
-* `func`, a space, $`\mathrm{printsym}(s)`, then its parameters' definitions in
-  parentheses, with no space before them: `func @sum(%n: i32)`;
+* $`n` spaces, `func`, a space, $`\mathrm{printsym}(s)`, then its
+  parameters' definitions in parentheses, with no space before them:
+  `func @sum(%n: i32)`;
 * when $`n > 0`, ` -> ` and the result types, separated by a comma and a
   space;
-* ` {`, a line feed, its blocks at the indentation 0, then `}` and a line
-  feed.
+* ` {`, a line feed, its blocks at the indentation $`n`, then $`n` spaces,
+  `}` and a line feed.
 
-An item that is a function is written as that function. A `func` has no
-attributes, so none are printed.
+A `func` has no attributes, so none are printed. A dialect set
+$`x_1, \dots, x_k` at the indentation $`n` is written as $`n` spaces,
+`dialects x₁, …, xₖ`, a line feed and an empty line, and as nothing when
+$`k = 0`.
+
+An item that is a function is written as that function. A nested module
+with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
+indentation $`n`, is written as $`n` spaces, `module `,
+$`\mathrm{printsym}(s)`, `() {` and a line feed; then its dialect set and
+its items at the indentation $`n + 2`; then $`n` spaces, `}` and a line
+feed (ADR-2026-11-10-1510). Items at the indentation $`n` are each written,
+followed by an empty line.
 :::
 
-:::readable Fir.LocTable.print Fir.printDialects Fir.Module.print (fingerprint := "3877336929970104377")
+:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "5894661627180521872")
 *Definition: the location table, and a module, in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is written `locs {` and a line feed, then each entry $`r = \mathit{loc}`
 in the order the table stores them, as the line `  @r = loc`, indented by
-two spaces, then `}` and a line feed. The dialect set $`x_1, \dots, x_n`
-of a module is written `dialects x₁, …, xₙ` and a line feed, then an empty
-line, and nothing when $`n = 0`. A module is its dialect set, then each of
-its items, followed by an empty line, and then its location table. So every
-text ends with a line feed, and a module with no dialects and no items is
-`locs {` and `}` on two lines. The
+two spaces, then `}` and a line feed. A module is its dialect set, then its
+items, each followed by an empty line, both at the indentation 0, and then
+its location table. So every text ends with a line feed, and a module with
+no dialects and no items is `locs {` and `}` on two lines. The
 {ref "The-fir-specification--Text-format--Example"}[example] shows a
 module in this layout.
 :::

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15459920808307799559")
+:::moduleDocs (fingerprint := "13662613702334673895")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "3535621606043965172")
@@ -69,24 +69,32 @@ that scope. So its errors are found in that order. Its body is a region of
 the core's kind.
 :::
 
-:::readable Fir.Text.decodeItem Fir.Text.decodeModule (fingerprint := "18332817918151004258")
-*Definition: decoding an item and a module.* An item decodes only as a
-function:
+:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeModule (fingerprint := "4734637632757471414")
+*Definition: decoding an item and a module.* An item decodes as a function
+or as a nested module (ADR-2026-11-10-1510):
 
-* an item whose kind is not `func` is an error at its kind, "unknown item
-  kind";
 * a `func` with attributes is an error at its first attribute;
-* a `func` whose body holds items is an error at the kind of the first of
-  them, and one whose body is empty is a function without blocks;
-* any other `func` decodes as a function.
+* a `func` whose body holds a dialect set is an error at its kind, "a
+  func's body holds blocks, not a dialect set", and one whose body holds
+  items is an error at the kind of the first of them;
+* any other `func` decodes as a function, without blocks when its body is
+  empty;
+* a `module` with parameters, results or attributes is an error at the
+  first of them;
+* a `module` whose body holds blocks is an error at its kind, and one whose
+  body is empty decodes as a module with no dialect set and no items;
+* any other `module` decodes its items, in order, and keeps its dialect
+  set;
+* an item of any other kind is an error at its kind, "unknown item kind".
 
-A module decodes each of its items, in order, and keeps its dialect set and
-its location table as they were read. Decoding rejects no dialect set:
-whether a set names known dialects, and whether the module's words keep to
-it, is a rule of validation.
+A list of items decodes each item in order, and stops at the first error.
+A module decodes its items so, and keeps its dialect set and its location
+table as they were read. Decoding rejects no dialect set: whether a set
+names known dialects, and whether the module's words keep to it, is a rule
+of validation.
 :::
 
-:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "2585799744947679816")
+:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "10010423170018483077")
 *Definition: the parser.* The parser of a dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text] reads a text in
 three steps, and stops at the first error, with its position: it

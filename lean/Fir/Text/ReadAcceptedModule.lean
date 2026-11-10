@@ -166,31 +166,6 @@ theorem readLocs_writable (ts : List Token) : ReadsWritable readLocs LocTable.In
   obtain ⟨k₃, w₃⟩ := readLocEntries_writable _ w₂ _ _ e₃
   exact ⟨k₃, (expect_writable _ _ _ w₃ _ _ e₄).2⟩
 
-/-- The name of a dialect as read is a word. -/
-theorem readDialectName_writable (ts : List Token) :
-    ReadsWritable readDialectName (fun x => isWord x) ts := by
-  intro hw a r h
-  unfold readDialectName at h
-  split at h
-  · cases h
-    exact ⟨hw.word, hw.tail⟩
-  · exact absurd h fail_ne_ok
-
-/-- The names of a dialect set as read are words. -/
-theorem readDialects_writable (ts : List Token) :
-    ReadsWritable readDialects (fun xs => ∀ x ∈ xs, isWord x) ts := by
-  intro hw a r h
-  unfold readDialects at h
-  split at h
-  · bind_step h with ⟨⟨n, r₁, hr₁⟩, e₁, h⟩
-    bind_step h with ⟨⟨ns, r₂, hr₂⟩, e₂, h⟩
-    cases h
-    obtain ⟨k₁, w₁⟩ := readDialectName_writable _ hw.tail _ _ e₁
-    obtain ⟨k₂, w₂⟩ := readMore_writable readDialectName_writable _ w₁ _ _ e₂
-    exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ k₁) (k₂ y), w₂⟩
-  · cases h
-    exact ⟨by simp, hw⟩
-
 /-- The grammar step: on tokens that can be written, `readModule` gives a
 tree that can be written. -/
 theorem readModule_writable {ts : List Token} {s : SModule} (h : readModule ts = .ok s)

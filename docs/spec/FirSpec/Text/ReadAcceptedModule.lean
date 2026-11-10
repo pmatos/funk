@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "An accepted location table: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12210108358911855327")
+:::moduleDocs (fingerprint := "6064928561908290930")
 :::
 
 :::readable Fir.Text.readNat_writable Fir.Text.readLocRef_writable (pin := Fir.Text.readNat) (pin := Fir.Text.readLocRef) (pin := Fir.Location.limit) (fingerprint := "5781592515716110835")
@@ -61,15 +61,7 @@ location reference token, and its location is within the limits. So every
 number of the table is below $`2^{32}`.
 :::
 
-:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "12495480647584659157")
-*Theorems: the names of a dialect set as read are words.* For every list
-of tokens that can be written, the reader of a dialect's name gives a
-word, since it reads a word token, and the reader of a dialect set gives
-words only: the name after `dialects`, and each name after a comma. Each
-leaves tokens that can be written.
-:::
-
-:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "4564956809006786608")
+:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "18411574549067702597")
 *Theorem: the grammar step.* For every list of tokens $`\mathit{ts}` that
 {ref "The-fir-specification--Text-format--What-the-lexer-accepts"}[can be written],
 and every module $`s` as read: when the

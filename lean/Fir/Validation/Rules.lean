@@ -2,9 +2,11 @@ import Fir.Validation.Dominance
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
-its symbols are unique, its location table is well formed, each of its
-functions is valid, and its dialect set names each dialect once, by a word. A function is valid when its blocks, its ops and its
-successors obey the rules below, and each op obeys its dialect's rule.
+its symbols are unique, each of its items is a function, its location table
+is well formed, each of its functions is valid, and its dialect set names
+each dialect once, by a word. A function is valid when its blocks, its ops
+and its successors obey the rules below, and each op obeys its dialect's
+rule.
 
 # Ops
 
@@ -283,15 +285,20 @@ def Module.context (m : Module d) : ModuleContext d :=
   ⟨m.symbols, m.locs.map (·.1)⟩
 
 /--
-A module is valid when each symbol names one function, its location table is
-well formed, each of its functions is valid, and its dialect set names each
-dialect once, by a word. Which dialects the set may name, and that the
-module's words name only those, is the rule of a module's dialect set, in
-the chapter on sums of dialects: it reads the words of the module, which
-the dialect's text gives.
+A module is valid when each symbol names one function, each of its items is
+a function, its location table is well formed, each of its functions is
+valid, and its dialect set names each dialect once, by a word. Which
+dialects the set may name, and that the module's words name only those, is
+the rule of a module's dialect set, in the chapter on sums of dialects: it
+reads the words of the module, which the dialect's text gives.
+
+A nested module (ADR-2026-11-10-1510) is not yet valid: the rule of its own
+symbol table and dialect set comes in the second stage of #211, and until
+then validation accepts no module that holds one.
 -/
 structure Module.Valid (m : Module d) : Prop where
   symbolsUnique : (m.funcs.map (·.name)).Nodup
+  flat : ∀ i ∈ m.items, i.func?.isSome
   locs : LocTable.Valid m.locs
   funcs : ∀ f ∈ m.funcs, f.Valid m.context
   dialectNames : ∀ x ∈ m.dialects, isWord x

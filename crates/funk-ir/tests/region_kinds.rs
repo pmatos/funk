@@ -9,8 +9,8 @@
 use funk_ir::dialects::core;
 use funk_ir::registry::RegistryError;
 use funk_ir::{
-    Dialect, Func, FuncContext, OpShape, OpSpec, OpTypes, Region, RegionKindSpec, Registry, parse,
-    print, verify,
+    Dialect, Effects, Func, FuncContext, OpShape, OpSpec, OpTypes, Region, RegionKindSpec,
+    Registry, parse, print, verify,
 };
 
 /// An op with no attributes, operands or results that owns one region of
@@ -30,6 +30,10 @@ impl OpSpec for Owner {
             }),
             _ => Err(format!("{} takes and gives nothing", self.0)),
         }
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

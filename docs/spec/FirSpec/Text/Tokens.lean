@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10589762067033830349")
+:::moduleDocs (fingerprint := "4401133695442974589")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
@@ -136,7 +136,7 @@ other. The four are defined together, since ops hold regions, which hold
 blocks of ops.
 :::
 
-:::readable Fir.Func.tokens Fir.Item.tokens (fingerprint := "11368144789468871078")
+:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "2718090411911793323")
 *Definition: the tokens of a function and of an item.* For every dialect
 with a text format, a function with symbol $`f`, parameters $`p^*`, result
 types $`T_1, \dots, T_n` and blocks has the tokens:
@@ -145,8 +145,14 @@ $$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\math
 
 where $`\mathit{res}` is empty when $`n = 0`, and otherwise
 $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
-separated by $`\texttt{,}`. An item, which is a function, has the tokens of
-its function.
+separated by $`\texttt{,}`. An item that is a function has the tokens of
+its function. A nested module with the symbol $`s`, the dialect set $`x^*`
+and the items $`i^*` has the tokens:
+
+$$`\mathsf{word}~\mathtt{module}~\mathsf{sym}~s~\texttt{(}~\texttt{)}~\texttt{\{}~\mathrm{tokens}(x^*)~\mathrm{tokens}(i^*)~\texttt{\}}`
+
+where the tokens of a dialect set are those of a module's set, below, and
+the tokens of a list of items are the tokens of each item, in order.
 :::
 
 :::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.Module.tokens (fingerprint := "10327504033382181455")

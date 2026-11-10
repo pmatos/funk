@@ -7,12 +7,13 @@
 
 mod common;
 
+use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use funk_ir::dialects::core::{self, core_type, int_type, int_width};
 use funk_ir::{
-    Attr, Dialect, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse,
-    print, verify,
+    Attr, Dialect, Effects, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck,
+    TypeSpec, parse, print, verify,
 };
 
 /// An op of the toy dialect, with its decoding as a function.
@@ -32,6 +33,15 @@ impl OpSpec for ToyOp {
             return Err("toy.make is not allowed in @forbidden".into());
         }
         Ok(())
+    }
+
+    /// `toy.br` and `toy.cond` are terminators, so they are control; the
+    /// other toy ops are pure.
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            control: matches!(self.0, "toy.br" | "toy.cond"),
+            ..Effects::PURE
+        }
     }
 }
 
@@ -171,6 +181,50 @@ fn a_module_of_toy_ops_parses_verifies_prints_and_round_trips() {
     assert_eq!(parse(&print(&m), &reg), Ok(m));
     assert_eq!(reg.dialect_of("toy.mix"), Some("toy"));
     assert_eq!(reg.dialect_of("add"), Some("core"));
+}
+
+/// Each op of the toy module has the effects its dialect declares, through
+/// the registry: a terminator is control, as the Lean obligation
+/// `notControl` asks, and every other op of the module, toy or core, is
+/// pure.
+#[test]
+fn toy_ops_declare_their_effects_through_the_registry() {
+    let reg = registry();
+    let m = parse(&toy_module(), &reg).unwrap_or_else(|e| panic!("{e}"));
+    for f in m.funcs() {
+        let mut types: HashMap<&str, &Type> = HashMap::new();
+        for b in &f.body.blocks {
+            for d in f.params.iter().chain(&b.params) {
+                types.insert(&d.name, &d.ty);
+            }
+            for op in &b.ops {
+                for d in &op.results {
+                    types.insert(&d.name, &d.ty);
+                }
+            }
+        }
+        for b in &f.body.blocks {
+            for (i, op) in b.ops.iter().enumerate() {
+                let operands: Vec<Type> = op
+                    .operands
+                    .iter()
+                    .map(|x| types[x.as_str()].clone())
+                    .collect();
+                let results: Vec<Type> = op.results.iter().map(|d| d.ty.clone()).collect();
+                let at = OpTypes {
+                    attrs: &op.attrs,
+                    operands: &operands,
+                    results: &results,
+                };
+                let last = i + 1 == b.ops.len();
+                let want = Effects {
+                    control: last,
+                    ..Effects::PURE
+                };
+                assert_eq!(reg.effects(&op.name, &at), Some(want), "{}", op.name);
+            }
+        }
+    }
 }
 
 #[test]
