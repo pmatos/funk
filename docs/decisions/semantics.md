@@ -2,8 +2,9 @@
 
 This page says what holds today about the meaning of fir. It summarizes the
 ADRs it cites and does not replace them. When this page and an ADR disagree,
-the page is wrong (ADR-2026-11-09-1610). semantics-m1-design.md has the M1
-design not built yet, and semantics-dialects.md how dialects combine.
+the page is wrong (ADR-2026-11-09-1610). See semantics-m1-design.md for the
+M1 design not built yet, semantics-dialects.md for sums, and
+semantics-effects.md for op effects.
 
 ## Ground rule: fir reaches any hardware
 
@@ -150,7 +151,7 @@ wherever some value it could take would be UB. So the x86-64 backend can emit a
 bare `idiv` (ADR-2026-10-30-0818).
 
 Propagation is checked, not only stated. Every op of every dialect declares a
-poison class through `DialectPoison`: `propagates` or `exception`
+poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-30-0818). In the core dialect, 19 ops propagate and six are
 exceptions (ADR-2026-11-03-1615). `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass

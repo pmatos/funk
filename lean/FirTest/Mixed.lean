@@ -50,6 +50,13 @@ example : names CoreToy = ["toy"] := rfl
 #guard Core.samples.all (fun o => poisonClass (d := CoreToy) (.inl o) == Core.Op.poisonClass o) &&
   poisonClass (d := CoreToy) (.inr (.mask 8 3)) == .propagates
 
+/-- The effects of an op of the sum, on the memories of its two sides. -/
+def coreToyEffects (o : CoreToy.Op) : Effects (Core.Mem ⊕ Empty) := effects o
+
+-- The sum's ops have their own dialect's effects, on the sum's memories.
+#guard Core.samples.all (fun o => coreToyEffects (.inl o) == (Core.Op.effects o).map .inl) &&
+  coreToyEffects (.inr (.mask 8 3)) == {}
+
 /-! # Running a mixed module
 
 The spec's semantics of the sum is the set monad's: each side's instance,
@@ -200,6 +207,12 @@ def mixedProblems (t : String) : Option (List Problem) :=
 
 /-- info: 'Fir.Dialect.sum.lawfulPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Dialect.sum.lawfulPoison
+
+/-- info: 'Fir.Dialect.sum.lawfulEffects' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Dialect.sum.lawfulEffects
+
+/-- info: 'FirTest.Toy.lawfulDialectEffects' does not depend on any axioms -/
+#guard_msgs in #print axioms Toy.lawfulDialectEffects
 
 /-- info: 'FirTest.Toy.lawfulDialectText' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Toy.lawfulDialectText

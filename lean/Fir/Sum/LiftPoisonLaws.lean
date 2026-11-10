@@ -167,8 +167,8 @@ theorem propagates_lift (h : ι.Lawful) {o : e.Op} (hp : PropagatesPoison (d := 
         rw [HVector.down_up]
         exact hub
 
-variable [DialectPoison (dep.over e)] [DialectCall (dep.over e)]
-  [DialectSignature big] [DialectDenote big SetM] [DialectPoison big] [DialectCall big]
+variable [DialectEffects (dep.over e)] [DialectCall (dep.over e)]
+  [DialectSignature big] [DialectDenote big SetM] [DialectEffects big] [DialectCall big]
 
 /-- The lift of a lawful extension is lawful over a lawful `big`, when the
 inclusion is lawful and `e` accepts each type of `dep` whose inclusion `big`

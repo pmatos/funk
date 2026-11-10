@@ -64,8 +64,10 @@ instance : DialectValidation ProbeDialect where
   validOp _ _ := True
   validFunc _ _ _ := True
 
-/-- A probe op states its own rule for poison. -/
-instance : DialectPoison ProbeDialect := ⟨fun _ => .exception⟩
+/-- A probe op states its own rule for poison, and declares every effect:
+at `i0`, which validation rejects, it gives poison for a value. The probe
+dialect has no memory, so its memories have no names. -/
+instance : DialectEffects ProbeDialect := ⟨Empty, fun _ => .exception, fun _ => .all⟩
 
 /-- The rule of `id`: the operand, at a width above zero; at `i0`, a
 value for poison and poison for a value. -/

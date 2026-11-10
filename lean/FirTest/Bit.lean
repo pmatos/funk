@@ -9,9 +9,10 @@ names.
 
 Its type `bit.bit` is one bit, or poison. `%b: bit.bit = bit.low %x` takes
 the low bit of the integer `%x`, and `%y: i1 = bit.int %b` gives the bit
-back as an `i1`. Both propagate poison. The dialect states every class over
-the core, and meets the text laws and the poison obligations, so
-`FirTest.Deps` can lift it into the sum of the core and the toy dialect.
+back as an `i1`. Both propagate poison and are pure. The dialect states
+every class over the core, and meets the text laws and the poison and
+effect obligations, so `FirTest.Deps` can lift it into the sum of the core
+and the toy dialect.
 -/
 
 namespace FirTest.Bit
@@ -152,8 +153,10 @@ instance : DialectDenote BitDialect SetM where
   denote := Op.denote
   exit _ _ := fun _ => False
 
-/-- Both bit ops propagate poison. -/
-instance : DialectPoison BitDialect := ⟨fun _ => .propagates⟩
+/-- Both bit ops propagate poison, and both are pure: each gives a defined
+result on a defined operand and is never UB. The bit dialect has no memory,
+so its memories have no names. -/
+instance : DialectEffects BitDialect := ⟨Empty, fun _ => .propagates, fun _ => {}⟩
 
 /-- No bit op calls a function. -/
 instance : DialectCall BitDialect := ⟨fun _ => none⟩
@@ -272,6 +275,24 @@ instance lawful : LawfulDialectPoison BitDialect where
     | .low _, _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
     | .int, _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
   monotone o _ _ := monotone o
+
+/-- The bit dialect is lawful in its effects: both ops are never UB, give a
+defined result on a defined operand, and are not terminators. -/
+theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
+  neverUB o _ _ _ := fun args _ => by
+    cases o <;> match args with
+      | .cons _ .nil => exact ⟨fun _ h => (by cases h), fun h => nomatch h⟩
+  makesNoPoison o _ _ _ := fun _ args hd _ hr => by
+    cases o <;> match args, hd, hr with
+      | .cons a .nil, hd, hr =>
+        cases a with
+        | poison => exact absurd (.inl rfl) hd
+        | value x =>
+          cases hr
+          rintro (h | h) <;> cases h
+  notControl _ _ := rfl
+
+instance : LawfulDialectEffects BitDialect := lawfulDialectEffects
 
 end Bit
 

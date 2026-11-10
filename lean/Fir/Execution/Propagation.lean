@@ -1,4 +1,5 @@
 import Fir.Execution.Behaviour
+import Fir.Execution.OpEffects
 import Fir.Validation.Rules
 
 /-!
@@ -7,8 +8,9 @@ import Fir.Validation.Rules
 A poison operand gives a poison result, unless the op says otherwise
 (ADR-2026-10-30-0818). That rule is a property that each op must have, so it
 is checked, not only stated. Every op of every dialect declares its _poison
-class_, so that a dialect added for new hardware states it too
-(ADR-2026-10-29-2016):
+class_, with its other effects in the dialect's effect class (the section on
+effect sets), so that a dialect added for new hardware states it too
+(ADR-2026-10-29-2016, ADR-2026-11-09-1541):
 
 * _Propagates_: when any operand is poison, every result the op returns is
   poison, and the op hits immediate UB only by its own rules.
@@ -34,22 +36,9 @@ type with no poison, never triggers either clause.
 
 namespace Fir
 
-/-- How an op treats poison operands. -/
-inductive PoisonClass where
-  /-- A poison operand makes every result the op returns poison. -/
-  | propagates
-  /-- The op states its own rule for poison operands. -/
-  | exception
-  deriving Repr, DecidableEq
-
 /-- Which values of a dialect's types are poison. -/
 class TyPoison (Ty : Type) [TyDenote Ty] where
   IsPoison : {t : Ty} → ⟦t⟧ → Prop
-
-/-- Each op of a dialect declares its poison class. -/
-class DialectPoison (d : Dialect) where
-  poisonClass : d.Op → PoisonClass
-export DialectPoison (poisonClass)
 
 /-- Some element of the vector has the property. -/
 def HVector.Any {f : α → Type} (p : {a : α} → f a → Prop) : {as : List α} → HVector f as → Prop
@@ -218,7 +207,7 @@ valid instance that propagates poison propagates it and returns a result
 on some defined operands; and every valid instance that runs by its own
 rule, a terminator or an op with no callee, is total and monotone. -/
 class LawfulDialectPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
-    [DialectSignature d] [DialectPoison d] [DialectDenote d SetM] [DialectCall d]
+    [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
     [DialectValidation d] : Prop where
   poison_isRefinedBy : ∀ {t : d.Ty}, validTy t → ∀ (p v : ⟦t⟧), TyPoison.IsPoison p →
     TyRefinement.IsRefinedBy p v
