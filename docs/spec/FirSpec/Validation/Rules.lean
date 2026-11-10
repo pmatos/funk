@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14621842834150240363")
+:::moduleDocs (fingerprint := "1605892715069647757")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -91,15 +91,17 @@ $`\vdash_d` are what the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect adds to validation].
 :::
 
-:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "15966897255941960890")
+:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "5925398413384773857")
 *Definition: a valid function.* The function $`f` is valid in the module
 context $`C` when every premise of this rule holds, where
 $`B = \mathrm{blocks}(f)` and $`d` is the dialect of $`f`:
 
-$$`\dfrac{\begin{array}{c} B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \mathrm{kind}(\mathrm{body}(f)) = \epsilon \\ B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
 
 In words:
 
+* The body is a region of the core's kind, a control-flow graph
+  (ADR-2026-10-29-2005): it names no kind (ADR-2026-11-10-1530).
 * The body has an entry block $`e`, and $`e` declares no arguments of its
   own: its arguments are the function's parameters.
 * Every block is reachable from the entry (ADR-2026-10-30-0817). This is
@@ -152,12 +154,12 @@ _valid_ when:
   to itself, directly or not.
 :::
 
-:::readable Fir.Module.context Fir.Module.Valid (fingerprint := "13918725921862657793")
+:::readable Fir.Module.context Fir.Module.Valid (fingerprint := "4562828675817276732")
 *Definition: a valid module.* The context of the module $`M`,
 $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M` and the
 references of its location table. $`M` is valid when:
 
-$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{funcs}(M) \text{ are distinct} \\ \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{ctx}(M) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(M) \\ \text{the names of } \mathrm{dialects}(M) \text{ are distinct words} \end{array}}{\vdash M~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{funcs}(M) \text{ are distinct} \\ \text{each item of } M \text{ is a function} \\ \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{ctx}(M) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(M) \\ \text{the names of } \mathrm{dialects}(M) \text{ are distinct words} \end{array}}{\vdash M~\text{valid}}`
 
 Here $`\mathrm{funcs}(M)` is the functions of $`M`, in order,
 $`\mathrm{locs}(M)` its location table, and $`\mathrm{dialects}(M)` its
@@ -167,6 +169,10 @@ keep to it, is the rule of
 which reads words through the dialect's text. Since symbols are distinct, the
 symbol table gives each symbol the type of its one function, and a call
 names exactly one callee.
+
+A nested module (ADR-2026-11-10-1510) is not valid yet: the rule of its own
+symbol table and dialect set comes in the second stage of #211, and until
+then validation accepts no module that holds one.
 :::
 
 :::readable Fir.TypesValid (fingerprint := "4327058517537719696")

@@ -7,7 +7,8 @@
 //! write and read back:
 //!
 //! - ops that own regions, at any depth up to three, whose blocks hold ops,
-//!   arguments and branches of their own;
+//!   arguments and branches of their own, and some of which name a kind
+//!   from [`REGION_KINDS`];
 //! - string attributes and applied attributes, `h()` and `h(1, "s", g(x))`
 //!   among them, on the toy op [`TOY_OP`], which decodes with any
 //!   attributes: no core op or type takes one;
@@ -17,6 +18,9 @@
 //!   calls of symbols that name no function of the module;
 //! - broken location tables (`locs.rs`), and ops whose location reference
 //!   is in no entry.
+//! - nested modules, up to three deep, each with its own dialect set and
+//!   the functions of a valid module, which validation rejects until it
+//!   checks them (#211).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -35,7 +39,10 @@
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::{self, int_type};
-use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
+use crate::effects::Effects;
+use crate::ir::{
+    Attr, Block, Def, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
+};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
 mod locs;
@@ -46,6 +53,10 @@ pub const WELL_FORMED_MODULES: u64 = 600;
 
 /// The toy op: any attributes, operands, results and regions decode.
 pub const TOY_OP: &str = "toy.any";
+
+/// The kinds that generated regions name: words of a dialect, which the
+/// text writes after a region's `{`, whatever dialects the reader holds.
+pub const REGION_KINDS: [&str; 3] = ["toy.graph", "gpu.warp", "toy.a.b"];
 
 /// The dialects whose ops a generated module holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -68,6 +79,11 @@ impl OpSpec for AnyOp {
     fn decode(&self, _op: &OpTypes<'_>) -> Result<OpShape, String> {
         Ok(OpShape::default())
     }
+
+    /// Pure: it is not a terminator, and nothing runs it.
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
+    }
 }
 
 /// The test dialect `toy` with its one op, [`TOY_OP`], over the core. Test
@@ -87,7 +103,7 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     let symbols: Vec<String> = m.funcs().map(|f| f.name.clone()).collect();
     let keys: Vec<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
     for item in &mut m.items {
-        let Item::Func(f) = item;
+        let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
     }
@@ -97,13 +113,32 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     if rng.one_in(2) {
         locs::break_table(rng, &mut m.locs);
     }
+    add_dialects(rng, &mut m.dialects);
     if rng.one_in(4) {
-        for _ in 0..=rng.below(3) {
-            m.dialects
-                .push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
-        }
+        m.items.push(Item::Module(nested(rng, 3)));
     }
     m
+}
+
+/// Names one to three dialects, drawn with repeats, in one draw of four.
+fn add_dialects(rng: &mut Rng, dialects: &mut Vec<String>) {
+    if rng.one_in(4) {
+        for _ in 0..=rng.below(3) {
+            dialects.push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
+        }
+    }
+}
+
+/// A nested module at most `depth` deep: the functions of a valid module,
+/// then, in one draw of three, a module nested in it.
+fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
+    let mut n = NestedModule::new(symbol(rng));
+    add_dialects(rng, &mut n.dialects);
+    n.items = super::module(rng).items;
+    if depth > 1 && rng.one_in(3) {
+        n.items.push(Item::Module(nested(rng, depth - 1)));
+    }
+    n
 }
 
 /// What a function defines, and what its new ops may name.
@@ -268,11 +303,16 @@ impl<'m> Shaper<'m> {
         b
     }
 
-    /// Gives `op` one or two regions of up to three blocks each.
+    /// Gives `op` one or two regions of up to three blocks each, a third
+    /// of them of a kind from [`REGION_KINDS`].
     fn add_regions(&mut self, rng: &mut Rng, op: &mut Op, depth: u32) {
         for _ in 0..1 + rng.below(2) {
             let blocks = (0..rng.below(4)).map(|_| self.block(rng, depth)).collect();
-            op.regions.push(Region::new(blocks));
+            let mut region = Region::new(blocks);
+            if rng.one_in(3) {
+                region = region.with_kind(*rng.pick(&REGION_KINDS));
+            }
+            op.regions.push(region);
         }
     }
 

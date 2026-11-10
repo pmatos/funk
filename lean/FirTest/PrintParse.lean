@@ -53,16 +53,27 @@ theorem sumModule_print_unique {m : Module CoreDialect} (h : m.Valid)
 
 /-! # A module that is well formed but not valid -/
 
-/-- `@f`, whose first `add` owns a region. The region's block defines `%y`
+/-- Each region of a function's ops names its kind, if any, by a word: a
+form that the kernel decides. -/
+theorem kinds_of_all {d : Dialect} {f : Func d}
+    (h : ∀ o ∈ f.allOps, ∀ r ∈ o.regions, r.kind.all isWord = true) :
+    ∀ o ∈ f.allOps, ∀ r ∈ o.regions, ∀ k ∈ r.kind, isWord k := by
+  intro o ho r hr k hk
+  have := h o ho r hr
+  rw [Option.mem_def.mp hk] at this
+  simpa using this
+
+/-- `@f`, whose first `add` owns a region of the kind `toy.graph`. The
+region's block defines `%y`
 and `%b`, which the first pass reads after `%a` and before `%c`, while
 `Func.defs` lists `%c` before them. -/
 def regionFn : Func CoreDialect where
   name := "f"
   params := [("x", i 8)]
   results := [i 8]
-  body := ⟨[⟨"entry", [], [
+  body := ⟨none, [⟨"entry", [], [
     { op [("a", i 8)] (.add 8 {}) ["x", "x"] with
-      regions := [⟨[⟨"in", [("y", i 8)], [
+      regions := [⟨some "toy.graph", [⟨"in", [("y", i 8)], [
         op [("b", i 8)] (.add 8 { nsw := true }) ["y", "a"],
         op [] (.ret [i 8]) ["b"]]⟩]⟩] },
     op [("c", i 8)] (.add 8 {}) ["a", "a"],
@@ -88,12 +99,14 @@ theorem regionFn_wellFormed : regionFn.WellFormed where
       h.2.1, ?_, h.2.2.2⟩
     rw [h.2.2.1]
     exact fun s hs => nomatch hs
+  bodyKind := rfl
+  kinds := kinds_of_all (by decide +kernel)
 
 /-- The module of `@f` is well formed. -/
 theorem regionModule_wellFormed : regionModule.WellFormed where
   dialects := by simp [regionModule]
-  funcs f hf := by
-    simp only [regionModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [regionModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     exact regionFn_wellFormed
@@ -124,12 +137,14 @@ local macro "func_wellFormed" : tactic => `(tactic| exact {
     refine ⟨LawfulDialectText.opName_isWord _, LawfulDialectText.opAttrs_writable _, ?_⟩
     simp only [Text.isName_iff]
     revert o
-    decide +kernel })
+    decide +kernel
+  bodyKind := rfl
+  kinds := kinds_of_all (by decide +kernel) })
 
 /-! # A function with no blocks -/
 
 /-- `@e`, whose body has no blocks. -/
-def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨[]⟩⟩
+def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨none, []⟩⟩
 
 /-- The module of `@e`. -/
 def emptyModule : Module CoreDialect := ⟨[], [.func emptyFn], [(0, .unknown)]⟩
@@ -140,8 +155,8 @@ def emptyModule : Module CoreDialect := ⟨[], [.func emptyFn], [(0, .unknown)]�
 /-- The module of `@e` is well formed. -/
 theorem emptyModule_wellFormed : emptyModule.WellFormed where
   dialects := by simp [emptyModule]
-  funcs f hf := by
-    simp only [emptyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [emptyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -162,8 +177,8 @@ theorem emptyModule_parse_print : Fir.parse emptyModule.print = .ok emptyModule 
 levels deep. -/
 theorem nested_wellFormed : (nested 3).WellFormed where
   dialects := by simp [nested]
-  funcs f hf := by
-    simp only [nested, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [nested, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -179,8 +194,8 @@ callsite, derived, name and range locations, whose references, lines and
 columns go up to `2^32 - 1`. -/
 theorem tricky_wellFormed : tricky.WellFormed where
   dialects := by simp [tricky]
-  funcs f hf := by
-    simp only [tricky, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [tricky, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl <;> func_wellFormed
   locs := by unfold LocTable.InLimits; decide +kernel
@@ -207,7 +222,7 @@ theorem coreToy_printThenParse : PrintThenParse (d := CoreToy) Fir.parse := prin
 terminator, since the toy dialect has none. -/
 def toyFn : Func ToyDialect :=
   ⟨"m", [("a", .inl (i 8))], [.inl (i 8)],
-    ⟨[⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
+    ⟨none, [⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
 
 /-- The module of `@m`. -/
 def toyModule : Module ToyDialect := ⟨[], [.func toyFn], [(0, .unknown)]⟩
@@ -215,8 +230,8 @@ def toyModule : Module ToyDialect := ⟨[], [.func toyFn], [(0, .unknown)]⟩
 /-- The module of `@m` is well formed. -/
 theorem toyModule_wellFormed : toyModule.WellFormed where
   dialects := by simp [toyModule]
-  funcs f hf := by
-    simp only [toyModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [toyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     func_wellFormed
@@ -237,7 +252,7 @@ theorem toyModule_parse_print : Fir.parse toyModule.print = .ok toyModule :=
 /-- The function of `FirTest.Mixed`'s mixed module, as abstract syntax: a
 toy op whose result a core op uses. -/
 def mixedFn : Func CoreToy :=
-  ⟨"f", [("a", .inl (i 8))], [.inl (i 8), .inl (i 8)], ⟨[⟨"entry", [], [
+  ⟨"f", [("a", .inl (i 8))], [.inl (i 8), .inl (i 8)], ⟨none, [⟨"entry", [], [
     ⟨[("m", .inl (i 8))], .inr (.mask 8 3), ["a"], [], [], 1⟩,
     ⟨[("s", .inl (i 8))], .inl (.add 8 {}), ["m", "a"], [], [], 0⟩,
     ⟨[], .inl (.ret [i 8, i 8]), ["m", "s"], [], [], 0⟩]⟩]⟩⟩
@@ -263,12 +278,14 @@ theorem mixedFn_wellFormed : mixedFn.WellFormed where
       h.2.1, ?_, h.2.2.2⟩
     rw [h.2.2.1]
     exact fun s hs => nomatch hs
+  bodyKind := rfl
+  kinds := kinds_of_all (by decide +kernel)
 
 /-- The mixed module is well formed. -/
 theorem mixedModule_wellFormed : mixedModule.WellFormed where
   dialects := by simp only [mixedModule, List.mem_singleton, forall_eq]; decide
-  funcs f hf := by
-    simp only [mixedModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+  items f hf := by
+    simp only [mixedModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
     exact mixedFn_wellFormed

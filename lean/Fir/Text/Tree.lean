@@ -22,11 +22,14 @@ eleven after it give the last two, and put all three together:
   blocks and ops; and the module.
 * The last section, the round trip, proved, puts the three steps together.
 
-The tree of a module is how the grammar sees it. Each item is a `func` with
+The tree of a module is how the grammar sees it. A function is a `func` with
 its symbol, its parameters, its result types and no attributes, and its body
 is its blocks, even when it has none: a function's tokens after its `{`
 start with a label or are its `}`, never a word, so the grammar reads its
-body as blocks. Each op is its results, its name and attributes as the
+body as blocks. A nested module is a `module` with its symbol and no
+parameters, results or attributes, and its body is its dialect set and its
+items, or no blocks when it has neither, since its tokens after its `{` are
+then its `}`. Each op is its results, its name and attributes as the
 dialect writes them, its operands, its successors, its regions and its
 location reference. Each type is the attribute that writes it. The dialect
 set and the location table are the module's own.
@@ -66,7 +69,7 @@ def SOp.erase : SOp → SOp
 /-- Regions without their positions. -/
 def SRegion.eraseList : List SRegion → List SRegion
   | [] => []
-  | ⟨bs⟩ :: rs => ⟨SBlock.eraseList bs⟩ :: SRegion.eraseList rs
+  | ⟨k, bs⟩ :: rs => ⟨k, SBlock.eraseList bs⟩ :: SRegion.eraseList rs
 
 /-- Blocks without their positions. -/
 def SBlock.eraseList : List SBlock → List SBlock
@@ -90,7 +93,7 @@ def SItem.erase : SItem → SItem
 /-- The body of an item without its positions. -/
 def SBody.erase : SBody → SBody
   | .blocks bs => .blocks (SBlock.eraseList bs)
-  | .items is => .items (SItem.eraseList is)
+  | .items ds is => .items ds (SItem.eraseList is)
 
 /-- Items without their positions. -/
 def SItem.eraseList : List SItem → List SItem
@@ -133,7 +136,7 @@ def Operation.tree : Operation d → SOp
 /-- The trees of regions. -/
 def Region.treeList : List (Region d) → List SRegion
   | [] => []
-  | ⟨blocks⟩ :: rs => ⟨Block.treeList blocks⟩ :: Region.treeList rs
+  | ⟨k, blocks⟩ :: rs => ⟨k, Block.treeList blocks⟩ :: Region.treeList rs
 
 /-- The trees of blocks. -/
 def Block.treeList : List (Block d) → List SBlock
@@ -153,9 +156,28 @@ def Func.tree (f : Func d) : SItem :=
   ⟨"func", .zero, f.name, f.params.map defTree, f.results.map (tyAttr · , .zero), [],
     .blocks (Block.treeList f.body.blocks)⟩
 
-/-- The tree of an item. -/
+/-- The body of a nested module: its dialect set and its items, or no
+blocks when it has neither, as the grammar reads an empty body. -/
+def moduleBody (ds : List Name) (is : List SItem) : SBody :=
+  if ds.isEmpty ∧ is.isEmpty then .blocks [] else .items ds is
+
+mutual
+/-- The tree of an item. A nested module is an item of kind `module` with no
+parameters, results or attributes, whose body is its dialect set and its
+items. -/
 def Item.tree : Item d → SItem
   | .func f => f.tree
+  | .module name ds is => ⟨"module", .zero, name, [], [], [], moduleBody ds (Item.treeList is)⟩
+
+/-- The trees of items. -/
+def Item.treeList : List (Item d) → List SItem
+  | [] => []
+  | i :: is => i.tree :: Item.treeList is
+end
+
+theorem Item.treeList_eq_map : ∀ is : List (Item d), Item.treeList is = is.map Item.tree
+  | [] => rfl
+  | i :: is => by rw [Item.treeList, Item.treeList_eq_map is, List.map_cons]
 
 /-- The tree of a module: its dialect set, its items' trees and its location
 table. -/
@@ -251,19 +273,20 @@ theorem SRegion.eraseList_eq_nil {srs : List SRegion}
     simp [SRegion.eraseList, Region.treeList] at h
 
 /-- Regions that erase to the trees of a region and the regions after it
-are a region whose blocks erase to the region's, then regions that erase to
-the others' trees. -/
+are a region of the region's kind whose blocks erase to the region's, then
+regions that erase to the others' trees. -/
 theorem SRegion.eraseList_eq_cons {srs : List SRegion} {r : Region d} {rs : List (Region d)}
     (h : SRegion.eraseList srs = Region.treeList (r :: rs)) :
-    ∃ sr srs', srs = sr :: srs' ∧ SBlock.eraseList sr.blocks = Block.treeList r.blocks ∧
+    ∃ sr srs', srs = sr :: srs' ∧ sr.kind = r.kind ∧
+      SBlock.eraseList sr.blocks = Block.treeList r.blocks ∧
       SRegion.eraseList srs' = Region.treeList rs := by
-  obtain ⟨blocks⟩ := r
+  obtain ⟨kind, blocks⟩ := r
   cases srs with
   | nil => simp [SRegion.eraseList, Region.treeList] at h
   | cons sr srs' =>
-    obtain ⟨bs⟩ := sr
+    obtain ⟨k, bs⟩ := sr
     simp only [SRegion.eraseList, Region.treeList, List.cons.injEq, SRegion.mk.injEq] at h
-    exact ⟨_, srs', rfl, h.1, h.2⟩
+    exact ⟨_, srs', rfl, h.1.1, h.1.2, h.2⟩
 
 /-- An item that erases to a function's tree is a `func` with the
 function's symbol, parameters and result types, no attributes, and the
@@ -279,7 +302,7 @@ theorem SItem.erase_eq_funcTree {si : SItem} {f : Func d} (h : si.erase = f.tree
   · simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) h₅
   · cases body with
     | blocks bs => exact ⟨bs, rfl, by simpa [SBody.erase] using h₇⟩
-    | items is => simp [SBody.erase] at h₇
+    | items _ _ => simp [SBody.erase] at h₇
 
 /-- A module's tree, without positions, holds its dialect set, its items' trees and its
 location table. -/

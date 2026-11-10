@@ -14,8 +14,12 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-30-0815):
 
-* an item whose kind is not `func`, at its kind; a `func` with attributes, at
-  its first attribute; and a `func` whose body holds items, at the first;
+* an item whose kind is neither `func` nor `module`, at its kind;
+* a `func` with attributes, at its first attribute; a `func` whose body
+  holds a dialect set, at its kind; and one whose body holds items, at the
+  first;
+* a `module` with parameters, results or attributes, at the first of them,
+  and one whose body holds blocks, at its kind;
 * a type that does not decode, at the type;
 * a value defined twice, at its second definition;
 * an operand that its function does not define, at the operand;
@@ -85,7 +89,7 @@ def defineOps (sc : Scope d) : List SOp → Except ParseError (Scope d)
 /-- Adds the definitions of the blocks of these regions to the scope. -/
 def defineRegions (sc : Scope d) : List SRegion → Except ParseError (Scope d)
   | [] => pure sc
-  | ⟨bs⟩ :: rs => do
+  | ⟨_, bs⟩ :: rs => do
     let sc ← defineBlocks sc bs
     defineRegions sc rs
 end
@@ -124,29 +128,67 @@ def decodeOps (sc : Scope d) (f : String) : List SOp → Except ParseError (List
 /-- Decodes the regions of an op of the function `f`, in its scope. -/
 def decodeRegions (sc : Scope d) (f : String) : List SRegion → Except ParseError (List (Region d))
   | [] => pure []
-  | ⟨bs⟩ :: rs => do pure (⟨← decodeBlocks sc f bs⟩ :: (← decodeRegions sc f rs))
+  | ⟨k, bs⟩ :: rs => do pure (⟨k, ← decodeBlocks sc f bs⟩ :: (← decodeRegions sc f rs))
 end
 
 /-- Decodes a function: its result types and its definitions first, then
-its ops. -/
+its ops. A function's body is a region of the core's kind. -/
 def decodeFunc (name : String) (params : List SDef) (results : List (Attr × TextPos))
     (blocks : List SBlock) : Except ParseError (Func d) := do
   let results ← results.mapM fun (a, p) => decodeType a p
   let sc ← define ∅ params
   let sc ← defineBlocks sc blocks
   let params ← params.mapM decodeDef
-  pure ⟨name, params, results, ⟨← decodeBlocks sc name blocks⟩⟩
+  pure ⟨name, params, results, ⟨none, ← decodeBlocks sc name blocks⟩⟩
 
-/-- Decodes an item. In M0 every item is a `func`, with no attributes and
-with blocks in its body. -/
+/-- Decodes an item of kind `func`, at `kindPos`: it has no attributes,
+and its body is blocks. An empty body is no blocks. -/
+def decodeFuncItem (kindPos : TextPos) (name : String) (params : List SDef)
+    (results : List (Attr × TextPos)) : List (Attr × TextPos) → SBody → Except ParseError (Item d)
+  | (_, p) :: _, _ => errorAt p "a func has no attributes"
+  | [], .items (_ :: _) _ => errorAt kindPos "a func's body holds blocks, not a dialect set"
+  | [], .items [] (⟨_, p, _, _, _, _, _⟩ :: _) => errorAt p "a func's body holds blocks, not items"
+  | [], .items [] [] => do pure (.func (← decodeFunc name params results []))
+  | [], .blocks bs => do pure (.func (← decodeFunc name params results bs))
+
+/-- Checks the header of an item of kind `module`: it has no parameters,
+results or attributes. -/
+def moduleHeader : List SDef → List (Attr × TextPos) → List (Attr × TextPos) →
+    Except ParseError Unit
+  | x :: _, _, _ => errorAt x.pos "a module has no parameters"
+  | [], (_, p) :: _, _ => errorAt p "a module has no results"
+  | [], [], (_, p) :: _ => errorAt p "a module has no attributes"
+  | [], [], [] => pure ()
+
+mutual
+/-- Decodes an item: a `func`, or a `module`, whose body is its dialect set
+and its items (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
+module with no items. -/
 def decodeItem : SItem → Except ParseError (Item d)
   | ⟨kind, kindPos, name, params, results, attrs, body⟩ =>
-    if kind ≠ "func" then errorAt kindPos ("unknown item kind " ++ kind ++ ": M0 has only func")
-    else match attrs, body with
-      | (_, p) :: _, _ => errorAt p "a func has no attributes"
-      | [], .items (⟨_, p, _, _, _, _, _⟩ :: _) => errorAt p "a func's body holds blocks, not items"
-      | [], .items [] => do pure (.func (← decodeFunc name params results []))
-      | [], .blocks bs => do pure (.func (← decodeFunc name params results bs))
+    if kind = "func" then decodeFuncItem kindPos name params results attrs body
+    else if kind = "module" then do
+      moduleHeader params results attrs
+      match body with
+      | .blocks [] => pure (.module name [] [])
+      | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
+      | .items ds is => do pure (.module name ds (← decodeItems is))
+    else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module")
+
+/-- Decodes items, in order. -/
+def decodeItems : List SItem → Except ParseError (List (Item d))
+  | [] => pure []
+  | i :: is => do
+    let i ← decodeItem i
+    pure (i :: (← decodeItems is))
+end
+
+/-- Decoding items decodes each, in order. -/
+theorem decodeItems_eq_mapM : ∀ is : List SItem,
+    decodeItems (d := d) is = is.mapM decodeItem
+  | [] => rfl
+  | i :: is => by
+    rw [decodeItems, List.mapM_cons, decodeItems_eq_mapM is]
 
 /-- Decodes a module. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do

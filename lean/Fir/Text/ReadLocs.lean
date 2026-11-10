@@ -100,23 +100,10 @@ def readLocs (ts : List Token) : Read LocTable ts := do
 # A module
 
 A module is its dialect set, its items, then its location table, then the
-end of the text. The word `dialects` starts the dialect set, and a comma
-separates the names that follow it. A module that names no dialect has no
-set in its text, and the word `dialects` is no item's kind.
+end of the text. The reader of a dialect set, with the readers of items,
+reads the set. A module that names no dialect has no set in its text, and
+the word `dialects` is no item's kind.
 -/
-
-/-- Reads the name of a dialect: a word. -/
-def readDialectName : (ts : List Token) → Read Name ts
-  | ⟨.word w, _⟩ :: rest => .ok (w, ⟨rest, Nat.le_succ _⟩)
-  | ts => fail ts "the name of a dialect"
-
-/-- Reads the dialect set that starts a module, `dialects a, b`, or none. -/
-def readDialects : (ts : List Token) → Read (List Name) ts
-  | ⟨.word "dialects", _⟩ :: rest => do
-    let (n, ⟨r, hr⟩) ← readDialectName rest
-    let (ns, ⟨r', hr'⟩) ← readMore readDialectName r
-    pure (n :: ns, ⟨r', by simp; omega⟩)
-  | ts => .ok ([], .here ts)
 
 /-- Reads a module from its tokens. -/
 def readModule (ts : List Token) : Except ParseError SModule := do

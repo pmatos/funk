@@ -11,6 +11,7 @@
 
 use super::type_list;
 use super::types::core_type;
+use crate::effects::Effects;
 use crate::ir::{Attr, Type};
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::text::print_symbol;
@@ -70,6 +71,13 @@ impl OpSpec for Call {
                  named {sym}"
             )),
         }
+    }
+
+    /// Empty: `call`'s own rule only runs its callee. A call has its
+    /// callee's effects too, which a reader of a call's effects adds
+    /// (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

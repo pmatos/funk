@@ -166,14 +166,16 @@ def renOp (a b : Name) (o : Operation CoreDialect) : Operation CoreDialect :=
 def renFunc (a b : Name) (f : Func CoreDialect) : Func CoreDialect :=
   { f with
     params := f.params.map fun (x, t) => (ren a b x, t)
-    body := ⟨f.body.blocks.map fun blk =>
+    body := ⟨f.body.kind, f.body.blocks.map fun blk =>
       { blk with params := blk.params.map (fun (x, t) => (ren a b x, t)),
                  body := blk.body.map (renOp a b) }⟩ }
 
 /-- The module of `lookups`, with the name `a` written `b`. -/
 def renamed (a b : Name) : Option (Module CoreDialect) :=
   match parseCore lookups with
-  | .ok m => some { m with items := m.items.map fun | .func f => .func (renFunc a b f) }
+  | .ok m => some { m with items := m.items.map fun
+    | .func f => .func (renFunc a b f)
+    | i@(.module ..) => i }
   | .error _ => none
 
 /-- The module of `lookups`. -/

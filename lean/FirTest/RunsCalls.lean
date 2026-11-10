@@ -37,7 +37,7 @@ def factFn : Func CoreDialect where
   name := "fact"
   params := [("n", i 64)]
   results := [i 64]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("one", i 64)] (.const 64 1) [] 0,
       op [("small", i 1)] (.icmp .sle 64) ["n", "one"] 0,
@@ -58,7 +58,7 @@ def parityFn (name other : String) (base : BitVec 1) : Func CoreDialect where
   name := name
   params := [("n", i 32)]
   results := [i 1]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("zero", i 32)] (.const 32 0) [] 0,
       op [("z", i 1)] (.icmp .eq 32) ["n", "zero"] 0,
@@ -94,6 +94,7 @@ def recModule : Module CoreDialect := ⟨[], [.func factFn, .func evenFn, .func 
 earlier result of its own block, and its `call` names `@fact` at its
 type. -/
 theorem factFn_valid : factFn.Valid recModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     have hentry : factFn.Reachable "entry" := .entry rfl
@@ -114,6 +115,7 @@ theorem factFn_valid : factFn.Valid recModule.context where
 
 /-- `@even` is valid in its module: its `call` names `@odd` at its type. -/
 theorem evenFn_valid : evenFn.Valid recModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     have hentry : evenFn.Reachable "entry" := .entry rfl
@@ -134,6 +136,7 @@ theorem evenFn_valid : evenFn.Valid recModule.context where
 
 /-- `@odd` is valid in its module: its `call` names `@even` at its type. -/
 theorem oddFn_valid : oddFn.Valid recModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     have hentry : oddFn.Reachable "entry" := .entry rfl
@@ -155,12 +158,13 @@ theorem oddFn_valid : oddFn.Valid recModule.context where
 /-- The module of `@fact`, `@even` and `@odd` is valid. -/
 theorem recModule_valid : recModule.Valid where
   symbolsUnique := by decide
+  flat := by decide
   locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [recModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
     simp [Location.WellFormed, Location.refs]⟩
   funcs f hf := by
-    simp only [recModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [recModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl | rfl
     · exact factFn_valid

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16338383544870729772")
+:::moduleDocs (fingerprint := "778644107879246559")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -36,25 +36,27 @@ A part $`v` written at a position $`p`, such as an operand or a result
 type, keeps $`v` and moves to $`p_0`: $`\mathrm{erase}(v, p) = (v, p_0)`.
 :::
 
-:::readable Fir.Text.SOp.erase Fir.Text.SRegion.eraseList Fir.Text.SBlock.eraseList Fir.Text.SOp.eraseList (pin := Fir.Text.SOp) (pin := Fir.Text.SBlock) (pin := Fir.Text.SRegion) (fingerprint := "6142680531305349951")
+:::readable Fir.Text.SOp.erase Fir.Text.SRegion.eraseList Fir.Text.SBlock.eraseList Fir.Text.SOp.eraseList (pin := Fir.Text.SOp) (pin := Fir.Text.SBlock) (pin := Fir.Text.SRegion) (fingerprint := "18407039982094021363")
 *Definitions: ops, regions and blocks without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[op as written]
 erases its results and puts its name at $`p_0` and each operand at
 $`p_0`. It keeps the op's name, attributes, successors and location
-reference, and erases its regions. Erasing a region erases its blocks, and
+reference, and erases its regions. Erasing a region keeps its kind and
+erases its blocks, and
 erasing a block keeps its label and erases its arguments and its ops. A
 list is erased element by element. The four definitions call one another,
 as an op may hold regions.
 :::
 
-:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "9664042224910379088")
+:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "2009820988942171414")
 *Definitions: items and their bodies without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[item as written]
 keeps its kind and its symbol, puts its kind at $`p_0`, erases its
 parameters, and puts each result type and each attribute at $`p_0`. A body
-of blocks erases its blocks, and a body of items erases its items.
+of blocks erases its blocks, and a body of items keeps its dialect set and
+erases its items.
 :::
 
 :::readable Fir.Text.SModule.erase (pin := Fir.Text.SModule) (fingerprint := "4321630760763797544")
@@ -80,7 +82,7 @@ definition $`x : T` is
 $$`\begin{aligned} & \mathrm{tree}(x : T) = \{\mathsf{name}~x,~\mathsf{pos}~p_0, \\ & \quad \mathsf{ty}~\mathrm{tyattr}(T),~\mathsf{ty\_pos}~p_0\} \end{aligned}`
 :::
 
-:::readable Fir.Operation.tree Fir.Region.treeList Fir.Block.treeList Fir.Operation.treeList (pin := Fir.Operation) (pin := Fir.Block) (pin := Fir.Region) (pin := Fir.DialectText) (fingerprint := "8847471298669668753")
+:::readable Fir.Operation.tree Fir.Region.treeList Fir.Block.treeList Fir.Operation.treeList (pin := Fir.Operation) (pin := Fir.Block) (pin := Fir.Region) (pin := Fir.DialectText) (fingerprint := "16872019440792913881")
 *Definitions: the trees of ops, regions and blocks.* The tree of an
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[op]
 with the op instance $`\iota` holds:
@@ -92,12 +94,13 @@ with the op instance $`\iota` holds:
 * each operand at $`p_0`;
 * its successors, the trees of its regions, and its location reference.
 
-The tree of a region is the trees of its blocks, and the tree of a block
+The tree of a region is its kind and the trees of its blocks, and the tree
+of a block
 holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.Item.tree (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "17692060576293912157")
+:::readable Fir.Func.tree Fir.moduleBody Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "9879907637118872792")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -107,8 +110,13 @@ function $`f` is the item of kind `func`, at $`p_0`, with:
 * as its body, the trees of the blocks of $`f`: a body of blocks, even
   when $`f` has none.
 
-The tree of an item is the tree of its function, since every item of M0 is
-a function.
+The tree of an item that is a function is the tree of its function. The
+tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
+the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
+$`s`, no parameters, results or attributes, and as its body the dialect set
+$`x^*` and the trees of $`i^*`; but when $`x^*` and $`i^*` are both empty,
+its body is no blocks, as the grammar reads an empty body. The trees of a
+list of items are the tree of each, in order.
 :::
 
 :::readable Fir.Module.tree (pin := Fir.Module) (fingerprint := "8609683091975040167")
@@ -155,7 +163,7 @@ $`o` with the op instance $`\iota`, then:
 The decoding step reads each part of the op off these equations.
 :::
 
-:::readable Fir.SOp.eraseList_eq_nil Fir.SOp.eraseList_eq_cons Fir.SBlock.eraseList_eq_nil Fir.SBlock.eraseList_eq_cons Fir.SRegion.eraseList_eq_nil Fir.SRegion.eraseList_eq_cons (fingerprint := "17433017824174039419")
+:::readable Fir.SOp.eraseList_eq_nil Fir.SOp.eraseList_eq_cons Fir.SBlock.eraseList_eq_nil Fir.SBlock.eraseList_eq_cons Fir.SRegion.eraseList_eq_nil Fir.SRegion.eraseList_eq_cons (fingerprint := "13289437245592097271")
 *Theorems: lists that erase to the trees of lists.* For every dialect with
 a text format:
 
@@ -169,8 +177,9 @@ a text format:
   and ops erase to the trees of those of $`b`, followed by blocks that
   erase to the trees of $`b^*`;
 * a list of regions as written that erases to the trees of a region $`r`
-  followed by $`r^*` is a region whose blocks erase to the trees of the
-  blocks of $`r`, followed by regions that erase to the trees of $`r^*`.
+  followed by $`r^*` is a region of the kind of $`r` whose blocks erase to
+  the trees of the blocks of $`r`, followed by regions that erase to the
+  trees of $`r^*`.
 
 The decoding step goes down a tree with them, one element at a time.
 :::

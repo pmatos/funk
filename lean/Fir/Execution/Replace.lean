@@ -86,17 +86,26 @@ is `s`. -/
 abbrev Func.replaceBody (s : Name) (b : Region d) (f : Func d) : Func d :=
   { f with body := if f.name = s then b else f.body }
 
+/-- An item, with the body `b` in place of its body when it is a function
+whose symbol is `s`. A nested module is unchanged: its functions are in its
+own symbol table. -/
+def Item.replaceBody (s : Name) (b : Region d) : Item d → Item d
+  | .func f => .func (f.replaceBody s b)
+  | i@(.module ..) => i
+
 /-- The module `M`, with the body `b` in place of the body of its function
 whose symbol is `s`: every other part of it is unchanged. -/
 def Module.replaceBody (M : Module d) (s : Name) (b : Region d) : Module d :=
-  ⟨M.dialects, M.items.map fun | .func f => .func (f.replaceBody s b), M.locs⟩
+  ⟨M.dialects, M.items.map (Item.replaceBody s b), M.locs⟩
 
 /-- The functions of `M` with a body replaced are those of `M`, each with
 its body replaced when its symbol is `s`. -/
 theorem Module.funcs_replaceBody (M : Module d) (s : Name) (b : Region d) :
     (M.replaceBody s b).funcs = M.funcs.map (Func.replaceBody s b) := by
-  simp only [Module.replaceBody, Module.funcs, List.map_map]
+  simp only [Module.replaceBody, Module.funcs, List.filterMap_map, List.map_filterMap]
   congr 1
+  funext i
+  cases i <;> rfl
 
 /-- A function whose symbol is not `s` keeps its body. -/
 theorem Func.replaceBody_of_ne {s : Name} {b : Region d} {f : Func d} (h : f.name ≠ s) :
@@ -153,6 +162,11 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
   symbolsUnique := by
     rw [Module.funcs_replaceBody, List.map_map]
     exact hM.symbolsUnique
+  flat i hi := by
+    obtain ⟨j, hj, rfl⟩ := List.mem_map.1 hi
+    cases j with
+    | func => rfl
+    | module => exact hM.flat _ hj
   locs := hM.locs
   funcs f hf := by
     rw [Module.context_replaceBody]

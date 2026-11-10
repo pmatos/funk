@@ -127,6 +127,8 @@ def moduleProblems (m : Module d) : List Problem :=
   let lk := m.lookup
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
+  m.items.filterMap (fun i => if i.func?.isSome then none else
+    some { message := "the nested module " ++ Text.printSymbol i.name ++ " is not valid yet" }) ++
   m.locs.problems ++
   m.funcs.flatMap (·.problems lk) ++
   m.dialects.filterMap (fun x => if isWord x then none else

@@ -9,7 +9,8 @@
 
 use funk_ir::dialects::core::{self, int_type, int_width};
 use funk_ir::{
-    Dialect, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse, print, verify,
+    Dialect, Effects, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse, print,
+    verify,
 };
 
 const CASES: &str = include_str!("../../../tests/dialects/dialect-set.cases");
@@ -28,6 +29,10 @@ impl OpSpec for TagOp {
         } else {
             Err(format!("{} used at the wrong types", self.0))
         }
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

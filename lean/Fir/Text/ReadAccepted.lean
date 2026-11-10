@@ -63,7 +63,7 @@ def SOp.Writable : SOp → Prop
 /-- Regions as read can be written. -/
 def SRegion.WritableList : List SRegion → Prop
   | [] => True
-  | ⟨bs⟩ :: rs => SBlock.WritableList bs ∧ SRegion.WritableList rs
+  | ⟨k, bs⟩ :: rs => (∀ w ∈ k, isWord w) ∧ SBlock.WritableList bs ∧ SRegion.WritableList rs
 
 /-- Blocks as read can be written. -/
 def SBlock.WritableList : List SBlock → Prop
@@ -77,16 +77,33 @@ def SOp.WritableList : List SOp → Prop
   | o :: os => o.Writable ∧ SOp.WritableList os
 end
 
-/-- The body of an item as read can be written, when it holds blocks.
-Decoding rejects a body that holds items, unless it holds none. -/
-def SBody.Writable : SBody → Prop
-  | .blocks bs => SBlock.WritableList bs
-  | .items _ => True
-
+mutual
 /-- An item as read can be written: its parameters, its result types and its
 body. -/
-def SItem.Writable (i : SItem) : Prop :=
-  (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable
+def SItem.Writable : SItem → Prop
+  | ⟨_, _, _, params, results, _, body⟩ =>
+    (∀ x ∈ params, x.Writable) ∧ (∀ r ∈ results, r.1.IsType) ∧ SBody.Writable body
+
+/-- The body of an item as read can be written: its blocks, or its dialect
+set and its items. -/
+def SBody.Writable : SBody → Prop
+  | .blocks bs => SBlock.WritableList bs
+  | .items ds is => (∀ x ∈ ds, isWord x) ∧ SItem.WritableList is
+
+/-- Items as read can be written. -/
+def SItem.WritableList : List SItem → Prop
+  | [] => True
+  | i :: is => i.Writable ∧ SItem.WritableList is
+end
+
+theorem SItem.writable_iff (i : SItem) : i.Writable ↔
+    (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable := by
+  obtain ⟨⟩ := i
+  rfl
+
+theorem SItem.writableList_iff : ∀ is : List SItem, SItem.WritableList is ↔ ∀ i ∈ is, i.Writable
+  | [] => by simp [SItem.WritableList]
+  | i :: is => by simp [SItem.WritableList, SItem.writableList_iff is]
 
 /-- A module as read can be written: its dialect set, its items, and its
 location table. -/
@@ -376,5 +393,17 @@ theorem readOpLoc_writable (ts : List Token) :
   · cases h
     exact ⟨hw.locRef, hw.tail⟩
   · exact absurd h fail_ne_ok
+
+/-- A region's kind as read is a word, and leaves tokens that can be
+written. -/
+theorem readKind_writable (ts : List Token) :
+    ReadsWritable readKind (fun k => ∀ w ∈ k, isWord w) ts := by
+  intro hw k r h
+  unfold readKind at h
+  split at h
+  · cases h
+    exact ⟨fun w hw' => by cases hw'; exact hw.word, hw.tail⟩
+  · cases h
+    exact ⟨by simp, hw⟩
 
 end Fir.Text

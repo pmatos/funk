@@ -10,7 +10,8 @@ use std::sync::Mutex;
 
 use funk_ir::dialects::core;
 use funk_ir::{
-    Attr, Block, Dialect, Module, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
+    Attr, Block, Dialect, Effects, Item, Module, NestedModule, OpShape, OpSpec, OpTypes, Registry,
+    parse, print, verify,
 };
 
 const DEPTH: usize = 1_000_000;
@@ -40,6 +41,10 @@ impl OpSpec for ToyNest {
         } else {
             Err("toy.nest defines and uses no values".into())
         }
+    }
+
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 
@@ -124,6 +129,31 @@ fn copies_and_compares(
     assert_eq!(digest.1, debug_len(text, depth));
     change(&mut copy);
     assert!(copy != *m);
+}
+
+/// A text of `depth` nested modules, each holding the next, written without
+/// indentation.
+fn module_nest_text(depth: usize) -> String {
+    format!(
+        "{}{}\nlocs {{\n}}\n",
+        "module @m() {\n".repeat(depth),
+        "}\n".repeat(depth)
+    )
+}
+
+/// The innermost nested module of `m`, whose modules each hold one.
+fn innermost_module(m: &mut Module) -> &mut NestedModule {
+    let mut n = match m.items.first_mut() {
+        Some(Item::Module(n)) => n,
+        _ => panic!("a nested module"),
+    };
+    while matches!(n.items.first(), Some(Item::Module(_))) {
+        let Some(Item::Module(inner)) = n.items.first_mut() else {
+            unreachable!("the first item is a module")
+        };
+        n = inner;
+    }
+    n
 }
 
 /// The innermost attribute of `a`, which nests applications of one
@@ -211,5 +241,35 @@ fn items_nest_to_any_depth() {
         let e = parse(&format!("{items}\nlocs {{\n}}\n"), &registry()).unwrap_err();
         assert_eq!((e.pos.line, e.pos.col), (2, 1), "{e}");
         assert!(e.reason.contains("holds blocks, not items"), "{e}");
+    });
+}
+
+/// Nested modules (ADR-2026-11-10-1510) parse, verify, clone, compare, hash,
+/// debug-format and drop at any depth. Their canonical text, indented two
+/// spaces deeper at each level, is printed 3,000 levels deep.
+#[test]
+fn modules_nest_to_any_depth() {
+    on_small_stack(|| {
+        let text = module_nest_text(DEPTH);
+        let reg = registry();
+        let m = parse(&text, &reg).expect("the text parses");
+        drop(text);
+        let ds = verify(&m, &reg);
+        assert_eq!(ds.len(), 1, "{ds:?}");
+        assert!(ds[0].message.contains("nested module"), "{ds:?}");
+        copies_and_compares(&m, module_nest_text, DEPTH, |m| {
+            innermost_module(m).name = "n".into();
+        });
+        let depth = 3_000;
+        let mut canonical = String::new();
+        for k in 0..depth {
+            canonical.push_str(&format!("{:n$}module @m() {{\n", "", n = 2 * k));
+        }
+        for k in (0..depth).rev() {
+            canonical.push_str(&format!("{:n$}}}\n\n", "", n = 2 * k));
+        }
+        canonical.push_str("locs {\n}\n");
+        let shallow = parse(&module_nest_text(depth), &reg).expect("the text parses");
+        assert!(print(&shallow) == canonical);
     });
 }

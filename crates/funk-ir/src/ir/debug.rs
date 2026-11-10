@@ -170,6 +170,7 @@ mod tests {
 
         #[derive(Debug)]
         pub struct Region {
+            pub kind: Option<String>,
             pub blocks: Vec<Block>,
         }
 
@@ -204,6 +205,7 @@ mod tests {
 
     fn region(r: &Region) -> derived::Region {
         derived::Region {
+            kind: r.kind.clone(),
             blocks: r.blocks.iter().map(block).collect(),
         }
     }

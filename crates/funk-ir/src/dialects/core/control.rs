@@ -18,7 +18,16 @@
 
 use super::type_list;
 use super::types::{CoreType, core_type};
+use crate::effects::Effects;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
+
+/// The effects of `br` and `ret`: control alone (`Core.Op.effects`).
+fn control() -> Effects {
+    Effects {
+        control: true,
+        ..Effects::PURE
+    }
+}
 
 /// A terminator with `successors` successors.
 fn terminator(successors: usize) -> OpShape {
@@ -58,6 +67,11 @@ impl OpSpec for Br {
         }
         Ok(terminator(1))
     }
+
+    /// Control (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        control()
+    }
 }
 
 /// `cond_br %c, ^then(%x), ^else(%y)`.
@@ -76,6 +90,14 @@ impl OpSpec for CondBr {
                 "cond_br takes one operand, its i1 condition, not {}",
                 type_list(op.operands)
             )),
+        }
+    }
+
+    /// Control, and may-UB on a poison condition (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_ub: true,
+            ..control()
         }
     }
 }
@@ -110,6 +132,11 @@ impl OpSpec for Ret {
             type_list(op.operands),
             type_list(cx.results)
         ))
+    }
+
+    /// Control (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        control()
     }
 }
 

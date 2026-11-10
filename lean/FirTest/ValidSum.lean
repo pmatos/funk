@@ -149,6 +149,7 @@ theorem sum_reachable : ∀ b ∈ sum.blocks, sum.Reachable b.label := by
 
 /-- `@sum` is valid in its module. -/
 theorem sum_valid : sum.Valid sumModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable := sum_reachable
   labelsUnique := by decide
@@ -168,6 +169,7 @@ theorem sum_valid : sum.Valid sumModule.context where
 /-- `@sum10` is valid in its module: it has one block, and its `call`
 names `@sum` at `@sum`'s type. -/
 theorem sum10_valid : sum10.Valid sumModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     simp only [sum10, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
@@ -188,14 +190,17 @@ theorem sum10_valid : sum10.Valid sumModule.context where
 /-- The spec's example module is valid. -/
 theorem sumModule_valid : sumModule.Valid where
   symbolsUnique := by decide
+  flat i hi := by
+    simp only [sumModule, List.mem_cons, List.not_mem_nil, or_false] at hi
+    rcases hi with rfl | rfl <;> rfl
   locs := by
     refine ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => ?_⟩
     simp only [sumModule, List.mem_cons, List.not_mem_nil, or_false] at he
     rcases he with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
       simp [Location.WellFormed, Location.refs]
   funcs f hf := by
-    simp only [sumModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
-      List.not_mem_nil, or_false] at hf
+    simp only [sumModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil,
+      List.mem_cons, List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl
     · exact sum_valid
     · exact sum10_valid

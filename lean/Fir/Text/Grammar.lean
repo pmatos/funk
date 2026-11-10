@@ -14,21 +14,22 @@ kind of item needs no change to the grammar, but the parser must learn to
 decode it. A float or a nested symbol reference needs new tokens: a change
 to the tokens of the previous section.
 
-* An item's kind says what it is. M0, the first milestone that this
-  specification covers, has one kind, `func`, so its items are written as
-  `func @sum(%n: i32) -> i32 { ... }`. A `func`
-  has no attributes, and its body is its blocks. A later kind, such as a
-  nested module, a global or an external declaration, uses the same
-  production: its attributes say what a function's header cannot, and a
-  kind whose body holds items, as a nested module's would, writes items in
-  place of blocks. The word `locs` starts the location table, so no kind
-  is named `locs`. One table ends the text, and every item refers into it,
-  however deeply it is nested.
+* An item's kind says what it is. The kinds are `func` and `module`, so a
+  function is written as `func @sum(%n: i32) -> i32 { ... }` and a nested
+  module as `module @dev() { ... }`. A `func` has no attributes, and its
+  body is its blocks. A `module` has no parameters, results or attributes,
+  and its body is its items, which may start with its own dialect set
+  (ADR-2026-11-10-1510). A later kind, such as a global or an external
+  declaration, uses the same production: its attributes say what a
+  function's header cannot. The word `locs` starts the location table, so
+  no kind is named `locs`. One table ends the text, and every item refers
+  into it, however deeply it is nested.
 * A module's dialect set starts the text, when it names a dialect: the word
   `dialects`, then the names of the dialects, separated by commas, as in
-  `dialects toy, gpu` (ADR-2026-11-10-1306). So no kind is named
-  `dialects` either. The core is in every set and is never named, and a
-  module that names no dialect writes no set.
+  `dialects toy, gpu` (ADR-2026-11-10-1306). A nested module's set starts
+  its body in the same way. So no kind is named `dialects` either. The core
+  is in every set and is never named, and a module that names no dialect
+  writes no set.
 * A function's parameters are written in its header, and are the arguments
   of its entry block. The entry block, like every block, is written with its
   label, as in `^entry:`.
@@ -187,8 +188,9 @@ applies (ADR-2026-10-30-0815):
 * a number out of its range;
 * a string or quoted symbol not in its one spelling, such as an escape the
   printer does not write, or a quoted name that is a word;
-* an item whose kind the parser does not know. In M0 that is every kind but
-  `func`, and a `func` with attributes or with items in its body;
+* an item whose kind the parser does not know: every kind but `func` and
+  `module`; a `func` with attributes, or with a dialect set or items in its
+  body; and a `module` with parameters, results, attributes or blocks;
 * a type that does not decode;
 * a value that a function defines twice: an operand's type is found at its
   definition, so each value has one;

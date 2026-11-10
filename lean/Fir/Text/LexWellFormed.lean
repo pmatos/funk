@@ -245,7 +245,7 @@ theorem op_tokens (hf : f.WellFormed) :
     (∀ b ∈ Region.allBlocks o.regions, b ∈ f.allBlocks) → ∀ t ∈ o.tokens, t.Writable
   | ⟨results, op, operands, succs, regions, loc⟩, ho, hres, hsub => by
     have hwf := hf.ops _ ho
-    have hregs := regions_tokens hf regions hsub
+    have hregs := regions_tokens hf regions hsub (hf.kinds _ ho)
     simp only [Operation.tokens]
     split_writable
     · exact hf.lhs_tokens hres
@@ -256,13 +256,19 @@ theorem op_tokens (hf : f.WellFormed) :
 /-- The tokens of regions of the function, at any depth, can be written. -/
 theorem regions_tokens (hf : f.WellFormed) :
     ∀ rs : List (Region d), (∀ b ∈ Region.allBlocks rs, b ∈ f.allBlocks) →
-    ∀ t ∈ Region.tokensList rs, t.Writable
-  | [], _ => by simp [Region.tokensList]
-  | ⟨bs⟩ :: rs, hsub => by
+    (∀ r ∈ rs, ∀ k ∈ r.kind, isWord k) → ∀ t ∈ Region.tokensList rs, t.Writable
+  | [], _, _ => by simp [Region.tokensList]
+  | ⟨kind, bs⟩ :: rs, hsub, hk => by
     have h₁ := blocks_tokens hf bs fun b hb => hsub b (by simp [Region.allBlocks, hb])
-    have h₂ := regions_tokens hf rs fun b hb => hsub b (by simp [Region.allBlocks, hb])
+    have h₂ := regions_tokens hf rs (fun b hb => hsub b (by simp [Region.allBlocks, hb]))
+      fun r hr => hk r (.tail _ hr)
+    have h₀ : ∀ t ∈ kindTokens kind, t.Writable := by
+      cases kind with
+      | none => simp [kindTokens]
+      | some k => simpa [kindTokens, Tok.Writable] using hk _ (.head _) k rfl
     simp only [Region.tokensList]
     split_writable
+    · exact h₀
     · exact h₁
     · exact h₂
 end
@@ -287,21 +293,44 @@ theorem tokens (hf : f.WellFormed) : ∀ t ∈ f.tokens, t.Writable := by
 
 end Func.WellFormed
 
+/-- The tokens of a dialect set whose names are words can be written. -/
+theorem dialectsTokens_writable {ds : List Name} (h : ∀ x ∈ ds, isWord x) :
+    ∀ t ∈ dialectsTokens ds, t.Writable := by
+  unfold dialectsTokens
+  split
+  · simp
+  · refine List.forall_mem_cons.mpr ⟨by unfold Tok.Writable; decide,
+      forall_mem_intercalate_of comma_writable ?_⟩
+    simp only [List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+      List.mem_singleton, forall_eq]
+    exact h
+
+mutual
+/-- Every token of a well-formed item can be written. -/
+theorem Item.WellFormed.tokens : ∀ {i : Item d}, i.WellFormed → ∀ t ∈ i.tokens, t.Writable
+  | .func _, h => Func.WellFormed.tokens h
+  | .module _ _ is, h => by
+    have his := Item.WellFormed.tokensList (is := is) h.2
+    simp only [Item.tokens]
+    split_writable
+    · decide
+    · exact dialectsTokens_writable h.1
+    · exact his
+
+/-- Every token of well-formed items can be written. -/
+theorem Item.WellFormed.tokensList : ∀ {is : List (Item d)}, Item.WellFormedList is →
+    ∀ t ∈ Item.tokensList is, t.Writable
+  | [], _ => by simp [Item.tokensList]
+  | _ :: _, h => by
+    simp only [Item.tokensList, List.forall_mem_append]
+    exact ⟨Item.WellFormed.tokens h.1, Item.WellFormed.tokensList h.2⟩
+end
+
 /-- Every token of a well-formed module can be written. -/
 theorem Module.WellFormed.tokens_writable {m : Module d} (h : m.WellFormed) :
     ∀ t ∈ m.tokens, t.Writable := by
   simp only [Module.tokens, List.forall_mem_append, List.forall_mem_flatMap]
-  refine ⟨⟨?_, fun i hi => ?_⟩, h.locs.tokens⟩
-  · unfold dialectsTokens
-    split
-    · simp
-    · refine List.forall_mem_cons.mpr ⟨by unfold Tok.Writable; decide,
-        forall_mem_intercalate_of comma_writable ?_⟩
-      simp only [List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
-        List.mem_singleton, forall_eq]
-      exact h.dialects
-  cases i with
-  | func f => exact (h.funcs f (List.mem_map.mpr ⟨_, hi, rfl⟩)).tokens
+  exact ⟨⟨dialectsTokens_writable h.dialects, fun i hi => (h.items i hi).tokens⟩, h.locs.tokens⟩
 
 /-- The lexer reads the printed text of a well-formed module as its tokens. -/
 theorem Module.WellFormed.lex_print {m : Module d} (h : m.WellFormed) :

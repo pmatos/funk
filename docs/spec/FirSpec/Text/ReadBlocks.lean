@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Blocks and regions read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14359386289347756802")
+:::moduleDocs (fingerprint := "9928131537140790139")
 :::
 
 :::readable Fir.head_blocks (pin := Fir.Block.tokensList) (fingerprint := "17423821835765405823")
@@ -47,19 +47,23 @@ parentheses when it has any, then `:`, then its ops. Its ops end at the
 label of the next block, or at the `}` after the last.
 :::
 
-:::readable Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "3564753331505198229")
+:::readable Fir.readKind_reads Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "3849686805577609084")
 *Theorems: regions read back, one at a time.* For every dialect with a text
 format, the reader of regions reads tokens of regions as their trees before
 any location reference, up to positions:
 
 * for no regions: it reads nothing;
-* for a region with the blocks $`b^*`, followed by regions $`r^*`: it reads
-  them when the reader of blocks reads the tokens of $`b^*` as their trees before `}`,
-  and the reader of regions reads the tokens of $`r^*` as their trees
-  before any location reference.
+* for a region of any kind with the blocks $`b^*`, followed by regions
+  $`r^*`: it reads them when the reader of blocks reads the tokens of
+  $`b^*` as their trees before `}`, and the reader of regions reads the
+  tokens of $`r^*` as their trees before any location reference.
 
-A region's tokens are `{`, its blocks, and `}`. The regions of an op end
-at its location reference.
+The reader of a region's kind reads the token $`\mathsf{word}~k` as the
+kind $`k`, and reads no kind, the core's, before any token that is not a
+word. A region's tokens are `{`, the word of its kind when it names one,
+its blocks, and `}`; its blocks start with a label or end at `}`, so the
+reader of a region's kind reads the region's own kind. The regions of an
+op end at its location reference.
 :::
 
 :::readable Fir.Block.readsList Fir.Operation.readsList Fir.Operation.readsBody Fir.Region.readsList (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Block.defs) (fingerprint := "12896156741841929050")

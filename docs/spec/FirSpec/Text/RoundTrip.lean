@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17744331054923624846")
+:::moduleDocs (fingerprint := "6101803878320670846")
 :::
 
 :::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
@@ -59,8 +59,8 @@ op back: it finds the types of the operands where they are defined, and
 gives them to the dialect with the op's name and attributes.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Module.WellFormed (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "4265873223270394096")
-*Definition: a well-formed function, and a well-formed module.* A function
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "3091985326477444571")
+*Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 
 * the value names of $`\mathrm{defs}(f)`, every value that $`f` defines,
@@ -69,14 +69,21 @@ $`f` is _well formed_ when:
 * for each type $`t` of $`\mathrm{types}(f)`, every type that the text of
   $`f` states, $`\mathrm{tyattr}(t)` is written as a type and
   $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`;
-* each op of $`\mathrm{allops}(f)` is well formed in $`f`.
+* each op of $`\mathrm{allops}(f)` is well formed in $`f`;
+* the body of $`f` is a region of the core's kind, since the text of a
+  function names no kind;
+* each region of an op of $`\mathrm{allops}(f)` that names a kind names it
+  by a word.
 
 Its symbol may be any string, since a symbol that is not a word is quoted.
-A module is _well formed_ when each dialect of its set is named by a word,
-each of its functions is well formed, and its
+An item is well formed when it is a well-formed function, or a nested
+module whose dialect set names each dialect by a word and each of whose
+items is well formed, at any depth. A module is _well formed_ when each
+dialect of its set is named by a word, each of its items is well formed,
+and its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is within limits: every reference, line and column in it is below
-$`2^{32}`.
+$`2^{32}`. So each function of a well-formed module is well formed.
 
 These are the conditions under which the printed form of a module says
 everything the module holds, so that the parser can give it back. They are
@@ -136,7 +143,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "9943546898082679850")
+:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "16352145579292145560")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -148,12 +155,13 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
 * every valid module of $`d` is well formed.
 
 The proof reads each condition of well-formedness off a rule of validation
-or a law of the text. Validation gives distinct value names that are names,
-labels that are names, valid types, ops that own no region, operand and
-result types that match the op instance, successors that name blocks of
-the function and pass values that it defines, and location references that
-are keys of the table, whose keys are below $`2^{32}`, and a dialect set
-whose names are words. The laws give op
-names that are words, attributes that can be written, and valid types that
-are written as types and read back.
+or a law of the text. Validation gives items that are all functions,
+distinct value names that are names, labels that are names, valid types,
+a body of the core's kind, ops that own no region, and so no region that
+names a kind, operand and result types that match the op instance,
+successors that name blocks of the function and pass values that it
+defines, and location references that are keys of the table, whose keys
+are below $`2^{32}`, and a dialect set whose names are words. The laws
+give op names that are words, attributes that can be written, and valid
+types that are written as types and read back.
 :::

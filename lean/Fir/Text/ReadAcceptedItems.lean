@@ -6,9 +6,10 @@ import Fir.Text.ReadAcceptedBlocks
 On tokens that can be written, the readers of items give items that can be
 written. An item's parameters come from the reader of definitions, its
 result types from the reader of types, and its body from the reader of
-blocks, or from the reader of items when it starts with a word. Nothing is
-asked of its kind, its symbol or its attributes: decoding accepts only a
-`func` with no attributes, whatever its symbol.
+blocks, or from the readers of a dialect set and of items when it starts
+with a word. Nothing is asked of its kind, its symbol or its attributes:
+decoding accepts only a `func` with no attributes and a `module` with none,
+whatever its symbol.
 
 The reader of items and the reader of one item call one another, for the
 items of a body. They are proved together, by induction that follows their
@@ -16,6 +17,31 @@ own recursion, as the readers of blocks are.
 -/
 
 namespace Fir.Text
+
+/-- The name of a dialect as read is a word. -/
+theorem readDialectName_writable (ts : List Token) :
+    ReadsWritable readDialectName (fun x => isWord x) ts := by
+  intro hw a r h
+  unfold readDialectName at h
+  split at h
+  · cases h
+    exact ⟨hw.word, hw.tail⟩
+  · exact absurd h fail_ne_ok
+
+/-- The names of a dialect set as read are words. -/
+theorem readDialects_writable (ts : List Token) :
+    ReadsWritable readDialects (fun xs => ∀ x ∈ xs, isWord x) ts := by
+  intro hw a r h
+  unfold readDialects at h
+  split at h
+  · bind_step h with ⟨⟨n, r₁, hr₁⟩, e₁, h⟩
+    bind_step h with ⟨⟨ns, r₂, hr₂⟩, e₂, h⟩
+    cases h
+    obtain ⟨k₁, w₁⟩ := readDialectName_writable _ hw.tail _ _ e₁
+    obtain ⟨k₂, w₂⟩ := readMore_writable readDialectName_writable _ w₁ _ _ e₂
+    exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ k₁) (k₂ y), w₂⟩
+  · cases h
+    exact ⟨by simp, hw⟩
 
 /-- On tokens that can be written, the readers of items give items that can
 be written. -/
@@ -74,15 +100,18 @@ theorem readItems_writable :
     bind_step h with ⟨⟨body, r₇, h₇⟩, e₇, h⟩
     have k₇ : body.Writable ∧ TokensWritable r₇ := by
       split at e₇
-      · bind_step e₇ with ⟨⟨is, r, hr⟩, f₁, e₇⟩
+      · bind_step e₇ with ⟨⟨ds, r, hr⟩, f₁, e₇⟩
+        bind_step e₇ with ⟨⟨is, r', hr'⟩, f₂, e₇⟩
         cases e₇
-        exact ⟨trivial, (ih r₁ h₁ r₂ h₂ r₃ h₃ r₄ h₄ r₅ h₅ [] _ _ _ (by assumption) w₆ _ _ f₁).2⟩
+        obtain ⟨j₁, v₁⟩ := readDialects_writable _ w₆ _ _ f₁
+        obtain ⟨j₂, v₂⟩ := ih r₁ h₁ r₂ h₂ r₃ h₃ r₄ h₄ r₅ h₅ [] _ _ _ (by assumption) r hr v₁ _ _ f₂
+        exact ⟨⟨j₁, (SItem.writableList_iff is).mpr j₂⟩, v₂⟩
       · bind_step e₇ with ⟨⟨bs, a⟩, f₁, e₇⟩
         cases e₇
         exact readBlocks_writable _ w₆ _ _ f₁
     bind_step h with ⟨⟨_, r₈, h₈⟩, e₈, h⟩
     cases h
-    exact ⟨⟨k₂.1, k₄.1, k₇.1⟩, (expect_writable _ _ _ k₇.2 _ _ e₈).2⟩
+    exact ⟨(SItem.writable_iff _).mpr ⟨k₂.1, k₄.1, k₇.1⟩, (expect_writable _ _ _ k₇.2 _ _ e₈).2⟩
   | case5 kind p ts hne => -- `readItem`: no symbol
     intro hw i r h
     rw [readItem.eq_2 _ _ _ hne] at h

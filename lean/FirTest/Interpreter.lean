@@ -117,7 +117,7 @@ results as it takes, of its types. A function built here need not. -/
 
 /-- `@f(%a: t) -> i8`, whose one block runs `o`, then `ret %s`. -/
 def withOp (t : Core.Ty) (o : Operation CoreDialect) : Func CoreDialect :=
-  ⟨"f", [("a", t)], [.int 8], ⟨[⟨"e", [], [o, ⟨[], .ret [.int 8], ["s"], [], [], 0⟩]⟩]⟩⟩
+  ⟨"f", [("a", t)], [.int 8], ⟨none, [⟨"e", [], [o, ⟨[], .ret [.int 8], ["s"], [], [], 0⟩]⟩]⟩⟩
 
 #guard runFuncIn inferInstance (withOp (.int 8) ⟨[("s", .int 8)], .add 8 {}, ["a", "a"], [], [], 0⟩)
     ["1"] == some (returns ["2"])

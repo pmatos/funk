@@ -43,7 +43,7 @@ def countFn : Func CoreDialect where
   name := "count"
   params := [("n", i 32)]
   results := [i 32]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("zero", i 32)] (.const 32 0) [] 0,
       op [("z", i 1)] (.icmp .eq 32) ["n", "zero"] 0,
@@ -62,7 +62,7 @@ def gFn : Func CoreDialect where
   name := "g"
   params := [("x", i 32)]
   results := [i 32]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("zero", i 32)] (.const 32 0) [] 0,
       op [("q", i 32)] (.udiv 32 false) ["x", "zero"] 0,
@@ -91,6 +91,7 @@ theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
 
 /-- `@count` is valid in its module. -/
 theorem countFn_valid : countFn.Valid ubModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     have hentry : countFn.Reachable "entry" := .entry rfl
@@ -111,6 +112,7 @@ theorem countFn_valid : countFn.Valid ubModule.context where
 
 /-- `@g` is valid in its module. -/
 theorem gFn_valid : gFn.Valid ubModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     simp only [gFn, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
@@ -131,12 +133,13 @@ theorem gFn_valid : gFn.Valid ubModule.context where
 /-- The module of `@count` and `@g` is valid. -/
 theorem ubModule_valid : ubModule.Valid where
   symbolsUnique := by decide
+  flat := by decide
   locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [ubModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
     simp [Location.WellFormed, Location.refs]⟩
   funcs f hf := by
-    simp only [ubModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl
     · exact countFn_valid
@@ -145,7 +148,7 @@ theorem ubModule_valid : ubModule.Valid where
   dialectsUnique := by simp [ubModule]
 
 /-- The new body of `@g`: it calls `@count` back on its argument. -/
-def gBody : Region CoreDialect := ⟨[
+def gBody : Region CoreDialect := ⟨none, [
     ⟨"entry", [], [
       op [("r", i 32)] (.call "count" [i 32] [i 32]) ["x"] 0,
       op [] (.ret [i 32]) ["r"] 0]⟩]⟩
@@ -160,6 +163,7 @@ theorem ubModule'_funcs : ubModule'.funcs = [countFn, { gFn with body := gBody }
 
 /-- `@g` with its new body is valid in the module's context. -/
 theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     simp only [gBody, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
@@ -180,7 +184,7 @@ theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubMod
 /-- The module with `@g`'s new body is valid too. -/
 theorem ubModule'_valid : ubModule'.Valid :=
   Module.valid_replaceBody ubModule_valid fun g hg hs => by
-    simp only [ubModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hg
     rcases hg with rfl | rfl
     · exact absurd hs (by decide)
@@ -219,7 +223,8 @@ theorem odd_self_isRefinedBy :
       funcRuns (recModule.replaceBody oddFn.name oddFn.body)
         (oddFn.replaceBody oddFn.name oddFn.body) := by
   have hM : recModule.replaceBody oddFn.name oddFn.body = recModule := by
-    simp [Module.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn, parityFn]
+    simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
+      parityFn]
   rw [hM]
   show funcRuns recModule oddFn ⊑
     funcRuns recModule

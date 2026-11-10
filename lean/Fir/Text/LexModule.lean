@@ -7,7 +7,8 @@ The printer writes every op on a line of its own, and every block, region,
 item and the location table end with a line feed or a `}`. So each of them
 is read before whatever follows it, and a module is read piece by piece,
 from its dialect set, which ends with a line feed too, to the end of its
-location table.
+location table, and a nested module the same way, from its `module` line
+to its `}`.
 
 The result is the last theorem below: for every module whose tokens can be
 written, the lexer reads its printed text as exactly the module's tokens,
@@ -116,13 +117,25 @@ theorem Operation.spells (n : Nat) : ∀ o : Operation d, (∀ t ∈ o.tokens, t
 theorem Region.spellsList (n : Nat) : ∀ rs : List (Region d), (∀ t ∈ Region.tokensList rs, t.Writable) →
     SpellsAny (Region.printList n rs).toList (Region.tokensList rs)
   | [], _ => by simpa [Region.printList, Region.tokensList] using SpellsAny.nil
-  | ⟨blocks⟩ :: rs, hw => by
+  | ⟨kind, blocks⟩ :: rs, hw => by
     have hb := Block.spellsList (n + 2) blocks fun t ht => hw t (by simp [Region.tokensList, ht])
     have hr := Region.spellsList n rs fun t ht => hw t (by simp [Region.tokensList, ht])
-    simp only [Region.printList, Region.tokensList, String.toList_append, String.reduceToList,
-      List.append_assoc, List.cons_append, List.nil_append]
-    exact SpellsAny.space (SpellsAny.lbrace (SpellsAny.lf (SpellsAny.append_any hb
-      (SpellsAny.indent (SpellsAny.rbrace hr) n))))
+    have hrest : SpellsAny ('\n' :: (Block.printList (n + 2) blocks ++ indent n ++ "}" ++
+        Region.printList n rs).toList) (Block.tokensList blocks ++ .rbrace :: Region.tokensList rs) := by
+      simp only [String.toList_append, String.reduceToList, List.append_assoc, List.cons_append,
+        List.nil_append]
+      exact SpellsAny.lf (SpellsAny.append_any hb (SpellsAny.indent (SpellsAny.rbrace hr) n))
+    cases kind with
+    | none =>
+      simp only [Region.printList, Region.tokensList, printKind, kindTokens, String.toList_append,
+        String.reduceToList, List.append_assoc, List.cons_append, List.nil_append] at hrest ⊢
+      exact SpellsAny.space (SpellsAny.lbrace hrest)
+    | some k =>
+      have hk : (Tok.word k).Writable := hw (.word k) (by simp [Region.tokensList, kindTokens])
+      have hw' := Spells.tok_any hk hrest fun cs => boundary_cons (by decide)
+      simp only [Region.printList, Region.tokensList, printKind, kindTokens, String.toList_append,
+        String.reduceToList, List.append_assoc, List.cons_append, List.nil_append] at hw' ⊢
+      exact SpellsAny.space (SpellsAny.lbrace (SpellsAny.space hw'))
 
 /-- Blocks read back as their tokens, before any text. -/
 theorem Block.spellsList (n : Nat) : ∀ bs : List (Block d), (∀ t ∈ Block.tokensList bs, t.Writable) →
@@ -160,19 +173,20 @@ theorem Operation.spellsList (n : Nat) : ∀ os : List (Operation d),
       (Operation.spellsList n os fun t ht => hw t (by simp [Operation.tokensList, ht]))
 end
 
-/-- A function reads back as its tokens, before any text. -/
-theorem Func.spells (f : Func d) (hw : ∀ t ∈ f.tokens, t.Writable) :
-    SpellsAny f.print.toList f.tokens := by
+/-- A function at indentation `n` reads back as its tokens, before any
+text. -/
+theorem Func.spells (n : Nat) (f : Func d) (hw : ∀ t ∈ f.tokens, t.Writable) :
+    SpellsAny (f.print n).toList f.tokens := by
   have hdefs := spells_defs f.params fun t ht => hw t (by simp [Func.tokens, ht])
-  have hblocks := Block.spellsList 0 f.body.blocks fun t ht => hw t (by simp [Func.tokens, ht])
+  have hblocks := Block.spellsList n f.body.blocks fun t ht => hw t (by simp [Func.tokens, ht])
   intro cs us hl
   by_cases hr : f.results.isEmpty = true
   · simp only [Func.print, Func.tokens, hr, ite_true, String.toList_append, String.reduceToList,
-      List.append_assoc, List.cons_append, List.nil_append]
-    exact Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
+      toList_indent, List.append_assoc, List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
       Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
       hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| Lexes.space <| Lexes.lbrace <|
-      Lexes.lf <| hblocks _ _ <| Lexes.rbrace <| Lexes.lf hl
+      Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
   · simp only [Func.tokens, hr, Bool.false_eq_true, ite_false] at hw
     have hall := forall_mem_intercalate (sep := [Tok.comma])
       (tss := f.results.map (tyAttr · |>.tokens)) fun t ht => hw t (by simp [ht])
@@ -180,16 +194,61 @@ theorem Func.spells (f : Func d) (hw : ∀ t ∈ f.tokens, t.Writable) :
       SpellsEach.map fun ty hty =>
         Attr.spells _ (hall _ (List.mem_map_of_mem (f := (tyAttr · |>.tokens)) hty))
     simp only [Func.print, Func.tokens, hr, Bool.false_eq_true, ite_false, String.toList_append,
-      String.reduceToList, List.append_assoc, List.cons_append, List.nil_append]
-    exact Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
+      String.reduceToList, toList_indent, List.append_assoc, List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
       Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
       hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| Lexes.space <| Lexes.arrow <|
       Lexes.space <| spells_commaSep htypes _ _ (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
-      Lexes.lf <| hblocks _ _ <| Lexes.rbrace <| Lexes.lf hl
+      Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
 
-/-- An item reads back as its tokens, before any text. -/
-theorem Item.spells : ∀ i : Item d, (∀ t ∈ i.tokens, t.Writable) → SpellsAny i.print.toList i.tokens
-  | .func f, hw => Func.spells f hw
+/-- A dialect set at indentation `n`, then an empty line, reads back as its
+tokens, before any text. -/
+theorem spellsDialects (n : Nat) (ns : List Name) (hw : ∀ t ∈ dialectsTokens ns, t.Writable) :
+    SpellsAny (printDialects n ns).toList (dialectsTokens ns) := by
+  by_cases he : ns.isEmpty = true
+  · simpa [printDialects, dialectsTokens, he] using SpellsAny.nil
+  · have hall := forall_mem_intercalate (sep := [Tok.comma]) (tss := ns.map ([Tok.word ·]))
+      fun t ht => hw t (by simp only [dialectsTokens, he]; exact List.mem_cons_of_mem _ ht)
+    have hn : SpellsEach (ns.map fun x => x) (ns.map ([Tok.word ·])) :=
+      SpellsEach.map fun x hx => spells_word (hall _ (List.mem_map_of_mem hx) (.word x) (by simp))
+    rw [List.map_id'] at hn
+    intro cs us hl
+    simp only [printDialects, dialectsTokens, he, Bool.false_eq_true, ite_false,
+      String.toList_append, String.reduceToList, toList_indent, List.append_assoc,
+      List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.lit "dialects" ['d', 'i', 'a', 'l', 'e', 'c', 't', 's']
+      (boundary_space _) <| Lexes.space <| spells_commaSep hn _ _ (boundary_cons (by decide)) <|
+      Lexes.lf <| Lexes.lf hl) n
+
+mutual
+/-- An item at indentation `n` reads back as its tokens, before any text. -/
+theorem Item.spells (n : Nat) :
+    ∀ i : Item d, (∀ t ∈ i.tokens, t.Writable) → SpellsAny (i.print n).toList i.tokens
+  | .func f, hw => Func.spells n f hw
+  | .module name ds is, hw => by
+    have hds := spellsDialects (n + 2) ds fun t ht => hw t (by simp [Item.tokens, ht])
+    have his := Item.spellsList (n + 2) is fun t ht => hw t (by simp [Item.tokens, ht])
+    intro cs us hl
+    simp only [Item.print, Item.tokens, String.toList_append, String.reduceToList,
+      toList_indent, List.append_assoc, List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.lit "module" ['m', 'o', 'd', 'u', 'l', 'e'] (boundary_space _) <|
+      Lexes.space <| Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <| Lexes.rparen <|
+      Lexes.space <| Lexes.lbrace <| Lexes.lf <| hds _ _ <| his _ _ <|
+      Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
+
+/-- Items at indentation `n`, each followed by an empty line, read back as
+their tokens, before any text. -/
+theorem Item.spellsList (n : Nat) : ∀ is : List (Item d),
+    (∀ t ∈ Item.tokensList is, t.Writable) →
+    SpellsAny (Item.printList n is).toList (Item.tokensList is)
+  | [], _ => by simpa [Item.printList, Item.tokensList] using SpellsAny.nil
+  | i :: is, hw => by
+    have hi := Item.spells n i fun t ht => hw t (by simp [Item.tokensList, ht])
+    have his := Item.spellsList n is fun t ht => hw t (by simp [Item.tokensList, ht])
+    simp only [Item.printList, Item.tokensList, String.toList_append, String.reduceToList,
+      List.append_assoc, List.cons_append, List.nil_append]
+    exact SpellsAny.append_any hi (SpellsAny.lf his)
+end
 
 /-- The entries of the location table read back as their tokens. -/
 theorem LocTable.spellsEntries (t : LocTable)
@@ -221,42 +280,13 @@ theorem LocTable.spells (t : LocTable) (hw : ∀ x ∈ t.tokens, x.Writable) :
   exact Lexes.lit "locs" ['l', 'o', 'c', 's'] (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
     Lexes.lf <| he _ _ <| Lexes.rbrace <| Lexes.lf hl
 
-/-- Items, each followed by an empty line, read back as their tokens. -/
-theorem Module.spellsItems (items : List (Item d)) (hw : ∀ t ∈ items.flatMap Item.tokens, t.Writable) :
-    SpellsAny (String.join (items.map (·.print ++ "\n"))).toList (items.flatMap Item.tokens) := by
-  induction items with
-  | nil => simpa using SpellsAny.nil
-  | cons i is ih =>
-    have hi := Item.spells i fun t ht => hw t (List.mem_append_left _ ht)
-    have ih := ih fun t ht => hw t (List.mem_append_right _ ht)
-    simp only [List.map_cons, String.join_cons, List.flatMap_cons, String.toList_append,
-      String.reduceToList, List.append_assoc, List.cons_append, List.nil_append]
-    exact SpellsAny.append_any hi (SpellsAny.lf ih)
-
-/-- A module's dialect set, then an empty line, reads back as its tokens,
-before any text. -/
-theorem spellsDialects (ns : List Name) (hw : ∀ t ∈ dialectsTokens ns, t.Writable) :
-    SpellsAny (printDialects ns).toList (dialectsTokens ns) := by
-  by_cases he : ns.isEmpty = true
-  · simpa [printDialects, dialectsTokens, he] using SpellsAny.nil
-  · have hall := forall_mem_intercalate (sep := [Tok.comma]) (tss := ns.map ([Tok.word ·]))
-      fun t ht => hw t (by simp only [dialectsTokens, he]; exact List.mem_cons_of_mem _ ht)
-    have hn : SpellsEach (ns.map fun x => x) (ns.map ([Tok.word ·])) :=
-      SpellsEach.map fun x hx => spells_word (hall _ (List.mem_map_of_mem hx) (.word x) (by simp))
-    rw [List.map_id'] at hn
-    intro cs us hl
-    simp only [printDialects, dialectsTokens, he, Bool.false_eq_true, ite_false,
-      String.toList_append, String.reduceToList, List.append_assoc, List.cons_append,
-      List.nil_append]
-    exact Lexes.lit "dialects" ['d', 'i', 'a', 'l', 'e', 'c', 't', 's'] (boundary_space _) <|
-      Lexes.space <| spells_commaSep hn _ _ (boundary_cons (by decide)) <| Lexes.lf <| Lexes.lf hl
-
 /-- A module reads back as its tokens, before any text. -/
 theorem Module.spells (m : Module d) (hw : ∀ t ∈ m.tokens, t.Writable) :
     SpellsAny m.print.toList m.tokens := by
-  simp only [Module.print, Module.tokens, String.toList_append, List.forall_mem_append] at hw ⊢
-  exact SpellsAny.append_any (SpellsAny.append_any (spellsDialects m.dialects hw.1.1)
-    (Module.spellsItems m.items hw.1.2)) (LocTable.spells m.locs hw.2)
+  simp only [Module.print, Module.tokens, String.toList_append, List.forall_mem_append,
+    ← Item.tokensList_eq_flatMap] at hw ⊢
+  exact SpellsAny.append_any (SpellsAny.append_any (spellsDialects 0 m.dialects hw.1.1)
+    (Item.spellsList 0 m.items hw.1.2)) (LocTable.spells m.locs hw.2)
 
 /-- Lexing printed text: for every module whose tokens can be written, the
 lexer reads its printed text as exactly its tokens, then `eof`. The

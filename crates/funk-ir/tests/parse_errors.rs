@@ -5,7 +5,7 @@
 mod common;
 
 use common::{one_func, parse_err, parse_ok};
-use funk_ir::{Registry, TextPos, text::parse_bytes};
+use funk_ir::{Registry, TextPos, print, text::parse_bytes};
 
 /// A function `@f(%a: i32) -> i32` whose entry block holds `ops`, one per
 /// line from line 3.
@@ -99,12 +99,81 @@ fn an_item_of_an_unknown_kind_is_rejected() {
         3,
         "blocks, not items",
     );
+}
+
+/// The texts of `lean/FirTest/Parse.lean`'s nested modules
+/// (ADR-2026-11-10-1510).
+#[test]
+fn nested_modules_round_trip() {
+    let canonical = one_func(concat!(
+        "module @dev() {\n  dialects toy, gpu\n\n  func @k() {\n  ^e:\n    ret @0\n  }\n\n",
+        "  module @inner() {\n    func @j() {\n    ^e:\n      ret @0\n    }\n\n  }\n\n}\n\n",
+        "module @none() {\n}\n",
+    ));
+    assert_eq!(print(&parse_ok(&canonical)), canonical);
+    let cases = [
+        (
+            "module @m() { dialects toy module @n() { } }\n",
+            "module @m() {\n  dialects toy\n\n  module @n() {\n  }\n\n}\n",
+        ),
+        (
+            "module @m() { dialects toy }\n",
+            "module @m() {\n  dialects toy\n\n}\n",
+        ),
+    ];
+    for (text, printed) in cases {
+        assert_eq!(print(&parse_ok(&one_func(text))), one_func(printed));
+    }
+}
+
+#[test]
+fn a_func_whose_body_holds_a_dialect_set_is_rejected() {
     rejected_at(
-        &one_func("module @m() {\n  func @g() {\n  }\n}\n"),
+        &one_func("func @f() {\n  dialects toy\n}\n"),
         1,
         1,
-        "unknown item kind module",
+        "not a dialect set",
     );
+}
+
+#[test]
+fn a_module_item_with_a_header_or_blocks_is_rejected() {
+    let cases = [
+        (
+            "module @m(%a: i8) {\n}\n",
+            1,
+            11,
+            "a module has no parameters",
+        ),
+        ("module @m() -> i8 {\n}\n", 1, 16, "a module has no results"),
+        (
+            "module @m() inline {\n}\n",
+            1,
+            13,
+            "a module has no attributes",
+        ),
+        (
+            "module @m() {\n^e:\n  ret @0\n}\n",
+            1,
+            1,
+            "holds items, not blocks",
+        ),
+        (
+            "module @m() {\n  dialects\n}\n",
+            3,
+            1,
+            "the name of a dialect",
+        ),
+        (
+            "module @m() {\n  global @g() {\n  }\n}\n",
+            2,
+            3,
+            "unknown item kind global",
+        ),
+    ];
+    for (text, line, col, needle) in cases {
+        rejected_at(&one_func(text), line, col, needle);
+    }
 }
 
 #[test]

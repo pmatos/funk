@@ -29,12 +29,12 @@ def moduleOf (fs : List (Func CoreDialect)) (locs : LocTable := [(0, .unknown)])
   ⟨[], fs.map .func, locs⟩
 
 /-- A function `@name` whose one block returns nothing. -/
-def empty (name : Name) : Func CoreDialect := ⟨name, [], [], ⟨[⟨"e", [], [op [] (.ret []) []]⟩]⟩⟩
+def empty (name : Name) : Func CoreDialect := ⟨name, [], [], ⟨none, [⟨"e", [], [op [] (.ret []) []]⟩]⟩⟩
 
 /-- A function with the blocks `bs`. -/
 def withBlocks (bs : List (Block CoreDialect)) (params : List (Name × Ty) := []) :
     Func CoreDialect :=
-  ⟨"f", params, [], ⟨bs⟩⟩
+  ⟨"f", params, [], ⟨none, bs⟩⟩
 
 /-- A block labelled `l` that returns nothing. -/
 def retBlock (l : Name) (params : List (Name × Ty) := []) : Block CoreDialect :=
@@ -102,6 +102,9 @@ def report (t : String) : String × UInt32 := FirRef.validateBytes "t.fir" t.toU
 /-! # Functions -/
 
 #guard messages (moduleOf [withBlocks []]) == ["the function has no entry block"]
+#guard messages (moduleOf [{ empty "f" with body := ⟨some "toy.graph", (empty "f").blocks⟩ }]) ==
+  ["the function's body is a region of kind toy.graph: a function's body is a region of " ++
+    "the core's kind"]
 #guard messages (moduleOf [withBlocks [retBlock "e" [("x", .int 8)]]]) ==
   ["the entry block ^e declares arguments: its arguments are the function's parameters"]
 #guard checks (oneFunc "func @f() {\n^e:\n  ret @0\n^e:\n  ret @0\n}\n")
@@ -133,8 +136,8 @@ def report (t : String) : String × UInt32 := FirRef.validateBytes "t.fir" t.toU
 block holds an op that owns a region, and so on, `n` levels deep; the
 innermost block holds `inner`. -/
 def deep (n : Nat) (inner : List (Operation CoreDialect)) : Module CoreDialect :=
-  let body := Nat.repeat (fun os => [⟨[], .br, [], [⟨"b", []⟩], [⟨[⟨"b", [], os⟩]⟩], 0⟩]) n inner
-  moduleOf [⟨"f", [], [], ⟨[⟨"e", [], body⟩, retBlock "b"]⟩⟩]
+  let body := Nat.repeat (fun os => [⟨[], .br, [], [⟨"b", []⟩], [⟨none, [⟨"b", [], os⟩]⟩], 0⟩]) n inner
+  moduleOf [⟨"f", [], [], ⟨none, [⟨"e", [], body⟩, retBlock "b"]⟩⟩]
 
 /-- What the check finds in `deep n` whose innermost op defines a value of
 type `i0`: the region of the top op, and the type, `n` levels down. -/

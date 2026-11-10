@@ -7,10 +7,13 @@
 
 mod common;
 
+use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use funk_ir::dialects::core::{self, core_type, int_type, int_width};
 use funk_ir::{
-    Attr, Dialect, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse,
-    print, verify,
+    Attr, Dialect, Effects, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck,
+    TypeSpec, parse, print, verify,
 };
 
 /// An op of the toy dialect, with its decoding as a function.
@@ -30,6 +33,15 @@ impl OpSpec for ToyOp {
             return Err("toy.make is not allowed in @forbidden".into());
         }
         Ok(())
+    }
+
+    /// `toy.br` and `toy.cond` are terminators, so they are control; the
+    /// other toy ops are pure.
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            control: matches!(self.0, "toy.br" | "toy.cond"),
+            ..Effects::PURE
+        }
     }
 }
 
@@ -171,6 +183,50 @@ fn a_module_of_toy_ops_parses_verifies_prints_and_round_trips() {
     assert_eq!(reg.dialect_of("add"), Some("core"));
 }
 
+/// Each op of the toy module has the effects its dialect declares, through
+/// the registry: a terminator is control, as the Lean obligation
+/// `notControl` asks, and every other op of the module, toy or core, is
+/// pure.
+#[test]
+fn toy_ops_declare_their_effects_through_the_registry() {
+    let reg = registry();
+    let m = parse(&toy_module(), &reg).unwrap_or_else(|e| panic!("{e}"));
+    for f in m.funcs() {
+        let mut types: HashMap<&str, &Type> = HashMap::new();
+        for b in &f.body.blocks {
+            for d in f.params.iter().chain(&b.params) {
+                types.insert(&d.name, &d.ty);
+            }
+            for op in &b.ops {
+                for d in &op.results {
+                    types.insert(&d.name, &d.ty);
+                }
+            }
+        }
+        for b in &f.body.blocks {
+            for (i, op) in b.ops.iter().enumerate() {
+                let operands: Vec<Type> = op
+                    .operands
+                    .iter()
+                    .map(|x| types[x.as_str()].clone())
+                    .collect();
+                let results: Vec<Type> = op.results.iter().map(|d| d.ty.clone()).collect();
+                let at = OpTypes {
+                    attrs: &op.attrs,
+                    operands: &operands,
+                    results: &results,
+                };
+                let last = i + 1 == b.ops.len();
+                let want = Effects {
+                    control: last,
+                    ..Effects::PURE
+                };
+                assert_eq!(reg.effects(&op.name, &at), Some(want), "{}", op.name);
+            }
+        }
+    }
+}
+
 #[test]
 fn an_op_or_type_that_no_dialect_decodes_is_a_parse_error() {
     let e = parse(TOY_MODULE, &registry()).unwrap_err();
@@ -293,13 +349,31 @@ fn a_dialect_rule_can_read_the_op_context() {
 }
 
 #[test]
-fn regions_round_trip_and_validation_rejects_them() {
+fn regions_and_their_kinds_round_trip_and_validation_rejects_them() {
     let text = branches(
-        "^entry:\n  toy.scope {\n    ^inner(%k: i32):\n      toy.scope {\n      } {\n        ^deeper:\n          ret %k @0\n      } @0\n  } @0\n  ret %n @0\n",
+        "^entry:\n  toy.scope {\n    ^inner(%k: i32):\n      toy.scope { toy.graph\n      } {\n        ^deeper:\n          ret %k @0\n      } @0\n  } @0\n  ret %n @0\n",
     );
     let reg = registry();
     let m = parse(&text, &reg).unwrap_or_else(|e| panic!("{e}"));
     assert_eq!(print(&m), text);
+    let outer = &m.funcs().next().expect("a function").body.blocks[0].ops[0];
+    let inner = &outer.regions[0].blocks[0].ops[0];
+    let kinds: Vec<_> = inner.regions.iter().map(|r| r.kind.as_deref()).collect();
+    assert_eq!(
+        (outer.regions[0].kind.as_deref(), kinds),
+        (None, vec![Some("toy.graph"), None])
+    );
+    let copy = m.clone();
+    assert_eq!(copy, m);
+    assert_eq!(print(&copy), text);
+    let hash = |m: &funk_ir::Module| {
+        let mut h = DefaultHasher::new();
+        m.hash(&mut h);
+        h.finish()
+    };
+    assert_eq!(hash(&copy), hash(&m));
+    let plain = parse(&text.replace(" toy.graph", ""), &reg).unwrap_or_else(|e| panic!("{e}"));
+    assert_ne!(plain, m);
     assert!(
         diags(&text)
             .iter()

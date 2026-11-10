@@ -28,7 +28,7 @@ while an environment and a return hold typed values; this turns the one
 into the other.
 :::
 
-:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "17375602474723844924")
+:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "15837783068621949683")
 *Definition: environments, being stuck, looking a name up and binding
 names.* An _environment_ $`E` is a list of the values a run has defined,
 each a name with a typed value, $`x \mapsto (t, v)`, the latest first.
@@ -99,7 +99,7 @@ This is how block arguments take the values that a branch passes
 (ADR-2026-10-29-2010), and a poison value arrives as poison.
 :::
 
-:::readable Fir.Module.func? (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "3654794366578574978")
+:::readable Fir.Module.func? (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "2585130467582552436")
 *Definition: the function with a symbol.* $`\mathrm{lookup}_M(s)` is the
 first function of the module $`M`, in the order of its items, whose symbol
 is $`s`, or none when there is no such function. A call of $`s` runs it.

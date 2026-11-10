@@ -108,6 +108,11 @@ def Succ.tokens (s : Succ) : List Tok :=
     if s.args.isEmpty then []
     else .lparen :: [Tok.comma].intercalate (s.args.map ([.value ·])) ++ [.rparen]
 
+/-- The tokens of a region's kind: its word, or none for the core's kind. -/
+def kindTokens : Option Name → List Tok
+  | none => []
+  | some k => [.word k]
+
 mutual
 /-- The tokens of an op. -/
 def Operation.tokens : Operation d → List Tok
@@ -121,7 +126,8 @@ def Operation.tokens : Operation d → List Tok
 /-- The tokens of the regions of an op. -/
 def Region.tokensList : List (Region d) → List Tok
   | [] => []
-  | ⟨blocks⟩ :: rs => .lbrace :: Block.tokensList blocks ++ .rbrace :: Region.tokensList rs
+  | ⟨kind, blocks⟩ :: rs =>
+    .lbrace :: kindTokens kind ++ Block.tokensList blocks ++ .rbrace :: Region.tokensList rs
 
 /-- The tokens of blocks. -/
 def Block.tokensList : List (Block d) → List Tok
@@ -144,17 +150,32 @@ def Func.tokens (f : Func d) : List Tok :=
   .word "func" :: .sym f.name :: .lparen :: defsTokens f.params ++ .rparen :: results ++
     .lbrace :: Block.tokensList f.body.blocks ++ [.rbrace]
 
+/-- The tokens of a dialect set: none when it names no dialect. -/
+def dialectsTokens (ns : List Name) : List Tok :=
+  if ns.isEmpty then [] else .word "dialects" :: [Tok.comma].intercalate (ns.map ([.word ·]))
+
+mutual
 /-- The tokens of an item. -/
 def Item.tokens : Item d → List Tok
   | .func f => f.tokens
+  | .module name ds is =>
+    .word "module" :: .sym name :: .lparen :: .rparen :: .lbrace :: dialectsTokens ds ++
+      Item.tokensList is ++ [.rbrace]
+
+/-- The tokens of items. -/
+def Item.tokensList : List (Item d) → List Tok
+  | [] => []
+  | i :: is => i.tokens ++ Item.tokensList is
+end
+
+theorem Item.tokensList_eq_flatMap : ∀ is : List (Item d),
+    Item.tokensList is = is.flatMap Item.tokens
+  | [] => rfl
+  | i :: is => by rw [Item.tokensList, Item.tokensList_eq_flatMap is, List.flatMap_cons]
 
 /-- The tokens of the location table. -/
 def LocTable.tokens (t : LocTable) : List Tok :=
   .word "locs" :: .lbrace :: t.flatMap (fun (r, l) => .locRef r :: .eq :: l.tokens) ++ [.rbrace]
-
-/-- The tokens of a module's dialect set: none when it names no dialect. -/
-def dialectsTokens (ns : List Name) : List Tok :=
-  if ns.isEmpty then [] else .word "dialects" :: [Tok.comma].intercalate (ns.map ([.word ·]))
 
 /-- The tokens of a module, in the order that the printer writes them. -/
 def Module.tokens (m : Module d) : List Tok :=

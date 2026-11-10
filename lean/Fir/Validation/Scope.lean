@@ -39,7 +39,7 @@ mutual
 /-- The blocks of a list of regions, at any depth. -/
 def Region.allBlocks : List (Region d) → List (Block d)
   | [] => []
-  | ⟨bs⟩ :: rs => Block.allBlocks bs ++ Region.allBlocks rs
+  | ⟨_, bs⟩ :: rs => Block.allBlocks bs ++ Region.allBlocks rs
 
 /-- These blocks and the blocks of their ops' regions, at any depth. -/
 def Block.allBlocks : List (Block d) → List (Block d)

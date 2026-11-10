@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 use super::attr::{Attr, Type};
 use super::location::{LocRef, LocTable};
+use super::nested::NestedModule;
 
 /// A definition of a value: its name, without `%`, and its type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -85,7 +86,11 @@ pub struct Block {
     pub ops: Vec<Op>,
 }
 
-/// A region: a list of blocks, the first of which is its entry.
+/// A region: its kind and a list of blocks, the first of which is its entry.
+///
+/// A region names its kind (ADR-2026-11-09-1543). `None` is the core's
+/// kind, a control-flow graph whose ops run in order (ADR-2026-10-29-2005);
+/// a dialect's kind is a word of that dialect, such as `toy.graph`.
 ///
 /// Regions nest to any depth, so `Region` writes its `Clone`, `PartialEq`,
 /// `Hash`, `Debug` and `Drop` without recursion (ADR-2026-10-30-1333).
@@ -93,6 +98,8 @@ pub struct Block {
 /// `Region`: take them with [`std::mem::take`].
 #[derive(Default)]
 pub struct Region {
+    /// The region's kind, or `None` for the core's kind.
+    pub kind: Option<String>,
     /// The region's blocks.
     pub blocks: Vec<Block>,
 }
@@ -135,14 +142,15 @@ impl Func {
 }
 
 /// An item of a module. Every item is written
-/// `kind @sym(params) -> results attrs { body }` (N2). M0 has one kind,
-/// `func`. A nested module, a global or an external declaration would each be
-/// a new kind, and a new variant here; how dialects add kinds is H4 and H5.
+/// `kind @sym(params) -> results attrs { body }` (N2). The kinds are `func`
+/// and `module` (ADR-2026-11-10-1510).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Item {
     /// A function.
     Func(Func),
+    /// A nested module: a symbol table of its own, with its own dialect set.
+    Module(NestedModule),
 }
 
 impl Item {
@@ -150,6 +158,7 @@ impl Item {
     pub fn name(&self) -> &str {
         match self {
             Item::Func(f) => &f.name,
+            Item::Module(m) => &m.name,
         }
     }
 
@@ -157,6 +166,7 @@ impl Item {
     pub fn as_func(&self) -> Option<&Func> {
         match self {
             Item::Func(f) => Some(f),
+            Item::Module(_) => None,
         }
     }
 
@@ -164,14 +174,15 @@ impl Item {
     pub fn as_func_mut(&mut self) -> Option<&mut Func> {
         match self {
             Item::Func(f) => Some(f),
+            Item::Module(_) => None,
         }
     }
 }
 
 /// A module: its dialect set, its items, then its location table.
 ///
-/// A module is a symbol table over its own items. A nested module would be
-/// an item holding a `Module` with a symbol table of its own, so nothing here
+/// A module is a symbol table over its own items. A nested module is an
+/// item, [`NestedModule`], with a symbol table of its own, so nothing here
 /// assumes one global table.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Module {
@@ -186,7 +197,8 @@ pub struct Module {
 }
 
 impl Module {
-    /// The module's functions, in order.
+    /// The module's own functions, in order. Those of a nested module are
+    /// not among them.
     pub fn funcs(&self) -> impl Iterator<Item = &Func> {
         self.items.iter().filter_map(Item::as_func)
     }
