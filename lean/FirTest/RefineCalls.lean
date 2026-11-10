@@ -133,12 +133,13 @@ theorem gFn_valid : gFn.Valid ubModule.context where
 /-- The module of `@count` and `@g` is valid. -/
 theorem ubModule_valid : ubModule.Valid where
   symbolsUnique := by decide
+  flat := by decide
   locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [ubModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
     simp [Location.WellFormed, Location.refs]⟩
   funcs f hf := by
-    simp only [ubModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl
     · exact countFn_valid
@@ -183,7 +184,7 @@ theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubMod
 /-- The module with `@g`'s new body is valid too. -/
 theorem ubModule'_valid : ubModule'.Valid :=
   Module.valid_replaceBody ubModule_valid fun g hg hs => by
-    simp only [ubModule, Module.funcs, List.map_cons, List.map_nil, List.mem_cons,
+    simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hg
     rcases hg with rfl | rfl
     · exact absurd hs (by decide)
@@ -222,7 +223,8 @@ theorem odd_self_isRefinedBy :
       funcRuns (recModule.replaceBody oddFn.name oddFn.body)
         (oddFn.replaceBody oddFn.name oddFn.body) := by
   have hM : recModule.replaceBody oddFn.name oddFn.body = recModule := by
-    simp [Module.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn, parityFn]
+    simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
+      parityFn]
   rw [hM]
   show funcRuns recModule oddFn ⊑
     funcRuns recModule

@@ -5,8 +5,9 @@
 //! The layout: single spaces between tokens, a space after each comma and
 //! after the colon of a definition; blocks at the indentation of their
 //! function or op, their ops two spaces deeper; one op per line, ending with
-//! its location reference; one empty line after each item; then the location
-//! table; and a line feed at the end of every line.
+//! its location reference; a nested module's body two spaces deeper than its
+//! `module` line; one empty line after each item; then the location table;
+//! and a line feed at the end of every line.
 //!
 //! Attributes and regions nest to any depth, so they are printed from the
 //! steps of a walk, not by recursive calls (ADR-2026-10-30-1333).
@@ -192,17 +193,62 @@ fn write_block_head(out: &mut impl Write, n: usize, b: &Block) -> fmt::Result {
     out.write_str(":\n")
 }
 
-/// A function: an item of kind `func`, with no attributes.
-fn write_func(out: &mut impl Write, f: &Func) -> fmt::Result {
+/// A function at indentation `n`: an item of kind `func`, with no
+/// attributes. Its header, labels and `}` are at `n`, its ops two spaces
+/// deeper.
+fn write_func(out: &mut impl Write, f: &Func, n: usize) -> fmt::Result {
+    indent(out, n)?;
     write!(out, "func {}({})", print_symbol(&f.name), Commas(&f.params))?;
     if !f.results.is_empty() {
         write!(out, " -> {}", Commas(&f.results))?;
     }
     out.write_str(" {\n")?;
     for b in &f.body.blocks {
-        write_part(out, Part::Block(b), 0)?;
+        write_part(out, Part::Block(b), n)?;
     }
+    indent(out, n)?;
     out.write_str("}\n")
+}
+
+/// A dialect set at indentation `n`, then an empty line, or nothing when it
+/// names no dialect.
+fn write_dialects(out: &mut impl Write, names: &[String], n: usize) -> fmt::Result {
+    if names.is_empty() {
+        return Ok(());
+    }
+    indent(out, n)?;
+    writeln!(out, "dialects {}\n", Commas(names))
+}
+
+/// Items at indentation `n`, each followed by an empty line. A nested
+/// module's body is two spaces deeper than its `module` line, and its `}` at
+/// that line's indentation (ADR-2026-11-10-1510). Modules nest to any depth,
+/// so the lists of items that enclose the one being written wait on a stack.
+fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
+    let mut open = vec![(items.iter(), n)];
+    while let Some((rest, n)) = open.last_mut() {
+        let n = *n;
+        match rest.next() {
+            Some(Item::Func(f)) => {
+                write_func(out, f, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Module(m)) => {
+                indent(out, n)?;
+                writeln!(out, "module {}() {{", print_symbol(&m.name))?;
+                write_dialects(out, &m.dialects, n + 2)?;
+                open.push((m.items.iter(), n + 2));
+            }
+            None => {
+                open.pop();
+                if let Some((_, outer)) = open.last() {
+                    indent(out, *outer)?;
+                    out.write_str("}\n\n")?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn write_locs(out: &mut impl Write, t: &LocTable) -> fmt::Result {
@@ -217,19 +263,8 @@ fn write_locs(out: &mut impl Write, t: &LocTable) -> fmt::Result {
 /// by piece, so the text is never held whole. It stops at the first error
 /// of `out`, which a sink may return to end the text early.
 pub fn write_module(out: &mut impl Write, m: &Module) -> fmt::Result {
-    for (i, name) in m.dialects.iter().enumerate() {
-        out.write_str(if i == 0 { "dialects " } else { ", " })?;
-        out.write_str(name)?;
-    }
-    if !m.dialects.is_empty() {
-        out.write_str("\n\n")?;
-    }
-    for item in &m.items {
-        match item {
-            Item::Func(f) => write_func(out, f)?,
-        }
-        out.write_char('\n')?;
-    }
+    write_dialects(out, &m.dialects, 0)?;
+    write_items(out, &m.items, 0)?;
     write_locs(out, &m.locs)
 }
 
@@ -252,5 +287,5 @@ pub fn print_op(op: &Op, n: usize) -> String {
 
 /// The canonical text of one function, with its line feed.
 pub fn print_func(f: &Func) -> String {
-    to_string(|out| write_func(out, f))
+    to_string(|out| write_func(out, f, 0))
 }

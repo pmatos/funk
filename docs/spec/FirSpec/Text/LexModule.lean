@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4529290017172724994")
+:::moduleDocs (fingerprint := "6106019203592123269")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -74,14 +74,26 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Item.spells (pin := Fir.Func.print) (pin := Fir.Item.print) (fingerprint := "3754463180754474539")
-*Theorems: a printed function, and an item, spell their tokens before any
-characters.* For every dialect with a text format, every function $`f`
-whose tokens can all be written spells $`\mathrm{tokens}(f)` before any
-characters, printed as `func`, a space, its symbol, its parameters in
-parentheses, ` -> ` and its result types with `, ` between them when it
-has results, ` {`, a line feed, its blocks, `}` and a line feed. So does
-every item whose tokens can all be written.
+:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "7739933725994279128")
+*Theorems: a printed function, an item, and items, spell their tokens
+before any characters.* For every dialect with a text format and every
+indentation $`n`:
+
+* every function $`f` whose tokens can all be written spells
+  $`\mathrm{tokens}(f)` before any characters, printed as $`n` spaces,
+  `func`, a space, its symbol, its parameters in parentheses, ` -> ` and
+  its result types with `, ` between them when it has results, ` {`, a
+  line feed, its blocks, $`n` spaces, `}` and a line feed;
+* so does every item whose tokens can all be written: a nested module is
+  printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
+  feed, its dialect set and its items two spaces deeper, $`n` spaces, `}`
+  and a line feed;
+* every list of items whose tokens can all be written, each printed then
+  followed by an empty line, spells before any characters the tokens of
+  the items.
+
+The theorems for an item and for a list of items are proved together, by
+induction on the items, since a nested module holds items.
 :::
 
 :::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "6259925923906660465")
@@ -96,24 +108,20 @@ characters.* For every location table whose tokens can all be written:
   line feed, spells its tokens before any characters.
 :::
 
-:::readable Fir.spellsDialects (pin := Fir.printDialects) (pin := Fir.dialectsTokens) (fingerprint := "11569368363644327681")
+:::readable Fir.spellsDialects (pin := Fir.printDialects) (pin := Fir.dialectsTokens) (fingerprint := "15063603192545110511")
 *Theorem: a printed dialect set spells its tokens before any characters.*
-For every list of names whose tokens can all be written, so whose names are
-words, its printed form spells its tokens before any characters: nothing,
-when the list is empty, and otherwise the word `dialects`, a space, the
-names separated by a comma and a space, and two line feeds.
+For every indentation $`n` and every list of names whose tokens can all be
+written, so whose names are words, its printed form spells its tokens
+before any characters: nothing, when the list is empty, and otherwise
+$`n` spaces, the word `dialects`, a space, the names separated by a comma
+and a space, and two line feeds.
 :::
 
-:::readable Fir.Module.spellsItems Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "4621242517318431203")
-*Theorems: a printed module spells its tokens before any characters.* For
-every dialect with a text format:
-
-* every list of items whose tokens can all be written, each printed then
-  followed by an empty line, spells before any characters the tokens of
-  the items;
-* every module $`m` whose tokens can all be written, printed as its
-  dialect set, its items and then its location table, spells
-  $`\mathrm{tokens}(m)` before any characters.
+:::readable Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "15335076232817219196")
+*Theorem: a printed module spells its tokens before any characters.* For
+every dialect with a text format, every module $`m` whose tokens can all
+be written, printed as its dialect set, its items and then its location
+table, spells $`\mathrm{tokens}(m)` before any characters.
 :::
 
 :::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "7324819918049803602")

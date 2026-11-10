@@ -5,8 +5,11 @@ import Fir.Text.ReadTable
 # Reading a printed module
 
 A module's dialect set reads back first, then its items before the word
-`locs`, which starts its location table, and the table before `eof`. Each item is a function, the
-only kind of item so far, which the previous sections read.
+`locs`, which starts its location table, and the table before `eof`. A
+function reads back as the previous sections show. A nested module reads
+back the same way as a module, its dialect set and then its items, before
+the `}` that closes its body; the reader of items and the reader of an item
+are proved together, by induction on the items.
 
 The result is the grammar step: on any tokens that hold the module's
 tokens, then `eof`, at any positions, the reader of a module gives a tree
@@ -24,37 +27,6 @@ namespace Fir
 open Text
 
 variable {d : Dialect} [DialectText d]
-
-/-- `readItems` reads the tokens of a module's items as their trees, before
-the word `locs`. -/
-theorem readItems_reads : ∀ items : List (Item d),
-    (∀ f, Item.func f ∈ items → ∀ t ∈ f.types, (tyAttr t).IsType) →
-    Reads (readItems true) SItem.eraseList (items.map Item.tree) (items.flatMap Item.tokens)
-      (· = .word "locs")
-  | [], _, ts, rest, h, hs => by
-    simp only [List.flatMap_nil, List.nil_append] at h
-    match ts, h with
-    | [], h =>
-      rw [readItems.eq_2 _ _ fun _ _ _ he => by simp at he]
-      exact ⟨[], _, rfl, rfl, h⟩
-    | ⟨t, p⟩ :: ts', h =>
-      have ht : t = .word "locs" := hs t (by simp [← h])
-      subst ht
-      rw [readItems.eq_1]
-      exact ⟨[], _, rfl, rfl, h⟩
-  | .func f :: items, ht, ts, rest, h, hs => by
-    have hf := Func.reads f (ht f (.head _))
-    have his := readItems_reads items fun f' hf' => ht f' (.tail _ hf')
-    simp only [List.flatMap_cons, Item.tokens, Func.tokens, List.cons_append,
-      List.append_assoc] at h
-    take_pos h p
-    obtain ⟨si, ⟨r, hr⟩, h₁, h₂, h₃⟩ := hf p _ (items.flatMap Item.tokens ++ rest)
-      (by simpa only [Func.tokens, List.tail_cons, List.cons_append, List.append_assoc] using h)
-      fun _ _ => trivial
-    obtain ⟨sis, ⟨r', hr'⟩, h₄, h₅, h₆⟩ := his r rest h₃ hs
-    rw [readItems.eq_1]
-    simp only [true_and, String.reduceEq, ↓reduceIte, h₁, ok_bind, h₄]
-    exact ⟨_, _, rfl, by simp [SItem.eraseList, Item.tree, h₂, h₅], h₆⟩
 
 /-- `readDialectName` reads a word as the name it is, before any token. -/
 theorem readDialectName_reads (x : Name) :
@@ -87,25 +59,186 @@ theorem readDialects_reads (ns : List Name) :
     simp only [readDialectName, ok_bind, h₁]
     exact ⟨_, _, rfl, by simpa using h₂, h₃⟩
 
+/-- The word that starts an item: its kind. -/
+def Item.kind : Item d → String
+  | .func _ => "func"
+  | .module .. => "module"
+
+theorem Item.tokens_eq (i : Item d) : i.tokens = .word i.kind :: i.tokens.tail := by
+  cases i <;> rfl
+
+/-- The tokens of items, then tokens that start with `P`, start with a word
+that is the kind of an item, or with `P`. -/
+theorem head_items (is : List (Item d)) (rest : List Tok) (P : Tok → Prop)
+    (hk : P (.word "func") ∧ P (.word "module")) (hr : ∀ t ∈ rest.head?, P t) :
+    ∀ t ∈ (Item.tokensList is ++ rest).head?, P t := by
+  cases is with
+  | nil => simpa [Item.tokensList] using hr
+  | cons i _ => cases i <;> simp [Item.tokensList, Item.tokens, Func.tokens, hk]
+
+mutual
+/-- Each type that an item writes is written as a type, at any depth. -/
+def Item.TypesWritable : Item d → Prop
+  | .func f => ∀ t ∈ f.types, (tyAttr t).IsType
+  | .module _ _ is => Item.TypesWritableList is
+
+/-- Each type that these items write is written as a type. -/
+def Item.TypesWritableList : List (Item d) → Prop
+  | [] => True
+  | i :: is => i.TypesWritable ∧ Item.TypesWritableList is
+end
+
+theorem Item.typesWritableList_iff : ∀ is : List (Item d),
+    Item.TypesWritableList is ↔ ∀ i ∈ is, i.TypesWritable
+  | [] => by simp [Item.TypesWritableList]
+  | i :: is => by simp [Item.TypesWritableList, Item.typesWritableList_iff is]
+
+/-- What ends a list of items: the word `locs` at the top of a module, and
+`}` in the body of an item. -/
+def itemsEnd (top : Bool) (t : Tok) : Prop := if top then t = .word "locs" else t = .rbrace
+
+mutual
+/-- `readItem` reads the tokens of an item after its kind as the item's
+tree, when each type it writes is written as a type. -/
+theorem Item.reads : ∀ i : Item d, i.TypesWritable → ∀ p,
+    Reads (readItem i.kind p) SItem.erase i.tree i.tokens.tail (fun _ => True)
+  | .func f, ht, p => Func.reads f ht p
+  | .module name ds is, ht, p => by
+    have his := Item.readsList false is ht
+    rintro ts rest h -
+    simp only [Item.tokens, List.tail_cons, List.cons_append, List.append_assoc] at h
+    take_tok h
+    take_tok h
+    rw [readItem.eq_1]
+    simp only [expect_cons, ok_bind]
+    -- No parameters, since `)` follows the `(`.
+    refine bind_reads (fun v => v.1 = [] ∧ v.2.1.map (·.tok) = .rparen :: .lbrace ::
+      (dialectsTokens ds ++ (Item.tokensList is ++ .rbrace :: rest))) ?_ ?_
+    · split
+      case h_1 => exact ⟨_, rfl, rfl, h⟩
+      case h_2 hne =>
+        take_tok h
+        exact (hne _ _ _ rfl HEq.rfl).elim
+    rintro ⟨sps, ⟨r₂, hr₂⟩⟩ ⟨rfl, h⟩
+    take_tok h
+    simp only [expect_cons, ok_bind]
+    -- No results, since `{` follows the `)`.
+    refine bind_reads (fun v => v.1 = [] ∧ v.2.1.map (·.tok) = .lbrace ::
+      (dialectsTokens ds ++ (Item.tokensList is ++ .rbrace :: rest))) ?_ ?_
+    · split
+      case h_1 => simp at h
+      case h_2 => exact ⟨_, rfl, rfl, h⟩
+    rintro ⟨srs, ⟨r₄, hr₄⟩⟩ ⟨rfl, h⟩
+    -- No attributes, since `{` follows.
+    replace h := readAttrs_reads [] _ _ h (by simp [Tok.startsAttr])
+    obtain ⟨attrs, ⟨r₅, hr₅⟩, hA, hA', h⟩ := h
+    obtain rfl : attrs = [] := List.map_eq_nil_iff.mp hA'
+    take_tok h
+    simp only [hA, ok_bind, expect_cons]
+    -- The body: no blocks when `}` follows the `{`, and a dialect set and
+    -- items otherwise, which start with a word.
+    refine bind_reads (fun v => v.1.erase = moduleBody ds (Item.treeList is) ∧
+      v.2.1.map (·.tok) = .rbrace :: rest) ?_ ?_
+    · by_cases he : ds = [] ∧ is = []
+      · obtain ⟨rfl, rfl⟩ := he
+        simp only [dialectsTokens, List.isEmpty_nil, ite_true, Item.tokensList,
+          List.nil_append] at h
+        split
+        case h_1 w q tl _ _ => simp at h
+        case h_2 =>
+          obtain ⟨sbs, r, hB, hB', h⟩ := Block.readsList ([] : List (Block d))
+            (by simp [Block.allBlocks]) _ _ h (by simp)
+          simp only [hB, ok_bind]
+          refine ⟨_, rfl, ?_, h⟩
+          simp only [SBody.erase, moduleBody, Item.treeList, List.isEmpty_nil, and_self,
+            ite_true]
+          simpa [Block.treeList] using hB'
+      · obtain ⟨w, L, hL⟩ : ∃ w L,
+            dialectsTokens ds ++ (Item.tokensList is ++ .rbrace :: rest) = .word w :: L := by
+          rcases ds with _ | ⟨x, xs⟩
+          · rcases is with _ | ⟨i, is⟩
+            · exact absurd ⟨rfl, rfl⟩ he
+            · cases i <;> simp [dialectsTokens, Item.tokensList, Item.tokens, Func.tokens]
+          · simp [dialectsTokens]
+        rw [hL] at h
+        obtain ⟨q, tl, rfl, h⟩ := map_tok_cons h
+        dsimp only
+        · have h' : (⟨.word w, q⟩ :: tl : List Token).map (·.tok) =
+              dialectsTokens ds ++ (Item.tokensList is ++ .rbrace :: rest) := by
+            rw [hL]; simp [h]
+          have hst : ∀ t ∈ (Item.tokensList is ++ .rbrace :: rest).head?,
+              t ≠ .comma ∧ t ≠ .word "dialects" :=
+            head_items _ _ _ (by simp) (by simp)
+          obtain ⟨ns, ⟨r, hr⟩, hD, hD', h⟩ := readDialects_reads ds _ _ h' hst
+          obtain ⟨sis, ⟨r', hr'⟩, hI, hI', h⟩ := his r _ h (by simp [itemsEnd])
+          simp only [hD, ok_bind, hI]
+          refine ⟨_, rfl, ?_, h⟩
+          obtain rfl : ns = ds := hD'
+          have hne : ¬(ns.isEmpty = true ∧ (Item.treeList is).isEmpty = true) := by
+            rcases ns with _ | _ <;> rcases is with _ | _ <;> simp_all [Item.treeList]
+          simp only [SBody.erase, moduleBody, hne, ite_false, hI']
+    rintro ⟨body, ⟨r₇, hr₇⟩⟩ ⟨hB, h⟩
+    take_tok h
+    simp only [expect_cons, ok_bind]
+    exact ⟨_, _, rfl, by simp [SItem.erase, Item.tree, Item.kind, hB], h⟩
+
+/-- `readItems` reads the tokens of items as their trees, before the word
+`locs` at the top of a module, or before `}` in a body. -/
+theorem Item.readsList (top : Bool) : ∀ is : List (Item d), Item.TypesWritableList is →
+    Reads (readItems top) SItem.eraseList (Item.treeList is) (Item.tokensList is) (itemsEnd top)
+  | [], _, ts, rest, h, hs => by
+    simp only [Item.tokensList, List.nil_append] at h
+    match ts, h with
+    | [], h =>
+      rw [readItems.eq_2 _ _ fun _ _ _ he => by simp at he]
+      exact ⟨[], _, rfl, rfl, h⟩
+    | ⟨t, p⟩ :: ts', h =>
+      have ht : itemsEnd top t := hs t (by simp [← h])
+      cases top with
+      | true =>
+        obtain rfl : t = .word "locs" := ht
+        rw [readItems.eq_1]
+        exact ⟨[], _, rfl, rfl, h⟩
+      | false =>
+        obtain rfl : t = .rbrace := ht
+        rw [readItems.eq_2 _ _ fun _ _ _ he => by simp at he]
+        exact ⟨[], _, rfl, rfl, h⟩
+  | i :: is, ht, ts, rest, h, hs => by
+    obtain ⟨hi, his⟩ := ht
+    have hr := Item.reads i hi
+    have hrs := Item.readsList top is his
+    simp only [Item.tokensList, List.append_assoc] at h
+    rw [Item.tokens_eq i, List.cons_append] at h
+    take_pos h p
+    obtain ⟨si, ⟨r, hr'⟩, h₁, h₂, h₃⟩ := hr p _ (Item.tokensList is ++ rest) h fun _ _ => trivial
+    obtain ⟨sis, ⟨r', hr''⟩, h₄, h₅, h₆⟩ := hrs r rest h₃ hs
+    have hk : ¬(top = true ∧ i.kind = "locs") := by cases i <;> simp [Item.kind]
+    rw [readItems.eq_1]
+    simp only [hk, ↓reduceIte, h₁, ok_bind, h₄]
+    exact ⟨_, _, rfl, by simp [SItem.eraseList, Item.treeList, h₂, h₅], h₆⟩
+end
+
 /-- The grammar step: on the tokens of a module, then `eof`, at any
 positions, `readModule` gives the module's tree, up to positions, when each
 type the module writes is written as a type and its location table is
 within the limits. -/
 theorem readModule_tokens {m : Module d}
-    (ht : ∀ f ∈ m.funcs, ∀ t ∈ f.types, (tyAttr t).IsType) (hl : m.locs.InLimits)
+    (ht : ∀ i ∈ m.items, i.TypesWritable) (hl : m.locs.InLimits)
     {ts : List Token} (h : ts.map (·.tok) = m.tokens ++ [.eof]) :
     ∃ s, readModule ts = .ok s ∧ s.erase = m.tree := by
   simp only [Module.tokens, List.append_assoc] at h
   have hst : ∀ t ∈ (m.items.flatMap Item.tokens ++ (m.locs.tokens ++ [Tok.eof])).head?,
       t ≠ .comma ∧ t ≠ .word "dialects" := by
     apply head?_append
-    · cases m.items with
-      | nil => simp
-      | cons i _ => cases i; simp [Item.tokens, Func.tokens]
+    · rw [← Item.tokensList_eq_flatMap]
+      simpa using head_items m.items [] (fun t => t ≠ .comma ∧ t ≠ .word "dialects") (by simp)
+        (by simp)
     · simp [LocTable.tokens]
-  obtain ⟨ns, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readDialects_reads m.dialects ts _ h hst
-  obtain ⟨items, ⟨r, hr⟩, h₁, h₂, h₃⟩ := readItems_reads m.items
-    (fun f hf => ht f (List.mem_map.mpr ⟨_, hf, rfl⟩)) r₀ _ h₀'' (by simp [LocTable.tokens])
+  rw [← Item.tokensList_eq_flatMap] at h
+  obtain ⟨ns, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readDialects_reads m.dialects ts _ h
+    (by rw [← Item.tokensList_eq_flatMap] at hst; exact hst)
+  obtain ⟨items, ⟨r, hr⟩, h₁, h₂, h₃⟩ := Item.readsList true m.items
+    ((Item.typesWritableList_iff _).mpr ht) r₀ _ h₀'' (by simp [LocTable.tokens, itemsEnd])
   have h₃' : r.map (·.tok) = .word "locs" :: (m.locs.tokens.tail ++ [.eof]) := by
     simpa [LocTable.tokens] using h₃
   obtain ⟨q, r', rfl, -⟩ := map_tok_cons h₃'
@@ -113,16 +246,29 @@ theorem readModule_tokens {m : Module d}
   take_tok h₆
   rw [readModule.eq_1]
   simp only [h₀, ok_bind, h₁, h₄, expect_cons]
-  exact ⟨_, rfl, by simp [SModule.erase, Module.tree, ← h₀', h₂, ← h₅]⟩
+  exact ⟨_, rfl, by simp [SModule.erase, Module.tree, ← h₀', ← Item.treeList_eq_map, h₂, ← h₅]⟩
 
 variable [DialectSignature d]
+
+mutual
+/-- Each type that a well-formed item writes is written as a type. -/
+theorem Item.WellFormed.typesWritable : ∀ {i : Item d}, i.WellFormed → i.TypesWritable
+  | .func _, h => fun t ht => (Func.WellFormed.types h t ht).1
+  | .module _ _ _, h => Item.WellFormed.typesWritableList h.2
+
+/-- Each type that well-formed items write is written as a type. -/
+theorem Item.WellFormed.typesWritableList : ∀ {is : List (Item d)}, Item.WellFormedList is →
+    Item.TypesWritableList is
+  | [], _ => trivial
+  | _ :: _, h => ⟨Item.WellFormed.typesWritable h.1, Item.WellFormed.typesWritableList h.2⟩
+end
 
 /-- The grammar step for a well-formed module: each type it writes is
 written as a type, and its location table is within the limits. -/
 theorem Module.WellFormed.readModule_tokens {m : Module d} (h : m.WellFormed) {ts : List Token}
     (hts : ts.map (·.tok) = m.tokens ++ [.eof]) :
     ∃ s, readModule ts = .ok s ∧ s.erase = m.tree :=
-  Fir.readModule_tokens (fun f hf t ht => ((h.funcs f hf).types t ht).1) h.locs hts
+  Fir.readModule_tokens (fun i hi => (h.items i hi).typesWritable) h.locs hts
 
 /-- The first two steps of the parser read the printed text of a
 well-formed module as the module's tree, up to positions. -/

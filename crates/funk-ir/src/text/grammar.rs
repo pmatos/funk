@@ -78,7 +78,7 @@ impl<'t> Parser<'t> {
     }
 
     /// `dialects ::= 'dialects' word (',' word)*`, the dialect set that
-    /// starts a module, or none.
+    /// starts a module or a body of items, or none.
     fn dialects(&mut self) -> Result<Vec<String>, ParseError> {
         let mut names = Vec::new();
         if matches!(self.peek(), Tok::Word(w) if w == "dialects") {
@@ -172,30 +172,45 @@ impl<'t> Parser<'t> {
     }
 
     /// An item, with the items of its body at any depth: the bodies being
-    /// read wait in a [`Nest`].
+    /// read wait in a [`Nest`]. A body of items may start with a dialect set
+    /// (ADR-2026-11-10-1510).
     fn item(&mut self) -> Result<SItem, ParseError> {
         let mut items = Nest::new(1);
         loop {
             items.push(self.item_head()?);
             if matches!(self.peek(), Tok::Word(_)) {
+                let dialects = self.dialects()?;
+                items.last_mut().expect("the item just read").body =
+                    SBody::Items(dialects, Vec::new());
                 items.open(1);
-                continue;
+                if matches!(self.peek(), Tok::Word(_)) {
+                    continue;
+                }
+            } else {
+                let mut at = BodyPos::default();
+                let blocks = self.blocks(&mut at)?;
+                items.last_mut().expect("the item just read").body = SBody::Blocks(blocks, at);
+                self.expect(&Tok::RBrace, "} to close the item's body")?;
+                if items.is_outermost() {
+                    return Ok(items.finish().pop().expect("the item just read"));
+                }
+                if matches!(self.peek(), Tok::Word(_)) {
+                    continue;
+                }
             }
-            let mut at = BodyPos::default();
-            let blocks = self.blocks(&mut at)?;
-            items.last_mut().expect("the item just read").body = SBody::Blocks(blocks, at);
-            self.expect(&Tok::RBrace, "} to close the item's body")?;
-            // The item is whole: close each body that it ends.
+            // No item follows: close each body that ends here.
             loop {
+                self.expect(&Tok::RBrace, "} to close the item's body")?;
+                let (body, owner) = items.close().expect("an inner body");
+                if let SBody::Items(_, inner) = &mut owner.body {
+                    *inner = body;
+                }
                 if items.is_outermost() {
                     return Ok(items.finish().pop().expect("the item just read"));
                 }
                 if matches!(self.peek(), Tok::Word(_)) {
                     break;
                 }
-                self.expect(&Tok::RBrace, "} to close the item's body")?;
-                let (body, owner) = items.close().expect("an inner body");
-                owner.body = SBody::Items(body);
             }
         }
     }
@@ -235,7 +250,7 @@ impl<'t> Parser<'t> {
             params,
             results,
             attrs,
-            body: SBody::Items(Vec::new()),
+            body: SBody::Items(Vec::new(), Vec::new()),
         })
     }
 

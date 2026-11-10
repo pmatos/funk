@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module decoded back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11643379802254013298")
+:::moduleDocs (fingerprint := "8452656509907407351")
 :::
 
 :::readable Fir.bind_eq_of (fingerprint := "12224089499088332229")
@@ -54,22 +54,28 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
-:::readable Fir.Func.WellFormed.decodeItem_eq Fir.mapM_decodeItem (pin := Fir.Text.decodeItem) (fingerprint := "3255620957031153553")
+:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "1750046234271386164")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
 
 * for every well-formed function $`f`, an item as written that erases to
   the tree of $`f` decodes as the item that is $`f`;
-* for every list of items whose functions are all well formed, items as
-  written that erase, in order, to their trees decode, one after the
-  other, as those items.
+* for every well-formed item, an item as written that erases to its tree
+  decodes as that item;
+* for every list of well-formed items, items as written that erase, in
+  order, to their trees decode, one after the other, as those items.
 
 An item that erases to the tree of a function is a `func` with no
 attributes and a body of blocks, so the decoder of items takes its branch
-for blocks: the only branch that printed text reaches.
+for blocks: the only branch that printed text reaches. An item that erases
+to the tree of a nested module is a `module` with no parameters, results
+or attributes; its body is no blocks when the module has no dialect set and
+no items, and otherwise its dialect set and items that erase to the trees
+of its items, which decode back in turn. The last two theorems call one
+another, and are proved together by induction on the items.
 :::
 
-:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "7763701068141764021")
+:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "4661324548460288479")
 *Theorem: the decoding step gives a well-formed module back from its
 tree.* For every dialect with signatures, validation
 rules and a text format whose text is

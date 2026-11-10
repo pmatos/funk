@@ -29,10 +29,11 @@ pub(super) struct SItem {
     pub body: SBody,
 }
 
-/// `body ::= block* | item*`. An empty body is an empty list of blocks.
+/// `body ::= block* | dialects? item*`. An empty body is an empty list of
+/// blocks.
 pub(super) enum SBody {
     Blocks(Vec<Block>, BodyPos),
-    Items(Vec<SItem>),
+    Items(Vec<String>, Vec<SItem>),
 }
 
 /// Where the parts of a body of blocks stand, each list in the order of the
@@ -51,9 +52,9 @@ impl Drop for SBody {
     /// Items nest to any depth, so they are dropped one at a time
     /// (ADR-2026-10-30-1333).
     fn drop(&mut self) {
-        if let SBody::Items(items) = self {
+        if let SBody::Items(_, items) = self {
             drop_all(std::mem::take(items), |item, rest| {
-                if let SBody::Items(inner) = &mut item.body {
+                if let SBody::Items(_, inner) = &mut item.body {
                     rest.append(inner);
                 }
             });

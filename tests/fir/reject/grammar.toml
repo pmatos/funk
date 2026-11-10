@@ -146,11 +146,36 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "M0 has one item kind, func: module is not one"
+rule = "a module has no parameters"
+text = '''
+module @m(%a: i8) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a module's body holds items, not blocks"
 text = '''
 module @m() {
-  func @g() {
-  }
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function's body holds blocks, not a dialect set"
+text = '''
+func @f() {
+  dialects toy
 }
 
 locs {
