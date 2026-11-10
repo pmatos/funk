@@ -85,7 +85,8 @@ pub trait OpSpec: Send + Sync {
     /// its own rule (ADR-2026-11-09-1541). An op with a callee has its
     /// callee's effects too, which this set leaves out. Every op declares
     /// its set, so the method has no default, as `Core.Op.effects` has no
-    /// case for the rest.
+    /// case for the rest. An op without `control` is not a terminator: its
+    /// [`OpShape::terminator`] is false, as Lean's `notControl` proves.
     fn effects(&self, op: &OpTypes<'_>) -> Effects;
 }
 

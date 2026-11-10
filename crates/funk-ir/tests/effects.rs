@@ -2,7 +2,8 @@
 //! cases of `tests/dialects/effects.cases`, which
 //! `lean/FirTest/EffectCases.lean` reads too, so the registry's sets are
 //! `Core.Op.effects`. Each case pins the first op of the entry block of
-//! `@f`, which takes its operands from `@f`'s parameters.
+//! `@f`, which takes its operands from `@f`'s parameters. Each pinned op is
+//! control exactly when it is a terminator, as Lean's `notControl` asks.
 
 use std::collections::BTreeSet;
 
@@ -58,8 +59,13 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
         operands: &operands,
         results: &results,
     };
-    reg.effects(&op.name, &types)
-        .unwrap_or_else(|| panic!("{}: {} is registered", c.name, op.name))
+    let effects = reg
+        .effects(&op.name, &types)
+        .unwrap_or_else(|| panic!("{}: {} is registered", c.name, op.name));
+    let spec = reg.op(&op.name).expect("the op is registered");
+    let shape = spec.decode(&types).expect("the op decodes");
+    assert_eq!(effects.control, shape.terminator, "{}: control", c.name);
+    effects
 }
 
 #[test]

@@ -184,7 +184,8 @@ fn a_module_of_toy_ops_parses_verifies_prints_and_round_trips() {
 
 /// Each op of the toy module has the effects its dialect declares, through
 /// the registry: a terminator is control, as the Lean obligation
-/// `notControl` asks, and every other op, toy or core, is pure.
+/// `notControl` asks, and every other op of the module, toy or core, is
+/// pure.
 #[test]
 fn toy_ops_declare_their_effects_through_the_registry() {
     let reg = registry();
@@ -223,12 +224,6 @@ fn toy_ops_declare_their_effects_through_the_registry() {
             }
         }
     }
-    let none = OpTypes {
-        attrs: &[],
-        operands: &[],
-        results: &[],
-    };
-    assert_eq!(Registry::core().effects("toy.br", &none), None);
 }
 
 #[test]

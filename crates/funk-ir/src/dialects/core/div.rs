@@ -71,7 +71,7 @@ impl OpSpec for Division {
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
         Effects {
             may_ub: true,
-            may_poison: !op.attrs.is_empty(),
+            may_poison: self.1 && !op.attrs.is_empty(),
             ..Effects::PURE
         }
     }
