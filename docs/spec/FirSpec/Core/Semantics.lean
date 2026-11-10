@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8908722822994727884")
+:::moduleDocs (fingerprint := "1767484562019162825")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "7653001876836925693")
@@ -53,19 +53,19 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "14161872408466095758")
+:::readable Fir.Core.Op.exit? (fingerprint := "34922924445590343")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
 the terminators $`\mathsf{br}` and $`\mathsf{cond\_br}` have the
 {ref "The-fir-specification--Execution--Branch-rules"}[branch rules], and
-$`\mathsf{ret}` the rule of the
+$`\mathsf{ret}` and $`\mathsf{unreachable}` theirs of the
 {ref "The-fir-specification--Execution--Control-flow-rules"}[control-flow rules].
 Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7015844231653859016")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "2232592771498486841")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op

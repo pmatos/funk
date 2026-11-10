@@ -44,8 +44,8 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   empty.
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, and `sdiv` and `udiv` with `exact`.
-- May-UB: the four divisions and `cond_br`.
-- Control: `br`, `cond_br` and `ret`.
+- May-UB: the four divisions, `cond_br` and `unreachable`.
+- Control: `br`, `cond_br`, `ret` and `unreachable`.
 
 ## Soundness
 

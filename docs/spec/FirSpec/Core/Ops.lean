@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8444641160636120334")
+:::moduleDocs (fingerprint := "3534762741233764535")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -51,7 +51,7 @@ ult,ule,ugt,uge   \mathsf{ult} \mid \mathsf{ule} \mid \mathsf{ugt} \mid \mathsf{
 ```
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "2735477602325828993")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "6627881021730923988")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, so the types of its operands and results follow from it. Below,
 $`c` is a constant of type $`\mathsf{i}N`, $`t` and $`r` are types, and
@@ -161,8 +161,9 @@ freeze,poison \mathsf{freeze}_N \mid \mathsf{poison}_N
 ```grammar Fir.Core.Op
 \mathit{op}
 -         \dots
-br,condBr \mathsf{br} \mid \mathsf{cond\_br}
-ret       \mathsf{ret}~t^*
+br,condBr   \mathsf{br} \mid \mathsf{cond\_br}
+ret         \mathsf{ret}~t^*
+unreachable \mathsf{unreachable}
 ```
 
 * $`\mathsf{br}` jumps to its one successor, passing it the successor's
@@ -174,6 +175,9 @@ ret       \mathsf{ret}~t^*
 * $`\mathsf{ret}~t^*` returns its operands, of the types $`t^*`, from the
   function: any number of them, each a value or poison
   (ADR-2026-10-30-0816).
+* $`\mathsf{unreachable}` has no operands and no successors, and reaching
+  it is immediate UB (ADR-2026-11-09-1548). A producer puts it where
+  control never goes, such as after a call that never returns.
 
 *Calls* run another function of the module.
 

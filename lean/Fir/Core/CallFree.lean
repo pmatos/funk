@@ -74,6 +74,7 @@ theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect
   | .br, _ => br_total
   | .condBr, _ => condBr_total
   | .ret ts, _ => ret_total ts
+  | .unreachable, _ => unreachable_total
   | .call .., h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
@@ -86,6 +87,7 @@ theorem Op.exit_goto (op : Op) (args : HVector toType (Fir.sig (d := CoreDialect
   | br => exact ⟨br_goto_lt args h, rfl⟩
   | condBr => exact ⟨condBr_goto_lt args h, rfl⟩
   | ret _ => cases h
+  | unreachable => cases (unreachable_exit args _).1 h
   | _ => cases hT
 
 /-- The only core op whose exit returns is `ret`. -/
@@ -95,6 +97,7 @@ theorem Op.exit_ret (op : Op) (args : HVector toType (Fir.sig (d := CoreDialect)
   cases op with
   | ret ts => exact ⟨ts, rfl⟩
   | br => cases h
+  | unreachable => cases (unreachable_exit args _).1 h
   | condBr =>
     match args, h with
     | .cons c .nil, h =>

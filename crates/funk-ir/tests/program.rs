@@ -236,7 +236,7 @@ fn a_function_built_to_stay_defined_holds_only_ops_that_stay_defined() {
 #[test]
 fn every_kind_of_ub_is_planted_beside_a_near_miss() {
     let (mut by_zero, mut by_poison, mut min_by_minus_one, mut poison_by_minus_one) = (0, 0, 0, 0);
-    let (mut branch, mut near_misses, mut poison_results) = (0, 0, 0);
+    let (mut branch, mut trap, mut near_misses, mut poison_results) = (0, 0, 0, 0);
     for (_, p) in programs() {
         for f in p.module.funcs() {
             if !f.name.starts_with("planted.ub") {
@@ -248,6 +248,16 @@ fn every_kind_of_ub_is_planted_beside_a_near_miss() {
                 .map(|o| o.name.as_str())
                 .collect();
             names.pop();
+            let mut ops = f.body.blocks.iter().flat_map(|b| &b.ops);
+            if ops.any(|o| o.name == "unreachable") {
+                assert_eq!(
+                    names,
+                    ["const"],
+                    "a planted unreachable of an unknown shape"
+                );
+                trap += 1;
+                continue;
+            }
             match names.as_slice() {
                 ["poison"] => branch += 1,
                 ["const", d] if d.contains("div") || d.contains("rem") => by_zero += 1,
@@ -272,6 +282,7 @@ fn every_kind_of_ub_is_planted_beside_a_near_miss() {
         ("signed minimum by -1", min_by_minus_one),
         ("poison by -1", poison_by_minus_one),
         ("branch on poison", branch),
+        ("unreachable reached", trap),
         ("near misses", near_misses),
         ("near misses that give poison", poison_results),
     ] {

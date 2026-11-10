@@ -39,7 +39,7 @@ They are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "8575812874960057094")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "7334686291403163751")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the
@@ -57,7 +57,9 @@ $`M`:
   and give no results;
 * $`\mathsf{ret}~t^*`, the only op whose exit returns, takes operands of
   the types $`t^*`, which the core rule of $`\mathsf{ret}` asks to be the
-  result types of $`f`.
+  result types of $`f`;
+* $`\mathsf{unreachable}` neither jumps nor returns: its exit is UB, which
+  ends the run.
 :::
 
 :::readable Fir.Core.runsWell Fir.Core.fuelMonotone Fir.Core.progress Fir.Core.neverStuck (pin := Fir.Core.funcRuns) (pin := Fir.Core.RunsWell) (fingerprint := "268846460176556723")

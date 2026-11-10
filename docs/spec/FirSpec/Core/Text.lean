@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5137435498858895133")
+:::moduleDocs (fingerprint := "16835796905292211576")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -27,17 +27,17 @@ $`\mathrm{name}(p)` is `eq`, `ne`, `slt`, `sle`, `sgt`, `sge`, `ult`,
 parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "2220217634864718192")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "1305945465985180086")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-25 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+26 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
 written with the name it has in the op set, except the conditional branch
 $`\mathsf{cond\_br}`, which the Lean spells `condBr` and the text
 `cond_br`.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (fingerprint := "11960409149810052978")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (fingerprint := "5541406463215105519")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
@@ -60,7 +60,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (fingerprint := "4111233635218291554")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (fingerprint := "6939094326676777775")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -114,6 +114,8 @@ $`\mathsf{i}W` are integer types.
   $`\mathsf{i1}` and no results, it is $`\mathsf{cond\_br}`.
 * `ret`: without attributes or results, from the operand types $`t^*`, it
   is $`\mathsf{ret}~t^*`.
+* `unreachable`: without attributes, operands or results, it is
+  $`\mathsf{unreachable}`.
 * `call`: from the one attribute $`\mathsf{sym}~f`, at any operand types
   $`t^*` and result types $`r^*`, it is $`\mathsf{call}~f : t^* \to r^*`.
 
@@ -140,7 +142,7 @@ undefined otherwise, so `i032`, `u8` and `i16777216` do not decode. `i0`
 decodes, and validation rejects it.
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "2188211750398099125")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "12407850079966777447")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the blocks
 above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
@@ -148,7 +150,7 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 25 core ops at least once, with each of the ten
+holds each of the 26 core ops at least once, with each of the ten
 predicates, at widths from 1 to 128, with and without each flag, and
 $`\mathsf{ret}` with and without operands. On every build, checks test
 that each of them reads back from its own name, attributes and types, and

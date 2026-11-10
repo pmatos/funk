@@ -6,7 +6,7 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 25 core ops has a class (ADR-2026-10-30-0818).
+Every one of the 26 core ops has a class (ADR-2026-10-30-0818).
 
 Nineteen ops propagate poison: `const`, `poison`, `add`, `sub`, `mul`,
 `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`, `xor`, `shl`, `lshr`, `ashr`,
@@ -22,7 +22,7 @@ divisor, and propagate a poison dividend, but for one case: `sdiv` and
 allows both kinds of UB, because a defined value in place of the poison
 would be UB too: a zero divisor, or a dividend that is the signed minimum.
 
-Six ops are exceptions, each with its own rule:
+Seven ops are exceptions, each with its own rule:
 
 * `select`: a poison condition gives poison; the operand not chosen does not
   matter, and the one chosen is given as it is.
@@ -30,6 +30,7 @@ Six ops are exceptions, each with its own rule:
 * `cond_br`: a poison condition is immediate UB.
 * `br`, `ret` and `call` pass values on as they are, poison included: to
   block arguments, to the caller, or to the callee and back.
+* `unreachable` has no operands, and reaching it is immediate UB.
 
 Each op family has its execution rules and the proofs of its obligations in
 sections of their own, after the interpreter: the sections from arithmetic
@@ -69,7 +70,7 @@ def Op.poisonClass : Op → PoisonClass
   | .const .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _
   | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .zext .. | .sext ..
   | .trunc .. | .poison _ => .propagates
-  | .select _ | .freeze _ | .br | .condBr | .ret _ | .call .. => .exception
+  | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its `iN`. -/
 def Ty.IsPoison : {t : Ty} → ⟦t⟧ → Prop
@@ -88,7 +89,7 @@ instance : TyPoison Core.Ty := ⟨Core.Ty.IsPoison⟩
 
 -- The exceptions among one instance of every core op.
 #guard (Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name ==
-  ["select", "freeze", "br", "cond_br", "ret", "ret", "call"]
+  ["select", "freeze", "br", "cond_br", "ret", "ret", "unreachable", "call"]
 
 /-- A poison core value is refined by every value of its type. -/
 theorem Core.Ty.poison_isRefinedBy :

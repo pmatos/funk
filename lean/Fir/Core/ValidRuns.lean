@@ -20,10 +20,10 @@ the previous sections:
 * _every core function valid in the context of a module runs within that
   module_. Validation's rule for `call @g` asks that the module's symbol
   table give `@g` the type of the call, its operand types and its result
-  types, which is what a call needs; `br`, `cond_br` and `ret` keep to the
-  rules of their terminators, as for a function without calls. So no path
-  of its run is stuck, and, with the ops of the previous point total, its
-  run has an outcome at every budget.
+  types, which is what a call needs; `br`, `cond_br`, `ret` and
+  `unreachable` keep to the rules of their terminators, as for a function
+  without calls. So no path of its run is stuck, and, with the ops of the
+  previous point total, its run has an outcome at every budget.
 
 The theorems for core functions without calls keep their statements. A
 function without calls runs within itself, so they need only its own

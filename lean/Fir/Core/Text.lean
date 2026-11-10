@@ -26,7 +26,8 @@ results, which are written where those values are defined.
   before its location: `%p: i32 = poison @1`. Its result is one integer, as
   for `const`.
 * Every other op is written with the name it has in the op set, and no
-  attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`.
+  attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`,
+  `unreachable @1`.
 * The integer type of width N is written `i` and N in decimal with no
   leading zeros, such as `i32`, and the pointer type is written `ptr`. A
   width above 16,777,215, the widest the core dialect has, is a parse error
@@ -66,7 +67,7 @@ def Op.name : Op → String
   | .icmp .. => "icmp" | .select _ => "select"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
-  | .ret _ => "ret" | .call .. => "call"
+  | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
 /-- The flags of `add`, `sub` and `mul`, in their fixed order. -/
 def WrapFlags.attrs (f : WrapFlags) : List Attr :=
@@ -151,6 +152,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "br" => if ts.isEmpty ∧ rs.isEmpty then bare as (some .br) else none
   | "cond_br" => if ts = [.int 1] ∧ rs.isEmpty then bare as (some .condBr) else none
   | "ret" => if rs.isEmpty then bare as (some (.ret ts)) else none
+  | "unreachable" => if ts.isEmpty ∧ rs.isEmpty then bare as (some .unreachable) else none
   | "call" => match as with
     | [.sym f] => some (.call f ts rs)
     | _ => none
@@ -197,7 +199,8 @@ def samples : List Op :=
    .sub 16 { nsw := true }, .mul 64 { nuw := true, nsw := true },
    .sdiv 32 true, .udiv 32 false, .srem 8, .urem 8, .and 1, .or 33, .xor 128,
    .shl 32, .lshr 32, .ashr 32, .select 8, .zext 8 32, .sext 1 64, .trunc 64 7,
-   .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .call "f" [.int 8] [.int 1]] ++
+   .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .unreachable,
+   .call "f" [.int 8] [.int 1]] ++
   Pred.all.map (.icmp · 32)
 
 -- Decoding an op's encoding, at its own types, gives the op back.

@@ -17,8 +17,8 @@ This section gives every core op its meaning in the set of the ways a run
 may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
-terminators. `freeze` asks for the choice effect, and the divisions and
-`cond_br` for the UB effect, so the spec and the tree of choices that
+terminators. `freeze` asks for the choice effect, and the divisions,
+`cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
 `fir-ref run` computes in share them.
 
 * Each op that is not a terminator has the rule of its family, from the
@@ -131,6 +131,7 @@ def Op.exit? [MonadUB m] : (op : Op) →
   | .condBr => some fun
     | .cons c .nil => exitOfEv (condBrExit c)
   | .ret _ => some fun _ => pure retExit
+  | .unreachable => some fun _ => exitOfEv unreachableExit
   | _ => none
 
 /-- The op has rules: as an op that is not a terminator, as a terminator,
@@ -146,7 +147,8 @@ def Op.hasRules (op : Op) : Bool :=
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
-#guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.call "f" [.int 8] [.int 8]).hasRules &&
+#guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
+  (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr]).hasRules
 #guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
 

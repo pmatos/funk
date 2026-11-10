@@ -10,7 +10,8 @@
 //! `udiv`, `srem`, `urem` and the flag `exact`, the comparison family (#16)
 //! `icmp` with its predicates and `select`, the branches (#19) `br` and
 //! `cond_br`, and the calls (#20) `call`. #122 adds the constant `poison`
-//! beside `const`. A later family adds a file and a line here.
+//! beside `const`, and #228 the terminator `unreachable` beside `ret`. A
+//! later family adds a file and a line here.
 
 mod arith;
 mod bitwise;
@@ -63,6 +64,7 @@ pub fn dialect() -> Dialect {
         .op(control::Br)
         .op(control::CondBr)
         .op(control::Ret)
+        .op(control::Unreachable)
         .op(call::Call)
 }
 
