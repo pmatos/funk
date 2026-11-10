@@ -17,4 +17,5 @@ pub use int::{Int, Nat};
 pub use location::{LocRef, LocTable, Location};
 pub use module::{Block, Def, Func, FuncType, Item, Module, Op, Region, Succ, SymbolTable};
 pub use nested::NestedModule;
+pub(crate) use nested::Table;
 pub(crate) use region::Part;

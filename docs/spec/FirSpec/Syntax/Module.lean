@@ -189,7 +189,7 @@ of its module. $`\mathrm{func?}(i)` is the function $`f` when $`i` is
 $`\mathsf{func}~f`, and none when $`i` is a module.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "6394292950614492778")
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "2006544800862020226")
 *Definition: a module.* A module is its dialect set, its items, then its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]:
 
@@ -211,7 +211,8 @@ table.
 
 A module is the unit that fir validates, runs and prints.
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
-requires each symbol to name one function, each item to be a function, the
-location table to be well formed, and each function to be valid in the
-context of the module.
+requires the location table to be well formed and each symbol table of the
+module, its own and each nested module's, to be valid: each symbol names
+one item of its table, and each function is valid in the context of its
+table.
 :::

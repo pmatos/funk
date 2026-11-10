@@ -134,6 +134,21 @@ fn a_symbol_names_the_first_function_with_it() {
     assert_eq!(ds[0].message, "the symbol @g names more than one item");
 }
 
+#[test]
+fn a_symbol_names_its_first_function_after_a_module() {
+    // A nested module before a function of the same symbol does not hide
+    // it: the spec's symbol table holds functions alone
+    // (`SymbolTable.symbols`), so the call checks against @g.
+    let text = one_func(
+        "module @g() {\n}\n\n\
+         func @g(%a: i8) -> i8 {\n^entry:\n  ret %a @0\n}\n\n\
+         func @f(%x: i8) -> i8 {\n^entry:\n  %y: i8 = call @g %x @0\n  ret %y @0\n}\n",
+    );
+    let ds = diagnostics(&text);
+    assert_eq!(ds.len(), 1, "{ds:#?}");
+    assert_eq!(ds[0].message, "the symbol @g names more than one item");
+}
+
 /// A module of `@g() -> i32` and `@f(%n: i32) -> i32`, whose entry block
 /// holds `op` and then returns `%n`, built with the builder.
 fn built(op: Op) -> Module {

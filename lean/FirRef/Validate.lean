@@ -3,6 +3,7 @@ import Fir.Validation.DialectSet
 import FirRef.Dominance
 import FirRef.LocTable
 import FirRef.PrintModule
+import FirRef.Tables
 
 /-!
 `fir-ref validate` runs the spec's validation check, `Module.problems`, at
@@ -15,10 +16,13 @@ loop whose recursive calls are tail calls, so it takes no stack per level.
 compile every later call of `Func.allBlocks` as a call of `allBlocks`
 (ADR-2026-10-30-1450, ADR-2026-10-30-1742).
 
-The spec compiles `Func.problems` and `Module.problems` before that
-theorem exists, so their compiled code calls the spec's walk. `funcProblems`
-and `moduleProblems` are copies of them, compiled after it and proved equal
-by `rfl`, and two more `@[csimp]` theorems make `fir-ref` call the copies.
+The spec compiles `Func.problems`, `SymbolTable.problems` and
+`Module.problems` before that theorem exists, so their compiled code calls
+the spec's walk. `funcProblems`, `tableProblems` and `moduleProblems` are
+copies of them, compiled after it and proved equal by `rfl`, and more
+`@[csimp]` theorems make `fir-ref` call the copies. `moduleProblems` lists
+the module's symbol tables with `FirRef.Tables`'s walk, imported first,
+which takes no stack per level of nested modules.
 The rest of the check, `Func.problemsIn`, takes the list of blocks as an
 argument and walks only lists. `FirRef.Dominance`, imported first, replaces
 it with a copy that decides dominance with a dominator tree built at most
@@ -122,18 +126,23 @@ def funcProblems (lk : Lookup d) (f : Func d) : List Problem :=
 
 @[csimp] theorem problems_eq_funcProblems : @Func.problems = @funcProblems := rfl
 
-/-- `Module.problems`, compiled after `problems_eq_funcProblems`. -/
-def moduleProblems (m : Module d) : List Problem :=
-  let lk := m.lookup
-  (repeats (m.funcs.map (·.name))).map (fun s =>
+/-- `SymbolTable.problems`, compiled after `problems_eq_funcProblems`. -/
+def tableProblems (held : Std.HashSet LocRef) (t : SymbolTable d) : List Problem :=
+  let lk := t.lookup held
+  (repeats (t.items.map Item.name)).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
-  m.items.filterMap (fun i => if i.func?.isSome then none else
-    some { message := "the nested module " ++ Text.printSymbol i.name ++ " is not valid yet" }) ++
-  m.locs.problems ++
-  m.funcs.flatMap (·.problems lk) ++
-  m.dialects.filterMap (fun x => if isWord x then none else
+  t.funcs.flatMap (·.problems lk) ++
+  t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
-  (repeats m.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
+  (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
+
+@[csimp] theorem problems_eq_tableProblems : @SymbolTable.problems = @tableProblems := rfl
+
+/-- `Module.problems`, compiled after `problems_eq_tableProblems` and
+`tables_eq_moduleTables`. -/
+def moduleProblems (m : Module d) : List Problem :=
+  let held := Std.HashSet.ofList (m.locs.map (·.1))
+  m.locs.problems ++ m.tables.flatMap (·.problems held)
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
 
@@ -169,11 +178,17 @@ def funcSetProblems (ns : List Name) (f : Func d) : List Problem :=
 
 @[csimp] theorem setProblems_eq_funcSetProblems : @Func.setProblems = @funcSetProblems := rfl
 
-/-- `Module.setProblems`, compiled after `setProblems_eq_funcSetProblems`. -/
-def moduleSetProblems (m : Module d) : List Problem :=
-  m.dialects.filterMap (fun x => if x ∈ names d then none else
+/-- `SymbolTable.setProblems`, compiled after `setProblems_eq_funcSetProblems`. -/
+def tableSetProblems (t : SymbolTable d) : List Problem :=
+  t.dialects.filterMap (fun x => if x ∈ names d then none else
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
-  m.funcs.flatMap (Func.setProblems m.dialects)
+  t.funcs.flatMap (Func.setProblems t.dialects)
+
+@[csimp] theorem setProblems_eq_tableSetProblems :
+    @SymbolTable.setProblems = @tableSetProblems := rfl
+
+/-- `Module.setProblems`, compiled after `setProblems_eq_tableSetProblems`. -/
+def moduleSetProblems (m : Module d) : List Problem := m.tables.flatMap SymbolTable.setProblems
 
 @[csimp] theorem setProblems_eq_moduleSetProblems :
     @Module.setProblems = @moduleSetProblems := rfl

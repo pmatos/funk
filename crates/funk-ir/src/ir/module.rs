@@ -201,27 +201,40 @@ impl Module {
     /// The module's own functions, in order. Those of a nested module are
     /// not among them.
     pub fn funcs(&self) -> impl Iterator<Item = &Func> {
-        self.items.iter().filter_map(Item::as_func)
+        self.table().funcs()
     }
 
     /// The symbol table of this module's own items.
     pub fn symbols(&self) -> SymbolTable<'_> {
-        let mut map = HashMap::new();
-        for item in &self.items {
-            map.entry(item.name()).or_insert(item);
-        }
-        SymbolTable { map }
+        SymbolTable::of(&self.items)
     }
 }
 
-/// The items of one module, by symbol. When two items share a symbol, which
-/// validation rejects, the first one wins.
+/// The items of one symbol table, by symbol. When two items share a symbol,
+/// which validation rejects, the first function wins, or else the first
+/// item.
 #[derive(Clone, Debug)]
 pub struct SymbolTable<'m> {
     map: HashMap<&'m str, &'m Item>,
 }
 
 impl<'m> SymbolTable<'m> {
+    /// The symbol table of the items `items`: those of a module, or of a
+    /// module nested in one.
+    ///
+    /// A symbol names its first function, as `SymbolTable.symbols` in
+    /// `lean/Fir/Validation/Scope.lean` does, and otherwise its first item.
+    pub fn of(items: &'m [Item]) -> SymbolTable<'m> {
+        let mut map: HashMap<&str, &Item> = HashMap::new();
+        for item in items {
+            let first = map.entry(item.name()).or_insert(item);
+            if first.as_func().is_none() && item.as_func().is_some() {
+                *first = item;
+            }
+        }
+        SymbolTable { map }
+    }
+
     /// The item that `name` names.
     pub fn get(&self, name: &str) -> Option<&'m Item> {
         self.map.get(name).copied()

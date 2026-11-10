@@ -151,6 +151,20 @@ theorem Module.context_replaceBody (M : Module d) (s : Name) (b : Region d) :
   simp only [Module.context, Module.symbols_replaceBody]
   rfl
 
+/-- Replacing a body keeps every symbol of the module's own table. -/
+theorem Item.name_replaceBody (s : Name) (b : Region d) (i : Item d) :
+    (i.replaceBody s b).name = i.name := by
+  cases i <;> rfl
+
+/-- Replacing a body keeps the tables nested in the module's items: no
+function holds one, and a nested module is unchanged. -/
+theorem Item.tablesIn_replaceBody (s : Name) (b : Region d) :
+    ∀ is : List (Item d), Item.tablesIn (is.map (Item.replaceBody s b)) = Item.tablesIn is
+  | [] => rfl
+  | i :: is => by
+    rw [List.map_cons, Item.tablesIn, Item.tablesIn, Item.tablesIn_replaceBody s b is]
+    cases i <;> rfl
+
 variable [DialectSignature d] [DialectValidation d]
 
 /-- A valid module with a body replaced is valid when its function `@s`
@@ -158,27 +172,29 @@ with the new body is valid in the module's context, which the replacement
 keeps. -/
 theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : Region d}
     (h : ∀ g ∈ M.funcs, g.name = s → ({ g with body := b } : Func d).Valid M.context) :
-    (M.replaceBody s b).Valid where
-  symbolsUnique := by
-    rw [Module.funcs_replaceBody, List.map_map]
-    exact hM.symbolsUnique
-  flat i hi := by
-    obtain ⟨j, hj, rfl⟩ := List.mem_map.1 hi
-    cases j with
-    | func => rfl
-    | module => exact hM.flat _ hj
-  locs := hM.locs
-  funcs f hf := by
-    rw [Module.context_replaceBody]
-    rw [Module.funcs_replaceBody] at hf
-    obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf
-    by_cases hs : g.name = s
-    · rw [Func.replaceBody_of_eq hs]
-      exact h g hg hs
-    · rw [Func.replaceBody_of_ne hs]
-      exact hM.funcs g hg
-  dialectNames := hM.dialectNames
-  dialectsUnique := hM.dialectsUnique
+    (M.replaceBody s b).Valid := by
+  refine ⟨hM.locs, fun t ht => ?_⟩
+  simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
+  rcases ht with rfl | ht
+  · refine ⟨?_, fun f hf => ?_, hM.dialectNames, hM.dialectsUnique⟩
+    · change ((M.items.map (Item.replaceBody s b)).map Item.name).Nodup
+      rw [List.map_map]
+      have : Item.name ∘ Item.replaceBody s b = (Item.name : Item d → Name) :=
+        funext (Item.name_replaceBody s b)
+      rw [this]
+      exact hM.table.symbolsUnique
+    · have hc := Module.context_replaceBody M s b
+      have hf' : f ∈ (M.replaceBody s b).funcs := hf
+      change f.Valid (M.replaceBody s b).context
+      rw [hc]
+      rw [Module.funcs_replaceBody] at hf'
+      obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
+      by_cases hs : g.name = s
+      · rw [Func.replaceBody_of_eq hs]
+        exact h g hg hs
+      · rw [Func.replaceBody_of_ne hs]
+        exact hM.funcs g hg
+  · exact hM.tables t (List.mem_cons_of_mem _ ht)
 
 end
 

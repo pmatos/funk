@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15063373684911851246")
+:::moduleDocs (fingerprint := "18162976455339911840")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -214,25 +214,57 @@ _valid_ when:
   to itself, directly or not.
 :::
 
-:::readable Fir.Module.context Fir.Module.Valid (fingerprint := "4562828675817276732")
-*Definition: a valid module.* The context of the module $`M`,
-$`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M` and the
-references of its location table. $`M` is valid when:
+:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "2474978220110121452")
+*Definition: a valid symbol table and a valid module.* The context of the
+module $`M`, $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M`
+and the references of its location table. A module holds a
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
+at each level of nesting: its own, and that of each module nested in it
+(ADR-2026-11-10-1510). In a module whose location table has the references
+$`K`, the context of the table $`T`, $`\mathrm{ctx}_K(T)`, is the symbol
+table of the functions of $`T`, $`\mathrm{symtab}_T`, and $`K`. The table
+$`T` is valid in $`K` when:
 
-$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{funcs}(M) \text{ are distinct} \\ \text{each item of } M \text{ is a function} \\ \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{ctx}(M) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(M) \\ \text{the names of } \mathrm{dialects}(M) \text{ are distinct words} \end{array}}{\vdash M~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
 
-Here $`\mathrm{funcs}(M)` is the functions of $`M`, in order,
-$`\mathrm{locs}(M)` its location table, and $`\mathrm{dialects}(M)` its
-dialect set. Which dialects the set may name, and that the words of $`M`
-keep to it, is the rule of
+and $`M` is valid when its location table is, and each of its tables is:
+
+$$`\dfrac{\begin{array}{c} \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{keys}(M) \vdash T~\text{valid} \\ \text{for each } T \in \mathrm{tables}(M) \end{array}}{\vdash M~\text{valid}}`
+
+Here $`\mathrm{items}(T)` is the items of $`T`, functions and nested
+modules, $`\mathrm{funcs}(T)` its functions and $`\mathrm{dialects}(T)`
+its dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
+$`M`, $`\mathrm{keys}(M)` its references, and $`\mathrm{tables}(M)` the
+tables of $`M`, its own first. One location table serves every table.
+
+A symbol names one item of its table, a function or a nested module, so a
+function and a module never share a symbol of one table; a nested module
+may reuse a symbol of its parent's table, since it is a table of its own.
+Each function is checked against the symbols of its own table, so a call
+names a function of its own table: never one of a nested module, of its
+parent, or a module. Since symbols are distinct, the symbol table gives
+each symbol the type of its one function, and a call names exactly one
+callee. Which dialects a table's set may name, and that the words of its
+functions keep to it, is the rule of
 {ref "The-fir-specification--Sums-of-dialects--A-module___s-dialect-set"}[a module's dialect set],
-which reads words through the dialect's text. Since symbols are distinct, the
-symbol table gives each symbol the type of its one function, and a call
-names exactly one callee.
+which reads words through the dialect's text.
+:::
 
-A nested module (ADR-2026-11-10-1510) is not valid yet: the rule of its own
-symbol table and dialect set comes in the second stage of #211, and until
-then validation accepts no module that holds one.
+:::readable Fir.Module.Valid.table Fir.Module.Valid.funcs Fir.Module.Valid.symbolsUnique Fir.Module.Valid.dialectNames Fir.Module.Valid.dialectsUnique (fingerprint := "14505164559828351400")
+*Theorem: what a valid module's own table gives.* For every valid module
+$`M`, its own table is valid in $`\mathrm{keys}(M)`. So each function of
+$`M` is valid in $`\mathrm{ctx}(M)`, the functions of $`M` have distinct
+symbols, and the names of $`\mathrm{dialects}(M)` are distinct words. The
+chapters on the text and on execution read a valid module through these,
+and look only at its own functions.
+:::
+
+:::readable Fir.Module.valid_of_flat (fingerprint := "12487538470488893174")
+*Theorem: a module with no nested module.* A module $`M` whose items are
+all functions has one table, its own. So $`M` is valid when the symbols of
+its items are distinct, its location table is valid, each of its functions
+is valid in $`\mathrm{ctx}(M)`, and the names of $`\mathrm{dialects}(M)`
+are distinct words. The tests prove their modules valid this way.
 :::
 
 :::readable Fir.TypesValid (fingerprint := "4327058517537719696")

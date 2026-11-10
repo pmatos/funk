@@ -1,6 +1,8 @@
-//! The rules of a module's dialect set (ADR-2026-11-10-1306): the part of
-//! `Module.Valid` about the set, in `lean/Fir/Validation/Rules.lean`, and
-//! `Module.InDialectSet`, in `lean/Fir/Validation/DialectSet.lean`.
+//! The rules of a module's dialect sets (ADR-2026-11-10-1306): the part of
+//! `SymbolTable.Valid` about the set, in `lean/Fir/Validation/Rules.lean`,
+//! and `SymbolTable.InDialectSet`, in `lean/Fir/Validation/DialectSet.lean`.
+//! Each symbol table, the module's own and each nested module's, keeps to
+//! its own set (ADR-2026-11-10-1510).
 //!
 //! The set names each dialect once, by a word, and names only registered
 //! dialects other than the core, which every module holds. Every word that
@@ -17,21 +19,21 @@ use std::collections::HashSet;
 use super::Diagnostic;
 use crate::ir::names::{is_word, word_dialect};
 use crate::ir::tree::{Step, walk};
-use crate::ir::{Attr, Func, Module, Part, Type};
+use crate::ir::{Attr, Func, Part, Table, Type};
 use crate::registry::Registry;
 use crate::text::quote;
 
-/// The rules of the set itself, which are `Module.Valid`'s: each name is a
-/// word, named once.
-pub(super) fn check_names(m: &Module, out: &mut Vec<Diagnostic>) {
-    for x in m.dialects.iter().filter(|x| !is_word(x)) {
+/// The rules of a table's set itself, which are `SymbolTable.Valid`'s: each
+/// name is a word, named once.
+pub(super) fn check_names(dialects: &[String], out: &mut Vec<Diagnostic>) {
+    for x in dialects.iter().filter(|x| !is_word(x)) {
         out.push(Diagnostic::module(format!(
             "the dialect set names {}, which is not a word",
             quote(x)
         )));
     }
     let mut seen = HashSet::new();
-    for x in &m.dialects {
+    for x in dialects {
         if !seen.insert(x.as_str()) {
             out.push(Diagnostic::module(format!(
                 "the dialect set names {x} more than once"
@@ -40,15 +42,16 @@ pub(super) fn check_names(m: &Module, out: &mut Vec<Diagnostic>) {
     }
 }
 
-/// The rule of the set over the module's words, `Module.InDialectSet`.
-pub(super) fn check_words(m: &Module, reg: &Registry, out: &mut Vec<Diagnostic>) {
-    for x in m.dialects.iter().filter(|x| !reg.is_extension(x)) {
+/// The rule of a table's set over the table's words,
+/// `SymbolTable.InDialectSet`.
+pub(super) fn check_words(t: Table<'_>, reg: &Registry, out: &mut Vec<Diagnostic>) {
+    for x in t.dialects.iter().filter(|x| !reg.is_extension(x)) {
         out.push(Diagnostic::module(format!(
             "the dialect set names {x}, which is not a known dialect"
         )));
     }
-    for f in m.funcs() {
-        if let Some(x) = first_outside(f, &m.dialects) {
+    for f in t.funcs() {
+        if let Some(x) = first_outside(f, t.dialects) {
             out.push(Diagnostic::at_block(
                 &f.name,
                 None,

@@ -103,20 +103,20 @@ theorem forever_valid : forever.Valid foreverModule.context where
   dialect := trivial
 
 /-- `@forever`'s module is valid. -/
-theorem foreverModule_valid : foreverModule.Valid where
-  symbolsUnique := by decide
-  flat := by decide
-  locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
+theorem foreverModule_valid : foreverModule.Valid := Module.valid_of_flat
+  (by decide)
+  (by decide)
+  (⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [foreverModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
-    simp [Location.WellFormed, Location.refs]⟩
-  funcs f hf := by
+    simp [Location.WellFormed, Location.refs]⟩)
+  (fun f hf => by
     simp only [foreverModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     subst hf
-    exact forever_valid
-  dialectNames := by simp [foreverModule]
-  dialectsUnique := by simp [foreverModule]
+    exact forever_valid)
+  (by simp [foreverModule])
+  (by simp [foreverModule])
 
 /-- `@forever` is a function of its module. -/
 theorem forever_mem : forever ∈ foreverModule.funcs := by

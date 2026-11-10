@@ -144,9 +144,7 @@ class Reader:
         return t
 
     def module(self) -> list[Function]:
-        found = []
-        while self.at("word") and self.peek().text != "locs":
-            found.append(self.item())
+        found = self.items()
         self.take("word")
         self.take("{")
         while not self.at("}"):
@@ -157,6 +155,39 @@ class Reader:
         if self.peek() is not None:
             raise TextError(f"line {self.peek().line}: text after the location table")
         return found
+
+    def items(self) -> list[Function]:
+        """The functions of a symbol table: its dialect set, if it has one,
+        then its items. A nested module's functions are in its own table,
+        which no call of this one reaches (ADR-2026-11-10-1510), so its
+        body is skipped."""
+        if self.at("word") and self.peek().text == "dialects":
+            self.take("word")
+            self.take("word")
+            while self.at(","):
+                self.take(",")
+                self.take("word")
+        found = []
+        while self.at("word") and self.peek().text != "locs":
+            if self.peek().text == "module":
+                self.nested()
+            else:
+                found.append(self.item())
+        return found
+
+    def nested(self) -> None:
+        self.take("word")
+        self.take("symbol")
+        self.take("(")
+        self.take(")")
+        self.take("{")
+        depth = 1
+        while depth:
+            t = self.peek()
+            if t is None:
+                raise TextError("a nested module does not end")
+            depth += {"{": 1, "}": -1}.get(t.kind, 0)
+            self.i += 1
 
     def item(self) -> Function:
         kind = self.take("word")
