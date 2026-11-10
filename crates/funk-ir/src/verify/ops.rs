@@ -31,7 +31,16 @@ struct At<'a> {
     op: &'a Op,
 }
 
-impl At<'_> {
+impl<'a> At<'a> {
+    fn new(s: &'a Scope<'_>, block: &'a Block, index: usize, op: &'a Op) -> At<'a> {
+        At {
+            func: &s.func.name,
+            block,
+            index,
+            op,
+        }
+    }
+
     fn diag(&self, message: String) -> Diagnostic {
         Diagnostic::at_op(self.func, self.block, self.index, message)
     }
@@ -45,12 +54,7 @@ pub(super) fn check(
     op: &Op,
     out: &mut Vec<Diagnostic>,
 ) {
-    let at = At {
-        func: &s.func.name,
-        block: b,
-        index: i,
-        op,
-    };
+    let at = At::new(s, b, i, op);
     for su in &op.succs {
         check_succ(s, &at, su, out);
     }
@@ -76,12 +80,7 @@ pub(super) fn check_inner(
     op: &Op,
     out: &mut Vec<Diagnostic>,
 ) {
-    let at = At {
-        func: &s.func.name,
-        block: b,
-        index: i,
-        op,
-    };
+    let at = At::new(s, b, i, op);
     for su in &op.succs {
         if !is_name(&su.label) {
             out.push(at.diag(format!(
