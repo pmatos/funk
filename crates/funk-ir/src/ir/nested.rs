@@ -11,7 +11,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 
 use super::debug::{Bracket, DebugTree};
-use super::module::{Func, Item};
+use super::module::{Func, Item, Module};
 use super::tree::{self, Nest, Node, Step, walk};
 
 /// A module nested in another, as an item of kind `module`
@@ -36,6 +36,47 @@ impl NestedModule {
             dialects: Vec::new(),
             items: Vec::new(),
         }
+    }
+}
+
+/// A symbol table of a module (`SymbolTable` in
+/// `lean/Fir/Validation/Scope.lean`): the dialect set and the items of the
+/// module, or of a module nested in it.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Table<'a> {
+    pub dialects: &'a [String],
+    pub items: &'a [Item],
+}
+
+impl<'a> Table<'a> {
+    /// The table's functions, in order. A nested module's are its own.
+    pub fn funcs(self) -> impl Iterator<Item = &'a Func> {
+        self.items.iter().filter_map(Item::as_func)
+    }
+}
+
+impl Module {
+    /// Every symbol table of the module, in the order of `Module.tables`:
+    /// its own, then that of each nested module, at any depth, each before
+    /// the tables nested in it. A walk keeps the path on the heap, so this
+    /// takes no stack per level of nesting.
+    pub(crate) fn tables(&self) -> Vec<Table<'_>> {
+        let mut out = vec![Table {
+            dialects: &self.dialects,
+            items: &self.items,
+        }];
+        for item in &self.items {
+            if let Item::Module(n) = item {
+                out.extend(walk(Entry::Module(n)).filter_map(|s| match s {
+                    Step::Enter(Entry::Module(m)) => Some(Table {
+                        dialects: &m.dialects,
+                        items: &m.items,
+                    }),
+                    _ => None,
+                }));
+            }
+        }
+        out
     }
 }
 

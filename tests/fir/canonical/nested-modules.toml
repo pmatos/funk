@@ -1,0 +1,10 @@
+# A nested module is a symbol table of its own (ADR-2026-11-10-1510): @dev
+# and @dev's @main hold a @g each, and calls resolve in their own table, so
+# @main calls the top-level @g, which doubles. Running and funk build see
+# only the top-level functions.
+tests = [
+  { func = "@main", args = ["5"] },
+  { func = "@main", args = ["-1073741824"] },
+  { func = "@g", args = ["7"] },
+  { func = "@main", args = ["21"], expect = ["42"] },
+]

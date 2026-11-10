@@ -3,7 +3,8 @@
 # fir-ref that it builds: scripts/check-fir-ref-deep.sh FIR_REF. On a 256
 # KiB stack, fir-ref fmt and validate give texts nested a million levels
 # deep in attributes, in functions, in modules and in regions, and a block
-# of a million ops, their verdicts, never an abort.
+# of a million ops, their verdicts, never an abort, and validate accepts
+# valid modules nested a million levels deep.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -51,6 +52,12 @@ awk -v end="$ending" 'BEGIN {
     printf "bad @b() {\n%s", end
 }' >"$tmp/deep-modules.fir"
 awk -v end="$ending" 'BEGIN {
+    for (i = 0; i < 1000000; i++) printf "module @a() {\n"
+    printf "func @a() {\n^e:\nret @0\n"
+    for (i = 0; i < 1000000; i++) printf "}\n"
+    printf "%s", end
+}' >"$tmp/valid-modules.fir"
+awk -v end="$ending" 'BEGIN {
     printf "func @f() {\n^e:\n"
     for (i = 0; i < 1000000; i++) printf "br {\n^b:\n"
     printf "ret %%x @0\n"
@@ -97,6 +104,24 @@ deep() {
     done
     return "$fail"
 }
+# On a 256 KiB stack, fir-ref validate accepts $tmp/valid-modules.fir:
+# modules nested a million levels deep, the innermost holding a function,
+# each with its own symbol table (ADR-2026-11-10-1510). The text is not
+# canonical, and its canonical form indents each level two spaces deeper,
+# so only validate reads it.
+valid_deep() {
+    local file=$tmp/valid-modules.fir rc=0 out err want
+    printf -v want '{"file":"%s","verdict":"accepted","diagnostics":[]}' "$file"
+    out=$(ulimit -c 0; LEAN_STACK_SIZE_KB=256 exec "$fir_ref" validate "$file" \
+        2>"$tmp/deep.err") || rc=$?
+    err=$(<"$tmp/deep.err")
+    if [[ $rc -ne 0 || $out != "$want" || -n $err ]]; then
+        echo "On a 256 KiB stack, fir-ref validate on modules nested a million" \
+            "levels deep exits with $rc, prints '$out' and '$err' on standard" \
+            "error; expected 0, '$want' and nothing" >&2
+        return 1
+    fi
+}
 attr_error="op ret does not decode: the dialect has no op with this name and these"
 attr_error+=" attributes, operand types and result types"
 deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" || status=1
@@ -107,4 +132,5 @@ deep deep-modules "modules nested a million levels deep" 2000001 1 \
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
+valid_deep || status=1
 exit "$status"

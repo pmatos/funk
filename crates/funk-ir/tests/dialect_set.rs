@@ -1,6 +1,8 @@
 //! A module's dialect set (ADR-2026-11-10-1306), on the shared cases of
-//! `tests/dialects/dialect-set.cases`, which `lean/FirTest/DialectSet.lean`
-//! reads too, so the two validators agree on each of them.
+//! `tests/dialects/dialect-set.cases`, and the dialect sets of nested
+//! modules (ADR-2026-11-10-1510), on those of
+//! `tests/dialects/nested-modules.cases`. `lean/FirTest/DialectSet.lean`
+//! reads both too, so the two validators agree on each of them.
 //!
 //! The cases run with the core and a test dialect named `toy`: the type
 //! `toy.flag`, the ops `toy.flag` and `toy.test`, and `toy.note`, which
@@ -13,6 +15,7 @@ use funk_ir::{
 };
 
 const CASES: &str = include_str!("../../../tests/dialects/dialect-set.cases");
+const NESTED: &str = include_str!("../../../tests/dialects/nested-modules.cases");
 
 /// An op of the tagged dialect, with its decoding as a function.
 struct TagOp(&'static str, fn(&OpTypes<'_>) -> bool);
@@ -75,8 +78,11 @@ struct Case {
 }
 
 fn cases() -> Vec<Case> {
-    CASES
-        .split("=== ")
+    read(CASES)
+}
+
+fn read(file: &'static str) -> Vec<Case> {
+    file.split("=== ")
         .skip(1)
         .map(|piece| {
             let (head, text) = piece.split_once('\n').expect("a case has a first line");
@@ -100,7 +106,7 @@ fn the_shared_cases_are_all_read() {
 #[test]
 fn each_case_parses_prints_as_itself_and_gets_its_verdict() {
     let reg = registry();
-    for c in cases() {
+    for c in cases().into_iter().chain(read(NESTED)) {
         let m = parse(c.text, &reg).unwrap_or_else(|e| panic!("{}: {e}", c.name));
         assert_eq!(print(&m), c.text, "{}", c.name);
         let ds = verify(&m, &reg);
@@ -109,6 +115,29 @@ fn each_case_parses_prints_as_itself_and_gets_its_verdict() {
             assert!(d.message.contains("dialect"), "{}: {d}", c.name);
         }
     }
+}
+
+#[test]
+fn the_nested_cases_are_all_read() {
+    let cases = read(NESTED);
+    assert_eq!(cases.len(), 8);
+    assert_eq!(cases.iter().filter(|c| c.accept).count(), 3);
+}
+
+#[test]
+fn a_nested_word_outside_its_set_names_its_function_and_dialect() {
+    let reg = registry();
+    let c = read(NESTED)
+        .into_iter()
+        .find(|c| c.name == "nested-does-not-inherit-the-set")
+        .unwrap();
+    let ds = verify(&parse(c.text, &reg).unwrap(), &reg);
+    assert_eq!(ds.len(), 1, "{ds:#?}");
+    assert_eq!(
+        ds[0].message,
+        "the function writes a word of the dialect toy, which the module's dialect set does not name"
+    );
+    assert_eq!(ds[0].func.as_deref(), Some("f"));
 }
 
 #[test]

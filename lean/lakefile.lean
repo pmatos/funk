@@ -33,7 +33,17 @@ input_file useOnceCases where
   path := ".." / "tests" / "dialects" / "use-once.cases"
   text := true
 
+/-- The cases that the dialect-set tests share with the Rust tests.
+`FirTest.DialectSet` includes the files. -/
+input_file dialectSetCases where
+  path := ".." / "tests" / "dialects" / "dialect-set.cases"
+  text := true
+
+input_file nestedModulesCases where
+  path := ".." / "tests" / "dialects" / "nested-modules.cases"
+  text := true
+
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
 lean_lib FirTest where
-  needs := #[`@/useOnceCases]
+  needs := #[`@/useOnceCases, `@/dialectSetCases, `@/nestedModulesCases]

@@ -2,9 +2,10 @@ import Fir.Validation.Dominance
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
-its symbols are unique, each of its items is a function, its location table
-is well formed, each of its functions is valid, and its dialect set names
-each dialect once, by a word. A function is valid when its blocks, its ops
+its location table is well formed and each of its symbol tables, its own
+and that of each nested module, is valid: its symbols are unique, each of
+its functions is valid, and its dialect set names each dialect once, by a
+word. A function is valid when its blocks, its ops
 and its successors obey the rules below, and each op obeys its dialect's
 rule.
 
@@ -118,25 +119,66 @@ def LocTable.Valid (t : LocTable) : Prop :=
 def Module.context (m : Module d) : ModuleContext d :=
   ⟨m.symbols, m.locs.map (·.1)⟩
 
-/--
-A module is valid when each symbol names one function, each of its items is
-a function, its location table is well formed, each of its functions is
-valid, and its dialect set names each dialect once, by a word. Which
-dialects the set may name, and that the module's words name only those, is
-the rule of a module's dialect set, in the chapter on sums of dialects: it
-reads the words of the module, which the dialect's text gives.
+/-- The context in which the functions of a symbol table are checked, in a
+module whose location table has the references `keys`: the table's own
+symbols, and the module's one location table. -/
+def SymbolTable.context (keys : List LocRef) (t : SymbolTable d) : ModuleContext d :=
+  ⟨t.symbols, keys⟩
 
-A nested module (ADR-2026-11-10-1510) is not yet valid: the rule of its own
-symbol table and dialect set comes in the second stage of #211, and until
-then validation accepts no module that holds one.
+/--
+A symbol table is valid, in a module whose location table has the
+references `keys`, when each symbol names one item, function or nested
+module, each of its functions is valid in the table's context, and its
+dialect set names each dialect once, by a word. Which dialects the set may
+name, and that the table's words name only those, is the rule of a
+module's dialect set, in the chapter on sums of dialects: it reads the
+words of the module, which the dialect's text gives.
+-/
+structure SymbolTable.Valid (keys : List LocRef) (t : SymbolTable d) : Prop where
+  symbolsUnique : (t.items.map Item.name).Nodup
+  funcs : ∀ f ∈ t.funcs, f.Valid (t.context keys)
+  dialectNames : ∀ x ∈ t.dialects, isWord x
+  dialectsUnique : t.dialects.Nodup
+
+/--
+A module is valid when its location table is well formed and each of its
+symbol tables is valid: its own, and that of each module nested in it, at
+any depth (ADR-2026-11-10-1510). One location table serves them all.
 -/
 structure Module.Valid (m : Module d) : Prop where
-  symbolsUnique : (m.funcs.map (·.name)).Nodup
-  flat : ∀ i ∈ m.items, i.func?.isSome
   locs : LocTable.Valid m.locs
-  funcs : ∀ f ∈ m.funcs, f.Valid m.context
-  dialectNames : ∀ x ∈ m.dialects, isWord x
-  dialectsUnique : m.dialects.Nodup
+  tables : ∀ t ∈ m.tables, t.Valid (m.locs.map (·.1))
+
+/-- A valid module's own table is valid. -/
+theorem Module.Valid.table {m : Module d} (h : m.Valid) : m.table.Valid (m.locs.map (·.1)) :=
+  h.tables _ (List.mem_cons_self ..)
+
+/-- Each function of a valid module is valid in the module's context. -/
+theorem Module.Valid.funcs {m : Module d} (h : m.Valid) : ∀ f ∈ m.funcs, f.Valid m.context :=
+  h.table.funcs
+
+/-- Each function of a valid module has a symbol of its own. -/
+theorem Module.Valid.symbolsUnique {m : Module d} (h : m.Valid) : (m.funcs.map (·.name)).Nodup :=
+  (funcNames_sublist m.items).nodup h.table.symbolsUnique
+
+/-- A valid module's dialect set names each dialect by a word. -/
+theorem Module.Valid.dialectNames {m : Module d} (h : m.Valid) : ∀ x ∈ m.dialects, isWord x :=
+  h.table.dialectNames
+
+/-- A valid module's dialect set names each dialect once. -/
+theorem Module.Valid.dialectsUnique {m : Module d} (h : m.Valid) : m.dialects.Nodup :=
+  h.table.dialectsUnique
+
+/-- A module with no nested module is valid when its location table and its
+own table are. -/
+theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.isSome)
+    (symbolsUnique : (m.items.map Item.name).Nodup) (locs : LocTable.Valid m.locs)
+    (funcs : ∀ f ∈ m.funcs, f.Valid m.context) (dialectNames : ∀ x ∈ m.dialects, isWord x)
+    (dialectsUnique : m.dialects.Nodup) : m.Valid := by
+  refine ⟨locs, fun t ht => ?_⟩
+  simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
+  subst ht
+  exact ⟨symbolsUnique, funcs, dialectNames, dialectsUnique⟩
 
 /-!
 # Valid op instances

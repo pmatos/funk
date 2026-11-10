@@ -99,6 +99,18 @@ class Tests(unittest.TestCase):
     def test_a_module_without_functions(self):
         self.assertEqual(read("locs {\n}\n"), {})
 
+    def test_nested_modules_hold_their_own_functions(self):
+        text = (
+            "func @g() {\n^e:\n  ret @0\n}\n\n"
+            "module @dev() {\n  dialects toy\n\n"
+            "  func @g(%a: i8) {\n  ^e:\n    ret @0\n  }\n\n"
+            "  module @inner() {\n  }\n\n}\n\n"
+            "func @h() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        functions = read(text)
+        self.assertEqual(list(functions), ["@g", "@h"])
+        self.assertEqual(functions["@g"].params, ())
+
     def test_texts_it_cannot_read(self):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),

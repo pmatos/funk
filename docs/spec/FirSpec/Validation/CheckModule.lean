@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16548835796344265610")
+:::moduleDocs (fingerprint := "754155793961006328")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
@@ -64,40 +64,54 @@ is a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid location table].
 :::
 
-:::readable Fir.Module.lookup Fir.Module.lookup_agrees (fingerprint := "10918549764375575559")
-*Definition and theorem: the lookup of a module.* The
+:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "12308579040400648023")
+*Definition and theorem: the lookup of a symbol table.* The
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] of
-the module $`M` gives each symbol the type of the first function of $`M`
-with that symbol, from a hash table built once, and has the references of
-the location table of $`M`, from a hash set built once.
+the table $`T`, given a hash set of the references of the module's location
+table, gives each symbol the type of the first function of $`T` with that
+symbol, from a hash table built once, and has the references of the hash
+set.
 
-*Theorem:* for every module $`M`, the lookup of $`M` agrees with the
-context of $`M`, $`\mathrm{ctx}(M)`, that the rules use. So the theorems
-about the check of a function apply to every function of $`M`, checked
-with the lookup of $`M`.
+*Theorem:* for every table $`T` and every list of references $`K`, the
+lookup of $`T` with a hash set of $`K` agrees with the context of $`T` in
+$`K`, $`\mathrm{ctx}_K(T)`, that the rules use. So the theorems about the
+check of a function apply to every function of $`T`, checked with the
+lookup of $`T`.
 :::
 
-:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "11479613087675994705")
-*Definition: the check of a module.* The check of the module $`M`,
-$`\mathrm{problems}(M)`, builds the lookup of $`M` once, and gives, in this
-order:
+:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "3170458230691400155")
+*Definition: the check of a symbol table.* The check of the table $`T`,
+given a hash set of the references of the module's location table, builds
+the lookup of $`T` once, and gives, in this order:
 
 * "the symbol `@s` names more than one item", placed at $`s`, for each
-  symbol of a function of $`M` that repeats the symbol of a function before
-  it;
-* "the nested module `@s` is not valid yet", for each item of $`M` that is
-  a nested module, in order;
-* the problems of the location table;
+  symbol of an item of $`T`, function or nested module, that repeats the
+  symbol of an item before it;
 * the
   {ref "The-fir-specification--Validation--Checking-functions"}[problems of each function]
-  of $`M`, in order, checked with the lookup of $`M`;
+  of $`T`, in order, checked with the lookup of $`T`;
 * "the dialect set names $`x`, which is not a word", for each name $`x` of
-  the dialect set that is not a word;
+  the dialect set of $`T` that is not a word;
 * "the dialect set names $`x` more than once", for each name that repeats
   one before it.
 
 A symbol in a message is spelled as the text writes it: bare when it is a
 word, and quoted otherwise.
+:::
+
+:::readable Fir.SymbolTable.problems_eq_nil_iff (fingerprint := "7069496205811800726")
+*Theorem: the check of a table decides its validity.* For every table
+$`T` and every list of references $`K`, the check of $`T` with a hash set
+of $`K` gives no problem exactly when $`T` is valid in $`K`.
+:::
+
+:::readable Fir.Module.problems (fingerprint := "14799544796645307810")
+*Definition: the check of a module.* The check of the module $`M`,
+$`\mathrm{problems}(M)`, builds a hash set of the references of its
+location table once, and gives, in this order, the problems of the location
+table, then the problems of each of its
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol tables],
+its own first, each checked with that hash set.
 :::
 
 :::readable Fir.Module.problems_eq_nil_iff (fingerprint := "9852547177654724991")

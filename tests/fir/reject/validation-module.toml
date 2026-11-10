@@ -1,13 +1,194 @@
 # Must-reject texts that parse, and break a rule of validation for the
 # module: unique symbols, a well-formed location table and a dialect set
-# that names known dialects, each once (ADR-2026-11-10-1306).
+# that names known dialects, each once (ADR-2026-11-10-1306), in the
+# module's own symbol table and in each nested module's
+# (ADR-2026-11-10-1510).
 
 [[reject]]
 verdict = "validation-error"
-rule = "a nested module is not valid yet: validation checks nested modules from stage 2 of #211"
+rule = "each symbol names one item, function or nested module: a function and a module are @m"
 text = '''
+func @m() {
+^e:
+  ret @0
+}
+
 module @m() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each symbol names one item of its table, in a nested module too: two functions of @dev are @f"
+text = '''
+module @dev() {
+  func @f() {
+  ^e:
+    ret @0
+  }
+
+  func @f() {
+  ^e:
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each symbol names one item of its table, at any depth: two modules of @c, in @b in @a, are @d"
+text = '''
+module @a() {
+  module @b() {
+    module @c() {
+      module @d() {
+      }
+
+      module @d() {
+      }
+
+    }
+
+  }
+
+}
+
+locs {
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an op refers only to a function of its own table: @g is a function of the nested module @dev, not of the top level"
+text = '''
+func @f() {
+^e:
+  call @g @0
+  ret @0
+}
+
+module @dev() {
   func @g() {
+  ^e:
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an op refers only to a function of its own table: @g is a function of the top level, not of the nested module @dev"
+text = '''
+func @g() {
+^e:
+  ret @0
+}
+
+module @dev() {
+  func @f() {
+  ^e:
+    call @g @0
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call names a function: @m is a nested module"
+text = '''
+func @f() {
+^e:
+  call @m @0
+  ret @0
+}
+
+module @m() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "each function of a nested module is valid: block ^dead of @dev's @f is not reachable from its entry"
+text = '''
+module @dev() {
+  func @f() {
+  ^e:
+    ret @0
+  ^dead:
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's ops use the module's one location table: @1 is not in it"
+text = '''
+module @dev() {
+  func @f() {
+  ^e:
+    ret @1
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's dialect set names only dialects that the reader holds: the core alone holds no toy"
+text = '''
+module @dev() {
+  dialects toy
+
+}
+
+locs {
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's dialect set never names the core, which every module holds"
+text = '''
+module @dev() {
+  dialects core
+
+  func @f() {
+  ^e:
+    ret @0
   }
 
 }

@@ -19,8 +19,8 @@
 //! - broken location tables (`locs.rs`), and ops whose location reference
 //!   is in no entry.
 //! - nested modules, up to three deep, each with its own dialect set and
-//!   the functions of a valid module, which validation rejects until it
-//!   checks them (#211).
+//!   the functions of a valid module, which validation checks as symbol
+//!   tables of their own (ADR-2026-11-10-1510).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results

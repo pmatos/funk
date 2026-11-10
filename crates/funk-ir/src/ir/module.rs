@@ -205,11 +205,7 @@ impl Module {
 
     /// The symbol table of this module's own items.
     pub fn symbols(&self) -> SymbolTable<'_> {
-        let mut map = HashMap::new();
-        for item in &self.items {
-            map.entry(item.name()).or_insert(item);
-        }
-        SymbolTable { map }
+        SymbolTable::of(&self.items)
     }
 }
 
@@ -221,6 +217,16 @@ pub struct SymbolTable<'m> {
 }
 
 impl<'m> SymbolTable<'m> {
+    /// The symbol table of the items `items`: those of a module, or of a
+    /// module nested in one.
+    pub fn of(items: &'m [Item]) -> SymbolTable<'m> {
+        let mut map = HashMap::new();
+        for item in items {
+            map.entry(item.name()).or_insert(item);
+        }
+        SymbolTable { map }
+    }
+
     /// The item that `name` names.
     pub fn get(&self, name: &str) -> Option<&'m Item> {
         self.map.get(name).copied()
