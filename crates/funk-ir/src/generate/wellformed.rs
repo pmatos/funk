@@ -32,7 +32,7 @@
 //! module.
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
-use crate::dialects::core::int_type;
+use crate::dialects::core::{self, int_type};
 use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
@@ -68,10 +68,11 @@ impl OpSpec for AnyOp {
     }
 }
 
-/// The test dialect `toy` with its one op, [`TOY_OP`]. Test dialects name
-/// their ops `toy.` and a word (ADR-2026-10-30-1146).
+/// The test dialect `toy` with its one op, [`TOY_OP`], over the core. Test
+/// dialects are named `toy`, so their ops are `toy.` and a word
+/// (ADR-2026-11-09-1543).
 pub fn toy_dialect() -> Dialect {
-    Dialect::new("toy").op(AnyOp)
+    Dialect::new("toy").depends_on(core::NAME).op(AnyOp)
 }
 
 /// A random well-formed module, which validation often rejects.

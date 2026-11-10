@@ -44,7 +44,7 @@ impl OpSpec for ToyNest {
 
 fn registry() -> Registry {
     let mut reg = Registry::core();
-    reg.register(Dialect::new("toy").op(ToyNest))
+    reg.register(Dialect::new("toy").depends_on("core").op(ToyNest))
         .expect("the toy dialect registers");
     reg
 }
