@@ -30,7 +30,7 @@ every kind of location, with references, lines and columns up to the
 largest below `2^32`. -/
 def tricky : Module CoreDialect where
   items := [
-    .func ⟨"a\"b\\c\n\t\x00\x01\u00e9\u202e\u2028\u00ad", [("x.0", i 8)], [i 8, i 256], ⟨[
+    .func ⟨"a\"b\\c\n\t\x00\x01\u00e9\u202e\u2028\u00ad", [("x.0", i 8)], [i 8, i 256], ⟨none, [
       ⟨"entry", [], [
         op [("m", i 8)] (.const 8 (-128)) [] 4294967295,
         op [("z", i 8)] (.const 8 0) [] 1,
@@ -38,7 +38,7 @@ def tricky : Module CoreDialect where
         op [("r", i 8)] (.call "1" [i 8] [i 8]) ["m"] 3,
         op [] .br [] 4 [⟨"exit", ["r", "big"]⟩]]⟩,
       ⟨"exit", [("a", i 8), ("b", i 256)], [op [] (.ret [i 8, i 256]) ["a", "b"] 5]⟩]⟩⟩,
-    .func ⟨"_", [], [], ⟨[⟨"e", [], [op [] (.ret []) [] 0]⟩]⟩⟩]
+    .func ⟨"_", [], [], ⟨none, [⟨"e", [], [op [] (.ret []) [] 0]⟩]⟩⟩]
   locs := [
     (0, .unknown),
     (1, .name "\u2028\"\\\u007f"),
@@ -61,7 +61,7 @@ def tricky : Module CoreDialect where
 -- Tokens that cannot be written do not lex back: an empty value name, a
 -- label that is not a name, and a location reference of `2^32`.
 #guard !lexesToTokens (Module.mk (d := CoreDialect) []
-  [.func ⟨"f", [], [], ⟨[⟨"a b", [], [op [("", i 8)] (.const 8 0) [] 0]⟩]⟩⟩] [])
+  [.func ⟨"f", [], [], ⟨none, [⟨"a b", [], [op [("", i 8)] (.const 8 0) [] 0]⟩]⟩⟩] [])
 #guard !lexesTo (Tok.locRef 4294967296).spell [.locRef 4294967296]
 
 /--

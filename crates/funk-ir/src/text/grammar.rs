@@ -434,11 +434,20 @@ impl<'t> Parser<'t> {
     }
 
     /// `region* locref`, one step at a time, for the last op read: opens its
-    /// next region, or ends it with its location reference.
+    /// next region, with the kind that a word after its `{` names, or ends
+    /// it with its location reference.
     fn op_tail(&mut self, blocks: &mut Nest<Block>) -> Result<(), ParseError> {
         if self.eat(&Tok::LBrace) {
+            let kind = match self.peek() {
+                Tok::Word(w) => {
+                    let w = w.clone();
+                    self.advance();
+                    Some(w)
+                }
+                _ => None,
+            };
             blocks.last_op().regions.reserve_exact(1);
-            blocks.open(1);
+            blocks.open_region(kind, 1);
             return Ok(());
         }
         let loc = match self.peek() {

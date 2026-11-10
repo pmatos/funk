@@ -33,7 +33,7 @@ def deadBlock : Func CoreDialect where
   name := "f"
   params := []
   results := [.int 32]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [op [("c", .int 32)] (.const 32 0) [], op [] (.ret [.int 32]) ["c"]]⟩,
     ⟨"dead", [], [op [("d", .int 32)] (.const 32 1) [], op [] (.ret [.int 32]) ["d"]]⟩]⟩
 

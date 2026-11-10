@@ -98,9 +98,10 @@ theorem decodeRegions_cons {sc : Scope d} {f : String} {r : Region d} {rs : List
     (hrs : Decodes (decodeRegions sc f) SRegion.eraseList (Region.treeList rs) rs) :
     Decodes (decodeRegions sc f) SRegion.eraseList (Region.treeList (r :: rs)) (r :: rs) := by
   intro srs h
-  obtain ⟨⟨sbs⟩, srs', rfl, h₁, h₂⟩ := SRegion.eraseList_eq_cons h
+  obtain ⟨⟨k, sbs⟩, srs', rfl, hk, h₁, h₂⟩ := SRegion.eraseList_eq_cons h
   simp only [decodeRegions, hb _ h₁, ok_bind, hrs _ h₂]
   cases r
+  cases hk
   rfl
 
 variable [DialectSignature d]
@@ -193,7 +194,7 @@ theorem Region.decodesList [DialectValidation d] [LawfulDialectText d] (sc : Sco
     (∀ b ∈ Region.allBlocks rs, b.DecodesIn sc) →
     Decodes (decodeRegions sc f) SRegion.eraseList (Region.treeList rs) rs
   | [], _ => decodeRegions_nil sc f
-  | ⟨blocks⟩ :: rs, h =>
+  | ⟨_, blocks⟩ :: rs, h =>
     decodeRegions_cons
       (Block.decodesList sc f blocks fun b hb => h b (by simp [Region.allBlocks, hb]))
       (Region.decodesList sc f rs fun b hb => h b (by simp [Region.allBlocks, hb]))

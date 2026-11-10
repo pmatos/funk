@@ -293,13 +293,20 @@ fn a_dialect_rule_can_read_the_op_context() {
 }
 
 #[test]
-fn regions_round_trip_and_validation_rejects_them() {
+fn regions_and_their_kinds_round_trip_and_validation_rejects_them() {
     let text = branches(
-        "^entry:\n  toy.scope {\n    ^inner(%k: i32):\n      toy.scope {\n      } {\n        ^deeper:\n          ret %k @0\n      } @0\n  } @0\n  ret %n @0\n",
+        "^entry:\n  toy.scope {\n    ^inner(%k: i32):\n      toy.scope { toy.graph\n      } {\n        ^deeper:\n          ret %k @0\n      } @0\n  } @0\n  ret %n @0\n",
     );
     let reg = registry();
     let m = parse(&text, &reg).unwrap_or_else(|e| panic!("{e}"));
     assert_eq!(print(&m), text);
+    let outer = &m.funcs().next().expect("a function").body.blocks[0].ops[0];
+    let inner = &outer.regions[0].blocks[0].ops[0];
+    let kinds: Vec<_> = inner.regions.iter().map(|r| r.kind.as_deref()).collect();
+    assert_eq!(
+        (outer.regions[0].kind.as_deref(), kinds),
+        (None, vec![Some("toy.graph"), None])
+    );
     assert!(
         diags(&text)
             .iter()

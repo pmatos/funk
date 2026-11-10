@@ -188,7 +188,7 @@ def link (i : Nat) (x : Name) (term : Operation CoreDialect) : Block CoreDialect
 
 /-- A function of `n` blocks in a chain; block `i` uses the value `use i`. -/
 def chain (n : Nat) (use : Nat → Name) : Module CoreDialect :=
-  moduleOf [⟨"f", [("p", .int 32)], [], ⟨(List.range n).map fun i =>
+  moduleOf [⟨"f", [("p", .int 32)], [], ⟨none, (List.range n).map fun i =>
     link i (use i)
       (if i + 1 = n then op [] (.ret []) [] else op [] .br [] 0 [⟨s!"b{i + 1}", []⟩])⟩⟩]
 
@@ -205,7 +205,7 @@ Block `l` defines `%vl`, a `freeze` of the value of the block `use l`, or
 of `%p` for the entry, and ends with `ret`, `br` or `cond_br %c` by its
 number of successors. -/
 def ofShape (sh : Shape) (use : Name → Name) : Module CoreDialect :=
-  moduleOf [⟨"f", [("p", .int 32), ("c", .int 1)], [], ⟨sh.zipIdx.map fun ((l, ss), i) =>
+  moduleOf [⟨"f", [("p", .int 32), ("c", .int 1)], [], ⟨none, sh.zipIdx.map fun ((l, ss), i) =>
     ⟨l, [], [op [(s!"v{l}", .int 32)] (.freeze 32) [if i = 0 then "p" else s!"v{use l}"],
       match ss with
       | [] => op [] (.ret []) []

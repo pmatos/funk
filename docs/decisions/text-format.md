@@ -41,6 +41,15 @@ module must name the core or a dialect of its set: op names, attribute
 words and type words, at any depth. Both validators check this beside
 `Module.Valid`, as `Module.InDialectSet` (ADR-2026-11-10-1306).
 
+## Region kinds
+
+A region names its kind. A region of an op writes its kind as a word right
+after its `{`, as in `toy.run { toy.graph`. The core's kind, a control-flow
+graph, writes nothing there, so every M0 text is unchanged. A function's
+body is always of the core's kind and its text names none: a word after an
+item's `{` starts its items. Validation rejects a function whose body names
+a kind, and, as in M0, any op that owns a region (ADR-2026-11-10-1530).
+
 ## One format
 
 Text is fir's only format in v0. A binary format is left out on purpose. It

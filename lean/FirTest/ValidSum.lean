@@ -149,6 +149,7 @@ theorem sum_reachable : ∀ b ∈ sum.blocks, sum.Reachable b.label := by
 
 /-- `@sum` is valid in its module. -/
 theorem sum_valid : sum.Valid sumModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable := sum_reachable
   labelsUnique := by decide
@@ -168,6 +169,7 @@ theorem sum_valid : sum.Valid sumModule.context where
 /-- `@sum10` is valid in its module: it has one block, and its `call`
 names `@sum` at `@sum`'s type. -/
 theorem sum10_valid : sum10.Valid sumModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     simp only [sum10, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb

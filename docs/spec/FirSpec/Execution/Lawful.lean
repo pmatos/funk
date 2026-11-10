@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2582150824750587004")
 :::
 
-:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "14577504316984155928")
+:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "18245530803132403907")
 *Theorem: every op of a valid function is a valid op instance.* In every
 dialect with its validation rules, let the function $`f` be
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]

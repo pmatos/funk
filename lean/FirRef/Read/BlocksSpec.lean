@@ -98,12 +98,24 @@ theorem U_readOpWithResults (n : Name) (p : TextPos) (ts : List Token) :
       exact absurd he (hn' _ _)
     · simp only [U_fail, fail_bind]
 
+theorem U_readKind_word (k : Name) (p : TextPos) (rest : List Token) :
+    U (readKind (⟨.word k, p⟩ :: rest)) = .ok (some k, rest) := rfl
+
+theorem U_readKind_nil {ts : List Token} (h : ∀ k p rest, ts ≠ ⟨.word k, p⟩ :: rest) :
+    U (readKind ts) = .ok (none, ts) := by
+  unfold readKind
+  split
+  · rename_i k p rest
+    exact absurd rfl (h k p rest)
+  · rfl
+
 theorem U_readRegions_lbrace (p : TextPos) (rest : List Token) :
     U (readRegions (⟨.lbrace, p⟩ :: rest)) = (do
-      let (bs, r₁) ← U (readBlocks rest)
+      let (kind, r₀) ← U (readKind rest)
+      let (bs, r₁) ← U (readBlocks r₀)
       let ((), r₂) ← U (expect .rbrace "a block or } to close the region" r₁)
       let (rs, r₃) ← U (readRegions r₂)
-      pure (⟨bs⟩ :: rs, r₃)) := by
+      pure (⟨kind, bs⟩ :: rs, r₃)) := by
   rw [readRegions.eq_def]
   U_norm
 

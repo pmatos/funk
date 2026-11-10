@@ -59,7 +59,7 @@ def sum : Func CoreDialect where
   name := "sum"
   params := [("n", i 32)]
   results := [i 32]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("zero", i 32)] (.const 32 0) [] 1,
       op [] .br [] 1 [⟨"loop", ["zero", "zero"]⟩]]⟩,
@@ -79,7 +79,7 @@ def sum10 : Func CoreDialect where
   name := "sum10"
   params := []
   results := [i 32]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [("ten", i 32)] (.const 32 10) [] 5,
       op [("s", i 32)] (.call "sum" [i 32] [i 32]) ["ten"] 6,
@@ -148,18 +148,24 @@ indentation 2 as
 ```
 
 No core op has a region, so this region is only there to check the
-printer's layout, which is the same for every dialect. A function
+printer's layout, which is the same for every dialect. A region that names
+its kind writes the kind after its `{`: a `br` that owns an empty region of
+the kind `toy.graph`, then an empty region of the core's kind, prints as
+`br { toy.graph`, `} {` and `} @7` on three lines. A function
 whose symbol is not a word prints as `func @"1"() {`, and a call to it as
 `call @"a b" @0`. The attribute `h` applied to nothing prints as `h()`, not
 `h`. Every printed text ends with a line feed, even that of a module with
 no items, which prints as `locs {` and `}` on two lines.
 -/
 
-#guard Operation.print 2 { op [] .br [] 7 with regions := [⟨[⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
+#guard Operation.print 2 { op [] .br [] 7 with regions := [⟨none, [⟨"inner", [], [op [] (.ret []) [] 0]⟩]⟩] } ==
   "  br {\n    ^inner:\n      ret @0\n  } @7\n"
 
+#guard Operation.print 2 { op [] .br [] 7 with regions := [⟨some "toy.graph", []⟩, ⟨none, []⟩] } ==
+  "  br { toy.graph\n  } {\n  } @7\n"
+
 #guard Func.print (d := CoreDialect)
-    ⟨"1", [], [], ⟨[⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
+    ⟨"1", [], [], ⟨none, [⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
   "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
 
 #guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"

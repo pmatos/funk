@@ -82,8 +82,10 @@ def Func.OpWellFormed (f : Func d) (o : Operation d) : Prop :=
 /--
 A function can be written and read back: its value names are unique and can
 be written; its labels can be written; each type it states is written as a
-type and decodes back to itself; and each of its ops can be written and read
-back. Its symbol can be any string.
+type and decodes back to itself; each of its ops can be written and read
+back; its body is a region of the core's kind, which the text of a function
+does not name; and each region of its ops that names a kind names it by a
+word. Its symbol can be any string.
 -/
 structure Func.WellFormed (f : Func d) : Prop where
   namesUnique : (f.defs.map (·.1)).Nodup
@@ -91,6 +93,8 @@ structure Func.WellFormed (f : Func d) : Prop where
   labels : ∀ b ∈ f.allBlocks, isName b.label
   types : ∀ t ∈ f.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
   ops : ∀ o ∈ f.allOps, f.OpWellFormed o
+  bodyKind : f.body.kind = none
+  kinds : ∀ o ∈ f.allOps, ∀ r ∈ o.regions, ∀ k ∈ r.kind, isWord k
 
 /-- A module can be written and read back: each dialect of its set is named
 by a word, each of its functions can be written and read back, and each
@@ -167,7 +171,8 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
       have hx : (p.1 == x) = true := List.find?_some (p := fun y : Name × d.Ty => y.1 == x) hp
       rw [← beq_iff_eq.mp hx]
       exact hf.names p (List.mem_of_find?_eq_some hp)
-  refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_⟩
+  refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_, hf.bodyKind,
+    fun o ho r hr => ?_⟩
   · exact ⟨LawfulDialectText.tyAttr_isType t (hf.types t ht),
       LawfulDialectText.decodeTy_encode t (hf.types t ht)⟩
   · simp only [Func.allOps, hall, List.mem_flatMap] at ho
@@ -187,6 +192,11 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
         exact hdef a p.2 hp.symm
     · obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ m.locs.map (·.1) from hloc)
       exact hloc ▸ (hl.2.1 e he).1
+  · simp only [Func.allOps, hall, List.mem_flatMap] at ho
+    obtain ⟨b, hb, ho⟩ := ho
+    obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp ho
+    rw [(hf.ops b hb i o hi).1] at hr
+    exact absurd hr (List.not_mem_nil)
 
 /-- Every valid module of a dialect with lawful text is well formed. -/
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=

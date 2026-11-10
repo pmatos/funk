@@ -110,14 +110,28 @@ impl Nest<Block> {
         block.ops.last_mut().expect("the block holds an op")
     }
 
-    /// Ends the region being built and adds it to the op that owns it.
-    /// Returns false, and does nothing, for the outermost blocks.
+    /// Starts a region of the kind `kind` for the last op, with room for
+    /// `capacity` blocks: the op owns the region from here on, and its
+    /// blocks are built next.
+    pub(crate) fn open_region(&mut self, kind: Option<String>, capacity: usize) {
+        self.last_op().regions.push(Region {
+            kind,
+            blocks: Vec::new(),
+        });
+        self.open(capacity);
+    }
+
+    /// Ends the region being built and gives its blocks to the op that owns
+    /// it. Returns false, and does nothing, for the outermost blocks.
     pub(crate) fn close_region(&mut self) -> bool {
         let Some((blocks, owner)) = self.close() else {
             return false;
         };
         let op = owner.ops.last_mut().expect("the block holds the op");
-        op.regions.push(Region { blocks });
+        op.regions
+            .last_mut()
+            .expect("the op owns the region")
+            .blocks = blocks;
         true
     }
 }
@@ -127,7 +141,7 @@ impl Clone for Region {
         let mut blocks = Nest::new(self.blocks.len());
         for step in walk(Part::Region(self)).skip(1) {
             match step {
-                Step::Enter(Part::Region(r)) => blocks.open(r.blocks.len()),
+                Step::Enter(Part::Region(r)) => blocks.open_region(r.kind.clone(), r.blocks.len()),
                 Step::Enter(Part::Block(b)) => blocks.push(block_head(b)),
                 Step::Enter(Part::Op(o)) => blocks.push_op(op_head(o)),
                 Step::Leave(Part::Region(_)) => {
@@ -137,6 +151,7 @@ impl Clone for Region {
             }
         }
         Region {
+            kind: self.kind.clone(),
             blocks: blocks.finish(),
         }
     }
@@ -145,7 +160,7 @@ impl Clone for Region {
 /// Whether two parts are equal but for the parts under them.
 fn same_head(a: Part<'_>, b: Part<'_>) -> bool {
     match (a, b) {
-        (Part::Region(_), Part::Region(_)) => true,
+        (Part::Region(x), Part::Region(y)) => x.kind == y.kind,
         (Part::Block(x), Part::Block(y)) => x.label == y.label && x.params == y.params,
         (Part::Op(x), Part::Op(y)) => {
             x.results == y.results
@@ -170,7 +185,10 @@ impl Eq for Region {}
 impl Hash for Region {
     fn hash<H: Hasher>(&self, state: &mut H) {
         tree::hash(Part::Region(self), state, |p, state| match p {
-            Part::Region(_) => state.write_u8(0),
+            Part::Region(r) => {
+                state.write_u8(0);
+                r.kind.hash(state);
+            }
             Part::Block(b) => {
                 state.write_u8(1);
                 (&b.label, &b.params).hash(state);
@@ -188,8 +206,9 @@ impl fmt::Debug for Region {
         let mut out = DebugTree::new(f);
         for step in walk(Part::Region(self)) {
             match step {
-                Step::Enter(Part::Region(_)) => {
+                Step::Enter(Part::Region(r)) => {
                     out.open(None, "Region", Bracket::Struct)?;
+                    out.value(Some("kind"), &r.kind)?;
                     out.open(Some("blocks"), "", Bracket::List)?;
                 }
                 Step::Enter(Part::Block(b)) => {

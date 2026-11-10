@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the second pass accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15390018644585589724")
+:::moduleDocs (fingerprint := "13834909300499829018")
 :::
 
-:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "6047679517239721726")
+:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "1272652400646387885")
 *Definition: a definition that can be written and read back.* Let $`d` be
 a dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].
 A value $`x` with its type $`t` _can be written and read back_ when $`x`
@@ -43,7 +43,7 @@ the scope, in order, and fails at the first one that the scope does not
 give a type.
 :::
 
-:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "7189482657483562352")
+:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "5941027170812358432")
 *Definition: an op that a scope accepts.* Let $`d` be a dialect with a
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] and a
 text, $`\mathit{sc}` a scope, and $`o` an op with the op instance $`p`.
@@ -61,7 +61,8 @@ The scope $`\mathit{sc}` _accepts_ $`o` when:
   its label is a name, and so is each value that it passes;
 * the location reference of $`o` is below $`2^{32}`;
 * each result of $`o`, a value with its type, can be written and read
-  back.
+  back;
+* each region of $`o` that names a kind names it by a word.
 
 Here $`\mathrm{opname}(p)` and $`\mathrm{opattrs}(p)` are the name and the
 attributes that the dialect writes for $`p`, and $`\mathrm{sig}(p)` and
@@ -72,7 +73,7 @@ function $`f`, with the scope in place of the type that $`f` gives each
 value; the second pass knows the scope, and not yet the function.
 :::
 
-:::readable Fir.Block.AcceptedIn Fir.Block.AllAcceptedIn Fir.Operation.AllAcceptedIn Fir.Region.AllAcceptedIn (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "6461851756803125000")
+:::readable Fir.Block.AcceptedIn Fir.Block.AllAcceptedIn Fir.Operation.AllAcceptedIn Fir.Region.AllAcceptedIn (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "2889628472981364467")
 *Definition: blocks, ops and regions that a scope accepts.* Let $`d` be a
 dialect with a signature and a text, and $`\mathit{sc}` a scope. The scope
 $`\mathit{sc}` _accepts_ a block $`b` when:
@@ -85,8 +86,9 @@ $`\mathit{sc}` _accepts_ a block $`b` when:
 It accepts a list of blocks _at any depth_ when it accepts each of the
 blocks and each block of their ops' regions, at any depth; a list of ops
 at any depth, when it accepts each of the ops and each block of their
-regions, at any depth; and a list of regions at any depth, when it accepts
-each block of the regions, at any depth.
+regions, at any depth; and a list of regions at any depth, when each of
+the regions that names a kind names it by a word and it accepts each block
+of the regions, at any depth.
 :::
 
 :::readable Fir.Text.decodeType_writable (pin := Fir.Text.decodeType) (pin := Fir.LawfulDialectText) (fingerprint := "267462141306649413")
@@ -128,7 +130,7 @@ everything that $`\mathrm{decode}` gives from $`a`:
 $$`\begin{aligned} & W(a) \implies \forall x.\ \mathrm{decode}(a) = \mathsf{ok}(x) \\ & \quad \implies P(x) \end{aligned}`
 :::
 
-:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "4351980553499127475")
+:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "837740839871284214")
 *Theorems: the second pass, part by part.* Let $`d` be a dialect with a
 signature and a text, $`\mathit{sc}` a scope and $`g` a function's
 symbol. Each pass below decodes in $`\mathit{sc}`, for $`g`. The passes
@@ -152,8 +154,9 @@ that is not empty:
 * for every list of blocks and list of regions $`R` as read, when the
   pass over blocks takes those blocks from "can be written" to "accepted
   by $`\mathit{sc}` at any depth" and the pass over regions takes $`R`
-  there too, the pass over regions takes the region of those blocks,
-  followed by $`R`, there as well.
+  there too, the pass over regions takes the region of those blocks, of
+  any kind, followed by $`R`, there as well. A region as read names its
+  kind by a word, if at all, and the pass keeps the kind.
 
 For an op, the second pass asks the dialect's text for the op instance
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` that it decodes from the name

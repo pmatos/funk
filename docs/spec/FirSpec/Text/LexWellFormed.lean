@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5124373538691367297")
+:::moduleDocs (fingerprint := "6561109306192563529")
 :::
 
 :::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
@@ -74,7 +74,7 @@ depth, $`b` is among the blocks of the regions of the list's ops, at any
 depth. It lets the proofs below go down from a list of ops into one op.
 :::
 
-:::readable Fir.Func.WellFormed.def_tokens Fir.Func.WellFormed.defs_tokens (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (fingerprint := "12316180008839595303")
+:::readable Fir.Func.WellFormed.def_tokens Fir.Func.WellFormed.defs_tokens (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (fingerprint := "5833674688040657592")
 *Theorems: the definitions of a well-formed function have tokens that can
 be written.* For every dialect with
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signatures] and
@@ -113,7 +113,7 @@ and every well-formed function $`f`:
   is empty.
 :::
 
-:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "3606856485907590430")
+:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "3303971550985368086")
 *Theorems: the blocks, ops and regions of a well-formed function have
 tokens that can be written.* For every dialect with signatures and a text
 format, and every well-formed function $`f`:
@@ -125,15 +125,16 @@ format, and every well-formed function $`f`:
   written;
 * so does every single op of $`f` whose results $`f` defines and the
   blocks of whose regions are blocks of $`f`;
-* every list of regions whose blocks, at any depth, are blocks of $`f`
-  has tokens that can be written.
+* every list of regions whose blocks, at any depth, are blocks of $`f`,
+  and each of which names its kind, if any, by a word, has tokens that can
+  be written.
 
 They are proved together, since ops hold regions, which hold blocks of
 ops. An op's location reference is below $`2^{32}`, since the op is well
-formed.
+formed, and the kinds of its regions are words, since $`f` is.
 :::
 
-:::readable Fir.Func.WellFormed.tokens (pin := Fir.Func.WellFormed) (fingerprint := "2655969649465564586")
+:::readable Fir.Func.WellFormed.tokens (pin := Fir.Func.WellFormed) (fingerprint := "1421354120040587777")
 *Theorem: a well-formed function has tokens that can be written.* For
 every dialect with signatures and a text format, every token of every
 well-formed function can be written: `func`, its symbol, its parameters,

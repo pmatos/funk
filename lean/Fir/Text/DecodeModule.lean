@@ -64,8 +64,11 @@ theorem Func.WellFormed.decodeFunc_eq {f : Func d} (hf : f.WellFormed) {sps : Li
   refine (bind_eq_of (a := f.results) ?_).trans ?_
   · exact mapM_decodeType (fun _ _ => rfl) hr fun t ht =>
       (hf.types t (List.mem_append_left _ ht)).2
-  · simp only [e₁, ok_bind, e₂, hps, hbs]
-    obtain ⟨_, _, _, ⟨_⟩⟩ := f
+  · have hk := hf.bodyKind
+    simp only [e₁, ok_bind, e₂, hps, hbs]
+    obtain ⟨_, _, _, ⟨_, _⟩⟩ := f
+    simp only at hk
+    subst hk
     rfl
 
 /-- An item decodes back from a tree that erases to its tree, when its

@@ -56,7 +56,7 @@ def blocksWeight : List (Block d) → Nat
 /-- A measure of regions. -/
 def regionsWeight : List (Region d) → Nat
   | [] => 0
-  | ⟨bs⟩ :: rs => blocksWeight bs + regionsWeight rs + 3
+  | ⟨_, bs⟩ :: rs => blocksWeight bs + regionsWeight rs + 3
 end
 
 /-- A measure of items. -/
@@ -140,7 +140,7 @@ def printFrames (acc : String) : List (Frame d) → String
     printFrames (acc ++ blockHead n b) (.ops (n + 2) b.body :: .blocks n bs :: fs)
   | .regions _ [] :: fs => printFrames acc fs
   | .regions n (r :: rs) :: fs =>
-    printFrames (acc ++ " {\n")
+    printFrames (acc ++ " {" ++ printKind r.kind ++ "\n")
       (.blocks (n + 2) r.blocks :: .str (indent n ++ "}") :: .regions n rs :: fs)
   | .items [] :: fs => printFrames acc fs
   | .items (.func f :: is) :: fs =>

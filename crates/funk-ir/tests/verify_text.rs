@@ -94,6 +94,10 @@ fn every_block_holds_an_op() {
 #[test]
 fn no_op_owns_a_region_yet() {
     rejects(&func(&["^entry:", "  ret %a {", "  } @0"]), "owns a region");
+    rejects(
+        &func(&["^entry:", "  ret %a { toy.graph", "  } @0"]),
+        "owns a region",
+    );
     let text = func(&[
         "^entry:",
         "  ret %v {",

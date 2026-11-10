@@ -44,7 +44,7 @@ def sblocksWeight : List SBlock → Nat
 /-- A measure of regions as written. -/
 def sregionsWeight : List SRegion → Nat
   | [] => 0
-  | ⟨bs⟩ :: rs => sblocksWeight bs + sregionsWeight rs + 3
+  | ⟨_, bs⟩ :: rs => sblocksWeight bs + sregionsWeight rs + 3
 end
 
 /-- What is left of a function's blocks to add to its scope. -/
@@ -121,7 +121,7 @@ def defineFrames (sc : Scope d) : List ScopeFrame → Except ParseError (Scope d
   | .ops (⟨results, _, _, _, _, _, regions, _⟩ :: os) :: fs => do
     defineFrames (← define sc results) (.regions regions :: .ops os :: fs)
   | .regions [] :: fs => defineFrames sc fs
-  | .regions (⟨bs⟩ :: rs) :: fs => defineFrames sc (.blocks bs :: .regions rs :: fs)
+  | .regions (⟨_, bs⟩ :: rs) :: fs => defineFrames sc (.blocks bs :: .regions rs :: fs)
 termination_by fs => scopeFramesWeight fs
 decreasing_by
   all_goals

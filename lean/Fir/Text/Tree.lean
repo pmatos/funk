@@ -66,7 +66,7 @@ def SOp.erase : SOp → SOp
 /-- Regions without their positions. -/
 def SRegion.eraseList : List SRegion → List SRegion
   | [] => []
-  | ⟨bs⟩ :: rs => ⟨SBlock.eraseList bs⟩ :: SRegion.eraseList rs
+  | ⟨k, bs⟩ :: rs => ⟨k, SBlock.eraseList bs⟩ :: SRegion.eraseList rs
 
 /-- Blocks without their positions. -/
 def SBlock.eraseList : List SBlock → List SBlock
@@ -133,7 +133,7 @@ def Operation.tree : Operation d → SOp
 /-- The trees of regions. -/
 def Region.treeList : List (Region d) → List SRegion
   | [] => []
-  | ⟨blocks⟩ :: rs => ⟨Block.treeList blocks⟩ :: Region.treeList rs
+  | ⟨k, blocks⟩ :: rs => ⟨k, Block.treeList blocks⟩ :: Region.treeList rs
 
 /-- The trees of blocks. -/
 def Block.treeList : List (Block d) → List SBlock
@@ -251,19 +251,20 @@ theorem SRegion.eraseList_eq_nil {srs : List SRegion}
     simp [SRegion.eraseList, Region.treeList] at h
 
 /-- Regions that erase to the trees of a region and the regions after it
-are a region whose blocks erase to the region's, then regions that erase to
-the others' trees. -/
+are a region of the region's kind whose blocks erase to the region's, then
+regions that erase to the others' trees. -/
 theorem SRegion.eraseList_eq_cons {srs : List SRegion} {r : Region d} {rs : List (Region d)}
     (h : SRegion.eraseList srs = Region.treeList (r :: rs)) :
-    ∃ sr srs', srs = sr :: srs' ∧ SBlock.eraseList sr.blocks = Block.treeList r.blocks ∧
+    ∃ sr srs', srs = sr :: srs' ∧ sr.kind = r.kind ∧
+      SBlock.eraseList sr.blocks = Block.treeList r.blocks ∧
       SRegion.eraseList srs' = Region.treeList rs := by
-  obtain ⟨blocks⟩ := r
+  obtain ⟨kind, blocks⟩ := r
   cases srs with
   | nil => simp [SRegion.eraseList, Region.treeList] at h
   | cons sr srs' =>
-    obtain ⟨bs⟩ := sr
+    obtain ⟨k, bs⟩ := sr
     simp only [SRegion.eraseList, Region.treeList, List.cons.injEq, SRegion.mk.injEq] at h
-    exact ⟨_, srs', rfl, h.1, h.2⟩
+    exact ⟨_, srs', rfl, h.1.1, h.1.2, h.2⟩
 
 /-- An item that erases to a function's tree is a `func` with the
 function's symbol, parameters and result types, no attributes, and the

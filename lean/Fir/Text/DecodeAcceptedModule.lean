@@ -57,14 +57,14 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
   obtain ⟨k₁, n₁⟩ := define_holds e₂ e₄ Scope.holds_empty (by simp)
   obtain ⟨k₂, n₂⟩ := SBlock.adds sbs e₃ e₅ k₁ n₁
   simp only [List.nil_append] at k₂ n₂
-  have hperm := Func.scopeDefs_perm (d := d) ⟨name, ps, rs, ⟨bs⟩⟩
+  have hperm := Func.scopeDefs_perm (d := d) ⟨name, ps, rs, ⟨none, bs⟩⟩
   have hnd := (hperm.map (·.1)).nodup_iff.mp n₂
-  have hsc : ∀ x, sc[x]? = Func.typeOf ⟨name, ps, rs, ⟨bs⟩⟩ x := fun x => Option.ext fun t => by
+  have hsc : ∀ x, sc[x]? = Func.typeOf ⟨name, ps, rs, ⟨none, bs⟩⟩ x := fun x => Option.ext fun t => by
     rw [k₂ x t, Func.typeOf, find?_fst_eq_some hnd]
     simpa [Func.blocks] using hperm.mem_iff (a := (x, t))
   have hbs := SBlock.decodesTo sc name sbs hb bs e₅
   have hps := mapM_decodeDef_writable e₄ hp
-  have hdefs : ∀ y ∈ Func.defs (d := d) ⟨name, ps, rs, ⟨bs⟩⟩, WritableDef y := by
+  have hdefs : ∀ y ∈ Func.defs (d := d) ⟨name, ps, rs, ⟨none, bs⟩⟩, WritableDef y := by
     intro y hy
     simp only [Func.defs, Func.allBlocks, Func.blocks, List.mem_append, List.mem_flatMap,
       Block.defs] at hy
@@ -73,7 +73,7 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
     · exact (hbs b hb).params y hy
     · exact ((hbs b hb).ops o ho).defs y hy
   refine ⟨hnd, fun y hy => (hdefs y hy).1, fun b hb => (hbs b hb).label, fun t ht => ?_,
-    fun o ho => ?_⟩
+    fun o ho => ?_, rfl, fun o ho => ?_⟩
   · simp only [Func.types, List.mem_append, List.mem_map] at ht
     rcases ht with ht | ⟨y, hy, rfl⟩
     · exact mapM_decodeType_writable (fun _ _ => rfl) e₁ hr t ht
@@ -84,6 +84,9 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
     refine ⟨k.name, k.attrs, ?_, k.results, fun s hs => k.succs s hs, k.loc⟩
     rw [← k.operands]
     exact List.map_congr_left fun x _ => (hsc x).symm
+  · simp only [Func.allOps, List.mem_flatMap] at ho
+    obtain ⟨b, hb, ho⟩ := ho
+    exact ((hbs b hb).ops o ho).kinds
 
 /-- An item decoded from a tree that can be written is a well-formed
 function. -/
