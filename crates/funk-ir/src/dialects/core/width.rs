@@ -9,6 +9,7 @@
 
 use super::type_list;
 use super::types::int_width;
+use crate::effects::Effects;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 
 /// The width changes, each as the text names it.
@@ -67,6 +68,11 @@ impl OpSpec for Cast {
             return Ok(());
         }
         Err(format!("{} {rule}, not from i{m} to i{n}", self.0))
+    }
+
+    /// Pure (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
     }
 }
 

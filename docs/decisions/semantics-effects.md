@@ -74,3 +74,20 @@ them lawful for poison (`Dialect.sum.lawfulEffects`,
 toy and bit test dialects declare pure ops and are lawful in their effects,
 and so are their sums with the core. The probe test dialect declares every
 effect.
+
+## In Rust
+
+`funk-ir` mirrors the class (ADR-2026-11-09-1541). `Effects`, in
+`crates/funk-ir/src/effects.rs`, has the fields of the Lean `Effects`, with
+memories named by strings. `OpSpec::effects` is required, so every op of
+every Rust dialect declares its set, the test dialects included.
+`Registry::effects` gives an op's set through the dialect that its prefix
+names, as a sum gives each op its own side's set (ADR-2026-11-10-0042). No
+registered dialect has a memory yet, so how Rust keeps each dialect's
+memories apart is left to the first dialect that adds one.
+
+`tests/dialects/effects.cases` pins the set of every core op, at each
+attribute that changes it. `lean/FirTest/EffectCases.lean` and
+`crates/funk-ir/tests/effects.rs` read it, so the `fir-spec` and `rust-test`
+hooks check that Rust's sets equal `Core.Op.effects`, as the use-once cases
+check the two validators (ADR-2026-11-09-2257).

@@ -11,6 +11,7 @@
 use super::arith::bin_width;
 use super::type_list;
 use crate::Attr;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 
 /// The division and remainder ops, each with whether it may have the flag
@@ -61,6 +62,17 @@ impl OpSpec for Division {
                 type_list(op.operands),
                 type_list(op.results)
             )),
+        }
+    }
+
+    /// May-UB, on a zero or poison divisor, and for `sdiv` and `srem` on
+    /// the signed minimum by `-1`. `exact` gives poison when it is broken,
+    /// so with it the op may produce poison too (`Core.Op.effects`).
+    fn effects(&self, op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_ub: true,
+            may_poison: self.1 && !op.attrs.is_empty(),
+            ..Effects::PURE
         }
     }
 }

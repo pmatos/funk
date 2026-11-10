@@ -44,9 +44,15 @@ import FirTest.RefineCalls
 import FirTest.Lawful
 import FirTest.LawfulRefine
 import FirTest.Effects
+import FirTest.EffectCases
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
+import FirTest.FloatModel
+import FirTest.FloatModelFma
+import FirTest.FloatModelF16
+import FirTest.FloatModelBf16
+import FirTest.FloatModelF128
 
 /-!
 The Lean tests. Building this library runs their checks. This root module
