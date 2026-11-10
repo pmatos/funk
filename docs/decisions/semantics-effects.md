@@ -63,7 +63,9 @@ callee, as the poison obligations do (ADR-2026-11-02-1514). The memory-named
 effects and observable have no obligation yet: M0's runs have no memory and no
 trace. The core dialect is lawful in its effects
 (`Core.lawfulDialectEffects`), and `lean/FirTest/G0Effects.lean` restates the
-class and its obligations for every dialect.
+class and its obligations for every dialect. The obligations reject a wrong
+declaration: with `sdiv` declared without may-UB, the core dialect is not
+lawful in its effects (`Core.Unlawful.sdivNoUB_unlawful`).
 
 A sum of dialects gives each op its own side's effects, on the sum's
 memories, each side's kept apart. A lift gives each op of the extension its

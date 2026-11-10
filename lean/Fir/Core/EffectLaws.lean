@@ -1,5 +1,6 @@
 import Fir.Core.Lawful
 import Fir.Execution.EffectLaws
+import Fir.Core.Unlawful
 
 /-!
 # The core dialect's effect obligations
@@ -20,6 +21,11 @@ effects. Each effect that a core op leaves out, it does not have:
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
 (ADR-2026-11-02-1514).
+
+The obligations have teeth: the last section declares the core ops' effects
+with `sdiv` left without may-UB, and shows that the obligations reject that
+declaration, as the section on semantics that the obligations reject shows
+for semantics.
 -/
 
 namespace Fir.Core
@@ -167,5 +173,28 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   notControl := Core.Op.notControl_all
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
+
+/-! # A declaration that the obligations reject -/
+
+namespace Core.Unlawful
+
+/-- The core ops' effects, but `sdiv` declared without may-UB. -/
+@[instance_reducible] def sdivNoUB : DialectEffects CoreDialect where
+  Mem := Core.Mem
+  poisonClass := Core.Op.poisonClass
+  effects
+    | .sdiv _ x => { mayPoison := x }
+    | op => Core.Op.effects op
+
+/-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
+left without may-UB must never end in UB. -/
+theorem sdivNoUB_unlawful : ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _ _ := by
+  intro h
+  have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
+    (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
+  exact (hnever (.cons (.value 1) (.cons (.value 0) .nil)) _).1 rfl
+    ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
+
+end Core.Unlawful
 
 end Fir
