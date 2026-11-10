@@ -20,6 +20,10 @@ is:
 * a nested module's body, its dialect set and its items, two spaces deeper
   than its `module` line, and its closing `}` at that line's indentation
   (ADR-2026-11-10-1510). An empty line has no spaces;
+* an item of a dialect's kind written as a function's header, with its
+  kind in place of `func`, then each attribute after a space, then ` {` and,
+  on the next line, its closing `}` at its indentation
+  (ADR-2026-11-10-2224);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
@@ -123,6 +127,16 @@ or nothing when it names no dialect. -/
 def printDialects (n : Nat) (ns : List Name) : String :=
   if ns.isEmpty then "" else indent n ++ "dialects " ++ ", ".intercalate ns ++ "\n\n"
 
+/-- An item of a dialect's kind at indentation `n`, with its line feed: its
+kind, symbol, parameters and results as a function's header writes them,
+each of its attributes after a space, then its empty body, whose `}` is on
+the next line, at `n`. -/
+def DialectItem.print (n : Nat) (i : DialectItem d) : String :=
+  let results :=
+    if i.results.isEmpty then "" else " -> " ++ ", ".intercalate (i.results.map (tyAttr · |>.print))
+  indent n ++ i.kind ++ " " ++ printSymbol i.name ++ "(" ++ printDefs i.params ++ ")" ++ results ++
+    String.join (i.attrs.map (" " ++ ·.print)) ++ " {\n" ++ indent n ++ "}\n"
+
 mutual
 /-- An item at indentation `n`, with its line feed. A nested module is an
 item of kind `module`, with no parameters, results or attributes: its body,
@@ -132,6 +146,7 @@ def Item.print (n : Nat) : Item d → String
   | .module name ds is =>
     indent n ++ "module " ++ printSymbol name ++ "() {\n" ++ printDialects (n + 2) ds ++
       Item.printList (n + 2) is ++ indent n ++ "}\n"
+  | .dialect i => i.print n
 
 /-- Items at indentation `n`, each followed by an empty line. -/
 def Item.printList (n : Nat) : List (Item d) → String

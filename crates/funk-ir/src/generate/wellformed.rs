@@ -20,7 +20,10 @@
 //!   is in no entry.
 //! - nested modules, up to three deep, each with its own dialect set and
 //!   the functions of a valid module, which validation checks as symbol
-//!   tables of their own (ADR-2026-11-10-1510).
+//!   tables of their own (ADR-2026-11-10-1510);
+//! - items of a kind from [`ITEM_KINDS`], with parameters, results and
+//!   attributes, which every reader decodes whichever dialect registers
+//!   the kind, and no registry here does (ADR-2026-11-10-2224).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -41,7 +44,7 @@ use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::{self, int_type};
 use crate::effects::Effects;
 use crate::ir::{
-    Attr, Block, Def, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
+    Attr, Block, Def, DialectItem, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
 };
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
@@ -57,6 +60,9 @@ pub const TOY_OP: &str = "toy.any";
 /// The kinds that generated regions name: words of a dialect, which the
 /// text writes after a region's `{`, whatever dialects the reader holds.
 pub const REGION_KINDS: [&str; 3] = ["toy.graph", "gpu.warp", "toy.a.b"];
+
+/// The kinds of the generated items of a dialect's kind.
+pub const ITEM_KINDS: [&str; 3] = ["toy.cell", "gpu.kernel", "toy.a.b"];
 
 /// The dialects whose ops a generated module holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -114,10 +120,30 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         locs::break_table(rng, &mut m.locs);
     }
     add_dialects(rng, &mut m.dialects);
+    if rng.one_in(3) {
+        let at = rng.below(m.items.len() as u64 + 1) as usize;
+        m.items.insert(at, dialect_item(rng));
+    }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
     }
     m
+}
+
+/// An item of a kind from [`ITEM_KINDS`], with up to two parameters, two
+/// results of core types and three attributes.
+fn dialect_item(rng: &mut Rng) -> Item {
+    let mut i = DialectItem::new(*rng.pick(&ITEM_KINDS), symbol(rng));
+    let mut taken = Vec::new();
+    for _ in 0..rng.below(3) {
+        let t = int_type(width(rng, Widths::Any));
+        i.params.push(Def::new(Shaper::fresh(rng, &mut taken), t));
+    }
+    i.results = (0..rng.below(3))
+        .map(|_| int_type(width(rng, Widths::Any)))
+        .collect();
+    i.attrs = (0..rng.below(4)).map(|_| attr(rng, 0)).collect();
+    Item::Dialect(i)
 }
 
 /// Names one to three dialects, drawn with repeats, in one draw of four.
@@ -135,6 +161,9 @@ fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     let mut n = NestedModule::new(symbol(rng));
     add_dialects(rng, &mut n.dialects);
     n.items = super::module(rng).items;
+    if rng.one_in(3) {
+        n.items.push(dialect_item(rng));
+    }
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
     }

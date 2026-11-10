@@ -138,6 +138,7 @@ class Rules(unittest.TestCase):
                 "lean/FirRef/Sample.lean": "",
                 "lean/FirRef/Decode/Run.lean": "",
                 "lean/FirTest/G0.lean": "",
+                "lean/FirTest/G0/Validation.lean": "",
                 "lean/FirTest/Run.lean": "",
             },
         )
@@ -150,6 +151,7 @@ class Rules(unittest.TestCase):
                 "lean/FirRef/Parse.lean",
                 "lean/FirRef/Sample.lean",
                 "lean/FirTest/G0.lean",
+                "lean/FirTest/G0/Validation.lean",
             ],
         )
 
@@ -318,6 +320,7 @@ class Repository(unittest.TestCase):
     def test_the_repository_passes(self):
         self.assertEqual(problems(), [])
         self.assertIn("lean/FirTest/G0.lean", generic_files())
+        self.assertIn("lean/FirTest/G0/Validation.lean", generic_files())
 
     def test_the_core_words_hold_every_core_op(self):
         self.assertLessEqual(set(CORE_OPS), core_words())

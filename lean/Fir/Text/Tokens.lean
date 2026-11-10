@@ -154,6 +154,15 @@ def Func.tokens (f : Func d) : List Tok :=
 def dialectsTokens (ns : List Name) : List Tok :=
   if ns.isEmpty then [] else .word "dialects" :: [Tok.comma].intercalate (ns.map ([.word ·]))
 
+/-- The tokens of an item of a dialect's kind: its header, as a function's,
+its attributes, and an empty body. -/
+def DialectItem.tokens (i : DialectItem d) : List Tok :=
+  let results :=
+    if i.results.isEmpty then []
+    else .arrow :: [Tok.comma].intercalate (i.results.map (tyAttr · |>.tokens))
+  .word i.kind :: .sym i.name :: .lparen :: defsTokens i.params ++ .rparen :: results ++
+    i.attrs.flatMap Attr.tokens ++ [.lbrace, .rbrace]
+
 mutual
 /-- The tokens of an item. -/
 def Item.tokens : Item d → List Tok
@@ -161,6 +170,7 @@ def Item.tokens : Item d → List Tok
   | .module name ds is =>
     .word "module" :: .sym name :: .lparen :: .rparen :: .lbrace :: dialectsTokens ds ++
       Item.tokensList is ++ [.rbrace]
+  | .dialect i => i.tokens
 
 /-- The tokens of items. -/
 def Item.tokensList : List (Item d) → List Tok

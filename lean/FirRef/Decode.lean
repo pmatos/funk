@@ -7,7 +7,8 @@ import FirRef.Decode.Tree
 `decodeFrames`, which take no stack per level of regions and none per block
 or op, and with the copies of `decodeType`, `decodeDef` and `define`
 compiled after `print_eq_printAttr`. `decodeFuncItem` is the
-spec's, calling `decodeFunc`. `decodeLoop` decodes items with an explicit
+spec's, calling `decodeFunc`, and `decodeDialectItem` is the spec's, with
+those copies. `decodeLoop` decodes items with an explicit
 stack of frames, so it takes no stack per level of nested modules, and
 `decodeLoop_eq` proves that it computes what the spec's `decodeItems` does,
 errors included. The theorem
@@ -52,6 +53,20 @@ theorem decodeFuncItem_eq : @decodeFuncItem = @Text.decodeFuncItem := by
   funext d _ kindPos name params results attrs body
   simp only [decodeFuncItem, Text.decodeFuncItem, decodeFunc_eq]
   rfl
+
+/-- `Text.decodeDialectItem`, with the copies of `decodeType` and
+`decodeDef`. -/
+def decodeDialectItem (kind : String) (kindPos : TextPos) (name : String) (params : List SDef)
+    (results attrs : List (Attr × TextPos)) : SBody → Except ParseError (Item d)
+  | .blocks [] => do
+    let results ← results.mapM fun (a, p) => decodeType a p
+    let params ← params.mapM decodeDef
+    pure (.dialect ⟨kind, name, params, results, attrs.map (·.1)⟩)
+  | _ => errorAt kindPos "an item of a dialect's kind has an empty body"
+
+theorem decodeDialectItem_eq : @decodeDialectItem = @Text.decodeDialectItem := by
+  funext d _ kind kindPos name params results attrs body
+  rcases body with _ | _ | _ <;> rfl
 
 /-- What is left to decode of items, nested modules included. -/
 inductive DFrame (d : Dialect) where
@@ -107,7 +122,12 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
         | .blocks [] => decodeLoop (.items (.module name [] [] :: done) sis :: fs)
         | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
         | .items ds is => decodeLoop (.items [] is :: .module name ds :: .items done sis :: fs)
-    else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module")
+    else if isDialectWord kind then
+      match decodeDialectItem kind kindPos name params results attrs body with
+      | .ok i => decodeLoop (.items (i :: done) sis :: fs)
+      | .error e => .error e
+    else errorAt kindPos ("unknown item kind " ++ kind ++
+      ": the kinds are func, module and the words of dialects")
   | _ => .ok []
 termination_by fs => dWeight fs
 decreasing_by
@@ -148,7 +168,10 @@ theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (param
         | .blocks [] => pure (.module name [] [])
         | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
         | .items ds is => do pure (.module name ds (← Text.decodeItems is))
-      else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module") := by
+      else if isDialectWord kind then
+        Text.decodeDialectItem kind kindPos name params results attrs body
+      else errorAt kindPos ("unknown item kind " ++ kind ++
+        ": the kinds are func, module and the words of dialects") := by
   rw [Text.decodeItem.eq_def]
   rfl
 
@@ -158,7 +181,7 @@ theorem error_bind' {ε α β : Type} (e : ε) (k : α → Except ε β) :
 theorem decodeLoop_eq (fs : List (DFrame d)) : decodeLoop fs = dRun fs := by
   fun_induction decodeLoop fs <;>
     simp_all [dRun, dFinish, decodeItems_nil, decodeItems_cons, decodeItem_mk, decodeFuncItem_eq,
-      ok_bind, error_bind', errorAt]
+      decodeDialectItem_eq, ok_bind, error_bind', errorAt]
   -- The stacks that `decodeLoop` does not take apart give no items on both sides.
   rename_i fs h₁ h₂ h₃
   match fs, h₁, h₂, h₃ with

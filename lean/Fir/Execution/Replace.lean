@@ -88,10 +88,10 @@ abbrev Func.replaceBody (s : Name) (b : Region d) (f : Func d) : Func d :=
 
 /-- An item, with the body `b` in place of its body when it is a function
 whose symbol is `s`. A nested module is unchanged: its functions are in its
-own symbol table. -/
+own symbol table. An item of a dialect's kind is unchanged too. -/
 def Item.replaceBody (s : Name) (b : Region d) : Item d → Item d
   | .func f => .func (f.replaceBody s b)
-  | i@(.module ..) => i
+  | i => i
 
 /-- The module `M`, with the body `b` in place of the body of its function
 whose symbol is `s`: every other part of it is unchanged. -/
@@ -156,6 +156,15 @@ theorem Item.name_replaceBody (s : Name) (b : Region d) (i : Item d) :
     (i.replaceBody s b).name = i.name := by
   cases i <;> rfl
 
+/-- Replacing a body keeps the items of a dialect's kind of the module's own
+table. -/
+theorem Module.dialectItems_replaceBody (M : Module d) (s : Name) (b : Region d) :
+    (M.replaceBody s b).table.dialectItems = M.table.dialectItems := by
+  simp only [SymbolTable.dialectItems, Module.table, Module.replaceBody, List.filterMap_map]
+  congr 1
+  funext i
+  cases i <;> rfl
+
 /-- Replacing a body keeps the tables nested in the module's items: no
 function holds one, and a nested module is unchanged. -/
 theorem Item.tablesIn_replaceBody (s : Name) (b : Region d) :
@@ -176,7 +185,7 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
   refine ⟨hM.locs, fun t ht => ?_⟩
   simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
   rcases ht with rfl | ht
-  · refine ⟨?_, fun f hf => ?_, hM.dialectNames, hM.dialectsUnique⟩
+  · refine ⟨?_, fun f hf => ?_, fun i hi => ?_, hM.dialectNames, hM.dialectsUnique⟩
     · change ((M.items.map (Item.replaceBody s b)).map Item.name).Nodup
       rw [List.map_map]
       have : Item.name ∘ Item.replaceBody s b = (Item.name : Item d → Name) :=
@@ -194,6 +203,11 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
         exact h g hg hs
       · rw [Func.replaceBody_of_ne hs]
         exact hM.funcs g hg
+    · have hi' : i ∈ (M.replaceBody s b).table.dialectItems := hi
+      rw [Module.dialectItems_replaceBody] at hi'
+      change i.Valid ⟨(M.replaceBody s b).symbols⟩
+      rw [Module.symbols_replaceBody]
+      exact hM.table.dialectItems i hi'
   · exact hM.tables t (List.mem_cons_of_mem _ ht)
 
 end

@@ -48,6 +48,8 @@ CORE_EXAMPLE = "lean/Fir/Text/Example.lean"
 NAME_CORE = {"lean/Fir/Text/PrintParse.lean", "lean/Fir/Text/ParseWellFormed.lean"}
 # G0's Lean test, whose statements must stay generic.
 G0_TEST = "lean/FirTest/G0.lean"
+# The modules that G0's Lean test is split into, by subject.
+G0_TEST_DIR = "lean/FirTest/G0/"
 # A word of two letters or more: the core dialect's text has none shorter,
 # and its file's one-letter strings are value names and symbols.
 WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_.]+")
@@ -259,7 +261,10 @@ def is_generic(rel: str) -> bool:
     every dialect. A new file is, unless it goes in a place that is not."""
     if rel == CORE_EXAMPLE or rel.startswith(DIALECT_DIRS):
         return False
-    if rel.startswith("lean/Fir/") or rel in {"lean/FirRef.lean", G0_TEST}:
+    if rel.startswith(("lean/Fir/", G0_TEST_DIR)) or rel in {
+        "lean/FirRef.lean",
+        G0_TEST,
+    }:
         return True
     return rel.startswith("lean/FirRef/") and rel not in _command_line()
 

@@ -4,9 +4,9 @@ import Fir.Validation.CheckFuncs
 The check of a module follows the rule of a valid module: its location
 table, then each of its symbol tables, its own and that of each nested
 module: the symbols of its items, each function, in the context of the
-table, then its dialect set. It builds the set of the module's location
-references once, and each table's symbols once, as hash tables, and every
-function looks them up.
+table, each item of a dialect's kind, then its dialect set. It builds the
+set of the module's location references once, and each table's symbols
+once, as hash tables, and every function looks them up.
 
 # The location table
 
@@ -78,6 +78,96 @@ theorem LocTable.problems_eq_nil (t : LocTable) : t.problems = [] ↔ t.Valid :=
     exact ⟨hp, fun e h => ⟨⟨hl e h, (hw e h).1⟩, (hw e h).2⟩⟩
 
 /-!
+# Items of a dialect's kind
+
+An item of a dialect's kind is checked against the general rules of such an
+item, then the dialect's rule for it. Whether its attributes can be written
+is decided attribute by attribute.
+-/
+
+mutual
+/-- Whether an attribute can be written: `Attr.Writable`, as a test. -/
+def Attr.writable : Attr → Bool
+  | .word w => isWord w
+  | .int _ | .str _ | .sym _ => true
+  | .app h args => isWord h && Attr.allWritable args
+
+/-- Whether every attribute of a list can be written. -/
+def Attr.allWritable : List Attr → Bool
+  | [] => true
+  | a :: as => a.writable && Attr.allWritable as
+end
+
+mutual
+theorem Attr.writable_iff : ∀ a : Attr, a.writable = true ↔ a.Writable
+  | .word _ | .int _ | .str _ | .sym _ => by simp [Attr.writable, Attr.Writable]
+  | .app _ args => by simp [Attr.writable, Attr.Writable, Attr.allWritable_iff args]
+
+theorem Attr.allWritable_iff : ∀ as : List Attr, Attr.allWritable as = true ↔ Attr.AllWritable as
+  | [] => by simp [Attr.allWritable, Attr.AllWritable]
+  | a :: as => by
+    simp [Attr.allWritable, Attr.AllWritable, Attr.writable_iff a, Attr.allWritable_iff as]
+end
+
+instance instDecidableAllWritable (as : List Attr) : Decidable (Attr.AllWritable as) :=
+  decidable_of_iff _ (Attr.allWritable_iff as)
+
+section
+variable [DialectValidation d] [DecidableDialectValidation d]
+
+/-- A problem about the item `i` of a dialect's kind. -/
+def DialectItem.problem (i : DialectItem d) (message : String) : Problem :=
+  { message, func := i.name }
+
+/-- The problem of an item whose kind no dialect registers, or the problem
+of an item that breaks the rule of its kind. A kind that no dialect
+registers has no rule to break. -/
+def DialectItem.kindProblems (ctx : FuncContext d) (i : DialectItem d) : List Problem :=
+  if i.kind ∈ itemKindNames (d := d) then
+    if validItem (DialectView.id d) ctx i then [] else
+      [i.problem ("the item breaks the rule of its kind " ++ Text.quote i.kind)]
+  else [i.problem ("no dialect registers the kind of item " ++ Text.quote i.kind)]
+
+theorem DialectItem.kindProblems_eq_nil_iff (ctx : FuncContext d) (i : DialectItem d) :
+    i.kindProblems ctx = [] ↔ i.kind ∈ itemKindNames (d := d) ∧ validItem (DialectView.id d) ctx i := by
+  unfold DialectItem.kindProblems
+  split
+  · split <;> simp_all
+  · simp_all
+
+/-- The problems of an item of a dialect's kind, with the symbols of its
+table: every rule of a valid item that it breaks. -/
+def DialectItem.problems (ctx : FuncContext d) (i : DialectItem d) : List Problem :=
+  (if isDialectWord i.kind then [] else
+    [i.problem ("the kind " ++ Text.quote i.kind ++ " is not a word of a dialect")]) ++
+  i.params.filterMap (fun x => if isName x.1 then none else
+    some (i.problem ("the parameter " ++ valueRef x.1 ++ " is not a name"))) ++
+  (repeats (i.params.map (·.1))).map (fun x =>
+    i.problem ("the item defines " ++ valueRef x ++ " more than once")) ++
+  (if ∀ t ∈ i.types, validTy t then [] else [i.problem "a type of the item is not valid"]) ++
+  (if Attr.allWritable i.attrs then [] else
+    [i.problem "an attribute of the item cannot be written"]) ++
+  i.kindProblems ctx
+
+/-- The check of an item of a dialect's kind decides `DialectItem.Valid`. -/
+theorem DialectItem.problems_eq_nil_iff (ctx : FuncContext d) (i : DialectItem d) :
+    i.problems ctx = [] ↔ i.Valid ctx := by
+  simp only [DialectItem.problems, List.append_eq_nil_iff, ite_eq_left_iff, reduceCtorEq,
+    imp_false, Decidable.not_not, List.filterMap_eq_nil_iff, List.map_eq_nil_iff,
+    repeats_eq_nil, Attr.allWritable_iff, DialectItem.kindProblems_eq_nil_iff]
+  constructor
+  · rintro ⟨⟨⟨⟨⟨a, c⟩, e⟩, f⟩, g⟩, b, h⟩
+    exact ⟨a, b, c, e, f, g, h⟩
+  · rintro ⟨a, b, c, e, f, g, h⟩
+    exact ⟨⟨⟨⟨⟨a, c⟩, e⟩, f⟩, g⟩, b, h⟩
+
+instance instDecidableDialectItemValid (ctx : FuncContext d) (i : DialectItem d) :
+    Decidable (i.Valid ctx) :=
+  decidable_of_iff _ (i.problems_eq_nil_iff ctx)
+
+end
+
+/-!
 # Modules
 
 A module is checked one symbol table at a time: its own, then that of each
@@ -109,6 +199,7 @@ def SymbolTable.problems (held : Std.HashSet LocRef) (t : SymbolTable d) : List 
   (repeats (t.items.map Item.name)).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   t.funcs.flatMap (·.problems lk) ++
+  t.dialectItems.flatMap (·.problems ⟨lk.symbols⟩) ++
   t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
   (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
@@ -118,8 +209,10 @@ theorem SymbolTable.problems_eq_nil_iff (keys : List LocRef) (t : SymbolTable d)
     t.problems (Std.HashSet.ofList keys) = [] ↔ t.Valid keys := by
   simp only [SymbolTable.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
     List.flatMap_eq_nil_iff, Func.problems_eq_nil (t.lookup_agrees keys),
+    DialectItem.problems_eq_nil_iff, (t.lookup_agrees keys).symbols,
     List.filterMap_eq_nil_iff, ite_none_eq_none]
-  exact ⟨fun ⟨⟨⟨a, b⟩, c⟩, e⟩ => ⟨a, b, c, e⟩, fun ⟨a, b, c, e⟩ => ⟨⟨⟨a, b⟩, c⟩, e⟩⟩
+  exact ⟨fun ⟨⟨⟨⟨a, b⟩, i⟩, c⟩, e⟩ => ⟨a, b, i, c, e⟩,
+    fun ⟨a, b, i, c, e⟩ => ⟨⟨⟨⟨a, b⟩, i⟩, c⟩, e⟩⟩
 
 /-- The problems of a module: those of its location table, then those of
 each of its symbol tables, in order. -/

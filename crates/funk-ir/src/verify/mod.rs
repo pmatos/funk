@@ -11,6 +11,7 @@
 mod cfg;
 mod dialect_set;
 mod func;
+mod items;
 mod locs;
 mod ops;
 
@@ -132,9 +133,9 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
 }
 
 /// The rules of one symbol table (`SymbolTable.Valid`): each symbol names
-/// one item, function or nested module, each function is valid against the
-/// table's own symbols, and the dialect set names each dialect once, by a
-/// word.
+/// one item, each function is valid against the table's own symbols, each
+/// item of a dialect's kind is valid with them, and the dialect set names
+/// each dialect once, by a word.
 fn check_table(t: Table<'_>, keys: &HashSet<LocRef>, reg: &Registry, out: &mut Vec<Diagnostic>) {
     let mut seen = HashSet::new();
     for item in t.items {
@@ -155,6 +156,9 @@ fn check_table(t: Table<'_>, keys: &HashSet<LocRef>, reg: &Registry, out: &mut V
     };
     for f in t.funcs() {
         func::check(f, &cx, out);
+    }
+    for i in t.dialect_items() {
+        items::check(i, &symbols, reg, out);
     }
     dialect_set::check_names(t.dialects, out);
 }

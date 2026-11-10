@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18162976455339911840")
+:::moduleDocs (fingerprint := "14819655843938608632")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -47,7 +47,7 @@ target (ADR-2026-10-29-2010). No branch may go to the entry block: it has
 no predecessors, and its arguments are the function's parameters.
 :::
 
-:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "9699330169066306942")
+:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "6570281988972527310")
 *Definition: the valid regions of an op.* Let $`o` be an op of the
 function $`f`, checked in the module context $`C`, let $`p` be its op
 instance, and let $`d` be the dialect. The regions of $`o` are valid when:
@@ -214,7 +214,25 @@ _valid_ when:
   to itself, directly or not.
 :::
 
-:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "2474978220110121452")
+:::readable Fir.DialectItem.Valid (pin := Fir.isDialectWord) (pin := Fir.DialectItem.types) (fingerprint := "16285291260031980")
+*Definition: a valid item of a dialect's kind.* The
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[item]
+$`i` of a dialect's kind is valid in the function context $`C` when every
+premise of this rule holds, where $`d` is the dialect:
+
+$$`\dfrac{\begin{array}{c} \mathrm{isdialectword}(\mathrm{kind}(i)) \qquad \mathrm{kind}(i) \in \mathrm{itemkinds}_d \\ \mathrm{isname}(x) \ \text{ for each parameter } x \text{ of } i \\ \text{the names of the parameters of } i \text{ are distinct} \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(i) \\ \text{each attribute of } i \text{ can be written} \\ C, \mathrm{id} \vdash_d i~\text{valid} \end{array}}{C \vdash i~\text{valid}}`
+
+In words: its kind is a word of a dialect, a word that holds a `.`, and
+the dialect registers it; its parameters are named by distinct names; every
+type it states, its parameters' and its results', is valid for the dialect;
+every attribute can be written as a token; and the item obeys the
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect's rule]
+for its kind, through the identity view (ADR-2026-11-10-2224). The dialect
+reads its kinds by name, so a sum of dialects sends the item to the
+dialect that registers its kind.
+:::
+
+:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "17696861027737048487")
 *Definition: a valid symbol table and a valid module.* The context of the
 module $`M`, $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M`
 and the references of its location table. A module holds a
@@ -225,20 +243,22 @@ $`K`, the context of the table $`T`, $`\mathrm{ctx}_K(T)`, is the symbol
 table of the functions of $`T`, $`\mathrm{symtab}_T`, and $`K`. The table
 $`T` is valid in $`K` when:
 
-$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ (\mathrm{symtab}_T) \vdash i~\text{valid} \\ \text{for each } i \in \mathrm{ditems}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
 
 and $`M` is valid when its location table is, and each of its tables is:
 
 $$`\dfrac{\begin{array}{c} \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{keys}(M) \vdash T~\text{valid} \\ \text{for each } T \in \mathrm{tables}(M) \end{array}}{\vdash M~\text{valid}}`
 
-Here $`\mathrm{items}(T)` is the items of $`T`, functions and nested
-modules, $`\mathrm{funcs}(T)` its functions and $`\mathrm{dialects}(T)`
-its dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
+Here $`\mathrm{items}(T)` is the items of $`T`, functions, nested modules
+and items of a dialect's kind, $`\mathrm{funcs}(T)` its functions,
+$`\mathrm{ditems}(T)` its items of a dialect's kind, each checked in the
+function context of the symbols of $`T`, and $`\mathrm{dialects}(T)` its
+dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
 $`M`, $`\mathrm{keys}(M)` its references, and $`\mathrm{tables}(M)` the
 tables of $`M`, its own first. One location table serves every table.
 
-A symbol names one item of its table, a function or a nested module, so a
-function and a module never share a symbol of one table; a nested module
+A symbol names one item of its table, of whatever kind, so a function, a
+module and an item of a dialect's kind never share a symbol of one table; a nested module
 may reuse a symbol of its parent's table, since it is a table of its own.
 Each function is checked against the symbols of its own table, so a call
 names a function of its own table: never one of a nested module, of its

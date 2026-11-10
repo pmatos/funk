@@ -242,3 +242,17 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an item of a dialect's kind has an empty body"
+text = '''
+toy.cell @c() {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

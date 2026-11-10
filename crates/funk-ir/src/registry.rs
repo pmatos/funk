@@ -17,13 +17,19 @@
 //! dialect that its head word names, and only that dialect's [`TypeSpec`]s
 //! are asked about it, so no dialect can claim another's type. A region kind
 //! is registered under its dialect's name as an op is, and a
-//! [`RegionKindSpec`] is the kind's rule, `validRegion`.
+//! [`RegionKindSpec`] is the kind's rule, `validRegion`. A kind of item is
+//! registered the same way, and an [`ItemKindSpec`] is its rule,
+//! `validItem` (ADR-2026-11-10-2224).
 
+mod error;
+mod item_kind;
 mod region_kind;
 
 use std::collections::HashMap;
 use std::fmt;
 
+pub use error::RegistryError;
+pub use item_kind::{ItemKindError, ItemKindSpec};
 pub use region_kind::RegionKindSpec;
 
 use crate::dialects;
@@ -139,7 +145,7 @@ pub trait FuncSpec: Send + Sync {
 }
 
 /// A dialect: a name, the dialects it depends on, its ops, its types, its
-/// function rules and its region kinds.
+/// function rules, its region kinds and its kinds of item.
 pub struct Dialect {
     /// The dialect's name: a word with no `.`. Every dialect but the core
     /// writes its ops and types as this name, a `.` and a word; the core
@@ -156,6 +162,8 @@ pub struct Dialect {
     pub func_rules: Vec<Box<dyn FuncSpec>>,
     /// The region kinds that the dialect registers, each with its rule.
     pub region_kinds: Vec<Box<dyn RegionKindSpec>>,
+    /// The kinds of item that the dialect registers, each with its rule.
+    pub item_kinds: Vec<Box<dyn ItemKindSpec>>,
 }
 
 impl Dialect {
@@ -168,6 +176,7 @@ impl Dialect {
             types: Vec::new(),
             func_rules: Vec::new(),
             region_kinds: Vec::new(),
+            item_kinds: Vec::new(),
         }
     }
 
@@ -203,85 +212,13 @@ impl Dialect {
         self.region_kinds.push(Box::new(kind));
         self
     }
-}
 
-/// Why a dialect could not be registered.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RegistryError {
-    /// The dialect's name is not a word with no `.`, so no word can name it.
-    DialectNameNotAPrefix(String),
-    /// A dialect of this name is already registered.
-    DuplicateDialect(String),
-    /// The dialect depends on one that is not registered.
-    MissingDependency {
-        /// The dialect being registered.
-        dialect: String,
-        /// The dependency that no registered dialect has as its name.
-        dependency: String,
-    },
-    /// The op's name does not name the dialect that registers it: a
-    /// prefixed dialect's ops are `name.word`, and the core's are bare.
-    OpOutsideDialect {
-        /// The dialect being registered.
-        dialect: String,
-        /// The op's name.
-        op: String,
-    },
-    /// An op of this name is already registered.
-    DuplicateOp(String),
-    /// The op's name is not a word, so the text cannot write it.
-    OpNameNotAWord(String),
-    /// The region kind is not a word.
-    KindNotAWord(String),
-    /// The region kind does not name the dialect that registers it: a
-    /// dialect's kinds are `name.word`, and the core registers none, since
-    /// its own kind is the control-flow graph of a function's body.
-    KindOutsideDialect {
-        /// The dialect being registered.
-        dialect: String,
-        /// The kind's word.
-        kind: String,
-    },
-    /// A region kind of this name is already registered.
-    DuplicateKind(String),
-}
-
-impl fmt::Display for RegistryError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RegistryError::DialectNameNotAPrefix(d) => {
-                write!(f, "dialect name {d:?} is not a word without a dot")
-            }
-            RegistryError::DuplicateDialect(d) => write!(f, "dialect {d} is already registered"),
-            RegistryError::MissingDependency {
-                dialect,
-                dependency,
-            } => write!(
-                f,
-                "dialect {dialect} depends on {dependency}, which is not registered"
-            ),
-            RegistryError::OpOutsideDialect { dialect, op } if dialect == CORE => {
-                write!(f, "op {op} of the core is not a bare word")
-            }
-            RegistryError::OpOutsideDialect { dialect, op } => {
-                write!(
-                    f,
-                    "op {op} of dialect {dialect} is not written {dialect}.WORD"
-                )
-            }
-            RegistryError::DuplicateOp(o) => write!(f, "op {o} is already registered"),
-            RegistryError::OpNameNotAWord(o) => write!(f, "op name {o:?} is not a word"),
-            RegistryError::KindNotAWord(k) => write!(f, "region kind {k:?} is not a word"),
-            RegistryError::KindOutsideDialect { dialect, kind } => write!(
-                f,
-                "region kind {kind} of dialect {dialect} is not written {dialect}.WORD"
-            ),
-            RegistryError::DuplicateKind(k) => write!(f, "region kind {k} is already registered"),
-        }
+    /// Adds a kind of item and its rule.
+    pub fn item_kind(mut self, kind: impl ItemKindSpec + 'static) -> Dialect {
+        self.item_kinds.push(Box::new(kind));
+        self
     }
 }
-
-impl std::error::Error for RegistryError {}
 
 /// Whether `op` is written under `prefix`: a bare word for the core, whose
 /// prefix is `None`, and the prefix, a `.` and a word for any other dialect.
@@ -303,13 +240,14 @@ struct Registered {
 }
 
 /// The registered dialects, their ops by name, their types, their function
-/// rules and their region kinds by name.
+/// rules, their region kinds by name and their kinds of item by name.
 #[derive(Default)]
 pub struct Registry {
     dialects: Vec<Registered>,
     ops: HashMap<String, (usize, Box<dyn OpSpec>)>,
     func_rules: Vec<Box<dyn FuncSpec>>,
     kinds: HashMap<String, Box<dyn RegionKindSpec>>,
+    item_kinds: HashMap<String, Box<dyn ItemKindSpec>>,
 }
 
 impl fmt::Debug for Registry {
@@ -319,10 +257,13 @@ impl fmt::Debug for Registry {
         ops.sort();
         let mut kinds: Vec<_> = self.kinds.keys().collect();
         kinds.sort();
+        let mut item_kinds: Vec<_> = self.item_kinds.keys().collect();
+        item_kinds.sort();
         f.debug_struct("Registry")
             .field("dialects", &dialects)
             .field("ops", &ops)
             .field("kinds", &kinds)
+            .field("item_kinds", &item_kinds)
             .finish()
     }
 }
@@ -349,8 +290,8 @@ impl Registry {
     /// Registers a dialect, or fails without changing the registry. Its name
     /// must be new and a word with no `.`, each dialect it depends on must
     /// be registered, each op must be a new word that names it, and each
-    /// region kind a new word `name.word` of a dialect other than the core,
-    /// which registers no kind.
+    /// region kind and each kind of item a new word `name.word` of a dialect
+    /// other than the core, which registers neither.
     pub fn register(&mut self, dialect: Dialect) -> Result<(), RegistryError> {
         let name = dialect.name.as_str();
         if !is_word(name) || name.contains('.') {
@@ -400,6 +341,10 @@ impl Registry {
             }
             kinds.push(kind);
         }
+        item_kind::check_kinds(name, prefix, &dialect.item_kinds, |k| {
+            self.item_kinds.contains_key(k)
+        })
+        .map_err(RegistryError::ItemKind)?;
         let index = self.dialects.len();
         for op in dialect.ops {
             self.ops.insert(op.name().to_string(), (index, op));
@@ -407,6 +352,9 @@ impl Registry {
         self.func_rules.extend(dialect.func_rules);
         for kind in dialect.region_kinds {
             self.kinds.insert(kind.name().to_string(), kind);
+        }
+        for kind in dialect.item_kinds {
+            self.item_kinds.insert(kind.name().to_string(), kind);
         }
         self.dialects.push(Registered {
             name: dialect.name,
@@ -453,6 +401,11 @@ impl Registry {
     /// The registered region kind named `name`, with its rule.
     pub fn region_kind(&self, name: &str) -> Option<&dyn RegionKindSpec> {
         self.kinds.get(name).map(|k| k.as_ref())
+    }
+
+    /// The registered kind of item named `name`, with its rule.
+    pub fn item_kind(&self, name: &str) -> Option<&dyn ItemKindSpec> {
+        self.item_kinds.get(name).map(|k| k.as_ref())
     }
 
     /// The registered dialects' rules over whole functions.

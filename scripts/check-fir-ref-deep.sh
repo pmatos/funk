@@ -116,7 +116,7 @@ deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" |
 deep deep-items "functions nested a million levels deep" 2 1 \
     "a func's body holds blocks, not items" || status=1
 deep deep-modules "modules nested a million levels deep" 2000001 1 \
-    "unknown item kind bad: the kinds are func and module" || status=1
+    "unknown item kind bad: the kinds are func, module and the words of dialects" || status=1
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1

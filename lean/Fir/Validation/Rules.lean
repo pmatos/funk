@@ -4,10 +4,10 @@ import Fir.Validation.Dominance
 The general rules of validation, for every dialect. A module is valid when
 its location table is well formed and each of its symbol tables, its own
 and that of each nested module, is valid: its symbols are unique, each of
-its functions is valid, and its dialect set names each dialect once, by a
-word. A function is valid when its blocks, its ops
-and its successors obey the rules below, and each op obeys its dialect's
-rule.
+its functions is valid, each of its items of a dialect's kind is valid, and
+its dialect set names each dialect once, by a word. A function is valid
+when its blocks, its ops and its successors obey the rules below, and each
+op obeys its dialect's rule.
 
 # Ops
 
@@ -292,10 +292,26 @@ def SymbolTable.context (keys : List LocRef) (t : SymbolTable d) : ModuleContext
   ⟨t.symbols, keys⟩
 
 /--
+An item of a dialect's kind is valid, in the context of its table's
+symbols, when its kind is a word of a dialect that the dialect registers,
+its parameters have distinct names, its types are valid, its attributes can
+be written, and it obeys the dialect's rule for items (ADR-2026-11-10-2224).
+-/
+structure DialectItem.Valid (ctx : FuncContext d) (i : DialectItem d) : Prop where
+  kind : isDialectWord i.kind
+  registered : i.kind ∈ itemKindNames (d := d)
+  names : ∀ x ∈ i.params, isName x.1
+  namesUnique : (i.params.map (·.1)).Nodup
+  types : ∀ t ∈ i.types, validTy t
+  attrs : Attr.AllWritable i.attrs
+  dialect : validItem (DialectView.id d) ctx i
+
+/--
 A symbol table is valid, in a module whose location table has the
-references `keys`, when each symbol names one item, function or nested
-module, each of its functions is valid in the table's context, and its
-dialect set names each dialect once, by a word. Which dialects the set may
+references `keys`, when each symbol names one item, each of its functions is
+valid in the table's context, each of its items of a dialect's kind is valid
+with the table's symbols, and its dialect set names each dialect once, by a
+word. Which dialects the set may
 name, and that the table's words name only those, is the rule of a
 module's dialect set, in the chapter on sums of dialects: it reads the
 words of the module, which the dialect's text gives.
@@ -303,6 +319,7 @@ words of the module, which the dialect's text gives.
 structure SymbolTable.Valid (keys : List LocRef) (t : SymbolTable d) : Prop where
   symbolsUnique : (t.items.map Item.name).Nodup
   funcs : ∀ f ∈ t.funcs, f.Valid (t.context keys)
+  dialectItems : ∀ i ∈ t.dialectItems, i.Valid ⟨t.symbols⟩
   dialectNames : ∀ x ∈ t.dialects, isWord x
   dialectsUnique : t.dialects.Nodup
 
@@ -344,7 +361,10 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
   refine ⟨locs, fun t ht => ?_⟩
   simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
   subst ht
-  exact ⟨symbolsUnique, funcs, dialectNames, dialectsUnique⟩
+  refine ⟨symbolsUnique, funcs, fun i hi => ?_, dialectNames, dialectsUnique⟩
+  obtain ⟨j, hj, he⟩ := List.mem_filterMap.mp hi
+  have := flat j hj
+  cases j <;> simp_all [Item.func?, Item.dialect?]
 
 /-!
 # Valid op instances

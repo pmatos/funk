@@ -86,6 +86,17 @@ owns regions of a dialect's kinds runs by its dialect's semantics, which
 sees its op instance and operands, not the regions. An op that owns a
 region of the core's kind is stuck, and no valid op does
 (ADR-2026-11-10-1941).
+## Kinds of item
+
+A dialect registers kinds of item, each a word of the dialect such as
+`toy.cell`, with its own rule, `validItem` (ADR-2026-11-10-2224). An item
+of a dialect's kind is written by the one item production, with an empty
+body, and every reader decodes it whichever dialects it holds. Validation
+asks that a dialect register its kind, that it obey that dialect's rule,
+and that its table's dialect set name the dialect of each of its words.
+The sum registers both sides' kinds and sends each to the side that
+registers it. The core registers none: `func` and `module` are its own
+terms (ADR-2026-11-10-2224, ADR-2026-11-10-1510).
 
 ## Limits
 

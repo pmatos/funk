@@ -5,6 +5,7 @@ import FirRef.Parse
 import FirRef.Dominance
 import FirRef.LocTable
 import FirRef.Tables
+import FirRef.AttrWalk
 import FirRef.Validate
 import FirRef.Lex.Arg
 

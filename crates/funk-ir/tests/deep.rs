@@ -1,8 +1,9 @@
 //! fir has no nesting limit (ADR-2026-10-30-1549). Texts and IR nested a
-//! million levels deep, in attributes, regions and items, parse, print,
-//! verify, clone, compare, hash, debug-format and drop on a thread with a
-//! 256 KiB stack, where a walk that recursed once per level would overflow
-//! within a few thousand levels.
+//! million levels deep, in attributes, regions and items, the attributes of
+//! an item of a dialect's kind included, parse, print, verify, clone,
+//! compare, hash, debug-format and drop on a thread with a 256 KiB stack,
+//! where a walk that recursed once per level would overflow within a few
+//! thousand levels.
 
 use std::fmt::{self, Debug, Write};
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -10,8 +11,8 @@ use std::sync::Mutex;
 
 use funk_ir::dialects::core;
 use funk_ir::{
-    Attr, Block, Dialect, Effects, Item, Module, NestedModule, OpShape, OpSpec, OpTypes, Registry,
-    parse, print, verify,
+    Attr, Block, Dialect, DialectItem, Effects, FuncContext, Item, ItemKindSpec, Module,
+    NestedModule, OpShape, OpSpec, OpTypes, Registry, parse, print, verify,
 };
 
 const DEPTH: usize = 1_000_000;
@@ -48,10 +49,26 @@ impl OpSpec for ToyNest {
     }
 }
 
+/// `toy.box`: a kind of item with any attributes.
+struct ToyBox;
+
+impl ItemKindSpec for ToyBox {
+    fn name(&self) -> &str {
+        "toy.box"
+    }
+
+    fn check(&self, _cx: &FuncContext<'_>, _item: &DialectItem) -> Result<(), String> {
+        Ok(())
+    }
+}
+
 fn registry() -> Registry {
     let mut reg = Registry::core();
-    reg.register(Dialect::new("toy").depends_on(core::NAME).op(ToyNest))
-        .expect("the toy dialect registers");
+    let toy = Dialect::new("toy")
+        .depends_on(core::NAME)
+        .op(ToyNest)
+        .item_kind(ToyBox);
+    reg.register(toy).expect("the toy dialect registers");
     reg
 }
 
@@ -67,6 +84,12 @@ fn module_text(body: &str) -> String {
 fn attr_text(depth: usize) -> String {
     let attr = format!("{}x{}", "h(".repeat(depth), ")".repeat(depth));
     module_text(&format!("  toy.nest {attr} @0\n"))
+}
+
+/// A `toy.box` whose attribute applies `h` `depth` times.
+fn item_attr_text(depth: usize) -> String {
+    let attr = format!("{}x{}", "h(".repeat(depth), ")".repeat(depth));
+    format!("dialects toy\n\ntoy.box @b() {attr} {{\n}}\n\nlocs {{\n}}\n")
 }
 
 /// A text of `depth` regions, each holding a block whose op holds the next,
@@ -191,6 +214,24 @@ fn attributes_nest_to_any_depth() {
         assert_eq!(verify(&m, &reg), vec![]);
         copies_and_compares(&m, attr_text, DEPTH, |m| {
             *innermost(&mut entry(m).ops[0].attrs[0]) = Attr::word("y");
+        });
+    });
+}
+
+#[test]
+fn item_attributes_nest_to_any_depth() {
+    on_small_stack(|| {
+        let text = item_attr_text(DEPTH);
+        let reg = registry();
+        let m = parse(&text, &reg).expect("the text parses");
+        assert!(print(&m) == text);
+        drop(text);
+        assert_eq!(verify(&m, &reg), vec![]);
+        copies_and_compares(&m, item_attr_text, DEPTH, |m| {
+            let Some(Item::Dialect(i)) = m.items.first_mut() else {
+                panic!("a toy.box")
+            };
+            *innermost(&mut i.attrs[0]) = Attr::word("y");
         });
     });
 }

@@ -29,10 +29,12 @@ def tablesWalk (acc : List (SymbolTable d)) : List (List (Item d)) → List (Sym
   | [] => acc.reverse
   | [] :: st => tablesWalk acc st
   | (.func _ :: is) :: st => tablesWalk acc (is :: st)
+  | (.dialect _ :: is) :: st => tablesWalk acc (is :: st)
   | (.module _ ds js :: is) :: st => tablesWalk (⟨ds, js⟩ :: acc) (js :: is :: st)
 termination_by st => sizeOf st
 decreasing_by
-  all_goals simp only [List.cons.sizeOf_spec, Item.func.sizeOf_spec, Item.module.sizeOf_spec]
+  all_goals simp only [List.cons.sizeOf_spec, Item.func.sizeOf_spec, Item.module.sizeOf_spec,
+    Item.dialect.sizeOf_spec]
   all_goals omega
 
 /-- The loop lists the tables that its stack holds, after those it has

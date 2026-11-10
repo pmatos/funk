@@ -14,7 +14,9 @@ set may name, and that the module's words keep to it:
 * each word that the module writes names the core or a dialect of its set:
   the name of each op and each word of its attributes, the kind of each
   region of an op, and each word of each type that a function states, at
-  any depth.
+  any depth; and the kind of each item of a dialect's kind, each word of
+  each type that it states and each word of its attributes
+  (ADR-2026-11-10-2224).
 
 A module nested in another has a dialect set of its own, not its parent's
 (ADR-2026-11-10-1510), so the rule holds for each symbol table of a module:
@@ -58,14 +60,22 @@ def Func.wordDialects (f : Func d) : List String :=
   f.types.flatMap (fun t => (tyAttr t).dialects) ++
     f.allBlocks.flatMap fun b => b.body.flatMap Operation.wordDialects
 
+/-- The dialects that the words of an item of a dialect's kind name, in
+order: its kind's, those of each type that it states, then those of its
+attributes. -/
+def DialectItem.wordDialects (i : DialectItem d) : List String :=
+  (wordDialect i.kind).toList ++ i.types.flatMap (fun t => (tyAttr t).dialects) ++
+    Attr.dialectsAll i.attrs
+
 variable [DialectSet d]
 
 /-- A symbol table keeps to its dialect set: the set names only dialects of
-`d`'s set, and every word of the table's functions names the core or a
-dialect of its set. -/
+`d`'s set, and every word of the table's functions and of its items of a
+dialect's kind names the core or a dialect of its set. -/
 structure SymbolTable.InDialectSet (t : SymbolTable d) : Prop where
   known : ∀ x ∈ t.dialects, x ∈ names d
   words : ∀ f ∈ t.funcs, ∀ x ∈ f.wordDialects, x ∈ t.dialects
+  itemWords : ∀ i ∈ t.dialectItems, ∀ x ∈ i.wordDialects, x ∈ t.dialects
 
 /-- A module keeps to its dialect sets: each of its symbol tables, its own
 and that of each nested module, keeps to its own set. -/
@@ -79,12 +89,29 @@ def Func.setProblems (ns : List Name) (f : Func d) : List Problem :=
       ", which the module's dialect set does not name")]
   | none => []
 
+/-- The problem of an item of a dialect's kind that writes a word of a
+dialect that its table's set does not name: the first such dialect, if there
+is one. -/
+def DialectItem.setProblems (ns : List Name) (i : DialectItem d) : List Problem :=
+  match i.wordDialects.find? (· ∉ ns) with
+  | some x => [{ message := "the item writes a word of the dialect " ++ x ++
+      ", which the module's dialect set does not name", func := i.name }]
+  | none => []
+
 /-- The problems of a symbol table's dialect set: each dialect that it names
-and `d` does not hold, then each function that writes a word outside it. -/
+and `d` does not hold, then each function that writes a word outside it,
+then each item of a dialect's kind that does. -/
 def SymbolTable.setProblems (t : SymbolTable d) : List Problem :=
   t.dialects.filterMap (fun x => if x ∈ names d then none else
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
-  t.funcs.flatMap (Func.setProblems t.dialects)
+  t.funcs.flatMap (Func.setProblems t.dialects) ++
+  t.dialectItems.flatMap (DialectItem.setProblems t.dialects)
+
+/-- No word of a list names a dialect outside `ns` exactly when the first
+search for one finds none. -/
+theorem find?_not_mem_eq_none {ns : List Name} {xs : List String} :
+    xs.find? (· ∉ ns) = none ↔ ∀ x ∈ xs, x ∈ ns := by
+  simp [List.find?_eq_none]
 
 /-- The problems of a module's dialect sets: those of each of its symbol
 tables, in order. -/
@@ -94,24 +121,36 @@ def Module.setProblems (m : Module d) : List Problem := m.tables.flatMap SymbolT
 `SymbolTable.InDialectSet`. -/
 theorem SymbolTable.setProblems_eq_nil_iff (t : SymbolTable d) :
     t.setProblems = [] ↔ t.InDialectSet := by
-  simp only [SymbolTable.setProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
-    ite_none_eq_none, List.flatMap_eq_nil_iff, Func.setProblems]
-  constructor
-  · rintro ⟨hk, hw⟩
-    refine ⟨hk, fun f hf x hx => ?_⟩
-    have h := hw f hf
-    split at h
+  have key : ∀ (xs : List String) (ps : String → List Problem),
+      ((match xs.find? (· ∉ t.dialects) with | some x => ps x | none => []) = [] ↔
+        ∀ x ∈ xs, x ∈ t.dialects) ∨ (∃ x, ps x = []) := by
+    intro xs ps
+    by_cases h : ∃ x, ps x = []
+    · exact .inr h
+    · refine .inl ?_
+      split
+      · rename_i x hx
+        have hn := List.find?_some hx
+        simp only [decide_eq_true_eq] at hn
+        exact ⟨fun e => absurd ⟨x, e⟩ h, fun hall => absurd (hall x (List.mem_of_find?_eq_some hx)) hn⟩
+      · rename_i hx
+        exact ⟨fun _ => find?_not_mem_eq_none.mp hx, fun _ => rfl⟩
+  have hf : ∀ f : Func d, f.setProblems t.dialects = [] ↔ ∀ x ∈ f.wordDialects, x ∈ t.dialects := by
+    intro f
+    rcases key f.wordDialects fun x => [f.problem ("the function writes a word of the dialect " ++
+      x ++ ", which the module's dialect set does not name")] with h | ⟨_, h⟩
+    · exact h
     · cases h
-    · rename_i hn
-      simpa using List.find?_eq_none.mp hn x hx
-  · rintro ⟨hk, hw⟩
-    refine ⟨hk, fun f hf => ?_⟩
-    split
-    · rename_i x hx
-      have := List.find?_some hx
-      simp only [decide_eq_true_eq] at this
-      exact absurd (hw f hf x (List.mem_of_find?_eq_some hx)) this
-    · rfl
+  have hi : ∀ i : DialectItem d, i.setProblems t.dialects = [] ↔
+      ∀ x ∈ i.wordDialects, x ∈ t.dialects := by
+    intro i
+    rcases key i.wordDialects fun x => [{ message := "the item writes a word of the dialect " ++
+      x ++ ", which the module's dialect set does not name", func := i.name }] with h | ⟨_, h⟩
+    · exact h
+    · cases h
+  simp only [SymbolTable.setProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
+    ite_none_eq_none, List.flatMap_eq_nil_iff, hf, hi]
+  exact ⟨fun ⟨⟨a, b⟩, c⟩ => ⟨a, b, c⟩, fun ⟨a, b, c⟩ => ⟨⟨a, b⟩, c⟩⟩
 
 /-- The check of a module's dialect sets decides `Module.InDialectSet`. -/
 theorem Module.setProblems_eq_nil_iff (m : Module d) : m.setProblems = [] ↔ m.InDialectSet := by

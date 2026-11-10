@@ -16,8 +16,9 @@ use std::collections::HashMap;
 
 use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
+use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
-use crate::ir::{Def, Func, Item, Module, NestedModule, Op, Part, Region, Type};
+use crate::ir::{Def, DialectItem, Func, Item, Module, NestedModule, Op, Part, Region, Type};
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
@@ -73,8 +74,10 @@ enum Decoded {
 /// A `func` has no attributes and blocks in its body. A `module` has no
 /// parameters, results or attributes, and its dialect set and items in its
 /// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
-/// function with no blocks or a module with no items. Every other item is
-/// of a kind the parser does not know.
+/// function with no blocks or a module with no items. An item whose kind is
+/// a word of a dialect has an empty body (ADR-2026-11-10-2224), whichever
+/// dialect registers its kind, as validation asks. Every other item is of a
+/// kind the parser does not know.
 fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
     match s.kind.as_str() {
         "func" => func_item(s, reg).map(Decoded::Item),
@@ -102,14 +105,51 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
             };
             Ok(Decoded::Module(m, body))
         }
+        kind if is_dialect_word(kind) => dialect_item(s, reg).map(Decoded::Item),
         _ => err(
             s.kind_pos,
             format!(
-                "unknown item kind {}: the kinds are func and module",
+                "unknown item kind {}: the kinds are func, module and the words of dialects",
                 s.kind
             ),
         ),
     }
+}
+
+/// An item of a dialect's kind (`decodeDialectItem`): its body is empty,
+/// and its result types, then its parameters' types, decode. Its attributes
+/// stay as the text writes them.
+fn dialect_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+    if !matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty()) {
+        return err(s.kind_pos, "an item of a dialect's kind has an empty body");
+    }
+    let scope = Scope {
+        types: HashMap::new(),
+        reg,
+        func: &s.name,
+    };
+    for (t, pos) in &s.results {
+        scope.check_type(t, *pos)?;
+    }
+    for (d, at) in &s.params {
+        scope.check_type(&d.ty, at.ty)?;
+    }
+    Ok(Item::Dialect(DialectItem {
+        kind: std::mem::take(&mut s.kind),
+        name: std::mem::take(&mut s.name),
+        params: std::mem::take(&mut s.params)
+            .into_iter()
+            .map(|(d, _)| d)
+            .collect(),
+        results: std::mem::take(&mut s.results)
+            .into_iter()
+            .map(|(t, _)| t)
+            .collect(),
+        attrs: std::mem::take(&mut s.attrs)
+            .into_iter()
+            .map(|(a, _)| a)
+            .collect(),
+    }))
 }
 
 /// An item of kind `func`.

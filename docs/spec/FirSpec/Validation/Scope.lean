@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10759067883333108595")
+:::moduleDocs (fingerprint := "16755440733866033890")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -101,20 +101,23 @@ A valid module has one function for each symbol. A call is valid only when
 the symbol table gives its symbol the type the call states.
 :::
 
-:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.symbols (fingerprint := "18081840893550951667")
+:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.symbols (fingerprint := "4849842385175751582")
 *Definition: a symbol table of a module.* A module nested in another is a
 symbol table of its own, with its own dialect set (ADR-2026-11-10-1510). A
 _symbol table_ $`T` is a dialect set $`\mathrm{dialects}(T)` and a list of
 items $`\mathrm{items}(T)`: those of a module, or of a module nested in
 one. Its functions $`\mathrm{funcs}(T)` are the items of $`T` that are
 functions, in order; the functions of a nested module are those of its own
-table. Its symbol table $`\mathrm{symtab}_T(s)` is the type of the first
+table. Its items of a dialect's kind $`\mathrm{ditems}(T)` are the items
+of $`T` of a kind that a dialect registers, in order. Its symbol table
+$`\mathrm{symtab}_T(s)` is the type of the first
 function of $`T` whose symbol is $`s`, as for a module:
 
 $$`\mathrm{symtab}_T(s) = \mathrm{type}(g)`
 
 where $`g` is the first function of $`\mathrm{funcs}(T)` with the symbol
-$`s`. A nested module's symbol names no function, so no op refers to it.
+$`s`. The symbol of a nested module, or of an item of a dialect's kind,
+names no function, so no op refers to it as a callee.
 :::
 
 :::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "9662001617122106345")
@@ -170,11 +173,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "12753828943017303426")
+:::readable Fir.DialectValidation (fingerprint := "8528412600476982322")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds five things of its own:
+dialect $`d` adds six things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -193,14 +196,21 @@ dialect $`d` adds five things of its own:
   $`C, v, f \vdash_d r : k~\text{valid}`. A kind's rule says how values
   are scoped in a region of its kind, which of its ops end its blocks, and
   where its successors go (ADR-2026-11-10-1941). A dialect that registers
-  no kind has no such rule.
+  no kind has no such rule;
+* the kinds of item that it registers, $`\mathrm{itemkinds}_d`, each a word
+  of $`d`, and the rule of each for an item $`i` of that kind, in a function
+  context and through a view, written $`C, v \vdash_d i~\text{valid}`. The
+  rule reads the item's attributes, and says what the kind holds
+  (ADR-2026-11-10-2224). A dialect that registers no kind of item has no
+  such rule.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
-The core dialect has no rule over a whole function, and registers no region
-kind: the rule of its own kind, a control-flow graph, is the rule of a
-function's body.
+The core dialect has no rule over a whole function. It registers no kind of
+item: its kinds, `func` and `module`, have rules of their own in the next
+sections. It registers no region kind either: the rule of its own kind, a
+control-flow graph, is the rule of a function's body.
 :::
 
 :::readable Fir.Operation.ownsCoreRegion (fingerprint := "3667057443299565156")

@@ -13,8 +13,10 @@ and the reader decides the side by the word alone.
 Names make this hold for every sum. When the base's words name only
 dialects of its set, `e`'s name is not in that set, and `e` writes its own
 words under its name, every word goes to its own side
-(`Dialect.sum.routes_of_names`), and every region kind goes to the rule of
-the side that registers it (`Dialect.sum.validRegion_ext`). So adding a dialect of a new name to a
+(`Dialect.sum.routes_of_names`), every region kind goes to the rule of
+the side that registers it (`Dialect.sum.validRegion_ext`), and every item
+of a kind that `e` registers goes to `e`'s rule for items
+(`Dialect.sum.validItem_ext`). So adding a dialect of a new name to a
 dialect with lawful text and a lawful set gives a dialect with lawful text
 and a lawful set, and adding any number of them, one at a time, does too.
 
@@ -213,9 +215,10 @@ theorem names_disjoint [LawfulDialectText (base ⊞ e)] (o₁ : base.Op) (o₂ :
 variable (base e) in
 /-- `e` writes its own words under its name, and names only dialects of
 its base's set besides its own: each op name and each valid type of its
-own and each region kind that it registers names `e`, and every word of
-its ops' attributes and of its valid types names the base's dialects or
-`e`. -/
+own, each region kind and each kind of item that it registers names `e`,
+and every word of its ops' attributes and of its valid types names the
+base's dialects or `e`. An extension that registers no kind of item has the
+kinds of item by the default. -/
 class _root_.Fir.LawfulDialectName [DialectSet base] : Prop where
   opName_named : ∀ o : e.Op, wordDialect (opName (d := base.over e) o) = some (name e)
   opAttrs_mem : ∀ o : e.Op, ∀ x ∈ Attr.dialectsAll (opAttrs (d := base.over e) o),
@@ -225,6 +228,8 @@ class _root_.Fir.LawfulDialectName [DialectSet base] : Prop where
   tyAttr_mem : ∀ t : e.Ty, validTy (d := base.over e) (.inr t) →
     ∀ x ∈ (tyAttr (d := base.over e) (.inr t)).dialects, x ∈ names base ++ [name e]
   kind_named : ∀ k ∈ regionKindNames (d := base.over e), wordDialect k = some (name e)
+  itemKind_named : ∀ k ∈ itemKindNames (d := base.over e), wordDialect k = some (name e) := by
+    intro k hk; nomatch hk
 
 omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText base]
     [LawfulDialectText (base.over e)] in
@@ -260,6 +265,12 @@ instance lawfulSet [DialectSet base] [LawfulDialectSet base] [LawfulDialectName 
     · exact List.mem_append_left _ (LawfulDialectSet.kind_mem k hk x h)
     · rw [show x = name e from Option.some.inj (h.symm.trans (LawfulDialectName.kind_named k hk))]
       exact List.mem_append_right _ (List.mem_singleton_self _)
+  itemKind_mem k hk x h := by
+    rcases List.mem_append.mp hk with hk | hk
+    · exact List.mem_append_left _ (LawfulDialectSet.itemKind_mem k hk x h)
+    · rw [show x = name e from
+        Option.some.inj (h.symm.trans (LawfulDialectName.itemKind_named k hk))]
+      exact List.mem_append_right _ (List.mem_singleton_self _)
 
 omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText base]
     [LawfulDialectText (base.over e)] in
@@ -276,6 +287,21 @@ theorem validRegion_ext [DialectSet base] [LawfulDialectSet base] [LawfulDialect
     hn (LawfulDialectSet.kind_mem k hb _ (LawfulDialectName.kind_named k hk))
   show ValidRegion v k ctx f r ↔ _
   simp [ValidRegion, hb]
+
+omit [DialectSignature base] [DialectSignature (base.over e)] [LawfulDialectText base]
+    [LawfulDialectText (base.over e)] in
+/-- An item of a kind that `e` registers obeys `e`'s rule for items in the
+sum, when the base's words name only dialects of its set, `e`'s name is new
+to it, and `e` writes its kinds under its name. -/
+theorem validItem_ext [DialectSet base] [LawfulDialectSet base] [LawfulDialectName base e]
+    (hn : name e ∉ names base) {host : Dialect} (v : DialectView (base ⊞ e) host)
+    (ctx : FuncContext host) {i : DialectItem host}
+    (hk : i.kind ∈ itemKindNames (d := base.over e)) :
+    validItem (d := base ⊞ e) v ctx i ↔ validItem (d := base.over e) (extView v) ctx i := by
+  have hb : i.kind ∉ itemKindNames (d := base) := fun hb =>
+    hn (LawfulDialectSet.itemKind_mem _ hb _ (LawfulDialectName.itemKind_named _ hk))
+  show ValidItem v ctx i ↔ _
+  simp [ValidItem, hb]
 
 /-!
 # The round trip over sums

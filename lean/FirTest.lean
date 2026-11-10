@@ -35,6 +35,7 @@ import FirTest.Mixed
 import FirTest.SumTypes
 import FirTest.Bit
 import FirTest.DialectSet
+import FirTest.ItemKinds
 import FirTest.Deps
 import FirTest.Runs
 import FirTest.ValidSum

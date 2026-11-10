@@ -16,14 +16,16 @@ written, the tree it gives can be written too, part by part:
   reference is below 2³²; a block's label is a name, and its arguments
   and ops can be written;
 * an item's parameters can be written, its result types are written as
-  types, and the blocks of its body can be written; a module's dialect set
+  types, its attributes can be written, and the blocks of its body can be
+  written; a module's dialect set
   names words, its items can be written, and each number of its location
   table is below 2³².
 
 An op's operands are not in this list: decoding finds each of them among
-the definitions of its function, whose names are names. An item's kind and
-attributes are not in it either, since decoding accepts only a `func`
-without attributes. A `func` whose body is a list of items is rejected
+the definitions of its function, whose names are names. An item's kind is
+not in it either: decoding accepts only `func`, `module` and a word of a
+dialect, which a word token gives. An item of a dialect's kind keeps its
+attributes, so they are in it. A `func` whose body is a list of items is rejected
 unless that list is empty, so nothing is asked of the items of a body.
 
 Each reader takes what it needs from the tokens it reads. A name comes from
@@ -78,11 +80,12 @@ def SOp.WritableList : List SOp → Prop
 end
 
 mutual
-/-- An item as read can be written: its parameters, its result types and its
-body. -/
+/-- An item as read can be written: its parameters, its result types, its
+attributes and its body. -/
 def SItem.Writable : SItem → Prop
-  | ⟨_, _, _, params, results, _, body⟩ =>
-    (∀ x ∈ params, x.Writable) ∧ (∀ r ∈ results, r.1.IsType) ∧ SBody.Writable body
+  | ⟨_, _, _, params, results, attrs, body⟩ =>
+    (∀ x ∈ params, x.Writable) ∧ (∀ r ∈ results, r.1.IsType) ∧ (∀ a ∈ attrs, a.1.Writable) ∧
+      SBody.Writable body
 
 /-- The body of an item as read can be written: its blocks, or its dialect
 set and its items. -/
@@ -97,7 +100,8 @@ def SItem.WritableList : List SItem → Prop
 end
 
 theorem SItem.writable_iff (i : SItem) : i.Writable ↔
-    (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable := by
+    (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧
+      (∀ a ∈ i.attrs, a.1.Writable) ∧ i.body.Writable := by
   obtain ⟨⟩ := i
   rfl
 

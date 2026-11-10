@@ -16,7 +16,9 @@ use std::fmt::{self, Display, Write};
 
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
-use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type};
+use crate::ir::{
+    Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type,
+};
 
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -210,6 +212,30 @@ fn write_func(out: &mut impl Write, f: &Func, n: usize) -> fmt::Result {
     out.write_str("}\n")
 }
 
+/// An item of a dialect's kind at indentation `n`, with its line feed
+/// (`DialectItem.print`): its header as a function's, with its kind in
+/// place of `func`, each attribute after a space, then its empty body, whose
+/// `}` is on the next line, at `n`.
+fn write_dialect_item(out: &mut impl Write, i: &DialectItem, n: usize) -> fmt::Result {
+    indent(out, n)?;
+    write!(
+        out,
+        "{} {}({})",
+        i.kind,
+        print_symbol(&i.name),
+        Commas(&i.params)
+    )?;
+    if !i.results.is_empty() {
+        write!(out, " -> {}", Commas(&i.results))?;
+    }
+    for a in &i.attrs {
+        write!(out, " {a}")?;
+    }
+    out.write_str(" {\n")?;
+    indent(out, n)?;
+    out.write_str("}\n")
+}
+
 /// A dialect set at indentation `n`, then an empty line, or nothing when it
 /// names no dialect.
 fn write_dialects(out: &mut impl Write, names: &[String], n: usize) -> fmt::Result {
@@ -231,6 +257,10 @@ fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
         match rest.next() {
             Some(Item::Func(f)) => {
                 write_func(out, f, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Dialect(i)) => {
+                write_dialect_item(out, i, n)?;
                 out.write_char('\n')?;
             }
             Some(Item::Module(m)) => {
