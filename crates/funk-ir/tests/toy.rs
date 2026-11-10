@@ -7,6 +7,8 @@
 
 mod common;
 
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use funk_ir::dialects::core::{self, core_type, int_type, int_width};
 use funk_ir::{
     Attr, Dialect, OpContext, OpShape, OpSpec, OpTypes, Registry, Type, TypeCheck, TypeSpec, parse,
@@ -307,6 +309,17 @@ fn regions_and_their_kinds_round_trip_and_validation_rejects_them() {
         (outer.regions[0].kind.as_deref(), kinds),
         (None, vec![Some("toy.graph"), None])
     );
+    let copy = m.clone();
+    assert_eq!(copy, m);
+    assert_eq!(print(&copy), text);
+    let hash = |m: &funk_ir::Module| {
+        let mut h = DefaultHasher::new();
+        m.hash(&mut h);
+        h.finish()
+    };
+    assert_eq!(hash(&copy), hash(&m));
+    let plain = parse(&text.replace(" toy.graph", ""), &reg).unwrap_or_else(|e| panic!("{e}"));
+    assert_ne!(plain, m);
     assert!(
         diags(&text)
             .iter()

@@ -128,10 +128,15 @@ impl Nest<Block> {
             return false;
         };
         let op = owner.ops.last_mut().expect("the block holds the op");
-        op.regions
+        let region = op
+            .regions
             .last_mut()
-            .expect("the op owns the region")
-            .blocks = blocks;
+            .expect("open_region gave the op the region");
+        debug_assert!(
+            region.blocks.is_empty(),
+            "the region was opened with open_region"
+        );
+        region.blocks = blocks;
         true
     }
 }
