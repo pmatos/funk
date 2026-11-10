@@ -94,7 +94,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-1941](2026-11-09-1941-a-new-fir-ref-fast-path-needs-the-depth-rule-or-a-clearly-too-slow-case.md) | [fir-ref](../decisions/fir-ref.md) | A new `fir-ref` fast path needs the depth rule or a case that is clearly too slow | this ADR |
 | [ADR-2026-11-09-2257](2026-11-09-2257-a-dialect-s-function-rule-sees-the-host-function-through-a-view.md) | [validation](../decisions/validation.md) | A dialect's function rule sees the host function through a view | this ADR |
 | [ADR-2026-11-09-2306](2026-11-09-2306-the-spec-sums-a-base-and-an-extension-over-it.md) | [semantics](../decisions/semantics.md) | The spec sums a base dialect and an extension over it, routing ops and types by prefix | this ADR, ADR-2026-11-10-1310 |
-| [ADR-2026-11-09-2353](2026-11-09-2353-a-base-op-sees-only-the-context-its-base-can-write.md) | [validation](../decisions/validation.md) | In a sum, a base op sees only the context that its base can write | this ADR |
+| [ADR-2026-11-09-2353](2026-11-09-2353-a-base-op-sees-only-the-context-its-base-can-write.md) | [validation](../decisions/validation.md) | In a sum, a base op sees only the context that its base can write | this ADR, ADR-2026-11-10-1310 |
 | [ADR-2026-11-10-0042](2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk-ir's registry routes each word by its dialect prefix and checks names and dependencies at registration | this ADR |
 | [ADR-2026-11-10-1310](2026-11-10-1310-an-extension-lifts-into-any-sum-that-holds-what-it-depends-on.md) | [semantics](../decisions/semantics.md) | An extension lifts into any sum that holds what it depends on, through an inclusion of types | this ADR |
 

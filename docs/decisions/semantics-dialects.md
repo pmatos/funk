@@ -51,10 +51,11 @@ the base accepts (ADR-2026-11-09-2306).
 
 An extension is written over the dialects it depends on. It joins any sum
 that holds them by a lift: `e.lift dep ι` is `e`, written over `dep`, with
-an inclusion `ι` of `dep`'s types in a larger base's. An inclusion maps
-types and their values each way. The base of a sum is included by
-`TyIncl.inl`, and inclusions extend over an extension and compose, so a
-dialect held anywhere in a nested sum is included (ADR-2026-11-10-1310).
+an inclusion `ι` of `dep`'s types in those of a larger base `big`. An
+inclusion maps types and their values each way. The base of a sum is
+included by `TyIncl.inl`, and inclusions extend over an extension and
+compose, so a dialect held anywhere in a nested sum is included
+(ADR-2026-11-10-1310).
 
 The lift has `e`'s ops and rules, `big`'s rules and text for `big`'s types,
 and `e`'s semantics on values moved across the inclusion. A lifted op sees

@@ -1,6 +1,6 @@
 # In a sum, a base op sees only the context that its base can write
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-10-1310
 Tier: direction; area: validation
 
 ## Context
