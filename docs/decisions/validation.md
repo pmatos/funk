@@ -89,6 +89,11 @@ op is valid in that function, `add` included. Dropping the types that the
 base cannot write would let a core `ret` return too few values
 (ADR-2026-11-09-2353).
 
+An extension lifted into a larger sum follows the same rule against what it
+depends on. Its op sees only the symbols whose types are all its own or its
+dependencies', and is valid only where the function's result types all are
+(ADR-2026-11-10-1310).
+
 ## How `fir-ref` runs the check
 
 fir has no nesting limit. Every tool handles any depth without a stack

@@ -66,8 +66,9 @@ The chapters follow the WebAssembly specification:
   parser, with the proofs that parsing a printed well-formed module gives
   it back and that every module the parser gives is well formed.
 * _Sums of dialects_ gives how the ops and types of several dialects
-  combine in one module, routed by the prefix of each word, and proves
-  that the round trip and the poison obligations hold for the sum.
+  combine in one module, routed by the prefix of each word, how an
+  extension joins a sum that holds what it depends on, and proves that the
+  round trip and the poison obligations hold for the sum.
 
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every
@@ -325,7 +326,10 @@ functions, blocks and ops.
 A module that holds the ops of several dialects is a module of their sum,
 built one dialect at a time on the core (ADR-2026-11-09-1543,
 ADR-2026-11-09-2306). Every word says which dialect it belongs to, by its
-prefix, and the sum reads each word with that dialect.
+prefix, and the sum reads each word with that dialect. An extension is
+written over the dialects it depends on, and joins a sum that holds them,
+and more, by a lift through an inclusion of types (ADR-2026-11-10-1310), so
+extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.Names "Words and dialect sets" FirSpec.Sum.Names (level := 2)}
 
@@ -338,6 +342,14 @@ prefix, and the sum reads each word with that dialect.
 {includeReadable "." Fir.Sum.TextLaws "The text of a sum" FirSpec.Sum.TextLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.PoisonLaws "A sum's poison obligations" FirSpec.Sum.PoisonLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.Inclusion "Inclusions of types" FirSpec.Sum.Inclusion (level := 2)}
+
+{includeReadable "." Fir.Sum.Lift "Lifting an extension" FirSpec.Sum.Lift (level := 2)}
+
+{includeReadable "." Fir.Sum.LiftTextLaws "The text of a lift" FirSpec.Sum.LiftTextLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.LiftPoisonLaws "A lift's poison obligations" FirSpec.Sum.LiftPoisonLaws (level := 2)}
 
 # Architecture decision records
 %%%

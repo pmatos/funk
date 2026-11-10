@@ -117,5 +117,9 @@ import Fir.Sum.Names
 import Fir.Sum.Dialect
 import Fir.Sum.TextLaws
 import Fir.Sum.PoisonLaws
+import Fir.Sum.Inclusion
+import Fir.Sum.Lift
+import Fir.Sum.LiftTextLaws
+import Fir.Sum.LiftPoisonLaws
 import Fir.Core.Names
 import Fir.Validation.DialectSet

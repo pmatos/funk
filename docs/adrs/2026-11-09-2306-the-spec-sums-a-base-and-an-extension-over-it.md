@@ -1,6 +1,6 @@
 # The spec sums a base dialect and an extension over it, routing ops and types by prefix
 
-Status: accepted; refined by ADR-2026-11-10-1306
+Status: accepted; refined by ADR-2026-11-10-1306 and ADR-2026-11-10-1310
 Tier: direction; area: semantics
 
 ## Context

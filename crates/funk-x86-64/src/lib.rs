@@ -11,7 +11,9 @@
 //! line and prints its results (ADR-2026-10-30-1233), on a stack that
 //! covers every call it makes (ADR-2026-11-02-1132).
 //! [`build`] assembles both with `as` and links them with `ld` into an
-//! object file and an executable (ADR-2026-10-30-1326).
+//! object file and an executable (ADR-2026-10-30-1326), with the host's C
+//! library only when the module's object file needs it
+//! (ADR-2026-11-10-1303).
 //!
 //! Register allocation is the baseline: every value has a stack slot, and
 //! each op loads its operands and stores its results (ADR-2026-10-30-1230).
@@ -34,6 +36,7 @@
 
 pub mod abi;
 pub mod asm;
+mod elf;
 mod entry;
 pub mod frame;
 mod lower;
@@ -98,15 +101,26 @@ pub fn object_path(exe: &Path) -> PathBuf {
 }
 
 /// Compiles `m`, which must be valid, then writes its object file and the
-/// executable `exe`, linked from that object file and the entry point.
+/// executable `exe`, linked from that object file and the entry point, as
+/// [`build_program`] does.
+pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
+    let program = compile(m).map_err(BuildError::Unsupported)?;
+    build_program(&program, exe)
+}
+
+/// Assembles `program`, then writes its object file and the executable
+/// `exe`, linked from that object file and the entry point.
+///
+/// When the object file references a symbol that it does not define, the
+/// executable links with the host's C library; otherwise it is static and
+/// links nothing else (ADR-2026-11-10-1303).
 ///
 /// Every file is first written to a temporary directory next to `exe`. The
 /// object file and then the executable are moved into place only once both
 /// are built, so a build that fails leaves both paths as they were. The one
 /// exception: if the executable cannot be moved into place, the new object
 /// file is removed again.
-pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
-    let program = compile(m).map_err(BuildError::Unsupported)?;
+pub fn build_program(program: &Program, exe: &Path) -> Result<Outputs, BuildError> {
     let object = object_path(exe);
     let parent = match exe.parent() {
         Some(p) if !p.as_os_str().is_empty() => p,
@@ -120,10 +134,19 @@ pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
             .map_err(|e| BuildError::Io(format!("cannot write {}: {e}", path.display())))
     };
     write(&module_s, &program.module)?;
-    write(&entry_s, &program.entry)?;
-    tools::assemble(&module_s, &built_o)
-        .and_then(|()| tools::assemble(&entry_s, &entry_o))
-        .and_then(|()| tools::link(&[&built_o, &entry_o], &built_exe))
+    tools::assemble(&module_s, &built_o).map_err(BuildError::Tool)?;
+    let built = std::fs::read(&built_o)
+        .map_err(|e| BuildError::Io(format!("cannot read {}: {e}", built_o.display())))?;
+    let libc = !elf::undefined_symbols(&built)
+        .map_err(BuildError::Tool)?
+        .is_empty();
+    if libc {
+        write(&entry_s, &format!("{}{}", entry::LIBC, program.entry))?;
+    } else {
+        write(&entry_s, &program.entry)?;
+    }
+    tools::assemble(&entry_s, &entry_o)
+        .and_then(|()| tools::link(&[&built_o, &entry_o], &built_exe, libc))
         .map_err(BuildError::Tool)?;
     let place = |from: &Path, to: &Path| {
         std::fs::rename(from, to)
