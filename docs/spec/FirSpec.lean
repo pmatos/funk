@@ -139,9 +139,15 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Execution.Refinement "Refinement" FirSpec.Execution.Refinement (level := 2)}
 
+{includeReadable "." Fir.Execution.OpEffects "Effect sets" FirSpec.Execution.OpEffects (level := 2)}
+
 {includeReadable "." Fir.Execution.Propagation "Poison classes" FirSpec.Execution.Propagation (level := 2)}
 
+{includeReadable "." Fir.Execution.EffectLaws "Effect obligations" FirSpec.Execution.EffectLaws (level := 2)}
+
 {includeReadable "." Fir.Core.Values "Core values" FirSpec.Core.Values (level := 2)}
+
+{includeReadable "." Fir.Core.OpEffects "Core effects" FirSpec.Core.OpEffects (level := 2)}
 
 {includeReadable "." Fir.Core.Poison "Core poison classes" FirSpec.Core.Poison (level := 2)}
 
@@ -238,6 +244,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Execution.Lawful "What the lawful class gives" FirSpec.Execution.Lawful (level := 2)}
 
 {includeReadable "." Fir.Core.Lawful "The core dialect's poison obligations" FirSpec.Core.Lawful (level := 2)}
+
+{includeReadable "." Fir.Core.EffectLaws "The core dialect's effect obligations" FirSpec.Core.EffectLaws (level := 2)}
 
 # Text format
 
@@ -343,6 +351,8 @@ extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.PoisonLaws "A sum's poison obligations" FirSpec.Sum.PoisonLaws (level := 2)}
 
+{includeReadable "." Fir.Sum.EffectLaws "A sum's effect obligations" FirSpec.Sum.EffectLaws (level := 2)}
+
 {includeReadable "." Fir.Sum.Inclusion "Inclusions of types" FirSpec.Sum.Inclusion (level := 2)}
 
 {includeReadable "." Fir.Sum.Lift "Lifting an extension" FirSpec.Sum.Lift (level := 2)}
@@ -350,6 +360,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.LiftTextLaws "The text of a lift" FirSpec.Sum.LiftTextLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.LiftPoisonLaws "A lift's poison obligations" FirSpec.Sum.LiftPoisonLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.LiftEffectLaws "A lift's effect obligations" FirSpec.Sum.LiftEffectLaws (level := 2)}
 
 # Architecture decision records
 %%%

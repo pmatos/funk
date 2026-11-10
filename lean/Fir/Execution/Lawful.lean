@@ -71,7 +71,7 @@ theorem Func.Valid.opsMonotone
 
 end
 
-variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty] [DialectPoison d]
+variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty] [DialectEffects d]
   [DialectCall d] [DialectDenote d SetM] [LawfulDialectPoison d] {ctx : ModuleContext d}
   {M : Module d}
 

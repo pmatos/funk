@@ -65,6 +65,20 @@ class Keep(unittest.TestCase):
         data = tomllib.loads((self.corpus / "reject/fuzz.toml").read_text())
         self.assertEqual(len(data["reject"]), 2)
 
+    def test_texts_are_appended_one_blank_line_apart(self):
+        path = self.corpus / "reject/fuzz.toml"
+        path.write_text("# kept\n")
+        self.keep([ran(REJECT, 1), *printed()])
+        table = fuzz_to_corpus.reject_table("validation-error", "breaks it", b"\xffbad")
+        self.assertEqual(path.read_text(), "# kept\n\n" + table)
+
+    def test_an_empty_file_gets_no_blank_line(self):
+        path = self.corpus / "reject/fuzz.toml"
+        path.write_text("")
+        self.keep([ran(REJECT, 1), *printed()])
+        table = fuzz_to_corpus.reject_table("validation-error", "breaks it", b"\xffbad")
+        self.assertEqual(path.read_text(), table)
+
     def test_a_valid_module_joins_the_canonical_texts(self):
         status, _ = self.keep([ran(VALID), *printed("canonical text\n")])
         self.assertEqual(status, 0)

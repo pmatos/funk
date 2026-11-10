@@ -159,7 +159,7 @@ $`\mathsf{exact}` changes only that result, poison in place of a quotient,
 so the theorems hold with it and without it.
 :::
 
-:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "10225088611800713013")
+:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "17636922214119484463")
 *Theorem: at width zero, no division returns a result on defined
 operands.* With or without $`\mathsf{exact}`, none of
 $`\mathsf{sdiv}_0`, $`\mathsf{udiv}_0`, $`\mathsf{srem}_0` and

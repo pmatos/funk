@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10842113153742306584")
+:::moduleDocs (fingerprint := "1655125458572184615")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -119,11 +119,18 @@ $$`\frac{\vdash_b f~\text{valid by the base's view} \qquad \vdash_{b.\mathrm{ove
 Each rule of the sum can be decided when each side's can.
 :::
 
-:::readable Fir.Dialect.sum.instDialectPoison Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (fingerprint := "2932494328661375889")
-*Definition: how an op of a sum runs.* An op of the sum has its side's
-poison class, and calls the function that it calls on its side. It runs by
-its side's rule: a base op takes its operands moved down to the base's
-types, and its results are moved up to the sum's.
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "14807394188783317028")
+*Definition: how an op of a sum runs.* The memories of the sum are those of
+the base and those of $`e`, kept apart: $`M_b + M_e`. An op of the sum has
+its side's
+{ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
+with its side's memories renamed into the sum's:
+
+$$`\mathrm{eff}(\mathsf{inl}\ p) = \mathsf{inl}(\mathrm{eff}_b(p)) \qquad \mathrm{eff}(\mathsf{inr}\ q) = \mathsf{inr}(\mathrm{eff}_{b.\mathrm{over}(e)}(q))`
+
+It calls the function that it calls on its side. It runs by its side's
+rule: a base op takes its operands moved down to the base's types, and its
+results are moved up to the sum's.
 
 $$`[\![\mathsf{inl}\ p]\!](v^*) = \uparrow [\![p]\!]_b(\downarrow v^*) \qquad [\![\mathsf{inr}\ q]\!](v^*) = [\![q]\!]_{b.\mathrm{over}(e)}(v^*)`
 

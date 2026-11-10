@@ -17,8 +17,9 @@ can take and give the base's values. The base is the dialect it depends on.
 A dialect with no types of its own takes `Empty` (ADR-2026-11-09-2306).
 
 `base ⊞ e` has the ops of both and the types of both. Each class is lifted
-side by side: signature, text, validation, poison classes, semantics, calls,
-and the meaning, poison and refinement of the summed types. Any number of
+side by side: signature, text, validation, poison classes and effects,
+semantics, calls, and the meaning, poison and refinement of the summed types.
+The sum's memories are each side's, kept apart (ADR-2026-11-09-1541). Any number of
 dialects is a nested sum, `core ⊞ a ⊞ b` (ADR-2026-11-09-2306).
 
 A word belongs to the dialect named before its first `.`. A bare word
@@ -45,7 +46,8 @@ The sum's text is lawful exactly when every word goes to its own side. That
 holds when the base's set is lawful, `e` writes its words under its name, and
 `e`'s name is new to the base. Then the round trip and well-formedness hold
 for the sum. The sum of lawful dialects is lawful when `e` accepts every type
-the base accepts (ADR-2026-11-09-2306).
+the base accepts (ADR-2026-11-09-2306). The same condition makes the sum
+lawful in its effects when both sides are (ADR-2026-11-09-1541).
 
 ## Lifting an extension
 
@@ -66,8 +68,10 @@ The sum of a larger base and the lift has lawful text when the base's text
 and set are lawful, `e`'s name is new to the base, and the set of what `e`
 depends on is in the base's set. The lift is lawful for poison when the base
 and `e` are, the inclusion is lawful, and `e` accepts each type it depends on
-whose inclusion the base accepts. So two extensions of the core, written
-apart, combine in one lawful sum (ADR-2026-11-10-1310).
+whose inclusion the base accepts. Under the same conditions, the lift is
+lawful in its effects when `e` is, with `e`'s effects on `e`'s memories
+(ADR-2026-11-09-1541). So two extensions of the core, written apart, combine
+in one lawful sum (ADR-2026-11-10-1310).
 
 ## Limits
 

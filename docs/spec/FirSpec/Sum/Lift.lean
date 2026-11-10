@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15539824790894933717")
+:::moduleDocs (fingerprint := "17843848195623745215")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "6557817499235600651")
@@ -72,9 +72,10 @@ above. A function obeys $`e`'s function rule through the lift's view. Each
 rule can be decided when $`B`'s and $`e`'s can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectPoison Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "4031535597666515998")
+:::readable Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "3339976446362193004")
 *Definition: how an op of the lift runs.* An op of the lift has $`e`'s
-poison class and calls what it calls in $`e`. It runs by $`e`'s rule on its
+{ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
+on $`e`'s memories, and calls what it calls in $`e`. It runs by $`e`'s rule on its
 operands moved down across $`\hat\iota`, and its results move up:
 
 $$`[\![q]\!](v^*) = \uparrow_{\hat\iota} [\![q]\!]_{d.\mathrm{over}(e)}(\downarrow_{\hat\iota} v^*)`

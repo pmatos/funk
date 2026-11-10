@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A lift's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11697219202051291408")
+:::moduleDocs (fingerprint := "12759343580284914304")
 :::
 
 :::readable Fir.HVector.forall₂_up Fir.HVector.forall₂_down Fir.HVector.map_up (fingerprint := "7072234090836315310")
@@ -47,7 +47,7 @@ propagates poison over $`d` propagates it in the lift, across a lawful
 inclusion.
 :::
 
-:::readable Fir.Dialect.lift.lawfulPoison Fir.Dialect.lift.sum_lawfulPoison (fingerprint := "13705583925890202283")
+:::readable Fir.Dialect.lift.lawfulPoison Fir.Dialect.lift.sum_lawfulPoison (fingerprint := "14521476552571790067")
 *Theorem: the lift of a lawful extension is lawful.* Let $`B` and $`e`
 over $`d` meet the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations],
