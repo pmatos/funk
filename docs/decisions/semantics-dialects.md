@@ -54,8 +54,14 @@ pass through a core `br`, `ret` or `call` (ADR-2026-11-09-2306). No core op
 is valid in a function that returns such a value (ADR-2026-11-09-2353).
 
 An extension is written over the whole base before it. Lifting one into a
-larger base, and the per-module dialect set in the text, are later stages of
-#227 (ADR-2026-11-09-2306).
+larger base is a later stage of #227 (ADR-2026-11-09-2306).
+
+## A module's dialect set
+
+A module names its dialects other than the core on its first line,
+`dialects toy`. Its words must name only the core or those dialects, and it
+may name only dialects of the reader's set (ADR-2026-11-10-1306). A module
+that names none uses the core alone (ADR-2026-11-09-1543).
 
 The Lean test dialects, toy, use-once and probe, are extensions of the core
 named `toy` (ADR-2026-11-09-2306).

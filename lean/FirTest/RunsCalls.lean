@@ -79,7 +79,7 @@ def evenFn : Func CoreDialect := parityFn "even" "odd" 1
 def oddFn : Func CoreDialect := parityFn "odd" "even" 0
 
 /-- The module of `@fact`, `@even` and `@odd`. -/
-def recModule : Module CoreDialect := ⟨[.func factFn, .func evenFn, .func oddFn], [(0, .unknown)]⟩
+def recModule : Module CoreDialect := ⟨[], [.func factFn, .func evenFn, .func oddFn], [(0, .unknown)]⟩
 
 -- It is the module of the texts that `FirTest.Calls` runs, and the
 -- validation check accepts it.
@@ -166,6 +166,8 @@ theorem recModule_valid : recModule.Valid where
     · exact factFn_valid
     · exact evenFn_valid
     · exact oddFn_valid
+  dialectNames := by simp [recModule]
+  dialectsUnique := by simp [recModule]
 
 /-- Every run of `@fact`, which calls itself, has an outcome, no path of
 it is stuck, and more fuel never changes how it returns or hits UB. -/

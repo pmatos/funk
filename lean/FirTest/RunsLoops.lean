@@ -57,7 +57,7 @@ def forever : Func CoreDialect where
       op [] .br [] 0 [⟨"loop", ["b"]⟩]]⟩]⟩
 
 /-- A module that holds `@forever`. -/
-def foreverModule : Module CoreDialect := ⟨[.func forever], [(0, .unknown)]⟩
+def foreverModule : Module CoreDialect := ⟨[], [.func forever], [(0, .unknown)]⟩
 
 #guard foreverModule.problems.isEmpty
 #guard foreverModule.print == "\n".intercalate [
@@ -112,6 +112,8 @@ theorem foreverModule_valid : foreverModule.Valid where
       List.not_mem_nil, or_false] at hf
     subst hf
     exact forever_valid
+  dialectNames := by simp [foreverModule]
+  dialectsUnique := by simp [foreverModule]
 
 /-- `@forever` is a function of its module. -/
 theorem forever_mem : forever ∈ foreverModule.funcs := by

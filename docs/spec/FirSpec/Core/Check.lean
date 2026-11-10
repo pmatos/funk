@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's rules, decided: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16393045539489324021")
+:::moduleDocs (fingerprint := "2810980850477788012")
 :::
 
 :::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "637337370968257790")
@@ -38,7 +38,7 @@ dialect is a
 {ref "The-fir-specification--Validation--The-validation-check"}[decidable dialect].
 :::
 
-:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "8256747208012650833")
+:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "13243833345381518612")
 *Definition: the rejected function, alone in a module.* The module holds
 the function `@f` and nothing else, and its location table has the one
 entry `@0 = unknown`, which every op of `@f` refers to. A check run when

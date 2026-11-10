@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1652572696080746610")
+:::moduleDocs (fingerprint := "17641277585792641574")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
@@ -98,14 +98,16 @@ An item that is a function is written as that function. A `func` has no
 attributes, so none are printed.
 :::
 
-:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "10774507257686382669")
+:::readable Fir.LocTable.print Fir.printDialects Fir.Module.print (fingerprint := "3877336929970104377")
 *Definition: the location table, and a module, in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is written `locs {` and a line feed, then each entry $`r = \mathit{loc}`
 in the order the table stores them, as the line `  @r = loc`, indented by
-two spaces, then `}` and a line feed. A module is each of its items,
-followed by an empty line, and then its location table. So every text
-ends with a line feed, and a module with no items is
+two spaces, then `}` and a line feed. The dialect set $`x_1, \dots, x_n`
+of a module is written `dialects x₁, …, xₙ` and a line feed, then an empty
+line, and nothing when $`n = 0`. A module is its dialect set, then each of
+its items, followed by an empty line, and then its location table. So every
+text ends with a line feed, and a module with no dialects and no items is
 `locs {` and `}` on two lines. The
 {ref "The-fir-specification--Text-format--Example"}[example] shows a
 module in this layout.

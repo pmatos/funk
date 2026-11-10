@@ -66,7 +66,10 @@ theorem expectC_ok {tok : Tok} {msg : String} {s : σ} {r : Unit × σ}
 theorem readModuleC_ok_eof {s : σ} {m : SModule} (h : readModuleC s = .ok m) :
     ∃ (s₂ : σ) (t : Token) (s₃ : σ), uncons s₂ = some (t, s₃) ∧ t.tok = .eof := by
   unfold readModuleC at h
-  rcases h1 : readItemsC s with e | ⟨items, s₁⟩ <;> rw [h1] at h
+  rcases h0 : readDialectsC s with e | ⟨ns, s₀⟩ <;> rw [h0] at h
+  · cases h
+  dsimp only at h
+  rcases h1 : readItemsC s₀ with e | ⟨items, s₁⟩ <;> rw [h1] at h
   · cases h
   · dsimp only at h
     split at h

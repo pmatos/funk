@@ -67,7 +67,7 @@ attributes and a body of blocks, so the decoder of items takes its branch
 for blocks: the only branch that printed text reaches.
 :::
 
-:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "9538717840138443045")
+:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "7763701068141764021")
 *Theorem: the decoding step gives a well-formed module back from its
 tree.* For every dialect with signatures, validation
 rules and a text format whose text is

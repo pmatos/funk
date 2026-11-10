@@ -308,9 +308,14 @@ fn the_verifier_rejects_ill_typed_comparisons_that_a_builder_made() {
         let o = built("icmp", &attrs, &["a", "a"], &one(&i1));
         rejected_at_op(o, ICMP_BUILT, needle);
     }
-    let old = built("icmp.slt", &[], &["a", "a"], &one(&i1));
-    let why = "op icmp.slt is not registered";
-    rejected_at_op(old, why, why);
+    // The old name is a word of a dialect named `icmp`, which the module's
+    // dialect set does not name either.
+    let mut ds = verify_op(built("icmp.slt", &[], &["a", "a"], &one(&i1)));
+    let outside = "the function writes a word of the dialect icmp, which the module's dialect set does not name";
+    assert_eq!(ds.pop().map(|d| d.message), Some(outside.to_string()));
+    assert_eq!(ds.len(), 1, "{ds:#?}");
+    assert_eq!(ds[0].message, "op icmp.slt is not registered");
+    assert_eq!((ds[0].op, ds[0].loc), (Some(1), Some(L)));
 }
 
 /// The selects that the parser rejects above, made with the builder.

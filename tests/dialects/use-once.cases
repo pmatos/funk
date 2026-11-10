@@ -1,11 +1,15 @@
 Cases for the use-once test dialect, shared by the two validators' tests:
 `lean/FirTest/UseOnce.lean` and `crates/funk-ir/tests/use_once.rs`. Each case
 starts with a line of three equals signs, `accept` or `reject`, and its name.
+A case that writes a word of the use-once dialect names `toy` in its dialect
+set.
 The result of `toy.once` must be used exactly once in its function. Every
 case holds the function `@f`, and the first op of its entry block has the
 location reference `@1`, where both validators report a broken rule.
 
 === accept used-once-by-a-core-op
+dialects toy
+
 func @f(%n: i32) -> i32 {
 ^entry:
   %q: i32 = toy.once @1
@@ -18,6 +22,8 @@ locs {
   @1 = name("q")
 }
 === accept used-once-by-a-toy-op
+dialects toy
+
 func @f() {
 ^entry:
   %q: i32 = toy.once @1
@@ -30,6 +36,8 @@ locs {
   @1 = name("q")
 }
 === accept passed-once-to-a-block
+dialects toy
+
 func @f() -> i32 {
 ^entry:
   %q: i32 = toy.once @1
@@ -55,6 +63,8 @@ locs {
   @1 = name("a")
 }
 === reject never-used
+dialects toy
+
 func @f() {
 ^entry:
   %q: i32 = toy.once @1
@@ -66,6 +76,8 @@ locs {
   @1 = name("q")
 }
 === reject used-twice-by-one-op
+dialects toy
+
 func @f() -> i32 {
 ^entry:
   %q: i32 = toy.once @1
@@ -78,6 +90,8 @@ locs {
   @1 = name("q")
 }
 === reject used-by-a-toy-op-and-a-core-op
+dialects toy
+
 func @f() -> i32 {
 ^entry:
   %q: i32 = toy.once @1
@@ -90,6 +104,8 @@ locs {
   @1 = name("q")
 }
 === reject passed-to-two-blocks
+dialects toy
+
 func @f(%c: i1) -> i32 {
 ^entry:
   %q: i32 = toy.once @1
@@ -105,6 +121,8 @@ locs {
   @1 = name("q")
 }
 === reject the-second-of-two-values
+dialects toy
+
 func @f() -> i32 {
 ^entry:
   %p: i32 = toy.once @1

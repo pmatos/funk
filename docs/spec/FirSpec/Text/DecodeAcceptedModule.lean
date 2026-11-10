@@ -80,7 +80,7 @@ its body then holds blocks, which can be written, or nothing, and the
 function is decoded from them.
 :::
 
-:::readable Fir.decodeModule_wellFormed (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (pin := Fir.Text.SModule.Writable) (fingerprint := "4638756508524404831")
+:::readable Fir.decodeModule_wellFormed (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (pin := Fir.Text.SModule.Writable) (fingerprint := "1964490746647289689")
 *Theorem: the decoding step.* Let $`d` be a dialect with a signature,
 validation rules and a text, whose text is lawful. For every module $`s`
 as read that can be written, and every module $`m` of $`d`: when $`s`
@@ -91,7 +91,7 @@ $$`\begin{aligned} & s \text{ can be written} \\ & \wedge\ \mathrm{decodemodule}
 
 Here $`\mathrm{decodemodule}(s) = \mathsf{ok}(m)` says that $`s` decodes
 to $`m` without an error. Each function of $`m` is decoded from an item
-of $`s`, so it is well formed; and $`m` keeps the location table of $`s`,
-which is within the limits. These are the two conditions of a well-formed
-module. This is the last of the parser's three steps.
+of $`s`, so it is well formed; and $`m` keeps the dialect set of $`s`,
+whose names are words, and its location table, which is within the
+limits. These are the three conditions of a well-formed module. This is the last of the parser's three steps.
 :::

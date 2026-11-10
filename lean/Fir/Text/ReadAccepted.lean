@@ -16,8 +16,9 @@ written, the tree it gives can be written too, part by part:
   reference is below 2³²; a block's label is a name, and its arguments
   and ops can be written;
 * an item's parameters can be written, its result types are written as
-  types, and the blocks of its body can be written; a module's items can
-  be written, and each number of its location table is below 2³².
+  types, and the blocks of its body can be written; a module's dialect set
+  names words, its items can be written, and each number of its location
+  table is below 2³².
 
 An op's operands are not in this list: decoding finds each of them among
 the definitions of its function, whose names are names. An item's kind and
@@ -87,8 +88,10 @@ body. -/
 def SItem.Writable (i : SItem) : Prop :=
   (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧ i.body.Writable
 
-/-- A module as read can be written: its items, and its location table. -/
-def SModule.Writable (s : SModule) : Prop := (∀ i ∈ s.items, i.Writable) ∧ s.locs.InLimits
+/-- A module as read can be written: its dialect set, its items, and its
+location table. -/
+def SModule.Writable (s : SModule) : Prop :=
+  (∀ x ∈ s.dialects, isWord x) ∧ (∀ i ∈ s.items, i.Writable) ∧ s.locs.InLimits
 
 /-! # Reading tokens that can be written -/
 

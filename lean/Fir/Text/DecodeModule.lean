@@ -97,10 +97,10 @@ theorem mapM_decodeItem : ∀ {sis : List SItem} {items : List (Item d)},
 module, at any positions, `decodeModule` gives the module back. -/
 theorem Module.WellFormed.decodeModule_eq {m : Module d} (hm : m.WellFormed) {s : SModule}
     (h : s.erase = m.tree) : Text.decodeModule s = .ok m := by
-  obtain ⟨hi, hl⟩ := SModule.erase_eq_tree h
+  obtain ⟨hn, hi, hl⟩ := SModule.erase_eq_tree h
   have hw : ∀ f, Item.func f ∈ m.items → f.WellFormed := fun f hf =>
     hm.funcs f (List.mem_map.mpr ⟨_, hf, rfl⟩)
-  simp only [Text.decodeModule, mapM_decodeItem hw hi, ok_bind, hl]
+  simp only [Text.decodeModule, mapM_decodeItem hw hi, ok_bind, hl, hn]
   rfl
 
 end Fir

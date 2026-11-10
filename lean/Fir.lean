@@ -118,3 +118,4 @@ import Fir.Sum.Dialect
 import Fir.Sum.TextLaws
 import Fir.Sum.PoisonLaws
 import Fir.Core.Names
+import Fir.Validation.DialectSet

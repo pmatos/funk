@@ -1,4 +1,5 @@
 import Fir.Validation.CheckModule
+import Fir.Validation.DialectSet
 import FirRef.Dominance
 import FirRef.LocTable
 import FirRef.PrintModule
@@ -127,9 +128,55 @@ def moduleProblems (m : Module d) : List Problem :=
   (repeats (m.funcs.map (·.name))).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   m.locs.problems ++
-  m.funcs.flatMap (·.problems lk)
+  m.funcs.flatMap (·.problems lk) ++
+  m.dialects.filterMap (fun x => if isWord x then none else
+    some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
+  (repeats m.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
+
+/-! # The dialect set
+
+The check of a module's dialect set lists each function's blocks too, through
+`Func.types` and `Func.allBlocks`, so it has copies here, compiled after
+`allBlocks_eq_allBlocks`. `wordDialects` writes `Func.types` out, as the
+spec's code of `Func.types` calls the spec's walk. The words of a type or of
+an attribute are walked by recursion, once per level of an applied
+attribute, but `fir-ref` decodes only the core dialect, whose ops and types
+hold attributes of one level.
+-/
+
+section
+
+variable {d : Dialect} [DialectText d] [DialectSet d]
+
+/-- `Func.wordDialects`, compiled after `allBlocks_eq_allBlocks`. -/
+def wordDialects (f : Func d) : List String :=
+  let all := f.allBlocks
+  (f.results ++ (f.params ++ all.flatMap Block.defs).map (·.2)).flatMap (fun t => (tyAttr t).dialects) ++
+    all.flatMap fun b => b.body.flatMap fun o => opDialects o.op
+
+@[csimp] theorem wordDialects_eq_wordDialects : @Func.wordDialects = @wordDialects := rfl
+
+/-- `Func.setProblems`, compiled after `wordDialects_eq_wordDialects`. -/
+def funcSetProblems (ns : List Name) (f : Func d) : List Problem :=
+  match f.wordDialects.find? (· ∉ ns) with
+  | some x => [f.problem ("the function writes a word of the dialect " ++ x ++
+      ", which the module's dialect set does not name")]
+  | none => []
+
+@[csimp] theorem setProblems_eq_funcSetProblems : @Func.setProblems = @funcSetProblems := rfl
+
+/-- `Module.setProblems`, compiled after `setProblems_eq_funcSetProblems`. -/
+def moduleSetProblems (m : Module d) : List Problem :=
+  m.dialects.filterMap (fun x => if x ∈ names d then none else
+    some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
+  m.funcs.flatMap (Func.setProblems m.dialects)
+
+@[csimp] theorem setProblems_eq_moduleSetProblems :
+    @Module.setProblems = @moduleSetProblems := rfl
+
+end
 
 /-! # `decide` on validity -/
 

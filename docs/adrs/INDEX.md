@@ -96,6 +96,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-2306](2026-11-09-2306-the-spec-sums-a-base-and-an-extension-over-it.md) | [semantics](../decisions/semantics.md) | The spec sums a base dialect and an extension over it, routing ops and types by prefix | this ADR |
 | [ADR-2026-11-09-2353](2026-11-09-2353-a-base-op-sees-only-the-context-its-base-can-write.md) | [validation](../decisions/validation.md) | In a sum, a base op sees only the context that its base can write | this ADR |
 | [ADR-2026-11-10-0042](2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk-ir's registry routes each word by its dialect prefix and checks names and dependencies at registration | this ADR |
+| [ADR-2026-11-10-1306](2026-11-10-1306-a-module-names-its-dialect-set-on-its-first-line.md) | [text-format](../decisions/text-format.md) | A module names its dialect set on its first line, and the validators reject a word of a dialect outside it | this ADR |
 
 ## Implementation
 

@@ -213,6 +213,9 @@ fn write_locs(out: &mut impl Write, t: &LocTable) -> fmt::Result {
 /// by piece, so the text is never held whole. It stops at the first error
 /// of `out`, which a sink may return to end the text early.
 pub fn write_module(out: &mut impl Write, m: &Module) -> fmt::Result {
+    if !m.dialects.is_empty() {
+        write!(out, "dialects {}\n\n", m.dialects.join(", "))?;
+    }
     for item in &m.items {
         match item {
             Item::Func(f) => write_func(out, f)?,

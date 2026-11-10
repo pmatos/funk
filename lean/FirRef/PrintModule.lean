@@ -155,7 +155,8 @@ decreasing_by
 
 /-- A module in text: `Module.print`, with no stack per level of regions
 and in linear time apart from long integers (#41). -/
-def printModule (m : Module d) : String := printFrames "" [.items m.items, .str m.locs.print]
+def printModule (m : Module d) : String :=
+  printFrames (printDialects m.dialects) [.items m.items, .str m.locs.print]
 
 /-- The loop appends the text of its frames. -/
 theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
@@ -187,6 +188,6 @@ theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
 place of `Module.print`. -/
 @[csimp] theorem print_eq_printModule : @Module.print = @printModule := by
   funext d _ m
-  simp [printModule, printFrames_eq, Frame.text, Module.print]
+  simp [printModule, printFrames_eq, Frame.text, Module.print, String.append_assoc]
 
 end FirRef

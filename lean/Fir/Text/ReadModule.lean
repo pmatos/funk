@@ -4,15 +4,16 @@ import Fir.Text.ReadTable
 /-!
 # Reading a printed module
 
-A module's items read back before the word `locs`, which starts its
-location table, and the table before `eof`. Each item is a function, the
+A module's dialect set reads back first, then its items before the word
+`locs`, which starts its location table, and the table before `eof`. Each item is a function, the
 only kind of item so far, which the previous sections read.
 
 The result is the grammar step: on any tokens that hold the module's
 tokens, then `eof`, at any positions, the reader of a module gives a tree
 that is the module's tree once its positions are erased. It needs only that
 each type the module writes is written as a type, and that its location
-table is within the limits. A well-formed module has both, so with lexing
+table is within the limits; the names of its dialect set are read as any
+words. A well-formed module has both, so with lexing
 printed text the first two steps of the parser read its printed text as its
 tree, and so do they for a valid module. The last step decodes that tree,
 and gives the module back, in the sections that follow.
@@ -55,6 +56,37 @@ theorem readItems_reads : ∀ items : List (Item d),
     simp only [true_and, String.reduceEq, ↓reduceIte, h₁, ok_bind, h₄]
     exact ⟨_, _, rfl, by simp [SItem.eraseList, Item.tree, h₂, h₅], h₆⟩
 
+/-- `readDialectName` reads a word as the name it is, before any token. -/
+theorem readDialectName_reads (x : Name) :
+    Reads readDialectName id x [.word x] (fun _ => True) := by
+  intro ts rest h _
+  take_tok h
+  exact ⟨x, _, rfl, rfl, h⟩
+
+/-- `readDialects` reads the tokens of a module's dialect set as the set,
+before any token but a comma and the word `dialects`. -/
+theorem readDialects_reads (ns : List Name) :
+    Reads readDialects id ns (dialectsTokens ns) (fun t => t ≠ .comma ∧ t ≠ .word "dialects") := by
+  intro ts rest h hs
+  cases ns with
+  | nil =>
+    simp only [dialectsTokens, List.isEmpty_nil, ite_true, List.nil_append] at h
+    rw [readDialects.eq_2 _ fun p ts' he => not_cons_of_head h (fun u hu => (hs u hu).2) p ts' he]
+    exact ⟨[], _, rfl, rfl, h⟩
+  | cons n ns =>
+    simp only [dialectsTokens, List.isEmpty_cons, Bool.false_eq_true, ite_false, List.map_cons,
+      intercalate_cons, List.cons_append, List.nil_append] at h
+    take_tok h
+    take_tok h
+    have hm := Reads.more (item := readDialectName) (f := id) (g := id)
+      (toks := fun x => [Tok.word x]) (stop := fun _ => True) trivial
+      (stop' := fun t => t ≠ .comma ∧ t ≠ .word "dialects") (fun t ht => ⟨trivial, ht.1⟩) (xs := ns) (fun x _ => readDialectName_reads x)
+    obtain ⟨xs, ⟨r, hr⟩, h₁, h₂, h₃⟩ := hm _ rest
+      (by simpa [List.flatMap_map] using h) hs
+    rw [readDialects.eq_1]
+    simp only [readDialectName, ok_bind, h₁]
+    exact ⟨_, _, rfl, by simpa using h₂, h₃⟩
+
 /-- The grammar step: on the tokens of a module, then `eof`, at any
 positions, `readModule` gives the module's tree, up to positions, when each
 type the module writes is written as a type and its location table is
@@ -64,16 +96,24 @@ theorem readModule_tokens {m : Module d}
     {ts : List Token} (h : ts.map (·.tok) = m.tokens ++ [.eof]) :
     ∃ s, readModule ts = .ok s ∧ s.erase = m.tree := by
   simp only [Module.tokens, List.append_assoc] at h
+  have hst : ∀ t ∈ (m.items.flatMap Item.tokens ++ (m.locs.tokens ++ [Tok.eof])).head?,
+      t ≠ .comma ∧ t ≠ .word "dialects" := by
+    apply head?_append
+    · cases m.items with
+      | nil => simp
+      | cons i _ => cases i; simp [Item.tokens, Func.tokens]
+    · simp [LocTable.tokens]
+  obtain ⟨ns, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readDialects_reads m.dialects ts _ h hst
   obtain ⟨items, ⟨r, hr⟩, h₁, h₂, h₃⟩ := readItems_reads m.items
-    (fun f hf => ht f (List.mem_map.mpr ⟨_, hf, rfl⟩)) ts _ h (by simp [LocTable.tokens])
+    (fun f hf => ht f (List.mem_map.mpr ⟨_, hf, rfl⟩)) r₀ _ h₀'' (by simp [LocTable.tokens])
   have h₃' : r.map (·.tok) = .word "locs" :: (m.locs.tokens.tail ++ [.eof]) := by
     simpa [LocTable.tokens] using h₃
   obtain ⟨q, r', rfl, -⟩ := map_tok_cons h₃'
   obtain ⟨locs, ⟨r₂, hr₂⟩, h₄, h₅, h₆⟩ := LocTable.reads m.locs hl _ [.eof] h₃ fun _ _ => trivial
   take_tok h₆
   rw [readModule.eq_1]
-  simp only [h₁, ok_bind, h₄, expect_cons]
-  exact ⟨_, rfl, by simp [SModule.erase, Module.tree, h₂, ← h₅]⟩
+  simp only [h₀, ok_bind, h₁, h₄, expect_cons]
+  exact ⟨_, rfl, by simp [SModule.erase, Module.tree, ← h₀', h₂, ← h₅]⟩
 
 variable [DialectSignature d]
 

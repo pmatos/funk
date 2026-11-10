@@ -199,5 +199,7 @@ theorem sumModule_valid : sumModule.Valid where
     rcases hf with rfl | rfl
     · exact sum_valid
     · exact sum10_valid
+  dialectNames := by simp [sumModule]
+  dialectsUnique := by simp [sumModule]
 
 end FirTest

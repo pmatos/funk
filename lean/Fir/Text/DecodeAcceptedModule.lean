@@ -128,9 +128,9 @@ theorem decodeModule_wellFormed {s : SModule} {m : Module d} (h : decodeModule s
   unfold decodeModule at h
   bind_step h with ⟨items, e, h⟩
   cases h
-  refine ⟨fun f hf => ?_, hw.2⟩
+  refine ⟨hw.1, fun f hf => ?_, hw.2.2⟩
   simp only [Module.funcs, List.mem_map] at hf
   obtain ⟨⟨f'⟩, hi, rfl⟩ := hf
-  exact mapM_decodeItem_wellFormed e hw.1 f' hi
+  exact mapM_decodeItem_wellFormed e hw.2.1 f' hi
 
 end Fir

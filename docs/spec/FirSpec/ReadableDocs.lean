@@ -113,6 +113,7 @@ import FirSpec.Text.DecodeAccepted
 import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
 import FirSpec.Sum.Names
+import FirSpec.Validation.DialectSet
 import FirSpec.Core.Names
 import FirSpec.Sum.Dialect
 import FirSpec.Sum.TextLaws

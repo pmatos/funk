@@ -331,6 +331,8 @@ prefix, and the sum reads each word with that dialect.
 
 {includeReadable "." Fir.Core.Names "The core's words are bare" FirSpec.Core.Names (level := 2)}
 
+{includeReadable "." Fir.Validation.DialectSet "A module's dialect set" FirSpec.Validation.DialectSet (level := 2)}
+
 {includeReadable "." Fir.Sum.Dialect "The sum of dialects" FirSpec.Sum.Dialect (level := 2)}
 
 {includeReadable "." Fir.Sum.TextLaws "The text of a sum" FirSpec.Sum.TextLaws (level := 2)}

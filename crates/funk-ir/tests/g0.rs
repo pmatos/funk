@@ -142,7 +142,13 @@ fn an_op_is_a_name_and_its_parts() {
     assert_eq!(print(&m), bare_op_text("gpu.launch"));
     let ds = verify(&m, &Registry::core());
     let messages: Vec<&str> = ds.iter().map(|d| d.message.as_str()).collect();
-    assert_eq!(messages, ["op gpu.launch is not registered"]);
+    assert_eq!(
+        messages,
+        [
+            "op gpu.launch is not registered",
+            "the function writes a word of the dialect gpu, which the module's dialect set does not name"
+        ]
+    );
 }
 
 #[test]

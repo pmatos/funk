@@ -150,7 +150,7 @@ def decodeItem : SItem → Except ParseError (Item d)
 
 /-- Decodes a module. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do
-  pure ⟨← m.items.mapM decodeItem, m.locs⟩
+  pure ⟨m.dialects, ← m.items.mapM decodeItem, m.locs⟩
 
 end Fir.Text
 

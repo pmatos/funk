@@ -168,13 +168,17 @@ impl Item {
     }
 }
 
-/// A module: its items, then its location table.
+/// A module: its dialect set, its items, then its location table.
 ///
 /// A module is a symbol table over its own items. A nested module would be
 /// an item holding a `Module` with a symbol table of its own, so nothing here
 /// assumes one global table.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Module {
+    /// The dialect set: the names of the dialects other than the core whose
+    /// words the module writes, in the order the text writes them. Empty
+    /// for a module of the core alone (ADR-2026-11-10-1306).
+    pub dialects: Vec<String>,
     /// The items, in order.
     pub items: Vec<Item>,
     /// The location table.

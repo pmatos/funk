@@ -31,7 +31,7 @@ by default the module of `f` alone, with the semantics `s`, on arguments
 that `fir-ref run` reads, `poison` among them. -/
 def runFuncIn (s : DialectDenote CoreDialect Tree) (f : Func CoreDialect)
     (args : List String := []) (fuel : Nat := defaultFuel)
-    (M : Module CoreDialect := ⟨[.func f], []⟩) : Option RunReport :=
+    (M : Module CoreDialect := ⟨[], [.func f], []⟩) : Option RunReport :=
   match readArgs (f.params.map (·.2)) args with
   | .error _ => none
   | .ok vs => letI := s

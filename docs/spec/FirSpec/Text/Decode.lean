@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8898706217334797839")
+:::moduleDocs (fingerprint := "15334796005753321278")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "3535621606043965172")
@@ -68,7 +68,7 @@ blocks, then its parameters, and then its blocks by the second pass, in
 that scope. So its errors are found in that order.
 :::
 
-:::readable Fir.Text.decodeItem Fir.Text.decodeModule (fingerprint := "1223603262505284043")
+:::readable Fir.Text.decodeItem Fir.Text.decodeModule (fingerprint := "18332817918151004258")
 *Definition: decoding an item and a module.* An item decodes only as a
 function:
 
@@ -79,11 +79,13 @@ function:
   them, and one whose body is empty is a function without blocks;
 * any other `func` decodes as a function.
 
-A module decodes each of its items, in order, and keeps its location
-table as it was read.
+A module decodes each of its items, in order, and keeps its dialect set and
+its location table as they were read. Decoding rejects no dialect set:
+whether a set names known dialects, and whether the module's words keep to
+it, is a rule of validation.
 :::
 
-:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "7200152627699517901")
+:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "2585799744947679816")
 *Definition: the parser.* The parser of a dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text] reads a text in
 three steps, and stops at the first error, with its position: it

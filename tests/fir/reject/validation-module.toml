@@ -1,5 +1,6 @@
 # Must-reject texts that parse, and break a rule of validation for the
-# module: unique symbols and a well-formed location table.
+# module: unique symbols, a well-formed location table and a dialect set
+# that names known dialects, each once (ADR-2026-11-10-1306).
 
 [[reject]]
 verdict = "validation-error"
@@ -143,5 +144,53 @@ text = '''
 locs {
   @1 = unknown
   @3 = fused(@1, @2)
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a dialect set names only dialects that the reader holds: the core alone holds no toy"
+text = '''
+dialects toy
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a dialect set never names the core, which every module holds"
+text = '''
+dialects core
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a dialect set names each dialect once, and only dialects that the reader holds: toy twice"
+text = '''
+dialects toy, toy
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
 }
 '''

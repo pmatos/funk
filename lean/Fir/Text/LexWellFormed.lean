@@ -291,7 +291,15 @@ end Func.WellFormed
 theorem Module.WellFormed.tokens_writable {m : Module d} (h : m.WellFormed) :
     ∀ t ∈ m.tokens, t.Writable := by
   simp only [Module.tokens, List.forall_mem_append, List.forall_mem_flatMap]
-  refine ⟨fun i hi => ?_, h.locs.tokens⟩
+  refine ⟨⟨?_, fun i hi => ?_⟩, h.locs.tokens⟩
+  · unfold dialectsTokens
+    split
+    · simp
+    · refine List.forall_mem_cons.mpr ⟨by unfold Tok.Writable; decide,
+        forall_mem_intercalate_of comma_writable ?_⟩
+      simp only [List.mem_map, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂,
+        List.mem_singleton, forall_eq]
+      exact h.dialects
   cases i with
   | func f => exact (h.funcs f (List.mem_map.mpr ⟨_, hi, rfl⟩)).tokens
 

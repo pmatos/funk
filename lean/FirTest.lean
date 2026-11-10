@@ -31,6 +31,7 @@ import FirTest.Toy
 import FirTest.UseOnce
 import FirTest.Mixed
 import FirTest.SumTypes
+import FirTest.DialectSet
 import FirTest.Runs
 import FirTest.ValidSum
 import FirTest.RunsLoops

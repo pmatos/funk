@@ -127,7 +127,7 @@ def broken : Problem :=
 problem at the first op of the entry block. -/
 def Case.holds (c : Case) : Bool :=
   match (Fir.parse c.text : Except ParseError (Module CoreUseOnce)) with
-  | .ok m => m.problems == if c.accept then [] else [broken]
+  | .ok m => m.allProblems == if c.accept then [] else [broken]
   | .error _ => false
 
 #guard cases.length == 9

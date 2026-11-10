@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1086758024943119589")
+:::moduleDocs (fingerprint := "7846098429552708362")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "9078334971116599343")
@@ -173,16 +173,20 @@ item, and a new alternative here. How dialects add kinds of item is not
 decided yet, so fir defines only functions.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "10891783193603547263")
-*Definition: a module.* A module is its items, then its
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "11814683466467004193")
+*Definition: a module.* A module is its dialect set, its items, then its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]:
 
 ```grammar Fir.Module
 \mathit{module}
-items,locs \begin{array}{l} \{\mathsf{items}~\mathit{item}^*, \\ \enspace \mathsf{locs}~(r = \mathit{loc})^*\,\} \end{array}
+dialects,items,locs \begin{array}{l} \{\mathsf{dialects}~\mathit{name}^*, \\ \enspace \mathsf{items}~\mathit{item}^*, \\ \enspace \mathsf{locs}~(r = \mathit{loc})^*\,\} \end{array}
 ```
 
-In text, the items come first and the table, `locs { … }`, ends the module.
+The dialect set names the dialects other than the core whose words the
+module writes; the core is in every module's set and is never named, and a
+module whose set is empty uses the core alone. In text, the dialect set
+comes first, when it names a dialect, then the items, and the table,
+`locs { … }`, ends the module.
 $`\mathrm{funcs}(M)` is the sequence of the functions of the module $`M`,
 in order: the $`\mathit{func}` of each item $`\mathsf{func}~\mathit{func}`.
 

@@ -1,5 +1,6 @@
 //! The verifier: every rule of `Module.Valid` (`lean/Fir/Validation/`), with
-//! each dialect's own rules through the registry.
+//! each dialect's own rules through the registry, and the rule of the
+//! module's dialect set, `Module.InDialectSet`.
 //!
 //! A module that parsed can still be invalid, and the IR can hold what no
 //! text can, such as an ill-typed op that a pass made, so the verifier checks
@@ -7,6 +8,7 @@
 //! that names where the rule broke and carries the IR location of the op.
 
 mod cfg;
+mod dialect_set;
 mod func;
 mod locs;
 mod ops;
@@ -134,5 +136,7 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
             &mut out,
         );
     }
+    dialect_set::check_names(m, &mut out);
+    dialect_set::check_words(m, reg, &mut out);
     out
 }

@@ -6,7 +6,8 @@ import Fir.Text.LexPrint
 The printer writes every op on a line of its own, and every block, region,
 item and the location table end with a line feed or a `}`. So each of them
 is read before whatever follows it, and a module is read piece by piece,
-from its first item to the end of its location table.
+from its dialect set, which ends with a line feed too, to the end of its
+location table.
 
 The result is the last theorem below: for every module whose tokens can be
 written, the lexer reads its printed text as exactly the module's tokens,
@@ -232,12 +233,30 @@ theorem Module.spellsItems (items : List (Item d)) (hw : ∀ t ∈ items.flatMap
       String.reduceToList, List.append_assoc, List.cons_append, List.nil_append]
     exact SpellsAny.append_any hi (SpellsAny.lf ih)
 
+/-- A module's dialect set, then an empty line, reads back as its tokens,
+before any text. -/
+theorem spellsDialects (ns : List Name) (hw : ∀ t ∈ dialectsTokens ns, t.Writable) :
+    SpellsAny (printDialects ns).toList (dialectsTokens ns) := by
+  by_cases he : ns.isEmpty = true
+  · simpa [printDialects, dialectsTokens, he] using SpellsAny.nil
+  · have hall := forall_mem_intercalate (sep := [Tok.comma]) (tss := ns.map ([Tok.word ·]))
+      fun t ht => hw t (by simp only [dialectsTokens, he]; exact List.mem_cons_of_mem _ ht)
+    have hn : SpellsEach (ns.map fun x => x) (ns.map ([Tok.word ·])) :=
+      SpellsEach.map fun x hx => spells_word (hall _ (List.mem_map_of_mem hx) (.word x) (by simp))
+    rw [List.map_id'] at hn
+    intro cs us hl
+    simp only [printDialects, dialectsTokens, he, Bool.false_eq_true, ite_false,
+      String.toList_append, String.reduceToList, List.append_assoc, List.cons_append,
+      List.nil_append]
+    exact Lexes.lit "dialects" ['d', 'i', 'a', 'l', 'e', 'c', 't', 's'] (boundary_space _) <|
+      Lexes.space <| spells_commaSep hn _ _ (boundary_cons (by decide)) <| Lexes.lf <| Lexes.lf hl
+
 /-- A module reads back as its tokens, before any text. -/
 theorem Module.spells (m : Module d) (hw : ∀ t ∈ m.tokens, t.Writable) :
     SpellsAny m.print.toList m.tokens := by
-  simp only [Module.print, Module.tokens, String.toList_append]
-  exact SpellsAny.append_any (Module.spellsItems m.items fun t ht => hw t (List.mem_append_left _ ht))
-    (LocTable.spells m.locs fun t ht => hw t (List.mem_append_right _ ht))
+  simp only [Module.print, Module.tokens, String.toList_append, List.forall_mem_append] at hw ⊢
+  exact SpellsAny.append_any (SpellsAny.append_any (spellsDialects m.dialects hw.1.1)
+    (Module.spellsItems m.items hw.1.2)) (LocTable.spells m.locs hw.2)
 
 /-- Lexing printed text: for every module whose tokens can be written, the
 lexer reads its printed text as exactly its tokens, then `eof`. The

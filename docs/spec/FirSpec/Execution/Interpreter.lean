@@ -99,7 +99,7 @@ This is how block arguments take the values that a branch passes
 (ADR-2026-10-29-2010), and a poison value arrives as poison.
 :::
 
-:::readable Fir.Module.func? (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "10835904503605873279")
+:::readable Fir.Module.func? (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "3654794366578574978")
 *Definition: the function with a symbol.* $`\mathrm{lookup}_M(s)` is the
 first function of the module $`M`, in the order of its items, whose symbol
 is $`s`, or none when there is no such function. A call of $`s` runs it.
