@@ -1,6 +1,7 @@
 //! The verifier: every rule of `Module.Valid` (`lean/Fir/Validation/`), with
 //! each dialect's own rules through the registry, and the rule of the
-//! module's dialect set, `Module.InDialectSet`.
+//! module's dialect sets, `Module.InDialectSet`, for each symbol table of
+//! the module: its own and that of each nested module, at any depth.
 //!
 //! A module that parsed can still be invalid, and the IR can hold what no
 //! text can, such as an ill-typed op that a pass made, so the verifier checks
@@ -16,7 +17,7 @@ mod ops;
 use std::collections::HashSet;
 use std::fmt;
 
-use crate::ir::{Block, Item, LocRef, Module};
+use crate::ir::{Block, LocRef, Module, SymbolTable, Table};
 use crate::registry::Registry;
 use crate::text::print_symbol;
 
@@ -104,12 +105,39 @@ impl fmt::Display for Diagnostic {
 }
 
 /// Checks `m` against every rule of validation, and against the rule of its
-/// dialect set (`Module.InDialectSet`). An empty list means that the module
-/// is valid and keeps to its dialect set.
+/// dialect sets (`Module.InDialectSet`). An empty list means that the module
+/// is valid and keeps to its dialect sets.
+///
+/// The module is checked one symbol table at a time (ADR-2026-11-10-1510):
+/// its own, then that of each nested module, at any depth, each with its
+/// own symbols and dialect set and the module's one location table. The
+/// diagnostics come in the spec's order: the location table, each table's
+/// problems (`SymbolTable.problems`), then each table's dialect set
+/// (`SymbolTable.setProblems`). A problem in a nested module names its
+/// function, as one at the top level does.
 pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
-    let mut out = Vec::new();
+    let keys: HashSet<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
+    let mut out: Vec<Diagnostic> = locs::check(&m.locs, &keys)
+        .into_iter()
+        .map(Diagnostic::module)
+        .collect();
+    let tables = m.tables();
+    for &t in &tables {
+        check_table(t, &keys, reg, &mut out);
+    }
+    for &t in &tables {
+        dialect_set::check_words(t, reg, &mut out);
+    }
+    out
+}
+
+/// The rules of one symbol table (`SymbolTable.Valid`): each symbol names
+/// one item, function or nested module, each function is valid against the
+/// table's own symbols, and the dialect set names each dialect once, by a
+/// word.
+fn check_table(t: Table<'_>, keys: &HashSet<LocRef>, reg: &Registry, out: &mut Vec<Diagnostic>) {
     let mut seen = HashSet::new();
-    for item in &m.items {
+    for item in t.items {
         if !seen.insert(item.name()) {
             let mut d = Diagnostic::module(format!(
                 "the symbol {} names more than one item",
@@ -119,33 +147,14 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
             out.push(d);
         }
     }
-    for item in &m.items {
-        if let Item::Module(n) = item {
-            out.push(Diagnostic::module(format!(
-                "the nested module {} is not valid yet",
-                print_symbol(&n.name)
-            )));
-        }
+    let symbols = SymbolTable::of(t.items);
+    let cx = func::Context {
+        symbols: &symbols,
+        locs: keys,
+        reg,
+    };
+    for f in t.funcs() {
+        func::check(f, &cx, out);
     }
-    let keys: HashSet<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
-    out.extend(
-        locs::check(&m.locs, &keys)
-            .into_iter()
-            .map(Diagnostic::module),
-    );
-    let symbols = m.symbols();
-    for f in m.funcs() {
-        func::check(
-            f,
-            &func::Context {
-                symbols: &symbols,
-                locs: &keys,
-                reg,
-            },
-            &mut out,
-        );
-    }
-    dialect_set::check_names(m, &mut out);
-    dialect_set::check_words(m, reg, &mut out);
-    out
+    dialect_set::check_names(t.dialects, out);
 }

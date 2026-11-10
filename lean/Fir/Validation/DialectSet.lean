@@ -15,6 +15,12 @@ set may name, and that the module's words keep to it:
   the name of each op and each word of its attributes, and each word of
   each type that a function states, at any depth.
 
+A module nested in another has a dialect set of its own, not its parent's
+(ADR-2026-11-10-1510), so the rule holds for each symbol table of a module:
+its own and that of each nested module, each against its own set. A nested
+module whose set names no dialect uses the core alone, whatever its parent
+names.
+
 So the words of a module of the sum `core ⊞ toy` that names no dialect are
 the core's alone, and its first `toy.` word breaks the rule. A word's
 dialect is the part before its first `.`, as the section on words and
@@ -48,30 +54,41 @@ def Func.wordDialects (f : Func d) : List String :=
 
 variable [DialectSet d]
 
-/-- A module keeps to its dialect set: the set names only dialects of `d`'s
-set, and every word of the module names the core or a dialect of its set. -/
-structure Module.InDialectSet (m : Module d) : Prop where
-  known : ∀ x ∈ m.dialects, x ∈ names d
-  words : ∀ f ∈ m.funcs, ∀ x ∈ f.wordDialects, x ∈ m.dialects
+/-- A symbol table keeps to its dialect set: the set names only dialects of
+`d`'s set, and every word of the table's functions names the core or a
+dialect of its set. -/
+structure SymbolTable.InDialectSet (t : SymbolTable d) : Prop where
+  known : ∀ x ∈ t.dialects, x ∈ names d
+  words : ∀ f ∈ t.funcs, ∀ x ∈ f.wordDialects, x ∈ t.dialects
+
+/-- A module keeps to its dialect sets: each of its symbol tables, its own
+and that of each nested module, keeps to its own set. -/
+def Module.InDialectSet (m : Module d) : Prop := ∀ t ∈ m.tables, t.InDialectSet
 
 /-- The problem of a function that writes a word of a dialect that its
-module's set does not name: the first such dialect, if there is one. -/
+table's set does not name: the first such dialect, if there is one. -/
 def Func.setProblems (ns : List Name) (f : Func d) : List Problem :=
   match f.wordDialects.find? (· ∉ ns) with
   | some x => [f.problem ("the function writes a word of the dialect " ++ x ++
       ", which the module's dialect set does not name")]
   | none => []
 
-/-- The problems of a module's dialect set: each dialect that it names and
-`d` does not hold, then each function that writes a word outside it. -/
-def Module.setProblems (m : Module d) : List Problem :=
-  m.dialects.filterMap (fun x => if x ∈ names d then none else
+/-- The problems of a symbol table's dialect set: each dialect that it names
+and `d` does not hold, then each function that writes a word outside it. -/
+def SymbolTable.setProblems (t : SymbolTable d) : List Problem :=
+  t.dialects.filterMap (fun x => if x ∈ names d then none else
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
-  m.funcs.flatMap (Func.setProblems m.dialects)
+  t.funcs.flatMap (Func.setProblems t.dialects)
 
-/-- The check of a module's dialect set decides `Module.InDialectSet`. -/
-theorem Module.setProblems_eq_nil_iff (m : Module d) : m.setProblems = [] ↔ m.InDialectSet := by
-  simp only [Module.setProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
+/-- The problems of a module's dialect sets: those of each of its symbol
+tables, in order. -/
+def Module.setProblems (m : Module d) : List Problem := m.tables.flatMap SymbolTable.setProblems
+
+/-- The check of a symbol table's dialect set decides
+`SymbolTable.InDialectSet`. -/
+theorem SymbolTable.setProblems_eq_nil_iff (t : SymbolTable d) :
+    t.setProblems = [] ↔ t.InDialectSet := by
+  simp only [SymbolTable.setProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
     ite_none_eq_none, List.flatMap_eq_nil_iff, Func.setProblems]
   constructor
   · rintro ⟨hk, hw⟩
@@ -89,6 +106,11 @@ theorem Module.setProblems_eq_nil_iff (m : Module d) : m.setProblems = [] ↔ m.
       simp only [decide_eq_true_eq] at this
       exact absurd (hw f hf x (List.mem_of_find?_eq_some hx)) this
     · rfl
+
+/-- The check of a module's dialect sets decides `Module.InDialectSet`. -/
+theorem Module.setProblems_eq_nil_iff (m : Module d) : m.setProblems = [] ↔ m.InDialectSet := by
+  simp only [Module.setProblems, List.flatMap_eq_nil_iff, SymbolTable.setProblems_eq_nil_iff,
+    Module.InDialectSet]
 
 instance (m : Module d) : Decidable m.InDialectSet :=
   decidable_of_iff _ m.setProblems_eq_nil_iff

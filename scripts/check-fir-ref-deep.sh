@@ -3,7 +3,8 @@
 # fir-ref that it builds: scripts/check-fir-ref-deep.sh FIR_REF. On a 256
 # KiB stack, fir-ref fmt and validate give texts nested a million levels
 # deep in attributes, in functions, in modules and in regions, and a block
-# of a million ops, their verdicts, never an abort.
+# of a million ops, their verdicts, never an abort, and validate accepts
+# valid modules nested a million levels deep.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -51,6 +52,12 @@ awk -v end="$ending" 'BEGIN {
     printf "bad @b() {\n%s", end
 }' >"$tmp/deep-modules.fir"
 awk -v end="$ending" 'BEGIN {
+    for (i = 0; i < 1000000; i++) printf "module @a() {\n"
+    printf "func @a() {\n^e:\nret @0\n"
+    for (i = 0; i < 1000000; i++) printf "}\n"
+    printf "%s", end
+}' >"$tmp/valid-modules.fir"
+awk -v end="$ending" 'BEGIN {
     printf "func @f() {\n^e:\n"
     for (i = 0; i < 1000000; i++) printf "br {\n^b:\n"
     printf "ret %%x @0\n"
@@ -62,11 +69,17 @@ awk -v end="$ending" 'BEGIN {
     for (i = 0; i < 1000000; i++) printf "  %%c%d: i32 = const %d @0\n", i, i
     printf "  ret @0\n%s", end
 }' >"$tmp/ops.fir"
-# deep NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB stack, fir-ref fmt
-# --check and validate give $tmp/NAME.fir, WHAT, the parse error at LINE
-# and COLUMN with MESSAGE, or, without one, accept it, and print exactly
-# that verdict.
+# deep [--validate-only] NAME WHAT [LINE COLUMN MESSAGE]: on a 256 KiB
+# stack, fir-ref fmt --check and validate give $tmp/NAME.fir, WHAT, the
+# parse error at LINE and COLUMN with MESSAGE, or, without one, accept it,
+# and print exactly that verdict. With --validate-only, only validate reads
+# it: a text whose canonical form is too large to print.
 deep() {
+    local cmds=("fmt --check" validate)
+    if [[ $1 == --validate-only ]]; then
+        cmds=(validate)
+        shift
+    fi
     local file=$tmp/$1.fir what=$2 verdict=accepted diags='' want_rc=0 fail=0
     local cmd rc out err want_out want_err
     shift 2
@@ -75,7 +88,7 @@ deep() {
         printf -v diags '{"kind":"parse-error","message":"%s","line":%s,"column":%s}' \
             "$3" "$1" "$2"
     fi
-    for cmd in "fmt --check" validate; do
+    for cmd in "${cmds[@]}"; do
         want_out='' want_err=''
         if [[ $cmd == validate ]]; then
             printf -v want_out '{"file":"%s","verdict":"%s","diagnostics":[%s]}' \
@@ -107,4 +120,9 @@ deep deep-modules "modules nested a million levels deep" 2000001 1 \
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
+# Valid modules nested a million levels deep, the innermost holding a
+# function, each a symbol table of its own (ADR-2026-11-10-1510). Their
+# canonical form indents each level two spaces deeper, so only validate
+# reads them.
+deep --validate-only valid-modules "valid modules nested a million levels deep" || status=1
 exit "$status"

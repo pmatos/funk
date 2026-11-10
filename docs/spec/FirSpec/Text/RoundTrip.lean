@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6101803878320670846")
+:::moduleDocs (fingerprint := "3650873460291634123")
 :::
 
 :::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
@@ -143,25 +143,29 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.Location.limit) (fingerprint := "16352145579292145560")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "14076724405672915249")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
 
-* for every module $`m` whose location table is valid, every function
-  $`f` that is
+* for every location table that is valid, every function $`f` that is
   {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
-  the context of $`m` is well formed;
+  a context whose references are those of the table is well formed;
+* the items of a valid symbol table, whose nested tables are all valid,
+  are well formed, at any depth;
 * every valid module of $`d` is well formed.
 
 The proof reads each condition of well-formedness off a rule of validation
-or a law of the text. Validation gives items that are all functions,
-distinct value names that are names, labels that are names, valid types,
-a body of the core's kind, ops that own no region, and so no region that
-names a kind, operand and result types that match the op instance,
-successors that name blocks of the function and pass values that it
-defines, and location references that are keys of the table, whose keys
-are below $`2^{32}`, and a dialect set whose names are words. The laws
-give op names that are words, attributes that can be written, and valid
-types that are written as types and read back.
+or a law of the text. Validation gives distinct value names that are
+names, labels that are names, valid types, a body of the core's kind, ops
+that own no region, and so no region that names a kind, operand and result
+types that match the op instance, successors that name blocks of the
+function and pass values that it defines, and location references that are
+keys of the table, whose keys are below $`2^{32}`, and dialect sets whose
+names are words, the module's own and each nested module's. The laws give
+op names that are words, attributes that can be written, and valid types
+that are written as types and read back. A nested module is well formed
+when its set's names are words and its items are well formed, which its
+own table, valid like every table of the module, gives, by induction on
+the nesting.
 :::

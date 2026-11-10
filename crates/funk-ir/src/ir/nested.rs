@@ -11,7 +11,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 
 use super::debug::{Bracket, DebugTree};
-use super::module::{Func, Item};
+use super::module::{Func, Item, Module};
 use super::tree::{self, Nest, Node, Step, walk};
 
 /// A module nested in another, as an item of kind `module`
@@ -36,6 +36,57 @@ impl NestedModule {
             dialects: Vec::new(),
             items: Vec::new(),
         }
+    }
+}
+
+/// A symbol table of a module (`SymbolTable` in
+/// `lean/Fir/Validation/Scope.lean`): the dialect set and the items of the
+/// module, or of a module nested in it.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Table<'a> {
+    pub dialects: &'a [String],
+    pub items: &'a [Item],
+}
+
+impl<'a> Table<'a> {
+    /// The table of a nested module.
+    fn of(m: &'a NestedModule) -> Table<'a> {
+        Table {
+            dialects: &m.dialects,
+            items: &m.items,
+        }
+    }
+
+    /// The table's functions, in order. A nested module's are its own.
+    pub fn funcs(self) -> impl Iterator<Item = &'a Func> {
+        self.items.iter().filter_map(Item::as_func)
+    }
+}
+
+impl Module {
+    /// The module's own symbol table: its dialect set and its items.
+    pub(crate) fn table(&self) -> Table<'_> {
+        Table {
+            dialects: &self.dialects,
+            items: &self.items,
+        }
+    }
+
+    /// Every symbol table of the module, in the order of `Module.tables`:
+    /// its own, then that of each nested module, at any depth, each before
+    /// the tables nested in it. A walk keeps the path on the heap, so this
+    /// takes no stack per level of nesting.
+    pub(crate) fn tables(&self) -> Vec<Table<'_>> {
+        let nested = self.items.iter().flat_map(|i| match i {
+            Item::Module(n) => Some(walk(Entry::Module(n)).filter_map(Step::entered)),
+            Item::Func(_) => None,
+        });
+        std::iter::once(self.table())
+            .chain(nested.flatten().filter_map(|e| match e {
+                Entry::Module(m) => Some(Table::of(m)),
+                Entry::Func(_) => None,
+            }))
+            .collect()
     }
 }
 

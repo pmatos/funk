@@ -131,21 +131,21 @@ theorem gFn_valid : gFn.Valid ubModule.context where
   dialect := trivial
 
 /-- The module of `@count` and `@g` is valid. -/
-theorem ubModule_valid : ubModule.Valid where
-  symbolsUnique := by decide
-  flat := by decide
-  locs := ⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
+theorem ubModule_valid : ubModule.Valid := Module.valid_of_flat
+  (by decide)
+  (by decide)
+  (⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
     simp only [ubModule, List.mem_cons, List.not_mem_nil, or_false] at he
     subst he
-    simp [Location.WellFormed, Location.refs]⟩
-  funcs f hf := by
+    simp [Location.WellFormed, Location.refs]⟩)
+  (fun f hf => by
     simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
       List.not_mem_nil, or_false] at hf
     rcases hf with rfl | rfl
     · exact countFn_valid
-    · exact gFn_valid
-  dialectNames := by simp [ubModule]
-  dialectsUnique := by simp [ubModule]
+    · exact gFn_valid)
+  (by simp [ubModule])
+  (by simp [ubModule])
 
 /-- The new body of `@g`: it calls `@count` back on its argument. -/
 def gBody : Region CoreDialect := ⟨none, [

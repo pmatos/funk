@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7805917909892943464")
+:::moduleDocs (fingerprint := "3930274354973762683")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -98,6 +98,51 @@ where $`g` is the first function of $`M` with the symbol $`s`.
 
 A valid module has one function for each symbol. A call is valid only when
 the symbol table gives its symbol the type the call states.
+:::
+
+:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.symbols (fingerprint := "18081840893550951667")
+*Definition: a symbol table of a module.* A module nested in another is a
+symbol table of its own, with its own dialect set (ADR-2026-11-10-1510). A
+_symbol table_ $`T` is a dialect set $`\mathrm{dialects}(T)` and a list of
+items $`\mathrm{items}(T)`: those of a module, or of a module nested in
+one. Its functions $`\mathrm{funcs}(T)` are the items of $`T` that are
+functions, in order; the functions of a nested module are those of its own
+table. Its symbol table $`\mathrm{symtab}_T(s)` is the type of the first
+function of $`T` whose symbol is $`s`, as for a module:
+
+$$`\mathrm{symtab}_T(s) = \mathrm{type}(g)`
+
+where $`g` is the first function of $`\mathrm{funcs}(T)` with the symbol
+$`s`. A nested module's symbol names no function, so no op refers to it.
+:::
+
+:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "9662001617122106345")
+*Definition: the symbol tables of a module.* The tables that an item
+holds, at any depth, are none for a function, and for a nested module with
+the dialect set $`D` and the items $`I`, its own table $`(D, I)`, then the
+tables that $`I` holds. The tables that a list of items holds are those of
+each item, in order:
+
+$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
+
+A module's own table, $`\mathrm{table}(M)`, is its dialect set and its
+items, and its tables are its own, then those that its items hold:
+$`\mathrm{tables}(M) = \mathrm{table}(M) \cdot \mathrm{tables}^*(\mathrm{items}(M))`.
+So each table comes before the tables nested in it.
+:::
+
+:::readable Fir.funcNames_sublist Fir.Item.tablesIn_eq_nil Fir.Item.mem_tablesIn Fir.Module.table_funcs Fir.Module.table_symbols (fingerprint := "16289454389313836746")
+*Theorems: the symbol tables of items.* For every list of items $`I`:
+
+* the symbols of the functions of $`I` are some of the symbols of $`I`, in
+  order, so when the symbols of $`I` are distinct, so are those of its
+  functions;
+* when every item of $`I` is a function, $`I` holds no table;
+* each table that an item of $`I` holds is a table that $`I` holds.
+
+A module's own table has the module's functions and gives the module's
+symbol table: $`\mathrm{funcs}(\mathrm{table}(M)) = \mathrm{funcs}(M)` and
+$`\mathrm{symtab}_{\mathrm{table}(M)} = \mathrm{symtab}_M`.
 :::
 
 :::readable Fir.OpContext (fingerprint := "11106651158325661476")

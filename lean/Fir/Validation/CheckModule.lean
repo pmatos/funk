@@ -1,11 +1,12 @@
 import Fir.Validation.CheckFuncs
 
 /-!
-The check of a module follows the rule of a valid module: the symbols of
-its functions, that each item is a function, its location table, each
-function, in the context of the module, then its dialect set. It builds the
-module's symbol table and the set of its location references once, as hash
-tables, and every function looks them up.
+The check of a module follows the rule of a valid module: its location
+table, then each of its symbol tables, its own and that of each nested
+module: the symbols of its items, each function, in the context of the
+table, then its dialect set. It builds the set of the module's location
+references once, and each table's symbols once, as hash tables, and every
+function looks them up.
 
 # The location table
 
@@ -78,45 +79,60 @@ theorem LocTable.problems_eq_nil (t : LocTable) : t.problems = [] ↔ t.Valid :=
 
 /-!
 # Modules
+
+A module is checked one symbol table at a time: its own, then that of each
+nested module, at any depth, each with its own symbols and dialect set, and
+all with the module's one set of location references.
 -/
 
-/-- The module's symbol table and location references, as hash tables. -/
-def Module.lookup (m : Module d) : Lookup d :=
-  let symbols := firsts (m.funcs.map fun f => (f.name, f.type))
-  let held := Std.HashSet.ofList (m.locs.map (·.1))
+/-- The lookup of a symbol table: its symbols, as a hash table, and the
+references `held` of the module's location table. -/
+def SymbolTable.lookup (held : Std.HashSet LocRef) (t : SymbolTable d) : Lookup d :=
+  let symbols := firsts (t.funcs.map fun f => (f.name, f.type))
   ⟨fun s => symbols[s]?, held.contains⟩
 
-theorem Module.lookup_agrees (m : Module d) : m.lookup.Agrees m.context where
+theorem SymbolTable.lookup_agrees (keys : List LocRef) (t : SymbolTable d) :
+    (t.lookup (Std.HashSet.ofList keys)).Agrees (t.context keys) where
   symbols := by
     funext s
-    simp [Module.lookup, Module.context, Module.symbols, getElem?_firsts, List.find?_map,
-      Function.comp_def]
-  hasLoc r := by simp [Module.lookup, Module.context]
+    simp [SymbolTable.lookup, SymbolTable.context, SymbolTable.symbols, getElem?_firsts,
+      List.find?_map, Function.comp_def]
+  hasLoc r := by simp [SymbolTable.lookup, SymbolTable.context]
 
 variable [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d]
 
-/-- The problems of a module: every rule of validation that it breaks. -/
-def Module.problems (m : Module d) : List Problem :=
-  let lk := m.lookup
-  (repeats (m.funcs.map (·.name))).map (fun s =>
+/-- The problems of a symbol table, with the references `held` of the
+module's location table: every rule of a valid table that it breaks. -/
+def SymbolTable.problems (held : Std.HashSet LocRef) (t : SymbolTable d) : List Problem :=
+  let lk := t.lookup held
+  (repeats (t.items.map Item.name)).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
-  m.items.filterMap (fun i => if i.func?.isSome then none else
-    some { message := "the nested module " ++ Text.printSymbol i.name ++ " is not valid yet" }) ++
-  m.locs.problems ++
-  m.funcs.flatMap (·.problems lk) ++
-  m.dialects.filterMap (fun x => if isWord x then none else
+  t.funcs.flatMap (·.problems lk) ++
+  t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
-  (repeats m.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
+  (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
+
+/-- The check of a symbol table decides `SymbolTable.Valid`. -/
+theorem SymbolTable.problems_eq_nil_iff (keys : List LocRef) (t : SymbolTable d) :
+    t.problems (Std.HashSet.ofList keys) = [] ↔ t.Valid keys := by
+  simp only [SymbolTable.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
+    List.flatMap_eq_nil_iff, Func.problems_eq_nil (t.lookup_agrees keys),
+    List.filterMap_eq_nil_iff, ite_none_eq_none]
+  exact ⟨fun ⟨⟨⟨a, b⟩, c⟩, e⟩ => ⟨a, b, c, e⟩, fun ⟨a, b, c, e⟩ => ⟨⟨⟨a, b⟩, c⟩, e⟩⟩
+
+/-- The problems of a module: those of its location table, then those of
+each of its symbol tables, in order. -/
+def Module.problems (m : Module d) : List Problem :=
+  let held := Std.HashSet.ofList (m.locs.map (·.1))
+  m.locs.problems ++ m.tables.flatMap (·.problems held)
 
 /-- The validation check decides `Module.Valid`: a module has no problems
 exactly when it is valid. -/
 theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid := by
-  simp only [Module.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
-    LocTable.problems_eq_nil, List.flatMap_eq_nil_iff, Func.problems_eq_nil m.lookup_agrees,
-    List.filterMap_eq_nil_iff, ite_none_eq_none]
-  exact ⟨fun ⟨⟨⟨⟨⟨a, g⟩, b⟩, c⟩, e⟩, f⟩ => ⟨a, g, b, c, e, f⟩,
-    fun ⟨a, g, b, c, e, f⟩ => ⟨⟨⟨⟨⟨a, g⟩, b⟩, c⟩, e⟩, f⟩⟩
+  simp only [Module.problems, List.append_eq_nil_iff, LocTable.problems_eq_nil,
+    List.flatMap_eq_nil_iff, SymbolTable.problems_eq_nil_iff]
+  exact ⟨fun ⟨a, b⟩ => ⟨a, b⟩, fun ⟨a, b⟩ => ⟨a, b⟩⟩
 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 

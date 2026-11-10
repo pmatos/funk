@@ -24,6 +24,7 @@ import FirTest.Read
 import FirTest.ReadDeep
 import FirTest.ValidateOps
 import FirTest.Validate
+import FirTest.ValidateNested
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore
@@ -48,6 +49,11 @@ import FirTest.Memory
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
+import FirTest.FloatModel
+import FirTest.FloatModelFma
+import FirTest.FloatModelF16
+import FirTest.FloatModelBf16
+import FirTest.FloatModelF128
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

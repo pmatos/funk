@@ -245,18 +245,18 @@ fn items_nest_to_any_depth() {
 }
 
 /// Nested modules (ADR-2026-11-10-1510) parse, verify, clone, compare, hash,
-/// debug-format and drop at any depth. Their canonical text, indented two
-/// spaces deeper at each level, is printed 3,000 levels deep.
+/// debug-format and drop at any depth: each is a valid symbol table of its
+/// own, and a symbol named twice at the bottom is found. Their canonical
+/// text, indented two spaces deeper at each level, is printed 3,000 levels
+/// deep.
 #[test]
 fn modules_nest_to_any_depth() {
     on_small_stack(|| {
         let text = module_nest_text(DEPTH);
         let reg = registry();
-        let m = parse(&text, &reg).expect("the text parses");
+        let mut m = parse(&text, &reg).expect("the text parses");
         drop(text);
-        let ds = verify(&m, &reg);
-        assert_eq!(ds.len(), 1, "{ds:?}");
-        assert!(ds[0].message.contains("nested module"), "{ds:?}");
+        assert_eq!(verify(&m, &reg), vec![]);
         copies_and_compares(&m, module_nest_text, DEPTH, |m| {
             innermost_module(m).name = "n".into();
         });
@@ -271,5 +271,11 @@ fn modules_nest_to_any_depth() {
         canonical.push_str("locs {\n}\n");
         let shallow = parse(&module_nest_text(depth), &reg).expect("the text parses");
         assert!(print(&shallow) == canonical);
+        let inner = innermost_module(&mut m);
+        inner.items.push(Item::Module(NestedModule::new("d")));
+        inner.items.push(Item::Module(NestedModule::new("d")));
+        let ds = verify(&m, &reg);
+        assert_eq!(ds.len(), 1, "{ds:?}");
+        assert_eq!(ds[0].message, "the symbol @d names more than one item");
     });
 }

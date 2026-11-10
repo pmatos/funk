@@ -83,9 +83,16 @@ def Operation.uses (o : Operation d) : List Name :=
 /-!
 # Symbols
 
-A module is a symbol table: each function's name is a symbol, and ops refer
+A module is a symbol table: each item's name is a symbol, and ops refer
 to functions only through symbols (ADR-2026-10-29-2012). The type of a
 function is its parameter types and its result types.
+
+A module nested in another is a symbol table of its own, with its own
+dialect set (ADR-2026-11-10-1510). So a module holds a symbol table at each
+level of nesting: its own, and that of each nested module, at any depth. An
+op refers by symbol only to a function of the table that holds its
+function, never into a nested module or out of one, and validation checks
+each table with the same rule.
 -/
 
 /-- The type of a function: what it takes and what it returns. -/
@@ -99,6 +106,73 @@ def Func.type (f : Func d) : FuncType d := ⟨f.params.map (·.2), f.results⟩
 /-- The module's symbol table: the type of the function each symbol names. -/
 def Module.symbols (m : Module d) (s : Name) : Option (FuncType d) :=
   (m.funcs.find? (·.name == s)).map Func.type
+
+/-- A symbol table: the dialect set and the items of a module, or of a
+module nested in one. -/
+structure SymbolTable (d : Dialect) where
+  dialects : List Name
+  items : List (Item d)
+
+/-- The functions of a symbol table, in order. The functions of a nested
+module are those of its own table. -/
+def SymbolTable.funcs (t : SymbolTable d) : List (Func d) :=
+  t.items.filterMap Item.func?
+
+/-- The type of the function that each symbol of a table names: its first
+function with that symbol. -/
+def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
+  (t.funcs.find? (·.name == s)).map Func.type
+
+mutual
+/-- The symbol tables that an item holds, at any depth: none for a function,
+and a nested module's own, then those its items hold. -/
+def Item.tables : Item d → List (SymbolTable d)
+  | .func _ => []
+  | .module _ ds is => ⟨ds, is⟩ :: Item.tablesIn is
+
+/-- The symbol tables that a list of items holds, at any depth, in order. -/
+def Item.tablesIn : List (Item d) → List (SymbolTable d)
+  | [] => []
+  | i :: is => i.tables ++ Item.tablesIn is
+end
+
+/-- A module's own symbol table: its dialect set and its items. -/
+def Module.table (m : Module d) : SymbolTable d := ⟨m.dialects, m.items⟩
+
+/-- Every symbol table of a module: its own, then that of each nested
+module, at any depth, each before the tables nested in it. -/
+def Module.tables (m : Module d) : List (SymbolTable d) := m.table :: Item.tablesIn m.items
+
+/-- The functions of a list of items are named by some of its symbols, in
+order. -/
+theorem funcNames_sublist : ∀ is : List (Item d),
+    ((is.filterMap Item.func?).map (·.name)).Sublist (is.map Item.name)
+  | [] => .slnil
+  | .func _ :: is => .cons_cons _ (funcNames_sublist is)
+  | .module .. :: is => .cons _ (funcNames_sublist is)
+
+/-- Items that are all functions hold no symbol table. -/
+theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.isSome) →
+    Item.tablesIn is = []
+  | [], _ => rfl
+  | .func _ :: _, h => by
+    rw [Item.tablesIn, Item.tables, Item.tablesIn_eq_nil fun j hj => h j (List.mem_cons_of_mem _ hj)]
+    rfl
+  | .module .. :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
+
+/-- The tables that an item of a list holds are tables of the list. -/
+theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →
+    ∀ u ∈ i.tables, u ∈ Item.tablesIn is
+  | _ :: _, hi, u, hu => by
+    rw [Item.tablesIn, List.mem_append]
+    rcases List.mem_cons.mp hi with rfl | h
+    · exact .inl hu
+    · exact .inr (Item.mem_tablesIn h u hu)
+
+/-- A module's own table holds its functions, and gives its symbols. -/
+@[simp] theorem Module.table_funcs (m : Module d) : m.table.funcs = m.funcs := rfl
+
+@[simp] theorem Module.table_symbols (m : Module d) : m.table.symbols = m.symbols := rfl
 
 /--
 What a dialect's op rules may look at: the module's symbol table and the
