@@ -26,6 +26,23 @@ constructor and a parser change (ADR-2026-11-03-0600). The M1 design registers
 kinds of item through the one grammar, so a new kind needs no parser change
 (ADR-2026-11-09-1543).
 
+## The dialect set
+
+A module's text may start with its dialect set: the word `dialects`, the
+names of the dialects other than the core whose words it writes, separated
+by `, `, then an empty line, as in `dialects toy, gpu`. A module that names
+no dialect has no such line, so every M0 text is unchanged. The word
+`dialects` is no item's kind. The names keep the order the text gives them
+(ADR-2026-11-10-1306).
+
+A valid module names each dialect once, by a word. Each name must be a
+dialect that the reader holds, other than the core, and every word of the
+module must name the core or a dialect of its set: op names, attribute
+words and type words, at any depth. Both validators check this beside
+`Module.Valid`, as `Module.InDialectSet` (ADR-2026-11-10-1306).
+
+## One format
+
 Text is fir's only format in v0. A binary format is left out on purpose. It
 can come later if text parsing becomes a bottleneck (ADR-2026-10-29-2014).
 

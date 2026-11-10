@@ -121,6 +121,8 @@ fn registry() -> Registry {
 }
 
 const TOY_MODULE: &str = "\
+dialects toy
+
 func @g(%n: i32, %c: i1) -> i32 {
 ^entry:
   %t: toy.tok = toy.make @1
@@ -191,9 +193,12 @@ fn an_op_or_type_that_no_dialect_decodes_is_a_parse_error() {
     );
 }
 
-/// A function `@f(%n: i32, %c: i1) -> i32` with this body.
+/// A function `@f(%n: i32, %c: i1) -> i32` with this body, in a module whose
+/// dialect set names `toy`.
 fn branches(body: &str) -> String {
-    format!("func @f(%n: i32, %c: i1) -> i32 {{\n{body}}}\n\nlocs {{\n  @0 = unknown\n}}\n")
+    format!(
+        "dialects toy\n\nfunc @f(%n: i32, %c: i1) -> i32 {{\n{body}}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+    )
 }
 
 fn diags(text: &str) -> Vec<String> {
@@ -279,7 +284,7 @@ fn a_symbol_that_an_op_refers_to_must_name_a_function() {
 
 #[test]
 fn a_dialect_rule_can_read_the_op_context() {
-    let text = "func @forbidden() {\n^entry:\n  %t: toy.tok = toy.make @0\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+    let text = "dialects toy\n\nfunc @forbidden() {\n^entry:\n  %t: toy.tok = toy.make @0\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
     assert!(
         diags(text)
             .iter()
@@ -330,7 +335,7 @@ fn errors_inside_regions_point_at_their_text() {
 
 #[test]
 fn types_are_extensible_and_checked() {
-    let text = "func @f(%v: toy.vec(0)) {\n^entry:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
+    let text = "dialects toy\n\nfunc @f(%v: toy.vec(0)) {\n^entry:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n";
     assert!(
         diags(text)
             .iter()

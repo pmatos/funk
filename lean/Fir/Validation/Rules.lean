@@ -2,8 +2,8 @@ import Fir.Validation.Dominance
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
-its symbols are unique, its location table is well formed, and each of its
-functions is valid. A function is valid when its blocks, its ops and its
+its symbols are unique, its location table is well formed, each of its
+functions is valid, and its dialect set names each dialect once, by a word. A function is valid when its blocks, its ops and its
 successors obey the rules below, and each op obeys its dialect's rule.
 
 # Ops
@@ -116,12 +116,18 @@ def Module.context (m : Module d) : ModuleContext d :=
 
 /--
 A module is valid when each symbol names one function, its location table is
-well formed, and each of its functions is valid.
+well formed, each of its functions is valid, and its dialect set names each
+dialect once, by a word. Which dialects the set may name, and that the
+module's words name only those, is the rule of a module's dialect set, in
+the chapter on sums of dialects: it reads the words of the module, which
+the dialect's text gives.
 -/
 structure Module.Valid (m : Module d) : Prop where
   symbolsUnique : (m.funcs.map (·.name)).Nodup
   locs : LocTable.Valid m.locs
   funcs : ∀ f ∈ m.funcs, f.Valid m.context
+  dialectNames : ∀ x ∈ m.dialects, isWord x
+  dialectsUnique : m.dialects.Nodup
 
 /-!
 # Valid op instances

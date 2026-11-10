@@ -28,8 +28,8 @@ is its blocks, even when it has none: a function's tokens after its `{`
 start with a label or are its `}`, never a word, so the grammar reads its
 body as blocks. Each op is its results, its name and attributes as the
 dialect writes them, its operands, its successors, its regions and its
-location reference. Each type is the attribute that writes it. The location
-table is the module's own.
+location reference. Each type is the attribute that writes it. The dialect
+set and the location table are the module's own.
 
 The tree that the grammar reads holds the position of each part that
 decoding can reject, taken from the tokens. A module has no positions, so
@@ -99,7 +99,7 @@ def SItem.eraseList : List SItem → List SItem
 end
 
 /-- A module's tree without its positions. -/
-def SModule.erase (s : SModule) : SModule := ⟨SItem.eraseList s.items, s.locs⟩
+def SModule.erase (s : SModule) : SModule := ⟨s.dialects, SItem.eraseList s.items, s.locs⟩
 
 theorem SOp.eraseList_eq_map : ∀ os : List SOp, SOp.eraseList os = os.map SOp.erase
   | [] => rfl
@@ -157,8 +157,9 @@ def Func.tree (f : Func d) : SItem :=
 def Item.tree : Item d → SItem
   | .func f => f.tree
 
-/-- The tree of a module: its items' trees and its location table. -/
-def Module.tree (m : Module d) : SModule := ⟨m.items.map Item.tree, m.locs⟩
+/-- The tree of a module: its dialect set, its items' trees and its location
+table. -/
+def Module.tree (m : Module d) : SModule := ⟨m.dialects, m.items.map Item.tree, m.locs⟩
 
 theorem Operation.treeList_eq_map :
     ∀ os : List (Operation d), Operation.treeList os = os.map Operation.tree
@@ -280,10 +281,11 @@ theorem SItem.erase_eq_funcTree {si : SItem} {f : Func d} (h : si.erase = f.tree
     | blocks bs => exact ⟨bs, rfl, by simpa [SBody.erase] using h₇⟩
     | items is => simp [SBody.erase] at h₇
 
-/-- A module's tree, without positions, holds its items' trees and its
+/-- A module's tree, without positions, holds its dialect set, its items' trees and its
 location table. -/
 theorem SModule.erase_eq_tree {s : SModule} {m : Module d} (h : s.erase = m.tree) :
-    s.items.map SItem.erase = m.items.map Item.tree ∧ s.locs = m.locs := by
+    s.dialects = m.dialects ∧ s.items.map SItem.erase = m.items.map Item.tree ∧
+      s.locs = m.locs := by
   simpa [SModule.erase, Module.tree, SItem.eraseList_eq_map] using h
 
 end Fir

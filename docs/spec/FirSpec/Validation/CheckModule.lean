@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16778447892377274030")
+:::moduleDocs (fingerprint := "14390084335471279203")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
@@ -77,7 +77,7 @@ about the check of a function apply to every function of $`M`, checked
 with the lookup of $`M`.
 :::
 
-:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "16400290938143800205")
+:::readable Fir.Module.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "13230843903150416356")
 *Definition: the check of a module.* The check of the module $`M`,
 $`\mathrm{problems}(M)`, builds the lookup of $`M` once, and gives, in this
 order:
@@ -87,7 +87,11 @@ order:
 * the problems of the location table;
 * the
   {ref "The-fir-specification--Validation--Checking-functions"}[problems of each function]
-  of $`M`, in order, checked with the lookup of $`M`.
+  of $`M`, in order, checked with the lookup of $`M`;
+* "the dialect set names $`x`, which is not a word", for each name $`x` of
+  the dialect set that is not a word;
+* "the dialect set names $`x` more than once", for each name that repeats
+  one before it.
 
 A symbol in a message is spelled as the text writes it: bare when it is a
 word, and quoted otherwise.

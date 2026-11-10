@@ -140,10 +140,15 @@ inductive Item (d : Dialect) where
   | func (f : Func d)
 
 /--
-A module: its items, then its location table. In text the table ends the
-module.
+A module: its dialect set, its items, then its location table. In text the
+dialect set starts the module and the table ends it.
+
+The dialect set names the dialects, other than the core, whose words the
+module may write (ADR-2026-11-09-1543). The core is in every module's set
+and is never named. A module that names none uses the core alone.
 -/
 structure Module (d : Dialect) where
+  dialects : List Name := []
   items : List (Item d)
   locs : LocTable
 

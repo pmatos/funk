@@ -119,9 +119,10 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
       | .error _ => { err := "the run makes a choice", status := 2 }
 
 /-- `@f(%a: T) -> T, T` that masks `%a` to its low `k` bits, then adds
-`%a` to the mask: a toy op whose result a core op uses. -/
+`%a` to the mask: a toy op whose result a core op uses. Its module names the
+toy dialect in its dialect set. -/
 def maskAdd (ty k : String) : String :=
-  "func @f(%a: " ++ ty ++ ") -> " ++ ty ++ ", " ++ ty ++ " {\n^entry:\n  %m: " ++ ty ++
+  "dialects toy\n\nfunc @f(%a: " ++ ty ++ ") -> " ++ ty ++ ", " ++ ty ++ " {\n^entry:\n  %m: " ++ ty ++
     " = toy.mask " ++ k ++ " %a @1\n  %s: " ++ ty ++ " = add %m, %a @0\n  ret %m, %s @0\n}\n\n" ++
     "locs {\n  @0 = unknown\n  @1 = name(\"mask\")\n}\n"
 
@@ -135,14 +136,14 @@ def mixed : String := maskAdd "i8" "3"
   | .ok m => m.print == mixed
   | .error _ => false
 -- The core dialect alone does not read the toy op.
-#guard rejectedAt mixed 3 12 "op toy.mask does not decode"
+#guard rejectedAt mixed 5 12 "op toy.mask does not decode"
 -- A text of core ops alone reads the same in the sum.
 #guard match parseMixed seven with
   | .ok m => m.print == seven
   | .error _ => false
 -- A toy op that does not decode is a parse error, at its name.
 #guard match parseMixed (maskAdd "i8" "-1") with
-  | .error e => e.pos == ⟨3, 12⟩ && (e.reason.splitOn "op toy.mask does not decode").length > 1
+  | .error e => e.pos == ⟨5, 12⟩ && (e.reason.splitOn "op toy.mask does not decode").length > 1
   | .ok _ => false
 #guard (parseMixed (mixed.replace "%m: i8 = toy.mask 3 %a" "%m: i16 = toy.mask 3 %a")).toBool ==
   false

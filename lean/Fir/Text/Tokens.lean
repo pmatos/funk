@@ -152,8 +152,12 @@ def Item.tokens : Item d → List Tok
 def LocTable.tokens (t : LocTable) : List Tok :=
   .word "locs" :: .lbrace :: t.flatMap (fun (r, l) => .locRef r :: .eq :: l.tokens) ++ [.rbrace]
 
+/-- The tokens of a module's dialect set: none when it names no dialect. -/
+def dialectsTokens (ns : List Name) : List Tok :=
+  if ns.isEmpty then [] else .word "dialects" :: [Tok.comma].intercalate (ns.map ([.word ·]))
+
 /-- The tokens of a module, in the order that the printer writes them. -/
 def Module.tokens (m : Module d) : List Tok :=
-  m.items.flatMap Item.tokens ++ m.locs.tokens
+  dialectsTokens m.dialects ++ m.items.flatMap Item.tokens ++ m.locs.tokens
 
 end Fir

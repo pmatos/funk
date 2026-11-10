@@ -15,6 +15,8 @@ is:
   at the op's indentation, followed by the next region or the location
   reference;
 * each op on its own line, ending with a space and its location reference;
+* the dialect set first, when the module names a dialect, on a line of its
+  own followed by an empty line;
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
@@ -22,7 +24,7 @@ is:
 
 This section gives the printer from the inside out: attributes, locations,
 definitions and successors, ops with their blocks and regions, functions
-and items, and last the location table and the module.
+and items, and last the location table, the dialect set and the module.
 -/
 
 namespace Fir
@@ -115,8 +117,14 @@ def LocTable.print (t : LocTable) : String :=
   "locs {\n" ++ String.join (t.map fun (r, l) => "  " ++ printLocRef r ++ " = " ++ l.print ++ "\n") ++
     "}\n"
 
-/-- A module: its items, each followed by an empty line, then its table. -/
+/-- The dialect set of a module, `dialects a, b`, then an empty line, or
+nothing when the module names no dialect. -/
+def printDialects (ns : List Name) : String :=
+  if ns.isEmpty then "" else "dialects " ++ ", ".intercalate ns ++ "\n\n"
+
+/-- A module: its dialect set, its items, each followed by an empty line,
+then its table. -/
 def Module.print (m : Module d) : String :=
-  String.join (m.items.map (·.print ++ "\n")) ++ m.locs.print
+  printDialects m.dialects ++ String.join (m.items.map (·.print ++ "\n")) ++ m.locs.print
 
 end Fir

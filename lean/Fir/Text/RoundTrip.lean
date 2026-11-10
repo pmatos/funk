@@ -92,9 +92,11 @@ structure Func.WellFormed (f : Func d) : Prop where
   types : ∀ t ∈ f.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
   ops : ∀ o ∈ f.allOps, f.OpWellFormed o
 
-/-- A module can be written and read back: each of its functions can, and
-each number in its location table is in range. -/
+/-- A module can be written and read back: each dialect of its set is named
+by a word, each of its functions can be written and read back, and each
+number in its location table is in range. -/
 structure Module.WellFormed (m : Module d) : Prop where
+  dialects : ∀ x ∈ m.dialects, isWord x
   funcs : ∀ f ∈ m.funcs, f.WellFormed
   locs : m.locs.InLimits
 
@@ -188,6 +190,6 @@ theorem Func.Valid.wellFormed {m : Module d} {f : Func d} (hf : f.Valid m.contex
 
 /-- Every valid module of a dialect with lawful text is well formed. -/
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
-  fun _ hm => ⟨fun f hf => (hm.funcs f hf).wellFormed hm.locs, hm.locs.2.1⟩
+  fun _ hm => ⟨hm.dialectNames, fun f hf => (hm.funcs f hf).wellFormed hm.locs, hm.locs.2.1⟩
 
 end Fir

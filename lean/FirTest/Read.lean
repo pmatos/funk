@@ -166,8 +166,8 @@ def applied : Module AttrDialect where
 #guard readsPrinted Example.sumModule && readsTokensAt Example.sumModule
 #guard readsPrinted tricky && readsTokensAt tricky
 #guard readsPrinted (nested 3) && readsTokensAt (nested 3)
-#guard readsPrinted (Module.mk (d := CoreDialect) [] []) &&
-  readsTokensAt (Module.mk (d := CoreDialect) [] [])
+#guard readsPrinted (Module.mk (d := CoreDialect) [] [] []) &&
+  readsTokensAt (Module.mk (d := CoreDialect) [] [] [])
 #guard readsPrinted applied && readsTokensAt applied
 
 -- The tree keeps the positions of the tokens: erasing them changes it.
@@ -177,16 +177,16 @@ def applied : Module AttrDialect where
 
 -- A function with no blocks, `{ }`, reads as a body of no blocks.
 #guard match readModule (tokensAt applied) with
-  | .ok ⟨[_, ⟨_, _, "empty", [], [], [], .blocks []⟩, _], _⟩ => true
+  | .ok ⟨[], [_, ⟨_, _, "empty", [], [], [], .blocks []⟩, _], _⟩ => true
   | _ => false
 
 -- A type that is not written as a type does not read back, and neither
 -- does a line of `2^32`.
-#guard !readsTokensAt (Module.mk (d := AttrDialect)
+#guard !readsTokensAt (Module.mk (d := AttrDialect) []
   [.func ⟨"f", [("x", .int 5)], [], ⟨[]⟩⟩] [])
-#guard !readsTokensAt (Module.mk (d := AttrDialect)
+#guard !readsTokensAt (Module.mk (d := AttrDialect) []
   [.func ⟨"f", [], [.str "t"], ⟨[]⟩⟩] [])
-#guard !readsTokensAt (Module.mk (d := AttrDialect) [] [(0, .range "f" 4294967296 1 1 1)])
+#guard !readsTokensAt (Module.mk (d := AttrDialect) [] [] [(0, .range "f" 4294967296 1 1 1)])
 
 /--
 info: 'Fir.readModule_tokens' depends on axioms: [propext, Classical.choice, Quot.sound]

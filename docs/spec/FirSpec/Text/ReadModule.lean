@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9415480017361798480")
+:::moduleDocs (fingerprint := "5582355071872013592")
 :::
 
 :::readable Fir.readItems_reads (pin := Fir.Text.readItems) (pin := Fir.Item.tokens) (pin := Fir.Func.types) (fingerprint := "2526066823815534157")
@@ -30,7 +30,17 @@ tokens of the items, one after the other, as their trees before the word
 location table and stops the reader of items.
 :::
 
-:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Module.funcs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (fingerprint := "13685553452659558979")
+:::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "18070745907755646629")
+*Theorems: a dialect set reads back.* The reader of a dialect's name reads
+the token $`\mathsf{word}~x` as $`x`, before any token. The reader of a
+dialect set reads the tokens of a set as the set, before any token but a
+comma and the word `dialects`: an empty set has no tokens, and the reader
+reads none, since what follows is not `dialects`; a set of names is
+`dialects`, its first name, and each other name after a comma, which the
+reader of a list reads until no comma follows.
+:::
+
+:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Module.funcs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (fingerprint := "4126831828981113173")
 *Theorem: the grammar step reads a module's tokens as its tree.* For every
 dialect with a text format and every
 module $`m` such that:
@@ -50,13 +60,14 @@ to the tree of $`m`:
 $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof} \implies \\ & \exists\, s.\ \mathrm{readmodule}(\mathit{ts}) = \mathsf{ok}(s) \\ & \quad \wedge\ \mathrm{erase}(s) = \mathrm{tree}(m) \end{aligned}`
 
 Here $`\mathrm{readmodule}` is the reader of a module. This is the second
-step of the round trip. Of all the readers, only the readers of types and
-of lines and columns reject a token of the right kind, and the two
+step of the round trip. The reader reads the dialect set first, which an
+item's `func` or the table's `locs` ends. Of all the readers, only the
+readers of types and of lines and columns reject a token of the right kind, and the two
 conditions cover them. Being within limits also bounds the location
 references, which no reader checks.
 :::
 
-:::readable Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (fingerprint := "12684728694162639599")
+:::readable Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (fingerprint := "7218452147794352182")
 *Theorem: the grammar step for a well-formed module.* For every dialect
 with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -67,7 +78,7 @@ type, and its location table is
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits].
 :::
 
-:::readable Fir.Module.WellFormed.read_print (pin := Fir.Text.lex) (pin := Fir.Module.print) (fingerprint := "10943986515388161621")
+:::readable Fir.Module.WellFormed.read_print (pin := Fir.Text.lex) (pin := Fir.Module.print) (fingerprint := "7819737173046406881")
 *Theorem: the first two steps read a well-formed module's text as its
 tree.* For every dialect with signatures and a text format and every
 well-formed module $`m`, the
@@ -83,7 +94,7 @@ gives the tokens of $`m`, then $`\mathsf{eof}`, and the theorem above
 reads them.
 :::
 
-:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "14595993799706723983")
+:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "10774493079560699890")
 *Theorem: the first two steps read a valid module's text as its tree.* For
 every dialect with signatures, validation rules and a text format whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful], and

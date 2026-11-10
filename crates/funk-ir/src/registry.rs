@@ -354,6 +354,12 @@ impl Registry {
             .map(|(d, _)| self.dialects[*d].name.as_str())
     }
 
+    /// Whether a module's dialect set may name `name`: a registered dialect
+    /// other than the core, which every module holds and none names.
+    pub fn is_extension(&self, name: &str) -> bool {
+        name != CORE && self.dialect(name).is_some()
+    }
+
     /// The dialects that the registered dialect `name` depends on.
     pub fn dependencies(&self, name: &str) -> Option<&[String]> {
         self.dialect(name).map(|d| d.deps.as_slice())

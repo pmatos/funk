@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6209201448781201091")
+:::moduleDocs (fingerprint := "1458708492775121829")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
@@ -148,14 +148,17 @@ separated by $`\texttt{,}`. An item, which is a function, has the tokens of
 its function.
 :::
 
-:::readable Fir.LocTable.tokens Fir.Module.tokens (fingerprint := "16307846641236868949")
+:::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.Module.tokens (fingerprint := "10327504033382181455")
 *Definition: the tokens of the location table and of a module.* The
 location table with entries $`r_1 = \mathit{loc}_1, \dots, r_n = \mathit{loc}_n`
 has the tokens:
 
 $$`\begin{aligned} & \mathsf{word}~\mathtt{locs}~\texttt{\{} \\ & \quad \mathsf{locref}~r_1~\texttt{=}~\mathrm{tokens}(\mathit{loc}_1)~\dots \\ & \quad \mathsf{locref}~r_n~\texttt{=}~\mathrm{tokens}(\mathit{loc}_n)~\texttt{\}} \end{aligned}`
 
-For every dialect with a text format, a module has the tokens of each of
-its items, in order, then the tokens of its location table. This is the
+A dialect set $`x_1, \dots, x_n` has no tokens when $`n = 0`, and
+otherwise the tokens $`\mathsf{word}~\mathtt{dialects}~\mathsf{word}~x_1~\texttt{,}~\dots~\texttt{,}~\mathsf{word}~x_n`.
+For every dialect with a text format, a module has the tokens of its
+dialect set, then those of each of its items, in order, then the tokens of
+its location table. This is the
 list that the lexer must read back from the printed module.
 :::

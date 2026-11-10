@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7088173544698277502")
+:::moduleDocs (fingerprint := "17553896059277704968")
 :::
 
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
@@ -70,13 +70,14 @@ the definitions of its function, whose names are names, and rejects one
 that is not there.
 :::
 
-:::readable Fir.Text.SBody.Writable Fir.Text.SItem.Writable Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "1337409852049701888")
+:::readable Fir.Text.SBody.Writable Fir.Text.SItem.Writable Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "6351523543393346110")
 *Definition: items and modules as read that can be written.* The body of
 an item as read can be written when it holds blocks that can be written,
 or when it holds items, whatever they are. An item as read can be written
 when each of its parameters can be written, each of its result types is
 written as a type, and its body can be written. A module as read can be
-written when each of its items can be written, and every number of its
+written when each name of its dialect set is a word, each of its items can
+be written, and every number of its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table],
 each key and each number of each location, is below $`2^{32}`.
 

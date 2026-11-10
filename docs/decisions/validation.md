@@ -35,6 +35,13 @@ and nothing more (ADR-2026-10-30-1740):
   type, `validOp ctx o` for every context and op, and `validFunc` for every
   function (ADR-2026-11-09-2257).
 
+A module's dialect set has a rule of its own, `Module.InDialectSet`, in
+`lean/Fir/Validation/DialectSet.lean`, beside `Module.Valid`. It reads the
+module's words through the dialect's text, so `Module.Valid` and the
+theorems about it need no text. Its check is `Module.setProblems`, and
+`fir-ref validate` and `funk verify` report `Module.problems`, then
+`Module.setProblems` (ADR-2026-11-10-1306).
+
 A dialect's rules in `DialectValidation` stay propositions. A dialect that
 wants the check proves them decidable. The core dialect does so case by case
 in `lean/Fir/Core/Check.lean`. A new dialect derives `DecidableEq` for its

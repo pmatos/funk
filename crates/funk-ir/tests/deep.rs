@@ -51,9 +51,11 @@ fn registry() -> Registry {
 }
 
 /// `@f` with `body` in its entry block, before `ret`, in a module whose
-/// table has `@0`.
+/// dialect set names `toy` and whose table has `@0`.
 fn module_text(body: &str) -> String {
-    format!("func @f() {{\n^e:\n{body}  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n")
+    format!(
+        "dialects toy\n\nfunc @f() {{\n^e:\n{body}  ret @0\n}}\n\nlocs {{\n  @0 = unknown\n}}\n"
+    )
 }
 
 /// A text of `depth` attributes, each applying `h` to the next.

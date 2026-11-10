@@ -75,8 +75,10 @@ inductive SBody where
   | items (is : List SItem)
 end
 
-/-- A module as written: its items, then its location table. -/
+/-- A module as written: its dialect set, its items, then its location
+table. -/
 structure SModule where
+  dialects : List Name
   items : List SItem
   locs : LocTable
 

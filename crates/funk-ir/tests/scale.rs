@@ -39,12 +39,19 @@ fn long_chains_of_blocks_and_deep_dominance_verify_in_linear_time() {
     let start = Instant::now();
     let ds = verify(&m, &Registry::core());
     let secs = start.elapsed().as_secs();
-    assert_eq!(ds.len(), blocks - 1, "{:#?}", &ds[..3.min(ds.len())]);
+    // Each `toy.br` is unregistered, and its word is outside the module's
+    // dialect set, which the function's one diagnostic of the set says.
+    assert_eq!(ds.len(), blocks, "{:#?}", &ds[..3.min(ds.len())]);
+    let (ops, set) = ds.split_at(blocks - 1);
     assert!(
-        ds.iter()
+        ops.iter()
             .all(|d| d.message == "op toy.br is not registered"),
         "{:#?}",
-        &ds[..3]
+        &ops[..3]
+    );
+    assert!(
+        set[0].message.contains("a word of the dialect toy"),
+        "{set:#?}"
     );
     assert!(secs < 20, "took {secs} s");
 }

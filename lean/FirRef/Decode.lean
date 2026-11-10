@@ -54,7 +54,7 @@ theorem decodeItem_eq : @decodeItem = @Text.decodeItem := by
 /-- A module decoded: `Text.decodeModule`, with no stack per level of
 regions and none per block or op. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do
-  pure ⟨← m.items.mapM decodeItem, m.locs⟩
+  pure ⟨m.dialects, ← m.items.mapM decodeItem, m.locs⟩
 
 /-- `decodeModule` decodes as the spec's decoder does, errors included, so
 `fir-ref` runs it in place of `Text.decodeModule`. -/

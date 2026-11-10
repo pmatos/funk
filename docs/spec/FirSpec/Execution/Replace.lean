@@ -14,17 +14,18 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "437735271719311545")
+:::moduleDocs (fingerprint := "17804789227085482557")
 :::
 
-:::readable Fir.Func.replaceBody Fir.Module.replaceBody (fingerprint := "5723528013114806774")
+:::readable Fir.Func.replaceBody Fir.Module.replaceBody (fingerprint := "562563534737412202")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
 otherwise. For a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[module]
 $`M`, $`M[s \leftarrow b]` replaces each function $`f` of $`M` by
-$`f[s \leftarrow b]`, in the same order, and keeps the location table.
+$`f[s \leftarrow b]`, in the same order, and keeps the dialect set and the
+location table.
 
 Every function keeps its symbol, its parameters and its result types, and
 every other function keeps its body. A caller reaches a callee only by
@@ -70,14 +71,15 @@ symbol and its type; so is the context in which validation checks its
 functions, which is the symbol table and the keys of the location table.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "4687357507584858990")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "18378224484304118459")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
 $`s` a symbol and $`b` a region, and let each function $`g` of $`M` with
 the symbol $`s`, given the body $`b`, be valid in the context of $`M`.
 Then $`M[s \leftarrow b]` is valid: its symbols are those of $`M`, so
-still unique; its location table is that of $`M`; and each of its
+still unique; its location table and its dialect set are those of $`M`;
+and each of its
 functions is valid in its context, which is that of $`M`.
 
 So the new body needs to be checked alone, against the old module's

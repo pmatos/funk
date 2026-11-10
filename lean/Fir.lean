@@ -122,3 +122,4 @@ import Fir.Sum.Lift
 import Fir.Sum.LiftTextLaws
 import Fir.Sum.LiftPoisonLaws
 import Fir.Core.Names
+import Fir.Validation.DialectSet

@@ -59,6 +59,7 @@ impl<'t> Parser<'t> {
     }
 
     fn module(&mut self) -> Result<SModule, ParseError> {
+        let dialects = self.dialects()?;
         let mut items = Vec::new();
         loop {
             match self.peek() {
@@ -69,7 +70,27 @@ impl<'t> Parser<'t> {
         }
         let locs = self.locs()?;
         self.expect(&Tok::Eof, "the end of the text after the location table")?;
-        Ok(SModule { items, locs })
+        Ok(SModule {
+            dialects,
+            items,
+            locs,
+        })
+    }
+
+    /// `dialects ::= 'dialects' word (',' word)*`, the dialect set that
+    /// starts a module, or none.
+    fn dialects(&mut self) -> Result<Vec<String>, ParseError> {
+        let mut names = Vec::new();
+        if matches!(self.peek(), Tok::Word(w) if w == "dialects") {
+            self.advance();
+            loop {
+                names.push(self.word("the name of a dialect")?.0);
+                if !self.eat(&Tok::Comma) {
+                    break;
+                }
+            }
+        }
+        Ok(names)
     }
 
     /// Reads the rest of the text, and returns its first error in the

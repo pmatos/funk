@@ -1,0 +1,154 @@
+Cases for a module's dialect set, shared by the two validators' tests:
+`lean/FirTest/DialectSet.lean` and `crates/funk-ir/tests/dialect_set.rs`.
+Each case starts with a line of three equals signs, `accept` or `reject`,
+and its name. The cases run in the sum of the core and a test dialect named
+`toy`, with the type `toy.flag`, the ops `toy.flag` and `toy.test`, and the
+op `toy.note`, which takes any attributes and gives nothing. A module may
+write a word of `toy` only when its dialect set names `toy`, and its set
+names only `toy`, once.
+
+=== accept no-set-core-words
+func @f(%a: i8) -> i8 {
+^entry:
+  %s: i8 = add %a, %a @0
+  ret %s @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept set-names-toy
+dialects toy
+
+func @f(%a: i8) -> i1 {
+^entry:
+  %f: toy.flag = toy.flag %a @0
+  %b: i1 = toy.test %f @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept set-names-an-unused-dialect
+dialects toy
+
+func @f() {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept type-in-the-set
+dialects toy
+
+func @g(%f: toy.flag) {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept attribute-words-in-the-set
+dialects toy
+
+func @f() {
+^entry:
+  toy.note toy.color(red, 3) @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept bare-attribute-words
+dialects toy
+
+func @f() {
+^entry:
+  toy.note red 7 "s" @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject op-outside-the-set
+func @f() {
+^entry:
+  toy.note 7 @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject type-outside-the-set
+func @g(%f: toy.flag) {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject attribute-outside-the-set
+dialects toy
+
+func @f() {
+^entry:
+  toy.note gpu.color @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject nested-attribute-outside-the-set
+dialects toy
+
+func @f() {
+^entry:
+  toy.note toy.color(gpu.red) @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject unknown-dialect
+dialects gpu
+
+func @f() {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject core-is-never-named
+dialects core
+
+func @f() {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject named-twice
+dialects toy, toy
+
+func @f() {
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}

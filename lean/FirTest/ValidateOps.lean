@@ -29,7 +29,7 @@ def valid (t : String) : Bool := checks t []
 location table `@0 = unknown`. -/
 def entryOnly (ops : List (Operation CoreDialect)) (params : List (Name × Ty) := [])
     (results : List Ty := []) : Module CoreDialect :=
-  ⟨[.func ⟨"f", params, results, ⟨[⟨"e", [], ops⟩]⟩⟩], [(0, .unknown)]⟩
+  ⟨[], [.func ⟨"f", params, results, ⟨[⟨"e", [], ops⟩]⟩⟩], [(0, .unknown)]⟩
 
 /-! # Every op of the core dialect, in a valid function -/
 
