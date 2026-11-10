@@ -8,9 +8,10 @@
 //! loop, or forward, past the next, which makes a join. The last block
 //! returns. A chain may also have a trap: a block after the last that ends
 //! in `unreachable` (#228), which one branch of the chain goes to, so some
-//! runs reach it, which is UB, and others pass it by. Every block but the entry may take arguments, and each branch
-//! passes values of their types: values in scope, often the block's own
-//! arguments in another order, or new ones.
+//! runs reach it, which is UB, and others pass it by. Every block but the
+//! entry may take arguments, and each branch passes values of their types:
+//! values in scope, often the block's own arguments in another order, or
+//! new ones.
 //!
 //! A block's ops may call any function of the module (`calls.rs`), and the
 //! last block returns the values of the function's result types, which
@@ -164,7 +165,7 @@ fn dominates(exits: &[Vec<usize>], a: usize, b: usize) -> bool {
         stack.push(0);
     }
     while let Some(x) = stack.pop() {
-        for &y in exits.get(x).into_iter().flatten() {
+        for &y in &exits[x] {
             if y != a && !seen[y] {
                 seen[y] = true;
                 stack.push(y);

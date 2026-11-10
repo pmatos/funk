@@ -57,7 +57,9 @@ $`M`:
   and give no results;
 * $`\mathsf{ret}~t^*`, the only op whose exit returns, takes operands of
   the types $`t^*`, which the core rule of $`\mathsf{ret}` asks to be the
-  result types of $`f`.
+  result types of $`f`;
+* $`\mathsf{unreachable}` neither jumps nor returns: its exit is UB, which
+  ends the run.
 :::
 
 :::readable Fir.Core.runsWell Fir.Core.fuelMonotone Fir.Core.progress Fir.Core.neverStuck (pin := Fir.Core.funcRuns) (pin := Fir.Core.RunsWell) (fingerprint := "268846460176556723")

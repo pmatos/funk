@@ -34,6 +34,15 @@ fn control() -> Effects {
     }
 }
 
+/// The effects of `cond_br` and `unreachable`: control and may-UB
+/// (`Core.Op.effects`).
+fn control_ub() -> Effects {
+    Effects {
+        may_ub: true,
+        ..control()
+    }
+}
+
 /// A terminator with `successors` successors.
 fn terminator(successors: usize) -> OpShape {
     OpShape {
@@ -43,7 +52,8 @@ fn terminator(successors: usize) -> OpShape {
     }
 }
 
-/// Checks that the branch `name` has no attributes and defines no values.
+/// Checks that the terminator `name` has no attributes and defines no
+/// values.
 fn bare(name: &str, op: &OpTypes<'_>) -> Result<(), String> {
     if !op.attrs.is_empty() {
         return Err(format!("{name} takes no attributes"));
@@ -100,10 +110,7 @@ impl OpSpec for CondBr {
 
     /// Control, and may-UB on a poison condition (`Core.Op.effects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects {
-            may_ub: true,
-            ..control()
-        }
+        control_ub()
     }
 }
 
@@ -166,10 +173,7 @@ impl OpSpec for Unreachable {
 
     /// Control, and may-UB, since reaching it is UB (`Core.Op.effects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects {
-            may_ub: true,
-            ..control()
-        }
+        control_ub()
     }
 }
 

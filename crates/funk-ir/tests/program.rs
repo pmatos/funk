@@ -248,9 +248,18 @@ fn every_kind_of_ub_is_planted_beside_a_near_miss() {
                 .map(|o| o.name.as_str())
                 .collect();
             names.pop();
+            let mut ops = f.body.blocks.iter().flat_map(|b| &b.ops);
+            if ops.any(|o| o.name == "unreachable") {
+                assert_eq!(
+                    names,
+                    ["const"],
+                    "a planted unreachable of an unknown shape"
+                );
+                trap += 1;
+                continue;
+            }
             match names.as_slice() {
                 ["poison"] => branch += 1,
-                ["const"] => trap += 1,
                 ["const", d] if d.contains("div") || d.contains("rem") => by_zero += 1,
                 ["poison", d] if d.contains("div") || d.contains("rem") => by_poison += 1,
                 ["const", "const", _] => min_by_minus_one += 1,

@@ -5,7 +5,7 @@ import Fir.Text.RoundTrip
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 25 of its ops and every type. The laws are proved for every
+text, for all 26 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, and `ret` and `call` with
 any number of operands and results. A type reads back from how it is
@@ -357,7 +357,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 25 core ops and
+/-- The core dialect's text meets the seven laws, for all 26 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

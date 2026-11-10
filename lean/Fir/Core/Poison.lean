@@ -6,7 +6,7 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 25 core ops has a class (ADR-2026-10-30-0818).
+Every one of the 26 core ops has a class (ADR-2026-10-30-0818).
 
 Nineteen ops propagate poison: `const`, `poison`, `add`, `sub`, `mul`,
 `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`, `xor`, `shl`, `lshr`, `ashr`,
