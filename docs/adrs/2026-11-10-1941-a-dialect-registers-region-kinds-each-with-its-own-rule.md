@@ -50,7 +50,8 @@ the M1 epic leaves out.
   `LawfulDialectName` ask that registered kinds be words of the dialect's
   name, so a kind goes to the dialect that registers it
   (`Dialect.sum.validRegion_ext`). In Rust, registration puts each kind
-  under its dialect's prefix, as for ops (ADR-2026-11-10-0042).
+  under its dialect's prefix, as for ops (ADR-2026-11-10-0042), and
+  rejects a kind of the core.
 - **Dialect sets.** A region kind's word joins the words of ADR-2026-11-10-1306:
   `Operation.wordDialects` adds each region's kind after the op's name and
   attributes, so a kind of a dialect outside the module's set is rejected

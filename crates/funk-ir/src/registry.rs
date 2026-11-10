@@ -221,8 +221,11 @@ pub enum RegistryError {
     DuplicateOp(String),
     /// The op's name is not a word, so the text cannot write it.
     OpNameNotAWord(String),
-    /// The region kind is not a word that names the dialect that registers
-    /// it: a prefixed dialect's kinds are `name.word`, and the core's bare.
+    /// The region kind is not a word.
+    KindNotAWord(String),
+    /// The region kind does not name the dialect that registers it: a
+    /// dialect's kinds are `name.word`, and the core registers none, since
+    /// its own kind is the control-flow graph of a function's body.
     KindOutsideDialect {
         /// The dialect being registered.
         dialect: String,
@@ -258,9 +261,10 @@ impl fmt::Display for RegistryError {
             }
             RegistryError::DuplicateOp(o) => write!(f, "op {o} is already registered"),
             RegistryError::OpNameNotAWord(o) => write!(f, "op name {o:?} is not a word"),
+            RegistryError::KindNotAWord(k) => write!(f, "region kind {k:?} is not a word"),
             RegistryError::KindOutsideDialect { dialect, kind } => write!(
                 f,
-                "region kind {kind:?} of dialect {dialect} is not a word written under its name"
+                "region kind {kind} of dialect {dialect} is not written {dialect}.WORD"
             ),
             RegistryError::DuplicateKind(k) => write!(f, "region kind {k} is already registered"),
         }
@@ -334,7 +338,9 @@ impl Registry {
 
     /// Registers a dialect, or fails without changing the registry. Its name
     /// must be new and a word with no `.`, each dialect it depends on must
-    /// be registered, and each op must be a new word that names it.
+    /// be registered, each op must be a new word that names it, and each
+    /// region kind a new word `name.word` of a dialect other than the core,
+    /// which registers no kind.
     pub fn register(&mut self, dialect: Dialect) -> Result<(), RegistryError> {
         let name = dialect.name.as_str();
         if !is_word(name) || name.contains('.') {
@@ -370,7 +376,10 @@ impl Registry {
         let mut kinds: Vec<&str> = Vec::new();
         for kind in &dialect.region_kinds {
             let kind = kind.name();
-            if !is_word(kind) || !written_under(kind, prefix) {
+            if !is_word(kind) {
+                return Err(RegistryError::KindNotAWord(kind.to_string()));
+            }
+            if prefix.is_none() || !written_under(kind, prefix) {
                 return Err(RegistryError::KindOutsideDialect {
                     dialect: dialect.name.clone(),
                     kind: kind.to_string(),

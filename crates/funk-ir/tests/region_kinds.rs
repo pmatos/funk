@@ -112,8 +112,8 @@ fn an_op_owns_regions_of_the_kinds_that_its_registration_states() {
     assert_eq!(
         messages(&text(&[&owner("toy.run", " toy.free", &["g"])], true)),
         [
-            "the regions of toy.run are not of the kinds that its registration states",
             "a region of toy.run is of kind toy.free, which no dialect registers",
+            "the regions of toy.run are not of the kinds that its registration states",
         ]
     );
     assert_eq!(
@@ -179,6 +179,20 @@ fn a_kind_is_registered_once_under_its_dialect_name() {
         r.register(bare),
         Err(RegistryError::KindOutsideDialect { .. })
     ));
+    let spaced = Dialect::new("toy").region_kind(OneBlock("toy. graph"));
+    assert_eq!(
+        r.register(spaced),
+        Err(RegistryError::KindNotAWord("toy. graph".into()))
+    );
+    let mut fresh = Registry::new();
+    let core_kind = Dialect::new(core::NAME).region_kind(OneBlock("graph"));
+    assert_eq!(
+        fresh.register(core_kind),
+        Err(RegistryError::KindOutsideDialect {
+            dialect: core::NAME.into(),
+            kind: "graph".into(),
+        })
+    );
     let twice = Dialect::new("toy")
         .region_kind(OneBlock("toy.graph"))
         .region_kind(OneBlock("toy.graph"));

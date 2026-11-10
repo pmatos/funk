@@ -89,13 +89,7 @@ pub(super) fn check_inner(
                 quote(&su.label)
             )));
         }
-        for a in &su.args {
-            if !s.types.contains_key(a.as_str()) {
-                out.push(at.diag(format!(
-                    "successor argument %{a} is not defined in the function"
-                )));
-            }
-        }
+        check_succ_args(s, &at, su, out);
     }
     check_general(s, cx, &at, false, out);
 }
@@ -113,6 +107,7 @@ fn check_general(
     out: &mut Vec<Diagnostic>,
 ) {
     let op = at.op;
+    check_region_kinds(s, cx, at, out);
     if !cx.locs.contains(&op.loc) {
         out.push(at.diag(format!(
             "location reference {} is not in the location table",
@@ -170,7 +165,17 @@ fn check_general(
     if let Err(why) = spec.check(&ocx, &types) {
         out.push(at.diag(why));
     }
-    check_regions(s, cx, at, &shape, out);
+    if !op
+        .regions
+        .iter()
+        .map(|r| r.kind.as_deref())
+        .eq(shape.regions.iter().map(|k| Some(k.as_str())))
+    {
+        out.push(at.diag(format!(
+            "the regions of {} are not of the kinds that its registration states",
+            op.name
+        )));
+    }
 }
 
 /// An op of a function's body is a terminator exactly when it is the last
@@ -211,28 +216,13 @@ fn check_counts(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
     }
 }
 
-/// The regions of an op have the kinds that its registration states, in
-/// order; each kind is a word that a dialect registers, and each region
-/// obeys its kind's rule (`Func.RegionsValid`). A region of the core's kind
-/// names no kind, and no registration states it.
-fn check_regions(
-    s: &Scope<'_>,
-    cx: &Context<'_>,
-    at: &At<'_>,
-    shape: &OpShape,
-    out: &mut Vec<Diagnostic>,
-) {
+/// Each region of an op that names a kind names a word that a dialect
+/// registers, and obeys its kind's rule (`Func.RegionsValid`). These hold
+/// whether or not the op decodes; that the kinds are those its registration
+/// states is checked once it does. A region of the core's kind names no
+/// kind, and no registration states it.
+fn check_region_kinds(s: &Scope<'_>, cx: &Context<'_>, at: &At<'_>, out: &mut Vec<Diagnostic>) {
     let op = at.op;
-    if op.regions.is_empty() && shape.regions.is_empty() {
-        return;
-    }
-    let kinds = op.regions.iter().map(|r| r.kind.as_deref());
-    if !kinds.eq(shape.regions.iter().map(|k| Some(k.as_str()))) {
-        out.push(at.diag(format!(
-            "the regions of {} are not of the kinds that its registration states",
-            op.name
-        )));
-    }
     let fcx = FuncContext {
         symbols: cx.symbols,
     };
@@ -275,13 +265,7 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
     if blocks.first().is_some_and(|e| e.label == su.label) {
         out.push(at.diag(format!("no branch may go to the entry block ^{}", su.label)));
     }
-    for a in &su.args {
-        if !s.types.contains_key(a.as_str()) {
-            out.push(at.diag(format!(
-                "successor argument %{a} is not defined in the function"
-            )));
-        }
-    }
+    check_succ_args(s, at, su, out);
     let Some(target) = s.blocks.get(su.label.as_str()) else {
         out.push(at.diag(format!(
             "successor ^{} is not a block of the function",
@@ -308,6 +292,17 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
             Commas(&shown),
             Commas(&wanted)
         )));
+    }
+}
+
+/// Each value that a successor passes is defined in the function.
+fn check_succ_args(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) {
+    for a in &su.args {
+        if !s.types.contains_key(a.as_str()) {
+            out.push(at.diag(format!(
+                "successor argument %{a} is not defined in the function"
+            )));
+        }
     }
 }
 
