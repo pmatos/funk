@@ -10,6 +10,7 @@
 
 use super::arith::bin_width;
 use super::type_list;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 
 /// The bitwise ops, in the spec's order.
@@ -40,6 +41,15 @@ impl OpSpec for Bitwise {
                 type_list(op.operands),
                 type_list(op.results)
             )),
+        }
+    }
+
+    /// Pure, but a shift may produce poison, for an amount of `N` or more
+    /// (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_poison: SHIFT_OPS.contains(&self.0),
+            ..Effects::PURE
         }
     }
 }

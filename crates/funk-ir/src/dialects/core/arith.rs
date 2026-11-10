@@ -10,6 +10,7 @@
 
 use super::type_list;
 use super::types::int_width;
+use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
 use crate::{Attr, Type};
 
@@ -71,6 +72,15 @@ impl OpSpec for Wrap {
                 type_list(op.operands),
                 type_list(op.results)
             )),
+        }
+    }
+
+    /// Pure without flags. A flag gives poison when it is broken, so with
+    /// one the op may produce poison (`Core.Op.effects`).
+    fn effects(&self, op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_poison: !op.attrs.is_empty(),
+            ..Effects::PURE
         }
     }
 }
