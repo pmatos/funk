@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5004954702079656391")
 :::
 
-:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "7983149712947125447")
+:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "620551015558347730")
 *Theorems: the names of a dialect set as read are words.* For every list
 of tokens that can be written, the reader of a dialect's name gives a
 word, since it reads a word token, and the reader of a dialect set gives

@@ -89,7 +89,7 @@ def defineOps (sc : Scope d) : List SOp → Except ParseError (Scope d)
 /-- Adds the definitions of the blocks of these regions to the scope. -/
 def defineRegions (sc : Scope d) : List SRegion → Except ParseError (Scope d)
   | [] => pure sc
-  | ⟨bs⟩ :: rs => do
+  | ⟨_, bs⟩ :: rs => do
     let sc ← defineBlocks sc bs
     defineRegions sc rs
 end
@@ -128,18 +128,18 @@ def decodeOps (sc : Scope d) (f : String) : List SOp → Except ParseError (List
 /-- Decodes the regions of an op of the function `f`, in its scope. -/
 def decodeRegions (sc : Scope d) (f : String) : List SRegion → Except ParseError (List (Region d))
   | [] => pure []
-  | ⟨bs⟩ :: rs => do pure (⟨← decodeBlocks sc f bs⟩ :: (← decodeRegions sc f rs))
+  | ⟨k, bs⟩ :: rs => do pure (⟨k, ← decodeBlocks sc f bs⟩ :: (← decodeRegions sc f rs))
 end
 
 /-- Decodes a function: its result types and its definitions first, then
-its ops. -/
+its ops. A function's body is a region of the core's kind. -/
 def decodeFunc (name : String) (params : List SDef) (results : List (Attr × TextPos))
     (blocks : List SBlock) : Except ParseError (Func d) := do
   let results ← results.mapM fun (a, p) => decodeType a p
   let sc ← define ∅ params
   let sc ← defineBlocks sc blocks
   let params ← params.mapM decodeDef
-  pure ⟨name, params, results, ⟨← decodeBlocks sc name blocks⟩⟩
+  pure ⟨name, params, results, ⟨none, ← decodeBlocks sc name blocks⟩⟩
 
 /-- Decodes an item of kind `func`, at `kindPos`: it has no attributes,
 and its body is blocks. An empty body is no blocks. -/

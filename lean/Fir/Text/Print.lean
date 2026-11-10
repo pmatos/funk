@@ -11,9 +11,9 @@ is:
   parameters or around the colons of a source range (`"f":2:3 to 2:14`);
 * a function's blocks at the indentation of the function, and its ops two
   spaces deeper. A region of an op opens with ` {` at the end of the op's
-  line; its blocks are two spaces deeper than the op, and its closing `}` is
-  at the op's indentation, followed by the next region or the location
-  reference;
+  line, then a space and the region's kind when it names one; its blocks
+  are two spaces deeper than the op, and its closing `}` is at the op's
+  indentation, followed by the next region or the location reference;
 * each op on its own line, ending with a space and its location reference;
 * the dialect set first, when the module names a dialect, on a line of its
   own followed by an empty line;
@@ -74,6 +74,12 @@ def Succ.print (s : Succ) : String :=
   "^" ++ s.label ++
     if s.args.isEmpty then "" else "(" ++ ", ".intercalate (s.args.map ("%" ++ ·)) ++ ")"
 
+/-- A region's kind, after the `{` that opens the region: a space and its
+word, or nothing for the core's kind. -/
+def printKind : Option Name → String
+  | none => ""
+  | some k => " " ++ k
+
 mutual
 /-- An op at indentation `n`, with its line feed. -/
 def Operation.print (n : Nat) : Operation d → String
@@ -87,8 +93,8 @@ def Operation.print (n : Nat) : Operation d → String
 /-- The regions of an op at indentation `n`. -/
 def Region.printList (n : Nat) : List (Region d) → String
   | [] => ""
-  | ⟨blocks⟩ :: rs => " {\n" ++ Block.printList (n + 2) blocks ++ indent n ++ "}" ++
-      Region.printList n rs
+  | ⟨kind, blocks⟩ :: rs => " {" ++ printKind kind ++ "\n" ++ Block.printList (n + 2) blocks ++
+      indent n ++ "}" ++ Region.printList n rs
 
 /-- Blocks at indentation `n`, their ops two spaces deeper. -/
 def Block.printList (n : Nat) : List (Block d) → String

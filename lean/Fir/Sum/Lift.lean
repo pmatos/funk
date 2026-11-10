@@ -26,12 +26,14 @@ has:
   is the rule of ADR-2026-11-09-2353, with `e` in place of the base;
 * `e`'s function rule, through a view that projects the types to `dep`'s and
   `e`'s own;
-* `e`'s poison classes, calls and semantics. An op of `e` takes its operands
-  moved down to `dep`'s types and its results move up to `big`'s.
+* `e`'s poison classes, effects, calls and semantics. An op of `e` takes its
+  operands moved down to `dep`'s types and its results move up to `big`'s.
+  Its effects name `e`'s memories, as `e` declares them over `dep`.
 
 This section gives, in order: the lift and the inclusion of its types, then
 each class of the lift over `big`. The sections after it prove that the lift
-of a lawful extension is lawful, for its text and for poison.
+of a lawful extension is lawful, for its text, for poison and for its
+effects.
 -/
 
 namespace Fir
@@ -148,9 +150,11 @@ instance instDecidableDialectValidation [DialectValidation big] [DialectValidati
   decValidOp ctx o := instDecidableValidOp (e := e) ctx o
   decValidFunc v ctx f := DecidableDialectValidation.decValidFunc (d := dep.over e) (projView v) ctx f
 
-/-- An op of the lift has `e`'s poison class. -/
-instance instDialectPoison [DialectPoison (dep.over e)] : DialectPoison (big.over (e.lift dep ι)) :=
-  ⟨fun o => poisonClass (d := dep.over e) o⟩
+/-- An op of the lift has `e`'s poison class and `e`'s effects, on `e`'s
+memories. -/
+instance instDialectEffects [h : DialectEffects (dep.over e)] :
+    DialectEffects (big.over (e.lift dep ι)) :=
+  ⟨h.Mem, fun o => poisonClass (d := dep.over e) o, fun o => effects (d := dep.over e) o⟩
 
 /-- An op of the lift calls what it calls in `e`. -/
 instance instDialectCall [DialectCall (dep.over e)] : DialectCall (big.over (e.lift dep ι)) :=

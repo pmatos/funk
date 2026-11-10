@@ -81,7 +81,7 @@ theorem U_readItems_none {top : Bool} {s : σ} (h : nextItem top s = none) :
         exact not_head (hn w) p rest he
 
 /-- `readBlocks`, on a cursor, with no stack per level. -/
-def readBlocksC (s : σ) : Except ParseError (List SBlock × σ) := blocksLoop s [.blocks []]
+def readBlocksC (s : σ) : Except ParseError (List SBlock × σ) := blocksLoop s [.blocks none []]
 
 theorem readBlocksC_eq (s : σ) : V (readBlocksC s) = U (readBlocks (view s)) := by
   rw [readBlocksC, blocksLoop_eq]

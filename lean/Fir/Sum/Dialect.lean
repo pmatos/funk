@@ -15,7 +15,7 @@ types and its own. So an op of `e` can take and give values of the base's
 types, as an extension op takes a core integer. The base is what `e`
 depends on, and `e` may name the base's types. `e` states each class of a
 dialect for `base.over e`: its signature, its text, its rules, its poison
-classes, its semantics and its calls. A dialect that has no types of its
+classes and effects, its semantics and its calls. A dialect that has no types of its
 own takes `Empty` for them.
 
 The sum's ops are those of the base and those of `e`, and its types are
@@ -255,12 +255,18 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
   decValidFunc v ctx f := inferInstanceAs (Decidable (validFunc (d := base) (baseView v) ctx f ∧
     validFunc (d := base.over e) (extView v) ctx f))
 
-/-- An op of the sum has its side's poison class. -/
-instance instDialectPoison [DialectPoison base] [DialectPoison (base.over e)] :
-    DialectPoison (base ⊞ e) where
+/-- The memories of the sum are those of each side, kept apart. An op of the
+sum has its side's poison class, and its side's effects on its side's
+memories. -/
+instance instDialectEffects [h₁ : DialectEffects base] [h₂ : DialectEffects (base.over e)] :
+    DialectEffects (base ⊞ e) where
+  Mem := h₁.Mem ⊕ h₂.Mem
   poisonClass
     | .inl o => poisonClass o
     | .inr o => poisonClass (d := base.over e) o
+  effects
+    | .inl o => (effects o).map .inl
+    | .inr o => (effects (d := base.over e) o).map .inr
 
 /-- An op of the sum calls the function that it calls on its side. -/
 instance instDialectCall [DialectCall base] [DialectCall (base.over e)] :

@@ -193,7 +193,7 @@ theorem propagates_inl {o : base.Op} (h : PropagatesPoison o) :
         rw [HVector.ofSum_toSum]
         exact hub
 
-variable [DialectPoison base] [DialectPoison (base.over e)]
+variable [DialectEffects base] [DialectEffects (base.over e)]
   [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
 

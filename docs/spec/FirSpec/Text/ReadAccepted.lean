@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10271400815095648746")
+:::moduleDocs (fingerprint := "7033212644242088261")
 :::
 
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
@@ -174,9 +174,9 @@ Each word comes from a word token, which is a word.
   each of them can be written.
 :::
 
-:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "8610404709604926096")
-*Theorems: successors and an op's location reference as read can be
-written.* For every list of tokens:
+:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable Fir.Text.readKind_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "11394805476722136123")
+*Theorems: successors, an op's location reference and a region's kind as
+read can be written.* For every list of tokens:
 
 * the reader of the values that a successor passes, after its `(`, gives
   that each of them is a name: each comes from a value token;
@@ -186,7 +186,9 @@ written.* For every list of tokens:
   reader of an op's operands and successors, give that each successor
   they read can be written;
 * the reader of an op's location reference gives that the reference is
-  below $`2^{32}`: it comes from a location reference token.
+  below $`2^{32}`: it comes from a location reference token;
+* the reader of a region's kind gives that the kind, when there is one, is
+  a word: it comes from a word token.
 
 Nothing is said of the operands: decoding finds each of them among the
 definitions of its function.

@@ -5,6 +5,8 @@ import FirSpec.Core.Types
 import FirSpec.Core.Ops
 import FirSpec.Core.Signature
 import FirSpec.Core.Poison
+import FirSpec.Core.OpEffects
+import FirSpec.Core.EffectLaws
 import FirSpec.Core.Unlawful
 import FirSpec.Core.Values
 import FirSpec.Execution.Behaviour
@@ -12,6 +14,8 @@ import FirSpec.Execution.CallSteps
 import FirSpec.Execution.Effects
 import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
+import FirSpec.Execution.OpEffects
+import FirSpec.Execution.EffectLaws
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
 import FirSpec.Execution.SetRuns
@@ -118,10 +122,12 @@ import FirSpec.Core.Names
 import FirSpec.Sum.Dialect
 import FirSpec.Sum.TextLaws
 import FirSpec.Sum.PoisonLaws
+import FirSpec.Sum.EffectLaws
 import FirSpec.Sum.Inclusion
 import FirSpec.Sum.Lift
 import FirSpec.Sum.LiftTextLaws
 import FirSpec.Sum.LiftPoisonLaws
+import FirSpec.Sum.LiftEffectLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

@@ -11,8 +11,8 @@ toy dialect by lifting it: an inclusion of the core's types in those of
 
 The spec's theorems on lifts then give the sum's laws with no proof of its
 own: its text is lawful, so its valid modules are well formed and its round
-trip holds, and it meets the poison obligations, since the toy dialect and
-the bit dialect do. The tests show that the sum reads, prints and validates
+trip holds, and it meets the poison and effect obligations, since the toy
+dialect and the bit dialect do. The tests show that the sum reads, prints and validates
 a module that uses all three prefixes, sends each word to its own dialect,
 and that neither smaller sum reads that module.
 -/
@@ -61,16 +61,37 @@ theorem coreToyBit_validIsWellFormed : ValidIsWellFormed (d := CoreToyBit) :=
 theorem coreToyBit_printThenParse : PrintThenParse (d := CoreToyBit) Fir.parse :=
   Dialect.lift.sum_printThenParse bit_new core_sub_toy
 
-/-! # Lawful poison -/
+/-! # Lawful poison and effects -/
 
 /-- The sum of the core and the toy dialect is lawful. -/
 instance coreToy_lawful : LawfulDialectPoison CoreToy := Dialect.sum.lawfulPoison fun _ h => h
+
+/-- The sum of the core and the toy dialect is lawful in its effects, since
+both are. -/
+instance coreToy_lawfulEffects : LawfulDialectEffects CoreToy :=
+  Dialect.sum.lawfulEffects fun _ h => h
 
 /-- The sum of three dialects is lawful: the inclusion of the core's types
 is lawful, and the bit dialect accepts each core type that the core
 accepts. -/
 instance coreToyBit_lawful : LawfulDialectPoison CoreToyBit :=
   Dialect.lift.sum_lawfulPoison TyIncl.lawful_inl fun _ h => h
+
+/-- The sum of three dialects is lawful in its effects, under the same
+conditions. -/
+instance coreToyBit_lawfulEffects : LawfulDialectEffects CoreToyBit :=
+  Dialect.lift.sum_lawfulEffects TyIncl.lawful_inl fun _ h => h
+
+/-- The effects of an op of the sum of three dialects, on the memories of
+its three dialects. -/
+def coreToyBitEffects (o : CoreToyBit.Op) : Effects ((Core.Mem ⊕ Empty) ⊕ Empty) := effects o
+
+-- Each op of the sum of three dialects has its own dialect's effects.
+#guard Core.samples.all (fun o =>
+    coreToyBitEffects (.inl (.inl o)) == (Core.Op.effects o).map (.inl ∘ .inl)) &&
+  coreToyBitEffects (.inl (.inr (.mask 8 3))) == {} &&
+  coreToyBitEffects (.inr (.low 8)) == {} && coreToyBitEffects (.inr .int) == {}
+#guard poisonClass (d := CoreToyBit) (.inr (.low 8)) == .propagates
 
 /-! # Words routed to their own dialect -/
 
@@ -186,6 +207,12 @@ end
 
 /-- info: 'Fir.Dialect.lift.lawfulPoison' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Dialect.lift.lawfulPoison
+
+/-- info: 'Fir.Dialect.lift.lawfulEffects' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Dialect.lift.lawfulEffects
+
+/-- info: 'FirTest.Bit.lawfulDialectEffects' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Bit.lawfulDialectEffects
 
 /-- info: 'FirTest.coreToyBit_validIsWellFormed' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms coreToyBit_validIsWellFormed

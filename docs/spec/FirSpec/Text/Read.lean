@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14857816940191872153")
+:::moduleDocs (fingerprint := "10061496186304799929")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -37,7 +37,7 @@ the type's position ($`\mathsf{ty\_pos}` is `tyPos` in the Lean). Decoding
 rejects a type, or a value defined twice, at these positions.
 :::
 
-:::readable Fir.Text.SOp Fir.Text.SBlock Fir.Text.SRegion (fingerprint := "540794935121264740")
+:::readable Fir.Text.SOp Fir.Text.SBlock Fir.Text.SRegion (fingerprint := "8449572933258008816")
 *Definition: ops, blocks and regions as written.* An op, a block and a
 region are read as these records, before any op is decoded:
 
@@ -53,7 +53,7 @@ label,params,ops \begin{array}{l} \{\mathsf{label}~\ell, \\ \enspace \mathsf{par
 
 ```grammar Fir.Text.SRegion
 \mathit{sregion}
-blocks \{\mathsf{blocks}~\mathit{sblock}^*\}
+kind,blocks \{\mathsf{kind}~k^?,~\mathsf{blocks}~\mathit{sblock}^*\}
 ```
 
 An op keeps its results as written, its name $`n` with its position $`p`
@@ -61,7 +61,8 @@ An op keeps its results as written, its name $`n` with its position $`p`
 $`x` with its position $`q`, its
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors],
 its regions and its location reference $`r`. A block keeps its label, its
-arguments as written and its ops; a region, its blocks. Nothing here
+arguments as written and its ops; a region, the kind it names, if any, and
+its blocks. Nothing here
 depends on the dialect: the name and attributes of an op stay as written
 until decoding.
 :::
@@ -155,7 +156,7 @@ or neither. Last comes the op's location reference; any other token there
 is an error, "expected the op's location reference".
 :::
 
-:::readable Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "8835602927585443407")
+:::readable Fir.Text.readKind Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "18325856566973871954")
 *Definition: reading blocks, ops and regions.* These readers call one
 another, since an op may own regions:
 
@@ -167,10 +168,13 @@ another, since an op may own regions:
   then its name, a word.
 * The rest of an op is its attributes, then its operands and successors,
   then its regions, then its location reference.
-* Regions are read as long as `{` follows: the region's blocks, then `}`.
+* Regions are read as long as `{` follows: the region's kind, then its
+  blocks, then `}`. A word right after the `{` is the region's kind, and
+  no word there is the core's kind; a block starts with a label, so the
+  two never meet.
 :::
 
-:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "9747579688625934490")
+:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "7135882020144580303")
 *Definition: reading a dialect set.* When the tokens start with the word
 `dialects`, the set is the word after it, then each word after a comma, as
 long as a comma follows; a token after `dialects` or after a comma that is

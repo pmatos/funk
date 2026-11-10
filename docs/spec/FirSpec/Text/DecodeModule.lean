@@ -34,7 +34,7 @@ decoding each $`(a_i, q_i)` with the
 order, gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "11330118856080397004")
+:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "9625755100788047290")
 *Theorem: a well-formed function decodes back.* For every dialect with
 signatures, validation rules and a text format whose text is lawful, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -49,7 +49,9 @@ The decoder decodes the result types, builds the scope with the
 {ref "The-fir-specification--Text-format--The-decoding-step"}[first pass],
 decodes the parameters, and decodes the blocks in that scope with the
 {ref "The-fir-specification--Text-format--Blocks-and-ops-decoded-back"}[second pass];
-each step succeeds with the part of $`f` that it decodes.
+each step succeeds with the part of $`f` that it decodes. The decoder gives
+a body of the core's kind, which is the kind of a well-formed function's
+body.
 :::
 
 :::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "1750046234271386164")

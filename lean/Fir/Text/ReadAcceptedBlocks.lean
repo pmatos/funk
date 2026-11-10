@@ -106,14 +106,16 @@ theorem readBlocks_writable : ∀ ts, ReadsWritable readBlocks SBlock.WritableLi
   | case7 pos rest ihbs ihregs => -- `readRegions`: a region, then the regions after it
     intro hw rs r h
     rw [readRegions.eq_1] at h
+    bind_step h with ⟨⟨kind, r₀, h₀⟩, e₀, h⟩
     bind_step h with ⟨⟨bs, r₁, h₁⟩, e₁, h⟩
     bind_step h with ⟨⟨_, r₂, h₂⟩, e₂, h⟩
     bind_step h with ⟨⟨rs', r₃, h₃⟩, e₃, h⟩
     cases h
-    obtain ⟨k₁, w₁⟩ := ihbs hw.tail _ _ e₁
+    obtain ⟨k₀, w₀⟩ := readKind_writable _ hw.tail _ _ e₀
+    obtain ⟨k₁, w₁⟩ := ihbs r₀ h₀ w₀ _ _ e₁
     have w₂ := (expect_writable _ _ _ w₁ _ _ e₂).2
-    obtain ⟨k₃, w₃⟩ := ihregs r₁ h₁ r₂ h₂ w₂ _ _ e₃
-    exact ⟨⟨k₁, k₃⟩, w₃⟩
+    obtain ⟨k₃, w₃⟩ := ihregs r₀ h₀ r₁ h₁ r₂ h₂ w₂ _ _ e₃
+    exact ⟨⟨k₀, k₁, k₃⟩, w₃⟩
   | case8 ts hne => -- `readRegions`: no region
     intro hw rs r h
     rw [readRegions.eq_2 _ hne] at h

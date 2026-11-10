@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The decoding step: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6171007526611993748")
+:::moduleDocs (fingerprint := "10408754279736529092")
 :::
 
 :::readable Fir.Block.scopeDefs Fir.Operation.scopeDefs Fir.Region.scopeDefs (fingerprint := "14018173596716500762")
@@ -130,7 +130,7 @@ reader that adds definitions to a scope adds $`y_1 : T_1, \dots, y_n : T_n`
 for their trees, in order.
 :::
 
-:::readable Fir.Text.defineBlocks_nil Fir.Text.defineBlocks_cons Fir.Text.defineOps_nil Fir.Text.defineOps_cons Fir.Text.defineRegions_nil Fir.Text.defineRegions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (fingerprint := "7987321205122702915")
+:::readable Fir.Text.defineBlocks_nil Fir.Text.defineBlocks_cons Fir.Text.defineOps_nil Fir.Text.defineOps_cons Fir.Text.defineRegions_nil Fir.Text.defineRegions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (fingerprint := "16706359931980544307")
 *Theorems: the first pass adds definitions, one element at a time.* For
 every dialect with a text format, the first pass on blocks, on ops and on
 regions adds, for their trees, their definitions in the order of the first
@@ -143,9 +143,9 @@ pass:
 * for an op followed by ops $`o^*`: it adds them when the types of the op's
   results decode back to themselves, the pass on regions adds those of the
   op's regions, and the pass on ops adds those of $`o^*`;
-* for a region followed by regions $`r^*`: it adds them when the pass on
-  blocks adds those of the region's blocks, and the pass on regions adds
-  those of $`r^*`.
+* for a region of any kind followed by regions $`r^*`: it adds them when
+  the pass on blocks adds those of the region's blocks, and the pass on
+  regions adds those of $`r^*`.
 
 Here a type $`T` _decodes back to itself_ when
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
@@ -160,7 +160,7 @@ and the first pass on regions. The three are proved together, by recursion
 on the blocks, ops and regions, from the lemmas above.
 :::
 
-:::readable Fir.Func.WellFormed.decodeTy_def (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "10409820501084467350")
+:::readable Fir.Func.WellFormed.decodeTy_def (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12984321481616943013")
 *Theorem: every type that a well-formed function defines decodes back.* For
 every dialect with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -169,7 +169,7 @@ every value that $`f` defines at any depth with its type:
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
 :::
 
-:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "4990254789688537331")
+:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "15451524792393144736")
 *Theorem: the first pass on a well-formed function gives each value its
 type.* For every dialect with
 signatures and a text format, every well-formed function $`f`, parameters

@@ -68,8 +68,9 @@ results. `isTerminator` marks the ops that end a block, and `succCount` says
 how many successors an op has: a terminator chooses one of them, or returns.
 Only terminators have successors.
 
-Region signatures and effect kinds come later, with the first dialect whose
-ops have regions (H6) or need effect classes (H7).
+Each op's effects come from the dialect's effect class (the section on
+effect sets). Region signatures come later, with the first dialect whose ops
+have regions (H6).
 -/
 class DialectSignature (d : Dialect) where
   /-- The types of the op's operands. -/

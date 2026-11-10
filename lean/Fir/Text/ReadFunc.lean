@@ -41,7 +41,7 @@ theorem bind_reads {ε α γ δ : Type} {X : Except ε α} {K : α → Except ε
 function's tree, when each type it writes is written as a type. -/
 theorem Func.reads (f : Func d) (ht : ∀ t ∈ f.types, (tyAttr t).IsType) (p : TextPos) :
     Reads (readItem "func" p) SItem.erase f.tree f.tokens.tail (fun _ => True) := by
-  obtain ⟨name, params, results, ⟨blocks⟩⟩ := f
+  obtain ⟨name, params, results, ⟨_, blocks⟩⟩ := f
   have hres : ∀ t ∈ results, (tyAttr t).IsType := fun t h => ht t (List.mem_append_left _ h)
   have hpar : ∀ x ∈ params, (tyAttr x.2).IsType := fun x hx =>
     ht x.2 (List.mem_append_right _ (List.mem_map_of_mem (List.mem_append_left _ hx)))

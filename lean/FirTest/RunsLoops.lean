@@ -48,7 +48,7 @@ def forever : Func CoreDialect where
   name := "forever"
   params := [("x", i 8)]
   results := [i 8]
-  body := ⟨[
+  body := ⟨none, [
     ⟨"entry", [], [
       op [] .br [] 0 [⟨"loop", ["x"]⟩]]⟩,
     ⟨"loop", [("a", i 8)], [
@@ -82,6 +82,7 @@ def foreverModule : Module CoreDialect := ⟨[], [.func forever], [(0, .unknown)
 /-- `@forever` is valid in its module. Every use is of a parameter or of an
 argument or earlier result of its own block. -/
 theorem forever_valid : forever.Valid foreverModule.context where
+  bodyKind := rfl
   entry := ⟨_, rfl, rfl⟩
   reachable b hb := by
     have hentry : forever.Reachable "entry" := .entry rfl

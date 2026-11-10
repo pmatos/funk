@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the first pass accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6304069941811610365")
+:::moduleDocs (fingerprint := "12357358463602932005")
 :::
 
 :::readable Fir.Text.Scope.Holds.not_mem (pin := Fir.Text.Scope.Holds) (fingerprint := "3433405947972505279")
@@ -71,7 +71,7 @@ to any scope that holds $`L`, with distinct names, the values that
 $`\mathrm{defs}` lists, and finds no value twice.
 :::
 
-:::readable Fir.Text.adds_blocks_nil Fir.Text.adds_blocks_cons Fir.Text.adds_ops_nil Fir.Text.adds_ops_cons Fir.Text.adds_regions_nil Fir.Text.adds_regions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "16227880566020978982")
+:::readable Fir.Text.adds_blocks_nil Fir.Text.adds_blocks_cons Fir.Text.adds_ops_nil Fir.Text.adds_ops_cons Fir.Text.adds_regions_nil Fir.Text.adds_regions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "15688411651180599518")
 *Theorems: the first pass, part by part.* Let $`d` be a dialect with a
 text. The first pass over blocks
 {ref "The-fir-specification--Text-format--What-the-first-pass-accepts"}[adds]
@@ -88,8 +88,8 @@ In the same way, the first pass over ops adds the empty list of ops, and
 adds an op followed by the ops $`O`, whatever its name, attributes,
 operands, successors and location reference, when it adds the op's
 regions and the ops $`O`; and the first pass over regions adds the empty
-list of regions, and adds a region followed by the regions $`R` when it
-adds the region's blocks and the regions $`R`.
+list of regions, and adds a region of any kind followed by the regions
+$`R` when it adds the region's blocks and the regions $`R`.
 
 The order is that of the
 {ref "The-fir-specification--Text-format--The-decoding-step"}[first pass]:

@@ -139,7 +139,7 @@ def problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Proble
   let tree := Thunk.mk fun _ => dominance t.graph f.entryLabel?
   let defs := f.params ++ all.flatMap Block.defs
   let reached := reachedIn t.graph t.start
-  f.entryProblems ++
+  f.kindProblems ++ f.entryProblems ++
   f.blocks.filterMap (fun b => if reached.contains b.label then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " is not reachable from the entry"))) ++
   (repeats (f.blocks.map (·.label))).map (fun l =>

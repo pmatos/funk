@@ -195,7 +195,8 @@ Each op declares a set of effects drawn from this list (ADR-2026-11-09-1541):
 - writes memory `m`;
 - allocates or frees in memory `m`;
 - may-UB;
-- may produce poison, which is the op's existing poison class;
+- may produce poison: a poison result on operands with no poison, beside the
+  op's poison class (ADR-2026-11-09-2249);
 - observable: it adds an event to the trace;
 - control: it is a terminator.
 
@@ -209,7 +210,8 @@ A dialect declares the effects of its own ops, including effects on memories it
 adds. A new Lean class, beside `DialectPoison`, gives each op's effect set, and
 `OpSpec` gives it in Rust. The Rust registry's declarations are checked against
 the Lean ones, as op signatures are. `DialectPoison` folds into the effect class
-when the class lands (ADR-2026-11-09-1541).
+when the class lands (ADR-2026-11-09-1541). The class has landed in Lean;
+semantics-effects.md says what holds today.
 
 For each op, the spec proves that its declaration over-approximates its
 semantics. An op that does not declare a write to `m` leaves `m` unchanged. One

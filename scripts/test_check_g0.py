@@ -5,10 +5,12 @@ import unittest
 from pathlib import Path
 
 from check_g0 import (
+    CORE_EFFECTS,
     CORE_POISON,
     CORE_TEXT,
     ROOT,
     core_words,
+    effects_problems,
     generic_files,
     poison_problems,
     problems,
@@ -35,7 +37,14 @@ def Op.poisonClass : Op → PoisonClass
   | .add .. | .ret _ => .propagates
   | .br => .exception
 
-instance : DialectPoison CoreDialect := ⟨Core.Op.poisonClass⟩
+instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
+"""
+
+CORE_EFFECTS_SAMPLE = """
+/-- The effects of each core op. -/
+def Op.effects : Op → Effects Mem
+  | .add _ f => { mayPoison := f.nsw || f.nuw }
+  | .ret _ | .br => { control := true }
 """
 
 
@@ -45,7 +54,11 @@ def tree(case: unittest.TestCase, files: dict[str, str]) -> Path:
     tmp = tempfile.TemporaryDirectory()
     case.addCleanup(tmp.cleanup)
     root = Path(tmp.name)
-    samples = {CORE_TEXT: CORE_TEXT_SAMPLE, CORE_POISON: CORE_POISON_SAMPLE}
+    samples = {
+        CORE_TEXT: CORE_TEXT_SAMPLE,
+        CORE_POISON: CORE_POISON_SAMPLE,
+        CORE_EFFECTS: CORE_EFFECTS_SAMPLE,
+    }
     for rel, text in {**samples, **files}.items():
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -255,6 +268,49 @@ class PoisonClasses(unittest.TestCase):
                 "def Op.poisonClass : Op → PoisonClass := fun _ => .exception\n"
             ),
             [f"{CORE_POISON}:1: Op.poisonClass lists no op"],
+        )
+
+
+class Effects(unittest.TestCase):
+    def effects(self, text: str) -> list[str]:
+        return effects_problems(tree(self, {CORE_EFFECTS: text}))
+
+    def test_each_op_listed_by_its_constructor_passes(self):
+        self.assertEqual(self.effects(CORE_EFFECTS_SAMPLE), [])
+
+    def test_a_case_for_the_rest_fails(self):
+        for rest in ["_", "op", "(_)"]:
+            text = CORE_EFFECTS_SAMPLE.replace("| .ret _ | .br =>", f"| {rest} =>")
+            self.assertEqual(
+                self.effects(text),
+                [
+                    f"{CORE_EFFECTS}:5: Op.effects has a case that is not one op's constructor"
+                ],
+                rest,
+            )
+
+    def test_operators_in_values_are_not_cases(self):
+        text = CORE_EFFECTS_SAMPLE.replace(
+            "| .ret _ | .br => { control := true }",
+            "| .ret _ | .br => { control := true <| x |>.f }",
+        )
+        self.assertEqual(self.effects(text), [])
+
+    def test_no_table_or_no_case_fails(self):
+        self.assertEqual(
+            self.effects("def other := 1\n"),
+            [f"{CORE_EFFECTS}: no `def Op.effects`, so no op's effect set is checked"],
+        )
+        self.assertEqual(
+            self.effects("def Op.effects : Op → Effects Mem := fun _ => {}\n"),
+            [f"{CORE_EFFECTS}:1: Op.effects lists no op"],
+        )
+
+    def test_problems_report_the_effects_table(self):
+        root = tree(self, {CORE_EFFECTS: "def other := 1\n"})
+        self.assertIn(
+            f"{CORE_EFFECTS}: no `def Op.effects`, so no op's effect set is checked",
+            problems(root),
         )
 
 

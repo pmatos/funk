@@ -86,7 +86,11 @@ pub struct Block {
     pub ops: Vec<Op>,
 }
 
-/// A region: a list of blocks, the first of which is its entry.
+/// A region: its kind and a list of blocks, the first of which is its entry.
+///
+/// A region names its kind (ADR-2026-11-09-1543). `None` is the core's
+/// kind, a control-flow graph whose ops run in order (ADR-2026-10-29-2005);
+/// a dialect's kind is a word of that dialect, such as `toy.graph`.
 ///
 /// Regions nest to any depth, so `Region` writes its `Clone`, `PartialEq`,
 /// `Hash`, `Debug` and `Drop` without recursion (ADR-2026-10-30-1333).
@@ -94,6 +98,8 @@ pub struct Block {
 /// `Region`: take them with [`std::mem::take`].
 #[derive(Default)]
 pub struct Region {
+    /// The region's kind, or `None` for the core's kind.
+    pub kind: Option<String>,
     /// The region's blocks.
     pub blocks: Vec<Block>,
 }

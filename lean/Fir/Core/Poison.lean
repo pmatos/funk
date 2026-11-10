@@ -1,6 +1,7 @@
 import Fir.Core.Values
 import Fir.Core.Text
 import Fir.Execution.Propagation
+import Fir.Core.OpEffects
 
 /-!
 # The poison classes of the core ops
@@ -79,7 +80,9 @@ end Fir.Core
 
 namespace Fir
 
-instance : DialectPoison CoreDialect := ⟨Core.Op.poisonClass⟩
+/-- The core dialect's effect class: each op's poison class, and its
+effects from the section on the effects of the core ops. -/
+instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
 
 instance : TyPoison Core.Ty := ⟨Core.Ty.IsPoison⟩
 

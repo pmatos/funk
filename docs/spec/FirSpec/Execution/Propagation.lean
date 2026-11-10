@@ -14,29 +14,14 @@ when the Lean changes under it.
 
 #doc (Manual) "Poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6974688253723191427")
+:::moduleDocs (fingerprint := "1793719121250415061")
 :::
 
-:::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
-*Definition: a poison class.* How an op treats {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[poison] operands.
-
-```grammar Fir.PoisonClass
-\mathit{class}
-propagates   \mathsf{propagates}
-exception    \mathsf{exception}
-```
-
-* $`\mathsf{propagates}`: a poison operand makes every result the op
-  returns poison.
-* $`\mathsf{exception}`: the op states its own rule for poison operands.
-:::
-
-:::readable Fir.TyPoison Fir.DialectPoison (fingerprint := "4053862862580637704")
-*Definition: the poison values of a dialect, and the poison class of each
-op.* Each dialect says which values of each of its types are poison, and
-gives each of its ops a poison class, $`\mathrm{class}(o)`. A type may have
-no poison at all. Every op declares a class, so that a dialect added for
-new hardware states one too (ADR-2026-10-29-2016).
+:::readable Fir.TyPoison (fingerprint := "4292109808732388566")
+*Definition: the poison values of a dialect.* Each dialect says which
+values of each of its types are poison. A type may have no poison at all.
+Each op's poison class, $`\mathrm{class}(o)`, comes from the dialect's
+{ref "The-fir-specification--Execution--Effect-sets"}[effect class].
 :::
 
 :::readable Fir.HVector.Any Fir.HVector.All Fir.HVector.Forall₂ Fir.HVector.forall₂_refl (fingerprint := "6154170390044616023")
@@ -155,7 +140,7 @@ refinement compositional: a pass that replaces a value by one that refines
 it refines every op that uses it, and so the whole function.
 :::
 
-:::readable Fir.LawfulDialectPoison (pin := Fir.TypesValid) (fingerprint := "17368548828273043478")
+:::readable Fir.LawfulDialectPoison (pin := Fir.TypesValid) (fingerprint := "4142040794794364572")
 *Definition: a lawful dialect.* A dialect is _lawful_ when it meets every
 poison obligation on its valid op instances. An op instance is _valid_
 when validation accepts its operand and result types

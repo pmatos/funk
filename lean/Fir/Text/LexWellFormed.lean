@@ -245,7 +245,7 @@ theorem op_tokens (hf : f.WellFormed) :
     (∀ b ∈ Region.allBlocks o.regions, b ∈ f.allBlocks) → ∀ t ∈ o.tokens, t.Writable
   | ⟨results, op, operands, succs, regions, loc⟩, ho, hres, hsub => by
     have hwf := hf.ops _ ho
-    have hregs := regions_tokens hf regions hsub
+    have hregs := regions_tokens hf regions hsub (hf.kinds _ ho)
     simp only [Operation.tokens]
     split_writable
     · exact hf.lhs_tokens hres
@@ -256,13 +256,19 @@ theorem op_tokens (hf : f.WellFormed) :
 /-- The tokens of regions of the function, at any depth, can be written. -/
 theorem regions_tokens (hf : f.WellFormed) :
     ∀ rs : List (Region d), (∀ b ∈ Region.allBlocks rs, b ∈ f.allBlocks) →
-    ∀ t ∈ Region.tokensList rs, t.Writable
-  | [], _ => by simp [Region.tokensList]
-  | ⟨bs⟩ :: rs, hsub => by
+    (∀ r ∈ rs, ∀ k ∈ r.kind, isWord k) → ∀ t ∈ Region.tokensList rs, t.Writable
+  | [], _, _ => by simp [Region.tokensList]
+  | ⟨kind, bs⟩ :: rs, hsub, hk => by
     have h₁ := blocks_tokens hf bs fun b hb => hsub b (by simp [Region.allBlocks, hb])
-    have h₂ := regions_tokens hf rs fun b hb => hsub b (by simp [Region.allBlocks, hb])
+    have h₂ := regions_tokens hf rs (fun b hb => hsub b (by simp [Region.allBlocks, hb]))
+      fun r hr => hk r (.tail _ hr)
+    have h₀ : ∀ t ∈ kindTokens kind, t.Writable := by
+      cases kind with
+      | none => simp [kindTokens]
+      | some k => simpa [kindTokens, Tok.Writable] using hk _ (.head _) k rfl
     simp only [Region.tokensList]
     split_writable
+    · exact h₀
     · exact h₁
     · exact h₂
 end

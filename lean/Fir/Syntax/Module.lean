@@ -103,9 +103,16 @@ structure Block (d : Dialect) where
   body : List (Operation d)
 
 /--
-A region: a list of blocks. The first block is the region's entry.
+A region: its kind and a list of blocks. The first block is the region's
+entry.
+
+A region names its kind (ADR-2026-11-09-1543). No kind, `none`, is the
+core's kind: a control-flow graph of blocks, whose ops run in order
+(ADR-2026-10-29-2005). A dialect's kind, such as a region whose ops are
+unordered, is named by a word of that dialect.
 -/
 structure Region (d : Dialect) where
+  kind : Option Name := none
   blocks : List (Block d)
 end
 

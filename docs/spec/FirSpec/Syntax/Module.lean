@@ -17,10 +17,10 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16016337379009133486")
+:::moduleDocs (fingerprint := "4490408035636114134")
 :::
 
-:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "9078334971116599343")
+:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "8197633234102511224")
 *Definition: the strings that refer to values, labels and symbols.* In
 the syntax trees of a program, a value, a block label and a symbol are each
 referred to by a string, stored without its sigil: the value `%x`, the label
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "7311467072228554417")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "3151177739411748522")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -77,13 +77,13 @@ block, the first block of the function, and to pass one value of the right
 type for each of that block's arguments.
 :::
 
-:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "7685077818017998768")
+:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "8815191834166478095")
 *Definition: operations, blocks and regions.* An _operation_ is one use of
 an op in a block: it names the op's results, gives its op instance, names
 its operands, and holds its successors, regions and location reference. A
-block is a label, typed arguments and a list of operations. A region is a
-list of blocks. The three are defined together, since an op may own
-regions:
+block is a label, typed arguments and a list of operations. A region is
+its kind and a list of blocks. The three are defined together, since an op
+may own regions:
 
 ```grammar Fir.Operation
 \mathit{operation}
@@ -97,7 +97,7 @@ label,params,body \begin{array}{l} \{\mathsf{label}~\ell, \\ \enspace \mathsf{pa
 
 ```grammar Fir.Region
 \mathit{region}
-blocks \{\mathsf{blocks}~\mathit{block}^*\}
+kind,blocks \{\mathsf{kind}~k^?,~\mathsf{blocks}~\mathit{block}^*\}
 ```
 
 Here $`t` is a type and $`o` an op instance of the
@@ -123,7 +123,13 @@ $`\mathsf{add}_{32}~\mathsf{nsw}`, whose operands are $`\mathit{acc}~i`,
 with no successors, no regions and the location reference 3.
 
 A block's $`\mathsf{params}` are its arguments, and its $`\mathsf{body}`
-its operations. The first block of a region is its _entry_. Every op has
+its operations. The first block of a region is its _entry_. A region names
+its kind (ADR-2026-11-09-1543): no kind, $`k^? = \epsilon`, is the core's
+kind, a control-flow graph of blocks whose ops run in order
+(ADR-2026-10-29-2005), and a kind $`k` is a word of a dialect, such as
+`toy.graph`. The text writes a region's kind as a word right after the
+region's `{`, and writes nothing there for the core's kind
+(ADR-2026-11-10-1530). Every op has
 this one shape, whatever its dialect, so that a dialect adds ops without
 new syntax (ADR-2026-10-29-2016), and a function is a control-flow graph of
 blocks (ADR-2026-10-29-2005). What makes these terms well formed is
@@ -132,7 +138,7 @@ among other rules, every block holds at least one op, and its last op, and
 only that one, is a terminator.
 :::
 
-:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "9263509389443027510")
+:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "17110687698519134541")
 *Definition: a function.* A function is a symbol, typed parameters, the
 types of its results, and a region, its body:
 
@@ -145,7 +151,9 @@ $`s` is the function's symbol, any string. $`\mathsf{params}` are its
 parameters, and $`\mathsf{results}` the types of what it returns: any
 number of them, none included (ADR-2026-10-30-0816). In text, a function is
 written `func @s(%x: t, …) -> t, … { … }`, with its blocks between the
-braces, and with no arrow when it returns nothing.
+braces, and with no arrow when it returns nothing. Its body is a region of
+the core's kind, and its text names no kind: a word after the `{` of an
+item starts the items of its body (ADR-2026-11-10-1530).
 
 The parameters are the arguments of the entry block, the first block of
 $`\mathsf{body}`;

@@ -34,8 +34,9 @@ theorem ok_bind {ε α β : Type} (a : α) (k : α → Except ε β) : (Except.o
 /-- What is left of a function's blocks to decode, and what is decoded so
 far. -/
 inductive TreeFrame (d : Dialect) where
-  /-- The blocks of a region: those decoded, last first, and those left. -/
-  | blocks (done : List (Block d)) (rest : List SBlock)
+  /-- The blocks of a region of this kind: those decoded, last first, and
+  those left. -/
+  | blocks (kind : Option Name) (done : List (Block d)) (rest : List SBlock)
   /-- The ops of the block `b`, whose body is empty: those decoded, last
   first, and those left. -/
   | ops (b : Block d) (done : List (Operation d)) (rest : List SOp)
@@ -45,7 +46,7 @@ inductive TreeFrame (d : Dialect) where
 
 /-- A measure of a frame. -/
 def TreeFrame.weight : TreeFrame d → Nat
-  | .blocks _ bs => sblocksWeight bs + 1
+  | .blocks _ _ bs => sblocksWeight bs + 1
   | .ops _ _ os => sopsWeight os + 1
   | .regions _ _ rs => sregionsWeight rs + 1
 
@@ -83,17 +84,17 @@ is a tail call. -/
 def decodeFrames (sc : Scope d) (f : String) :
     List (TreeFrame d) → Except ParseError (List (Block d))
   | [] => pure []
-  | .blocks done [] :: fs => match fs with
+  | .blocks kind done [] :: fs => match fs with
     | [] => pure done.reverse
     | .regions o rs rest :: fs =>
-      decodeFrames sc f (.regions o (⟨done.reverse⟩ :: rs) rest :: fs)
+      decodeFrames sc f (.regions o (⟨kind, done.reverse⟩ :: rs) rest :: fs)
     | _ => pure []
-  | .blocks done (⟨label, params, ops⟩ :: bs) :: fs => do
+  | .blocks kind done (⟨label, params, ops⟩ :: bs) :: fs => do
     let params ← params.mapM decodeDef
-    decodeFrames sc f (.ops ⟨label, params, []⟩ [] ops :: .blocks done bs :: fs)
+    decodeFrames sc f (.ops ⟨label, params, []⟩ [] ops :: .blocks kind done bs :: fs)
   | .ops b done [] :: fs => match fs with
-    | .blocks bs rest :: fs =>
-      decodeFrames sc f (.blocks ({ b with body := done.reverse } :: bs) rest :: fs)
+    | .blocks kind bs rest :: fs =>
+      decodeFrames sc f (.blocks kind ({ b with body := done.reverse } :: bs) rest :: fs)
     | _ => pure []
   | .ops b done (⟨results, name, namePos, attrs, operands, succs, regions, loc⟩ :: os) :: fs => do
     let ts ← operandTypes sc f [] operands
@@ -108,8 +109,8 @@ def decodeFrames (sc : Scope d) (f : String) :
     | .ops b os rest :: fs =>
       decodeFrames sc f (.ops b ({ o with regions := done.reverse } :: os) rest :: fs)
     | _ => pure []
-  | .regions o done (⟨bs⟩ :: rs) :: fs =>
-    decodeFrames sc f (.blocks [] bs :: .regions o done rs :: fs)
+  | .regions o done (⟨kind, bs⟩ :: rs) :: fs =>
+    decodeFrames sc f (.blocks kind [] bs :: .regions o done rs :: fs)
 termination_by fs => treeFramesWeight fs
 decreasing_by
   all_goals
@@ -140,9 +141,9 @@ def finish (sc : Scope d) (f : String) :
       finish sc f (.op { o with regions := (r :: rs).reverse ++ more }) fs
     | _ => pure []
   | .block b, fs => match fs with
-    | .blocks bs rest :: fs => do
+    | .blocks kind bs rest :: fs => do
       let more ← Text.decodeBlocks sc f rest
-      finish sc f (.region ⟨(b :: bs).reverse ++ more⟩) fs
+      finish sc f (.region ⟨kind, (b :: bs).reverse ++ more⟩) fs
     | _ => pure []
   | .op o, fs => match fs with
     | .ops b os rest :: fs => do
@@ -154,9 +155,9 @@ def finish (sc : Scope d) (f : String) :
 def runTreeFrames (sc : Scope d) (f : String) :
     List (TreeFrame d) → Except ParseError (List (Block d))
   | [] => pure []
-  | .blocks bs rest :: fs => do
+  | .blocks kind bs rest :: fs => do
     let more ← Text.decodeBlocks sc f rest
-    finish sc f (.region ⟨bs.reverse ++ more⟩) fs
+    finish sc f (.region ⟨kind, bs.reverse ++ more⟩) fs
   | .ops b os rest :: fs => do
     let more ← Text.decodeOps sc f rest
     finish sc f (.block { b with body := os.reverse ++ more }) fs
@@ -171,16 +172,16 @@ theorem decodeFrames_eq (sc : Scope d) (f : String) (fs : List (TreeFrame d)) :
   fun_induction decodeFrames sc f fs with
   | case1 => rfl
   | case2 => simp [runTreeFrames, finish, Text.decodeBlocks]
-  | case3 done o rs rest fs ih =>
+  | case3 kind done o rs rest fs ih =>
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
     simp [runTreeFrames, finish, Text.decodeBlocks]
-  | case4 done fs h1 h2 =>
+  | case4 kind done fs h1 h2 =>
     simp only [runTreeFrames, finish, Text.decodeBlocks, pure_bind]
-  | case5 done label params ops bs fs ih =>
+  | case5 kind done label params ops bs fs ih =>
     simp only [ih, runTreeFrames, finish, Text.decodeBlocks, decodeDef_eq]
     simp
-  | case6 b done bs rest fs ih =>
+  | case6 b done kind bs rest fs ih =>
     simp only [List.unattach_reverse, List.unattach_attach] at ih
     rw [ih]
     simp [runTreeFrames, finish, Text.decodeOps]
@@ -207,14 +208,14 @@ theorem decodeFrames_eq (sc : Scope d) (f : String) (fs : List (TreeFrame d)) :
     simp [runTreeFrames, finish, Text.decodeRegions]
   | case10 o done fs h =>
     simp only [runTreeFrames, finish, Text.decodeRegions, pure_bind]
-  | case11 o done bs rs fs ih =>
+  | case11 o done kind bs rs fs ih =>
     rw [ih]
     simp [runTreeFrames, finish, Text.decodeRegions]
 
 /-- The loop decodes a function's blocks as the spec's `decodeBlocks`
 does. -/
 theorem decodeFrames_blocks (sc : Scope d) (f : String) (bs : List SBlock) :
-    decodeFrames sc f [.blocks [] bs] = Text.decodeBlocks sc f bs := by
+    decodeFrames sc f [.blocks none [] bs] = Text.decodeBlocks sc f bs := by
   simp [decodeFrames_eq, runTreeFrames, finish]
 
 end FirRef

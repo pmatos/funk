@@ -29,7 +29,7 @@ def valid (t : String) : Bool := checks t []
 location table `@0 = unknown`. -/
 def entryOnly (ops : List (Operation CoreDialect)) (params : List (Name × Ty) := [])
     (results : List Ty := []) : Module CoreDialect :=
-  ⟨[], [.func ⟨"f", params, results, ⟨[⟨"e", [], ops⟩]⟩⟩], [(0, .unknown)]⟩
+  ⟨[], [.func ⟨"f", params, results, ⟨none, [⟨"e", [], ops⟩]⟩⟩], [(0, .unknown)]⟩
 
 /-! # Every op of the core dialect, in a valid function -/
 
@@ -51,6 +51,9 @@ def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n
 /-! # An op owns no region -/
 
 #guard checks (func ["br {\n  ^inner:\n    ret @0\n  } @0"])
+  ["the op owns a region: no op may own one yet",
+   "the op has 0 successors, and its op instance has 1"]
+#guard checks (func ["br { toy.graph\n  ^inner:\n    ret @0\n  } @0"])
   ["the op owns a region: no op may own one yet",
    "the op has 0 successors, and its op instance has 1"]
 

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "What the lawful class gives: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2582150824750587004")
+:::moduleDocs (fingerprint := "12360667126087243427")
 :::
 
-:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "14577504316984155928")
+:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "18245530803132403907")
 *Theorem: every op of a valid function is a valid op instance.* In every
 dialect with its validation rules, let the function $`f` be
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]
@@ -48,7 +48,7 @@ run can reach (ADR-2026-11-05-1715), and those are valid op instances in
 a valid module, by the previous theorem.
 :::
 
-:::readable Fir.Func.progress_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.Progress) (fingerprint := "9879526906783345535")
+:::readable Fir.Func.progress_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.Progress) (fingerprint := "14203432439168694315")
 *Theorem: in a lawful dialect, a function of a module whose functions are
 valid and run within it has progress.* Let the dialect be
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful]: its
@@ -68,7 +68,7 @@ instance. No path of such a run is stuck either, whatever its ops do, as
 that section proves.
 :::
 
-:::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "12246780387192884151")
+:::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "14711092829804244707")
 *Theorem: refined arguments, by the lawful class alone.* In every
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect, let every function of the module $`M` be valid in a context
 $`C`. Then for every function $`f` of $`M` and all argument vectors $`a`
@@ -85,7 +85,7 @@ callee monotone at valid op instances, so every function of $`M` has
 applies.
 :::
 
-:::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "2470441501711249044")
+:::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "2375913733936981657")
 *Theorem: congruence in the callee, by the lawful class alone.* In every
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect whose refinement of values is reflexive and transitive,
 let $`M` be a
