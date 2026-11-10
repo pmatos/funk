@@ -92,8 +92,11 @@ def keep(funk: str, artifact: Path, corpus: Path, rule: str | None) -> tuple[int
         return 2, f"{artifact} is a {v.verdict}: say which rule it breaks with --rule"
     path = corpus / "reject" / "fuzz.toml"
     table = reject_table(v.verdict, rule, artifact.read_bytes())
-    old = path.read_text(encoding="utf-8") if path.exists() else ""
-    path.write_text(old + ("\n" if old else "") + table, encoding="utf-8")
+    # Append rather than read the file and write it back: SonarCloud's S2083
+    # taint analysis flags file content that flows into a write.
+    separate = path.exists() and path.stat().st_size > 0
+    with path.open("a", encoding="utf-8") as out:
+        out.write(("\n" if separate else "") + table)
     return 0, f"added a {v.verdict} to {path}"
 
 
