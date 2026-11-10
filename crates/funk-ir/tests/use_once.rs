@@ -7,7 +7,7 @@
 //! `lean/FirTest/UseOnce.lean` reads the same file, so the two validators
 //! agree on each of them.
 
-use funk_ir::dialects::core::int_width;
+use funk_ir::dialects::core::{self, int_width};
 use funk_ir::{
     Block, Diagnostic, Dialect, Func, FuncContext, FuncSpec, LocRef, Op, OpShape, OpSpec, OpTypes,
     Registry, parse, verify,
@@ -90,8 +90,14 @@ impl FuncSpec for UseOnce {
 
 fn registry() -> Registry {
     let mut r = Registry::core();
-    r.register(Dialect::new("toy").op(Once).op(Sink).func_rule(UseOnce))
-        .expect("the use-once dialect registers");
+    r.register(
+        Dialect::new("toy")
+            .depends_on(core::NAME)
+            .op(Once)
+            .op(Sink)
+            .func_rule(UseOnce),
+    )
+    .expect("the use-once dialect registers");
     r
 }
 
