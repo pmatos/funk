@@ -14,9 +14,9 @@
 use std::collections::HashSet;
 
 use super::Diagnostic;
-use super::func::all_blocks;
 use crate::ir::names::{is_word, word_dialect};
-use crate::ir::{Attr, Func, Module, Type};
+use crate::ir::tree::{Step, walk};
+use crate::ir::{Attr, Block, Func, Module, Part, Type};
 use crate::registry::Registry;
 use crate::text::quote;
 
@@ -59,15 +59,22 @@ pub(super) fn check_words(m: &Module, reg: &Registry, out: &mut Vec<Diagnostic>)
     }
 }
 
+/// The blocks of `f`, at any depth, in the spec's order (`Func.allBlocks`).
+fn blocks(f: &Func) -> impl Iterator<Item = &Block> {
+    f.body.parts().filter_map(|p| match p {
+        Part::Block(b) => Some(b),
+        Part::Region(_) | Part::Op(_) => None,
+    })
+}
+
 /// The first dialect, outside `declared`, that a word of `f` names.
 fn first_outside<'f>(f: &'f Func, declared: &[String]) -> Option<&'f str> {
     let outside = |w: &'f str| word_dialect(w).filter(|x| !declared.iter().any(|d| d == x));
-    let blocks = all_blocks(&f.body);
     let types = f
         .results
         .iter()
         .chain(f.params.iter().map(|p| &p.ty))
-        .chain(blocks.iter().flat_map(|b| {
+        .chain(blocks(f).flat_map(|b| {
             b.params
                 .iter()
                 .chain(b.ops.iter().flat_map(|o| &o.results))
@@ -78,8 +85,7 @@ fn first_outside<'f>(f: &'f Func, declared: &[String]) -> Option<&'f str> {
             return Some(x);
         }
     }
-    blocks
-        .iter()
+    blocks(f)
         .flat_map(|b| &b.ops)
         .find_map(|o| outside(&o.name).or_else(|| in_attrs(&o.attrs, &outside)))
 }
@@ -90,28 +96,15 @@ fn in_type<'a>(ty: &'a Type, outside: &impl Fn(&'a str) -> Option<&'a str>) -> O
 }
 
 /// The first dialect that `outside` gives for a word of `attrs`, in the
-/// order the text writes them. Attributes nest to any depth, so the ones
-/// still to look at wait on a stack (ADR-2026-10-30-1333).
+/// order the text writes them, at any depth.
 fn in_attrs<'a>(
     attrs: &'a [Attr],
     outside: &impl Fn(&'a str) -> Option<&'a str>,
 ) -> Option<&'a str> {
-    let mut pending: Vec<&'a Attr> = attrs.iter().rev().collect();
-    while let Some(a) = pending.pop() {
-        match a {
-            Attr::Word(w) => {
-                if let Some(x) = outside(w) {
-                    return Some(x);
-                }
-            }
-            Attr::App(head, args) => {
-                if let Some(x) = outside(head) {
-                    return Some(x);
-                }
-                pending.extend(args.iter().rev());
-            }
-            Attr::Int(_) | Attr::Str(_) | Attr::Sym(_) => {}
-        }
-    }
-    None
+    attrs.iter().find_map(|a| {
+        walk(a).filter_map(Step::entered).find_map(|n| match n {
+            Attr::Word(w) | Attr::App(w, _) => outside(w),
+            Attr::Int(_) | Attr::Str(_) | Attr::Sym(_) => None,
+        })
+    })
 }

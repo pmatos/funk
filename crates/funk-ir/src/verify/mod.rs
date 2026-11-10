@@ -103,8 +103,9 @@ impl fmt::Display for Diagnostic {
     }
 }
 
-/// Checks `m` against every rule of validation. An empty list means that
-/// the module is valid.
+/// Checks `m` against every rule of validation, and against the rule of its
+/// dialect set (`Module.InDialectSet`). An empty list means that the module
+/// is valid and keeps to its dialect set.
 pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     let mut seen = HashSet::new();

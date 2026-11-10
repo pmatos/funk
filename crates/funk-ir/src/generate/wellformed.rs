@@ -29,8 +29,8 @@
 //! the cross-language round trip uses those modules. [`Dialects::CoreAndToy`]
 //! adds [`TOY_OP`], which a registry knows once it registers
 //! [`toy_dialect`]. A module may name one to three dialects in its dialect
-//! set, which the round trips print and read back whatever dialects the
-//! reader holds. The generator is deterministic: one seed gives one module.
+//! set, drawn with repeats, which the round trips print and read back
+//! whatever dialects the reader holds. The generator is deterministic: one seed gives one module.
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
 use crate::dialects::core::{self, int_type};
@@ -97,7 +97,7 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         locs::break_table(rng, &mut m.locs);
     }
     if rng.one_in(4) {
-        for _ in 0..=rng.below(2) {
+        for _ in 0..=rng.below(3) {
             m.dialects
                 .push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
         }
