@@ -1,4 +1,5 @@
-//! Control flow: `br`, `cond_br` and `ret` (`lean/Fir/Core/Ops.lean`,
+//! Control flow: `br`, `cond_br`, `ret` and `unreachable`
+//! (`lean/Fir/Core/Ops.lean`,
 //! `Op.decode` in `lean/Fir/Core/Text.lean`, `Op.Valid` in
 //! `lean/Fir/Core/Validation.lean`).
 //!
@@ -15,6 +16,10 @@
 //! `ret` returns its operands: any number of values of core types, none
 //! included (ADR-2026-10-30-0816). It returns the function's result types,
 //! which validation checks.
+//!
+//! `unreachable` has no operands, results, attributes or successors, and
+//! reaching it is immediate UB (ADR-2026-11-09-1548). Its effects are
+//! may-UB and control (ADR-2026-11-09-1541).
 
 use super::type_list;
 use super::types::{CoreType, core_type};
@@ -140,6 +145,34 @@ impl OpSpec for Ret {
     }
 }
 
+/// `unreachable`.
+pub(super) struct Unreachable;
+
+impl OpSpec for Unreachable {
+    fn name(&self) -> &str {
+        "unreachable"
+    }
+
+    fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
+        bare("unreachable", op)?;
+        if !op.operands.is_empty() {
+            return Err(format!(
+                "unreachable takes no operands, not {}",
+                type_list(op.operands)
+            ));
+        }
+        Ok(terminator(0))
+    }
+
+    /// Control, and may-UB, since reaching it is UB (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects {
+            may_ub: true,
+            ..control()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -164,7 +197,13 @@ mod tests {
         let one = std::slice::from_ref(&i1);
         assert_eq!(decode(&Br, &[], &[], &[]), "1 successors");
         assert_eq!(decode(&CondBr, &[], one, &[]), "2 successors");
-        for (spec, operands) in [(&Br as &dyn OpSpec, &[][..]), (&CondBr, one)] {
+        assert_eq!(decode(&Unreachable, &[], &[], &[]), "0 successors");
+        let pairs = [
+            (&Br as &dyn OpSpec, &[][..]),
+            (&CondBr, one),
+            (&Unreachable, &[]),
+        ];
+        for (spec, operands) in pairs {
             let name = spec.name();
             let words = decode(spec, &[Attr::word("nsw")], operands, &[]);
             assert_eq!(words, format!("{name} takes no attributes"));
@@ -172,6 +211,8 @@ mod tests {
             assert_eq!(result, format!("{name} defines no values"));
         }
         assert!(decode(&Br, &[], one, &[]).starts_with("br takes no operands"));
+        let why = decode(&Unreachable, &[], one, &[]);
+        assert_eq!(why, "unreachable takes no operands, not (i1)");
         for operands in [vec![], vec![i8], vec![ptr], vec![i1.clone(), i1]] {
             let why = decode(&CondBr, &[], &operands, &[]);
             assert!(why.starts_with("cond_br takes one operand"), "{why}");

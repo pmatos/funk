@@ -237,6 +237,13 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
       cases h
       exact ⟨rfl, rfl, rfl, (List.isEmpty_iff.mp hr).symm⟩
     · cases h
+  · -- unreachable
+    split at h
+    · rename_i ht
+      obtain ⟨rfl, h⟩ := bare_eq h
+      cases h
+      exact ⟨rfl, rfl, (List.isEmpty_iff.mp ht.1).symm, (List.isEmpty_iff.mp ht.2).symm⟩
+    · cases h
   · -- call
     split at h <;> cases h
     exact ⟨rfl, rfl, rfl, rfl⟩

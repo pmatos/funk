@@ -71,7 +71,7 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "15021738381655644978")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "13547300689173556551")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 

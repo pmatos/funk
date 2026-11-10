@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13350650603332787761")
+:::moduleDocs (fingerprint := "15256143221521100581")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "2052658102503826680")
@@ -23,7 +23,7 @@ yet, so no memory has a name: the set of its memory names is empty. It
 gains memories with the memory model (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "9656962251309293370")
+:::readable Fir.Core.Op.effects (fingerprint := "5732827507469254214")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -37,7 +37,7 @@ $$`\mathsf{srem},\ \mathsf{urem}:\ \{\mathsf{mayUB}\}`
 
 $$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison}:\ \{\mathsf{mayPoison}\}`
 
-$$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
+$$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no

@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9471557765715568977")
 :::
 
-:::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "17753302036347918519")
+:::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "17429499784111136466")
 *Definition: the core ops in the tree of choices.* `fir-ref run` runs the
 core dialect in the
 {ref "The-fir-specification--Execution--Choice-trees"}[tree of choices].
@@ -45,7 +45,8 @@ monads.* For every set $`E` of reasons, a
 made from a function $`g` to a way to end has, on every two operands of
 $`\mathsf{i}w`, the set monad's computation as the set of its tree. So
 does a {ref "The-fir-specification--Execution--Branch-rules"}[terminator rule]
-made from a way to end, such as $`\mathsf{cond\_br}`'s. Both end in one
+made from a way to end, such as $`\mathsf{cond\_br}`'s or
+$`\mathsf{unreachable}`'s. Both end in one
 way and never choose, so their trees are single leaves.
 :::
 

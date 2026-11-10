@@ -17,11 +17,11 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "14473149069114112062")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "5074657499700953264")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "4645807055663611004")
 *Theorem: each core op that does not declare may-UB never ends in UB.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
-$`\mathsf{urem}` and $`\mathsf{cond\_br}` never ends in UB, at every
-width. Each rule gives its result at once, $`\mathsf{freeze}` after
+$`\mathsf{urem}`, $`\mathsf{cond\_br}` and $`\mathsf{unreachable}` never
+ends in UB, at every width. Each rule gives its result at once, $`\mathsf{freeze}` after
 choosing bits, and $`\mathsf{br}` and $`\mathsf{ret}` go to their
 successor or return. $`\mathsf{call}` has no rule of its own, so it has no
 outcome by one.
@@ -48,7 +48,7 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoison) (fingerprint := "4743314408651579304")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoison) (fingerprint := "913560372236832908")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
@@ -60,10 +60,11 @@ $`\mathsf{freeze}` gives bits. $`\mathsf{call}` gives no result by a rule
 of its own, and the terminators give none.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "8544232680631904298")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "6450297432809235542")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
-$`\mathsf{cond\_br}` and $`\mathsf{ret}`, and each declares
+$`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
+declares
 $`\mathsf{control}`.
 :::
 

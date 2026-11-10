@@ -86,6 +86,7 @@ theorem Op.monotone_all : (op : Op) →
   | .br, _ => br_monotone
   | .condBr, _ => condBr_monotone
   | .ret ts, _ => ret_monotone ts
+  | .unreachable, _ => unreachable_monotone
   | .call .., h => by rcases h with h | h <;> cases h
 
 /-- Every terminator and every op with no callee of every core function is

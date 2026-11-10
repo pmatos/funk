@@ -297,6 +297,8 @@ as `.Lb0_loop`. `br` copies its block arguments, then jumps unless its block
 comes next. `cond_br` tests bit 0 with `testb $1, %al` before any copy. A `jnz`
 or `jz` then goes to one edge, and the code of the other edge follows it. A
 branch on poison goes one way or the other (ADR-2026-10-31-0334).
+`unreachable` is `ud2`. A run that reaches it is UB, so any code would do, and
+`ud2` stops the run instead of falling into the next block (ADR-2026-11-09-1548).
 
 A branch copies the values it passes as one parallel move. `moves.rs` turns an
 edge's copies into steps. It drops a copy from a slot to itself. It then does

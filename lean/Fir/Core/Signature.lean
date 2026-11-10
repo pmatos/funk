@@ -24,7 +24,7 @@ abbrev i (w : Nat) : Ty := .int w
 
 /-- The operand types of each core op. -/
 def Op.sig : Op → List Ty
-  | .const _ _ | .poison _ | .br => []
+  | .const _ _ | .poison _ | .br | .unreachable => []
   | .add w _ | .sub w _ | .mul w _ | .sdiv w _ | .udiv w _ | .srem w | .urem w
   | .and w | .or w | .xor w | .shl w | .lshr w | .ashr w | .icmp _ w => [i w, i w]
   | .select w => [i 1, i w, i w]
@@ -41,12 +41,12 @@ def Op.returnTypes : Op → List Ty
   | .select w | .freeze w | .poison w => [i w]
   | .icmp _ _ => [i 1]
   | .zext _ n | .sext _ n | .trunc _ n => [i n]
-  | .br | .condBr | .ret _ => []
+  | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs
 
-/-- `br`, `cond_br` and `ret` end a block. -/
+/-- `br`, `cond_br`, `ret` and `unreachable` end a block. -/
 def Op.isTerminator : Op → Bool
-  | .br | .condBr | .ret _ => true
+  | .br | .condBr | .ret _ | .unreachable => true
   | _ => false
 
 /-- `br` has one successor and `cond_br` two; no other op has any. -/

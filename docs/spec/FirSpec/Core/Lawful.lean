@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "10829226034814001931")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "3167597357796507158")
+:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "337348766703349946")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -36,7 +36,8 @@ $`\mathsf{shl}`, $`\mathsf{lshr}` and $`\mathsf{ashr}`, $`\mathsf{icmp}`,
 and the width changes $`\mathsf{zext}`, $`\mathsf{sext}` and
 $`\mathsf{trunc}`. Each proves it in the section of its family. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
-$`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{call}`, are poison
+$`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
+$`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 

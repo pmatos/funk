@@ -36,8 +36,8 @@ of funk are on `main`:
   `xor`, the shifts `shl`, `lshr` and `ashr`, the width changes `zext`,
   `sext` and `trunc`, `sdiv` and `udiv` with their flag `exact`, `srem`,
   `urem`, `icmp` with its ten predicates, `select`, the branches `br` and
-  `cond_br`, `ret`, and `call` of any function of the module, with any
-  number of arguments and results
+  `cond_br`, `ret`, the terminator `unreachable`, and `call` of any
+  function of the module, with any number of arguments and results
   ([#14](https://github.com/pmatos/funk/issues/14),
   [#15](https://github.com/pmatos/funk/issues/15),
   [#16](https://github.com/pmatos/funk/issues/16),
@@ -45,7 +45,8 @@ of funk are on `main`:
   [#18](https://github.com/pmatos/funk/issues/18),
   [#19](https://github.com/pmatos/funk/issues/19),
   [#20](https://github.com/pmatos/funk/issues/20),
-  [#122](https://github.com/pmatos/funk/issues/122)). The verifier checks
+  [#122](https://github.com/pmatos/funk/issues/122),
+  [#228](https://github.com/pmatos/funk/issues/228)). The verifier checks
   dominance across blocks, block arguments, that every block is
   reachable from the entry, and that each call matches its callee's
   signature. `funk fmt` prints fir
@@ -65,8 +66,8 @@ of funk are on `main`:
   `const`, `add`, `sub` and `mul` with their flags, `freeze`, `poison`,
   the bitwise ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv`
   with or without `exact`, `srem`, `urem`, `icmp`, `select`, `br`,
-  `cond_br`, `ret` and `call` at `i1`, `i8`, `i16`, `i32`, `i64` and
-  `i128` into an object file and an executable for Linux. An
+  `cond_br`, `ret`, `unreachable` and `call` at `i1`, `i8`, `i16`, `i32`,
+  `i64` and `i128` into an object file and an executable for Linux. An
   `i128` is a pair of eightbytes, and each op lowers it through a pair of
   registers
   ([ADR-2026-11-03-010730](adrs/2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md)).

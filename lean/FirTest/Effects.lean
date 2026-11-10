@@ -7,9 +7,10 @@ Tests of the core dialect's effects, of the instance
 * _The instance._ It gives `udiv` at `i8` no poison on defined operands,
   `add` without flags no UB, and `freeze` no control.
 * _Effects the core ops need._ For example, `add` with `nsw` and `shl` give
-  poison on defined operands, `udiv` by zero and `cond_br` on poison are
-  UB, and `br` is a terminator: leaving any of those effects out of their
-  sets would make the obligations false. `lean/FirTest/G0.lean` pins every
+  poison on defined operands, `udiv` by zero, `cond_br` on poison and
+  `unreachable` are UB, and `br` and `unreachable` are terminators:
+  leaving any of those effects out of their sets would make the
+  obligations false. `lean/FirTest/G0.lean` pins every
   core op's set.
 -/
 
@@ -54,6 +55,13 @@ theorem condBr_mayUB : ¬ NeverUB (d := CoreDialect) .condBr :=
 
 /-- `br` is a terminator. -/
 theorem br_control : Fir.isTerminator (d := CoreDialect) .br = true := rfl
+
+/-- Reaching `unreachable` is UB. -/
+theorem unreachable_mayUB : ¬ NeverUB (d := CoreDialect) .unreachable :=
+  fun h => (h .nil _).2 rfl ((unreachable_exit _ _).2 rfl)
+
+/-- `unreachable` is a terminator. -/
+theorem unreachable_control : Fir.isTerminator (d := CoreDialect) .unreachable = true := rfl
 
 /-! # The theorems' axioms -/
 

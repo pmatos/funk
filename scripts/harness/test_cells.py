@@ -159,8 +159,8 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(len(casts), 9)
         values = [c for c in found if c.table == "values"]
-        self.assertEqual(len([c for c in values if not c.width]), 5)
-        self.assertEqual(len(values), 5 + 8 * 3)
+        self.assertEqual(len([c for c in values if not c.width]), 6)
+        self.assertEqual(len(values), 6 + 8 * 3)
 
     def test_the_cells_of_an_op(self):
         self.assertEqual(
@@ -202,6 +202,10 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(
             of_op(Op("ret", (), ("i8",), (), ())), {Cell("values", "ret", "one", "i8")}
+        )
+        self.assertEqual(
+            of_op(Op("unreachable", (), (), (), ())),
+            {Cell("values", "unreachable", "nothing", "")},
         )
         self.assertEqual(
             of_op(Op("call", ("@f",), ("i8",), ("i8", "i128", "i8"), ())),

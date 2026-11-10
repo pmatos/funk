@@ -104,7 +104,7 @@ below, with why it is needed.
 * _Totality_: on every operand vector, the op has some outcome.
 * _A result on defined operands_: the op returns a result on some operand
   vector with no poison. Exceptions are exempt, so an exception that is
-  always UB, such as a future `unreachable`, stays allowed.
+  always UB, such as `unreachable`, stays allowed.
 * _Monotonicity_: refining the operands refines what the op does.
 
 Totality and monotonicity look only at what runs: the meaning of an op that

@@ -1,0 +1,80 @@
+# Tests of unreachable.fir: the terminator unreachable, which is
+# immediate UB when a run reaches it (#228, ADR-2026-11-09-1548).
+# - guard_iN, at each width of the backend, returns %x from ^ok on one
+#   value of %c and goes to ^dead, which holds only unreachable, on the
+#   other. At i1, i16 and i64, ^ok is cond_br's first successor and
+#   ^dead comes after it; at i8, i32 and i128, ^dead is the first
+#   successor and comes before ^ok, so true reaches it. Native code
+#   places the trap both last and in front of a block it must not fall
+#   into.
+# - after_spin is a function whose last call never returns: when %c is
+#   false it calls @spin, which loops for ever, and unreachable after
+#   the call says so. The run then never reaches unreachable: it runs
+#   out of fuel.
+# - never holds only unreachable, so every run of it is UB, and
+#   calls_never, which calls it when %c is false, is UB of its caller.
+# - after_ops computes values on both sides of the branch: the ops
+#   before unreachable run, and the run is UB all the same.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's. On those runs native
+# code never reaches its ud2. A run that reaches unreachable is
+# interpreter-only, since a native run of UB proves nothing; fir-ref
+# gives the reason unreachable reached, but the harness matches ub to
+# any reason (ADR-2026-10-30-2135). The tests with expect and values
+# check that the runs that do not reach it return exactly %x.
+tests = [
+  { func = "@guard_i1", args = ["true", "true"] },
+  { func = "@guard_i1", args = ["true", "false"] },
+  { func = "@guard_i1", args = ["false", "false"], expect = "ub" },
+  { func = "@guard_i1", args = ["true", "false"], expect = ["false"] },
+  { func = "@guard_i8", args = ["false", "0"] },
+  { func = "@guard_i8", args = ["false", "1"] },
+  { func = "@guard_i8", args = ["false", "-1"] },
+  { func = "@guard_i8", args = ["false", "-128"] },
+  { func = "@guard_i8", args = ["false", "127"] },
+  { func = "@guard_i8", args = ["true", "127"], expect = "ub" },
+  { func = "@guard_i8", args = ["false", "127"], expect = ["127"] },
+  { func = "@guard_i16", args = ["true", "0"] },
+  { func = "@guard_i16", args = ["true", "1"] },
+  { func = "@guard_i16", args = ["true", "-1"] },
+  { func = "@guard_i16", args = ["true", "-32768"] },
+  { func = "@guard_i16", args = ["true", "32767"] },
+  { func = "@guard_i16", args = ["false", "32767"], expect = "ub" },
+  { func = "@guard_i16", args = ["true", "32767"], expect = ["32767"] },
+  { func = "@guard_i32", args = ["false", "0"] },
+  { func = "@guard_i32", args = ["false", "1"] },
+  { func = "@guard_i32", args = ["false", "-1"] },
+  { func = "@guard_i32", args = ["false", "-2147483648"] },
+  { func = "@guard_i32", args = ["false", "2147483647"] },
+  { func = "@guard_i32", args = ["true", "2147483647"], expect = "ub" },
+  { func = "@guard_i32", args = ["false", "2147483647"], expect = ["2147483647"] },
+  { func = "@guard_i64", args = ["true", "0"] },
+  { func = "@guard_i64", args = ["true", "1"] },
+  { func = "@guard_i64", args = ["true", "-1"] },
+  { func = "@guard_i64", args = ["true", "-9223372036854775808"] },
+  { func = "@guard_i64", args = ["true", "9223372036854775807"] },
+  { func = "@guard_i64", args = ["false", "9223372036854775807"], expect = "ub" },
+  { func = "@guard_i64", args = ["true", "9223372036854775807"], expect = ["9223372036854775807"] },
+  { func = "@guard_i128", args = ["false", "0"] },
+  { func = "@guard_i128", args = ["false", "1"] },
+  { func = "@guard_i128", args = ["false", "-1"] },
+  { func = "@guard_i128", args = ["false", "-170141183460469231731687303715884105728"] },
+  { func = "@guard_i128", args = ["false", "170141183460469231731687303715884105727"] },
+  { func = "@guard_i128", args = ["true", "170141183460469231731687303715884105727"], expect = "ub" },
+  { func = "@guard_i128", args = ["false", "170141183460469231731687303715884105727"], expect = ["170141183460469231731687303715884105727"] },
+  { func = "@after_spin", args = ["true", "0"] },
+  { func = "@after_spin", args = ["true", "-1"] },
+  { func = "@after_spin", args = ["true", "9223372036854775807"] },
+  { func = "@after_spin", args = ["false", "7"], fuel = 100, expect = "fuel-exhausted" },
+  { func = "@never", expect = "ub" },
+  { func = "@calls_never", args = ["true", "0"] },
+  { func = "@calls_never", args = ["true", "-128"] },
+  { func = "@calls_never", args = ["true", "127"] },
+  { func = "@calls_never", args = ["false", "5"], expect = "ub" },
+  { func = "@after_ops", args = ["true", "0"] },
+  { func = "@after_ops", args = ["true", "1"] },
+  { func = "@after_ops", args = ["true", "-1"] },
+  { func = "@after_ops", args = ["true", "-2147483648"] },
+  { func = "@after_ops", args = ["true", "2147483647"] },
+  { func = "@after_ops", args = ["false", "3"], expect = "ub" },
+]

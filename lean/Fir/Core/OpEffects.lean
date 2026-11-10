@@ -21,8 +21,9 @@ have no trace.
 * May-UB: the four divisions, on a zero or poison divisor, and `sdiv` and
   `srem` on the signed minimum or a poison dividend by `-1`. `sdiv` and
   `udiv` with `exact` may produce poison too.
-* Control: the terminators `br`, `ret` and `cond_br`. `cond_br` may hit UB
-  too, on a poison condition.
+* Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
+  `cond_br` may hit UB too, on a poison condition, and `unreachable` hits
+  UB whenever a run reaches it (ADR-2026-11-09-1548).
 
 `call`'s own rule does nothing but run its callee, so its own set is
 empty. That does not make a call pure: a call has its callee's effects too,
@@ -50,6 +51,6 @@ def Op.effects : Op → Effects Mem
   | .srem _ | .urem _ => { mayUB := true }
   | .shl _ | .lshr _ | .ashr _ | .poison _ => { mayPoison := true }
   | .br | .ret _ => { control := true }
-  | .condBr => { mayUB := true, control := true }
+  | .condBr | .unreachable => { mayUB := true, control := true }
 
 end Fir.Core

@@ -6,7 +6,9 @@
 //! validation requires (ADR-2026-10-30-0817). A `cond_br` also goes to any
 //! block but the entry: back to an earlier one or to itself, which makes a
 //! loop, or forward, past the next, which makes a join. The last block
-//! returns. Every block but the entry may take arguments, and each branch
+//! returns. A chain may also have a trap: a block after the last that ends
+//! in `unreachable` (#228), which one branch of the chain goes to, so some
+//! runs reach it, which is UB, and others pass it by. Every block but the entry may take arguments, and each branch
 //! passes values of their types: values in scope, often the block's own
 //! arguments in another order, or new ones.
 //!
@@ -34,16 +36,18 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
     } else {
         2 + rng.below(4) as usize
     };
+    let trap = n > 1 && rng.one_in(4);
+    let total = n + usize::from(trap);
     let mut labels: Vec<String> = Vec::new();
-    while labels.len() < n {
+    while labels.len() < total {
         let l = name(rng, false);
         if !labels.contains(&l) {
             labels.push(l);
         }
     }
-    let params: Vec<Vec<(String, Type)>> = (0..n)
+    let params: Vec<Vec<(String, Type)>> = (0..total)
         .map(|k| {
-            let count = if k == 0 { 0 } else { rng.below(4) };
+            let count = if k == 0 || k == n { 0 } else { rng.below(4) };
             let mut ps: Vec<(String, Type)> = Vec::new();
             for _ in 0..count {
                 let t = match ps.last() {
@@ -55,10 +59,15 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
             ps
         })
         .collect();
-    let exits: Vec<Vec<usize>> = (0..n - 1).map(|k| exit(rng, k, n)).collect();
+    let mut exits: Vec<Vec<usize>> = (0..n - 1).map(|k| exit(rng, k, n)).collect();
+    exits.resize(total, Vec::new());
+    if trap {
+        let k = rng.below(n as u64 - 1) as usize;
+        to_trap(rng, &mut exits[k], k, n);
+    }
     let fparams = body.values.clone();
-    let mut defs: Vec<Vec<(String, Type)>> = Vec::with_capacity(n);
-    for k in 0..n {
+    let mut defs: Vec<Vec<(String, Type)>> = Vec::with_capacity(total);
+    for k in 0..total {
         body.values = fparams.clone();
         for (d, ds) in defs.iter().enumerate() {
             if dominates(&exits, d, k) {
@@ -79,9 +88,12 @@ pub(super) fn build(rng: &mut Rng, body: &mut Body<'_>, mut f: Func) -> Func {
             };
             body.define(rng, t);
         }
-        let term = match exits.get(k) {
-            Some(targets) => branch(rng, body, targets, &labels, &params),
-            None => ret(rng, body, &f),
+        let term = if k == n {
+            Op::new("unreachable", *rng.pick(body.keys))
+        } else if k == n - 1 {
+            ret(rng, body, &f)
+        } else {
+            branch(rng, body, &exits[k], &labels, &params)
         };
         let block = body.take_block(&labels[k], &params[k], term);
         let mut ds = params[k].clone();
@@ -118,14 +130,34 @@ fn exit(rng: &mut Rng, k: usize, n: usize) -> Vec<usize> {
     }
 }
 
+/// Makes `targets`, the exits of block `k` of a chain of `n`, go to the
+/// trap after the chain too: a `br` to the next block becomes a `cond_br`
+/// to it and to the trap, in either order, and a `cond_br` sends its other
+/// successor to the trap. The next block stays a target, so the chain still
+/// reaches every block.
+fn to_trap(rng: &mut Rng, targets: &mut Vec<usize>, k: usize, n: usize) {
+    if targets.len() == 1 {
+        let at = rng.below(2) as usize;
+        targets.insert(at, n);
+        return;
+    }
+    let first = if targets[0] == targets[1] {
+        rng.one_in(2)
+    } else {
+        targets[0] != k + 1
+    };
+    targets[usize::from(!first)] = n;
+}
+
 /// Whether block `a` dominates block `b`: they are one block, or the entry
 /// does not reach `b` once `a` is removed. `exits[k]` are the successors
-/// of block `k`; the last block has none.
+/// of block `k`, one entry for each block; the last block and the trap
+/// have none.
 fn dominates(exits: &[Vec<usize>], a: usize, b: usize) -> bool {
     if a == b {
         return true;
     }
-    let mut seen = vec![false; exits.len() + 1];
+    let mut seen = vec![false; exits.len()];
     let mut stack = Vec::new();
     if a != 0 {
         seen[0] = true;
@@ -225,7 +257,7 @@ mod tests {
     #[test]
     fn dominance_is_the_spec_s_on_a_chain_with_a_loop_and_a_join() {
         // 0 -> 1; 1 -> 2 or back to 1; 2 -> 3 or on to 4; 3 -> 4.
-        let exits = vec![vec![1], vec![2, 1], vec![3, 4], vec![4]];
+        let exits = vec![vec![1], vec![2, 1], vec![3, 4], vec![4], vec![]];
         let doms = |b: usize| {
             (0..5)
                 .filter(|&a| dominates(&exits, a, b))
