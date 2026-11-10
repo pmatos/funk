@@ -1,6 +1,6 @@
 # A module names its dialect set on a first line that starts with the word dialects
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-10-1941
 Tier: direction; area: text-format
 
 ## Context

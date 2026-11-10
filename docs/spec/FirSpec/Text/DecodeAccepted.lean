@@ -43,7 +43,7 @@ the scope, in order, and fails at the first one that the scope does not
 give a type.
 :::
 
-:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "5941027170812358432")
+:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "1882579601107023393")
 *Definition: an op that a scope accepts.* Let $`d` be a dialect with a
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] and a
 text, $`\mathit{sc}` a scope, and $`o` an op with the op instance $`p`.

@@ -34,7 +34,11 @@ the sum, by routing each op and each type to the side it belongs to:
   route them on their own. The dialect-set laws say which dialects their
   words may name;
 * a function of the sum obeys the function rule of each side, and each
-  rule sees the whole function through its own view.
+  rule sees the whole function through its own view;
+* the sum registers the region kinds of both sides. A region of a kind that
+  the base registers obeys the base's rule for it, and a region of any other
+  kind `e`'s rule, each through its own view. The laws of names say that
+  `e`'s kinds are words of `e`'s name, so the base registers none of them.
 
 An op of the base sees the context of a function only when the base can
 write it: the symbols whose types are all the base's, and the function's
@@ -225,9 +229,21 @@ instance instDialectSignature [DialectSignature base] [DialectSignature (base.ov
   succCount
     | .inl o => succCount o
     | .inr o => succCount (d := base.over e) o
+  regionKinds
+    | .inl o => regionKinds o
+    | .inr o => regionKinds (d := base.over e) o
 
-/-- The rules of the sum: a type and an op obey the rules of their side,
-and a function obeys the function rule of each side. -/
+/-- The rule of a region kind in the sum: the base's rule for a kind that the
+base registers, and `e`'s for every other kind. -/
+def ValidRegion [DialectValidation base] [DialectValidation (base.over e)] {host : Dialect}
+    (v : DialectView (base ⊞ e) host) (k : Name) (ctx : FuncContext host) (f : Func host)
+    (r : Region host) : Prop :=
+  if k ∈ regionKindNames (d := base) then validRegion (d := base) (baseView v) k ctx f r
+  else validRegion (d := base.over e) (extView v) k ctx f r
+
+/-- The rules of the sum: a type and an op obey the rules of their side, a
+function obeys the function rule of each side, and the sum registers the
+region kinds of both sides. -/
 instance instDialectValidation [DialectValidation base] [DialectValidation (base.over e)] :
     DialectValidation (base ⊞ e) where
   validTy
@@ -241,6 +257,8 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
     | .inr o => validOp (extContext ctx) o
   validFunc v ctx f :=
     validFunc (d := base) (baseView v) ctx f ∧ validFunc (d := base.over e) (extView v) ctx f
+  regionKindNames := regionKindNames (d := base) ++ regionKindNames (d := base.over e)
+  validRegion := ValidRegion
 
 /-- The sum's rules can be decided when each side's can. -/
 instance instDecidableDialectValidation [DialectValidation base] [DialectValidation (base.over e)]
@@ -254,6 +272,9 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
     | .inr o => DecidableDialectValidation.decValidOp (d := base.over e) (extContext ctx) o
   decValidFunc v ctx f := inferInstanceAs (Decidable (validFunc (d := base) (baseView v) ctx f ∧
     validFunc (d := base.over e) (extView v) ctx f))
+  decValidRegion v k ctx f r := by
+    show Decidable (ValidRegion v k ctx f r)
+    unfold ValidRegion; infer_instance
 
 /-- The memories of the sum are those of each side, kept apart. An op of the
 sum has its side's poison class, and its side's effects on its side's

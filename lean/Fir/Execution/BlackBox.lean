@@ -114,7 +114,7 @@ steps too. -/
 theorem Func.call_cont {M : Module d} {f g : Func d} {env genv : Env d} {o : Operation d}
     {os body : List (Operation d)} {args : HVector toType (sig o.op)} {s : Name}
     {vs : List (DVal d)} {k N₁ N₂ : Nat} {x : Ev (Except Stuck (Result (List (DVal d) × Nat)))}
-    (hreg : o.regions = []) (hargs : env.operands (sig o.op) o.operands = .ok args)
+    (hreg : o.ownsCoreRegion = false) (hargs : env.operands (sig o.op) o.operands = .ok args)
     (hT : isTerminator o.op = false) (hc : callee? o.op = some s) (hg : M.func? s = some g)
     (hen : g.enter args.toDVals = .ok (body, genv))
     (hx : (Func.runOps (m := SetM) M N₁ g genv body).run (.ok (.ok (.ret (vs, k)))))

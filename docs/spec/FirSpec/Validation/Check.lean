@@ -14,19 +14,23 @@ when the Lean changes under it.
 
 #doc (Manual) "The validation check: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2167333755786008956")
+:::moduleDocs (fingerprint := "12883482886528262281")
 :::
 
-:::readable Fir.DecidableDialectValidation (fingerprint := "1088891619841682136")
+:::readable Fir.DecidableDialectValidation (fingerprint := "5366593531323839649")
 *Definition: a dialect whose own rules can be decided.* A dialect $`d` is
 _decidable_ when there is an algorithm that tells, for every type $`t` of
 $`d`, whether $`\vdash_d t~\text{valid}`, another that tells, for every
 op context $`C` and op instance $`\mathit{op}`, whether
 $`C \vdash_d \mathit{op}~\text{valid}`, and a third that tells, for every
 function context $`C`, view $`v` and function $`f`, whether
-$`C, v \vdash_d f~\text{valid}`. These are the dialect's
+$`C, v \vdash_d f~\text{valid}`, and a fourth that tells, for every view
+$`v`, kind $`k`, function context $`C`, function $`f` and region $`r`,
+whether $`C, v, f \vdash_d r : k~\text{valid}`. These are the dialect's
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rules]; the
-check runs the three algorithms wherever the rules ask them.
+check runs the four algorithms wherever the rules ask them. A dialect that
+registers no region kind decides the fourth by default: no region of a kind
+of its own is valid.
 
 A function that breaks its dialect's rule over a whole function has no
 place of its own to report, so the check reports the rule at its entry block,

@@ -108,6 +108,7 @@ theorem countFn_valid : countFn.Valid ubModule.context where
     simp only [countFn, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
     rcases hb with rfl | rfl | rfl <;> simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- `@g` is valid in its module. -/
@@ -128,6 +129,7 @@ theorem gFn_valid : gFn.Valid ubModule.context where
     subst hb
     simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- The module of `@count` and `@g` is valid. -/
@@ -178,6 +180,7 @@ theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubMod
     subst hb
     simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- The module with `@g`'s new body is valid too. -/

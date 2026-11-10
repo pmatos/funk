@@ -85,6 +85,7 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " holds no ops"))) ++
   f.blocks.flatMap (fun b => let n := b.body.length
     b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b n i o) ++
+  all.flatMap (fun b => b.body.flatMap (·.innerProblems lk f t)) ++
   (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem])
 
 /-- The problems of a function, in the context of its module. -/
@@ -103,9 +104,10 @@ theorem Func.valid_iff (ctx : ModuleContext d) (f : Func d) : f.Valid ctx ↔
     (∀ t ∈ f.types, validTy t) ∧
     (∀ b ∈ f.blocks, b.body ≠ []) ∧
     (∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o) ∧
+    (∀ b ∈ f.allBlocks, ∀ o ∈ b.body, ∀ o' ∈ o.innerOps, f.InnerOpValid ctx o') ∧
     validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
-  ⟨fun ⟨k, a, b, c, d, e, f, g, h, i, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, j⟩,
-    fun ⟨k, a, b, c, d, e, f, g, h, i, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, j⟩⟩
+  ⟨fun ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩,
+    fun ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩⟩
 
 omit [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d] in
@@ -139,10 +141,16 @@ theorem Func.types_all (f : Func d) :
     · obtain ⟨x, hx, rfl⟩ := List.mem_map.mp ht
       exact h₂ x hx
 
+theorem Func.inner_all {lk : Lookup d} {ctx : ModuleContext d} (f : Func d) (h : lk.Agrees ctx) :
+    (∀ b ∈ f.allBlocks, ∀ o ∈ b.body, o.innerProblems lk f (f.tables f.allBlocks) = []) ↔
+      ∀ b ∈ f.allBlocks, ∀ o ∈ b.body, ∀ o' ∈ o.innerOps, f.InnerOpValid ctx o' :=
+  forall_congr' fun _ => imp_congr_right fun _ => forall_congr' fun _ =>
+    imp_congr_right fun _ => Operation.innerProblems_eq_nil h
+
 /-- The check of a function decides `Func.Valid`. -/
 theorem Func.problems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d}
     (h : lk.Agrees ctx) : f.problems lk = [] ↔ f.Valid ctx := by
-  rw [Func.valid_iff, ← Func.reached_all, ← f.ops_all h, Func.types_all]
+  rw [Func.valid_iff, ← Func.reached_all, ← f.ops_all h, ← f.inner_all h, Func.types_all]
   simp only [Func.problems, Func.problemsIn, List.append_eq_nil_iff, Func.kindProblems_eq_nil,
     Func.entryProblems_eq_nil,
     List.filterMap_eq_nil_iff, ite_none_eq_none, List.map_eq_nil_iff, repeats_eq_nil,

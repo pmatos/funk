@@ -28,7 +28,7 @@ while an environment and a return hold typed values; this turns the one
 into the other.
 :::
 
-:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "15837783068621949683")
+:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "13118793556506930591")
 *Definition: environments, being stuck, looking a name up and binding
 names.* An _environment_ $`E` is a list of the values a run has defined,
 each a name with a typed value, $`x \mapsto (t, v)`, the latest first.
@@ -143,7 +143,9 @@ terminator"). Otherwise the run takes the first op $`o` of $`o^*`, leaves
 the rest $`o'^*`, takes one step of fuel, and goes on by these steps; a
 check that fails makes the path stuck:
 
-1. Check that $`o` owns no region; no rule runs one.
+1. Check that $`o` owns no region of the core's kind; no rule runs one.
+   The interpreter does not enter a region of a dialect's kind: an op that
+   owns one runs by its dialect's semantics, as any other op does.
 2. Take $`v^*`, the values of the operands of $`o` in $`E`, for the
    operand types of $`o`.
 3. When $`o` is a terminator, check that $`o'^*` is empty, then run

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17843848195623745215")
+:::moduleDocs (fingerprint := "13948809011209542304")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "6557817499235600651")
@@ -59,17 +59,19 @@ This is the rule for a base op in a sum (ADR-2026-11-09-2353), with $`e` in
 place of the base. It can be decided when $`e`'s rule can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "9348519840575910884")
+:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "6716522581487879815")
 *Definition: the signature and the rules of the lift.* An op of the lift
 has $`e`'s signature, with its types included by $`\hat\iota`:
 
 $$`\mathrm{sig}(q) = \hat\iota(t)^* \text{ where } \mathrm{sig}_{d.\mathrm{over}(e)}(q) = t^*`
 
-and the same for its result types; it ends a block and has successors as
-in $`e`. A type of $`B` is valid as $`B` says, and an own type of $`e` as
-$`e` says. An op refers to the symbols that $`e` says, and obeys its rule as
-above. A function obeys $`e`'s function rule through the lift's view. Each
-rule can be decided when $`B`'s and $`e`'s can.
+and the same for its result types; it ends a block, has successors and
+owns regions of kinds as in $`e`. A type of $`B` is valid as $`B` says, and
+an own type of $`e` as $`e` says. An op refers to the symbols that $`e`
+says, and obeys its rule as above. A function obeys $`e`'s function rule
+through the lift's view. The lift registers $`e`'s region kinds, and a
+region of one of them obeys $`e`'s rule for it through the lift's view.
+Each rule can be decided when $`B`'s and $`e`'s can.
 :::
 
 :::readable Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "3339976446362193004")

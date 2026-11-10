@@ -94,6 +94,31 @@ depends on. Its op sees only the symbols whose types are all its own or its
 dependencies', and is valid only where the function's result types all are
 (ADR-2026-11-10-1310).
 
+## Region kinds
+
+An op instance states the kinds of the regions its op owns, each a word of
+a dialect, never the core's: a region of the core's kind inside an op would
+be structured control flow, which M1 leaves out. A dialect registers kinds,
+each with a rule over a region of the function, seen through a view as a
+function rule is. The rule says how values are scoped in the region, which
+ops end its blocks and where its successors go. An op is valid only when its
+regions have the kinds its op instance states, each registered, and each
+obeys its rule. The core registers no kind, and its own kind's rule is the
+rule of a function's body (ADR-2026-11-10-1941).
+
+An op inside a region obeys the general rules that hold whatever the kind:
+its regions, types, number of successors, symbols, its dialect's own rule
+and its location; a successor's label is a name and the values it passes
+are defined in the function. The check walks the function's blocks at any
+depth and each op's own regions, one level down, so it takes no stack per
+level (ADR-2026-11-10-1941).
+
+In a sum, a region of a kind that the base registers obeys the base's rule,
+and any other kind `e`'s rule. A dialect writes its kinds under its name, so
+each kind goes to the dialect that registers it. A lift registers `e`'s
+kinds. In `funk-ir`, a dialect registers a `RegionKindSpec`, under its
+prefix (ADR-2026-11-10-1941).
+
 ## How `fir-ref` runs the check
 
 fir has no nesting limit. Every tool handles any depth without a stack
@@ -158,8 +183,8 @@ a test that needs no run at depth (ADR-2026-11-05-0025).
 
 `lean/FirTest/Validate.lean` pins the instances that `#synth` finds. It also
 runs `decide` on a module nested 1,000,000 levels deep. That module is not
-valid. No valid module nests regions in M0, since every op that owns one is
-rejected (ADR-2026-11-05-0025).
+valid. No valid core module nests regions, since no core op owns one
+(ADR-2026-11-05-0025, ADR-2026-11-10-1941).
 
 ## Dominance in `fir-ref`
 

@@ -8,11 +8,11 @@ block to the successors of its ops. In a valid function only the
 terminator has successors, so they are its terminator's.
 
 The graph, reachability and dominance below are over a function's top-level
-blocks. How values are scoped in the regions of an op, and how dominance
-reaches into them, is left for the first dialect whose ops have regions; no
-core op has one. That dialect will also reconcile the two views of a
-function that validation uses: the top-level blocks here, and every block
-at any depth for names and their types.
+blocks, the region of the core's kind that is its body. A region of an op is
+of a dialect's kind, and the rule of its kind says how values are scoped in
+it and whether dominance reaches into it (ADR-2026-11-10-1941). Validation
+has two views of a function: the top-level blocks here, and every block at
+any depth for names and their types.
 
 # The control-flow graph
 -/

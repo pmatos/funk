@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The ways a step goes on: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11491586926943817244")
+:::moduleDocs (fingerprint := "7399631569210620580")
 :::
 
 :::readable Fir.Ev.NotStuck (fingerprint := "8592670422160197782")
@@ -42,7 +42,7 @@ Let $`g` give a computation for each value, and let $`e` be an end.
   $`s` may end with $`\mathsf{ub}~r` and $`e = \mathsf{ub}~r`.
 :::
 
-:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "16985377396009429692")
+:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "10212668713376339604")
 *Definition and theorem: the eight ways a step goes on.* Write
 $`\mathrm{run}_M(n, f, E, o^*)` for the
 {ref "The-fir-specification--Execution--The-interpreter"}[run of the ops]
@@ -52,7 +52,8 @@ one of its paths ends with $`e`. A run of ops that returns gives typed
 values $`u^*` and the steps $`k` it leaves: $`\mathsf{ret}~(u^*, k)`.
 
 Take a run $`\mathrm{run}_M(n + 1, f, E, o\,o'^*)` whose first op is $`o`.
-In each of the eight ways, $`o` owns no region, and the values $`v^*` of
+In each of the eight ways, $`o` owns no region of the core's kind, and
+the values $`v^*` of
 its operands are found in $`E`, of its operand types. When $`o` is a terminator and $`o'^*`
 is empty, its exit $`\mathrm{exit}_o(v^*)` may end:
 

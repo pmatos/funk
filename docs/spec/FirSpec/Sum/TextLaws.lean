@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The text of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1403910908817431511")
+:::moduleDocs (fingerprint := "12504048324821814013")
 :::
 
 :::readable Fir.Dialect.sum.mapM_getLeft_map Fir.Dialect.sum.eq_map_of_mapM_getLeft (fingerprint := "10425250833271113799")
@@ -52,7 +52,7 @@ wrote it, and the reader decides that side by the word alone, so the words
 route. So a lawful sum has no op name on both of its sides.
 :::
 
-:::readable Fir.LawfulDialectName (fingerprint := "7419316199088341745")
+:::readable Fir.LawfulDialectName (fingerprint := "3078469256500740612")
 *Definition: an extension that writes its words under its name.* The
 extension $`e` over the base $`b` writes its words under its name $`n_e`
 when, for every op $`q` of $`e` and every valid own type $`t` of $`e`:
@@ -60,7 +60,9 @@ when, for every op $`q` of $`e` and every valid own type $`t` of $`e`:
 * $`\mathrm{dialect}(\mathrm{opname}(q)) = n_e`, and every dialect of the
   words of $`q`'s attributes is in $`\mathrm{names}(b) \cdot n_e`;
 * $`\mathrm{dialect}(\mathrm{head}(\mathrm{tyattr}(\mathsf{inr}\ t))) = n_e`,
-  and every dialect of its words is in $`\mathrm{names}(b) \cdot n_e`.
+  and every dialect of its words is in $`\mathrm{names}(b) \cdot n_e`;
+* $`\mathrm{dialect}(k) = n_e` for every region kind $`k` that $`e`
+  registers.
 
 The extension may name the base's dialects in its attributes and types,
 as a type of $`e` may take a core type as an argument.
@@ -76,6 +78,14 @@ stay in its set, $`\mathrm{names}(b) \cdot n_e`.
 So a sum built on the core, one dialect at a time, each of a name not yet
 in the sum, has lawful text at every step. The second is an instance, so a
 nested sum finds the law for each level by itself.
+:::
+
+:::readable Fir.Dialect.sum.validRegion_ext (pin := Fir.Dialect.sum.ValidRegion) (fingerprint := "5882056062111048233")
+*Theorem: a kind of the extension goes to the extension's rule.* Let the
+base's words stay in its set, $`e` write its words under its name, and
+$`n_e \notin \mathrm{names}(b)`. Then the base registers no kind that $`e`
+registers, so for every such kind $`k`, a region obeys the rule of $`k` in
+the sum exactly when it obeys $`e`'s rule for $`k`, through $`e`'s view.
 :::
 
 :::readable Fir.Dialect.sum.lawful_of_names Fir.Dialect.sum.validIsWellFormed Fir.Dialect.sum.printThenParse Fir.Dialect.sum.parse_wellFormed (fingerprint := "16980967360285776458")

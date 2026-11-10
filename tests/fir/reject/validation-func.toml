@@ -181,7 +181,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "no op owns a region yet: ret owns an empty one"
+rule = "a core op owns no region: ret owns an empty one, of the core's kind"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -196,7 +196,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "no op owns a region yet: ret owns one of the kind toy.graph"
+rule = "a core op owns no region: ret owns one of the kind toy.graph, which no dialect of the core registers"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -211,7 +211,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "no op owns a region yet: add owns an empty one"
+rule = "a core op owns no region: add owns an empty one, of the core's kind"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -227,7 +227,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a value is used only where it is in scope: %v is defined inside a region; ret also owns a region, which no op may own yet"
+rule = "a value is used only where it is in scope: %v is defined inside a region; ret also owns a region, which no core op may own"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:

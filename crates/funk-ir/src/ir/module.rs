@@ -67,7 +67,8 @@ pub struct Op {
     pub operands: Vec<String>,
     /// The blocks a terminator may go to. Only terminators have them.
     pub succs: Vec<Succ>,
-    /// The regions the op owns. No core op has one.
+    /// The regions the op owns, of the kinds that its registration states.
+    /// No core op has one.
     pub regions: Vec<Region>,
     /// The op's location reference into the module's location table.
     pub loc: LocRef,

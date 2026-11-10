@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10417988435784509680")
+:::moduleDocs (fingerprint := "16073740907722661856")
 :::
 
 :::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "10369497456229509283")
@@ -151,15 +151,43 @@ proofs of this chapter use them to read each
 line of a check as the premise it tests.
 :::
 
-:::readable Fir.opProblems Fir.opProblems_eq_nil (fingerprint := "8802023847365866800")
+:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "13354933883942441113")
+*Definition and theorem: the check of an op's regions.* The check of the
+regions of an op $`o` of $`f` gives "the op's regions are not of the kinds
+that its op instance states" unless the kinds of its regions are those of
+its op instance, in order. Then, for each region that names a kind $`k`,
+it gives "a region of the op is of kind $`k`, which is not a word" when
+$`k` is not a word, "a region of the op is of kind $`k`, which no dialect
+registers" when the dialect does not register it, and "a region of the op
+breaks the rule of its kind $`k`" when the region breaks the rule of $`k`.
+A problem names a kind that is not a word between quotes.
+
+*Theorem:* for every lookup that agrees with the module context $`C`, the
+check gives no problem exactly when the regions of $`o` are valid:
+
+$$`\begin{aligned} & \mathrm{regionproblems}(o) = \epsilon \\ \iff\ & C, f \vdash \mathrm{regions}(o)~\text{valid} \end{aligned}`
+:::
+
+:::readable Fir.generalProblems Fir.succCountProblems (fingerprint := "273876353942142938")
+*Definition: the checks of an op that hold in every region.* Two parts of
+the check of an op hold for every op, whatever the kind of its region. The
+first gives the problems of its operand and result types, and then those
+of the symbols it refers to, its dialect's own rule and its location
+reference. The second gives the problems of its number of successors, and
+of a successor of an op that is not a terminator. The check of an op of
+the body and the check of an op inside a region share them, word for word.
+:::
+
+:::readable Fir.opProblems Fir.opProblems_eq_nil (fingerprint := "17543932771768582581")
 *Definition and theorem: the check of an op.* The check of the op $`o` at
 index $`i` of the block $`b` of $`f`, given the number $`n` of ops of
 $`b`, tests the premises of the
 {ref "The-fir-specification--Validation--The-general-rules"}[rule of a valid op]
 in their order and gives a problem for each one that fails, placed at the
 op: its function, block, index and location reference. For example, it says
-"the op owns a region: no op may own one yet", "block `^l` does not end
-with a terminator", or "the op has 2 operands, and its op instance takes 3".
+"the op's regions are not of the kinds that its op instance states", "block
+`^l` does not end with a terminator", or "the op has 2 operands, and its
+op instance takes 3".
 It checks each successor and each use as the blocks above say. It reads the
 symbol table and the location table through a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup].
@@ -172,6 +200,26 @@ $`n = |\mathrm{body}(b)|`, the check gives no problem exactly when the op
 is valid:
 
 $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vdash o~\text{valid} \end{aligned}`
+:::
+
+:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "3277755168616031235")
+*Definitions and theorems: the check of the ops inside a region.* The check
+of an op inside a region tests the premises of the rule of a
+{ref "The-fir-specification--Validation--The-general-rules"}[valid op inside a region]
+in their order: its regions, its types, its number of successors, then for
+each successor "successor label … is not one or more name characters" and
+"successor argument `%x` is not defined in the function", then its symbols,
+its dialect's own rule and its location. Each problem is placed at the op,
+in its own block. The check of the ops inside the regions of an op runs it
+on every op of every block of each region of the op, and not deeper. A
+value is in the scope table exactly when $`f` defines it.
+
+*Theorems:* for every lookup that agrees with the module context $`C`, the
+check of an op inside a region gives no problem exactly when the op is
+valid inside it, and the check of the ops inside the regions of $`o` gives
+none exactly when each op of $`\mathrm{inner}(o)` is valid inside:
+
+$$`\begin{aligned} & \mathrm{innerproblems}(o) = \epsilon \\ \iff\ & C, f \vdash o'~\text{valid inside, for each } o' \in \mathrm{inner}(o) \end{aligned}`
 :::
 
 :::readable Fir.eq_beq_iff Fir.or_isEmpty_eq_true (fingerprint := "9153842687865872429")

@@ -144,23 +144,23 @@ theorem runOps_nil : Func.runOps (m := ChoiceTree ε) M (n + 1) f env [] =
     liftExcept (stuck "a block ends without a terminator") := by
   simp [Func.runOps]
 
-theorem runOps_region (h : (!o.regions.isEmpty) = true) :
+theorem runOps_region (h : o.ownsCoreRegion = true) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
-      liftExcept (stuck "an op owns a region, and no rule runs one") := by
+      liftExcept (stuck "an op owns a region of the core's kind, and no rule runs one") := by
   rw [Func.runOps]
   simp only [h, ite_true]
   rfl
 
 variable {args : HVector toType (sig o.op)}
 
-theorem runOps_operands (h : (!o.regions.isEmpty) = false) {e : Stuck}
+theorem runOps_operands (h : o.ownsCoreRegion = false) {e : Stuck}
     (ha : env.operands (sig o.op) o.operands = .error e) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
   rw [Func.runOps]
   simp only [h, ha]
   rfl
 
-theorem runOps_follows (h : (!o.regions.isEmpty) = false)
+theorem runOps_follows (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = true)
     (hos : (!os.isEmpty) = true) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
@@ -169,7 +169,7 @@ theorem runOps_follows (h : (!o.regions.isEmpty) = false)
   simp only [h, ha, hT, hos]
   rfl
 
-theorem runOps_exit (h : (!o.regions.isEmpty) = false)
+theorem runOps_exit (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = true)
     (hos : (!os.isEmpty) = false) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
@@ -178,7 +178,7 @@ theorem runOps_exit (h : (!o.regions.isEmpty) = false)
   simp only [h, ha, hT, hos]
   rfl
 
-theorem runOps_denote (h : (!o.regions.isEmpty) = false)
+theorem runOps_denote (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     (hc : callee? o.op = none) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
@@ -187,7 +187,7 @@ theorem runOps_denote (h : (!o.regions.isEmpty) = false)
   simp only [h, ha, hT, hc]
   rfl
 
-theorem runOps_noFunc (h : (!o.regions.isEmpty) = false)
+theorem runOps_noFunc (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none) :
     Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
@@ -196,7 +196,7 @@ theorem runOps_noFunc (h : (!o.regions.isEmpty) = false)
   simp only [h, ha, hT, hc, hg]
   rfl
 
-theorem runOps_enter (h : (!o.regions.isEmpty) = false)
+theorem runOps_enter (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g) {e : Stuck}
     (he : g.enter args.toDVals = .error e) :
@@ -205,7 +205,7 @@ theorem runOps_enter (h : (!o.regions.isEmpty) = false)
   simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he]
   rfl
 
-theorem runOps_call (h : (!o.regions.isEmpty) = false)
+theorem runOps_call (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g)
     {body : List (Operation d)} {genv : Env d} (he : g.enter args.toDVals = .ok (body, genv)) :
@@ -285,7 +285,7 @@ theorem runOps_congr (n : Nat) : RunsSame (ε := ε) M n := by
     | n + 1, [] => rw [runOps_nil, runOps_nil]
     | n + 1, o :: os =>
       have ihn : ∀ m ≤ n, RunsSame (ε := ε) M m := fun m hm => ih m (Nat.lt_succ_of_le hm)
-      by_cases hr : (!o.regions.isEmpty) = true
+      by_cases hr : o.ownsCoreRegion = true
       · rw [runOps_region hr, runOps_region hr]
       have hr' := Bool.of_not_eq_true hr
       have hops := operands_congr h (sig o.op) o.operands

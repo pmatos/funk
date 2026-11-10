@@ -4,10 +4,11 @@
 //! entry block declares no arguments of its own, every block is reachable
 //! from the entry (ADR-2026-10-30-0817), its labels and value names are
 //! unique, every name and label is one or more name characters, every type
-//! it states is valid, every block holds an op, every op is valid, and the
-//! function obeys each registered dialect's rule over a whole function.
-//! Names and labels are checked at any depth, in the blocks of ops' regions
-//! too.
+//! it states is valid, every block holds an op, every op is valid, every op
+//! inside a region of an op obeys the general rules, and the function obeys
+//! each registered dialect's rule over a whole function. Names and labels
+//! are checked at any depth, in the blocks of ops' regions too; the rule of
+//! a region's kind checks the rest of a region (ADR-2026-11-10-1941).
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;
@@ -168,6 +169,13 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
     for b in blocks {
         for (i, op) in b.ops.iter().enumerate() {
             ops::check(&scope, cx, b, i, op, out);
+        }
+    }
+    for owner in all.iter().flat_map(|b| &b.ops) {
+        for inner in owner.regions.iter().flat_map(|r| &r.blocks) {
+            for (i, op) in inner.ops.iter().enumerate() {
+                ops::check_inner(&scope, cx, inner, i, op, out);
+            }
         }
     }
     let func_cx = FuncContext {

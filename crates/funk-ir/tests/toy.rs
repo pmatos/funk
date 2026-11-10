@@ -68,7 +68,7 @@ fn term(successors: usize) -> OpShape {
     OpShape {
         terminator: true,
         successors,
-        symbols: vec![],
+        ..OpShape::default()
     }
 }
 
@@ -323,7 +323,7 @@ fn regions_and_their_kinds_round_trip_and_validation_rejects_them() {
     assert!(
         diags(&text)
             .iter()
-            .any(|d| d.contains("op toy.scope owns a region"))
+            .any(|d| d.contains("the regions of toy.scope are not of the kinds"))
     );
 }
 

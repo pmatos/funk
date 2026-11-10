@@ -25,6 +25,11 @@ runs the entry block op by op:
   jump to a successor, it binds the arguments of the block that the
   successor names to the values that the successor passes
   (ADR-2026-10-29-2010), and runs that block.
+* The interpreter runs only regions of the core's kind: a function's body.
+  An op that owns regions of a dialect's kinds runs by its dialect's
+  semantics, like any other op, and the interpreter does not enter them.
+  What such a region means is its dialect's to say, through the semantics
+  of the op instance.
 * An op that is not a terminator and calls no function takes its operands
   from the environment, and its dialect's semantics gives its results,
   which join the environment.
@@ -56,8 +61,9 @@ makes each of these checks of a valid function:
   parameters, and receives values of its own result types, which the
   dialect's own validation rule must ask, as the core rule for `call`
   does;
-* an op owns no region: no op of the core dialect has one, and how
-  regions run is not designed yet, so validation rejects them;
+* an op owns no region of the core's kind: a region inside an op would be
+  structured control flow, which is not designed, so validation asks that
+  the kind of each region of an op be a dialect's;
 * a block ends with a terminator, and nothing follows its terminator.
 
 Two checks hold a dialect's terminators to the rules that validation
@@ -182,7 +188,8 @@ def Func.runOps (M : Module d) : Nat → Func d → Env d → List (Operation d)
   | 0, _, _, _ => pure .fuelExhausted
   | _ + 1, _, _, [] => liftExcept (stuck "a block ends without a terminator")
   | n + 1, f, env, o :: os => do
-    if !o.regions.isEmpty then liftExcept (stuck "an op owns a region, and no rule runs one")
+    if o.ownsCoreRegion then
+      liftExcept (stuck "an op owns a region of the core's kind, and no rule runs one")
     let args ← liftExcept (env.operands (sig o.op) o.operands)
     if isTerminator o.op then
       if !os.isEmpty then liftExcept (stuck "an op follows the terminator of its block")

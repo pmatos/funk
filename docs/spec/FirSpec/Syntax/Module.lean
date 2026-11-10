@@ -20,7 +20,7 @@ the Lean changes under it.
 :::moduleDocs (fingerprint := "3705415384001814050")
 :::
 
-:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "8197633234102511224")
+:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
 *Definition: the strings that refer to values, labels and symbols.* In
 the syntax trees of a program, a value, a block label and a symbol are each
 referred to by a string, stored without its sigil: the value `%x`, the label
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "3151177739411748522")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "18103268847858425710")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -77,7 +77,7 @@ block, the first block of the function, and to pass one value of the right
 type for each of that block's arguments.
 :::
 
-:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "8815191834166478095")
+:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "2216873348528431298")
 *Definition: operations, blocks and regions.* An _operation_ is one use of
 an op in a block: it names the op's results, gives its op instance, names
 its operands, and holds its successors, regions and location reference. A
@@ -111,9 +111,10 @@ and $`(x : t)^*` a sequence of value names, each with its type.
 * $`\mathsf{operands}` are the values that the op uses, by name.
 * $`\mathsf{succs}` are its successors. Only terminators have them.
 * $`\mathsf{regions}` are the regions that the op owns. No op of the core
-  dialect has one, and validation requires every op to own none, so in fir
-  today the field is always empty. It is part of every op so that a dialect
-  with regions needs no new syntax.
+  dialect has one. A dialect's op may own regions of the kinds that its op
+  instance states, each a kind that a dialect registers with its own rule.
+  The field is part of every op so that a dialect with regions needs no new
+  syntax.
 * $`\mathsf{loc}` is the reference of the op's location, which every op
   has.
 
@@ -138,7 +139,7 @@ among other rules, every block holds at least one op, and its last op, and
 only that one, is a terminator.
 :::
 
-:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "12238697828094980680")
+:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "7024285893138231908")
 *Definition: a function.* A function is a symbol, typed parameters, the
 types of its results, and a region, its body:
 

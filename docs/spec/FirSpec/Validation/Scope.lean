@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7805917909892943464")
+:::moduleDocs (fingerprint := "16610938487577370944")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -33,7 +33,8 @@ Validation needs both lists. The control-flow graph, reachability and
 dominance are about $`\mathrm{blocks}(f)`, the blocks that branches connect.
 Names and their types are about $`\mathrm{allblocks}(f)`, so that a value
 defined in a nested block still has one type. The two lists differ only
-when an op owns a region, and no op of a valid function owns one yet.
+when an op owns a region. Such a region is of a dialect's kind, and the
+rule of its kind says how values are scoped in it.
 :::
 
 :::readable Fir.Block.defs Fir.Func.defs Fir.Func.typeOf Fir.Func.types (fingerprint := "16013911283360544923")
@@ -124,11 +125,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "14691305273018662797")
+:::readable Fir.DialectValidation (fingerprint := "12753828943017303426")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds four things of its own:
+dialect $`d` adds five things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -140,10 +141,27 @@ dialect $`d` adds four things of its own:
   view, written $`C, v \vdash_d f~\text{valid}`, for what no rule of one
   op can state, such as a value that must be used exactly once.
   Validation calls this rule on every function, also on one that breaks
-  other rules, so the rule assumes nothing about the function.
+  other rules, so the rule assumes nothing about the function;
+* the region kinds that it registers, $`\mathrm{kinds}_d`, each a word of
+  $`d`, and the rule of each kind $`k` for a region $`r` of a function, in a
+  function context and through a view, written
+  $`C, v, f \vdash_d r : k~\text{valid}`. A kind's rule says how values
+  are scoped in a region of its kind, which of its ops end its blocks, and
+  where its successors go (ADR-2026-11-10-1941). A dialect that registers
+  no kind has no such rule.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
-The core dialect has no rule over a whole function.
+The core dialect has no rule over a whole function, and registers no region
+kind: the rule of its own kind, a control-flow graph, is the rule of a
+function's body.
+:::
+
+:::readable Fir.Operation.ownsCoreRegion (fingerprint := "3667057443299565156")
+*Definition: an op that owns a region of the core's kind.* An op owns a
+region of the core's kind when one of its regions names no kind. No valid
+op does, since the kinds of an op's regions are words of dialects. The
+interpreter runs only regions of the core's kind, so it stops on such an
+op.
 :::

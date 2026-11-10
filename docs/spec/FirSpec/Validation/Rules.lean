@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17626029059217508268")
+:::moduleDocs (fingerprint := "4749188729614645891")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -47,7 +47,31 @@ target (ADR-2026-10-29-2010). No branch may go to the entry block: it has
 no predecessors, and its arguments are the function's parameters.
 :::
 
-:::readable Fir.Func.OpValid (pin := Fir.Operation.uses) (pin := Fir.DialectSignature) (fingerprint := "5008303483154810361")
+:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "9699330169066306942")
+*Definition: the valid regions of an op.* Let $`o` be an op of the
+function $`f`, checked in the module context $`C`, let $`p` be its op
+instance, and let $`d` be the dialect. The regions of $`o` are valid when:
+
+$$`\dfrac{\begin{array}{c} \mathrm{regions}(o) = r_1 \dots r_n \qquad \mathrm{kinds}(p) = k_1 \dots k_n \qquad \mathrm{kind}(r_j) = k_j \\ \mathrm{isword}(k_j) \qquad k_j \in \mathrm{kinds}_d \qquad (\mathrm{symtab}_C), \mathrm{id}, f \vdash_d r_j : k_j~\text{valid} \ \text{ for each } j \end{array}}{C, f \vdash \mathrm{regions}(o)~\text{valid}}`
+
+In words: the op owns one region for each kind that its op instance
+states, in order, each region names that kind, the kind is a word that the
+dialect registers, and the region obeys the rule of its kind, in the
+context of the module's symbol table and through the identity view. A kind
+is a word of a dialect, never the core's, so an op that owns a region of
+the core's kind, or any region when its op instance states none, is
+invalid. No core op states a region, so a core op that owns one is invalid
+(ADR-2026-11-10-1941).
+:::
+
+:::readable Fir.Func.RegionsValid.noCoreRegion Fir.Func.regionsValid_of_nil (fingerprint := "11311767626596888277")
+*Theorems: valid regions of an op.* An op whose regions are valid owns no
+region of the core's kind, since each of its regions names a kind. And an
+op that owns no region, of an op instance that states none, has valid
+regions: every core op that owns no region.
+:::
+
+:::readable Fir.Func.OpValid (pin := Fir.Operation.uses) (pin := Fir.DialectSignature) (fingerprint := "16606214502766472009")
 *Definition: a valid op.* Let $`o` be the op at index $`i` of the block
 $`b` of the function $`f`, checked in the module context $`C`, let $`l`
 be the label of $`b`, let $`p` be its
@@ -55,7 +79,7 @@ be the label of $`b`, let $`p` be its
 let $`d` be the dialect of $`p`. The op is valid when every premise of this
 rule holds:
 
-$$`\dfrac{\begin{array}{c} \mathrm{regions}(o) = \epsilon \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ \mathrm{term}(p) \iff i + 1 = |\mathrm{body}(b)| \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \\ \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ f \vdash s~\text{valid} \ \text{ for each } s \in \mathrm{succs}(o) \\ \mathrm{inscope}_f(x, l, i) \text{ for each } x \in \mathrm{uses}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f)) \vdash_d p~\text{valid} \\ \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f, b, i \vdash o~\text{valid}}`
+$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ \mathrm{term}(p) \iff i + 1 = |\mathrm{body}(b)| \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \\ \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ f \vdash s~\text{valid} \ \text{ for each } s \in \mathrm{succs}(o) \\ \mathrm{inscope}_f(x, l, i) \text{ for each } x \in \mathrm{uses}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f)) \vdash_d p~\text{valid} \\ \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f, b, i \vdash o~\text{valid}}`
 
 Here $`\mathrm{regions}(o)`, $`\mathrm{operands}(o)`, $`\mathrm{results}(o)`,
 $`\mathrm{succs}(o)` and $`\mathrm{loc}(o)` are the parts of the op
@@ -63,8 +87,9 @@ $`o`, $`\mathrm{body}(b)` is the ops of $`b`, $`\mathrm{results}(f)` is the
 result types of $`f`, and $`\mathrm{type}_f(\mathrm{operands}(o))` is the
 type of each operand, in turn. In words, the premises say:
 
-* The op owns no region. Region rules come with the first dialect whose
-  ops have regions; no core op has one.
+* Its regions are valid, by the rule for the valid regions of an op above:
+  they have the kinds that its op instance states, and each obeys the rule
+  of its kind. No core op states a region.
 * Its operands are values that $`f` defines, with the types
   $`\mathrm{sig}(p)` that the op instance takes, as many as it takes.
 * Its results have the types $`\mathrm{ret}(p)` that the op instance gives.
@@ -91,12 +116,44 @@ $`\vdash_d` are what the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect adds to validation].
 :::
 
-:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "5925398413384773857")
+:::readable Fir.Func.InnerOpValid Fir.Operation.innerOps (fingerprint := "9676253623755961838")
+*Definition: a valid op inside a region.* An op inside a region of an op
+of the function $`f` is checked by the general rules that do not depend on
+the kind of its region. Let $`o` be such an op, $`p` its op instance and
+$`d` the dialect. It is valid in the module context $`C` when:
+
+$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \qquad \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ \mathrm{isname}(l) \text{ and } \mathrm{type}_f(x^*) \text{ defined, each } l(x^*) \in \mathrm{succs}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f)) \vdash_d p~\text{valid} \qquad \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f \vdash o~\text{valid inside}}`
+
+These are the premises of a
+valid op, but for three that the kind of the region decides: where the op
+may stand in its block, where its successors go, and which values it may
+use. A successor still names a block by a name, and passes values that
+$`f` defines. The rule of the region's kind says the rest. The ops inside
+the regions of an op, $`\mathrm{inner}(o)`, are the ops of each block of
+each of its regions, and not deeper.
+:::
+
+:::readable Fir.Block.InRegionOf Fir.Block.InRegionOf.mono Fir.Block.mem_allBlocks Fir.Region.mem_allBlocks_cases Fir.Block.mem_allBlocks_cases Fir.Operation.mem_regionBlocks_cases Fir.Func.mem_allBlocks_cases (pin := Fir.Func.allBlocks) (fingerprint := "12115075447680226974")
+*Theorems: where a block of a function sits.* A block $`b` is _in a region
+of_ a list of blocks $`L` when some op of some block of $`L` owns a region
+that holds $`b`. Every block of a list is among its blocks at any depth.
+And every block of $`\mathrm{allblocks}(f)` is a block of the body of $`f`,
+or a block in a region of $`\mathrm{allblocks}(f)`. So every op of a
+function at any depth is an op of its body, or an op inside a region of an
+op of the function, and the rules below cover each op once.
+:::
+
+:::readable Fir.Func.inner_of_noRegions (fingerprint := "14527961165736990592")
+*Theorem: no region, no op inside one.* When no op of $`f` owns a region,
+at any depth, every op inside a region of $`f` is valid: there is none.
+:::
+
+:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "15276493308517073629")
 *Definition: a valid function.* The function $`f` is valid in the module
 context $`C` when every premise of this rule holds, where
 $`B = \mathrm{blocks}(f)` and $`d` is the dialect of $`f`:
 
-$$`\dfrac{\begin{array}{c} \mathrm{kind}(\mathrm{body}(f)) = \epsilon \\ B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \mathrm{kind}(\mathrm{body}(f)) = \epsilon \\ B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ C, f \vdash o'~\text{valid inside for each } o' \in \mathrm{inner}(o) \\ \text{and each op } o \text{ of a block of } \mathrm{allblocks}(f) \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
 
 In words:
 
@@ -116,6 +173,9 @@ In words:
 * Every type that the function states, its result types and the type of
   every definition, is valid for its dialect.
 * Every block holds at least one op, and every op is valid.
+* Every op inside a region of an op, at any depth, is valid inside it, by
+  the general rules; the rule of the region's kind, which the valid regions
+  of its owner ask for, says the rest.
 * The function obeys its dialect's
   {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rule over a whole function],
   in the context of the module's symbol table and through the identity view.

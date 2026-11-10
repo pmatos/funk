@@ -211,16 +211,33 @@ The check of an op follows the rule of a valid op, premise by premise, in
 its order.
 -/
 
-/-- The problems of the op `o` at index `i` of block `b` of function `f`,
-given `n`, the number of ops of `b`, which the caller counts once per
-block. -/
-def opProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (n : Nat) (i : Nat)
-    (o : Operation d) : List Problem :=
-  let at_ (message : String) : Problem :=
-    { message, func := f.name, block := b.label, op := i, loc := o.loc }
-  let last := i + 1 == n
-  (if o.regions.isEmpty then [] else [at_ "the op owns a region: no op may own one yet"]) ++
-  (if sameLists (o.operands.map (t.scope[·]?)) ((sig o.op).map some) then [] else
+/-- A region kind, as a problem names it: the word, or the kind between
+quotes when it is not a word. -/
+def kindRef (k : Name) : String := if isWord k then k else Text.quote k
+
+/-- The problems of the regions of the op `o` of function `f`. `at_` makes a
+problem about the op. -/
+def regionProblems (lk : Lookup d) (f : Func d) (at_ : String → Problem) (o : Operation d) :
+    List Problem :=
+  (if o.regions.map (·.kind) = (regionKinds o.op).map some then [] else
+    [at_ "the op's regions are not of the kinds that its op instance states"]) ++
+  o.regions.filterMap fun r => match r.kind with
+    | none => none
+    | some k =>
+      if !isWord k then some (at_ ("a region of the op is of kind " ++ kindRef k ++
+        ", which is not a word"))
+      else if k ∈ regionKindNames (d := d) then
+        if validRegion (DialectView.id d) k ⟨lk.symbols⟩ f r then none
+        else some (at_ ("a region of the op breaks the rule of its kind " ++ kindRef k))
+      else some (at_ ("a region of the op is of kind " ++ kindRef k ++
+        ", which no dialect registers"))
+
+/-- The problems of the op `o` of function `f` for the general rules of an
+op: its types, its successors' count, the symbols it refers to, its
+dialect's own rule and its location. `at_` makes a problem about the op. -/
+def generalProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (at_ : String → Problem)
+    (o : Operation d) : List Problem × List Problem :=
+  ((if sameLists (o.operands.map (t.scope[·]?)) ((sig o.op).map some) then [] else
     [at_ (if o.operands.length = (sig o.op).length then
         "an operand of the op is not of the type that its op instance takes"
       else "the op has " ++ toString o.operands.length ++ " operands, and its op instance " ++
@@ -229,23 +246,60 @@ def opProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (n 
     [at_ (if o.results.length = (returnTypes o.op).length then
         "a result of the op is not of the type that its op instance gives"
       else "the op has " ++ toString o.results.length ++ " results, and its op instance " ++
-        "gives " ++ toString (returnTypes o.op).length)]) ++
-  (if isTerminator o.op == last then [] else
-    [at_ (if last then "block " ++ labelRef b.label ++ " does not end with a terminator"
-      else "the op ends a block, and is not the last op of " ++ labelRef b.label)]) ++
-  (if o.succs.length == succCount o.op then [] else
-    [at_ ("the op has " ++ toString o.succs.length ++ " successors, and its op instance has " ++
-      toString (succCount o.op))]) ++
-  (if isTerminator o.op || o.succs.isEmpty then [] else
-    [at_ "the op is not a terminator, and only terminators have successors"]) ++
-  o.succs.flatMap (succProblems t at_) ++
-  o.uses.flatMap (useProblems t at_ b.label i) ++
+        "gives " ++ toString (returnTypes o.op).length)]),
   (symbolRefs o.op).filterMap (fun g => if (lk.symbols g).isSome then none else
     some (at_ ("the op refers to " ++ Text.printSymbol g ++ ", which names no function"))) ++
   (if validOp ⟨lk.symbols, f.results⟩ o.op then [] else
     [at_ "the op breaks its dialect's own rule"]) ++
   (if lk.hasLoc o.loc then [] else
-    [at_ ("location reference @" ++ toString o.loc ++ " is not in the location table")])
+    [at_ ("location reference @" ++ toString o.loc ++ " is not in the location table")]))
+
+/-- The problems of the count of successors of the op `o`. -/
+def succCountProblems (at_ : String → Problem) (o : Operation d) : List Problem :=
+  (if o.succs.length == succCount o.op then [] else
+    [at_ ("the op has " ++ toString o.succs.length ++ " successors, and its op instance has " ++
+      toString (succCount o.op))]) ++
+  (if isTerminator o.op || o.succs.isEmpty then [] else
+    [at_ "the op is not a terminator, and only terminators have successors"])
+
+/-- The problems of the op `o` at index `i` of block `b` of function `f`,
+given `n`, the number of ops of `b`, which the caller counts once per
+block. -/
+def opProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (n : Nat) (i : Nat)
+    (o : Operation d) : List Problem :=
+  let at_ (message : String) : Problem :=
+    { message, func := f.name, block := b.label, op := i, loc := o.loc }
+  let last := i + 1 == n
+  let g := generalProblems lk f t at_ o
+  regionProblems lk f at_ o ++ g.1 ++
+  (if isTerminator o.op == last then [] else
+    [at_ (if last then "block " ++ labelRef b.label ++ " does not end with a terminator"
+      else "the op ends a block, and is not the last op of " ++ labelRef b.label)]) ++
+  succCountProblems at_ o ++
+  o.succs.flatMap (succProblems t at_) ++
+  o.uses.flatMap (useProblems t at_ b.label i) ++
+  g.2
+
+/-- The problems of the op `o` at index `i` of block `b`, which is a block of
+a region of an op of function `f`: those of the general rules only. -/
+def innerOpProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (b : Block d) (i : Nat)
+    (o : Operation d) : List Problem :=
+  let at_ (message : String) : Problem :=
+    { message, func := f.name, block := b.label, op := i, loc := o.loc }
+  let g := generalProblems lk f t at_ o
+  regionProblems lk f at_ o ++ g.1 ++ succCountProblems at_ o ++
+  o.succs.flatMap (fun s =>
+    (if isName s.label then [] else
+      [at_ ("successor label " ++ Text.quote s.label ++ " is not one or more name characters")]) ++
+    s.args.filterMap fun a => if t.scope.contains a then none else
+      some (at_ ("successor argument " ++ valueRef a ++ " is not defined in the function"))) ++
+  g.2
+
+/-- The problems of the ops inside the regions of the op `o`. -/
+def Operation.innerProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (o : Operation d) :
+    List Problem :=
+  o.regions.flatMap fun r => r.blocks.flatMap fun b =>
+    b.body.zipIdx.flatMap fun (o', i) => innerOpProblems lk f t b i o'
 
 omit [DecidableEq d.Ty] [DialectSignature d] [DialectValidation d]
   [DecidableDialectValidation d] in
@@ -258,14 +312,60 @@ theorem or_isEmpty_eq_true {a : Bool} {l : List Succ} :
     (a || l.isEmpty) = true ↔ (a = false → l = []) := by
   cases a <;> simp
 
+omit [DecidableEq d.Ty] in
+/-- The check of an op's regions decides `Func.RegionsValid`. -/
+theorem regionProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d}
+    {at_ : String → Problem} {o : Operation d} (h : lk.Agrees ctx) :
+    regionProblems lk f at_ o = [] ↔ f.RegionsValid ctx o := by
+  unfold regionProblems Func.RegionsValid
+  rw [List.append_eq_nil_iff, ite_nil_eq_nil, List.filterMap_eq_nil_iff, h.symbols]
+  refine and_congr Iff.rfl (forall_congr' fun r => imp_congr_right fun _ => ?_)
+  cases r.kind with
+  | none => simp
+  | some k =>
+    simp only [Option.some.injEq, forall_eq']
+    by_cases hw : isWord k <;> by_cases hk : k ∈ regionKindNames (d := d) <;>
+      simp [hw, hk]
+
+omit [DecidableEq d.Ty] [DialectSignature d] [DialectValidation d]
+  [DecidableDialectValidation d] in
+theorem Func.scope_contains (f : Func d) (x : Name) :
+    (f.tables f.allBlocks).scope.contains x = (f.typeOf x).isSome := by
+  rw [Std.HashMap.contains_eq_isSome_getElem?, f.scope_eq]
+
+/-- The check of an op inside a region decides `Func.InnerOpValid`. -/
+theorem innerOpProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d}
+    {b : Block d} {i : Nat} {o : Operation d} (h : lk.Agrees ctx) :
+    innerOpProblems lk f (f.tables f.allBlocks) b i o = [] ↔ f.InnerOpValid ctx o := by
+  simp only [innerOpProblems, generalProblems, succCountProblems, Func.InnerOpValid,
+    List.append_eq_nil_iff, regionProblems_eq_nil h, ite_nil_eq_nil, sameLists_iff,
+    Func.scope_fun, beq_iff_eq, or_isEmpty_eq_true, List.flatMap_eq_nil_iff, Func.scope_contains,
+    List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, and_assoc]
+
+/-- The check of the ops inside an op's regions decides that each obeys the
+general rules. -/
+theorem Operation.innerProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d}
+    {o : Operation d} (h : lk.Agrees ctx) :
+    o.innerProblems lk f (f.tables f.allBlocks) = [] ↔ ∀ o' ∈ o.innerOps, f.InnerOpValid ctx o' := by
+  simp only [Operation.innerProblems, Operation.innerOps, List.flatMap_eq_nil_iff,
+    List.mem_flatMap]
+  constructor
+  · rintro hp o' ⟨r, hr, b, hb, ho'⟩
+    obtain ⟨i, hi⟩ := List.getElem?_of_mem ho'
+    exact (innerOpProblems_eq_nil h).mp (hp r hr b hb (o', i) (List.mem_zipIdx_iff_getElem?.mpr hi))
+  · intro hv r hr b hb p hp
+    exact (innerOpProblems_eq_nil h).mpr
+      (hv p.1 ⟨r, hr, b, hb, List.mem_of_getElem? (List.mem_zipIdx_iff_getElem?.mp hp)⟩)
+
 /-- The check of an op decides `Func.OpValid`, for every op of a block of the
 function. -/
 theorem opProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d} {b : Block d}
     {i : Nat} {o : Operation d} (h : lk.Agrees ctx) (hb : b ∈ f.blocks) :
     opProblems lk f (f.tables f.allBlocks) b b.body.length i o = [] ↔ f.OpValid ctx b i o := by
   have hl : ∃ b' ∈ f.blocks, b'.label = b.label := ⟨b, hb, rfl⟩
-  simp only [opProblems, Func.OpValid, List.append_eq_nil_iff, ite_nil_eq_nil, sameLists_iff,
-    Func.scope_fun, List.isEmpty_iff, beq_iff_eq, eq_beq_iff, or_isEmpty_eq_true,
+  simp only [opProblems, generalProblems, succCountProblems, Func.OpValid, List.append_eq_nil_iff,
+    regionProblems_eq_nil h, ite_nil_eq_nil, sameLists_iff,
+    Func.scope_fun, beq_iff_eq, eq_beq_iff, or_isEmpty_eq_true,
     List.flatMap_eq_nil_iff, succProblems_eq_nil, useProblems_eq_nil hl,
     List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, and_assoc]
 

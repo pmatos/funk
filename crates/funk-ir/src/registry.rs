@@ -14,10 +14,16 @@
 //! checks that each op of a dialect is written under the dialect's name, so
 //! the map of op names routes each op to its dialect. A type goes to the
 //! dialect that its head word names, and only that dialect's [`TypeSpec`]s
-//! are asked about it, so no dialect can claim another's type.
+//! are asked about it, so no dialect can claim another's type. A region kind
+//! is registered under its dialect's name as an op is, and a
+//! [`RegionKindSpec`] is the kind's rule, `validRegion`.
+
+mod region_kind;
 
 use std::collections::HashMap;
 use std::fmt;
+
+pub use region_kind::RegionKindSpec;
 
 use crate::dialects;
 use crate::dialects::core::NAME as CORE;
@@ -47,6 +53,10 @@ pub struct OpShape {
     pub successors: usize,
     /// The symbols the op refers to. Each must name an item of the module.
     pub symbols: Vec<String>,
+    /// The kind of each region that the op owns, in order: each a region
+    /// kind of a dialect, never the core's (`regionKinds`). Empty for an op
+    /// that owns no region.
+    pub regions: Vec<String>,
 }
 
 /// What a dialect's op rule may look at: the module's symbol table and the
@@ -118,8 +128,8 @@ pub trait FuncSpec: Send + Sync {
     fn check(&self, cx: &FuncContext<'_>, func: &Func) -> Result<(), String>;
 }
 
-/// A dialect: a name, the dialects it depends on, its ops, its types and its
-/// function rules.
+/// A dialect: a name, the dialects it depends on, its ops, its types, its
+/// function rules and its region kinds.
 pub struct Dialect {
     /// The dialect's name: a word with no `.`. Every dialect but the core
     /// writes its ops and types as this name, a `.` and a word; the core
@@ -134,6 +144,8 @@ pub struct Dialect {
     pub types: Vec<Box<dyn TypeSpec>>,
     /// The dialect's rules over whole functions.
     pub func_rules: Vec<Box<dyn FuncSpec>>,
+    /// The region kinds that the dialect registers, each with its rule.
+    pub region_kinds: Vec<Box<dyn RegionKindSpec>>,
 }
 
 impl Dialect {
@@ -145,6 +157,7 @@ impl Dialect {
             ops: Vec::new(),
             types: Vec::new(),
             func_rules: Vec::new(),
+            region_kinds: Vec::new(),
         }
     }
 
@@ -172,6 +185,12 @@ impl Dialect {
     /// Adds a rule over whole functions.
     pub fn func_rule(mut self, rule: impl FuncSpec + 'static) -> Dialect {
         self.func_rules.push(Box::new(rule));
+        self
+    }
+
+    /// Adds a region kind and its rule.
+    pub fn region_kind(mut self, kind: impl RegionKindSpec + 'static) -> Dialect {
+        self.region_kinds.push(Box::new(kind));
         self
     }
 }
@@ -202,6 +221,16 @@ pub enum RegistryError {
     DuplicateOp(String),
     /// The op's name is not a word, so the text cannot write it.
     OpNameNotAWord(String),
+    /// The region kind is not a word that names the dialect that registers
+    /// it: a prefixed dialect's kinds are `name.word`, and the core's bare.
+    KindOutsideDialect {
+        /// The dialect being registered.
+        dialect: String,
+        /// The kind's word.
+        kind: String,
+    },
+    /// A region kind of this name is already registered.
+    DuplicateKind(String),
 }
 
 impl fmt::Display for RegistryError {
@@ -229,6 +258,11 @@ impl fmt::Display for RegistryError {
             }
             RegistryError::DuplicateOp(o) => write!(f, "op {o} is already registered"),
             RegistryError::OpNameNotAWord(o) => write!(f, "op name {o:?} is not a word"),
+            RegistryError::KindOutsideDialect { dialect, kind } => write!(
+                f,
+                "region kind {kind:?} of dialect {dialect} is not a word written under its name"
+            ),
+            RegistryError::DuplicateKind(k) => write!(f, "region kind {k} is already registered"),
         }
     }
 }
@@ -254,13 +288,14 @@ struct Registered {
     types: Vec<Box<dyn TypeSpec>>,
 }
 
-/// The registered dialects, their ops by name, their types and their
-/// function rules.
+/// The registered dialects, their ops by name, their types, their function
+/// rules and their region kinds by name.
 #[derive(Default)]
 pub struct Registry {
     dialects: Vec<Registered>,
     ops: HashMap<String, (usize, Box<dyn OpSpec>)>,
     func_rules: Vec<Box<dyn FuncSpec>>,
+    kinds: HashMap<String, Box<dyn RegionKindSpec>>,
 }
 
 impl fmt::Debug for Registry {
@@ -268,9 +303,12 @@ impl fmt::Debug for Registry {
         let dialects: Vec<_> = self.dialects.iter().map(|d| &d.name).collect();
         let mut ops: Vec<_> = self.ops.keys().collect();
         ops.sort();
+        let mut kinds: Vec<_> = self.kinds.keys().collect();
+        kinds.sort();
         f.debug_struct("Registry")
             .field("dialects", &dialects)
             .field("ops", &ops)
+            .field("kinds", &kinds)
             .finish()
     }
 }
@@ -329,11 +367,28 @@ impl Registry {
             }
             names.push(op_name);
         }
+        let mut kinds: Vec<&str> = Vec::new();
+        for kind in &dialect.region_kinds {
+            let kind = kind.name();
+            if !is_word(kind) || !written_under(kind, prefix) {
+                return Err(RegistryError::KindOutsideDialect {
+                    dialect: dialect.name.clone(),
+                    kind: kind.to_string(),
+                });
+            }
+            if self.kinds.contains_key(kind) || kinds.contains(&kind) {
+                return Err(RegistryError::DuplicateKind(kind.to_string()));
+            }
+            kinds.push(kind);
+        }
         let index = self.dialects.len();
         for op in dialect.ops {
             self.ops.insert(op.name().to_string(), (index, op));
         }
         self.func_rules.extend(dialect.func_rules);
+        for kind in dialect.region_kinds {
+            self.kinds.insert(kind.name().to_string(), kind);
+        }
         self.dialects.push(Registered {
             name: dialect.name,
             deps: dialect.deps,
@@ -363,6 +418,11 @@ impl Registry {
     /// The dialects that the registered dialect `name` depends on.
     pub fn dependencies(&self, name: &str) -> Option<&[String]> {
         self.dialect(name).map(|d| d.deps.as_slice())
+    }
+
+    /// The registered region kind named `name`, with its rule.
+    pub fn region_kind(&self, name: &str) -> Option<&dyn RegionKindSpec> {
+        self.kinds.get(name).map(|k| k.as_ref())
     }
 
     /// The registered dialects' rules over whole functions.

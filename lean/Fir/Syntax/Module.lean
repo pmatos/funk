@@ -79,9 +79,9 @@ An op in place, in a block: one operation of fir.
   the types it is used at.
 * `operands` are the values the op uses.
 * `succs` are the op's successors. Only terminators have them.
-* `regions` are the regions the op owns. No op of the core dialect has one,
-  so in M0 this list is always empty; it is part of every op so that a
-  dialect with regions needs no new syntax (G0).
+* `regions` are the regions the op owns, of the kinds that its op instance
+  states. No op of the core dialect has one; the list is part of every op
+  so that a dialect with regions needs no new syntax (G0).
 * `loc` is the op's required location, as a reference into the module's
   location table (H8).
 -/
