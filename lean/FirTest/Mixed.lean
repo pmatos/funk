@@ -1,13 +1,13 @@
 import FirTest.Interpreter
-import FirTest.Sum
 import FirTest.Toy
 
 /-!
 A module that mixes core ops and a toy op, in the sum of the core dialect
-and the toy dialect, `CoreToy`. The sum sends each op name that starts with
-`toy.` to the toy dialect and every other name to the core dialect: the rule
-for test dialects, ADR-2026-10-30-2040. No core op name starts with `toy.`
-and the toy op's does, so the sum's text is lawful.
+and the toy dialect, `CoreToy`, the spec's sum (ADR-2026-11-09-1543). The
+sum sends each op name that starts with `toy.` to the toy dialect and every
+other name to the core dialect. The core's words are bare and the toy
+dialect writes its op as `toy.mask`, so the sum's text is lawful by the
+spec's theorem on names.
 
 The tests run the spec's parser, printer, validation check and interpreter
 on such a module, unchanged: it parses, prints as itself, is valid, and runs
@@ -19,32 +19,33 @@ namespace FirTest
 
 open Fir FirRef
 
-/-- A test dialect's op name: `toy.` and the rest of the name. -/
-def isToyName (n : String) : Bool := "toy.".toList.isPrefixOf n.toList
-
-instance : SumRoute Core.Op Toy.Op := ⟨isToyName⟩
-
 /-- The sum of the core dialect and the toy dialect. -/
-abbrev CoreToy : Dialect := SumDialect Core.Ty Core.Op Toy.Op
+abbrev CoreToy : Dialect := CoreSum Toy.Op
 
-/-- No core op name starts with `toy.`, and the toy op's does. -/
-theorem coreToy_routes : SumDialect.Routes Core.Ty Core.Op Toy.Op := by
-  refine ⟨fun o => ?_, fun o => ?_⟩
-  · cases o <;> simp only [opName, Core.Op.name] <;> decide
-  · cases o; exact (by decide : isToyName "toy.mask" = true)
+/-- The toy dialect's name is new to the core. -/
+theorem toy_new : name (Ext Toy.Op) ∉ names CoreDialect := Core.name_new _
 
-instance : LawfulDialectText CoreToy := SumDialect.lawful coreToy_routes
+instance : LawfulDialectText CoreToy := Dialect.sum.lawful_of_names toy_new
 
 /-- Every valid module of the sum is well formed, as the spec proves of
-every dialect with lawful text. -/
-theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) := validIsWellFormed
+every sum whose dialect is new to its base. -/
+theorem coreToy_validIsWellFormed : ValidIsWellFormed (d := CoreToy) :=
+  Dialect.sum.validIsWellFormed toy_new
 
-#guard isToyName "toy.mask" && isToyName "toy." && !isToyName "toy" && !isToyName "add"
+/-- The sum's dialect set is the toy dialect's name. -/
+example : names CoreToy = ["toy"] := rfl
+
 -- A name that starts with `toy.` goes to the toy dialect, whether or not it
 -- decodes there, and every other name to the core dialect.
-#guard decodeOp (d := CoreToy) "toy.mask" [.int 3] [.int 8] [.int 8] == some (.inr (.mask 8 3))
-#guard decodeOp (d := CoreToy) "toy.add" [] [.int 8, .int 8] [.int 8] == none
-#guard decodeOp (d := CoreToy) "add" [] [.int 8, .int 8] [.int 8] == some (.inl (.add 8 {}))
+#guard decodeOp (d := CoreToy) "toy.mask" [.int 3] [.inl (.int 8)] [.inl (.int 8)] ==
+  some (.inr (.mask 8 3))
+#guard decodeOp (d := CoreToy) "toy.add" [] [.inl (.int 8), .inl (.int 8)] [.inl (.int 8)] == none
+#guard decodeOp (d := CoreToy) "add" [] [.inl (.int 8), .inl (.int 8)] [.inl (.int 8)] ==
+  some (.inl (.add 8 {}))
+-- A type goes to the side its head word names: `i8` to the core, and
+-- `toy.i8` to the toy dialect, which has no type of its own.
+#guard decodeTy (d := CoreToy) (.word "i8") == some (.inl (.int 8))
+#guard decodeTy (d := CoreToy) (.word "toy.i8") == none
 -- Each op of the sum has its own dialect's poison class.
 #guard Core.samples.all (fun o => poisonClass (d := CoreToy) (.inl o) == Core.Op.poisonClass o) &&
   poisonClass (d := CoreToy) (.inr (.mask 8 3)) == .propagates
@@ -83,6 +84,25 @@ instance : DialectDenote ToyDialect Mix where
 /-- Parses with the sum of the core and the toy dialect. -/
 def parseMixed (t : String) : Except ParseError (Module CoreToy) := Fir.parse t
 
+/-- Reads `fir-ref`'s arguments at the sum's types, which are the core's. -/
+def readSumArgs : (ts : List CoreToy.Ty) → List String → Except String (HVector toType ts)
+  | [], [] => pure .nil
+  | .inl t :: ts, a :: as => return .cons (← readArg t a) (← readSumArgs ts as)
+  | .inr t :: _, _ => t.elim
+  | ts, as => .error s!"{as.length} arguments are given for {ts.length} parameters"
+
+/-- A value of the sum, as a value of the core: the sum's types are the
+core's. -/
+def coreVal : DVal CoreToy → DVal CoreDialect
+  | ⟨.inl t, v⟩ => ⟨t, v⟩
+  | ⟨.inr t, _⟩ => t.elim
+
+/-- How a run of the sum ends, as a run of the core ends. -/
+def coreResult : Except Stuck (Result (List (DVal CoreToy))) → Except Stuck (Result Core.Obs)
+  | .ok (.ret vs) => .ok (.ret (vs.map coreVal))
+  | .ok .fuelExhausted => .ok .fuelExhausted
+  | .error e => .error e
+
 /-- What `fir-ref run` would report on the first function of the text `t`,
 in the sum, on arguments that may be `poison`. -/
 def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel) :
@@ -90,10 +110,10 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
   match parseMixed t with
   | .error _ => none
   | .ok m => m.funcs.head?.bind fun f =>
-    match readArgs (f.params.map (·.2)) args with
+    match readSumArgs (f.params.map (·.2)) args with
     | .error _ => none
     | .ok vs => some <| match (f.run m (m := Mix) vs fuel).run.script constOf [] 0 with
-      | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok r, c))
+      | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok (coreResult r), c))
       | .ok (.ub r, c) => scriptedReport "@f" (.ok (.ub r, c))
       | .ok (.noOutcome op, _) => { err := s!"{op} has no rule", status := 2 }
       | .error _ => { err := "the run makes a choice", status := 2 }
@@ -174,20 +194,14 @@ def mixedProblems (t : String) : Option (List Problem) :=
 
 /-! # The theorems' axioms -/
 
-/-- info: 'FirTest.SumDialect.lawful_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms SumDialect.lawful_iff
+/-- info: 'Fir.Dialect.sum.lawful_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Dialect.sum.lawful_iff
 
-/-- info: 'FirTest.SumDialect.names_disjoint' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms SumDialect.names_disjoint
-
-/-- info: 'FirTest.SumDialect.lawfulPoison' does not depend on any axioms -/
-#guard_msgs in #print axioms SumDialect.lawfulPoison
+/-- info: 'Fir.Dialect.sum.lawfulPoison' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Dialect.sum.lawfulPoison
 
 /-- info: 'FirTest.Toy.lawfulDialectText' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Toy.lawfulDialectText
-
-/-- info: 'FirTest.coreToy_routes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms coreToy_routes
 
 /-- info: 'FirTest.coreToy_validIsWellFormed' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms coreToy_validIsWellFormed

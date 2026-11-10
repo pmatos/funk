@@ -202,7 +202,8 @@ theorem coreToy_printThenParse : PrintThenParse (d := CoreToy) Fir.parse := prin
 /-- `@m`, a function of the toy dialect alone: one `toy.mask`, and no
 terminator, since the toy dialect has none. -/
 def toyFn : Func ToyDialect :=
-  ⟨"m", [("a", i 8)], [i 8], ⟨[⟨"entry", [], [⟨[("k", i 8)], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
+  ⟨"m", [("a", .inl (i 8))], [.inl (i 8)],
+    ⟨[⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
 
 /-- The module of `@m`. -/
 def toyModule : Module ToyDialect := ⟨[.func toyFn], [(0, .unknown)]⟩
@@ -231,9 +232,9 @@ theorem toyModule_parse_print : Fir.parse toyModule.print = .ok toyModule :=
 /-- The function of `FirTest.Mixed`'s mixed module, as abstract syntax: a
 toy op whose result a core op uses. -/
 def mixedFn : Func CoreToy :=
-  ⟨"f", [("a", i 8)], [i 8, i 8], ⟨[⟨"entry", [], [
-    ⟨[("m", i 8)], .inr (.mask 8 3), ["a"], [], [], 1⟩,
-    ⟨[("s", i 8)], .inl (.add 8 {}), ["m", "a"], [], [], 0⟩,
+  ⟨"f", [("a", .inl (i 8))], [.inl (i 8), .inl (i 8)], ⟨[⟨"entry", [], [
+    ⟨[("m", .inl (i 8))], .inr (.mask 8 3), ["a"], [], [], 1⟩,
+    ⟨[("s", .inl (i 8))], .inl (.add 8 {}), ["m", "a"], [], [], 0⟩,
     ⟨[], .inl (.ret [i 8, i 8]), ["m", "s"], [], [], 0⟩]⟩]⟩⟩
 
 /-- The mixed module, as abstract syntax. -/

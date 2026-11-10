@@ -73,6 +73,15 @@ location of its first op. `tests/dialects/use-once.cases` holds the cases of a
 use-once toy dialect, which the Lean and Rust tests both read
 (ADR-2026-11-09-2257).
 
+## A base op in a sum of dialects
+
+In the spec's sum `base ⊞ e`, a base op is checked by the base's own rule.
+It sees only the symbols whose types are all the base's. It sees the
+function's result types only when they are all the base's. Otherwise no base
+op is valid in that function, `add` included. Dropping the types that the
+base cannot write would let a core `ret` return too few values
+(ADR-2026-11-09-2353).
+
 ## How `fir-ref` runs the check
 
 fir has no nesting limit. Every tool handles any depth without a stack
