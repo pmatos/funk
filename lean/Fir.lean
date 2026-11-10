@@ -77,6 +77,8 @@ import Fir.Core.CallRefine
 import Fir.Execution.Lawful
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
+import Fir.Memory.Model
+import Fir.Memory.Laws
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
