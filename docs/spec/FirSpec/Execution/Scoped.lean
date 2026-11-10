@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope along a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7789761743438093526")
+:::moduleDocs (fingerprint := "5522836030231372541")
 :::
 
 :::readable Fir.eq_of_nodup_map (fingerprint := "17771416556615606785")
@@ -24,14 +24,10 @@ and $`a` and $`b` are members with $`g(a) = g(b)`, then $`a = b`. The
 proofs below use it to show that two blocks with one label are one block.
 :::
 
-:::readable Fir.Block.mem_allBlocks Fir.Func.mem_defs_arg Fir.Func.mem_defs_result (fingerprint := "13843914713198665285")
-*Theorem: a block of a list is among its blocks at any depth, and the
-arguments of a block and the results of its ops are definitions of the
-function.*
+:::readable Fir.Func.mem_defs_arg Fir.Func.mem_defs_result (pin := Fir.Block.mem_allBlocks) (fingerprint := "12289368350231825257")
+*Theorem: the arguments of a block and the results of its ops are
+definitions of the function.*
 
-* Each block of a list $`bs` of blocks is in $`\mathrm{allblocks}(bs)`,
-  which lists the blocks of $`bs` at any depth as $`\mathrm{allblocks}(f)`
-  does for the body of a function.
 * For each block $`b` of $`\mathrm{blocks}(f)`, each argument $`y : t` of
   $`b` is in $`\mathrm{defs}(f)`.
 * For each block $`b` of $`\mathrm{blocks}(f)` and each op $`o` of $`b`,

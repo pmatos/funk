@@ -219,6 +219,7 @@ instance : LawfulDialectName CoreDialect BitExt where
       have : x = "bit" := by simpa [tyAttr, Attr.dialects, DialectText.tyAttr, wordDialect] using h
       subst this
       exact List.mem_singleton_self _
+  kind_named _ h := nomatch h
 
 /-! # The bit dialect is lawful -/
 

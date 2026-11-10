@@ -59,7 +59,7 @@ $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`. The case of an op follows,
 once its condition is defined.
 :::
 
-:::readable Fir.Operation.DecodesIn Fir.Block.DecodesIn (pin := Fir.DialectSignature) (fingerprint := "15495677668507595244")
+:::readable Fir.Operation.DecodesIn Fir.Block.DecodesIn (pin := Fir.DialectSignature) (fingerprint := "8355073201370729281")
 *Definitions: an op, and a block, that decode in a scope.* For every
 dialect with signatures and a text format, an op $`o` with the op instance
 $`\iota` _decodes in_ the scope $`\mathit{sc}` when:

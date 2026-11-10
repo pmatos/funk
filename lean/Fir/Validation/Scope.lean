@@ -25,7 +25,8 @@ A function defines values in three ways: its parameters, the arguments of
 its blocks, and the results of its ops. Every definition names the value and
 gives its type, so the type of a value can be looked up by its name. The
 blocks of a function include, at any depth, the blocks of its ops' regions;
-no core op has one.
+no core op has one, and a region of an op is of a dialect's kind, whose rule
+says how values are scoped in it.
 -/
 
 namespace Fir
@@ -83,6 +84,10 @@ def Func.block? (f : Func d) (l : Name) : Option (Block d) :=
 successors. -/
 def Operation.uses (o : Operation d) : List Name :=
   o.operands ++ o.succs.flatMap (·.args)
+
+/-- Whether the op owns a region of the core's kind. No valid op does: the
+kinds of an op's regions are words of dialects. -/
+def Operation.ownsCoreRegion (o : Operation d) : Bool := o.regions.any (·.kind.isNone)
 
 /-!
 # Symbols
@@ -222,12 +227,21 @@ The rules a dialect adds to validation.
   it also sees the uses by other dialects' ops. Validation calls it on every
   function, also on one that breaks other rules, so it must hold no
   assumption about the function.
+* `regionKindNames` lists the region kinds that the dialect registers, each a
+  word of the dialect, and `validRegion` is the rule of each: how values are
+  scoped in a region of that kind, which of its ops end its blocks, and
+  where its successors go. The rule sees the region and the function of the
+  `host` dialect that holds it, through a view, as `validFunc` does. A
+  dialect that registers no kind, as the core does, has neither.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
   symbolRefs : d.Op → List Name
   validOp : OpContext d → d.Op → Prop
   validFunc : {host : Dialect} → DialectView d host → FuncContext host → Func host → Prop
-export DialectValidation (validTy symbolRefs validOp validFunc)
+  regionKindNames : List Name := []
+  validRegion : {host : Dialect} → DialectView d host → Name → FuncContext host → Func host →
+    Region host → Prop := fun _ _ _ _ _ => False
+export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion)
 
 end Fir

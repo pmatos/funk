@@ -20,7 +20,8 @@ once, every way in which a path of a run of ops goes on from its first
 op, so that the proofs need not unfold the interpreter:
 
 * A path that does not end stuck, with fuel left and an op to run, takes
-  one of eight ways. In each, the op owns no region and its operands are
+  one of eight ways. In each, the op owns no region of the core's kind and
+  its operands are
   found. Then the op is a terminator, the last op of its block, whose
   exit hits UB, returns, or jumps to a block, where the run goes on with
   one step less; or it runs by its own rule, which hits UB, or gives
@@ -85,45 +86,45 @@ steps, goes on, when it does not end stuck. -/
 inductive Func.StepPath (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
     (os : List (Operation d)) : Ev (Except Stuck (Result (List (DVal d) × Nat))) → Prop
   | exitUB {args : HVector toType (sig o.op)} {r : String} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = true → os = [] →
       DialectDenote.exit (m := SetM) o.op args (.ub r) → Func.StepPath M n f env o os (.ub r)
   | ret {args : HVector toType (sig o.op)} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = true → os = [] →
       DialectDenote.exit (m := SetM) o.op args (.ok .ret) → sig o.op = f.results →
       Func.StepPath M n f env o os (.ok (.ok (.ret (args.toDVals, n))))
   | goto {args : HVector toType (sig o.op)} {i : Nat} {b : Block d} {env₁ : Env d} {e} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = true → os = [] →
       DialectDenote.exit (m := SetM) o.op args (.ok (.goto i)) →
       f.jump env o.succs i = .ok (b, env₁) → (Func.runOps (m := SetM) M n f env₁ b.body).run e →
       Func.StepPath M n f env o os e
   | denoteUB {args : HVector toType (sig o.op)} {r : String} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = false → callee? o.op = none →
       DialectDenote.denote (m := SetM) o.op args (.ub r) → Func.StepPath M n f env o os (.ub r)
   | denote {args : HVector toType (sig o.op)} {rs : HVector toType (returnTypes o.op)} {e} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = false → callee? o.op = none →
       DialectDenote.denote (m := SetM) o.op args (.ok rs) →
       (o.results.map (·.1)).length = rs.toDVals.length →
       (Func.runOps (m := SetM) M n f ((o.results.map (·.1)).zip rs.toDVals ++ env) os).run e →
       Func.StepPath M n f env o os e
   | callUB {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv} {r : String} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
       g.enter args.toDVals = .ok (body, genv) →
       (Func.runOps (m := SetM) M n g genv body).run (.ub r) → Func.StepPath M n f env o os (.ub r)
   | callExh {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
       g.enter args.toDVals = .ok (body, genv) →
       (Func.runOps (m := SetM) M n g genv body).run (.ok (.ok .fuelExhausted)) →
       Func.StepPath M n f env o os (.ok (.ok .fuelExhausted))
   | callRet {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv}
       {vs : List (DVal d)} {k : Nat} {e} :
-      o.regions = [] → env.operands (sig o.op) o.operands = .ok args →
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
       isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
       g.enter args.toDVals = .ok (body, genv) →
       (Func.runOps (m := SetM) M n g genv body).run (.ok (.ok (.ret (vs, k)))) →
@@ -144,7 +145,7 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
     · obtain ⟨_, h, _⟩ := (run_liftExcept_bind hne).1 h
       cases h
     rename_i hreg
-    have hreg' : o.regions = [] := by simpa using hreg
+    have hreg' : o.ownsCoreRegion = false := by simpa using hreg
     obtain ⟨args, hargs, h⟩ := (run_liftExcept_bind hne).1 h
     split at h
     · rename_i hT

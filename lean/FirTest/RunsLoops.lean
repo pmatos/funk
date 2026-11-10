@@ -99,6 +99,7 @@ theorem forever_valid : forever.Valid foreverModule.context where
     simp only [forever, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
     rcases hb with rfl | rfl <;> simp [op]
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
+  inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
 
 /-- `@forever`'s module is valid. -/

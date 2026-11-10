@@ -169,6 +169,7 @@ instance : LawfulDialectName CoreDialect FlagExt where
       have : x = "toy" := by simpa [tyAttr, Attr.dialects, DialectText.tyAttr, wordDialect] using h
       subst this
       exact List.mem_singleton_self _
+  kind_named _ h := nomatch h
 
 end Flag
 

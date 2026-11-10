@@ -48,14 +48,23 @@ def everyOp : String := oneFunc ("func @all(%a: i32, %b: i32, %c: i1) -> i32 {\n
 
 #guard valid everyOp
 
-/-! # An op owns no region -/
+/-! # A core op owns no region
+
+No core op states a region, and the core registers no kind, so a region of
+any kind is one too many, and one of a dialect's kind is of a kind that no
+dialect of the core registers. The ops inside a region still obey the
+general rules: the `ret` inside returns no value from a function that
+returns one. -/
 
 #guard checks (func ["br {\n  ^inner:\n    ret @0\n  } @0"])
-  ["the op owns a region: no op may own one yet",
-   "the op has 0 successors, and its op instance has 1"]
+  ["the op's regions are not of the kinds that its op instance states",
+   "the op has 0 successors, and its op instance has 1",
+   "the op breaks its dialect's own rule"]
 #guard checks (func ["br { toy.graph\n  ^inner:\n    ret @0\n  } @0"])
-  ["the op owns a region: no op may own one yet",
-   "the op has 0 successors, and its op instance has 1"]
+  ["the op's regions are not of the kinds that its op instance states",
+   "a region of the op is of kind toy.graph, which no dialect registers",
+   "the op has 0 successors, and its op instance has 1",
+   "the op breaks its dialect's own rule"]
 
 /-! # Operand and result types -/
 
@@ -115,10 +124,11 @@ def branches (term : String) (rest : String) : String :=
 #guard checks (func ["%b: i32 = add %c, %a @0", "%c: i32 = const 1 @0", "ret %b @0"])
   ["%c is used before it is defined"]
 #guard checks (func ["br {\n  ^r:\n    %x: i32 = const 1 @0\n    ret @0\n  } @0", "ret %x @0"])
-  ["the op owns a region: no op may own one yet",
+  ["the op's regions are not of the kinds that its op instance states",
    "the op ends a block, and is not the last op of ^entry",
    "the op has 0 successors, and its op instance has 1",
-   "%x is defined inside a region, and is not in scope here"]
+   "%x is defined inside a region, and is not in scope here",
+   "the op breaks its dialect's own rule"]
 
 /-! # Symbols, the dialect's own rule and locations -/
 

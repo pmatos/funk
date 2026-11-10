@@ -6,12 +6,13 @@
 //!
 //! The set names each dialect once, by a word, and names only registered
 //! dialects other than the core, which every module holds. Every word that
-//! the module writes names the core or a dialect of its set: each op's name
-//! and the words of its attributes, and the words of each type that a
-//! function states, at any depth. A function that writes a word of another
-//! dialect gets one diagnostic, which names the first such dialect in the
-//! spec's order: the function's result types, its parameters' types, the
-//! types that each block defines, then each op's name and attributes.
+//! the module writes names the core or a dialect of its set: each op's name,
+//! the words of its attributes and the kinds of its regions, and the words
+//! of each type that a function states, at any depth. A function that
+//! writes a word of another dialect gets one diagnostic, which names the
+//! first such dialect in the spec's order: the function's result types, its
+//! parameters' types, the types that each block defines, then each op's
+//! name, attributes and region kinds.
 
 use std::collections::HashSet;
 
@@ -82,10 +83,15 @@ fn first_outside<'f>(f: &'f Func, declared: &[String]) -> Option<&'f str> {
             return Some(x);
         }
         if first_op.is_none() {
-            first_op = b
-                .ops
-                .iter()
-                .find_map(|o| outside(&o.name).or_else(|| in_attrs(&o.attrs, &outside)));
+            first_op = b.ops.iter().find_map(|o| {
+                outside(&o.name)
+                    .or_else(|| in_attrs(&o.attrs, &outside))
+                    .or_else(|| {
+                        o.regions
+                            .iter()
+                            .find_map(|r| r.kind.as_deref().and_then(outside))
+                    })
+            });
         }
     }
     first_op

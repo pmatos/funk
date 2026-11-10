@@ -14,19 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4912345686199086277")
+:::moduleDocs (fingerprint := "11232296592506280195")
 :::
 
-:::readable Fir.Operation.regionBlocks_eq_nil Fir.Block.allBlocks_eq_self (pin := Fir.Operation.regionBlocks) (pin := Fir.Block.allBlocks) (fingerprint := "9773432489846029769")
-*Theorems: without regions, the blocks at any depth are the blocks.* For
-every list of ops none of which owns a region, the blocks nested in those
-ops are none; and for every list of blocks none of whose ops owns a region,
-the list of those blocks at any depth is the list itself. They let the
-proofs below replace "every block at any depth" of a valid function by its
-blocks.
-:::
-
-:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "440130193823260376")
+:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
 *Definition: an op that can be written and read back.* Let $`f` be a
 function and $`o` an op with the op instance $`p`. The op $`o` is _well
 formed_ in $`f` when:
@@ -135,7 +126,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "14076724405672915249")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "5578296981944101061")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -148,16 +139,17 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
 * every valid module of $`d` is well formed.
 
 The proof reads each condition of well-formedness off a rule of validation
-or a law of the text. Validation gives distinct value names that are
-names, labels that are names, valid types, a body of the core's kind, ops
-that own no region, and so no region that names a kind, operand and result
-types that match the op instance, successors that name blocks of the
-function and pass values that it defines, and location references that are
-keys of the table, whose keys are below $`2^{32}`, and dialect sets whose
-names are words, the module's own and each nested module's. The laws give
-op names that are words, attributes that can be written, and valid types
-that are written as types and read back. A nested module is well formed
-when its set's names are words and its items are well formed, which its
-own table, valid like every table of the module, gives, by induction on
-the nesting.
+or a law of the text. Every op of a function, at any depth, is an op of
+its body or an op inside a region of an op. Validation gives distinct
+value names that are names, labels that are names, valid types, a body of
+the core's kind, regions of ops whose kinds are words, operand and result
+types that match the op instance, successors whose labels are names and
+that pass values that the function defines, and location references that
+are keys of the table, whose keys are below $`2^{32}`, and dialect sets
+whose names are words, the module's own and each nested module's. The
+laws give op names that are words, attributes that can be written, and
+valid types that are written as types and read back. A nested module is
+well formed when its set's names are words and its items are well formed,
+which its own table, valid like every table of the module, gives, by
+induction on the nesting.
 :::

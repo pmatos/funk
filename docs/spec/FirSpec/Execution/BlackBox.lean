@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6267169728559521535")
+:::moduleDocs (fingerprint := "10351767067061231664")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -91,7 +91,7 @@ call of a black box is compared by the black box's facts. With no black
 box, $`M'` is $`M`, which is the case of refined arguments.
 :::
 
-:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "8189387378742339663")
+:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "10367187128702594812")
 *Definition and theorem: a caller goes on after its callee at the sum of
 their budgets.*
 For an end $`e` of a run of ops, $`e + k` is $`e` with $`k` more steps
@@ -100,7 +100,8 @@ $`\mathsf{ret}~(u^*, i)`, and $`e` itself otherwise.
 
 Let the call step of the
 {ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[eighth way]
-apply to the first op $`o` of $`o\,o'^*`: $`o` owns no region, the values
+apply to the first op $`o` of $`o\,o'^*`: $`o` owns no region of the
+core's kind, the values
 $`v^*` of its operands are found in $`E`, $`o` is not a terminator and
 calls the symbol $`s`, $`g = \mathrm{lookup}_M(s)`, and entering $`g`
 with $`v^*` starts at the ops $`p^*` in the environment $`G`. Let

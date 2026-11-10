@@ -72,7 +72,9 @@ after its `{`, as in `toy.run { toy.graph`. The core's kind, a control-flow
 graph, writes nothing there, so every M0 text is unchanged. A function's
 body is always of the core's kind and its text names none: a word after an
 item's `{` starts its items. Validation rejects a function whose body names
-a kind, and, as in M0, any op that owns a region (ADR-2026-11-10-1530).
+a kind (ADR-2026-11-10-1530). An op may own regions only of the kinds its
+op instance states, and a kind's word joins the module's dialect set
+(ADR-2026-11-10-1941).
 
 ## One format
 

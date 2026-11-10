@@ -18,7 +18,7 @@ changes under it.
 
 #doc (Manual) "Dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8343847725334882782")
+:::moduleDocs (fingerprint := "17479146872936980795")
 :::
 
 :::readable Fir.HVector (pin := Fir.DialectDenote) (fingerprint := "5494653853977177333")
@@ -73,11 +73,11 @@ integers, and $`\llbracket \mathsf{ptr} \rrbracket` is empty
 ({ref "The-fir-specification--Execution--Core-values"}[core values]).
 :::
 
-:::readable Fir.DialectSignature (pin := Fir.Func.OpValid) (fingerprint := "12890725616559564221")
+:::readable Fir.DialectSignature (pin := Fir.Func.OpValid) (fingerprint := "11992914690758339057")
 *Definition: the signature of a dialect.* The signature of a dialect $`D`
-gives four facts about each op instance $`o \in \mathrm{Op}_D`:
+gives five facts about each op instance $`o \in \mathrm{Op}_D`:
 
-$$`\begin{aligned} \mathrm{sig}_D(o) &\in \mathrm{Ty}_D^* \\ \mathrm{res}_D(o) &\in \mathrm{Ty}_D^* \\ \mathrm{term}_D(o) &\in \{\mathsf{true}, \mathsf{false}\} \\ \mathrm{nsucc}_D(o) &\in \mathbb{N} \end{aligned}`
+$$`\begin{aligned} \mathrm{sig}_D(o) &\in \mathrm{Ty}_D^* \\ \mathrm{res}_D(o) &\in \mathrm{Ty}_D^* \\ \mathrm{term}_D(o) &\in \{\mathsf{true}, \mathsf{false}\} \\ \mathrm{nsucc}_D(o) &\in \mathbb{N} \\ \mathrm{kinds}_D(o) &\in \mathit{word}^* \end{aligned}`
 
 * $`\mathrm{sig}_D(o)` is the list of the types of its operands, and
   $`\mathrm{res}_D(o)` the list of the types of its results.
@@ -86,17 +86,22 @@ $$`\begin{aligned} \mathrm{sig}_D(o) &\in \mathrm{Ty}_D^* \\ \mathrm{res}_D(o) &
 * $`\mathrm{nsucc}_D(o)` is its number of _successors_, the blocks that
   control may go to next. A terminator goes to one of them, or returns from
   the function.
+* $`\mathrm{kinds}_D(o)` is the list of the kinds of the regions that $`o`
+  owns, one word of a dialect for each region, such as `toy.graph`. It is
+  empty by default. A kind is never the core's: a region of the core's kind
+  inside an op would be structured control flow (H6), which M1 leaves out.
 
-The Lean spells them `sig`, `returnTypes`, `isTerminator` and `succCount`.
+The Lean spells them `sig`, `returnTypes`, `isTerminator`, `succCount` and
+`regionKinds`.
 
 Validation reads the signature to check each op in its place
 ({ref "The-fir-specification--Validation--The-general-rules"}[the general rules]):
 its operands and results have the types of $`\mathrm{sig}_D(o)` and
 $`\mathrm{res}_D(o)`, it is a terminator exactly when it is the last op of
 its block, it has $`\mathrm{nsucc}_D(o)` successors, and an op that is not
-a terminator has none, whatever $`\mathrm{nsucc}_D(o)` says. The signature
-says nothing of regions or of kinds of effect: they come with the first
-dialect that needs them, and neither is decided yet. The
+a terminator has none, whatever $`\mathrm{nsucc}_D(o)` says, and its
+regions have the kinds $`\mathrm{kinds}_D(o)`. An op's effects come from
+the dialect's effect class, not from its signature. The
 {ref "The-fir-specification--Abstract-syntax--Core-signatures"}[core signatures]
 give the core dialect's.
 :::

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1655125458572184615")
+:::moduleDocs (fingerprint := "14607884244719161286")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -101,22 +101,38 @@ the extension's (ADR-2026-11-09-2353). This can be decided when the base's
 rule can.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "15944417547548400106")
+:::readable Fir.Dialect.sum.ValidRegion (fingerprint := "7317452533583571498")
+*Definition: the rule of a region kind in a sum.* A region of the kind
+$`k` obeys, in the sum, the base's rule for $`k`, through the base's view,
+when the base registers $`k`; and otherwise $`e`'s rule for $`k`, through
+$`e`'s view:
+
+$$`\vdash_{b \boxplus e} r : k~\text{valid} \iff \begin{cases} \vdash_b r : k~\text{valid by the base's view} & k \in \mathrm{kinds}_b \\ \vdash_{b.\mathrm{over}(e)} r : k~\text{valid by } e\text{'s view} & \text{otherwise} \end{cases}`
+
+The laws of names say that $`e` registers only words of its own name, and
+the base only words of its own set, which does not hold $`e`'s name, so
+each kind goes to the dialect that registers it.
+:::
+
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "14340377562275970302")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:
 
 $$`\mathrm{sig}(\mathsf{inl}\ p) = (\mathsf{inl}\ t)^* \text{ where } \mathrm{sig}_b(p) = t^* \qquad \mathrm{sig}(\mathsf{inr}\ q) = \mathrm{sig}_{b.\mathrm{over}(e)}(q)`
 
-and the same for its result types, whether it ends a block and its number
-of successors. A type of the sum is valid as its side says, an op refers
+and the same for its result types, whether it ends a block, its number
+of successors and the kinds of its regions. A type of the sum is valid as
+its side says, an op refers
 to the symbols that its side says, and obeys its side's rule as above. A
 function of the sum obeys the function rule of each side, each through its
 own view:
 
 $$`\frac{\vdash_b f~\text{valid by the base's view} \qquad \vdash_{b.\mathrm{over}(e)} f~\text{valid by } e\text{'s view}}{\vdash_{b \boxplus e} f~\text{valid}}`
 
-Each rule of the sum can be decided when each side's can.
+The sum registers the region kinds of the base, then those of $`e`, and a
+region obeys the rule of its kind in the sum, as above. Each rule of the
+sum can be decided when each side's can.
 :::
 
 :::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "14807394188783317028")

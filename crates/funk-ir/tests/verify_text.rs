@@ -92,11 +92,14 @@ fn every_block_holds_an_op() {
 }
 
 #[test]
-fn no_op_owns_a_region_yet() {
-    rejects(&func(&["^entry:", "  ret %a {", "  } @0"]), "owns a region");
+fn a_core_op_owns_no_region() {
+    rejects(
+        &func(&["^entry:", "  ret %a {", "  } @0"]),
+        "the regions of ret are not of the kinds that its registration states",
+    );
     rejects(
         &func(&["^entry:", "  ret %a { toy.graph", "  } @0"]),
-        "owns a region",
+        "is of kind toy.graph, which no dialect registers",
     );
     let text = func(&[
         "^entry:",
