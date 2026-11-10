@@ -165,7 +165,7 @@ variable {d : Dialect} [DialectText d] [DialectSet d]
 def wordDialects (f : Func d) : List String :=
   let all := f.allBlocks
   (f.results ++ (f.params ++ all.flatMap Block.defs).map (·.2)).flatMap (fun t => (tyAttr t).dialects) ++
-    all.flatMap fun b => b.body.flatMap fun o => opDialects o.op
+    all.flatMap fun b => b.body.flatMap Operation.wordDialects
 
 @[csimp] theorem wordDialects_eq_wordDialects : @Func.wordDialects = @wordDialects := rfl
 

@@ -139,19 +139,24 @@ def deep (n : Nat) (inner : List (Operation CoreDialect)) : Module CoreDialect :
   let body := Nat.repeat (fun os => [⟨[], .br, [], [⟨"b", []⟩], [⟨none, [⟨"b", [], os⟩]⟩], 0⟩]) n inner
   moduleOf [⟨"f", [], [], ⟨none, [⟨"e", [], body⟩, retBlock "b"]⟩⟩]
 
-/-- What the check finds in `deep n` whose innermost op defines a value of
-type `i0`: the region of the top op, and the type, `n` levels down. -/
-def deepProblems : List String :=
-  ["the type of %x is not valid", "the op owns a region: no op may own one yet"]
+/-- The problem of an op that owns a region of the core's kind: no core op
+states a region. -/
+def regionMessage : String := "the op's regions are not of the kinds that its op instance states"
 
-#guard messages (deep 3 [op [] (.ret []) []]) == ["the op owns a region: no op may own one yet"]
-#guard messages (deep 3 [op [("x", .int 0)] (.const 0 0) []]) == deepProblems
-#guard messages (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) == deepProblems
+/-- What the check finds in `deep n` whose innermost op defines a value of
+type `i0`: the type, `n` levels down, and the region of each of the `n` ops
+that own one, each checked by the rules of an op inside a region below the
+top. -/
+def deepProblems (n : Nat) : List String :=
+  "the type of %x is not valid" :: List.replicate n regionMessage
+
+#guard messages (deep 3 [op [] (.ret []) []]) == List.replicate 3 regionMessage
+#guard messages (deep 3 [op [("x", .int 0)] (.const 0 0) []]) == deepProblems 3
+#guard messages (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) == deepProblems 1000000
 #guard messages (deep 1000000 [op [("y", .int 8)] (.const 8 0) [], op [("y", .int 8)] (.const 8 1) []])
-  == ["value %y is defined more than once", "the op owns a region: no op may own one yet"]
+  == "value %y is defined more than once" :: List.replicate 1000000 regionMessage
 #guard messages (nested 1000) ==
-  ["the op owns a region: no op may own one yet",
-   "the op has 0 successors, and its op instance has 1"]
+  (List.replicate 1000 [regionMessage, "the op has 0 successors, and its op instance has 1"]).flatten
 
 /-! # `decide` and `fir-ref validate`'s own path at any depth -/
 
@@ -180,17 +185,20 @@ def decideFuncs (m : Module CoreDialect) : List Bool := m.funcs.map (decide <| �
 #guard decideFuncs (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) == [false]
 
 /-- What `fir-ref validate` reports on the file `t.fir` once it parses as
-`deep n` whose innermost op defines a value of type `i0`, for any `n > 0`. -/
-def deepReport : String × UInt32 :=
+`deep n` whose innermost op defines a value of type `i0`, for any `n > 0`:
+the type, then the region of the top op, in block `^e`, and of each op below
+it, in a block `^b`. -/
+def deepReport (n : Nat) : String × UInt32 :=
+  let diag (b : String) := "{\"kind\":\"validation-error\",\"message\":\"" ++ regionMessage ++
+    "\",\"func\":\"f\",\"block\":\"" ++ b ++ "\",\"op\":0,\"loc\":{\"ref\":0,\"location\":\"unknown\"}}"
   ("{\"file\":\"t.fir\",\"verdict\":\"validation-error\",\"diagnostics\":[{\"kind\":" ++
     "\"validation-error\",\"message\":\"the type of %x is not valid\",\"func\":\"f\"," ++
-    "\"block\":null,\"op\":null,\"loc\":null},{\"kind\":\"validation-error\",\"message\":" ++
-    "\"the op owns a region: no op may own one yet\",\"func\":\"f\",\"block\":\"e\"," ++
-    "\"op\":0,\"loc\":{\"ref\":0,\"location\":\"unknown\"}}]}", 1)
+    "\"block\":null,\"op\":null,\"loc\":null}," ++
+    ",".intercalate (diag "e" :: List.replicate (n - 1) (diag "b")) ++ "]}", 1)
 
-#guard FirRef.reportModule "t.fir" (deep 3 [op [("x", .int 0)] (.const 0 0) []]) == deepReport
+#guard FirRef.reportModule "t.fir" (deep 3 [op [("x", .int 0)] (.const 0 0) []]) == deepReport 3
 #guard FirRef.reportModule "t.fir" (deep 1000000 [op [("x", .int 0)] (.const 0 0) []]) ==
-  deepReport
+  deepReport 1000000
 #guard FirRef.reportModule "t.fir" (flatValid 3) ==
   ("{\"file\":\"t.fir\",\"verdict\":\"accepted\",\"diagnostics\":[]}", 0)
 

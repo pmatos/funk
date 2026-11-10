@@ -1,19 +1,28 @@
-//! The rules of an op (`Func.OpValid` in `lean/Fir/Validation/Rules.lean`).
+//! The rules of an op (`Func.OpValid` in `lean/Fir/Validation/Rules.lean`),
+//! and of an op inside a region of an op (`Func.InnerOpValid`).
 //!
-//! An op at index `i` of block `b` is valid when it owns no region; it is
+//! An op at index `i` of block `b` of a function's body is valid when it is
 //! registered, and its attributes, operand types and result types decode
 //! through its registration; it is a terminator exactly when it is the last
 //! op of its block, with as many successors as its registration says and
 //! none if it is not a terminator; each successor is valid; each value it
 //! uses is in scope; each symbol it refers to names a function; its
-//! dialect's own rule holds; and its location reference is a key of the
-//! location table.
+//! dialect's own rule holds; its location reference is a key of the
+//! location table; and its regions have the kinds that its registration
+//! states, each registered, and each obeys the rule of its kind
+//! (`Func.RegionsValid`, ADR-2026-11-10-1941).
+//!
+//! An op inside a region of an op obeys the same rules but three, which the
+//! rule of its region's kind decides: where it stands in its block, where
+//! its successors go, and which values it may use. Its successors' labels
+//! are still names, and the values they pass are defined in the function.
 
 use super::Diagnostic;
 use super::func::{Context, Scope, Site};
+use crate::ir::names::{is_name, is_word};
 use crate::ir::{Block, Item, Op, Succ, Type};
-use crate::registry::{OpContext, OpShape, OpTypes};
-use crate::text::Commas;
+use crate::registry::{FuncContext, OpContext, OpShape, OpTypes};
+use crate::text::{Commas, quote};
 
 struct At<'a> {
     func: &'a str,
@@ -22,7 +31,16 @@ struct At<'a> {
     op: &'a Op,
 }
 
-impl At<'_> {
+impl<'a> At<'a> {
+    fn new(s: &'a Scope<'_>, block: &'a Block, index: usize, op: &'a Op) -> At<'a> {
+        At {
+            func: &s.func.name,
+            block,
+            index,
+            op,
+        }
+    }
+
     fn diag(&self, message: String) -> Diagnostic {
         Diagnostic::at_op(self.func, self.block, self.index, message)
     }
@@ -36,18 +54,59 @@ pub(super) fn check(
     op: &Op,
     out: &mut Vec<Diagnostic>,
 ) {
-    let at = At {
-        func: &s.func.name,
-        block: b,
-        index: i,
-        op,
-    };
-    if !op.regions.is_empty() {
-        out.push(at.diag(format!(
-            "op {} owns a region: no op may own one yet",
-            op.name
-        )));
+    let at = At::new(s, b, i, op);
+    for su in &op.succs {
+        check_succ(s, &at, su, out);
     }
+    for x in op
+        .operands
+        .iter()
+        .chain(op.succs.iter().flat_map(|su| &su.args))
+    {
+        if s.types.contains_key(x.as_str()) {
+            check_scope(s, &at, x, out);
+        }
+    }
+    check_general(s, cx, &at, true, out);
+}
+
+/// The rules of an op inside a region of an op: those that hold whatever
+/// the kind of its region (`Func.InnerOpValid`).
+pub(super) fn check_inner(
+    s: &Scope<'_>,
+    cx: &Context<'_>,
+    b: &Block,
+    i: usize,
+    op: &Op,
+    out: &mut Vec<Diagnostic>,
+) {
+    let at = At::new(s, b, i, op);
+    for su in &op.succs {
+        if !is_name(&su.label) {
+            out.push(at.diag(format!(
+                "successor label {} is not one or more name characters",
+                quote(&su.label)
+            )));
+        }
+        check_succ_args(s, &at, su, out);
+    }
+    check_general(s, cx, &at, false, out);
+}
+
+/// The rules of an op that hold in every region: its location, its
+/// operand and result types through its registration, its count of
+/// successors, the symbols it refers to, its dialect's own rule and its
+/// regions; and, when `place`, for an op of a function's body, that it is a
+/// terminator exactly when it is the last op of its block.
+fn check_general(
+    s: &Scope<'_>,
+    cx: &Context<'_>,
+    at: &At<'_>,
+    place: bool,
+    out: &mut Vec<Diagnostic>,
+) {
+    let op = at.op;
+    check_region_kinds(s, cx, at, out);
     if !cx.locs.contains(&op.loc) {
         out.push(at.diag(format!(
             "location reference {} is not in the location table",
@@ -59,18 +118,6 @@ pub(super) fn check(
         match s.types.get(x.as_str()) {
             Some(t) => operand_types.push((*t).clone()),
             None => out.push(at.diag(format!("operand %{x} is not defined in the function"))),
-        }
-    }
-    for su in &op.succs {
-        check_succ(s, &at, su, out);
-    }
-    for x in op
-        .operands
-        .iter()
-        .chain(op.succs.iter().flat_map(|su| &su.args))
-    {
-        if s.types.contains_key(x.as_str()) {
-            check_scope(s, &at, x, out);
         }
     }
     let Some(spec) = cx.reg.op(&op.name) else {
@@ -96,7 +143,10 @@ pub(super) fn check(
             return;
         }
     };
-    check_shape(&at, &shape, out);
+    if place {
+        check_place(at, &shape, out);
+    }
+    check_counts(at, &shape, out);
     for g in &shape.symbols {
         if cx.symbols.get(g).and_then(Item::as_func).is_none() {
             let sym = crate::text::print_symbol(g);
@@ -114,9 +164,22 @@ pub(super) fn check(
     if let Err(why) = spec.check(&ocx, &types) {
         out.push(at.diag(why));
     }
+    if !op
+        .regions
+        .iter()
+        .map(|r| r.kind.as_deref())
+        .eq(shape.regions.iter().map(|k| Some(k.as_str())))
+    {
+        out.push(at.diag(format!(
+            "the regions of {} are not of the kinds that its registration states",
+            op.name
+        )));
+    }
 }
 
-fn check_shape(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
+/// An op of a function's body is a terminator exactly when it is the last
+/// op of its block.
+fn check_place(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
     let (op, last) = (at.op, at.index + 1 == at.block.ops.len());
     if shape.terminator && !last {
         out.push(at.diag(format!(
@@ -130,6 +193,12 @@ fn check_shape(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
             at.block.label
         )));
     }
+}
+
+/// An op has as many successors as its registration says, and none when it
+/// is not a terminator.
+fn check_counts(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
+    let op = at.op;
     if op.succs.len() != shape.successors {
         out.push(at.diag(format!(
             "{} has {} successors, and its registration says {}",
@@ -146,6 +215,45 @@ fn check_shape(at: &At<'_>, shape: &OpShape, out: &mut Vec<Diagnostic>) {
     }
 }
 
+/// Each region of an op that names a kind names a word that a dialect
+/// registers, and obeys its kind's rule (`Func.RegionsValid`). These hold
+/// whether or not the op decodes; that the kinds are those its registration
+/// states is checked once it does. A region of the core's kind names no
+/// kind, and no registration states it.
+fn check_region_kinds(s: &Scope<'_>, cx: &Context<'_>, at: &At<'_>, out: &mut Vec<Diagnostic>) {
+    let op = at.op;
+    let fcx = FuncContext {
+        symbols: cx.symbols,
+    };
+    for r in &op.regions {
+        let Some(k) = r.kind.as_deref() else {
+            continue;
+        };
+        if !is_word(k) {
+            out.push(at.diag(format!(
+                "a region of {} is of kind {}, which is not a word",
+                op.name,
+                quote(k)
+            )));
+            continue;
+        }
+        match cx.reg.region_kind(k) {
+            None => out.push(at.diag(format!(
+                "a region of {} is of kind {k}, which no dialect registers",
+                op.name
+            ))),
+            Some(spec) => {
+                if let Err(why) = spec.check(&fcx, s.func, r) {
+                    out.push(at.diag(format!(
+                        "a region of {} breaks the rule of its kind {k}: {why}",
+                        op.name
+                    )));
+                }
+            }
+        }
+    }
+}
+
 /// A successor names a block other than the entry, and passes one value of
 /// the right type for each of that block's arguments (`SuccValid`). Each
 /// argument that is not defined is a use out of scope, whatever the block;
@@ -156,13 +264,7 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
     if blocks.first().is_some_and(|e| e.label == su.label) {
         out.push(at.diag(format!("no branch may go to the entry block ^{}", su.label)));
     }
-    for a in &su.args {
-        if !s.types.contains_key(a.as_str()) {
-            out.push(at.diag(format!(
-                "successor argument %{a} is not defined in the function"
-            )));
-        }
-    }
+    check_succ_args(s, at, su, out);
     let Some(target) = s.blocks.get(su.label.as_str()) else {
         out.push(at.diag(format!(
             "successor ^{} is not a block of the function",
@@ -189,6 +291,17 @@ fn check_succ(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) 
             Commas(&shown),
             Commas(&wanted)
         )));
+    }
+}
+
+/// Each value that a successor passes is defined in the function.
+fn check_succ_args(s: &Scope<'_>, at: &At<'_>, su: &Succ, out: &mut Vec<Diagnostic>) {
+    for a in &su.args {
+        if !s.types.contains_key(a.as_str()) {
+            out.push(at.diag(format!(
+                "successor argument %{a} is not defined in the function"
+            )));
+        }
     }
 }
 

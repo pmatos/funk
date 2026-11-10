@@ -40,6 +40,7 @@ theorem lawfulName [DialectSet dep] [DialectSet big] [LawfulDialectName dep e]
   tyAttr_named t hv := LawfulDialectName.tyAttr_named (base := dep) (e := e) t hv
   tyAttr_mem t hv x h := List.mem_append.mpr ((List.mem_append.mp
     (LawfulDialectName.tyAttr_mem (base := dep) (e := e) t hv x h)).imp (hsub x) id)
+  kind_named k hk := LawfulDialectName.kind_named (base := dep) (e := e) k hk
 
 variable [LawfulDialectText big] [LawfulDialectText (dep.over e)]
 

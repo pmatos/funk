@@ -14,19 +14,22 @@ when the Lean changes under it.
 
 #doc (Manual) "A module's dialect set: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11077141747893955975")
+:::moduleDocs (fingerprint := "6352036132527464955")
 :::
 
-:::readable Fir.opDialects Fir.Func.wordDialects (fingerprint := "15713263119767034989")
+:::readable Fir.opDialects Fir.Operation.wordDialects Fir.Func.wordDialects (fingerprint := "13886475487497378349")
 *Definition: the dialects that a function's words name.* The dialects of an
 op instance $`p` are those of its name and then those of its attributes:
 
 $$`\mathrm{dialects}(p) = \mathrm{dialect}(\mathrm{opname}(p)) \mathbin{+\!\!+} \mathrm{dialects}(\mathrm{opattrs}(p))`
 
-where a bare name gives none. The dialects of a function $`f` are, in
-order, those of the words of each type that $`f` states, its result types
-and the type of each value it defines, and then those of each op of its
-blocks, at any depth.
+where a bare name gives none. The dialects of an op are those of its op
+instance, then the dialect of the kind of each of its regions that names
+one, in order: a region kind's word joins the dialect set
+(ADR-2026-11-10-1941). The dialects of a function $`f` are, in order, those
+of the words of each type that $`f` states, its result types and the type
+of each value it defines, and then those of each op of its blocks, at any
+depth.
 :::
 
 :::readable Fir.SymbolTable.InDialectSet Fir.Module.InDialectSet (fingerprint := "13360016989078555249")

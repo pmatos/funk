@@ -98,7 +98,7 @@ def body (header : String) (lines : List String) : String :=
     ["^e:", "  %b: i32 = add %a, %a @0", "  %a: i32 = const 1 @0", "  ret %b @0"]) "@f" ==
   stuckBy "%a is not defined"
 #guard runText (body "func @f()" ["^e:", "  ret {", "  ^b:", "    ret @0", "  } @0"]) "@f" ==
-  stuckBy "an op owns a region, and no rule runs one"
+  stuckBy "an op owns a region of the core's kind, and no rule runs one"
 -- A function returns values of its result types, and no op follows a
 -- terminator.
 #guard runText (body "func @f() -> i32" ["^e:", "  %c: i8 = const 1 @0", "  ret %c @0"]) "@f" ==

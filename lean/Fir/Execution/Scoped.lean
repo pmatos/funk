@@ -55,15 +55,6 @@ theorem eq_of_nodup_map {α β : Type} {g : α → β} {a b : α} :
       · exact absurd (h.symm ▸ List.mem_map_of_mem ha') hnd.1
       · exact eq_of_nodup_map hnd.2 ha' hb' h
 
-/-- Each block of a list is among its blocks at any depth. -/
-theorem Block.mem_allBlocks {b : Block d} :
-    ∀ {bs : List (Block d)}, b ∈ bs → b ∈ Block.allBlocks bs
-  | ⟨_, _, _⟩ :: _, h => by
-    rw [Block.allBlocks]
-    rcases List.mem_cons.1 h with rfl | h
-    · exact List.mem_cons_self
-    · exact List.mem_cons_of_mem _ (List.mem_append_right _ (Block.mem_allBlocks h))
-
 /-- The arguments of a block of a function are among its definitions. -/
 theorem Func.mem_defs_arg {f : Func d} {b : Block d} (hb : b ∈ f.blocks) {p : Name × d.Ty}
     (hp : p ∈ b.params) : p ∈ f.defs := by

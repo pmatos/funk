@@ -12,8 +12,9 @@ set may name, and that the module's words keep to it:
 * each dialect that the set names is a dialect of `d`'s own set, `names d`:
   a module uses only dialects that its dialect holds;
 * each word that the module writes names the core or a dialect of its set:
-  the name of each op and each word of its attributes, and each word of
-  each type that a function states, at any depth.
+  the name of each op and each word of its attributes, the kind of each
+  region of an op, and each word of each type that a function states, at
+  any depth.
 
 A module nested in another has a dialect set of its own, not its parent's
 (ADR-2026-11-10-1510), so the rule holds for each symbol table of a module:
@@ -46,11 +47,16 @@ name's, then those of its attributes. -/
 def opDialects (op : d.Op) : List String :=
   (wordDialect (opName op)).toList ++ Attr.dialectsAll (opAttrs op)
 
+/-- The dialects that the words of an op name, in order: those of its op
+instance, then the dialect of the kind of each of its regions. -/
+def Operation.wordDialects (o : Operation d) : List String :=
+  opDialects o.op ++ o.regions.flatMap fun r => (r.kind.bind wordDialect).toList
+
 /-- The dialects that the words of a function name, in order: those of each
 type that it states, then those of each of its ops, at any depth. -/
 def Func.wordDialects (f : Func d) : List String :=
   f.types.flatMap (fun t => (tyAttr t).dialects) ++
-    f.allBlocks.flatMap fun b => b.body.flatMap fun o => opDialects o.op
+    f.allBlocks.flatMap fun b => b.body.flatMap Operation.wordDialects
 
 variable [DialectSet d]
 

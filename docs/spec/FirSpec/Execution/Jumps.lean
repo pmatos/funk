@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with jumps and loops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5092494823803185153")
+:::moduleDocs (fingerprint := "2246578784609202284")
 :::
 
 :::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "13566937332335085816")
@@ -32,7 +32,7 @@ there is none. A jump looks up the values that its successor passes this
 way.
 :::
 
-:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "17829918576368849041")
+:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "13108684191324668844")
 *Theorem: what a run needs of an op, from the values in scope.* Let $`f`
 be {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
 a module context, $`b` a block of $`\mathrm{blocks}(f)`, and $`o` the op
@@ -41,7 +41,7 @@ the environment $`E`
 {ref "The-fir-specification--Execution--Scope-along-a-run"}[holds every value in scope]
 at $`o`, $`\mathrm{scoped}_f(E, \mathrm{label}(b), i)`, then:
 
-* $`o` owns no region;
+* $`o` owns no region of the core's kind;
 * looking the operands of $`o` up in $`E`, for the operand types
   $`\mathrm{sig}(o)`, succeeds;
 * the results of $`o` are declared with the types $`\mathrm{ret}(o)`;

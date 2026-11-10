@@ -25,7 +25,7 @@ has:
   function whose result types `e` cannot write, no op of `e` is valid. This
   is the rule of ADR-2026-11-09-2353, with `e` in place of the base;
 * `e`'s function rule, through a view that projects the types to `dep`'s and
-  `e`'s own;
+  `e`'s own, and `e`'s region kinds with their rules, through the same view;
 * `e`'s poison classes, effects, calls and semantics. An op of `e` takes its
   operands moved down to `dep`'s types and its results move up to `big`'s.
   Its effects name `e`'s memories, as `e` declares them over `dep`.
@@ -121,16 +121,18 @@ instance instDecidableValidOp [DialectValidation (dep.over e)]
 -/
 
 /-- An op of the lift has `e`'s signature, with `dep`'s types included in
-`big`'s. -/
+`big`'s, and the region kinds that `e` gives it. -/
 instance instDialectSignature [DialectSignature (dep.over e)] :
     DialectSignature (big.over (e.lift dep ι)) where
   sig o := (sig (d := dep.over e) o).map (incl e ι).incl
   returnTypes o := (returnTypes (d := dep.over e) o).map (incl e ι).incl
   isTerminator o := isTerminator (d := dep.over e) o
   succCount o := succCount (d := dep.over e) o
+  regionKinds o := regionKinds (d := dep.over e) o
 
 /-- The rules of the lift: `big`'s for `big`'s types, `e`'s for its own
-types and its ops, and `e`'s function rule through its view. -/
+types and its ops, and `e`'s function rule and region kinds through its
+view. -/
 instance instDialectValidation [DialectValidation big] [DialectValidation (dep.over e)] :
     DialectValidation (big.over (e.lift dep ι)) where
   validTy
@@ -139,6 +141,8 @@ instance instDialectValidation [DialectValidation big] [DialectValidation (dep.o
   symbolRefs o := symbolRefs (d := dep.over e) o
   validOp := ValidOp
   validFunc v ctx f := validFunc (d := dep.over e) (projView v) ctx f
+  regionKindNames := regionKindNames (d := dep.over e)
+  validRegion v k ctx f r := validRegion (d := dep.over e) (projView v) k ctx f r
 
 /-- The lift's rules can be decided when `big`'s and `e`'s can. -/
 instance instDecidableDialectValidation [DialectValidation big] [DialectValidation (dep.over e)]
@@ -149,6 +153,8 @@ instance instDecidableDialectValidation [DialectValidation big] [DialectValidati
     | .inr t => DecidableDialectValidation.decValidTy (d := dep.over e) (.inr t)
   decValidOp ctx o := instDecidableValidOp (e := e) ctx o
   decValidFunc v ctx f := DecidableDialectValidation.decValidFunc (d := dep.over e) (projView v) ctx f
+  decValidRegion v k ctx f r :=
+    DecidableDialectValidation.decValidRegion (d := dep.over e) (projView v) k ctx f r
 
 /-- An op of the lift has `e`'s poison class and `e`'s effects, on `e`'s
 memories. -/

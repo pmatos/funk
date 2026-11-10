@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13332034338581136419")
+:::moduleDocs (fingerprint := "16947650484722065126")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -49,7 +49,7 @@ names the function and its entry block, and has the location reference of
 that block's first op. A function with no blocks has only its symbol.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "8781818128990395421")
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "6541225577311025103")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function
@@ -75,6 +75,8 @@ gives, in this order:
   rejects;
 * "block `^l` holds no ops" for each top-level block without ops;
 * the problems of each op of each top-level block, in order;
+* the problems of the ops inside the regions of each op of each block of
+  the list, in order;
 * "the function breaks a rule of its dialect" when the function breaks its
   dialect's own rule over a whole function, at its entry block.
 
@@ -82,7 +84,7 @@ The check of $`f` in its module, $`\mathrm{problems}(f)`, runs this with
 the list $`\mathrm{allblocks}(f)`.
 :::
 
-:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.types_all (fingerprint := "1947166074871081073")
+:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.inner_all Fir.Func.types_all (fingerprint := "7584199573976597098")
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 
@@ -91,7 +93,9 @@ $`f`, module context $`C` and lookup:
 * the search from the entry finds every top-level block exactly when every
   top-level block is reachable;
 * when the lookup agrees with $`C`, the check of every op of every
-  top-level block gives no problem exactly when every such op is valid;
+  top-level block gives no problem exactly when every such op is valid,
+  and the check of the ops inside the regions of every op of every block at
+  any depth gives no problem exactly when every such op is valid inside;
 * every type in $`\mathrm{types}(f)` is valid exactly when every result
   type of $`f` is valid and the type of every definition in
   $`\mathrm{defs}(f)` is valid.
