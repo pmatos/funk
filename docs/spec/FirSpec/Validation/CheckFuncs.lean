@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11396718151567096626")
+:::moduleDocs (fingerprint := "13332034338581136419")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -25,14 +25,18 @@ its block $`b` is placed at the symbol of $`f`, the label of $`b`, and the
 location reference of the first op of $`b`, when $`b` has an op.
 :::
 
-:::readable Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "6428048307201822305")
-*Definition and theorem: the check of the entry block.* The check of the
+:::readable Fir.Func.kindProblems Fir.Func.kindProblems_eq_nil Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "11743999808642634351")
+*Definitions and theorems: the checks of the body's kind and of the entry
+block.* The check of the body's kind gives "the function's body is a region
+of kind $`k`: a function's body is a region of the core's kind" when the
+body names the kind $`k`, and nothing when it names none. The check of the
 entry block gives "the function has no entry block" when the body has no
 block, and "the entry block `^e` declares arguments: its arguments are the
 function's parameters" when its entry block $`e` declares any.
 
-*Theorem:* for every function $`f`, the check of its entry block gives no
-problem exactly when $`\mathrm{blocks}(f) = e~b^*` for some block $`e`
+*Theorems:* for every function $`f`, the check of its body's kind gives no
+problem exactly when its body names no kind, and the check of its entry
+block gives no problem exactly when $`\mathrm{blocks}(f) = e~b^*` for some block $`e`
 that declares no arguments, the first premise of the
 {ref "The-fir-specification--Validation--The-general-rules"}[rule of a valid function].
 :::
@@ -45,7 +49,7 @@ names the function and its entry block, and has the location reference of
 that block's first op. A function with no blocks has only its symbol.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "2404998429050274037")
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "8781818128990395421")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function
@@ -53,6 +57,8 @@ $`f` builds its
 {ref "The-fir-specification--Validation--Checking-ops"}[tables] once, and
 gives, in this order:
 
+* "the function's body is a region of kind $`k`: a function's body is a
+  region of the core's kind" when its body names the kind $`k`;
 * the problems of the entry block;
 * "block `^l` is not reachable from the entry" for each top-level block
   that the
@@ -76,7 +82,7 @@ The check of $`f` in its module, $`\mathrm{problems}(f)`, runs this with
 the list $`\mathrm{allblocks}(f)`.
 :::
 
-:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.types_all (fingerprint := "16203153610006954786")
+:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.types_all (fingerprint := "1947166074871081073")
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 

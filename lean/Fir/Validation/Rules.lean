@@ -59,15 +59,17 @@ def Func.OpValid (ctx : ModuleContext d) (f : Func d) (b : Block d) (i : Nat)
 /-!
 # Functions
 
-A function is valid when its entry block declares no arguments, every block
-is reachable from the entry, its labels and value names are unique and can
-be written in the text, every type it states is valid, every block holds at
-least one op, each of them valid, and the function obeys its dialect's own
-rule over a whole function.
+A function is valid when its body is a region of the core's kind, a
+control-flow graph (ADR-2026-10-29-2005), its entry block declares no
+arguments, every block is reachable from the entry, its labels and value
+names are unique and can be written in the text, every type it states is
+valid, every block holds at least one op, each of them valid, and the
+function obeys its dialect's own rule over a whole function.
 -/
 
 /-- A function is valid in the context of its module. -/
 structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
+  bodyKind : f.body.kind = none
   entry : ∃ e, f.blocks.head? = some e ∧ e.params = []
   reachable : ∀ b ∈ f.blocks, f.Reachable b.label
   labelsUnique : (f.blocks.map (·.label)).Nodup

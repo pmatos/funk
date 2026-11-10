@@ -143,15 +143,21 @@ impl<'t> Parser<'t> {
         }
     }
 
+    /// Takes the next token when it is a word, and gives the word.
+    fn eat_word(&mut self) -> Option<String> {
+        let Tok::Word(w) = self.peek() else {
+            return None;
+        };
+        let w = w.clone();
+        self.advance();
+        Some(w)
+    }
+
     fn word(&mut self, expected: &str) -> Result<(String, TextPos), ParseError> {
         let pos = self.pos();
-        match self.peek() {
-            Tok::Word(w) => {
-                let w = w.clone();
-                self.advance();
-                Ok((w, pos))
-            }
-            _ => self.fail(expected),
+        match self.eat_word() {
+            Some(w) => Ok((w, pos)),
+            None => self.fail(expected),
         }
     }
 
@@ -434,11 +440,13 @@ impl<'t> Parser<'t> {
     }
 
     /// `region* locref`, one step at a time, for the last op read: opens its
-    /// next region, or ends it with its location reference.
+    /// next region, with the kind that a word after its `{` names, or ends
+    /// it with its location reference.
     fn op_tail(&mut self, blocks: &mut Nest<Block>) -> Result<(), ParseError> {
         if self.eat(&Tok::LBrace) {
+            let kind = self.eat_word();
             blocks.last_op().regions.reserve_exact(1);
-            blocks.open(1);
+            blocks.open_region(kind, 1);
             return Ok(());
         }
         let loc = match self.peek() {

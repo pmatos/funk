@@ -116,13 +116,25 @@ theorem Operation.spells (n : Nat) : ∀ o : Operation d, (∀ t ∈ o.tokens, t
 theorem Region.spellsList (n : Nat) : ∀ rs : List (Region d), (∀ t ∈ Region.tokensList rs, t.Writable) →
     SpellsAny (Region.printList n rs).toList (Region.tokensList rs)
   | [], _ => by simpa [Region.printList, Region.tokensList] using SpellsAny.nil
-  | ⟨blocks⟩ :: rs, hw => by
+  | ⟨kind, blocks⟩ :: rs, hw => by
     have hb := Block.spellsList (n + 2) blocks fun t ht => hw t (by simp [Region.tokensList, ht])
     have hr := Region.spellsList n rs fun t ht => hw t (by simp [Region.tokensList, ht])
-    simp only [Region.printList, Region.tokensList, String.toList_append, String.reduceToList,
-      List.append_assoc, List.cons_append, List.nil_append]
-    exact SpellsAny.space (SpellsAny.lbrace (SpellsAny.lf (SpellsAny.append_any hb
-      (SpellsAny.indent (SpellsAny.rbrace hr) n))))
+    have hrest : SpellsAny ('\n' :: (Block.printList (n + 2) blocks ++ indent n ++ "}" ++
+        Region.printList n rs).toList) (Block.tokensList blocks ++ .rbrace :: Region.tokensList rs) := by
+      simp only [String.toList_append, String.reduceToList, List.append_assoc, List.cons_append,
+        List.nil_append]
+      exact SpellsAny.lf (SpellsAny.append_any hb (SpellsAny.indent (SpellsAny.rbrace hr) n))
+    cases kind with
+    | none =>
+      simp only [Region.printList, Region.tokensList, printKind, kindTokens, String.toList_append,
+        String.reduceToList, List.append_assoc, List.cons_append, List.nil_append] at hrest ⊢
+      exact SpellsAny.space (SpellsAny.lbrace hrest)
+    | some k =>
+      have hk : (Tok.word k).Writable := hw (.word k) (by simp [Region.tokensList, kindTokens])
+      have hw' := Spells.tok_any hk hrest fun cs => boundary_cons (by decide)
+      simp only [Region.printList, Region.tokensList, printKind, kindTokens, String.toList_append,
+        String.reduceToList, List.append_assoc, List.cons_append, List.nil_append] at hw' ⊢
+      exact SpellsAny.space (SpellsAny.lbrace (SpellsAny.space hw'))
 
 /-- Blocks read back as their tokens, before any text. -/
 theorem Block.spellsList (n : Nat) : ∀ bs : List (Block d), (∀ t ∈ Block.tokensList bs, t.Writable) →

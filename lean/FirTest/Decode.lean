@@ -46,7 +46,7 @@ def sfunc (params : List SDef) (results : List (Attr × TextPos)) (label : Name)
 /-- `inner` inside `n` levels of regions: the block of each region holds a
 `br` that owns the next region, as in `nested`. -/
 def deepRegions (n : Nat) (params : List SDef) (inner : SOp) : SModule :=
-  sfunc params [] "e" (Nat.repeat (fun os => [sop [] "br" [] [⟨[⟨"b", [], os⟩]⟩]]) n [inner])
+  sfunc params [] "e" (Nat.repeat (fun os => [sop [] "br" [] [⟨none, [⟨"b", [], os⟩]⟩]]) n [inner])
 
 /-- Decodes with the core dialect. -/
 def decodeCore (m : SModule) : Except ParseError (Module CoreDialect) := Text.decodeModule m
@@ -81,18 +81,20 @@ def sret : SOp := sop [] "ret" [] []
   (pos 8 3) "value %v is defined twice"
 
 /-- A function whose entry block holds an op with two regions of two blocks
-each, between other ops, and a second block. -/
+each, the first of the kind `toy.graph`, between other ops, and a second
+block. -/
 def bushy : Module CoreDialect :=
   let c (n : Name) : Operation CoreDialect := ⟨[(n, .int 8)], .const 8 1, [], [], [], 0⟩
   let ret (xs : List Name) : Operation CoreDialect :=
     ⟨[], .ret (xs.map fun _ => .int 8), xs, [], [], 0⟩
   let blk (l : Name) : Block CoreDialect :=
     ⟨l, [("p" ++ l, .int 8)], [c ("c" ++ l), ret ["p" ++ l]]⟩
-  let region (k : Name) : Region CoreDialect := ⟨[blk (k ++ "1"), blk (k ++ "2")]⟩
+  let region (k : Name) : Region CoreDialect :=
+    ⟨if k = "a" then some "toy.graph" else none, [blk (k ++ "1"), blk (k ++ "2")]⟩
   let br : Operation CoreDialect := ⟨[], .br, [], [], [region "a", region "b"], 0⟩
   let body : List (Block CoreDialect) :=
     [⟨"e", [], [c "y", br, c "z", ret ["x"]]⟩, ⟨"e2", [], [ret []]⟩]
-  ⟨[], [.func ⟨"f", [("x", .int 8)], [], ⟨body⟩⟩], [(0, .unknown)]⟩
+  ⟨[], [.func ⟨"f", [("x", .int 8)], [], ⟨none, body⟩⟩], [(0, .unknown)]⟩
 
 -- Its text reads back in order through `FirRef.parse`.
 #guard roundTrips bushy.print && (bushy.print.splitOn "^").length == 7
@@ -107,7 +109,7 @@ def flatTree (n : Nat) : SModule :=
 
 /-- The number of ops in the first block of the first function. -/
 def opCount : Except ParseError (Module CoreDialect) → Nat
-  | .ok ⟨_, [.func ⟨_, _, _, ⟨[⟨_, _, os⟩]⟩⟩], _⟩ => os.length
+  | .ok ⟨_, [.func ⟨_, _, _, ⟨_, [⟨_, _, os⟩]⟩⟩], _⟩ => os.length
   | _ => 0
 
 -- A block of 3,000,000 ops.

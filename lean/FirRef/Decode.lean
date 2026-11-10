@@ -29,7 +29,7 @@ def decodeFunc (name : String) (params : List SDef) (results : List (Attr × Tex
   let sc ← define ∅ params
   let sc ← defineFrames sc [.blocks blocks]
   let params ← params.mapM decodeDef
-  pure ⟨name, params, results, ⟨← decodeFrames sc name [.blocks [] blocks]⟩⟩
+  pure ⟨name, params, results, ⟨none, ← decodeFrames sc name [.blocks none [] blocks]⟩⟩
 
 theorem decodeFunc_eq : @decodeFunc = @Text.decodeFunc := by
   funext d _ name params results blocks

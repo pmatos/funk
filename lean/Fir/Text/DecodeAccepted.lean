@@ -61,8 +61,8 @@ variable {d : Dialect} [DialectSignature d] [DialectText d]
 /-! # Blocks and ops that a scope accepts -/
 
 /-- What the second pass gives of an op, in the scope `sc`: what
-`Func.OpWellFormed` asks, with the scope in place of `Func.typeOf`, and
-results that can be written and read back. -/
+`Func.OpWellFormed` asks, with the scope in place of `Func.typeOf`, results
+that can be written and read back, and regions whose kinds are words. -/
 structure Operation.AcceptedIn (sc : Scope d) (o : Operation d) : Prop where
   name : isWord (opName o.op)
   attrs : Attr.AllWritable (opAttrs o.op)
@@ -71,6 +71,7 @@ structure Operation.AcceptedIn (sc : Scope d) (o : Operation d) : Prop where
   succs : ∀ s ∈ o.succs, s.Writable
   loc : o.loc < Location.limit
   defs : ∀ y ∈ o.results, WritableDef y
+  kinds : ∀ r ∈ o.regions, ∀ k ∈ r.kind, isWord k
 
 /-- What the second pass gives of a block, in the scope `sc`: its label is
 a name, its arguments can be written and read back, and so can each of its
@@ -89,10 +90,10 @@ accepted in the scope `sc`. -/
 def Operation.AllAcceptedIn (sc : Scope d) (os : List (Operation d)) : Prop :=
   (∀ o ∈ os, o.AcceptedIn sc) ∧ ∀ b ∈ Operation.regionBlocks os, b.AcceptedIn sc
 
-/-- Each block of the regions `rs`, at any depth, is accepted in the scope
-`sc`. -/
+/-- Each of the regions `rs` names its kind, if any, by a word, and each of
+their blocks, at any depth, is accepted in the scope `sc`. -/
 def Region.AllAcceptedIn (sc : Scope d) (rs : List (Region d)) : Prop :=
-  ∀ b ∈ Region.allBlocks rs, b.AcceptedIn sc
+  (∀ r ∈ rs, ∀ k ∈ r.kind, isWord k) ∧ ∀ b ∈ Region.allBlocks rs, b.AcceptedIn sc
 
 end Fir
 
@@ -218,13 +219,13 @@ theorem decodes_ops_cons [DialectValidation d] [LawfulDialectText d] {sc : Scope
   refine ⟨fun o ho => ?_, fun b hb => ?_⟩
   · rcases List.mem_cons.mp ho with rfl | ho
     · refine ⟨e₁ ▸ hname, e₂ ▸ hattrs, ?_, e₄.symm, hsuccs, hloc,
-        mapM_decodeDef_writable f₂ hres⟩
+        mapM_decodeDef_writable f₂ hres, k₁.1⟩
       rw [e₃, ← operandTypes_ok f₁, List.map_map]
       rfl
     · exact k₂ o ho
   · simp only [Operation.regionBlocks, List.mem_append] at hb
     rcases hb with hb | hb
-    · exact k₁ b hb
+    · exact k₁.2 b hb
     · exact k₃ b hb
 
 /-- The second pass decodes no regions as no regions. -/
@@ -237,25 +238,28 @@ theorem decodes_regions_nil (sc : Scope d) (g : String) :
 
 /-- The second pass accepts the blocks of regions, when it accepts each
 region's blocks and the regions after it. -/
-theorem decodes_regions_cons {sc : Scope d} {g : String} {bs : List SBlock}
+theorem decodes_regions_cons {sc : Scope d} {g : String} {k : Option Name} {bs : List SBlock}
     {srs : List SRegion}
     (hb : DecodesTo (decodeBlocks sc g) SBlock.WritableList (Block.AllAcceptedIn sc) bs)
     (hrs : DecodesTo (decodeRegions sc g) SRegion.WritableList (Region.AllAcceptedIn sc) srs) :
     DecodesTo (decodeRegions sc g) SRegion.WritableList (Region.AllAcceptedIn sc)
-      (⟨bs⟩ :: srs) := by
+      (⟨k, bs⟩ :: srs) := by
   intro hw x h
   simp only [SRegion.WritableList] at hw
   rw [decodeRegions] at h
   bind_step h with ⟨blocks, f₁, h⟩
   bind_step h with ⟨rs, f₂, h⟩
   cases h
-  have k₁ := hb hw.1 blocks f₁
-  have k₂ := hrs hw.2 rs f₂
-  intro b hb
-  simp only [Region.allBlocks, List.mem_append] at hb
-  rcases hb with hb | hb
-  · exact k₁ b hb
-  · exact k₂ b hb
+  have k₁ := hb hw.2.1 blocks f₁
+  have k₂ := hrs hw.2.2 rs f₂
+  refine ⟨fun r hr => ?_, fun b hb => ?_⟩
+  · rcases List.mem_cons.mp hr with rfl | hr
+    · exact hw.1
+    · exact k₂.1 r hr
+  · simp only [Region.allBlocks, List.mem_append] at hb
+    rcases hb with hb | hb
+    · exact k₁ b hb
+    · exact k₂.2 b hb
 
 mutual
 /-- The second pass over blocks, at any depth. -/
@@ -278,7 +282,7 @@ theorem SRegion.decodesTo [DialectValidation d] [LawfulDialectText d] (sc : Scop
     (g : String) : ∀ srs : List SRegion,
       DecodesTo (decodeRegions sc g) SRegion.WritableList (Region.AllAcceptedIn sc) srs
   | [] => decodes_regions_nil sc g
-  | ⟨bs⟩ :: srs => decodes_regions_cons (SBlock.decodesTo sc g bs) (SRegion.decodesTo sc g srs)
+  | ⟨_, bs⟩ :: srs => decodes_regions_cons (SBlock.decodesTo sc g bs) (SRegion.decodesTo sc g srs)
 end
 
 end Fir.Text

@@ -108,6 +108,11 @@ def Succ.tokens (s : Succ) : List Tok :=
     if s.args.isEmpty then []
     else .lparen :: [Tok.comma].intercalate (s.args.map ([.value ·])) ++ [.rparen]
 
+/-- The tokens of a region's kind: its word, or none for the core's kind. -/
+def kindTokens : Option Name → List Tok
+  | none => []
+  | some k => [.word k]
+
 mutual
 /-- The tokens of an op. -/
 def Operation.tokens : Operation d → List Tok
@@ -121,7 +126,8 @@ def Operation.tokens : Operation d → List Tok
 /-- The tokens of the regions of an op. -/
 def Region.tokensList : List (Region d) → List Tok
   | [] => []
-  | ⟨blocks⟩ :: rs => .lbrace :: Block.tokensList blocks ++ .rbrace :: Region.tokensList rs
+  | ⟨kind, blocks⟩ :: rs =>
+    .lbrace :: kindTokens kind ++ Block.tokensList blocks ++ .rbrace :: Region.tokensList rs
 
 /-- The tokens of blocks. -/
 def Block.tokensList : List (Block d) → List Tok

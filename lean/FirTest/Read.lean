@@ -62,7 +62,7 @@ def sopEq : SOp → SOp → Bool
 /-- Two lists of regions are the same. -/
 def regionsEq : List SRegion → List SRegion → Bool
   | [], [] => true
-  | ⟨bs⟩ :: rs, ⟨bs'⟩ :: rs' => blocksEq bs bs' && regionsEq rs rs'
+  | ⟨k, bs⟩ :: rs, ⟨k', bs'⟩ :: rs' => k == k' && blocksEq bs bs' && regionsEq rs rs'
   | _, _ => false
 
 /-- Two lists of blocks are the same. -/
@@ -144,22 +144,23 @@ def aop (results : List (Name × Attr)) (name : String) (attrs : List Attr)
 
 /-- A module whose types and attributes are applied words with and without
 arguments, whose ops have successors with and without arguments and
-regions with and without blocks, and whose last function has no blocks. -/
+regions with and without blocks and with and without a kind, and whose
+last function has no blocks. -/
 def applied : Module AttrDialect where
   items := [
     .func ⟨"g", [("x", .app "h" []), ("y", .word "h")], [.app "vec" [.int 4, .word "i32"], .word "h"],
-      ⟨[⟨"entry", [], [
+      ⟨none, [⟨"entry", [], [
           aop [("r", .app "h" [.app "h" [], .str "s\"", .sym "1", .int (-3)])] "op.a"
             [.app "h" [], .word "h", .int 7, .str "", .sym "f", .app "k" [.word "h"]] ["x", "y"]
             [⟨"b", ["x", "y"]⟩, ⟨"c", []⟩]
-            [⟨[⟨"in", [("z", .word "t"), ("w", .app "t" [])],
-                [aop [] "yield" [] ["z"] [] [] 1]⟩]⟩, ⟨[]⟩],
-          aop [] "ret" [] [] [] [⟨[]⟩] 2]⟩,
+            [⟨none, [⟨"in", [("z", .word "t"), ("w", .app "t" [])],
+                [aop [] "yield" [] ["z"] [] [] 1]⟩]⟩, ⟨some "toy.graph", []⟩],
+          aop [] "ret" [] [] [] [⟨none, []⟩] 2]⟩,
         ⟨"b", [("q", .word "h"), ("q2", .app "h" [])], [aop [] "ret" [] ["q"] [] [] 2]⟩,
         ⟨"c", [], [aop [("u", .word "a"), ("v", .app "b" [])] "pair" [] [],
           aop [] "ret" [.word "h"] ["u", "v"] [] [] 3]⟩]⟩⟩,
-    .func ⟨"empty", [], [], ⟨[]⟩⟩,
-    .func ⟨"1", [("p", .word "h")], [], ⟨[⟨"e", [], [aop [] "br" [] [] [⟨"e", []⟩]]⟩]⟩⟩]
+    .func ⟨"empty", [], [], ⟨none, []⟩⟩,
+    .func ⟨"1", [("p", .word "h")], [], ⟨none, [⟨"e", [], [aop [] "br" [] [] [⟨"e", []⟩]]⟩]⟩⟩]
   locs := [(0, .unknown), (1, .range "f.c" 1 0 4294967295 4), (2, .fused []),
     (3, .fused [0, 1, 2]), (4, .callsite 1 2), (5, .derived 4), (6, .name "n")]
 
@@ -183,9 +184,9 @@ def applied : Module AttrDialect where
 -- A type that is not written as a type does not read back, and neither
 -- does a line of `2^32`.
 #guard !readsTokensAt (Module.mk (d := AttrDialect) []
-  [.func ⟨"f", [("x", .int 5)], [], ⟨[]⟩⟩] [])
+  [.func ⟨"f", [("x", .int 5)], [], ⟨none, []⟩⟩] [])
 #guard !readsTokensAt (Module.mk (d := AttrDialect) []
-  [.func ⟨"f", [], [.str "t"], ⟨[]⟩⟩] [])
+  [.func ⟨"f", [], [.str "t"], ⟨none, []⟩⟩] [])
 #guard !readsTokensAt (Module.mk (d := AttrDialect) [] [] [(0, .range "f" 4294967296 1 1 1)])
 
 /--

@@ -166,7 +166,7 @@ def renOp (a b : Name) (o : Operation CoreDialect) : Operation CoreDialect :=
 def renFunc (a b : Name) (f : Func CoreDialect) : Func CoreDialect :=
   { f with
     params := f.params.map fun (x, t) => (ren a b x, t)
-    body := ⟨f.body.blocks.map fun blk =>
+    body := ⟨f.body.kind, f.body.blocks.map fun blk =>
       { blk with params := blk.params.map (fun (x, t) => (ren a b x, t)),
                  body := blk.body.map (renOp a b) }⟩ }
 

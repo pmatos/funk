@@ -135,8 +135,12 @@ fn write_part(out: &mut impl Write, root: Part<'_>, mut n: usize) -> fmt::Result
     for step in walk(root) {
         match step {
             Step::Enter(Part::Op(op)) => write_op_head(out, n, op)?,
-            Step::Enter(Part::Region(_)) => {
-                out.write_str(" {\n")?;
+            Step::Enter(Part::Region(r)) => {
+                out.write_str(" {")?;
+                if let Some(kind) = &r.kind {
+                    write!(out, " {kind}")?;
+                }
+                out.write_char('\n')?;
                 n += 2;
             }
             Step::Enter(Part::Block(b)) => {

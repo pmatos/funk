@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1458708492775121829")
+:::moduleDocs (fingerprint := "10589762067033830349")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
@@ -111,7 +111,7 @@ which writes each of its types as an attribute $`\mathrm{attr}(T)`:
   $`\texttt{(}~\mathsf{value}~a_1~\texttt{,}~\dots~\texttt{,}~\mathsf{value}~a_n~\texttt{)}`.
 :::
 
-:::readable Fir.Operation.tokens Fir.Region.tokensList Fir.Block.tokensList Fir.Operation.tokensList (fingerprint := "41541705136619067")
+:::readable Fir.kindTokens Fir.Operation.tokens Fir.Region.tokensList Fir.Block.tokensList Fir.Operation.tokensList (fingerprint := "10506617580454205707")
 *Definition: the tokens of ops, regions and blocks.* For every dialect with
 a text format, an op with results $`d^*`, op instance $`o`, operands
 $`x_1, \dots, x_m`, successors $`s_1, \dots, s_k`, regions and location
@@ -127,8 +127,9 @@ reference $`r` has, in order:
 * the tokens of each of its regions;
 * $`\mathsf{locref}~r`.
 
-A region has the tokens $`\texttt{\{}`, then the tokens of its blocks, then
-$`\texttt{\}}`. A block labelled $`\ell` has $`\mathsf{label}~\ell`, then,
+A region has the tokens $`\texttt{\{}`, then $`\mathsf{word}~k` when it
+names the kind $`k` and nothing for the core's kind, then the tokens of its
+blocks, then $`\texttt{\}}`. A block labelled $`\ell` has $`\mathsf{label}~\ell`, then,
 when it has arguments, $`\texttt{(}`, the tokens of their definitions and
 $`\texttt{)}`; then $`\texttt{:}` and the tokens of its ops, one after the
 other. The four are defined together, since ops hold regions, which hold

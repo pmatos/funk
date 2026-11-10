@@ -534,3 +534,17 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a function's body names no kind: a word after its { starts items, and a func holds blocks"
+text = '''
+func @f() { toy.graph
+^entry:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

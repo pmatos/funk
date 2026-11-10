@@ -67,7 +67,7 @@ conditions cover them. Being within limits also bounds the location
 references, which no reader checks.
 :::
 
-:::readable Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (fingerprint := "7218452147794352182")
+:::readable Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (fingerprint := "2960553621227182581")
 *Theorem: the grammar step for a well-formed module.* For every dialect
 with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]

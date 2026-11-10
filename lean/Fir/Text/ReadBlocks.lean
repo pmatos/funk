@@ -89,25 +89,50 @@ theorem readRegions_nil_reads :
     exact absurd h' (by simp)]
   exact ⟨[], _, rfl, rfl, h⟩
 
+/-- `readKind` reads a region's kind from its word, and no kind before a
+token that is not a word. -/
+theorem readKind_reads (kind : Option Name) :
+    Reads readKind id kind (kindTokens kind) (fun t => kind = none → ∀ w, t ≠ .word w) := by
+  intro ts rest h hs
+  cases kind with
+  | none =>
+    simp only [kindTokens, List.nil_append] at h
+    refine ⟨none, .here ts, ?_, rfl, h⟩
+    rcases ts with _ | ⟨⟨tok, p⟩, ts'⟩
+    · rfl
+    · cases tok
+      all_goals first
+        | rfl
+        | (rename_i w; exact absurd rfl (hs (.word w) (by simp [← h]) rfl w))
+  | some k =>
+    simp only [kindTokens, List.cons_append, List.nil_append] at h
+    take_tok h
+    exact ⟨some k, _, rfl, rfl, h⟩
+
 /-- `readRegions` reads a region and the regions after it, when
 `readBlocks` reads the region's blocks and `readRegions` the regions after
 it. -/
-theorem readRegions_cons_reads {blocks : List (Block d)} {rs : List (Region d)}
+theorem readRegions_cons_reads {kind : Option Name} {blocks : List (Block d)}
+    {rs : List (Region d)}
     (hb : Reads readBlocks SBlock.eraseList (Block.treeList blocks) (Block.tokensList blocks)
       (· = .rbrace))
     (hrs : Reads readRegions SRegion.eraseList (Region.treeList rs) (Region.tokensList rs)
       (fun t => ∃ r, t = .locRef r)) :
-    Reads readRegions SRegion.eraseList (Region.treeList (⟨blocks⟩ :: rs))
-      (Region.tokensList (⟨blocks⟩ :: rs)) (fun t => ∃ r, t = .locRef r) := by
+    Reads readRegions SRegion.eraseList (Region.treeList (⟨kind, blocks⟩ :: rs))
+      (Region.tokensList (⟨kind, blocks⟩ :: rs)) (fun t => ∃ r, t = .locRef r) := by
   intro ts rest h hs
   simp only [Region.tokensList, List.cons_append, List.append_assoc] at h
   take_tok h
-  obtain ⟨sbs, ⟨r, hr⟩, h₁, h₂, h₃⟩ := hb _ _ h (by simp)
+  have hstop := head_blocks blocks (.rbrace :: (Region.tokensList rs ++ rest))
+    (fun t => kind = none → ∀ w, t ≠ .word w) (fun _ _ _ => by simp)
+    (fun t ht => by simp only [List.head?_cons, Option.mem_def, Option.some.injEq] at ht; subst ht; simp)
+  obtain ⟨k, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readKind_reads kind _ _ h hstop
+  obtain ⟨sbs, ⟨r, hr⟩, h₁, h₂, h₃⟩ := hb _ _ h₀'' (by simp)
   take_tok h₃
   obtain ⟨srs, ⟨r', hr'⟩, h₄, h₅, h₆⟩ := hrs _ rest h₃ hs
   rw [readRegions.eq_1]
-  simp only [h₁, ok_bind, expect_cons, h₄]
-  exact ⟨_, _, rfl, by simp [SRegion.eraseList, Region.treeList, h₂, h₅], h₆⟩
+  simp only [h₀, h₁, ok_bind, expect_cons, h₄]
+  exact ⟨_, _, rfl, by simp [SRegion.eraseList, Region.treeList, ← h₀', h₂, h₅], h₆⟩
 
 mutual
 /-- `readBlocks` reads blocks' tokens as their trees, before a `}`. -/
@@ -160,7 +185,7 @@ theorem Region.readsList : ∀ rs : List (Region d),
     Reads readRegions SRegion.eraseList (Region.treeList rs) (Region.tokensList rs)
       (fun t => ∃ r, t = .locRef r)
   | [], _ => readRegions_nil_reads
-  | ⟨blocks⟩ :: rs, hty =>
+  | ⟨_, blocks⟩ :: rs, hty =>
     readRegions_cons_reads (Block.readsList blocks fun b hb => hty b (by simp [Region.allBlocks, hb]))
       (Region.readsList rs fun b hb => hty b (by simp [Region.allBlocks, hb]))
 end

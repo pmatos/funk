@@ -39,6 +39,18 @@ def Func.entryProblems (f : Func d) : List Problem :=
     else [f.blockProblem e ("the entry block " ++ labelRef e.label ++ " declares arguments: " ++
       "its arguments are the function's parameters")]
 
+/-- The problem of a function whose body names a kind: a function's body is
+a region of the core's kind. -/
+def Func.kindProblems (f : Func d) : List Problem :=
+  match f.body.kind with
+  | none => []
+  | some k => [f.problem ("the function's body is a region of kind " ++ k ++
+      ": a function's body is a region of the core's kind")]
+
+theorem Func.kindProblems_eq_nil (f : Func d) : f.kindProblems = [] ↔ f.body.kind = none := by
+  unfold Func.kindProblems
+  split <;> simp_all
+
 theorem Func.entryProblems_eq_nil (f : Func d) :
     f.entryProblems = [] ↔ ∃ e, f.blocks.head? = some e ∧ e.params = [] := by
   unfold Func.entryProblems
@@ -52,7 +64,7 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
   let t := f.tables all
   let defs := f.params ++ all.flatMap Block.defs
   let reached := reachedIn t.graph t.start
-  f.entryProblems ++
+  f.kindProblems ++ f.entryProblems ++
   f.blocks.filterMap (fun b => if reached.contains b.label then none else
     some (f.blockProblem b ("block " ++ labelRef b.label ++ " is not reachable from the entry"))) ++
   (repeats (f.blocks.map (·.label))).map (fun l =>
@@ -81,6 +93,7 @@ def Func.problems (lk : Lookup d) (f : Func d) : List Problem :=
 
 omit [DecidableEq d.Ty] [DecidableDialectValidation d] in
 theorem Func.valid_iff (ctx : ModuleContext d) (f : Func d) : f.Valid ctx ↔
+    f.body.kind = none ∧
     (∃ e, f.blocks.head? = some e ∧ e.params = []) ∧
     (∀ b ∈ f.blocks, f.Reachable b.label) ∧
     (f.blocks.map (·.label)).Nodup ∧
@@ -91,8 +104,8 @@ theorem Func.valid_iff (ctx : ModuleContext d) (f : Func d) : f.Valid ctx ↔
     (∀ b ∈ f.blocks, b.body ≠ []) ∧
     (∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o) ∧
     validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
-  ⟨fun ⟨a, b, c, d, e, f, g, h, i, j⟩ => ⟨a, b, c, d, e, f, g, h, i, j⟩,
-    fun ⟨a, b, c, d, e, f, g, h, i, j⟩ => ⟨a, b, c, d, e, f, g, h, i, j⟩⟩
+  ⟨fun ⟨k, a, b, c, d, e, f, g, h, i, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, j⟩,
+    fun ⟨k, a, b, c, d, e, f, g, h, i, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, j⟩⟩
 
 omit [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d] in
@@ -130,7 +143,8 @@ theorem Func.types_all (f : Func d) :
 theorem Func.problems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d}
     (h : lk.Agrees ctx) : f.problems lk = [] ↔ f.Valid ctx := by
   rw [Func.valid_iff, ← Func.reached_all, ← f.ops_all h, Func.types_all]
-  simp only [Func.problems, Func.problemsIn, List.append_eq_nil_iff, Func.entryProblems_eq_nil,
+  simp only [Func.problems, Func.problemsIn, List.append_eq_nil_iff, Func.kindProblems_eq_nil,
+    Func.entryProblems_eq_nil,
     List.filterMap_eq_nil_iff, ite_none_eq_none, List.map_eq_nil_iff, repeats_eq_nil,
     List.flatMap_eq_nil_iff, Func.defs, List.mem_append, or_imp, forall_and, Prod.forall,
     and_assoc, ite_nil_eq_nil, h.symbols]
