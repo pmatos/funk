@@ -55,6 +55,12 @@ input_file nestedModulesCases where
   path := ".." / "tests" / "dialects" / "nested-modules.cases"
   text := true
 
+/-- The cases that the region-kind tests share with the Rust tests, which
+`FirTest.RegionKindCases` includes. -/
+input_file regionKindsCases where
+  path := ".." / "tests" / "dialects" / "region-kinds.cases"
+  text := true
+
 /-- The cases that the tests of kinds of item share with the Rust tests,
 which `FirTest.ItemKinds` includes. -/
 input_file itemKindsCases where
@@ -65,4 +71,4 @@ input_file itemKindsCases where
 @[default_target]
 lean_lib FirTest where
   needs := #[`@/useOnceCases, `@/effectCases, `@/effectSummaryCases, `@/dialectSetCases,
-    `@/nestedModulesCases, `@/itemKindsCases]
+    `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases]
