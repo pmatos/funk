@@ -1,6 +1,6 @@
 # An inline assembly block is an event of the trace only when its effect set says observable
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1443
 Tier: direction; area: semantics
 
 ## Context
