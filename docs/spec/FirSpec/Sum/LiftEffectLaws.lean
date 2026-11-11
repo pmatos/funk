@@ -14,7 +14,19 @@ when the Lean changes under it.
 
 #doc (Manual) "A lift's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5367318829686041040")
+:::moduleDocs (fingerprint := "797813349324330337")
+:::
+
+:::readable Fir.Dialect.lift.instDialectMemDenote Fir.Dialect.lift.ownRuleHas_lift (fingerprint := "7157026062623711188")
+*Definition: the lift's semantics with memory.* Where a run names the
+lift's memories by $`\rho`, an op of the lift runs by $`e`'s
+{ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
+at $`\rho \circ \hat\mu`, on its operands moved down across $`\hat\iota`,
+with its results moved up.
+
+*Lemma: an op of $`e` keeps what it has.* What an op of the lift runs by
+its own rule has every property that it has in $`e` at
+$`\rho \circ \hat\mu` and that mapping the results keeps.
 :::
 
 :::readable Fir.HVector.any_up (fingerprint := "309306349894809047")
@@ -22,7 +34,7 @@ when the Lean changes under it.
 crossed up holds poison exactly when it did.
 :::
 
-:::readable Fir.Dialect.lift.neverUB_lift Fir.Dialect.lift.makesNoPoison_lift (fingerprint := "2433529917330163221")
+:::readable Fir.Dialect.lift.neverUB_lift Fir.Dialect.lift.makesNoPoison_lift (fingerprint := "15875035905999447038")
 *Lemmas: an op of $`e` keeps its effects in the lift.* An op of $`e` that
 {ref "The-fir-specification--Execution--Effect-obligations"}[never ends in UB]
 over $`d` never does in the lift: it ends in UB in the lift exactly when it
@@ -30,7 +42,7 @@ does in $`e`. One that makes no poison over $`d` makes none in the lift,
 across a lawful inclusion, which keeps which values are poison both ways.
 :::
 
-:::readable Fir.Dialect.lift.lawfulEffects Fir.Dialect.lift.sum_lawfulEffects (fingerprint := "7791440102001755658")
+:::readable Fir.Dialect.lift.lawfulEffects Fir.Dialect.lift.sum_lawfulEffects (fingerprint := "9666568117692061383")
 *Theorem: the lift of an extension lawful in its effects is lawful in its
 effects.* Let $`e` over $`d` be
 {ref "The-fir-specification--Execution--Effect-obligations"}[lawful in its effects],
@@ -41,5 +53,8 @@ $`B \boxplus e{\uparrow}_\iota`, by the theorem on sums.
 
 Each op of the lift has $`e`'s effects and runs by $`e`'s rule on the same
 values, which only cross the inclusion; it is a terminator exactly when it
-is in $`e`.
+is in $`e`. It meets the memory obligations at $`\rho` because it meets
+them in $`e` at $`\rho \circ \hat\mu`, and its declaration renamed by
+$`\hat\mu` and then by $`\rho` is its declaration renamed by
+$`\rho \circ \hat\mu`.
 :::

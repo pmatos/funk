@@ -66,8 +66,12 @@ instance : DialectValidation ProbeDialect where
 
 /-- A probe op states its own rule for poison, and declares every effect:
 at `i0`, which validation rejects, it gives poison for a value. The probe
-dialect has no memory, so its memories have no names. -/
-instance : DialectEffects ProbeDialect := ⟨Empty, fun _ => .exception, fun _ => .all⟩
+dialect has no memory of its own: its memories are the core's. -/
+instance : DialectEffects ProbeDialect :=
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .exception, fun _ => .all⟩
+
+/-- The probe dialect's memories are the core's, and none of its own. -/
+instance : DialectMemOver CoreDialect (Ext Op) := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩
 
 /-- The rule of `id`: the operand, at a width above zero; at `i0`, a
 value for poison and poison for a value. -/
@@ -88,6 +92,10 @@ instance : DialectDenote ProbeDialect SetM where
 
 /-- No probe op calls a function. -/
 instance : DialectCall ProbeDialect := ⟨fun _ => none⟩
+
+/-- No probe op touches memory: at every naming of its memories, it runs by
+its rule in the set monad and keeps the memories. -/
+instance : DialectMemDenote ProbeDialect := DialectMemDenote.ofSetM
 
 /-- A valid probe op instance has a width above zero. -/
 theorem pos_of_typesValid {w : Nat} (h : TypesValid (d := ProbeDialect) (.id w)) : 0 < w :=
@@ -122,6 +130,17 @@ instance lawful : LawfulDialectPoison ProbeDialect where
       obtain ⟨n, rfl⟩ : ∃ n, w = n + 1 := ⟨w - 1, by omega⟩
       exact id_monotone n
 
+/-- The probe dialect is lawful in its effects: it declares every effect,
+so the obligations ask nothing of may-UB, poison or control, and it touches
+no memory. -/
+instance lawfulEffects : LawfulDialectEffects ProbeDialect where
+  neverUB _ _ _ h := nomatch h
+  makesNoPoison _ _ _ h := nomatch h
+  notControl _ h := nomatch h
+  writesNot := DialectMemDenote.ofSetM_writesNot
+  readsNot := DialectMemDenote.ofSetM_readsNot
+  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
+
 end Probe
 
 /-- The sum of the core dialect and the probe dialect. -/
@@ -129,6 +148,10 @@ abbrev CoreProbe : Dialect := CoreSum Probe.Op
 
 /-- The sum is lawful: the probe dialect accepts the core's valid types. -/
 instance coreProbe_lawful : LawfulDialectPoison CoreProbe := Dialect.sum.lawfulPoison fun _ h => h
+
+/-- The sum is lawful in its effects, since both sides are. -/
+instance coreProbe_lawfulEffects : LawfulDialectEffects CoreProbe :=
+  Dialect.sum.lawfulEffects fun _ h => h
 
 /-- `id` at `i0` is not a valid op instance. -/
 theorem probe0_not_typesValid : ¬ TypesValid (d := CoreProbe) (.inr (.id 0)) :=

@@ -66,8 +66,9 @@ The chapters follow the WebAssembly specification:
   abstract units, pointers with provenance, and the accesses that load,
   store, allocate and free, with the laws they obey. It then gives the
   memories of a run, with a frame for each call, the memory effect, the
-  state layer that adds memory to a way of computing, and the runs with
-  memory of a function.
+  state layer that adds memory to a way of computing, the runs with
+  memory of a function, and what an op that declares no effect on a memory
+  must leave of it.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, the round-trip properties, and the
   parser, with the proofs that parsing a printed well-formed module gives
@@ -140,8 +141,9 @@ Memory is logical blocks in typed memories (ADR-2026-11-09-1542). This
 chapter gives one memory of that model, written once for a unit of any
 width, so that every memory of every dialect is an instance of it. It then
 makes memory an effect of a run: the memories of a run, the effect that
-ops ask for, the layer that adds the memories to a way of computing, and
-the runs of a function with memory.
+ops ask for, the layer that adds the memories to a way of computing, the
+runs of a function with memory, and the obligations that an op's
+declaration of its effects on memory puts on its semantics.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
@@ -156,6 +158,10 @@ the runs of a function with memory.
 {includeReadable "." Fir.Execution.MemoryState "The state layer" FirSpec.Execution.MemoryState (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryRuns "Runs with memory" FirSpec.Execution.MemoryRuns (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryObligationLaws "Meeting the memory obligations" FirSpec.Execution.MemoryObligationLaws (level := 2)}
 
 # Text format
 

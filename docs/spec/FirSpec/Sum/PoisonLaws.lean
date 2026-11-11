@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A sum's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "911688016596945753")
+:::moduleDocs (fingerprint := "16140865909255041323")
 :::
 
 :::readable Fir.HVector.ofSum_toSum Fir.HVector.toSum_ofSum Fir.HVector.forall₂_ofSum Fir.HVector.any_ofSum Fir.HVector.all_toSum (fingerprint := "2660157476304062812")
@@ -47,7 +47,7 @@ sum accepts is one that $`e` over the base accepts, when $`e` accepts
 every type that the base accepts.
 :::
 
-:::readable Fir.Dialect.sum.propagates_inl Fir.Dialect.sum.lawfulPoison (fingerprint := "989622840414631194")
+:::readable Fir.Dialect.sum.propagates_inl Fir.Dialect.sum.lawfulPoison (fingerprint := "12250915897818379880")
 *Theorem: the sum of lawful dialects is lawful.* Let the base and $`e`
 over the base meet the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations],

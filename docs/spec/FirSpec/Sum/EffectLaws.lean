@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A sum's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "209645641429570924")
+:::moduleDocs (fingerprint := "1602020451731626254")
 :::
 
 :::readable Fir.HVector.any_toSum (fingerprint := "8356120504750222703")
@@ -31,7 +31,21 @@ moved down and up, which keeps which of them are poison, and it ends in UB
 in the sum exactly when it does in the base.
 :::
 
-:::readable Fir.Dialect.sum.lawfulEffects (fingerprint := "13826328052956240568")
+:::readable Fir.Dialect.sum.instDialectMemDenote Fir.Dialect.sum.ownRuleHas_inl Fir.Dialect.sum.ownRuleHas_inr (fingerprint := "17118347255317226753")
+*Definition: a sum's semantics with memory.* Where a run names the sum's
+memories by $`\rho`, an op of $`e` runs by $`e`'s
+{ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
+at $`\rho`, and a base op by the base's at
+$`\rho \circ \mathrm{ofBase}`: the run names each memory of the base as
+the sum does.
+
+*Lemma: a side's op keeps what it has.* What an op of $`e` runs by its own
+rule in the sum is what it runs in $`e`. What a base op runs by its own
+rule in the sum has every property that it has in the base at
+$`\rho \circ \mathrm{ofBase}` and that mapping the results keeps.
+:::
+
+:::readable Fir.Dialect.sum.lawfulEffects (fingerprint := "6947791787800025204")
 *Theorem: the sum of dialects lawful in their effects is lawful in its
 effects.* Let the base and $`e` over the base be
 {ref "The-fir-specification--Execution--Effect-obligations"}[lawful in their effects],
@@ -41,5 +55,9 @@ $`b \boxplus e` is lawful in its effects.
 Each op of the sum has its own side's effects, so it meets the
 obligations as an op of its own side: a base op by the lemmas above, and an
 op of $`e` unchanged. An op is a terminator in the sum exactly when it is
-on its side.
+on its side. A base op meets the memory obligations at $`\rho` because it
+meets them in the base at $`\rho \circ \mathrm{ofBase}`: renaming its
+declaration by $`\mathrm{ofBase}` and then by $`\rho` renames it by
+$`\rho \circ \mathrm{ofBase}`, and the obligations hold of the results
+mapped up to the sum's types.
 :::

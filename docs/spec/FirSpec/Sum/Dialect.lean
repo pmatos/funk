@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "746139153106266780")
+:::moduleDocs (fingerprint := "17623863330440996922")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -149,14 +149,24 @@ base's view, and any other obeys $`e`'s rule through $`e`'s view. Each rule
 of the sum can be decided when each side's can.
 :::
 
-:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "14807394188783317028")
-*Definition: how an op of a sum runs.* The memories of the sum are those of
-the base and those of $`e`, kept apart: $`M_b + M_e`. An op of the sum has
+:::readable Fir.DialectMemOver Fir.DialectMemOver.ofBase (fingerprint := "16129074969842651274")
+*Definition: the memories of an extension.* The memory names $`M_e` of
+$`e` over the base are the base's memory names $`M_b` and $`e`'s own
+$`O_e`, as its types are the base's and its own: a map
+$`\mathrm{split} : M_e \to M_b + O_e` and its inverse $`\mathrm{join}`.
+$`e` names the base's memory $`x` as
+$`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
+:::
+
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "5103561852968972671")
+*Definition: how an op of a sum runs.* The memories of the sum are
+$`e`'s, $`M_e`, which name the base's: so a memory has one name in the
+sum, whichever side names it (ADR-2026-11-11-0452). An op of the sum has
 its side's
 {ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
-with its side's memories renamed into the sum's:
+a base op's with its memories renamed by $`\mathrm{ofBase}`:
 
-$$`\mathrm{eff}(\mathsf{inl}\ p) = \mathsf{inl}(\mathrm{eff}_b(p)) \qquad \mathrm{eff}(\mathsf{inr}\ q) = \mathsf{inr}(\mathrm{eff}_{b.\mathrm{over}(e)}(q))`
+$$`\mathrm{eff}(\mathsf{inl}\ p) = \mathrm{ofBase}(\mathrm{eff}_b(p)) \qquad \mathrm{eff}(\mathsf{inr}\ q) = \mathrm{eff}_{b.\mathrm{over}(e)}(q)`
 
 It calls the function that it calls on its side. It runs by its side's
 rule: a base op takes its operands moved down to the base's types, and its

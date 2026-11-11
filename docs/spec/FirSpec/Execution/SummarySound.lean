@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15048710468963305199")
+:::moduleDocs (fingerprint := "7652720213210074280")
 :::
 
 :::readable Fir.DVals.Clean Fir.Env.Clean (fingerprint := "8528918267713506938")
@@ -38,7 +38,7 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (fingerprint := "14892638772956362743")
+:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (fingerprint := "9643212442418999716")
 *Theorems: the ops of a function leave out what its summary leaves out.*
 Let the dialect be lawful in its effects, and every function of $`M`
 valid. Let $`s` name the function $`f` of $`M`. From any ops of the blocks
@@ -55,7 +55,7 @@ its caller's, with less fuel, so the induction covers the callee's run,
 recursion included. For poison, the run keeps its environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (fingerprint := "11081348750401310654")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (fingerprint := "15916412028685664532")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
 its effects, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. For every budget of fuel:

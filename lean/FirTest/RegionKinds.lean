@@ -178,7 +178,8 @@ abbrev coreInBit : TyIncl CoreDialect.Ty (CoreDialect ⊞ BitExt).Ty := TyIncl.i
 
 /-- The region dialect, written over the core, lifted into the sum of the
 core and the bit dialect. -/
-abbrev RegionOverBit : Dialect := (Ext Op).lift CoreDialect coreInBit
+abbrev RegionOverBit : Dialect :=
+  (Ext Op).lift CoreDialect coreInBit (DialectMemOver.ofBase (base := CoreDialect) (e := BitExt))
 
 /-- The sum of the core, the bit dialect and the region dialect. -/
 abbrev CoreBitRegion : Dialect := CoreDialect ⊞ BitExt ⊞ RegionOverBit

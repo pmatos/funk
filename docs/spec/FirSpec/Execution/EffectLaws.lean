@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3013532393854837883")
+:::moduleDocs (fingerprint := "1445801162894727801")
 :::
 
 :::readable Fir.NeverUB (fingerprint := "7156262212872704501")
@@ -32,7 +32,7 @@ $`\mathsf{ok}~\vec{w} \in \mathrm{denote}_o(\vec{v})` has no poison
 element. A terminator gives no results, so it makes none.
 :::
 
-:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (fingerprint := "2766575171871511352")
+:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "16626236626511120339")
 *Definition: a dialect lawful in its effects.* A dialect is _lawful in its
 effects_ when its effect declarations are sound: an effect that an op
 leaves out, it does not have. For every
@@ -40,13 +40,20 @@ leaves out, it does not have. For every
 instance $`o` that is a terminator or has no callee:
 
 * if $`\mathsf{mayUB} \notin \mathrm{eff}(o)`, then $`o` never ends in UB;
-* if $`\mathsf{mayPoison} \notin \mathrm{eff}(o)`, then $`o` makes no poison.
+* if $`\mathsf{mayPoison} \notin \mathrm{eff}(o)`, then $`o` makes no poison;
+* wherever a run names the dialect's memories by $`\rho`, for every memory
+  $`x` of the run: if $`\rho(\mathrm{eff}(o).\mathit{writes})` does not
+  hold $`x`, what $`o` runs by its own rule writes no unit of $`x`; if
+  $`\rho(\mathrm{eff}(o).\mathit{reads})` does not hold $`x`, it does not
+  read $`x`; and if $`\rho(\mathrm{eff}(o).\mathit{allocates})` does not
+  hold $`x`, it neither allocates nor frees in $`x`
+  ({ref "The-fir-specification--Memory--Memory-obligations"}[memory obligations]).
 
 And for every op $`o`: if $`\mathsf{control} \notin \mathrm{eff}(o)`,
 then $`o` is not a terminator.
 
-An op with a callee is left out of the first two: it runs its callee, not a
-rule of its own, and has its callee's effects (ADR-2026-11-02-1514). The
-memory-named effects and $`\mathsf{observable}` have no obligation yet,
-since a run of M0 has no memory and no trace.
+An op with a callee is left out of all but the last: it runs its callee,
+not a rule of its own, and has its callee's effects (ADR-2026-11-02-1514).
+$`\mathsf{observable}` has no obligation yet, since a run of M0 has no
+trace.
 :::

@@ -25,9 +25,14 @@ open Fir
 dialect, as the left side of the sum. -/
 abbrev coreInToy : TyIncl CoreDialect.Ty CoreToy.Ty := TyIncl.inl
 
+/-- The core's memories, named as the sum of the core and the toy dialect
+names them: by the toy dialect's names for them. -/
+abbrev coreMemInToy : DialectEffects.Mem CoreDialect → DialectEffects.Mem CoreToy :=
+  DialectMemOver.ofBase (base := CoreDialect) (e := Ext Toy.Op)
+
 /-- The bit dialect, written over the core, lifted into the sum of the core
 and the toy dialect. -/
-abbrev BitOverToy : Dialect := BitExt.lift CoreDialect coreInToy
+abbrev BitOverToy : Dialect := BitExt.lift CoreDialect coreInToy coreMemInToy
 
 /-- The sum of the core, the toy dialect and the bit dialect. -/
 abbrev CoreToyBit : Dialect := CoreToy ⊞ BitOverToy
@@ -172,13 +177,18 @@ either. -/
 /-- The core's types, included in those of the sum of three. -/
 abbrev coreInThree : TyIncl CoreDialect.Ty CoreToyBit.Ty := coreInToy.comp TyIncl.inl
 
+/-- The core's memories, named as the sum of three names them. -/
+abbrev coreMemInThree : DialectEffects.Mem CoreDialect → DialectEffects.Mem CoreToyBit :=
+  DialectMemOver.ofBase (base := CoreToy) (e := BitOverToy) ∘ coreMemInToy
+
 #guard coreInThree.incl (.int 8) == .inl (.inl (.int 8))
 #guard coreInThree.proj (.inl (.inl (.int 8))) == some (.int 8)
 #guard coreInThree.proj (.inr .bit) == none
 
 -- The bit dialect, lifted into the sum of three by `coreInThree`, reads
 -- its op at the core's types there.
-#guard decodeOp (d := CoreToyBit.over (BitExt.lift CoreDialect coreInThree)) "bit.low" []
+#guard decodeOp (d := CoreToyBit.over (BitExt.lift CoreDialect coreInThree coreMemInThree))
+  "bit.low" []
   [.inl (.inl (.inl (.int 8)))] [.inr .bit] == some (.low 8)
 
 /-- The types of the sum of the core and the bit dialect, included in those
@@ -188,14 +198,23 @@ abbrev coreBitInThree : TyIncl (CoreDialect ⊞ BitExt).Ty CoreToyBit.Ty := core
 #guard coreBitInThree.incl (.inr .bit) == .inr .bit
 #guard coreBitInThree.proj (.inl (.inl (.int 8))) == some (.inl (.int 8))
 
+/-- The memories of the sum of the core and the bit dialect, named as the
+sum of three names them: the bit dialect's memory map in the sum of three. -/
+abbrev coreBitMemInThree :
+    DialectEffects.Mem (CoreDialect ⊞ BitExt) → DialectEffects.Mem CoreToyBit :=
+  Dialect.lift.liftMem (e := BitExt) coreMemInToy
+
 section
 variable (e : Dialect) [TyDenote e.Ty] [DialectName e]
   [DialectSignature ((CoreDialect ⊞ BitExt).over e)] [DialectText ((CoreDialect ⊞ BitExt).over e)]
   [DialectValidation ((CoreDialect ⊞ BitExt).over e)]
 
-example : DialectText (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree) := inferInstance
+example :
+    DialectText (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree coreBitMemInThree) :=
+  inferInstance
 
-example : DialectValidation (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree) :=
+example :
+    DialectValidation (CoreToyBit ⊞ e.lift (CoreDialect ⊞ BitExt) coreBitInThree coreBitMemInThree) :=
   inferInstance
 
 end
