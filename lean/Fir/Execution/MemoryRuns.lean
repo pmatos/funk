@@ -32,9 +32,10 @@ open Memory
 
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
+variable (m) in
 /-- A computation with no memory, in the state layer: it runs, and keeps the
 state. This is a monad morphism, Lean's `StateT.lift`. -/
-def MonadMorphism.liftState (m : Type → Type) [Monad m] [LawfulMonad m] (σ : Type) :
+def MonadMorphism.liftState (σ : Type) :
     MonadMorphism m (StateT σ m) where
   map x := StateT.lift x
   map_pure a := by
@@ -52,7 +53,8 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 /-- Lifting into the layer keeps frames, when a frame of the monad below is
 the computation itself: entering a call and leaving it at once changes no
 memory. -/
-theorem MonadMorphism.liftState_mapsFrame [MonadFrame m] (hid : ∀ {α : Type} (x : m α), MonadFrame.frame x = x) :
+theorem MonadMorphism.liftState_mapsFrame [MonadFrame m]
+    (hid : ∀ {α : Type} (x : m α), MonadFrame.frame x = x) :
     (MonadMorphism.liftState m (Memories Mem unit)).MapsFrame := by
   intro α x
   funext S

@@ -105,7 +105,8 @@ theorem MonadMorphism.state_choose [MonadChoice m] [MonadChoice n]
     (h : ∀ w, φ.map (MonadChoice.choose w) = MonadChoice.choose w) (w : Nat) :
     (φ.state σ).map (MonadChoice.choose w) = MonadChoice.choose w := by
   funext s
-  show φ.map ((fun b => (b, s)) <$> MonadChoice.choose w) = (fun b => (b, s)) <$> MonadChoice.choose w
+  show φ.map ((fun b => (b, s)) <$> MonadChoice.choose w) =
+    (fun b => (b, s)) <$> MonadChoice.choose w
   rw [φ.map_map, h]
 
 /-- A morphism that keeps UB keeps it through the layer. -/

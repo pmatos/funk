@@ -137,7 +137,8 @@ theorem exit_length (S : Memories Mem unit) (x : Mem) :
 
 omit [DecidableEq Mem] in
 /-- Recording an allocation changes no memory. -/
-theorem record_mem (S : Memories Mem unit) (x : Mem) (a : AllocId) : (S.record x a).mem = S.mem := by
+theorem record_mem (S : Memories Mem unit) (x : Mem) (a : AllocId) :
+    (S.record x a).mem = S.mem := by
   unfold record
   split <;> rfl
 
