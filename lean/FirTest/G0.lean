@@ -1,6 +1,7 @@
 import Fir
 import FirRef
 import FirTest.G0.Validation
+import FirTest.G0.Regions
 
 /-!
 G0's check on the Lean side (ADR-2026-11-03-0600). fir's spec is written
@@ -15,7 +16,8 @@ code of the spec's chapters for every dialect names nothing of the core
 dialect and writes none of its words. It checks this file too, and the files of
 `FirTest/G0/`, outside their `#guard` commands, so a statement cannot be
 narrowed to the core dialect. The statements about validation are in
-`FirTest.G0.Validation`.
+`FirTest.G0.Validation`, and those about region kinds that a dialect
+registers in `FirTest.G0.Regions`.
 
 The section on behaviour models shows the seam where a dialect that needs
 probabilities plugs in. `lean/FirTest/G0Effects.lean` restates the classes

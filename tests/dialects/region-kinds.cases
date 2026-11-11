@@ -1,0 +1,283 @@
+Cases for a region kind that a dialect registers (ADR-2026-11-10-1941),
+shared by the two validators' tests: `lean/FirTest/RegionKindCases.lean`
+and `crates/funk-ir/tests/region_kind_cases.rs`. Each case starts with a
+line of three equals signs, its verdict and its name. The verdict is
+`accept`; `reject`, for a case that breaks a general rule; or
+`reject-by-kind`, for a case where a region breaks the rule of its kind,
+which both validators report as such. Each case parses and prints as
+itself on both sides.
+
+The cases run in the sum of the core and a test dialect named `toy`, with
+two ops: `toy.graph`, which takes and gives nothing and owns one region of
+the kind `toy.dataflow`, and `toy.node`, which takes any number of values
+of one type `iN` and gives one of that type. The dialect registers the
+kind `toy.dataflow`, whose ops are unordered. Its rule: the region holds
+one block, which takes no arguments; every op of the block is an op of
+`toy`, and no op of `toy` is a terminator, so no op ends the block; and
+each value that an op of the block uses is a result of an op of the same
+block, before or after it, or a parameter of the function. Nodes may use
+each other's results in a cycle, as nothing orders them.
+
+=== accept a-node-uses-a-later-node
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %b: i8 = toy.node %a, %p @0
+      %a: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept a-node-of-no-operands
+dialects toy
+
+func @f() {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i32 = toy.node @0
+      %b: i32 = toy.node %a, %a, %a @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept nodes-may-use-each-other
+dialects toy
+
+func @f() {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %b @0
+      %b: i8 = toy.node %a @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept two-graphs-in-a-function
+dialects toy
+
+func @f(%p: i8) -> i8 {
+^entry:
+  %s: i8 = add %p, %p @0
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  toy.graph { toy.dataflow
+    ^h:
+      %b: i8 = toy.node %c @0
+      %c: i8 = toy.node %p @0
+  } @0
+  ret %s @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept a-graph-inside-a-graph
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      toy.graph { toy.dataflow
+        ^h:
+          %b: i8 = toy.node %p @0
+      } @0
+      %a: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind two-blocks
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+    ^h:
+      %b: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-block-argument
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g(%x: i8):
+      %a: i8 = toy.node %x @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-core-op-inside
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = add %p, %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-terminator-inside
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+      ret @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-use-of-a-value-of-the-body
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  %s: i8 = add %p, %p @0
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %s @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-use-of-another-graphs-node
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  toy.graph { toy.dataflow
+    ^h:
+      %b: i8 = toy.node %a @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject-by-kind a-use-of-the-outer-graphs-node
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+      toy.graph { toy.dataflow
+        ^h:
+          %b: i8 = toy.node %a @0
+      } @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject a-use-of-a-node-in-the-body
+dialects toy
+
+func @f(%p: i8) -> i8 {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject a-region-of-no-kind
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph {
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject a-kind-that-no-dialect-registers
+dialects toy
+
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.cfg
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== reject a-graph-outside-the-dialect-set
+func @f(%p: i8) {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %p @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}

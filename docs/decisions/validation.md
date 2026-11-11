@@ -146,6 +146,12 @@ each kind goes to the dialect that registers it. A lift registers `e`'s
 kinds. In `funk-ir`, a dialect registers a `RegionKindSpec`, under its
 prefix (ADR-2026-11-10-1941).
 
+`tests/dialects/region-kinds.cases` holds the cases of a toy kind whose ops
+are unordered: one block, only the toy dialect's ops and no terminator, and
+uses of the block's results in any order or of the function's parameters.
+The Lean and Rust tests both read it, so the two validators agree on each
+case and both print each case as itself (ADR-2026-11-10-1941).
+
 ## How `fir-ref` runs the check
 
 fir has no nesting limit. Every tool handles any depth without a stack
