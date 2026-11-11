@@ -1,6 +1,6 @@
 # `fir-ref run` walks a machine with explicit call frames in place of the spec's modes
 
-Status: accepted; refined by ADR-2026-11-05-0442
+Status: accepted; refined by ADR-2026-11-05-0442, ADR-2026-11-11-1328
 Tier: implementation; area: fir-ref
 
 ## Context

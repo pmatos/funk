@@ -194,6 +194,10 @@ unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 2)}
 
+{includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 2)}
+
+{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
+
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 2)}
 
 # Text format

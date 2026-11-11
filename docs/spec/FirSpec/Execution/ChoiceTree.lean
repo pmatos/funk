@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1147497501033574720")
+:::moduleDocs (fingerprint := "6983827326669927177")
 :::
 
 :::readable Fir.ChoiceTree (fingerprint := "6945210103657211533")
@@ -62,6 +62,21 @@ $`\mathsf{choose}~w~(b \mapsto \mathsf{pure}~b)`, and
 with a reason $`r` is the leaf $`\mathsf{ub}~r`. So the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter],
 written once for any monad with these effects, also runs in trees.
+:::
+
+:::readable Fir.ChoiceTree.bind_pure Fir.ChoiceTree.bind_assoc (pin := Fir.ChoiceTree.instLawfulMonad) (fingerprint := "10333011097471270980")
+*Theorem: trees are a lawful monad.* For every tree $`t`, putting back
+each leaf $`\mathsf{pure}~a` as $`\mathsf{pure}~a` gives $`t`, and for
+every $`g` and $`h` from results to trees, sequences associate:
+
+$$`\begin{aligned} t \mathbin{>\!\!>\!\!=} \mathsf{pure} & = t \\ (t \mathbin{>\!\!>\!\!=} g) \mathbin{>\!\!>\!\!=} h & = t \mathbin{>\!\!>\!\!=} (a \mapsto g(a) \mathbin{>\!\!>\!\!=} h) \end{aligned}`
+
+With $`\mathsf{pure}~a \mathbin{>\!\!>\!\!=} g = g(a)`, which holds by
+the definition of $`\mathbin{>\!\!>\!\!=}`, these are the three monad
+laws, so trees are a lawful monad, and so is the
+{ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
+them. `fir-ref`'s machine, which walks a run with memory, rests on these
+laws.
 :::
 
 :::readable Fir.ChoiceTree.toSet (fingerprint := "3155849494660982669")
