@@ -45,9 +45,14 @@ results, which are written where those values are defined.
   attributes: `%f: i8 = freeze %p @1`, `%w: i64 = zext %x @1`, `ret %r @1`,
   `unreachable @1`.
 * The integer type of width N is written `i` and N in decimal with no
-  leading zeros, such as `i32`, and the pointer type is written `ptr`. A
-  width above 16,777,215, the widest the core dialect has, is a parse error
-  (ADR-2026-11-03-1000).
+  leading zeros, such as `i32`. A width above 16,777,215, the widest the
+  core dialect has, is a parse error (ADR-2026-11-03-1000).
+* The pointer type of the default memory, `ptr<0>`, is written `ptr`.
+  The pointer type `ptr<N>` of another memory is written `ptr(N)`, in the
+  applied form of the grammar, such as `ptr(1)`. So each pointer type has
+  one spelling: `ptr(0)` does not decode, since `ptr` writes that type, and
+  neither does a negative number, a memory above 16,777,215 or any other
+  argument list (ADR-2026-11-11-1709).
 * A float type is written by its alias when it has one: `f16`, `bf16`,
   `f32`, `f64` or `f128`. Every other format `float<e,m>` is written
   `float(e, m)`, in the applied form of the grammar, such as
@@ -239,7 +244,8 @@ def Ty.attr : Ty → Attr
   | .float e m => match floatAlias e m with
     | some n => .word n
     | none => .app "float" [.int e, .int m]
-  | .ptr => .word "ptr"
+  | .ptr 0 => .word "ptr"
+  | .ptr (n + 1) => .app "ptr" [.int (n + 1)]
 
 /-- Reads `float(e, m)`: a format with no alias, whose numbers are not
 negative and which is no wider than `maxWidth` bits in all. -/
@@ -248,10 +254,16 @@ def decodeFloat (e m : Int) : Option Ty :=
     some (.float e.toNat m.toNat)
   else none
 
-/-- Reads a core type: `ptr`, `i` and a width of at most `maxWidth` with no
-leading zeros, a float format's alias, or `float(e, m)`. -/
+/-- Reads `ptr(N)`: the pointer of a memory other than the default one, no
+higher than `maxMemory`. -/
+def decodePtr (n : Int) : Option Ty :=
+  if 1 ≤ n ∧ n ≤ maxMemory then some (.ptr n.toNat) else none
+
+/-- Reads a core type: `ptr` or `ptr(N)`, `i` and a width of at most
+`maxWidth` with no leading zeros, a float format's alias, or
+`float(e, m)`. -/
 def Ty.decode : Attr → Option Ty
-  | .word "ptr" => some .ptr
+  | .word "ptr" => some (.ptr 0)
   | .word s => match s.toList with
     | 'i' :: ds =>
       let digits := String.ofList ds
@@ -259,6 +271,7 @@ def Ty.decode : Attr → Option Ty
         if toString w = digits ∧ w ≤ maxWidth then some (.int w) else none
     | _ => (aliasFormat s).map fun (e, m) => .float e m
   | .app "float" [.int e, .int m] => decodeFloat e m
+  | .app "ptr" [.int n] => decodePtr n
   | _ => none
 
 end Fir.Core
@@ -292,7 +305,11 @@ def samples : List Op :=
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
 
-#guard [Ty.int 1, .int 32, .int 128, .ptr].all fun t => Ty.decode t.attr == some t
+#guard [Ty.int 1, .int 32, .int 128, .ptr 0, .ptr 1, .ptr maxMemory].all fun t =>
+  Ty.decode t.attr == some t
+#guard Ty.decode (.app "ptr" [.int 0]) == none && Ty.decode (.app "ptr" [.int (-1)]) == none
+#guard Ty.decode (.app "ptr" [.int (maxMemory + 1)]) == none && Ty.decode (.app "ptr" []) == none
+#guard Ty.decode (.app "ptr" [.int 1, .int 2]) == none && Ty.decode (.app "ptr" [.word "x"]) == none
 #guard [Ty.float 5 10, .float 8 7, .float 8 23, .float 11 52, .float 15 112, .float 2 1,
   .float 5 2, .float 2 (maxWidth - 3)].all fun t => Ty.decode t.attr == some t
 #guard Ty.decode (.word "f32") == some (.float 8 23) && Ty.decode (.word "bf16") == some (.float 8 7)
@@ -315,7 +332,7 @@ def samples : List Op :=
 #guard Op.decode "poison" [] [] [.int 1] == some (.poison 1)
 #guard Op.decode "poison" [.int 0] [] [.int 8] == none && Op.decode "poison" [] [.int 8] [.int 8] == none
 #guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
-#guard Op.decode "poison" [] [] [.ptr] == none
+#guard Op.decode "poison" [] [] [.ptr 0] == none
 #guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
 -- A float constant is a float literal: `1.0`, `-0.0` and the quiet NaN of
 -- `f32` with its sign set.

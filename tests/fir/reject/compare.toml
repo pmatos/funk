@@ -265,7 +265,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "icmp defines an i1, not a ptr; a ptr value is also invalid, but decoding fails first"
+rule = "icmp defines an i1, not a ptr"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -280,7 +280,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "icmp takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "icmp takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -295,7 +295,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "icmp takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "icmp takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -415,7 +415,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "select's condition is an i1, not a ptr; a ptr parameter is also invalid, but decoding fails first"
+rule = "select's condition is an i1, not a ptr"
 text = '''
 func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -475,7 +475,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "select takes two values of one integer type: a ptr first value is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "select takes two values of one integer type: a ptr first value is not one"
 text = '''
 func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -490,7 +490,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "select takes two values of one integer type: a ptr second value is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "select takes two values of one integer type: a ptr second value is not one"
 text = '''
 func @f(%c: i1, %a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -505,7 +505,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "select defines a value of its values' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "select defines a value of its values' integer type: ptr is not one"
 text = '''
 func @f(%c: i1, %a: i32, %b: i64) -> i32 {
 ^entry:

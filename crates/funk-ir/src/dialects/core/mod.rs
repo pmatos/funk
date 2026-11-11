@@ -1,8 +1,8 @@
 //! The core dialect: the small, CPU-shaped dialect of M0
 //! (`lean/Fir/Core/`).
 //!
-//! Its types are the integers `iN`, the floats `float<e,m>` and the reserved
-//! `ptr`. Each op family lives in a file of its own and registers its ops in
+//! Its types are the integers `iN`, the floats `float<e,m>` and the pointers
+//! `ptr<N>`. Each op family lives in a file of its own and registers its ops in
 //! [`dialect`]: the tracer registers `const`, `add` and `ret`, the arithmetic
 //! family (#14) `sub`, `mul`, the flags of all three and `freeze`, the
 //! bitwise family (#15) `and`, `or`, `xor`, `shl`, `lshr` and `ashr`, the
@@ -35,7 +35,8 @@ pub use div::DIVISION_OPS;
 pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use types::{
-    CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_format, float_type, int_type, int_width,
+    CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
+    int_width, ptr_type,
 };
 pub use width::WIDTH_CHANGES;
 

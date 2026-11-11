@@ -2,8 +2,9 @@ import Fir.Syntax.Dialect
 
 /-!
 The core dialect is the small, CPU-shaped dialect of fir's first milestone,
-M0. Its types are the integer types, the float types and the reserved
-pointer type (ADR-2026-10-29-2007, ADR-2026-11-09-1549). They are one
+M0. Its types are the integer types, the float types and the pointer types,
+one for each memory (ADR-2026-10-29-2007, ADR-2026-11-09-1549,
+ADR-2026-11-09-1542). They are one
 dialect's types, not the whole type system of fir: another dialect brings
 its own (ADR-2026-10-29-2016).
 -/
@@ -25,18 +26,23 @@ A type of the core dialect.
   (ADR-2026-11-11-0950). `f16`, `bf16`, `f32`, `f64` and `f128` are
   `float<5,10>`, `float<8,7>`, `float<8,23>`, `float<11,52>` and
   `float<15,112>`.
-* `ptr` is reserved. M0 gives it no ops, and its values wait for the memory
-  model (S3), which is not decided. Validation in M0 rejects every value of
-  type `ptr`.
+* `ptr n` is `ptr<N>` with `N = n`: a pointer into the memory `n`
+  (ADR-2026-11-09-1542). The core's `ptr` is `ptr<0>`, the pointer of the
+  default memory, which every module has. A pointer of one memory is never
+  a pointer of another: `ptr<0>` and `ptr<1>` are different types.
 -/
 inductive Ty where
   | int (w : Nat)
   | float (e m : Nat)
-  | ptr
+  | ptr (n : Nat)
   deriving Repr, DecidableEq, Inhabited
 
 /-- The widest integer type, `i16777215`: `2^24 - 1` bits, MLIR's limit. -/
 def maxWidth : Nat := 2 ^ 24 - 1
+
+/-- The highest memory number that a pointer type may name, `2^24 - 1`, as
+LLVM bounds its address spaces. -/
+def maxMemory : Nat := 2 ^ 24 - 1
 
 /-- The bits of a value of `float<e,m>`: a sign bit, `e` exponent bits and
 `m` mantissa bits. -/

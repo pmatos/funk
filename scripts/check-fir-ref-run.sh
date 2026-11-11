@@ -200,7 +200,8 @@ for arg in "$long" "1 $long"; do
     LEAN_STACK_SIZE_KB=256 runs $c/add.fir 2 "fir-ref: $arg is not a value of type i64" \
         @double "$arg" || status=1
 done
-# poison is an argument of any iN (#123), but not of ptr, and not a choice.
+# poison is an argument of any iN (#123) and of ptr, the only one of ptr
+# since a run starts with no allocation, but not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1
 runs $c/add.fir 2 'fir-ref: Poison is not a value of type i64' @double Poison || status=1
@@ -208,8 +209,9 @@ runs "$tmp/freeze.fir" 0 "${ret}[\"-2\"],\"choices\":1}" --choices -2 @f poison 
 runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f poison || status=1
 runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: choice 1, poison, is not a value of type i2' \
     --choices poison @f poison || status=1
-printf 'func @p(%%x: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >"$tmp/ptr.fir"
-runs "$tmp/ptr.fir" 2 'fir-ref: poison is not a value of type ptr' @p poison || status=1
+printf 'func @p(%%x: ptr) -> ptr {\n^e:\n  ret %%x @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >"$tmp/ptr.fir"
+runs "$tmp/ptr.fir" 0 "${ret}[\"poison\"]$none" @p poison || status=1
+runs "$tmp/ptr.fir" 2 'fir-ref: 0 is not a value of type ptr' @p 0 || status=1
 runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
 runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
 rc=0

@@ -2,6 +2,8 @@
 
 #![allow(dead_code)]
 
+pub mod op_verify;
+
 use std::path::PathBuf;
 
 use funk_ir::{Diagnostic, Module, ParseError, Registry, parse, verify};

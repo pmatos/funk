@@ -561,7 +561,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "add takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "add takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -576,7 +576,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "add takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "add takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -591,7 +591,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "add defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "add defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -606,7 +606,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sub takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "sub takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -621,7 +621,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sub takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "sub takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -636,7 +636,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sub defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "sub defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -651,7 +651,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "mul takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "mul takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -666,7 +666,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "mul takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "mul takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -681,7 +681,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "mul defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "mul defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -696,7 +696,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "freeze takes one operand of an integer type: a ptr operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "freeze takes one operand of an integer type: a ptr operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -711,7 +711,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "freeze defines a value of its operand's integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "freeze defines a value of its operand's integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -726,7 +726,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "freeze takes and defines one integer type: a ptr operand with a ptr result is not one, though the two types agree; a ptr parameter and a ptr value are also invalid, but decoding fails first"
+rule = "freeze takes and defines one integer type: a ptr operand with a ptr result is not one, though the two types agree"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:

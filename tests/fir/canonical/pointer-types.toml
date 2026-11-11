@@ -1,0 +1,13 @@
+# Tests of pointer-types.fir: values of ptr, the default memory's pointer,
+# pass through parameters, results, block arguments and calls as they are
+# (ADR-2026-11-11-1709). A run starts with no allocation, so the only
+# pointer argument is poison. The backend does not lower pointers yet, so
+# each test is interpreter-only.
+tests = [
+  { func = "@id", args = ["poison"], expect = ["poison"] },
+  { func = "@mixed", args = ["-5", "poison", "1.0"], expect = ["1.0", "poison", "-5"] },
+  { func = "@pass", args = ["true", "poison", "poison"], expect = ["poison"] },
+  { func = "@pass", args = ["poison", "poison", "poison"], expect = "ub" },
+  { func = "@call", args = ["poison", "3"], expect = ["3", "poison"] },
+  { func = "@drop", args = ["poison"], expect = ["7"] },
+]

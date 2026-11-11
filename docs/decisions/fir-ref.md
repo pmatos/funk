@@ -282,8 +282,8 @@ width. Decimals have no leading zeros, no `+` and no `-0`, and are in the
 type's range (ADR-2026-10-30-1856). A float of `float<e,m>` is spelled as its
 constants are, as `1.0` or `0x7fc00000`, and a float result is written the same
 way (ADR-2026-11-11-1438). `poison`, spelled exactly so, is an argument of any `iN`
-and of any float type. It is no argument of `ptr`, which has no values. It is
-not a choice either, since `freeze` chooses a value (ADR-2026-11-03-1847).
+and of any float type. It is the only argument of `ptr`: a run starts with no
+allocation. It is not a choice either, since `freeze` chooses a value (ADR-2026-11-03-1847).
 
 **Fuel.** `--fuel N` gives N steps, one for each op run, terminators included.
 N is ASCII decimal digits, and anything else is a usage error. The default is

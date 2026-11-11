@@ -118,20 +118,23 @@ fix what an op computes, such as `add` of two values giving their sum. The execu
 sections from arithmetic rules to call rules, do.
 -/
 
-/-- Each poison replaced by the value `0`. -/
+/-- Each poison replaced by a defined value: `0` of an integer or float
+type, and the pointer with no provenance at offset `0` of a pointer type. -/
 def fillZero : {ts : List Ty} → HVector toType ts → HVector toType ts
   | [], .nil => .nil
   | .int _ :: _, .cons x xs =>
     .cons (.value (match (x : PoisonOr _) with | .poison => 0 | .value v => v)) (fillZero xs)
   | .float _ _ :: _, .cons x xs =>
     .cons (.value (match (x : PoisonOr _) with | .poison => 0 | .value v => v)) (fillZero xs)
-  | .ptr :: _, .cons x _ => nomatch (x : Empty)
+  | .ptr _ :: _, .cons x xs =>
+    .cons (.value (match (x : PoisonOr Memory.Pointer) with
+      | .poison => ⟨none, 0⟩ | .value v => v)) (fillZero xs)
 
 /-- `fillZero` puts a defined value in place of each poison. -/
 theorem fillZero_fills :
     ∀ {ts : List Ty} (xs : HVector toType ts), xs.IsFilledBy (d := CoreDialect) (fillZero xs)
   | [], .nil => ⟨fun h => h, trivial⟩
-  | .int _ :: _, .cons x xs | .float _ _ :: _, .cons x xs => by
+  | .int _ :: _, .cons x xs | .float _ _ :: _, .cons x xs | .ptr _ :: _, .cons x xs => by
     obtain ⟨hn, hr⟩ := fillZero_fills xs
     refine ⟨?_, ?_, hr⟩
     · rintro (h | h)
@@ -140,7 +143,6 @@ theorem fillZero_fills :
     · cases x
       · exact .inl rfl
       · exact .inr rfl
-  | .ptr :: _, .cons x _ => nomatch (x : Empty)
 
 /-- Every op is UB on every operand vector. -/
 @[instance_reducible] def alwaysUB : DialectDenote CoreDialect SetM where

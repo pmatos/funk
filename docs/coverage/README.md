@@ -137,7 +137,7 @@ allow, or a width for a row that passes no value.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 287 | 475 | 337 | 215 | 284 | 465 | 208 | 134 |
+| `const` |  | 287 | 475 | 338 | 215 | 284 | 465 | 208 | 134 |
 | `add` |  | 12 | 228 | 31 | 28 | 30 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -242,12 +242,12 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2263 | 1298 | 529 | 504 | 616 | 1336 | 527 | 801 | 128 | 128 | 121 | 119 | 128 |
-| `ret` | returns several values |  | 54 | 186 | 36 | 26 | 26 | 186 | 49 | 47 | 5 | 6 | 5 | 6 | 5 |
+| `ret` | returns one value |  | 2263 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 | 128 | 128 | 121 | 119 | 128 |
+| `ret` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2263 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 | 126 | 126 | 119 | 117 | 126 |
-| `func` | returns several values |  | 54 | 186 | 36 | 26 | 26 | 186 | 49 | 45 | 5 | 6 | 5 | 6 | 5 |
+| `func` | returns one value |  | 2263 | 1298 | 531 | 504 | 616 | 1336 | 527 | 801 | 126 | 126 | 119 | 117 | 126 |
+| `func` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |

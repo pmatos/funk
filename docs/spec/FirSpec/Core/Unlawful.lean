@@ -55,7 +55,7 @@ turns every poison operand into UB, which would undo the deferral that
 poison exists for.
 :::
 
-:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "975132632958963206")
+:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "1600389928004172081")
 *Definition: the rejected rule for $`\mathsf{sdiv}`.* Under it, a poison
 dividend by $`-1` gives poison. For $`a, b \in \llbracket \mathsf{i}N \rrbracket`:
 
@@ -81,7 +81,9 @@ poison dividend.
 :::readable Fir.Core.Unlawful.fillZero Fir.Core.Unlawful.fillZero_fills (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.Forall₂) (fingerprint := "10563675819995500177")
 *Definition: each poison replaced by zero.* For an operand vector
 $`\vec{v}` of core values, $`\mathrm{fill}_0(\vec{v})` replaces each poison
-by the value $`0` of its type, and keeps every other element.
+of an integer or float type by the value $`0` of its type, and each poison
+pointer by the pointer with no provenance at offset $`0`, and keeps every
+other element.
 
 *Theorem: replacing each poison by zero fills a vector.* For every
 operand vector $`\vec{v}`, $`\mathrm{fill}_0(\vec{v})` has no poison, and

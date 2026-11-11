@@ -28,7 +28,7 @@ successor or return. $`\mathsf{call}` has no rule of its own, so it has no
 outcome by one.
 :::
 
-:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "18403531860515470230")
+:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "9970722609581778881")
 *Theorems: defined operands hold values.* An operand vector of one or two
 integers with no poison element holds values: $`(v)` is
 $`(\mathsf{value}~x)` for some $`x`, and $`(v_1, v_2)` is
@@ -36,7 +36,7 @@ $`(\mathsf{value}~x, \mathsf{value}~y)`. A vector of one integer that is
 not poison has no poison element.
 :::
 
-:::readable Fir.Core.defined₂Float Fir.Core.not_any_of_ne_float (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "13304536426056681304")
+:::readable Fir.Core.defined₂Float Fir.Core.not_any_of_ne_float (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "10131071272920059735")
 *Theorems: defined float operands hold values.* An operand vector of two
 floats of one format with no poison element holds values,
 $`(\mathsf{value}~x, \mathsf{value}~y)`; and a vector of one float that

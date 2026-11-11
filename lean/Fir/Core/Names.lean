@@ -83,7 +83,7 @@ theorem tyAttr_bare (t : Ty) : (tyAttr (d := CoreDialect) t).dialects = [] := by
       unfold floatAlias at hn
       split at hn <;> cases hn <;> decide
     | none => simp [tyAttr, Ty.attr, hn, Attr.dialects, Attr.dialectsAll, wordDialect]
-  | ptr => simp [tyAttr, Ty.attr, Attr.dialects, wordDialect]
+  | ptr n => cases n <;> simp [tyAttr, Ty.attr, Attr.dialects, Attr.dialectsAll, wordDialect]
 
 /-- The core dialect's words name no dialect. -/
 theorem lawfulDialectSet : LawfulDialectSet CoreDialect where

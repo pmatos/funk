@@ -13,7 +13,8 @@
 # validation-branch.toml breaks each successor rule that can be broken
 # alone with br and cond_br. Three rules still cannot be broken alone:
 # only terminators have successors, as an op that is not one takes none;
-# a block argument has no ptr type, as no value has one; and a successor
+# a block argument has a valid type, as only a value of its invalid type
+# can reach it; and a successor
 # passes values that the function defines, as an undefined value has no
 # type. The ops that own regions will add texts that break the scope
 # rule alone.
@@ -124,9 +125,9 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "every type is valid: ptr is reserved, and a parameter has no ptr type"
+rule = "every type is valid: a parameter has no ptr(1) type, a pointer of memory 1, which the module does not have"
 text = '''
-func @f(%p: ptr) {
+func @f(%p: ptr(1)) {
 ^e:
   ret @0
 }
@@ -138,11 +139,11 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "every type is valid: ptr is reserved, and a result has no ptr type"
+rule = "every type is valid: a result has no ptr(2) type, a pointer of memory 2, which the module does not have"
 text = '''
-func @f(%p: ptr) -> ptr {
+func @f() -> ptr(2) {
 ^e:
-  ret %p @0
+  unreachable @0
 }
 
 locs {
@@ -152,12 +153,12 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "every type is valid: ptr is reserved, and a block argument has no ptr type; ^b is also unreachable, as no tracer op branches"
+rule = "every type is valid: a block argument has no ptr(16777215) type, a pointer of a memory that the module does not have; ^b is also unreachable, as no tracer op branches"
 text = '''
 func @f() {
 ^e:
   ret @0
-^b(%p: ptr):
+^b(%p: ptr(16777215)):
   ret @0
 }
 

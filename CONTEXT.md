@@ -140,7 +140,7 @@ dialects and extensions are defined (H4, H5) is not decided yet.
 
 **core dialect**:
 The small, CPU-shaped dialect that M0 defines: the integer types `iN`, the
-reserved `ptr` type and the M0 op set.
+float types, the pointer types `ptr<N>` and the M0 op set.
 _Avoid_: base fir, core IR
 
 **extension dialect**:

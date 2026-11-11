@@ -6,7 +6,7 @@ them. When this page and an ADR disagree, the page is wrong
 (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools do not implement them
-yet. M0 gives `ptr` no values and no ops (ADR-2026-11-09-1542). M0 has no
+yet. `ptr` has values but no ops yet (ADR-2026-11-09-1542). M0 has no
 global data (ADR-2026-11-09-1546). A module holds functions only and declares
 no dialects (ADR-2026-11-09-1543). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
@@ -41,7 +41,11 @@ not alias, unless a pointer was exposed and rebuilt from an integer
 
 A pointer type names its memory. The core `ptr` is `ptr<0>`, and other memories
 are `ptr<N>`. A dialect may add memories of its own. A pointer moves between
-memories only through an op that a dialect provides (ADR-2026-11-09-1542).
+memories only through an op that a dialect provides (ADR-2026-11-09-1542). The
+spec and the tools have the pointer types: a value of `ptr<N>` is poison or a
+pointer, refined only by itself. Every module has memory 0, so `ptr` is valid,
+and `ptr<N>` for `N ≥ 1` waits for the data layout to declare memory `N`
+(#231).
 
 The module's data layout gives each memory its unit of addressing and its
 pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes
@@ -60,8 +64,9 @@ global, or heap through external calls. Managed memory can be added as another
 kind later (ADR-2026-11-09-1542). The world may create and free heap
 allocations when it answers an external call (ADR-2026-11-11-1017).
 
-Every theorem that relies on `ptr` having no values is restated. Call congruence
-is the first, in #214 (ADR-2026-11-09-1542).
+Every theorem that relies on `ptr` having no values is restated
+(ADR-2026-11-09-1542). Stage 3a of #231 restates call congruence for a callee
+with no pointer parameter, and #214 proves it for the rest.
 
 An op allocates in a memory for the current call. The allocation is freed when
 the call returns. Heap allocation stays a call to an external function such as

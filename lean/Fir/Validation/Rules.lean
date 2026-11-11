@@ -372,7 +372,8 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
 An op instance's types are its operand types and its result types. They
 are _valid_ when validation accepts each of them, as it accepts the types
 of every value that a valid function defines. For the core dialect that is
-`iN` with 1 ≤ N ≤ 16,777,215, never `ptr`. Every op of a valid function
+`iN` with 1 ≤ N ≤ 16,777,215, a valid float format, and `ptr`, the
+pointer of the default memory. Every op of a valid function
 has an op instance with valid types, as the section on what the lawful
 class gives proves, and the poison obligations speak only of such op
 instances (ADR-2026-11-02-1515).

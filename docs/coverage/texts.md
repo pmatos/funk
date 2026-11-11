@@ -242,6 +242,20 @@ every format, poison among them.
 `reject/float-ops.toml` holds the float constants and `fcmp` texts that
 do not decode.
 
+The texts of #231's stage 3a give `ptr` values
+([ADR-2026-11-09-1542](../adrs/2026-11-09-1542-memory-is-logical-blocks-in-typed-memories.md),
+[ADR-2026-11-11-1709](../adrs/2026-11-11-1709-a-pointer-type-is-written-ptr-or-ptr-n.md)).
+`pointer-types` passes values of `ptr`, the default memory's pointer,
+through parameters, results, block arguments and a call, mixed with
+integers and a float; a run starts with no allocation, so each pointer
+argument is poison, and every test is interpreter-only, since the backend
+does not lower pointers yet. `reject/pointer-types.toml` holds the pointer
+types that do not decode, such as `ptr(0)`, which is written `ptr`, those
+that do not validate, such as `ptr(1)`, a memory that no module has yet,
+and pointers passed where a pointer of another memory or an integer is
+expected. The texts that relied on `ptr` being invalid name `ptr(1)` or
+another memory now.
+
 The texts of #229's fourth stage also use the float arithmetic `fadd`,
 `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`
 ([ADR-2026-11-11-1800](../adrs/2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md),

@@ -54,7 +54,7 @@ def float_format(ty: str) -> tuple[int, int] | None:
 def bits_of(ty: str) -> tuple[int, bool] | None:
     """The bits of a value of `ty`, and whether it is an integer type: `N`
     for `iN`, and `1 + e + m` for `float<e,m>`. None for any other type,
-    such as `ptr`, which has no values."""
+    such as `ptr`, whose values are pointers, not bits."""
     m = INT_TYPE.fullmatch(ty)
     if m is not None:
         return int(m.group(1)), True

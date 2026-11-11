@@ -39,7 +39,8 @@ def spell(bits: int, width: int) -> str:
 
 def standins(ty: str) -> tuple[str, ...] | None:
     """The stand-ins of the type `ty` in order, or None when it has none,
-    as `ptr` has none: it is no `iN` and no float type."""
+    as `ptr` has none: its values are pointers, not bits, and native code
+    takes no pointer argument until the backend lowers pointers (#231)."""
     b = bits_of(ty)
     if b is None:
         return None

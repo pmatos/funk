@@ -455,7 +455,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "and takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "and takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -470,7 +470,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "and takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "and takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -485,7 +485,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "and defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "and defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -500,7 +500,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "or takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "or takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -515,7 +515,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "or takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "or takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -530,7 +530,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "or defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "or defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -545,7 +545,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "xor takes two operands of one integer type: a ptr left operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "xor takes two operands of one integer type: a ptr left operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -560,7 +560,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "xor takes two operands of one integer type: a ptr right operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "xor takes two operands of one integer type: a ptr right operand is not one"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -575,7 +575,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "xor defines a value of its operands' integer type: ptr is not one; a ptr value is also invalid, but decoding fails first"
+rule = "xor defines a value of its operands' integer type: ptr is not one"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:

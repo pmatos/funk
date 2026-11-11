@@ -97,9 +97,10 @@ can go, not the stack. No tool relies on a large reserved stack
 
 fir integer types are bitvectors `iN`. Signedness lives on ops, never on types.
 Every op whose meaning depends on sign comes in a signed and an unsigned form,
-such as `sdiv` and `udiv`. `ptr` is a separate type. M0 reserves it and gives
-it no ops. ADR-2026-11-09-1542 decides its values and ops. These types belong to
-the core dialect, not to a closed type system (ADR-2026-10-29-2007).
+such as `sdiv` and `udiv`. Pointer types are separate: `ptr<N>` points into the
+memory `N`, and the core `ptr` is `ptr<0>`. A value of a pointer type is poison
+or a pointer, and no op makes or uses one yet (ADR-2026-11-09-1542). These types
+belong to the core dialect, not to a closed type system (ADR-2026-10-29-2007).
 
 An integer type `iN` has `1 <= N <= 16,777,215`, which is `2^24 - 1`. The IR
 and the Lean interpreter accept every width in that range. A wider type does
@@ -188,11 +189,11 @@ nothing of the new body, because a call of `@g` is a black box
 (ADR-2026-11-05-1715).
 
 `Func.runs_replaceBody_isRefinedBy` asks that the parameter types of `@g` have
-finitely many argument vectors. Every core type has finitely many values. A
-dialect with a type of infinitely many values, such as memory, cannot use the
-general theorem as it is. Refined arguments need no finiteness
-(ADR-2026-11-02-1426). `ptr` gets values, so call congruence is restated
-(ADR-2026-11-09-1542).
+finitely many argument vectors. A dialect with a type of infinitely many values
+cannot use the general theorem as it is. Refined arguments need no finiteness
+(ADR-2026-11-02-1426). `ptr` has values now, infinitely many, so the core's
+congruence is restated for a callee with no pointer parameter, and #214 proves
+it for the rest (ADR-2026-11-09-1542).
 
 Runs with memory refine too, whatever their ops do to the memories. A poison
 unit of memory is refined by any unit, and every other unit only by itself;

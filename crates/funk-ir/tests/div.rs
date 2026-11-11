@@ -7,11 +7,11 @@
 
 mod common;
 
+use common::op_verify::{built, rejected_at_op, verify_op, words};
 use common::{one_func, parse_err, parse_ok};
 use funk_ir::dialects::core::{DIVISION_OPS, int_type};
 use funk_ir::{
-    Attr, Block, Diagnostic, Func, LocRef, Location, Module, Op, Registry, TextPos, Type, print,
-    verify,
+    Attr, Block, Func, LocRef, Location, Module, Op, Registry, TextPos, Type, print, verify,
 };
 
 /// Each op as the text writes it, with each set of its flags: `sdiv`,
@@ -198,75 +198,6 @@ fn exact_is_a_flag_of_sdiv_and_udiv_only_and_comes_once() {
             assert_eq!(print(&m), text);
         }
     }
-}
-
-const L: LocRef = LocRef(5);
-
-/// Whether `d` is the diagnostic of the function that rejects a value of
-/// the reserved type `ptr` (`verify_text.rs`), such as `%p` below.
-fn rejects_ptr(d: &Diagnostic) -> bool {
-    d.op.is_none() && d.message.contains(", ptr, is not valid: ptr is reserved")
-}
-
-/// The diagnostics of `@f(%a: i32, %b: i64, %p: ptr) -> i32`, whose entry
-/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`, less
-/// those that reject a value of type `ptr`.
-fn verify_op(op: Op) -> Vec<Diagnostic> {
-    let c = Op::new("const", LocRef(0))
-        .attr(Attr::int(1))
-        .result("c", int_type(32));
-    let f = Func::new("f")
-        .param("a", int_type(32))
-        .param("b", int_type(64))
-        .param("p", Type::word("ptr"))
-        .result(int_type(32))
-        .block(
-            Block::new("entry")
-                .op(c)
-                .op(op)
-                .op(Op::new("ret", LocRef(0)).operand("a")),
-        );
-    let mut m = Module::new();
-    m.locs.push(Location::Unknown);
-    m.locs.insert(L, Location::Name("here".into()));
-    let mut ds = verify(&m.func(f), &Registry::core());
-    ds.retain(|d| !rejects_ptr(d));
-    ds
-}
-
-/// Asserts that the verifier rejects `op` with one diagnostic at the op and
-/// its location, for a reason that holds `needle`.
-fn rejected_at_op(op: Op, needle: &str) {
-    let name = op.name.clone();
-    let ds = verify_op(op);
-    assert_eq!(ds.len(), 1, "{ds:#?}");
-    let d = &ds[0];
-    let head = format!("op {name} does not match its registration");
-    assert!(d.message.starts_with(&head), "{d}");
-    assert!(d.message.contains(needle), "{d} lacks {needle:?}");
-    assert_eq!(
-        (d.func.as_deref(), d.block.as_deref(), d.op, d.loc),
-        (Some("f"), Some("entry"), Some(1), Some(L)),
-        "{d}"
-    );
-    assert_eq!(
-        d.to_string(),
-        format!("@f ^entry op 1 at @5: {}", d.message)
-    );
-}
-
-/// `op` with these attributes, these operands and results of these types.
-fn built(op: &str, attrs: &[Attr], operands: &[&str], results: &[Type]) -> Op {
-    let o = attrs.iter().fold(Op::new(op, L), |o, a| o.attr(a.clone()));
-    let o = operands.iter().fold(o, |o, x| o.operand(*x));
-    results
-        .iter()
-        .enumerate()
-        .fold(o, |o, (k, t)| o.result(format!("r{k}"), t.clone()))
-}
-
-fn words(ws: &[&str]) -> Vec<Attr> {
-    ws.iter().map(|w| Attr::word(*w)).collect()
 }
 
 /// The uses that the parser rejects above, made with the builder.

@@ -1,9 +1,7 @@
 # Must-reject texts of #18's ops: sdiv and udiv with their flag exact,
 # srem and urem. These ops have no validation rule beyond their
 # signatures, so a text that breaks one does not decode: each is a parse
-# error at the op's name (ADR-2026-10-30-0815). A text with a ptr operand
-# or result also breaks validation, as ptr is reserved; the parse error
-# comes first.
+# error at the op's name (ADR-2026-10-30-0815).
 
 [[reject]]
 verdict = "parse-error"
@@ -97,7 +95,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sdiv takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+rule = "sdiv takes integers: ptr operands, with a ptr result, do not decode"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -112,7 +110,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sdiv defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+rule = "sdiv defines an integer: a ptr result does not decode"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -127,7 +125,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sdiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "sdiv takes integers: a ptr left operand does not decode, with an i32 right operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -142,7 +140,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sdiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "sdiv takes integers: a ptr right operand does not decode, with an i32 left operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -322,7 +320,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "udiv takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+rule = "udiv takes integers: ptr operands, with a ptr result, do not decode"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -337,7 +335,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "udiv defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+rule = "udiv defines an integer: a ptr result does not decode"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -352,7 +350,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "udiv takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "udiv takes integers: a ptr left operand does not decode, with an i32 right operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -367,7 +365,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "udiv takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "udiv takes integers: a ptr right operand does not decode, with an i32 left operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -547,7 +545,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "srem takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+rule = "srem takes integers: ptr operands, with a ptr result, do not decode"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -562,7 +560,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "srem defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+rule = "srem defines an integer: a ptr result does not decode"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -577,7 +575,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "srem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "srem takes integers: a ptr left operand does not decode, with an i32 right operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -592,7 +590,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "srem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "srem takes integers: a ptr right operand does not decode, with an i32 left operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -772,7 +770,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "urem takes integers: ptr operands, with a ptr result, do not decode; the parameter %p also breaks validation, as ptr is reserved"
+rule = "urem takes integers: ptr operands, with a ptr result, do not decode"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -787,7 +785,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "urem defines an integer: a ptr result does not decode; it also breaks validation, as ptr is reserved"
+rule = "urem defines an integer: a ptr result does not decode"
 text = '''
 func @f(%a: i32, %b: i64) -> i32 {
 ^entry:
@@ -802,7 +800,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "urem takes integers: a ptr left operand does not decode, with an i32 right operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "urem takes integers: a ptr left operand does not decode, with an i32 right operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -817,7 +815,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "urem takes integers: a ptr right operand does not decode, with an i32 left operand and result; the parameter %p also breaks validation, as ptr is reserved"
+rule = "urem takes integers: a ptr right operand does not decode, with an i32 left operand and result"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:

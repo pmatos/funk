@@ -162,6 +162,9 @@ def addI8 (a : String) : RunReport := runText (addAt "i8") "@f" ["1", a]
   runText (addAt "i1") "@f" ["true", a] == fails 2 ("fir-ref: " ++ a ++ " is not a value of type i1")
 #guard runText (body "func @p(%x: ptr)" ["^e:", "  ret @0"]) "@p" ["0"] ==
   fails 2 "fir-ref: 0 is not a value of type ptr"
+#guard ["ptr(0, 0)", "ptr(none, 0)", "null", "0x0"].all fun a =>
+  runText (body "func @p(%x: ptr(1))" ["^e:", "  ret @0"]) "@p" [a] ==
+    fails 2 ("fir-ref: " ++ shown a ++ " is not a value of type ptr(1)")
 -- An argument is lexed over positions, so a comment of a million characters
 -- is no value, alone or after one (#135).
 #guard ["//", "// one", "1 2", "-", "//\x01", "// " ++ "".pushn 'x' 1000000,
@@ -177,7 +180,8 @@ info: 'FirRef.argAttr_eq_argAttrP' depends on axioms: [propext, Classical.choice
 
 `poison` is an argument of any `iN`, spelled as the output spells a poison
 value (#123), and a run on it is the spec's run on a poison argument. It is
-no argument of `ptr`, and no choice: `freeze` chooses a value. -/
+an argument of a pointer type too, the only one, since a run starts with no
+allocation. It is no choice: `freeze` chooses a value. -/
 
 #guard addI8 "poison" == returns ["poison"]
 #guard runText (addAt "i1") "@f" ["true", "poison"] == returns ["poison"]
@@ -188,10 +192,17 @@ no argument of `ptr`, and no choice: `freeze` chooses a value. -/
 -- Only `poison`, spelled exactly so.
 #guard ["Poison", "POISON", " poison", "poison ", "\"poison\"", "%poison", "poison()"].all
   fun a => addI8 a == fails 2 ("fir-ref: " ++ a ++ " is not a value of type i8")
-#guard runText (body "func @p(%x: ptr)" ["^e:", "  ret @0"]) "@p" ["poison"] ==
-  fails 2 "fir-ref: poison is not a value of type ptr"
-#guard runText (body "func @p(%a: i8, %x: ptr)" ["^e:", "  ret @0"]) "@p" ["poison", "poison"] ==
-  fails 2 "fir-ref: poison is not a value of type ptr"
+#guard runText (body "func @p(%x: ptr)" ["^e:", "  ret @0"]) "@p" ["poison"] == returns []
+#guard runText (body "func @p(%a: i8, %x: ptr(7)) -> ptr(7), i8" ["^e:", "  ret %x, %a @0"]) "@p"
+  ["poison", "poison"] == returns ["poison", "poison"]
+-- A pointer is written by its allocation and offset, which no run of this
+-- stage gives, since no op makes a pointer yet.
+#guard valueText ⟨.ptr 0, (.value ⟨some 3, -4⟩ : PoisonOr Memory.Pointer)⟩ == "ptr(3, -4)"
+#guard valueText ⟨.ptr 2, (.value ⟨none, 0⟩ : PoisonOr Memory.Pointer)⟩ == "ptr(none, 0)"
+-- A pointer passes through a block argument and a call as it is.
+#guard runText ("func @id(%x: ptr) -> ptr {\n^e:\n  ret %x @0\n}\n\n" ++ body "func @p(%x: ptr) -> ptr"
+    ["^e:", "  br ^b(%x) @0", "^b(%y: ptr):", "  %z: ptr = call @id %y @0", "  ret %z @0"])
+    "@p" ["poison"] == returns ["poison"]
 
 /-- `@f(%a: i2) -> i2`, which returns `freeze %a`. -/
 def freezeArg : String := body "func @f(%a: i2) -> i2" ["^e:", "  %f: i2 = freeze %a @0", "  ret %f @0"]
