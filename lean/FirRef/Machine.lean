@@ -116,7 +116,8 @@ def advance (M : Module d) :
         if !os.isEmpty then .leaf (.ok (stuck "an op follows the terminator of its block"))
         else advance M (.ex n f env o args ((DialectDenote.exit (m := SM) o.op args).run S)) st
       else match callee? o.op with
-        | none => advance M (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
+        | none =>
+          advance M (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
         | some s => match M.func? s with
           | none => .leaf (.ok (stuck s!"@{s} is not a function of the module"))
           | some g => match Bindings.enter g args with

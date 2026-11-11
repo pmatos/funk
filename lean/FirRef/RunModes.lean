@@ -72,7 +72,8 @@ theorem tree_of_leaf {c : Cur d ε Mems} {st : List (Frame d)} {l : Leaf d ε}
 /-- Scripted mode from a state, after `made` choices: the spec's
 `ChoiceTree.script` on the state's tree. -/
 def scriptFrom {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
-    (s : Cur d ε Mems × List (Frame d)) (cs : List σ) (made : Nat) : Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
+    (s : Cur d ε Mems × List (Frame d)) (cs : List σ) (made : Nat) :
+    Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
   match advance M s.1 s.2, cs with
   | .leaf l, cs => (leafTree l).script read cs made
   | .choose w _, [] => .error (.short made w)
@@ -101,8 +102,9 @@ theorem sample_leafTree {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
 /-- Sampled mode from a state, with the values drawn so far in `acc`, the
 last first: the spec's `ChoiceTree.sample` on the state's tree, after
 them. -/
-def sampleFrom {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (s : Cur d ε Mems × List (Frame d))
-    (g : γ) (acc : List ChoiceTree.Chosen) : Leaf d ε × List ChoiceTree.Chosen :=
+def sampleFrom {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
+    (s : Cur d ε Mems × List (Frame d)) (g : γ) (acc : List ChoiceTree.Chosen) :
+    Leaf d ε × List ChoiceTree.Chosen :=
   match _h : advance M s.1 s.2 with
   | .leaf l => (l, acc.reverse)
   | .choose w k =>
