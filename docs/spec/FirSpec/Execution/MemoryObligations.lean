@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17710123599665356057")
+:::moduleDocs (fingerprint := "16941496527179815482")
 :::
 
 :::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "2324173610234647755")
@@ -76,6 +76,12 @@ A load from $`x` gives different units from $`S` and from $`S[x := m]`,
 so it reads $`x`. A store to $`x` writes the same units in both and leaves
 the rest, so it does not read $`x`: whether it faults depends only on the
 allocations of $`x`, which $`m` keeps.
+:::
+
+:::readable Fir.NoUB (fingerprint := "11987572549178889052")
+*Definition: no UB.* A computation $`c` of the state layer _never ends in
+UB_ when, from every memories $`S`, $`\mathsf{ub}~r \notin c(S)` for every
+reason $`r`.
 :::
 
 :::readable Fir.DialectMemDenote Fir.OwnRuleHas (fingerprint := "379604914047239213")

@@ -1,5 +1,5 @@
 import Fir.Execution.SummaryFixpoint
-import Fir.Execution.EffectLaws
+import Fir.Execution.MemoryObligationLaws
 import Fir.Execution.Lawful
 
 /-!
@@ -8,7 +8,9 @@ import Fir.Execution.Lawful
 A pass may rely on a function's summary as it relies on an op's effects,
 because the summary is proved sound: an effect that it leaves out, a run
 of the function does not have (ADR-2026-11-10-2108). In a dialect lawful in
-its effects, for a function of a module whose functions are all valid:
+its effects whose semantics with memory lifts its semantics in the set
+monad (the section on runs with memory), for a function of a module whose
+functions are all valid:
 
 * _No may-UB_: when its summary leaves out may-UB, no run of the function
   ends in UB, at any budget of fuel.
@@ -24,7 +26,9 @@ its run, recursion included.
 
 * An op that runs by its own rule, a terminator or an op with no callee,
   is covered by the obligations of a dialect lawful in its effects: it
-  never ends in UB, and gives no poison on operands with no poison.
+  never ends in UB, and gives no poison on operands with no poison. The
+  obligations speak of its semantics with memory, which lifts its
+  semantics in the set monad, so they hold of its rule in the set monad.
 * A call runs its callee, whose summary is below its caller's, so it leaves
   out the effects that its caller's leaves out.
 * For poison, the run keeps an environment with no poison: the arguments
@@ -147,8 +151,8 @@ theorem Operation.call?_of {o : Operation d} {c : Name} (hT : isTerminator o.op 
   simp [Operation.call?, hT, hc]
 
 variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [DialectDenote d SetM]
-  [DialectEffects d] [DialectValidation d] [DialectMemDenote d] [LawfulDialectEffects d]
-  {ctx : ModuleContext d} {M : Module d}
+  [DialectEffects d] [DialectValidation d] [DialectMemDenote d] [LiftsSetM d]
+  [LawfulDialectEffects d] {ctx : ModuleContext d} {M : Module d}
 
 /-- No run of ops of a function of `M` ends in UB when the function's
 summary leaves out may-UB, from any of its ops on, at any budget. -/
@@ -178,13 +182,13 @@ theorem Module.runOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx) (n : Nat) :
   rw [Func.stepPath_iff (by intro _ h; cases h)] at h
   cases h with
   | exitUB _ _ hT _ hx =>
-    exact (LawfulDialectEffects.neverUB o.op htv (.inl hT) hown _ r).2 hT hx
+    exact (NeverUB.setM (LawfulDialectEffects.neverUB o.op htv (.inl hT) hown) _ r).2 hT hx
   | goto _ _ _ _ _ hj hrun =>
     obtain ⟨_, _, _, hblk, -⟩ := Func.jump_eq_ok hj
     exact ih n (Nat.lt_succ_self n) s f _ _ r hf hs
       (fun o' h' => ⟨_, (Func.block?_some hblk).1, h'⟩) hrun
   | denoteUB _ _ hT hc hx =>
-    exact (LawfulDialectEffects.neverUB o.op htv (.inr hc) hown _ r).1 hT hx
+    exact (NeverUB.setM (LawfulDialectEffects.neverUB o.op htv (.inr hc) hown) _ r).1 hT hx
   | denote _ _ _ _ _ _ hrun => exact ih n (Nat.lt_succ_self n) s f _ os r hf hs htail hrun
   | @callUB _ c g _ _ _ _ _ hT hc hg hen hx =>
     have hg' : M.table.func? c = some g := hg
@@ -232,7 +236,7 @@ theorem Module.runOps_clean (hv : ∀ g ∈ M.funcs, g.Valid ctx) (n : Nat) :
     exact ih n (Nat.lt_succ_self n) s f _ _ vs k hf hs (henv.bind _ (henv.mapM_value hvs))
       (fun o' h' => ⟨_, (Func.block?_some hblk).1, h'⟩) hrun
   | @denote args rs _ _ hargs hT hc hx _ hrun =>
-    have hrs := LawfulDialectEffects.makesNoPoison o.op htv (.inr hc) hown hT args
+    have hrs := MakesNoPoison.setM (LawfulDialectEffects.makesNoPoison o.op htv (.inr hc) hown) hT args
       (henv.operands hargs) rs hx
     exact ih n (Nat.lt_succ_self n) s f _ os vs k hf hs
       (henv.bind _ ((HVector.clean_toDVals rs).2 hrs)) htail hrun

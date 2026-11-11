@@ -21,6 +21,10 @@ effects. Each effect that a core op leaves out, it does not have:
   rule in the set monad and keeps the memories, at every naming of them
   (the section on meeting the memory obligations).
 
+So the core's semantics with memory lifts its semantics in the set monad,
+and the first two obligations, stated over the semantics with memory,
+follow from what each rule does in the set monad.
+
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
 (ADR-2026-11-02-1514).
@@ -38,7 +42,7 @@ namespace Fir.Core
 /-- Every core op that does not declare may-UB never ends in UB: each rule
 gives its result, or its exit, at once. -/
 theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB = false →
-    NeverUB (d := CoreDialect) op
+    NeverUBSetM (d := CoreDialect) op
   | .const .., _ | .poison _, _ => fun _ _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .add .., _ | .sub .., _ | .mul .., _ | .and _, _ | .or _, _ | .xor _, _ | .shl _, _
   | .lshr _, _ | .ashr _, _ | .icmp .., _ => fun
@@ -110,7 +114,7 @@ theorem flags_none {f : WrapFlags} (h : (f != {}) = false) : f = {} := by
 /-- Every core op that does not declare that it may produce poison makes
 none: on operands with no poison, it gives a defined result. -/
 theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayPoison = false →
-    MakesNoPoison (d := CoreDialect) op
+    MakesNoPoisonSetM (d := CoreDialect) op
   | .const _ v, _ => fun _ _ _ _ h => by cases h; exact not_any_of_ne fun h => nomatch h
   | .add _ f, h | .sub _ f, h | .mul _ f, h => by
     obtain rfl := flags_none h
@@ -173,11 +177,15 @@ namespace Fir
 op runs by its rule in the set monad and keeps the memories. -/
 instance Core.instDialectMemDenote : DialectMemDenote CoreDialect := DialectMemDenote.ofSetM
 
+/-- The core dialect's semantics with memory lifts its semantics in the set
+monad. -/
+instance Core.liftsSetM : LiftsSetM CoreDialect := DialectMemDenote.ofSetM_liftsSetM
+
 /-- The core dialect is lawful in its effects: every effect that a core op
 leaves out, it does not have. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
-  neverUB op _ _ := Core.Op.neverUB_all op
-  makesNoPoison op _ _ := Core.Op.makesNoPoison_all op
+  neverUB op _ _ h := NeverUB.ofSetM (Core.Op.neverUB_all op h)
+  makesNoPoison op _ _ h := MakesNoPoison.ofSetM (Core.Op.makesNoPoison_all op h)
   notControl := Core.Op.notControl_all
   writesNot := DialectMemDenote.ofSetM_writesNot
   readsNot := DialectMemDenote.ofSetM_readsNot
@@ -200,12 +208,13 @@ namespace Core.Unlawful
 /-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
 left without may-UB must never end in UB. -/
 theorem sdivNoUB_unlawful :
-    ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _ _
+    ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _
       (@DialectMemDenote.ofSetM CoreDialect _ _ sdivNoUB _) := by
   intro h
-  have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ _ h
+  have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
-  exact (hnever (.cons (.value 1) (.cons (.value 0) .nil)) _).1 rfl
+  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => 0) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl) Memory.Memories.empty _
     ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 
 end Core.Unlawful

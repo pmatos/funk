@@ -91,6 +91,24 @@ theorem fuelMonotone (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSi
     (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.runs M args) :=
   Func.fuelMonotone M f args
 
+/-- More fuel never changes how a run with memory ends, for every function
+of every dialect, wherever a run names its memories, whatever its ops do to
+the memories. -/
+theorem memRuns_fuelMonotone (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
+    [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d] {N : Type}
+    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns unit ρ M args) :=
+  Func.memRuns_fuelMonotone unit ρ M f args
+
+/-- The runs with memory of every function of every dialect whose semantics
+with memory lifts its semantics in the set monad are its runs, wherever a
+run names its memories. -/
+theorem memRuns_eq (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
+    [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM] [LiftsSetM d]
+    {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (M : Module d)
+    (f : Func d) : f.memRuns unit ρ M = f.runs M :=
+  Func.memRuns_eq unit ρ M f
+
 /-- No path of a run is stuck, for every function of every dialect whose
 module's functions are valid and run within the module. -/
 theorem neverStuck (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]

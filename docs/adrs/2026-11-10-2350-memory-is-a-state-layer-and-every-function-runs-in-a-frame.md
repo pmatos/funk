@@ -1,6 +1,6 @@
 # Memory is a state layer over the way of computing, and every function runs in a frame
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-0623
 Tier: direction; area: semantics
 
 ## Context

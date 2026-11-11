@@ -233,7 +233,10 @@ computing carries the memories of a run, and the interpreter runs every
 function in a frame, which frees the function's stack allocations when it
 returns. In a monad with no memory, such as the set monad or the tree of
 choices, a frame changes nothing, so M0's runs are unchanged
-(ADR-2026-11-10-2350).
+(ADR-2026-11-10-2350). A function's runs with memory run its dialect's
+semantics with memory at a naming of the memories, from the empty
+memories. They are fuel-monotone for every dialect, and for a dialect that
+lifts the set monad they are its runs (ADR-2026-11-11-0623).
 
 The term carries op regions from M0 on, empty for core ops. Kinds and rules
 of regions: ADR-2026-11-10-1941. The CFG is the core dialect's region kind.

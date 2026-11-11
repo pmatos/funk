@@ -34,7 +34,7 @@ theorem propagates (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d
 /-- In every dialect lawful in its effects, a valid op that runs by its own
 rule and does not declare may-UB never ends in UB. -/
 theorem neverUB (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).mayUB = false) :
     NeverUB op :=
@@ -43,7 +43,7 @@ theorem neverUB (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature 
 /-- In every dialect lawful in its effects, a valid op that runs by its own
 rule and does not declare that it may produce poison makes none. -/
 theorem makesNoPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) (h : (effects op).mayPoison = false) :
     MakesNoPoison op :=
@@ -52,10 +52,26 @@ theorem makesNoPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSign
 /-- In every dialect lawful in its effects, an op that does not declare
 control is not a terminator. -/
 theorem notControl (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (h : (effects op).control = false) :
     isTerminator op = false :=
   LawfulDialectEffects.notControl op h
+
+/-- In every dialect whose semantics with memory lifts its semantics in the
+set monad, an op that never ends in UB with memory never does in the set
+monad. -/
+theorem neverUB_setM (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
+    [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d] {op : d.Op} (h : NeverUB op) :
+    NeverUBSetM op :=
+  h.setM
+
+/-- In every dialect whose semantics with memory lifts its semantics in the
+set monad, an op that makes no poison with memory makes none in the set
+monad. -/
+theorem makesNoPoison_setM (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
+    [DialectEffects d] [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d] {op : d.Op}
+    (h : MakesNoPoison op) : MakesNoPoisonSetM op :=
+  h.setM
 
 /-! # Memory obligations -/
 
@@ -70,7 +86,7 @@ example (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 rule and does not declare a write to a memory of a run writes no unit of
 it, wherever the run names the dialect's memories. -/
 theorem writesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
     (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N)
@@ -81,7 +97,7 @@ theorem writesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignatur
 rule and does not declare a read of a memory of a run does not depend on
 its units, wherever the run names the dialect's memories. -/
 theorem readsNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
     (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N)
@@ -92,7 +108,7 @@ theorem readsNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature
 rule and does not declare allocation in a memory of a run leaves its
 allocations as they were, wherever the run names the dialect's memories. -/
 theorem allocatesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
-    [DialectEffects d] [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+    [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
     (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N)
@@ -130,7 +146,8 @@ theorem summary_least (d : Dialect) [DialectSignature d] [DialectCall d] [h : Di
 functions whose summary leaves out may-UB never ends in UB. -/
 theorem summary_neverUB (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
-    [DialectValidation d] [DialectMemDenote d] [LawfulDialectEffects d] {ctx : ModuleContext d} {M : Module d}
+    [DialectValidation d] [DialectMemDenote d] [LiftsSetM d] [LawfulDialectEffects d]
+    {ctx : ModuleContext d} {M : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayUB = false) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (r : String) : ¬ (f.run (m := SetM) M args fuel).run (.ub r) :=
@@ -141,7 +158,8 @@ functions whose summary leaves out may produce poison returns no poison on
 arguments with none. -/
 theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
-    [DialectValidation d] [DialectMemDenote d] [LawfulDialectEffects d] {ctx : ModuleContext d} {M : Module d}
+    [DialectValidation d] [DialectMemDenote d] [LiftsSetM d] [LawfulDialectEffects d]
+    {ctx : ModuleContext d} {M : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayPoison = false) (args : HVector toType (f.params.map (·.2)))
     (hargs : ¬ args.Any TyPoison.IsPoison) (fuel : Nat) (vs : List (DVal d)) :

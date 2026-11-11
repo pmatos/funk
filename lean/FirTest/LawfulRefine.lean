@@ -97,6 +97,10 @@ instance : DialectCall ProbeDialect := ⟨fun _ => none⟩
 its rule in the set monad and keeps the memories. -/
 instance : DialectMemDenote ProbeDialect := DialectMemDenote.ofSetM
 
+/-- The probe dialect's semantics with memory lifts its semantics in the set
+monad. -/
+instance : LiftsSetM ProbeDialect := DialectMemDenote.ofSetM_liftsSetM
+
 /-- A valid probe op instance has a width above zero. -/
 theorem pos_of_typesValid {w : Nat} (h : TypesValid (d := ProbeDialect) (.id w)) : 0 < w :=
   (h.1 (.inl (.int w)) List.mem_cons_self).1

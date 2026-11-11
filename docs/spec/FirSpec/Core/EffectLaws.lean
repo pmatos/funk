@@ -14,11 +14,12 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16560063528682439889")
+:::moduleDocs (fingerprint := "5517594513519362116")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "4645807055663611004")
-*Theorem: each core op that does not declare may-UB never ends in UB.*
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "11594808089863998178")
+*Theorem: each core op that does not declare may-UB never ends in UB in
+the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
 $`\mathsf{urem}`, $`\mathsf{cond\_br}` and $`\mathsf{unreachable}` never
 ends in UB, at every width. Each rule gives its result at once, $`\mathsf{freeze}` after
@@ -48,9 +49,9 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoison) (fingerprint := "913560372236832908")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "7830821743847109644")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
-poison.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
+poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
 $`\mathsf{udiv}` without $`\mathsf{exact}`, $`\mathsf{srem}`,
 $`\mathsf{urem}`, the bitwise ops, $`\mathsf{icmp}`, $`\mathsf{select}`,
@@ -68,25 +69,28 @@ declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.instDialectMemDenote Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "2601014253220477756")
+:::readable Fir.Core.instDialectMemDenote Fir.Core.liftsSetM Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "13464239640783598498")
 *Definition: the core's semantics with memory.* No core op touches memory:
 at every naming of the core's memories, each op runs by its rule in the
 set monad and keeps the memories
 ({ref "The-fir-specification--Memory--Meeting-the-memory-obligations"}[a dialect whose ops touch no memory]).
+So its semantics with memory lifts its semantics in the set monad.
 
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have: the three theorems above, for every
-core op instance, and the memory obligations, which every op of a dialect
+core op instance, carried from the set monad to the semantics with memory,
+and the memory obligations, which every op of a dialect
 whose ops touch no memory meets. So a pass may rely on the core ops'
 effect sets (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "14200413286571276150")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "531966677343437695")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. A dialect
 lawful in its effects under $`\mathrm{eff}'` would make $`\mathsf{sdiv}_8`
-never end in UB, but $`\mathsf{sdiv}_8(1, 0)` is UB, so no such dialect
+never end in UB, with memory and so from the empty memories, but
+$`\mathsf{sdiv}_8(1, 0)` is UB, so no such dialect
 exists: the obligations reject the declaration. The soundness proofs have
 teeth.
 :::

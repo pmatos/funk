@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A lift's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "797813349324330337")
+:::moduleDocs (fingerprint := "14690532284854476308")
 :::
 
 :::readable Fir.Dialect.lift.instDialectMemDenote Fir.Dialect.lift.ownRuleHas_lift (fingerprint := "7157026062623711188")
@@ -34,15 +34,22 @@ $`\rho \circ \hat\mu` and that mapping the results keeps.
 crossed up holds poison exactly when it did.
 :::
 
-:::readable Fir.Dialect.lift.neverUB_lift Fir.Dialect.lift.makesNoPoison_lift (fingerprint := "15875035905999447038")
+:::readable Fir.Dialect.lift.neverUB_lift Fir.Dialect.lift.makesNoPoison_lift Fir.Dialect.lift.liftsSetM (fingerprint := "15992739990474350256")
 *Lemmas: an op of $`e` keeps its effects in the lift.* An op of $`e` that
 {ref "The-fir-specification--Execution--Effect-obligations"}[never ends in UB]
-over $`d` never does in the lift: it ends in UB in the lift exactly when it
-does in $`e`. One that makes no poison over $`d` makes none in the lift,
-across a lawful inclusion, which keeps which values are poison both ways.
+over $`d` never does in the lift, wherever a run names the lift's memories
+by $`\rho`: it runs by $`e`'s rule with memory at $`\rho \circ \hat\mu`, and
+mapping its results adds no UB. One that makes no poison over $`d` makes
+none in the lift, across a lawful inclusion, which keeps which values are
+poison both ways.
+
+*Theorem: the lift of an extension that lifts the set monad lifts it.*
+When $`e`'s semantics with memory over $`d` lifts its semantics in the set
+monad, so does the lift's: each op runs by $`e`'s rule in the set monad,
+with its values crossing the inclusion, and keeps the memories.
 :::
 
-:::readable Fir.Dialect.lift.lawfulEffects Fir.Dialect.lift.sum_lawfulEffects (fingerprint := "9666568117692061383")
+:::readable Fir.Dialect.lift.lawfulEffects Fir.Dialect.lift.sum_lawfulEffects (fingerprint := "3874471640347852484")
 *Theorem: the lift of an extension lawful in its effects is lawful in its
 effects.* Let $`e` over $`d` be
 {ref "The-fir-specification--Execution--Effect-obligations"}[lawful in its effects],

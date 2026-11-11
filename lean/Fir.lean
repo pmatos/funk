@@ -79,6 +79,8 @@ import Fir.Execution.Replace
 import Fir.Core.CallRefine
 import Fir.Execution.Lawful
 import Fir.Execution.MemoryRuns
+import Fir.Execution.StatePaths
+import Fir.Execution.MemoryMonotone
 import Fir.Execution.MemoryObligations
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Lawful

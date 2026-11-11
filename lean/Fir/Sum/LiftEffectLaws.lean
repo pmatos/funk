@@ -69,35 +69,44 @@ theorem ownRuleHas_lift (hP : ∀ {α β : Type} (f : α → β) (c : StateT (Me
   ⟨fun ht => hP _ _ ((h (HVector.down (incl e ι μ) args)).1 ht),
     fun ht => (h (HVector.down (incl e ι μ) args)).2 ht⟩
 
-end
-
-variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.Ty]
-  {ι : TyIncl dep.Ty big.Ty} {MA MB : Type} {μ : MA → MB} [DialectSignature (dep.over e)]
-  [DialectDenote (dep.over e) SetM]
-
+omit [DecidableEq N] in
 /-- An op of `e` that never ends in UB over `dep` never does in the lift. -/
 theorem neverUB_lift {o : e.Op} (h : NeverUB (d := dep.over e) o) :
-    NeverUB (d := big.over (e.lift dep ι μ)) o := fun args r =>
-  ⟨fun ht hden => by
-    rcases (HVector.map_up _ _).1 hden with ⟨a, -, he⟩ | ⟨r', hr, he⟩
-    · cases he
-    · cases he
-      exact (h (HVector.down (incl e ι μ) args) r).1 ht hr,
-  fun ht hex => (h (HVector.down (incl e ι μ) args) r).2 ht hex⟩
-
-variable [TyPoison dep.Ty] [TyPoison big.Ty] [TyPoison e.Ty]
-  [TyRefinement dep.Ty] [TyRefinement big.Ty] [TyRefinement e.Ty]
+    NeverUB (d := big.over (e.lift dep ι μ)) o :=
+  fun unit ρ => ownRuleHas_lift unit ρ (fun f _ h => NoUB.map f h) (h unit (ρ ∘ liftMem μ))
 
 /-- An op of `e` that makes no poison over `dep` makes none in the lift,
 when the inclusion is lawful. -/
-theorem makesNoPoison_lift (hι : ι.Lawful) {o : e.Op} (h : MakesNoPoison (d := dep.over e) o) :
-    MakesNoPoison (d := big.over (e.lift dep ι μ)) o := fun ht args hnp rs hden => by
-  rcases (HVector.map_up _ _).1 hden with ⟨a, ha, he⟩ | ⟨r, -, he⟩
+theorem makesNoPoison_lift [TyPoison dep.Ty] [TyPoison big.Ty] [TyPoison e.Ty]
+    [TyRefinement dep.Ty] [TyRefinement big.Ty] [TyRefinement e.Ty] (hι : ι.Lawful) {o : e.Op}
+    (h : MakesNoPoison (d := dep.over e) o) :
+    MakesNoPoison (d := big.over (e.lift dep ι μ)) o := by
+  intro ht N _ unit ρ args hnp S rs S' hden
+  rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨a, S'', ha, he⟩ | ⟨_, -, he⟩
   · cases he
-    exact fun hp =>
-      h ht _ (fun hd => hnp ((HVector.any_down (incl_lawful e μ hι) args).1 hd)) a ha
-        ((HVector.any_up (incl_lawful e μ hι) a).1 hp)
+    exact fun hp => h ht unit (ρ ∘ liftMem μ) _
+      (fun hd => hnp ((HVector.any_down (incl_lawful e μ hι) args).1 hd)) S a _ ha
+      ((HVector.any_up (incl_lawful e μ hι) a).1 hp)
   · cases he
+
+/-- The lift of an extension that lifts the set monad over `dep` lifts it:
+each op runs by `e`'s rule in the set monad, with its values crossing the
+inclusion, and keeps the memories. -/
+instance liftsSetM [DialectDenote (dep.over e) SetM] [LiftsSetM (dep.over e)] :
+    LiftsSetM (big.over (e.lift dep ι μ)) where
+  lifts unit ρ := by
+    show @instDialectDenote _ _ _ _ _ _ _ _ _ _ _ _ _
+      (DialectMemDenote.denoteAt unit (ρ ∘ liftMem μ)) = _
+    rw [LiftsSetM.lifts (d := dep.over e)]
+    exact DialectDenote.ext (fun _ _ => ((MonadMorphism.liftState SetM _).map_map _ _).symm)
+      (fun _ _ => rfl)
+
+end
+
+variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.Ty]
+  {ι : TyIncl dep.Ty big.Ty} [DialectSignature (dep.over e)]
+  [TyPoison dep.Ty] [TyPoison big.Ty] [TyPoison e.Ty]
+  [TyRefinement dep.Ty] [TyRefinement big.Ty] [TyRefinement e.Ty]
 
 variable [DialectEffects dep] [DialectEffects big] [DialectEffects (dep.over e)]
   [DialectMemOver dep e] [DialectMemDenote (dep.over e)] [DialectCall (dep.over e)]
@@ -125,7 +134,7 @@ theorem lawfulEffects {μ : DialectEffects.Mem dep → DialectEffects.Mem big}
     ownRuleHas_lift unit ρ (fun f _ h => AllocatesNot.map f h) (h.allocatesNot o
       (typesValid_lift hty hv) hc unit _ x (by rw [← MemSet.map_map]; exact ha))
 
-variable [DialectSignature big] [DialectDenote big SetM] [DialectCall big] [DialectMemDenote big]
+variable [DialectSignature big] [DialectCall big] [DialectMemDenote big]
 
 /-- The sum of a `big` lawful in its effects and the lift of an extension
 lawful in its effects is lawful in its effects, when the inclusion is

@@ -142,8 +142,9 @@ chapter gives one memory of that model, written once for a unit of any
 width, so that every memory of every dialect is an instance of it. It then
 makes memory an effect of a run: the memories of a run, the effect that
 ops ask for, the layer that adds the memories to a way of computing, the
-runs of a function with memory, and the obligations that an op's
-declaration of its effects on memory puts on its semantics.
+runs of a function with memory and how they end, their fuel monotonicity,
+and the obligations that an op's declaration of its effects on memory puts
+on its semantics.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
@@ -158,6 +159,10 @@ declaration of its effects on memory puts on its semantics.
 {includeReadable "." Fir.Execution.MemoryState "The state layer" FirSpec.Execution.MemoryState (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryRuns "Runs with memory" FirSpec.Execution.MemoryRuns (level := 2)}
+
+{includeReadable "." Fir.Execution.StatePaths "How a run with memory ends" FirSpec.Execution.StatePaths (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryMonotone "Runs with memory at every budget" FirSpec.Execution.MemoryMonotone (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 2)}
 

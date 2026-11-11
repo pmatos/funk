@@ -94,6 +94,35 @@ def nested : String := withFuncs [
 -- returns: `const 3` in `@outer` then loads from it, which is UB.
 #guard memRunWith constThreeLoads nested "@outer" == some [(false, [], 0)]
 
+/-! # Fuel monotonicity with memory
+
+The runs with memory of every dialect are fuel-monotone, whatever its ops
+do to the memories. `constAllocatesSet` is `constAllocates` in the state
+layer over the set monad: the theorem on runs of ops covers it, so a run of
+ops that allocates with more fuel is ahead of the run with less, from the
+same memories. -/
+
+/-- `constAllocates`, in the state layer over the set monad. -/
+@[instance_reducible] def constAllocatesSet (k : AllocKind) :
+    DialectDenote CoreDialect (StateT Mems SetM) where
+  denote
+    | Core.Op.const w v, args => do
+      let _ ← MonadMemory.alloc () k 1
+      StateT.lift (DialectDenote.denote (m := SetM) (d := CoreDialect) (Core.Op.const w v) args)
+    | op, args => StateT.lift (DialectDenote.denote (m := SetM) op args)
+  exit op args := StateT.lift (DialectDenote.exit (m := SetM) op args)
+
+example (k : AllocKind) (M : Module CoreDialect) (f : Func CoreDialect) (env : Env CoreDialect)
+    (os : List (Operation CoreDialect)) (n j : Nat) (S : Mems) :
+    letI := constAllocatesSet k
+    Ahead j (runFrom (Func.runOps (m := StateT Mems SetM) M n f env os) S)
+      (runFrom (Func.runOps (m := StateT Mems SetM) M (n + j) f env os) S) :=
+  letI := constAllocatesSet k
+  Func.runOps_memAhead M n j f env os S
+
+/-- info: 'Fir.Func.memRuns_fuelMonotone' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRuns_fuelMonotone
+
 /-! # A run with no allocation
 
 The core dialect's own rules touch no memory: its runs with memory keep the
@@ -101,8 +130,7 @@ empty memories, and are its runs. -/
 
 example (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) :
-    letI := DialectDenote.liftState (d := CoreDialect) (m := SetM) Mems
-    f.memRuns Unit (fun _ => 8) M args = f.runs M args := by
+    f.memRuns (fun _ : Unit => 8) (fun _ => ()) M args = f.runs M args := by
   rw [Func.memRuns_eq]
 
 end FirTest.MemoryRuns

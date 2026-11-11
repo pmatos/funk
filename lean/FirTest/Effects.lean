@@ -36,29 +36,29 @@ theorem freeze_notControl : Fir.isTerminator (d := CoreDialect) (.freeze 8) = fa
 
 /-- `add` with `nsw` gives poison on `127 + 1` at `i8`. -/
 theorem addNsw_makesPoison : ¬ MakesNoPoison (d := CoreDialect) (.add 8 { nsw := true }) :=
-  fun h => h rfl (.cons (.value 127) (.cons (.value 1) .nil)) (by rintro (h | h | h) <;> cases h) _
+  fun h => h.setM rfl (.cons (.value 127) (.cons (.value 1) .nil)) (by rintro (h | h | h) <;> cases h) _
     rfl (.inl (show addWith (w := 8) { nsw := true } (.value 127) (.value 1) = .poison by decide))
 
 /-- `shl` gives poison for a shift of `8` at `i8`. -/
 theorem shl_makesPoison : ¬ MakesNoPoison (d := CoreDialect) (.shl 8) :=
-  fun h => h rfl (.cons (.value 1) (.cons (.value 8) .nil)) (by rintro (h | h | h) <;> cases h) _
+  fun h => h.setM rfl (.cons (.value 1) (.cons (.value 8) .nil)) (by rintro (h | h | h) <;> cases h) _
     rfl (.inl (show shlValues (w := 8) (.value 1) (.value 8) = .poison by decide))
 
 /-- `udiv` by zero is UB. -/
 theorem udiv_mayUB : ¬ NeverUB (d := CoreDialect) (.udiv 8 false) :=
-  fun h => (h (.cons (.value 1) (.cons (.value 0) .nil)) _).1 rfl
+  fun h => (h.setM (.cons (.value 1) (.cons (.value 0) .nil)) _).1 rfl
     ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 
 /-- `cond_br` on poison is UB. -/
 theorem condBr_mayUB : ¬ NeverUB (d := CoreDialect) .condBr :=
-  fun h => (h (.cons .poison .nil) _).2 rfl ((condBr_exit _ _).2 rfl)
+  fun h => (h.setM (.cons .poison .nil) _).2 rfl ((condBr_exit _ _).2 rfl)
 
 /-- `br` is a terminator. -/
 theorem br_control : Fir.isTerminator (d := CoreDialect) .br = true := rfl
 
 /-- Reaching `unreachable` is UB. -/
 theorem unreachable_mayUB : ¬ NeverUB (d := CoreDialect) .unreachable :=
-  fun h => (h .nil _).2 rfl ((unreachable_exit _ _).2 rfl)
+  fun h => (h.setM .nil _).2 rfl ((unreachable_exit _ _).2 rfl)
 
 /-- `unreachable` is a terminator. -/
 theorem unreachable_control : Fir.isTerminator (d := CoreDialect) .unreachable = true := rfl

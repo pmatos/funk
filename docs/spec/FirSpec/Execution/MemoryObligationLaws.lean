@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9167487277552049244")
+:::moduleDocs (fingerprint := "13848549422878406383")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -57,4 +57,34 @@ monad, lifted into the state layer, and keeps the memories.
 $`\rho` and for every memory $`x` of the run, what each of its ops runs by
 its own rule writes no unit of $`x`, does not read $`x`, and neither
 allocates nor frees in $`x`, whatever the op declares.
+:::
+
+:::readable Fir.NoUB.map Fir.noUB_lift Fir.NoUB.of_lift (fingerprint := "15877855276453459811")
+*Theorems: no UB through mapping and lifting.* Mapping the results of a
+computation that never ends in UB gives one that never does. A computation
+$`x` of the set monad with $`\mathsf{ub}~r \notin x` for every $`r` never
+ends in UB in the state layer; and if, lifted into the layer, it never ends
+in UB from some memories, then $`\mathsf{ub}~r \notin x` for every $`r`.
+:::
+
+:::readable Fir.DialectMemDenote.ofSetM_liftsSetM Fir.NeverUB.ofSetM Fir.MakesNoPoison.ofSetM (pin := Fir.LiftsSetM) (fingerprint := "10987074844963660206")
+*Theorem: a dialect whose ops touch no memory lifts the set monad.* Its
+semantics with memory is its semantics in the set monad, lifted, at every
+naming: the two are
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied].
+
+*Theorem: its effects with memory are its effects in the set monad.* An
+op of such a dialect that never ends in UB in the set monad never ends in
+UB with memory, at every naming and from every memories, and one that
+makes no poison in the set monad makes none with memory.
+:::
+
+:::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11785032560525899817")
+*Theorem: back to the set monad.* In a dialect whose semantics with memory
+lifts its semantics in the set monad, an op that never ends in UB with
+memory never ends in UB in the set monad, and one that makes no poison
+with memory makes none in the set monad. The proof runs the op from the
+empty memories of a run whose one memory name is $`()`. So the theorems
+over runs in the set monad, such as the soundness of function summaries,
+use the obligations through this tie.
 :::

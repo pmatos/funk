@@ -115,6 +115,10 @@ def ReadsNot (x : Mem) (c : StateT (Memories Mem unit) SetM α) : Prop :=
   ∀ S (m : Memory (unit x)), m.allocs = (S.mem x).allocs →
     ∀ e, c S e → ∃ e', c (S.set x m) e' ∧ ReadsNot.Match x S m e e'
 
+/-- The computation `c` never ends in UB, from any memories. -/
+def NoUB (c : StateT (Memories Mem unit) SetM α) : Prop :=
+  ∀ S r, ¬ c S (.ub r)
+
 /-! # A dialect's semantics with memory -/
 
 /-- A dialect's semantics in the state layer over the set monad, wherever a

@@ -76,34 +76,42 @@ theorem ownRuleHas_inl (hP : ∀ {α β : Type} (f : α → β) (c : StateT (Mem
 theorem ownRuleHas_inr {o : e.Op} (h : OwnRuleHas (d := base.over e) unit ρ P o) :
     OwnRuleHas (d := base ⊞ e) unit ρ P (.inr o) := h
 
-end
-
-variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
-  [DialectSignature base] [DialectSignature (base.over e)]
-  [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
-
+omit [DecidableEq N] in
 /-- A base op that never ends in UB in the base never does in the sum. -/
 theorem neverUB_inl {o : base.Op} (h : NeverUB o) : NeverUB (d := base ⊞ e) (.inl o) :=
-  fun args r =>
-    ⟨fun ht hden => by
-      rcases (map_toSum _ _).1 hden with ⟨a, -, he⟩ | ⟨r', hr, he⟩
-      · cases he
-      · cases he
-        exact (h (HVector.ofSum args) r).1 ht hr,
-    fun ht hex => (h (HVector.ofSum args) r).2 ht hex⟩
-
-variable [TyPoison base.Ty] [TyPoison e.Ty]
+  fun unit ρ => ownRuleHas_inl unit ρ (fun f _ h => NoUB.map f h)
+    (h unit (ρ ∘ DialectMemOver.ofBase))
 
 /-- A base op that makes no poison in the base makes none in the sum. -/
-theorem makesNoPoison_inl {o : base.Op} (h : MakesNoPoison o) :
-    MakesNoPoison (d := base ⊞ e) (.inl o) := fun ht args hnp rs hden => by
-  rcases (map_toSum _ _).1 hden with ⟨a, ha, he⟩ | ⟨r, -, he⟩
+theorem makesNoPoison_inl [TyPoison base.Ty] [TyPoison e.Ty] {o : base.Op}
+    (h : MakesNoPoison o) : MakesNoPoison (d := base ⊞ e) (.inl o) := by
+  intro ht N _ unit ρ args hnp S rs S' hden
+  rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨a, S'', ha, he⟩ | ⟨_, -, he⟩
   · cases he
-    exact fun hp => h ht _ (fun hd => hnp ((HVector.any_ofSum args).1 hd)) a ha
-      ((HVector.any_toSum a).1 hp)
+    exact fun hp => h ht unit (ρ ∘ DialectMemOver.ofBase) _
+      (fun hd => hnp ((HVector.any_ofSum args).1 hd)) S a _ ha ((HVector.any_toSum a).1 hp)
   · cases he
 
-variable [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
+/-- A sum of two dialects that lift the set monad lifts it: each side's op
+runs by its rule in the set monad, with its results mapped, and keeps the
+memories. -/
+instance liftsSetM [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
+    [LiftsSetM base] [LiftsSetM (base.over e)] : LiftsSetM (base ⊞ e) where
+  lifts unit ρ := by
+    show @instDialectDenote _ _ _ _ _ _ _ _ (DialectMemDenote.denoteAt unit _)
+      (DialectMemDenote.denoteAt unit ρ) = _
+    rw [LiftsSetM.lifts (d := base), LiftsSetM.lifts (d := base.over e)]
+    refine DialectDenote.ext (fun op args => ?_) (fun op args => ?_)
+    · cases op with
+      | inl o => exact ((MonadMorphism.liftState SetM _).map_map _ _).symm
+      | inr o => rfl
+    · cases op <;> rfl
+
+end
+
+variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty] [TyPoison base.Ty] [TyPoison e.Ty]
+  [DialectSignature base] [DialectSignature (base.over e)]
+  [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
   [DialectMemDenote base] [DialectMemDenote (base.over e)]
   [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
