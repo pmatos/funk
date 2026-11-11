@@ -64,8 +64,9 @@ until the backend's output avoids it (ADR-2026-10-30-1229).
 A value of `iN`, with `N` at most 64, lives in one 64-bit register or slot. Its
 low `N` bits are its bits, and the bits above are unspecified. This holds in
 slots, in scratch registers, and for arguments and results
-(ADR-2026-10-30-1231). The one exception is a returned `i1`, which is 0 or 1 in
-all 64 bits (ADR-2026-10-30-1232, ADR-2026-11-03-0109).
+(ADR-2026-10-30-1231). The one exception is a returned `i1`, which the backend
+returns as 0 or 1 in all 64 bits (ADR-2026-10-30-1232, ADR-2026-11-03-0109).
+No caller may rely on that for an unmarked `i1` (ADR-2026-11-11-1019).
 
 `add`, `sub`, `mul`, `and`, `or`, `xor`, `trunc`, `select` and `freeze` work on
 all 64 bits and extend nothing. Their result's low `N` bits depend only on
@@ -220,7 +221,10 @@ result at the return, and nothing unmarked. An `i1` marked `zext` is a C
 `_Bool`. With no marker, neither side may rely on the upper bits.
 
 Code that calls a C function may rely only on bit 0 of an `i1` result. It may
-also read `%al` as 0 or 1 (ADR-2026-10-30-1232).
+also read `%al` as 0 or 1 (ADR-2026-10-30-1232). No caller, funk's own code
+included, relies on the bits above bit 0 of an unmarked `i1` result, though the
+backend still returns it as 0 or 1 in all of `%rax`. A caller that needs a C
+`_Bool` relies on the `zext` marker (ADR-2026-11-11-1019).
 
 ## Poison
 
