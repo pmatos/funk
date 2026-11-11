@@ -14,10 +14,13 @@ has neither operands nor attributes, is a cell at each width of its result
 - A width change, `zext`, `sext` or `trunc`, is a cell for each pair of
   widths from `iM` to `iN` that the spec allows: `M < N`, or `N < M` for
   `trunc`.
-- A float constant, and `fcmp` with each predicate of `FPred.all`, is a
-  cell at each float format of the matrix's side: `f32` and `f64` for
+- A float constant, `fcmp` with each predicate of `FPred.all`, and each
+  op of float arithmetic, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
+  with `round(rne)` and `fneg` and `fabs` with no attribute, is a cell at
+  each float format of the matrix's side: `f32` and `f64` for
   differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
-  `f64` and `f128` for interpreter-only tests (#229).
+  `f64` and `f128` for interpreter-only tests (#229,
+  ADR-2026-11-11-1141).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -78,8 +81,22 @@ AT_WIDTH = {
     "freeze": ("",),
     "poison": ("",),
 }
-# The float ops at a format, with the attributes that are cells.
-AT_FORMAT = {"const": ("",), "fcmp": FPREDS}
+# The attribute of a float op that rounds (`roundAttr`).
+ROUND = ("round(rne)",)
+# The float ops at a format, in the order of `Op`, with the attributes
+# that are cells.
+AT_FORMAT = {
+    "const": ("",),
+    "fcmp": FPREDS,
+    "fadd": ROUND,
+    "fsub": ROUND,
+    "fmul": ROUND,
+    "fdiv": ROUND,
+    "fneg": ("",),
+    "fabs": ("",),
+    "sqrt": ROUND,
+    "fma": ROUND,
+}
 CASTS = ("zext", "sext", "trunc")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
@@ -92,7 +109,12 @@ VALUES = (
     ("call", (NOTHING, ONE, SEVERAL)),
     ("func", (NOTHING, ONE, SEVERAL)),
 )
-OPS = (*AT_WIDTH, "fcmp", *CASTS, *(op for op, _ in VALUES if op != "func"))
+OPS = (
+    *AT_WIDTH,
+    *(op for op in AT_FORMAT if op != "const"),
+    *CASTS,
+    *(op for op, _ in VALUES if op != "func"),
+)
 
 
 class Cell(NamedTuple):
@@ -164,7 +186,7 @@ def of_op(op: Op) -> set[Cell]:
     """The cells that an op exercises, at any width. An op that the core
     dialect does not have, or an attribute that is not a cell, is an
     error."""
-    if op.name == "fcmp" or (op.name == "const" and is_float(op.results[0])):
+    if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:
             raise CellError(f"{op.name} {attr} is not a cell")

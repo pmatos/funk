@@ -15,11 +15,11 @@
 //! branches `br` and `cond_br`, `ret`, `unreachable` in a trap block that a
 //! branch may go to, and `call` of any function of the module, the caller
 //! itself included, with any number of arguments and results (`calls.rs`).
-//! Every value is an integer: the float types, float constants and `fcmp`
-//! (#229) are not generated. A division may be by zero, a run may reach
-//! `unreachable`, and a loop or a recursion may never end: that is UB or a run
-//! out of fuel, not invalid, and no check runs these modules. The generator is
-//! deterministic: one seed gives one module.
+//! Every value is an integer: the float types, float constants, `fcmp` and
+//! the float arithmetic (#229) are not generated. A division may be by zero,
+//! a run may reach `unreachable`, and a loop or a recursion may never end:
+//! that is UB or a run out of fuel, not invalid, and no check runs these
+//! modules. The generator is deterministic: one seed gives one module.
 //!
 //! [`program`] builds on it the programs that the differential harness runs
 //! (#165).

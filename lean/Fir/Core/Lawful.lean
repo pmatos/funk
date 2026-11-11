@@ -9,10 +9,10 @@ is proved for every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 21 ops that propagate poison does, at every
+* _Propagation._ Each of the 24 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
-  shifts, `icmp`, `fcmp` and the width changes.
+  shifts, `icmp`, `fcmp`, the width changes and the float arithmetic.
 * _A result on defined operands._ Each of them returns a result on some
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
@@ -57,6 +57,9 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .ashr w, _ => ashr_propagatesPoison w
   | .icmp p w, _ => icmp_propagatesPoison p w
   | .fcmp p e m, _ => fcmp_propagatesPoison p e m
+  | .fbin o e m, _ => fbin_propagatesPoison o e m
+  | .funary o e m, _ => funary_propagatesPoison o e m
+  | .fma e m, _ => fma_propagatesPoison e m
   | .zext m n, _ => zext_propagatesPoison m n
   | .sext m n, _ => sext_propagatesPoison m n
   | .trunc m n, _ => trunc_propagatesPoison m n
@@ -92,6 +95,9 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .ashr w, _, _ => ashr_returnsOnDefined w
   | .icmp p w, _, _ => icmp_returnsOnDefined p w
   | .fcmp p e m, _, _ => fcmp_returnsOnDefined p e m
+  | .fbin o e m, _, _ => fbin_returnsOnDefined o e m
+  | .funary o e m, _, _ => funary_returnsOnDefined o e m
+  | .fma e m, _, _ => fma_returnsOnDefined e m
   | .zext m n, _, _ => zext_returnsOnDefined m n
   | .sext m n, _, _ => sext_returnsOnDefined m n
   | .trunc m n, _, _ => trunc_returnsOnDefined m n

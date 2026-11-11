@@ -7,7 +7,7 @@ import Fir.Core.FloatTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 28 of its ops and every type. The laws are proved for every
+text, for all 31 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -141,6 +141,45 @@ theorem plainBinOps_lookup {n : String} {mk : Nat → Op} (h : plainBinOps.looku
   repeat (split at h; (cases h; rename_i hn; cases beq_iff_eq.mp hn; exact ⟨rfl, rfl, rfl, rfl⟩))
   cases h
 
+/-- `fadd`, `fsub`, `fmul` and `fdiv` decode only from their own name,
+attributes, operand types and result type. -/
+theorem decodeFBin_eq {o : FBin} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFBin o as ts rs = some op) :
+    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  unfold decodeFBin at h
+  split at h
+  · rename_i hr
+    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+    exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
+  · cases h
+
+/-- `fneg`, `fabs` and `sqrt` decode only from their own name, attributes,
+operand type and result type. -/
+theorem decodeFUnary_eq {o : FUnary} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFUnary o as ts rs = some op) :
+    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  unfold decodeFUnary at h
+  split at h
+  · rename_i hok
+    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+    exact ⟨rfl, FUnary.attrs_of_attrsOk hok, rfl, rfl⟩
+  · cases h
+
+/-- `fma` decodes only from its own name, attributes, operand types and
+result type. -/
+theorem decodeFma_eq {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFma as ts rs = some op) :
+    op.name = "fma" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  unfold decodeFma at h
+  split at h
+  · rename_i hr
+    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+    exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
+  · cases h
+
 /-- Every core op decodes from its name and attributes, at its operand and
 result types. -/
 theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes = some o := by
@@ -152,6 +191,15 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     · simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, constAttr_of_ne_one v h, h]
   | fconst e m v => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatLit_floatLit]
   | fcmp p e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, find_fpred_name]
+  | fbin o e m =>
+    cases o <;> simp [Op.name, FBin.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFBin,
+      roundAttr, isRoundAttrs, floatOpFormat]
+  | funary o e m =>
+    cases o <;> simp [Op.name, FUnary.name, Op.attrs, FUnary.attrs, Op.sig, Op.returnTypes,
+      Op.decode, decodeFUnary, FUnary.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
+  | fma e m =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFma, roundAttr,
+      isRoundAttrs, floatOpFormat]
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
   | _ =>
@@ -202,6 +250,14 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
         obtain ⟨rfl, rfl⟩ := hab
         exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
       · cases h
+  · exact decodeFBin_eq h -- fadd
+  · exact decodeFBin_eq h -- fsub
+  · exact decodeFBin_eq h -- fmul
+  · exact decodeFBin_eq h -- fdiv
+  · exact decodeFUnary_eq h -- fneg
+  · exact decodeFUnary_eq h -- fabs
+  · exact decodeFUnary_eq h -- sqrt
+  · exact decodeFma_eq h -- fma
   · -- add
     obtain ⟨_, _, rfl, rfl, hf, rfl⟩ := binOp_eq h
     exact ⟨rfl, attrs_of_decodeWrap hf, rfl, rfl⟩
@@ -294,7 +350,9 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
 
 /-- Every core op's name is a word. -/
 theorem Op.name_isWord (o : Op) : isWord o.name := by
-  cases o <;> simp only [Op.name] <;> decide
+  cases o <;> first
+    | (simp only [Op.name]; decide)
+    | (rename_i o _ _; cases o <;> simp only [Op.name, FBin.name, FUnary.name] <;> decide)
 
 /-- Every predicate's name is a word. -/
 theorem Pred.name_isWord (p : Pred) : isWord p.name := by
@@ -317,6 +375,9 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | icmp p _ => exact ⟨p.name_isWord, trivial⟩
   | fconst e m v => simp [Op.attrs, Attr.AllWritable, Attr.Writable, floatLit_valid]
   | fcmp p => exact ⟨p.name_isWord, trivial⟩
+  | fbin | fma => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+  | funary o =>
+    cases o <;> simp [Op.attrs, FUnary.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
   | add _ f | sub _ f | mul _ f =>
     obtain ⟨nuw, nsw⟩ := f
     cases nuw <;> cases nsw <;>
@@ -332,7 +393,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 28 core ops and
+/-- The core dialect's text meets the seven laws, for all 31 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

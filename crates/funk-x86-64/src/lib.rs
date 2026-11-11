@@ -5,8 +5,9 @@
 //! AT&T syntax (ADR-2026-10-30-1229). The module's file holds one function
 //! per fir function, each a global symbol that follows the System V AMD64
 //! calling convention (ADR-2026-10-30-1232), so C code can link to it, and,
-//! when a function divides at `i128`, the runtime helper that it calls,
-//! under local symbols (ADR-2026-11-03-0414). The entry file holds the
+//! when a function divides at `i128` or does `fma` at `f32` or `f64`,
+//! the runtime helper that it calls, under local symbols
+//! (ADR-2026-11-03-0414). The entry file holds the
 //! entry point of an executable that runs one function from the command
 //! line and prints its results (ADR-2026-10-30-1233), on a stack that
 //! covers every call it makes (ADR-2026-11-02-1132).

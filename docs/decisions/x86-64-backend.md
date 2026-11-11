@@ -91,7 +91,9 @@ constant is written to its slot as an integer immediate of its bits. `fcmp`
 loads its operands with `movss` or `movsd` into `%xmm0` and `%xmm1`, compares
 them with `ucomiss` or `ucomisd`, and reads the flags with one `setCC`, or two
 for `oeq` and `une`, which also test the parity flag that an unordered pair sets
-(ADR-2026-11-11-1140).
+(ADR-2026-11-11-1140). x86-64-backend-lowering.md says how the float arithmetic
+lowers, with SSE2 and, for `fma`, a routine of a runtime helper
+(ADR-2026-11-11-1802).
 
 An `i128` is two eightbytes. Each half is 64 bits of the value, and no bit is
 unspecified (ADR-2026-11-03-010730).
@@ -330,8 +332,9 @@ over its calls, of what the call pushes plus the callee's need
 (ADR-2026-11-02-1132).
 
 `entry/stack.rs` counts pushed words from the layout that `abi::call` reads
-(ADR-2026-11-03-0108). A division at `i128` counts as a call needing 24 bytes
-(ADR-2026-11-03-0415).
+(ADR-2026-11-03-0108). A division at `i128` or an `fma` at `f32` or `f64`
+counts as a call needing 24 bytes, the most that a runtime helper's routine
+uses (ADR-2026-11-03-0415, ADR-2026-11-11-1802).
 
 Calls within a cycle do not count. A function from which no cycle is reachable
 gets exactly its figure, whatever `ulimit -s` says. A function from which a
@@ -354,6 +357,8 @@ A register allocator must treat as clobbered:
 
 - `%rax`, `%rcx` and `%rdx` by a division (ADR-2026-10-31-0050).
 - `%rax`, `%rcx`, `%xmm0` and `%xmm1` by an `fcmp` (ADR-2026-11-11-1140).
+- `%xmm0` by a float op of arithmetic, `%rax` by `fneg` and `fabs`, and every
+  caller-saved register by an `fma` (ADR-2026-11-11-1802).
 - `%rax` and `%rcx` by a branch (ADR-2026-10-31-0334).
 - `%rax`, `%rcx` and `%rdx` by an `i128` op, and `%rsi` by a shift
   (ADR-2026-11-03-010730).

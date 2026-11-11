@@ -6,6 +6,7 @@ import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
+import Fir.Core.FloatArith
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -18,7 +19,8 @@ This section gives every core op its meaning in the set of the ways a run
 may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
-terminators. `freeze` asks for the choice effect, and the divisions,
+terminators. `freeze` and the float arithmetic, whose NaN results are
+chosen, ask for the choice effect, and the divisions,
 `cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
 `fir-ref run` computes in share them.
 
@@ -117,6 +119,18 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a (.cons b .nil) => pure (.cons (icmpValues p a b) .nil)
   | .fcmp p _ _ => some fun
     | .cons a (.cons b .nil) => pure (.cons (fcmpValues p a b) .nil)
+  | .fbin o _ _ => some fun
+    | .cons a (.cons b .nil) => do
+      let v ← fbinValues o a b
+      pure (.cons v .nil)
+  | .funary o _ _ => some fun
+    | .cons a .nil => do
+      let v ← funaryValue o a
+      pure (.cons v .nil)
+  | .fma _ _ => some fun
+    | .cons a (.cons b (.cons c .nil)) => do
+      let v ← fmaValues a b c
+      pure (.cons v .nil)
   | .select _ => some fun
     | .cons c (.cons a (.cons b .nil)) => pure (.cons (selectValues c a b) .nil)
   | .zext _ n => some fun
@@ -141,7 +155,8 @@ def Op.exit? [MonadUB m] : (op : Op) →
 /-- The op has rules: as an op that is not a terminator, as a terminator,
 or as an op that calls a function, whose meaning is its callee's run. It
 looks at the rules in the set monad, which has the effects of choice and
-UB that the rules of `freeze`, the divisions and `cond_br` ask for. -/
+UB that the rules of `freeze`, the float arithmetic, the divisions and
+`cond_br` ask for. -/
 def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome || op.callTarget?.isSome
 
@@ -152,6 +167,9 @@ def Op.hasRules (op : Op) : Bool :=
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
+#guard [FBin.fadd, .fsub, .fmul, .fdiv].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
+#guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o 5 10).hasRules
+#guard (Op.fma 11 52).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr]).hasRules

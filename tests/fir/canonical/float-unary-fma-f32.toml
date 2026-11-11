@@ -1,0 +1,77 @@
+# Tests of float-unary-fma-f32.fir: fneg, fabs, sqrt, fma at f32
+# (ADR-2026-11-11-1800), on the hard inputs: results halfway between
+# two floats, subnormals, -0, overflow to infinity and NaN operands.
+# Written by scripts/harness/float_arith_cases.py, which computes each
+# expected result with scripts/harness/float_ref.py, apart from Lean.
+# A test without expect is differential: fir-ref and native code
+# run it, and the native result must equal fir-ref's. Each
+# result that is not a NaN is also checked by an interpreter-only
+# test with expect.
+# A NaN result is any NaN: its test is interpreter-only and names
+# the NaN by a choice of the sign and the mantissa, as signed
+# i24. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@fneg", args = ["0.0"] },
+  { func = "@fneg", args = ["0.0"], expect = ["-0.0"] },
+  { func = "@fneg", args = ["0xff800000"] },
+  { func = "@fneg", args = ["0xff800000"], expect = ["0x7f800000"] },
+  { func = "@fneg", args = ["1.0e-45"] },
+  { func = "@fneg", args = ["1.0e-45"], expect = ["-1.0e-45"] },
+  { func = "@fneg", args = ["0xffffffff"], choices = ["0"], expect = ["0x7fc00000"] },
+  { func = "@fabs", args = ["-0.0"] },
+  { func = "@fabs", args = ["-0.0"], expect = ["0.0"] },
+  { func = "@fabs", args = ["-3.4028235e38"] },
+  { func = "@fabs", args = ["-3.4028235e38"], expect = ["3.4028235e38"] },
+  { func = "@fabs", args = ["0xffffffff"], choices = ["-1"], expect = ["0xffffffff"] },
+  { func = "@sqrt", args = ["4.0"] },
+  { func = "@sqrt", args = ["4.0"], expect = ["2.0"] },
+  { func = "@sqrt", args = ["2.25"] },
+  { func = "@sqrt", args = ["2.25"], expect = ["1.5"] },
+  { func = "@sqrt", args = ["2.0"] },
+  { func = "@sqrt", args = ["2.0"], expect = ["1.4142135"] },
+  { func = "@sqrt", args = ["1.0e-45"] },
+  { func = "@sqrt", args = ["1.0e-45"], expect = ["3.743392e-23"] },
+  { func = "@sqrt", args = ["3.0e-45"] },
+  { func = "@sqrt", args = ["3.0e-45"], expect = ["5.293956e-23"] },
+  { func = "@sqrt", args = ["3.4028235e38"] },
+  { func = "@sqrt", args = ["3.4028235e38"], expect = ["1.8446743e19"] },
+  { func = "@sqrt", args = ["0.0"] },
+  { func = "@sqrt", args = ["0.0"], expect = ["0.0"] },
+  { func = "@sqrt", args = ["-0.0"] },
+  { func = "@sqrt", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@sqrt", args = ["-1.0"], choices = ["1"], expect = ["0x7f800001"] },
+  { func = "@sqrt", args = ["0x7f800000"] },
+  { func = "@sqrt", args = ["0x7f800000"], expect = ["0x7f800000"] },
+  { func = "@sqrt", args = ["0xff800000"], choices = ["0"], expect = ["0x7fc00000"] },
+  { func = "@sqrt", args = ["0xffffffff"], choices = ["-1"], expect = ["0xffffffff"] },
+  { func = "@fma", args = ["1.0", "1.0", "1.0"] },
+  { func = "@fma", args = ["1.0", "1.0", "1.0"], expect = ["2.0"] },
+  { func = "@fma", args = ["1.0000001", "0.9999999", "-1.0"] },
+  { func = "@fma", args = ["1.0000001", "0.9999999", "-1.0"], expect = ["-1.4210855e-14"] },
+  { func = "@fma", args = ["1.0000001", "1.0000001", "-1.0000002"] },
+  { func = "@fma", args = ["1.0000001", "1.0000001", "-1.0000002"], expect = ["1.4210855e-14"] },
+  { func = "@fma", args = ["3.4028235e38", "2.0", "-3.4028235e38"] },
+  { func = "@fma", args = ["3.4028235e38", "2.0", "-3.4028235e38"], expect = ["3.4028235e38"] },
+  { func = "@fma", args = ["1.0", "5.9604645e-8", "1.0"] },
+  { func = "@fma", args = ["1.0", "5.9604645e-8", "1.0"], expect = ["1.0"] },
+  { func = "@fma", args = ["1.0e-45", "0.5", "0.0"] },
+  { func = "@fma", args = ["1.0e-45", "0.5", "0.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["0.0", "1.0", "-0.0"] },
+  { func = "@fma", args = ["0.0", "1.0", "-0.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["-0.0", "1.0", "-0.0"] },
+  { func = "@fma", args = ["-0.0", "1.0", "-0.0"], expect = ["-0.0"] },
+  { func = "@fma", args = ["-1.0", "1.0", "1.0"] },
+  { func = "@fma", args = ["-1.0", "1.0", "1.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["0x7f800000", "0.0", "0xffffffff"], choices = ["1"], expect = ["0x7f800001"] },
+  { func = "@fma", args = ["0x7f800000", "1.0", "0xff800000"], choices = ["0"], expect = ["0x7fc00000"] },
+  { func = "@fma", args = ["1.0", "1.0", "0x7f800000"] },
+  { func = "@fma", args = ["1.0", "1.0", "0x7f800000"], expect = ["0x7f800000"] },
+  { func = "@fma", args = ["1.0e-45", "1.0e-45", "-1.0e-45"] },
+  { func = "@fma", args = ["1.0e-45", "1.0e-45", "-1.0e-45"], expect = ["-1.0e-45"] },
+  { func = "@fma", args = ["3.4028235e38", "3.4028235e38", "0xff800000"] },
+  { func = "@fma", args = ["3.4028235e38", "3.4028235e38", "0xff800000"], expect = ["0xff800000"] },
+  { func = "@fneg", args = ["poison"] },
+  { func = "@fabs", args = ["poison"] },
+  { func = "@sqrt", args = ["poison"] },
+  { func = "@fma", args = ["poison", "0.0", "0.0"] },
+]

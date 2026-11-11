@@ -211,11 +211,8 @@ The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. The
 interpreter-only side adds `i7` and `i33`. Ops at other widths count towards no
 cell.
 
-The float ops have a table of their own: a float constant, and `fcmp` with each
-predicate, at each float format of a side. The differential side has `f32` and
-`f64`, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
-Passed and returned values are cells at each of these formats too
-(ADR-2026-11-11-1141).
+The float ops have a table of their own, at each float format of a side;
+testing-and-harness-floats.md says which (ADR-2026-11-11-1141).
 
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. It also exercises the `func` cell of its results. The

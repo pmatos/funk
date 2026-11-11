@@ -1,7 +1,7 @@
-# Current decisions: the x86-64 backend, lowering `i128` and division
+# Current decisions: the x86-64 backend, lowering `i128`, division and floats
 
 This page continues x86-64-backend.md. It says what holds today for how the
-naive backend lowers `i128` values and the divisions. It only summarizes the
+naive backend lowers `i128` values, the divisions and the float arithmetic. It only summarizes the
 ADRs it cites (ADR-2026-11-09-1610). When this page and an ADR disagree, the
 page has a bug.
 
@@ -49,3 +49,21 @@ use only caller-saved registers and leave `%rsp` as they found it. So nothing
 is saved around the call. A `b` below `2^64` takes two `divq`, and a larger one
 takes 64 steps of restoring division. A zero divisor traps in the first `divq`.
 There is no guard (ADR-2026-11-03-0415).
+
+## Float arithmetic
+
+The backend lowers the float arithmetic at `f32` and `f64` with SSE2 only, which
+every x86-64 has. `fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` are one instruction
+each, `addss` to `sqrtss` or their `sd` forms, on `%xmm0` and the second
+operand's slot. MXCSR keeps its default mode, round to nearest even, and no
+flush-to-zero, so subnormals are honoured. `fneg` and `fabs` flip or clear the
+sign bit in `%rax` with `btcq` or `btrq`, which is IEEE 754's negate and abs and
+refines fir's any NaN (ADR-2026-11-11-1802).
+
+SSE2 has no fused multiply-add, and FMA3 is not in every x86-64. So `fma` calls
+`__funk_rt_fmaf` or `__funk_rt_fma`, hand-written in
+`crates/funk-x86-64/src/lower/fma.s`, which `lower::module` appends once as it
+appends `div128.s`. At `f32` the routine rounds the sum to odd in `f64` and then
+to `f32`, which rounds once. At `f64` it computes `a * b + c` exactly in 128-bit
+integers and rounds once. Each routine uses only caller-saved registers and 16
+bytes of stack (ADR-2026-11-11-1802).

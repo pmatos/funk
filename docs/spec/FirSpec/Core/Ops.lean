@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13664522346971596275")
+:::moduleDocs (fingerprint := "13350109140198078490")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -71,12 +71,34 @@ ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
 ```
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "15976023950794432229")
+:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "15404010338068231471")
+*Float operations.* The float arithmetic has four ops of two operands and
+three of one (ADR-2026-11-11-1800). Each that rounds rounds to nearest,
+ties to even.
+
+```grammar Fir.Core.FBin
+\mathit{fbin}
+fadd,fsub,fmul,fdiv   \mathsf{fadd} \mid \mathsf{fsub} \mid \mathsf{fmul} \mid \mathsf{fdiv}
+```
+
+```grammar Fir.Core.FUnary
+\mathit{funary}
+fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
+```
+
+* $`\mathsf{fadd}` adds, $`\mathsf{fsub}` subtracts the second operand
+  from the first, $`\mathsf{fmul}` multiplies and $`\mathsf{fdiv}` divides
+  the first by the second.
+* $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
+  neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
+:::
+
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "13742069391112286988")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in eight families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in nine families.
 
 *Constants* put a fixed value in the program.
 
@@ -159,6 +181,27 @@ select \mathsf{select}_N
   not matter, even when it is poison; the one chosen is given as it is.
 
   $$`\mathsf{select}_N(c, a, b) = \begin{cases} a & \text{if } c = 1 \\ b & \text{if } c = 0 \\ \mathsf{poison} & \text{if } c \text{ is poison} \end{cases}`
+
+*Float arithmetic* computes on floats of one format
+$`\mathsf{float}\langle e,m \rangle`, by Lean's float model
+(ADR-2026-11-11-1800).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-       \dots
+fbin    \mathit{fbin}_{e,m}
+funary  \mathit{funary}_{e,m}
+fma     \mathsf{fma}_{e,m}
+```
+
+* $`\mathit{fbin}_{e,m}` (`fbin` in the Lean) takes two values and
+  $`\mathit{funary}_{e,m}` (`funary`) one, and each gives the model's
+  result, rounded to nearest even where the op rounds.
+* $`\mathsf{fma}_{e,m}` gives $`a \times b + c` of three values, rounded
+  once.
+* When the model's result is a NaN, the op gives any NaN of the format:
+  its sign and payload are a choice. None is ever UB, and a poison operand
+  gives poison.
 
 *Width changes* move an integer to another width.
 

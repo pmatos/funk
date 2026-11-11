@@ -46,9 +46,10 @@ bare `idiv` (ADR-2026-10-30-0818).
 
 Propagation is checked, not only stated. Every op of every dialect declares a
 poison class through `DialectEffects`: `propagates` or `exception`
-(ADR-2026-10-30-0818). In the core dialect, 21 ops propagate and seven are
-exceptions (ADR-2026-11-03-1615). The float constant and `fcmp` are among the
-21 (ADR-2026-11-11-1139). `select`, `freeze` and `cond_br` are
+(ADR-2026-10-30-0818). In the core dialect, 24 ops propagate and seven are
+exceptions (ADR-2026-11-03-1615). The float constant, `fcmp` and the three ops
+of float arithmetic are among the 24 (ADR-2026-11-11-1139,
+ADR-2026-11-11-1800). `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are (ADR-2026-10-30-0818). `unreachable` is an exception that
 is always UB, which the obligations below allow (ADR-2026-11-09-1548). The core dialect lists each op by

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16657826250666995770")
+:::moduleDocs (fingerprint := "4221374963765117764")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "6665678896706364262")
+:::readable Fir.Core.Op.denote? (fingerprint := "8211522301814288648")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -37,7 +37,7 @@ result:
   each turned into a rule that may end with UB;
 * $`\mathsf{freeze}_N`: the
   {ref "The-fir-specification--Execution--The-freeze-rule"}[freeze rule],
-  the one rule that chooses;
+  which chooses bits for a poison operand;
 * $`\mathsf{and}_N`, $`\mathsf{or}_N`, $`\mathsf{xor}_N`,
   $`\mathsf{shl}_N`, $`\mathsf{lshr}_N` and $`\mathsf{ashr}_N`: the
   {ref "The-fir-specification--Execution--Bitwise-and-shift-rules"}[bitwise and shift rules];
@@ -45,6 +45,10 @@ result:
   {ref "The-fir-specification--Execution--Comparison-and-selection-rules"}[comparison and selection rules];
 * $`\mathsf{fcmp}_{e,m}~p`: the
   {ref "The-fir-specification--Execution--Float-comparison-rules"}[float comparison rules];
+* $`\mathit{fbin}_{e,m}`, $`\mathit{funary}_{e,m}` and
+  $`\mathsf{fma}_{e,m}`: the
+  {ref "The-fir-specification--Execution--Float-arithmetic-rules"}[float arithmetic rules],
+  which choose the bits of a NaN result;
 * $`\mathsf{zext}_{M \to N}`, $`\mathsf{sext}_{M \to N}` and
   $`\mathsf{trunc}_{M \to N}`: the
   {ref "The-fir-specification--Execution--Width-change-rules"}[width change rules].
@@ -68,13 +72,14 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "14813759187394959886")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7852276650248616456")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
-set of flags, and $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
-predicates, at a valid format and at one that validation rejects, among them, and
+set of flags, $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
+predicates, at a valid format and at one that validation rejects, and each
+float op of arithmetic, among them, and
 $`\mathsf{call}` counts through its callee.
 
 *Definition: the core dialect's semantics.* In the
