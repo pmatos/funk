@@ -5,13 +5,13 @@ A test's arguments may hold `poison`, which `fir-ref run` takes as it is.
 Native code holds no poison (ADR-2026-10-30-2248), and a built executable
 reads each argument as a constant, so a differential test runs native code
 on stand-ins: defined values in place of each poison. The stand-ins of
-`iN`, and of a float type of `N` bits, are its boundary bit patterns, the ones that `fir-ref run --seed`
-favours (ADR-2026-10-31-0002): 0, 1, all ones, the signed minimum and the
-signed maximum, each once, so `false` and `true` at `i1`. At a float type
-they are `+0`, the smallest subnormal, a NaN with its sign set, `-0` and a
-NaN, spelled as the float's bits read as a signed integer
-(ADR-2026-11-11-1138). Native code runs
-on every combination: with `k` poison arguments, up to `5 ** k` runs.
+`iN`, and of a float type of `N` bits, are its boundary bit patterns, the
+ones that `fir-ref run --seed` favours (ADR-2026-10-31-0002): 0, 1, all
+ones, the signed minimum and the signed maximum, each once, so `false` and
+`true` at `i1`. At a float type they are `+0`, the smallest subnormal, a
+NaN with its sign set, `-0` and a NaN, spelled as the float's bits read as
+a signed integer (ADR-2026-11-11-1138). Native code runs on every
+combination: with `k` poison arguments, up to `5 ** k` runs.
 
 Each native result must refine an outcome of `fir-ref`'s run on the poison
 itself. A run with a value in place of poison refines the run with poison,

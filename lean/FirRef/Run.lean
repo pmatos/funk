@@ -82,23 +82,25 @@ def valueText : DVal CoreDialect → String
     | .value b => (Attr.int b.toInt).print
   | ⟨.ptr, v⟩ => nomatch (v : Empty)
 
-/-- The constant that the text `s` spells at the type `iN`: the spec's
+/-- The `const` op that the text `s` spells at the type `t`: the spec's
 lexer reads `s` as one token (`argAttr`, which `fir-ref` runs as
 `argAttrP`, over positions), `Core.Op.decode` reads that as a `const`, and
 the token is spelled exactly `s`, with nothing around it. -/
-def constOf (w : Nat) (s : String) : Option (BitVec w) := do
+def constOpOf (t : Core.Ty) (s : String) : Option Core.Op := do
   let attr ← argAttr s
   if attr.print != s then none
-  match Core.Op.decode "const" [attr] [] [.int w] with
+  Core.Op.decode "const" [attr] [] [t]
+
+/-- The constant that the text `s` spells at the type `iN` (`constOpOf`). -/
+def constOf (w : Nat) (s : String) : Option (BitVec w) :=
+  match constOpOf (.int w) s with
   | some (.const w' v) => if h : w' = w then some (h ▸ v) else none
   | _ => none
 
-/-- The constant that the text `s` spells at the float type `float<e,m>`,
-read as `constOf` reads one of `iN`: its bits read as a signed integer. -/
-def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) := do
-  let attr ← argAttr s
-  if attr.print != s then none
-  match Core.Op.decode "const" [attr] [] [.float e m] with
+/-- The constant that the text `s` spells at the float type `float<e,m>`
+(`constOpOf`): its bits read as a signed integer. -/
+def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) :=
+  match constOpOf (.float e m) s with
   | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
   | _ => none
 

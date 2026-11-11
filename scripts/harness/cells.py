@@ -19,10 +19,11 @@ has neither operands nor attributes, is a cell at each width of its result
   differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
   `f64` and `f128` for interpreter-only tests (#229).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
-  width. `ret` returns no value, one, or several; a `call` gives no result,
-  one, or several; and so does the function that a test runs, `func`. One
-  value or several are cells at each width that a value has. `unreachable`
-  passes nothing, so it is one cell.
+  width or float format. `ret` returns no value, one, or several; a `call`
+  gives no result, one, or several; and so does the function that a test
+  runs, `func`. One value or several are cells at each width and float
+  format of the side (ADR-2026-11-11-1141). `unreachable` passes nothing,
+  so it is one cell.
 """
 
 from typing import NamedTuple

@@ -75,6 +75,13 @@ impl Class {
             Class::Int | Class::Sse => 1,
         }
     }
+
+    /// The class of an integer of `words` eightbytes: a pair for two, and
+    /// one INTEGER eightbyte otherwise.
+    #[cfg(test)]
+    pub(crate) fn int(words: usize) -> Class {
+        if words == 2 { Class::Pair } else { Class::Int }
+    }
 }
 
 /// The class of a value of `ty`: SSE for a float, a pair for `i128`, and

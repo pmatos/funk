@@ -6,10 +6,7 @@ use crate::width::Class;
 
 /// [`check_classes`] on integer arguments of `words` eightbytes each.
 fn check_call(words: &[usize]) {
-    let classes: Vec<Class> = words
-        .iter()
-        .map(|&w| if w == 2 { Class::Pair } else { Class::Int })
-        .collect();
+    let classes: Vec<Class> = words.iter().map(|&w| Class::int(w)).collect();
     check_classes(&classes);
 }
 

@@ -58,17 +58,6 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// The layout of integer results of the widths `widths`, each one that
-    /// the backend lowers: at most 64, or 128, as [`Layout::of_classes`]
-    /// lays them out.
-    pub fn new(widths: &[u32]) -> Result<Layout, String> {
-        let classes: Vec<Class> = widths
-            .iter()
-            .map(|&w| if w > 64 { Class::Pair } else { Class::Int })
-            .collect();
-        Layout::of_classes(&classes)
-    }
-
     /// The layout of results of the classes `classes`. Fails when the area
     /// would not fit in the 2 GiB that a displacement reaches.
     pub fn of_classes(classes: &[Class]) -> Result<Layout, String> {

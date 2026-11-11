@@ -16,7 +16,7 @@ fn arguments(words: &[usize]) -> Vec<Arg> {
                 slot: Mem {
                     disp: -8 * used as i32,
                 },
-                class: if words == 2 { Class::Pair } else { Class::Int },
+                class: Class::int(words),
             }
         })
         .collect()

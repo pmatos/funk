@@ -98,10 +98,7 @@ mod tests {
 
     /// The classes of integer arguments of `words` eightbytes each.
     fn ints(words: &[usize]) -> Vec<Class> {
-        words
-            .iter()
-            .map(|&w| if w == 2 { Class::Pair } else { Class::Int })
-            .collect()
+        words.iter().map(|&w| Class::int(w)).collect()
     }
 
     fn regs(rs: &[Reg]) -> Vec<Loc> {
