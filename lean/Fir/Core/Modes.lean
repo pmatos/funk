@@ -1,5 +1,5 @@
-import Fir.Core.Semantics
-import Fir.Execution.Modes
+import Fir.Core.EffectLaws
+import Fir.Execution.MemoryModes
 
 /-!
 # The core dialect's exhaustive, scripted and sampled runs
@@ -12,9 +12,18 @@ error.
 
 Each op's semantics in the tree has the set monad's as its set: the rules
 are written once for any monad, and the set of a tree keeps the steps of
-a computation, the choice effect and UB. So the theorems of exhaustive and
-scripted modes hold for every core function, on every argument vector, at
-every fuel budget. `fir-ref` computes the exhaustive, scripted and sampled
+a computation, the choice effect and UB.
+
+The modes run the core dialect with memory (the section on modes with
+memory): its rules in the tree, lifted into the state layer over the tree,
+from the empty memories, where each memory's units are as wide as the run
+says. No core op touches memory, so each op keeps the memories, as it does
+in the core's semantics with memory, and the morphism through the layer
+maps the one to the other at every naming of the core's memories. So the
+theorems of exhaustive and scripted modes hold of the runs with memory of
+every core function, on every argument vector, at every fuel budget; and
+since the core's runs with memory are its runs, they hold of its runs in
+the set monad too. `fir-ref` computes the exhaustive, scripted and sampled
 modes defined below, and nothing else, to report a run. The values that
 sampled mode chose fit the run, so it inherits scripted mode's theorems.
 
@@ -30,6 +39,8 @@ poison (ADR-2026-11-03-1847).
 -/
 
 namespace Fir.Core
+
+open Memory
 
 /-- The core dialect's rules in the tree of choices. An op without rules
 ends its path with no outcome, and names itself. -/
@@ -96,89 +107,198 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ | .fconst .., _
     | .fcmp .., _ => rfl
 
+/-- The core dialect's rules in the state layer over the tree of choices:
+each op runs by its rule in the tree and keeps the memories, as it runs with
+memory by its rule in the set monad (the section on the core's effects). -/
+instance {N : Type} {unit : N → Nat} :
+    DialectDenote CoreDialect (StateT (Memories N unit) (ChoiceTree Op)) :=
+  DialectDenote.liftState _
+
+variable {N : Type} [DecidableEq N] (unit : N → Nat)
+
+/-- The core's semantics in the layer over the tree of choices denotes its
+semantics with memory, wherever a run names the core's memories. -/
+theorem memMapsDenote (ρ : DialectEffects.Mem CoreDialect → N) :
+    MemMapsDenote (d := CoreDialect) unit (ε := Op) ρ :=
+  ChoiceTree.toSetMorphism.state_mapsDenote_liftState _ mapsDenote
+
 /-- Exhaustive mode on the core function `f` of the module `M`: every path
-of its run on `args` with `fuel` steps, when no path chooses more than
-`budget` bits in all. -/
-def exhaustive (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
-    (fuel budget : Nat) : Option (List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)) :=
-  (f.run M (m := ChoiceTree Op) args fuel).run.explore budget
+of its run with memory on `args` with `fuel` steps, from the empty memories
+whose units are `unit x` bits wide for the memory `x`, when no path chooses
+more than `budget` bits in all. -/
+def exhaustive (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+    Option (List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)) :=
+  (f.memTree unit M args fuel).explore budget
 
 /-- Scripted mode on the core function `f` of the module `M`: the path of
-its run on `args` with `fuel` steps that the choice sequence `cs` names,
-each value read by `read`, or why `cs` does not fit the run. -/
+its run with memory on `args` with `fuel` steps, from the empty memories,
+that the choice sequence `cs` names, each value read by `read`, or why `cs`
+does not fit the run. -/
 def scripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
     (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
     Except (ChoiceTree.Misfit σ) (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat) :=
-  (f.run M (m := ChoiceTree Op) args fuel).run.script read cs 0
-
-/-- Exhaustive mode, within its choice budget, gives exactly the outcomes
-of the run at the fuel budget it runs with. -/
-theorem exhaustive_outcomes (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
-    (fuel budget : Nat) {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
-    (hx : exhaustive M f args fuel budget = some ls) (o : Outcome Obs) :
-    Run.outcomes (f.run M (m := SetM) args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o :=
-  Func.explore_outcomes mapsDenote M f args fuel budget hx o
-
-/-- Exhaustive mode, within its choice budget, lists a stuck path exactly
-when the run has one. -/
-theorem exhaustive_stuck (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
-    (fuel budget : Nat) {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
-    (hx : exhaustive M f args fuel budget = some ls) :
-    Run.IsStuck (f.run M (m := SetM) args fuel) ↔ ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st :=
-  Func.explore_stuck mapsDenote M f args fuel budget hx
-
-/-- Scripted mode, on a choice sequence that fits, gives an outcome of the
-run at the fuel budget it runs with. -/
-theorem scripted_outcomes {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
-    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
-    (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
-    (hs : scripted read M f args fuel cs = .ok (l, c)) {o : Outcome Obs}
-    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.run M (m := SetM) args fuel) o :=
-  Func.script_outcomes mapsDenote read M f args fuel cs hs ho
-
-/-- Scripted mode, on a choice sequence that fits, reports a stuck path
-only when the run has one. -/
-theorem scripted_stuck {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
-    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
-    (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
-    (hs : scripted read M f args fuel cs = .ok (l, c)) {st : Stuck}
-    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.run M (m := SetM) args fuel) :=
-  Func.script_stuck mapsDenote read M f args fuel cs hs hst
+  (f.memTree unit M args fuel).script read cs 0
 
 /-- Sampled mode on the core function `f` of the module `M`: the path of
-its run on `args` with `fuel` steps on which `draw` gives each choice, from
-the generator `g`, and the values chosen on it. -/
+its run with memory on `args` with `fuel` steps, from the empty memories, on
+which `draw` gives each choice, from the generator `g`, and the values
+chosen on it. -/
 def sampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
     (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × List ChoiceTree.Chosen :=
-  (f.run M (m := ChoiceTree Op) args fuel).run.sample draw g
+  (f.memTree unit M args fuel).sample draw g
+
+/-! # Outcomes of the runs with memory -/
+
+variable (ρ : DialectEffects.Mem CoreDialect → N)
+
+/-- Exhaustive mode, within its choice budget, gives exactly the outcomes
+of the run with memory at the fuel budget it runs with, wherever a run
+names the core's memories. -/
+theorem exhaustive_memOutcomes (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
+    {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
+    (hx : exhaustive unit M f args fuel budget = some ls) (o : Outcome Obs) :
+    Run.outcomes (f.memRuns unit ρ M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o :=
+  Func.memExplore_outcomes unit ρ (memMapsDenote unit ρ) M f args fuel budget hx o
+
+/-- Exhaustive mode, within its choice budget, lists a stuck path exactly
+when the run with memory has one. -/
+theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
+    {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
+    (hx : exhaustive unit M f args fuel budget = some ls) :
+    Run.IsStuck (f.memRuns unit ρ M args fuel) ↔ ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st :=
+  Func.memExplore_stuck unit ρ (memMapsDenote unit ρ) M f args fuel budget hx
+
+/-- Scripted mode, on a choice sequence that fits, gives an outcome of the
+run with memory at the fuel budget it runs with. -/
+theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
+    (hs : scripted unit read M f args fuel cs = .ok (l, c)) {o : Outcome Obs}
+    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns unit ρ M args fuel) o :=
+  Func.memScript_outcomes unit ρ (memMapsDenote unit ρ) read M f args fuel cs hs ho
+
+/-- Scripted mode, on a choice sequence that fits, reports a stuck path
+only when the run with memory has one. -/
+theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
+    (hs : scripted unit read M f args fuel cs = .ok (l, c)) {st : Stuck}
+    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns unit ρ M args fuel) :=
+  Func.memScript_stuck unit ρ (memMapsDenote unit ρ) read M f args fuel cs hs hst
 
 /-- The values that sampled mode chose are a choice sequence that fits the
 run: scripted mode on them reports the same path, with as many choices. -/
 theorem sampled_fits {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
     (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
-    scripted ChoiceTree.readChosen M f args fuel (sampled draw M f args fuel g).2 =
-      .ok ((sampled draw M f args fuel g).1, (sampled draw M f args fuel g).2.length) := by
-  have h := ChoiceTree.sample_script (draw := draw) (f.run M (m := ChoiceTree Op) args fuel).run g 0
+    scripted unit ChoiceTree.readChosen M f args fuel (sampled unit draw M f args fuel g).2 =
+      .ok ((sampled unit draw M f args fuel g).1,
+        (sampled unit draw M f args fuel g).2.length) := by
+  have h := ChoiceTree.sample_script (draw := draw) (f.memTree unit (ε := Op) M args fuel) g 0
   rw [Nat.zero_add] at h
   exact h
+
+/-- Sampled mode gives an outcome of the run with memory at the fuel budget
+it runs with, whatever the generator. -/
+theorem sampled_memOutcomes {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (g : γ) {o : Outcome Obs}
+    (ho : (sampled unit draw M f args fuel g).1.pathEnd = .outcome o) :
+    Run.outcomes (f.memRuns unit ρ M args fuel) o :=
+  scripted_memOutcomes unit ρ _ M f args fuel _ (sampled_fits unit draw M f args fuel g) ho
+
+/-- Sampled mode reports a stuck path only when the run with memory has
+one. -/
+theorem sampled_memStuck {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (g : γ) {st : Stuck}
+    (hst : (sampled unit draw M f args fuel g).1.pathEnd = .stuck st) :
+    Run.IsStuck (f.memRuns unit ρ M args fuel) :=
+  scripted_memStuck unit ρ _ M f args fuel _ (sampled_fits unit draw M f args fuel g) hst
+
+/-! # Outcomes of the runs
+
+The core's ops touch no memory, so the tree of a core run with memory is the
+tree of its run with no memory: the modes report what they reported before
+memory, path for path, and each mode's theorems speak of the run in the set
+monad too. -/
+
+/-- The tree of a core run with memory is the tree of its run: each core op
+keeps the memories, so the paths, their choices and how each ends are the
+same, and only the memories that the tree drops at each leaf differ. -/
+theorem memTree_eq (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    f.memTree unit (ε := Op) M args fuel = (f.run M (m := ChoiceTree Op) args fuel).run := by
+  have h := Func.run_map (DialectDenote.liftState_mapsDenote (m := ChoiceTree Op)
+    (d := CoreDialect) (Memories N unit))
+    (MonadMorphism.liftState_mapsFrame (Mem := N) (unit := unit) (fun _ => rfl)) M f args fuel
+  unfold Func.memTree
+  rw [← h]
+  show (ChoiceTree.bind _ fun a => .pure (a, Memories.empty)).bind (fun p => .pure p.1) = _
+  rw [ChoiceTree.bind_assoc]
+  exact ChoiceTree.bind_pure _
+
+/-- Exhaustive mode, within its choice budget, gives exactly the outcomes
+of the run at the fuel budget it runs with. -/
+theorem exhaustive_outcomes (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
+    {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
+    (hx : exhaustive unit M f args fuel budget = some ls) (o : Outcome Obs) :
+    Run.outcomes (f.run M (m := SetM) args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
+  rw [exhaustive, memTree_eq] at hx
+  exact Func.explore_outcomes mapsDenote M f args fuel budget hx o
+
+/-- Exhaustive mode, within its choice budget, lists a stuck path exactly
+when the run has one. -/
+theorem exhaustive_stuck (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
+    {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
+    (hx : exhaustive unit M f args fuel budget = some ls) :
+    Run.IsStuck (f.run M (m := SetM) args fuel) ↔ ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
+  rw [exhaustive, memTree_eq] at hx
+  exact Func.explore_stuck mapsDenote M f args fuel budget hx
+
+/-- Scripted mode, on a choice sequence that fits, gives an outcome of the
+run at the fuel budget it runs with. -/
+theorem scripted_outcomes {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
+    (hs : scripted unit read M f args fuel cs = .ok (l, c)) {o : Outcome Obs}
+    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.run M (m := SetM) args fuel) o := by
+  rw [scripted, memTree_eq] at hs
+  exact Func.script_outcomes mapsDenote read M f args fuel cs hs ho
+
+/-- Scripted mode, on a choice sequence that fits, reports a stuck path
+only when the run has one. -/
+theorem scripted_stuck {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
+    (hs : scripted unit read M f args fuel cs = .ok (l, c)) {st : Stuck}
+    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.run M (m := SetM) args fuel) := by
+  rw [scripted, memTree_eq] at hs
+  exact Func.script_stuck mapsDenote read M f args fuel cs hs hst
 
 /-- Sampled mode gives an outcome of the run at the fuel budget it runs
 with, whatever the generator. -/
 theorem sampled_outcomes {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
-    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ)
-    {o : Outcome Obs} (ho : (sampled draw M f args fuel g).1.pathEnd = .outcome o) :
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (g : γ) {o : Outcome Obs}
+    (ho : (sampled unit draw M f args fuel g).1.pathEnd = .outcome o) :
     Run.outcomes (f.run M (m := SetM) args fuel) o :=
-  scripted_outcomes _ M f args fuel _ (sampled_fits draw M f args fuel g) ho
+  scripted_outcomes unit _ M f args fuel _ (sampled_fits unit draw M f args fuel g) ho
 
 /-- Sampled mode reports a stuck path only when the run has one. -/
 theorem sampled_stuck {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
-    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ)
-    {st : Stuck} (hst : (sampled draw M f args fuel g).1.pathEnd = .stuck st) :
+    (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
+    (fuel : Nat) (g : γ) {st : Stuck}
+    (hst : (sampled unit draw M f args fuel g).1.pathEnd = .stuck st) :
     Run.IsStuck (f.run M (m := SetM) args fuel) :=
-  scripted_stuck _ M f args fuel _ (sampled_fits draw M f args fuel g) hst
+  scripted_stuck unit _ M f args fuel _ (sampled_fits unit draw M f args fuel g) hst
 
 end Fir.Core
