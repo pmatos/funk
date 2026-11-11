@@ -175,7 +175,7 @@ Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o` and $`\mathrm{callee}(o)`
 are what the dialect says of $`o`; looking operands up, jumping, looking a
 symbol up and entering a function are the blocks above. Running in a frame
 is the way of computing's
-{ref "The-fir-specification--Memory--The-memory-effect"}[frame effect]:
+{ref "The-fir-specification--Execution--The-frame-effect"}[frame effect]:
 with memory, it frees the callee's stack allocations when the callee
 returns (ADR-2026-11-09-1548); with no memory, it changes nothing. Each op takes one
 step, the terminator and the call included, and a callee runs on the steps

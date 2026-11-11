@@ -24,9 +24,11 @@ memory is (G0, ADR-2026-10-29-2016).
 - **Memory is an effect.** `MonadMemory` gives allocating, freeing, loading
   and storing, each on a named memory; a faulting access is UB.
 - **The interpreter runs every function in a frame.** `MonadFrame.frame`
-  runs a computation as one call. `Func.runOps` runs each callee in a
-  frame, and `Func.run` runs the function it starts with in one. The frame
-  is the monad's: the interpreter says only where a call starts and returns.
+  (`lean/Fir/Execution/Frame.lean`) runs a computation as one call.
+  `Func.runOps` runs each callee in a frame, and `Func.run` runs the
+  function it starts with in one, so no op runs outside a frame. The frame
+  is the monad's: the interpreter says only where a call starts and returns,
+  and imports nothing of the memory model.
 - **A monad without memory has frames that change nothing.** In the set
   monad and the tree of choices a frame is the computation itself, so M0's
   runs, `fir-ref` and their proofs are unchanged.
@@ -52,6 +54,11 @@ memory is (G0, ADR-2026-10-29-2016).
 
 - A dialect whose ops touch no memory runs in the layer by lifting its
   rules, and its runs with memory are its runs (`Func.memRuns_eq`).
+- A proper tail call (ADR-2026-11-09-1553) replaces its caller's frame, so
+  the caller's stack allocations are freed before the callee runs. A frame
+  that only brackets a computation cannot do that, so the tail-call ticket
+  adds a second frame operation that leaves the current frame and enters a
+  fresh one in its place, and runs the callee there.
 - Ops that touch memory state their semantics in a monad with
   `MonadMemory`; progress, fuel monotonicity and refinement for them are
   proved over the layer, and `fir-ref` walks the layer over the tree of

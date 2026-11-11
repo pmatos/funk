@@ -14,20 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "447964480813469807")
-:::
-
-:::readable Fir.SetM.pure_bind Fir.SetM.bind_pure Fir.SetM.bind_assoc (pin := Fir.SetM.instLawfulMonad) (fingerprint := "1246182902180986501")
-*Theorem: the set monad's laws.* In the
-{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad],
-a value then $`f` is $`f` of the value, a computation then a value is the
-computation, and sequences associate:
-
-$$`\mathrm{pure}(a) \mathbin{>\!\!>\!\!=} f = f(a) \qquad s \mathbin{>\!\!>\!\!=} \mathrm{pure} = s`
-
-$$`(s \mathbin{>\!\!>\!\!=} f) \mathbin{>\!\!>\!\!=} g = s \mathbin{>\!\!>\!\!=} (a \mapsto f(a) \mathbin{>\!\!>\!\!=} g)`
-
-So the set monad is a lawful monad.
+:::moduleDocs (fingerprint := "1985518580704619510")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")

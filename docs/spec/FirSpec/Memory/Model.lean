@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9848544354756000761")
+:::moduleDocs (fingerprint := "2710814930418249509")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -122,6 +122,11 @@ the units fit, $`o + |\vec{y}| \le |\vec{x}|`. A store writes only units
 that fit, as its access checks.
 :::
 
+:::readable Fir.Memory.Block.kill (fingerprint := "10408486902089807610")
+*Definition: a freed block.* $`\mathrm{kill}(k, \vec{x}, \ell) = (k, \vec{x}, \mathsf{false})`:
+the block, no longer live, with its kind and its units.
+:::
+
 :::readable Fir.Memory.Memory.empty (fingerprint := "4566367693092568579")
 *Definition: the empty memory.* Before anything is allocated, a memory has
 no blocks: $`M = \epsilon`.
@@ -141,9 +146,9 @@ one that did. A pointer that names an id not yet allocated has none, and
 every access through it faults.
 :::
 
-:::readable Fir.Memory.Memory.free (fingerprint := "15821920455813180707")
-*Definition: freeing.* Freeing the allocation $`a` marks its block as not
-live, and changes nothing else. The block stays in the memory, so no id is
+:::readable Fir.Memory.Memory.free (fingerprint := "3491244456422549382")
+*Definition: freeing.* Freeing the allocation $`a` kills its block,
+$`M[a] := \mathrm{kill}(M[a])`, and changes nothing else. The block stays in the memory, so no id is
 reused. Freeing never faults: freeing a block that is already freed, or an
 id the memory does not have, changes nothing. The run frees a call's stack
 allocations when it returns (ADR-2026-11-09-1548), and an external call

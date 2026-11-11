@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Frame laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15174901139564733552")
+:::moduleDocs (fingerprint := "8614347794442316598")
 :::
 
 :::readable Fir.Memory.Memories.enter_mem Fir.Memory.Memories.exit_enter (fingerprint := "11872330539158653898")
@@ -28,27 +28,26 @@ memories as they were: $`\mathrm{exit}(\mathrm{enter}(S)) = S`.
 $`m`, every memory $`y \neq x` is $`S`'s, and the frames are $`S`'s.
 :::
 
-:::readable Fir.Memory.Memories.kill Fir.Memory.Memories.kill_kill (fingerprint := "15548542594635949673")
-*Definition: a freed block.* $`\mathrm{kill}(b)` is the block $`b`, no
-longer live, with its kind and units. Killing a killed block changes
-nothing.
+:::readable Fir.Memory.Memories.kill_kill (fingerprint := "12794855804287308356")
+*Theorem: freeing a freed block changes nothing.* Killing a killed block
+gives the killed block: $`\mathrm{kill}(\mathrm{kill}(b)) = \mathrm{kill}(b)`.
 :::
 
-:::readable Fir.Memory.Memories.free_get Fir.Memory.Memories.free_length (fingerprint := "900990532738960949")
+:::readable Fir.Memory.Memories.free_get Fir.Memory.Memories.free_length (fingerprint := "5944758421440549963")
 *Theorem: a free kills only its own allocation.* After freeing $`b` of
 $`y`, the allocation $`a` of $`x` is $`\mathrm{kill}` of what it was when
 $`(y, b) = (x, a)`, and as it was otherwise. No memory gains or loses an
 allocation.
 :::
 
-:::readable Fir.Memory.Memories.freeAll_get Fir.Memory.Memories.freeAll_length Fir.Memory.Memories.freeAll_frames (fingerprint := "13549400094004485985")
+:::readable Fir.Memory.Memories.freeAll_get Fir.Memory.Memories.freeAll_length Fir.Memory.Memories.freeAll_frames (fingerprint := "17629710118196293691")
 *Theorem: freeing a list kills exactly what it lists.* After freeing the
 list $`l`, the allocation $`a` of $`x` is killed when $`(x, a) \in l`, and
 as it was otherwise. No memory gains or loses an allocation, and the
 frames stay as they were.
 :::
 
-:::readable Fir.Memory.Memories.exit_frames Fir.Memory.Memories.exit_get Fir.Memory.Memories.exit_length (fingerprint := "4050348716101354141")
+:::readable Fir.Memory.Memories.exit_frames Fir.Memory.Memories.exit_get Fir.Memory.Memories.exit_length (fingerprint := "9530880913325362074")
 *Theorem: leaving a call frees exactly its frame.* When the frames of
 $`S` are $`\mathit{fr}~\mathit{fr}^*`, leaving the call pops
 $`\mathit{fr}`, so the frames are $`\mathit{fr}^*`; it kills the

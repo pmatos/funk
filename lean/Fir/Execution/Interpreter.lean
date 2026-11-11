@@ -1,4 +1,4 @@
-import Fir.Execution.MemoryEffect
+import Fir.Execution.Frame
 import Fir.Validation.Scope
 
 /-!
@@ -41,7 +41,7 @@ runs the entry block op by op:
   function that the run starts with alike: the run enters a frame before
   the function's first op and leaves it when the function returns, so that
   the stack allocations of a call are freed when it returns
-  (ADR-2026-11-09-1548, the section on the memory effect). In a monad with
+  (ADR-2026-11-09-1548, the section on the frame effect). In a monad with
   no memory, such as the set monad, a frame changes nothing.
 
 Every op takes one step of fuel, the terminator and the call included. A

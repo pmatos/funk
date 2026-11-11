@@ -1,5 +1,5 @@
 import Fir.Execution.ChoiceTree
-import Fir.Memory.Frames
+import Fir.Execution.MemoryEffect
 
 /-!
 # The state layer
@@ -131,6 +131,8 @@ theorem MonadMorphism.state_free (x : Mem) (a : AllocId) :
   funext S
   exact φ.map_pure _
 
+section
+
 variable (h : ∀ {α : Type} (r : String), φ.map (MonadUB.ub r : m α) = MonadUB.ub r)
 include h
 
@@ -162,10 +164,36 @@ theorem MonadMorphism.state_store (x : Mem) (p : Pointer) (us : List (MemUnit (u
   · exact φ.map_pure _
   · exact h _
 
-omit h in
+end
+
 /-- The tree of choices in the state layer maps to the set monad in the
 state layer: `toSet`, at each state. -/
 def ChoiceTree.toSetState (ε σ : Type) : MonadMorphism (StateT σ (ChoiceTree ε)) (StateT σ SetM) :=
   (ChoiceTree.toSetMorphism (ε := ε)).state σ
+
+/-- `toSet` through the layer keeps a choice of bits. -/
+theorem ChoiceTree.toSetState_choose (ε σ : Type) (w : Nat) :
+    (ChoiceTree.toSetState ε σ).map (MonadChoice.choose w) = MonadChoice.choose w :=
+  (ChoiceTree.toSetMorphism (ε := ε)).state_choose ChoiceTree.toSet_choose w
+
+/-- `toSet` through the layer keeps UB. -/
+theorem ChoiceTree.toSetState_ub (ε σ : Type) {α : Type} (r : String) :
+    (ChoiceTree.toSetState ε σ).map (MonadUB.ub r : StateT σ (ChoiceTree ε) α) = MonadUB.ub r :=
+  (ChoiceTree.toSetMorphism (ε := ε)).state_ub (ChoiceTree.toSet_ub (ε := ε)) r
+
+variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
+  {ε : Type} [DialectDenote d (StateT (Memories Mem unit) (ChoiceTree ε))]
+  [DialectDenote d (StateT (Memories Mem unit) SetM)]
+
+/-- The run of a function in the layer over the tree of choices has, at
+each state, its run in the layer over the set monad as its set, when each
+op's semantics in the one has its semantics in the other as its set. -/
+theorem Func.run_toSetState
+    (h : (ChoiceTree.toSetState ε (Memories Mem unit)).MapsDenote (d := d)) (M : Module d)
+    (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    ((ChoiceTree.toSetState ε (Memories Mem unit)).except Stuck).map
+        (f.run M (m := StateT (Memories Mem unit) (ChoiceTree ε)) args fuel) =
+      f.run M (m := StateT (Memories Mem unit) SetM) args fuel :=
+  Func.run_map h (ChoiceTree.toSetMorphism.state_mapsFrame) M f args fuel
 
 end Fir

@@ -30,7 +30,7 @@ import Fir.Core.Values
 import Fir.Core.OpEffects
 import Fir.Core.Poison
 import Fir.Core.Unlawful
-import Fir.Execution.MemoryEffect
+import Fir.Execution.Frame
 import Fir.Execution.Interpreter
 import Fir.Core.Arith
 import Fir.Core.Wrap
@@ -54,6 +54,7 @@ import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
+import Fir.Execution.MemoryEffect
 import Fir.Execution.MemoryState
 import Fir.Execution.Modes
 import Fir.Core.Modes

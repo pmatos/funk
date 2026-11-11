@@ -25,6 +25,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.Behaviour "Outcomes and behaviours" FirSpec.Execution.Behaviour (level := 1)}
 
+{includeReadable "." Fir.Execution.Frame "The frame effect" FirSpec.Execution.Frame (level := 1)}
+
 {includeReadable "." Fir.Execution.Fuel "Fuel and progress" FirSpec.Execution.Fuel (level := 1)}
 
 {includeReadable "." Fir.Execution.Refinement "Refinement" FirSpec.Execution.Refinement (level := 1)}

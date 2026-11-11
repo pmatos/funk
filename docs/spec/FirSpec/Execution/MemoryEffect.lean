@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The memory effect: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3293106545108198844")
+:::moduleDocs (fingerprint := "1580814651269538647")
 :::
 
 :::readable Fir.MonadMemory (fingerprint := "1580814651269538647")
@@ -30,22 +30,4 @@ it gives the memory model's four operations, each on a named memory:
   through $`p`.
 
 A load or a store that faults is immediate UB (ADR-2026-11-09-1542).
-:::
-
-:::readable Fir.MonadFrame (fingerprint := "9116329985796444310")
-*Definition: the frame effect.* A way of computing has the frame effect
-when it can run a computation $`x` as the run of one call,
-$`\mathrm{frame}(x)`: it enters a frame before $`x` and leaves it after.
-The interpreter runs every function in a frame of its own, so that a
-call's stack allocations are freed when it returns (ADR-2026-11-09-1548).
-:::
-
-:::readable Fir.inFrame Fir.inFrame_setM (pin := Fir.instMonadFrameSetM) (fingerprint := "152058064850931469")
-*Definition: a frame of the interpreter.* The interpreter's computations
-may also end stuck. Running one in a frame runs, in a frame of the way of
-computing, the computation of the ways it may end, stuck ones included.
-
-*Theorem: the set monad has no memory.* In the set monad a frame is the
-computation itself: $`\mathrm{frame}(x) = x`. So the runs of the set
-monad are those of M0.
 :::

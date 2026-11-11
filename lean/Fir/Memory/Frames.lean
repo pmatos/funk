@@ -63,7 +63,10 @@ def set (S : Memories Mem unit) (x : Mem) (m : Memory (unit x)) : Memories Mem u
   { S with mem := fun y => if h : x = y then h ▸ m else S.mem y }
 
 /-- Records the stack allocation `a` of the memory `x` in the innermost
-frame. Outside every call there is no frame, and nothing is recorded. -/
+frame. Outside every call there is no frame, and nothing is recorded, so
+such an allocation would never be freed. A run never allocates outside a
+call: the interpreter runs the function that a run starts with in a frame
+of its own, as it runs every callee. -/
 def record (S : Memories Mem unit) (x : Mem) (a : AllocId) : Memories Mem unit :=
   match S.frames with
   | [] => S

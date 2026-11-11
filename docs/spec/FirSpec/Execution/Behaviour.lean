@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Outcomes and behaviours: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2605771044880655497")
+:::moduleDocs (fingerprint := "18223517462678380884")
 :::
 
 :::readable Fir.Outcome (fingerprint := "2974526082486249930")
@@ -89,6 +89,17 @@ $$`\mathrm{ub}(r) = \{ \mathsf{ub}~r \}`
 
 so a choice may end with any bits, and UB ends the computation: what
 follows it never runs.
+:::
+
+:::readable Fir.SetM.pure_bind Fir.SetM.bind_pure Fir.SetM.bind_assoc (pin := Fir.SetM.instLawfulMonad) (fingerprint := "1246182902180986501")
+*Theorem: the set monad's laws.* In the set monad, a value then $`f` is $`f` of the value, a computation then a value is the
+computation, and sequences associate:
+
+$$`\mathrm{pure}(a) \mathbin{>\!\!>\!\!=} f = f(a) \qquad s \mathbin{>\!\!>\!\!=} \mathrm{pure} = s`
+
+$$`(s \mathbin{>\!\!>\!\!=} f) \mathbin{>\!\!>\!\!=} g = s \mathbin{>\!\!>\!\!=} (a \mapsto f(a) \mathbin{>\!\!>\!\!=} g)`
+
+So the set monad is a lawful monad.
 :::
 
 :::readable Fir.Stuck (fingerprint := "4791329397428074215")

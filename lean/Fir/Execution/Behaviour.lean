@@ -75,6 +75,59 @@ instance : MonadChoice SetM where
 instance : MonadUB SetM where
   ub r := fun e => e = .ub r
 
+variable {α β γ : Type}
+
+/-- `pure` then `f` is `f`. -/
+theorem pure_bind (a : α) (f : α → SetM β) : (pure a >>= f) = f a := by
+  funext e
+  apply propext
+  show ((∃ a', Ev.ok a' = .ok a ∧ f a' e) ∨ ∃ r, Ev.ub r = .ok a ∧ e = .ub r) ↔ f a e
+  constructor
+  · rintro (⟨_, h, h'⟩ | ⟨_, h, _⟩)
+    · cases h
+      exact h'
+    · cases h
+  · exact fun h => .inl ⟨a, rfl, h⟩
+
+/-- `s` then `pure` is `s`. -/
+theorem bind_pure (s : SetM α) : (s >>= pure) = s := by
+  funext e
+  apply propext
+  show ((∃ a, s (.ok a) ∧ e = .ok a) ∨ ∃ r, s (.ub r) ∧ e = .ub r) ↔ s e
+  constructor
+  · rintro (⟨_, h, rfl⟩ | ⟨_, h, rfl⟩) <;> exact h
+  · intro h
+    cases e with
+    | ok a => exact .inl ⟨a, h, rfl⟩
+    | ub r => exact .inr ⟨r, h, rfl⟩
+
+/-- Binds associate. -/
+theorem bind_assoc (s : SetM α) (f : α → SetM β) (g : β → SetM γ) :
+    (s >>= f >>= g) = s >>= fun a => f a >>= g := by
+  funext e
+  apply propext
+  show ((∃ b, ((∃ a, s (.ok a) ∧ f a (.ok b)) ∨ ∃ r, s (.ub r) ∧ Ev.ok b = .ub r) ∧ g b e) ∨
+      ∃ r, ((∃ a, s (.ok a) ∧ f a (.ub r)) ∨ ∃ r', s (.ub r') ∧ Ev.ub r = .ub r') ∧
+        e = .ub r) ↔
+    (∃ a, s (.ok a) ∧ ((∃ b, f a (.ok b) ∧ g b e) ∨ ∃ r, f a (.ub r) ∧ e = .ub r)) ∨
+      ∃ r, s (.ub r) ∧ e = .ub r
+  constructor
+  · rintro (⟨b, ⟨a, ha, hb⟩ | ⟨_, _, h⟩, hg⟩ | ⟨r, ⟨a, ha, hr⟩ | ⟨r', hr', h⟩, rfl⟩)
+    · exact .inl ⟨a, ha, .inl ⟨b, hb, hg⟩⟩
+    · cases h
+    · exact .inl ⟨a, ha, .inr ⟨r, hr, rfl⟩⟩
+    · cases h
+      exact .inr ⟨r, hr', rfl⟩
+  · rintro (⟨a, ha, ⟨b, hb, hg⟩ | ⟨r, hr, rfl⟩⟩ | ⟨r, hr, rfl⟩)
+    · exact .inl ⟨b, .inl ⟨a, ha, hb⟩, hg⟩
+    · exact .inr ⟨r, .inl ⟨a, ha, hr⟩, rfl⟩
+    · exact .inr ⟨r, .inr ⟨r, hr, rfl⟩, rfl⟩
+
+/-- The set monad is a lawful monad. -/
+instance : LawfulMonad SetM :=
+  LawfulMonad.mk' SetM (fun s => bind_pure s) (fun a f => pure_bind a f)
+    (fun s f g => bind_assoc s f g)
+
 end SetM
 
 /-!

@@ -65,7 +65,7 @@ $`\varphi(x)`, lifted the same way.
 :::readable Fir.MonadMorphism.MapsFrame Fir.MonadMorphism.except_inFrame (pin := Fir.MonadFrame) (pin := Fir.inFrame) (fingerprint := "15244815885718087586")
 *Definition: a translation that keeps frames.* Both monads run a call in
 a frame of their own, by their
-{ref "The-fir-specification--Memory--The-memory-effect"}[frame effect].
+{ref "The-fir-specification--Execution--The-frame-effect"}[frame effect].
 A monad morphism $`\varphi` from $`m` to $`n` _keeps frames_ when, for
 every computation $`x` of $`m`,
 

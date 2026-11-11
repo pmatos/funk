@@ -54,23 +54,20 @@ theorem set_mem_ne (S : Memories Mem unit) {x y : Mem} (m : Memory (unit x)) (h 
 # Freeing
 -/
 
-/-- A block, freed. -/
-def kill {u : Nat} (b : Block u) : Block u := { b with live := false }
-
 /-- Freeing a freed block changes nothing. -/
-theorem kill_kill {u : Nat} (b : Block u) : kill (kill b) = kill b := rfl
+theorem kill_kill {u : Nat} (b : Block u) : b.kill.kill = b.kill := rfl
 
 /-- A free changes only the allocation it frees, which it kills. -/
 theorem free_get (S : Memories Mem unit) (y : Mem) (b : AllocId) (x : Mem) (a : AllocId) :
     ((S.free y b).mem x).blocks[a]? =
-      if (y, b) = (x, a) then ((S.mem x).blocks[a]?).map kill else (S.mem x).blocks[a]? := by
+      if (y, b) = (x, a) then ((S.mem x).blocks[a]?).map Block.kill
+      else (S.mem x).blocks[a]? := by
   by_cases hy : y = x
   · subst hy
     by_cases hb : b = a
     · subst hb
       simp [free, Memory.free]
-      rfl
-    · simp [free, Memory.free, hb]
+    · simp [free, Memory.free_blocks_ne _ hb, hb]
   · simp [free, set_mem_ne _ _ hy, hy]
 
 /-- A free keeps the number of allocations of every memory. -/
@@ -85,7 +82,7 @@ theorem free_length (S : Memories Mem unit) (y : Mem) (b : AllocId) (x : Mem) :
 allocation as it was. -/
 theorem freeAll_get (x : Mem) (a : AllocId) : ∀ (S : Memories Mem unit) (l : List (Mem × AllocId)),
     ((S.freeAll l).mem x).blocks[a]? =
-      if (x, a) ∈ l then ((S.mem x).blocks[a]?).map kill else (S.mem x).blocks[a]?
+      if (x, a) ∈ l then ((S.mem x).blocks[a]?).map Block.kill else (S.mem x).blocks[a]?
   | S, [] => by simp [freeAll]
   | S, (y, b) :: l => by
     rw [freeAll, freeAll_get x a (S.free y b) l, free_get]
@@ -122,7 +119,7 @@ each of them, and leaves every other allocation as it was. -/
 theorem exit_get {S : Memories Mem unit} {fr : List (Mem × AllocId)}
     {frs : List (List (Mem × AllocId))} (h : S.frames = fr :: frs) (x : Mem) (a : AllocId) :
     (S.exit.mem x).blocks[a]? =
-      if (x, a) ∈ fr then ((S.mem x).blocks[a]?).map kill else (S.mem x).blocks[a]? := by
+      if (x, a) ∈ fr then ((S.mem x).blocks[a]?).map Block.kill else (S.mem x).blocks[a]? := by
   simp only [exit, h]
   exact freeAll_get x a _ fr
 
@@ -180,7 +177,7 @@ theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n : Nat) :
   have hf : (S.enter.alloc x .stack n).2.frames = [(x, (S.mem x).blocks.length)] :: S.frames :=
     alloc_stack_frames (S := S.enter) rfl x n
   rw [exit_get hf]
-  simp [alloc_mem_self, enter_mem, Memory.alloc_blocks_new, kill]
+  simp [alloc_mem_self, enter_mem, Memory.alloc_blocks_new, Block.kill]
 
 /-- Every access to a call's stack allocation after the call returns is
 UB. -/

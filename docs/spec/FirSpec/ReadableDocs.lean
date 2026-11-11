@@ -124,6 +124,7 @@ import FirSpec.Memory.Model
 import FirSpec.Memory.Laws
 import FirSpec.Memory.Frames
 import FirSpec.Memory.FrameLaws
+import FirSpec.Execution.Frame
 import FirSpec.Execution.MemoryEffect
 import FirSpec.Execution.MemoryState
 import FirSpec.Execution.MemoryRuns
