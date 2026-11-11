@@ -20,6 +20,15 @@ the tests. A sum and a lift run an op of a side by that side's rule with
 its results mapped, so they meet the obligations when their sides do
 (the sections on the sum and the lift of dialects lawful in their
 effects).
+
+No UB fares the same way: mapping keeps it, and a computation of the set
+monad with no UB, run in the state layer, has none from any memories. So
+such a dialect's semantics with memory lifts its semantics in the set
+monad, and its ops meet the obligations on may-UB and poison with memory
+when they meet them in the set monad. The last section goes back: in a
+dialect that lifts the set monad, an op that meets them with memory meets
+them in the set monad, which is how the theorems over runs in the set
+monad use them.
 -/
 
 namespace Fir

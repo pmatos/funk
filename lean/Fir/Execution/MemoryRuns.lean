@@ -145,11 +145,10 @@ monad are their runs, at every naming of its memories. -/
 theorem Func.memRuns_eq [LiftsSetM d] (M : Module d) (f : Func d) :
     f.memRuns unit ρ M = f.runs M := by
   funext args fuel
-  show Functor.map (f := SetM) Prod.fst
-    ((@Func.run _ _ _ _ _ _ _ _ (DialectMemDenote.denoteAt unit ρ) M f args fuel).run
-      Memories.empty) = (f.run M (m := SetM) args fuel).run
+  unfold Func.memRuns
   rw [LiftsSetM.lifts unit ρ, Func.memRun_eq]
-  simp
+  simp only [Functor.map_map, id_map']
+  rfl
 
 /-! # Progress and refinement, with no memory touched -/
 

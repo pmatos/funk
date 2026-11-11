@@ -304,11 +304,9 @@ theorem Func.run_fromState (M : Module d) (f : Func d)
   | ret p => simp only [fromState_pure, map_pure]; rfl
   | fuelExhausted => simp only [fromState_pure, map_pure]; rfl
 
-omit [DecidableEq d.Ty] [DialectCall d] [DialectDenote d (StateT (Memories Mem unit) SetM)] in
 /-- A run of a function with memory that cannot start is stuck there, on
 every path. -/
-theorem Func.run_fromState_stuck [DecidableEq d.Ty] [DialectCall d]
-    [DialectDenote d (StateT (Memories Mem unit) SetM)] (M : Module d) (f : Func d)
+theorem Func.run_fromState_stuck (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (n : Nat) (S : Memories Mem unit) {st : Stuck}
     (hen : f.enter args.toDVals = .error st) (e : Ev (Except Stuck (Result (List (DVal d)))))
     (h : (Prod.fst <$> fromState (f.run M (m := StateT (Memories Mem unit) SetM) args n) S).run e) :
@@ -372,14 +370,12 @@ theorem Func.memRuns_fuelMonotone (unit : N → Nat) (ρ : DialectEffects.Mem d 
   · intro n m o hnm ho hs
     obtain ⟨j, rfl⟩ := Nat.exists_eq_add_of_le hnm
     cases o with
-    | ret a => exact up n j _ (fun h => nomatch h) (fun _ h => nomatch h) hs
-    | ub r => exact up n j _ (fun h => nomatch h) (fun _ h => nomatch h) hs
+    | ret _ | ub _ => exact up n j _ (fun h => nomatch h) (fun _ h => nomatch h) hs
     | fuelExhausted => exact absurd rfl ho
   · intro n m o hnm ho ht
     obtain ⟨j, rfl⟩ := Nat.exists_eq_add_of_le hnm
     cases o with
-    | ret a => exact down n j _ (fun h => nomatch h) (fun _ h => nomatch h) ht
-    | ub r => exact down n j _ (fun h => nomatch h) (fun _ h => nomatch h) ht
+    | ret _ | ub _ => exact down n j _ (fun h => nomatch h) (fun _ h => nomatch h) ht
     | fuelExhausted => exact absurd rfl ho
 
 end

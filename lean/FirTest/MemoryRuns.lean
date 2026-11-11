@@ -100,7 +100,8 @@ The runs with memory of every dialect are fuel-monotone, whatever its ops
 do to the memories. `constAllocatesSet` is `constAllocates` in the state
 layer over the set monad: the theorem on runs of ops covers it, so a run of
 ops that allocates with more fuel is ahead of the run with less, from the
-same memories. -/
+same memories. The alloc dialect's one op allocates by its semantics with
+memory, and the theorem on runs with memory covers its runs. -/
 
 /-- `constAllocates`, in the state layer over the set monad. -/
 @[instance_reducible] def constAllocatesSet (k : AllocKind) :
@@ -119,6 +120,52 @@ example (k : AllocKind) (M : Module CoreDialect) (f : Func CoreDialect) (env : E
       (runFrom (Func.runOps (m := StateT Mems SetM) M (n + j) f env os) S) :=
   letI := constAllocatesSet k
   Func.runOps_memAhead M n j f env os S
+
+/-- The ops of the alloc dialect: `alloc` allocates one unit on the stack of
+the dialect's one memory, and gives no result. -/
+inductive AllocOp where
+  | alloc
+  deriving DecidableEq
+
+/-- A dialect, for these tests, whose one op touches memory: its semantics
+with memory allocates, so it lifts no semantics in the set monad. -/
+abbrev AllocDialect : Dialect := ⟨AllocOp, Core.Ty⟩
+
+instance : DialectSignature AllocDialect where
+  sig _ := []
+  returnTypes _ := []
+  isTerminator _ := false
+  succCount _ := 0
+
+instance : DialectCall AllocDialect := ⟨fun _ => none⟩
+
+/-- The alloc dialect has one memory, `()`, and `alloc` declares that it
+allocates in it. -/
+instance : DialectEffects AllocDialect :=
+  ⟨Unit, fun _ => .exception, fun _ => { allocates := .these [()] }⟩
+
+/-- Wherever a run names the memory `()` as `ρ ()`, `alloc` allocates one
+unit on its stack. -/
+instance : DialectMemDenote AllocDialect where
+  denoteAt _ ρ :=
+    { denote := fun _ _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1
+      exit := fun _ _ => MonadUB.ub "alloc is not a terminator" }
+
+/-- A run with memory of the alloc dialect runs its semantics with memory at
+the naming it is given. -/
+example {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N) (M : Module AllocDialect)
+    (f : Func AllocDialect) (args : HVector toType (f.params.map (·.2))) (n : Nat) :
+    f.memRuns unit ρ M args n = Functor.map (f := SetM) Prod.fst
+      ((@Func.run _ _ _ _ _ _ _ _ (DialectMemDenote.denoteAt unit ρ) M f args n).run
+        Memories.empty) :=
+  rfl
+
+/-- The runs with memory of the alloc dialect, whose op allocates, are
+fuel-monotone. -/
+example (M : Module AllocDialect) (f : Func AllocDialect)
+    (args : HVector toType (f.params.map (·.2))) :
+    FuelMonotone (f.memRuns (fun _ : Unit => 8) id M args) :=
+  Func.memRuns_fuelMonotone _ _ M f args
 
 /-- info: 'Fir.Func.memRuns_fuelMonotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_fuelMonotone

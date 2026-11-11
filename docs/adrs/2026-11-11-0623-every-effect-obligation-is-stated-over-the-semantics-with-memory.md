@@ -30,11 +30,13 @@ first memory op lands (stage 4).
   lifted into the state layer. `DialectMemDenote.ofSetM` meets it, and so do
   sums and lifts whose sides do. The core dialect and the test dialects
   meet it.
-- **Theorems over runs in the set monad assume the tie.** Under it, an op
-  meets each obligation in the set monad exactly when it meets it with
-  memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back). The
-  soundness of function summaries (`Module.summary_neverUB`,
-  `Module.summary_noPoison`) takes `LiftsSetM`.
+- **Theorems over runs in the set monad that use these two obligations
+  assume the tie.** Under it, an op meets each obligation in the set monad
+  exactly when it meets it with memory (`NeverUB.setM`,
+  `MakesNoPoison.setM`, and `.ofSetM` back). The soundness of function
+  summaries (`Module.summary_neverUB`, `Module.summary_noPoison`) takes
+  `LiftsSetM`. Theorems that do not use them, such as fuel monotonicity,
+  progress and refinement of runs in the set monad, take no tie.
 - **Runs with memory run the dialect's semantics with memory.**
   `Func.memRuns unit ρ M f` runs `DialectMemDenote.denoteAt unit ρ`, from
   the empty memories. Under the tie, they are the runs in the set monad

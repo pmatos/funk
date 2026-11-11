@@ -93,6 +93,7 @@ meets no may-UB and no may produce poison in the set monad exactly when it
 meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`), and
 theorems over runs in the set monad use them so. A dialect with a memory
 op has no tie.
+
 Observable has no obligation yet: M0's runs have no trace. The core dialect
 is lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no
 memory, so `DialectMemDenote.ofSetM` gives its semantics with memory and

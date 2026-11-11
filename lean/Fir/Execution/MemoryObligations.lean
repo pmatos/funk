@@ -27,7 +27,9 @@ memory `x` of the run:
   does not read `x`, although whether it faults depends on the allocations
   of `x`.
 
-An op that neither writes nor allocates in `x` leaves `x` as it was.
+An op that neither writes nor allocates in `x` leaves `x` as it was. The
+obligation on may-UB is stated here too, over the same semantics: a
+computation that never ends in UB, from any memories.
 UB ends a path and shows no memory, so no write and no allocation speak of
 the paths that end in results. No read speaks of UB too: from the other
 memory, UB comes for the same reason.

@@ -70,7 +70,7 @@ then $`o` is not a terminator.
 
 Each obligation but the last speaks of the op's semantics with memory, so
 it holds of an op that touches memory, which has no semantics in the set
-monad (ADR-2026-11-11-0451).
+monad (ADR-2026-11-11-0623).
 
 An op with a callee is left out of all but the last: it runs its callee,
 not a rule of its own, and has its callee's effects (ADR-2026-11-02-1514).

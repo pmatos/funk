@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17083197767276495102")
+:::moduleDocs (fingerprint := "3134613195537927620")
 :::
 
 :::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "17867899712697039806")
@@ -59,7 +59,7 @@ UB of the smaller run is one of the larger, and each of the larger is one
 of the smaller, unless the smaller can run out of fuel.
 :::
 
-:::readable Fir.fromState_fst Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "16392479221761254983")
+:::readable Fir.fromState_fst Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "10140593824667432733")
 *Theorems: the run of a function with memory.* What a computation of the
 layer may end with from $`S`, without the memories it ends with, is what
 it ends with read from $`S`, without them. A function's run with memory from
