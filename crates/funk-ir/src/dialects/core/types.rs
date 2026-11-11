@@ -66,8 +66,13 @@ pub fn int_type(width: u32) -> Type {
 }
 
 /// The type `ptr<N>` with `N = memory`: `ptr` for the default memory, and
-/// `ptr(N)` for another.
+/// `ptr(N)` for another. `memory` is at most [`MAX_MEMORY`]: a higher one
+/// writes a type that does not decode.
 pub fn ptr_type(memory: u32) -> Type {
+    debug_assert!(
+        memory <= MAX_MEMORY,
+        "memory {memory} is above {MAX_MEMORY}"
+    );
     match memory {
         0 => Type::word(PTR),
         n => Type::app(PTR, vec![Attr::int(i128::from(n))]),

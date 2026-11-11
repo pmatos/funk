@@ -344,10 +344,22 @@ fn hidden_characters_are_rejected_outside_strings_even_in_comments() {
 fn tokens_must_not_run_into_name_characters() {
     rejected_at(&func(&["ret %a @1x"]), 3, 11, "must not run into");
     rejected_at(
-        &func(&["%c: i32 = const 1.5 @0", "ret %c @0"]),
+        &func(&["%c: i32 = const 1.5x @0", "ret %c @0"]),
         3,
         19,
-        "float",
+        "must not run into",
+    );
+    rejected_at(
+        &func(&["%c: i32 = const 1.e5 @0", "ret %c @0"]),
+        3,
+        19,
+        "must not run into",
+    );
+    rejected_at(
+        &func(&["%c: i32 = const 1.5 @0", "ret %c @0"]),
+        3,
+        13,
+        "not 1.5",
     );
     rejected_at(
         &func(&["%c: i32 = const 1abc @0", "ret %c @0"]),
@@ -372,7 +384,7 @@ fn tokens_must_not_run_into_name_characters() {
         &func(&["%c: i32 = const - 1 @0", "ret %c @0"]),
         3,
         19,
-        "negative integer",
+        "negative number",
     );
     rejected_at(
         &func(&["% c: i32 = const 1 @0"]),

@@ -67,8 +67,14 @@ input_file itemKindsCases where
   path := ".." / "tests" / "dialects" / "item-kinds.cases"
   text := true
 
+/-- The cases of the text of float constants that the Lean tests share with
+the Rust tests, which `FirTest.FloatText` includes. -/
+input_file floatTextCases where
+  path := ".." / "tests" / "dialects" / "float-text.cases"
+  text := true
+
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
 lean_lib FirTest where
   needs := #[`@/useOnceCases, `@/effectCases, `@/effectSummaryCases, `@/dialectSetCases,
-    `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases]
+    `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases, `@/floatTextCases]

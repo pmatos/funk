@@ -80,7 +80,7 @@ dialects of its head and of its arguments. -/
 def Attr.dialects : Attr → List String
   | .word w => (wordDialect w).toList
   | .app h args => (wordDialect h).toList ++ Attr.dialectsAll args
-  | .int _ | .str _ | .sym _ => []
+  | .int _ | .str _ | .sym _ | .float _ => []
 
 /-- The dialects that the words of a list of attributes name. -/
 def Attr.dialectsAll : List Attr → List String

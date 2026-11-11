@@ -23,6 +23,7 @@ theorem Attr.spells : ∀ a : Attr, (∀ t ∈ a.tokens, t.Writable) → Spells 
   | .int i, _ => Tok.spells (t := .int i) trivial
   | .str s, _ => Tok.spells (t := .str s) trivial
   | .sym s, _ => Tok.spells (t := .sym s) trivial
+  | .float l, hw => Tok.spells (t := .float l) (hw _ (by simp [Attr.tokens]))
   | .app h args, hw => by
     have hh : isWord h = true := hw (.word h) (by simp [Attr.tokens])
     have heach := Attr.spellsEach args <| forall_mem_intercalate (sep := [Tok.comma])

@@ -9,9 +9,9 @@ on stand-ins: defined values in place of each poison. The stand-ins of
 ones that `fir-ref run --seed` favours (ADR-2026-10-31-0002): 0, 1, all
 ones, the signed minimum and the signed maximum, each once, so `false` and
 `true` at `i1`. At a float type they are `+0`, the smallest subnormal, a
-NaN with its sign set, `-0` and a NaN, spelled as the float's bits read as
-a signed integer (ADR-2026-11-11-1138). Native code runs on every
-combination: with `k` poison arguments, up to `5 ** k` runs.
+NaN with its sign set, `-0` and a NaN, each spelled as its one float
+literal (ADR-2026-11-11-1438). Native code runs on every combination: with
+`k` poison arguments, up to `5 ** k` runs.
 
 Each native result must refine an outcome of `fir-ref`'s run on the poison
 itself. A run with a value in place of poison refines the run with poison,
@@ -21,17 +21,17 @@ on every stand-in.
 
 import itertools
 
-from refine import POISON, bits_of
+import float_text
+from refine import POISON, bits_of, float_format
 
 
 def count(n: int, thing: str) -> str:
     return f"{n} {thing}" if n == 1 else f"{n} {thing}s"
 
 
-def spell(bits: int, width: int, is_int: bool = True) -> str:
-    """The bit pattern `bits` of `iN`, or of a float type of `N` bits,
-    spelled as a constant of its type."""
-    if width == 1 and is_int:
+def spell(bits: int, width: int) -> str:
+    """The bit pattern `bits` of `iN` spelled as a constant of its type."""
+    if width == 1:
         return "true" if bits else "false"
     signed = bits - (1 << width) if bits >> (width - 1) else bits
     return str(signed)
@@ -48,7 +48,7 @@ def standins(ty: str) -> tuple[str, ...] | None:
     top = 1 << (width - 1)
     found = []
     for bits in (0, 1, (1 << width) - 1, top, top - 1):
-        s = spell(bits, width, is_int)
+        s = spell(bits, width) if is_int else float_text.spell(*float_format(ty), bits)
         if s not in found:
             found.append(s)
     return tuple(found)

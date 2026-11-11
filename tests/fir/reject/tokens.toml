@@ -132,7 +132,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "fir has no floating-point numbers"
+rule = "a constant of an integer type is an integer, not a float literal: 1.5 does not decode at i32"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:

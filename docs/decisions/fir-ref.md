@@ -279,9 +279,9 @@ fir's text writes it, quoted exactly when it is not a word
 **Arguments.** There is one per parameter, spelled as a `const` of the
 parameter's type: `true` or `false` at `i1`, and signed decimal at every other
 width. Decimals have no leading zeros, no `+` and no `-0`, and are in the
-type's range (ADR-2026-10-30-1856). A float of `float<e,m>` is its bits read as
-a signed integer of `1 + e + m` bits, and a float result is written the same way
-(ADR-2026-11-11-1138). `poison`, spelled exactly so, is an argument of any `iN`
+type's range (ADR-2026-10-30-1856). A float of `float<e,m>` is spelled as its
+constants are, as `1.0` or `0x7fc00000`, and a float result is written the same
+way (ADR-2026-11-11-1438). `poison`, spelled exactly so, is an argument of any `iN`
 and of any float type. It is the only argument of `ptr`: a run starts with no
 allocation. It is not a choice either, since `freeze` chooses a value (ADR-2026-11-03-1847).
 

@@ -8,8 +8,9 @@
 
 mod common;
 
+use common::op_verify::{L, built, verify_in};
 use common::{one_func, parse_err, parse_ok};
-use funk_ir::dialects::core::{WIDTH_CHANGES, int_type};
+use funk_ir::dialects::core::{WIDTH_CHANGES, int_type, ptr_type};
 use funk_ir::{
     Attr, Block, Diagnostic, Func, LocRef, Location, Module, Op, Registry, TextPos, Type, print,
     verify,
@@ -122,8 +123,6 @@ fn ill_typed_width_changes_are_rejected_at_the_name() {
     }
 }
 
-const L: LocRef = LocRef(5);
-
 /// The validation error of `op` from `iM` to `iN`, where validation
 /// rejects it.
 fn wrong_direction(op: &str, m: u32, n: u32) -> String {
@@ -171,36 +170,16 @@ fn a_width_change_that_does_not_widen_or_narrow_parses_and_fails_validation() {
 /// The diagnostics of `@f(%a: i32, %b: i64, %c: i8, %p: ptr) -> i32`, whose
 /// entry block holds a constant `%k: i32`, `op` at index 1, and `ret %a`.
 fn verify_op(op: Op) -> Vec<Diagnostic> {
-    let k = Op::new("const", LocRef(0))
-        .attr(Attr::int(1))
-        .result("k", int_type(32));
-    let f = Func::new("f")
-        .param("a", int_type(32))
-        .param("b", int_type(64))
-        .param("c", int_type(8))
-        .param("p", Type::word("ptr"))
-        .result(int_type(32))
-        .block(
-            Block::new("entry")
-                .op(k)
-                .op(op)
-                .op(Op::new("ret", LocRef(0)).operand("a")),
-        );
-    let mut m = Module::new();
-    m.locs.push(Location::Unknown);
-    m.locs.insert(L, Location::Name("here".into()));
-    verify(&m.func(f), &Registry::core())
-}
-
-/// `op` with these attributes, these operands and results of these types,
-/// at `@5`.
-fn built(op: &str, attrs: &[Attr], operands: &[&str], results: &[Type]) -> Op {
-    let o = attrs.iter().fold(Op::new(op, L), |o, a| o.attr(a.clone()));
-    let o = operands.iter().fold(o, |o, x| o.operand(*x));
-    results
-        .iter()
-        .enumerate()
-        .fold(o, |o, (k, t)| o.result(format!("r{k}"), t.clone()))
+    verify_in(
+        &[
+            ("a", int_type(32)),
+            ("b", int_type(64)),
+            ("c", int_type(8)),
+            ("p", ptr_type(0)),
+        ],
+        "k",
+        op,
+    )
 }
 
 /// The uses that the parser rejects in

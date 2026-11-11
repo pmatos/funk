@@ -19,11 +19,7 @@ def lexDigitsP (d : Char) (i : s.Pos) (p : TextPos) : Except ParseError (List Ch
   let ds := if d = '0' then ['0'] else d :: takeWhileP Char.isDigit i []
   let j := if d = '0' then i else skipWhileP Char.isDigit i
   match peekP j with
-  | some (c, _) =>
-    if isNameChar c then
-      errorAt p ("a number must not run into the name character '" ++ c.toString ++
-        "': numbers have no leading zeros, and fir has no float literals")
-    else .ok (ds, j)
+  | some (c, _) => if isNameChar c then errorAt p (runsInto c) else .ok (ds, j)
   | none => .ok (ds, j)
 
 theorem lexDigitsP_eq (d : Char) (i : s.Pos) (p : TextPos) :

@@ -200,9 +200,9 @@ allocation. It is no choice: `freeze` chooses a value. -/
 #guard valueText ⟨.ptr 0, (.value ⟨some 3, -4⟩ : PoisonOr Memory.Pointer)⟩ == "ptr(3, -4)"
 #guard valueText ⟨.ptr 2, (.value ⟨none, 0⟩ : PoisonOr Memory.Pointer)⟩ == "ptr(none, 0)"
 -- A pointer passes through a block argument and a call as it is.
-#guard runText (body "func @p(%x: ptr) -> ptr"
-    ["^e:", "  br ^b(%x) @0", "^b(%y: ptr):", "  %z: ptr = call @p %y @0", "  ret %z @0"])
-    "@p" ["poison"] (fuel := 10) == exhausted
+#guard runText ("func @id(%x: ptr) -> ptr {\n^e:\n  ret %x @0\n}\n\n" ++ body "func @p(%x: ptr) -> ptr"
+    ["^e:", "  br ^b(%x) @0", "^b(%y: ptr):", "  %z: ptr = call @id %y @0", "  ret %z @0"])
+    "@p" ["poison"] == returns ["poison"]
 
 /-- `@f(%a: i2) -> i2`, which returns `freeze %a`. -/
 def freezeArg : String := body "func @f(%a: i2) -> i2" ["^e:", "  %f: i2 = freeze %a @0", "  ret %f @0"]

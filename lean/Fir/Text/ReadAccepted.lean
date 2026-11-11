@@ -30,8 +30,8 @@ unless that list is empty, so nothing is asked of the items of a body.
 
 Each reader takes what it needs from the tokens it reads. A name comes from
 a value or a label token, a word from a word token, a reference from a
-location reference token, and the lexer's step says that each of those
-tokens can be written. A reader gives a property on some tokens when, if
+location reference token, a float literal from a float literal token, and
+the lexer's step says that each of those tokens can be written. A reader gives a property on some tokens when, if
 they can be written, what it reads has the property and the tokens it
 leaves can be written. The tokens that a reader leaves are a suffix of the
 tokens it was given, but a reader's definition records only that there are
@@ -132,6 +132,10 @@ theorem TokensWritable.word {w : String} {p : TextPos} {ts : List Token}
     (h : TokensWritable (⟨.word w, p⟩ :: ts)) : isWord w :=
   (h _ (.head _)).resolve_left nofun
 
+theorem TokensWritable.float {l : FloatLit} {p : TextPos} {ts : List Token}
+    (h : TokensWritable (⟨.float l, p⟩ :: ts)) : l.valid = true :=
+  (h _ (.head _)).resolve_left nofun
+
 theorem TokensWritable.locRef {r : Nat} {p : TextPos} {ts : List Token}
     (h : TokensWritable (⟨.locRef r, p⟩ :: ts)) : r < Location.limit :=
   (h _ (.head _)).resolve_left nofun
@@ -193,7 +197,7 @@ theorem readAttr_writable :
     (∀ ts, ReadsWritable readAttr Attr.Writable ts) ∧
       (∀ ts, ReadsWritable readAttrArgs Attr.AllWritable ts) ∧
       (∀ ts, ReadsWritable readMoreAttrArgs Attr.AllWritable ts) := by
-  refine readAttr.mutual_induct _ _ _ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  refine readAttr.mutual_induct _ _ _ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · intro w pos pos₁ rest ih hw a r h
     rw [readAttr.eq_1] at h
     bind_step h with ⟨⟨args, r₁, hr₁⟩, e₁, h⟩
@@ -204,13 +208,17 @@ theorem readAttr_writable :
     rw [readAttr.eq_2 _ _ _ hne] at h
     cases h
     exact ⟨hw.word, hw.tail⟩
-  all_goals try
-    intro _ _ _ hw a r h
+  iterate 3
+    · intro _ _ _ hw a r h
+      simp only [readAttr] at h
+      cases h
+      exact ⟨trivial, hw.tail⟩
+  · intro _ _ _ hw a r h
     simp only [readAttr] at h
     cases h
-    exact ⟨trivial, hw.tail⟩
-  · intro ts h₁ h₂ h₃ h₄ h₅ hw a r h
-    rw [readAttr.eq_6 _ h₁ h₂ h₃ h₄ h₅] at h
+    exact ⟨hw.float, hw.tail⟩
+  · intro ts h₁ h₂ h₃ h₄ h₅ h₆ hw a r h
+    rw [readAttr.eq_7 _ h₁ h₂ h₃ h₄ h₅ h₆] at h
     exact absurd h fail_ne_ok
   · intro pos rest hw a r h
     rw [readAttrArgs.eq_1] at h

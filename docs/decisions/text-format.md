@@ -102,14 +102,22 @@ has one spelling, and neither does a negative memory, one above 16,777,215,
 `ptr()` or another argument list. Whether the module has memory `N` is
 validation's rule (ADR-2026-11-11-1709).
 
-A float constant is `const` with one attribute: its bits read as a
-two's-complement signed integer of `1 + e + m` bits, in decimal, as an integer
-constant of that width is written. So `%one: f32 = const 1065353216` is `1.0`,
-`-2147483648` at `f32` is `-0`, and every NaN payload and sign has a spelling.
-A number outside that signed range does not decode, so each bit pattern has one
-spelling. `fir-ref run`, the corpus and the built executables spell float
-arguments and results the same way. No float literal and no hexadecimal
-literal joins the grammar (ADR-2026-11-11-1138).
+A float constant is `const` with one float literal, as LLVM writes it. A zero,
+or a finite value of a format no wider than `f128` in either field
+(`2 <= e <= 15`, `1 <= m <= 112`), is the shortest decimal that reads back to
+its bits: `%one: f32 = const 1.0`, `0.1`, `-0.0`, `1.5e-7`. Of two shortest,
+the nearer wins, then the one with an even last digit. Digits are laid out
+plainly when the decimal exponent lies in `-4 <= E < 16`, and otherwise as
+`d.ddde±E`; there is always a digit after `.`. Every other value, NaNs and
+infinities among them, is `0x` and its bits in exactly `ceil((1 + e + m) / 4)`
+lowercase hexadecimal digits, as `0x7fc00000`. A decimal reads by rounding its
+exact value to nearest even. A literal decodes only when it is the spelling of
+the bits it reads as, so `1.00`, `0x3f800000` and `1065353216` at `f32` do not
+decode, and each bit pattern has one spelling. The lexer reads a float literal
+as one token, held by the generic attribute `Attr.float`. `fir-ref run` and the
+corpus spell float arguments and results the same way; a built executable
+keeps its bits read as a signed integer, which the harness converts
+(ADR-2026-11-11-1438).
 
 `fcmp` writes its predicate as LLVM does, one of `oeq`, `one`, `olt`, `ole`,
 `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:

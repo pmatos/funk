@@ -39,11 +39,12 @@ result (ADR-2026-10-30-1855), and so is a choice sequence that does not
 fit the run.
 
 Arguments, choices and values are spelled as constants are in text: `true`
-and `false` at `i1`, and signed decimal at every other width, read with the
-spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
+and `false` at `i1`, signed decimal at every other width, and the one
+float literal of a float's bits at a float type (ADR-2026-11-11-1438), read
+with the spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
 lexer here as `argAttrP`, which lexes at most two tokens over the text's
 positions, with no stack per character (`argAttr_eq_argAttrP`). A value or
-an argument may also be `poison`, at any `iN`, so that a run may start from
+an argument may also be `poison`, at any `iN` or float type, so that a run may start from
 poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
 `freeze` chooses a value of its type.
 -/
@@ -74,8 +75,8 @@ def tyText (t : Core.Ty) : String := t.attr.print
 def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map Attr.print)
 
 /-- A value as `fir-ref run` spells it: as a constant of its type in text,
-or `poison`. A float is written as its bits read as a signed integer
-(ADR-2026-11-11-1138). A pointer is written `ptr(A, O)`, for the
+or `poison`. A float is written as the one float literal of its bits
+(ADR-2026-11-11-1438). A pointer is written `ptr(A, O)`, for the
 allocation `A` it has provenance for and its offset `O`, and
 `ptr(none, O)` when it has no provenance. It names no address, which a
 pointer has only once it is exposed (ADR-2026-11-09-1542), and no run
@@ -86,7 +87,7 @@ def valueText : DVal CoreDialect → String
     | .value b => (Core.constAttr w b).print
   | ⟨.float e m, v⟩ => match (v : PoisonOr (BitVec (Core.floatWidth e m))) with
     | .poison => "poison"
-    | .value b => (Attr.int b.toInt).print
+    | .value b => (Attr.float (Core.floatLit e m b)).print
   | ⟨.ptr _, v⟩ => match (v : PoisonOr Memory.Pointer) with
     | .poison => "poison"
     | .value p =>
@@ -109,7 +110,7 @@ def constOf (w : Nat) (s : String) : Option (BitVec w) :=
   | _ => none
 
 /-- The constant that the text `s` spells at the float type `float<e,m>`
-(`constOpOf`): its bits read as a signed integer. -/
+(`constOpOf`): the one float literal of its bits. -/
 def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) :=
   match constOpOf (.float e m) s with
   | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
@@ -118,7 +119,8 @@ def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)
 /-- An argument of type `t`: a constant of `t`, or `poison` at any `iN` and
 any float type, spelled as `valueText` spells it. A pointer argument is
 `poison`: a run starts with no allocation, so no pointer has provenance
-for one. -/
+for one. So a pointer that `valueText` writes, `ptr(A, O)`, is the one
+value of the output that is no argument. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
   | .int w, s => match constOf w s with

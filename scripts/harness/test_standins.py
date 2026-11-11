@@ -31,16 +31,24 @@ class Standins(unittest.TestCase):
 
     def test_a_float_type_has_the_boundary_bit_patterns_of_its_bits(self):
         # +0, the smallest subnormal, a NaN with its sign set, -0 and a NaN,
-        # each its bits read as a signed integer (ADR-2026-11-11-1138).
-        self.assertEqual(standins("f32"), ("0", "1", "-1", "-2147483648", "2147483647"))
-        self.assertEqual(standins("f16"), ("0", "1", "-1", "-32768", "32767"))
-        self.assertEqual(standins("float(2, 1)"), ("0", "1", "-1", "-8", "7"))
-        for ty in ("f16", "bf16", "f32", "f64", "f128", "float(5, 2)"):
+        # each its one float literal (ADR-2026-11-11-1438).
+        self.assertEqual(
+            standins("f32"), ("0.0", "1.0e-45", "0xffffffff", "-0.0", "0x7fffffff")
+        )
+        self.assertEqual(standins("f16"), ("0.0", "6.0e-8", "0xffff", "-0.0", "0x7fff"))
+        self.assertEqual(standins("float(2, 1)"), ("0.0", "0.5", "0xf", "-0.0", "0x7"))
+        self.assertEqual(
+            standins("float(16, 3)"),
+            ("0x00000", "0x00001", "0xfffff", "0x80000", "0x7ffff"),
+        )
+        for ty in ("f16", "bf16", "f32", "f64", "f128", "float(5, 2)", "float(16, 3)"):
             got = standins(ty)
             self.assertTrue(all(is_value(v, ty) for v in got), ty)
         self.assertFalse(is_value("true", "f32"))
-        self.assertFalse(is_value("2147483648", "f32"))
-        self.assertTrue(is_value("-2147483648", "f32"))
+        self.assertFalse(is_value("-2147483648", "f32"))
+        self.assertFalse(is_value("1.00", "f32"))
+        self.assertFalse(is_value("0x3f800000", "f32"))
+        self.assertTrue(is_value("-0.0", "f32"))
 
     def test_a_type_with_no_values_has_none(self):
         for ty in ("ptr", "i0", "i08", "f8", "float", "float(5)", ""):

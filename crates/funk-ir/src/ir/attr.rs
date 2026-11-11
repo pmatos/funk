@@ -18,8 +18,9 @@ use super::int::Int;
 use super::tree::{self, Nest, Node, Step, walk};
 
 /// An attribute: a word such as `nsw`, an integer, a string, a symbol
-/// reference such as `@sum`, or a word applied to attributes, such as
-/// `vec(4, i32)`. A word applied to no attributes, `h()`, is not the word `h`.
+/// reference such as `@sum`, a word applied to attributes, such as
+/// `vec(4, i32)`, or a float literal, such as `1.5` or `0x7fc00000`. A word
+/// applied to no attributes, `h()`, is not the word `h`.
 ///
 /// `Attr` implements `Drop`, so a field cannot be moved out of an owned
 /// `Attr`: borrow it, clone it, or take it with [`std::mem::take`].
@@ -34,6 +35,9 @@ pub enum Attr {
     Sym(String),
     /// A word applied to attributes.
     App(String, Vec<Attr>),
+    /// A float literal, as it is written: a decimal such as `-1.5e-7`, or
+    /// `0x` and hexadecimal digits (ADR-2026-11-11-1438).
+    Float(String),
 }
 
 impl Attr {
@@ -91,6 +95,7 @@ impl Attr {
             Attr::Int(i) => Attr::Int(i.clone()),
             Attr::Str(s) => Attr::Str(s.clone()),
             Attr::Sym(s) => Attr::Sym(s.clone()),
+            Attr::Float(s) => Attr::Float(s.clone()),
             Attr::App(h, _) => Attr::App(h.clone(), Vec::new()),
         }
     }
@@ -126,6 +131,7 @@ impl PartialEq for Attr {
             (Attr::Word(x), Attr::Word(y))
             | (Attr::Str(x), Attr::Str(y))
             | (Attr::Sym(x), Attr::Sym(y))
+            | (Attr::Float(x), Attr::Float(y))
             | (Attr::App(x, _), Attr::App(y, _)) => x == y,
             (Attr::Int(x), Attr::Int(y)) => x == y,
             _ => false,
@@ -140,7 +146,9 @@ impl Hash for Attr {
         tree::hash(self, state, |a, state| {
             std::mem::discriminant(a).hash(state);
             match a {
-                Attr::Word(s) | Attr::Str(s) | Attr::Sym(s) | Attr::App(s, _) => s.hash(state),
+                Attr::Word(s) | Attr::Str(s) | Attr::Sym(s) | Attr::Float(s) | Attr::App(s, _) => {
+                    s.hash(state)
+                }
                 Attr::Int(i) => i.hash(state),
             }
         });
@@ -168,6 +176,7 @@ impl fmt::Debug for Attr {
                 Step::Enter(Attr::Int(i)) => ("Int", i),
                 Step::Enter(Attr::Str(s)) => ("Str", s),
                 Step::Enter(Attr::Sym(s)) => ("Sym", s),
+                Step::Enter(Attr::Float(s)) => ("Float", s),
             };
             out.open(None, name, Bracket::Tuple)?;
             out.value(None, value)?;

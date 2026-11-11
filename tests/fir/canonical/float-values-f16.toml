@@ -2,13 +2,13 @@
 # arguments by br and cond_br, returned one and several at a time, and
 # given by calls with one result and with several, each coming back as
 # its bits: a NaN with its sign set and a payload, -0, 1 and the smallest
-# subnormal, and poison (ADR-2026-11-11-1138, ADR-2026-11-11-1141).
+# subnormal, and poison (ADR-2026-11-11-1438, ADR-2026-11-11-1141).
 # Each test is interpreter-only, as the backend does not lower f16.
 tests = [
-  { func = "@choose", args = ["true", "-511", "-32768"], expect = ["-511"] },
-  { func = "@choose", args = ["false", "-511", "-32768"], expect = ["-32768"] },
-  { func = "@choose", args = ["false", "15360", "poison"], expect = ["poison"] },
-  { func = "@swap", args = ["15360", "1"], expect = ["1", "15360"] },
-  { func = "@calls", args = ["true", "-511", "15360"], expect = ["-511", "15360", "-511"] },
-  { func = "@calls", args = ["false", "1", "-32768"], expect = ["-32768", "-32768", "1"] },
+  { func = "@choose", args = ["true", "0xfe01", "-0.0"], expect = ["0xfe01"] },
+  { func = "@choose", args = ["false", "0xfe01", "-0.0"], expect = ["-0.0"] },
+  { func = "@choose", args = ["false", "1.0", "poison"], expect = ["poison"] },
+  { func = "@swap", args = ["1.0", "6.0e-8"], expect = ["6.0e-8", "1.0"] },
+  { func = "@calls", args = ["true", "0xfe01", "1.0"], expect = ["0xfe01", "1.0", "0xfe01"] },
+  { func = "@calls", args = ["false", "6.0e-8", "-0.0"], expect = ["-0.0", "-0.0", "6.0e-8"] },
 ]

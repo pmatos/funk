@@ -95,7 +95,7 @@ class Tests(unittest.TestCase):
             set(flagged),
             {
                 "[constAttr w v]",
-                "[.int v.toInt]",
+                "[.float (floatLit e m v)]",
                 "[.word p.name]",
                 "f.attrs",
                 'if e then [.word "exact"] else []',
@@ -104,7 +104,7 @@ class Tests(unittest.TestCase):
             },
         )
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
-        self.assertEqual(flagged["[.int v.toInt]"], {"fconst"})
+        self.assertEqual(flagged["[.float (floatLit e m v)]"], {"fconst"})
         self.assertEqual(flagged["[.word p.name]"], {"icmp", "fcmp"})
         self.assertEqual(flagged["f.attrs"], {"add", "sub", "mul"})
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})

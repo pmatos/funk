@@ -30,17 +30,17 @@ no dialect. The theorem states the equation: a dialect's name, a $`.` and
 any word make a word of that dialect.
 :::
 
-:::readable Fir.Attr.head? Fir.Attr.dialect? Fir.Attr.dialects Fir.Attr.dialectsAll Fir.Attr.dialect?_mem Fir.Attr.mem_dialectsAll (pin := Fir.Attr) (fingerprint := "13295879490704131267")
+:::readable Fir.Attr.head? Fir.Attr.dialect? Fir.Attr.dialects Fir.Attr.dialectsAll Fir.Attr.dialect?_mem Fir.Attr.mem_dialectsAll (pin := Fir.Attr) (fingerprint := "5878379765441588316")
 *Definition: the dialects of a type or an attribute.* The head of an
 attribute is its word, or the word that an applied attribute applies; a
-number, a string and a symbol have none. A type belongs to the dialect of
+number, a float literal, a string and a symbol have none. A type belongs to the dialect of
 its head, $`\mathrm{dialect}(\mathrm{head}(a))`, so $`\texttt{toy.vec(4, i32)}`
 is a type of $`\texttt{toy}`.
 
 $`\mathrm{dialects}(a)` lists the dialect of every word of $`a`, at any
 depth: of a word, its dialect if it has one; of an applied attribute, the
 dialect of its head and then those of its arguments, in order; of a number,
-a string or a symbol, none. The two theorems say that the dialect of a type
+a float literal, a string or a symbol, none. The two theorems say that the dialect of a type
 is among the dialects of its words, and that the dialects of a list of
 attributes are those of its members.
 :::

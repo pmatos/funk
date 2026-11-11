@@ -1,4 +1,5 @@
 import Fir.Core.Signature
+import Fir.Core.FloatText
 import Fir.Text.Grammar
 
 /-!
@@ -12,11 +13,14 @@ results, which are written where those values are defined.
   a two's-complement signed integer, in decimal, so `i8` constants run from
   `-128` to `127`. Each bit pattern has one spelling: `const 1` and
   `const -1` at `i1` are errors.
-* A float constant is written as its bits read as a two's-complement
-  signed integer, in decimal, as an integer constant of the same width is:
-  `%one: f32 = const 1065353216 @1` is `1.0` and
-  `%z: f32 = const -2147483648 @1` is `-0`. Every bit pattern has one
-  spelling, each NaN's payload and sign included (ADR-2026-11-11-1138).
+* A float constant is written as a float literal, the one spelling of its
+  bits that the section on float constants gives (ADR-2026-11-11-1438): a
+  decimal when it reads back to the bits, such as
+  `%one: f32 = const 1.0 @1` and `%z: f32 = const -0.0 @1`, and otherwise
+  hexadecimal bits, such as `%n: f32 = const 0x7fc00000 @1` for a NaN.
+  Every bit pattern has one spelling, each NaN's payload and sign
+  included; `const 1065353216` and `const 0x3f800000` at `f32` do not
+  decode.
 * `add`, `sub` and `mul` have their flags as attributes, in a fixed order,
   `nuw` before `nsw`, each at most once: `%s: i32 = add nuw nsw %a, %b @1`.
 * `sdiv` and `udiv` have `exact` when it is set:
@@ -55,7 +59,8 @@ results, which are written where those values are defined.
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
 and sampled modes") are spelled the same way: `true` and `false` at `i1`,
-and signed decimal at every other width, a float's bits included. An
+signed decimal at every other width, and a float literal at a float type,
+as a float constant is written. An
 argument and a value in the output may also be `poison`, at any integer
 or float type: `fir-ref run` accepts a
 poison argument, since the runs of a function that the execution chapter
@@ -112,7 +117,7 @@ def constAttr : (w : Nat) → BitVec w → Attr
 /-- The attributes of a core op instance. -/
 def Op.attrs : Op → List Attr
   | .const w v => [constAttr w v]
-  | .fconst _ _ v => [.int v.toInt]
+  | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p _ _ => [.word p.name]
   | .add _ f | .sub _ f | .mul _ f => f.attrs
@@ -161,8 +166,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
     | [.word "false"], [], [.int 1] => some (.const 1 0)
     | [.int v], [], [.int w] =>
       if w ≠ 1 ∧ (BitVec.ofInt w v).toInt = v then some (.const w (.ofInt w v)) else none
-    | [.int v], [], [.float e m] =>
-      if (BitVec.ofInt (floatWidth e m) v).toInt = v then some (.fconst e m (.ofInt _ v)) else none
+    | [.float l], [], [.float e m] => (decodeFloatLit e m l).map (.fconst e m)
     | _, _, _ => none
   | "icmp" => match as, ts, rs with
     | [.word p], [.int a, .int b], [.int 1] => do
@@ -312,18 +316,19 @@ def samples : List Op :=
 #guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
 #guard Op.decode "poison" [] [] [.ptr 0] == none
 #guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
--- A float constant is its bits read as a signed integer: `1.0`, `-0` and
--- the quiet NaN of `f32` with its sign set.
-#guard Op.decode "const" [.int 1065353216] [] [.float 8 23] == some (.fconst 8 23 0x3f800000)
-#guard Op.decode "const" [.int (-2147483648)] [] [.float 8 23] == some (.fconst 8 23 0x80000000)
-#guard Op.decode "const" [.int (-4194304)] [] [.float 8 23] == some (.fconst 8 23 0xffc00000)
-#guard match (Op.fconst 8 23 0xffc00000).attrs with
-  | [.int v] => v == -4194304
-  | _ => false
--- Each bit pattern has one spelling: the unsigned reading of `-0` does not
--- fit, and neither does `true`.
-#guard Op.decode "const" [.int 2147483648] [] [.float 8 23] == none
-#guard Op.decode "const" [.int 4294967295] [] [.float 8 23] == none
+-- A float constant is a float literal: `1.0`, `-0.0` and the quiet NaN of
+-- `f32` with its sign set.
+#guard Op.decode "const" [.float (.dec false 1 ['0'] none)] [] [.float 8 23] ==
+  some (.fconst 8 23 0x3f800000)
+#guard Op.decode "const" [.float (.dec true 0 ['0'] none)] [] [.float 8 23] ==
+  some (.fconst 8 23 0x80000000)
+#guard Op.decode "const" [.float (.hex "ffc00000".toList)] [] [.float 8 23] ==
+  some (.fconst 8 23 0xffc00000)
+#guard (Op.fconst 8 23 0xffc00000).attrs.map Attr.print == ["0xffc00000"]
+-- Each bit pattern has one spelling: the bits read as an integer, the
+-- bits of a number in hexadecimal and `true` do not decode.
+#guard Op.decode "const" [.int 1065353216] [] [.float 8 23] == none
+#guard Op.decode "const" [.float (.hex "3f800000".toList)] [] [.float 8 23] == none
 #guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
 #guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt 11 52)

@@ -60,7 +60,7 @@ A test's `args` may hold `poison`, which goes to `fir-ref` unchanged
 (ADR-2026-11-03-1847). Native code runs on stand-ins in its place: 0, 1, all
 ones, the signed minimum and the signed maximum. At a float type these are the
 same bit patterns of its `1 + e + m` bits, spelled as its constants are
-(ADR-2026-11-11-1138). It runs once on each combination. Each native result is judged against the outcomes of `fir-ref` on
+(ADR-2026-11-11-1438). It runs once on each combination. Each native result is judged against the outcomes of `fir-ref` on
 the poison, and every result must pass. UB among those outcomes makes the test
 invalid. Past the choice budget, a failing vector also runs on `fir-ref`. UB or
 a path out of fuel there makes the test invalid.

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16259356870740253104")
+:::moduleDocs (fingerprint := "4195911346069966190")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -35,7 +35,7 @@ below hold for every core module, valid or not, where the
 would give them only for valid modules.
 :::
 
-:::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "4362277538974857739")
+:::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "1998525394283694137")
 *Definitions and theorems: every value of a core type with finitely many
 values, and every argument vector.* An integer and a float type have
 finitely many values; a pointer type has infinitely many, one for every
@@ -48,8 +48,9 @@ finitely many values are listed:
 * the values of $`\mathsf{float}\langle e,m \rangle` are poison and the
   vectors of $`1 + e + m` bits, in the same order.
 
-No list holds the values of $`\mathsf{ptr}\langle N \rangle`, which lists
-none. The argument vectors of a list of types $`t_1, \dots, t_n` are
+No list holds the values of $`\mathsf{ptr}\langle N \rangle`, so the
+list takes the proof that its type has finitely many values. The argument
+vectors of a list of types $`t_1, \dots, t_n` are
 listed too: every choice of a value of $`t_1`, then of $`t_2`, up to
 $`t_n`, and the one empty vector when $`n = 0`.
 

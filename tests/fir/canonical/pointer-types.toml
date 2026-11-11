@@ -5,7 +5,7 @@
 # each test is interpreter-only.
 tests = [
   { func = "@id", args = ["poison"], expect = ["poison"] },
-  { func = "@mixed", args = ["-5", "poison", "4607182418800017408"], expect = ["4607182418800017408", "poison", "-5"] },
+  { func = "@mixed", args = ["-5", "poison", "1.0"], expect = ["1.0", "poison", "-5"] },
   { func = "@pass", args = ["true", "poison", "poison"], expect = ["poison"] },
   { func = "@pass", args = ["poison", "poison", "poison"], expect = "ub" },
   { func = "@call", args = ["poison", "3"], expect = ["3", "poison"] },

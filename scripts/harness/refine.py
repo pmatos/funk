@@ -14,6 +14,8 @@ invalid, as a run out of fuel does on the other side (ADR-2026-11-09-1602).
 import re
 from dataclasses import dataclass
 
+import float_text
+
 POISON = "poison"
 UB = "ub"
 FUEL_EXHAUSTED = "fuel-exhausted"
@@ -37,21 +39,28 @@ FLOAT_ALIASES = {
 }
 
 
-def bits_of(ty: str) -> tuple[int, bool] | None:
-    """The bits of a value of `ty`, and whether it is an integer type: `N`
-    for `iN`, and `1 + e + m` for `float<e,m>`, by its alias or as
-    `float(e, m)`. None for any other type, such as `ptr`, whose values
-    are pointers, not bits. A float is spelled as its bits read as a signed integer, as an
-    integer of that width is (ADR-2026-11-11-1138)."""
-    m = INT_TYPE.fullmatch(ty)
-    if m is not None:
-        return int(m.group(1)), True
+def float_format(ty: str) -> tuple[int, int] | None:
+    """`(e, m)` for the float type `float<e,m>`, by its alias or as
+    `float(e, m)`, and None for any other type."""
     fmt = FLOAT_ALIASES.get(ty)
     if fmt is None:
         f = FLOAT_TYPE.fullmatch(ty)
         if f is None:
             return None
         fmt = int(f.group(1)), int(f.group(2))
+    return fmt
+
+
+def bits_of(ty: str) -> tuple[int, bool] | None:
+    """The bits of a value of `ty`, and whether it is an integer type: `N`
+    for `iN`, and `1 + e + m` for `float<e,m>`. None for any other type,
+    such as `ptr`, whose values are pointers, not bits."""
+    m = INT_TYPE.fullmatch(ty)
+    if m is not None:
+        return int(m.group(1)), True
+    fmt = float_format(ty)
+    if fmt is None:
+        return None
     return 1 + fmt[0] + fmt[1], False
 
 
@@ -106,7 +115,11 @@ def is_value(spelling: str, ty: str) -> bool:
     if b is None:
         return False
     width, is_int = b
-    if width == 1 and is_int:
+    if not is_int:
+        # A float is the one float literal of its bits (ADR-2026-11-11-1438).
+        e, m = float_format(ty)
+        return float_text.decode(e, m, spelling) is not None
+    if width == 1:
         return spelling in ("true", "false")
     if DECIMAL.fullmatch(spelling) is None or spelling == "-0":
         return False

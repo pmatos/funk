@@ -107,38 +107,40 @@ def Ty.Finite : Ty → Prop
   | .int _ | .float _ _ => True
   | .ptr _ => False
 
-/-- Every value of an integer or float type: poison and each bit vector of
-its width. A pointer type's values are infinitely many, so no list holds
-them, and it lists none. -/
-def Ty.values : (t : Ty) → List ⟦t⟧
-  | .int w => .poison :: (ChoiceTree.allBits w).map .value
-  | .float e m => .poison :: (ChoiceTree.allBits (floatWidth e m)).map .value
-  | .ptr _ => []
+/-- Every value of a core type with finitely many values, an integer or a
+float type: poison and each bit vector of its width. A pointer type's values
+are infinitely many, so no list holds them, and the proof that the type is
+finite rules it out. -/
+def Ty.values : (t : Ty) → t.Finite → List ⟦t⟧
+  | .int w, _ => .poison :: (ChoiceTree.allBits w).map .value
+  | .float e m, _ => .poison :: (ChoiceTree.allBits (floatWidth e m)).map .value
+  | .ptr _, h => (h : False).elim
 
 /-- Every value of a core type with finitely many values is one of its
 values. -/
-theorem Ty.mem_values : ∀ {t : Ty}, t.Finite → ∀ v : ⟦t⟧, v ∈ t.values
+theorem Ty.mem_values : ∀ {t : Ty} (h : t.Finite) (v : ⟦t⟧), v ∈ t.values h
   | .int _, _, .poison => List.mem_cons_self
   | .int _, _, .value b =>
     List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
   | .float _ _, _, .poison => List.mem_cons_self
   | .float _ _, _, .value b =>
     List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
-  | .ptr _, h, _ => h.elim
+  | .ptr _, h, _ => (h : False).elim
 
-/-- Every argument vector of the types `ts`, when each has finitely many
+/-- Every argument vector of the types `ts`, each with finitely many
 values. -/
-def argVectors : (ts : List Ty) → List (HVector toType ts)
-  | [] => [.nil]
-  | t :: ts => t.values.flatMap fun v => (argVectors ts).map (.cons v)
+def argVectors : (ts : List Ty) → (∀ t ∈ ts, t.Finite) → List (HVector toType ts)
+  | [], _ => [.nil]
+  | t :: ts, h => (t.values (h t List.mem_cons_self)).flatMap fun v =>
+    (argVectors ts fun u hu => h u (List.mem_cons_of_mem _ hu)).map (.cons v)
 
 /-- Every argument vector of the types `ts`, each with finitely many
 values, is one of them. -/
-theorem mem_argVectors : ∀ {ts : List Ty}, (∀ t ∈ ts, t.Finite) →
-    ∀ a : HVector toType ts, a ∈ argVectors ts
+theorem mem_argVectors : ∀ {ts : List Ty} (h : ∀ t ∈ ts, t.Finite)
+    (a : HVector toType ts), a ∈ argVectors ts h
   | [], _, .nil => List.mem_singleton_self _
-  | _ :: _, h, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values (h _ List.mem_cons_self) v,
-      List.mem_map_of_mem (mem_argVectors (fun t ht => h t (List.mem_cons_of_mem _ ht)) a)⟩
+  | _ :: _, _, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values _ v,
+      List.mem_map_of_mem (mem_argVectors _ a)⟩
 
 /-- Refined arguments: on arguments that refine others, a poison by any
 value, the observable behaviour of every function of every core module
@@ -160,7 +162,7 @@ theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g �
     {f : Func CoreDialect} (hf : f ∈ M.funcs) :
     funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) (f.replaceBody g.name b) :=
   Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _, mem_argVectors hfin⟩ h hf
+    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined by itself in the module with `@g`'s new body, when `@g` has no
