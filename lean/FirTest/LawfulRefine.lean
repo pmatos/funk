@@ -244,13 +244,13 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
 /-- info: 'Fir.Func.runs_replaceBody_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runs_replaceBody_isRefinedBy_of_lawful
 
-/-- info: 'Fir.Core.opsMonotone_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.opsMonotone_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.opsMonotone_all
 
-/-- info: 'FirTest.probe0_not_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.probe0_not_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.probe0_not_monotone
 
-/-- info: 'FirTest.coreProbe_not_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.coreProbe_not_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.coreProbe_not_monotone
 
 /-- info: 'FirTest.coreProbe_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/

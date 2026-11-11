@@ -39,6 +39,7 @@ import Fir.Core.Bitwise
 import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
+import Fir.Core.FloatCompare
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -50,6 +51,7 @@ import Fir.Core.BitwiseLaws
 import Fir.Core.WidthLaws
 import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
+import Fir.Core.FloatCompareLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
@@ -106,6 +108,7 @@ import Fir.Text.Read
 import Fir.Text.ReadLocs
 import Fir.Text.Decode
 import Fir.Core.Text
+import Fir.Core.TypeTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example
 import Fir.Text.Tokens

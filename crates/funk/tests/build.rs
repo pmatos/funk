@@ -68,7 +68,7 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
         )),
         "{json}"
     );
-    let lowers = "the x86-64 backend lowers i1, i8, i16, i32, i64 and i128";
+    let lowers = "the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32 and f64";
     for want in [
         format!(
             "{{\"kind\":\"unsupported\",\"message\":\"parameter %a: {lowers}, not i7\",\"func\":\"odd\",\"block\":\"entry\",\"op\":null,\"loc\":{{\"ref\":1,\"location\":\"\\\"w.c\\\":1:1 to 1:5\"}}}}"
@@ -137,7 +137,7 @@ fn a_result_of_an_unsupported_width_is_reported_at_its_op() {
     assert_eq!(
         text(&out.stderr),
         format!(
-            "{src}: unsupported in @pair ^entry op 0: %w: the x86-64 backend lowers i1, i8, i16, i32, i64 and i128, not i33 (at @4 = \"p.c\":2:3 to 2:12)\n"
+            "{src}: unsupported in @pair ^entry op 0: %w: the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32 and f64, not i33 (at @4 = \"p.c\":2:3 to 2:12)\n"
         )
     );
     assert!(nothing_written(&exe));

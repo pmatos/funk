@@ -15,7 +15,7 @@ changes under it.
 
 #doc (Manual) "Core signatures: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17172137080388402663")
+:::moduleDocs (fingerprint := "16939118958856226295")
 :::
 
 :::readable Fir.CoreDialect Fir.Core.i (fingerprint := "6975174900697461964")
@@ -30,7 +30,7 @@ specification is written in. The Lean writes $`\mathsf{i}N` as `i N`, a
 shorthand for the type `int N`.
 :::
 
-:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "5706628440802508344")
+:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "3186785205227862657")
 *Definition: the types of each core op's operands and results.* Each core op
 takes operands and gives results of fixed types, which follow from the op
 instance. As in the WebAssembly specification, $`[t_1^*] \to [t_2^*]`
@@ -44,13 +44,14 @@ $`\mathsf{shl}_N`, $`\mathsf{lshr}_N` and $`\mathsf{ashr}_N`, and
 $`\mathit{cvtop}_{M \to N}` for any of $`\mathsf{zext}_{M \to N}`,
 $`\mathsf{sext}_{M \to N}` and $`\mathsf{trunc}_{M \to N}`:
 
-$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{unreachable} & [\,] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
+$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{const}_{e,m}~v & [\,] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{fcmp}_{e,m}~\mathit{fpred} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{i1}] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{unreachable} & [\,] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
 
 So $`\mathsf{select}_N` takes its $`\mathsf{i1}` condition first, a
 $`\mathsf{ret}` takes the values it returns as its operands, and a
 $`\mathsf{call}` takes its callee's arguments and gives its callee's
-results. The Lean calls the two halves `sig` and `returnTypes`, and spells
-$`\mathsf{cond\_br}` as `condBr`.
+results. The Lean calls the two halves `sig` and `returnTypes`, spells
+$`\mathsf{cond\_br}` as `condBr`, and the float constant
+$`\mathsf{const}_{e,m}` as `fconst`.
 
 These types are what
 {ref "The-fir-specification--Validation--The-general-rules"}[validation]

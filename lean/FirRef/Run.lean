@@ -71,17 +71,15 @@ def tyText (t : Core.Ty) : String := t.attr.print
 def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map Attr.print)
 
 /-- A value as `fir-ref run` spells it: as a constant of its type in text,
-or `poison`. A float type has no constants yet, and no run gives a float
-value: `readArg` refuses every argument of a float type, and no core op
-gives one. Until float constants fix their spelling (#229), a float value
-is written as the integer constant of its bits. -/
+or `poison`. A float is written as its bits read as a signed integer
+(ADR-2026-11-11-1138). -/
 def valueText : DVal CoreDialect → String
   | ⟨.int w, v⟩ => match (v : PoisonOr (BitVec w)) with
     | .poison => "poison"
     | .value b => (Core.constAttr w b).print
   | ⟨.float e m, v⟩ => match (v : PoisonOr (BitVec (Core.floatWidth e m))) with
     | .poison => "poison"
-    | .value b => (Core.constAttr _ b).print
+    | .value b => (Attr.int b.toInt).print
   | ⟨.ptr, v⟩ => nomatch (v : Empty)
 
 /-- The constant that the text `s` spells at the type `iN`: the spec's
@@ -95,15 +93,26 @@ def constOf (w : Nat) (s : String) : Option (BitVec w) := do
   | some (.const w' v) => if h : w' = w then some (h ▸ v) else none
   | _ => none
 
-/-- An argument of type `t`: a constant of `t`, or `poison` at any `iN`,
-spelled as `valueText` spells it. A float type has no constants yet, so no
-text is an argument of one. -/
+/-- The constant that the text `s` spells at the float type `float<e,m>`,
+read as `constOf` reads one of `iN`: its bits read as a signed integer. -/
+def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) := do
+  let attr ← argAttr s
+  if attr.print != s then none
+  match Core.Op.decode "const" [attr] [] [.float e m] with
+  | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
+  | _ => none
+
+/-- An argument of type `t`: a constant of `t`, or `poison` at any `iN` and
+any float type, spelled as `valueText` spells it. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
   | .int w, s => match constOf w s with
     | some v => pure (.value v : PoisonOr (BitVec w))
     | none => .error s!"{shown s} is not a value of type {tyText (.int w)}"
-  | .float e m, s => .error s!"{shown s} is not a value of type {tyText (.float e m)}"
+  | .float e m, "poison" => pure (.poison : PoisonOr (BitVec (Core.floatWidth e m)))
+  | .float e m, s => match floatConstOf e m s with
+    | some v => pure (.value v : PoisonOr (BitVec (Core.floatWidth e m)))
+    | none => .error s!"{shown s} is not a value of type {tyText (.float e m)}"
   | .ptr, s => .error s!"{shown s} is not a value of type ptr"
 
 /-- One argument for each type of `ts`. -/

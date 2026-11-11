@@ -46,6 +46,12 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
     · split <;> simp [Attr.dialects, wordDialect]
     · simp [Attr.dialects]
   | icmp p w => simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hp]
+  | fconst => simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects]
+  | fcmp p =>
+    have hq : wordDialect p.name = none := by
+      apply wordDialect_eq_none
+      cases p <;> decide
+    simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hq]
   | add _ f | sub _ f | mul _ f => exact hw f
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]

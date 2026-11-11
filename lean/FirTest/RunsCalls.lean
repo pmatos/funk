@@ -220,7 +220,7 @@ every valid core module. -/
 /-- info: 'Fir.Func.progress_of_inModule' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.progress_of_inModule
 
-/-- info: 'Fir.Core.Op.total_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.Op.total_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.total_all
 
 /-- info: 'Fir.Core.inModule_of_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/

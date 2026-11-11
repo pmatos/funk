@@ -14,10 +14,18 @@ when the Lean changes under it.
 
 #doc (Manual) "Constant obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6946184819928592071")
+:::moduleDocs (fingerprint := "8068000624057668295")
 :::
 
-:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "2023729354523156256")
+:::readable Fir.Core.fconst_returnsOnDefined Fir.Core.fconst_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.fconstValue) (fingerprint := "12294614273908857620")
+*Theorem: a float $`\mathsf{const}` returns a result on defined operands,
+and is total.* For every format $`\mathsf{float}\langle e,m \rangle` and
+every vector $`v` of $`1+e+m` bits, $`\mathsf{const}_{e,m}~v` returns its
+bits $`v` on its one operand vector, the empty one, as the integer
+$`\mathsf{const}` below does, so it meets both obligations.
+:::
+
+:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "14675401607846407967")
 *Theorem: $`\mathsf{const}` returns a result on defined operands, and is
 total.* For every width $`w` and every vector $`c` of $`w` bits, under
 fir's execution rules, $`\mathsf{const}_w~c`
@@ -40,7 +48,7 @@ proves the other two obligations of $`\mathsf{const}` for any semantics;
 these two depend on its rule, so they are proved here.
 :::
 
-:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "3584212295673655336")
+:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "17739971570536908327")
 *Theorem: $`\mathsf{poison}` returns a result on defined operands, and is
 total.* For every width $`w`, under fir's execution rules,
 $`\mathsf{poison}_w` returns a result on defined operands and is total

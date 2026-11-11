@@ -4,6 +4,7 @@ import Fir.Core.FreezeLaws
 import Fir.Core.WidthLaws
 import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
+import Fir.Core.FloatCompareLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Jumps
 
@@ -51,6 +52,7 @@ instance (f : Func CoreDialect) : Decidable (CallFree f) :=
 /-- Every core op but `call` is total. -/
 theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect) op
   | .const w v, _ => const_total w v
+  | .fconst e m v, _ => fconst_total e m v
   | .add w f, _ => add_total w f
   | .sub w f, _ => sub_total w f
   | .mul w f, _ => mul_total w f
@@ -65,6 +67,7 @@ theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect
   | .lshr w, _ => lshr_total w
   | .ashr w, _ => ashr_total w
   | .icmp p w, _ => icmp_total p w
+  | .fcmp p e m, _ => fcmp_total p e m
   | .select w, _ => select_total w
   | .zext m n, _ => zext_total m n
   | .sext m n, _ => sext_total m n

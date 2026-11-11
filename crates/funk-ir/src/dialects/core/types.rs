@@ -84,6 +84,14 @@ pub fn int_width(ty: &Type) -> Option<u32> {
     }
 }
 
+/// The format `(e, m)` of `ty` if it is `float<e,m>`.
+pub fn float_format(ty: &Type) -> Option<(u32, u32)> {
+    match core_type(ty)? {
+        CoreType::Float { e, m } => Some((e, m)),
+        CoreType::Int(_) | CoreType::Ptr => None,
+    }
+}
+
 /// `None` when `ty` is not a core type; an error when it looks like `iN` or
 /// `float(e, m)` but is not written as the spec requires.
 fn decode(ty: &Type) -> Option<Result<CoreType, String>> {

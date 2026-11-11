@@ -1,4 +1,4 @@
-//! Comparison and selection: `icmp` and `select` (`Op.decode` in
+//! Comparison and selection: `icmp`, `fcmp` and `select` (`Op.decode` in
 //! `lean/Fir/Core/Text.lean`).
 //!
 //! `icmp` has one attribute, its predicate, written as LLVM writes it:
@@ -6,11 +6,13 @@
 //! `icmp %a, %b`, `icmp slt sgt`, `icmp lt`, `icmp slt nsw` and the old
 //! spelling `icmp.slt`, which names no op, do not decode. `select` takes an
 //! `i1` condition and two `iN` and defines one `iN`, with no attributes.
-//! Validation has no rule for either op beyond its signature (`Op.Valid` in
-//! `lean/Fir/Core/Validation.lean`).
+//! `fcmp` has one attribute, one of [`FLOAT_PREDICATES`], and takes two
+//! values of one float type and defines one `i1`: `%lt: i1 = fcmp olt %a,
+//! %b` (ADR-2026-11-11-1139). Validation has no rule for any of them beyond
+//! its signature (`Op.Valid` in `lean/Fir/Core/Validation.lean`).
 
 use super::type_list;
-use super::types::int_width;
+use super::types::{float_format, int_width};
 use crate::Attr;
 use crate::effects::Effects;
 use crate::registry::{OpShape, OpSpec, OpTypes};
@@ -20,26 +22,42 @@ pub const PREDICATES: [&str; 10] = [
     "eq", "ne", "slt", "sle", "sgt", "sge", "ult", "ule", "ugt", "uge",
 ];
 
+/// The predicates of `fcmp`, in the spec's order (`FPred.all`).
+pub const FLOAT_PREDICATES: [&str; 14] = [
+    "oeq", "one", "olt", "ole", "ogt", "oge", "ord", "ueq", "une", "ult", "ule", "ugt", "uge",
+    "uno",
+];
+
 /// Checks that the attributes of `icmp` are one predicate, or says why
 /// they are not.
 fn decode_predicate(attrs: &[Attr]) -> Result<(), String> {
+    decode_predicate_of("icmp", &PREDICATES, attrs)
+}
+
+/// Checks that the attributes of the comparison `op` are one of
+/// `predicates`, or says why they are not.
+fn decode_predicate_of(op: &str, predicates: &[&str], attrs: &[Attr]) -> Result<(), String> {
     let p = match attrs {
         [p] => p,
-        [] => return Err("icmp has one attribute, its predicate, and has none".into()),
+        [] => {
+            return Err(format!(
+                "{op} has one attribute, its predicate, and has none"
+            ));
+        }
         _ => {
             return Err(format!(
-                "icmp has one attribute, its predicate, not {}",
+                "{op} has one attribute, its predicate, not {}",
                 attrs.len()
             ));
         }
     };
     match p {
-        Attr::Word(w) if PREDICATES.contains(&w.as_str()) => Ok(()),
+        Attr::Word(w) if predicates.contains(&w.as_str()) => Ok(()),
         Attr::Word(w) => Err(format!(
-            "icmp's predicate is one of {}, not {w}",
-            PREDICATES.join(", ")
+            "{op}'s predicate is one of {}, not {w}",
+            predicates.join(", ")
         )),
-        _ => Err(format!("icmp's attribute is its predicate, not {p}")),
+        _ => Err(format!("{op}'s attribute is its predicate, not {p}")),
     }
 }
 
@@ -70,6 +88,40 @@ impl OpSpec for Icmp {
     }
 
     /// Pure (`Core.Op.effects`).
+    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
+        Effects::PURE
+    }
+}
+
+/// `%lt: i1 = fcmp olt %a, %b`, with any of [`FLOAT_PREDICATES`].
+pub(super) struct Fcmp;
+
+impl OpSpec for Fcmp {
+    fn name(&self) -> &str {
+        "fcmp"
+    }
+
+    fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
+        decode_predicate_of("fcmp", &FLOAT_PREDICATES, op.attrs)?;
+        let well_typed = match (op.operands, op.results) {
+            ([a, b], [r]) => {
+                int_width(r) == Some(1)
+                    && float_format(a).is_some_and(|f| float_format(b) == Some(f))
+            }
+            _ => false,
+        };
+        if well_typed {
+            return Ok(OpShape::default());
+        }
+        Err(format!(
+            "fcmp takes two operands of one float type and defines one i1, not {} -> {}",
+            type_list(op.operands),
+            type_list(op.results)
+        ))
+    }
+
+    /// Pure: it is never UB, and gives poison only for a poison operand
+    /// (`Core.Op.effects`).
     fn effects(&self, _op: &OpTypes<'_>) -> Effects {
         Effects::PURE
     }
@@ -145,6 +197,27 @@ mod tests {
         ] {
             let e = decode_predicate(&bad).unwrap_err();
             assert!(e.starts_with("icmp") && e.contains(why), "{bad:?}: {e}");
+        }
+    }
+
+    #[test]
+    fn float_predicates_decode_as_op_decode_reads_them() {
+        let fcmp = |a: &[Attr]| decode_predicate_of("fcmp", &FLOAT_PREDICATES, a);
+        for p in FLOAT_PREDICATES {
+            assert_eq!(fcmp(&words(&[p])), Ok(()), "{p}");
+        }
+        for (bad, why) in [
+            (words(&[]), "and has none"),
+            (words(&["olt", "olt"]), "not 2"),
+            (words(&["slt"]), "not slt"),
+            (words(&["eq"]), "not eq"),
+            (words(&["true"]), "not true"),
+            (words(&["false"]), "not false"),
+            (words(&["OLT"]), "not OLT"),
+            (vec![Attr::int(1)], "attribute is its predicate, not 1"),
+        ] {
+            let e = fcmp(&bad).unwrap_err();
+            assert!(e.starts_with("fcmp") && e.contains(why), "{bad:?}: {e}");
         }
     }
 }

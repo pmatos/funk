@@ -14,6 +14,10 @@ has neither operands nor attributes, is a cell at each width of its result
 - A width change, `zext`, `sext` or `trunc`, is a cell for each pair of
   widths from `iM` to `iN` that the spec allows: `M < N`, or `N < M` for
   `trunc`.
+- A float constant, and `fcmp` with each predicate of `FPred.all`, is a
+  cell at each float format of the matrix's side: `f32` and `f64` for
+  differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
+  `f64` and `f128` for interpreter-only tests (#229).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width. `ret` returns no value, one, or several; a `call` gives no result,
   one, or several; and so does the function that a test runs, `func`. One
@@ -27,10 +31,28 @@ from firtext import Op
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
+FLOAT_DIFFERENTIAL = ("f32", "f64")
+FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")
 EXACT = ("", "exact")
 PREDS = ("eq", "ne", "slt", "sle", "sgt", "sge", "ult", "ule", "ugt", "uge")
+FPREDS = (
+    "oeq",
+    "one",
+    "olt",
+    "ole",
+    "ogt",
+    "oge",
+    "ord",
+    "ueq",
+    "une",
+    "ult",
+    "ule",
+    "ugt",
+    "uge",
+    "uno",
+)
 
 # The ops at a width, in the order of `Op`, with the attributes that are
 # cells: a flag set or a predicate.
@@ -54,6 +76,8 @@ AT_WIDTH = {
     "freeze": ("",),
     "poison": ("",),
 }
+# The float ops at a format, with the attributes that are cells.
+AT_FORMAT = {"const": ("",), "fcmp": FPREDS}
 CASTS = ("zext", "sext", "trunc")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
@@ -66,13 +90,14 @@ VALUES = (
     ("call", (NOTHING, ONE, SEVERAL)),
     ("func", (NOTHING, ONE, SEVERAL)),
 )
-OPS = (*AT_WIDTH, *CASTS, *(op for op, _ in VALUES if op != "func"))
+OPS = (*AT_WIDTH, "fcmp", *CASTS, *(op for op, _ in VALUES if op != "func"))
 
 
 class Cell(NamedTuple):
-    """`table` is `ops`, `casts` or `values`. `row` is a flag set or
-    predicate, the source width of a width change, or what a value row
-    passes; `width` is a width, or empty where nothing is passed."""
+    """`table` is `ops`, `floats`, `casts` or `values`. `row` is a flag set
+    or predicate, the source width of a width change, or what a value row
+    passes; `width` is a width or a float format, or empty where nothing is
+    passed."""
 
     table: str
     op: str
@@ -88,11 +113,14 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
-def cells(widths: tuple[int, ...]) -> list[Cell]:
-    """Every cell of one side of the matrix, at these widths."""
+def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
+    """Every cell of one side of the matrix, at these widths and float
+    formats."""
     out = []
     for op, attrs in AT_WIDTH.items():
         out += [Cell("ops", op, a, ty(w)) for a in attrs for w in widths]
+    for op, attrs in AT_FORMAT.items():
+        out += [Cell("floats", op, a, f) for a in attrs for f in formats]
     for op in CASTS:
         for m in widths:
             out += [
@@ -105,6 +133,11 @@ def cells(widths: tuple[int, ...]) -> list[Cell]:
             else:
                 out += [Cell("values", op, row, ty(w)) for w in widths]
     return out
+
+
+def is_float(t: str) -> bool:
+    """Whether `t` is a float type: an alias or `float(e, m)`."""
+    return t in ("f16", "bf16", "f32", "f64", "f128") or t.startswith("float(")
 
 
 def allowed(op: str, m: int, n: int) -> bool:
@@ -127,6 +160,12 @@ def of_op(op: Op) -> set[Cell]:
     """The cells that an op exercises, at any width. An op that the core
     dialect does not have, or an attribute that is not a cell, is an
     error."""
+    if op.name == "fcmp" or (op.name == "const" and is_float(op.results[0])):
+        attr = "" if op.name == "const" else " ".join(op.attrs)
+        if attr not in AT_FORMAT[op.name]:
+            raise CellError(f"{op.name} {attr} is not a cell")
+        typed = op.operands if op.name == "fcmp" else op.results
+        return {Cell("floats", op.name, attr, typed[0])}
     if op.name in AT_WIDTH:
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_WIDTH[op.name]:

@@ -64,6 +64,7 @@ theorem Op.monotone_all : (op : Op) →
     Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
     OpMonotone (d := CoreDialect) op
   | .const w v, _ => const_monotone w v
+  | .fconst e m v, _ => fconst_monotone e m v
   | .add w f, _ => add_monotone w f
   | .sub w f, _ => sub_monotone w f
   | .mul w f, _ => mul_monotone w f
@@ -78,6 +79,7 @@ theorem Op.monotone_all : (op : Op) →
   | .lshr w, _ => lshr_monotone w
   | .ashr w, _ => ashr_monotone w
   | .icmp p w, _ => icmp_monotone p w
+  | .fcmp p e m, _ => fcmp_monotone p e m
   | .select w, _ => select_monotone w
   | .zext m n, _ => zext_monotone m n
   | .sext m n, _ => sext_monotone m n

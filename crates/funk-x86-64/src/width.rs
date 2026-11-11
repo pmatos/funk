@@ -12,6 +12,11 @@
 //! A value of `i128` is a pair of eightbytes, each 64 bits of the value with
 //! none unspecified: the low eightbyte in one register or slot, the high one
 //! in another (ADR-2026-11-03-010730).
+//!
+//! A value of `f32` or `f64` is its bits, in the low 32 or 64 bits of one
+//! slot or SSE register, the bits above unspecified, as for an `iN`
+//! (ADR-2026-11-11-1140). [`check`] gives its width, 32 or 64, and
+//! [`class`] says that it passes in SSE registers.
 
 use funk_ir::Type;
 use funk_ir::dialects::core::{CoreType, core_type};
@@ -25,14 +30,65 @@ pub const ONE_REGISTER: [u32; 5] = [1, 8, 16, 32, 64];
 /// The width that a pair of registers or slots holds: `i128`.
 pub const PAIR: u32 = 128;
 
-/// The widths that the backend lowers, as the diagnostics name them.
-const NAMED: &str = "i1, i8, i16, i32, i64 and i128";
+/// The float formats that the backend lowers, `f32` and `f64`, as
+/// `(e, m, bits)`.
+const FLOATS: [(u32, u32, u32); 2] = [(8, 23, 32), (11, 52, 64)];
 
-/// The width of `ty` if the backend lowers values of it, or why not.
+/// The types that the backend lowers, as the diagnostics name them.
+const NAMED: &str = "i1, i8, i16, i32, i64, i128, f32 and f64";
+
+/// The width of `ty` if the backend lowers values of it, or why not: `N`
+/// for `iN`, and the bits of a float, 32 for `f32` and 64 for `f64`.
 pub fn check(ty: &Type) -> Result<u32, String> {
-    match core_type(ty) {
-        Some(CoreType::Int(w)) if ONE_REGISTER.contains(&w) || w == PAIR => Ok(w),
-        _ => Err(format!("the x86-64 backend lowers {NAMED}, not {ty}")),
+    lowered(ty).0
+}
+
+/// [`check`] and [`class`] of `ty`, from one decoding of it.
+pub fn lowered(ty: &Type) -> (Result<u32, String>, Class) {
+    let t = core_type(ty);
+    let width = match t {
+        Some(CoreType::Int(w)) if ONE_REGISTER.contains(&w) || w == PAIR => Some(w),
+        Some(CoreType::Float { e, m }) => FLOATS.iter().find(|f| (f.0, f.1) == (e, m)).map(|f| f.2),
+        _ => None,
+    };
+    let width = width.ok_or_else(|| format!("the x86-64 backend lowers {NAMED}, not {ty}"));
+    (width, class_of(t))
+}
+
+/// How a value passes to and from a function, by System V's classes
+/// (ADR-2026-11-11-1140).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Class {
+    /// One eightbyte of class INTEGER: `i1` to `i64`.
+    Int,
+    /// Two eightbytes of class INTEGER, low half first: `i128`.
+    Pair,
+    /// One eightbyte of class SSE: `f32` or `f64`.
+    Sse,
+}
+
+impl Class {
+    /// The eightbytes that a value of this class takes.
+    pub fn words(self) -> usize {
+        match self {
+            Class::Pair => 2,
+            Class::Int | Class::Sse => 1,
+        }
+    }
+}
+
+/// The class of a value of `ty`: SSE for a float, a pair for `i128`, and
+/// one INTEGER eightbyte for any other type, so that a value of a type the
+/// backend does not lower still has a slot to name.
+pub fn class(ty: &Type) -> Class {
+    class_of(core_type(ty))
+}
+
+fn class_of(t: Option<CoreType>) -> Class {
+    match t {
+        Some(CoreType::Float { .. }) => Class::Sse,
+        Some(CoreType::Int(PAIR)) => Class::Pair,
+        _ => Class::Int,
     }
 }
 
@@ -40,10 +96,7 @@ pub fn check(ty: &Type) -> Result<u32, String> {
 /// the stack: two for `i128`, and one for any other type, so that a value
 /// of a width the backend does not lower still has a slot to name.
 pub fn words(ty: &Type) -> usize {
-    match core_type(ty) {
-        Some(CoreType::Int(PAIR)) => 2,
-        _ => 1,
-    }
+    class(ty).words()
 }
 
 /// How to fill the bits above a value's width.
@@ -84,21 +137,44 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_six_widths_are_lowered() {
+    fn only_the_six_widths_and_two_float_formats_are_lowered() {
         for w in ONE_REGISTER.into_iter().chain([PAIR]) {
             assert_eq!(check(&Type::word(format!("i{w}"))), Ok(w));
         }
-        for t in ["i7", "i33", "i65", "i127", "i129", "i256", "i16777215"] {
+        assert_eq!(check(&Type::word("f32")), Ok(32));
+        assert_eq!(check(&Type::word("f64")), Ok(64));
+        for t in [
+            "i7",
+            "i33",
+            "i65",
+            "i127",
+            "i129",
+            "i256",
+            "i16777215",
+            "f16",
+            "bf16",
+            "f128",
+        ] {
             assert_eq!(
                 check(&Type::word(t)),
                 Err(format!(
-                    "the x86-64 backend lowers i1, i8, i16, i32, i64 and i128, not {t}"
+                    "the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32 and f64, not {t}"
                 ))
             );
         }
         for t in ["ptr", "toy.tok"] {
             assert!(check(&Type::word(t)).is_err(), "{t}");
         }
+    }
+
+    #[test]
+    fn floats_pass_in_sse_registers() {
+        assert_eq!(class(&Type::word("f32")), Class::Sse);
+        assert_eq!(class(&Type::word("f64")), Class::Sse);
+        assert_eq!(class(&Type::word("bf16")), Class::Sse);
+        assert_eq!(class(&Type::word("i128")), Class::Pair);
+        assert_eq!(class(&Type::word("i64")), Class::Int);
+        assert_eq!(words(&Type::word("f64")), 1);
     }
 
     #[test]

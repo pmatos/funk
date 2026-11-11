@@ -1,8 +1,9 @@
 //! How a funk function looks from outside (ADR-2026-10-30-1232): its symbol in the
 //! object file, where its arguments arrive and, in [`results`], where its
 //! results go (ADR-2026-11-03-0109), by the System V AMD64 calling convention.
-//! An `i128` passes as two eightbytes (ADR-2026-11-03-0108); `layout.rs`
-//! says where each one goes.
+//! An `i128` passes as two eightbytes (ADR-2026-11-03-0108), and an `f32`
+//! or `f64` in an SSE register (ADR-2026-11-11-1140); `layout.rs` says
+//! where each one goes.
 
 mod layout;
 
@@ -13,6 +14,7 @@ use funk_ir::ir::names::is_word;
 pub(crate) use layout::{Loc, layout};
 
 use crate::asm::{Asm, Mem, Reg};
+use crate::width::Class;
 
 pub mod results;
 
@@ -24,17 +26,28 @@ pub const ARG_REGS: [Reg; 6] = [Reg::Rdi, Reg::Rsi, Reg::Rdx, Reg::Rcx, Reg::R8,
 pub const RESULT_REG: Reg = Reg::Rax;
 
 /// An argument of a funk call: the slot that holds it, relative to
-/// `%rbp`, and how many eightbytes it has: 2 for an `i128`, whose high half
-/// is in the slot above ([`Mem::high`]), and 1 for any other value.
+/// `%rbp`, and its class: a pair for an `i128`, whose high half is in the
+/// slot above ([`Mem::high`]), SSE for a float, and one INTEGER eightbyte
+/// for any other value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Arg {
     pub slot: Mem,
-    pub words: usize,
+    pub class: Class,
+}
+
+/// The `movq` operand of a register argument's place: a general-purpose
+/// register, or `%xmmN`.
+fn reg_name(loc: Loc) -> Option<String> {
+    match loc {
+        Loc::Reg(reg) => Some(reg.q().to_string()),
+        Loc::Xmm(n) => Some(format!("%xmm{n}")),
+        Loc::Stack(_) => None,
+    }
 }
 
 /// Stores a function's incoming arguments in their frame slots after the
 /// standard prologue has established `%rbp`. `args` gives the declared
-/// parameters in order, each of one or two eightbytes. `hidden` is the slot
+/// parameters in order, each of its class. `hidden` is the slot
 /// for the result-area address, when results return in memory; it arrives
 /// first, in `%rdi`, and shifts the parameters along the shared layout.
 ///
@@ -46,8 +59,8 @@ pub(crate) struct Arg {
 /// earlier stores remain in `asm`.
 pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Result<(), usize> {
     let skip = usize::from(hidden.is_some());
-    let words = passed(skip, args.iter().map(|a| a.words));
-    let incoming = layout(&words);
+    let classes = passed(skip, args.iter().map(|a| a.class));
+    let incoming = layout(&classes);
     if let Some(slot) = hidden {
         asm.ins("movq", format_args!("{}, {slot}", ARG_REGS[0].q()));
     }
@@ -58,7 +71,10 @@ pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Resul
     {
         for (loc, to) in locs.into_iter().zip([arg.slot, arg.slot.high()]) {
             match loc {
-                Loc::Reg(reg) => asm.ins("movq", format_args!("{}, {to}", reg.q())),
+                Loc::Reg(_) | Loc::Xmm(_) => {
+                    let reg = reg_name(loc).unwrap_or_default();
+                    asm.ins("movq", format_args!("{reg}, {to}"));
+                }
                 Loc::Stack(at) => {
                     let from = Mem {
                         disp: stack_arg_offset(at).ok_or(i)?,
@@ -89,8 +105,8 @@ pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Resul
 /// This owns placement and accounting for both fir calls and executable
 /// entry code (ADR-2026-11-02-1428).
 pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, String> {
-    let words: Vec<usize> = args.iter().map(|a| a.words).collect();
-    let layout = layout(&words);
+    let classes: Vec<Class> = args.iter().map(|a| a.class).collect();
+    let layout = layout(&classes);
     let bytes = outgoing_bytes(layout.stack)
         .ok_or("the call passes more arguments on the stack than 2 GiB holds")?;
     let mut stack = vec![None; layout.stack / 8];
@@ -98,8 +114,8 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
     for (a, locs) in args.iter().zip(&layout.args) {
         for (loc, slot) in locs.iter().zip([a.slot, a.slot.high()]) {
             match *loc {
-                Loc::Reg(reg) => regs.push((reg, slot)),
                 Loc::Stack(at) => stack[at / 8] = Some(slot),
+                reg => regs.push((reg_name(reg).unwrap_or_default(), slot)),
             }
         }
     }
@@ -117,7 +133,7 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
         }
     }
     for (reg, slot) in regs {
-        asm.ins("movq", format_args!("{slot}, {}", reg.q()));
+        asm.ins("movq", format_args!("{slot}, {reg}"));
     }
     asm.ins("call", format_args!("{}", symbol(callee)));
     if bytes > 0 {
@@ -126,24 +142,26 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
     Ok(bytes as u64)
 }
 
-/// The eightbytes of each argument of a call, in the order that [`layout`]
-/// places them: `hidden` arguments of one eightbyte first, which is the
+/// The class of each argument of a call, in the order that [`layout`]
+/// places them: `hidden` arguments of one INTEGER eightbyte first, which is the
 /// address of the result area when the results go in memory
 /// ([`results::Layout::hidden_arguments`], ADR-2026-11-03-0109), then each
 /// of `args`. The address takes `%rdi`, so an `i128` argument looks for its
 /// pair of registers from `%rsi` on. The callee's prologue and the entry's
 /// stack figure read a call by this; [`call`] gets the address as its first
 /// [`Arg`].
-pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = usize>) -> Vec<usize> {
-    std::iter::repeat_n(1, hidden).chain(args).collect()
+pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = Class>) -> Vec<Class> {
+    std::iter::repeat_n(Class::Int, hidden)
+        .chain(args)
+        .collect()
 }
 
 /// The 8-byte words that [`call`] pushes, before the return address, for
-/// arguments of `words` eightbytes each: those that [`layout`] puts on the
+/// arguments of the classes `classes`: those that [`layout`] puts on the
 /// stack, and the padding between and after them. The entry's stack figure
 /// reads a call by it too (ADR-2026-11-02-1132).
-pub(crate) fn pushed_words(words: &[usize]) -> usize {
-    layout(words).stack / 8
+pub(crate) fn pushed_words(classes: &[Class]) -> usize {
+    layout(classes).stack / 8
 }
 
 /// The padded outgoing area of `bytes` must fit the signed immediate of

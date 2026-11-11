@@ -2,6 +2,7 @@
 
 use super::{Area, Layout, Place};
 use crate::asm::{Asm, Mem, Reg};
+use crate::width::Class;
 
 fn layout(widths: &[u32]) -> (Vec<Place>, i32) {
     let l = Layout::new(widths).unwrap();
@@ -28,6 +29,36 @@ fn one_or_two_eightbytes_come_back_in_rax_then_rdx() {
         assert!(!l.in_memory());
         assert_eq!(l.hidden_arguments(), 0);
     }
+}
+
+/// Floats come back as System V returns a structure of their eightbytes:
+/// each SSE eightbyte in the next of `%xmm0` and `%xmm1`, each INTEGER one in
+/// the next of `%rax` and `%rdx`, and three or more in the area, as gcc and
+/// clang return `struct { double a; long b; }` and the like.
+#[test]
+fn float_results_come_back_in_xmm0_then_xmm1() {
+    use Class::{Int as I, Pair as P, Sse as F};
+    let rax = Place::Reg(Reg::Rax);
+    let (x0, x1) = (Place::Xmm(0), Place::Xmm(1));
+    let places = |cs: &[Class]| {
+        let l = Layout::of_classes(cs).unwrap();
+        (l.places().to_vec(), l.area())
+    };
+    assert_eq!(places(&[F]), (vec![x0], 0));
+    assert_eq!(places(&[F, F]), (vec![x0, x1], 0));
+    assert_eq!(places(&[F, I]), (vec![x0, rax], 0));
+    assert_eq!(places(&[I, F]), (vec![rax, x0], 0));
+    assert_eq!(places(&[F, I, F]), (area(&[0, 8, 16]), 32));
+    assert_eq!(places(&[F, P]), (area(&[0, 16, 24]), 32));
+    let l = Layout::of_classes(&[I, F]).unwrap();
+    let s = slots(2);
+    let given = code(|a| l.give(a, None, &[(s[0], 1), (s[1], 64)]).unwrap());
+    assert_eq!(
+        given,
+        "\tmovq\t-8(%rbp), %rax\n\tandl\t$1, %eax\n\tmovq\t-16(%rbp), %xmm0\n"
+    );
+    let got = code(|a| l.receive(a, None, &s).unwrap());
+    assert_eq!(got, "\tmovq\t%rax, -8(%rbp)\n\tmovq\t%xmm0, -16(%rbp)\n");
 }
 
 #[test]

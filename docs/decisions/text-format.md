@@ -95,6 +95,19 @@ text. `float(e, m)` of a format with an alias does not decode, so each format
 has one spelling, and neither does a negative number, another argument list, an
 alias applied to arguments or the bare word `float` (ADR-2026-11-11-0951).
 
+A float constant is `const` with one attribute: its bits read as a
+two's-complement signed integer of `1 + e + m` bits, in decimal, as an integer
+constant of that width is written. So `%one: f32 = const 1065353216` is `1.0`,
+`-2147483648` at `f32` is `-0`, and every NaN payload and sign has a spelling.
+A number outside that signed range does not decode, so each bit pattern has one
+spelling. `fir-ref run`, the corpus and the built executables spell float
+arguments and results the same way. No float literal and no hexadecimal
+literal joins the grammar (ADR-2026-11-11-1138).
+
+`fcmp` writes its predicate as LLVM does, one of `oeq`, `one`, `olt`, `ole`,
+`ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:
+`%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-11-1139).
+
 Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
 float type has at most as many bits in all (ADR-2026-11-11-0950). A
 location reference, a line and a column are below `2^32`. An integer

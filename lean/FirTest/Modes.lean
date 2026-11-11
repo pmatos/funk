@@ -211,49 +211,49 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
 
 /-! # The theorems' axioms -/
 
-/-- info: 'Fir.Core.exhaustive_outcomes' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.exhaustive_outcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.exhaustive_outcomes
 
-/-- info: 'Fir.Core.exhaustive_stuck' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.exhaustive_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.exhaustive_stuck
 
-/-- info: 'Fir.Core.scripted_outcomes' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.scripted_outcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.scripted_outcomes
 
-/-- info: 'Fir.Core.scripted_stuck' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.scripted_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.scripted_stuck
 
 /-- info: 'Fir.ChoiceTree.explore_isSome_iff' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.ChoiceTree.explore_isSome_iff
 
-/-- info: 'Fir.Core.sub_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sub_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sub_propagatesPoison
 
-/-- info: 'Fir.Core.sub_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sub_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sub_returnsOnDefined
 
-/-- info: 'Fir.Core.sub_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sub_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sub_total
 
-/-- info: 'Fir.Core.sub_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sub_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sub_monotone
 
-/-- info: 'Fir.Core.mul_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.mul_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.mul_propagatesPoison
 
-/-- info: 'Fir.Core.mul_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.mul_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.mul_returnsOnDefined
 
-/-- info: 'Fir.Core.mul_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.mul_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.mul_total
 
-/-- info: 'Fir.Core.mul_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.mul_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.mul_monotone
 
-/-- info: 'Fir.Core.freeze_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.freeze_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.freeze_total
 
-/-- info: 'Fir.Core.freeze_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.freeze_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.freeze_monotone
 
 end FirTest

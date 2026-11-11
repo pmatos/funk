@@ -16,6 +16,7 @@ import FirTest.Width
 import FirTest.PoisonOp
 import FirTest.Div
 import FirTest.Compare
+import FirTest.FloatCompare
 import FirTest.Branch
 import FirTest.Unreachable
 import FirTest.Loops

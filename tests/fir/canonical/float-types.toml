@@ -1,0 +1,12 @@
+# Tests of float-types.fir: values of every float format pass through
+# parameters, results, block arguments and calls as their bits, spelled
+# as the bits read as a signed integer (ADR-2026-11-11-1138), and
+# poison passes as poison. The module has formats that the backend does
+# not lower, so each test is interpreter-only.
+tests = [
+  { func = "@aliases", args = ["-1", "32641", "-4194303", "1", "170138587312039964317873038467719495681"], expect = ["170138587312039964317873038467719495681", "1", "-4194303", "32641", "-1"] },
+  { func = "@generic", args = ["-8", "127", "-1", "poison"], expect = ["poison", "-1", "127", "-8"] },
+  { func = "@pass", args = ["true", "2143289344", "-2147483648"], expect = ["2143289344"] },
+  { func = "@pass", args = ["false", "2143289344", "-2147483648"], expect = ["-2147483648"] },
+  { func = "@swap", args = ["-4503599627370495", "-32768"], expect = ["-32768", "-4503599627370495"] },
+]

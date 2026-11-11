@@ -58,8 +58,9 @@ test may name its path with `choices`. Without it, a run that chooses fails
 
 A test's `args` may hold `poison`, which goes to `fir-ref` unchanged
 (ADR-2026-11-03-1847). Native code runs on stand-ins in its place: 0, 1, all
-ones, the signed minimum and the signed maximum. It runs once on each
-combination. Each native result is judged against the outcomes of `fir-ref` on
+ones, the signed minimum and the signed maximum. At a float type these are the
+same bit patterns of its `1 + e + m` bits, spelled as its constants are
+(ADR-2026-11-11-1138). It runs once on each combination. Each native result is judged against the outcomes of `fir-ref` on
 the poison, and every result must pass. UB among those outcomes makes the test
 invalid. Past the choice budget, a failing vector also runs on `fir-ref`. UB or
 a path out of fuel there makes the test invalid.
@@ -209,6 +210,11 @@ for none, one or several values. `scripts/harness/cells.py` holds the exact set.
 The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. The
 interpreter-only side adds `i7` and `i33`. Ops at other widths count towards no
 cell.
+
+The float ops have a table of their own: a float constant, and `fcmp` with each
+predicate, at each float format of a side. The differential side has `f32` and
+`f64`, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`
+(ADR-2026-11-11-1141).
 
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. It also exercises the `func` cell of its results. The

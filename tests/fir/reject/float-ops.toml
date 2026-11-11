@@ -1,0 +1,155 @@
+# Must-reject texts of #229's float constants and fcmp. A float constant
+# is its bits read as a signed integer, so a number outside the signed
+# range of its format, or any other attribute, does not decode
+# (ADR-2026-11-11-1138). fcmp has one of fourteen predicates, compares
+# two values of one float format and gives an i1 (ADR-2026-11-11-1139).
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant is its bits read as a signed integer: 2147483648 is out of the range of f32"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 2147483648 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: the unsigned reading of -0 does not decode at f32"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 4294967295 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "true is an i1 constant, not a value of f64"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f64 {
+^e:
+  %c: f64 = const true @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one attribute, its bits"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f16 {
+^e:
+  %c: f16 = const 1 2 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp has a float predicate: slt is icmp's"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp slt %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp has no constant predicates: true is not one"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp true %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp has one predicate"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp gives an i1, not an i8"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i8 {
+^e:
+  %r: i8 = fcmp olt %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp compares two values of one format: an f32 and an f64 are a type mismatch"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp olt %a, %d @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fcmp compares floats, not integers"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp olt %i, %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

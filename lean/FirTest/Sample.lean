@@ -140,13 +140,13 @@ def listed (t : String) (args : List String) (s : Nat) : Bool :=
 /-- info: 'Fir.ChoiceTree.sample_script' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.ChoiceTree.sample_script
 
-/-- info: 'Fir.Core.sampled_fits' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sampled_fits' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sampled_fits
 
-/-- info: 'Fir.Core.sampled_outcomes' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sampled_outcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sampled_outcomes
 
-/-- info: 'Fir.Core.sampled_stuck' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.sampled_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sampled_stuck
 
 end FirTest

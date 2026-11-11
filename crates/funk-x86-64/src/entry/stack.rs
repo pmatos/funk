@@ -25,7 +25,7 @@ use funk_ir::{Func, Module, Op};
 
 use crate::abi::{self, pushed_words, results::Layout};
 use crate::lower::{HELPER_STACK, callee, helper};
-use crate::width;
+use crate::width::{self, Class};
 
 /// The stack a run of one function needs.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -55,7 +55,7 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
     let calls: Vec<Vec<Call>> = funcs
         .iter()
         .map(|f| {
-            let types = value_words(f);
+            let types = value_classes(f);
             let ops = f.body.blocks.iter().flat_map(|b| &b.ops);
             ops.filter_map(|op| {
                 let i = *index.get(callee(op)?)?;
@@ -110,32 +110,33 @@ pub fn needs(m: &Module, frames: &[i32]) -> Vec<Need> {
     out
 }
 
-/// The eightbytes of each value that `f` defines, as the lowering passes it
-/// to a call: two for an `i128`, one for any other (`width::words`). An
-/// argument that `f` does not define, which only a module that is not valid
-/// has, counts as one.
-fn value_words(f: &Func) -> HashMap<&str, usize> {
+/// The class of each value that `f` defines, as the lowering passes it to a
+/// call (`width::class`): a pair for an `i128`, SSE for a float, and one
+/// INTEGER eightbyte for any other. An argument that `f` does not define,
+/// which only a module that is not valid has, counts as one INTEGER
+/// eightbyte.
+fn value_classes(f: &Func) -> HashMap<&str, Class> {
     let blocks = f.body.blocks.iter();
     let defs = f
         .params
         .iter()
         .chain(blocks.flat_map(|b| b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))));
-    defs.map(|d| (d.name.as_str(), width::words(&d.ty)))
+    defs.map(|d| (d.name.as_str(), width::class(&d.ty)))
         .collect()
 }
 
-/// The eightbytes of each argument that the call `op` passes, as
-/// `abi::call` lays them out: the address of its result area first when its
-/// results go in memory (ADR-2026-11-03-0109), then its operands, of the
-/// eightbytes that `types` gives. Lowering has checked the layout, so one
+/// The class of each argument that the call `op` passes, as `abi::call`
+/// lays them out: the address of its result area first when its results go
+/// in memory (ADR-2026-11-03-0109), then its operands, of the classes that
+/// `types` gives. Lowering has checked the layout, so one
 /// that fails here cannot be built and counts nothing more.
-fn passed(op: &Op, types: &HashMap<&str, usize>) -> Vec<usize> {
+fn passed(op: &Op, types: &HashMap<&str, Class>) -> Vec<Class> {
     let layout = Layout::of_types(op.results.iter().map(|d| &d.ty));
     let hidden = layout.map_or(0, |l| l.hidden_arguments());
     let args = op.operands.iter();
     abi::passed(
         hidden,
-        args.map(|x| types.get(x.as_str()).copied().unwrap_or(1)),
+        args.map(|x| types.get(x.as_str()).copied().unwrap_or(Class::Int)),
     )
 }
 

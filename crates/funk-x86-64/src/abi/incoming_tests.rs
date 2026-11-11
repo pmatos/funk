@@ -4,6 +4,7 @@ use funk_ir::{Registry, parse};
 
 use super::Arg;
 use crate::asm::Mem;
+use crate::width::Class;
 
 fn arguments(words: &[usize]) -> Vec<Arg> {
     let mut used = 0;
@@ -15,7 +16,7 @@ fn arguments(words: &[usize]) -> Vec<Arg> {
                 slot: Mem {
                     disp: -8 * used as i32,
                 },
-                words,
+                class: if words == 2 { Class::Pair } else { Class::Int },
             }
         })
         .collect()

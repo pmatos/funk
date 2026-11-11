@@ -9,13 +9,14 @@
 //! when they go in memory, the call passes the address of its frame's
 //! result area first, and copies each result out of the area after it. An
 //! `i128` passes as two eightbytes (ADR-2026-11-03-0108), and comes back in
-//! two: alone in `%rdx:%rax`, and among other results in the area.
+//! two: alone in `%rdx:%rax`, and among other results in the area. An `f32`
+//! or `f64` passes and comes back in an SSE register (ADR-2026-11-11-1140).
 
 use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
 use crate::abi::{self, Arg, results::Layout};
-use crate::width::PAIR;
+use crate::width::Class;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -39,19 +40,18 @@ fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     let mut args = Vec::with_capacity(op.operands.len() + 1);
     for x in &op.operands {
-        let words = if cx.width(x)? == PAIR { 2 } else { 1 };
         args.push(Arg {
             slot: cx.slot(x)?,
-            words,
+            class: cx.class(x)?,
         });
     }
-    let mut widths = Vec::with_capacity(op.results.len());
+    let mut classes = Vec::with_capacity(op.results.len());
     let mut into = Vec::with_capacity(op.results.len());
     for d in &op.results {
-        widths.push(cx.width(&d.name)?);
+        classes.push(cx.class(&d.name)?);
         into.extend(cx.eightbytes(&d.name)?);
     }
-    let layout = Layout::new(&widths)?;
+    let layout = Layout::of_classes(&classes)?;
     let area = if layout.in_memory() {
         let area = cx.frame.result_area();
         Some(area.ok_or("the frame has no result area for the call")?)
@@ -64,7 +64,7 @@ fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
             0,
             Arg {
                 slot: area.address,
-                words: 1,
+                class: Class::Int,
             },
         );
         layout.pass(&mut cx.asm, area);

@@ -14,7 +14,7 @@ and, in the `func` rows, the results of the function it runs. An
 empty entry is not a cell: a width change that the spec does not
 allow, or a width for a row that passes no value.
 
-785 cells, 785 with a test.
+890 cells, 890 with a test.
 
 ## Differential tests
 
@@ -61,6 +61,26 @@ allow, or a width for a row that passes no value.
 | `freeze` |  | 36 | 20 | 19 | 38 | 17 | 30 |
 | `poison` |  | 16 | 22 | 22 | 23 | 21 | 21 |
 
+### Float ops at a format (differential tests)
+
+| op | predicate | `f32` | `f64` |
+| --- | --- | --- | --- |
+| `const` |  | 3 | 3 |
+| `fcmp` | `oeq` | 21 | 21 |
+| `fcmp` | `one` | 20 | 20 |
+| `fcmp` | `olt` | 20 | 20 |
+| `fcmp` | `ole` | 20 | 20 |
+| `fcmp` | `ogt` | 24 | 20 |
+| `fcmp` | `oge` | 20 | 20 |
+| `fcmp` | `ord` | 20 | 20 |
+| `fcmp` | `ueq` | 20 | 20 |
+| `fcmp` | `une` | 20 | 20 |
+| `fcmp` | `ult` | 20 | 20 |
+| `fcmp` | `ule` | 20 | 20 |
+| `fcmp` | `ugt` | 20 | 20 |
+| `fcmp` | `uge` | 20 | 20 |
+| `fcmp` | `uno` | 21 | 21 |
+
 ### Width changes (differential tests)
 
 | op | from | to `i1` | to `i8` | to `i16` | to `i32` | to `i64` | to `i128` |
@@ -93,15 +113,15 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 855 |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2263 | 1474 | 1156 | 1557 | 1323 | 2377 |
-| `ret` | returns several values |  | 280 | 431 | 265 | 246 | 396 | 538 |
+| `ret` | returns one value |  | 2823 | 1474 | 1156 | 1557 | 1323 | 2377 |
+| `ret` | returns several values |  | 282 | 431 | 265 | 246 | 399 | 539 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 |
-| `call` | gives several results |  | 171 | 220 | 126 | 111 | 189 | 279 |
+| `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |
-| `func` | returns one value |  | 2263 | 1474 | 1156 | 1557 | 1323 | 2377 |
-| `func` | returns several values |  | 280 | 431 | 265 | 237 | 396 | 502 |
+| `func` | returns one value |  | 2823 | 1474 | 1156 | 1557 | 1323 | 2377 |
+| `func` | returns several values |  | 282 | 431 | 265 | 237 | 399 | 503 |
 
 ## Interpreter-only tests
 
@@ -148,6 +168,26 @@ allow, or a width for a row that passes no value.
 | `freeze` |  | 23 | 56 | 56 | 56 | 56 | 56 | 56 | 11 |
 | `poison` |  | 28 | 31 | 31 | 31 | 45 | 31 | 31 | 31 |
 
+### Float ops at a format (interpreter-only tests)
+
+| op | predicate | `f16` | `bf16` | `f32` | `f64` | `f128` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `const` |  | 3 | 3 | 1 | 1 | 3 |
+| `fcmp` | `oeq` | 21 | 21 | 3 | 3 | 21 |
+| `fcmp` | `one` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `olt` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ole` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ogt` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `oge` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ord` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ueq` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `une` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ult` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ule` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `ugt` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `uge` | 20 | 20 | 3 | 3 | 20 |
+| `fcmp` | `uno` | 21 | 21 | 3 | 3 | 21 |
+
 ### Width changes (interpreter-only tests)
 
 | op | from | to `i1` | to `i7` | to `i8` | to `i16` | to `i32` | to `i33` | to `i64` | to `i128` |
@@ -186,12 +226,12 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 1339 | 1298 | 529 | 504 | 616 | 1336 | 527 | 801 |
-| `ret` | returns several values |  | 51 | 186 | 36 | 26 | 26 | 186 | 49 | 47 |
+| `ret` | returns one value |  | 2263 | 1298 | 529 | 504 | 616 | 1336 | 527 | 801 |
+| `ret` | returns several values |  | 54 | 186 | 36 | 26 | 26 | 186 | 49 | 47 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 1339 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 |
-| `func` | returns several values |  | 51 | 186 | 36 | 26 | 26 | 186 | 49 | 45 |
+| `func` | returns one value |  | 2263 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 |
+| `func` | returns several values |  | 54 | 186 | 36 | 26 | 26 | 186 | 49 | 45 |

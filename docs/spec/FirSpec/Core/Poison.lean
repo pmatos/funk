@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7465049857782302748")
+:::moduleDocs (fingerprint := "17934991323783403524")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "9579307297950494261")
-*Definition: the poison class of each core op.* Nineteen core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "14623949289347429345")
+*Definition: the poison class of each core op.* Twenty-one core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 
@@ -51,11 +51,12 @@ for the core dialect: it ties the dialect's refinement of values to its
 poison.
 :::
 
-:::readable Fir.Core.const_propagatesPoison Fir.Core.const_monotone Fir.Core.poison_propagatesPoison Fir.Core.poison_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.OpMonotone) (fingerprint := "10814135831303282794")
+:::readable Fir.Core.const_propagatesPoison Fir.Core.const_monotone Fir.Core.fconst_propagatesPoison Fir.Core.fconst_monotone Fir.Core.poison_propagatesPoison Fir.Core.poison_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.OpMonotone) (fingerprint := "18306094282312137454")
 *Theorem: $`\mathsf{const}` and $`\mathsf{poison}` propagate poison and are
 monotone, whatever the semantics of the core ops.* For every width $`w`
-and value $`c`, the ops $`\mathsf{const}_w~c` and $`\mathsf{poison}_w`
-propagate poison, and are {ref "The-fir-specification--Execution--Poison-classes"}[monotone], under any meaning that the
+and value $`c`, every format $`\mathsf{float}\langle e,m \rangle` and
+bits $`v`, the ops $`\mathsf{const}_w~c`, $`\mathsf{const}_{e,m}~v` and
+$`\mathsf{poison}_w` propagate poison, and are {ref "The-fir-specification--Execution--Poison-classes"}[monotone], under any meaning that the
 core ops are given.
 
 The meaning of the core ops is given separately, by their execution rules
@@ -65,7 +66,7 @@ meanings that the
 {ref "The-fir-specification--Execution--Semantics-the-obligations-reject"}[next section]
 rejects.
 
-Neither op has operands. So no operand vector holds a poison, and both
+None of the three has operands. So no operand vector holds a poison, and both
 clauses of propagation hold with nothing to check. And the only operand
 vector is the empty one, which only refines itself, so monotonicity asks
 only that each op refine itself, which it does. The theorems hold for every
