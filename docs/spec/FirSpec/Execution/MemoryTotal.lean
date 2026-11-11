@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Totality with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4146914753880111498")
+:::moduleDocs (fingerprint := "18284861627636461743")
 :::
 
-:::readable Fir.HasOutcome Fir.HasOutcome.map Fir.hasOutcome_lift Fir.HasOutcome.of_lift (fingerprint := "3355415598623577078")
+:::readable Fir.HasOutcome Fir.HasOutcome.map Fir.hasOutcome_lift Fir.HasOutcome.of_lift Fir.OpHasOutcome (fingerprint := "7856571833701684355")
 *Definition and theorems: a computation with an outcome.* A computation
 $`c` of the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] _has
@@ -30,6 +30,10 @@ Mapping the results of $`c` keeps an outcome. A computation $`x` of the
 set monad that may end in some way, run in the state layer, has an outcome
 from every state, which it keeps; and when, so run, it has an outcome from
 some state, $`x` may end in some way.
+
+In a semantics of a dialect in the state layer, an op _has an outcome_ when
+what it runs by its own rule has one, on every operand vector: its meaning
+when it is not a terminator, its exit when it is.
 :::
 
 :::readable Fir.MemTotal Fir.LawfulDialectTotal (pin := Fir.OwnRuleHas) (fingerprint := "5761744309621376310")

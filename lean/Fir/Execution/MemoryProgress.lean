@@ -7,30 +7,25 @@ import Fir.Execution.MemoryTotal
 A run with memory of a function is never stuck, and has an outcome at every
 budget, when every function of its module is valid and runs within the
 module with memory, calls and recursion included, whatever its ops do to
-the memories. Progress needs each op that runs by its own rule to have an
-outcome from any memories: a dialect lawful in its totality gives that.
+the memories.
 
 The proof is the proof for runs in the set monad (the section on progress
 with calls), read from given memories (the section on how a run with memory
-ends), and stands beside it (ADR-2026-11-11-0801). It is by induction on the budget, for every function of the module
-at once, from any op of any of its blocks on, and from any memories. Its
-invariant is the one of the section on jumps: before an op, the
-environment holds every value in scope at the op. Each step goes on from
-the memories that the step before it ended with, and the claim holds from
-every memories, so it covers the rest of the run from those. A call runs
-its callee from the memories with a new frame entered, which the induction
-covers, and leaves the frame on each path that returns, from which the
-caller goes on.
+ends), and stands beside it (ADR-2026-11-11-0801). It is by induction on
+the budget, for every function of the module at once, from any op of any
+of its blocks on, and from any memories. Its invariant is the one of the
+section on jumps: before an op, the environment holds every value in scope
+at the op. Each step goes on from the memories that the step before it
+ended with, and the claim holds from every memories, so it covers the rest
+of the run from those. A call runs its callee from the memories with a new
+frame entered, which the induction covers, and leaves the frame on each
+path that returns, from which the caller goes on.
 
 Showing that no path is stuck needs nothing of the ops' semantics: an op
 that may end in many ways, from any memories, is never stuck in any of
 them. Progress needs each op that runs by its own rule to have an outcome
 from the memories it starts from, which a dialect lawful in its totality
 gives at every naming.
-
-For a dialect that lifts the set monad, a function that runs within its
-module runs within it with memory, at every naming: its terminators go
-where they go in the set monad, and keep the memories.
 -/
 
 namespace Fir
@@ -134,12 +129,8 @@ has an outcome from any memories. -/
 theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (hm : ∀ g ∈ M.funcs, g.MemInModule unit M)
     (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body,
-      isTerminator o.op = true ∨ callee? o.op = none → ∀ args : HVector toType (sig o.op),
-        (isTerminator o.op = false →
-          HasOutcome (DialectDenote.denote (m := StateT (Memories Mem unit) SetM) o.op args)) ∧
-        (isTerminator o.op = true →
-          HasOutcome (DialectDenote.exit (m := StateT (Memories Mem unit) SetM) o.op args)))
-    (n : Nat) :
+      isTerminator o.op = true ∨ callee? o.op = none →
+        OpHasOutcome (σ := Memories Mem unit) o.op) (n : Nat) :
     ∀ f ∈ M.funcs, ∀ b ∈ f.blocks, ∀ (i : Nat) (env : Env d), i < b.body.length →
       env.Scoped f b.label i → ∀ S : Memories Mem unit,
         HasPath (fromState (Func.runOps (m := StateT (Memories Mem unit) SetM) M n f env
@@ -259,10 +250,7 @@ theorem Func.memNeverStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem)) (Env.scoped_params hvf he hep args)
     Memories.empty.enter
   rw [List.drop_zero] at hns
-  have key : f.memRuns unit ρ M args n = (Prod.fst <$> fromState
-      (f.run M (m := StateT (Memories N unit) SetM) args n) Memories.empty).run :=
-    fromState_fst _ _
-  rw [key, Func.run_fromState M f args n _ (Func.enter_entry he hep args)] at h
+  rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)] at h
   exact NoStuck.finish _ (NoStuck.map Result.withState hns) st h
 
 /-- A run with memory of a function of the module `M` has an outcome at
@@ -280,20 +268,12 @@ theorem Func.memProgress [LawfulDialectTotal d] (hv : ∀ g ∈ M.funcs, g.Valid
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
   have hpos := List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem)
   have hold := Env.scoped_params hvf he hep args
-  have ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body,
-      isTerminator o.op = true ∨ callee? o.op = none → ∀ args : HVector toType (sig o.op),
-        (isTerminator o.op = false →
-          HasOutcome (DialectDenote.denote (m := StateT (Memories N unit) SetM) o.op args)) ∧
-        (isTerminator o.op = true →
-          HasOutcome (DialectDenote.exit (m := StateT (Memories N unit) SetM) o.op args)) :=
-    fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc unit ρ
-  have hhp := Module.calls_memHasPath hv hm ht n f hf e hmem 0 _ hpos hold Memories.empty.enter
+  have hhp := Module.calls_memHasPath hv hm
+    (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc unit ρ)
+    n f hf e hmem 0 _ hpos hold Memories.empty.enter
   have hns := Module.calls_memNoStuck hv hm n f hf e hmem 0 _ hpos hold Memories.empty.enter
   rw [List.drop_zero] at hhp hns
-  have key : f.memRuns unit ρ M args n = (Prod.fst <$> fromState
-      (f.run M (m := StateT (Memories N unit) SetM) args n) Memories.empty).run :=
-    fromState_fst _ _
-  rw [key, Func.run_fromState M f args n _ (Func.enter_entry he hep args)]
+  rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)]
   obtain ⟨ev, hev⟩ := HasPath.finish Prod.fst (HasPath.map Result.withState hhp)
   match ev, hev with
   | .ok (.ok (.ret vs)), hev => exact ⟨.ret vs, hev⟩

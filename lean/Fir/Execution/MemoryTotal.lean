@@ -26,12 +26,12 @@ It holds as the obligation on may-UB does:
 
 So in a dialect that lifts the set monad, as every dialect whose ops touch
 no memory does, an op is total with memory exactly when it is total in the
-set monad, and a lawful dialect is lawful in its totality. A sum and a lift run an op
-of a side by that side's rule with its results mapped, so they are lawful
-in their totality when their sides are (the section on the sum and the lift
-of dialects lawful in their totality).
+set monad, and a lawful dialect is lawful in its totality. A sum and a
+lift run an op of a side by that side's rule with its results mapped, so
+they are lawful in their totality when their sides are (the section on the
+totality of a sum and a lift).
 
-A dialect meets the obligation by being _lawful in its totality_, the last
+A dialect meets the obligation by being _lawful in its totality_, the
 class below. The class asks for no semantics in the set monad, so a dialect
 whose ops touch memory can meet it.
 -/
@@ -78,6 +78,16 @@ theorem HasOutcome.of_lift {c : SetM α} (h : HasOutcome (StateT.lift c : StateT
   · exact ⟨_, hr⟩
 
 /-! # The obligation -/
+
+/-- In a semantics in the state layer, what the op runs by its own rule has
+an outcome from any state, on every operand vector: its meaning when it is
+not a terminator, and its exit when it is. -/
+def OpHasOutcome {d : Dialect} [TyDenote d.Ty] [DialectSignature d]
+    [DialectDenote d (StateT σ SetM)] (op : d.Op) : Prop :=
+  ∀ args : HVector toType (sig op),
+    (isTerminator op = false →
+      HasOutcome (DialectDenote.denote (m := StateT σ SetM) op args)) ∧
+    (isTerminator op = true → HasOutcome (DialectDenote.exit (m := StateT σ SetM) op args))
 
 section
 

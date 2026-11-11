@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12505030734063547011")
+:::moduleDocs (fingerprint := "12998060254520900076")
 :::
 
-:::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "17532954821513616046")
+:::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "17375378244954417757")
 *Theorem: in a module whose functions are all valid and run within it with
 memory, the run from any op of any of its functions, from any memories, has
 no stuck path, and has a path when every op that runs by its own rule has

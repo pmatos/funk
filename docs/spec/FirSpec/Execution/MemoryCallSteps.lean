@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9783283162604987386")
+:::moduleDocs (fingerprint := "17976563511346448721")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -85,4 +85,13 @@ and keeps the memories. So, in a dialect that
 {ref "The-fir-specification--Memory--Runs-with-memory"}[lifts the set monad],
 a function that runs within its module runs within it with memory, at every
 naming.
+:::
+
+:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "2274960835630802990")
+*Theorem: a run with memory that starts.* When a function $`f` starts on
+its arguments, at its entry block's ops $`o^*` with the environment $`E`,
+its runs with memory at a naming, at the budget $`n`, are
+$`\mathrm{run}_M(n, f, E, o^*)` read from the empty memories with a frame
+entered, finished: a return of its ops is a return of $`f`, and a run out of
+fuel is one.
 :::

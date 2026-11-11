@@ -133,6 +133,20 @@ theorem lawfulTotal_ofLawful (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRe
     LawfulDialectTotal d :=
   LawfulDialectTotal.ofLawful
 
+/-- Every sum of two dialects lawful in their totality is lawful in its
+totality, when the extension accepts the base's valid types. Neither side
+needs a semantics in the set monad, so a side whose ops touch memory may
+take part. -/
+theorem sum_lawfulTotal (base e : Dialect) [TyDenote base.Ty] [TyDenote e.Ty]
+    [DialectSignature base] [DialectSignature (base.over e)] [DialectEffects base]
+    [DialectEffects (base.over e)] [DialectMemOver base e] [DialectMemDenote base]
+    [DialectMemDenote (base.over e)] [DialectCall base] [DialectCall (base.over e)]
+    [DialectValidation base] [DialectValidation (base.over e)] [LawfulDialectTotal base]
+    [LawfulDialectTotal (base.over e)]
+    (hty : ∀ t : base.Ty, validTy t → validTy (d := base.over e) (.inl t)) :
+    LawfulDialectTotal (base ⊞ e) :=
+  Dialect.sum.lawfulTotal hty
+
 /-- In every sum, the memories are the extension's, which name the base's:
 a memory has one name in the sum, whichever side names it. -/
 example (base e : Dialect) [DialectEffects base] [DialectEffects (base.over e)]

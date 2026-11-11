@@ -21,7 +21,10 @@ how a run with memory ends):
   progress with calls, but each terminator keeps to its rules from any
   memories. A terminator whose exit goes to a successor names one that it
   has and gives no results, and one whose exit returns returns values of
-  the function's result types.
+  the function's result types. For a dialect that lifts the set monad, a
+  function that runs within its module runs within it with memory, at
+  every naming: its terminators go where they go in the set monad, and
+  keep the memories.
 -/
 
 namespace Fir
@@ -247,6 +250,20 @@ they run within it by the dialect's semantics with memory at that naming. -/
 def Func.InModuleAt (M : Module d) (f : Func d) : Prop :=
   letI := DialectMemDenote.denoteAt (d := d) unit ρ
   f.MemInModule unit M
+
+/-- A run with memory of a function that starts, at a budget, at a naming:
+its entry block's ops, run from the empty memories with a frame entered,
+finished. -/
+theorem Func.memRuns_enter [DecidableEq d.Ty] (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) (n : Nat) {body : List (Operation d)}
+    {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
+    letI := DialectMemDenote.denoteAt (d := d) unit ρ
+    f.memRuns unit ρ M args n = (Result.finish Prod.fst
+      (runFrom (Func.runOps (m := StateT (Memories N unit) SetM) M n f env body)
+        Memories.empty.enter)).run := by
+  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+  rw [← Func.run_fromState M f args n _ hen]
+  exact fromState_fst _ _
 
 /-- A function that runs within its module runs within it with memory,
 wherever a run names the memories of a dialect that lifts the set monad. -/

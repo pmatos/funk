@@ -122,34 +122,44 @@ example (k : AllocKind) (M : Module CoreDialect) (f : Func CoreDialect) (env : E
   Func.runOps_memAhead M n j f env os S
 
 /-- The ops of the alloc dialect: `alloc` allocates one unit on the stack of
-the dialect's one memory, and gives no result. -/
+the dialect's one memory, and gives no result; `ret` returns nothing. -/
 inductive AllocOp where
   | alloc
+  | ret
   deriving DecidableEq
 
-/-- A dialect, for these tests, whose one op touches memory: its semantics
-with memory allocates, so it lifts no semantics in the set monad. -/
+/-- A dialect, for these tests, whose op `alloc` touches memory: its
+semantics with memory allocates, so it lifts no semantics in the set
+monad. -/
 abbrev AllocDialect : Dialect := ⟨AllocOp, Core.Ty⟩
 
 instance : DialectSignature AllocDialect where
   sig _ := []
   returnTypes _ := []
-  isTerminator _ := false
+  isTerminator
+    | .alloc => false
+    | .ret => true
   succCount _ := 0
 
 instance : DialectCall AllocDialect := ⟨fun _ => none⟩
 
-/-- The alloc dialect has one memory, `()`, and `alloc` declares that it
-allocates in it. -/
+/-- The alloc dialect has one memory, `()`; `alloc` declares that it
+allocates in it, and `ret` that it is a terminator. -/
 instance : DialectEffects AllocDialect :=
-  ⟨Unit, fun _ => .exception, fun _ => { allocates := .these [()] }⟩
+  ⟨Unit, fun _ => .exception, fun
+    | .alloc => { allocates := .these [()] }
+    | .ret => { control := true }⟩
 
 /-- Wherever a run names the memory `()` as `ρ ()`, `alloc` allocates one
-unit on its stack. -/
+unit on its stack, and `ret` returns. -/
 instance : DialectMemDenote AllocDialect where
   denoteAt _ ρ :=
-    { denote := fun _ _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1
-      exit := fun _ _ => MonadUB.ub "alloc is not a terminator" }
+    { denote := fun
+        | .alloc, _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1
+        | .ret, _ => MonadUB.ub "ret is a terminator"
+      exit := fun
+        | .alloc, _ => MonadUB.ub "alloc is not a terminator"
+        | .ret, _ => pure .ret }
 
 /-- A run with memory of the alloc dialect runs its semantics with memory at
 the naming it is given. -/
@@ -172,41 +182,121 @@ example (M : Module AllocDialect) (f : Func AllocDialect)
 
 /-! # Progress with an op that allocates -/
 
-/-- Validation of the alloc dialect accepts every type, op and function:
-these tests need only that it has one. -/
+/-- Validation of the alloc dialect accepts every type and function, and
+`ret` in a function with no results. -/
 instance : DialectValidation AllocDialect where
   validTy _ := True
   symbolRefs _ := []
-  validOp _ _ := True
+  validOp ctx op := op = .ret → ctx.results = []
   validFunc _ _ _ := True
 
-/-- `alloc` has an outcome from any memories, wherever a run names the
-dialect's memory: an allocation always succeeds. -/
-theorem alloc_memTotal : MemTotal (d := AllocDialect) .alloc :=
-  fun _ _ _ => ⟨fun _ => HasOutcome.map _ fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+instance : DecidableDialectValidation AllocDialect where
+  decValidTy _ := inferInstanceAs (Decidable True)
+  decValidOp ctx op := inferInstanceAs (Decidable (op = .ret → ctx.results = []))
+  decValidFunc _ _ _ := inferInstanceAs (Decidable True)
+
+/-- Each alloc op has an outcome from any memories, wherever a run names
+the dialect's memory: an allocation always succeeds, and `ret` returns. -/
+theorem alloc_memTotal : ∀ op : AllocOp, MemTotal (d := AllocDialect) op
+  | .alloc => fun _ _ _ => ⟨fun _ => HasOutcome.map _ fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+  | .ret => fun _ _ _ => ⟨fun h => (nomatch h), fun _ _ => ⟨_, rfl⟩⟩
 
 /-- The alloc dialect is lawful in its totality, with no semantics in the
 set monad. -/
-instance : LawfulDialectTotal AllocDialect := ⟨fun | .alloc, _, _ => alloc_memTotal⟩
+instance : LawfulDialectTotal AllocDialect := ⟨fun op _ _ => alloc_memTotal op⟩
 
-/-- Every function of the alloc dialect runs within its module with memory,
-at every naming: no op calls a function, and none is a terminator. -/
+/-- Every valid function of the alloc dialect runs within its module with
+memory, at every naming: no op calls a function, `alloc` never exits, and
+`ret` returns from a function with no results, by its validation rule. -/
 theorem alloc_inModuleAt {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N)
-    (M : Module AllocDialect) (f : Func AllocDialect) : f.InModuleAt unit ρ M := by
+    {ctx : ModuleContext AllocDialect} (M : Module AllocDialect) {f : Func AllocDialect}
+    (hv : f.Valid ctx) : f.InModuleAt unit ρ M := by
   letI := DialectMemDenote.denoteAt (d := AllocDialect) unit ρ
   show f.MemInModule unit M
-  exact ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ _ _ h => (nomatch h), fun _ _ _ _ h => nomatch h⟩
+  refine ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ o _ _ _ _ _ _ h => ?_,
+    fun b hb o ho _ _ _ _ h => ?_⟩
+  · cases o with | mk _ op _ _ _ _ => cases op <;> cases h
+  · obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
+    have hvalid := (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
+    revert hvalid h
+    cases b.body[i].op with
+    | alloc => intro h; cases h
+    | ret => intro _ hvalid; exact (hvalid rfl).symm
 
-/-- A run with memory of the alloc dialect, whose op allocates, is never
-stuck and has an outcome at every budget, when its module's functions are
-valid. -/
-example {ctx : ModuleContext AllocDialect} {M : Module AllocDialect}
-    (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func AllocDialect} (hf : f ∈ M.funcs)
+/-- A function of the alloc dialect that allocates, then returns. -/
+def allocMain : Func AllocDialect where
+  name := "main"
+  params := []
+  results := []
+  body := { blocks := [{ label := "entry", params := [], body := [
+    { results := [], op := .alloc, operands := [], succs := [], regions := [], loc := 0 },
+    { results := [], op := .ret, operands := [], succs := [], regions := [], loc := 0 }] }] }
+
+/-- A module of the alloc dialect with that one function. -/
+def allocModule : Module AllocDialect := { items := [.func allocMain], locs := [(0, .unknown)] }
+
+/-- `allocMain` is valid in its module. -/
+theorem allocMain_valid : allocMain.Valid allocModule.context where
+  bodyKind := rfl
+  entry := ⟨_, rfl, rfl⟩
+  reachable b hb := by
+    simp only [allocMain, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
+    subst hb
+    exact .entry rfl
+  labelsUnique := by decide
+  namesUnique := by decide +kernel
+  names x hx := Text.isName_iff.2 (by revert x; decide +kernel)
+  labels b hb := Text.isName_iff.2 (by revert b; decide +kernel)
+  types t ht := by revert t; decide +kernel
+  blocksNonEmpty b hb := by
+    simp only [allocMain, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
+    subst hb
+    simp
+  ops b hb i o ho := by
+    simp only [allocMain, Func.blocks, List.mem_cons, List.not_mem_nil, or_false] at hb
+    subst hb
+    match i, ho with
+    | 0, ho =>
+      cases ho
+      exact ⟨Func.regionsValid_of_nil rfl rfl, rfl, rfl, by decide, rfl, fun _ => rfl,
+        fun _ h => (nomatch h), fun _ h => (nomatch h), fun _ h => (nomatch h), fun h => (nomatch h),
+        by decide⟩
+    | 1, ho =>
+      cases ho
+      exact ⟨Func.regionsValid_of_nil rfl rfl, rfl, rfl, by decide, rfl, fun h => (nomatch h),
+        fun _ h => (nomatch h), fun _ h => (nomatch h), fun _ h => (nomatch h), fun _ => rfl,
+        by decide⟩
+  inner := Func.inner_of_noRegions (by decide +kernel)
+  dialect := trivial
+
+/-- The module is valid. -/
+theorem allocModule_valid : allocModule.Valid := Module.valid_of_flat
+  (by decide)
+  (by decide)
+  (⟨by decide, by unfold LocTable.InLimits; decide +kernel, fun e he => by
+    simp only [allocModule, List.mem_cons, List.not_mem_nil, or_false] at he
+    subst he
+    simp [Location.WellFormed, Location.refs]⟩)
+  (fun f hf => by
+    simp only [allocModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil,
+      List.mem_cons, List.not_mem_nil, or_false] at hf
+    subst hf
+    exact allocMain_valid)
+  (by simp [allocModule])
+  (by simp [allocModule])
+
+/-- A run with memory of a valid module of the alloc dialect, whose op
+allocates, is never stuck and has an outcome at every budget. -/
+theorem allocModule_runsWell {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (args : HVector toType (f.params.map (·.2))) :
-    NeverStuck (f.memRuns (fun _ : Unit => 8) id M args) ∧
-      Progress (f.memRuns (fun _ : Unit => 8) id M args) :=
-  have hm := fun g _ => alloc_inModuleAt (fun _ : Unit => 8) id M g
+    NeverStuck (f.memRuns (fun _ : Unit => 8) id allocModule args) ∧
+      Progress (f.memRuns (fun _ : Unit => 8) id allocModule args) :=
+  have hv := allocModule_valid.funcs
+  have hm := fun g hg => alloc_inModuleAt (fun _ : Unit => 8) id allocModule (hv g hg)
   ⟨Func.memNeverStuck _ _ hv hm hf args, Func.memProgress _ _ hv hm hf args⟩
+
+/-- `allocMain` is a function of the module, so the theorem holds of it. -/
+example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 
 /-- info: 'Fir.Func.memNeverStuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memNeverStuck
