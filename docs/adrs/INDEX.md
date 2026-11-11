@@ -124,6 +124,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-11-1443](2026-11-11-1443-an-unobservable-inline-assembly-block-s-answer-depends-on-the-memory-it-reads.md) | [semantics](../decisions/semantics.md) | An unobservable inline assembly block's answer depends on the contents of the memory it declares it reads | this ADR |
 | [ADR-2026-11-11-1444](2026-11-11-1444-an-address-escapes-when-an-op-hands-it-to-code-outside-the-program.md) | [semantics](../decisions/semantics.md) | An address escapes when an op hands it to code outside the program | this ADR |
 | [ADR-2026-11-11-1445](2026-11-11-1445-the-end-of-run-comparison-looks-only-at-live-memory.md) | [semantics](../decisions/semantics.md) | The end-of-run comparison looks only at live memory, so allocations the world freed are not compared | this ADR |
+| [ADR-2026-11-11-1450](2026-11-11-1450-a-webassembly-backend-is-milestone-m8.md) | [process](../decisions/process.md) | A WebAssembly backend is milestone M8 | this ADR |
 | [ADR-2026-11-11-1800](2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md) | [semantics](../decisions/semantics.md) | Float arithmetic runs Lean's model, and a NaN result is any NaN, chosen by sign and mantissa | this ADR |
 | [ADR-2026-11-11-1801](2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md) | [text-format](../decisions/text-format.md) | A float op that rounds is written with round(rne), and no other mode decodes | this ADR |
 
