@@ -210,6 +210,8 @@ unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
 
+{includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}
+
 {includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
 
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}

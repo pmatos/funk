@@ -4,7 +4,8 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls, and the float constants and comparisons. Each op below is an op instance: it carries its
+branches and calls, and the float constants, comparisons and arithmetic.
+Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
 
@@ -81,6 +82,26 @@ inductive FPred where
   deriving Repr, DecidableEq, Inhabited
 
 /--
+A float op of two operands, each rounded to nearest even
+(ADR-2026-11-11-1800): `fadd` adds, `fsub` subtracts the second operand
+from the first, `fmul` multiplies and `fdiv` divides the first by the
+second.
+-/
+inductive FBin where
+  | fadd | fsub | fmul | fdiv
+  deriving Repr, DecidableEq, Inhabited
+
+/--
+A float op of one operand (ADR-2026-11-11-1800): `fneg` negates, `fabs`
+gives the absolute value, and `sqrt` the square root, rounded to nearest
+even. Only `sqrt` rounds: a negation or an absolute value is a float of
+the format.
+-/
+inductive FUnary where
+  | fneg | fabs | sqrt
+  deriving Repr, DecidableEq, Inhabited
+
+/--
 An op instance of the core dialect. `w` is the width `N` of the integers the
 op works on.
 
@@ -127,6 +148,17 @@ Comparison and selection:
 * `fcmp p e m`: compares two values of `float<e,m>` with predicate `p`,
   giving an `i1`, by the numbers they encode in Lean's float model. It is
   never UB, and a poison operand gives poison (ADR-2026-11-11-1139).
+
+Float arithmetic, by Lean's float model, with a NaN result that is any NaN
+of the format (ADR-2026-11-11-1800). Each is never UB, and a poison operand
+gives poison:
+
+* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two
+  values of `float<e,m>`, rounded to nearest even.
+* `funary o e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
+  `float<e,m>`; `sqrt` rounds to nearest even.
+* `fma e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
+  to nearest even.
 
 Width changes:
 
@@ -182,6 +214,9 @@ inductive Op where
   | ashr (w : Nat)
   | icmp (p : Pred) (w : Nat)
   | fcmp (p : FPred) (e m : Nat)
+  | fbin (o : FBin) (e m : Nat)
+  | funary (o : FUnary) (e m : Nat)
+  | fma (e m : Nat)
   | select (w : Nat)
   | zext (m n : Nat)
   | sext (m n : Nat)

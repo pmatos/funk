@@ -24,8 +24,11 @@
 //!
 //! An `f32` or `f64` is its bits in one slot. A float constant writes them
 //! as an integer immediate, as any constant does, and `fcmp` loads its
-//! operands into SSE registers (`fcompare.rs`). Floats pass and return in
-//! SSE registers (ADR-2026-11-11-1140).
+//! operands into SSE registers (`fcompare.rs`), as the float arithmetic
+//! does, but for `fneg` and `fabs`, which change the sign bit in `%rax`,
+//! and `fma`, which calls a routine of a runtime helper of its own
+//! (`farith.rs`, ADR-2026-11-11-1802). Floats pass and return in SSE
+//! registers (ADR-2026-11-11-1140).
 
 mod arith;
 mod bitwise;
@@ -35,6 +38,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod farith;
 mod fcompare;
 mod freeze;
 mod moves;
@@ -45,12 +49,19 @@ use funk_ir::text::{print_op, print_symbol};
 use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
-pub use div::{HELPER_STACK, helper};
+pub use div::HELPER_STACK;
 
 use crate::abi::{self, Arg, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
+
+/// The routine of a runtime helper that `op` calls, if any: a division at
+/// `i128`, or `fma` at `f32` or `f64`. Each routine needs at most
+/// [`HELPER_STACK`] bytes of stack below its caller's `%rsp`.
+pub fn helper(op: &Op) -> Option<&'static str> {
+    div::helper(op).or_else(|| farith::helper(op))
+}
 
 /// Why an op was not lowered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -230,6 +241,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| div::lowering(name))
         .or_else(|| compare::lowering(name))
         .or_else(|| fcompare::lowering(name))
+        .or_else(|| farith::lowering(name))
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
 }
@@ -243,7 +255,8 @@ pub struct Lowered {
 }
 
 /// The assembly of every function of `m`, followed by the runtime helper
-/// when a function divides at `i128`, or a diagnostic for each part that
+/// that divides at `i128` when a function does, and the one that does
+/// `fma` at `f32` and `f64` when a function does, or a diagnostic for each part that
 /// the backend cannot lower. `m` must be valid.
 pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
@@ -256,9 +269,12 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
             frames.push(size);
         }
     }
-    let mut ops = m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops);
-    if ops.any(|op| helper(op).is_some()) {
+    let ops = || m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops);
+    if ops().any(|op| div::helper(op).is_some()) {
         asm.raw(div::HELPER);
+    }
+    if ops().any(|op| farith::helper(op).is_some()) {
+        asm.raw(farith::HELPER);
     }
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {

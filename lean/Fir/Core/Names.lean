@@ -28,7 +28,9 @@ theorem name_new (e : Dialect) [DialectName e] : name e ∉ names CoreDialect :=
 /-- The name of a core op names no dialect. -/
 theorem opName_bare (o : Op) : wordDialect (opName (d := CoreDialect) o) = none := by
   apply wordDialect_eq_none
-  cases o <;> simp only [opName, Op.name] <;> decide
+  cases o <;> first
+    | (simp only [opName, Op.name]; decide)
+    | (rename_i o _ _; cases o <;> simp only [opName, Op.name, FBin.name, FUnary.name] <;> decide)
 
 /-- No word of a core op's attributes names a dialect. -/
 theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) = [] := by
@@ -52,6 +54,10 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
       apply wordDialect_eq_none
       cases p <;> decide
     simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hq]
+  | fbin | fma => simp [opAttrs, Op.attrs, roundAttr, Attr.dialectsAll, Attr.dialects, wordDialect]
+  | funary o =>
+    cases o <;> simp [opAttrs, Op.attrs, FUnary.attrs, roundAttr, Attr.dialectsAll, Attr.dialects,
+      wordDialect]
   | add _ f | sub _ f | mul _ f => exact hw f
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7074652306970837079")
+:::moduleDocs (fingerprint := "10133536074912500472")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "2052658102503826680")
@@ -23,11 +23,11 @@ yet, so no memory has a name: the set of its memory names is empty. It
 gains memories with the memory model (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "13731022592774262036")
+:::readable Fir.Core.Op.effects (fingerprint := "7461051455000583795")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call} \end{aligned}`
 
 $$`\mathsf{add}_f,\ \mathsf{sub}_f,\ \mathsf{mul}_f:\ \{\mathsf{mayPoison}\} \text{ if } f \text{ has a flag, else } \emptyset`
 
@@ -40,7 +40,9 @@ $$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison}:\ \{\mathsf{ma
 $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
 $`\mathsf{const}` here is a constant of any type, an integer's or a
-float's. $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
+float's. The float arithmetic is pure: a NaN result is a defined
+value, and M1 has no floating-point exceptions (ADR-2026-11-11-1800).
+$`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its
 effects (ADR-2026-11-03-0600).

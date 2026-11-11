@@ -1,0 +1,49 @@
+# Tests of float-unary-fma-f16.fir: fneg, fabs, sqrt, fma at f16
+# (ADR-2026-11-11-1800), on the hard inputs: results halfway between
+# two floats, subnormals, -0, overflow to infinity and NaN operands.
+# Written by scripts/harness/float_arith_cases.py, which computes each
+# expected result with scripts/harness/float_ref.py, apart from Lean.
+# Each test is interpreter-only: the backend does not lower
+# f16, so fir-ref alone runs it and must give what it expects.
+# A NaN result is any NaN: its test is interpreter-only and names
+# the NaN by a choice of the sign and the mantissa, as signed
+# i11. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@fneg", args = ["0.0"], expect = ["-0.0"] },
+  { func = "@fneg", args = ["0xfc00"], expect = ["0x7c00"] },
+  { func = "@fneg", args = ["6.0e-8"], expect = ["-6.0e-8"] },
+  { func = "@fneg", args = ["0xffff"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@fabs", args = ["-0.0"], expect = ["0.0"] },
+  { func = "@fabs", args = ["-65500.0"], expect = ["65500.0"] },
+  { func = "@fabs", args = ["0xffff"], choices = ["-1"], expect = ["0xffff"] },
+  { func = "@sqrt", args = ["4.0"], expect = ["2.0"] },
+  { func = "@sqrt", args = ["2.25"], expect = ["1.5"] },
+  { func = "@sqrt", args = ["2.0"], expect = ["1.414"] },
+  { func = "@sqrt", args = ["6.0e-8"], expect = ["0.0002441"] },
+  { func = "@sqrt", args = ["1.0e-7"], expect = ["0.0003452"] },
+  { func = "@sqrt", args = ["65500.0"], expect = ["255.9"] },
+  { func = "@sqrt", args = ["0.0"], expect = ["0.0"] },
+  { func = "@sqrt", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@sqrt", args = ["-1.0"], choices = ["1"], expect = ["0x7c01"] },
+  { func = "@sqrt", args = ["0x7c00"], expect = ["0x7c00"] },
+  { func = "@sqrt", args = ["0xfc00"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@sqrt", args = ["0xffff"], choices = ["-1"], expect = ["0xffff"] },
+  { func = "@fma", args = ["1.0", "1.0", "1.0"], expect = ["2.0"] },
+  { func = "@fma", args = ["1.001", "0.999", "-1.0"], expect = ["-9.5e-7"] },
+  { func = "@fma", args = ["1.001", "1.001", "-1.002"], expect = ["9.5e-7"] },
+  { func = "@fma", args = ["65500.0", "2.0", "-65500.0"], expect = ["65500.0"] },
+  { func = "@fma", args = ["1.0", "0.0004883", "1.0"], expect = ["1.0"] },
+  { func = "@fma", args = ["6.0e-8", "0.5", "0.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["0.0", "1.0", "-0.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["-0.0", "1.0", "-0.0"], expect = ["-0.0"] },
+  { func = "@fma", args = ["-1.0", "1.0", "1.0"], expect = ["0.0"] },
+  { func = "@fma", args = ["0x7c00", "0.0", "0xffff"], choices = ["1"], expect = ["0x7c01"] },
+  { func = "@fma", args = ["0x7c00", "1.0", "0xfc00"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@fma", args = ["1.0", "1.0", "0x7c00"], expect = ["0x7c00"] },
+  { func = "@fma", args = ["6.0e-8", "6.0e-8", "-6.0e-8"], expect = ["-6.0e-8"] },
+  { func = "@fma", args = ["65500.0", "65500.0", "0xfc00"], expect = ["0xfc00"] },
+  { func = "@fneg", args = ["poison"], expect = ["poison"] },
+  { func = "@fabs", args = ["poison"], expect = ["poison"] },
+  { func = "@sqrt", args = ["poison"], expect = ["poison"] },
+  { func = "@fma", args = ["poison", "0.0", "0.0"], expect = ["poison"] },
+]

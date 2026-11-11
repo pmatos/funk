@@ -241,3 +241,22 @@ format. `float-types` now has interpreter-only tests that pass values of
 every format, poison among them.
 `reject/float-ops.toml` holds the float constants and `fcmp` texts that
 do not decode.
+
+The texts of #229's fourth stage also use the float arithmetic `fadd`,
+`fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`
+([ADR-2026-11-11-1800](../adrs/2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md),
+[ADR-2026-11-11-1801](../adrs/2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md)).
+`float-binary-T` runs `fadd`, `fsub`, `fmul` and `fdiv`, and
+`float-unary-fma-T` runs `fneg`, `fabs`, `sqrt` and `fma`, at `T`, one of
+`f16`, `bf16`, `f32`, `f64` and `f128`, on the hard inputs: results
+halfway between two floats, subnormals, `-0`, overflow to infinity and
+NaN operands, `fsub` and `fdiv` in both operand orders, and a poison
+operand. `scripts/harness/float_arith_cases.py` writes them, with each
+expected result that `scripts/harness/float_ref.py` computes
+([ADR-2026-11-11-1803](../adrs/2026-11-11-1803-the-float-arithmetic-corpus-is-generated-from-the-exact-rational-reference.md)).
+A result that is not a NaN is differential at `f32` and `f64` and
+interpreter-only at every format; a NaN result is interpreter-only, with
+a choice that names the NaN, until #219. `reject/float-arith.toml` holds
+the texts of these ops that do not decode, such as `fadd` without
+`round(rne)` or with `round(rtz)`, and one at a format that validation
+rejects.

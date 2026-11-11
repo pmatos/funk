@@ -11,11 +11,13 @@ dialect has no memory yet, so its memories have no names, and M0's runs
 have no trace.
 
 * Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
-  `select`, `zext`, `sext`, `trunc`, `freeze`, and `add`, `sub` and `mul`
-  without flags. On operands
+  `select`, `zext`, `sext`, `trunc`, `freeze`, `add`, `sub` and `mul`
+  without flags, and the float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`,
+  `fneg`, `fabs`, `sqrt` and `fma`. On operands
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
-  chooses, and `freeze` gives defined bits.
+  chooses, and `freeze` gives defined bits. A float op's NaN is a defined
+  value, and M1 has no floating-point exceptions (ADR-2026-11-11-1800).
 * May produce poison: `poison`; `add`, `sub` and `mul` with a flag, which
   give poison when the flag is broken; and the shifts, which give poison
   for an amount of `N` or more.
@@ -45,8 +47,8 @@ for the rest, so a new core op does not build until it declares its
 effects (ADR-2026-11-03-0600). A flag of `add`, `sub` or `mul`, and `exact`
 on a division, may produce poison. -/
 def Op.effects : Op → Effects Mem
-  | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .fcmp .. | .select _ | .zext ..
-  | .sext .. | .trunc .. | .freeze _ | .call .. => {}
+  | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .fcmp .. | .fbin .. | .funary ..
+  | .fma .. | .select _ | .zext .. | .sext .. | .trunc .. | .freeze _ | .call .. => {}
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }

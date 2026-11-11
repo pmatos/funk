@@ -116,6 +116,13 @@ keeps its bits read as a signed integer, which the harness converts
 `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:
 `%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-11-1139).
 
+Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
+has one attribute, `round(rne)`, in the applied form:
+`%s: f32 = fadd round(rne) %a, %b`. `fneg` and `fabs` do not round and have
+none. Any other attribute does not decode, so a missing mode, `round(rtz)`, the
+bare word `rne` and `fneg round(rne)` are parse errors. The op carries no mode,
+since M1 has one (ADR-2026-11-09-1549, ADR-2026-11-11-1801).
+
 Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
 float type has at most as many bits in all (ADR-2026-11-11-0950). A
 location reference, a line and a column are below `2^32`. An integer

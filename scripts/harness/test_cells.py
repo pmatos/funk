@@ -9,7 +9,9 @@ import cells
 from cells import Cell, CellError, of_op, results
 from firtext import Op
 
-TEXT = Path(__file__).resolve().parents[2] / "lean" / "Fir" / "Core" / "Text.lean"
+CORE = Path(__file__).resolve().parents[2] / "lean" / "Fir" / "Core"
+TEXT = CORE / "Text.lean"
+FLOAT_OP_TEXT = CORE / "FloatOpText.lean"
 
 
 def definition(text: str, name: str) -> str:
@@ -29,12 +31,34 @@ def attr_lists(body: str) -> set[str]:
     return found
 
 
-def decoded_attrs(text: str) -> dict[str, tuple[str, ...]]:
+def round_attrs(floats: str) -> tuple[str, ...]:
+    """The one rounding attribute that `isRoundAttrs` accepts, as the text
+    writes it."""
+    body = definition(floats, "isRoundAttrs")
+    found = re.findall(r'\| \[\.app "(\w+)" \[\.word "(\w+)"\]\] => true', body)
+    return tuple(f"{head}({mode})" for head, mode in found)
+
+
+def unary_attrs(floats: str) -> dict[str, tuple[str, ...]]:
+    """The attributes that each float op of one operand reads, by
+    `FUnary.attrsOk`: `round(rne)`, or none."""
+    body = definition(floats, "FUnary.attrsOk")
+    found = {}
+    for ctors, result in re.findall(r"\n  \| ([^=]*)=> (.*)", body):
+        attrs = round_attrs(floats) if "isRoundAttrs" in result else ("",)
+        for ctor in re.findall(r"\.(\w+)", ctors):
+            found[ctor] = attrs
+    return found
+
+
+def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     """The attributes that are cells of each op, as `Op.decode` reads
     them: the arm of an op that reads its attributes with `decodeWrap`,
-    `decodeExact` or `Pred.all` takes theirs, and an op of `plainBinOps`,
-    or whose arm takes them through `bare`, takes none. A constant's value
-    and a callee are not cells, and any other arm is not known."""
+    `decodeExact` or `Pred.all` takes theirs, a float op of arithmetic
+    takes `round(rne)` or none, as `decodeFBin`, `decodeFma` and
+    `FUnary.attrsOk` read them, and an op of `plainBinOps`, or whose arm
+    takes them through `bare`, takes none. A constant's value and a callee
+    are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
     for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
@@ -46,11 +70,17 @@ def decoded_attrs(text: str) -> dict[str, tuple[str, ...]]:
         "FPred.all": cells.FPREDS,
         "bare": ("",),
         "decodeCast": ("",),
+        "decodeFBin": round_attrs(floats),
+        "decodeFma": round_attrs(floats),
     }
+    unary = unary_attrs(floats)
     found = {}
     for name, arm in arms.items():
         if name in ("const", "call"):
             found[name] = ("",)
+            continue
+        if ctor := re.search(r"decodeFUnary \.(\w+)", arm):
+            found[name] = unary.get(ctor.group(1), ("unknown",))
             continue
         read = [
             attrs
@@ -73,8 +103,11 @@ def flagged_ops(text: str) -> dict[str, set[str]]:
 
 
 class Tests(unittest.TestCase):
-    def assert_cells_follow(self, text: str):
+    def assert_cells_follow(self, text: str, floats: str | None = None):
+        floats = floats or FLOAT_OP_TEXT.read_text(encoding="utf-8")
         names = re.findall(r'=> "(\w+)"', definition(text, "Op.name"))
+        for kind in ("FBin", "FUnary"):
+            names += re.findall(r'=> "(\w+)"', definition(floats, f"{kind}.name"))
         self.assertEqual(sorted(names), sorted(cells.OPS))
         preds = re.findall(r"\.(\w+)", definition(text, "Pred.all").split(":=")[1])
         self.assertEqual(tuple(preds), cells.PREDS)
@@ -84,7 +117,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
         self.assertEqual(
-            decoded_attrs(text),
+            decoded_attrs(text, floats),
             {
                 op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 for op in cells.OPS
@@ -100,9 +133,14 @@ class Tests(unittest.TestCase):
                 "f.attrs",
                 'if e then [.word "exact"] else []',
                 "[.sym f]",
+                "[roundAttr]",
+                "o.attrs",
                 "[]",
             },
         )
+        self.assertEqual(flagged["[roundAttr]"], {"fbin", "fma"})
+        self.assertEqual(flagged["o.attrs"], {"funary"})
+        self.assertEqual(round_attrs(floats), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
         self.assertEqual(flagged["[.float (floatLit e m v)]"], {"fconst"})
         self.assertEqual(flagged["[.word p.name]"], {"icmp", "fcmp"})
@@ -137,7 +175,8 @@ class Tests(unittest.TestCase):
         for old, new in [to_attrs, *to_decode]:
             self.assertEqual(text.count(old), 1, old)
             text = text.replace(old, new)
-        self.assertEqual(decoded_attrs(text)["lshr"], cells.EXACT)
+        floats = FLOAT_OP_TEXT.read_text(encoding="utf-8")
+        self.assertEqual(decoded_attrs(text, floats)["lshr"], cells.EXACT)
         self.assertEqual(flagged_ops(text)["f.attrs"], {"add", "sub", "mul"})
         decode_only = original
         for old, new in to_decode:
@@ -163,7 +202,20 @@ class Tests(unittest.TestCase):
             of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
-        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS)))
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8))
+        add = Op("fadd", ("round(rne)",), ("f32", "f32"), ("f32",), ())
+        self.assertEqual(of_op(add), {Cell("floats", "fadd", "round(rne)", "f32")})
+        fma = Op("fma", ("round(rne)",), ("bf16",) * 3, ("bf16",), ())
+        self.assertEqual(of_op(fma), {Cell("floats", "fma", "round(rne)", "bf16")})
+        neg = Op("fneg", (), ("f128",), ("f128",), ())
+        self.assertEqual(of_op(neg), {Cell("floats", "fneg", "", "f128")})
+        for bad in [
+            Op("fadd", (), ("f32", "f32"), ("f32",), ()),
+            Op("fadd", ("round(rtz)",), ("f32", "f32"), ("f32",), ()),
+            Op("fneg", ("round(rne)",), ("f32",), ("f32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
         self.assertIn(Cell("values", "call", "one", "f32"), found)
         values = [c for c in found if c.table == "values" and c.width]
         self.assertEqual(len(values), 8 * 3)

@@ -11,8 +11,9 @@
 //! family (#16) `icmp` with its predicates and `select`, the branches (#19)
 //! `br` and `cond_br`, and the calls (#20) `call`. #122 adds the constant
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
-//! `ret`. #229 adds float constants to `const` and the float comparison
-//! `fcmp`. A later family adds a file and a line here.
+//! `ret`. #229 adds float constants to `const`, the float comparison
+//! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
+//! `fabs`, `sqrt` and `fma`. A later family adds a file and a line here.
 
 mod arith;
 mod bitwise;
@@ -21,6 +22,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod float_arith;
 mod float_text;
 mod freeze;
 mod types;
@@ -30,6 +32,7 @@ pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
+pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use types::{
     CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_format, float_type, int_type, int_width,
@@ -43,7 +46,7 @@ pub const NAME: &str = "core";
 
 /// The core dialect, ready to register.
 pub fn dialect() -> Dialect {
-    Dialect::new(NAME)
+    let core = Dialect::new(NAME)
         .types(types::CoreTypes)
         .op(constant::Const)
         .op(arith::Wrap("add"))
@@ -71,7 +74,8 @@ pub fn dialect() -> Dialect {
         .op(control::CondBr)
         .op(control::Ret)
         .op(control::Unreachable)
-        .op(call::Call)
+        .op(call::Call);
+    float_arith::FloatArith::all().fold(core, Dialect::op)
 }
 
 /// Writes a list of types as `(t1, t2)`, for messages.
