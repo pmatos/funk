@@ -156,16 +156,6 @@ variable [LiftsSetM d] [DialectValidation d] [TyPoison d.Ty] [TyRefinement d.Ty]
   [LawfulDialectPoison d]
   {ctx : ModuleContext d} {M : Module d}
 
-/-- Refined arguments, with memory: for a lawful dialect whose ops touch no
-memory, a function's behaviour with memory on arguments that refine others
-refines its behaviour with memory on those others. -/
-theorem Func.memRuns_args_isRefinedBy_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func d}
-    (hf : f ∈ M.funcs) {a a' : HVector toType (f.params.map (·.2))}
-    (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns unit ρ M a) ⊑ observable (f.memRuns unit ρ M a') := by
-  rw [Func.memRuns_eq]
-  exact Func.runs_args_isRefinedBy_of_lawful hv hf ha
-
 /-- Congruence in the callee, with memory: for a lawful dialect whose ops
 touch no memory, in a valid module, replacing the body of its function `@g`
 with one under which `@g` refines itself with memory refines every function

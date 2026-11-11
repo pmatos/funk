@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10953727801353079974")
+:::moduleDocs (fingerprint := "17263823827012330628")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -23,6 +23,26 @@ terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Totality-with-memory"}[total with memory]:
 the core dialect is lawful, and its semantics with memory lifts its
 semantics in the set monad.
+:::
+
+:::readable Fir.Core.lawfulDialectMonotone (fingerprint := "853410003265425313")
+*Theorem: the core dialect is lawful in its monotonicity.* Each core
+terminator and each core op with no callee is
+{ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory]:
+the core dialect is lawful, and its semantics with memory lifts its
+semantics in the set monad.
+:::
+
+:::readable Fir.Core.memRuns_args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "14354991659016519450")
+*Theorem: refined arguments, with memory, for every core module.* For
+every core module $`M`, valid or not, every function $`f` of it, and every
+naming of the core's memories, the behaviour with memory of $`f` on
+arguments $`\vec{v}'` refines its behaviour with memory on
+$`\vec{v} \sqsubseteq \vec{v}'`, calls and recursion included: every core
+op that runs by its own rule is monotone at every width, so it is monotone
+with memory, and the
+{ref "The-fir-specification--Memory--Refined-arguments-and-memories"}[theorem on refined arguments and memories]
+applies from the empty memories.
 :::
 
 :::readable Fir.Core.memNeverStuck Fir.Core.memProgress (pin := Fir.Core.inModule_of_valid) (fingerprint := "9635650436885863802")

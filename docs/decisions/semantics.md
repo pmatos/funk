@@ -190,6 +190,17 @@ general theorem as it is. Refined arguments need no finiteness
 (ADR-2026-11-02-1426). `ptr` gets values, so call congruence is restated
 (ADR-2026-11-09-1542).
 
+Runs with memory refine too, whatever their ops do to the memories. A poison
+unit of memory is refined by any unit, and every other unit only by itself;
+refined memories have the same frames and allocations. A dialect lawful in
+its monotonicity (`LawfulDialectMonotone`) has each op monotone over its
+semantics with memory, from memories that refine others. Refinement then
+compares runs from given memories, the end memories included, since a
+callee runs from its caller's memories. Refined arguments and memories need
+nothing more. Congruence assumes the new callee refines the old from every
+memories, and one fuel bound for it, until #214. These proofs stand beside
+those in the set monad (ADR-2026-11-11-1002).
+
 ## The interpreter and its calculus
 
 fir's semantics is a monadic definitional interpreter, written in Lean. It is
