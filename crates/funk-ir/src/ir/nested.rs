@@ -5,13 +5,14 @@
 //! hand, from walks over its [`Entry`]s, the traits that `#[derive]` would
 //! write recursively: `Clone`, `PartialEq`, `Hash`, `Debug` and `Drop`.
 //! `Item` derives its own, which call the nested module's and so never
-//! recurse.
+//! recurse. A function and an item of a dialect's kind are leaves of the
+//! walk.
 
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
 use super::debug::{Bracket, DebugTree};
-use super::module::{Func, Item, Module};
+use super::module::{DialectItem, Func, Item, Module};
 use super::tree::{self, Nest, Node, Step, walk};
 
 /// A module nested in another, as an item of kind `module`
@@ -61,6 +62,12 @@ impl<'a> Table<'a> {
     pub fn funcs(self) -> impl Iterator<Item = &'a Func> {
         self.items.iter().filter_map(Item::as_func)
     }
+
+    /// The table's items of a dialect's kind, in order
+    /// (`SymbolTable.dialectItems`).
+    pub fn dialect_items(self) -> impl Iterator<Item = &'a DialectItem> {
+        self.items.iter().filter_map(Item::as_dialect)
+    }
 }
 
 impl Module {
@@ -79,22 +86,24 @@ impl Module {
     pub(crate) fn tables(&self) -> Vec<Table<'_>> {
         let nested = self.items.iter().flat_map(|i| match i {
             Item::Module(n) => Some(walk(Entry::Module(n)).filter_map(Step::entered)),
-            Item::Func(_) => None,
+            Item::Func(_) | Item::Dialect(_) => None,
         });
         std::iter::once(self.table())
             .chain(nested.flatten().filter_map(|e| match e {
                 Entry::Module(m) => Some(Table::of(m)),
-                Entry::Func(_) => None,
+                Entry::Func(_) | Entry::Dialect(_) => None,
             }))
             .collect()
     }
 }
 
-/// A nested module or a function: a node of a walk over nested modules.
+/// A nested module, a function or an item of a dialect's kind: a node of a
+/// walk over nested modules.
 #[derive(Clone, Copy)]
 pub(crate) enum Entry<'a> {
     Module(&'a NestedModule),
     Func(&'a Func),
+    Dialect(&'a DialectItem),
 }
 
 /// The items of a nested module, as entries.
@@ -107,6 +116,7 @@ impl<'a> Iterator for Entries<'a> {
         self.0.next().map(|i| match i {
             Item::Func(f) => Entry::Func(f),
             Item::Module(m) => Entry::Module(m),
+            Item::Dialect(i) => Entry::Dialect(i),
         })
     }
 }
@@ -117,14 +127,14 @@ impl<'a> Node for Entry<'a> {
     fn children(self) -> Entries<'a> {
         match self {
             Entry::Module(m) => Entries(m.items.iter()),
-            Entry::Func(_) => Entries([].iter()),
+            Entry::Func(_) | Entry::Dialect(_) => Entries([].iter()),
         }
     }
 
     fn is_leaf(self) -> bool {
         match self {
             Entry::Module(m) => m.items.is_empty(),
-            Entry::Func(_) => true,
+            Entry::Func(_) | Entry::Dialect(_) => true,
         }
     }
 }
@@ -162,6 +172,7 @@ impl Clone for NestedModule {
         for step in walk(Entry::Module(self)).skip(1) {
             match step {
                 Step::Enter(Entry::Func(f)) => items.push(Item::Func(f.clone())),
+                Step::Enter(Entry::Dialect(i)) => items.push(Item::Dialect(i.clone())),
                 Step::Enter(Entry::Module(m)) => {
                     items.push(Item::Module(module_head(m)));
                     items.open(m.items.len());
@@ -169,7 +180,7 @@ impl Clone for NestedModule {
                 Step::Leave(Entry::Module(_)) => {
                     items.close_module();
                 }
-                Step::Leave(Entry::Func(_)) => {}
+                Step::Leave(Entry::Func(_) | Entry::Dialect(_)) => {}
             }
         }
         let mut m = module_head(self);
@@ -186,6 +197,7 @@ impl PartialEq for NestedModule {
                     x.name == y.name && x.dialects == y.dialects
                 }
                 (Entry::Func(x), Entry::Func(y)) => x == y,
+                (Entry::Dialect(x), Entry::Dialect(y)) => x == y,
                 _ => false,
             }
         })
@@ -205,6 +217,10 @@ impl Hash for NestedModule {
                 state.write_u8(1);
                 f.hash(state);
             }
+            Entry::Dialect(i) => {
+                state.write_u8(2);
+                i.hash(state);
+            }
         });
     }
 }
@@ -219,6 +235,11 @@ impl fmt::Debug for NestedModule {
                 Step::Enter(Entry::Func(func)) => {
                     out.open(None, "Func", Bracket::Tuple)?;
                     out.value(None, func)?;
+                    out.close()?;
+                }
+                Step::Enter(Entry::Dialect(item)) => {
+                    out.open(None, "Dialect", Bracket::Tuple)?;
+                    out.value(None, item)?;
                     out.close()?;
                 }
                 Step::Enter(Entry::Module(m)) => {
@@ -237,7 +258,7 @@ impl fmt::Debug for NestedModule {
                         out.close()?;
                     }
                 }
-                Step::Leave(Entry::Func(_)) => {}
+                Step::Leave(Entry::Func(_) | Entry::Dialect(_)) => {}
             }
         }
         Ok(())

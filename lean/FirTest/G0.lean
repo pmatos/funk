@@ -1,5 +1,6 @@
 import Fir
 import FirRef
+import FirTest.G0.Validation
 
 /-!
 G0's check on the Lean side (ADR-2026-11-03-0600). fir's spec is written
@@ -11,9 +12,10 @@ with the spec's own proof or definition. It builds only while those stay
 parameterized over the dialect: narrowing one of them to the core dialect
 breaks this file. `scripts/check_g0.py` checks the other half, that the
 code of the spec's chapters for every dialect names nothing of the core
-dialect and writes none of its words. It checks this file too, outside its
-`#guard` commands, so a statement below cannot be narrowed to the core
-dialect.
+dialect and writes none of its words. It checks this file too, and the files of
+`FirTest/G0/`, outside their `#guard` commands, so a statement cannot be
+narrowed to the core dialect. The statements about validation are in
+`FirTest.G0.Validation`.
 
 The section on behaviour models shows the seam where a dialect that needs
 probabilities plugs in. `lean/FirTest/G0Effects.lean` restates the classes
@@ -69,35 +71,6 @@ formed. -/
 theorem validIsWellFormed (d : Dialect) [DialectSignature d] [DialectValidation d] [DialectText d]
     [LawfulDialectText d] : ValidIsWellFormed (d := d) :=
   Fir.validIsWellFormed
-
-/-! # Validation -/
-
-/-- The validation check decides validity for every dialect whose rules
-are decidable. -/
-theorem problems_eq_nil_iff (d : Dialect) [DialectSignature d] [DialectValidation d]
-    [DecidableEq d.Ty] [DecidableDialectValidation d] (m : Module d) :
-    m.problems = [] ↔ m.Valid :=
-  m.problems_eq_nil_iff
-
-/-- The check of a module's dialect set decides its rule, for every dialect
-with a text and a dialect set: the set names dialects of the dialect's own
-set, and every word of the module names the core or a dialect of its set. -/
-theorem setProblems_eq_nil_iff (d : Dialect) [DialectText d] [DialectSet d] (m : Module d) :
-    m.setProblems = [] ↔ m.InDialectSet :=
-  m.setProblems_eq_nil_iff
-
-/-- `fir-ref`'s check of a module's dialect set is the spec's, for every
-dialect. -/
-theorem firRef_setProblems (d : Dialect) [DialectText d] [DialectSet d] (m : Module d) :
-    FirRef.moduleSetProblems m = m.setProblems := by
-  rw [FirRef.setProblems_eq_moduleSetProblems]
-
-/-- A valid function obeys its dialect's own rule over a whole function, for
-every dialect. -/
-theorem validFunc_of_valid (d : Dialect) [DialectSignature d] [DialectValidation d]
-    {ctx : ModuleContext d} {f : Func d} (h : f.Valid ctx) :
-    validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
-  h.dialect
 
 /-! # Execution -/
 

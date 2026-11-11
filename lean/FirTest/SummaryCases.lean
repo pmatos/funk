@@ -49,7 +49,7 @@ def tableAt (ds : List Name) (items : List (Item CoreDialect)) :
   | [] => some ⟨ds, items⟩
   | n :: ns => items.findSome? fun
     | .module n' ds' is => if n' == n then tableAt ds' is ns else none
-    | .func _ => none
+    | .func _ | .dialect _ => none
 
 mutual
 /-- The paths of the functions of every table under an item, behind
@@ -57,6 +57,7 @@ mutual
 def funcPathsItem (pre : List Name) : Item CoreDialect → List (List Name)
   | .func f => [pre ++ [f.name]]
   | .module n _ is => funcPaths (pre ++ [n]) is
+  | .dialect _ => []
 
 /-- The paths of every function of every table under `items`, behind
 `pre`. -/

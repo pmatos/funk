@@ -25,7 +25,8 @@ has:
   function whose result types `e` cannot write, no op of `e` is valid. This
   is the rule of ADR-2026-11-09-2353, with `e` in place of the base;
 * `e`'s function rule, through a view that projects the types to `dep`'s and
-  `e`'s own, and `e`'s region kinds with their rules, through the same view;
+  `e`'s own, `e`'s region kinds with their rules, and `e`'s kinds of item
+  with its rule for them, through the same view;
 * `e`'s poison classes, effects, calls and semantics. An op of `e` takes its
   operands moved down to `dep`'s types and its results move up to `big`'s.
   Its effects name `e`'s memories, as `e` declares them over `dep`.
@@ -131,7 +132,8 @@ instance instDialectSignature [DialectSignature (dep.over e)] :
   regionKinds o := regionKinds (d := dep.over e) o
 
 /-- The rules of the lift: `big`'s for `big`'s types, `e`'s for its own
-types and its ops, and `e`'s function rule and region kinds through its
+types and its ops, and `e`'s function rule, region kinds and kinds of item
+through its
 view. -/
 instance instDialectValidation [DialectValidation big] [DialectValidation (dep.over e)] :
     DialectValidation (big.over (e.lift dep ι)) where
@@ -143,6 +145,8 @@ instance instDialectValidation [DialectValidation big] [DialectValidation (dep.o
   validFunc v ctx f := validFunc (d := dep.over e) (projView v) ctx f
   regionKindNames := regionKindNames (d := dep.over e)
   validRegion v k ctx f r := validRegion (d := dep.over e) (projView v) k ctx f r
+  itemKindNames := itemKindNames (d := dep.over e)
+  validItem v ctx i := validItem (d := dep.over e) (projView v) ctx i
 
 /-- The lift's rules can be decided when `big`'s and `e`'s can. -/
 instance instDecidableDialectValidation [DialectValidation big] [DialectValidation (dep.over e)]
@@ -155,6 +159,8 @@ instance instDecidableDialectValidation [DialectValidation big] [DialectValidati
   decValidFunc v ctx f := DecidableDialectValidation.decValidFunc (d := dep.over e) (projView v) ctx f
   decValidRegion v k ctx f r :=
     DecidableDialectValidation.decValidRegion (d := dep.over e) (projView v) k ctx f r
+  decValidItem v ctx i :=
+    DecidableDialectValidation.decValidItem (d := dep.over e) (projView v) ctx i
 
 /-- An op of the lift has `e`'s poison class and `e`'s effects, on `e`'s
 memories. -/

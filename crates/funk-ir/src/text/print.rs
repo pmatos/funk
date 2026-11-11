@@ -16,7 +16,9 @@ use std::fmt::{self, Display, Write};
 
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
-use crate::ir::{Attr, Block, Def, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type};
+use crate::ir::{
+    Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type,
+};
 
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -197,15 +199,44 @@ fn write_block_head(out: &mut impl Write, n: usize, b: &Block) -> fmt::Result {
 /// attributes. Its header, labels and `}` are at `n`, its ops two spaces
 /// deeper.
 fn write_func(out: &mut impl Write, f: &Func, n: usize) -> fmt::Result {
-    indent(out, n)?;
-    write!(out, "func {}({})", print_symbol(&f.name), Commas(&f.params))?;
-    if !f.results.is_empty() {
-        write!(out, " -> {}", Commas(&f.results))?;
-    }
+    write_header(out, "func", &f.name, &f.params, &f.results, n)?;
     out.write_str(" {\n")?;
     for b in &f.body.blocks {
         write_part(out, Part::Block(b), n)?;
     }
+    indent(out, n)?;
+    out.write_str("}\n")
+}
+
+/// The header of an item at indentation `n`, as the one production of an
+/// item writes it: its kind, its symbol, its parameters and, when it has
+/// any, its results after ` -> `.
+fn write_header(
+    out: &mut impl Write,
+    kind: &str,
+    name: &str,
+    params: &[Def],
+    results: &[Type],
+    n: usize,
+) -> fmt::Result {
+    indent(out, n)?;
+    write!(out, "{kind} {}({})", print_symbol(name), Commas(params))?;
+    if !results.is_empty() {
+        write!(out, " -> {}", Commas(results))?;
+    }
+    Ok(())
+}
+
+/// An item of a dialect's kind at indentation `n`, with its line feed
+/// (`DialectItem.print`): its header as a function's, with its kind in
+/// place of `func`, each attribute after a space, then its empty body, whose
+/// `}` is on the next line, at `n`.
+fn write_dialect_item(out: &mut impl Write, i: &DialectItem, n: usize) -> fmt::Result {
+    write_header(out, &i.kind, &i.name, &i.params, &i.results, n)?;
+    for a in &i.attrs {
+        write!(out, " {a}")?;
+    }
+    out.write_str(" {\n")?;
     indent(out, n)?;
     out.write_str("}\n")
 }
@@ -231,6 +262,10 @@ fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
         match rest.next() {
             Some(Item::Func(f)) => {
                 write_func(out, f, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Dialect(i)) => {
+                write_dialect_item(out, i, n)?;
                 out.write_char('\n')?;
             }
             Some(Item::Module(m)) => {

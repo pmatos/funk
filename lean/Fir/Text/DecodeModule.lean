@@ -10,9 +10,11 @@ every function body of a printed module as blocks, the empty `{ }` included,
 never as an empty list of items. A nested module's item is a `module` with
 no parameters, results or attributes, whose body is its dialect set and its
 items, or no blocks when it has neither, and it decodes its items in turn.
-Decoding a function then
-decodes the result types, builds the scope with the first pass, decodes the
-parameters, and decodes the blocks in the scope with the second pass.
+An item of a dialect's kind has a word of a dialect as its kind, so it is
+neither a `func` nor a `module`, and its empty body reads as no blocks.
+Decoding a function then decodes the result types, builds the scope with
+the first pass, decodes the parameters, and decodes the blocks in the scope
+with the second pass.
 
 The result is the decoding step: on any tree that erases to the tree of a
 well-formed module, at any positions, decoding gives the module back.
@@ -86,6 +88,39 @@ theorem Func.WellFormed.decodeItem_eq {f : Func d} (hf : f.WellFormed) {si : SIt
   simp only [↓reduceIte, decodeFuncItem, hf.decodeFunc_eq hp hr hbs]
   rfl
 
+/-- A word of a dialect is not the kind `func` or `module`. -/
+theorem isDialectWord_ne {k : String} (hk : isDialectWord k) : k ≠ "func" ∧ k ≠ "module" :=
+  ⟨by rintro rfl; exact absurd hk (by decide), by rintro rfl; exact absurd hk (by decide)⟩
+
+omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
+/-- An item of a dialect's kind decodes back from a tree that erases to its
+tree, at any positions, when it is well formed. -/
+theorem DialectItem.WellFormed.decodeItem_eq {i : DialectItem d} (hi : i.WellFormed)
+    {si : SItem} (h : si.erase = i.tree) : Text.decodeItem si = .ok (.dialect i) := by
+  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  simp only [SItem.erase, DialectItem.tree, SItem.mk.injEq] at h
+  obtain ⟨rfl, -, rfl, hp, hr, ha, hb⟩ := h
+  obtain rfl : body = .blocks [] := by
+    cases body with
+    | blocks bs =>
+      cases bs with
+      | nil => rfl
+      | cons b _ => obtain ⟨⟩ := b; simp [SBody.erase, SBlock.eraseList] at hb
+    | items => simp [SBody.erase] at hb
+  have hr' : results.map (·.1) = i.results.map tyAttr := by
+    simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) hr
+  have ha' : attrs.map (·.1) = i.attrs := by
+    simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) ha
+  have hty : ∀ t ∈ i.types, decodeTy (tyAttr t) = some t := fun t ht => (hi.types t ht).2
+  have hres : results.mapM (fun (a, p) => decodeType (d := d) a p) = .ok i.results :=
+    mapM_decodeType (fun _ _ => rfl) hr' fun t ht => hty t (List.mem_append_right _ ht)
+  have hps : params.mapM decodeDef = .ok i.params := mapM_decodeDef hp fun y hy =>
+    hty y.2 (List.mem_append_left _ (List.mem_map_of_mem hy))
+  obtain ⟨hf, hm⟩ := isDialectWord_ne hi.kind
+  rw [Text.decodeItem.eq_def]
+  simp only [hf, hm, hi.kind, ↓reduceIte, decodeDialectItem, hres, hps, ok_bind, ha']
+  rfl
+
 -- The two theorems recurse together, so both take the dialect's lawful
 -- text, which only the first states it needs.
 set_option linter.unusedSectionVars false in
@@ -95,6 +130,7 @@ positions, when it is well formed. -/
 theorem Item.WellFormed.decodeItem_eq : ∀ {i : Item d}, i.WellFormed → ∀ {si : SItem},
     si.erase = i.tree → Text.decodeItem si = .ok i
   | .func _, hf, _, h => Func.WellFormed.decodeItem_eq hf h
+  | .dialect _, hi, _, h => DialectItem.WellFormed.decodeItem_eq hi h
   | .module name ds is, hm, ⟨kind, kindPos, sname, params, results, attrs, body⟩, h => by
     simp only [SItem.erase, Item.tree, SItem.mk.injEq] at h
     obtain ⟨rfl, -, rfl, hp, hr, ha, hb⟩ := h

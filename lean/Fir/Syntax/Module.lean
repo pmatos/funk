@@ -2,7 +2,8 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 
 /-!
-A module holds items: functions, and modules nested in it. A function is a
+A module holds items: functions, modules nested in it, and items of the
+kinds that its dialects register. A function is a
 control-flow graph of blocks (ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
 dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
@@ -15,8 +16,9 @@ referred to by name, and the names are stored as the producer wrote them
 validation chapter, not of the terms: a term can be ill-formed, and
 validation says which terms are valid.
 
-This section gives names first, then the terms from the inside out: a
-successor, an op with blocks and regions, a function, an item and a module.
+This section gives names first, then attributes, then the terms from the
+inside out: a successor, an op with blocks and regions, a function, an item
+of a dialect's kind, an item and a module.
 -/
 
 namespace Fir
@@ -51,6 +53,73 @@ def isWord (s : String) : Bool :=
   match s.toList with
   | c :: cs => isWordStart c && cs.all isNameChar
   | [] => false
+
+/-- A word of a dialect other than the core: a word that holds a `.`, such
+as `toy.cell`. Its dialect is the part before its first `.`. -/
+def isDialectWord (s : String) : Bool := isWord s && s.toList.contains '.'
+
+/-- A word of a dialect is a word. -/
+theorem isWord_of_isDialectWord {s : String} (h : isDialectWord s) : isWord s :=
+  (Bool.and_eq_true _ _).mp h |>.1
+
+/-!
+# Attributes
+
+Attributes, and types as the text writes them, are terms of one generic
+shape, the same for every dialect. An op instance holds its attributes in
+the dialect's own form, and an item of a dialect's kind holds them as these
+terms.
+-/
+
+/--
+An attribute, or a type, as written in text: a word such as `nsw` or `i32`,
+an integer, a string, a symbol reference such as `@sum`, or a word applied to
+attributes, such as `vec(4, i32)`. The core dialect does not use the applied
+form; it is there so that other dialects can write structured attributes and
+types without a change to the grammar. A word applied to no attributes,
+`h()`, is not the word `h`.
+-/
+inductive Attr where
+  | word (w : String)
+  | int (i : Int)
+  | str (s : String)
+  | sym (s : String)
+  | app (head : String) (args : List Attr)
+  deriving Inhabited
+
+mutual
+/-- How `#eval` shows an attribute: as the Lean term that builds it. It is
+written out because a derived instance would be `partial`, as `Attr` holds a
+list of itself, and no declaration of `lean/` is (ADR-2026-10-30-1452). -/
+def Attr.repr : Attr → Nat → Std.Format
+  | .word w, p => Repr.addAppParen ("Fir.Attr.word " ++ reprArg w) p
+  | .int i, p => Repr.addAppParen ("Fir.Attr.int " ++ reprArg i) p
+  | .str s, p => Repr.addAppParen ("Fir.Attr.str " ++ reprArg s) p
+  | .sym s, p => Repr.addAppParen ("Fir.Attr.sym " ++ reprArg s) p
+  | .app h args, p => Repr.addAppParen ("Fir.Attr.app " ++ reprArg h ++ " " ++
+      .bracket "[" (.joinSep (Attr.reprList args) ("," ++ .line)) "]") p
+
+/-- How `#eval` shows each attribute of a list. -/
+def Attr.reprList : List Attr → List Std.Format
+  | [] => []
+  | a :: as => a.repr 0 :: Attr.reprList as
+end
+
+instance : Repr Attr := ⟨Attr.repr⟩
+
+mutual
+/-- An attribute can be written as a token. Every symbol can: it is quoted
+when its name is not a word. -/
+def Attr.Writable : Attr → Prop
+  | .word w => isWord w
+  | .int _ | .str _ | .sym _ => True
+  | .app h args => isWord h ∧ Attr.AllWritable args
+
+/-- Every attribute of a list can be written. -/
+def Attr.AllWritable : List Attr → Prop
+  | [] => True
+  | a :: as => a.Writable ∧ Attr.AllWritable as
+end
 
 /-!
 # Terms
@@ -133,7 +202,27 @@ structure Func (d : Dialect) where
   body : Region d
 
 /--
-An item of a module: a function, or a nested module (ADR-2026-11-10-1510).
+An item of a kind that a dialect registers (ADR-2026-11-10-2224): what the
+one production of an item writes, `kind @sym(params) -> results attrs { }`,
+with an empty body. Its kind is a word of the dialect, such as `toy.cell`,
+never `func` or `module`, which are the core's. Its attributes are terms of
+the generic shape, which the dialect's rule for the kind reads, so a new
+kind needs no new syntax and no change to the parser.
+-/
+structure DialectItem (d : Dialect) where
+  kind : Name
+  name : Name
+  params : List (Name × d.Ty)
+  results : List d.Ty
+  attrs : List Attr
+
+/-- Every type that an item of a dialect's kind states: its parameters'
+types, then its results. -/
+def DialectItem.types (i : DialectItem d) : List d.Ty := i.params.map (·.2) ++ i.results
+
+/--
+An item of a module: a function, a nested module (ADR-2026-11-10-1510), or
+an item of a kind that a dialect registers (ADR-2026-11-10-2224).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
 example a device module inside a host module. A `module` item is such a
@@ -141,11 +230,13 @@ table: its symbol, its own dialect set and its items. Its set is its own,
 not its parent's, and its symbols are its own: an op refers by symbol only
 to an item of its own table. The text format writes every item with one
 generic production (N2), so a nested module needs no new production, only
-the dialect set that may start its body.
+the dialect set that may start its body. An item of a dialect's kind is
+written with the same production too.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
   | module (name : Name) (dialects : List Name) (items : List (Item d))
+  | dialect (i : DialectItem d)
 
 /--
 A module: its dialect set, its items, then its location table. In text the
@@ -164,15 +255,22 @@ structure Module (d : Dialect) where
 def Item.name : Item d → Name
   | .func f => f.name
   | .module n .. => n
+  | .dialect i => i.name
 
 /-- The function that an item is, if it is one. -/
 def Item.func? : Item d → Option (Func d)
   | .func f => some f
-  | .module .. => none
+  | _ => none
 
 @[simp] theorem Item.func?_func (f : Func d) : (Item.func f).func? = some f := rfl
 @[simp] theorem Item.func?_module (n : Name) (ds : List Name) (is : List (Item d)) :
     (Item.module n ds is).func? = none := rfl
+@[simp] theorem Item.func?_dialect (i : DialectItem d) : (Item.dialect i).func? = none := rfl
+
+/-- The item of a dialect's kind that an item is, if it is one. -/
+def Item.dialect? : Item d → Option (DialectItem d)
+  | .dialect i => some i
+  | _ => none
 
 /-- The functions of a module's own table, in order. The functions of a
 nested module are not among them: they are its own. -/

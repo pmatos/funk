@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15158369514405866677")
+:::moduleDocs (fingerprint := "16557791193898474158")
 :::
 
-:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "15166696025121488110")
+:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "3112771659388469883")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
 otherwise. An item that is a function $`f` becomes $`f[s \leftarrow b]`,
 and a nested module is unchanged, since its functions are in its own
-symbol table. For a
+symbol table. An item of a dialect's kind is unchanged too. For a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[module]
 $`M`, $`M[s \leftarrow b]` replaces each item of $`M` so, in the same
 order, and keeps the dialect set and the location table.
@@ -63,13 +63,14 @@ $`\mathrm{lookup}_M(s) = g`. A
 has unique symbols, so its calls of $`s` are calls of $`g`.
 :::
 
-:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "15407352291372746634")
+:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "5476321169022967364")
 *Theorems: a replacement keeps the symbol table and the context of
 validation.* For every module $`M`, symbol $`s` and region $`b`, the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 of $`M[s \leftarrow b]` is that of $`M`, since every function keeps its
 symbol and its type; so is the context in which validation checks its
 functions, which is the symbol table and the keys of the location table.
+The items of a dialect's kind of its own table are those of $`M`.
 :::
 
 :::readable Fir.Item.name_replaceBody Fir.Item.tablesIn_replaceBody (fingerprint := "3259367735023084775")

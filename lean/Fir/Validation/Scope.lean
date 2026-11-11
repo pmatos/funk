@@ -12,8 +12,8 @@ module, but only the runs of a valid one mean something
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
-and a rule over a whole function, as the last definition of this section
-says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
+a rule over a whole function, and rules for the kinds of region and of item
+that it registers, as the last definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
 The rules are propositions. The validation check, at the end of this
@@ -127,16 +127,22 @@ module are those of its own table. -/
 def SymbolTable.funcs (t : SymbolTable d) : List (Func d) :=
   t.items.filterMap Item.func?
 
+/-- The items of a symbol table of the kinds that dialects register, in
+order. -/
+def SymbolTable.dialectItems (t : SymbolTable d) : List (DialectItem d) :=
+  t.items.filterMap Item.dialect?
+
 /-- The type of the function that each symbol of a table names: its first
 function with that symbol. -/
 def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
   (t.funcs.find? (·.name == s)).map Func.type
 
 mutual
-/-- The symbol tables that an item holds, at any depth: none for a function,
-and a nested module's own, then those its items hold. -/
+/-- The symbol tables that an item holds, at any depth: none for a function
+or an item of a dialect's kind, and a nested module's own, then those its
+items hold. -/
 def Item.tables : Item d → List (SymbolTable d)
-  | .func _ => []
+  | .func _ | .dialect _ => []
   | .module _ ds is => ⟨ds, is⟩ :: Item.tablesIn is
 
 /-- The symbol tables that a list of items holds, at any depth, in order. -/
@@ -159,6 +165,7 @@ theorem funcNames_sublist : ∀ is : List (Item d),
   | [] => .slnil
   | .func _ :: is => .cons_cons _ (funcNames_sublist is)
   | .module .. :: is => .cons _ (funcNames_sublist is)
+  | .dialect _ :: is => .cons _ (funcNames_sublist is)
 
 /-- Items that are all functions hold no symbol table. -/
 theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.isSome) →
@@ -168,6 +175,7 @@ theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.
     rw [Item.tablesIn, Item.tables, Item.tablesIn_eq_nil fun j hj => h j (List.mem_cons_of_mem _ hj)]
     rfl
   | .module .. :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
+  | .dialect _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
 
 /-- The tables that an item of a list holds are tables of the list. -/
 theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →
@@ -233,6 +241,14 @@ The rules a dialect adds to validation.
   where its successors go. The rule sees the region and the function of the
   `host` dialect that holds it, through a view, as `validFunc` does. A
   dialect that registers no kind, as the core does, has neither.
+* `itemKindNames` lists the kinds of item that the dialect registers, each a
+  word of the dialect, and `validItem` is the dialect's rule for an item of
+  one of them (ADR-2026-11-10-2224). The rule sees the item of the `host`
+  dialect that holds it through a view, as `validFunc` does, and the symbols
+  of the item's table. It reads the kind from the item, and says what each
+  kind's parameters, results and attributes must be. A dialect that
+  registers no kind, as the core does, has neither: the core's kinds,
+  `func` and `module`, are terms of their own.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -242,6 +258,10 @@ class DialectValidation (d : Dialect) where
   regionKindNames : List Name := []
   validRegion : {host : Dialect} → DialectView d host → Name → FuncContext host → Func host →
     Region host → Prop := fun _ _ _ _ _ => False
-export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion)
+  itemKindNames : List Name := []
+  validItem : {host : Dialect} → DialectView d host → FuncContext host → DialectItem host →
+    Prop := fun _ _ _ => False
+export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
+  itemKindNames validItem)
 
 end Fir

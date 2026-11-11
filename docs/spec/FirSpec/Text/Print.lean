@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10255447765628156986")
+:::moduleDocs (fingerprint := "18125984063402587496")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
@@ -83,6 +83,24 @@ So `%s: i32 = add nsw %a, %b @3` is an op at the indentation 2 with one
 result, one attribute, two operands and the location reference 3.
 :::
 
+:::readable Fir.DialectItem.print (pin := Fir.DialectItem) (fingerprint := "13785985275742981652")
+*Definition: an item of a dialect's kind, in text.* An item of a dialect's
+kind at the indentation $`n`, with the kind $`k`, the symbol $`s`, the
+parameters $`p^*`, the result types $`t_1, \dots, t_m` and the attributes
+$`a_1, \dots, a_j`, is written as a function's header with $`k` in place
+of `func`, then its attributes, then its empty body:
+
+* $`n` spaces, $`k`, a space, $`\mathrm{printsym}(s)`, then its
+  parameters' definitions in parentheses;
+* when $`m > 0`, ` -> ` and the result types, separated by a comma and a
+  space;
+* a space before each attribute $`a_i`, written as an attribute;
+* ` {`, a line feed, $`n` spaces, `}` and a line feed.
+
+So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
+of the kind `toy.cell` (ADR-2026-11-10-2224).
+:::
+
 :::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "13951144100222046326")
 *Definition: a function, a dialect set, and items, in text.* A function at
 the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
@@ -101,7 +119,8 @@ $`x_1, \dots, x_k` at the indentation $`n` is written as $`n` spaces,
 `dialects x₁, …, xₖ`, a line feed and an empty line, and as nothing when
 $`k = 0`.
 
-An item that is a function is written as that function. A nested module
+An item that is a function is written as that function, and an item of a
+dialect's kind as that item. A nested module
 with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
 indentation $`n`, is written as $`n` spaces, `module `,
 $`\mathrm{printsym}(s)`, `() {` and a line feed; then its dialect set and

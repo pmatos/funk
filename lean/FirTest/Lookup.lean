@@ -175,7 +175,7 @@ def renamed (a b : Name) : Option (Module CoreDialect) :=
   match parseCore lookups with
   | .ok m => some { m with items := m.items.map fun
     | .func f => .func (renFunc a b f)
-    | i@(.module ..) => i }
+    | i => i }
   | .error _ => none
 
 /-- The module of `lookups`. -/

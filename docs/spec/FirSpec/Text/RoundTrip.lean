@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11232296592506280195")
+:::moduleDocs (fingerprint := "6200904237100752930")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -42,6 +42,15 @@ op back: it finds the types of the operands where they are defined, and
 gives them to the dialect with the op's name and attributes.
 :::
 
+:::readable Fir.DialectItem.WellFormed (pin := Fir.DialectItem.types) (pin := Fir.isDialectWord) (fingerprint := "13823025620736924754")
+*Definition: a well-formed item of a dialect's kind.* An item $`i` of a
+dialect's kind is _well formed_ when its kind is a word of a dialect, each
+of its parameters is named by a name, for each type $`t` of
+$`\mathrm{types}(i)` $`\mathrm{tyattr}(t)` is written as a type and
+$`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`, and each of its attributes
+can be written. Its symbol may be any string.
+:::
+
 :::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "3091985326477444571")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
@@ -59,9 +68,9 @@ $`f` is _well formed_ when:
   by a word.
 
 Its symbol may be any string, since a symbol that is not a word is quoted.
-An item is well formed when it is a well-formed function, or a nested
-module whose dialect set names each dialect by a word and each of whose
-items is well formed, at any depth. A module is _well formed_ when each
+An item is well formed when it is a well-formed function, a nested module
+whose dialect set names each dialect by a word and each of whose items is
+well formed, at any depth, or a well-formed item of a dialect's kind. A module is _well formed_ when each
 dialect of its set is named by a word, each of its items is well formed,
 and its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
@@ -126,7 +135,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "5578296981944101061")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "15101585842264551662")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -135,7 +144,9 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
   {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
   a context whose references are those of the table is well formed;
 * the items of a valid symbol table, whose nested tables are all valid,
-  are well formed, at any depth;
+  are well formed, at any depth: an item of a dialect's kind is, since its
+  kind is a word of a dialect, its parameters are named by names, its
+  types are valid and its attributes can be written;
 * every valid module of $`d` is well formed.
 
 The proof reads each condition of well-formedness off a rule of validation

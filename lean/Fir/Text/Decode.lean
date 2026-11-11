@@ -14,12 +14,15 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-30-0815):
 
-* an item whose kind is neither `func` nor `module`, at its kind;
+* an item whose kind is neither `func`, `module` nor a word of a dialect,
+  at its kind. An item of a dialect's kind decodes whichever dialect
+  registers it: that is validation's question (ADR-2026-11-10-2224);
 * a `func` with attributes, at its first attribute; a `func` whose body
   holds a dialect set, at its kind; and one whose body holds items, at the
   first;
 * a `module` with parameters, results or attributes, at the first of them,
   and one whose body holds blocks, at its kind;
+* an item of a dialect's kind whose body is not empty, at its kind;
 * a type that does not decode, at the type;
 * a value defined twice, at its second definition;
 * an operand that its function does not define, at the operand;
@@ -160,10 +163,22 @@ def moduleHeader : List SDef → List (Attr × TextPos) → List (Attr × TextPo
   | [], [], (_, p) :: _ => errorAt p "a module has no attributes"
   | [], [], [] => pure ()
 
+/-- Decodes an item of a dialect's kind `kind`, at `kindPos`: its body is
+empty, its result types and its parameters' types decode, and its
+attributes stay generic terms. -/
+def decodeDialectItem (kind : String) (kindPos : TextPos) (name : String) (params : List SDef)
+    (results attrs : List (Attr × TextPos)) : SBody → Except ParseError (Item d)
+  | .blocks [] => do
+    let results ← results.mapM fun (a, p) => decodeType a p
+    let params ← params.mapM decodeDef
+    pure (.dialect ⟨kind, name, params, results, attrs.map (·.1)⟩)
+  | _ => errorAt kindPos "an item of a dialect's kind has an empty body"
+
 mutual
-/-- Decodes an item: a `func`, or a `module`, whose body is its dialect set
-and its items (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
-module with no items. -/
+/-- Decodes an item: a `func`, a `module`, whose body is its dialect set
+and its items (ADR-2026-11-10-1510), or an item of a dialect's kind
+(ADR-2026-11-10-2224). An empty body is no blocks, so it is a module with no
+items. -/
 def decodeItem : SItem → Except ParseError (Item d)
   | ⟨kind, kindPos, name, params, results, attrs, body⟩ =>
     if kind = "func" then decodeFuncItem kindPos name params results attrs body
@@ -173,7 +188,9 @@ def decodeItem : SItem → Except ParseError (Item d)
       | .blocks [] => pure (.module name [] [])
       | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
       | .items ds is => do pure (.module name ds (← decodeItems is))
-    else errorAt kindPos ("unknown item kind " ++ kind ++ ": the kinds are func and module")
+    else if isDialectWord kind then decodeDialectItem kind kindPos name params results attrs body
+    else errorAt kindPos ("unknown item kind " ++ kind ++
+      ": the kinds are func, module and the words of dialects")
 
 /-- Decodes items, in order. -/
 def decodeItems : List SItem → Except ParseError (List (Item d))

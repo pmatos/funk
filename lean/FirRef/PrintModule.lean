@@ -65,6 +65,7 @@ mutual
 def itemWeight : Item d → Nat
   | .func f => blocksWeight f.body.blocks + 4
   | .module _ _ is => itemsWeight is + 5
+  | .dialect _ => 2
 
 /-- A measure of items. -/
 def itemsWeight : List (Item d) → Nat
@@ -126,6 +127,14 @@ def funcHead (n : Nat) (f : Func d) : String :=
     if f.results.isEmpty then "" else " -> " ++ ", ".intercalate (f.results.map (tyAttr · |>.print))
   indent n ++ "func " ++ printSymbol f.name ++ "(" ++ defsText f.params ++ ")" ++ results ++ " {\n"
 
+/-- An item of a dialect's kind at indentation `n`, with its line feed:
+`DialectItem.print`, compiled after `print_eq_printAttr`. -/
+def dialectItemText (n : Nat) (i : DialectItem d) : String :=
+  let results :=
+    if i.results.isEmpty then "" else " -> " ++ ", ".intercalate (i.results.map (tyAttr · |>.print))
+  indent n ++ i.kind ++ " " ++ printSymbol i.name ++ "(" ++ defsText i.params ++ ")" ++ results ++
+    String.join (i.attrs.map (" " ++ ·.print)) ++ " {\n" ++ indent n ++ "}\n"
+
 /-- The text that a frame stands for, by the spec's printer. -/
 def Frame.text : Frame d → String
   | .str s => s
@@ -158,6 +167,8 @@ def printFrames (acc : String) : List (Frame d) → String
     printFrames (acc ++ indent n ++ "module " ++ printSymbol name ++ "() {\n")
       (.str (printDialects (n + 2) ds) :: .items (n + 2) is' :: .str (indent n ++ "}\n") ::
         .str "\n" :: .items n is :: fs)
+  | .items n (.dialect i :: is) :: fs =>
+    printFrames (acc ++ dialectItemText n i) (.str "\n" :: .items n is :: fs)
 termination_by fs => framesWeight fs
 decreasing_by
   all_goals
@@ -197,6 +208,10 @@ theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
     rw [ih]
     simp only [Frame.text, Item.printList, Item.print, List.map_cons, String.join_cons,
       String.append_assoc]
+  | case12 acc n i is fs ih =>
+    rw [ih]
+    simp only [Frame.text, Item.printList, Item.print, DialectItem.print, dialectItemText,
+      defsText_eq, List.map_cons, String.join_cons, String.append_assoc]
   | _ => rename_i ih; rw [ih]; simp [Frame.text, Operation.printList, Block.printList,
       Region.printList, Item.printList, String.append_assoc]
 

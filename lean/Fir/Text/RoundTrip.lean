@@ -73,12 +73,26 @@ structure Func.WellFormed (f : Func d) : Prop where
   bodyKind : f.body.kind = none
   kinds : ∀ o ∈ f.allOps, ∀ r ∈ o.regions, ∀ k ∈ r.kind, isWord k
 
+/--
+An item of a dialect's kind can be written and read back: its kind is a
+word of a dialect, its parameters' names can be written, each type it
+states is written as a type and decodes back to itself, and its attributes
+can be written. Its symbol can be any string.
+-/
+structure DialectItem.WellFormed (i : DialectItem d) : Prop where
+  kind : isDialectWord i.kind
+  names : ∀ x ∈ i.params, isName x.1
+  types : ∀ t ∈ i.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
+  attrs : Attr.AllWritable i.attrs
+
 mutual
-/-- An item can be written and read back: a function that can, or a nested
-module whose dialect set names each dialect by a word and whose items can. -/
+/-- An item can be written and read back: a function that can, a nested
+module whose dialect set names each dialect by a word and whose items can,
+or an item of a dialect's kind that can. -/
 def Item.WellFormed : Item d → Prop
   | .func f => f.WellFormed
   | .module _ ds is => (∀ x ∈ ds, isWord x) ∧ Item.WellFormedList is
+  | .dialect i => i.WellFormed
 
 /-- Each of these items can be written and read back. -/
 def Item.WellFormedList : List (Item d) → Prop
@@ -107,7 +121,7 @@ theorem Module.WellFormed.funcs {m : Module d} (h : m.WellFormed) : ∀ f ∈ m.
   | func g =>
     cases he
     exact h.items _ hi
-  | module => cases he
+  | module | dialect => cases he
 
 /-- A position in a text: a line and a column, counted as in locations.
 Lines count from 1, and columns count UTF-8 bytes from 1. -/
@@ -218,6 +232,10 @@ theorem SymbolTable.Valid.itemsWellFormed {locs : LocTable} (hl : LocTable.Valid
   | _, is, ht, hn, i, hi => by
     cases i with
     | func f => exact Func.Valid.wellFormed (ht.funcs f (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)) hl
+    | dialect j =>
+      have hv := ht.dialectItems j (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)
+      exact ⟨hv.kind, hv.names, fun t h => ⟨LawfulDialectText.tyAttr_isType t (hv.types t h),
+        LawfulDialectText.decodeTy_encode t (hv.types t h)⟩, hv.attrs⟩
     | module n ds' js =>
       have hsub := Item.mem_tablesIn hi
       have hv := hn _ (hsub _ (List.mem_cons_self ..))

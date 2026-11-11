@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4490408035636114134")
+:::moduleDocs (fingerprint := "10244196718517803055")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
@@ -51,6 +51,66 @@ requires the string of every value and every label of a function to be a
 name, so that every valid module can be written. A symbol may be any
 string: the text writes it bare after `@` when it is a word, and quoted
 otherwise.
+:::
+
+:::readable Fir.isDialectWord Fir.isWord_of_isDialectWord (fingerprint := "848065248179675490")
+*Definition: a word of a dialect.* A word of a dialect other than the
+core is a word that holds a `.`, such as `toy.cell`; the part before its
+first `.` names its dialect. Every word of a dialect is a word. The kinds
+of item that dialects register are such words (ADR-2026-11-10-2224), so
+none of them is `func` or `module`, which are the core's, nor a word that
+the grammar reserves, such as `dialects` or `locs`.
+:::
+
+:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "2420144201630043887")
+*Definition: an attribute, or a type, as written.* The grammar writes the
+attributes of ops and items, and every type, as one kind of generic term:
+
+```grammar Fir.Attr
+\mathit{attr}
+word \mathsf{word}~w
+int  \mathsf{int}~i
+str  \mathsf{str}~s
+sym  \mathsf{sym}~s
+app  \mathsf{app}~h~\mathit{attr}^*
+```
+
+Here $`w`, $`h` and $`s` are strings and $`i` an integer; $`w` and $`h`
+can be written only when they are words, as the next blocks say. In text,
+$`\mathsf{word}~w` is written $`w`, such as `nsw` or `i32`;
+$`\mathsf{int}~i` is the integer $`i`; $`\mathsf{str}~s` is the string
+$`s`, quoted; $`\mathsf{sym}~s` is a reference to the symbol $`s`, such as
+`@sum`; and $`\mathsf{app}~h~a_1 \dots a_n` is the word $`h` applied to the
+attributes $`a_1, \dots, a_n`, written `h(a₁, …, aₙ)`, such as
+`vec(4, i32)`.
+
+The core dialect does not use the applied form. It is there so that other
+dialects can write structured attributes and types without a change to the
+grammar. A word applied to no attributes, `h()`, is not the word `h`.
+:::
+
+:::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "1789584298090586371")
+*Definition: how Lean shows an attribute.* For tests and debugging, Lean
+shows an attribute as the Lean term that builds it. This is written out by
+hand, since the one Lean would derive is not proved to terminate (Lean marks it
+partial), and no definition of the spec is partial (ADR-2026-10-30-1452). It plays no part
+in the text format.
+:::
+
+:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (fingerprint := "17382987230614626094")
+*Definition: an attribute that can be written.* An attribute can be
+written as tokens when each word in it is a
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word]:
+
+* $`\mathsf{word}~w` can be written when $`w` is a word;
+* $`\mathsf{int}~i`, $`\mathsf{str}~s` and $`\mathsf{sym}~s` can always be
+  written: a symbol whose name is not a word is quoted;
+* $`\mathsf{app}~h~a_1 \dots a_n` can be written when $`h` is a word and
+  each of $`a_1, \dots, a_n` can be written.
+
+A list of attributes can be written when each of them can. A module whose
+attributes cannot all be written has no text that reads back to it, so the
+round trip asks this of every attribute that a dialect writes.
 :::
 
 :::readable Fir.Succ (pin := Fir.Func.SuccValid) (pin := Fir.Succ.print) (fingerprint := "16157009433262250404")
@@ -166,14 +226,35 @@ their symbols (ADR-2026-10-29-2012). So a function can be checked, run and
 transformed on its own.
 :::
 
-:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module (fingerprint := "8585563377982031281")
-*Definition: an item.* An item is one entry of a module: a function, or a
-module nested in it (ADR-2026-11-10-1510):
+:::readable Fir.DialectItem Fir.DialectItem.types (pin := Fir.DialectItem.print) (fingerprint := "343753791736889547")
+*Definition: an item of a dialect's kind.* A dialect registers kinds of
+item of its own, as it registers ops, so a new kind needs no new syntax
+(ADR-2026-11-10-2224). An item of such a kind holds what the one
+production of an item writes, with an empty body:
+
+```grammar Fir.DialectItem
+\mathit{ditem}
+kind,name,params,results,attrs \begin{array}{l} \{\mathsf{kind}~k,~\mathsf{name}~s, \\ \enspace \mathsf{params}~(x : t)^*, \\ \enspace \mathsf{results}~t^*, \\ \enspace \mathsf{attrs}~\mathit{attr}^*\,\} \end{array}
+```
+
+$`k` is its kind, a word of a dialect such as `toy.cell`, and $`s` its
+symbol, any string. Its attributes are the generic terms above, which the
+dialect's rule for the kind reads, and say what a function's header cannot.
+In text it is written `k @s(%x: t, …) -> t, … a … {`, then `}` on the next
+line. $`\mathrm{types}(i)` is the types it states: its parameters' types,
+then its results.
+:::
+
+:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.dialect? (fingerprint := "2482776140988760982")
+*Definition: an item.* An item is one entry of a module: a function, a
+module nested in it (ADR-2026-11-10-1510), or an item of a kind that a
+dialect registers (ADR-2026-11-10-2224):
 
 ```grammar Fir.Item
 \mathit{item}
 func \mathsf{func}~\mathit{func}
 module \mathsf{module}~s~\mathit{name}^*~\mathit{item}^*
+dialect \mathsf{dialect}~\mathit{ditem}
 ```
 
 A module is a table of symbols, and fir lets such tables nest, as a device
@@ -184,9 +265,11 @@ so are its symbols: an op refers by symbol only to an item of its own
 table. In text it is written `module @s() { … }`, with its dialect set and
 its items between the braces.
 
-The symbol of an item, $`\mathrm{sym}(i)`, is the symbol of its function or
-of its module. $`\mathrm{func?}(i)` is the function $`f` when $`i` is
-$`\mathsf{func}~f`, and none when $`i` is a module.
+The symbol of an item, $`\mathrm{sym}(i)`, is the symbol of its function,
+of its module or of its item of a dialect's kind. $`\mathrm{func?}(i)` is
+the function $`f` when $`i` is $`\mathsf{func}~f`, and none otherwise;
+$`\mathrm{dialect?}(i)` is the item $`d` when $`i` is
+$`\mathsf{dialect}~d`, and none otherwise.
 :::
 
 :::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "2006544800862020226")
@@ -213,6 +296,6 @@ A module is the unit that fir validates, runs and prints.
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
 requires the location table to be well formed and each symbol table of the
 module, its own and each nested module's, to be valid: each symbol names
-one item of its table, and each function is valid in the context of its
-table.
+one item of its table, and each function, and each item of a dialect's
+kind, is valid in the context of its table.
 :::
