@@ -10,8 +10,9 @@ op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, and `ret` and `call` with
 any number of operands and results. A type reads back from how it is
 written, and is written as a type, for every valid type, `i1` to
-`i16777215`, as the laws ask; and every type that reads back is written as
-it was read.
+`i16777215` and every valid float format, by its alias or as
+`float(e, m)`, as the laws ask; and every type that reads back is written
+as it was read.
 
 With the laws, every valid core module is well formed, by the last theorem
 of the previous section, so it can be written and read back. With the round
@@ -267,10 +268,44 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
 theorem toList_int_attr (w : Nat) : ("i" ++ toString w).toList = 'i' :: Nat.toDigits 10 w := by
   simp [String.toList_append, toString, Nat.toList_repr]
 
+/-- An alias names the format it is the alias of. -/
+theorem aliasFormat_of_floatAlias {e m : Nat} {n : String} (h : floatAlias e m = some n) :
+    aliasFormat n = some (e, m) := by
+  unfold floatAlias at h
+  split at h <;> cases h <;> rfl
+
+/-- The format that an alias names has that alias. -/
+theorem floatAlias_of_aliasFormat {n : String} {e m : Nat} (h : aliasFormat n = some (e, m)) :
+    floatAlias e m = some n := by
+  unfold aliasFormat at h
+  split at h <;> cases h <;> rfl
+
+/-- Each alias reads back as the format it names. -/
+theorem Ty.decode_alias {n : String} {e m : Nat} (h : aliasFormat n = some (e, m)) :
+    Ty.decode (.word n) = some (.float e m) := by
+  unfold aliasFormat at h
+  split at h <;> cases h <;> rfl
+
+/-- `float(e, m)` reads back as the format it writes when the format has no
+alias and fits the width limit. -/
+theorem Ty.decode_float {e m : Nat} (ha : floatAlias e m = none)
+    (hw : floatWidth e m ≤ maxWidth) :
+    Ty.decode (.app "float" [.int e, .int m]) = some (.float e m) := by
+  have : (e : Int) + m + 1 ≤ (maxWidth : Int) := by unfold floatWidth at hw; omega
+  simp [Ty.decode, decodeFloat, ha, this]
+
 /-- Every valid core type decodes from how it is written. -/
 theorem Ty.decode_attr (t : Ty) (h : t.Valid) : Ty.decode t.attr = some t := by
   cases t with
   | ptr => rfl
+  | float e m =>
+    cases hn : floatAlias e m with
+    | some n =>
+      simp only [Ty.attr, hn]
+      exact Ty.decode_alias (aliasFormat_of_floatAlias hn)
+    | none =>
+      simp only [Ty.attr, hn]
+      exact Ty.decode_float hn h.2.2
   | int w =>
     have hne : "i" ++ toString w ≠ "ptr" := by
       intro he
@@ -287,6 +322,18 @@ theorem Ty.decode_attr (t : Ty) (h : t.Valid) : Ty.decode t.attr = some t := by
       simp [toString, h.2]
     · rename_i he
       exact absurd he (by simp)
+    · rename_i _ _ hs _
+      exact (hs _ rfl).elim
+
+/-- A float type decodes only from how it is written. -/
+theorem Ty.attr_decodeFloat {e m : Int} {t : Ty} (h : decodeFloat e m = some t) :
+    t.attr = .app "float" [.int e, .int m] := by
+  unfold decodeFloat at h
+  split at h
+  · rename_i hc
+    cases h
+    simp [Ty.attr, hc.2.2.2, Int.toNat_of_nonneg hc.1, Int.toNat_of_nonneg hc.2.1]
+  · cases h
 
 /-- A core type decodes only from how it is written. -/
 theorem Ty.attr_decode {a : Attr} {t : Ty} (h : Ty.decode a = some t) : t.attr = a := by
@@ -306,7 +353,9 @@ theorem Ty.attr_decode {a : Attr} {t : Ty} (h : Ty.decode a = some t) : t.attr =
           simp
         simp [Ty.attr, this, hd.1]
       · cases h
-    · cases h
+    · obtain ⟨⟨e, m⟩, he, rfl⟩ := Option.map_eq_some_iff.mp h
+      simp [Ty.attr, floatAlias_of_aliasFormat he]
+  · exact Ty.attr_decodeFloat h
   · cases h
 
 /-! # Writing ops and types as tokens -/
@@ -340,10 +389,20 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | _ => trivial
 
 /-- Every valid core type is written as a type: `i` and its width form a
-word. -/
+word, an alias is a word, and `float(e, m)` applies a word to two
+integers. -/
 theorem Ty.attr_isType (t : Ty) (h : t.Valid) : t.attr.IsType := by
   cases t with
   | ptr => exact h.elim
+  | float e m =>
+    cases hn : floatAlias e m with
+    | some n =>
+      simp only [Ty.attr, hn]
+      unfold floatAlias at hn
+      split at hn <;> cases hn <;> (show isWord _; decide)
+    | none =>
+      simp only [Ty.attr, hn]
+      exact ⟨by decide, trivial, trivial, trivial⟩
   | int w =>
     show isWord ("i" ++ toString w)
     have hd : ∀ c ∈ Nat.toDigits 10 w, isNameChar c := fun c hc => by

@@ -82,7 +82,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-1546](2026-11-09-1546-a-global-is-a-block-of-units-in-a-named-memory.md) | [semantics](../decisions/semantics.md) | A global is a symbol for a block of units in a named memory, with a constant initializer and a linkage | this ADR |
 | [ADR-2026-11-09-1547](2026-11-09-1547-external-declarations-carry-optional-extension-markers.md) | [semantics](../decisions/semantics.md) | An external declaration gives a signature that may be variadic, and narrow integers may carry `sext` or `zext` | this ADR |
 | [ADR-2026-11-09-1548](2026-11-09-1548-m1-covers-sequential-code-for-the-frontends.md) | [process](../decisions/process.md) | M1 gives the frontends what sequential code needs, and leaves hooks for concurrency, exceptions and contracts | this ADR |
-| [ADR-2026-11-09-1549](2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md) | [semantics](../decisions/semantics.md) | Floating point is strict IEEE 754 over a generic family of formats, with nondeterministic NaNs and three fast-math flags | this ADR |
+| [ADR-2026-11-09-1549](2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md) | [semantics](../decisions/semantics.md) | Floating point is strict IEEE 754 over a generic family of formats, with nondeterministic NaNs and three fast-math flags | this ADR, ADR-2026-11-11-0950, ADR-2026-11-11-0951 |
 | [ADR-2026-11-09-1550](2026-11-09-1550-aggregates-are-layouts-over-memory.md) | [semantics](../decisions/semantics.md) | In M1 aggregates are layouts over memory, not values | this ADR |
 | [ADR-2026-11-09-1551](2026-11-09-1551-memory-intrinsics-are-ops.md) | [semantics](../decisions/semantics.md) | Copying, moving and setting memory are ops that keep pointer provenance | this ADR |
 | [ADR-2026-11-09-1552](2026-11-09-1552-inline-assembly-is-a-target-tagged-world-event.md) | [semantics](../decisions/semantics.md) | Inline assembly is an op tagged with its target, and running it is an event answered by the world | this ADR |
@@ -109,6 +109,8 @@ superseded, what holds of its successor.
 | [ADR-2026-11-11-0452](2026-11-11-0452-a-memory-has-one-name-in-a-sum.md) | [semantics](../decisions/semantics.md) | A memory has one name in a sum: an extension's memories are its base's and its own, and a lift maps them | this ADR |
 | [ADR-2026-11-11-0623](2026-11-11-0623-every-effect-obligation-is-stated-over-the-semantics-with-memory.md) | [semantics](../decisions/semantics.md) | Every effect obligation is stated over the semantics with memory, and a dialect that touches no memory ties its set-monad semantics to it | this ADR, ADR-2026-11-11-0801 |
 | [ADR-2026-11-11-0801](2026-11-11-0801-progress-with-memory-asks-totality-over-the-semantics-with-memory.md) | [semantics](../decisions/semantics.md) | Progress with memory asks each op to be total over the semantics with memory, and is proved beside progress in the set monad | this ADR |
+| [ADR-2026-11-11-0950](2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md) | [semantics](../decisions/semantics.md) | The core accepts every float format of Lean's model, and validation rejects a smaller one | this ADR |
+| [ADR-2026-11-11-0951](2026-11-11-0951-a-float-type-is-written-by-its-alias-or-as-float-e-m.md) | [text-format](../decisions/text-format.md) | A float type is written by its alias, or as float(e, m) when it has none | this ADR |
 
 ## Implementation
 

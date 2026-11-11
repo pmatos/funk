@@ -27,7 +27,9 @@ then $`\mathrm{dialect}(w) = \bot`.
 $`\mathrm{names}(\mathrm{core}) = \epsilon`. No name of a core op holds a
 $`.`, no word of a core op's attributes does (the flags, the predicates and
 the constants $`\texttt{true}` and $`\texttt{false}`), and no core type
-does: $`\texttt{ptr}` and $`\texttt{i}N`, whose width is written in
-decimal digits. So the core's words name no dialect, and its words stay in
+does: $`\texttt{ptr}`, $`\texttt{i}N`, whose width is written in
+decimal digits, the aliases $`\texttt{f16}`, $`\texttt{bf16}`,
+$`\texttt{f32}`, $`\texttt{f64}` and $`\texttt{f128}`, and
+$`\texttt{float}(e, m)`, whose arguments are integers. So the core's words name no dialect, and its words stay in
 its empty set, and every dialect's name is new to the core.
 :::

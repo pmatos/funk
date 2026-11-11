@@ -202,11 +202,12 @@ fn no_result_and_one_result_need_no_area() {
     assert!(!asm.contains("leaq"), "{asm}");
 }
 
-/// Each width the backend does not lower is reported once, where its value
-/// is defined: a call's result at the call, with its location.
+/// Each type the backend does not lower, an integer width or a float format,
+/// is reported once, where its value is defined: a call's result at the
+/// call, with its location.
 #[test]
 fn a_result_of_a_width_the_backend_does_not_lower_is_reported_at_its_op() {
-    for t in ["i7", "i256"] {
+    for t in ["i7", "i256", "f32", "f64", "bf16", "float(5, 2)"] {
         let why = format!("the x86-64 backend lowers i1, i8, i16, i32, i64 and i128, not {t}");
         let m = module(&format!(
             "func @g(%a: i64, %b: {t}) -> i64, {t}, i64 {{\n^entry:\n  ret %a, %b, %a @0\n}}\n\n\

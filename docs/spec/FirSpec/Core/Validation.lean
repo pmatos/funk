@@ -14,22 +14,31 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11710929400646233540")
+:::moduleDocs (fingerprint := "8953882041236227957")
 :::
 
-:::readable Fir.Core.Ty.Valid (pin := Fir.Core.maxWidth) (fingerprint := "17016236652456720613")
+:::readable Fir.Core.Ty.Valid (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "4963546499838958976")
 *Definition: valid core types.* A
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[core type] is
 valid when it is an integer type $`\mathsf{i}N` whose width $`N` is at
-least 1 and at most $`2^{24} - 1 = 16{,}777{,}215`, MLIR's limit. The type
-$`\mathsf{ptr}` is never valid.
+least 1 and at most $`2^{24} - 1 = 16{,}777{,}215`, MLIR's limit, or a
+float type $`\mathsf{float}\langle e,m \rangle` with at least 2 exponent
+bits, at least 1 mantissa bit, and at most $`2^{24} - 1` bits in all. The
+type $`\mathsf{ptr}` is never valid.
 
 $$`\frac{1 \le N \le 2^{24} - 1}{\vdash \mathsf{i}N~\text{valid}}`
+
+$$`\frac{e \ge 2 \qquad m \ge 1 \qquad 1 + e + m \le 2^{24} - 1}{\vdash \mathsf{float}\langle e,m \rangle~\text{valid}}`
 
 The general rules write $`\vdash_d` for the rules of the dialect $`d`; for
 the core dialect this section drops the subscript. No rule
 concludes $`\vdash \mathsf{ptr}~\text{valid}`. $`\mathsf{i0}` is never
-valid, since it would hold no bits. $`\mathsf{ptr}` is reserved: fir has no
+valid, since it would hold no bits. A float format needs 2 exponent bits
+and 1 mantissa bit to hold zeros, subnormal and normal numbers,
+infinities and NaNs: these are the smallest widths of Lean's float model,
+on which the float ops are defined, and the core accepts every format of
+that model (ADR-2026-11-11-0950). $`\mathsf{float}\langle 2,1 \rangle`
+is the smallest valid format. $`\mathsf{ptr}` is reserved: fir has no
 values of type $`\mathsf{ptr}` until the memory model gives them a meaning.
 :::
 

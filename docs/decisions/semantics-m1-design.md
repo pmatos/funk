@@ -282,38 +282,10 @@ values in the core may be added later if a frontend needs them
 
 ## Floating point
 
-Floating point is one type family, `float<e,m>`, with `e` exponent bits and `m`
-explicit mantissa bits. The usual names are aliases: `f16`, `bf16`, `f32`, `f64`
-and `f128`. The spec and `fir-ref` handle every IEEE-shaped format. A format
-that is not IEEE-shaped, such as fp8 e4m3fn, is left to dialects
-(ADR-2026-11-09-1549).
-
-The semantics is strict IEEE 754. Denormals are honoured. Flush-to-zero is an
-explicit target attribute. When an op's IEEE result is a NaN, fir chooses any
-NaN bit pattern of the format, so payload and sign are nondeterministic. #219
-decides how `fir-ref` and the harness handle that choice (ADR-2026-11-09-1549).
-
-Every rounding op carries `round = rne`. Round to nearest even is the only value
-M1 accepts (ADR-2026-11-09-1549).
-
-The fast-math flags are (ADR-2026-11-09-1549):
-
-- `nnan`: a NaN operand or result makes the result poison.
-- `ninf`: an infinite operand or result makes the result poison.
-- `nsz`: the sign of a zero result is a free choice.
-- `contract` and `reassoc` are reserved words that the verifier rejects. They
-  are permissions for passes, not meanings of an op, and M2's optimizer decides
-  them.
-
-The spec defines fir's float ops on Lean's model, with a layer that adds the NaN
-choice. It defines the conversions between widths itself. Facts it needs are
-proved here, or checked with `decide` and `bv_decide`. Before relying on the
-model, the implementation confirms that each operation works for a format other
-than binary32 and binary64 (ADR-2026-11-09-1549).
-
-The naive backend lowers `f32` and `f64` with SSE in M1, and reports any other
-format as a diagnostic. A native result in a format it does not lower is judged
-by `fir-ref` alone (ADR-2026-11-09-1549).
+Floating point is one type family, `float<e,m>`, over every IEEE-shaped format,
+with strict IEEE 754 semantics and nondeterministic NaN bits
+(ADR-2026-11-09-1549). semantics-floats.md says what the ADRs decide and what
+holds today.
 
 ## Inline assembly
 

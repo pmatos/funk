@@ -41,7 +41,7 @@ $`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 
-:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "10499167636170042429")
+:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "11894539796577738084")
 *Theorems: a valid core op instance with an operand of type
 $`\mathsf{i}N` has $`N > 0`, and each valid core op that propagates poison returns a
 result on defined operands.*
@@ -63,14 +63,15 @@ gives that width. This is the one obligation that needs the op instance
 to be valid (ADR-2026-11-02-1515).
 :::
 
-:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "1603902509159020782")
+:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "8676955780486861682")
 *Theorem: the core dialect is lawful.* Every core op instance whose types
 validation accepts meets the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations]:
 
-* _Poison is refined by every value_: a poison of $`\mathsf{i}N` is
-  refined by every value of $`\mathsf{i}N`, at every width;
-  $`\mathsf{ptr}`, which validation rejects, has no values.
+* _Poison is refined by every value_: a poison of $`\mathsf{i}N` or of
+  $`\mathsf{float}\langle e,m \rangle` is refined by every value of its
+  type, at every width and format; $`\mathsf{ptr}`, which validation
+  rejects, has no values.
 * _Propagation_: each op whose class is $`\mathsf{propagates}` propagates
   poison.
 * _A result on defined operands_: each such op returns a result on some

@@ -14,31 +14,38 @@ changes under it.
 
 #doc (Manual) "Core values: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2638130483104455301")
+:::moduleDocs (fingerprint := "11261344510885299511")
 :::
 
-:::readable Fir.Core.Ty.toType (pin := Fir.PoisonOr) (fingerprint := "11451694641911891388")
+:::readable Fir.Core.Ty.toType (pin := Fir.PoisonOr) (pin := Fir.Core.floatWidth) (fingerprint := "13826713121803819229")
 *Definition: the values of the core types.* A value of
-$`\mathsf{i}N` is poison or a vector of $`N` bits, and $`\mathsf{ptr}` has
-no values in M0:
+$`\mathsf{i}N` is poison or a vector of $`N` bits, a value of
+$`\mathsf{float}\langle e,m \rangle` is poison or a vector of
+$`1 + e + m` bits, its raw bit pattern, and $`\mathsf{ptr}` has no values
+in M0:
 
-$$`\llbracket \mathsf{i}N \rrbracket = (\mathbb{B}^N)_{\mathsf{poison}} \qquad \llbracket \mathsf{ptr} \rrbracket = \emptyset`
+$$`\llbracket \mathsf{i}N \rrbracket = (\mathbb{B}^N)_{\mathsf{poison}} \qquad \llbracket \mathsf{float}\langle e,m \rangle \rrbracket = (\mathbb{B}^{1+e+m})_{\mathsf{poison}} \qquad \llbracket \mathsf{ptr} \rrbracket = \emptyset`
 
 Here $`\mathbb{B}^N` is the set of vectors of $`N` bits, and
 $`A_{\mathsf{poison}}` adds
 {ref "The-fir-specification--Execution--Values-and-refinement"}[poison] to
 a set $`A`. A vector of $`N` bits exists for every $`N`, so every width is
-treated alike (ADR-2026-10-29-2007). The meaning of a pointer waits for the
+treated alike (ADR-2026-10-29-2007). A float value is its bit pattern, as
+IEEE 754 encodes it: a sign bit, then the exponent, then the mantissa. So
+two NaNs with different bits are different values, and the ops of a float
+type say which bits they give (ADR-2026-11-11-0950). The meaning of a
+pointer waits for the
 memory model, which is not decided yet, so validation rejects every value
 of type $`\mathsf{ptr}`.
 :::
 
-:::readable Fir.Core.Ty.IsRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "4971053852378255705")
-*Definition: refinement of core values.* A value of $`\mathsf{i}N` is
-refined as a value that may be poison: poison is refined by every value of
-$`\mathsf{i}N`, and a vector of bits only by itself.
+:::readable Fir.Core.Ty.IsRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "3410120419689306874")
+*Definition: refinement of core values.* A value of $`\mathsf{i}N` or of
+$`\mathsf{float}\langle e,m \rangle` is refined as a value that may be
+poison: poison is refined by every value of its type, and a vector of bits
+only by itself.
 
-$$`v \sqsubseteq_{\mathsf{i}N} w \iff v = \mathsf{poison} \,\lor\, v = w`
+$$`v \sqsubseteq_{t} w \iff v = \mathsf{poison} \,\lor\, v = w \qquad (t = \mathsf{i}N \text{ or } t = \mathsf{float}\langle e,m \rangle)`
 
 $`\mathsf{ptr}` has no values, so there is nothing to refine. Typed core
 values refine as
@@ -46,7 +53,7 @@ values refine as
 do: same type, and a value that refines.
 :::
 
-:::readable Fir.Core.Obs (pin := Fir.List.IsRefinedBy) (pin := Fir.instHRefinementDVal) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "1277507948091340210")
+:::readable Fir.Core.Obs (pin := Fir.List.IsRefinedBy) (pin := Fir.instHRefinementDVal) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "4489845546313389813")
 *Definition: the observation of a core function.* What an observer sees of
 a return of a core function is the list of typed values it returns, any
 number of them (ADR-2026-10-30-0816). A returned list is refined by a list
@@ -95,7 +102,8 @@ $`t_1, \dots, t_n`, the runs of a core function give its run on each
 argument vector
 $`(v_1, \dots, v_n) \in \llbracket t_1 \rrbracket \times \dots \times \llbracket t_n \rrbracket`,
 at each budget, with returned lists as observations. A value of
-$`\mathsf{i}N` may be poison, so poison arguments are among the argument
+$`\mathsf{i}N` or of a float type may be poison, so poison arguments are
+among the argument
 vectors, and
 {ref "The-fir-specification--Execution--Refinement"}[refinement of functions]
 covers them.

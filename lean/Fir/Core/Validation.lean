@@ -13,12 +13,16 @@ are all the rules of the core dialect. It has no rule over a whole function.
 namespace Fir.Core
 
 /--
-A core type is valid when it is `iN` with `1 ≤ N ≤ maxWidth`. `i0` is not a
-type, and `ptr` is reserved: M0 has no values of type `ptr`, because their
-meaning waits for the memory model (S3).
+A core type is valid when it is `iN` with `1 ≤ N ≤ maxWidth`, or
+`float<e,m>` with `e ≥ 2`, `m ≥ 1` and `1 + e + m ≤ maxWidth`. `i0` is not a
+type. A float format needs at least 2 exponent bits and 1 mantissa bit, the
+smallest that Lean's float model accepts, and is no wider than the widest
+integer type (ADR-2026-11-11-0950). `ptr` is reserved: M0 has no values of
+type `ptr`, because their meaning waits for the memory model (S3).
 -/
 def Ty.Valid : Ty → Prop
   | .int w => 1 ≤ w ∧ w ≤ maxWidth
+  | .float e m => 2 ≤ e ∧ 1 ≤ m ∧ floatWidth e m ≤ maxWidth
   | .ptr => False
 
 /-- `call` refers to its callee's symbol; no other core op refers to one. -/

@@ -102,7 +102,7 @@ $$`\begin{aligned} & e \in \mathrm{rule}_g(a, b) \iff \\ & \quad (\exists v.\ g(
 $`g`, $`\mathrm{rule}_g(a, b)` is not empty, for all $`a` and $`b`.
 :::
 
-:::readable Fir.Core.div_poisonOut Fir.Core.div_ubByOwnRules (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.IsFilledBy) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "11454951678451582351")
+:::readable Fir.Core.div_poisonOut Fir.Core.div_ubByOwnRules (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.IsFilledBy) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "12338064316187323040")
 *Theorem: the two poison clauses, for a division.* For every name, $`s`
 and $`q`, the op rule $`\mathrm{rule}_{\mathrm{div}}` made from
 $`\mathrm{div}_{s,q}` meets the two clauses of an op that
@@ -118,7 +118,7 @@ The first follows from the first theorem above, the second from the
 second.
 :::
 
-:::readable Fir.Core.div_returnsOnDefined Fir.Core.div_width_zero_noResult (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "11848353221143673138")
+:::readable Fir.Core.div_returnsOnDefined Fir.Core.div_width_zero_noResult (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "8619464539613540045")
 *Theorem: at a width above zero, a division returns a result on defined
 operands.* For every name, $`s` and $`q`, and every $`w > 0`, some
 operand vector of $`\mathsf{i}w` with no poison, namely $`(0, 1)`, makes
@@ -159,7 +159,7 @@ $`\mathsf{exact}` changes only that result, poison in place of a quotient,
 so the theorems hold with it and without it.
 :::
 
-:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "17636922214119484463")
+:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "17479728603599290206")
 *Theorem: at width zero, no division returns a result on defined
 operands.* With or without $`\mathsf{exact}`, none of
 $`\mathsf{sdiv}_0`, $`\mathsf{udiv}_0`, $`\mathsf{srem}_0` and

@@ -55,7 +55,7 @@ turns every poison operand into UB, which would undo the deferral that
 poison exists for.
 :::
 
-:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "16208603591494766409")
+:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "975132632958963206")
 *Definition: the rejected rule for $`\mathsf{sdiv}`.* Under it, a poison
 dividend by $`-1` gives poison. For $`a, b \in \llbracket \mathsf{i}N \rrbracket`:
 
