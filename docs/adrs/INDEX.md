@@ -120,6 +120,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-11-1138](2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md) | [text-format](../decisions/text-format.md) | A float constant is written as its bits read as a signed integer | this ADR |
 | [ADR-2026-11-11-1139](2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md) | [semantics](../decisions/semantics.md) | fcmp compares floats by Lean's model, with fourteen predicates | this ADR |
 | [ADR-2026-11-11-1140](2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md) | [x86-64-backend](../decisions/x86-64-backend.md) | f32 and f64 pass and return in SSE registers, as System V classifies them | this ADR |
+| [ADR-2026-11-11-1450](2026-11-11-1450-a-webassembly-backend-is-milestone-m8.md) | [process](../decisions/process.md) | A WebAssembly backend is milestone M8 | this ADR |
 
 ## Implementation
 
