@@ -6,13 +6,12 @@
 
 mod common;
 
-use common::op_verify::{built, rejected_at, verify_in, words};
+use common::op_verify::{built, rejected_at_op, verify_op, words};
 use common::{one_func, parse_err, parse_ok};
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
-use funk_ir::dialects::core::{int_type, ptr_type};
+use funk_ir::dialects::core::int_type;
 use funk_ir::{
-    Attr, Block, Diagnostic, Func, LocRef, Location, Module, Op, Registry, TextPos, Type, print,
-    verify,
+    Attr, Block, Func, LocRef, Location, Module, Op, Registry, TextPos, Type, print, verify,
 };
 
 const OPS: [&str; 3] = ["add", "sub", "mul"];
@@ -189,23 +188,6 @@ fn the_flags_have_one_spelling_and_one_order() {
             }
         }
     }
-}
-
-/// The diagnostics of `@f(%a: i32, %b: i64, %p: ptr) -> i32`, whose entry
-/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`.
-fn verify_op(op: Op) -> Vec<Diagnostic> {
-    verify_in(
-        &[("a", int_type(32)), ("b", int_type(64)), ("p", ptr_type(0))],
-        "c",
-        op,
-    )
-}
-
-/// Asserts that the verifier rejects `op` with one diagnostic at the op and
-/// its location, for a reason that holds `needle`.
-fn rejected_at_op(op: Op, needle: &str) {
-    let head = format!("op {} does not match its registration", op.name);
-    rejected_at(&verify_op(op), &head, needle);
 }
 
 /// The uses that the parser rejects in

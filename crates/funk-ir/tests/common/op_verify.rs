@@ -2,7 +2,7 @@
 //! holds a constant, the op under test at index 1, and `ret %a`. The op
 //! tests of each core family share it.
 
-use funk_ir::dialects::core::int_type;
+use funk_ir::dialects::core::{int_type, ptr_type};
 use funk_ir::{
     Attr, Block, Diagnostic, Func, LocRef, Location, Module, Op, Registry, Type, verify,
 };
@@ -49,6 +49,25 @@ pub fn rejected_at(ds: &[Diagnostic], head: &str, needle: &str) {
         d.to_string(),
         format!("@f ^entry op 1 at @5: {}", d.message)
     );
+}
+
+/// The diagnostics of `@f(%a: i32, %b: i64, %p: ptr) -> i32`, whose entry
+/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`: the
+/// function that most families test their ops in.
+pub fn verify_op(op: Op) -> Vec<Diagnostic> {
+    verify_in(
+        &[("a", int_type(32)), ("b", int_type(64)), ("p", ptr_type(0))],
+        "c",
+        op,
+    )
+}
+
+/// Asserts that the verifier rejects `op`, in [`verify_op`]'s function,
+/// with one diagnostic at the op and its location, for a reason that holds
+/// `needle`.
+pub fn rejected_at_op(op: Op, needle: &str) {
+    let head = format!("op {} does not match its registration", op.name);
+    rejected_at(&verify_op(op), &head, needle);
 }
 
 /// `op` with these attributes, these operands and results of these types,
