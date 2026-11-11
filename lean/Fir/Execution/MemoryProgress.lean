@@ -266,20 +266,20 @@ theorem Func.memProgress [LawfulDialectTotal d] (hv : ∀ g ∈ M.funcs, g.Valid
   have hvf := hv f hf
   obtain ⟨e, he, hep⟩ := hvf.entry
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
-  have hpos := List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem)
-  have hold := Env.scoped_params hvf he hep args
   have hhp := Module.calls_memHasPath hv hm
     (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc unit ρ)
-    n f hf e hmem 0 _ hpos hold Memories.empty.enter
-  have hns := Module.calls_memNoStuck hv hm n f hf e hmem 0 _ hpos hold Memories.empty.enter
-  rw [List.drop_zero] at hhp hns
-  rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)]
+    n f hf e hmem 0 _ (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem))
+    (Env.scoped_params hvf he hep args) Memories.empty.enter
+  rw [List.drop_zero] at hhp
   obtain ⟨ev, hev⟩ := HasPath.finish Prod.fst (HasPath.map Result.withState hhp)
+  replace hev : f.memRuns unit ρ M args n ev := by
+    rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)]
+    exact hev
   match ev, hev with
   | .ok (.ok (.ret vs)), hev => exact ⟨.ret vs, hev⟩
   | .ok (.ok .fuelExhausted), hev => exact ⟨.fuelExhausted, hev⟩
   | .ub r, hev => exact ⟨.ub r, hev⟩
-  | .ok (.error st), hev => exact absurd hev (NoStuck.finish _ (NoStuck.map Result.withState hns) st)
+  | .ok (.error st), hev => exact absurd ⟨st, hev⟩ (Func.memNeverStuck unit ρ hv hm hf args n)
 
 end
 
