@@ -74,7 +74,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-08-2116](2026-11-08-2116-fresh-seeds-run-only-in-a-manual-stage-nightly-hook.md) | [testing-and-harness](../decisions/testing-and-harness.md) | Fresh seeds run only in a nightly workflow, through a manual-stage hook | this ADR |
 | [ADR-2026-11-09-1322](2026-11-09-1322-the-core-dialect-s-behaviour-is-the-set-instance-and-other-models-plug-in-at-a-named-seam.md) | [semantics](../decisions/semantics.md) | The core dialect's behaviour is the set instance, and a dialect that needs probabilities supplies its own behaviour model at a named seam | this ADR |
 | [ADR-2026-11-09-1540](2026-11-09-1540-a-run-shows-a-trace-of-events-judged-for-each-world.md) | [semantics](../decisions/semantics.md) | A run shows a trace of external calls and volatile accesses, and refinement holds for every world that answers them | this ADR |
-| [ADR-2026-11-09-1541](2026-11-09-1541-each-op-declares-a-set-of-effects-named-by-memory.md) | [semantics](../decisions/semantics.md) | Each op declares a set of effects, named by memory, and the spec proves the declaration sound | this ADR, ADR-2026-11-09-2249 |
+| [ADR-2026-11-09-1541](2026-11-09-1541-each-op-declares-a-set-of-effects-named-by-memory.md) | [semantics](../decisions/semantics.md) | Each op declares a set of effects, named by memory, and the spec proves the declaration sound | this ADR, ADR-2026-11-09-2249, ADR-2026-11-10-2108 |
 | [ADR-2026-11-09-1542](2026-11-09-1542-memory-is-logical-blocks-in-typed-memories.md) | [semantics](../decisions/semantics.md) | Memory is logical blocks in typed memories, and a pointer becomes an integer only by explicit exposure | this ADR |
 | [ADR-2026-11-09-1543](2026-11-09-1543-dialects-extend-fir-through-prefixed-names-and-declared-sets.md) | [semantics](../decisions/semantics.md) | Dialects extend fir through prefixed names, registered kinds of item and a dialect set that each module declares | this ADR, ADR-2026-11-10-1510 |
 | [ADR-2026-11-09-1544](2026-11-09-1544-one-abstraction-level-per-module-and-lowerings-must-refine.md) | [semantics](../decisions/semantics.md) | A module holds one abstraction level, a lowering must refine, and a dialect need not lower to core | this ADR |
@@ -102,6 +102,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-10-1510](2026-11-10-1510-a-module-item-nests-a-symbol-table-with-its-own-dialect-set.md) | [text-format](../decisions/text-format.md) | A `module` item nests a symbol table with its own dialect set, written two spaces deeper | this ADR |
 | [ADR-2026-11-10-1530](2026-11-10-1530-a-region-names-its-kind-by-a-word-after-its-opening-brace.md) | [text-format](../decisions/text-format.md) | A region names its kind by a word after its opening brace | this ADR, ADR-2026-11-10-1941 |
 | [ADR-2026-11-10-1941](2026-11-10-1941-a-dialect-registers-region-kinds-each-with-its-own-rule.md) | [validation](../decisions/validation.md) | A dialect registers region kinds, each with its own rule, and an op instance states its regions' kinds | this ADR |
+| [ADR-2026-11-10-2108](2026-11-10-2108-a-call-carries-its-callee-s-summary.md) | [semantics](../decisions/semantics.md) | A call carries its callee's summary: the effects of every op that it may reach, but control | this ADR |
 
 ## Implementation
 

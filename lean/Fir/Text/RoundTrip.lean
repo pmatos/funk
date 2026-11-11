@@ -30,12 +30,13 @@ is lawful. The next section proves that the core dialect's text is lawful,
 so every valid core module is well formed.
 
 The conditions look at every block and op of a function, at any depth: the
-blocks of the regions of its ops too. Every op of a valid function is an op
-of its body or an op inside a region of an op, and validation gives each
-what the conditions ask.
+blocks of the regions of its ops too, and the ops of all those blocks, as
+the section on scope and symbols defines them. Every op of a valid
+function is an op of its body or an op inside a region of an op, and
+validation gives each what the conditions ask.
 
-This section gives, in order: the ops of a function at any depth; what
-makes an op, a function and a module well formed; positions, errors and parsers; the two round trips and how
+This section gives, in order: what makes an op, a function and a module
+well formed; positions, errors and parsers; the two round trips and how
 they relate; and the theorems that valid modules are well formed.
 -/
 
@@ -44,9 +45,6 @@ namespace Fir
 open Text
 
 variable {d : Dialect}
-
-/-- Every op of a function, at any depth. -/
-def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
 
 variable [DialectSignature d] [DialectText d]
 

@@ -84,7 +84,8 @@ each of its ops $`o` a
 {ref "The-fir-specification--Execution--Poison-classes"}[poison class],
 $`\mathrm{class}(o)`, and a set of effects, $`\mathrm{eff}(o)`, the
 effects of the op's own rule. An op with a callee also has its callee's
-effects, which $`\mathrm{eff}(o)` leaves out and a reader adds. Every op declares both, so that a dialect
+effects, which $`\mathrm{eff}(o)` leaves out and the effects of an op in
+place add ({ref "The-fir-specification--Execution--Function-summaries"}[function summaries]). Every op declares both, so that a dialect
 added for new hardware states them too (ADR-2026-10-29-2016,
 ADR-2026-11-09-1541).
 

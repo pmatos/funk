@@ -30,7 +30,7 @@ The Lean class `DialectEffects`, in `lean/Fir/Execution/OpEffects.lean`, gives
 each op its poison class and its effect set. `DialectPoison` folded into it
 (ADR-2026-11-09-1541, ADR-2026-11-09-2249). An op's set holds the effects of
 its own rule. An op with a callee also has its callee's, since its meaning is
-the callee's run (ADR-2026-11-02-1514).
+the callee's run (ADR-2026-11-02-1514); the next section but one says how.
 
 ## The core ops' sets
 
@@ -62,8 +62,10 @@ The first two cover valid op instances that are terminators or have no
 callee, as the poison obligations do (ADR-2026-11-02-1514). The memory-named
 effects and observable have no obligation yet: M0's runs have no memory and no
 trace. The core dialect is lawful in its effects
-(`Core.lawfulDialectEffects`), and `lean/FirTest/G0.lean` restates the class
-and its obligations for every dialect.
+(`Core.lawfulDialectEffects`), and `lean/FirTest/G0Effects.lean` restates the
+class and its obligations for every dialect. The obligations reject a wrong
+declaration: with `sdiv` declared without may-UB, the core dialect is not
+lawful in its effects (`Core.Unlawful.sdivNoUB_unlawful`).
 
 A sum of dialects gives each op its own side's effects, on the sum's
 memories, each side's kept apart. A lift gives each op of the extension its
@@ -74,6 +76,30 @@ them lawful for poison (`Dialect.sum.lawfulEffects`,
 toy and bit test dialects declare pure ops and are lawful in their effects,
 and so are their sums with the core. The probe test dialect declares every
 effect.
+
+## Function summaries
+
+A call carries its callee's effects through a summary (ADR-2026-11-10-2108,
+refining ADR-2026-11-09-1541):
+
+- Each function of a symbol table has a summary: the join of what a caller
+  sees of each op of each function that it reaches through calls, itself
+  included (`SymbolTable.summary`, in `lean/Fir/Execution/Summary.lean`). A
+  caller sees every effect of an op but control.
+- The effects of an op in place are those of its own rule and, for a call,
+  its callee's summary (`SymbolTable.opEffects`). A call of a symbol that
+  names no function of its table has every effect but control.
+- A call resolves in the table that holds its function, so each nested
+  module's functions have summaries of their own (ADR-2026-11-10-1510).
+- The summary is the least fixpoint of the calls, recursion included
+  (`SymbolTable.summary_closed`, `SymbolTable.summary_le`). In a dialect
+  lawful in its effects and a module of valid functions, a function whose
+  summary leaves out may-UB never ends in UB, and one whose summary leaves
+  out may produce poison returns no poison on arguments with none
+  (`Module.summary_neverUB`, `Module.summary_noPoison`).
+  `lean/FirTest/G0Effects.lean` restates them for every dialect.
+- The spec's walk and Rust's pass keep their work on the heap, so a long
+  chain of calls takes no stack per call.
 
 ## In Rust
 
@@ -91,3 +117,11 @@ attribute that changes it. `lean/FirTest/EffectCases.lean` and
 `crates/funk-ir/tests/effects.rs` read it, so the `fir-spec` and `rust-test`
 hooks check that Rust's sets equal `Core.Op.effects`, as the use-once cases
 check the two validators (ADR-2026-11-09-2257).
+
+`Summaries`, in `crates/funk-ir/src/summary.rs`, gives each function of a
+table its summary, and each op in place its effects with its callee's.
+`OpSpec::callee` names the function that an op calls, as `callee?` does in
+Lean. `tests/dialects/effect-summaries.cases` pins the summary of every
+function of its modules, nested ones included; `lean/FirTest/SummaryCases.lean`
+and `crates/funk-ir/tests/summaries.rs` read it, so Rust's summaries equal
+`SymbolTable.summary` (ADR-2026-11-10-2108).

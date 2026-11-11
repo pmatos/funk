@@ -10,8 +10,8 @@ Tests of the core dialect's effects, of the instance
   poison on defined operands, `udiv` by zero, `cond_br` on poison and
   `unreachable` are UB, and `br` and `unreachable` are terminators:
   leaving any of those effects out of their sets would make the
-  obligations false. `lean/FirTest/G0.lean` pins every
-  core op's set.
+  obligations false. `lean/FirTest/G0Effects.lean` pins every core op's
+  set.
 -/
 
 namespace FirTest

@@ -34,8 +34,10 @@ poison operands, and the effect about operands with no poison
 (ADR-2026-11-09-2249).
 
 The effects of an op are those of its own rule. An op with a callee also
-has its callee's, whose meaning is the callee's run (ADR-2026-11-02-1514).
-The spec proves each declaration sound in the section on effect
+has its callee's, whose meaning is the callee's run (ADR-2026-11-02-1514):
+the section on function summaries gives each function the effects that a
+call of it may have, and each op in place its own effects with its
+callee's (ADR-2026-11-10-2108). The spec proves each declaration sound in the section on effect
 obligations: an effect that an op leaves out, it does not have.
 -/
 
@@ -105,8 +107,8 @@ class DialectEffects (d : Dialect) where
   /-- How the op treats poison operands. -/
   poisonClass : d.Op → PoisonClass
   /-- The effects of the op's own rule. An op with a callee runs its callee
-  and has its callee's effects too, which this set leaves out: a reader of
-  a call's effects adds the callee's. -/
+  and has its callee's effects too, which this set leaves out: the effects
+  of an op in place, `SymbolTable.opEffects`, add its callee's summary. -/
   effects : d.Op → Effects Mem
 export DialectEffects (poisonClass effects)
 

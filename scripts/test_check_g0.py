@@ -318,6 +318,7 @@ class Repository(unittest.TestCase):
     def test_the_repository_passes(self):
         self.assertEqual(problems(), [])
         self.assertIn("lean/FirTest/G0.lean", generic_files())
+        self.assertIn("lean/FirTest/G0Effects.lean", generic_files())
 
     def test_the_core_words_hold_every_core_op(self):
         self.assertLessEqual(set(CORE_OPS), core_words())
