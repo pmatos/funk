@@ -123,13 +123,15 @@ def fillZero : {ts : List Ty} → HVector toType ts → HVector toType ts
   | [], .nil => .nil
   | .int _ :: _, .cons x xs =>
     .cons (.value (match (x : PoisonOr _) with | .poison => 0 | .value v => v)) (fillZero xs)
+  | .float _ _ :: _, .cons x xs =>
+    .cons (.value (match (x : PoisonOr _) with | .poison => 0 | .value v => v)) (fillZero xs)
   | .ptr :: _, .cons x _ => nomatch (x : Empty)
 
 /-- `fillZero` puts a defined value in place of each poison. -/
 theorem fillZero_fills :
     ∀ {ts : List Ty} (xs : HVector toType ts), xs.IsFilledBy (d := CoreDialect) (fillZero xs)
   | [], .nil => ⟨fun h => h, trivial⟩
-  | .int _ :: _, .cons x xs => by
+  | .int _ :: _, .cons x xs | .float _ _ :: _, .cons x xs => by
     obtain ⟨hn, hr⟩ := fillZero_fills xs
     refine ⟨?_, ?_, hr⟩
     · rintro (h | h)

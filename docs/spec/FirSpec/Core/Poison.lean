@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9764340168716061063")
+:::moduleDocs (fingerprint := "7465049857782302748")
 :::
 
 :::readable Fir.Core.Op.poisonClass (fingerprint := "9579307297950494261")
@@ -32,14 +32,15 @@ $`\mathsf{cond\_br}` is `condBr` in the Lean. The Lean checks the
 exceptions against one instance of every core op.
 :::
 
-:::readable Fir.Core.Ty.IsPoison (fingerprint := "16563849751577617349")
-*Definition: which core values are poison.* A value of $`\mathsf{i}N` is
-poison when it is $`\mathsf{poison}`; $`\mathsf{ptr}` has no values, so
+:::readable Fir.Core.Ty.IsPoison (fingerprint := "16894231239370628842")
+*Definition: which core values are poison.* A value of $`\mathsf{i}N` or
+of $`\mathsf{float}\langle e,m \rangle` is poison when it is
+$`\mathsf{poison}`; $`\mathsf{ptr}` has no values, so
 none is poison. These are the poison values of the core dialect's types,
 which the obligations speak of.
 :::
 
-:::readable Fir.Core.Ty.poison_isRefinedBy (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "16560125237719402665")
+:::readable Fir.Core.Ty.poison_isRefinedBy (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "16985074532699527014")
 *Theorem: a poison core value is refined by every value of its type.* For
 every core type $`t` and all $`p, v \in \llbracket t \rrbracket`: if $`p` is
 poison, then $`p \sqsubseteq_t v`.

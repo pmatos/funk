@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2810980850477788012")
 :::
 
-:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "637337370968257790")
+:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "13276379075497579175")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with
 $`C`, the check of the function `@f` of the section on
@@ -31,7 +31,8 @@ module that holds the function, where a test could try only some.
 The check runs on core modules because the core dialect's own rules can be
 decided, case by case. Whether a core
 type is valid compares $`N` with 1 and $`2^{24} - 1` for $`\mathsf{i}N`,
-and is false for $`\mathsf{ptr}`. Whether a core op obeys the
+compares $`e`, $`m` and $`1 + e + m` with their bounds for
+$`\mathsf{float}\langle e,m \rangle`, and is false for $`\mathsf{ptr}`. Whether a core op obeys the
 {ref "The-fir-specification--Validation--Core-rules"}[core rules] in an op
 context compares types, widths or the symbol table's answer. So the core
 dialect is a
