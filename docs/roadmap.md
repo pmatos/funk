@@ -76,6 +76,7 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
 | M5 | Compile the Linux kernel | [milestone 5](https://github.com/pmatos/funk/milestone/5) |
 | M6 | JIT compilation | [milestone 6](https://github.com/pmatos/funk/milestone/6) |
 | M7 | x86 to arm64 binary translation | [milestone 7](https://github.com/pmatos/funk/milestone/7) |
+| M8 | WebAssembly backend | [milestone 9](https://github.com/pmatos/funk/milestone/9) |
 
 The milestones were renumbered on 2026-11-05, when the IR got a milestone of
 its own ahead of the backend (ADR-2026-11-05-2255). In an ADR, issue or
@@ -227,7 +228,8 @@ that the harness checks it natively. Making that code good is M2's job.
 
 **Out of M1.** Concurrency (S6), exceptions and unwinding, defining variadic
 functions, vectors, contract ops, structured control flow (H6) and the rest of
-the deferred list below stay with the milestones that need them; M1 leaves
+the [deferred list](roadmap-deferred.md) stay with the milestones that need
+them; M1 leaves
 hooks for the first three (ADR-2026-11-09-1548). S8 stays with M2's optimizer
 track.
 
@@ -287,53 +289,29 @@ An x86 assembly frontend that lowers to fir, with the M6 JIT targeting arm64,
 in the style of FEX-Emu. This needs an arm64 backend, which no milestone covers
 yet.
 
+### M8: WebAssembly backend
+
+**Goal.** A second backend that compiles fir to WebAssembly. It tests G0 on a
+target that is not x86-64 or arm64: a stack machine with structured control
+flow, several memories, and values owned by the host. Epic:
+[#293](https://github.com/pmatos/funk/issues/293).
+
+**Scope**, as the human ruled on 2026-11-11 (ADR-2026-11-11-1450):
+
+- The most recent WebAssembly version, with the proposals accepted into it.
+- Two targets: wasm32, with 32-bit pointers, and wasm64 (memory64), with
+  64-bit pointers.
+- Host references such as `externref` and `funcref` are target extension
+  types, as in LLVM ([#292](https://github.com/pmatos/funk/issues/292)).
+- The harness runs the output with wasmtime and checks that its results
+  refine `fir-ref`'s, as it does for native code.
+
+The epic will be split into tasks later. Open questions include how fir's
+control-flow graph lowers to Wasm's structured blocks and loops, irreducible
+control flow included. Its order relative to M2 to M7 is not set.
+
 ## Decisions deferred past M0
 
-Open in the fir v0 decision record, and out of M0 on purpose. Do not design
-around a guess for any of these. If work needs one, open a `human-ready` issue.
-The human decided S3, S5, H4, H5 and H7 for M1 on 2026-11-09; the table names
-their ADRs.
-
-S3, S8, H4 and H7 are marked Foundational in the record, which means decided
-before the code that depends on them. M0 has no memory, no optimization passes
-and no dialects, so none of its code depends on them. Each must be decided
-before the first step that does, as the table says.
-
-| ID | Decision | Likely needed by |
-| --- | --- | --- |
-| S3 | Memory model (Foundational; G0: several memories and address spaces) | Decided: ADR-2026-11-09-1542 |
-| S5 | Floating point | Decided: ADR-2026-11-09-1549 |
-| S6 | Concurrency | M4 at the latest (C and C++ atomics) |
-| S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
-| H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Decided: ADR-2026-11-09-1543, ADR-2026-11-09-1544 |
-| H6 | Structured control flow | When a frontend or pass needs it |
-| H7 | Effect classes beyond "pure" and "call" (Foundational) | Decided: ADR-2026-11-09-1541 |
-| P2 | Public API shape | At the start of M3 (ADR-2026-11-09-1554) |
-
-For S8 the record proposes three stages: a hand-written Rust SMT encoder,
-tested against `fir-ref`; then an encoder written in Lean and proven against
-the semantics; then `bv_decide` as the bar for admitting rewrite rules.
-
-The record also leaves these out of v0, each with a hook in the format so it
-can come back without a break:
-
-| Left out of v0 | Likely needed by |
-| --- | --- |
-| Exceptions and unwinding | M4 (C++) |
-| Vectors and SIMD | M2 or M5, and M7 (SSE and AVX) |
-| Contract ops (`assume`, `assert`, `requires`, `ensures`) | M3 (Vow) |
-| Garbage-collected or managed memory | A frontend that needs it |
-| Non-default FP rounding and FP exceptions | M4 or M5 |
-| A binary format | When text parsing becomes a bottleneck |
-
-Inline assembly and volatile accesses, which the record did not cover, join M1
-(ADR-2026-11-09-1548).
-
-## Open gaps
-
-- **arm64 backend.** M7 needs one, and no milestone covers it.
-- **Non-CPU targets.** G0 keeps the door open for GPUs, NPUs, TPUs and more,
-  but no milestone targets one yet.
-- **Wasm and LLVM IR frontends.** The record used a Wasm frontend as its first
-  strawman and plans LLVM IR import. Neither has a milestone. M0 starts from
-  fir text directly, so the Wasm strawman is not needed for M0.
+The decisions that the fir v0 decision record left open, and the milestone
+likely to need each one, are listed in
+[`roadmap-deferred.md`](roadmap-deferred.md).

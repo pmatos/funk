@@ -80,7 +80,9 @@ The later milestones are:
 - M4, C and C++ frontend;
 - M5, compile the Linux kernel;
 - M6, JIT compilation;
-- M7, x86 to arm64 binary translation.
+- M7, x86 to arm64 binary translation;
+- M8, WebAssembly backend, for wasm32 and wasm64, tested with wasmtime
+  (ADR-2026-11-11-1450). Its number does not set the order of work.
 
 Accepted ADRs, spike reports, issues and comments older than this numbering keep
 their wording. In them, M1 to M6 mean today's M2 to M7. Living docs use the new

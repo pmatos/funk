@@ -53,7 +53,7 @@ The roadmap's ground rules also settle these points:
 
 Some decisions are still open, such as the memory model, floating point,
 concurrency, and how dialects and extensions are defined. The roadmap lists
-them under [decisions deferred past M0](docs/roadmap.md#decisions-deferred-past-m0).
+them under [decisions deferred past M0](docs/roadmap-deferred.md).
 M0 is funk's first milestone. No work should assume an answer to any of these
 decisions.
 
