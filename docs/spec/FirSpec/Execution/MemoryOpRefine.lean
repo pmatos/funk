@@ -68,6 +68,8 @@ monad.* In a dialect that
 as every dialect whose ops touch no memory does, an op is monotone with
 memory exactly when it is monotone in the set monad: its rule keeps the
 memories it starts from, and so their refinement. So a lawful dialect that
-lifts the set monad is lawful in its monotonicity. The core dialect and the
-dialects of the tests are.
+lifts the set monad is lawful in its monotonicity: the core dialect is, and
+so are the dialects of the tests that lift the set monad. The alloc dialect
+of the tests, whose op allocates, lifts no semantics in the set monad; it
+is lawful in its monotonicity by its semantics with memory alone.
 :::

@@ -34,7 +34,22 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
     ∀ M' : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok M' → M ⊑ M' := by
   intro M M' h
   cases h
-  exact ⟨⟨rfl, ⟨trivial, trivial⟩, rfl⟩, trivial⟩
+  exact ⟨⟨rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
+
+/-- No access reaches a freed block, so its units are not compared: a store
+to a stack slot that is then freed may be dropped. -/
+example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
+    ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → N.free 0 ⊑ M.free 0 := by
+  intro M N h
+  cases h
+  exact ⟨⟨rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
+
+/-- While the block is live, the store may not be dropped. -/
+example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
+    ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → ¬ (N ⊑ M) := by
+  intro M N h hr
+  cases h
+  exact nomatch (hr.1.2.2.2 rfl).1
 
 /-- Two memories whose allocations differ do not refine each other. -/
 example : ¬ ((Memory.empty : Memory 8) ⊑ ((Memory.empty.alloc .heap 1).2 : Memory 8)) :=
@@ -84,6 +99,67 @@ example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
     observable (f.memRunsFrom allocModule (a, S)) ⊑ observable (f.memRunsFrom allocModule (a', S')) :=
   Func.memRunsFrom_args_isRefinedBy_of_lawful _ _ allocModule_valid.funcs hf ha hS
+
+/-! # Congruence in the callee, with memory, applies -/
+
+/-- A body with no blocks: a function with it never starts. -/
+def noBlocks : Region AllocDialect := { blocks := [] }
+
+/-- `allocMain` with no blocks, in its module so changed, has no path that
+returns, hits UB or runs out of fuel, from any memories: each is stuck. -/
+theorem noBlocks_outcomes (a : HVector toType (allocMain.params.map (·.2)))
+    (S : Memories Unit fun _ => 8) (m : Nat)
+    (o : Outcome (List (DVal AllocDialect) × Memories Unit fun _ => 8)) :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
+      (allocModule.replaceBody allocMain.name noBlocks) (a, S) m).outcomes o := by
+  letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+  have key : ∀ x, Ev.NotStuck x → ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
+      (allocModule.replaceBody allocMain.name noBlocks) (a, S) m) x := by
+    intro x hx h
+    obtain ⟨p, hp, -⟩ := (Func.memRunsFrom_run hx).1 h
+    simp [Func.enter, Func.blocks, noBlocks, stuck] at hp
+  cases o with
+  | ret _ => exact key _ fun _ h => nomatch h
+  | ub _ => exact key _ fun _ h => nomatch h
+  | fuelExhausted => exact key _ fun _ h => nomatch h
+
+
+/-- No budget lets the new `allocMain` run out of fuel. -/
+theorem noBlocks_bounded :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    ∃ B, ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
+      (unit := fun _ : Unit => 8) (allocModule.replaceBody allocMain.name noBlocks)).BoundedBy B :=
+  ⟨0, fun ⟨a, S⟩ => .inr fun m _ => noBlocks_outcomes a S m .fuelExhausted⟩
+
+/-- The new `allocMain` refines the old from every memories: it has no
+observable behaviour. -/
+theorem noBlocks_refines :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    allocMain.memRunsFrom (Mem := Unit) (unit := fun _ : Unit => 8) allocModule ⊑
+      (allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
+        (unit := fun _ : Unit => 8) (allocModule.replaceBody allocMain.name noBlocks) := by
+  intro ⟨a, S⟩ t ht
+  cases t with
+  | ret o => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ret o) hn).elim
+  | ub r => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ub r) hn).elim
+  | fuelExhausted => exact (noBlocks_outcomes a S 0 .fuelExhausted (ht 0)).elim
+
+/-- So congruence in the callee, with memory, applies: every function of
+the module is refined, with memory, by its counterpart in the module with
+the new body. -/
+
+example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
+    (a : HVector toType (f.params.map (·.2))) :
+    observable (f.memRuns (fun _ : Unit => 8) id allocModule a) ⊑
+      observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit => 8) id
+        (allocModule.replaceBody allocMain.name noBlocks) a) := by
+  have h := Func.memRuns_replaceBody_isRefinedBy_of_bound (fun _ : Unit => 8) id
+    Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans allocModule_valid (g := allocMain)
+    (by simp [allocModule, Module.funcs]) noBlocks ?hb ?hr hf
+  case hb => exact noBlocks_bounded
+  case hr => exact noBlocks_refines
+  exact h.2 a
 
 /-- The core dialect is lawful in its monotonicity. -/
 example : LawfulDialectMonotone CoreDialect := inferInstance

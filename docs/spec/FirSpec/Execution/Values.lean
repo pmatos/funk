@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Values and refinement: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13990253844739611933")
+:::moduleDocs (fingerprint := "5669569679317351933")
 :::
 
 :::readable Fir.PoisonOr (fingerprint := "17169256414108514350")
@@ -107,6 +107,27 @@ $`[b_1, \dots, b_n] \sqsubseteq [c_1, \dots, c_n]` give
 $`[a_1, \dots, a_n] \sqsubseteq [c_1, \dots, c_n]`, for lists of one kind
 of element. This is what makes refinement of returned lists, and so of a
 pipeline of passes, transitive.
+:::
+
+:::readable Fir.List.IsRefinedBy.length_eq Fir.List.isRefinedBy_refl Fir.List.IsRefinedBy.append Fir.List.IsRefinedBy.drop Fir.List.IsRefinedBy.take Fir.List.IsRefinedBy.getElem? Fir.List.IsRefinedBy.set Fir.List.IsRefinedBy.modify Fir.instHRefinementProd (pin := Fir.List.IsRefinedBy) (fingerprint := "7346315508574861417")
+*Theorems: lists that refine element by element, and pairs.* A list
+$`l'` refines $`l` when they have the same length and each element of
+$`l'` refines the element of $`l` at the same index. Then:
+
+* $`|l| = |l'|`, and a list refines itself when each element does;
+* appending, dropping the first $`n` elements and taking the first $`n`
+  keep refinement: $`l \mathbin{+\!\!+} m \sqsubseteq l' \mathbin{+\!\!+} m'`,
+  $`\mathrm{drop}_n(l) \sqsubseteq \mathrm{drop}_n(l')` and
+  $`\mathrm{take}_n(l) \sqsubseteq \mathrm{take}_n(l')`;
+* at each index $`i`, both lists have no element, or elements $`a` and
+  $`a'` with $`a \sqsubseteq a'`;
+* replacing the elements at $`i` by $`a \sqsubseteq a'` keeps refinement,
+  and so does changing them by a map $`g` that keeps refinement.
+
+*Definition: refining pairs.* A pair refines another when each part refines
+the other's part: $`(a, b) \sqsubseteq (a', b') \iff a \sqsubseteq a' \land b \sqsubseteq b'`.
+What a run from given memories returns, its values with the memories it
+ends with, refines so.
 :::
 
 :::readable Fir.PoisonOr.poison_isRefinedBy Fir.PoisonOr.isRefinedBy_refl Fir.PoisonOr.isRefinedBy_trans (fingerprint := "5762587255094126963")

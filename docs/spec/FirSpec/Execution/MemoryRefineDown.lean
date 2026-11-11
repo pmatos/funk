@@ -38,7 +38,7 @@ frame from $`S'` by the source's in its frame from $`S`: leaving a frame
 keeps refinement of memories.
 :::
 
-:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "12850138011807003321")
+:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "7510545194963323319")
 *Theorems: a callee's path that runs out of fuel or returns, allowed below a
 budget.* A path of a black box's target in its frame that runs out of fuel
 or returns, called on arguments and from memories that refine the

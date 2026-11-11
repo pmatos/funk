@@ -38,11 +38,6 @@ open SetM Memory
 
 variable {α β : Type}
 
-/-- A pair refines another when each part refines the other's: what a run
-from given memories returns, with the memories it ends with. -/
-instance instHRefinementProd [HRefinement α α] [HRefinement β β] : HRefinement (α × β) (α × β) :=
-  ⟨fun p q => p.1 ⊑ q.1 ∧ p.2 ⊑ q.2⟩
-
 /-- A way a function's run ends, read from given memories with the memories
 it ends with: a return carries them, and a run out of fuel shows none. -/
 def Result.withMem {σ : Type} : Result α × σ → Result (α × σ)

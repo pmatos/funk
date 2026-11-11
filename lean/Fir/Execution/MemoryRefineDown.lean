@@ -174,7 +174,7 @@ theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ok (.ok .fuelExhausted)) (fun _ h => nomatch h) h
     match e, he, hx with
     | .ok (.ok .fuelExhausted), he, _ => exact ⟨p, hp, MemAllowedBelow.of_exhausted he _⟩
-  rcases bb.bounded ((args'.cast hsig).cast bb.params.symm) S' with hdiv | hbdd
+  rcases bb.bounded ((args'.cast hsig).cast bb.params.symm, S') with hdiv | hbdd
   · obtain ⟨s₀, hs₀, hle⟩ := href .fuelExhausted hdiv
     match s₀, hs₀, hle with
     | .ub r, ⟨N, hN⟩, _ => exact ofUB hN

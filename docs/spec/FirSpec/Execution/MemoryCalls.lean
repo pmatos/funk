@@ -14,14 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7359096972208050137")
-:::
-
-:::readable Fir.instHRefinementProd (fingerprint := "7053481969216345597")
-*Definition: refining pairs.* A pair refines another when each part
-refines the other's part: $`(a, b) \sqsubseteq (a', b') \iff a \sqsubseteq a' \land b \sqsubseteq b'`.
-What a run from given memories returns, its values with the memories it
-ends with, refines so.
+:::moduleDocs (fingerprint := "3237605153120205651")
 :::
 
 :::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "9590645358696005234")

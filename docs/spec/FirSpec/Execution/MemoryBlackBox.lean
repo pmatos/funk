@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2647104984952277409")
+:::moduleDocs (fingerprint := "7122691847001462072")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "16450805183566433580")
@@ -49,9 +49,11 @@ at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.MemBlackBox Fir.MemCallsRefined (pin := Fir.Func.memRunsFrom) (fingerprint := "14702738150749903350")
-*Definitions: black boxes with memory, and modules whose calls refine.* A
-_black box with memory_ is a function $`g` of the source module $`M` and a
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined (pin := Fir.Func.memRunsFrom) (fingerprint := "11146693213621817567")
+*Definitions: bounded runs, black boxes with memory, and modules whose
+calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
+input, they diverge, or none of them with $`B` steps or more runs out of
+fuel. A _black box with memory_ is a function $`g` of the source module $`M` and a
 function $`g'` of the target module $`M'` with the same parameter types,
 such that:
 
@@ -60,8 +62,7 @@ such that:
   $`S'` refines that of $`g` in $`M` from $`S`, the memories they end with
   included
   ({ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs from given memories]);
-* on each argument vector and from each memories, $`g'` diverges, or none
-  of its runs with $`\mathit{bound}` steps or more runs out of fuel.
+* the runs of $`g'` from given memories are bounded by $`\mathit{bound}`.
 
 The target module _runs each call with memory as the source does_ when each
 symbol names the same function in both, or a black box with memory. A

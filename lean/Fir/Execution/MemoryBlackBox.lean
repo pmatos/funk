@@ -24,9 +24,9 @@ parameter types, such that
 * on arguments that refine others, and from memories that refine others,
   the observable behaviour of the target's function, with the memories it
   ends with, refines that of the source's;
-* on each argument vector and from each memories, the target's function
-  diverges, or never runs out of fuel at any budget of at least a fixed
-  bound.
+* its runs from given memories are _bounded_: on each argument vector and
+  from each memories, the target's function diverges, or never runs out of
+  fuel at any budget of at least a fixed bound.
 
 The black box speaks of runs from any memories, not only of runs from the
 empty memories: a callee runs from the memories its caller reached, and its
@@ -159,21 +159,23 @@ theorem Func.memCall_cont {M : Module d} {f g : Func d} {env genv : Env d} {o : 
 
 /-! # Black boxes -/
 
+/-- The runs `f` are bounded by the budget `B` when, on each input, they
+diverge, or none of them with `B` steps or more runs out of fuel. -/
+def FuncRuns.BoundedBy {A O : Type} (f : FuncRuns A O) (B : Nat) : Prop :=
+  ∀ a, (∀ m, (f a m).outcomes .fuelExhausted) ∨ ∀ m, B ≤ m → ¬ (f a m).outcomes .fuelExhausted
+
 /-- A black box with memory: the function `g` of the source module `M`,
 whose calls the target module `M'` runs as calls of `g'`. Their parameters
 have the same types; on arguments that refine others, from memories that
 refine others, the behaviour of `g'` refines that of `g`, the memories they
-end with included; and on each argument vector and from each memories,
-`g'` diverges, or none of its runs with `bound` steps or more runs out of
-fuel. -/
+end with included; and the runs of `g'` from given memories are bounded by
+`bound`. -/
 structure MemBlackBox (M M' : Module d) (bound : Nat) (g g' : Func d) : Prop where
   params : g'.params.map (·.2) = g.params.map (·.2)
   refines : ∀ (a a' : HVector toType (g.params.map (·.2))) (S S' : Memories Mem unit),
     a.Forall₂ TyRefinement.IsRefinedBy a' → S ⊑ S' →
       observable (g.memRunsFrom M (a, S)) ⊑ observable (g'.memRunsFrom M' (a'.cast params.symm, S'))
-  bounded : ∀ (a' : HVector toType (g'.params.map (·.2))) (S' : Memories Mem unit),
-    (∀ m, (g'.memRunsFrom M' (a', S') m).outcomes .fuelExhausted) ∨
-      ∀ m, bound ≤ m → ¬ (g'.memRunsFrom M' (a', S') m).outcomes .fuelExhausted
+  bounded : (g'.memRunsFrom (Mem := Mem) (unit := unit) M').BoundedBy bound
 
 variable (Mem unit) in
 /-- The target module `M'` runs each call with memory as the source `M`

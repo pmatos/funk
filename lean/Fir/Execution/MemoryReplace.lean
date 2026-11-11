@@ -35,8 +35,12 @@ asks for it: one budget past which no run of the new function from any
 memories runs out of fuel unless it diverges. Removing this hypothesis is
 [#214](https://github.com/pmatos/funk/issues/214) (ADR-2026-11-11-1002).
 
-A lawful dialect in its monotonicity gets both theorems for every function
-of a valid module by the class alone, at every naming of its memories.
+For a dialect lawful in its monotonicity, every function of a valid module
+refines itself on refined arguments and memories by the class alone, at
+every naming of its memories. Congruence in the callee then asks only what
+the class cannot give: that refinement of values be reflexive and
+transitive, the budget for the new function, and that it refine the old
+one from every memories.
 -/
 
 namespace Fir
@@ -63,11 +67,8 @@ theorem Func.memRunsFrom_replaceBody_isRefinedBy {M : Module d}
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     (hnd : (M.funcs.map (·.name)).Nodup) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
-    (hbound : ∃ B, ∀ (a : HVector toType (g.params.map (·.2))) (S : Memories Mem unit),
-      (∀ m, ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-        .fuelExhausted) ∨
-      ∀ m, B ≤ m → ¬ ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-        .fuelExhausted)
+    (hbound : ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := Mem) (unit := unit)
+      (M.replaceBody g.name b)).BoundedBy B)
     (h : g.memRunsFrom (Mem := Mem) (unit := unit) M ⊑
       (g.replaceBody g.name b).memRunsFrom (Mem := Mem) (unit := unit) (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
@@ -165,11 +166,8 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_bound
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hbound : letI := DialectMemDenote.denoteAt (d := d) unit ρ
-      ∃ B, ∀ (a : HVector toType (g.params.map (·.2))) (S : Memories N unit),
-        (∀ m, ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-          .fuelExhausted) ∨
-        ∀ m, B ≤ m → ¬ ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-          .fuelExhausted)
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit)
+        (M.replaceBody g.name b)).BoundedBy B)
     (h : letI := DialectMemDenote.denoteAt (d := d) unit ρ;
       g.memRunsFrom (Mem := N) (unit := unit) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit) (M.replaceBody g.name b))

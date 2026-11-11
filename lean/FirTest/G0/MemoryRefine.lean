@@ -63,11 +63,8 @@ theorem memRuns_replaceBody_isRefinedBy (d : Dialect) [TyDenote d.Ty] [Decidable
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hbound : letI := DialectMemDenote.denoteAt (d := d) unit ρ
-      ∃ B, ∀ (a : HVector toType (g.params.map (·.2))) (S : Memories N unit),
-        (∀ m, ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-          .fuelExhausted) ∨
-        ∀ m, B ≤ m → ¬ ((g.replaceBody g.name b).memRunsFrom (M.replaceBody g.name b) (a, S) m).outcomes
-          .fuelExhausted)
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit)
+        (M.replaceBody g.name b)).BoundedBy B)
     (h : letI := DialectMemDenote.denoteAt (d := d) unit ρ;
       g.memRunsFrom (Mem := N) (unit := unit) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit) (M.replaceBody g.name b))

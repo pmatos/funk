@@ -14,26 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "880320936606524875")
+:::moduleDocs (fingerprint := "3923420702968234993")
 :::
 
-:::readable Fir.List.IsRefinedBy.length_eq Fir.List.isRefinedBy_refl Fir.List.IsRefinedBy.append Fir.List.IsRefinedBy.drop Fir.List.IsRefinedBy.take Fir.List.IsRefinedBy.getElem? Fir.List.IsRefinedBy.set Fir.List.IsRefinedBy.modify (pin := Fir.List.IsRefinedBy) (fingerprint := "2883547409260904451")
-*Theorems: lists that refine element by element.* A list
-$`l'` refines $`l` when they have the same length and each element of
-$`l'` refines the element of $`l` at the same index. Then:
-
-* $`|l| = |l'|`, and a list refines itself when each element does;
-* appending, dropping the first $`n` elements and taking the first $`n`
-  keep refinement: $`l \mathbin{+\!\!+} m \sqsubseteq l' \mathbin{+\!\!+} m'`,
-  $`\mathrm{drop}_n(l) \sqsubseteq \mathrm{drop}_n(l')` and
-  $`\mathrm{take}_n(l) \sqsubseteq \mathrm{take}_n(l')`;
-* at each index $`i`, both lists have no element, or elements $`a` and
-  $`a'` with $`a \sqsubseteq a'`;
-* replacing the elements at $`i` by $`a \sqsubseteq a'` keeps refinement,
-  and so does changing them by a map $`g` that keeps refinement.
-:::
-
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "10750520556276307539")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "8580819944203145393")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
@@ -41,33 +25,38 @@ $$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = 
 
 So a fragment of a pointer keeps its pointer, and its provenance, in every
 memory that refines it, and units of bits keep their bits. A block $`b'`
-refines $`b` when it has the same kind and the same liveness, and its
-units refine the units of $`b` one by one. A memory refines another when
-its blocks refine the other's one by one, in the order they were made: both
-have the same allocations, each with its kind, size and liveness.
+refines $`b` when it has the same kind, liveness and size, and, while $`b`
+is live, its units refine the units of $`b` one by one. No access reaches a
+freed block, so its units are not compared: a store to a block that is then
+freed may be dropped. A memory refines another when its blocks refine the
+other's one by one, in the order they were made: both have the same
+allocations, each with its kind, size and liveness.
 :::
 
 :::readable Fir.Memory.MemUnit.isRefinedBy_refl Fir.Memory.MemUnit.isRefinedBy_trans Fir.Memory.Block.isRefinedBy_refl Fir.Memory.Block.isRefinedBy_trans Fir.Memory.Memory.isRefinedBy_refl Fir.Memory.Memory.isRefinedBy_trans (fingerprint := "5718639929467021518")
 *Theorems: refinement of units, blocks and memories is a preorder.* Each
 is reflexive and transitive: a poison unit refined by a unit refined by a
 third is refined by the third, and a unit of bits or a fragment is refined
-only by itself.
+only by itself. Blocks that refine each other are live together, so the
+units of the first two are compared exactly when those of the last two
+are.
 :::
 
 :::readable Fir.Memory.Block.IsRefinedBy.kill Fir.Memory.Memory.IsRefinedBy.free Fir.Memory.Memory.IsRefinedBy.alloc (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.free) (fingerprint := "16019051067054613619")
 *Theorems: allocating and freeing keep refinement.* Let $`M \sqsubseteq M'`.
 Freeing a block keeps refinement, and so does freeing the allocation $`a`
-in both. Allocating $`n` units of kind $`k` in both gives the same pointer,
+in both: the freed blocks keep their kinds and sizes, and their units are
+no longer compared. Allocating $`n` units of kind $`k` in both gives the same pointer,
 $`(|M|, 0) = (|M'|, 0)`, since both have as many allocations, and memories
 $`M \sqsubseteq M'` again: the new block holds $`n` poisons in both.
 :::
 
-:::readable Fir.Memory.Memory.IsRefinedBy.locate Fir.Memory.Memory.IsRefinedBy.load Fir.Memory.Memory.IsRefinedBy.store (pin := Fir.Memory.Memory.locate) (pin := Fir.Memory.Memory.load) (pin := Fir.Memory.Memory.store) (fingerprint := "10007343810621408188")
+:::readable Fir.Memory.Memory.IsRefinedBy.locate Fir.Memory.Memory.IsRefinedBy.load Fir.Memory.Memory.IsRefinedBy.store (pin := Fir.Memory.Memory.locate) (pin := Fir.Memory.Memory.load) (pin := Fir.Memory.Memory.store) (fingerprint := "270640476684629114")
 *Theorems: accesses to memories that refine others.* Let $`M \sqsubseteq M'`.
 An access of $`n` units through the pointer $`p` lands, in both, at the
-same fault, or in the same allocation at the same offset, in blocks
-$`b \sqsubseteq b'`: whether it faults depends only on the allocations,
-which are the same. So:
+same fault, or in the same allocation at the same offset, in live blocks
+$`b \sqsubseteq b'`, whose units are compared: whether it faults depends
+only on the allocations, which are the same. So:
 
 * a load through $`p` faults with the same fault in both, or loads units
   $`u^*` from $`M` and $`u'^*` from $`M'` with $`u^* \sqsubseteq u'^*`;

@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9650312343487476396")
+:::moduleDocs (fingerprint := "11899350260837497942")
 :::
 
-:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.MemBlackBox) (fingerprint := "9008627374309208738")
+:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.FuncRuns.BoundedBy) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.MemBlackBox) (fingerprint := "515877251149093904")
 *Theorem: congruence in the callee, with memory.* In a module $`M` whose
 symbols are unique, let every op of its functions that runs by its own rule
 be monotone with memory, and the refinement of values be reflexive and
@@ -25,9 +25,10 @@ transitive. Let $`g` be a function of $`M`, and $`g'` and $`M'` be $`g`
 and $`M` with the body of $`g` replaced
 ({ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee]).
 If, on each argument vector and from each memories, the behaviour of $`g'`
-in $`M'` refines that of $`g` in $`M`, values and memories, and there is
-one budget $`B` past which no run of $`g'` from any memories runs out of
-fuel unless it diverges, then every function of $`M` is refined so by its
+in $`M'` refines that of $`g` in $`M`, values and memories, and the runs
+of $`g'` from given memories are bounded by one budget $`B`, so that past
+it no run of $`g'` from any memories runs out of fuel unless it diverges,
+then every function of $`M` is refined so by its
 counterpart in $`M'`:
 
 $$`\mathrm{runs}^S_{M,g} \sqsubseteq \mathrm{runs}^S_{M',g'} \implies \forall f \in M.\ \mathrm{runs}^S_{M,f} \sqsubseteq \mathrm{runs}^S_{M',f'}`
@@ -57,12 +58,14 @@ its behaviour with memory on $`\vec{v}`, calls and recursion included,
 whatever its ops do to the memories.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_bound (fingerprint := "13077160525037351401")
-*Theorem: congruence in the callee, with memory, by the class alone.* For
-a dialect lawful in its monotonicity, in a valid module, at every naming of
-the dialect's memories, replacing the body of $`g` with one under which
-$`g'` refines $`g` from given memories, with one budget past which it runs
-out of fuel only if it diverges, refines every function of the module from
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_bound (fingerprint := "5971037717015447516")
+*Theorem: congruence in the callee, with memory, for a lawful dialect.*
+For a dialect lawful in its monotonicity, in a valid module, at every
+naming of the dialect's memories, the class gives that every op is
+monotone with memory. The rest is asked as above: that refinement of
+values be reflexive and transitive, that $`g'` refine $`g` from given
+memories, and that its runs from given memories be bounded by one budget.
+Then replacing the body of $`g` refines every function of the module from
 given memories, and so with memory, calls and recursion included, whatever
 the new body.
 :::
