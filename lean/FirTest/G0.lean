@@ -17,7 +17,9 @@ dialect.
 
 The section on behaviour models shows the seam where a dialect that needs
 probabilities plugs in. `lean/FirTest/G0Effects.lean` restates the classes
-of poison and effects, and the summaries of functions, in the same way.
+of poison and effects, and the summaries of functions, in the same way, and
+`lean/FirTest/G0Regions.lean` the results for region kinds that a dialect
+registers.
 -/
 
 namespace FirTest.G0

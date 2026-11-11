@@ -54,6 +54,7 @@ import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
 import FirTest.G0Effects
+import FirTest.G0Regions
 import FirTest.FloatModel
 import FirTest.FloatModelFma
 import FirTest.FloatModelF16

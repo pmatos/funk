@@ -47,7 +47,11 @@ CORE_EXAMPLE = "lean/Fir/Text/Example.lean"
 # Files that end with the core dialect's corollaries of their results.
 NAME_CORE = {"lean/Fir/Text/PrintParse.lean", "lean/Fir/Text/ParseWellFormed.lean"}
 # G0's Lean tests, whose statements must stay generic.
-G0_TESTS = {"lean/FirTest/G0.lean", "lean/FirTest/G0Effects.lean"}
+G0_TESTS = {
+    "lean/FirTest/G0.lean",
+    "lean/FirTest/G0Effects.lean",
+    "lean/FirTest/G0Regions.lean",
+}
 # A word of two letters or more: the core dialect's text has none shorter,
 # and its file's one-letter strings are value names and symbols.
 WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_.]+")
