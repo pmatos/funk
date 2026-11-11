@@ -257,8 +257,8 @@ The effect set decides whether a block is an event (ADR-2026-11-11-1015):
   `asm volatile` is.
 - Without observable, the block adds no event. Passes may delete, merge or move
   it within its declared reads and writes, as with GCC's plain `asm`. They may
-  merge or move it only when no write to the memories it reads comes between
-  (ADR-2026-11-11-1443).
+  merge or move it only when no write to the memories it reads comes between,
+  a write by the block itself included (ADR-2026-11-11-1443).
 
 The world answers a block with its results and with writes into memory that its
 declared effects allow. `fir-ref` takes the answer from the test's script, as

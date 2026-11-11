@@ -21,20 +21,24 @@ The human ruled on #299 on 2026-11-11
 ## Decision
 
 - **Escape.** An address escapes whenever an op hands it to code outside the
-  program:
+  program, as in LLVM's capture tracking:
   - an external call that gets it as an argument;
   - an inline assembly block whose effect set says observable;
   - a volatile store whose stored value is the pointer;
   - `ptr.expose` (ADR-2026-11-09-1542).
-- **Memory reachable from it.** Memory reachable from an escaped address has
-  escaped too.
-- **One meaning.** "Escaped" means this wherever the ADRs use it: the
-  memory an observer sees at a return (ADR-2026-11-11-1016), the memory the
-  world may write (ADR-2026-11-09-1540), and the memories an external call or
-  inline assembly may touch (ADR-2026-11-09-1541). LLVM's capture tracking
-  makes the same choice.
+- **What the observer sees.** At a return the observer sees the memory that
+  escaped by any of these ways, and the memory reachable from it, as
+  ADR-2026-11-11-1016 has it for external calls.
+- **Internal globals.** An `internal` global is observable once its address
+  escapes by any of these ways. After `ptr.expose` only an integer holds the
+  address, yet the global is observable all the same.
+- **Export globals.** Code outside the program sees an `export` global
+  whether or not its address escapes (ADR-2026-11-09-1546). This ADR does
+  not change that.
 
-This refines ADR-2026-11-11-1016, which named only external calls.
+This refines ADR-2026-11-11-1016, which named only external calls and made
+an `internal` global observable once it is reachable from what the observer
+sees.
 
 ## Alternatives
 

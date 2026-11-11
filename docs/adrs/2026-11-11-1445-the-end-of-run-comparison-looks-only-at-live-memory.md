@@ -17,11 +17,8 @@ on 2026-11-11
 ## Decision
 
 - **Live memory only.** At a return, the observer compares only live
-  allocations among the memory it sees. An allocation that the world has
-  freed is not compared.
-- **The renaming.** The one-to-one renaming of allocations that makes two
-  ends of a run match (ADR-2026-11-09-1540) ranges over the live allocations
-  that are compared.
+  allocations among the memory it sees. The contents of an allocation that
+  the world has freed are not compared.
 
 This refines ADR-2026-11-11-1016's list of what an observer sees and
 ADR-2026-11-11-1017's freeing. It agrees with ADR-2026-11-11-1002, whose

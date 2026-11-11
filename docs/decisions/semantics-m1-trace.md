@@ -41,19 +41,17 @@ An address escapes whenever an op hands it to code outside the program
 - a volatile store whose stored value is the pointer;
 - `ptr.expose`.
 
-"Escaped" means this wherever the ADRs use it, for the world and for effects
-too (ADR-2026-11-11-1444).
+An `internal` global is observable only once its address escapes by one of
+these ways, even when only an integer from `ptr.expose` holds it. Until then a
+store to it is invisible and can be removed (ADR-2026-11-11-1016,
+ADR-2026-11-11-1444). Code outside the program sees an `export` global whether
+or not its address escapes (ADR-2026-11-09-1546).
 
-An `internal` global is observable only once its address escapes: once it is
-reachable from what the observer sees. Until then a store to it is invisible
-and can be removed (ADR-2026-11-11-1016).
-
-Only live allocations are compared. An allocation that the world has freed is
-not, whatever it held (ADR-2026-11-11-1445).
+Only live allocations are compared. The contents of an allocation that the
+world has freed are not (ADR-2026-11-11-1445).
 
 Two ends of a run match when some one-to-one renaming of allocations makes
-their observed memory equal. The renaming ranges over the live allocations
-compared (ADR-2026-11-11-1445). Raw addresses are never compared. Memory that no
+their observed memory equal. Raw addresses are never compared. Memory that no
 observer can reach stays invisible, so a store to it can be removed
 (ADR-2026-11-09-1540).
 
@@ -94,8 +92,8 @@ Each test supplies a scripted world: the results of each external call, in
 order, and any writes into escaped memory. The script may create and free heap
 allocations as part of a call's answer (ADR-2026-11-11-1017). It answers an
 observable inline assembly block in trace order, and one without observable by
-the block, its operands and the units it declares it reads (ADR-2026-11-11-1015,
-ADR-2026-11-11-1443). A test that calls an external
+the block, its operands and the contents of the memories it declares it reads
+(ADR-2026-11-11-1015, ADR-2026-11-11-1443). A test that calls an external
 function must come with its script. `fir-ref run` reports the trace and the end
 of the run (ADR-2026-11-09-1540).
 
