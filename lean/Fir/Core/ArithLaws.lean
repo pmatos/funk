@@ -18,7 +18,8 @@ behaviour refines its behaviour on those others, calls and recursion
 included, as the section on refinement through core calls proves. Each
 proof is about fir's execution rules, read in the set monad.
 
-`const` propagates poison (ADR-2026-10-30-0818). The core poison classes
+`const` propagates poison (ADR-2026-10-30-0818), at an integer type and
+at a float type alike. The core poison classes
 section proves that it meets its poison clauses and is monotone whatever
 its semantics. Below, its rule gives the rest: it returns a result on
 operands with no poison, and it is total.
@@ -43,6 +44,17 @@ theorem const_returnsOnDefined (w : Nat) (v : BitVec w) :
 
 /-- `const` has an outcome on its one operand vector. -/
 theorem const_total (w : Nat) (v : BitVec w) : OpTotal (d := CoreDialect) (.const w v) :=
+  fun _ => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+
+/-- A float `const` returns its value on its one operand vector, the empty
+one. -/
+theorem fconst_returnsOnDefined (e m : Nat) (v : BitVec (floatWidth e m)) :
+    ReturnsOnDefined (d := CoreDialect) (.fconst e m v) :=
+  ⟨.nil, fun h => h, _, rfl⟩
+
+/-- A float `const` has an outcome on its one operand vector. -/
+theorem fconst_total (e m : Nat) (v : BitVec (floatWidth e m)) :
+    OpTotal (d := CoreDialect) (.fconst e m v) :=
   fun _ => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
 
 /-- `poison` returns its result on its one operand vector, the empty one,

@@ -3,8 +3,11 @@
 //! or to 16 for an `i128`.
 //!
 //! A result of at most 64 bits takes one eightbyte, an `i128` two, its low
-//! half first. Results of one or two eightbytes come back in `%rax`, then
-//! `%rdx`. More go in a result area that the caller provides in its frame:
+//! half first. Results of one or two eightbytes come back in registers, as
+//! System V classifies them: each INTEGER eightbyte in the next of `%rax`
+//! and `%rdx`, and each SSE eightbyte, an `f32` or an `f64`, in the next of
+//! `%xmm0` and `%xmm1` (ADR-2026-11-11-1140). More go in a result area that
+//! the caller provides in its frame:
 //! it passes the area's address as the call's first argument, and the
 //! callee writes every result there and returns the address in `%rax`.
 //! An `i1` result is 0 or 1 in all of its eightbyte; every other result is
@@ -18,7 +21,7 @@ use funk_ir::Type;
 
 use crate::abi::RESULT_REG;
 use crate::asm::{Asm, Mem, Reg};
-use crate::width::{self, Ext};
+use crate::width::{self, Class, Ext};
 
 /// The registers that carry the first two eightbytes of results, in order.
 pub const RESULT_REGS: [Reg; 2] = [RESULT_REG, Reg::Rdx];
@@ -28,6 +31,8 @@ pub const RESULT_REGS: [Reg; 2] = [RESULT_REG, Reg::Rdx];
 pub enum Place {
     /// In this register.
     Reg(Reg),
+    /// In the SSE register `%xmmN`.
+    Xmm(u8),
     /// At this offset in the result area.
     Area(i32),
 }
@@ -53,22 +58,30 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// The layout of results of the widths `widths`, each one that the
-    /// backend lowers: at most 64, or 128. Fails when the area would not
-    /// fit in the 2 GiB that a displacement reaches.
-    pub fn new(widths: &[u32]) -> Result<Layout, String> {
-        let words: usize = widths.iter().map(|&w| eightbytes(w)).sum();
+    /// The layout of results of the classes `classes`. Fails when the area
+    /// would not fit in the 2 GiB that a displacement reaches.
+    pub fn of_classes(classes: &[Class]) -> Result<Layout, String> {
+        let words: usize = classes.iter().map(|c| c.words()).sum();
         if words <= RESULT_REGS.len() {
-            let places = RESULT_REGS[..words].iter().map(|&r| Place::Reg(r));
-            return Ok(Layout {
-                places: places.collect(),
-                area: 0,
-            });
+            let (mut int, mut sse) = (0, 0);
+            let mut places = Vec::with_capacity(words);
+            for &c in classes {
+                for _ in 0..c.words() {
+                    if c == Class::Sse {
+                        places.push(Place::Xmm(sse));
+                        sse += 1;
+                    } else {
+                        places.push(Place::Reg(RESULT_REGS[int]));
+                        int += 1;
+                    }
+                }
+            }
+            return Ok(Layout { places, area: 0 });
         }
         let mut places = Vec::with_capacity(words);
         let mut end = 0u64;
-        for &w in widths {
-            let n = eightbytes(w) as u64;
+        for &c in classes {
+            let n = c.words() as u64;
             let at = end.next_multiple_of(8 * n);
             for k in 0..n {
                 places.push(Place::Area(fits(at + 8 * k)?));
@@ -83,11 +96,8 @@ impl Layout {
     /// does not lower counts as one eightbyte: lowering reports it where its
     /// value is defined, so no code is built with this layout.
     pub fn of_types<'t>(types: impl IntoIterator<Item = &'t Type>) -> Result<Layout, String> {
-        let widths: Vec<u32> = types
-            .into_iter()
-            .map(|t| width::check(t).unwrap_or(64))
-            .collect();
-        Layout::new(&widths)
+        let classes: Vec<Class> = types.into_iter().map(width::class).collect();
+        Layout::of_classes(&classes)
     }
 
     /// Where each eightbyte of the results goes, in order.
@@ -132,6 +142,10 @@ impl Layout {
         for (&place, &(slot, w)) in self.places.iter().zip(from) {
             let reg = match place {
                 Place::Reg(reg) => reg,
+                Place::Xmm(n) => {
+                    asm.ins("movq", format_args!("{slot}, %xmm{n}"));
+                    continue;
+                }
                 Place::Area(_) => Reg::Rcx,
             };
             asm.ins("movq", format_args!("{slot}, {}", reg.q()));
@@ -163,6 +177,7 @@ impl Layout {
         for (&place, &slot) in self.places.iter().zip(into) {
             let from = match place {
                 Place::Reg(reg) => reg.q().to_string(),
+                Place::Xmm(n) => format!("%xmm{n}"),
                 Place::Area(at) => {
                     let area = area.ok_or("the caller has no result area")?;
                     let disp = area.base.disp.checked_add(at);
@@ -194,11 +209,6 @@ impl Layout {
             ))
         }
     }
-}
-
-/// The eightbytes that a result of `width` bits takes: two for an `i128`.
-fn eightbytes(width: u32) -> usize {
-    if width > 64 { 2 } else { 1 }
 }
 
 fn fits(bytes: u64) -> Result<i32, String> {

@@ -14,7 +14,7 @@ mod g0_scan;
 
 use std::path::Path;
 
-use funk_ir::dialects::core::{self, PREDICATES, WRAP_FLAG_SETS};
+use funk_ir::dialects::core::{self, FLOAT_PREDICATES, PREDICATES, WRAP_FLAG_SETS};
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
 use g0_scan::{Tok, code, enum_variants, tokens};
 
@@ -32,6 +32,7 @@ fn core_ops() -> Vec<String> {
 fn core_words() -> Vec<String> {
     let mut words = core_ops();
     words.extend(PREDICATES.iter().map(|p| p.to_string()));
+    words.extend(FLOAT_PREDICATES.iter().map(|p| p.to_string()));
     words.extend(
         WRAP_FLAG_SETS
             .iter()

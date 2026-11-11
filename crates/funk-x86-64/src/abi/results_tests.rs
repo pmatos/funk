@@ -2,9 +2,20 @@
 
 use super::{Area, Layout, Place};
 use crate::asm::{Asm, Mem, Reg};
+use crate::width::Class;
+
+/// The layout of integer results of the widths `widths`: at most 64, or
+/// 128.
+fn of_widths(widths: &[u32]) -> Result<Layout, String> {
+    let classes: Vec<Class> = widths
+        .iter()
+        .map(|&w| Class::int(w.div_ceil(64) as usize))
+        .collect();
+    Layout::of_classes(&classes)
+}
 
 fn layout(widths: &[u32]) -> (Vec<Place>, i32) {
-    let l = Layout::new(widths).unwrap();
+    let l = of_widths(widths).unwrap();
     (l.places().to_vec(), l.area())
 }
 
@@ -24,10 +35,40 @@ fn one_or_two_eightbytes_come_back_in_rax_then_rdx() {
     // One i128 alone: its low half in %rax, its high half in %rdx.
     assert_eq!(layout(&[128]), (vec![rax, rdx], 0));
     for widths in [&[][..], &[8], &[1, 64], &[128]] {
-        let l = Layout::new(widths).unwrap();
+        let l = of_widths(widths).unwrap();
         assert!(!l.in_memory());
         assert_eq!(l.hidden_arguments(), 0);
     }
+}
+
+/// Floats come back as System V returns a structure of their eightbytes:
+/// each SSE eightbyte in the next of `%xmm0` and `%xmm1`, each INTEGER one in
+/// the next of `%rax` and `%rdx`, and three or more in the area, as gcc and
+/// clang return `struct { double a; long b; }` and the like.
+#[test]
+fn float_results_come_back_in_xmm0_then_xmm1() {
+    use Class::{Int as I, Pair as P, Sse as F};
+    let rax = Place::Reg(Reg::Rax);
+    let (x0, x1) = (Place::Xmm(0), Place::Xmm(1));
+    let places = |cs: &[Class]| {
+        let l = Layout::of_classes(cs).unwrap();
+        (l.places().to_vec(), l.area())
+    };
+    assert_eq!(places(&[F]), (vec![x0], 0));
+    assert_eq!(places(&[F, F]), (vec![x0, x1], 0));
+    assert_eq!(places(&[F, I]), (vec![x0, rax], 0));
+    assert_eq!(places(&[I, F]), (vec![rax, x0], 0));
+    assert_eq!(places(&[F, I, F]), (area(&[0, 8, 16]), 32));
+    assert_eq!(places(&[F, P]), (area(&[0, 16, 24]), 32));
+    let l = Layout::of_classes(&[I, F]).unwrap();
+    let s = slots(2);
+    let given = code(|a| l.give(a, None, &[(s[0], 1), (s[1], 64)]).unwrap());
+    assert_eq!(
+        given,
+        "\tmovq\t-8(%rbp), %rax\n\tandl\t$1, %eax\n\tmovq\t-16(%rbp), %xmm0\n"
+    );
+    let got = code(|a| l.receive(a, None, &s).unwrap());
+    assert_eq!(got, "\tmovq\t%rax, -8(%rbp)\n\tmovq\t%xmm0, -16(%rbp)\n");
 }
 
 #[test]
@@ -37,7 +78,7 @@ fn three_eightbytes_or_more_go_in_an_area_of_eightbytes() {
     let widths = [1, 8, 16, 32, 64, 1, 8, 16, 32];
     let offsets: Vec<i32> = (0..9).map(|k| 8 * k).collect();
     assert_eq!(layout(&widths), (area(&offsets), 80));
-    let l = Layout::new(&[64, 64, 64]).unwrap();
+    let l = of_widths(&[64, 64, 64]).unwrap();
     assert!(l.in_memory());
     assert_eq!(l.hidden_arguments(), 1);
 }
@@ -79,7 +120,7 @@ fn code(f: impl FnOnce(&mut Asm)) -> String {
 
 #[test]
 fn ret_gives_results_in_registers_and_an_i1_as_0_or_1() {
-    let l = Layout::new(&[1, 8]).unwrap();
+    let l = of_widths(&[1, 8]).unwrap();
     let s = slots(2);
     let given = code(|a| l.give(a, None, &[(s[0], 1), (s[1], 8)]).unwrap());
     assert_eq!(
@@ -91,18 +132,18 @@ fn ret_gives_results_in_registers_and_an_i1_as_0_or_1() {
         given,
         "\tmovq\t-8(%rbp), %rax\n\tmovq\t-16(%rbp), %rdx\n\tandl\t$1, %edx\n"
     );
-    let one = Layout::new(&[32]).unwrap();
+    let one = of_widths(&[32]).unwrap();
     assert_eq!(
         code(|a| one.give(a, None, &[(s[0], 32)]).unwrap()),
         "\tmovq\t-8(%rbp), %rax\n"
     );
-    let none = Layout::new(&[]).unwrap();
+    let none = of_widths(&[]).unwrap();
     assert_eq!(code(|a| none.give(a, None, &[]).unwrap()), "");
 }
 
 #[test]
 fn ret_writes_results_in_memory_and_returns_the_area_s_address() {
-    let l = Layout::new(&[16, 1, 64]).unwrap();
+    let l = of_widths(&[16, 1, 64]).unwrap();
     let s = slots(4);
     let from = [(s[0], 16), (s[1], 1), (s[2], 64)];
     let given = code(|a| l.give(a, Some(s[3]), &from).unwrap());
@@ -120,12 +161,12 @@ fn ret_writes_results_in_memory_and_returns_the_area_s_address() {
 #[test]
 fn a_caller_stores_each_result_as_it_comes() {
     let s = slots(3);
-    let two = Layout::new(&[1, 16]).unwrap();
+    let two = of_widths(&[1, 16]).unwrap();
     assert_eq!(
         code(|a| two.receive(a, None, &s[..2]).unwrap()),
         "\tmovq\t%rax, -8(%rbp)\n\tmovq\t%rdx, -16(%rbp)\n"
     );
-    let three = Layout::new(&[8, 8, 8]).unwrap();
+    let three = of_widths(&[8, 8, 8]).unwrap();
     let area = Area {
         address: Mem { disp: -32 },
         base: Mem { disp: -64 },

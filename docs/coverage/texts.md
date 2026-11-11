@@ -207,9 +207,36 @@ The texts of #229's second stage hold the float types
 [ADR-2026-11-11-0951](../adrs/2026-11-11-0951-a-float-type-is-written-by-its-alias-or-as-float-e-m.md)).
 `float-types` passes values of each alias, of formats written
 `float(e, m)`, the smallest, `float(2, 1)`, and the widest among them, as
-parameters, block arguments, call arguments and results. No core op takes
-a float yet and a float has no constants, so it has no tests: both tools
-parse, print and validate it. `reject/float-types.toml` holds its texts
-that do not decode, such as `float(8, 23)`, which is written `f32`, or do
-not validate, such as `float(1, 1)`, and ops that take integers at a
-float type.
+parameters, block arguments, call arguments and results.
+`reject/float-types.toml` holds its texts that do not decode, such as
+`float(8, 23)`, which is written `f32`, or do not validate, such as
+`float(1, 1)`, and ops that take integers at a float type.
+
+The texts of #229's third stage also use float constants and `fcmp`
+([ADR-2026-11-11-1138](../adrs/2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md),
+[ADR-2026-11-11-1139](../adrs/2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md)).
+A float is spelled as its bits read as a signed integer.
+`fcmp-ordered-T` runs each of the seven ordered predicates, and
+`fcmp-unordered-T` each of the seven unordered ones, at `T`, one of `f16`,
+`bf16`, `f32`, `f64` and `f128`, on pairs of hard values: 1 and 2 in both orders, `-0` and `+0`,
+the smallest subnormals against a zero, the largest finite values against
+the infinities, and NaNs, quiet and signalling, with a payload and with the
+sign set, against numbers, infinities, zeros and each other; and on poison
+operands. `fconst-T` returns constants of `T`, each NaN's payload and sign
+included, and compares a NaN constant with itself. Both are differential
+at `f32` and `f64`, which the backend lowers, and interpreter-only at the
+other formats, where `scripts/harness/float_ref.py` computed the expected
+results apart from Lean; a few interpreter-only tests at `f32` and `f64`
+check `fir-ref` against it too. `float-calls` passes `f32` and `f64` to
+and from functions as System V does
+([ADR-2026-11-11-1140](../adrs/2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md)):
+past the eight SSE registers onto the stack, back in `%xmm0` and `%xmm1`
+or in the result area, mixed with integers and an `i128`, through block
+arguments, and chosen by an `fcmp`. `float-values-T` passes values of `T`
+through `br` and `cond_br` and back from calls with one result and with
+several, for the cells of passed and returned values at each format;
+it is differential at `f32` and `f64` and interpreter-only at every
+format. `float-types` now has interpreter-only tests that pass values of
+every format, poison among them.
+`reject/float-ops.toml` holds the float constants and `fcmp` texts that
+do not decode.

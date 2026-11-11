@@ -2,13 +2,14 @@ import Std.Data.String.ToNat
 import Fir.Core.Text
 import Fir.Core.Validation
 import Fir.Text.RoundTrip
+import Fir.Core.TypeTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 26 of its ops and every type. The laws are proved for every
+text, for all 28 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
-combination of flags, `true` and `false` at `i1`, and `ret` and `call` with
-any number of operands and results. A type reads back from how it is
+combination of flags, `true` and `false` at `i1`, every float constant at
+every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
 written, and is written as a type, for every valid type, `i1` to
 `i16777215` and every valid float format, by its alias or as
 `float(e, m)`, as the laws ask; and every type that reads back is written
@@ -27,8 +28,8 @@ op needs" of the section "The round trip, proved", later in this chapter,
 says how the round trip extends.
 
 This section proves, in order: facts about attributes; that each op instance
-reads back from its spelling, and only from it; the same for types; that
-ops and types are written as tokens; and the laws.
+reads back from its spelling, and only from it; that ops are written as
+tokens; and the laws. The section before it proves the same of types.
 -/
 
 namespace Fir.Core
@@ -58,6 +59,15 @@ theorem find_pred_name (p : Pred) : Pred.all.find? (·.name == p.name) = some p 
 
 /-- A predicate found by a name has that name. -/
 theorem name_of_find_pred {s : String} {p : Pred} (h : Pred.all.find? (·.name == s) = some p) :
+    p.name = s := by
+  simpa using List.find?_some h
+
+/-- Each float predicate is found by its name. -/
+theorem find_fpred_name (p : FPred) : FPred.all.find? (·.name == p.name) = some p := by
+  cases p <;> rfl
+
+/-- A float predicate found by a name has that name. -/
+theorem name_of_find_fpred {s : String} {p : FPred} (h : FPred.all.find? (·.name == s) = some p) :
     p.name = s := by
   simpa using List.find?_some h
 
@@ -139,6 +149,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     · subst h
       rcases bitVec_one_cases v with rfl | rfl <;> rfl
     · simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, constAttr_of_ne_one v h, h]
+  | fconst e m v => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode]
+  | fcmp p e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, find_fpred_name]
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
   | _ =>
@@ -161,6 +173,11 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
         rename_i hw
         exact ⟨rfl, by simp [Op.attrs, constAttr_of_ne_one _ hw.1, hw.2], rfl, rfl⟩
       · cases h
+    · split at h
+      · cases h
+        rename_i hv
+        exact ⟨rfl, by simp [Op.attrs, hv], rfl, rfl⟩
+      · cases h
   · -- icmp
     split at h <;> (try cases h)
     rename_i p _ _
@@ -173,6 +190,19 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
         rename_i hab
         subst hab
         exact ⟨rfl, by simp [Op.attrs, name_of_find_pred hp], rfl, rfl⟩
+      · cases h
+  · -- fcmp
+    split at h <;> (try cases h)
+    rename_i p _ _ _ _
+    cases hp : FPred.all.find? (·.name == p) with
+    | none => simp [hp] at h
+    | some pr =>
+      simp only [hp] at h
+      split at h
+      · cases h
+        rename_i hab
+        obtain ⟨rfl, rfl⟩ := hab
+        exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
       · cases h
   · -- add
     obtain ⟨_, _, rfl, rfl, hf, rfl⟩ := binOp_eq h
@@ -262,102 +292,6 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
       exact plainBinOps_lookup hmk w
     · cases h
 
-/-! # Types -/
-
-/-- The characters of `iN`. -/
-theorem toList_int_attr (w : Nat) : ("i" ++ toString w).toList = 'i' :: Nat.toDigits 10 w := by
-  simp [String.toList_append, toString, Nat.toList_repr]
-
-/-- An alias names the format it is the alias of. -/
-theorem aliasFormat_of_floatAlias {e m : Nat} {n : String} (h : floatAlias e m = some n) :
-    aliasFormat n = some (e, m) := by
-  unfold floatAlias at h
-  split at h <;> cases h <;> rfl
-
-/-- The format that an alias names has that alias. -/
-theorem floatAlias_of_aliasFormat {n : String} {e m : Nat} (h : aliasFormat n = some (e, m)) :
-    floatAlias e m = some n := by
-  unfold aliasFormat at h
-  split at h <;> cases h <;> rfl
-
-/-- Each alias reads back as the format it names. -/
-theorem Ty.decode_alias {n : String} {e m : Nat} (h : aliasFormat n = some (e, m)) :
-    Ty.decode (.word n) = some (.float e m) := by
-  unfold aliasFormat at h
-  split at h <;> cases h <;> rfl
-
-/-- `float(e, m)` reads back as the format it writes when the format has no
-alias and fits the width limit. -/
-theorem Ty.decode_float {e m : Nat} (ha : floatAlias e m = none)
-    (hw : floatWidth e m ≤ maxWidth) :
-    Ty.decode (.app "float" [.int e, .int m]) = some (.float e m) := by
-  have : (e : Int) + m + 1 ≤ (maxWidth : Int) := by unfold floatWidth at hw; omega
-  simp [Ty.decode, decodeFloat, ha, this]
-
-/-- Every valid core type decodes from how it is written. -/
-theorem Ty.decode_attr (t : Ty) (h : t.Valid) : Ty.decode t.attr = some t := by
-  cases t with
-  | ptr => rfl
-  | float e m =>
-    cases hn : floatAlias e m with
-    | some n =>
-      simp only [Ty.attr, hn]
-      exact Ty.decode_alias (aliasFormat_of_floatAlias hn)
-    | none =>
-      simp only [Ty.attr, hn]
-      exact Ty.decode_float hn h.2.2
-  | int w =>
-    have hne : "i" ++ toString w ≠ "ptr" := by
-      intro he
-      have := congrArg String.toList he
-      simp at this
-    simp only [Ty.attr]
-    unfold Ty.decode
-    split
-    · rename_i he
-      exact absurd (Attr.word.inj he) hne
-    · rename_i he
-      cases Attr.word.inj he
-      simp only [toList_int_attr, ← Nat.repr_eq_ofList_toDigits, Nat.toNat?_repr, Option.bind_some]
-      simp [toString, h.2]
-    · rename_i he
-      exact absurd he (by simp)
-    · rename_i _ _ hs _
-      exact (hs _ rfl).elim
-
-/-- A float type decodes only from how it is written. -/
-theorem Ty.attr_decodeFloat {e m : Int} {t : Ty} (h : decodeFloat e m = some t) :
-    t.attr = .app "float" [.int e, .int m] := by
-  unfold decodeFloat at h
-  split at h
-  · rename_i hc
-    cases h
-    simp [Ty.attr, hc.2.2.2, Int.toNat_of_nonneg hc.1, Int.toNat_of_nonneg hc.2.1]
-  · cases h
-
-/-- A core type decodes only from how it is written. -/
-theorem Ty.attr_decode {a : Attr} {t : Ty} (h : Ty.decode a = some t) : t.attr = a := by
-  unfold Ty.decode at h
-  split at h
-  · cases h
-    rfl
-  · rename_i s _
-    split at h
-    · rename_i ds hs
-      obtain ⟨w, -, h⟩ := Option.bind_eq_some_iff.mp h
-      split at h
-      · cases h
-        rename_i hd
-        have : s = "i" ++ String.ofList ds := by
-          rw [← String.ofList_toList (s := s), hs]
-          simp
-        simp [Ty.attr, this, hd.1]
-      · cases h
-    · obtain ⟨⟨e, m⟩, he, rfl⟩ := Option.map_eq_some_iff.mp h
-      simp [Ty.attr, floatAlias_of_aliasFormat he]
-  · exact Ty.attr_decodeFloat h
-  · cases h
-
 /-! # Writing ops and types as tokens -/
 
 /-- Every core op's name is a word. -/
@@ -366,6 +300,10 @@ theorem Op.name_isWord (o : Op) : isWord o.name := by
 
 /-- Every predicate's name is a word. -/
 theorem Pred.name_isWord (p : Pred) : isWord p.name := by
+  cases p <;> decide
+
+/-- Every float predicate's name is a word. -/
+theorem FPred.name_isWord (p : FPred) : isWord p.name := by
   cases p <;> decide
 
 /-- Every core op's attributes can be written. -/
@@ -379,6 +317,8 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
       split <;> decide
     · simp [Op.attrs, constAttr_of_ne_one v h, Attr.AllWritable, Attr.Writable]
   | icmp p _ => exact ⟨p.name_isWord, trivial⟩
+  | fconst => simp [Op.attrs, Attr.AllWritable, Attr.Writable]
+  | fcmp p => exact ⟨p.name_isWord, trivial⟩
   | add _ f | sub _ f | mul _ f =>
     obtain ⟨nuw, nsw⟩ := f
     cases nuw <;> cases nsw <;>
@@ -388,35 +328,13 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | call => exact ⟨trivial, trivial⟩
   | _ => trivial
 
-/-- Every valid core type is written as a type: `i` and its width form a
-word, an alias is a word, and `float(e, m)` applies a word to two
-integers. -/
-theorem Ty.attr_isType (t : Ty) (h : t.Valid) : t.attr.IsType := by
-  cases t with
-  | ptr => exact h.elim
-  | float e m =>
-    cases hn : floatAlias e m with
-    | some n =>
-      simp only [Ty.attr, hn]
-      unfold floatAlias at hn
-      split at hn <;> cases hn <;> (show isWord _; decide)
-    | none =>
-      simp only [Ty.attr, hn]
-      exact ⟨by decide, trivial, trivial, trivial⟩
-  | int w =>
-    show isWord ("i" ++ toString w)
-    have hd : ∀ c ∈ Nat.toDigits 10 w, isNameChar c := fun c hc => by
-      simp [isNameChar, Nat.isDigit_of_mem_toDigits (by omega) (by omega) hc]
-    simp only [isWord, toList_int_attr, Bool.and_eq_true, List.all_eq_true]
-    exact ⟨by decide, hd⟩
-
 end Fir.Core
 
 namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 26 core ops and
+/-- The core dialect's text meets the seven laws, for all 28 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

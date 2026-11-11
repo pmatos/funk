@@ -137,28 +137,28 @@ The obligations of `const`, `add` (with any flags) and `ret` rest on
 and Lean's `&&&`, `|||` and `^^^` on `BitVec N`, which the bitwise ops use,
 rest on `Quot.sound`, so every core obligation does too. -/
 
-/-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.add_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_propagatesPoison
 
-/-- info: 'Fir.Core.add_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.add_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_returnsOnDefined
 
-/-- info: 'Fir.Core.add_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.add_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_total
 
-/-- info: 'Fir.Core.add_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.add_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.add_monotone
 
-/-- info: 'Fir.Core.const_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.const_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.const_returnsOnDefined
 
-/-- info: 'Fir.Core.const_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.const_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.const_total
 
-/-- info: 'Fir.Core.ret_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ret_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ret_total
 
-/-- info: 'Fir.Core.ret_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ret_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ret_monotone
 
 end FirTest

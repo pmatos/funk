@@ -15,6 +15,8 @@ with poison. A vector of bits exists for every `N`, so one rule serves
 every width, from 1 to the largest.
 
 * `const` gives its constant. It has no operands, so it is never poison.
+  A float constant gives its bits, at every format, a NaN's payload and
+  sign included (ADR-2026-11-11-1138).
 * `poison` gives the poison of its type, on every run. It has no operands
   either, so it propagates poison as `const` does: its poison is its own
   rule, not a poison operand's. It is never UB.
@@ -31,6 +33,11 @@ namespace Fir.Core
 
 /-- The value of `const w v`: `v`. -/
 def constValue (w : Nat) (v : BitVec w) : PoisonOr (BitVec w) := .value v
+
+/-- The value of `fconst e m v`: `v`, the bits of a float of
+`float<e,m>`. -/
+def fconstValue (e m : Nat) (v : BitVec (floatWidth e m)) : PoisonOr (BitVec (floatWidth e m)) :=
+  .value v
 
 /-- The value of `poison w`: the poison of `iN`. -/
 def poisonValue (w : Nat) : PoisonOr (BitVec w) := .poison

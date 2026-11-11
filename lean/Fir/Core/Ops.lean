@@ -4,7 +4,7 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls. Each op below is an op instance: it carries its
+branches and calls, and the float constants and comparisons. Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
 
@@ -67,6 +67,20 @@ inductive Pred where
   deriving Repr, DecidableEq, Inhabited
 
 /--
+The predicate of a float comparison, as LLVM names it. An `o` predicate is
+ordered: it is false when either operand is a NaN. A `u` predicate is
+unordered: it is true when either operand is a NaN. Otherwise each compares
+the numbers that the operands encode, so `-0` equals `+0`: `eq` is equal,
+`ne` not equal, `lt` less than, `le` less or equal, `gt` greater than and
+`ge` greater or equal. `ord` holds when neither operand is a NaN, and `uno`
+when either is (ADR-2026-11-11-1139).
+-/
+inductive FPred where
+  | oeq | one | olt | ole | ogt | oge | ord
+  | ueq | une | ult | ule | ugt | uge | uno
+  deriving Repr, DecidableEq, Inhabited
+
+/--
 An op instance of the core dialect. `w` is the width `N` of the integers the
 op works on.
 
@@ -74,6 +88,11 @@ Constants:
 
 * `const w v`: the constant `v` of type `iN`. It has no operands, so it is
   never poison.
+
+* `fconst e m v`: the constant `v` of the float type `float<e,m>`, given
+  by its bits: a sign bit, `e` exponent bits and `m` mantissa bits. Every
+  bit pattern is a constant, each NaN's payload and sign included. It has
+  no operands, so it is never poison (ADR-2026-11-11-1138).
 
 Arithmetic. The result wraps modulo `2^N` unless a flag says otherwise:
 
@@ -105,6 +124,9 @@ Comparison and selection:
   first value when the condition is `true`, the second when it is `false`.
   A poison condition gives poison. The value not chosen does not matter,
   even when it is poison; the one chosen is given as it is, poison or not.
+* `fcmp p e m`: compares two values of `float<e,m>` with predicate `p`,
+  giving an `i1`, by the numbers they encode in Lean's float model. It is
+  never UB, and a poison operand gives poison (ADR-2026-11-11-1139).
 
 Width changes:
 
@@ -144,6 +166,7 @@ Calls:
 -/
 inductive Op where
   | const (w : Nat) (v : BitVec w)
+  | fconst (e m : Nat) (v : BitVec (floatWidth e m))
   | add (w : Nat) (f : WrapFlags)
   | sub (w : Nat) (f : WrapFlags)
   | mul (w : Nat) (f : WrapFlags)
@@ -158,6 +181,7 @@ inductive Op where
   | lshr (w : Nat)
   | ashr (w : Nat)
   | icmp (p : Pred) (w : Nat)
+  | fcmp (p : FPred) (e m : Nat)
   | select (w : Nat)
   | zext (m n : Nat)
   | sext (m n : Nat)

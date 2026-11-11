@@ -43,6 +43,7 @@ def decoded_attrs(text: str) -> dict[str, tuple[str, ...]]:
         "decodeWrap": cells.WRAP,
         "decodeExact": cells.EXACT,
         "Pred.all": cells.PREDS,
+        "FPred.all": cells.FPREDS,
         "bare": ("",),
         "decodeCast": ("",),
     }
@@ -51,7 +52,11 @@ def decoded_attrs(text: str) -> dict[str, tuple[str, ...]]:
         if name in ("const", "call"):
             found[name] = ("",)
             continue
-        read = [attrs for reader, attrs in readers.items() if reader in arm]
+        read = [
+            attrs
+            for reader, attrs in readers.items()
+            if re.search(rf"\b{re.escape(reader)}", arm)
+        ]
         found[name] = read[0] if len(read) == 1 else ("unknown",)
     return found
 
@@ -73,17 +78,24 @@ class Tests(unittest.TestCase):
         self.assertEqual(sorted(names), sorted(cells.OPS))
         preds = re.findall(r"\.(\w+)", definition(text, "Pred.all").split(":=")[1])
         self.assertEqual(tuple(preds), cells.PREDS)
+        fpreds = re.findall(r"\.(\w+)", definition(text, "FPred.all").split(":=")[1])
+        self.assertEqual(tuple(fpreds), cells.FPREDS)
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
         self.assertEqual(
-            decoded_attrs(text), {op: cells.AT_WIDTH.get(op, ("",)) for op in cells.OPS}
+            decoded_attrs(text),
+            {
+                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                for op in cells.OPS
+            },
         )
         flagged = flagged_ops(text)
         self.assertEqual(
             set(flagged),
             {
                 "[constAttr w v]",
+                "[.int v.toInt]",
                 "[.word p.name]",
                 "f.attrs",
                 'if e then [.word "exact"] else []',
@@ -92,7 +104,8 @@ class Tests(unittest.TestCase):
             },
         )
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
-        self.assertEqual(flagged["[.word p.name]"], {"icmp"})
+        self.assertEqual(flagged["[.int v.toInt]"], {"fconst"})
+        self.assertEqual(flagged["[.word p.name]"], {"icmp", "fcmp"})
         self.assertEqual(flagged["f.attrs"], {"add", "sub", "mul"})
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
         self.assertEqual(flagged["[.sym f]"], {"call"})
@@ -136,6 +149,24 @@ class Tests(unittest.TestCase):
         ]:
             with self.subTest(edit=name), self.assertRaises(AssertionError):
                 self.assert_cells_follow(edited)
+
+    def test_float_ops_are_cells_at_their_format(self):
+        cmp = Op("fcmp", ("olt",), ("f64", "f64"), ("i1",), ())
+        self.assertEqual(of_op(cmp), {Cell("floats", "fcmp", "olt", "f64")})
+        const = Op("const", ("-4194304",), (), ("f32",), ())
+        self.assertEqual(of_op(const), {Cell("floats", "const", "", "f32")})
+        self.assertEqual(
+            of_op(Op("const", ("1",), (), ("i32",), ())),
+            {Cell("ops", "const", "", "i32")},
+        )
+        with self.assertRaises(CellError):
+            of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
+        found = cells.cells((8,), ("f32", "f64"))
+        floats = [c for c in found if c.table == "floats"]
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS)))
+        self.assertIn(Cell("values", "call", "one", "f32"), found)
+        values = [c for c in found if c.table == "values" and c.width]
+        self.assertEqual(len(values), 8 * 3)
 
     def test_the_cell_set(self):
         widths = (1, 8, 128)

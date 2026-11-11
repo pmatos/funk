@@ -75,7 +75,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
     | .ashr _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
     | .trunc .., .cons _ .nil | .icmp .., .cons _ (.cons _ .nil)
-    | .select _, .cons _ (.cons _ (.cons _ .nil)) => rfl
+    | .fcmp .., .cons _ (.cons _ .nil) | .select _, .cons _ (.cons _ (.cons _ .nil)) => rfl
     | .freeze w, .cons a .nil => by
       show (ChoiceTree.bind (freezeValue a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
@@ -85,15 +85,16 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args
     | .urem _, args => ruleOfEv_toSet uremValues args
-    | .const .., _ | .poison _, _ | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _
-    | .call .., _ => rfl
+    | .const .., _ | .fconst .., _ | .poison _, _ | .br, _ | .condBr, _ | .ret _, _
+    | .unreachable, _ | .call .., _ => rfl
   exit
     | .condBr, .cons c .nil => exitOfEv_toSet (condBrExit c)
     | .unreachable, _ => exitOfEv_toSet (ε := Op) unreachableExit
     | .const .., _ | .add .., _ | .sub .., _ | .mul .., _ | .sdiv .., _ | .udiv .., _
     | .srem _, _ | .urem _, _ | .and _, _ | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _
     | .ashr _, _ | .icmp .., _ | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _
-    | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ => rfl
+    | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ | .fconst .., _
+    | .fcmp .., _ => rfl
 
 /-- Exhaustive mode on the core function `f` of the module `M`: every path
 of its run on `args` with `fuel` steps, when no path chooses more than

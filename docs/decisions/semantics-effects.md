@@ -39,9 +39,9 @@ its constructor, with no case for the rest. `scripts/check_g0.py` checks that,
 as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 (ADR-2026-11-09-1541, ADR-2026-11-09-2249):
 
-- Pure: `const`, `and`, `or`, `xor`, `icmp`, `select`, the width changes,
-  `freeze`, and `add`, `sub` and `mul` without flags. `call`'s own set is
-  empty.
+- Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
+  `select`, the width changes, `freeze`, and `add`, `sub` and `mul` without
+  flags. `call`'s own set is empty (ADR-2026-11-11-1139).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, and `sdiv` and `udiv` with `exact`.
 - May-UB: the four divisions, `cond_br` and `unreachable`.

@@ -100,10 +100,10 @@ def frozenPoisonOp (n : Nat) : String :=
 The two obligations that name `Op.denote?` have the axioms of every core
 rule it dispatches to, as `const`'s do. -/
 
-/-- info: 'Fir.Core.poison_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.poison_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.poison_returnsOnDefined
 
-/-- info: 'Fir.Core.poison_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.poison_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.poison_total
 
 end FirTest

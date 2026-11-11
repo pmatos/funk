@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3534762741233764535")
+:::moduleDocs (fingerprint := "13664522346971596275")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -51,21 +51,48 @@ ult,ule,ugt,uge   \mathsf{ult} \mid \mathsf{ule} \mid \mathsf{ugt} \mid \mathsf{
 ```
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "6627881021730923988")
+:::readable Fir.Core.FPred (fingerprint := "7187194159295087930")
+*Float predicates.* A float comparison asks one of fourteen questions about
+two floats (ADR-2026-11-11-1139). It compares the numbers they encode, so
+$`-0` equals $`+0`. A NaN encodes no number, and a pair with a NaN is
+_unordered_. The $`\mathsf{o}` predicates are _ordered_: each is false on
+an unordered pair. The $`\mathsf{u}` predicates are _unordered_: each is
+true on one. Otherwise $`\mathsf{eq}` is equal, $`\mathsf{ne}` not equal,
+$`\mathsf{lt}` less than, $`\mathsf{le}` less or equal, $`\mathsf{gt}`
+greater than and $`\mathsf{ge}` greater or equal. $`\mathsf{ord}` holds of
+an ordered pair, and $`\mathsf{uno}` of an unordered one.
+
+```grammar Fir.Core.FPred
+\mathit{fpred}
+oeq,one,olt,ole   \mathsf{oeq} \mid \mathsf{one} \mid \mathsf{olt} \mid \mathsf{ole}
+ogt,oge,ord       \mathsf{ogt} \mid \mathsf{oge} \mid \mathsf{ord}
+ueq,une,ult,ule   \mathsf{ueq} \mid \mathsf{une} \mid \mathsf{ult} \mid \mathsf{ule}
+ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
+```
+:::
+
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "15976023950794432229")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
-works on, so the types of its operands and results follow from it. Below,
-$`c` is a constant of type $`\mathsf{i}N`, $`t` and $`r` are types, and
-$`f` is a function's symbol. The ops come in eight families.
+works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
+it works on, so the types of its operands and results follow from it.
+Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in eight families.
 
 *Constants* put a fixed value in the program.
 
 ```grammar Fir.Core.Op
 \mathit{op}
 const   \mathsf{const}_N~c
+fconst  \mathsf{const}_{e,m}~v
 ```
 
 * $`\mathsf{const}_N~c` is the constant $`c` of type $`\mathsf{i}N`. It has
   no operands, so it is never poison.
+* $`\mathsf{const}_{e,m}~v` (`fconst` in the Lean) is the float of
+  $`\mathsf{float}\langle e,m \rangle` whose bits are $`v`: a sign bit,
+  $`e` exponent bits and $`m` mantissa bits. Every bit pattern is a
+  constant, a NaN's payload and sign included (ADR-2026-11-11-1138). It is
+  never poison either.
 
 *Arithmetic* computes on integers of width $`N`. Results wrap modulo
 $`2^N` unless a flag says otherwise.
@@ -109,18 +136,23 @@ shl,lshr,ashr \mathsf{shl}_N \mid \mathsf{lshr}_N \mid \mathsf{ashr}_N
   second operand is the shift amount, read as unsigned. An amount of $`N`
   or more gives poison, and so does a poison amount.
 
-*Comparison and selection* turn a question about integers into a bit, and
-a bit into a choice.
+*Comparison and selection* turn a question about integers or floats into
+a bit, and a bit into a choice.
 
 ```grammar Fir.Core.Op
 \mathit{op}
 -      \dots
 icmp   \mathsf{icmp}_N~\mathit{pred}
+fcmp   \mathsf{fcmp}_{e,m}~\mathit{fpred}
 select \mathsf{select}_N
 ```
 
 * $`\mathsf{icmp}_N~\mathit{pred}` compares two $`\mathsf{i}N` values and
   gives an $`\mathsf{i1}`: 1 when the predicate holds, 0 when it does not.
+* $`\mathsf{fcmp}_{e,m}~\mathit{fpred}` compares two values of
+  $`\mathsf{float}\langle e,m \rangle` by the numbers they encode in Lean's
+  float model, and gives an $`\mathsf{i1}` in the same way. It is never
+  UB, and a poison operand gives poison.
 * $`\mathsf{select}_N` takes an $`\mathsf{i1}` condition and two
   $`\mathsf{i}N` values, and gives one of them. The value not chosen does
   not matter, even when it is poison; the one chosen is given as it is.

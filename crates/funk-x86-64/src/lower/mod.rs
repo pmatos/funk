@@ -21,6 +21,11 @@
 //! high one unless the op says otherwise (ADR-2026-11-03-010730). Division
 //! at `i128` calls a routine of the runtime helper, which the module's
 //! text then ends with, once (`div.rs`, ADR-2026-11-03-0414).
+//!
+//! An `f32` or `f64` is its bits in one slot. A float constant writes them
+//! as an integer immediate, as any constant does, and `fcmp` loads its
+//! operands into SSE registers (`fcompare.rs`). Floats pass and return in
+//! SSE registers (ADR-2026-11-11-1140).
 
 mod arith;
 mod bitwise;
@@ -30,6 +35,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod fcompare;
 mod freeze;
 mod moves;
 
@@ -76,6 +82,9 @@ pub struct Cx<'f> {
     /// The width of each value defined so far; `None` when the backend does
     /// not lower it.
     widths: HashMap<&'f str, Option<u32>>,
+    /// The class of each value defined so far: how it passes to and from a
+    /// function.
+    classes: HashMap<&'f str, width::Class>,
     /// The index of the function in its module, which its labels hold.
     func: usize,
     /// The arguments of each block, by label.
@@ -95,6 +104,13 @@ impl<'f> Cx<'f> {
             Some(None) => Err(Unlowered::Reported),
             None => Err(format!("%{name} is not defined").into()),
         }
+    }
+
+    /// The class of the value `name`, one that the backend lowers: SSE for
+    /// a float, a pair for an `i128`, and one INTEGER eightbyte otherwise.
+    pub fn class(&self, name: &str) -> Result<width::Class, Unlowered> {
+        self.width(name)?;
+        Ok(self.classes.get(name).copied().unwrap_or(width::Class::Int))
     }
 
     /// The slot of the value `name`.
@@ -180,11 +196,12 @@ impl<'f> Cx<'f> {
     fn define(&mut self, defs: &'f [Def]) -> Vec<String> {
         let mut out = Vec::new();
         for d in defs {
-            let w = width::check(&d.ty);
+            let (w, class) = width::lowered(&d.ty);
             if let Err(why) = &w {
                 out.push(format!("%{}: {why}", d.name));
             }
             self.widths.insert(d.name.as_str(), w.ok());
+            self.classes.insert(d.name.as_str(), class);
         }
         out
     }
@@ -212,6 +229,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| cast::lowering(name))
         .or_else(|| div::lowering(name))
         .or_else(|| compare::lowering(name))
+        .or_else(|| fcompare::lowering(name))
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
 }
@@ -280,6 +298,7 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
         asm: Asm::new(),
         frame,
         widths: HashMap::new(),
+        classes: HashMap::new(),
         func: i,
         params: HashMap::new(),
         next: None,
@@ -326,7 +345,7 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
         };
         incoming.push(Arg {
             slot,
-            words: width::words(&d.ty),
+            class: width::class(&d.ty),
         });
     }
     if let Err(i) = abi::receive(&mut cx.asm, &incoming, cx.frame.results_address()) {

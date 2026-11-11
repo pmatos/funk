@@ -1,0 +1,14 @@
+# Tests of float-values-f16.fir: values of f16 passed through block
+# arguments by br and cond_br, returned one and several at a time, and
+# given by calls with one result and with several, each coming back as
+# its bits: a NaN with its sign set and a payload, -0, 1 and the smallest
+# subnormal, and poison (ADR-2026-11-11-1138, ADR-2026-11-11-1141).
+# Each test is interpreter-only, as the backend does not lower f16.
+tests = [
+  { func = "@choose", args = ["true", "-511", "-32768"], expect = ["-511"] },
+  { func = "@choose", args = ["false", "-511", "-32768"], expect = ["-32768"] },
+  { func = "@choose", args = ["false", "15360", "poison"], expect = ["poison"] },
+  { func = "@swap", args = ["15360", "1"], expect = ["1", "15360"] },
+  { func = "@calls", args = ["true", "-511", "15360"], expect = ["-511", "15360", "-511"] },
+  { func = "@calls", args = ["false", "1", "-32768"], expect = ["-32768", "-32768", "1"] },
+]

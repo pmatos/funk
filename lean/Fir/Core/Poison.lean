@@ -6,12 +6,13 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 26 core ops has a class (ADR-2026-10-30-0818).
+Every one of the 28 core ops has a class (ADR-2026-10-30-0818).
 
-Nineteen ops propagate poison: `const`, `poison`, `add`, `sub`, `mul`,
-`sdiv`, `udiv`, `srem`, `urem`, `and`, `or`, `xor`, `shl`, `lshr`, `ashr`,
-`icmp`, `zext`, `sext` and `trunc`. `const` and `poison` have no operands,
-so they propagate poison whatever their semantics. `poison` meets the
+Twenty-one ops propagate poison: `const`, the float constant `fconst`,
+`poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
+`xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext` and `trunc`.
+`const`, `fconst` and `poison` have no operands, so they propagate poison
+whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
 the empty one, holds no poison, and on it `poison` returns a result, the
 poison of its type. The obligation asks for a result, not for a defined
@@ -67,9 +68,9 @@ namespace Fir.Core
 the rest, so a new core op does not build until it declares its class
 (ADR-2026-11-03-0600). -/
 def Op.poisonClass : Op → PoisonClass
-  | .const .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _
-  | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .zext .. | .sext ..
-  | .trunc .. | .poison _ => .propagates
+  | .const .. | .fconst .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _
+  | .urem _ | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .fcmp ..
+  | .zext .. | .sext .. | .trunc .. | .poison _ => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its `iN` or float
@@ -110,6 +111,22 @@ theorem Core.const_propagatesPoison [DialectDenote CoreDialect SetM] (w : Nat) (
 /-- `const` has no operands, so it is monotone, whatever its semantics. -/
 theorem Core.const_monotone [DialectDenote CoreDialect SetM] (w : Nat) (v : BitVec w) :
     OpMonotone (d := CoreDialect) (.const w v) := by
+  intro args args' _
+  cases args; cases args'
+  exact ⟨fun _ => SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _,
+    fun _ => SetM.isRefinedBy_refl (fun _ => rfl) _⟩
+
+/-- A float `const` has no operands, so it propagates poison, whatever its
+semantics. -/
+theorem Core.fconst_propagatesPoison [DialectDenote CoreDialect SetM] (e m : Nat)
+    (v : BitVec (Core.floatWidth e m)) : PropagatesPoison (d := CoreDialect) (.fconst e m v) where
+  poisonOut args h := by cases args with | nil => exact h.elim
+  ubByOwnRules args _ h := by cases args with | nil => exact h.elim
+
+/-- A float `const` has no operands, so it is monotone, whatever its
+semantics. -/
+theorem Core.fconst_monotone [DialectDenote CoreDialect SetM] (e m : Nat)
+    (v : BitVec (Core.floatWidth e m)) : OpMonotone (d := CoreDialect) (.fconst e m v) := by
   intro args args' _
   cases args; cases args'
   exact ⟨fun _ => SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _,

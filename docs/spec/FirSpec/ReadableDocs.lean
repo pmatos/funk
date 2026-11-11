@@ -65,6 +65,7 @@ import FirSpec.Core.Bitwise
 import FirSpec.Core.Width
 import FirSpec.Core.Div
 import FirSpec.Core.Compare
+import FirSpec.Core.FloatCompare
 import FirSpec.Core.Control
 import FirSpec.Core.Branch
 import FirSpec.Core.Call
@@ -76,6 +77,7 @@ import FirSpec.Core.BitwiseLaws
 import FirSpec.Core.WidthLaws
 import FirSpec.Core.DivLaws
 import FirSpec.Core.CompareLaws
+import FirSpec.Core.FloatCompareLaws
 import FirSpec.Core.ControlLaws
 import FirSpec.Core.BranchLaws
 import FirSpec.Execution.Morphism
@@ -97,6 +99,7 @@ import FirSpec.Text.Grammar
 import FirSpec.Core.Text
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
+import FirSpec.Core.TypeTextLaws
 import FirSpec.Core.TextLaws
 import FirSpec.Text.Lex
 import FirSpec.Text.Read

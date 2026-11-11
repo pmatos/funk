@@ -14,16 +14,18 @@ changes under it.
 
 #doc (Manual) "Arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13558055072320394658")
+:::moduleDocs (fingerprint := "1166736262897634241")
 :::
 
-:::readable Fir.Core.constValue Fir.Core.poisonValue (pin := Fir.PoisonOr) (fingerprint := "13574323644244185487")
+:::readable Fir.Core.constValue Fir.Core.fconstValue Fir.Core.poisonValue (pin := Fir.PoisonOr) (fingerprint := "3857023460360503600")
 *Definition: the rules of $`\mathsf{const}` and $`\mathsf{poison}`.* For
 every width $`N` and every vector $`c` of $`N` bits,
 $`\mathsf{const}_N~c` gives $`c`, and $`\mathsf{poison}_N` gives poison.
-Neither has operands:
+For every format $`\mathsf{float}\langle e,m \rangle` and every vector
+$`v` of $`1+e+m` bits, the float constant $`\mathsf{const}_{e,m}~v` gives
+$`v`, a NaN's bits as they are. None has operands:
 
-$$`\mathsf{const}_N~c\,() = c \qquad \mathsf{poison}_N\,() = \mathsf{poison}`
+$$`\mathsf{const}_N~c\,() = c \qquad \mathsf{const}_{e,m}~v\,() = v \qquad \mathsf{poison}_N\,() = \mathsf{poison}`
 
 From this section on, the execution rule of an op is written as a function
 of its operand values: $`\mathsf{add}_N(a, b)` is what $`\mathsf{add}_N`

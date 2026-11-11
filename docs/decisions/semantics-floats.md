@@ -61,9 +61,32 @@ A format with an alias is written by it, and every other format as
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
-refinement, and the corpus holds them. No core op takes or gives a float yet,
-and a float type has no constants, so `fir-ref run` takes no float argument and
-the naive backend reports a float parameter or result as a diagnostic. The
-check of Lean's float model at other formats is in
+refinement, and the corpus holds them. They also have two float ops:
+
+- A float constant is `const` at a float type, written as its bits read as a
+  signed integer, so every bit pattern, each NaN payload and sign included, has
+  one spelling (ADR-2026-11-11-1138). It is pure.
+- `fcmp` compares two floats of one format with one of fourteen predicates,
+  ordered or unordered, and gives an `i1`. The spec unpacks both operands and
+  compares them with Lean's model, `UnpackedFloat.compare`. It is pure, never
+  UB, and never gives a NaN, and a poison operand gives poison
+  (ADR-2026-11-11-1139).
+
+`fir-ref run` takes float arguments and prints float results in that spelling,
+and takes `poison` at a float type. The naive backend lowers `f32` and `f64`:
+it passes and returns them in SSE registers as System V does, and lowers the
+constants and `fcmp` (ADR-2026-11-11-1140). It reports every other format as a
+diagnostic where its value is defined. The corpus runs every predicate and the
+constants differentially at `f32` and `f64`, and on `fir-ref` against
+`scripts/harness/float_ref.py` at `f16`, `bf16` and `f128`, on zeros of both
+signs, subnormals, the largest finite values, infinities and NaNs.
+
+No core op gives a NaN yet: the arithmetic is the next stage of #229, and #219
+decides how `fir-ref` and the harness judge a NaN result. `poison`, `select`
+and `freeze` take no float yet. The lawful and effect theorems of the core now
+depend on `Classical.choice`, since Lean's `UnpackedFloat.unpack` does; the
+axiom check allows it (ADR-2026-10-30-1452).
+
+The check of Lean's float model at other formats is in
 `lean/FirTest/FloatModel.lean`, and the exact-rational reference that computed
 its expected bit patterns is `scripts/harness/float_ref.py`.

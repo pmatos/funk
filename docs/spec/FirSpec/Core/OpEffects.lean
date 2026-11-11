@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15256143221521100581")
+:::moduleDocs (fingerprint := "7074652306970837079")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "2052658102503826680")
@@ -23,11 +23,11 @@ yet, so no memory has a name: the set of its memory names is empty. It
 gains memories with the memory model (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "5732827507469254214")
+:::readable Fir.Core.Op.effects (fingerprint := "13731022592774262036")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call} \end{aligned}`
 
 $$`\mathsf{add}_f,\ \mathsf{sub}_f,\ \mathsf{mul}_f:\ \{\mathsf{mayPoison}\} \text{ if } f \text{ has a flag, else } \emptyset`
 
@@ -39,7 +39,8 @@ $$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison}:\ \{\mathsf{ma
 
 $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
-$`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
+$`\mathsf{const}` here is a constant of any type, an integer's or a
+float's. $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its
 effects (ADR-2026-11-03-0600).

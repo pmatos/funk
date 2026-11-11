@@ -3,7 +3,10 @@
 //!
 //! A constant is written into its slot as a 64-bit immediate: its value read
 //! as a signed integer, so its low `N` bits are its bits. `true` is 1 and
-//! `false` is 0. An `i128` constant is two immediates, its low and its high
+//! `false` is 0. A float constant at `f32` or `f64` is spelled the same way,
+//! its bits read as a signed integer (ADR-2026-11-11-1138), so it is written
+//! the same way too: SSE has no immediate operands, and the slot is what an
+//! op reads (ADR-2026-11-11-1140). An `i128` constant is two immediates, its low and its high
 //! 64 bits, one into each of its slots (ADR-2026-11-03-010730).
 //!
 //! Native code holds no poison (ADR-2026-10-30-2248), and any value refines
@@ -26,7 +29,7 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
     }
 }
 
-/// `%c: iN = const v`.
+/// `%c: iN = const v`, and `%c: f32 = const v` or `%c: f64 = const v`.
 fn constant(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([result], [value]) = (op.results.as_slice(), op.attrs.as_slice()) else {
         return Err("const defines one value and has one attribute".into());

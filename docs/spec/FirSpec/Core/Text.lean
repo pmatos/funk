@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5457094228224241135")
+:::moduleDocs (fingerprint := "10932335744813086371")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -27,21 +27,32 @@ $`\mathrm{name}(p)` is `eq`, `ne`, `slt`, `sle`, `sgt`, `sge`, `ult`,
 parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "1305945465985180086")
+:::readable Fir.Core.FPred.name Fir.Core.FPred.all (pin := Fir.Core.FPred) (fingerprint := "2855655812158596522")
+*Definition: the names of the float predicates.* Each of the fourteen
+{ref "The-fir-specification--Abstract-syntax--Core-ops"}[float predicates]
+of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
+`one`, `olt`, `ole`, `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`,
+`ugt`, `uge` or `uno` (ADR-2026-11-11-1139). They are listed in that order,
+and the parser looks a name up in that list to read a predicate back.
+:::
+
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "7904133121390987453")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-26 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
-written with the name it has in the op set, except the conditional branch
-$`\mathsf{cond\_br}`, which the Lean spells `condBr` and the text
-`cond_br`.
+28 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+written with the name it has in the op set, except two. The conditional
+branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
+`cond_br`. The float constant, which the Lean spells `fconst`, is written
+`const`, as an integer constant is: the type of its result tells them
+apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (fingerprint := "5541406463215105519")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (fingerprint := "12529195702843307171")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{signed}_{1+e+m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -49,6 +60,10 @@ $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
 * $`\mathrm{constattr}_N(c)` is the word `true` or `false` when $`N = 1`, as
   $`c` is 1 or 0, and otherwise the integer that the $`N` bits of $`c` give
   when read as a two's-complement signed integer;
+* $`\mathrm{signed}_{1+e+m}(v)` is the integer that the $`1+e+m` bits of
+  a float give when read as a two's-complement signed integer, so `f32`'s
+  `1.0` is `1065353216` and its $`-0` is `-2147483648`
+  (ADR-2026-11-11-1138);
 * $`\mathrm{flags}(\mathit{fl})` is the word `nuw` when the flag
   $`\mathsf{nuw}` is set, then the word `nsw` when $`\mathsf{nsw}` is set,
   so the flags come in this fixed order, each at most once;
@@ -60,7 +75,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (fingerprint := "6939094326676777775")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (fingerprint := "6542961393573177894")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -85,10 +100,18 @@ $`\mathsf{i}W` are integer types.
   $`\mathsf{i1}`, it is $`\mathsf{const}_1~1` or $`\mathsf{const}_1~0`.
   From an integer $`v`, no operands and the result type $`\mathsf{i}W`
   with $`W \neq 1`, it is $`\mathsf{const}_W~c`, where $`c` is the
-  $`W`-bit constant whose signed reading is $`v`, when there is one.
+  $`W`-bit constant whose signed reading is $`v`, when there is one. From
+  an integer $`v`, no operands and the result type
+  $`\mathsf{float}\langle e,m \rangle`, it is $`\mathsf{const}_{e,m}~v'`,
+  where $`v'` is the vector of $`1+e+m` bits whose signed reading is $`v`,
+  when there is one.
 * `icmp`: from the name of a predicate $`p`, the operand types
   $`\mathsf{i}A~\mathsf{i}B` with $`A = B`, and the result type
   $`\mathsf{i1}`, it is $`\mathsf{icmp}_A~p`.
+* `fcmp`: from the name of a float predicate $`p`, the operand types
+  $`\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e',m' \rangle`
+  with $`e = e'` and $`m = m'`, and the result type $`\mathsf{i1}`, it is
+  $`\mathsf{fcmp}_{e,m}~p`.
 * `add`, `sub` and `mul`: when $`\mathrm{width}(t^*, r^*) = A` and
   $`\mathrm{decodeflags}(a^*) = \mathit{fl}`, it is the op at width $`A`
   with the flags $`\mathit{fl}`.
@@ -165,7 +188,7 @@ calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
 validation rejects them.
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "12407850079966777447")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "15386014830632868840")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the blocks
 above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
@@ -173,11 +196,13 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 26 core ops at least once, with each of the ten
-predicates, at widths from 1 to 128, with and without each flag, and
+holds each of the 28 core ops at least once, with each of the ten
+predicates and each of the fourteen float predicates, at widths from 1 to
+128, float constants at `f32`, `f64`, `f16` and
+$`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, and
 $`\mathsf{ret}` with and without operands. On every build, checks test
 that each of them reads back from its own name, attributes and types, and
-that misspellings such as `i032`, `float(8, 23)`, flags in the wrong order
-and `const 1` at `i1` do not. The proof for every op instance, of every width, is in the
+that misspellings such as `i032`, `float(8, 23)`, flags in the wrong order,
+`const 1` at `i1` and `const 2147483648` at `f32` do not. The proof for every op instance, of every width, is in the
 section {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[The core dialect's text is lawful].
 :::

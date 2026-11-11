@@ -61,6 +61,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.Compare "Comparison and selection rules" FirSpec.Core.Compare (level := 1)}
 
+{includeReadable "." Fir.Core.FloatCompare "Float comparison rules" FirSpec.Core.FloatCompare (level := 1)}
+
 {includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 1)}
 
 {includeReadable "." Fir.Core.Branch "Branch rules" FirSpec.Core.Branch (level := 1)}
@@ -82,6 +84,8 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Core.DivLaws "Division obligations" FirSpec.Core.DivLaws (level := 1)}
 
 {includeReadable "." Fir.Core.CompareLaws "Comparison and selection obligations" FirSpec.Core.CompareLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatCompareLaws "Float comparison obligations" FirSpec.Core.FloatCompareLaws (level := 1)}
 
 {includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 1)}
 

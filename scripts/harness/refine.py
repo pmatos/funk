@@ -26,6 +26,33 @@ INVALID = "invalid"
 
 DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
 INT_TYPE = re.compile(r"i([1-9][0-9]*)")
+FLOAT_TYPE = re.compile(r"float\(([0-9]+), ([0-9]+)\)")
+# The float formats with an alias, as `(e, m)` (ADR-2026-11-11-0951).
+FLOAT_ALIASES = {
+    "f16": (5, 10),
+    "bf16": (8, 7),
+    "f32": (8, 23),
+    "f64": (11, 52),
+    "f128": (15, 112),
+}
+
+
+def bits_of(ty: str) -> tuple[int, bool] | None:
+    """The bits of a value of `ty`, and whether it is an integer type: `N`
+    for `iN`, and `1 + e + m` for `float<e,m>`, by its alias or as
+    `float(e, m)`. None for any other type, such as `ptr`, which has no
+    values. A float is spelled as its bits read as a signed integer, as an
+    integer of that width is (ADR-2026-11-11-1138)."""
+    m = INT_TYPE.fullmatch(ty)
+    if m is not None:
+        return int(m.group(1)), True
+    fmt = FLOAT_ALIASES.get(ty)
+    if fmt is None:
+        f = FLOAT_TYPE.fullmatch(ty)
+        if f is None:
+            return None
+        fmt = int(f.group(1)), int(f.group(2))
+    return 1 + fmt[0] + fmt[1], False
 
 
 @dataclass(frozen=True)
@@ -75,11 +102,11 @@ def show_values(values) -> str:
 
 def is_value(spelling: str, ty: str) -> bool:
     """Whether `spelling` is a value of type `ty`, spelled as a constant."""
-    m = INT_TYPE.fullmatch(ty)
-    if m is None:
+    b = bits_of(ty)
+    if b is None:
         return False
-    width = int(m.group(1))
-    if width == 1:
+    width, is_int = b
+    if width == 1 and is_int:
         return spelling in ("true", "false")
     if DECIMAL.fullmatch(spelling) is None or spelling == "-0":
         return False

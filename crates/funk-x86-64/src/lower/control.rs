@@ -143,14 +143,14 @@ fn edge(cx: &mut Cx<'_>, s: &Succ, steps: &[Step<Mem>], ends: bool) {
 
 /// `ret %a, %b`, with any number of values.
 fn ret(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
-    let mut widths = Vec::with_capacity(op.operands.len());
+    let mut classes = Vec::with_capacity(op.operands.len());
     let mut from = Vec::with_capacity(op.operands.len());
     for v in &op.operands {
         let w = cx.width(v)?;
-        widths.push(w);
+        classes.push(cx.class(v)?);
         from.extend(cx.eightbytes(v)?.into_iter().map(|slot| (slot, w)));
     }
-    let layout = Layout::new(&widths)?;
+    let layout = Layout::of_classes(&classes)?;
     let address = cx.frame.results_address();
     layout.give(&mut cx.asm, address, &from)?;
     frame::epilogue(&mut cx.asm);

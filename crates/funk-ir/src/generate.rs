@@ -2,23 +2,24 @@
 //! cross-checks with the Lean side (#10, #13).
 //!
 //! The modules are valid, so they are well formed (ADR-2026-10-30-0815), and
-//! every number in them is within its limit. They cover quoted symbols,
-//! `true` and `false`, constants at the bounds of their widths, every kind
-//! of location, and functions with zero, one and several results, of one
-//! block or of several, with loops and block arguments (`blocks.rs`). The
-//! ops are those of the core dialect that the registry has: `const`, `add`,
+//! every number in them is within its limit. They cover quoted symbols, `true`
+//! and `false`, constants at the bounds of their widths, every kind of
+//! location, and functions with zero, one and several results, of one block or
+//! of several, with loops and block arguments (`blocks.rs`). The ops are the
+//! ops of the core dialect on integers that the registry has: `const`, `add`,
 //! `sub` and `mul` with each combination of their flags, `freeze`, `poison`,
 //! the bitwise ops `and`, `or` and `xor`, the shifts `shl`, `lshr` and `ashr`,
 //! the width changes `zext`, `sext` and `trunc` between valid pairs of widths,
-//! `sdiv` and `udiv` with and without `exact`, `srem`, `urem`, `icmp` with each
-//! predicate on two values of any one type, `select` at any type, the branches
-//! `br` and `cond_br`, `ret`, `unreachable` in a trap block that a branch
-//! may go to, and `call` of any function of the module, the caller itself
-//! included, with any number of arguments and results (`calls.rs`). A
-//! division may be by zero, a run may reach `unreachable`, and a loop or a
-//! recursion may never end: that is UB or a run out of fuel, not invalid, and
-//! no check runs these modules. The generator is deterministic: one seed
-//! gives one module.
+//! `sdiv` and `udiv` with and without `exact`, `srem`, `urem`, `icmp` with
+//! each predicate on two values of any one type, `select` at any type, the
+//! branches `br` and `cond_br`, `ret`, `unreachable` in a trap block that a
+//! branch may go to, and `call` of any function of the module, the caller
+//! itself included, with any number of arguments and results (`calls.rs`).
+//! Every value is an integer: the float types, float constants and `fcmp`
+//! (#229) are not generated. A division may be by zero, a run may reach
+//! `unreachable`, and a loop or a recursion may never end: that is UB or a run
+//! out of fuel, not invalid, and no check runs these modules. The generator is
+//! deterministic: one seed gives one module.
 //!
 //! [`program`] builds on it the programs that the differential harness runs
 //! (#165).
