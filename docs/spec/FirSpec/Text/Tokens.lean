@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4401133695442974589")
+:::moduleDocs (fingerprint := "8624619368028891819")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
@@ -136,6 +136,20 @@ other. The four are defined together, since ops hold regions, which hold
 blocks of ops.
 :::
 
+:::readable Fir.DialectItem.tokens (fingerprint := "11209570587651951581")
+*Definition: the tokens of an item of a dialect's kind.* An item of a
+dialect's kind with the kind $`k`, the symbol $`s`, the parameters $`p^*`,
+the result types $`T_1, \dots, T_n` and the attributes $`a^*` has the
+tokens of a function's header, with $`k` in place of `func`, then those of
+its attributes, then an empty body:
+
+$$`\begin{aligned} & \mathsf{word}~k~\mathsf{sym}~s~\texttt{(}~\mathrm{tokens}(p^*)~\texttt{)} \\ & \quad \mathit{res}~\mathrm{tokens}(a_1) \dots \mathrm{tokens}(a_j)~\texttt{\{}~\texttt{\}} \end{aligned}`
+
+where $`\mathit{res}` is empty when $`n = 0`, and otherwise $`\texttt{->}`
+followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
+separated by $`\texttt{,}`.
+:::
+
 :::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "2718090411911793323")
 *Definition: the tokens of a function and of an item.* For every dialect
 with a text format, a function with symbol $`f`, parameters $`p^*`, result
@@ -146,7 +160,8 @@ $$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\math
 where $`\mathit{res}` is empty when $`n = 0`, and otherwise
 $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`. An item that is a function has the tokens of
-its function. A nested module with the symbol $`s`, the dialect set $`x^*`
+its function, and an item of a dialect's kind those of that item. A nested
+module with the symbol $`s`, the dialect set $`x^*`
 and the items $`i^*` has the tokens:
 
 $$`\mathsf{word}~\mathtt{module}~\mathsf{sym}~s~\texttt{(}~\texttt{)}~\texttt{\{}~\mathrm{tokens}(x^*)~\mathrm{tokens}(i^*)~\texttt{\}}`

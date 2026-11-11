@@ -22,14 +22,15 @@ character, whatever the module.
 The general rules can be decided for every dialect, given a way to compare
 its types. A dialect's own rules, which of its types are valid, whether an
 op obeys its op rule, whether a function obeys its function rule and
-whether a region obeys the rule of its kind, are propositions that the
-dialect states, and the check must decide them too. So the check asks of a
-dialect two things, and nothing more:
+whether a region obeys the rule of its kind, and whether an item of a kind
+it registers obeys its rule for items, are propositions that the dialect
+states, and the check must decide them too. So the check asks of a dialect
+two things, and nothing more:
 
 * that its types can be compared for equality, to compare the types of
   operands, results and block arguments with those that the op instances
   and blocks expect;
-* that its four rules can be decided, as the first definition below says.
+* that its five rules can be decided, as the first definition below says.
 
 The core dialect gives both: its types can be compared, and the last
 section of this chapter decides its rules. ADR-2026-10-30-1740 records
@@ -43,9 +44,10 @@ variable {d : Dialect}
 /--
 A dialect whose own rules of validation can be decided: whether a type is
 valid, whether an op obeys the dialect's rule in its context, whether a
-function obeys the dialect's rule over a whole function, and whether a
-region obeys the rule of its kind. A dialect that registers no kind decides
-the last by the default.
+function obeys the dialect's rule over a whole function, whether a region
+obeys the rule of its kind, and whether an item obeys the dialect's rule
+for items. A dialect that registers no kind of region or of item decides
+the last two by the default.
 -/
 class DecidableDialectValidation (d : Dialect) [DialectValidation d] where
   decValidTy : ∀ t : d.Ty, Decidable (validTy t)
@@ -54,6 +56,9 @@ class DecidableDialectValidation (d : Dialect) [DialectValidation d] where
     (f : Func host), Decidable (validFunc v ctx f)
   decValidRegion : ∀ {host : Dialect} (v : DialectView d host) (k : Name) (ctx : FuncContext host)
     (f : Func host) (r : Region host), Decidable (validRegion v k ctx f r) := by
+    intros; exact inferInstanceAs (Decidable False)
+  decValidItem : ∀ {host : Dialect} (v : DialectView d host) (ctx : FuncContext host)
+    (i : DialectItem host), Decidable (validItem v ctx i) := by
     intros; exact inferInstanceAs (Decidable False)
 
 instance [DialectValidation d] [DecidableDialectValidation d] (t : d.Ty) :
@@ -74,6 +79,10 @@ instance [DialectValidation d] [DecidableDialectValidation d] {host : Dialect}
     (r : Region host) : Decidable (validRegion v k ctx f r) :=
   DecidableDialectValidation.decValidRegion v k ctx f r
 
+instance [DialectValidation d] [DecidableDialectValidation d] {host : Dialect}
+    (v : DialectView d host) (ctx : FuncContext host) (i : DialectItem host) :
+    Decidable (validItem v ctx i) :=
+  DecidableDialectValidation.decValidItem v ctx i
 instance [DecidableEq d.Ty] : DecidableEq (FuncType d) := fun a b =>
   if h : a.params = b.params ∧ a.results = b.results then
     isTrue (by cases a; cases b; simp_all)

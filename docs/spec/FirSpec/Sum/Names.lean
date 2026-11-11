@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Words and dialect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2561546829333529184")
+:::moduleDocs (fingerprint := "17666849479822341420")
 :::
 
 :::readable Fir.wordDialect Fir.wordDialect_dot (fingerprint := "1656636787730505960")
@@ -53,7 +53,7 @@ dialects that its words may name. A bare word is the core's, and every
 dialect may write one, so the core's name is in no set.
 :::
 
-:::readable Fir.LawfulDialectSet (fingerprint := "14503821995922781692")
+:::readable Fir.LawfulDialectSet (fingerprint := "9771981345072976832")
 *Definition: a dialect whose words stay in its set.* The words of the
 dialect $`d` name only dialects of its set when, for every op instance $`p`
 and every valid type $`t`:
@@ -64,9 +64,13 @@ and every valid type $`t`:
 * every dialect of $`\mathrm{dialects}(\mathrm{tyattr}(t))` is in
   $`\mathrm{names}(d)`;
 * $`\mathrm{dialect}(k)`, if defined, is in $`\mathrm{names}(d)`, for
-  every region kind $`k` that $`d` registers.
+  every region kind $`k` that $`d` registers;
+* $`\mathrm{dialect}(k)`, if defined, is in $`\mathrm{names}(d)`, for
+  every kind of item $`k` that $`d` registers.
 
 A sum reads each word with the dialect that the word names, so a word of
 another dialect could not be read back. The core's set is empty, and the
-section on the core's words shows that its words are bare.
+section on the core's words shows that its words are bare. A dialect that
+registers no region kind, or no kind of item, meets the last two laws by
+default.
 :::

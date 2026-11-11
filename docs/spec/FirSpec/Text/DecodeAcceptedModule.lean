@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What decoding accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17428336469908996126")
+:::moduleDocs (fingerprint := "7839409479275318693")
 :::
 
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "7523009022168863131")
@@ -66,6 +66,17 @@ proof joins the two:
 These are the seven conditions of a well-formed function.
 :::
 
+:::readable Fir.Attr.allWritable_of_mem Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "4958433398132762956")
+*Theorems: an item of a dialect's kind decoded from a tree that can be
+written is well formed.* Attributes that can each be written can all be
+written. For every dialect with a text format, whose text is lawful, and
+every item as read whose kind is a word of a dialect, whose parameters can
+be written, whose result types are written as types and whose attributes
+can be written: when it decodes as an item of a dialect's kind, that item
+is well formed. Its body is then empty, its types decoded from attributes
+written as types, and its attributes kept as they were read.
+:::
+
 :::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "3781362611811854818")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
@@ -84,7 +95,8 @@ blocks, which can be written, or nothing, and the function is decoded from
 them. A `module` decodes only when it has no parameters, results or
 attributes; its body then holds no blocks, or a dialect set whose names are
 words and items that can be written, which decode to well-formed items in
-turn. The last two theorems call one another, and are proved together by
+turn. An item whose kind is a word of a dialect decodes by the theorem
+above. The last two theorems call one another, and are proved together by
 induction on the items.
 :::
 

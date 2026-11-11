@@ -21,11 +21,15 @@ The text format is the interface between Lean and Rust. Rust prints a module.
 Lean parses and reprints it. The bytes must match (ADR-2026-10-29-2014).
 
 Every op of every dialect uses one grammar, so a new dialect needs no parser
-change (ADR-2026-10-29-2014). Today a new kind of item is a new `Item`
-constructor and a parser change (ADR-2026-11-03-0600). The M1 design registers
-kinds of item through the one grammar, so a new kind needs no parser change
-(ADR-2026-11-09-1543). The kinds today are `func` and `module`
-(ADR-2026-11-10-1510).
+change (ADR-2026-10-29-2014). The same holds for items: a dialect
+registers kinds of item through the one grammar, so a new kind needs no
+parser change (ADR-2026-11-09-1543). The core's kinds are `func` and
+`module` (ADR-2026-11-10-1510). Any other kind is a word of a dialect, such
+as `toy.cell`, written `kind @sym(params) -> results attrs {` and then `}`
+on the next line: its body is empty. Every reader decodes such an item,
+whichever dialects it holds; a body that is not empty does not decode, and
+any other bare kind is still a parse error, so M0 texts are unchanged
+(ADR-2026-11-10-2224).
 
 ## The dialect set
 

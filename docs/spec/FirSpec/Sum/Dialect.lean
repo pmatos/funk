@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14607884244719161286")
+:::moduleDocs (fingerprint := "746139153106266780")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -114,7 +114,18 @@ the base only words of its own set, which does not hold $`e`'s name, so
 each kind goes to the dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "14340377562275970302")
+:::readable Fir.Dialect.sum.ValidItem (fingerprint := "10283173853771968966")
+*Definition: the rule for items in a sum.* An item $`i` of a dialect's
+kind $`k` obeys, in the sum, the base's rule, through the base's view, when
+the base registers $`k`; and otherwise $`e`'s rule, through $`e`'s view:
+
+$$`\vdash_{b \boxplus e} i~\text{valid} \iff \begin{cases} \vdash_b i~\text{valid by the base's view} & k \in \mathrm{itemkinds}_b \\ \vdash_{b.\mathrm{over}(e)} i~\text{valid by } e\text{'s view} & \text{otherwise} \end{cases}`
+
+As for region kinds, the laws of names send each kind of item to the
+dialect that registers it.
+:::
+
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "1536494424229976565")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:
@@ -131,8 +142,11 @@ own view:
 $$`\frac{\vdash_b f~\text{valid by the base's view} \qquad \vdash_{b.\mathrm{over}(e)} f~\text{valid by } e\text{'s view}}{\vdash_{b \boxplus e} f~\text{valid}}`
 
 The sum registers the region kinds of the base, then those of $`e`, and a
-region obeys the rule of its kind in the sum, as above. Each rule of the
-sum can be decided when each side's can.
+region obeys the rule of its kind in the sum, as above. In the same way,
+the sum registers the kinds of item of the base, then those of $`e`; an
+item of a kind that the base registers obeys the base's rule through the
+base's view, and any other obeys $`e`'s rule through $`e`'s view. Each rule
+of the sum can be decided when each side's can.
 :::
 
 :::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "14807394188783317028")

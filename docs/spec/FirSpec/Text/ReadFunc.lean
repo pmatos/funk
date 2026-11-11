@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "A function read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "670105155365794810")
+:::moduleDocs (fingerprint := "18056572356576373379")
 :::
 
 :::readable Fir.bind_reads (fingerprint := "11770048284880457070")
@@ -48,4 +48,22 @@ $`\mathsf{sym}~s`, `(`, the parameters, `)`, then
 a word after the `{` would start items, but the body of $`f` starts with a
 label or is `}`, so it is read as blocks, even when there are none. No
 attribute is read, since `{` follows the result types.
+:::
+
+:::readable Fir.head_attrs Fir.DialectItem.reads (pin := Fir.DialectItem.tokens) (pin := Fir.DialectItem.tree) (pin := Fir.DialectItem.types) (fingerprint := "12816540705349989332")
+*Theorems: an item of a dialect's kind reads back.* The tokens of a list
+of attributes, then `{`, start with a token that starts an attribute, or
+with the `{` when the list is empty. So the reader of an item, after the
+parameters and the results, knows where the attributes end.
+
+For every dialect with a
+{ref "The-fir-specification--Text-format--Grammar"}[text format], every
+item $`i` of a dialect's kind such that $`\mathrm{tyattr}(t)` is written as
+a type for each type $`t` of $`\mathrm{types}(i)`, and every position
+$`p`, the reader of an item of the kind of $`i` at $`p`
+{ref "The-fir-specification--Text-format--The-grammar-step"}[reads] the
+tokens of $`i` after its kind as the tree of $`i` before any token, up to
+positions: its symbol, `(`, its parameters, `)`, its results after `->`
+when it has any, its attributes, one after the other, then `{` and `}`,
+its empty body.
 :::

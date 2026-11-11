@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "500872842175542027")
+:::moduleDocs (fingerprint := "4640263418112242478")
 :::
 
 :::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "2049900563290384102")
@@ -27,16 +27,21 @@ reads none, since what follows is not `dialects`; a set of names is
 reader of a list reads until no comma follows.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (fingerprint := "11791088928063739089")
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "3320088879839101187")
 *Definitions: an item's kind, and the types it writes.* The kind of an
-item is `func` for a function and `module` for a nested module, and the
-tokens of an item start with $`\mathsf{word}` of its kind. So the tokens of
-a list of items, then more tokens, start with the word `func` or `module`,
-or, when the list is empty, as the tokens after it do. An item writes its
-types as types when, for a function $`f`, $`\mathrm{tyattr}(t)` is written
-as a type for each type $`t` of $`\mathrm{types}(f)`, every type that the
-text of $`f` states, and, for a nested module, when each of its items does,
-at any depth. A list of items ends at the word `locs` at the top of a
+item is `func` for a function, `module` for a nested module, and its own
+kind for an item of a dialect's kind, and the tokens of an item start with
+$`\mathsf{word}` of its kind. So the tokens of a list of items, then more
+tokens, start with the word `func`, the word `module` or a word of a
+dialect, or, when the list is empty, as the tokens after it do. An item
+writes its types as types when, for a function $`f`, $`\mathrm{tyattr}(t)`
+is written as a type for each type $`t` of $`\mathrm{types}(f)`, every type
+that the text of $`f` states; for a nested module, when each of its items
+does, at any depth; and, for an item $`i` of a dialect's kind, when its
+kind is a word of a dialect and $`\mathrm{tyattr}(t)` is written as a type
+for each $`t` of $`\mathrm{types}(i)`. A word of a dialect holds a `.`, so
+it is neither `dialects` nor `locs`, and an item of a dialect's kind is
+never read as a dialect set or as the location table. A list of items ends at the word `locs` at the top of a
 module, and at `}` in the body of an item.
 :::
 
@@ -52,7 +57,8 @@ with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
   up to positions, before the word `locs` at the top of a module, or
   before `}` in the body of an item.
 
-A function reads back by the theorem of the previous section. A nested
+A function, and an item of a dialect's kind, read back by the theorems of
+the previous section. A nested
 module reads back as its symbol, `(`, no parameters since `)` follows, `)`,
 no results and no attributes since `{` follows, `{`, then its body: no
 blocks when `}` follows, which is the tree of a module with no dialect set

@@ -1,0 +1,180 @@
+Cases for the kinds of item that a dialect registers (ADR-2026-11-10-2224),
+shared by the two validators' tests: `lean/FirTest/ItemKinds.lean` and
+`crates/funk-ir/tests/item_kinds.rs`. Each case starts with a line of three
+equals signs, `accept` or `reject`, and its name. The cases run in the sum
+of the core and a test dialect named `toy`, with the type `toy.flag` and
+two kinds of item. A `toy.cell` has no parameters, its one result is
+`toy.flag`, and its one attribute is 0 or 1. A `toy.alias` has no
+parameters or results, and its one attribute is a symbol that names a
+function of its own table. An item of a dialect's kind is a word of that
+dialect, so its table's dialect set must name `toy`.
+
+=== accept cell-in-the-set
+dialects toy
+
+toy.cell @c() -> toy.flag 1 {
+}
+
+locs {
+}
+=== accept alias-names-a-function
+dialects toy
+
+func @f() {
+^entry:
+  ret @0
+}
+
+toy.alias @a() @f {
+}
+
+locs {
+  @0 = unknown
+}
+=== accept cell-in-a-nested-module
+module @dev() {
+  dialects toy
+
+  toy.cell @c() -> toy.flag 0 {
+  }
+
+}
+
+locs {
+}
+=== accept alias-names-a-function-of-its-own-table
+dialects toy
+
+module @dev() {
+  dialects toy
+
+  func @k() {
+  ^entry:
+    ret @0
+  }
+
+  toy.alias @a() @k {
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== reject cell-outside-the-set
+toy.cell @c() -> toy.flag 1 {
+}
+
+locs {
+}
+=== reject nested-cell-does-not-inherit-the-set
+dialects toy
+
+module @dev() {
+  toy.cell @c() -> toy.flag 1 {
+  }
+
+}
+
+locs {
+}
+=== reject cell-with-a-parameter
+dialects toy
+
+toy.cell @c(%x: i8) -> toy.flag 1 {
+}
+
+locs {
+}
+=== reject cell-of-a-core-type
+dialects toy
+
+toy.cell @c() -> i8 1 {
+}
+
+locs {
+}
+=== reject cell-with-a-wrong-attribute
+dialects toy
+
+toy.cell @c() -> toy.flag 2 {
+}
+
+locs {
+}
+=== reject alias-names-no-function
+dialects toy
+
+toy.alias @a() @g {
+}
+
+locs {
+}
+=== reject alias-names-a-cell
+dialects toy
+
+toy.cell @c() -> toy.flag 1 {
+}
+
+toy.alias @a() @c {
+}
+
+locs {
+}
+=== reject alias-across-tables
+dialects toy
+
+func @f() {
+^entry:
+  ret @0
+}
+
+module @dev() {
+  dialects toy
+
+  toy.alias @a() @f {
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== reject unregistered-kind
+dialects toy
+
+toy.box @b() {
+}
+
+locs {
+}
+=== reject symbol-of-a-function
+dialects toy
+
+func @c() {
+^entry:
+  ret @0
+}
+
+toy.cell @c() -> toy.flag 1 {
+}
+
+locs {
+  @0 = unknown
+}
+=== reject parameters-named-twice
+dialects toy
+
+toy.cell @c(%x: i8, %x: i8) -> toy.flag 1 {
+}
+
+locs {
+}
+=== reject attribute-outside-the-set
+dialects toy
+
+toy.alias @a() gpu.f {
+}
+
+locs {
+}

@@ -7,9 +7,9 @@ On tokens that can be written, the readers of items give items that can be
 written. An item's parameters come from the reader of definitions, its
 result types from the reader of types, and its body from the reader of
 blocks, or from the readers of a dialect set and of items when it starts
-with a word. Nothing is asked of its kind, its symbol or its attributes:
-decoding accepts only a `func` with no attributes and a `module` with none,
-whatever its symbol.
+with a word, and its attributes from the reader of attributes. Nothing is
+asked of its kind or its symbol: decoding checks the kind, whatever the
+symbol.
 
 The reader of items and the reader of one item call one another, for the
 items of a body. They are proved together, by induction that follows their
@@ -94,7 +94,8 @@ theorem readItems_writable :
       · cases e₄
         exact ⟨by simp, w₃⟩
     bind_step h with ⟨⟨attrs, r₅, h₅⟩, e₅, h⟩
-    have w₅ := (readAttrs_writable _ k₄.2 _ _ e₅).2
+    have k₅ := readAttrs_writable _ k₄.2 _ _ e₅
+    have w₅ := k₅.2
     bind_step h with ⟨⟨_, r₆, h₆⟩, e₆, h⟩
     have w₆ := (expect_writable _ _ _ w₅ _ _ e₆).2
     bind_step h with ⟨⟨body, r₇, h₇⟩, e₇, h⟩
@@ -111,7 +112,8 @@ theorem readItems_writable :
         exact readBlocks_writable _ w₆ _ _ f₁
     bind_step h with ⟨⟨_, r₈, h₈⟩, e₈, h⟩
     cases h
-    exact ⟨(SItem.writable_iff _).mpr ⟨k₂.1, k₄.1, k₇.1⟩, (expect_writable _ _ _ k₇.2 _ _ e₈).2⟩
+    exact ⟨(SItem.writable_iff _).mpr ⟨k₂.1, k₄.1, k₅.1, k₇.1⟩,
+      (expect_writable _ _ _ k₇.2 _ _ e₈).2⟩
   | case5 kind p ts hne => -- `readItem`: no symbol
     intro hw i r h
     rw [readItem.eq_2 _ _ _ hne] at h

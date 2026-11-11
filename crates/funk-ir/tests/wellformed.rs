@@ -153,6 +153,7 @@ struct Shapes {
     missing_locs: usize,
     nested_modules: usize,
     modules_in_modules: usize,
+    dialect_items: usize,
     rejected: usize,
 }
 
@@ -245,6 +246,10 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.modules_in_modules,
             modules().any(|n| n.items.iter().any(|i| matches!(i, Item::Module(_)))),
         );
+        has(
+            &mut n.dialect_items,
+            m.items.iter().any(|i| matches!(i, Item::Dialect(_))),
+        );
         has(&mut n.rejected, !verify(&m, &reg).is_empty());
     }
     n
@@ -272,6 +277,7 @@ fn the_generator_covers_what_validation_rejects() {
             n.broken_tables,
             n.missing_locs,
             n.nested_modules,
+            n.dialect_items,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");

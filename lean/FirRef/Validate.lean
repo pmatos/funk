@@ -4,6 +4,7 @@ import FirRef.Dominance
 import FirRef.LocTable
 import FirRef.PrintModule
 import FirRef.Tables
+import FirRef.AttrWalk
 
 /-!
 `fir-ref validate` runs the spec's validation check, `Module.problems`, at
@@ -126,12 +127,30 @@ def funcProblems (lk : Lookup d) (f : Func d) : List Problem :=
 
 @[csimp] theorem problems_eq_funcProblems : @Func.problems = @funcProblems := rfl
 
-/-- `SymbolTable.problems`, compiled after `problems_eq_funcProblems`. -/
+/-- `DialectItem.problems`, compiled after `allWritable_eq_writableLoop`. -/
+def dialectItemProblems (ctx : FuncContext d) (i : DialectItem d) : List Problem :=
+  (if isDialectWord i.kind then [] else
+    [i.problem ("the kind " ++ Text.quote i.kind ++ " is not a word of a dialect")]) ++
+  i.params.filterMap (fun x => if isName x.1 then none else
+    some (i.problem ("the parameter " ++ valueRef x.1 ++ " is not a name"))) ++
+  (repeats (i.params.map (·.1))).map (fun x =>
+    i.problem ("the item defines " ++ valueRef x ++ " more than once")) ++
+  (if ∀ t ∈ i.types, validTy t then [] else [i.problem "a type of the item is not valid"]) ++
+  (if Attr.allWritable i.attrs then [] else
+    [i.problem "an attribute of the item cannot be written"]) ++
+  i.kindProblems ctx
+
+@[csimp] theorem problems_eq_dialectItemProblems :
+    @DialectItem.problems = @dialectItemProblems := rfl
+
+/-- `SymbolTable.problems`, compiled after `problems_eq_funcProblems` and
+`problems_eq_dialectItemProblems`. -/
 def tableProblems (held : Std.HashSet LocRef) (t : SymbolTable d) : List Problem :=
   let lk := t.lookup held
   (repeats (t.items.map Item.name)).map (fun s =>
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   t.funcs.flatMap (·.problems lk) ++
+  t.dialectItems.flatMap (·.problems ⟨lk.symbols⟩) ++
   t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
   (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
@@ -152,9 +171,11 @@ The check of a module's dialect set lists each function's blocks too, through
 `Func.types` and `Func.allBlocks`, so it has copies here, compiled after
 `allBlocks_eq_allBlocks`. `wordDialects` writes `Func.types` out, as the
 spec's code of `Func.types` calls the spec's walk. The words of a type or of
-an attribute are walked by recursion, once per level of an applied
+an op's attribute are walked by recursion, once per level of an applied
 attribute, but `fir-ref` decodes only the core dialect, whose ops and types
-hold attributes of one level.
+hold attributes of one level. The attributes of an item of a dialect's kind
+are kept as the text writes them, at any depth, so `DialectItem.wordDialects`
+has a copy compiled after `dialectsAll_eq_dialectsOf`.
 -/
 
 section
@@ -178,11 +199,31 @@ def funcSetProblems (ns : List Name) (f : Func d) : List Problem :=
 
 @[csimp] theorem setProblems_eq_funcSetProblems : @Func.setProblems = @funcSetProblems := rfl
 
-/-- `SymbolTable.setProblems`, compiled after `setProblems_eq_funcSetProblems`. -/
+/-- `DialectItem.wordDialects`, compiled after `dialectsAll_eq_dialectsOf`. -/
+def itemWordDialects (i : DialectItem d) : List String :=
+  (wordDialect i.kind).toList ++ i.types.flatMap (fun t => (tyAttr t).dialects) ++
+    Attr.dialectsAll i.attrs
+
+@[csimp] theorem wordDialects_eq_itemWordDialects :
+    @DialectItem.wordDialects = @itemWordDialects := rfl
+
+/-- `DialectItem.setProblems`, compiled after `wordDialects_eq_itemWordDialects`. -/
+def itemSetProblems (ns : List Name) (i : DialectItem d) : List Problem :=
+  match i.wordDialects.find? (· ∉ ns) with
+  | some x => [{ message := "the item writes a word of the dialect " ++ x ++
+      ", which the module's dialect set does not name", func := i.name }]
+  | none => []
+
+@[csimp] theorem setProblems_eq_itemSetProblems :
+    @DialectItem.setProblems = @itemSetProblems := rfl
+
+/-- `SymbolTable.setProblems`, compiled after `setProblems_eq_funcSetProblems`
+and `setProblems_eq_itemSetProblems`. -/
 def tableSetProblems (t : SymbolTable d) : List Problem :=
   t.dialects.filterMap (fun x => if x ∈ names d then none else
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
-  t.funcs.flatMap (Func.setProblems t.dialects)
+  t.funcs.flatMap (Func.setProblems t.dialects) ++
+  t.dialectItems.flatMap (DialectItem.setProblems t.dialects)
 
 @[csimp] theorem setProblems_eq_tableSetProblems :
     @SymbolTable.setProblems = @tableSetProblems := rfl

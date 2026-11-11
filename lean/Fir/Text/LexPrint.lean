@@ -4,8 +4,9 @@ import Fir.Text.LexLayout
 # Reading printed attributes, locations and definitions
 
 The printer writes each construct below as the spellings of its tokens, in
-its one layout: an attribute, a location, a definition, a use of a value and
-a successor. Each theorem assumes only that the tokens can be written, and
+its one layout: an attribute, a location, a definition, a use of a value, a
+successor and an item of a dialect's kind (ADR-2026-11-10-2224), whose
+attributes are each written after a space. Each theorem assumes only that the tokens can be written, and
 reads the text one piece at a time, as the printer writes it.
 -/
 
@@ -126,5 +127,59 @@ theorem Succ.spells (s : Succ) (hw : ∀ t ∈ s.tokens, t.Writable) : Spells s.
       String.reduceToList, List.append_assoc, List.cons_append, List.nil_append]
     exact Lexes.label h₁ (boundary_cons (by decide)) <| Lexes.lparen <|
       spells_commaSep heach _ _ (boundary_cons (by decide)) <| Lexes.rparen hl
+
+/-- Attributes, each written after a space, start at the end of a token:
+they are no text at all, or they start with a space. -/
+theorem startsBoundary_spaceAttrs (as : List Attr) :
+    StartsBoundary (String.join (as.map (" " ++ ·.print))).toList := by
+  cases as with
+  | nil => exact fun _ h => h
+  | cons a as =>
+    simp only [List.map_cons, String.join_cons, String.toList_append, String.reduceToList,
+      List.cons_append, List.nil_append]
+    exact startsBoundary_cons (by decide)
+
+/-- Attributes, each written after a space, read back as their tokens. -/
+theorem spells_spaceAttrs : ∀ as : List Attr, (∀ t ∈ as.flatMap Attr.tokens, t.Writable) →
+    Spells (String.join (as.map (" " ++ ·.print))).toList (as.flatMap Attr.tokens)
+  | [], _ => by simpa using Spells.nil
+  | a :: as, hw => by
+    have ha := Attr.spells a fun t ht => hw t (List.mem_append_left _ ht)
+    have has := spells_spaceAttrs as fun t ht => hw t (List.mem_append_right _ ht)
+    simp only [List.map_cons, String.join_cons, String.toList_append, String.reduceToList,
+      List.flatMap_cons, List.cons_append, List.nil_append]
+    exact Spells.space (Spells.append ha has (startsBoundary_spaceAttrs as))
+
+/-- An item of a dialect's kind at indentation `n` reads back as its tokens,
+before any text. -/
+theorem DialectItem.spells (n : Nat) (i : DialectItem d) (hw : ∀ t ∈ i.tokens, t.Writable) :
+    SpellsAny (i.print n).toList i.tokens := by
+  have hk : isWord i.kind := hw (.word i.kind) (by simp [DialectItem.tokens])
+  have hdefs := spells_defs i.params fun t ht => hw t (by simp [DialectItem.tokens, ht])
+  have hattrs := spells_spaceAttrs i.attrs fun t ht => hw t (by simp [DialectItem.tokens, ht])
+  have hb : ∀ cs, Boundary ((String.join (i.attrs.map (" " ++ ·.print))).toList ++ ' ' :: cs) :=
+    fun cs => startsBoundary_spaceAttrs i.attrs _ (boundary_space cs)
+  intro cs us hl
+  by_cases hr : i.results.isEmpty = true
+  · simp only [DialectItem.print, DialectItem.tokens, hr, ite_true, String.toList_append,
+      String.reduceToList, toList_indent, List.append_assoc, List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.word hk (boundary_space _) <| Lexes.space <|
+      Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
+      hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| hattrs _ _ (boundary_space _) <|
+      Lexes.space <| Lexes.lbrace <| Lexes.lf <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
+  · simp only [DialectItem.tokens, hr, Bool.false_eq_true, ite_false] at hw
+    have hall := forall_mem_intercalate (sep := [Tok.comma])
+      (tss := i.results.map (tyAttr · |>.tokens)) fun t ht => hw t (by simp [ht])
+    have htypes : SpellsEach (i.results.map (tyAttr · |>.print)) (i.results.map (tyAttr · |>.tokens)) :=
+      SpellsEach.map fun ty hty =>
+        Attr.spells _ (hall _ (List.mem_map_of_mem (f := (tyAttr · |>.tokens)) hty))
+    simp only [DialectItem.print, DialectItem.tokens, hr, Bool.false_eq_true, ite_false,
+      String.toList_append, String.reduceToList, toList_indent, List.append_assoc,
+      List.cons_append, List.nil_append]
+    exact Lexes.spaces (Lexes.word hk (boundary_space _) <| Lexes.space <|
+      Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
+      hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| Lexes.space <| Lexes.arrow <|
+      Lexes.space <| spells_commaSep htypes _ _ (hb _) <| hattrs _ _ (boundary_space _) <|
+      Lexes.space <| Lexes.lbrace <| Lexes.lf <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
 
 end Fir

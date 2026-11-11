@@ -38,7 +38,10 @@ the sum, by routing each op and each type to the side it belongs to:
 * the sum registers the region kinds of both sides. A region of a kind that
   the base registers obeys the base's rule for it, and a region of any other
   kind `e`'s rule, each through its own view. The laws of names say that
-  `e`'s kinds are words of `e`'s name, so the base registers none of them.
+  `e`'s kinds are words of `e`'s name, so the base registers none of them;
+* the sum registers the kinds of item of both sides in the same way. An
+  item of a kind that the base registers obeys the base's rule, and an item
+  of any other kind `e`'s rule, each through its own view.
 
 An op of the base sees the context of a function only when the base can
 write it: the symbols whose types are all the base's, and the function's
@@ -241,9 +244,16 @@ def ValidRegion [DialectValidation base] [DialectValidation (base.over e)] {host
   if k ∈ regionKindNames (d := base) then validRegion (d := base) (baseView v) k ctx f r
   else validRegion (d := base.over e) (extView v) k ctx f r
 
+/-- The rule for items in the sum: the base's rule for an item of a kind that
+the base registers, and `e`'s for every other kind. -/
+def ValidItem [DialectValidation base] [DialectValidation (base.over e)] {host : Dialect}
+    (v : DialectView (base ⊞ e) host) (ctx : FuncContext host) (i : DialectItem host) : Prop :=
+  if i.kind ∈ itemKindNames (d := base) then validItem (d := base) (baseView v) ctx i
+  else validItem (d := base.over e) (extView v) ctx i
+
 /-- The rules of the sum: a type and an op obey the rules of their side, a
 function obeys the function rule of each side, and the sum registers the
-region kinds of both sides. -/
+region kinds and the kinds of item of both sides. -/
 instance instDialectValidation [DialectValidation base] [DialectValidation (base.over e)] :
     DialectValidation (base ⊞ e) where
   validTy
@@ -259,6 +269,8 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
     validFunc (d := base) (baseView v) ctx f ∧ validFunc (d := base.over e) (extView v) ctx f
   regionKindNames := regionKindNames (d := base) ++ regionKindNames (d := base.over e)
   validRegion := ValidRegion
+  itemKindNames := itemKindNames (d := base) ++ itemKindNames (d := base.over e)
+  validItem := ValidItem
 
 /-- The sum's rules can be decided when each side's can. -/
 instance instDecidableDialectValidation [DialectValidation base] [DialectValidation (base.over e)]
@@ -275,6 +287,9 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
   decValidRegion v k ctx f r := by
     show Decidable (ValidRegion v k ctx f r)
     unfold ValidRegion; infer_instance
+  decValidItem v ctx i := by
+    show Decidable (ValidItem v ctx i)
+    unfold ValidItem; infer_instance
 
 /-- The memories of the sum are those of each side, kept apart. An op of the
 sum has its side's poison class, and its side's effects on its side's
