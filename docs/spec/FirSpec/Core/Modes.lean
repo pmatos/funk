@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9471557765715568977")
+:::moduleDocs (fingerprint := "18230307090077058362")
 :::
 
 :::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "17429499784111136466")
@@ -68,7 +68,7 @@ choices and its UB. So the theorems below hold for every core function,
 on every argument vector, at every fuel budget.
 :::
 
-:::readable Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (fingerprint := "8824377896590504095")
+:::readable Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (fingerprint := "11594694459329872152")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`:
@@ -86,7 +86,7 @@ types and fuel $`k`:
 report a run.
 :::
 
-:::readable Fir.Core.exhaustive_outcomes Fir.Core.exhaustive_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "11836097572887930469")
+:::readable Fir.Core.exhaustive_outcomes Fir.Core.exhaustive_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "17566031880716702473")
 *Theorem: exhaustive mode gives exactly the outcomes of a core run.* For
 every module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and
 choice budget $`B`, let $`R_k` be the run of $`f` on $`\vec{v}` in the
@@ -104,7 +104,7 @@ same hypotheses, $`R_k` is stuck exactly when some leaf of $`L` has the
 path end $`\mathsf{stuck}~s`, for some $`s`.
 :::
 
-:::readable Fir.Core.scripted_outcomes Fir.Core.scripted_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "10682984764488149608")
+:::readable Fir.Core.scripted_outcomes Fir.Core.scripted_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "7068125630922665754")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
 core run.* For every $`\mathrm{read}`, module $`M`, function $`f`,
 arguments $`\vec{v}`, fuel $`k` and choice sequence $`\mathit{cs}`, if
@@ -117,7 +117,7 @@ same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`, then
 $`R_k` is stuck.
 :::
 
-:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "16977139950284272472")
+:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "8355304763136905699")
 *Definition: sampled mode on a core function.* For a function
 $`\mathrm{draw}` and a generator $`g`,
 $`\mathrm{sampled}(M, f, \vec{v}, k, g)` is sampled mode on the tree of
@@ -140,7 +140,7 @@ So a sampled run can be replayed exactly, from the values `fir-ref`
 reports.
 :::
 
-:::readable Fir.Core.sampled_outcomes Fir.Core.sampled_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "8499175868464204258")
+:::readable Fir.Core.sampled_outcomes Fir.Core.sampled_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "8462286147197757807")
 *Theorem: sampled mode gives an outcome of a core run, whatever the
 generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`,
 arguments $`\vec{v}`, fuel $`k` and generator $`g`, if the leaf $`\ell`

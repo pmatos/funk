@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The runs of a function, and fuel monotonicity: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8482892094871252993")
+:::moduleDocs (fingerprint := "15385580192323226087")
 :::
 
-:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "14347387819809307446")
+:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "2702186033688374399")
 *Definition: the runs of a function.* Let $`f` be a function and $`M` a
 module, of a dialect that the interpreter can run in the set monad: its
 types have values and a test of equality, and its ops have a
@@ -76,7 +76,7 @@ These are the pieces from which the interpreter builds a run of ops, so
 the bound can be followed through a run step by step.
 :::
 
-:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "7543393846727784970")
+:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "15531259396566572660")
 *Theorem: a run gives back at most the fuel it was given.* For every module
 $`M`, budget $`n`, function $`f`, environment $`E` and list of ops
 $`o^*`, the run $`\mathrm{run}_M(n, f, E, o^*)` leaves at most $`n` steps.
@@ -148,7 +148,7 @@ callee out of fuel ends its caller so, and a return that leaves $`j` more
 steps lets the caller go on with $`j` more.
 :::
 
-:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "3757166056857420053")
+:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "10316076547955429506")
 *Theorem: a run with $`j` more steps of fuel is ahead by $`j` steps.* For
 every module $`M`, budget $`n`, number $`j`, function $`f`, environment
 $`E` and list of ops $`o^*`, the run $`\mathrm{run}_M(n + j, f, E, o^*)`
@@ -176,7 +176,7 @@ $$`\mathrm{drop}(\mathsf{ok}~(\mathsf{ret}~(a, k))) = \mathsf{ok}~(\mathsf{ret}~
 The steps left matter only to a caller.
 :::
 
-:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "2132605671336192117")
+:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "11166300857095917995")
 *Theorem: a function's run ends as its entry block's ops end, or stuck
 where it cannot start.* For every module $`M`, function $`f`, vector
 $`v^*` of values of its parameter types, budget $`n` and end $`e`,
@@ -200,7 +200,7 @@ do not have its parameter types. With this theorem, what is proved of
 runs of ops carries over to runs of functions.
 :::
 
-:::readable Fir.Func.run_up Fir.Func.run_down (fingerprint := "11841275653421512188")
+:::readable Fir.Func.run_up Fir.Func.run_down (fingerprint := "7091037276741261556")
 *Theorem: with more fuel, a function's run keeps each return and UB, and
 gains none unless the smaller run may run out of fuel.* For every module
 $`M`, function $`f`, vector $`v^*` of values of its parameter types,

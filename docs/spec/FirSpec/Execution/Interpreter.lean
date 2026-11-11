@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The interpreter: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3251824520712610684")
+:::moduleDocs (fingerprint := "1488414278265628941")
 :::
 
 :::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "11457153560144753281")
@@ -126,7 +126,7 @@ $`[p_1 \mapsto w_1, \dots, p_m \mapsto w_m]`, which holds the parameters
 and nothing else.
 :::
 
-:::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (fingerprint := "16914946586688321552")
+:::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (fingerprint := "11832946902684810477")
 *Definition: running the ops of a block.* For every dialect, for every way
 of computing in which the dialect's ops have their
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics],
@@ -164,7 +164,7 @@ check that fails makes the path stuck:
    $`s`, take
    $`g = \mathrm{lookup}_M(s)` (stuck when no function of $`M` has the
    symbol $`s`), enter $`g` with $`v^*`, and run its entry
-   block with $`n` steps:
+   block with $`n` steps, in a frame of its own:
    * when the callee runs out of fuel, so does the caller;
    * when it returns typed values with $`k` steps left, check that their
      types are the result types of $`o`, bind the names of the results of
@@ -173,7 +173,11 @@ check that fails makes the path stuck:
 
 Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o` and $`\mathrm{callee}(o)`
 are what the dialect says of $`o`; looking operands up, jumping, looking a
-symbol up and entering a function are the blocks above. Each op takes one
+symbol up and entering a function are the blocks above. Running in a frame
+is the way of computing's
+{ref "The-fir-specification--Execution--The-frame-effect"}[frame effect]:
+with memory, it frees the callee's stack allocations when the callee
+returns (ADR-2026-11-09-1548); with no memory, it changes nothing. Each op takes one
 step, the terminator and the call included, and a callee runs on the steps
 its caller has left, so a caller and all its callees share one budget
 (ADR-2026-11-02-0836). A run gives back at most the steps it was given, as
@@ -183,11 +187,11 @@ budget shrinks at every step, so that every run ends, however deep its
 calls go. When the callee is stuck or ends with UB, so does the caller.
 :::
 
-:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "7652563225295482938")
+:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "12851099653111767763")
 *Definition: the run of a function.* For a function $`f` of the module
 $`M`, values $`v^*` of its parameter types and $`\mathit{fuel}` steps of
 fuel, the run enters $`f` with $`v^*`, and runs its entry block with
-$`\mathit{fuel}` steps. A return gives the values returned, each with its
+$`\mathit{fuel}` steps, in a frame of its own, as a callee runs. A return gives the values returned, each with its
 type, and drops the steps left, which matter only to a caller; running
 out of fuel stays so, and a path that is stuck or ends with UB stays so.
 

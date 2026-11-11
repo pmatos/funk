@@ -77,9 +77,9 @@ theorem validIsWellFormed (d : Dialect) [DialectSignature d] [DialectValidation 
 /-! # Execution -/
 
 /-- The interpreter runs a function of any dialect, in any monad that has
-the dialect's semantics. -/
+the dialect's semantics and runs a call in a frame. -/
 example (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-    (m : Type → Type) [Monad m] [DialectDenote d m] (M : Module d) (f : Func d)
+    (m : Type → Type) [Monad m] [MonadFrame m] [DialectDenote d m] (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ExceptT Stuck m (Result (List (DVal d))) :=
   f.run M args fuel
@@ -182,6 +182,12 @@ theorem WeightedTree.toDist_bind (t : WeightedTree α) (f : α → WeightedTree 
   | flip p h t ihh iht =>
     simp only [WeightedTree.bind, WeightedTree.toDist, Dist.append_bind, Dist.scale_bind, ihh, iht]
 
+/-- Neither the weighted tree nor the distribution monad has memory, so a
+frame is the computation itself. -/
+instance : MonadFrame WeightedTree := ⟨fun t => t⟩
+
+instance : MonadFrame Dist := ⟨fun t => t⟩
+
 /-- `toDist` is a monad morphism from the weighted tree to the distribution
 monad: the same shape as `ChoiceTree.toSetMorphism`, with a distribution in
 the place of a set. -/
@@ -200,7 +206,7 @@ theorem weightedRun (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSig
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     (WeightedTree.toDistMorphism.except Stuck).map (f.run M (m := WeightedTree) args fuel) =
       f.run M (m := Dist) args fuel :=
-  Func.run_map h M f args fuel
+  Func.run_map h (fun _ => rfl) M f args fuel
 
 /-- The total weight of a distribution. -/
 def Dist.mass (d : Dist α) : Rat :=

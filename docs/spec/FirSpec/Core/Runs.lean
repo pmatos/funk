@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "8257165963732567689")
 :::
 
-:::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "10337998491495057787")
+:::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "16611792390663989322")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are
 $`\mathrm{runs}_M(f)`: on each vector $`v^*` of values of its parameter

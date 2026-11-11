@@ -104,6 +104,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-10-1941](2026-11-10-1941-a-dialect-registers-region-kinds-each-with-its-own-rule.md) | [validation](../decisions/validation.md) | A dialect registers region kinds, each with its own rule, and an op instance states its regions' kinds | this ADR |
 | [ADR-2026-11-10-2108](2026-11-10-2108-a-call-carries-its-callee-s-summary.md) | [semantics](../decisions/semantics.md) | A call carries its callee's summary: the effects of every op that it may reach, but control | this ADR |
 | [ADR-2026-11-10-2224](2026-11-10-2224-a-dialect-registers-kinds-of-item-each-with-its-own-rule.md) | [semantics](../decisions/semantics.md) | A dialect registers kinds of item, each with its own rule, written by the one item production | this ADR |
+| [ADR-2026-11-10-2350](2026-11-10-2350-memory-is-a-state-layer-and-every-function-runs-in-a-frame.md) | [semantics](../decisions/semantics.md) | Memory is a state layer over the way of computing, and every function runs in a frame | this ADR |
 
 ## Implementation
 

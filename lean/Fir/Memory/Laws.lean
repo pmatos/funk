@@ -299,7 +299,7 @@ theorem free_blocks_ne (M : Memory u) {a a' : AllocId} (h : a ≠ a') :
 theorem locate_free {M : Memory u} {a : AllocId} (ha : a < M.blocks.length) (off : Int)
     (n : Nat) : (M.free a).locate ⟨some a, off⟩ n = .error .freed := by
   have hb : (M.free a).blocks[a]? = some { M.blocks[a] with live := false } := by
-    simp [free, ha]
+    simp [free, ha, Block.kill]
   exact locate_freed hb rfl off n
 
 end Memory

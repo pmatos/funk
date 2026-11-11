@@ -125,6 +125,9 @@ access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 
+/-- The block, freed: no longer live, with its kind and its units. -/
+def Block.kill (b : Block u) : Block u := { b with live := false }
+
 namespace Memory
 
 /-- The memory before anything is allocated. -/
@@ -141,7 +144,7 @@ reach it again. Freeing changes nothing else. It never faults: freeing an
 allocation that is already freed, or that the memory does not have, changes
 nothing. -/
 def free (M : Memory u) (a : AllocId) : Memory u :=
-  ⟨M.blocks.modify a fun b => { b with live := false }⟩
+  ⟨M.blocks.modify a Block.kill⟩
 
 /-- Where an access of `n` units through `p` lands: the allocation, its
 block, and the offset of the first unit, or the fault that makes the access

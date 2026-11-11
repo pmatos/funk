@@ -1,4 +1,4 @@
-import Fir.Execution.Behaviour
+import Fir.Execution.Frame
 import Fir.Validation.Scope
 
 /-!
@@ -37,6 +37,12 @@ runs the entry block op by op:
   says, passes its operands to the callee, which the run looks up in the
   module by its symbol. The values that the callee returns are its
   results.
+* Every function runs in a frame of its own, the callee of a call and the
+  function that the run starts with alike: the run enters a frame before
+  the function's first op and leaves it when the function returns, so that
+  the stack allocations of a call are freed when it returns
+  (ADR-2026-11-09-1548, the section on the frame effect). In a monad with
+  no memory, such as the set monad, a frame changes nothing.
 
 Every op takes one step of fuel, the terminator and the call included. A
 run with no fuel left before an op runs out of fuel. A callee runs on the
@@ -103,6 +109,8 @@ exhaustive, scripted and sampled modes run this interpreter in a tree of
 choices, which has both effects. The call effect is the one exception,
 and it is written once here for every dialect: a dialect says only which
 of its ops call which function. In the core dialect, `call @g` calls `@g`.
+The frame of a call is the monad's: the interpreter only says where a
+call starts and where it returns.
 -/
 
 namespace Fir
@@ -156,7 +164,8 @@ def Func.jump (f : Func d) (env : Env d) (succs : List Succ) (i : Nat) :
   if vs.map (·.1) = b.params.map (·.2) then pure (b, env')
   else stuck s!"^{s.label} takes arguments of types other than its successor passes"
 
-variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [DialectDenote d m]
+variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [MonadFrame m]
+  [DialectDenote d m]
 
 /-- The function of the module `M` whose symbol is `s`. -/
 def Module.func? (M : Module d) (s : Name) : Option (Func d) :=
@@ -176,7 +185,8 @@ def Func.enter (f : Func d) (args : List (DVal d)) :
 Runs the ops `os` of a block of the function `f`, then the blocks that
 control goes to, in the environment `env`, with `n` steps of fuel left. It
 returns the values that `f` returns, each with its type, and the steps of
-fuel it leaves. A call runs the function of the module `M` that it names.
+fuel it leaves. A call runs the function of the module `M` that it names,
+in a frame of its own.
 
 The callee of a call gets the `n` steps that the call leaves, and gives
 back `k` of them. The caller goes on with `min k n` steps, which is `k`
@@ -209,7 +219,7 @@ def Func.runOps (M : Module d) : Nat → Func d → Env d → List (Operation d)
       | some s =>
         let some g := M.func? s | liftExcept (stuck s!"@{s} is not a function of the module")
         let (body, genv) ← liftExcept (g.enter args.toDVals)
-        match ← Func.runOps M n g genv body with
+        match ← inFrame (Func.runOps M n g genv body) with
         | .fuelExhausted => pure .fuelExhausted
         | .ret (vs, k) =>
           if vs.map (·.1) = returnTypes o.op then
@@ -226,13 +236,13 @@ decreasing_by
 /--
 The run of the function `f` of the module `M` on arguments of its parameter
 types, with `fuel` steps of fuel: the entry block's ops, in an environment
-that holds the parameters. It returns the values that `f` returns; the
-steps it leaves matter only to a caller.
+that holds the parameters, in a frame of its own. It returns the values
+that `f` returns; the steps it leaves matter only to a caller.
 -/
 def Func.run (M : Module d) (f : Func d) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) : ExceptT Stuck m (Result (List (DVal d))) := do
   let (body, env) ← liftExcept (f.enter args.toDVals)
-  match ← Func.runOps M fuel f env body with
+  match ← inFrame (Func.runOps M fuel f env body) with
   | .ret (vs, _) => pure (.ret vs)
   | .fuelExhausted => pure .fuelExhausted
 

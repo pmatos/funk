@@ -10,8 +10,9 @@ section ties the two. A _monad morphism_ maps the computations of one monad
 to those of another, and keeps the steps that runs are built from: ending
 at once with a value, running one computation then another, and applying
 a function to a result. When it maps each op's computation in the first
-monad to the op's computation in the second, it maps the interpreter's run
-in the first to its run in the second. The interpreter is written against
+monad to the op's computation in the second, and each call's frame to a
+frame, it maps the interpreter's run in the first to its run in the
+second. The interpreter is written against
 an abstract monad, so it cannot tell the two apart: this is the last
 theorem below.
 
@@ -62,6 +63,19 @@ theorem MonadMorphism.except_lift {ε α : Type} (x : m α) :
     (φ.except ε).map (ExceptT.lift x) = ExceptT.lift (φ.map x) := by
   simp only [MonadMorphism.except, ExceptT.lift, ExceptT.run, ExceptT.mk, φ.map_map]
 
+variable [MonadFrame m] [MonadFrame n]
+
+/-- The morphism maps running a computation as a call's frame in `m` to
+running its image as a call's frame in `n`. -/
+def MonadMorphism.MapsFrame : Prop :=
+  ∀ {α : Type} (x : m α), φ.map (MonadFrame.frame x) = MonadFrame.frame (φ.map x)
+
+/-- A morphism that maps frames maps them in `ExceptT ε m` too. -/
+theorem MonadMorphism.except_inFrame (hf : φ.MapsFrame) {ε α : Type} (x : ExceptT ε m α) :
+    (φ.except ε).map (inFrame x) = inFrame ((φ.except ε).map x) := by
+  simp only [MonadMorphism.except, inFrame, ExceptT.run, ExceptT.mk]
+  exact hf _
+
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d m] [DialectDenote d n]
 
@@ -76,8 +90,9 @@ structure MonadMorphism.MapsDenote : Prop where
 
 variable {φ}
 
-/-- Running ops maps to running them in the other monad, calls included. -/
-theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (M : Module d) (fuel : Nat) :
+/-- Running ops maps to running them in the other monad, calls included,
+when the morphism maps frames to frames. -/
+theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Module d) (fuel : Nat) :
     ∀ (f : Func d) (env : Env d) (os : List (Operation d)),
       (φ.except Stuck).map (Func.runOps (m := m) M fuel f env os) =
         Func.runOps (m := n) M fuel f env os := by
@@ -95,12 +110,12 @@ theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (M : Module d) (fuel : Nat)
         | (apply bind_congr; intro _)
         | split
         | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
-            φ.except_lift, h.denote, h.exit, ih₀, ih₁])
+            φ.except_lift, φ.except_inFrame hf, h.denote, h.exit, ih₀, ih₁])
 
 /-- The interpreter cannot tell monads apart: a morphism that maps each
-op's semantics in `m` to its semantics in `n` maps a function's run in `m`
-to its run in `n`. -/
-theorem Func.run_map (h : φ.MapsDenote (d := d)) (M : Module d) (f : Func d)
+op's semantics in `m` to its semantics in `n`, and frames to frames, maps a
+function's run in `m` to its run in `n`. -/
+theorem Func.run_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     (φ.except Stuck).map (f.run M (m := m) args fuel) = f.run M (m := n) args fuel := by
   simp only [Func.run]
@@ -108,6 +123,6 @@ theorem Func.run_map (h : φ.MapsDenote (d := d)) (M : Module d) (f : Func d)
     | (apply bind_congr; intro _)
     | split
     | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
-        Func.runOps_map h])
+        φ.except_inFrame hf, Func.runOps_map h hf])
 
 end Fir

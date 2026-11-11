@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12979570045138723279")
+:::moduleDocs (fingerprint := "14276607484032840456")
 :::
 
 :::readable Fir.AllowedBelow (pin := Fir.SomeUB) (fingerprint := "5689985325191484286")
@@ -54,7 +54,7 @@ The third is how the proof below steps back from what the source does
 after one op to the whole.
 :::
 
-:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "1264385933521307406")
+:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "18007412630080963165")
 *Theorem: a black box's source allows its target's path at a budget.* Let
 $`(g, g')` be a
 {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]
@@ -81,7 +81,7 @@ returns at $`N_0` what the black box allows, leaving at most $`N_0`
 steps, which keeps the ratio.
 :::
 
-:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "8634306296257500461")
+:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "15792781258898520229")
 *Theorem: the source's callee allows what the target's callee does, at a
 budget.* Let the target module $`M'` run each call as the source $`M`
 does, with the bound $`\beta`, each symbol naming the same function in
@@ -106,7 +106,7 @@ The same function is covered by the induction, and a black box by the
 previous theorem.
 :::
 
-:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "18095261011233692718")
+:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "11411532492399487658")
 *Theorem: every path of the target that runs out of fuel or returns is
 allowed by the source at a budget.* Let the target module $`M'` run each
 call as the source $`M` does, with the bound $`\beta`: each symbol names

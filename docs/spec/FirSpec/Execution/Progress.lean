@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10206442675212705322")
+:::moduleDocs (fingerprint := "2713912483922627793")
 :::
 
 :::readable Fir.eq_cons_of_head? (fingerprint := "10406841056930139947")
@@ -102,7 +102,7 @@ $`\mathrm{ret}(o)` is the result types of the op instance of $`o`, as its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] says.
 :::
 
-:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "15926848679554588473")
+:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "3680538009198523772")
 *Theorem: what a run needs of an op of the entry block.* Let $`f` be valid
 in a module context, $`e` its entry block, which declares no arguments,
 and $`o` the op at index $`i` of $`e`, for $`i` less than the number of
@@ -153,7 +153,7 @@ the interpreter can run in the set monad, as for
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
-:::readable Fir.Func.straight_noStuck Fir.Func.straight_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "7188831905626722678")
+:::readable Fir.Func.straight_noStuck Fir.Func.straight_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "12575606988205146329")
 *Theorem: from any op of its entry block on, the run of a function that
 runs straight has no stuck path, and has a path when its ops are total.*
 Let $`f` be valid in a module context and run straight, let $`e` be its

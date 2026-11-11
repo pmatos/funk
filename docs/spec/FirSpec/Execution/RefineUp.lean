@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Returns and UB, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16275544034918685054")
+:::moduleDocs (fingerprint := "4866961907919883239")
 :::
 
 :::readable Fir.MonotoneOps Fir.Func.OpsMonotone (pin := Fir.OpMonotone) (fingerprint := "11196719689786516999")
@@ -66,7 +66,7 @@ one step longer, or longer by a callee's budget too, which leaves $`k`
 more steps.
 :::
 
-:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "17587604883499326604")
+:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "7611471134138605084")
 *Theorem: the source's callee allows what the target's callee does.* Let
 the target module $`M'` run each call as the source $`M` does, with the
 bound $`\beta`: each symbol names the same function in both, or a
@@ -94,7 +94,7 @@ covers. When $`s` names a black box, the
 what its target does.
 :::
 
-:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "9919193492215224188")
+:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "2016634873251900477")
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in
