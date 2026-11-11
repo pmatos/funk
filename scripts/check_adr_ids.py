@@ -111,7 +111,7 @@ def removed_adrs(root: Path) -> list[Removed]:
         return []
     try:
         return parse_removed((root / path).read_text(encoding="utf-8"))
-    except ValueError as e:
+    except RemovedError as e:
         raise RemovedError(f"{path}: {e}") from e
 
 
@@ -225,7 +225,7 @@ def main(argv: list[str]) -> int:
     root = Path(git("rev-parse", "--show-toplevel").strip())
     try:
         found = problems(tracked_adrs(), removed_adrs(root))
-    except ValueError as e:
+    except RemovedError as e:
         found = [str(e)]
     for message in found:
         print(message, file=sys.stderr)

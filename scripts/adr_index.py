@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from check_adr_citations import citations
-from check_adr_ids import REMOVED, Removed, adr_id, removed_adrs
+from check_adr_ids import REMOVED, Removed, RemovedError, adr_id, removed_adrs
 
 ADR_DIR = "docs/adrs"
 DECISIONS_DIR = "docs/decisions"
@@ -248,6 +248,7 @@ def removed_problems(
     found = []
     ids = {adr.id for adr in adrs}
     pages = set(tracked(root, DECISIONS_DIR))
+    anchors: dict[str, set[str]] = {}
     for row in removed:
         where = f"{ADR_DIR}/{REMOVED}: ADR-{row.id} lives in {row.now}"
         match = PAGE_SECTION.fullmatch(row.now)
@@ -260,10 +261,12 @@ def removed_problems(
             )
         elif match[1] not in pages:
             found.append(f"{where}, but {DECISIONS_DIR}/{match[1]} is not tracked")
-        elif match[2] and match[2] not in slugs(
-            (root / DECISIONS_DIR / match[1]).read_text(encoding="utf-8")
-        ):
-            found.append(f"{where}, but that page has no heading #{match[2]}")
+        elif match[2]:
+            if match[1] not in anchors:
+                page = root / DECISIONS_DIR / match[1]
+                anchors[match[1]] = slugs(page.read_text(encoding="utf-8"))
+            if match[2] not in anchors[match[1]]:
+                found.append(f"{where}, but that page has no heading #{match[2]}")
     return found
 
 
@@ -315,7 +318,7 @@ def run(root: Path, write: bool, err) -> int:
     try:
         removed = removed_adrs(root)
         text = render(adrs, removed)
-    except (AdrError, ValueError) as e:
+    except (AdrError, RemovedError) as e:
         print(e, file=err)
         return 1
     index = root / ADR_DIR / INDEX

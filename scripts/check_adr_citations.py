@@ -24,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from check_adr_ids import adr_id, removed_adrs
+from check_adr_ids import RemovedError, adr_id, removed_adrs
 
 FIXTURES = {
     "docs/spec/FirSpecSite/Tests.lean": "the spec checker's tests of linking and rendering",
@@ -163,7 +163,7 @@ def problems(root: Path, fixtures) -> tuple[list[str], int]:
     found = []
     try:
         removed = {row.id: row.now for row in removed_adrs(root)}
-    except ValueError as e:
+    except RemovedError as e:
         found.append(str(e))
         removed = {}
     count = 0
