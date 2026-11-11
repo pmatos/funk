@@ -36,7 +36,7 @@ numbers, names and symbols, and last the tokens of a whole text.
 namespace Fir.Text
 
 /-- A token. Numbers are read whole: a location reference below `2^32`,
-and an integer of any size. -/
+and an integer of any size. A float literal is kept as it is written. -/
 inductive Tok where
   | value (name : Name)
   | label (name : Name)
@@ -47,6 +47,7 @@ inductive Tok where
   | str (s : String)
   | lparen | rparen | lbrace | rbrace | comma | colon | eq | arrow
   | eof
+  | float (l : FloatLit)
   deriving Repr, DecidableEq, Inhabited
 
 /-- How an error message names a token. Strings and symbols are spelled
@@ -62,6 +63,7 @@ def Tok.describe : Tok → String
   | .lparen => "(" | .rparen => ")" | .lbrace => "{" | .rbrace => "}"
   | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->"
   | .eof => "the end of the text"
+  | .float l => "float literal " ++ l.print
 
 /-- A token and the position where it starts. -/
 structure Token where
@@ -91,9 +93,6 @@ theorem length_dropWhile_le (f : Char → Bool) (cs : List Char) :
 
 /-- The characters after a token: never more than were given. -/
 abbrev Left (cs : List Char) := { r : List Char // r.length ≤ cs.length }
-
-/-- A lowercase hexadecimal digit. -/
-def isHexDigit (c : Char) : Bool := c.isDigit || ('a' ≤ c && c ≤ 'f')
 
 /-- The value of some hexadecimal digits. -/
 def hexValue (ds : List Char) : Nat :=
@@ -177,10 +176,24 @@ def lexString (cs : List Char) (p start : TextPos) : Except ParseError (String �
 
 A number has no leading zeros, and no token that holds a name or a number
 runs into a name character: maximal munch reads a name character after it as
-part of it, so `@1x`, `007` and `1.5` are errors at the number. A location
+part of it, so `@1x`, `007` and `1.5x` are errors at the number. A location
 reference is below 2³² (ADR-2026-11-03-1000); an integer has no limit here, since the
-dialect that reads it bounds it.
+dialect that reads it bounds it. A whole number followed by `.` and a
+digit, or `0` followed by `x`, is the start of a float literal, read whole
+as it is written; the core dialect bounds it (ADR-2026-11-11-1438).
 -/
+
+/-- Why a number may not end where it does: it runs into the name
+character `c`. -/
+def runsInto (c : Char) : String :=
+  "a number must not run into the name character '" ++ c.toString ++ "': numbers have no leading zeros"
+
+/-- Checks that a number ends before `cs`: `cs` is empty or starts with a
+character that is no name character. -/
+def lexEnd (cs : List Char) (p : TextPos) : Except ParseError Unit :=
+  match cs with
+  | c :: _ => if isNameChar c then errorAt p (runsInto c) else .ok ()
+  | [] => .ok ()
 
 /-- The digits of a number at `p` that starts with the digit `d`, followed
 by `cs`, and the characters after them. -/
@@ -189,11 +202,7 @@ def lexDigits (d : Char) (cs : List Char) (p : TextPos) : Except ParseError (Lis
   let rest : Left cs :=
     if d = '0' then ⟨cs, by simp⟩ else ⟨cs.dropWhile Char.isDigit, length_dropWhile_le _ _⟩
   match rest.1 with
-  | c :: _ =>
-    if isNameChar c then
-      errorAt p ("a number must not run into the name character '" ++ c.toString ++
-        "': numbers have no leading zeros, and fir has no float literals")
-    else .ok (ds, rest)
+  | c :: _ => if isNameChar c then errorAt p (runsInto c) else .ok (ds, rest)
   | [] => .ok (ds, rest)
 
 /-- The value of some decimal digits. A long number is read in two halves,
@@ -239,6 +248,84 @@ def lexInt (neg : Bool) (d : Char) (cs : List Char) (p : TextPos) :
   let n : Int := digitsValue ds
   pure (.int (if neg then -n else n), rest, p.advance ((if neg then 1 else 0) + ds.length))
 
+/-- Reads what may follow the fraction of a decimal float literal at `p`:
+`e` and its exponent, an integer with no leading zeros that is not `-0`, or
+nothing; then the literal must end. -/
+def lexExponent (cs : List Char) (p : TextPos) : Except ParseError (Option Int × Left cs) :=
+  match cs with
+  | 'e' :: '-' :: x :: r =>
+    if x = '0' then errorAt p "-0 is not an exponent"
+    else if x.isDigit then do
+      let (ds, ⟨r', h⟩) ← lexDigits x r p
+      pure (some (-(digitsValue ds : Int)), ⟨r', by simp; omega⟩)
+    else errorAt p (runsInto 'e')
+  | 'e' :: x :: r =>
+    if x.isDigit then do
+      let (ds, ⟨r', h⟩) ← lexDigits x r p
+      pure (some (digitsValue ds), ⟨r', by simp; omega⟩)
+    else errorAt p (runsInto 'e')
+  | cs => (lexEnd cs p).map fun _ => (none, ⟨cs, Nat.le_refl _⟩)
+
+/-- Reads the hexadecimal digits of a float literal after its `0x`, from
+`cs` at `p`, where the literal starts. -/
+def lexHex (cs : List Char) (p : TextPos) : Except ParseError (Tok × Left cs × TextPos) :=
+  let ds := cs.takeWhile isHexDigit
+  if ds.isEmpty then errorAt p "0x must be followed by lowercase hexadecimal digits"
+  else
+    (lexEnd (cs.dropWhile isHexDigit) p).map fun _ =>
+      (.float (.hex ds), ⟨cs.dropWhile isHexDigit, length_dropWhile_le _ _⟩, p.advance (2 + ds.length))
+
+/-- Reads the fraction of a decimal float literal from `c :: cs`, after
+its `.`, and what follows it. The literal starts at `p`, with `-` when
+`neg`, and its whole part is `whole`. -/
+def lexFraction (neg : Bool) (whole : Nat) (c : Char) (cs : List Char) (p : TextPos) :
+    Except ParseError (Tok × Left cs × TextPos) := do
+  let (exp, ⟨r, h⟩) ← lexExponent (cs.dropWhile Char.isDigit) p
+  let l := FloatLit.dec neg whole (c :: cs.takeWhile Char.isDigit) exp
+  pure (.float l, ⟨r, Nat.le_trans h (length_dropWhile_le _ _)⟩, p.advance l.print.length)
+
+/-- What follows the whole part of a number whose first digit `d` is
+followed by `cs`: the whole part is `0`, or `d` and the digits after it. -/
+def afterWhole (d : Char) (cs : List Char) : List Char :=
+  if d = '0' then cs else cs.dropWhile Char.isDigit
+
+/-- The value of the whole part of a number whose first digit `d` is
+followed by `cs`. -/
+def wholeValue (d : Char) (cs : List Char) : Nat :=
+  if d = '0' then 0 else digitsValue (d :: cs.takeWhile Char.isDigit)
+
+theorem length_afterWhole (d : Char) (cs : List Char) : (afterWhole d cs).length ≤ cs.length := by
+  unfold afterWhole
+  split
+  · exact Nat.le_refl _
+  · exact length_dropWhile_le _ _
+
+/-- Reads a float literal at `p` whose whole part starts with the digit
+`d`, followed by `cs`, with `-` before `d` when `neg`; or `none` when what
+follows the whole part does not start a float literal. -/
+def lexFloat (neg : Bool) (d : Char) (cs : List Char) (p : TextPos) :
+    Option (Except ParseError (Tok × Left cs × TextPos)) :=
+  match h : afterWhole d cs with
+  | '.' :: c :: r =>
+    if c.isDigit then
+      some ((lexFraction neg (wholeValue d cs) c r p).map fun (t, ⟨r', h'⟩, q) =>
+        (t, ⟨r', by have := length_afterWhole d cs; rw [h] at this; simp at this; omega⟩, q))
+    else none
+  | 'x' :: r =>
+    if d = '0' ∧ neg = false then
+      some ((lexHex r p).map fun (t, ⟨r', h'⟩, q) =>
+        (t, ⟨r', by have := length_afterWhole d cs; rw [h] at this; simp at this; omega⟩, q))
+    else none
+  | _ => none
+
+/-- Reads a number at `p` whose first digit `d` is followed by `cs`, with
+`-` before `d` when `neg`: a float literal, or else an integer. -/
+def lexNumber (neg : Bool) (d : Char) (cs : List Char) (p : TextPos) :
+    Except ParseError (Tok × Left cs × TextPos) :=
+  match lexFloat neg d cs p with
+  | some r => r
+  | none => lexInt neg d cs p
+
 /-!
 # The tokens of a text
 -/
@@ -267,14 +354,19 @@ def lexToken (c : Char) (cs : List Char) (p : TextPos) : Except ParseError (Tok 
   else if c = '-' then
     match cs with
     | '>' :: rest => .ok (.arrow, ⟨rest, by simp⟩, p.advance 2)
-    | '0' :: _ => errorAt p "-0 is not an integer"
+    | '0' :: rest =>
+      match lexFloat true '0' rest p with
+      | some r => do
+        let (t, ⟨r, hr⟩, q) ← r
+        pure (t, ⟨r, by simp; omega⟩, q)
+      | none => errorAt p "-0 is not an integer"
     | d :: rest =>
       if d.isDigit then do
-        let (t, ⟨r, hr⟩, q) ← lexInt true d rest p
+        let (t, ⟨r, hr⟩, q) ← lexNumber true d rest p
         pure (t, ⟨r, by simp; omega⟩, q)
-      else errorAt p "- must start a negative integer or ->"
-    | [] => errorAt p "- must start a negative integer or ->"
-  else if c.isDigit then lexInt false c cs p
+      else errorAt p "- must start a negative number or ->"
+    | [] => errorAt p "- must start a negative number or ->"
+  else if c.isDigit then lexNumber false c cs p
   else if isWordStart c then
     let w := cs.takeWhile isNameChar
     .ok (.word (String.ofList (c :: w)), ⟨cs.dropWhile isNameChar, length_dropWhile_le _ _⟩,

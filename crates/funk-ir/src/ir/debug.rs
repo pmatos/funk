@@ -166,6 +166,7 @@ mod tests {
             Str(String),
             Sym(String),
             App(String, Vec<Attr>),
+            Float(String),
         }
 
         #[derive(Debug)]
@@ -199,6 +200,7 @@ mod tests {
             Attr::Int(i) => derived::Attr::Int(i.clone()),
             Attr::Str(s) => derived::Attr::Str(s.clone()),
             Attr::Sym(s) => derived::Attr::Sym(s.clone()),
+            Attr::Float(s) => derived::Attr::Float(s.clone()),
             Attr::App(h, args) => derived::Attr::App(h.clone(), args.iter().map(attr).collect()),
         }
     }

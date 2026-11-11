@@ -1,4 +1,4 @@
-import Fir.Text.LexTokens
+import Fir.Text.LexFloats
 
 /-!
 # Reading printed strings and symbols
@@ -212,6 +212,44 @@ theorem spells_nat (n : Nat) : Spells (Nat.toDigits 10 n) [.int n] := by
   rw [he]
   exact spells_of_reads ⟨h₁, h₂, h₃, h₄⟩ fun cs hs => readsToken_nat he hs
 
+/-- A float literal that can be written spells itself. -/
+theorem spells_float {l : FloatLit} (hv : l.valid = true) : Spells l.print.toList [.float l] := by
+  match l, hv with
+  | .hex ds, hv =>
+    simp only [FloatLit.valid, Bool.and_eq_true, Bool.not_eq_true', List.isEmpty_eq_false_iff,
+      List.all_eq_true] at hv
+    rw [show (FloatLit.hex ds).print.toList = '0' :: 'x' :: ds by simp [FloatLit.print]]
+    exact spells_of_reads (by decide) fun cs hs => by simpa using readsToken_hex hv.1 hv.2 hs
+  | .dec neg n frac exp, hv =>
+    simp only [FloatLit.valid, Bool.and_eq_true, Bool.not_eq_true', List.isEmpty_eq_false_iff,
+      List.all_eq_true] at hv
+    obtain ⟨f, fs, rfl⟩ := List.exists_cons_of_ne_nil hv.1
+    have hf := hv.2 f List.mem_cons_self
+    have hfs : ∀ x ∈ fs, x.isDigit = true := fun x hx => hv.2 x (List.mem_cons_of_mem f hx)
+    obtain ⟨d, ds, he⟩ := toDigits_cons n
+    have hp : (printInt n).toList = d :: ds := by
+      rw [show (printInt n).toList = Nat.toDigits 10 n from Nat.toList_repr, he]
+    have hx : (expText exp).toList = expChars exp := by
+      cases exp <;> simp [expText, expChars]
+    cases neg with
+    | false =>
+      have hd : d.isDigit = true := isDigit_of_toDigits (he ▸ List.mem_cons_self ..)
+      have hn := isNameChar_of_isDigit hd
+      obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, h₁, h₂, h₃, h₄⟩ := ne_of_isNameChar hn
+      rw [show (FloatLit.dec false n (f :: fs) exp).print.toList =
+          d :: (ds ++ '.' :: f :: (fs ++ expChars exp)) by
+        simp only [FloatLit.print, String.toList_append, hp, hx]
+        simp]
+      exact spells_of_reads ⟨h₁, h₂, h₃, h₄⟩ fun cs hs => by
+        simpa using readsToken_dec he hf hfs exp hs
+    | true =>
+      rw [show (FloatLit.dec true n (f :: fs) exp).print.toList =
+          '-' :: d :: (ds ++ '.' :: f :: (fs ++ expChars exp)) by
+        simp only [FloatLit.print, String.toList_append, hp, hx]
+        simp]
+      exact spells_of_reads (by decide) fun cs hs => by
+        simpa using readsToken_negDec he hf hfs exp hs
+
 /-- Every token that can be written spells itself. -/
 theorem Tok.spells {t : Tok} (ht : t.Writable) : Spells t.spell.toList [t] := by
   cases t with
@@ -264,6 +302,7 @@ theorem Tok.spells {t : Tok} (ht : t.Writable) : Spells t.spell.toList [t] := by
       simp [Tok.spell, toList_quote]]
     exact spells_of_reads (by decide) fun cs _ => by simpa using readsToken_str s cs
   | eof => exact ht.elim
+  | float l => exact spells_float ht
   | _ => exact fun _ _ _ h => Tok.lexes_punct (by exact trivial) h
 
 end Fir.Text

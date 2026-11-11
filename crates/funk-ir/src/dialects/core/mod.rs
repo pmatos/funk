@@ -21,6 +21,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod float_text;
 mod freeze;
 mod types;
 mod width;
@@ -29,6 +30,7 @@ pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
+pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use types::{
     CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_format, float_type, int_type, int_width,
 };

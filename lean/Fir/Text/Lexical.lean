@@ -76,11 +76,32 @@ def quote (s : String) : String :=
 # Tokens
 
 A text is a sequence of tokens: names of values, labels and symbols,
-location references, words, integers, strings and punctuation.
+location references, words, integers, float literals, strings and
+punctuation.
+
+A float literal is a decimal or hexadecimal bits (ADR-2026-11-11-1438). A
+decimal is an optional `-`, a whole part with no leading zeros, `.`, one
+or more digits, and then optionally `e` and an integer exponent, with no
+leading zeros and never `-0`: `1.0`, `-0.5`, `1.5e-7`. Hexadecimal bits
+are `0x` and one or more lowercase hexadecimal digits, leading zeros
+included: `0x7fc00000`. A literal is kept as it is written; the core
+dialect says which literals spell a value of a float type.
 -/
 
 /-- The canonical spelling of an integer. -/
 def printInt (i : Int) : String := toString i
+
+/-- The exponent of a decimal float literal, `e` and the integer, if it has
+one. -/
+def expText : Option Int → String
+  | some x => "e" ++ printInt x
+  | none => ""
+
+/-- The spelling of a float literal: `-1.5e-7` or `0x7fc00000`. -/
+def _root_.Fir.FloatLit.print : FloatLit → String
+  | .dec neg whole frac exp =>
+    (if neg then "-" else "") ++ printInt whole ++ "." ++ String.ofList frac ++ expText exp
+  | .hex ds => "0x" ++ String.ofList ds
 
 /-- The canonical spelling of a symbol: `@` and its name, quoted unless the
 name is a word. -/
@@ -95,14 +116,15 @@ between and after tokens, and the parser drops them.
 
 Tokens are read by maximal munch: each token is the longest one that the
 text starts with. A value, a label, a symbol written as a word, a location
-reference, a word or an integer must not be followed directly by a name
-character, so `@1x` and `1abc` are errors, while `const-1` reads as
-`const -1`.
+reference, a word, an integer or a float literal must not be followed
+directly by a name character, so `@1x`, `1abc`, `1.5x` and `0x7FC00000`
+are errors, while `const-1` reads as `const -1`. A whole number followed
+by `.` and a digit, or `0` followed by `x`, starts a float literal, so
+`1.` and `1.e5` are errors.
 
-There is no float literal and no nested symbol reference, such as
-`@a::@b`. Both are left to later decisions, and will need new tokens;
-until they get them, a dialect cannot write either. So `1.5` is an error:
-an integer followed by a name character.
+There is no nested symbol reference, such as `@a::@b`. It is left to a
+later decision, and will need a new token; until it gets one, a dialect
+cannot write it.
 -/
 
 #guard quote "a\"b\\c\n\x01é" == "\"a\\\"b\\\\c\\n\\u{1}é\""
@@ -110,6 +132,8 @@ an integer followed by a name character.
 #guard ['"', '\\', '\t', '\n', 'é'].all allowedOutsideStrings
 #guard ['\r', '\u0085', '\u200e', '\u202e', '\u2066', '\ufeff', '\u2028'].all (!allowedOutsideStrings ·)
 #guard printInt (-128) == "-128" && printInt 0 == "0"
+#guard (FloatLit.dec true 1 ['5'] (some (-7))).print == "-1.5e-7" &&
+  (FloatLit.dec false 0 ['0'] none).print == "0.0" && (FloatLit.hex ['0', 'f']).print == "0x0f"
 #guard isWord "icmp" && isWord "gpu.launch" && !isWord "1f" && isName "0" && !isName ""
 #guard printSymbol "sum" == "@sum" && printSymbol "1" == "@\"1\"" &&
   printSymbol "a\nb" == "@\"a\\nb\"" && printSymbol "" == "@\"\""

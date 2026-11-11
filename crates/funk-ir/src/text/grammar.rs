@@ -302,7 +302,7 @@ impl<'t> Parser<'t> {
     fn at_attr(&self) -> bool {
         matches!(
             self.peek(),
-            Tok::Word(_) | Tok::Int(_) | Tok::Str(_) | Tok::Sym(_)
+            Tok::Word(_) | Tok::Int(_) | Tok::Str(_) | Tok::Sym(_) | Tok::Float(_)
         )
     }
 
@@ -326,6 +326,7 @@ impl<'t> Parser<'t> {
             Tok::Int(i) => Attr::Int(i),
             Tok::Str(s) => Attr::Str(s),
             Tok::Sym(s) => Attr::Sym(s),
+            Tok::Float(s) => Attr::Float(s),
             _ => return self.fail("an attribute"),
         };
         self.advance();

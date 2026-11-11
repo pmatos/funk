@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5338463033325093932")
 :::
 
-:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "13801516949283659392")
+:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "8378616456371445232")
 *Definition: a reader reads tokens back.* A
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader]
 takes a list of tokens, each with its position, and gives what it read and
@@ -41,7 +41,8 @@ Tokens are written as in the
 {ref "The-fir-specification--Text-format--The-parser"}[parser]:
 $`\mathsf{value}~x` is the value `%x`, $`\mathsf{label}~\ell` the label `^ℓ`,
 $`\mathsf{sym}~s` a symbol, $`\mathsf{locref}~r` the location reference
-`@r`, $`\mathsf{word}~w` a word and $`\mathsf{int}~n` an integer. A
+`@r`, $`\mathsf{word}~w` a word, $`\mathsf{int}~n` an integer and
+$`\mathsf{float}~l` a float literal. A
 punctuation token, such as `(` or `=`, is written as itself, and
 $`\mathsf{eof}` stands for the end of the text.
 
@@ -96,13 +97,13 @@ and the token after the list, which is not a comma, stops the reader of
 the rest.
 :::
 
-:::readable Fir.Text.Attr.tokens_cons (pin := Fir.Attr.tokens) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "5924600392021050269")
+:::readable Fir.Text.Attr.tokens_cons (pin := Fir.Attr.tokens) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "4236011577900124854")
 *Theorem: an attribute's tokens start with a token that starts an
 attribute.* For every
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`, the
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[tokens]
-of $`a` are not empty, and the first is a word, an integer, a string or a
-symbol.
+of $`a` are not empty, and the first is a word, an integer, a float
+literal, a string or a symbol.
 :::
 
 :::readable Fir.Text.commaAttrs (pin := Fir.Attr.tokens) (fingerprint := "13561104018607886205")
@@ -148,13 +149,13 @@ $`p_0` the empty position. The reader of a type takes only a word or an
 applied word, so the condition on $`a` is needed.
 :::
 
-:::readable Fir.Text.readAttrs_reads (pin := Fir.Text.readAttrs) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "12773071372742214260")
+:::readable Fir.Text.readAttrs_reads (pin := Fir.Text.readAttrs) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "8723733651605663759")
 *Theorem: the attributes of an op or an item read back.* For every list of
 attributes $`a_1, \dots, a_n`, the reader of attributes reads
 $`\mathrm{tokens}(a_1)~\dots~\mathrm{tokens}(a_n)` as
 $`a_1, \dots, a_n`, without their positions, before any token that starts
-no attribute and is not `(`: any token but a word, an integer, a string, a
-symbol or `(`.
+no attribute and is not `(`: any token but a word, an integer, a float
+literal, a string, a symbol or `(`.
 
 That reader reads as long as an attribute starts, so the token after the
 list must start none, and must not be the `(` that would apply the last

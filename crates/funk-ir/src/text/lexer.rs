@@ -2,9 +2,11 @@
 //!
 //! Whitespace and comments may come before, between and after tokens.
 //! Tokens are read by maximal munch, and a value, a label, a symbol written
-//! as a word, a location reference, a word or an integer must not run into a
-//! name character: `@1x` and `1.5` are errors, while `const-1` reads as
-//! `const -1`.
+//! as a word, a location reference, a word, an integer or a float literal
+//! must not run into a name character: `@1x` and `1.5x` are errors, while
+//! `const-1` reads as `const -1`. A whole number followed by `.` and a
+//! digit, or `0` followed by `x`, starts a float literal, kept as it is
+//! written (ADR-2026-11-11-1438).
 
 use super::chars::{allowed_outside_strings, is_escaped};
 use super::{ParseError, TextPos};
@@ -21,6 +23,8 @@ pub(super) enum Tok {
     Word(String),
     Int(Int),
     Str(String),
+    /// A float literal, as it is written: `-1.5e-7` or `0x7fc00000`.
+    Float(String),
     LParen,
     RParen,
     LBrace,
@@ -42,6 +46,7 @@ impl Tok {
             Tok::LocRef(r) => format!("location reference {r}"),
             Tok::Word(w) => format!("word {w}"),
             Tok::Int(i) => format!("integer {i}"),
+            Tok::Float(f) => format!("float literal {f}"),
             Tok::Str(s) => format!("string {}", super::chars::quote(s)),
             Tok::LParen => "(".into(),
             Tok::RParen => ")".into(),
@@ -91,6 +96,11 @@ impl<'t> Lexer<'t> {
         let tok = self.token()?;
         Ok(Token { tok, pos })
     }
+}
+
+/// A lowercase hexadecimal digit.
+fn is_hex_digit(c: char) -> bool {
+    c.is_ascii_digit() || ('a'..='f').contains(&c)
 }
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
@@ -206,7 +216,7 @@ impl Lexer<'_> {
                 self.bump();
                 Ok(Tok::Arrow)
             }
-            '-' | '0'..='9' => self.integer(pos),
+            '-' | '0'..='9' => self.number(pos),
             c if is_word_start(c) => Ok(Tok::Word(self.take_name_chars())),
             c => err(pos, format!("unexpected character {}", code_point(c))),
         }
@@ -262,31 +272,85 @@ impl Lexer<'_> {
             Some(c) if is_name_char(c) => err(
                 pos,
                 format!(
-                    "a number must not run into the name character {c:?}: numbers have no leading zeros, and fir has no float literals"
+                    "a number must not run into the name character {c:?}: numbers have no leading zeros"
                 ),
             ),
             _ => Ok(()),
         }
     }
 
-    fn integer(&mut self, pos: TextPos) -> Result<Tok, ParseError> {
+    /// An integer, or a float literal: `lexNumber` in
+    /// `lean/Fir/Text/Lex.lean`. Every error is at the number's start.
+    fn number(&mut self, pos: TextPos) -> Result<Tok, ParseError> {
+        let start = self.at;
         let negative = self.peek() == Some('-');
         if negative {
             self.bump();
-            match self.peek() {
-                Some('1'..='9') => {}
-                Some('0') => return err(pos, "-0 is not an integer"),
-                _ => return err(pos, "- must start a negative integer or ->"),
+            if !self.peek().is_some_and(|c| c.is_ascii_digit()) {
+                return err(pos, "- must start a negative number or ->");
             }
         }
-        let digits = self.nat_digits(pos)?;
-        let spelled = if negative {
-            format!("-{digits}")
+        let zero = self.peek() == Some('0');
+        if zero {
+            self.bump();
         } else {
-            digits
-        };
-        let int = Int::parse(&spelled).expect("the lexer reads canonical integers");
+            while self.peek().is_some_and(|c| c.is_ascii_digit()) {
+                self.bump();
+            }
+        }
+        match (self.peek(), self.peek2()) {
+            (Some('.'), Some(d)) if d.is_ascii_digit() => {
+                self.bump();
+                while self.peek().is_some_and(|c| c.is_ascii_digit()) {
+                    self.bump();
+                }
+                self.exponent(pos)?;
+                return Ok(Tok::Float(self.text[start..self.at].to_string()));
+            }
+            (Some('x'), _) if zero && !negative => {
+                self.bump();
+                let digits = self.at;
+                while self.peek().is_some_and(is_hex_digit) {
+                    self.bump();
+                }
+                if self.at == digits {
+                    return err(pos, "0x must be followed by lowercase hexadecimal digits");
+                }
+                self.no_name_char_after(pos)?;
+                return Ok(Tok::Float(self.text[start..self.at].to_string()));
+            }
+            _ => {}
+        }
+        if negative && zero {
+            return err(pos, "-0 is not an integer");
+        }
+        self.no_name_char_after(pos)?;
+        let int =
+            Int::parse(&self.text[start..self.at]).expect("the lexer reads canonical integers");
         Ok(Tok::Int(int))
+    }
+
+    /// What may follow the fraction of a float literal: `e` and an integer
+    /// with no leading zeros that is not `-0`, or nothing; then the literal
+    /// ends.
+    fn exponent(&mut self, pos: TextPos) -> Result<(), ParseError> {
+        if self.peek() == Some('e') {
+            let mut after = self.text[self.at + 1..].chars();
+            match (after.next(), after.next()) {
+                (Some('-'), Some('0')) => return err(pos, "-0 is not an exponent"),
+                (Some('-'), Some(d)) if d.is_ascii_digit() => {
+                    self.bump();
+                    self.bump();
+                    return self.nat_digits(pos).map(drop);
+                }
+                (Some(d), _) if d.is_ascii_digit() => {
+                    self.bump();
+                    return self.nat_digits(pos).map(drop);
+                }
+                _ => {}
+            }
+        }
+        self.no_name_char_after(pos)
     }
 
     fn string(&mut self) -> Result<String, ParseError> {
@@ -319,10 +383,7 @@ impl Lexer<'_> {
             Some('u') if self.peek() == Some('{') => {
                 self.bump();
                 let start = self.at;
-                while self
-                    .peek()
-                    .is_some_and(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
-                {
+                while self.peek().is_some_and(is_hex_digit) {
                     self.bump();
                 }
                 let hex = self.text[start..self.at].to_string();

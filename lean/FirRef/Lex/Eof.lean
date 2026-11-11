@@ -30,6 +30,43 @@ theorem lexAtP_ne_eof {i j : s.Pos} {p q : TextPos} (h : lexAtP i p = .ok (.eof,
   repeat' split at h
   all_goals first | cases h | simp [errorAt] at h
 
+theorem lexFloatP_ne_eof {neg : Bool} {d : Char} {i j : s.Pos} {p q : TextPos}
+    (h : lexFloatP neg d i p = some (.ok (.eof, j, q))) : False := by
+  unfold lexFloatP at h
+  repeat' split at h
+  all_goals first
+    | (cases h; done)
+    | skip
+  all_goals simp only [Option.some.injEq] at h
+  · unfold lexFractionP at h
+    split at h <;> cases h
+  · unfold lexHexP at h
+    dsimp only at h
+    split at h
+    · cases h
+    · rename_i hx
+      generalize lexEndP _ p = r at h
+      cases r <;> cases h
+
+theorem lexNumberP_ne_eof {neg : Bool} {d : Char} {i j : s.Pos} {p q : TextPos}
+    (h : lexNumberP neg d i p = .ok (.eof, j, q)) : False := by
+  unfold lexNumberP at h
+  split at h
+  · rename_i hx
+    subst h
+    exact lexFloatP_ne_eof hx
+  · exact lexIntP_ne_eof h
+
+theorem lexMinusZeroP_ne_eof {i j : s.Pos} {p q : TextPos}
+    (h : (match lexFloatP true '0' i p with
+      | some r => r
+      | none => errorAt p "-0 is not an integer") = .ok (.eof, j, q)) : False := by
+  split at h
+  · rename_i hx
+    subst h
+    exact lexFloatP_ne_eof hx
+  · cases h
+
 theorem lexTokenP_ne_eof {c : Char} {i j : s.Pos} {p q : TextPos} {t : Tok}
     (h : lexTokenP c i p = .ok (t, j, q)) : t ≠ .eof := by
   rintro rfl
@@ -40,7 +77,9 @@ theorem lexTokenP_ne_eof {c : Char} {i j : s.Pos} {p q : TextPos} {t : Tok}
     | (cases h; done)
     | (simp at h; done)
     | exact lexAtP_ne_eof h
-    | exact lexIntP_ne_eof h
+    | exact lexNumberP_ne_eof h
+    | exact lexMinusZeroP_ne_eof h
+    | (cases h; rename_i hf; exact lexFloatP_ne_eof hf)
     | (cases h; simp_all [punctOf_ne_eof])
 
 /-- A step of the lexer that does not end the text reads a token other

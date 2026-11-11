@@ -42,8 +42,9 @@ The lexer reads no token that cannot be written. A value or a label is `%`
 or `^` and the name characters after it, and the lexer rejects it when
 there are none. A word starts with a letter or `_` and takes in every name
 character after it. A location reference of 2³² or more is an error at
-the number. Symbols, integers, strings and punctuation can all be written,
-and whitespace and comments give no token at all.
+the number. A float literal that the lexer reads has one or more digits
+after its `.` or its `0x`. Symbols, integers, strings and punctuation can
+all be written, and whitespace and comments give no token at all.
 -/
 
 namespace Fir.Text
@@ -98,6 +99,67 @@ theorem lexInt_writable {neg : Bool} {d : Char} {cs : List Char} {p : TextPos} {
   cases h
   exact True.intro
 
+/-- A result that `Except.map` gives comes from a result it was given. -/
+theorem map_eq_ok {ε α β : Type} {f : α → β} {e : Except ε α} {y : β} (h : e.map f = .ok y) :
+    ∃ x, e = .ok x ∧ f x = y := by
+  cases e with
+  | error => cases h
+  | ok x => exact ⟨x, rfl, by cases h; rfl⟩
+
+/-- A fraction read after `.` and a digit can be written. -/
+theorem lexFraction_writable {neg : Bool} {whole : Nat} {c : Char} {cs : List Char} {p : TextPos}
+    {t : Tok} {r : Left cs} {q : TextPos} (hc : c.isDigit = true)
+    (h : lexFraction neg whole c cs p = .ok (t, r, q)) : t.Writable := by
+  unfold lexFraction at h
+  bind_step h with ⟨_, -, h⟩
+  cases h
+  simp only [Tok.Writable, FloatLit.valid, List.isEmpty_cons, Bool.not_false, List.all_cons, hc,
+    Bool.true_and, List.all_eq_true]
+  exact fun _ hx => mem_takeWhile hx
+
+/-- Hexadecimal digits read after `0x` can be written. -/
+theorem lexHex_writable {cs : List Char} {p : TextPos} {t : Tok} {r : Left cs} {q : TextPos}
+    (h : lexHex cs p = .ok (t, r, q)) : t.Writable := by
+  unfold lexHex at h
+  dsimp only at h
+  split at h
+  · cases h
+  · rename_i hne
+    obtain ⟨_, -, h⟩ := map_eq_ok h
+    cases h
+    simp only [Tok.Writable, FloatLit.valid, hne, Bool.not_false, Bool.true_and, List.all_eq_true]
+    exact fun _ hx => mem_takeWhile hx
+
+/-- A float literal that `lexFloat` reads can be written. -/
+theorem lexFloat_writable {neg : Bool} {d : Char} {cs : List Char} {p : TextPos} {t : Tok}
+    {r : Left cs} {q : TextPos} (h : lexFloat neg d cs p = some (.ok (t, r, q))) : t.Writable := by
+  unfold lexFloat at h
+  split at h
+  · split at h
+    · rename_i hc
+      simp only [Option.some.injEq] at h
+      obtain ⟨⟨_, _, _⟩, h₁, h⟩ := map_eq_ok h
+      cases h
+      exact lexFraction_writable hc h₁
+    · cases h
+  · split at h
+    · simp only [Option.some.injEq] at h
+      obtain ⟨⟨_, _, _⟩, h₁, h⟩ := map_eq_ok h
+      cases h
+      exact lexHex_writable h₁
+    · cases h
+  · cases h
+
+/-- `lexNumber` reads an integer or a float literal, which can be written. -/
+theorem lexNumber_writable {neg : Bool} {d : Char} {cs : List Char} {p : TextPos} {t : Tok}
+    {r : Left cs} {q : TextPos} (h : lexNumber neg d cs p = .ok (t, r, q)) : t.Writable := by
+  unfold lexNumber at h
+  split at h
+  · rename_i x hx
+    subst h
+    exact lexFloat_writable hx
+  · exact lexInt_writable h
+
 /-- What follows `@` is a location reference below `2^32`, or a symbol. -/
 theorem lexAt_writable {cs : List Char} {p : TextPos} {t : Tok} {r : Left cs} {q : TextPos}
     (h : lexAt cs p = .ok (t, r, q)) : t.Writable := by
@@ -145,15 +207,21 @@ theorem lexToken_writable {c : Char} {cs : List Char} {p : TextPos} {t : Tok} {r
   split at h
   · split at h
     · cases h; exact True.intro
-    · cases h
+    · split at h
+      · rename_i hf
+        bind_step h with ⟨⟨_, _, _⟩, h₁, h⟩
+        cases h
+        subst h₁
+        exact lexFloat_writable hf
+      · cases h
     · split at h
       · bind_step h with ⟨⟨_, _, _⟩, h₁, h⟩
         cases h
-        exact lexInt_writable h₁
+        exact lexNumber_writable h₁
       · cases h
     · cases h
   split at h
-  · exact lexInt_writable h
+  · exact lexNumber_writable h
   split at h
   · cases h; exact isWord_takeWhile ‹_›
   · cases h

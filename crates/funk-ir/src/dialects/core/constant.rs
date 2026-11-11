@@ -3,11 +3,11 @@
 //!
 //! `const` has one attribute, its value, no operands and one `iN` or float
 //! result. An `i1` constant is written `true` or `false`. Every other
-//! constant is written as its bits read as a two's-complement signed
-//! integer, in decimal, a float's `1 + e + m` bits included
-//! (ADR-2026-11-11-1138), so each bit pattern has one spelling: `const 1`
-//! and `const -1` at `i1` do not decode, and neither does a value that does
-//! not fit its type.
+//! integer constant is written as its bits read as a two's-complement
+//! signed integer, in decimal, so each bit pattern has one spelling:
+//! `const 1` and `const -1` at `i1` do not decode, and neither does a value
+//! that does not fit its type. A float constant is the one float literal
+//! of its bits (ADR-2026-11-11-1438, `float_text`).
 //!
 //! `poison` has no attributes, no operands and one `iN` result, the poison
 //! of its type (ADR-2026-11-03-1615).
@@ -63,17 +63,14 @@ impl OpSpec for Const {
 }
 
 /// Checks that `value` is a constant of `float<e,m>`, the type `result`:
-/// its `1 + e + m` bits read as a signed integer.
+/// the one float literal of some bits of it.
 fn float_constant(e: u32, m: u32, value: &Attr, result: &crate::Type) -> Result<OpShape, String> {
-    let width = e.saturating_add(m).saturating_add(1);
     match value {
-        Attr::Int(v) if v.fits_signed(width) => Ok(OpShape::default()),
-        Attr::Int(v) => Err(format!(
-            "the constant {v} does not fit {result}: a float constant is its \
-             {width} bits read as a signed integer"
-        )),
+        Attr::Float(s) => super::float_text::float_constant(e, m, s)
+            .map(|_| OpShape::default())
+            .map_err(|why| format!("{why}: it is no constant of {result}")),
         other => Err(format!(
-            "the value of a float const is its bits read as a signed integer, not {other}"
+            "the value of a float const is a float literal, such as 1.0 or 0x7fc00000, not {other}"
         )),
     }
 }
