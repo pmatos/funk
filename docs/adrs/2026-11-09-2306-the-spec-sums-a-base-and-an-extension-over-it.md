@@ -12,7 +12,7 @@ of the dialects it depends on.
 [#227](https://github.com/pmatos/funk/issues/227) builds this. Its first
 stage puts the sum in the spec.
 
-The test sum of ADR-2026-10-30-2040 shares one type set between its two
+The earlier test sum shares one type set between its two
 sides, so an extension cannot add types. A plain sum of two dialects, with
 types `Ty₁ ⊕ Ty₂`, would not let an extension's op take a core value. The
 core's `i8` would then also have two spellings. ADR-2026-11-09-2257 keeps
@@ -58,7 +58,8 @@ core's `i8` would then also have two spellings. ADR-2026-11-09-2257 keeps
   core named `toy` with no types of their own. `lean/FirTest/Sum.lean` is
   gone.
 
-This supersedes ADR-2026-10-30-2040.
+It replaces the ADR of the earlier test sum, now deleted (`INDEX.md`,
+Removed).
 
 ## Alternatives
 

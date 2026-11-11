@@ -1,8 +1,8 @@
 # Current decisions: the Rust IR and tools
 
-This page says what holds today for funk's Rust IR and tools. It summarizes
-the ADRs it cites and replaces none of them. When this page and an ADR
-disagree, the page has the bug (ADR-2026-11-09-1610).
+This page says what holds today for funk's Rust IR and tools. It is the record:
+when this page and an ADR disagree, the page wins, and the ADR is fixed or
+deleted (ADR-2026-11-09-1610).
 
 ## Workspace and toolchain
 

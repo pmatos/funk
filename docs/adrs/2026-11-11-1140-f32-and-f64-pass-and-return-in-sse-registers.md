@@ -35,7 +35,7 @@ eightbytes use `%rdi` to `%r9` and `%rax`, `%rdx`. SSE eightbytes use
   `une` accepts it set, since an unordered pair sets it.
 - The built executable reads and prints an `f32` or `f64` as it reads and
   prints an `i32` or `i64`: the bits read as a signed integer
-  (ADR-2026-11-11-1138).
+  (ADR-2026-11-11-1438).
 - Every other float format is reported where its value is defined, as an
   unsupported integer width is.
 

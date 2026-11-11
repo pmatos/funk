@@ -1,8 +1,8 @@
 # Current decisions: validation
 
-This page states what holds today for validation in fir and in `fir-ref`. It
-summarizes the ADRs it cites (ADR-2026-11-09-1610). If this page and an ADR
-disagree, the page has a bug.
+This page states what holds today for validation in fir and in `fir-ref`. It is
+the record: when this page and an ADR disagree, the page wins, and the ADR is
+fixed or deleted (ADR-2026-11-09-1610).
 
 ## Rules of validity
 

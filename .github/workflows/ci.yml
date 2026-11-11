@@ -27,9 +27,11 @@ jobs:
     name: Static checks
     runs-on: ubuntu-26.04
     steps:
+      # Two commits deep: on a pull request, HEAD^1 is the base of the merge.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -43,6 +45,12 @@ jobs:
         run: uvx pre-commit@4.6.2 run adr-ids --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run adr-ids-test --all-files --verbose --show-diff-on-failure
+      # A warning, never a failure, when a pull request adds more than two
+      # ADRs, so the reviewer looks again (#307). It is not a hook: it needs
+      # the merge's base, which `pre-commit run --all-files` does not have.
+      - name: Warn when a pull request adds more than two ADRs
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: python3 scripts/check_adr_ids.py --added-since HEAD^1
       - if: ${{ !cancelled() }}
         run: uvx --no-build pre-commit@4.6.2 run adr-index --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}

@@ -1,8 +1,8 @@
 # Current decisions: testing and the harness
 
-This page states what holds today for testing and the harness. It summarizes
-the ADRs it cites, and they remain the record. When this page and an ADR
-disagree, the page is wrong (ADR-2026-11-09-1610).
+This page states what holds today for testing and the harness. It is the record:
+when this page and an ADR disagree, the page wins, and the ADR is fixed or
+deleted (ADR-2026-11-09-1610).
 
 ## How a test is judged
 

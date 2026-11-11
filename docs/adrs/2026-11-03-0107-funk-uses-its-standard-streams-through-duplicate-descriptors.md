@@ -25,8 +25,8 @@ A closed standard error hid the same failure another way. Before `main`,
 the standard library opens `/dev/null` on each standard descriptor that is
 closed, so the diagnostic went there and funk exited with its verdict,
 where `fir-ref` exits with 2.
-ADR-2026-11-02-2253 records which standard descriptors were closed when
-funk started. funk used that for standard input and output only, and the
+A start-up constructor, since removed by ADR-2026-11-09-1603, recorded
+which standard descriptors were closed when funk started. funk used that for standard input and output only, and its
 ADR said that its behaviour on a closed standard error did not change.
 
 ## Decision
@@ -57,7 +57,7 @@ ADR said that its behaviour on a closed standard error did not change.
 ## Alternatives
 
 - **Check each descriptor's mode with `fcntl(F_GETFL)`.** It needs a call
-  into the C library: more unsafe code, which ADR-2026-11-02-2253 forbids,
+  into the C library: more unsafe code, which ADR-2026-11-03-0808 forbids,
   or a third-party crate, which ADR-2026-10-30-1030 does not take yet.
 - **A `BufWriter` for standard output.** It would change how standard
   output and standard error interleave when they go to one file.

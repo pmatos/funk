@@ -8,7 +8,7 @@ Tier: implementation; area: testing-and-harness
 The coverage matrix has a cell for each op instance at each width of a
 side: `i1` to `i128` for differential tests, and `i7` and `i33` more for
 interpreter-only tests (ADR-2026-11-03-0557). A new side or width changes
-that ADR. #229 adds float constants and `fcmp` (ADR-2026-11-11-1138,
+that ADR. #229 adds float constants and `fcmp` (ADR-2026-11-11-1438,
 ADR-2026-11-11-1139). They work on float formats, not integer widths. The
 backend lowers `f32` and `f64` only (ADR-2026-11-09-1549).
 

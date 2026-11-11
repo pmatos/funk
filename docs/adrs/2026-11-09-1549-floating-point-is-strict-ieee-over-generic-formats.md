@@ -1,7 +1,7 @@
 # Floating point is strict IEEE 754 over a generic family of formats, with nondeterministic NaNs and three fast-math flags
 
 Status: accepted; refined by ADR-2026-11-11-0950, ADR-2026-11-11-0951,
-ADR-2026-11-11-1138, ADR-2026-11-11-1139, ADR-2026-11-11-1140,
+ADR-2026-11-11-1139, ADR-2026-11-11-1140,
 ADR-2026-11-11-1438, ADR-2026-11-11-1800, ADR-2026-11-11-1801 and
 ADR-2026-11-11-1802
 Tier: direction; area: semantics

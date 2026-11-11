@@ -7,7 +7,7 @@ Tier: direction; area: semantics
 
 ADR-2026-11-02-0836 gives a call its meaning through the call effect: the
 interpreter runs the callee that `DialectCall` names, and never runs the
-op's `denote`. ADR-2026-11-02-1156 then gave `call` a stand-in `denote` in
+op's `denote`. An earlier ADR then gave `call` a stand-in `denote` in
 the set monad, immediate UB, so that the op-level obligations `OpTotal`
 and `OpMonotone`, which `LawfulDialectPoison` asked of every op, would
 hold for it.
@@ -22,7 +22,7 @@ rewrite of a call. What a call does is covered at function level:
 
 The human ruled on 2026-11-02, on
 [#20](https://github.com/pmatos/funk/issues/20), for the alternative that
-ADR-2026-11-02-1156 lists last: no op-level obligation for an op with a
+the earlier ADR listed last: no op-level obligation for an op with a
 callee.
 
 ## Decision
@@ -51,7 +51,8 @@ callee.
 - Where the spec counts which ops have rules (`Core.Op.hasRules`), an op
   with a callee has them: its meaning is its callee's run.
 
-This supersedes ADR-2026-11-02-1156. It refines ADR-2026-10-30-0818,
+It replaces that earlier ADR, now deleted (`INDEX.md`, Removed). It
+refines ADR-2026-10-30-0818,
 which asked every op to be total and monotone; ADR-2026-11-02-0836, whose
 consequences describe the stand-in; and ADR-2026-10-30-1855, since a
 `call` with `none` in `Op.denote?` is not an op without rules.

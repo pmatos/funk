@@ -1,9 +1,9 @@
 # Current decisions: semantics, what an M1 run shows
 
 This page continues semantics-m1-design.md. It says what the ADRs decide about
-what a run shows in M1 and how the world outside the module answers it. It
-summarizes the ADRs it cites and does not replace them. When this page and an
-ADR disagree, the page is wrong (ADR-2026-11-09-1610).
+what a run shows in M1 and how the world outside the module answers it. It is
+the record: when this page and an ADR disagree, the page wins, and the ADR is
+fixed or deleted (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools do not implement them
 yet. semantics.md says what a run shows in M0.

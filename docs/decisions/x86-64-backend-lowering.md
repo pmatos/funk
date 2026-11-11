@@ -1,9 +1,9 @@
 # Current decisions: the x86-64 backend, lowering `i128`, division and floats
 
 This page continues x86-64-backend.md. It says what holds today for how the
-naive backend lowers `i128` values, the divisions and the float arithmetic. It only summarizes the
-ADRs it cites (ADR-2026-11-09-1610). When this page and an ADR disagree, the
-page has a bug.
+naive backend lowers `i128` values, the divisions and the float arithmetic. It
+is the record: when this page and an ADR disagree, the page wins, and the ADR is
+fixed or deleted (ADR-2026-11-09-1610).
 
 ## Lowering `i128`
 

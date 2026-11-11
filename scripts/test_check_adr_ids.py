@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from check_adr_ids import problems
+from check_adr_ids import Removed, parse_removed, problems
 
 SCRIPT = Path(__file__).with_name("check_adr_ids.py")
 
@@ -101,6 +101,74 @@ class Ids(unittest.TestCase):
         self.assertIn("names 3 files", found[0])
 
 
+def row(
+    file: str = "2026-10-30-1031-a.md",
+    now: str = "ADR-2026-10-30-1046",
+    commit: str = "0123456789ab",
+) -> str:
+    return f'{{"file": "{file}", "now": "{now}", "commit": "{commit}"}}'
+
+
+def table(*rows: str) -> str:
+    return '{"about": "x", "removed": [' + ", ".join(rows) + "]}"
+
+
+class RemovedIds(unittest.TestCase):
+    def test_rows_parse_in_order(self):
+        rows = parse_removed(table(row(), row("2026-10-30-103112-b.md", "here")))
+        self.assertEqual(
+            rows,
+            [
+                Removed(
+                    "2026-10-30-1031",
+                    "2026-10-30-1031-a.md",
+                    "ADR-2026-10-30-1046",
+                    "0123456789ab",
+                ),
+                Removed(
+                    "2026-10-30-103112",
+                    "2026-10-30-103112-b.md",
+                    "here",
+                    "0123456789ab",
+                ),
+            ],
+        )
+
+    def test_bad_tables_fail(self):
+        bad = {
+            "not JSON": "{",
+            'no list "removed"': '{"removed": {}}',
+            "exactly the keys": table('{"file": "2026-10-30-1031-a.md"}'),
+            "every value is a string": table(
+                '{"file": "2026-10-30-1031-a.md", "now": 1, "commit": "0123456789ab"}'
+            ),
+            "not an ADR file name": table(row(file="notes.md")),
+            "where the rule lives": table(row(now=" ")),
+            "hex digits": table(row(commit="0123456")),
+            "has a row already": table(row(), row(file="2026-10-30-1031-b.md")),
+        }
+        for message, text in bad.items():
+            with (
+                self.subTest(message=message),
+                self.assertRaisesRegex(ValueError, message),
+            ):
+                parse_removed(text)
+
+    def test_a_removed_id_is_never_used_again(self):
+        removed = parse_removed(table(row()))
+        found = problems(
+            adrs("2026-10-30-1031-new.md", "2026-10-30-1032-b.md", "removed.json"),
+            removed,
+        )
+        self.assertEqual(len(found), 1)
+        self.assertTrue(
+            found[0].startswith(
+                "docs/adrs/2026-10-30-1031-new.md: ADR-2026-10-30-1031 was removed"
+            )
+        )
+        self.assertEqual(problems(adrs("2026-10-30-103100-new.md"), removed), [])
+
+
 def outside_env() -> dict[str, str]:
     # A commit hook runs with GIT_INDEX_FILE and similar set for this
     # repository; drop them so git in a scratch repository uses its own.
@@ -111,9 +179,9 @@ def git(repo: Path, *args: str) -> None:
     subprocess.run(["git", *args], cwd=repo, env=outside_env(), check=True)
 
 
-def run_script(cwd: Path):
+def run_script(cwd: Path, *args: str):
     return subprocess.run(
-        [sys.executable, str(SCRIPT)],
+        [sys.executable, str(SCRIPT), *args],
         check=False,
         cwd=cwd,
         env=outside_env(),
@@ -145,6 +213,85 @@ class Repository(unittest.TestCase):
             nested = run_script(repo / "docs")
             self.assertEqual(nested.returncode, 1)
             self.assertIn("docs/adrs/2026-10-30-1031-b.md", nested.stderr)
+
+    def test_a_removed_id_in_the_repository_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            adr_dir = repo / "docs" / "adrs"
+            adr_dir.mkdir(parents=True)
+            (adr_dir / "removed.json").write_text(table(row()) + "\n")
+            (adr_dir / "2026-10-30-1031-again.md").write_text("# ADR\n")
+            git(repo, "init", "-q")
+            git(repo, "add", "docs/adrs/removed.json")
+            self.assertEqual(run_script(repo).returncode, 0)
+            git(repo, "add", "docs/adrs/2026-10-30-1031-again.md")
+            result = run_script(repo / "docs")
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("ADR-2026-10-30-1031 was removed", result.stderr)
+            (adr_dir / "removed.json").write_text("{}\n")
+            self.assertIn("docs/adrs/removed.json: ", run_script(repo).stderr)
+
+
+class AddedSince(unittest.TestCase):
+    """--added-since prints a warning for more than two new ADRs, never fails."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.repo = Path(tmp.name)
+        self.adrs = self.repo / "docs" / "adrs"
+        self.adrs.mkdir(parents=True)
+        git(self.repo, "init", "-q")
+        self.commit("2026-10-30-1031-old.md", "README.md")
+        git(self.repo, "tag", "base")
+
+    def commit(self, *names: str) -> None:
+        for name in names:
+            (self.adrs / name).write_text(f"# {name}\n")
+        git(self.repo, "add", "docs")
+        git(
+            self.repo,
+            "-c", "user.name=t", "-c", "user.email=t@t", "-c", "core.hooksPath=/dev/null",
+            "commit", "-q", "-m", "x",
+        )  # fmt: skip
+
+    def added(self):
+        result = run_script(self.repo / "docs", "--added-since", "base")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_two_new_adrs_warn_nothing(self):
+        self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "removed.json")
+        out = self.added()
+        self.assertIn("2 ADRs added since base.", out)
+        self.assertNotIn("::warning", out)
+
+    def test_three_new_adrs_warn(self):
+        names = ("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "2026-10-30-1034-c.md")
+        self.commit(*names)
+        out = self.added()
+        self.assertIn(
+            "::warning title=More than 2 ADRs::This pull request adds 3 ADRs", out
+        )
+        for name in names:
+            self.assertIn(f"docs/adrs/{name}", out)
+
+    def test_a_renamed_or_changed_adr_is_not_added(self):
+        git(
+            self.repo,
+            "mv",
+            "docs/adrs/2026-10-30-1031-old.md",
+            "docs/adrs/2026-10-30-1031-new.md",
+        )
+        self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "README.md")
+        self.assertIn("2 ADRs added since base.", self.added())
+
+    def test_a_base_it_cannot_read_warns_and_passes(self):
+        result = run_script(self.repo, "--added-since", "no-such-ref")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(
+            "::warning title=ADRs added::cannot diff no-such-ref", result.stdout
+        )
 
 
 if __name__ == "__main__":

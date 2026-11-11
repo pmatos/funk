@@ -128,7 +128,7 @@ is checked.
 - The source checks read words, not meaning: code that builds a core op's
   name from pieces would pass them. They stop plain per-op code; the
   theorems, the empty registry and the test dialects of
-  ADR-2026-10-30-1146 and ADR-2026-10-30-2040 check behaviour.
+  ADR-2026-10-30-1146 and ADR-2026-11-09-2306 check behaviour.
 - Generic code that needs a word of the core dialect's text for a reason
   other than per-op code must move behind a dialect's class, or a new ADR
   must move the line.

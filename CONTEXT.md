@@ -161,7 +161,7 @@ change to the IR, the parser or the printer. Its ops and types are named
 One dialect that holds the ops of two dialects over the same types, so that
 one module can mix them. It sends each op name to one of the two, so no op
 name may belong to both. Only the Lean tests build one, from the core
-dialect and a test dialect (ADR-2026-10-30-2040).
+dialect and a test extension over it (ADR-2026-11-09-2306).
 
 ### Semantics
 

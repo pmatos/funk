@@ -1,8 +1,8 @@
 # Current decisions: the x86-64 backend
 
-This page says what holds today for the x86-64 backend. It only summarizes
-the ADRs it cites (ADR-2026-11-09-1610). When this page and an ADR disagree,
-the page has a bug.
+This page says what holds today for the x86-64 backend. It is the record: when
+this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
+(ADR-2026-11-09-1610).
 
 ## The crate
 

@@ -30,6 +30,9 @@ private def caseTable : String := include_str "citation-cases.json"
 private def caseFailures : Except String (Array String) := do
   let table ← Lean.Json.parse caseTable
   let known ← table.getObjValAs? (Array String) "known"
+  let removed ← (← table.getObjValAs? (Array Lean.Json) "removed").mapM fun row =>
+    return ((← row.getObjValAs? String "id"), (← row.getObjValAs? String "now"))
+  let gone (id : String) := (removed.find? (·.1 == id)).map (·.2)
   let mut out := #[]
   for entry in ← table.getObjValAs? (Array Lean.Json) "cases" do
     let text ← entry.getObjValAs? String "text"
@@ -41,7 +44,7 @@ private def caseFailures : Except String (Array String) := do
       s!"{line}:{col} {c.text}"
     unless found == cites do
       out := out.push s!"{text.quote}: citations {found}, expected {cites}"
-    let got := checkText (known.contains ·) "a.md" text
+    let got := checkText (known.contains ·) gone "a.md" text
     unless got == errors do
       out := out.push s!"{text.quote}: errors {got}, expected {errors}"
   return out
@@ -61,6 +64,13 @@ private def caseFailures : Except String (Array String) := do
 #guard adrIdOfFileName? "2026-10-30-103112-adr.md" == some "2026-10-30-103112"
 #guard adrIdOfFileName? "2026-10-30-10311-adr.md" == none
 #guard adrIdOfFileName? "README.md" == none
+
+/-! `removed.json` gives each deleted ADR's id, from its file name, and where its rule lives now. -/
+
+#guard parseRemoved "{\"removed\": [{\"file\": \"2026-10-29-2016-a.md\", \"now\": \"here\", \"commit\": \"0123456789ab\"}]}" ==
+  .ok #[("2026-10-29-2016", "here")]
+#guard (parseRemoved "{\"removed\": [{\"file\": \"notes.md\", \"now\": \"here\"}]}").toOption.isNone
+#guard (parseRemoved "{\"removed\": {}}").toOption.isNone
 
 /-! The linking tests below know one ADR. -/
 

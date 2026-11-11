@@ -1,8 +1,8 @@
 # Current decisions: the spec site
 
 This page says what holds today for the spec, its published site and the Lean
-build behind them. It summarizes the ADRs it cites. When this page and an ADR
-disagree, that is a bug in this page (ADR-2026-11-09-1610).
+build behind them. It is the record: when this page and an ADR disagree, the
+page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## What the spec is
 

@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from adr_index import AREAS, AdrError, holds, parse_adr, render, run
+from adr_index import AREAS, AdrError, holds, parse_adr, render, run, slugs
+from check_adr_ids import Removed
 
 
 def adr_text(
@@ -31,7 +32,6 @@ class Parsing(unittest.TestCase):
         self.assertEqual(adr.title, "We do `x`")
         self.assertEqual(adr.tier, "direction")
         self.assertEqual(adr.area, "process")
-        self.assertIsNone(adr.superseded_by)
         self.assertEqual(adr.followed_by, [])
 
     def test_status_may_wrap_over_lines(self):
@@ -54,10 +54,9 @@ class Parsing(unittest.TestCase):
             ],
         )
 
-    def test_superseded(self):
-        adr = parsed("2030-01-01-0001", status="superseded by ADR-2030-01-01-0002")
-        self.assertEqual(adr.superseded_by, "2030-01-01-0002")
-        self.assertEqual(adr.followed_by, [])
+    def test_rejects_superseded(self):
+        with self.assertRaisesRegex(AdrError, "edited in place"):
+            parsed("2030-01-01-0001", status="superseded by ADR-2030-01-01-0002")
 
     def test_rejects_a_missing_tier_line(self):
         text = "# A decision\n\nStatus: accepted\n\n## Context\n"
@@ -102,19 +101,6 @@ class Holds(unittest.TestCase):
             [first.id, second.id, third.id, fourth.id],
         )
         self.assertEqual(found[second.id], [second.id, fourth.id])
-
-    def test_a_superseded_adr_gives_way_to_its_successor(self):
-        old = parsed("2030-01-01-0001", status="superseded by ADR-2030-01-01-0002")
-        new = parsed("2030-01-01-0002")
-        self.assertEqual(holds([old, new])[old.id], [new.id])
-
-    def test_a_superseded_refiner_gives_way_in_a_chain(self):
-        first = parsed(
-            "2030-01-01-0001", status="accepted; refined by ADR-2030-01-01-0002"
-        )
-        second = parsed("2030-01-01-0002", status="superseded by ADR-2030-01-01-0003")
-        third = parsed("2030-01-01-0003")
-        self.assertEqual(holds([first, second, third])[first.id], [first.id, third.id])
 
     def test_a_chain_to_an_unknown_adr_is_an_error(self):
         one = parsed(
@@ -162,9 +148,66 @@ class Rendering(unittest.TestCase):
             ],
         )
 
+    def test_removed_rows_follow_in_order_of_id(self):
+        adr = parsed("2030-01-01-0002")
+        removed = [
+            Removed(
+                "2030-01-01-0003",
+                "2030-01-01-0003-c.md",
+                "ADR-2030-01-01-0002",
+                "0123456789ab",
+            ),
+            Removed(
+                "2030-01-01-0001",
+                "2030-01-01-0001-a.md",
+                "docs/decisions/process.md#adrs",
+                "abcdef012345",
+            ),
+        ]
+        text = render([adr], removed)
+        self.assertEqual(
+            text.split("## Removed\n")[1].splitlines()[-2:],
+            [
+                (
+                    "| `ADR-2030-01-01-0001` | [process.md#adrs](../decisions/process.md#adrs)"
+                    " | [`abcdef012345`](https://github.com/pmatos/funk/blob/abcdef012345"
+                    "/docs/adrs/2030-01-01-0001-a.md) |"
+                ),
+                (
+                    "| `ADR-2030-01-01-0003` | [ADR-2030-01-01-0002](2030-01-01-0002-a-slug.md)"
+                    " | [`0123456789ab`](https://github.com/pmatos/funk/blob/0123456789ab"
+                    "/docs/adrs/2030-01-01-0003-c.md) |"
+                ),
+            ],
+        )
+
+    def test_a_removed_rule_must_live_in_an_adr_or_a_page(self):
+        for now in ("ADR-2030-01-01-0009", "somewhere", "docs/decisions/a/b.md"):
+            with self.subTest(now=now), self.assertRaisesRegex(AdrError, "neither"):
+                render(
+                    [],
+                    [
+                        Removed(
+                            "2030-01-01-0001",
+                            "2030-01-01-0001-a.md",
+                            now,
+                            "0123456789ab",
+                        )
+                    ],
+                )
+
+    def test_slugs_are_githubs_anchors(self):
+        text = "# Current decisions: process\n\n## ADR ids\n### `INDEX.md`, and more\n#no\n"
+        self.assertEqual(
+            slugs(text), {"current-decisions-process", "adr-ids", "indexmd-and-more"}
+        )
+
     def test_a_pipe_in_a_title_stays_in_its_cell(self):
         text = render([parsed("2030-01-01-0001", title="a | b")])
         self.assertIn("a \\| b", text)
+
+
+REMOVED = "removed.json"
 
 
 def git(repo: Path, *args: str) -> None:
@@ -253,13 +296,35 @@ class Running(unittest.TestCase):
         self.assertIn("ADR-2030-01-01-0001", message)
         self.assertIn("process", message)
 
-    def test_a_superseded_adr_need_not_be_cited(self):
-        self.add(
-            "2030-01-01-0001-a.md", adr_text(status="superseded by ADR-2030-01-01-0002")
-        )
+    def test_a_removed_adr_is_listed_and_its_page_section_checked(self):
         self.add("2030-01-01-0002-b.md", adr_text())
         self.add_pages("2030-01-01-0002")
+        self.add_page("process.md", "# p\n\n## The rule\n\nADR-2030-01-01-0002\n")
+
+        def table(now: str) -> str:
+            row = f'{{"file": "2030-01-01-0001-a.md", "now": "{now}", "commit": "0123456789ab"}}'
+            return f'{{"removed": [{row}]}}'
+
+        self.add(REMOVED, table("docs/decisions/process.md#the-rule"))
         self.assertEqual(self.run_it(write=True), (0, ""))
+        text = (self.adrs / "INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("| `ADR-2030-01-01-0001` | [process.md#the-rule]", text)
+        for now, problem in (
+            ("docs/decisions/process.md#gone", "has no heading #gone"),
+            ("docs/decisions/other.md", "other.md is not tracked"),
+        ):
+            self.add(REMOVED, table(now))
+            status, message = self.run_it(write=True)
+            self.assertEqual(status, 1)
+            self.assertIn(problem, message)
+
+    def test_a_malformed_removed_table_fails(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
+        self.add(REMOVED, '{"removed": 1}')
+        status, message = self.run_it(write=True)
+        self.assertEqual(status, 1)
+        self.assertIn("removed.json", message)
 
     def test_a_citation_in_code_does_not_count(self):
         self.add("2030-01-01-0001-a.md", adr_text())
