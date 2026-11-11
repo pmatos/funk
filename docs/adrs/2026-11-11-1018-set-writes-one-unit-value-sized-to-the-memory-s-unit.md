@@ -14,8 +14,9 @@ on 2026-11-11.
 ## Decision
 
 - Set writes one unit value into each unit of its range. The value is sized
-  to the memory's unit: an `i8` on the default memory, and an integer of the
-  unit's width on a memory whose unit is wider or narrower.
+  to the memory's unit: an `i8` on the default memory, whose unit is an 8-bit
+  byte unless the data layout says otherwise, and an integer of the unit's
+  width on any memory whose unit is wider or narrower.
 
 This refines ADR-2026-11-09-1551's set.
 

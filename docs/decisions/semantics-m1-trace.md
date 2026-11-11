@@ -11,15 +11,14 @@ yet. semantics.md says what a run shows in M0.
 ## What a run shows
 
 A run shows an ordered trace of events (ADR-2026-11-09-1540). The core dialect
-has two kinds of event:
+has these kinds of event:
 
 - An external call: the callee's symbol, its arguments, and the units reachable
   from its pointer arguments when the call is made.
 - A volatile access: load or store, the accessed location as the observer sees
   it, and the value read or written.
-
-An inline assembly block whose effect set says observable is an event too
-(ADR-2026-11-11-1015). semantics-m1-design.md has the rule.
+- An inline assembly block whose effect set says observable
+  (ADR-2026-11-11-1015). semantics-m1-design.md has the rule.
 
 The trace ends in one of three ways (ADR-2026-11-09-1540):
 
@@ -78,9 +77,11 @@ be restated are those that #206 and #209 touch.
 
 Each test supplies a scripted world: the results of each external call, in
 order, and any writes into escaped memory. The script may create and free heap
-allocations as part of a call's answer (ADR-2026-11-11-1017). A test that calls
-an external function must come with its script. `fir-ref run` reports the trace
-and the end of the run (ADR-2026-11-09-1540).
+allocations as part of a call's answer (ADR-2026-11-11-1017). It answers an
+observable inline assembly block in trace order, and one without observable by
+the block and its operands (ADR-2026-11-11-1015). A test that calls an external
+function must come with its script. `fir-ref run` reports the trace and the end
+of the run (ADR-2026-11-09-1540).
 
 For a native run, the harness generates a stub library from the same script. It
 is linked in place of the external functions. It records each call (symbol,

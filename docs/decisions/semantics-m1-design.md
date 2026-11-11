@@ -57,8 +57,8 @@ raw addresses (ADR-2026-11-09-1542).
 Memory ops carry an `ordering` attribute. M1 accepts only `nonatomic`, so a
 concurrency model (S6) needs no format change. Allocations carry a kind: stack,
 global, or heap through external calls. Managed memory can be added as another
-kind later (ADR-2026-11-09-1542). The world creates and frees heap allocations
-when it answers an external call (ADR-2026-11-11-1017).
+kind later (ADR-2026-11-09-1542). The world may create and free heap
+allocations when it answers an external call (ADR-2026-11-11-1017).
 
 Every theorem that relies on `ptr` having no values is restated. Call congruence
 is the first, in #214 (ADR-2026-11-09-1542).
@@ -206,7 +206,8 @@ Three ops copy, move and set memory, over one memory and a length in its units
   destination is UB.
 - Move does the same and allows overlap.
 - Set writes one unit value into each unit. The value is sized to the memory's
-  unit: an `i8` on the default memory (ADR-2026-11-11-1018).
+  unit: an `i8` on the default memory, whose unit is an 8-bit byte unless the
+  layout says otherwise (ADR-2026-11-11-1018).
 
 Copy and move read the source memory and write the destination. Set writes. All
 three may be UB, for out-of-bounds access. The naive backend lowers them to

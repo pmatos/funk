@@ -181,7 +181,8 @@ it, and an `i128` argument looks for its pair from `%rsi` on
 The callee's `ret` writes every result to the area and returns the address in
 `%rax`. The caller copies each result into its slot right after the call. An
 `iN` result is in the low `N` bits of its eightbyte. An `i1` is 0 or 1 in all
-64 bits. The caller stores each eightbyte as it comes, with no extension.
+64 bits, which no caller relies on unless it is marked (ADR-2026-11-11-1019).
+The caller stores each eightbyte as it comes, with no extension.
 `crates/funk-x86-64/src/abi/results.rs` lays out and emits both sides
 (ADR-2026-11-03-0109).
 
@@ -220,11 +221,11 @@ match the C ABI. The backend extends a marked argument at the call and a marked
 result at the return, and nothing unmarked. An `i1` marked `zext` is a C
 `_Bool`. With no marker, neither side may rely on the upper bits.
 
-Code that calls a C function may rely only on bit 0 of an `i1` result. It may
-also read `%al` as 0 or 1 (ADR-2026-10-30-1232). No caller, funk's own code
-included, relies on the bits above bit 0 of an unmarked `i1` result, though the
-backend still returns it as 0 or 1 in all of `%rax`. A caller that needs a C
-`_Bool` relies on the `zext` marker (ADR-2026-11-11-1019).
+Code that calls a C function may rely only on bit 0 of an unmarked `i1` result
+(ADR-2026-10-30-1232). A caller that needs a C `_Bool`, 0 or 1 in `%al`, relies
+on the `zext` marker. The backend still returns an unmarked `i1` as 0 or 1 in
+all of `%rax`, but no caller, funk's own code included, relies on the bits above
+bit 0 (ADR-2026-11-11-1019).
 
 ## Poison
 
