@@ -1,6 +1,6 @@
 # Copying, moving and setting memory are ops that keep pointer provenance
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1018
 Tier: direction; area: semantics
 
 ## Context
