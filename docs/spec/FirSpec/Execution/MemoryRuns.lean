@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6404567729434908934")
+:::moduleDocs (fingerprint := "2197304219603556690")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -88,14 +88,6 @@ are its runs in the set monad, by the theorem above, since its semantics
 with memory is its semantics in the set monad, lifted.
 :::
 
-:::readable Fir.Func.memProgress_of_lawful (fingerprint := "12364916896146432039")
-*Theorem: progress, with no memory touched.* For a dialect that lifts the
-set monad and is lawful for poison, when every function of the module is
-valid and runs within the module, a run with memory has an outcome at
-every budget. Fuel monotonicity holds of the runs with memory of every
-dialect ({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[runs with memory at every budget]).
-:::
-
 :::readable Fir.Func.memRuns_args_isRefinedBy_of_lawful Fir.Func.memRuns_replaceBody_isRefinedBy_of_lawful (fingerprint := "12859629054751519097")
 *Theorem: refinement, with no memory touched.* For a lawful dialect that
 lifts the set monad, in a module whose functions are all valid: a
@@ -103,4 +95,8 @@ function's behaviour with memory on arguments that refine others refines
 its behaviour with memory on those others; and replacing the body of a
 function with one that refines it with memory refines every function of
 the module with memory, under the conditions of the theorem on runs.
+Fuel monotonicity and progress hold of the runs with memory of every
+dialect, whatever its ops do to the memories
+({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[runs with memory at every budget],
+{ref "The-fir-specification--Memory--Progress-and-no-stuck-path___-with-memory"}[progress with memory]).
 :::

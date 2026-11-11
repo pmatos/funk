@@ -66,7 +66,7 @@ theorem coreToyBit_validIsWellFormed : ValidIsWellFormed (d := CoreToyBit) :=
 theorem coreToyBit_printThenParse : PrintThenParse (d := CoreToyBit) Fir.parse :=
   Dialect.lift.sum_printThenParse bit_new core_sub_toy
 
-/-! # Lawful poison and effects -/
+/-! # Lawful poison, effects and totality -/
 
 /-- The sum of the core and the toy dialect is lawful. -/
 instance coreToy_lawful : LawfulDialectPoison CoreToy := Dialect.sum.lawfulPoison fun _ h => h
@@ -75,6 +75,11 @@ instance coreToy_lawful : LawfulDialectPoison CoreToy := Dialect.sum.lawfulPoiso
 both are. -/
 instance coreToy_lawfulEffects : LawfulDialectEffects CoreToy :=
   Dialect.sum.lawfulEffects fun _ h => h
+
+/-- The sum of the core and the toy dialect is lawful in its totality, since
+both are. -/
+instance coreToy_lawfulTotal : LawfulDialectTotal CoreToy :=
+  Dialect.sum.lawfulTotal fun _ h => h
 
 /-- The sum of three dialects is lawful: the inclusion of the core's types
 is lawful, and the bit dialect accepts each core type that the core
@@ -86,6 +91,11 @@ instance coreToyBit_lawful : LawfulDialectPoison CoreToyBit :=
 conditions. -/
 instance coreToyBit_lawfulEffects : LawfulDialectEffects CoreToyBit :=
   Dialect.lift.sum_lawfulEffects TyIncl.lawful_inl fun _ h => h
+
+/-- The sum of three dialects is lawful in its totality: the bit dialect
+accepts each core type that the core accepts. -/
+instance coreToyBit_lawfulTotal : LawfulDialectTotal CoreToyBit :=
+  Dialect.lift.sum_lawfulTotal fun _ h => h
 
 /-- The effects of an op of the sum of three dialects, on the memories of
 its three dialects. -/

@@ -83,8 +83,12 @@ import Fir.Execution.StatePaths
 import Fir.Execution.MemoryMonotone
 import Fir.Execution.MemoryObligations
 import Fir.Execution.MemoryObligationLaws
+import Fir.Execution.MemoryTotal
+import Fir.Execution.MemoryCallSteps
+import Fir.Execution.MemoryProgress
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
+import Fir.Core.MemoryRuns
 import Fir.Execution.Summary
 import Fir.Execution.SummaryLaws
 import Fir.Execution.SummaryFixpoint
@@ -143,5 +147,6 @@ import Fir.Sum.Lift
 import Fir.Sum.LiftTextLaws
 import Fir.Sum.LiftPoisonLaws
 import Fir.Sum.LiftEffectLaws
+import Fir.Sum.TotalLaws
 import Fir.Core.Names
 import Fir.Validation.DialectSet

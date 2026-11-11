@@ -129,6 +129,40 @@ theorem progress (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty
     Progress (f.runs M args) :=
   Func.progress_of_lawful hv hm hf args
 
+/-- No path of a run with memory is stuck, for every function of every
+dialect, wherever a run names its memories, whatever its ops do to the
+memories, when its module's functions are valid and run within the module
+with memory at that naming. -/
+theorem memNeverStuck (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
+    [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectValidation d] {N : Type}
+    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
+    {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M)
+    {f : Func d} (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
+    NeverStuck (f.memRuns unit ρ M args) :=
+  Func.memNeverStuck unit ρ hv hm hf args
+
+/-- A run with memory has an outcome at every budget, for every function of
+every dialect lawful in its totality, wherever a run names its memories,
+when its module's functions are valid and run within the module with
+memory at that naming. -/
+theorem memProgress (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
+    [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectValidation d]
+    [LawfulDialectTotal d] {N : Type} [DecidableEq N] (unit : N → Nat)
+    (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
+    (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M)
+    {f : Func d} (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
+    Progress (f.memRuns unit ρ M args) :=
+  Func.memProgress unit ρ hv hm hf args
+
+/-- Every function of every dialect that lifts the set monad and runs within
+its module runs within it with memory, wherever a run names its
+memories. -/
+theorem inModuleAt (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
+    [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM] [LiftsSetM d] {N : Type}
+    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {M : Module d} {f : Func d}
+    (h : f.InModule M) : f.InModuleAt unit ρ M :=
+  h.inModuleAt unit ρ
+
 /-! # Behaviour models
 
 The core dialect's behaviour is a set of outcomes, and a dialect that needs

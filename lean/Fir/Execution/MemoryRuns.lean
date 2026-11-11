@@ -150,21 +150,11 @@ theorem Func.memRuns_eq [LiftsSetM d] (M : Module d) (f : Func d) :
   simp only [Functor.map_map, id_map']
   rfl
 
-/-! # Progress and refinement, with no memory touched -/
+/-! # Refinement, with no memory touched -/
 
 variable [LiftsSetM d] [DialectValidation d] [TyPoison d.Ty] [TyRefinement d.Ty]
   [LawfulDialectPoison d]
   {ctx : ModuleContext d} {M : Module d}
-
-/-- A run with memory of a function of a lawful dialect whose ops touch no
-memory has an outcome at every budget, when every function of its module is
-valid and runs within the module. -/
-theorem Func.memProgress_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ctx)
-    (hm : ∀ g ∈ M.funcs, g.InModule M) {f : Func d} (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) :
-    Progress (f.memRuns unit ρ M args) := by
-  rw [Func.memRuns_eq]
-  exact Func.progress_of_lawful hv hm hf args
 
 /-- Refined arguments, with memory: for a lawful dialect whose ops touch no
 memory, a function's behaviour with memory on arguments that refine others
