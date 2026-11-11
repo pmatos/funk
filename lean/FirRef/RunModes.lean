@@ -6,7 +6,8 @@ spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`
 (ADR-2026-10-30-2218, ADR-2026-10-31-0002). Each of them builds the tree
 with `Func.runOps`, which takes stack per step and per level of calls, and
 `ChoiceTree.sample` and `ChoiceTree.explore` add stack per choice. Here,
-each mode walks the states of `FirRef.Machine` instead, in loops whose
+each mode walks the states of `FirRef.Machine`, which carry the memories
+of the run (ADR-2026-11-11-1328), instead, in loops whose
 recursive calls are tail calls: `Machine.advance` takes the steps between
 two choices, scripted and sampled modes keep what they have read or drawn
 in an accumulator, and exhaustive mode keeps the states it has still to
@@ -25,7 +26,7 @@ ADR-2026-11-03-0600, ADR-2026-11-04-2132).
 
 namespace FirRef
 
-open Fir
+open Fir Memory
 
 namespace Machine
 
@@ -52,14 +53,17 @@ theorem treeSize_pos : ∀ t : ChoiceTree ε α, 0 < treeSize t
   | .choose .. | .pure _ | .ub _ | .noOutcome _ => by simp only [treeSize]; omega
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DecidableEq d.Ty] [DialectCall d]
-  [DialectDenote d (ChoiceTree ε)] (M : Module d)
+  {N : Type} [DecidableEq N] {unit : N → Nat}
+  [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (M : Module d)
 
-theorem tree_of_choose {c : Cur d ε} {st : List (Frame d)} {w : Nat}
-    {k : BitVec w → Cur d ε × List (Frame d)} (h : advance M c st = .choose w k) :
+local notation "Mems" => Memories N unit
+
+theorem tree_of_choose {c : Cur d ε Mems} {st : List (Frame d)} {w : Nat}
+    {k : BitVec w → Cur d ε Mems × List (Frame d)} (h : advance M c st = .choose w k) :
     tree M c st = .choose w fun b => tree M (k b).1 (k b).2 := by
   rw [← advance_tree, h]; rfl
 
-theorem tree_of_leaf {c : Cur d ε} {st : List (Frame d)} {l : Leaf d ε}
+theorem tree_of_leaf {c : Cur d ε Mems} {st : List (Frame d)} {l : Leaf d ε}
     (h : advance M c st = .leaf l) : tree M c st = leafTree l := by
   rw [← advance_tree, h]; rfl
 
@@ -67,8 +71,8 @@ theorem tree_of_leaf {c : Cur d ε} {st : List (Frame d)} {l : Leaf d ε}
 
 /-- Scripted mode from a state, after `made` choices: the spec's
 `ChoiceTree.script` on the state's tree. -/
-def scriptFrom {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (s : Cur d ε × List (Frame d))
-    (cs : List σ) (made : Nat) : Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
+def scriptFrom {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
+    (s : Cur d ε Mems × List (Frame d)) (cs : List σ) (made : Nat) : Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
   match advance M s.1 s.2, cs with
   | .leaf l, cs => (leafTree l).script read cs made
   | .choose w _, [] => .error (.short made w)
@@ -78,7 +82,7 @@ def scriptFrom {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (s : 
 termination_by cs.length
 
 theorem scriptFrom_eq {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
-    (s : Cur d ε × List (Frame d)) (cs : List σ) (made : Nat) :
+    (s : Cur d ε Mems × List (Frame d)) (cs : List σ) (made : Nat) :
     scriptFrom M read s cs made = (tree M s.1 s.2).script read cs made := by
   fun_induction scriptFrom M read s cs made with
   | case1 s made l cs h => rw [tree_of_leaf M h]
@@ -88,7 +92,8 @@ theorem scriptFrom_eq {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)
 
 /-! # Sampled mode -/
 
-omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DialectDenote d (ChoiceTree ε)] in
+omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DecidableEq N]
+  [DialectDenote d (StateT Mems (ChoiceTree ε))] in
 theorem sample_leafTree {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (l : Leaf d ε) (g : γ) :
     (leafTree l).sample draw g = (l, []) := by
   cases l <;> rfl
@@ -96,7 +101,7 @@ theorem sample_leafTree {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
 /-- Sampled mode from a state, with the values drawn so far in `acc`, the
 last first: the spec's `ChoiceTree.sample` on the state's tree, after
 them. -/
-def sampleFrom {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (s : Cur d ε × List (Frame d))
+def sampleFrom {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (s : Cur d ε Mems × List (Frame d))
     (g : γ) (acc : List ChoiceTree.Chosen) : Leaf d ε × List ChoiceTree.Chosen :=
   match _h : advance M s.1 s.2 with
   | .leaf l => (l, acc.reverse)
@@ -107,7 +112,7 @@ termination_by treeSize (tree M s.1 s.2)
 decreasing_by rw [tree_of_choose M _h]; exact treeSize_lt (fun b => tree M (k b).1 (k b).2) _
 
 theorem sampleFrom_eq {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
-    (s : Cur d ε × List (Frame d)) (g : γ) (acc : List ChoiceTree.Chosen) :
+    (s : Cur d ε Mems × List (Frame d)) (g : γ) (acc : List ChoiceTree.Chosen) :
     sampleFrom M draw s g acc =
       (((tree M s.1 s.2).sample draw g).1, acc.reverse ++ ((tree M s.1 s.2).sample draw g).2) := by
   fun_induction sampleFrom M draw s g acc with
@@ -156,32 +161,32 @@ def shift (made : Nat) : Leaf d ε × Nat → Leaf d ε × Nat := fun p => (p.1,
 choice budget and the choices made before it, or the values of a choice
 still to visit, with the budget and the count of choices that the state
 after each of them starts from. -/
-inductive Work (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε : Type) where
-  | state (s : Cur d ε × List (Frame d)) (budget made : Nat)
-  | values (w : Nat) (k : BitVec w → Cur d ε × List (Frame d)) (bs : List (BitVec w))
+inductive Work (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ : Type) where
+  | state (s : Cur d ε σ × List (Frame d)) (budget made : Nat)
+  | values (w : Nat) (k : BitVec w → Cur d ε σ × List (Frame d)) (bs : List (BitVec w))
       (budget made : Nat)
 
 /-- What exhaustive mode gives for a state, with its choice budget and the
 choices made before it: the spec's `ChoiceTree.explore` on its tree. -/
-def exploredState (s : Cur d ε × List (Frame d)) (budget made : Nat) :
+def exploredState (s : Cur d ε Mems × List (Frame d)) (budget made : Nat) :
     Option (List (Leaf d ε × Nat)) :=
   ((tree M s.1 s.2).explore budget).map (List.map (shift made))
 
 /-- What exhaustive mode gives for an entry of the work list: for the
 values of a choice, the spec's `ChoiceTree.collect` of the states after
 them. -/
-def explored : Work d ε → Option (List (Leaf d ε × Nat))
+def explored : Work d ε Mems → Option (List (Leaf d ε × Nat))
   | .state s budget made => exploredState M s budget made
   | .values _ k bs budget made =>
     ChoiceTree.collect (fun b => exploredState M (k b) budget made) bs []
 
 /-- A measure of an entry of the work list. -/
-def Work.size : Work d ε → Nat
+def Work.size : Work d ε Mems → Nat
   | .state s _ _ => treeSize (tree M s.1 s.2)
   | .values _ k bs _ _ => (bs.map fun b => treeSize (tree M (k b).1 (k b).2) + 1).sum + 1
 
 /-- A measure of the work list that each step of `exploreFrom` lowers. -/
-def workSize (ps : List (Work d ε)) : Nat :=
+def workSize (ps : List (Work d ε Mems)) : Nat :=
   (ps.map (Work.size M)).sum
 
 set_option wf.preprocess false in
@@ -190,7 +195,7 @@ the spec's `ChoiceTree.collect` of `explored` over the work list. At a
 choice it visits the values one at a time, from zero up, and so goes on
 from a value only when it gets to it and stops at the first path over the
 budget, as the spec does. -/
-def exploreFrom : List (Work d ε) → List (Leaf d ε × Nat) → Option (List (Leaf d ε × Nat))
+def exploreFrom : List (Work d ε Mems) → List (Leaf d ε × Nat) → Option (List (Leaf d ε × Nat))
   | [], acc => some acc.reverse
   | .state s budget made :: rest, acc => match _h : advance M s.1 s.2 with
     | .leaf l => exploreFrom rest ((l, made) :: acc)
@@ -216,18 +221,20 @@ decreasing_by
   · simp only [workSize, Work.size, List.map_cons, List.sum_cons]
     omega
 
-omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DialectDenote d (ChoiceTree ε)] in
+omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DecidableEq N]
+  [DialectDenote d (StateT Mems (ChoiceTree ε))] in
 theorem shift_shift (made : Nat) : shift (d := d) (ε := ε) made ∘ shift 1 = shift (made + 1) := by
   funext p
   simp only [shift, Function.comp_apply, Prod.mk.injEq, true_and]
   omega
 
-omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DialectDenote d (ChoiceTree ε)] in
+omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DecidableEq N]
+  [DialectDenote d (StateT Mems (ChoiceTree ε))] in
 theorem explore_leafTree (l : Leaf d ε) (budget : Nat) :
     (leafTree l).explore budget = some [(l, 0)] := by
   cases l <;> rfl
 
-theorem exploreFrom_eq (ps : List (Work d ε)) (acc : List (Leaf d ε × Nat)) :
+theorem exploreFrom_eq (ps : List (Work d ε Mems)) (acc : List (Leaf d ε × Nat)) :
     exploreFrom M ps acc = ChoiceTree.collect (explored M) ps acc := by
   fun_induction exploreFrom M ps acc with
   | case1 acc => rfl
@@ -286,94 +293,109 @@ theorem exploreFrom_eq (ps : List (Work d ε)) (acc : List (Leaf d ε × Nat)) :
       | none => rfl
       | some L => simp [List.reverseAux_eq]
 
-omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DialectDenote d (ChoiceTree ε)] in
+omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] [DecidableEq N]
+  [DialectDenote d (StateT Mems (ChoiceTree ε))] in
 theorem map_shift_zero : ∀ l : List (Leaf d ε × Nat), l.map (shift 0) = l
   | [] => rfl
   | _ :: l => by rw [List.map_cons, map_shift_zero l]; rfl
 
-/-- The spec's run of a function, as the state that it starts from. -/
+/-- The spec's tree of a run with memory of a function, as the state that it
+starts from: the function's ops, from the empty memories with a frame
+entered. -/
 theorem run_tree (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
-    (f.run M (m := ChoiceTree ε) args fuel).run = match f.enter args.toDVals with
+    f.memTree unit (ε := ε) M args fuel = match f.enter args.toDVals with
       | .error e => .pure (.error e)
-      | .ok (body, env) => tree M (.ops fuel f (Bindings.ofEnv env) body) [] := by
+      | .ok (body, env) =>
+        tree M (.ops fuel f (Bindings.ofEnv env) body (Memories.empty : Mems).enter) [] := by
+  show Prod.fst <$> runAt (f.run M args fuel) Memories.empty = _
   unfold Func.run
+  rw [runAt_bind]
   cases f.enter args.toDVals with
   | error e => rfl
   | ok p =>
-    show _ = (kont M [] (Func.runOps M fuel f (Bindings.ofEnv p.2).toEnv p.1)).run
-    rw [runOps_congr fuel f _ p.2 p.1 (same_toEnv (Bindings.agrees_ofEnv p.2))]
-    rfl
+    show Prod.fst <$> runAt (inFrame (Func.runOps M fuel f p.2 p.1) >>= _) Memories.empty =
+      Prod.fst <$> kont M []
+        (runAt (Func.runOps M fuel f (Bindings.ofEnv p.2).toEnv p.1) Memories.empty.enter)
+    rw [runOps_congr fuel f _ p.2 p.1 (same_toEnv (Bindings.agrees_ofEnv p.2)), runAt_bind,
+      runAt_inFrame, ChoiceTree.bind_assoc]
+    congr 1
+
+/-- The state that a run with memory of `f` starts from, when its entry
+fits its arguments. -/
+abbrev start (f : Func d) (fuel : Nat) (body : List (Operation d)) (env : Env d) :
+    Cur d ε Mems × List (Frame d) :=
+  (.ops fuel f (Bindings.ofEnv env) body Memories.empty.enter, [])
 
 /-! # The modes on a function's run -/
 
-/-- Scripted mode on the run of the function `f` of the module `M` on
-`args` with `fuel` steps, by the machine. -/
+/-- Scripted mode on the run with memory of the function `f` of the module
+`M` on `args` with `fuel` steps, by the machine. -/
 def scripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
     Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
   match f.enter args.toDVals with
   | .error e => (ChoiceTree.pure (.error e) : ChoiceTree ε _).script read cs 0
-  | .ok (body, env) => scriptFrom M read (.ops fuel f (Bindings.ofEnv env) body, []) cs 0
+  | .ok (body, env) => scriptFrom M read (start (N := N) (unit := unit) f fuel body env) cs 0
 
 /-- Scripted mode by the machine is the spec's `ChoiceTree.script` on the
-tree of the run. -/
+tree of the run with memory. -/
 theorem scripted_eq {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
-    scripted (ε := ε) M read f args fuel cs =
-      (f.run M (m := ChoiceTree ε) args fuel).run.script read cs 0 := by
+    scripted (ε := ε) (unit := unit) M read f args fuel cs =
+      (f.memTree unit M args fuel).script read cs 0 := by
   unfold scripted
   rw [run_tree M f args fuel]
   cases f.enter args.toDVals with
   | error e => rfl
-  | ok p => exact scriptFrom_eq M read (.ops fuel f (Bindings.ofEnv p.2) p.1, []) cs 0
+  | ok p => exact scriptFrom_eq M read (start f fuel p.1 p.2) cs 0
 
-/-- Sampled mode on the run of the function `f` of the module `M` on `args`
-with `fuel` steps, by the machine. -/
+/-- Sampled mode on the run with memory of the function `f` of the module
+`M` on `args` with `fuel` steps, by the machine. -/
 def sampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     Leaf d ε × List ChoiceTree.Chosen :=
   match f.enter args.toDVals with
   | .error e => (.ok (.error e), [])
-  | .ok (body, env) => sampleFrom M draw (.ops fuel f (Bindings.ofEnv env) body, []) g []
+  | .ok (body, env) => sampleFrom M draw (start (N := N) (unit := unit) f fuel body env) g []
 
 /-- Sampled mode by the machine is the spec's `ChoiceTree.sample` on the
-tree of the run. -/
+tree of the run with memory. -/
 theorem sampled_eq {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
-    sampled (ε := ε) M draw f args fuel g =
-      (f.run M (m := ChoiceTree ε) args fuel).run.sample draw g := by
+    sampled (ε := ε) (unit := unit) M draw f args fuel g =
+      (f.memTree unit M args fuel).sample draw g := by
   unfold sampled
   rw [run_tree M f args fuel]
   cases f.enter args.toDVals with
   | error e => rfl
   | ok p => simp [sampleFrom_eq]
 
-/-- Exhaustive mode on the run of the function `f` of the module `M` on
-`args` with `fuel` steps and a choice budget of `budget` bits, by the
-machine. -/
+/-- Exhaustive mode on the run with memory of the function `f` of the
+module `M` on `args` with `fuel` steps and a choice budget of `budget`
+bits, by the machine. -/
 def exhaustive (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (Leaf d ε × Nat)) :=
   match f.enter args.toDVals with
   | .error e => some [(.ok (.error e), 0)]
   | .ok (body, env) =>
-    exploreFrom M [.state (.ops fuel f (Bindings.ofEnv env) body, []) budget 0] []
+    exploreFrom M [.state (start (N := N) (unit := unit) f fuel body env) budget 0] []
 
 /-- Exhaustive mode by the machine is the spec's `ChoiceTree.explore` on
-the tree of the run. -/
+the tree of the run with memory. -/
 theorem exhaustive_eq (f : Func d) (args : HVector toType (f.params.map (·.2)))
     (fuel budget : Nat) :
-    exhaustive (ε := ε) M f args fuel budget =
-      (f.run M (m := ChoiceTree ε) args fuel).run.explore budget := by
+    exhaustive (ε := ε) (unit := unit) M f args fuel budget =
+      (f.memTree unit M args fuel).explore budget := by
   unfold exhaustive
   rw [run_tree M f args fuel]
   cases f.enter args.toDVals with
   | error e => rfl
   | ok p =>
-    show exploreFrom M [.state (.ops fuel f (Bindings.ofEnv p.2) p.1, []) budget 0] [] =
-      (tree M (.ops fuel f (Bindings.ofEnv p.2) p.1) []).explore budget
+    show exploreFrom M [.state (start f fuel p.1 p.2) budget 0] [] =
+      (tree M (start (ε := ε) (N := N) (unit := unit) f fuel p.1 p.2).1 []).explore budget
     rw [exploreFrom_eq M, ChoiceTree.collect]
     simp only [explored, exploredState]
-    cases (tree (ε := ε) M (.ops fuel f (Bindings.ofEnv p.2) p.1) []).explore budget <;>
+    cases (tree M (start (ε := ε) (N := N) (unit := unit) f fuel p.1 p.2).1 []).explore budget <;>
       simp [ChoiceTree.collect, map_shift_zero]
 
 end Machine

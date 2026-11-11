@@ -144,6 +144,7 @@ import FirSpec.Execution.MemoryRefineUp
 import FirSpec.Execution.MemoryRefineDown
 import FirSpec.Execution.MemoryRefineRuns
 import FirSpec.Execution.MemoryReplace
+import FirSpec.Execution.MemoryModes
 import FirSpec.Core.MemoryRuns
 import FirSpec.Sum.Names
 import FirSpec.Validation.DialectSet

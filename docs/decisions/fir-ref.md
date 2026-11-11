@@ -196,6 +196,8 @@ run. `FirRef.Run` registers them for the core dialect, over `Core.scripted`,
 at any budget. Its frames and environments are on the heap, so a deep
 recursion costs memory, not stack (ADR-2026-11-04-2132).
 
+The modes and the machine run with memory; fir-ref-memory.md says how.
+
 A new mode of `fir-ref run` needs its own walk of the machine and its own
 `@[csimp]` theorem. Code that calls the spec's modes and does not import
 `FirRef.Run` still runs the spec's code (ADR-2026-11-04-2132).

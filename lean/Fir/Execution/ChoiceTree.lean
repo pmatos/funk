@@ -13,8 +13,9 @@ with no outcome at all, the empty set that an op without execution rules
 has (ADR-2026-10-30-1855). A node is a choice of _w_ bits, with one
 subtree for each value the bits may take.
 
-The tree's meaning is a set: each tree maps to the set of the ways its
-paths end. That map is a monad morphism, so a run of the interpreter in
+Trees are a lawful monad: running a tree then `pure` gives the tree, and
+sequences of trees associate. The tree's meaning is a set: each tree maps
+to the set of the ways its paths end. That map is a monad morphism, so a run of the interpreter in
 the tree maps to its run in the set monad, by the previous section.
 `fir-ref`'s three modes walk the tree: exhaustive mode visits every path,
 scripted mode follows the one path that a choice sequence names, and
@@ -49,6 +50,26 @@ def bind : ChoiceTree ε α → (α → ChoiceTree ε β) → ChoiceTree ε β
 instance : Monad (ChoiceTree ε) where
   pure := .pure
   bind := ChoiceTree.bind
+
+/-- A tree whose every result goes on with `pure` is the tree itself. -/
+theorem bind_pure : ∀ t : ChoiceTree ε α, t.bind .pure = t
+  | .pure _ | .ub _ | .noOutcome _ => rfl
+  | .choose w k => by
+    simp only [bind]
+    exact congrArg (ChoiceTree.choose w) (funext fun b => bind_pure (k b))
+
+/-- Binds of trees associate. -/
+theorem bind_assoc : ∀ (t : ChoiceTree ε α) (f : α → ChoiceTree ε β) (g : β → ChoiceTree ε γ),
+    (t.bind f).bind g = t.bind fun a => (f a).bind g
+  | .pure _, _, _ | .ub _, _, _ | .noOutcome _, _, _ => rfl
+  | .choose w k, f, g => by
+    simp only [bind]
+    exact congrArg (ChoiceTree.choose w) (funext fun b => bind_assoc (k b) f g)
+
+/-- The tree of choices is a lawful monad. -/
+instance : LawfulMonad (ChoiceTree ε) :=
+  LawfulMonad.mk' (ChoiceTree ε) (fun t => bind_pure t) (fun _ _ => rfl)
+    (fun t f g => bind_assoc t f g)
 
 instance : MonadChoice (ChoiceTree ε) := ⟨fun w => .choose w .pure⟩
 

@@ -12,11 +12,14 @@ reports the result as one JSON object on one line (ADR-2026-10-30-1856,
 ADR-2026-10-30-2218, ADR-2026-10-31-0002).
 
 `freeze` of poison makes a choice, so a run may end in many ways.
-`fir-ref` runs the interpreter in the spec's tree of choices, with the
-core dialect's rules, and walks the tree in one of three modes, the
+`fir-ref` runs the interpreter in the state layer over the spec's tree of
+choices, from the empty memories, with the core dialect's rules, and walks
+the tree in one of three modes, the
 spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`, which Lean
 proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
-`Core.sampled_outcomes`):
+`Core.sampled_outcomes`, and for the runs with memory
+`Core.scripted_memOutcomes`, `Core.exhaustive_memOutcomes` and
+`Core.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no
@@ -215,34 +218,42 @@ dialect, so they live in `fir-ref`'s command line, not in
 -/
 
 /-- `Core.scripted`, by the machine. -/
-def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
-    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
-  Machine.scripted M read f args fuel cs
+def runScripted {N : Type} [DecidableEq N] (unit : N → Nat) {σ : Type}
+    (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
+    Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  Machine.scripted (unit := unit) M read f args fuel cs
 
 @[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
-  funext σ read M f args fuel cs
+  funext N _ unit σ read M f args fuel cs
   exact (Machine.scripted_eq M read f args fuel cs).symm
 
 /-- `Core.exhaustive`, by the machine. -/
-def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+def runExhaustive {N : Type} [DecidableEq N] (unit : N → Nat) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (RunLeaf × Nat)) :=
-  Machine.exhaustive M f args fuel budget
+  Machine.exhaustive (unit := unit) M f args fuel budget
 
 @[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
-  funext M f args fuel budget
+  funext N _ unit M f args fuel budget
   exact (Machine.exhaustive_eq M f args fuel budget).symm
 
 /-- `Core.sampled`, by the machine. -/
-def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
+    (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     RunLeaf × List ChoiceTree.Chosen :=
-  Machine.sampled M draw f args fuel g
+  Machine.sampled (unit := unit) M draw f args fuel g
 
 @[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
-  funext γ draw M f args fuel g
+  funext N _ unit γ draw M f args fuel g
   exact (Machine.sampled_eq M draw f args fuel g).symm
+
+/-- The width of the units of each memory of a run of `fir-ref`, which
+names the core's memories by themselves (ADR-2026-11-11-1328). The core
+has no memory yet, so there is no width to give; the module's data layout
+will give them (#231). -/
+def coreUnit : Core.Mem → Nat := fun x => nomatch x
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
@@ -272,8 +283,11 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
           status := 2 }
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
-        | .ok vs, .scripted cs => scriptedReport name (Core.scripted constOf m f vs fuel cs)
-        | .ok vs, .exhaustive b => exhaustiveReport name b (Core.exhaustive m f vs fuel b)
-        | .ok vs, .sampled s => sampledReport name (Core.sampled draw m f vs fuel ⟨s.toUInt64⟩)
+        | .ok vs, .scripted cs =>
+          scriptedReport name (Core.scripted coreUnit constOf m f vs fuel cs)
+        | .ok vs, .exhaustive b =>
+          exhaustiveReport name b (Core.exhaustive coreUnit m f vs fuel b)
+        | .ok vs, .sampled s =>
+          sampledReport name (Core.sampled coreUnit draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef
