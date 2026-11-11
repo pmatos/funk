@@ -1,5 +1,5 @@
 import Fir.Sum.PoisonLaws
-import Fir.Execution.EffectLaws
+import Fir.Execution.MemoryObligationLaws
 
 /-!
 # The sum of dialects lawful in their effects is lawful in its effects
@@ -13,6 +13,13 @@ rule over the base. Moving a vector between the base's types and the sum's
 keeps which values are poison, and a base op ends in UB in the sum exactly
 when it does in the base. The one condition is the one for poison: `e`
 accepts every type that the base accepts.
+
+The sum's semantics with memory runs a base op by the base's at the run's
+naming composed with `ofBase`, and an op of `e` by `e`'s. So a base op meets
+the memory obligations in the sum because it meets them in the base at that
+naming: its declaration, renamed by `ofBase` and then by the run's naming,
+is renamed by the composite, and mapping its results to the sum's types
+changes no memory.
 -/
 
 namespace Fir
@@ -30,6 +37,46 @@ theorem HVector.any_toSum : ∀ {ts : List base.Ty} (xs : HVector toType ts),
 end
 
 namespace Dialect.sum
+
+open Memory
+
+section
+
+/-! # Memory -/
+
+variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
+  [DialectSignature base] [DialectSignature (base.over e)]
+  [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
+
+/-- The sum's semantics with memory, wherever a run names its memories by
+`ρ`: an op of `e` runs by `e`'s rule, and an op of the base by the base's,
+where the run names each memory of the base as `ρ` names it in `e`. -/
+instance instDialectMemDenote [DialectMemDenote base] [DialectMemDenote (base.over e)] :
+    DialectMemDenote (base ⊞ e) where
+  denoteAt unit ρ :=
+    letI := DialectMemDenote.denoteAt (d := base) unit (ρ ∘ DialectMemOver.ofBase)
+    letI := DialectMemDenote.denoteAt (d := base.over e) unit ρ
+    instDialectDenote
+
+variable [DialectMemDenote base] [DialectMemDenote (base.over e)] {N : Type} [DecidableEq N]
+  (unit : N → Nat) (ρ : DialectEffects.Mem (base ⊞ e) → N)
+  {P : {α : Type} → StateT (Memories N unit) SetM α → Prop}
+
+/-- A property that mapping the results keeps holds of what a base op runs
+by its own rule in the sum, when it holds in the base, where the run names
+each memory of the base as the sum does. -/
+theorem ownRuleHas_inl (hP : ∀ {α β : Type} (f : α → β) (c : StateT (Memories N unit) SetM α),
+      P c → P (f <$> c)) {o : base.Op}
+    (h : OwnRuleHas unit (ρ ∘ DialectMemOver.ofBase) P o) :
+    OwnRuleHas (d := base ⊞ e) unit ρ P (.inl o) := fun args =>
+  ⟨fun ht => hP _ _ ((h (HVector.ofSum args)).1 ht), fun ht => (h (HVector.ofSum args)).2 ht⟩
+
+/-- What an op of `e` runs by its own rule in the sum is what it runs in
+`e`. -/
+theorem ownRuleHas_inr {o : e.Op} (h : OwnRuleHas (d := base.over e) unit ρ P o) :
+    OwnRuleHas (d := base ⊞ e) unit ρ P (.inr o) := h
+
+end
 
 variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
   [DialectSignature base] [DialectSignature (base.over e)]
@@ -56,13 +103,17 @@ theorem makesNoPoison_inl {o : base.Op} (h : MakesNoPoison o) :
       ((HVector.any_toSum a).1 hp)
   · cases he
 
-variable [DialectEffects base] [DialectEffects (base.over e)]
-  [DialectCall base] [DialectCall (base.over e)]
+variable [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
+
+variable [DialectMemDenote base] [DialectMemDenote (base.over e)]
+
+variable [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
 
 /-- Two dialects lawful in their effects make a sum lawful in its effects,
 when `e` accepts every type that the base accepts: each op meets the
-obligations as its own side's op. -/
+obligations as its own side's op. A base op meets the memory obligations
+where the run names the base's memories as the sum does. -/
 theorem lawfulEffects [h₁ : LawfulDialectEffects base] [h₂ : LawfulDialectEffects (base.over e)]
     (hty : ∀ t : base.Ty, validTy t → validTy (d := base.over e) (.inl t)) :
     LawfulDialectEffects (base ⊞ e) where
@@ -75,6 +126,25 @@ theorem lawfulEffects [h₁ : LawfulDialectEffects base] [h₂ : LawfulDialectEf
   notControl
     | .inl o, hc => h₁.notControl o hc
     | .inr o, hc => h₂.notControl o hc
+  writesNot o hv hc _ _ unit ρ x hw := by
+    cases o with
+    | inl o =>
+      exact ownRuleHas_inl unit ρ (fun f _ h => WritesNot.map f h) (h₁.writesNot o
+        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact hw))
+    | inr o => exact ownRuleHas_inr unit ρ (h₂.writesNot o (typesValid_inr hty hv) hc unit ρ x hw)
+  readsNot o hv hc _ _ unit ρ x hr := by
+    cases o with
+    | inl o =>
+      exact ownRuleHas_inl unit ρ (fun f _ h => ReadsNot.map f h) (h₁.readsNot o
+        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact hr))
+    | inr o => exact ownRuleHas_inr unit ρ (h₂.readsNot o (typesValid_inr hty hv) hc unit ρ x hr)
+  allocatesNot o hv hc _ _ unit ρ x ha := by
+    cases o with
+    | inl o =>
+      exact ownRuleHas_inl unit ρ (fun f _ h => AllocatesNot.map f h) (h₁.allocatesNot o
+        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact ha))
+    | inr o =>
+      exact ownRuleHas_inr unit ρ (h₂.allocatesNot o (typesValid_inr hty hv) hc unit ρ x ha)
 
 end Dialect.sum
 

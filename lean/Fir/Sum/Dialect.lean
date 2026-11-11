@@ -25,6 +25,10 @@ the sum, by routing each op and each type to the side it belongs to:
 * an op or a type of the base has what the base gives it. Its types are
   the base's, written into the sum's;
 * an op or a type of `e` has what `base.over e` gives it;
+* the memories of `e` over the base are the base's and `e`'s own, as its
+  types are. The sum's memories are `e`'s, and an op of the base names a
+  memory by the name `e` gives it, so that each memory has one name in the
+  sum, whichever side names it;
 * reading an op or a type sends its name to a side by its prefix: a name
   whose dialect is `e`'s name goes to `e`, and every other name to the
   base. So the base never sees a word of `e`, and `e` sees its own words.
@@ -155,6 +159,30 @@ def HVector.ofSum : {ts : List base.Ty} → HVector (toType (Ty := (base ⊞ e).
   | _ :: _, .cons x xs => .cons x (HVector.ofSum xs)
 
 end
+
+/-!
+# Memories of an extension
+-/
+
+/-- The memories of `e` over the base are the base's memories and `e`'s own,
+as its types are the base's and its own: each name of `e` is a name of the
+base's or one of `e`'s own, and each of those is a name of `e`. So `e`
+names each memory of the base's by one name, `ofBase`. -/
+class DialectMemOver (base e : Dialect) [DialectEffects base] [DialectEffects (base.over e)] where
+  /-- The names of `e`'s own memories. -/
+  Own : Type
+  /-- Which memory a name of `e` names: one of the base's, or one of `e`'s own. -/
+  split : DialectEffects.Mem (base.over e) → DialectEffects.Mem base ⊕ Own
+  /-- The name that `e` gives a memory of the base's, or one of its own. -/
+  join : DialectEffects.Mem base ⊕ Own → DialectEffects.Mem (base.over e)
+  split_join : ∀ x, split (join x) = x
+  join_split : ∀ x, join (split x) = x
+
+/-- The name that `e` gives the base's memory `x`. -/
+abbrev DialectMemOver.ofBase {base e : Dialect} [DialectEffects base]
+    [DialectEffects (base.over e)] [DialectMemOver base e] (x : DialectEffects.Mem base) :
+    DialectEffects.Mem (base.over e) :=
+  DialectMemOver.join (.inl x)
 
 /-!
 # Contexts and views
@@ -291,18 +319,19 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
     show Decidable (ValidItem v ctx i)
     unfold ValidItem; infer_instance
 
-/-- The memories of the sum are those of each side, kept apart. An op of the
-sum has its side's poison class, and its side's effects on its side's
-memories. -/
-instance instDialectEffects [h₁ : DialectEffects base] [h₂ : DialectEffects (base.over e)] :
-    DialectEffects (base ⊞ e) where
-  Mem := h₁.Mem ⊕ h₂.Mem
+/-- The memories of the sum are `e`'s, which hold the base's: so a memory
+has one name in the sum, whichever side names it. An op of the sum has its
+side's poison class and its side's effects, an op of the base on the names
+that `e` gives the base's memories. -/
+instance instDialectEffects [DialectEffects base] [h₂ : DialectEffects (base.over e)]
+    [DialectMemOver base e] : DialectEffects (base ⊞ e) where
+  Mem := h₂.Mem
   poisonClass
     | .inl o => poisonClass o
     | .inr o => poisonClass (d := base.over e) o
   effects
-    | .inl o => (effects o).map .inl
-    | .inr o => (effects (d := base.over e) o).map .inr
+    | .inl o => (effects o).map DialectMemOver.ofBase
+    | .inr o => effects (d := base.over e) o
 
 /-- An op of the sum calls the function that it calls on its side. -/
 instance instDialectCall [DialectCall base] [DialectCall (base.over e)] :

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A lift's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12759343580284914304")
+:::moduleDocs (fingerprint := "14063312612523437650")
 :::
 
 :::readable Fir.HVector.forall₂_up Fir.HVector.forall₂_down Fir.HVector.map_up (fingerprint := "7072234090836315310")
@@ -32,14 +32,14 @@ poison or equal to another exactly when it was before crossing. So
 refinement of what a computation may end with carries over.
 :::
 
-:::readable Fir.Dialect.lift.incl_lawful Fir.Dialect.lift.isFilledBy_down (fingerprint := "721175524571914087")
+:::readable Fir.Dialect.lift.incl_lawful Fir.Dialect.lift.isFilledBy_down (fingerprint := "1307889240047526986")
 *Lemmas: the lift's values.* $`\hat\iota` is lawful when $`\iota` is. A
 vector of the lift
 {ref "The-fir-specification--Execution--Poison-classes"}[fills the poison]
 of another exactly when it does, moved down to $`e`'s types.
 :::
 
-:::readable Fir.Dialect.lift.typesValid_lift Fir.Dialect.lift.propagates_lift (fingerprint := "18352063200702292213")
+:::readable Fir.Dialect.lift.typesValid_lift Fir.Dialect.lift.propagates_lift (fingerprint := "2956785438648873838")
 *Lemmas: valid instances and propagation.* An op whose instance the lift
 accepts is one that $`e` accepts over $`d`, when $`e` accepts each type
 $`t` of $`d` whose inclusion $`\iota(t)` $`B` accepts. An op of $`e` that
@@ -47,7 +47,7 @@ propagates poison over $`d` propagates it in the lift, across a lawful
 inclusion.
 :::
 
-:::readable Fir.Dialect.lift.lawfulPoison Fir.Dialect.lift.sum_lawfulPoison (fingerprint := "14521476552571790067")
+:::readable Fir.Dialect.lift.lawfulPoison Fir.Dialect.lift.sum_lawfulPoison (fingerprint := "1644194869634161931")
 *Theorem: the lift of a lawful extension is lawful.* Let $`B` and $`e`
 over $`d` meet the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations],

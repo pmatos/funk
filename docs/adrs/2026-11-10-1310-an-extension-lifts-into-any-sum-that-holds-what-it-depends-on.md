@@ -1,6 +1,6 @@
 # An extension lifts into any sum that holds what it depends on, through an inclusion of types
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-0452
 Tier: direction; area: semantics
 
 ## Context

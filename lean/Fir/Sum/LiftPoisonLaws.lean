@@ -10,7 +10,7 @@ lawful and `e` accepts each type of `dep` whose inclusion `big` accepts.
 Each op of the lift runs by `e`'s rule on the same values, which only
 cross the inclusion, and a lawful inclusion keeps which values are poison
 and which refine others. The lift accepts `big`'s types as `big` does, so
-the sum `big ⊞ e.lift dep ι` is lawful by the theorem on sums
+the sum `big ⊞ e.lift dep ι μ` is lawful by the theorem on sums
 (`Dialect.lift.sum_lawfulPoison`).
 
 The proof first shows that crossing a lawful inclusion keeps what the
@@ -105,22 +105,23 @@ end
 namespace Dialect.lift
 
 variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.Ty]
-  {ι : TyIncl dep.Ty big.Ty} [TyPoison dep.Ty] [TyPoison big.Ty] [TyPoison e.Ty]
+  {ι : TyIncl dep.Ty big.Ty} {MA MB : Type} {μ : MA → MB} [TyPoison dep.Ty] [TyPoison big.Ty]
+  [TyPoison e.Ty]
   [TyRefinement dep.Ty] [TyRefinement big.Ty] [TyRefinement e.Ty]
 
-variable (e) in
+variable (e μ) in
 /-- The inclusion of the lift's types is lawful when `ι` is. -/
-theorem incl_lawful (h : ι.Lawful) : (incl e ι).Lawful := h.over
+theorem incl_lawful (h : ι.Lawful) : (incl e ι μ).Lawful := h.over
 
 /-- A vector of `e`'s operand types is filled by another exactly when it
 is across the inclusion. -/
 theorem isFilledBy_down (h : ι.Lawful) {ts : List (dep.over e).Ty}
-    (xs ys : HVector toType (ts.map (incl e ι).incl)) :
-    (HVector.down (incl e ι) xs).IsFilledBy (d := dep.over e) (HVector.down (incl e ι) ys) ↔
-      xs.IsFilledBy (d := big.over (e.lift dep ι)) ys := by
+    (xs ys : HVector toType (ts.map (incl e ι μ).incl)) :
+    (HVector.down (incl e ι μ) xs).IsFilledBy (d := dep.over e) (HVector.down (incl e ι μ) ys) ↔
+      xs.IsFilledBy (d := big.over (e.lift dep ι μ)) ys := by
   unfold HVector.IsFilledBy
-  rw [HVector.any_down (incl_lawful e h)]
-  exact and_congr Iff.rfl (HVector.forall₂_down (incl_lawful e h).poisonOrEq_up xs ys)
+  rw [HVector.any_down (incl_lawful e μ h)]
+  exact and_congr Iff.rfl (HVector.forall₂_down (incl_lawful e μ h).poisonOrEq_up xs ys)
 
 variable [DialectSignature (dep.over e)] [DialectValidation big] [DialectValidation (dep.over e)]
 
@@ -130,9 +131,9 @@ omit [TyPoison dep.Ty] [TyPoison big.Ty] [TyPoison e.Ty] [TyRefinement dep.Ty] [
 accepts, when `e` accepts each type of `dep` whose inclusion `big`
 accepts. -/
 theorem typesValid_lift (hty : ∀ t : dep.Ty, validTy (ι.incl t) → validTy (d := dep.over e) (.inl t))
-    {o : e.Op} (hv : TypesValid (d := big.over (e.lift dep ι)) o) :
+    {o : e.Op} (hv : TypesValid (d := big.over (e.lift dep ι μ)) o) :
     TypesValid (d := dep.over e) o := by
-  have h : ∀ t : (dep.over e).Ty, validTy (d := big.over (e.lift dep ι)) ((incl e ι).incl t) →
+  have h : ∀ t : (dep.over e).Ty, validTy (d := big.over (e.lift dep ι μ)) ((incl e ι μ).incl t) →
       validTy (d := dep.over e) t
     | .inl t, h => hty t h
     | .inr _, h => h
@@ -145,73 +146,74 @@ omit [DialectValidation big] [DialectValidation (dep.over e)] in
 /-- An op of `e` that propagates poison over `dep` propagates it in the
 lift. -/
 theorem propagates_lift (h : ι.Lawful) {o : e.Op} (hp : PropagatesPoison (d := dep.over e) o) :
-    PropagatesPoison (d := big.over (e.lift dep ι)) o where
+    PropagatesPoison (d := big.over (e.lift dep ι μ)) o where
   poisonOut args hany rs hden := by
     rcases (HVector.map_up _ _).1 hden with ⟨a, ha, he⟩ | ⟨r, -, he⟩
     · cases he
-      exact (HVector.all_up (incl_lawful e h) a).2
-        (hp.poisonOut _ ((HVector.any_down (incl_lawful e h) args).2 hany) a ha)
+      exact (HVector.all_up (incl_lawful e μ h) a).2
+        (hp.poisonOut _ ((HVector.any_down (incl_lawful e μ h) args).2 hany) a ha)
     · cases he
   ubByOwnRules args r hany hden := by
     rcases (HVector.map_up _ _).1 hden with ⟨a, -, he⟩ | ⟨r', hr, he⟩
     · cases he
     · cases he
       obtain ⟨args', hfill, r'', hub⟩ :=
-        hp.ubByOwnRules _ r ((HVector.any_down (incl_lawful e h) args).2 hany) hr
-      refine ⟨HVector.up (incl e ι) args', ?_, r'',
+        hp.ubByOwnRules _ r ((HVector.any_down (incl_lawful e μ h) args).2 hany) hr
+      refine ⟨HVector.up (incl e ι μ) args', ?_, r'',
         (HVector.map_up _ _).2 (.inr ⟨r'', ?_, rfl⟩)⟩
       · rw [← isFilledBy_down h, HVector.down_up]
         exact hfill
       · show DialectDenote.denote (m := SetM) (d := dep.over e) o
-          (HVector.down (incl e ι) (HVector.up (incl e ι) args')) _
+          (HVector.down (incl e ι μ) (HVector.up (incl e ι μ) args')) _
         rw [HVector.down_up]
         exact hub
 
-variable [DialectEffects (dep.over e)] [DialectCall (dep.over e)]
+variable [DialectEffects dep] [DialectEffects (dep.over e)] [DialectMemOver dep e]
+  [DialectCall (dep.over e)]
   [DialectSignature big] [DialectDenote big SetM] [DialectEffects big] [DialectCall big]
 
 /-- The lift of a lawful extension is lawful over a lawful `big`, when the
 inclusion is lawful and `e` accepts each type of `dep` whose inclusion `big`
 accepts. -/
-theorem lawfulPoison [h₁ : LawfulDialectPoison big] [h₂ : LawfulDialectPoison (dep.over e)]
-    (hι : ι.Lawful)
+theorem lawfulPoison {μ : DialectEffects.Mem dep → DialectEffects.Mem big}
+    [h₁ : LawfulDialectPoison big] [h₂ : LawfulDialectPoison (dep.over e)] (hι : ι.Lawful)
     (hty : ∀ t : dep.Ty, validTy (ι.incl t) → validTy (d := dep.over e) (.inl t)) :
-    LawfulDialectPoison (big.over (e.lift dep ι)) where
+    LawfulDialectPoison (big.over (e.lift dep ι μ)) where
   poison_isRefinedBy {t} := match t with
     | .inl _ => fun hv p v hp => h₁.poison_isRefinedBy hv p v hp
     | .inr t => fun hv p v hp => h₂.poison_isRefinedBy (t := .inr t) hv p v hp
   propagates o hv hc := propagates_lift hι (h₂.propagates o (typesValid_lift hty hv) hc)
   returnsOnDefined o hv hc := by
     obtain ⟨args, hnp, rs, hrs⟩ := h₂.returnsOnDefined o (typesValid_lift hty hv) hc
-    refine ⟨HVector.up (incl e ι) args, ?_, HVector.up (incl e ι) rs,
+    refine ⟨HVector.up (incl e ι μ) args, ?_, HVector.up (incl e ι μ) rs,
       (HVector.map_up _ _).2 (.inl ⟨rs, ?_, rfl⟩)⟩
-    · rw [← HVector.any_down (incl_lawful e hι), HVector.down_up]
+    · rw [← HVector.any_down (incl_lawful e μ hι), HVector.down_up]
       exact hnp
     · show DialectDenote.denote (m := SetM) (d := dep.over e) o
-        (HVector.down (incl e ι) (HVector.up (incl e ι) args)) _
+        (HVector.down (incl e ι μ) (HVector.up (incl e ι μ) args)) _
       rw [HVector.down_up]
       exact hrs
   total o hv hr args := by
-    have ht := h₂.total o (typesValid_lift hty hv) hr (HVector.down (incl e ι) args)
+    have ht := h₂.total o (typesValid_lift hty hv) hr (HVector.down (incl e ι μ) args)
     refine ⟨fun hn => ?_, fun hn => ht.2 hn⟩
     obtain ⟨x, hx⟩ := ht.1 hn
     cases x with
     | ok a => exact ⟨_, (HVector.map_up _ _).2 (.inl ⟨a, hx, rfl⟩)⟩
     | ub r => exact ⟨_, (HVector.map_up _ _).2 (.inr ⟨r, hx, rfl⟩)⟩
   monotone o hv hr args args' hargs := by
-    have hm := h₂.monotone o (typesValid_lift hty hv) hr (HVector.down (incl e ι) args)
-      (HVector.down (incl e ι) args')
-      ((HVector.forall₂_down (incl_lawful e hι).isRefinedBy_up args args').2 hargs)
-    exact ⟨fun hn => HVector.isRefinedBy_map_up (incl_lawful e hι) (hm.1 hn), hm.2⟩
+    have hm := h₂.monotone o (typesValid_lift hty hv) hr (HVector.down (incl e ι μ) args)
+      (HVector.down (incl e ι μ) args')
+      ((HVector.forall₂_down (incl_lawful e μ hι).isRefinedBy_up args args').2 hargs)
+    exact ⟨fun hn => HVector.isRefinedBy_map_up (incl_lawful e μ hι) (hm.1 hn), hm.2⟩
 
 /-- The sum of a lawful `big` and the lift of a lawful extension into it is
 lawful, when the inclusion is lawful and `e` accepts each type of `dep`
 whose inclusion `big` accepts. -/
-theorem sum_lawfulPoison [LawfulDialectPoison big] [LawfulDialectPoison (dep.over e)]
-    (hι : ι.Lawful)
+theorem sum_lawfulPoison {μ : DialectEffects.Mem dep → DialectEffects.Mem big}
+    [LawfulDialectPoison big] [LawfulDialectPoison (dep.over e)] (hι : ι.Lawful)
     (hty : ∀ t : dep.Ty, validTy (ι.incl t) → validTy (d := dep.over e) (.inl t)) :
-    LawfulDialectPoison (big ⊞ e.lift dep ι) :=
-  have := lawfulPoison (e := e) hι hty
+    LawfulDialectPoison (big ⊞ e.lift dep ι μ) :=
+  have := lawfulPoison (e := e) (μ := μ) hι hty
   Dialect.sum.lawfulPoison fun _ h => h
 
 end Dialect.lift

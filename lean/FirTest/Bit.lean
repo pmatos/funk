@@ -154,12 +154,20 @@ instance : DialectDenote BitDialect SetM where
   exit _ _ := fun _ => False
 
 /-- Both bit ops propagate poison, and both are pure: each gives a defined
-result on a defined operand and is never UB. The bit dialect has no memory,
-so its memories have no names. -/
-instance : DialectEffects BitDialect := ⟨Empty, fun _ => .propagates, fun _ => {}⟩
+result on a defined operand and is never UB. The bit dialect has no memory
+of its own: its memories are the core's. -/
+instance : DialectEffects BitDialect :=
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}⟩
+
+/-- The bit dialect's memories are the core's, and none of its own. -/
+instance : DialectMemOver CoreDialect BitExt := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩
 
 /-- No bit op calls a function. -/
 instance : DialectCall BitDialect := ⟨fun _ => none⟩
+
+/-- No bit op touches memory: at every naming of its memories, it runs by
+its rule in the set monad and keeps the memories. -/
+instance : DialectMemDenote BitDialect := DialectMemDenote.ofSetM
 
 /-! # The bit dialect's text is lawful -/
 
@@ -278,7 +286,8 @@ instance lawful : LawfulDialectPoison BitDialect where
   monotone o _ _ := monotone o
 
 /-- The bit dialect is lawful in its effects: both ops are never UB, give a
-defined result on a defined operand, and are not terminators. -/
+defined result on a defined operand, are not terminators, and touch no
+memory. -/
 theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
   neverUB o _ _ _ := fun args _ => by
     cases o <;> match args with
@@ -292,6 +301,9 @@ theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
           cases hr
           rintro (h | h) <;> cases h
   notControl _ _ := rfl
+  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
+  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
+  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
 
 instance : LawfulDialectEffects BitDialect := lawfulDialectEffects
 

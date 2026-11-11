@@ -19,8 +19,14 @@ A dialect with no types of its own takes `Empty` (ADR-2026-11-09-2306).
 `base ⊞ e` has the ops of both and the types of both. Each class is lifted
 side by side: signature, text, validation, poison classes and effects,
 semantics, calls, and the meaning, poison and refinement of the summed types.
-The sum's memories are each side's, kept apart (ADR-2026-11-09-1541). Any number of
-dialects is a nested sum, `core ⊞ a ⊞ b` (ADR-2026-11-09-2306).
+Any number of dialects is a nested sum, `core ⊞ a ⊞ b` (ADR-2026-11-09-2306).
+
+The memories of `e` over the base are the base's and `e`'s own, as its types
+are: `DialectMemOver base e` splits each of `e`'s memory names into one of the
+base's or one of its own, and `ofBase` is `e`'s name for a base memory. The
+sum's memories are `e`'s, and a base op's effects are renamed by `ofBase`, so
+a memory has one name in the sum, whichever side names it
+(ADR-2026-11-11-0452).
 
 A word belongs to the dialect named before its first `.`. A bare word
 belongs to the core. Reading an op or a type sends a word of `e`'s name to
@@ -64,13 +70,18 @@ and `e`'s semantics on values moved across the inclusion. A lifted op sees
 only the symbols whose types `e` can write, and is valid only where it can
 write the function's result types (ADR-2026-11-10-1310).
 
+A lift also records a memory map `μ` from `dep`'s memories to `big`'s:
+`e.lift dep ι μ`. Its memories are `big`'s and `e`'s own. `liftMem μ` renames
+`e`'s name for a memory of `dep` to `μ` of it and keeps `e`'s own, so the sum
+names each memory of `dep` once (`liftMem_ofBase`; ADR-2026-11-11-0452).
+
 The sum of a larger base and the lift has lawful text when the base's text
 and set are lawful, `e`'s name is new to the base, and the set of what `e`
 depends on is in the base's set. The lift is lawful for poison when the base
 and `e` are, the inclusion is lawful, and `e` accepts each type it depends on
 whose inclusion the base accepts. Under the same conditions, the lift is
-lawful in its effects when `e` is, with `e`'s effects on `e`'s memories
-(ADR-2026-11-09-1541). So two extensions of the core, written apart, combine
+lawful in its effects when `e` is, with `e`'s effects renamed by the lift's
+memory map (ADR-2026-11-09-1541, ADR-2026-11-11-0452). So two extensions of the core, written apart, combine
 in one lawful sum (ADR-2026-11-10-1310).
 
 ## Region kinds in sums

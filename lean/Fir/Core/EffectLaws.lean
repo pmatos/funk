@@ -1,5 +1,5 @@
 import Fir.Core.Lawful
-import Fir.Execution.EffectLaws
+import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
 /-!
@@ -17,6 +17,9 @@ effects. Each effect that a core op leaves out, it does not have:
   ops, `icmp`, `select`, the width changes, `const` and `freeze`.
 * _No control._ Every core op that does not declare control is not a
   terminator.
+* _No write, read or allocation._ No core op touches memory: it runs by its
+  rule in the set monad and keeps the memories, at every naming of them
+  (the section on meeting the memory obligations).
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
@@ -166,12 +169,19 @@ end Fir.Core
 
 namespace Fir
 
+/-- No core op touches memory: at every naming of the core's memories, each
+op runs by its rule in the set monad and keeps the memories. -/
+instance Core.instDialectMemDenote : DialectMemDenote CoreDialect := DialectMemDenote.ofSetM
+
 /-- The core dialect is lawful in its effects: every effect that a core op
 leaves out, it does not have. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   neverUB op _ _ := Core.Op.neverUB_all op
   makesNoPoison op _ _ := Core.Op.makesNoPoison_all op
   notControl := Core.Op.notControl_all
+  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
+  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
+  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 
@@ -189,9 +199,11 @@ namespace Core.Unlawful
 
 /-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
 left without may-UB must never end in UB. -/
-theorem sdivNoUB_unlawful : ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _ _ := by
+theorem sdivNoUB_unlawful :
+    ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _ _
+      (@DialectMemDenote.ofSetM CoreDialect _ _ sdivNoUB _) := by
   intro h
-  have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
+  have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
   exact (hnever (.cons (.value 1) (.cons (.value 0) .nil)) _).1 rfl
     ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))

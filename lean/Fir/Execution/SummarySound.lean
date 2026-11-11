@@ -147,7 +147,8 @@ theorem Operation.call?_of {o : Operation d} {c : Name} (hT : isTerminator o.op 
   simp [Operation.call?, hT, hc]
 
 variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [DialectDenote d SetM]
-  [DialectEffects d] [DialectValidation d] [LawfulDialectEffects d] {ctx : ModuleContext d} {M : Module d}
+  [DialectEffects d] [DialectValidation d] [DialectMemDenote d] [LawfulDialectEffects d]
+  {ctx : ModuleContext d} {M : Module d}
 
 /-- No run of ops of a function of `M` ends in UB when the function's
 summary leaves out may-UB, from any of its ops on, at any budget. -/

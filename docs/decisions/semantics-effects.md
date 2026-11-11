@@ -16,9 +16,9 @@ Each op declares a set of effects, drawn from this list
 - control: it is a terminator.
 
 The empty set is pure. The memory-named effects name the dialect's memories,
-or every memory, as an external call needs. Their shape is fixed, and no op
-uses them yet: the core dialect has no memory, so its memories have no names
-(ADR-2026-11-09-1541, ADR-2026-11-09-1542).
+or every memory, as an external call needs. No op uses them yet: the core
+dialect has no memory, so its memories have no names (ADR-2026-11-09-1541,
+ADR-2026-11-09-1542).
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison. That is not the poison class, which says how an op treats poison
@@ -58,24 +58,47 @@ obligations of each effect an op leaves out (ADR-2026-11-09-1541):
   poison.
 - Without control, the op is not a terminator.
 
-The first two cover valid op instances that are terminators or have no
-callee, as the poison obligations do (ADR-2026-11-02-1514). The memory-named
-effects and observable have no obligation yet: M0's runs have no memory and no
-trace. The core dialect is lawful in its effects
-(`Core.lawfulDialectEffects`), and `lean/FirTest/G0Effects.lean` restates the
+The memory-named effects have obligations over the op's semantics with
+memory (ADR-2026-11-11-0451, in `lean/Fir/Execution/MemoryObligations.lean`):
+
+- A dialect gives its ops a semantics in the state layer over the set monad
+  wherever a run names its memories (`DialectMemDenote`): for any memory names
+  of a run, any unit widths, and any map `ρ` of the dialect's memory names to
+  the run's.
+- For each memory `x` of the run that the op's declaration, renamed by `ρ`,
+  leaves out: without a write, every allocation of `x` keeps its units
+  (`WritesNot`); without allocation, `x` keeps the kind, size and liveness of
+  each allocation, and the frames keep its stack allocations
+  (`AllocatesNot`); without a read, the op does not depend on the units of
+  `x` (`ReadsNot`). A declaration of every memory covers every memory of the
+  run.
+- They speak of the paths that end. A store does not read its memory: it
+  writes the same units whatever was there.
+
+All but the last obligation cover valid op instances that are terminators
+or have no callee, as the poison obligations do (ADR-2026-11-02-1514).
+Observable has no obligation yet: M0's runs have no trace. The core dialect
+is lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no
+memory, so `DialectMemDenote.ofSetM` gives its semantics with memory and
+meets every memory obligation. `lean/FirTest/G0Effects.lean` restates the
 class and its obligations for every dialect. The obligations reject a wrong
 declaration: with `sdiv` declared without may-UB, the core dialect is not
-lawful in its effects (`Core.Unlawful.sdivNoUB_unlawful`).
+lawful in its effects (`Core.Unlawful.sdivNoUB_unlawful`). And
+`lean/FirTest/MemoryObligations.lean` shows that an allocation allocates, a
+store writes and a load reads.
 
 A sum of dialects gives each op its own side's effects, on the sum's
-memories, each side's kept apart. A lift gives each op of the extension its
-effects in the extension. The sum of dialects lawful in their effects is
-lawful in its effects, and so is a lift, under the conditions that make
-them lawful for poison (`Dialect.sum.lawfulEffects`,
-`Dialect.lift.lawfulEffects`; ADR-2026-11-09-2306, ADR-2026-11-10-1310). The
-toy and bit test dialects declare pure ops and are lawful in their effects,
-and so are their sums with the core. The probe test dialect declares every
-effect.
+memories, where a memory has one name (ADR-2026-11-11-0452). A lift gives
+each op of the extension its effects in the extension, renamed by its memory
+map. The sum of dialects lawful in their effects is lawful in its effects,
+and so is a lift, under the conditions that make them lawful for poison
+(`Dialect.sum.lawfulEffects`, `Dialect.lift.lawfulEffects`;
+ADR-2026-11-09-2306, ADR-2026-11-10-1310). A side's op meets the memory
+obligations in the sum at the run's naming composed with the side's memory
+map. The toy and bit test dialects declare pure ops and are lawful in their
+effects, and so are their sums with the core. The probe test dialect
+declares every effect and is lawful in its effects, and so is its sum with
+the core.
 
 ## Function summaries
 

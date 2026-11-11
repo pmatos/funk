@@ -13,7 +13,7 @@ back to those that `e` wrote.
 
 The lift writes its words under `e`'s name, and names only dialects of
 `big`'s set besides its own, when `dep`'s set is in `big`'s
-(`Dialect.lift.lawfulName`). So the sum `big ⊞ e.lift dep ι` has lawful
+(`Dialect.lift.lawfulName`). So the sum `big ⊞ e.lift dep ι μ` has lawful
 text under the same conditions as a sum of `big` and an extension written
 over it, and the round trip and well-formedness hold for it: the last
 theorems of this section restate them.
@@ -24,7 +24,7 @@ namespace Fir
 namespace Dialect.lift
 
 variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.Ty]
-  {ι : TyIncl dep.Ty big.Ty}
+  {ι : TyIncl dep.Ty big.Ty} {MA MB : Type} {μ : MA → MB}
   [DialectName e] [DialectText big] [DialectText (dep.over e)]
   [DialectSignature big] [DialectSignature (dep.over e)]
   [DialectValidation big] [DialectValidation (dep.over e)]
@@ -33,7 +33,7 @@ omit [DialectSignature big] [DialectSignature (dep.over e)] in
 /-- The words of the lift name `e` where `e`'s do, and only dialects of
 `big`'s set besides, when `dep`'s set is in `big`'s. -/
 theorem lawfulName [DialectSet dep] [DialectSet big] [LawfulDialectName dep e]
-    (hsub : ∀ x ∈ names dep, x ∈ names big) : LawfulDialectName big (e.lift dep ι) where
+    (hsub : ∀ x ∈ names dep, x ∈ names big) : LawfulDialectName big (e.lift dep ι μ) where
   opName_named o := LawfulDialectName.opName_named (base := dep) (e := e) o
   opAttrs_mem o x h := List.mem_append.mpr ((List.mem_append.mp
     (LawfulDialectName.opAttrs_mem (base := dep) (e := e) o x h)).imp (hsub x) id)
@@ -50,12 +50,12 @@ when `big`'s words name only dialects of its set, `e` writes its own words
 under its name, and `e`'s name is new to `big`. -/
 theorem lawfulText [DialectSet dep] [DialectSet big] [LawfulDialectSet big]
     [LawfulDialectName dep e] (hn : name e ∉ names big) :
-    LawfulDialectText (big.over (e.lift dep ι)) where
+    LawfulDialectText (big.over (e.lift dep ι μ)) where
   decodeOp_encode o := by
-    change decodeOp (e := e) ι _ _ ((sig (d := dep.over e) o).map (incl e ι).incl)
-      ((returnTypes (d := dep.over e) o).map (incl e ι).incl) = some o
-    rw [decodeOp, TyIncl.mapM_proj_map (incl e ι), Option.bind_some,
-      TyIncl.mapM_proj_map (incl e ι), Option.bind_some]
+    change decodeOp (e := e) ι _ _ ((sig (d := dep.over e) o).map (incl e ι μ).incl)
+      ((returnTypes (d := dep.over e) o).map (incl e ι μ).incl) = some o
+    rw [decodeOp, TyIncl.mapM_proj_map (incl e ι μ), Option.bind_some,
+      TyIncl.mapM_proj_map (incl e ι μ), Option.bind_some]
     exact LawfulDialectText.decodeOp_encode (d := dep.over e) o
   encode_decodeOp n as ts rs o hd := by
     change decodeOp (e := e) ι n as ts rs = some o at hd
@@ -63,10 +63,10 @@ theorem lawfulText [DialectSet dep] [DialectSet big] [LawfulDialectSet big]
     obtain ⟨rs', hrs, hd⟩ := Option.bind_eq_some_iff.mp hd
     obtain ⟨h₁, h₂, h₃, h₄⟩ := LawfulDialectText.encode_decodeOp (d := dep.over e) n as ts' rs' o hd
     refine ⟨h₁, h₂, ?_, ?_⟩
-    · change (sig (d := dep.over e) o).map (incl e ι).incl = ts
-      rw [h₃, (incl e ι).eq_map_of_mapM_proj hts]
-    · change (returnTypes (d := dep.over e) o).map (incl e ι).incl = rs
-      rw [h₄, (incl e ι).eq_map_of_mapM_proj hrs]
+    · change (sig (d := dep.over e) o).map (incl e ι μ).incl = ts
+      rw [h₃, (incl e ι μ).eq_map_of_mapM_proj hts]
+    · change (returnTypes (d := dep.over e) o).map (incl e ι μ).incl = rs
+      rw [h₄, (incl e ι μ).eq_map_of_mapM_proj hrs]
   decodeTy_encode
     | .inl t, hv => by
       change decodeTy (e := e) dep (Fir.tyAttr t) = some (.inl t)
@@ -104,23 +104,23 @@ variable [DialectSet dep] [DialectSet big] [LawfulDialectSet big] [LawfulDialect
 /-- The sum of `big` and a lift into it has lawful text, when `e`'s name
 is new to `big` and `dep`'s set is in `big`'s. -/
 theorem sum_lawfulText (hn : name e ∉ names big) (hsub : ∀ x ∈ names dep, x ∈ names big) :
-    LawfulDialectText (big ⊞ e.lift dep ι) :=
-  have := lawfulText (e := e) (dep := dep) (ι := ι) hn
-  have := lawfulName (e := e) (ι := ι) hsub
+    LawfulDialectText (big ⊞ e.lift dep ι μ) :=
+  have := lawfulText (e := e) (dep := dep) (ι := ι) (μ := μ) hn
+  have := lawfulName (e := e) (ι := ι) (μ := μ) hsub
   Dialect.sum.lawful_of_names hn
 
 /-- Every valid module of the sum of `big` and a lift into it is well
 formed. -/
 theorem sum_validIsWellFormed (hn : name e ∉ names big) (hsub : ∀ x ∈ names dep, x ∈ names big) :
-    ValidIsWellFormed (d := big ⊞ e.lift dep ι) :=
-  have := sum_lawfulText (e := e) (dep := dep) (ι := ι) hn hsub
+    ValidIsWellFormed (d := big ⊞ e.lift dep ι μ) :=
+  have := sum_lawfulText (e := e) (dep := dep) (ι := ι) (μ := μ) hn hsub
   Fir.validIsWellFormed
 
 /-- `parse(print(m)) == m` for every well-formed module of the sum of `big`
 and a lift into it. -/
 theorem sum_printThenParse (hn : name e ∉ names big) (hsub : ∀ x ∈ names dep, x ∈ names big) :
-    PrintThenParse (d := big ⊞ e.lift dep ι) Fir.parse :=
-  have := sum_lawfulText (e := e) (dep := dep) (ι := ι) hn hsub
+    PrintThenParse (d := big ⊞ e.lift dep ι μ) Fir.parse :=
+  have := sum_lawfulText (e := e) (dep := dep) (ι := ι) (μ := μ) hn hsub
   Fir.printThenParse
 
 end Dialect.lift

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The text of a lift: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5196457309684433282")
+:::moduleDocs (fingerprint := "7214088044110147805")
 :::
 
-:::readable Fir.Dialect.lift.lawfulName (fingerprint := "11932152504244079529")
+:::readable Fir.Dialect.lift.lawfulName (fingerprint := "14404641875743537380")
 *Theorem: the lift writes its words under its name.* Let $`e` write its
 words under its name over $`d`, and let $`d`'s set be in $`B`'s. Then the
 lift writes its words under its name over $`B`. Its words are $`e`'s, and
@@ -25,7 +25,7 @@ every dialect they name is in $`\mathrm{names}(d) \cdot n_e`, so in
 $`\mathrm{names}(B) \cdot n_e`.
 :::
 
-:::readable Fir.Dialect.lift.lawfulText (fingerprint := "10023310480075454674")
+:::readable Fir.Dialect.lift.lawfulText (fingerprint := "3480317085186262102")
 *Theorem: the text of the lift is lawful.* Let $`B` and $`e` over $`d`
 have
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text], let
@@ -39,7 +39,7 @@ $`B`'s set, so not $`n_e`, and $`B` reads it back; a valid own type of
 $`e` names $`n_e`, and $`e` reads it back.
 :::
 
-:::readable Fir.Dialect.lift.sum_lawfulText Fir.Dialect.lift.sum_validIsWellFormed Fir.Dialect.lift.sum_printThenParse (fingerprint := "17032275318313016257")
+:::readable Fir.Dialect.lift.sum_lawfulText Fir.Dialect.lift.sum_validIsWellFormed Fir.Dialect.lift.sum_printThenParse (fingerprint := "16665747849072813111")
 *Theorems: the round trip over a sum with a lift.* Under the conditions
 above, with $`d`'s set in $`B`'s, $`B \boxplus e{\uparrow}_\iota` has
 lawful text, every valid module of it is well formed, and

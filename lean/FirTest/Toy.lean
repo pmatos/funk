@@ -105,9 +105,13 @@ instance : DecidableDialectValidation ToyDialect where
 
 /-- `toy.mask` declares its effects through the effect class: it propagates
 poison, as its rule does, and it is pure, since its rule gives a defined
-result on a defined operand and is never UB. The toy dialect has no memory,
-so its memories have no names. -/
-instance : DialectEffects ToyDialect := ⟨Empty, fun _ => .propagates, fun _ => {}⟩
+result on a defined operand and is never UB. The toy dialect has no memory
+of its own: its memories are the core's. -/
+instance : DialectEffects ToyDialect :=
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}⟩
+
+/-- The toy dialect's memories are the core's, and none of its own. -/
+instance : DialectMemOver CoreDialect (Ext Op) := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩
 
 /-- `toy.mask w k`: the low `k` bits of a value, and poison of poison. -/
 def maskValue (w k : Nat) : PoisonOr (BitVec w) → PoisonOr (BitVec w)
@@ -134,9 +138,13 @@ instance : DialectDenote ToyDialect SetM where
 /-- No toy op calls a function. -/
 instance : DialectCall ToyDialect := ⟨fun _ => none⟩
 
+/-- No toy op touches memory: at every naming of its memories, it runs by
+its rule in the set monad and keeps the memories. -/
+instance : DialectMemDenote ToyDialect := DialectMemDenote.ofSetM
+
 /-- The toy dialect is lawful in its effects: `toy.mask` is pure, and it is
-never UB, gives a defined result on a defined operand, and is not a
-terminator. -/
+never UB, gives a defined result on a defined operand, is not a terminator,
+and touches no memory. -/
 theorem lawfulDialectEffects : LawfulDialectEffects ToyDialect where
   neverUB
     | .mask .., _, _, _ => fun
@@ -150,6 +158,9 @@ theorem lawfulDialectEffects : LawfulDialectEffects ToyDialect where
           cases hr
           rintro (h | h) <;> cases h
   notControl _ _ := rfl
+  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
+  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
+  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
 
 instance : LawfulDialectEffects ToyDialect := lawfulDialectEffects
 
