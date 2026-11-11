@@ -31,11 +31,23 @@ At a return, an observer sees the contents of (ADR-2026-11-11-1016):
 
 - every `export` global;
 - the memory reachable from them and from the returned pointers;
-- the memory that escaped to an external call, and the memory reachable from it.
+- the memory that escaped, and the memory reachable from it.
 
-An `internal` global is observable only once its address escapes: once it is
-reachable from what the observer sees. Until then a store to it is invisible
-and can be removed (ADR-2026-11-11-1016).
+An address escapes whenever an op hands it to code outside the program
+(ADR-2026-11-11-1444):
+
+- an external call that gets it as an argument;
+- an inline assembly block whose effect set says observable;
+- a volatile store whose stored value is the pointer;
+- `ptr.expose`.
+
+An `internal` global is observable only once its address escapes by one of
+these ways, even when only an integer from `ptr.expose` holds it. Until then a
+store to it is invisible and can be removed (ADR-2026-11-11-1016,
+ADR-2026-11-11-1444).
+
+Only live allocations are compared. The contents of an allocation that the
+world has freed are not (ADR-2026-11-11-1445).
 
 Two ends of a run match when some one-to-one renaming of allocations makes
 their observed memory equal. Raw addresses are never compared. Memory that no
@@ -79,7 +91,8 @@ Each test supplies a scripted world: the results of each external call, in
 order, and any writes into escaped memory. The script may create and free heap
 allocations as part of a call's answer (ADR-2026-11-11-1017). It answers an
 observable inline assembly block in trace order, and one without observable by
-the block and its operands (ADR-2026-11-11-1015). A test that calls an external
+the block, its operands and the contents of the memories it declares it reads
+(ADR-2026-11-11-1015, ADR-2026-11-11-1443). A test that calls an external
 function must come with its script. `fir-ref run` reports the trace and the end
 of the run (ADR-2026-11-09-1540).
 

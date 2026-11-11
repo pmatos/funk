@@ -1,6 +1,6 @@
 # The world may create and free heap allocations when it answers an external call
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1445
 Tier: direction; area: semantics
 
 ## Context
