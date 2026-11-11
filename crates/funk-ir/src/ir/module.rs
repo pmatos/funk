@@ -142,9 +142,50 @@ impl Func {
     }
 }
 
+/// An item of a kind that a dialect registers (`DialectItem` in
+/// `lean/Fir/Syntax/Module.lean`, ADR-2026-11-10-2224): what the one
+/// production of an item writes, `kind @sym(params) -> results attrs { }`,
+/// with an empty body. Its kind is a word of the dialect, such as
+/// `toy.cell`, and the dialect's [`ItemKindSpec`](crate::registry::ItemKindSpec)
+/// for the kind says what its parameters, results and attributes must be.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct DialectItem {
+    /// The item's kind: a word of a dialect, `name.word`.
+    pub kind: String,
+    /// The item's symbol, without `@`. Any string.
+    pub name: String,
+    /// The item's parameters.
+    pub params: Vec<Def>,
+    /// The item's result types.
+    pub results: Vec<Type>,
+    /// The item's attributes, as the text writes them.
+    pub attrs: Vec<Attr>,
+}
+
+impl DialectItem {
+    /// The item of kind `kind` with symbol `name`, and no parameters,
+    /// results or attributes.
+    pub fn new(kind: impl Into<String>, name: impl Into<String>) -> DialectItem {
+        DialectItem {
+            kind: kind.into(),
+            name: name.into(),
+            params: Vec::new(),
+            results: Vec::new(),
+            attrs: Vec::new(),
+        }
+    }
+
+    /// Every type that the item states: its parameters' types, then its
+    /// results (`DialectItem.types`).
+    pub fn types(&self) -> impl Iterator<Item = &Type> {
+        self.params.iter().map(|p| &p.ty).chain(&self.results)
+    }
+}
+
 /// An item of a module. Every item is written
-/// `kind @sym(params) -> results attrs { body }` (N2). The kinds are `func`
-/// and `module` (ADR-2026-11-10-1510).
+/// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
+/// `func` and `module` (ADR-2026-11-10-1510), and a dialect registers kinds
+/// of its own (ADR-2026-11-10-2224).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Item {
@@ -152,6 +193,8 @@ pub enum Item {
     Func(Func),
     /// A nested module: a symbol table of its own, with its own dialect set.
     Module(NestedModule),
+    /// An item of a kind that a dialect registers.
+    Dialect(DialectItem),
 }
 
 impl Item {
@@ -160,6 +203,7 @@ impl Item {
         match self {
             Item::Func(f) => &f.name,
             Item::Module(m) => &m.name,
+            Item::Dialect(i) => &i.name,
         }
     }
 
@@ -167,7 +211,7 @@ impl Item {
     pub fn as_func(&self) -> Option<&Func> {
         match self {
             Item::Func(f) => Some(f),
-            Item::Module(_) => None,
+            _ => None,
         }
     }
 
@@ -175,7 +219,15 @@ impl Item {
     pub fn as_func_mut(&mut self) -> Option<&mut Func> {
         match self {
             Item::Func(f) => Some(f),
-            Item::Module(_) => None,
+            _ => None,
+        }
+    }
+
+    /// The item of a dialect's kind that this item is, if it is one.
+    pub fn as_dialect(&self) -> Option<&DialectItem> {
+        match self {
+            Item::Dialect(i) => Some(i),
+            _ => None,
         }
     }
 }

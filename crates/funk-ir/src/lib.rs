@@ -37,12 +37,12 @@ pub mod verify;
 
 pub use effects::{Effects, MemSet};
 pub use ir::{
-    Attr, Block, Def, Func, FuncType, Int, Item, LocRef, LocTable, Location, Module, NestedModule,
-    Op, Region, Succ, SymbolTable, Type,
+    Attr, Block, Def, DialectItem, Func, FuncType, Int, Item, LocRef, LocTable, Location, Module,
+    NestedModule, Op, Region, Succ, SymbolTable, Type,
 };
 pub use registry::{
-    Dialect, FuncContext, FuncSpec, OpContext, OpShape, OpSpec, OpTypes, RegionKindSpec, Registry,
-    TypeCheck, TypeSpec,
+    Dialect, FuncContext, FuncSpec, ItemKindSpec, OpContext, OpShape, OpSpec, OpTypes,
+    RegionKindSpec, Registry, TypeCheck, TypeSpec,
 };
 pub use summary::{InFunc, Summaries};
 pub use text::{ParseError, TextPos, parse, print};

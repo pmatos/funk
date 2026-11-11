@@ -29,9 +29,12 @@ A module holds a symbol table at each level of nesting: its own, and that
 of each nested module, at any depth. Each table is a dialect set and a
 list of items. Validation checks every table with one rule,
 `SymbolTable.Valid`, in `lean/Fir/Validation/Rules.lean`: each symbol names
-one item of the table, function or nested module; each function is valid
-against the table's own symbols; and the set names each dialect once, by a
-word. `Module.Valid` asks a valid location table and a valid table at each
+one item of the table, of any kind; each function is valid against the
+table's own symbols; each item of a dialect's kind is valid
+(`DialectItem.Valid`: a kind that a dialect registers, distinct parameter
+names, valid types, attributes that can be written and the dialect's rule
+for the kind, ADR-2026-11-10-2224); and the set names each dialect once, by
+a word. `Module.Valid` asks a valid location table and a valid table at each
 level. One location table serves every table (ADR-2026-11-10-1510).
 
 So a function and a module never share a symbol of one table, while a

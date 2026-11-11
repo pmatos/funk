@@ -37,6 +37,7 @@ import FirTest.Mixed
 import FirTest.SumTypes
 import FirTest.Bit
 import FirTest.DialectSet
+import FirTest.ItemKinds
 import FirTest.Deps
 import FirTest.Runs
 import FirTest.ValidSum
@@ -54,7 +55,6 @@ import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
 import FirTest.G0Effects
-import FirTest.G0Regions
 import FirTest.FloatModel
 import FirTest.FloatModelFma
 import FirTest.FloatModelF16

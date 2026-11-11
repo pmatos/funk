@@ -11,7 +11,9 @@ The cases run in the sum of the core and a test dialect named `toy`: the
 flag dialect's type `toy.flag` and its ops `toy.flag` and `toy.test`, and
 `toy.note`, which takes any attributes and gives nothing, so an attribute
 can name a dialect. A module may write a word of `toy` only when its
-dialect set names `toy`.
+dialect set names `toy`. The tagged dialect also registers two kinds of
+item, `toy.cell` and `toy.alias` (ADR-2026-11-10-2224), which
+`FirTest.ItemKinds` checks.
 -/
 
 namespace FirTest.Tagged
@@ -82,16 +84,38 @@ instance : DialectText TagDialect where
   tyAttr := Flag.tyAttr
   decodeTy := Flag.decodeTy
 
+/-- The tagged dialect's rule for its kinds of item. A `toy.cell` holds a
+flag: it has no parameters, its one result is `toy.flag`, which it sees
+through its view of the host, and its one attribute is 0 or 1. A
+`toy.alias` has no parameters or results, and its one attribute is a symbol
+that names a function of its table. -/
+def itemRule {host : Dialect} (v : DialectView TagDialect host) (ctx : FuncContext host)
+    (i : DialectItem host) : Bool :=
+  if i.kind = "toy.cell" then
+    i.params.isEmpty && decide (i.results.map v.ty = [some (.inr .flag)]) &&
+      match i.attrs with
+      | [.int 0] | [.int 1] => true
+      | _ => false
+  else if i.kind = "toy.alias" then
+    i.params.isEmpty && i.results.isEmpty &&
+      match i.attrs with
+      | [.sym s] => (ctx.symbols s).isSome
+      | _ => false
+  else false
+
 instance : DialectValidation TagDialect where
   validTy := Flag.ValidTy
   symbolRefs _ := []
   validOp _ _ := True
   validFunc _ _ _ := True
+  itemKindNames := ["toy.cell", "toy.alias"]
+  validItem v ctx i := itemRule v ctx i = true
 
 instance : DecidableDialectValidation TagDialect where
   decValidTy t := inferInstanceAs (Decidable (Flag.ValidTy t))
   decValidOp _ _ := inferInstanceAs (Decidable True)
   decValidFunc _ _ _ := inferInstanceAs (Decidable True)
+  decValidItem v ctx i := inferInstanceAs (Decidable (itemRule v ctx i = true))
 
 end Tagged
 

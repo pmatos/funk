@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The text of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12504048324821814013")
+:::moduleDocs (fingerprint := "13835648070737097907")
 :::
 
 :::readable Fir.Dialect.sum.mapM_getLeft_map Fir.Dialect.sum.eq_map_of_mapM_getLeft (fingerprint := "10425250833271113799")
@@ -52,7 +52,7 @@ wrote it, and the reader decides that side by the word alone, so the words
 route. So a lawful sum has no op name on both of its sides.
 :::
 
-:::readable Fir.LawfulDialectName (fingerprint := "3078469256500740612")
+:::readable Fir.LawfulDialectName (fingerprint := "7376599880967418752")
 *Definition: an extension that writes its words under its name.* The
 extension $`e` over the base $`b` writes its words under its name $`n_e`
 when, for every op $`q` of $`e` and every valid own type $`t` of $`e`:
@@ -62,7 +62,7 @@ when, for every op $`q` of $`e` and every valid own type $`t` of $`e`:
 * $`\mathrm{dialect}(\mathrm{head}(\mathrm{tyattr}(\mathsf{inr}\ t))) = n_e`,
   and every dialect of its words is in $`\mathrm{names}(b) \cdot n_e`;
 * $`\mathrm{dialect}(k) = n_e` for every region kind $`k` that $`e`
-  registers.
+  registers, and for every kind of item $`k` that $`e` registers.
 
 The extension may name the base's dialects in its attributes and types,
 as a type of $`e` may take a core type as an argument.
@@ -86,6 +86,13 @@ base's words stay in its set, $`e` write its words under its name, and
 $`n_e \notin \mathrm{names}(b)`. Then the base registers no kind that $`e`
 registers, so for every such kind $`k`, a region obeys the rule of $`k` in
 the sum exactly when it obeys $`e`'s rule for $`k`, through $`e`'s view.
+:::
+
+:::readable Fir.Dialect.sum.validItem_ext (pin := Fir.Dialect.sum.ValidItem) (fingerprint := "3503632152703493896")
+*Theorem: a kind of item of the extension goes to the extension's rule.*
+Under the same assumptions, the base registers no kind of item that $`e`
+registers, so for every item $`i` of such a kind, $`i` obeys the rule for
+items in the sum exactly when it obeys $`e`'s rule, through $`e`'s view.
 :::
 
 :::readable Fir.Dialect.sum.lawful_of_names Fir.Dialect.sum.validIsWellFormed Fir.Dialect.sum.printThenParse Fir.Dialect.sum.parse_wellFormed (fingerprint := "16980967360285776458")

@@ -11,10 +11,12 @@ second pass accepts, and each decoded function is well formed. Its result
 types decode as types do, from attributes written as types.
 
 An item decodes only as a `func` with no attributes, whose body holds
-blocks or holds nothing, or as a `module` with no parameters, results or
+blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
-holds nothing. Decoding a module keeps the location table as it was read. So a module decoded from a tree that can be written is well
-formed: the decoding step.
+holds nothing, or as an item of a dialect's kind, whose kind is a word of a
+dialect and whose body is empty, with its attributes as read. Decoding a
+module keeps the location table as it was read. So a module decoded from a
+tree that can be written is well formed: the decoding step.
 -/
 
 namespace Fir
@@ -107,6 +109,34 @@ theorem decodeFuncItem_wellFormed {kindPos : TextPos} {name : String} {params : 
     cases h
     exact decodeFunc_wellFormed e hp hr hb
 
+/-- Attributes that can each be written can all be written. -/
+theorem Attr.allWritable_of_mem : ∀ {as : List Attr}, (∀ a ∈ as, a.Writable) → Attr.AllWritable as
+  | [], _ => trivial
+  | _ :: _, h => ⟨h _ (.head _), Attr.allWritable_of_mem fun a ha => h a (.tail _ ha)⟩
+
+/-- An item of a dialect's kind decoded from a tree that can be written is
+well formed. -/
+theorem decodeDialectItem_wellFormed {kind : String} {kindPos : TextPos} {name : String}
+    {params : List SDef} {results attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
+    (h : decodeDialectItem kind kindPos name params results attrs body = .ok i)
+    (hk : isDialectWord kind) (hp : ∀ x ∈ params, x.Writable) (hr : ∀ r ∈ results, r.1.IsType)
+    (ha : ∀ a ∈ attrs, a.1.Writable) : i.WellFormed := by
+  unfold decodeDialectItem at h
+  split at h
+  · bind_step h with ⟨rs, e₁, h⟩
+    bind_step h with ⟨ps, e₂, h⟩
+    cases h
+    have hps := mapM_decodeDef_writable e₂ hp
+    refine ⟨hk, fun x hx => (hps x hx).1, fun t ht => ?_,
+      Attr.allWritable_of_mem fun a h' => ?_⟩
+    · simp only [DialectItem.types, List.mem_append, List.mem_map] at ht
+      rcases ht with ⟨y, hy, rfl⟩ | ht
+      · exact (hps y hy).2
+      · exact mapM_decodeType_writable (fun _ _ => rfl) e₁ hr t ht
+    · obtain ⟨b, hb, rfl⟩ := List.mem_map.mp h'
+      exact ha b hb
+  · cases h
+
 -- The two theorems recurse together, so both take the dialect's lawful
 -- text, which only the first states it needs.
 set_option linter.unusedSectionVars false in
@@ -116,7 +146,7 @@ depth. -/
 theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .ok i →
     si.Writable → i.WellFormed
   | ⟨kind, kindPos, name, params, results, attrs, .items ds sis⟩, i, h, hw => by
-    obtain ⟨hp, hr, hd, hs⟩ := hw
+    obtain ⟨hp, hr, ha, hd, hs⟩ := hw
     rw [decodeItem.eq_def] at h
     dsimp only at h
     by_cases hk : kind = "func"
@@ -128,9 +158,12 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         bind_step h with ⟨is, e, h⟩
         cases h
         exact ⟨hd, decodeItems_wellFormed e hs⟩
-      · simp [hk, hm, errorAt] at h
+      · simp only [hk, hm, ↓reduceIte] at h
+        split at h
+        · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
+        · cases h
   | ⟨kind, kindPos, name, params, results, attrs, .blocks bs⟩, i, h, hw => by
-    obtain ⟨hp, hr, hb⟩ := hw
+    obtain ⟨hp, hr, ha, hb⟩ := hw
     rw [decodeItem.eq_def] at h
     dsimp only at h
     by_cases hk : kind = "func"
@@ -144,7 +177,10 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
           cases h
           exact ⟨by simp, trivial⟩
         | cons => simp [errorAt] at h
-      · simp [hk, hm, errorAt] at h
+      · simp only [hk, hm, ↓reduceIte] at h
+        split at h
+        · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
+        · cases h
 
 /-- Items decoded from trees that can be written are well formed. -/
 theorem decodeItems_wellFormed : ∀ {sis : List SItem} {is : List (Item d)},

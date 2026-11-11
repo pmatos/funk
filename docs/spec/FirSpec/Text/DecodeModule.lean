@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module decoded back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8452656509907407351")
+:::moduleDocs (fingerprint := "7958503940249937813")
 :::
 
 :::readable Fir.bind_eq_of (fingerprint := "12224089499088332229")
@@ -54,6 +54,16 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
+:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "3870543999219301537")
+*Theorems: an item of a dialect's kind decodes back.* A word of a dialect
+holds a `.`, so it is neither `func` nor `module`. For every dialect with
+a text format and every well-formed item $`i` of a dialect's kind, an item
+as written that erases to the tree of $`i` decodes as $`i`, at any
+positions: its kind is a word of a dialect, its body is no blocks, its
+result types and its parameters decode back, and its attributes are kept
+as they were read.
+:::
+
 :::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "1750046234271386164")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
@@ -71,7 +81,8 @@ for blocks: the only branch that printed text reaches. An item that erases
 to the tree of a nested module is a `module` with no parameters, results
 or attributes; its body is no blocks when the module has no dialect set and
 no items, and otherwise its dialect set and items that erase to the trees
-of its items, which decode back in turn. The last two theorems call one
+of its items, which decode back in turn. An item that erases to the tree of
+an item of a dialect's kind decodes back by the theorem above. The last two theorems call one
 another, and are proved together by induction on the items.
 :::
 

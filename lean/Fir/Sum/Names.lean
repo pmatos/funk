@@ -17,8 +17,8 @@ is the core's. Every word of an attribute names a dialect, or none.
 A dialect has a _dialect set_: the names of the dialects that its words may
 name. The core's words are bare, so the core's set is empty. A dialect's
 words name only dialects of its set: each op name, each word of an op's
-attributes, each word of a valid type and each region kind it registers.
-The section on sums of dialects
+attributes, each word of a valid type, each region kind it registers and
+each kind of item that it registers. The section on sums of dialects
 builds a dialect from several, and its set holds the name of each of them.
 
 This section gives, in order: the dialect that a word names, the dialects
@@ -118,13 +118,16 @@ class DialectSet (d : Dialect) where
 export DialectSet (names)
 
 /-- The words of a dialect name only dialects of its set: each op name, each
-word of an op's attributes, each word of a valid type and each region kind
-that it registers. -/
+word of an op's attributes, each word of a valid type, each region kind
+that it registers and each kind of item that it registers. A dialect that
+registers no kind of item has the last by the default. -/
 class LawfulDialectSet (d : Dialect) [DialectValidation d] [DialectText d] [DialectSet d] :
     Prop where
   opName_mem : ∀ (op : d.Op) (x : String), wordDialect (opName op) = some x → x ∈ names d
   opAttrs_mem : ∀ (op : d.Op), ∀ x ∈ Attr.dialectsAll (opAttrs op), x ∈ names d
   tyAttr_mem : ∀ t : d.Ty, validTy t → ∀ x ∈ (tyAttr t).dialects, x ∈ names d
   kind_mem : ∀ k ∈ regionKindNames (d := d), ∀ x, wordDialect k = some x → x ∈ names d
+  itemKind_mem : ∀ k ∈ itemKindNames (d := d), ∀ x, wordDialect k = some x → x ∈ names d := by
+    intro k hk; nomatch hk
 
 end Fir

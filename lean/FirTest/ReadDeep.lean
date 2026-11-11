@@ -56,6 +56,25 @@ def deepAttrText (n : Nat) : String :=
   "func @f() {\n^e:\n  ret " ++ String.join (List.replicate n "h(") ++ "x" ++
     String.join (List.replicate n ")") ++ " @0\n}\n" ++ locsText
 
+/-- An item of a dialect's kind whose attribute is applied `n` levels deep.
+Every reader decodes it, whatever its dialect, and keeps the attribute. -/
+def deepItemAttrText (n : Nat) : String :=
+  "toy.cell @c() " ++ String.join (List.replicate n "h(") ++ "x" ++
+    String.join (List.replicate n ")") ++ " {\n}\n" ++ locsText
+
+/-- What the core dialect's check reports on a text, as `fir-ref validate`
+runs it, or `none` when the text does not parse. -/
+def checkMessages (text : String) : Option (List String) :=
+  match Fir.parse (d := CoreDialect) text with
+  | .ok m => some ((m.problems ++ m.setProblems).map (·.message))
+  | .error _ => none
+
+/-- Whether the core dialect's printer gives a text back. -/
+def printsBack (text : String) : Bool :=
+  match Fir.parse (d := CoreDialect) text with
+  | .ok m => m.print == text
+  | .error _ => false
+
 /-- A block of `n` constants. -/
 def flatOpsText (n : Nat) : String :=
   "func @f() {\n^e:\n" ++
@@ -106,7 +125,14 @@ def lexError (text : String) : Option (Nat × Nat × String) :=
 -- `itemsLoop` and `decodeLoop`: the readers read the modules whole, and the
 -- decoder decodes them whole before it rejects the item after them.
 #guard parseError (deepModulesText 1000000) = some (2000001, 1,
-  "unknown item kind bad: the kinds are func and module")
+  "unknown item kind bad: the kinds are func, module and the words of dialects")
+-- `attrLoop`, `decodeLoop`, `writableLoop`, `dialectsLoop` and `printAttrs`: the
+-- readers read the item's attribute whole, the decoder keeps it, the check
+-- walks it with no stack per level, and the printer writes it back.
+#guard checkMessages (deepItemAttrText 1000000) = some [
+  "no dialect registers the kind of item \"toy.cell\"",
+  "the item writes a word of the dialect toy, which the module's dialect set does not name"]
+#guard printsBack (deepItemAttrText 1000000)
 -- `blocksLoop`: the readers read the regions whole.
 #guard readTextError (deepRegionsText 600000) = none
 

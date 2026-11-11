@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9573380394114366199")
+:::moduleDocs (fingerprint := "17482636798295833869")
 :::
 
 :::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
@@ -141,14 +141,23 @@ well-formed function can be written: `func`, its symbol, its parameters,
 its result types, which are written as types, and its blocks.
 :::
 
+:::readable Fir.DialectItem.WellFormed.tokens (pin := Fir.DialectItem.WellFormed) (pin := Fir.DialectItem.tokens) (fingerprint := "17143999542065976434")
+*Theorem: a well-formed item of a dialect's kind has tokens that can be
+written.* For every dialect with a text format, every token of a
+well-formed item of a dialect's kind can be written: its kind is a word,
+since a word of a dialect is one, the definitions of its parameters can be
+written, its result types are written as types, and its attributes can be
+written.
+:::
+
 :::readable Fir.dialectsTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "8087633961352507208")
 *Theorems: well-formed items and modules have tokens that can be written.*
 For every dialect with signatures and a text format:
 
 * every token of a dialect set whose names are words can be written;
 * every token of a well-formed item can be written, and so can every token
-  of a list of well-formed items: a function by the theorem above, and a
-  nested module since its dialect set names words and its items are well
+  of a list of well-formed items: a function and an item of a dialect's
+  kind by the theorems above, and a nested module since its dialect set names words and its items are well
   formed, at any depth;
 * every token of every well-formed module can be written. A well-formed
   module names its dialects by words, has well-formed items, and has a

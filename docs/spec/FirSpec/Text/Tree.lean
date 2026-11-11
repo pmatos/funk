@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "778644107879246559")
+:::moduleDocs (fingerprint := "13201938321690760624")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -100,7 +100,7 @@ holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "9879907637118872792")
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "3422487333582060718")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -110,7 +110,13 @@ function $`f` is the item of kind `func`, at $`p_0`, with:
 * as its body, the trees of the blocks of $`f`: a body of blocks, even
   when $`f` has none.
 
-The tree of an item that is a function is the tree of its function. The
+The tree of an item $`i` of a dialect's kind is the item of the kind of
+$`i`, at $`p_0`, with the symbol of $`i`, the trees of its parameters, each
+result type $`t` as $`\mathrm{tyattr}(t)` at $`p_0`, each attribute of
+$`i` at $`p_0`, and an empty body of blocks.
+
+The tree of an item that is a function is the tree of its function, and
+the tree of an item of a dialect's kind is the tree of that item. The
 tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
 the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
 $`s`, no parameters, results or attributes, and as its body the dialect set

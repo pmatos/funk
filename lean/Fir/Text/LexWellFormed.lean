@@ -305,10 +305,38 @@ theorem dialectsTokens_writable {ds : List Name} (h : ∀ x ∈ ds, isWord x) :
       List.mem_singleton, forall_eq]
     exact h
 
+omit [DialectSignature d] in
+/-- Every token of a well-formed item of a dialect's kind can be written. -/
+theorem DialectItem.WellFormed.tokens {i : DialectItem d} (h : i.WellFormed) :
+    ∀ t ∈ i.tokens, t.Writable := by
+  have hres : ∀ t ∈ (if i.results.isEmpty = true then []
+      else Tok.arrow :: [Tok.comma].intercalate (i.results.map (tyAttr · |>.tokens))), t.Writable := by
+    split
+    · simp
+    · split_writable
+      refine forall_mem_intercalate_of comma_writable fun ts hts => ?_
+      obtain ⟨ty, hty, rfl⟩ := List.mem_map.mp hts
+      exact Attr.Writable.tokens (h.types ty (List.mem_append_right _ hty)).1.writable
+  have hdefs : ∀ t ∈ defsTokens i.params, t.Writable :=
+    forall_mem_intercalate_of comma_writable fun ts hts => by
+      obtain ⟨x, hx, rfl⟩ := List.mem_map.mp hts
+      simp only [defTokens]
+      split_writable
+      · exact h.names x hx
+      · exact Attr.Writable.tokens
+          (h.types x.2 (List.mem_append_left _ (List.mem_map_of_mem hx))).1.writable
+  simp only [DialectItem.tokens]
+  split_writable
+  · exact isWord_of_isDialectWord h.kind
+  · exact hdefs
+  · exact hres
+  · exact fun a ha => Attr.Writable.tokens (Attr.AllWritable.mem h.attrs a ha)
+
 mutual
 /-- Every token of a well-formed item can be written. -/
 theorem Item.WellFormed.tokens : ∀ {i : Item d}, i.WellFormed → ∀ t ∈ i.tokens, t.Writable
   | .func _, h => Func.WellFormed.tokens h
+  | .dialect _, h => DialectItem.WellFormed.tokens h
   | .module _ _ is, h => by
     have his := Item.WellFormed.tokensList (is := is) h.2
     simp only [Item.tokens]

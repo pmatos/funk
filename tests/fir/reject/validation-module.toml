@@ -390,3 +390,14 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a dialect registers the kind of each item of a dialect's kind: the core registers none"
+text = '''
+toy.cell @c() {
+}
+
+locs {
+}
+'''

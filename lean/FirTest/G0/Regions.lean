@@ -3,11 +3,12 @@ import FirRef
 
 /-!
 G0's check on the Lean side, for region kinds that a dialect registers
-(ADR-2026-11-03-0600, ADR-2026-11-10-1941), split from `lean/FirTest/G0.lean`
-by responsibility. Each statement below is made of an arbitrary dialect `d`,
+(ADR-2026-11-03-0600, ADR-2026-11-10-1941), split from `FirTest.G0` by
+subject. Each statement below is made of an arbitrary dialect `d`,
 or an arbitrary base and extension, with the spec's own proof, so it builds
 only while those stay parameterized over the dialect. `scripts/check_g0.py`
-checks this file as it checks `G0.lean`, outside its `#guard` commands.
+checks this file as it checks the other files of `FirTest/G0/`, outside its
+`#guard` commands.
 
 They restate, for dialects with region kinds of their own, the validation
 results: a valid op's regions obey the rules of their kinds, which the

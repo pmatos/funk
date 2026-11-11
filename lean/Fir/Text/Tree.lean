@@ -29,7 +29,9 @@ start with a label or are its `}`, never a word, so the grammar reads its
 body as blocks. A nested module is a `module` with its symbol and no
 parameters, results or attributes, and its body is its dialect set and its
 items, or no blocks when it has neither, since its tokens after its `{` are
-then its `}`. Each op is its results, its name and attributes as the
+then its `}`. An item of a dialect's kind is an item of its kind with its
+symbol, its parameters, its result types and its attributes, and its body
+is no blocks. Each op is its results, its name and attributes as the
 dialect writes them, its operands, its successors, its regions and its
 location reference. Each type is the attribute that writes it. The dialect
 set and the location table are the module's own.
@@ -161,6 +163,13 @@ blocks when it has neither, as the grammar reads an empty body. -/
 def moduleBody (ds : List Name) (is : List SItem) : SBody :=
   if ds.isEmpty ∧ is.isEmpty then .blocks [] else .items ds is
 
+/-- The tree of an item of a dialect's kind: its kind, symbol, parameters,
+results and attributes, and an empty body, which the grammar reads as no
+blocks. -/
+def DialectItem.tree (i : DialectItem d) : SItem :=
+  ⟨i.kind, .zero, i.name, i.params.map defTree, i.results.map (tyAttr · , .zero),
+    i.attrs.map (·, .zero), .blocks []⟩
+
 mutual
 /-- The tree of an item. A nested module is an item of kind `module` with no
 parameters, results or attributes, whose body is its dialect set and its
@@ -168,6 +177,7 @@ items. -/
 def Item.tree : Item d → SItem
   | .func f => f.tree
   | .module name ds is => ⟨"module", .zero, name, [], [], [], moduleBody ds (Item.treeList is)⟩
+  | .dialect i => i.tree
 
 /-- The trees of items. -/
 def Item.treeList : List (Item d) → List SItem

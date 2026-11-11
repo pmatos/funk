@@ -12,14 +12,17 @@
 //! writes a word of another dialect gets one diagnostic, which names the
 //! first such dialect in the spec's order: the function's result types, its
 //! parameters' types, the types that each block defines, then each op's
-//! name, attributes and region kinds.
+//! name, attributes and region kinds. An item of a dialect's kind writes
+//! the words of its kind, of its types and of its attributes
+//! (ADR-2026-11-10-2224), and gets one diagnostic in the same way, in the
+//! order of `DialectItem.wordDialects`.
 
 use std::collections::HashSet;
 
 use super::Diagnostic;
 use crate::ir::names::{is_word, word_dialect};
 use crate::ir::tree::{Step, walk};
-use crate::ir::{Attr, Func, Part, Table, Type};
+use crate::ir::{Attr, DialectItem, Func, Part, Table, Type};
 use crate::registry::Registry;
 use crate::text::quote;
 
@@ -61,6 +64,27 @@ pub(super) fn check_words(t: Table<'_>, reg: &Registry, out: &mut Vec<Diagnostic
             ));
         }
     }
+    for i in t.dialect_items() {
+        if let Some(x) = item_outside(i, t.dialects) {
+            out.push(Diagnostic::at_block(
+                &i.name,
+                None,
+                format!(
+                    "the item writes a word of the dialect {x}, which the module's dialect set does not name"
+                ),
+            ));
+        }
+    }
+}
+
+/// The first dialect, outside `declared`, that a word of the item `i`
+/// names: its kind's, then those of its types, then those of its
+/// attributes.
+fn item_outside<'i>(i: &'i DialectItem, declared: &[String]) -> Option<&'i str> {
+    let outside = |w: &'i str| word_dialect(w).filter(|x| !declared.iter().any(|d| d == x));
+    outside(&i.kind)
+        .or_else(|| in_types(i.types(), &outside))
+        .or_else(|| in_attrs(&i.attrs, &outside))
 }
 
 /// The first dialect, outside `declared`, that a word of `f` names. Every
