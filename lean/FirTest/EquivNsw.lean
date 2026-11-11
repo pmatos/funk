@@ -24,15 +24,12 @@ fir's `shl` has no flags, so the flagged pair keeps `shl` as it is. -/
 overflows it gives poison, which every value refines. -/
 theorem addNsw_shl_32 :
     funcRuns (pairs 32) (addNswSelf 32) ⊑ funcRuns (pairs 32) (shlOne 32) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 32) (addNswSelf 32))
-    (Func.fuelMonotone (pairs 32) (shlOne 32)) (fun a => ⟨2, addNswSelf_runs (M := pairs 32) a⟩)
-    (fun a => ⟨3, shlOne_runs (M := pairs 32) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues, nsw,
+      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues,
         HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
     bv_decide
 
@@ -41,9 +38,7 @@ gives `-2^31` and `add nsw` overflows, so gives poison. -/
 theorem shl_addNsw_fails_32 :
     ¬ funcRuns (pairs 32) (shlOne 32) ⊑ funcRuns (pairs 32) (addNswSelf 32) := by
   intro h
-  exact (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 32) (shlOne 32))
-    (Func.fuelMonotone (pairs 32) (addNswSelf 32)) (fun a => ⟨3, shlOne_runs (M := pairs 32) a⟩)
-    (fun a => ⟨2, addNswSelf_runs (M := pairs 32) a⟩)).1 h (.cons (.value 1073741824) .nil) |>.1.2
+  exact (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).1 h (.value 1073741824)
 
 -- `fir-ref` agrees, on `2^30`.
 #guard runValid (pairsText 32) "@shl_one" ["1073741824"] == returns ["-2147483648"]
@@ -53,16 +48,13 @@ theorem shl_addNsw_fails_32 :
 `add nsw %x, %x`. -/
 theorem addNsw_shl (w : Nat) (hw : 2 ≤ w) :
     funcRuns (pairs w) (addNswSelf w) ⊑ funcRuns (pairs w) (shlOne w) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs w) (addNswSelf w))
-    (Func.fuelMonotone (pairs w) (shlOne w)) (fun a => ⟨2, addNswSelf_runs (M := pairs w) a⟩)
-    (fun a => ⟨3, shlOne_runs (M := pairs w) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues, nsw,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, one_mod (w := w) (by omega),
+      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues,
+        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, Nat.one_mod_two_pow (n := w) (by omega),
         show 1 < w by omega]
     exact add_self_eq_shl x
 
@@ -71,48 +63,45 @@ theorem addNsw_shl (w : Nat) (hw : 2 ≤ w) :
 theorem addNsw_shl_fails_1 :
     ¬ funcRuns (pairs 1) (addNswSelf 1) ⊑ funcRuns (pairs 1) (shlOne 1) := by
   intro h
-  exact (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 1) (addNswSelf 1))
-    (Func.fuelMonotone (pairs 1) (shlOne 1)) (fun a => ⟨2, addNswSelf_runs (M := pairs 1) a⟩)
-    (fun a => ⟨3, shlOne_runs (M := pairs 1) a⟩)).1 h (.cons (.value 0) .nil) |>.1.2
+  exact (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).1 h (.value 0)
 
 #guard runValid (pairsText 1) "@add_nsw_self" ["false"] == returns ["false"]
+
+/-- At `i1`, `add nsw %x, %x` refines `shl %x, 1`: `shl` shifts by the
+width there, so gives poison, which every value refines. -/
+theorem shl_addNsw_1 : funcRuns (pairs 1) (shlOne 1) ⊑ funcRuns (pairs 1) (addNswSelf 1) := by
+  refine (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).2 fun x => ?_
+  cases x <;> trivial
 
 /-! # Pair 4: `mul nsw %x, 2` and `add nsw %x, %x` -/
 
 /-- At `i32`, `add nsw %x, %x` refines `mul nsw %x, 2`. -/
 theorem mulNsw_addNsw_32 :
     funcRuns (pairs 32) (mulNswTwo 32) ⊑ funcRuns (pairs 32) (addNswSelf 32) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 32) (mulNswTwo 32))
-    (Func.fuelMonotone (pairs 32) (addNswSelf 32)) (fun a => ⟨3, mulNswTwo_runs (M := pairs 32) a⟩)
-    (fun a => ⟨2, addNswSelf_runs (M := pairs 32) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;> cases h₂ : x.smulOverflow 2#32 <;>
-      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues, nsw,
+      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues,
         HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
       bv_decide
 
 /-- At `i32`, `mul nsw %x, 2` refines `add nsw %x, %x`. -/
 theorem addNsw_mulNsw_32 :
     funcRuns (pairs 32) (addNswSelf 32) ⊑ funcRuns (pairs 32) (mulNswTwo 32) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 32) (addNswSelf 32))
-    (Func.fuelMonotone (pairs 32) (mulNswTwo 32)) (fun a => ⟨2, addNswSelf_runs (M := pairs 32) a⟩)
-    (fun a => ⟨3, mulNswTwo_runs (M := pairs 32) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;> cases h₂ : x.smulOverflow 2#32 <;>
-      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues, nsw,
+      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues,
         HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
       bv_decide
 
 /-! # Pair 3 at every width, and pair 4 at small widths -/
 
-/-- `2^k`, at `i(k+2)`, is the least value whose double overflows as a
-signed integer. -/
+/-- `2^k`, at `i(k+2)`, overflows as a signed integer when doubled. -/
 theorem pow_saddOverflow (k : Nat) :
     (BitVec.ofNat (k + 2) (2 ^ k)).saddOverflow (BitVec.ofNat (k + 2) (2 ^ k)) = true := by
   have hp : 0 < 2 ^ k := Nat.pow_pos (by decide)
@@ -134,17 +123,10 @@ theorem pow_saddOverflow (k : Nat) :
 theorem shl_addNsw_fails (k : Nat) :
     ¬ funcRuns (pairs (k + 2)) (shlOne (k + 2)) ⊑ funcRuns (pairs (k + 2)) (addNswSelf (k + 2)) := by
   intro h
-  have h1 := ((FuncRuns.isRefinedBy_iff_of_returns
-      (Func.fuelMonotone (pairs (k + 2)) (shlOne (k + 2)))
-      (Func.fuelMonotone (pairs (k + 2)) (addNswSelf (k + 2)))
-      (fun a => ⟨3, shlOne_runs (M := pairs (k + 2)) a⟩)
-      (fun a => ⟨2, addNswSelf_runs (M := pairs (k + 2)) a⟩)).1 h
-      (.cons (.value (BitVec.ofNat (k + 2) (2 ^ k))) .nil)).1.2
-  revert h1
-  show ¬ (shlValues (.value (BitVec.ofNat (k + 2) (2 ^ k))) (.value 1) ⊑
-      addWith nsw (.value (BitVec.ofNat (k + 2) (2 ^ k))) (.value (BitVec.ofNat (k + 2) (2 ^ k))))
-  simp [shlValues, shiftValues, addWith, wrapValues, nsw, pow_saddOverflow,
-    HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, one_mod (w := k + 2) (by omega)]
+  have h1 := (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).1 h
+    (.value (BitVec.ofNat (k + 2) (2 ^ k)))
+  simp [shlValues, shiftValues, addWith, wrapValues, pow_saddOverflow,
+    HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, Nat.one_mod_two_pow (n := k + 2) (by omega)] at h1
 
 /-- `2`, read as signed, at a width of three bits or more. -/
 theorem two_toInt {w : Nat} (hw : 3 ≤ w) : (2#w).toInt = 2 := by
@@ -167,51 +149,41 @@ theorem saddOverflow_eq_smulOverflow {w : Nat} (hw : 3 ≤ w) (x : BitVec w) :
 `mul nsw %x, 2`. -/
 theorem mulNsw_addNsw (w : Nat) (hw : 3 ≤ w) :
     funcRuns (pairs w) (mulNswTwo w) ⊑ funcRuns (pairs w) (addNswSelf w) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs w) (mulNswTwo w))
-    (Func.fuelMonotone (pairs w) (addNswSelf w)) (fun a => ⟨3, mulNswTwo_runs (M := pairs w) a⟩)
-    (fun a => ⟨2, addNswSelf_runs (M := pairs w) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
       simp [← saddOverflow_eq_smulOverflow hw, h, mulWith, addWith, wrapValues, mulValues,
-        addValues, nsw, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
-    exact mul_two_eq x
+        addValues, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
+    exact BitVec.mul_two (x := x)
 
 /-- At every width of three bits or more, `mul nsw %x, 2` refines
 `add nsw %x, %x`. -/
 theorem addNsw_mulNsw (w : Nat) (hw : 3 ≤ w) :
     funcRuns (pairs w) (addNswSelf w) ⊑ funcRuns (pairs w) (mulNswTwo w) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs w) (addNswSelf w))
-    (Func.fuelMonotone (pairs w) (mulNswTwo w)) (fun a => ⟨2, addNswSelf_runs (M := pairs w) a⟩)
-    (fun a => ⟨3, mulNswTwo_runs (M := pairs w) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
       simp [← saddOverflow_eq_smulOverflow hw, h, mulWith, addWith, wrapValues, mulValues,
-        addValues, nsw, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
-    exact (mul_two_eq x).symm
+        addValues, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
+    exact (BitVec.mul_two (x := x)).symm
 
 /-- At `i2`, `add nsw %x, %x` does not refine `mul nsw %x, 2`: `2` is `-2`
 there, so on `1`, `mul nsw` gives `-2` and `add nsw` overflows. -/
 theorem mulNsw_addNsw_fails_2 :
     ¬ funcRuns (pairs 2) (mulNswTwo 2) ⊑ funcRuns (pairs 2) (addNswSelf 2) := by
   intro h
-  exact (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 2) (mulNswTwo 2))
-    (Func.fuelMonotone (pairs 2) (addNswSelf 2)) (fun a => ⟨3, mulNswTwo_runs (M := pairs 2) a⟩)
-    (fun a => ⟨2, addNswSelf_runs (M := pairs 2) a⟩)).1 h (.cons (.value 1) .nil) |>.1.2
+  exact (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).1 h (.value 1)
 
 /-- At `i2`, `mul nsw %x, 2` does not refine `add nsw %x, %x`: on `-1`,
 `add nsw` gives `-2` and `mul nsw` overflows, since `-1 * -2` is `2`. -/
 theorem addNsw_mulNsw_fails_2 :
     ¬ funcRuns (pairs 2) (addNswSelf 2) ⊑ funcRuns (pairs 2) (mulNswTwo 2) := by
   intro h
-  exact (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 2) (addNswSelf 2))
-    (Func.fuelMonotone (pairs 2) (mulNswTwo 2)) (fun a => ⟨2, addNswSelf_runs (M := pairs 2) a⟩)
-    (fun a => ⟨3, mulNswTwo_runs (M := pairs 2) a⟩)).1 h (.cons (.value 3) .nil) |>.1.2
+  exact (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).1 h (.value 3)
 
 #guard runValid (pairsText 2) "@mul_nsw_two" ["1"] == returns ["-2"]
 #guard runValid (pairsText 2) "@add_nsw_self" ["1"] == returns ["poison"]
@@ -223,23 +195,18 @@ there, so on `true`, `mul nsw` gives `false` and `add nsw` overflows. -/
 theorem mulNsw_addNsw_fails_1 :
     ¬ funcRuns (pairs 1) (mulNswTwo 1) ⊑ funcRuns (pairs 1) (addNswSelf 1) := by
   intro h
-  exact (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 1) (mulNswTwo 1))
-    (Func.fuelMonotone (pairs 1) (addNswSelf 1)) (fun a => ⟨3, mulNswTwo_runs (M := pairs 1) a⟩)
-    (fun a => ⟨2, addNswSelf_runs (M := pairs 1) a⟩)).1 h (.cons (.value 1) .nil) |>.1.2
+  exact (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).1 h (.value 1)
 
 /-- At `i1`, `mul nsw %x, 2` refines `add nsw %x, %x`: on `true`, `add nsw`
 gives poison. -/
 theorem addNsw_mulNsw_1 :
     funcRuns (pairs 1) (addNswSelf 1) ⊑ funcRuns (pairs 1) (mulNswTwo 1) := by
-  refine (FuncRuns.isRefinedBy_iff_of_returns (Func.fuelMonotone (pairs 1) (addNswSelf 1))
-    (Func.fuelMonotone (pairs 1) (mulNswTwo 1)) (fun a => ⟨2, addNswSelf_runs (M := pairs 1) a⟩)
-    (fun a => ⟨3, mulNswTwo_runs (M := pairs 1) a⟩)).2 fun a => (obs_isRefinedBy_iff _ _).2 ?_
-  generalize arg a = x
+  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;>
-      simp [h₁, mulWith, addWith, wrapValues, mulValues, addValues, nsw,
+      simp [h₁, mulWith, addWith, wrapValues, mulValues, addValues,
         HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
       bv_decide
 

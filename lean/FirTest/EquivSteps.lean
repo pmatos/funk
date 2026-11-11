@@ -41,7 +41,8 @@ open Fir Core SetM
 theorem liftExcept_ok {ε α : Type} (a : α) :
     (liftExcept (Except.ok a : Except ε α) : ExceptT ε SetM α) = pure a := rfl
 
-/-- `liftExcept_ok`, with the success written as `pure`. -/
+/-- `liftExcept_ok`, with the success written as `pure`, as `Env.bind`
+writes it: `simp` matches the two forms apart. -/
 theorem liftExcept_pure {ε α : Type} (a : α) :
     (liftExcept (pure a : Except ε α) : ExceptT ε SetM α) = pure a := rfl
 
