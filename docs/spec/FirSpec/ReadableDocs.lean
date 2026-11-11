@@ -138,6 +138,15 @@ import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
+import FirSpec.Memory.Refine
+import FirSpec.Execution.MemoryOpRefine
+import FirSpec.Execution.MemoryStepPaths
+import FirSpec.Execution.MemoryCalls
+import FirSpec.Execution.MemoryBlackBox
+import FirSpec.Execution.MemoryRefineUp
+import FirSpec.Execution.MemoryRefineDown
+import FirSpec.Execution.MemoryRefineRuns
+import FirSpec.Execution.MemoryReplace
 import FirSpec.Core.MemoryRuns
 import FirSpec.Sum.Names
 import FirSpec.Validation.DialectSet
@@ -152,6 +161,7 @@ import FirSpec.Sum.LiftTextLaws
 import FirSpec.Sum.LiftPoisonLaws
 import FirSpec.Sum.LiftEffectLaws
 import FirSpec.Sum.TotalLaws
+import FirSpec.Sum.MonotoneLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

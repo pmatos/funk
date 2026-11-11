@@ -264,6 +264,10 @@ instance lawfulPoison : LawfulDialectPoison ToyDialect where
 the set monad, so `toy.mask` has an outcome from any memories. -/
 instance lawfulTotal : LawfulDialectTotal ToyDialect := LawfulDialectTotal.ofLawful
 
+/-- The toy dialect is lawful in its monotonicity: it is lawful, and it
+lifts the set monad, so `toy.mask` is monotone with memory. -/
+instance lawfulMonotone : LawfulDialectMonotone ToyDialect := LawfulDialectMonotone.ofLawful
+
 end Toy
 
 end FirTest

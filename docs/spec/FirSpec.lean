@@ -144,8 +144,9 @@ makes memory an effect of a run: the memories of a run, the effect that
 ops ask for, the layer that adds the memories to a way of computing, the
 runs of a function with memory and how they end, their fuel monotonicity,
 the obligations that an op's declaration of its effects on memory puts on
-its semantics, and progress with memory, which asks each op to be total
-from any memories.
+its semantics, progress with memory, which asks each op to be total from
+any memories, and refinement with memory, which refines memories unit by
+unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
@@ -154,6 +155,8 @@ from any memories.
 {includeReadable "." Fir.Memory.Frames "The memories of a run" FirSpec.Memory.Frames (level := 2)}
 
 {includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 2)}
+
+{includeReadable "." Fir.Memory.Refine "Refining memories" FirSpec.Memory.Refine (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryEffect "The memory effect" FirSpec.Execution.MemoryEffect (level := 2)}
 
@@ -174,6 +177,22 @@ from any memories.
 {includeReadable "." Fir.Execution.MemoryCallSteps "The steps of a call, with memory" FirSpec.Execution.MemoryCallSteps (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryProgress "Progress and no stuck path, with memory" FirSpec.Execution.MemoryProgress (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryOpRefine "Monotonicity with memory" FirSpec.Execution.MemoryOpRefine (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryStepPaths "The ways a step with memory goes on" FirSpec.Execution.MemoryStepPaths (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryCalls "Runs from given memories" FirSpec.Execution.MemoryCalls (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryBlackBox "Calls as black boxes, with memory" FirSpec.Execution.MemoryBlackBox (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryRefineUp "Returns and UB with memory, followed back" FirSpec.Execution.MemoryRefineUp (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryRefineDown "Running out of fuel with memory, followed back" FirSpec.Execution.MemoryRefineDown (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryRefineRuns "Refined arguments and memories" FirSpec.Execution.MemoryRefineRuns (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 2)}
 
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 2)}
 
@@ -296,6 +315,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.LiftEffectLaws "A lift's effect obligations" FirSpec.Sum.LiftEffectLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.TotalLaws "Totality of a sum and a lift" FirSpec.Sum.TotalLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.MonotoneLaws "Monotonicity of a sum and a lift" FirSpec.Sum.MonotoneLaws (level := 2)}
 
 # Architecture decision records
 %%%

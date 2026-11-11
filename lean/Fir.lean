@@ -88,6 +88,14 @@ import Fir.Execution.MemoryObligationLaws
 import Fir.Execution.MemoryTotal
 import Fir.Execution.MemoryCallSteps
 import Fir.Execution.MemoryProgress
+import Fir.Execution.MemoryOpRefine
+import Fir.Execution.MemoryStepPaths
+import Fir.Execution.MemoryCalls
+import Fir.Execution.MemoryBlackBox
+import Fir.Execution.MemoryRefineUp
+import Fir.Execution.MemoryRefineDown
+import Fir.Execution.MemoryRefineRuns
+import Fir.Execution.MemoryReplace
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
@@ -99,6 +107,7 @@ import Fir.Memory.Model
 import Fir.Memory.Laws
 import Fir.Memory.Frames
 import Fir.Memory.FrameLaws
+import Fir.Memory.Refine
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
@@ -151,5 +160,6 @@ import Fir.Sum.LiftTextLaws
 import Fir.Sum.LiftPoisonLaws
 import Fir.Sum.LiftEffectLaws
 import Fir.Sum.TotalLaws
+import Fir.Sum.MonotoneLaws
 import Fir.Core.Names
 import Fir.Validation.DialectSet

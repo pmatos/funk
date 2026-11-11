@@ -1,5 +1,7 @@
 import Fir.Core.EffectLaws
+import Fir.Core.CallRefine
 import Fir.Execution.MemoryProgress
+import Fir.Execution.MemoryReplace
 
 /-!
 # Every valid core function, with memory
@@ -19,6 +21,13 @@ from what it already meets in the set monad:
 So no path of a run with memory of a function of a valid core module is
 stuck, and it has an outcome at every budget, calls and recursion included,
 wherever a run names the core's memories.
+
+The core dialect is also lawful in its monotonicity, since it is lawful and
+lifts the set monad. Each core op that runs by its own rule is monotone in
+the set monad at every width, valid or not, so it is monotone with memory
+at every naming: on arguments that refine others, the runs with memory of
+every function of every core module refine its runs with memory on those
+others, calls and recursion included.
 -/
 
 namespace Fir
@@ -26,6 +35,11 @@ namespace Fir
 /-- The core dialect is lawful in its totality: each core op that runs by
 its own rule has an outcome from any memories, at every naming. -/
 instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect := LawfulDialectTotal.ofLawful
+
+/-- The core dialect is lawful in its monotonicity: each core op that runs
+by its own rule is monotone with memory, at every naming. -/
+instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
+  LawfulDialectMonotone.ofLawful
 
 namespace Core
 
@@ -47,6 +61,19 @@ theorem memProgress (hM : M.Valid) (hf : f ∈ M.funcs)
     (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns unit ρ M args) :=
   Func.memProgress unit ρ hM.funcs
     (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt unit ρ) hf args
+
+/-- Refined arguments, with memory: on arguments that refine others, a
+poison by any value, the runs with memory of every function of every core
+module refine its runs with memory on those others, calls and recursion
+included, wherever a run names the core's memories. -/
+theorem memRuns_args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
+    {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
+    observable (f.memRuns unit ρ M a) ⊑ observable (f.memRuns unit ρ M a') :=
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) unit ρ
+  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N unit :=
+    fun g b hb o ho hc => MemMonotone.ofLifts (opsMonotone_all g b hb o ho hc) unit ρ
+  Func.memRuns_isRefinedBy_of_from unit ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
+    (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
 end Core
 
