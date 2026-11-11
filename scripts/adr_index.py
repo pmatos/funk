@@ -136,17 +136,14 @@ def holds(adrs: list[Adr]) -> dict[str, list[str]]:
 
 def removed_row(row: Removed, files: dict[str, str]) -> str:
     """Return the Removed table's row of `row`. `files` maps each ADR's id to
-    its file."""
+    its file. `removed_problems` says when the place it names does not exist."""
     if row.now.startswith("ADR-") and row.now[4:] in files:
         now = f"[{row.now}]({files[row.now[4:]]})"
     elif PAGE_SECTION.fullmatch(row.now):
         page = row.now.removeprefix(f"{DECISIONS_DIR}/")
         now = f"[{page}](../decisions/{page})"
     else:
-        raise AdrError(
-            f"{ADR_DIR}/{REMOVED}: ADR-{row.id} lives in {row.now!r}, which is"
-            f" neither an ADR of {ADR_DIR}/ nor {DECISIONS_DIR}/PAGE.md#ANCHOR"
-        )
+        now = row.now.replace("|", "\\|")
     held = f"[`{row.commit}`]({REPO_URL}/blob/{row.commit}/{ADR_DIR}/{row.file})"
     return f"| `ADR-{row.id}` | {now} | {held} |"
 
@@ -185,7 +182,7 @@ def render(adrs: list[Adr], removed: Sequence[Removed] = ()) -> str:
         "",
         f"Each deleted ADR, from `{REMOVED}`. Its id is never used again. The",
         "rule it held lives in the second column now, and the last column",
-        "links the last commit that changed the file, which still holds it.",
+        "links the last commit on main that changed the file, which still holds it.",
         "",
         "| ADR | Its rule lives in | Last commit that held it |",
         "| --- | --- | --- |",
@@ -221,32 +218,51 @@ def area_of_page(name: str) -> str | None:
 
 
 def slugs(text: str) -> set[str]:
-    """Return the anchors of the Markdown headings in `text`, as GitHub makes
-    them: lower case, without punctuation, spaces as hyphens."""
-    found = set()
+    """Return the anchors of the ATX headings in `text`, outside fenced code,
+    as GitHub makes them: the text of a link or code span kept, lower case,
+    without punctuation, spaces as hyphens, and `-1`, `-2` on repeats."""
+    found: set[str] = set()
+    in_fence = False
     for line in text.splitlines():
-        heading = re.fullmatch(r"#{1,6} (.*)", line)
+        if line.lstrip(" ").startswith(("```", "~~~")):
+            in_fence = not in_fence
+        heading = (
+            None if in_fence else re.fullmatch(r" {0,3}#{1,6} +(.*?)(?: +#+)? *", line)
+        )
         if heading:
-            words = re.sub(r"[^\w\- ]", "", heading[1].strip().lower())
-            found.add(words.replace(" ", "-"))
+            words = re.sub(r"\[([^]]*)\]\([^)]*\)", r"\1", heading[1]).lower()
+            base = re.sub(r"[^\w\- ]", "", words).replace(" ", "-")
+            slug, n = base, 0
+            while slug in found:
+                n += 1
+                slug = f"{base}-{n}"
+            found.add(slug)
     return found
 
 
-def removed_problems(root: Path, removed: Sequence[Removed]) -> list[str]:
-    """Return one message per row of removed.json whose page or anchor does
-    not exist."""
+def removed_problems(
+    root: Path, removed: Sequence[Removed], adrs: list[Adr]
+) -> list[str]:
+    """Return one message per row of removed.json whose rule lives nowhere:
+    in an ADR that does not exist, or a page or heading that does not."""
     found = []
+    ids = {adr.id for adr in adrs}
     pages = set(tracked(root, DECISIONS_DIR))
     for row in removed:
-        match = PAGE_SECTION.fullmatch(row.now)
-        if match is None:
-            continue
         where = f"{ADR_DIR}/{REMOVED}: ADR-{row.id} lives in {row.now}"
-        if match[1] not in pages:
+        match = PAGE_SECTION.fullmatch(row.now)
+        if row.now.startswith("ADR-"):
+            if row.now[4:] not in ids:
+                found.append(f"{where}, which is not an ADR of {ADR_DIR}/")
+        elif match is None:
+            found.append(
+                f"{where}, which is neither ADR-ID nor {DECISIONS_DIR}/PAGE.md#ANCHOR"
+            )
+        elif match[1] not in pages:
             found.append(f"{where}, but {DECISIONS_DIR}/{match[1]} is not tracked")
-            continue
-        text = (root / DECISIONS_DIR / match[1]).read_text(encoding="utf-8")
-        if match[2] and match[2] not in slugs(text):
+        elif match[2] and match[2] not in slugs(
+            (root / DECISIONS_DIR / match[1]).read_text(encoding="utf-8")
+        ):
             found.append(f"{where}, but that page has no heading #{match[2]}")
     return found
 
@@ -306,7 +322,7 @@ def run(root: Path, write: bool, err) -> int:
     if write:
         index.write_text(text, encoding="utf-8")
     status = 0
-    for problem in page_problems(root, adrs) + removed_problems(root, removed):
+    for problem in page_problems(root, adrs) + removed_problems(root, removed, adrs):
         print(problem, file=err)
         status = 1
     committed = index.read_text(encoding="utf-8") if index.exists() else None

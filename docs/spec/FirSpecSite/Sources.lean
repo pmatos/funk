@@ -79,11 +79,11 @@ One message per citation in the spec's sources that names no ADR in `ids`, or
 that names a deleted ADR of `removed.json`.
 -/
 def checkSources (root : System.FilePath) (ids : Array String) : IO (Array String) := do
-  let removed ← match ← loadRemoved root with
-    | .ok rows => pure rows
-    | .error e => return #[e]
+  let (removed, loadErrors) := match ← loadRemoved root with
+    | .ok rows => (rows, #[])
+    | .error e => (#[], #[e])
   let gone (id : String) := (removed.find? (·.1 == id)).map (·.2)
-  let mut errors := #[]
+  let mut errors := loadErrors
   for file in ← sourceFiles root do
     errors := errors ++ checkText (ids.contains ·) gone file (← IO.FS.readFile (root / file))
   return errors

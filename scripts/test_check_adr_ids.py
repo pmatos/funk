@@ -1,5 +1,7 @@
 """Tests for scripts/check_adr_ids.py. Run: python scripts/test_check_adr_ids.py"""
 
+import contextlib
+import io
 import os
 import subprocess
 import sys
@@ -7,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from check_adr_ids import Removed, parse_removed, problems
+from check_adr_ids import Removed, annotate, parse_removed, problems
 
 SCRIPT = Path(__file__).with_name("check_adr_ids.py")
 
@@ -232,8 +234,8 @@ class Repository(unittest.TestCase):
             self.assertIn("docs/adrs/removed.json: ", run_script(repo).stderr)
 
 
-class AddedSince(unittest.TestCase):
-    """--added-since prints a warning for more than two new ADRs, never fails."""
+class WarnAdded(unittest.TestCase):
+    """--warn-added warns when HEAD adds more than two ADRs, and never fails."""
 
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
@@ -243,7 +245,6 @@ class AddedSince(unittest.TestCase):
         self.adrs.mkdir(parents=True)
         git(self.repo, "init", "-q")
         self.commit("2026-10-30-1031-old.md", "README.md")
-        git(self.repo, "tag", "base")
 
     def commit(self, *names: str) -> None:
         for name in names:
@@ -255,28 +256,31 @@ class AddedSince(unittest.TestCase):
             "commit", "-q", "-m", "x",
         )  # fmt: skip
 
-    def added(self):
-        result = run_script(self.repo / "docs", "--added-since", "base")
+    def warned(self):
+        result = run_script(self.repo / "docs", "--warn-added")
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout
 
     def test_two_new_adrs_warn_nothing(self):
         self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "removed.json")
-        out = self.added()
-        self.assertIn("2 ADRs added since base.", out)
+        out = self.warned()
+        self.assertIn("2 ADRs added to HEAD^1.", out)
         self.assertNotIn("::warning", out)
 
-    def test_three_new_adrs_warn(self):
+    def test_three_new_adrs_warn_on_one_line(self):
         names = ("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "2026-10-30-1034-c.md")
         self.commit(*names)
-        out = self.added()
-        self.assertIn(
-            "::warning title=More than 2 ADRs::This pull request adds 3 ADRs", out
+        warning = [line for line in self.warned().splitlines() if "::warning" in line]
+        self.assertEqual(len(warning), 1)
+        self.assertTrue(
+            warning[0].startswith(
+                "::warning title=More than 2 ADRs::This pull request adds 3 ADRs"
+            )
         )
         for name in names:
-            self.assertIn(f"docs/adrs/{name}", out)
+            self.assertIn(f"docs/adrs/{name}", warning[0])
 
-    def test_a_renamed_or_changed_adr_is_not_added(self):
+    def test_a_slug_renamed_or_changed_adr_is_not_added(self):
         git(
             self.repo,
             "mv",
@@ -284,14 +288,34 @@ class AddedSince(unittest.TestCase):
             "docs/adrs/2026-10-30-1031-new.md",
         )
         self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "README.md")
-        self.assertIn("2 ADRs added since base.", self.added())
+        self.assertIn("2 ADRs added to HEAD^1.", self.warned())
 
-    def test_a_base_it_cannot_read_warns_and_passes(self):
-        result = run_script(self.repo, "--added-since", "no-such-ref")
+    def test_an_adr_moved_to_a_new_id_is_added(self):
+        for old, new in (("1040", "1140"), ("1041", "1141"), ("1042", "1142")):
+            (self.adrs / f"2026-10-30-{old}-same.md").write_text("# The same text\n")
+        self.commit()
+        for old, new in (("1040", "1140"), ("1041", "1141"), ("1042", "1142")):
+            git(
+                self.repo,
+                "mv",
+                f"docs/adrs/2026-10-30-{old}-same.md",
+                f"docs/adrs/2026-10-30-{new}-same.md",
+            )
+        self.commit()
+        self.assertIn("::warning title=More than 2 ADRs::", self.warned())
+
+    def test_no_first_parent_warns_on_one_line_and_passes(self):
+        result = run_script(self.repo, "--warn-added")
         self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            "::warning title=ADRs added::cannot diff no-such-ref", result.stdout
-        )
+        lines = result.stdout.splitlines()
+        self.assertEqual(len(lines), 1)
+        self.assertTrue(lines[0].startswith("::warning title=ADRs added::cannot read"))
+
+    def test_a_warning_escapes_its_line_breaks(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            annotate("T", "100% sure\r\nnext")
+        self.assertEqual(out.getvalue(), "::warning title=T::100%25 sure%0D%0Anext\n")
 
 
 if __name__ == "__main__":

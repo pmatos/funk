@@ -298,10 +298,12 @@ into one ADR.
 
 CI warns, and never fails, when a pull request adds more than two ADRs. The
 step `Warn when a pull request adds more than two ADRs` of the `static` job
-runs `scripts/check_adr_ids.py --added-since HEAD^1` on a pull request: HEAD is
-the merge, HEAD^1 its base, so the job checks out two commits. It prints a
-GitHub `::warning::` and exits with 0. It is a step, not a hook, because
-`pre-commit run --all-files` has no base to count from.
+runs `scripts/check_adr_ids.py --warn-added` on a pull request. It counts the
+ADR ids at HEAD, the merge, that HEAD^1, its base, does not have, so the job
+checks out two commits. It prints a GitHub `::warning::` and exits with 0. It is
+a step, not a hook, because `pre-commit run --all-files` has no base to count
+from. It is the one exception to "every check is a hook": it never fails, and
+the human asked for it in #307. Do not move it into a hook.
 
 ### Tier, area, index and removed ADRs
 
@@ -322,9 +324,10 @@ that its `refined by` and `extended by` links reach. It links each ADR to its
 page. A status that does not start with `accepted` fails.
 
 A deleted ADR gets a row in `docs/adrs/removed.json`: its file, where its rule
-lives now, and the last commit that changed the file. Where the rule lives is
-an ADR, or a page section, `docs/decisions/PAGE.md#ANCHOR`. The index ends with
-these rows as its Removed table, each linking the old file at that commit.
+lives now, and the last commit on `main` that changed the file. Where the rule
+lives is an ADR, or a page section, `docs/decisions/PAGE.md#ANCHOR`. The index
+ends with these rows as its Removed table, each linking the old file at that
+commit.
 
 The `adr-index` hook fails when the index is stale or an ADR has no tier and
 area. It also fails when no page of an ADR's own area cites it, and when a row

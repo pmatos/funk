@@ -181,26 +181,18 @@ class Rendering(unittest.TestCase):
             ],
         )
 
-    def test_a_removed_rule_must_live_in_an_adr_or_a_page(self):
-        for now in ("ADR-2030-01-01-0009", "somewhere", "docs/decisions/a/b.md"):
-            with self.subTest(now=now), self.assertRaisesRegex(AdrError, "neither"):
-                render(
-                    [],
-                    [
-                        Removed(
-                            "2030-01-01-0001",
-                            "2030-01-01-0001-a.md",
-                            now,
-                            "0123456789ab",
-                        )
-                    ],
-                )
-
     def test_slugs_are_githubs_anchors(self):
         text = "# Current decisions: process\n\n## ADR ids\n### `INDEX.md`, and more\n#no\n"
         self.assertEqual(
             slugs(text), {"current-decisions-process", "adr-ids", "indexmd-and-more"}
         )
+
+    def test_slugs_number_repeats_and_skip_code_links_and_closing_hashes(self):
+        text = (
+            "## Foo\n## Foo ##\n```\n# not a heading\n```\n"
+            "## See [the page](a.md)\n## Foo\n"
+        )
+        self.assertEqual(slugs(text), {"foo", "foo-1", "see-the-page", "foo-2"})
 
     def test_a_pipe_in_a_title_stays_in_its_cell(self):
         text = render([parsed("2030-01-01-0001", title="a | b")])
@@ -312,11 +304,20 @@ class Running(unittest.TestCase):
         for now, problem in (
             ("docs/decisions/process.md#gone", "has no heading #gone"),
             ("docs/decisions/other.md", "other.md is not tracked"),
+            ("ADR-2030-01-01-0009", "which is not an ADR"),
+            ("somewhere", "which is neither"),
+            ("docs/decisions/a/b.md", "which is neither"),
         ):
             self.add(REMOVED, table(now))
             status, message = self.run_it(write=True)
             self.assertEqual(status, 1)
             self.assertIn(problem, message)
+
+    def test_an_untracked_removed_table_is_ignored(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
+        (self.adrs / REMOVED).write_text('{"removed": 1}', encoding="utf-8")
+        self.assertEqual(self.run_it(write=True), (0, ""))
 
     def test_a_malformed_removed_table_fails(self):
         self.add("2030-01-01-0001-a.md", adr_text())

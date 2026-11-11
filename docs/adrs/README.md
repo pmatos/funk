@@ -45,7 +45,7 @@ needs to know the decision. If not, write the doc comment.
 
 CI warns, without failing, when a pull request adds more than two ADRs, so that
 the reviewer looks again at each one (`scripts/check_adr_ids.py
---added-since`).
+--warn-added`).
 
 ## How to write one
 
@@ -65,8 +65,10 @@ the reviewer looks again at each one (`scripts/check_adr_ids.py
 ## Deleting one
 
 Delete the file and add a row to [`removed.json`](removed.json): the file's
-name, where its rule lives now, and the last commit that changed the file,
-`git log -1 --abbrev=12 --format=%h -- docs/adrs/FILE`. Where its rule lives
+name, where its rule lives now, and the last commit on `main` that changed the
+file, `git log -1 --abbrev=12 --format=%h origin/main -- docs/adrs/FILE`. A
+commit of the pull request's branch would not do: the squash merge leaves it
+off `main`. Where its rule lives
 is an ADR, `ADR-…`, or a page section, `docs/decisions/PAGE.md#ANCHOR`. Rewrite
 every citation of the deleted id in the same PR, in code, tests, the spec and
 the pages.

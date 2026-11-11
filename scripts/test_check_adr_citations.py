@@ -166,6 +166,13 @@ class Repository(unittest.TestCase):
             ],
         )
 
+    def test_an_untracked_removed_table_is_not_read(self):
+        git(self.repo, "rm", "-q", "--cached", "docs/adrs/2026-10-30-1031-a.md")
+        write(self.repo, "docs/adrs/removed.json", REMOVED)
+        found, _ = self.check()
+        self.assertEqual(len(found), 1)
+        self.assertIn("ADR-2026-10-30-1031 names no ADR", found[0])
+
     def test_a_malformed_removed_table_fails(self):
         write(self.repo, "docs/adrs/removed.json", '{"removed": [{"file": "x"}]}')
         self.add("docs/adrs/removed.json")

@@ -212,7 +212,7 @@ The last column is what holds now: the ADR and every ADR that its
 
 Each deleted ADR, from `removed.json`. Its id is never used again. The
 rule it held lives in the second column now, and the last column
-links the last commit that changed the file, which still holds it.
+links the last commit on main that changed the file, which still holds it.
 
 | ADR | Its rule lives in | Last commit that held it |
 | --- | --- | --- |

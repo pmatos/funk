@@ -32,14 +32,14 @@ The area is one of nine: `semantics`, `text-format`, `validation`, `fir-ref`,
 G0's enforcement sits with G0 in `semantics`, and a CLI's report format sits
 with its tool.
 
-`scripts/adr_index.py --write` generates `docs/adrs/INDEX.md`, with one line
-per ADR: its tier, area, title and what holds now. What holds now is the ADR
-and every ADR that its `refined by` and `extended by` links reach, so a reader
-need not follow a chain. The index ends with a Removed table, generated from
+`scripts/adr_index.py --write` generates `docs/adrs/INDEX.md`, with one line per
+ADR: its tier, area, title and what holds now. What holds now is the ADR and
+every ADR that its `refined by` and `extended by` links reach, so a reader need
+not follow a chain. The index ends with a Removed table, generated from
 `docs/adrs/removed.json`: each deleted ADR's id, where its rule lives now, and
-the last commit that changed its file. The `adr-index` hook fails when the
-index is stale or an ADR has no tier and area. `INDEX.md` is generated and over 20,000 bytes, so the
-file-size hook excludes it.
+the last commit on `main` that changed its file. The `adr-index` hook fails when
+the index is stale or an ADR has no tier and area. `INDEX.md` is generated and
+over 20,000 bytes, so the file-size hook excludes it.
 
 `docs/decisions/` holds one page per area in plain prose, each citing the
 ADRs it rests on. A page that outgrows the file-size budget continues in a

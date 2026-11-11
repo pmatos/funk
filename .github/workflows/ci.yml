@@ -50,7 +50,7 @@ jobs:
       # the merge's base, which `pre-commit run --all-files` does not have.
       - name: Warn when a pull request adds more than two ADRs
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        run: python3 scripts/check_adr_ids.py --added-since HEAD^1
+        run: python3 scripts/check_adr_ids.py --warn-added
       - if: ${{ !cancelled() }}
         run: uvx --no-build pre-commit@4.6.2 run adr-index --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
