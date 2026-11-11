@@ -44,8 +44,7 @@ An address escapes whenever an op hands it to code outside the program
 An `internal` global is observable only once its address escapes by one of
 these ways, even when only an integer from `ptr.expose` holds it. Until then a
 store to it is invisible and can be removed (ADR-2026-11-11-1016,
-ADR-2026-11-11-1444). Code outside the program sees an `export` global whether
-or not its address escapes (ADR-2026-11-09-1546).
+ADR-2026-11-11-1444).
 
 Only live allocations are compared. The contents of an allocation that the
 world has freed are not (ADR-2026-11-11-1445).

@@ -50,8 +50,6 @@ sees.
 
 - A pass that removes a store to an `internal` global first checks every
   way above, not only calls.
-- An `internal` global whose address goes through `ptr.expose` is compared
-  at a return.
 - The harness's wrapper dumps memory that escaped by any of these ways.
 - The `ptr.expose` ticket ([#232](https://github.com/pmatos/funk/issues/232)),
   the trace ticket ([#233](https://github.com/pmatos/funk/issues/233)) and
