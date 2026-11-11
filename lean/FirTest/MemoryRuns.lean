@@ -155,9 +155,9 @@ instance : DialectMemDenote AllocDialect where
 the naming it is given. -/
 example {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N) (M : Module AllocDialect)
     (f : Func AllocDialect) (args : HVector toType (f.params.map (·.2))) (n : Nat) :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) unit ρ
     f.memRuns unit ρ M args n = Functor.map (f := SetM) Prod.fst
-      ((@Func.run _ _ _ _ _ _ _ _ (DialectMemDenote.denoteAt unit ρ) M f args n).run
-        Memories.empty) :=
+      ((f.run M (m := StateT (Memories N unit) SetM) args n).run Memories.empty) :=
   rfl
 
 /-- The runs with memory of the alloc dialect, whose op allocates, are

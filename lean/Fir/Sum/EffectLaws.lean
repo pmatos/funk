@@ -98,8 +98,7 @@ memories. -/
 instance liftsSetM [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
     [LiftsSetM base] [LiftsSetM (base.over e)] : LiftsSetM (base ⊞ e) where
   lifts unit ρ := by
-    show @instDialectDenote _ _ _ _ _ _ _ _ (DialectMemDenote.denoteAt unit _)
-      (DialectMemDenote.denoteAt unit ρ) = _
+    dsimp only [DialectMemDenote.denoteAt]
     rw [LiftsSetM.lifts (d := base), LiftsSetM.lifts (d := base.over e)]
     refine DialectDenote.ext (fun op args => ?_) (fun op args => ?_)
     · cases op with

@@ -95,8 +95,7 @@ inclusion, and keeps the memories. -/
 instance liftsSetM [DialectDenote (dep.over e) SetM] [LiftsSetM (dep.over e)] :
     LiftsSetM (big.over (e.lift dep ι μ)) where
   lifts unit ρ := by
-    show @instDialectDenote _ _ _ _ _ _ _ _ _ _ _ _ _
-      (DialectMemDenote.denoteAt unit (ρ ∘ liftMem μ)) = _
+    dsimp only [DialectMemDenote.denoteAt]
     rw [LiftsSetM.lifts (d := dep.over e)]
     exact DialectDenote.ext (fun _ _ => ((MonadMorphism.liftState SetM _).map_map _ _).symm)
       (fun _ _ => rfl)
