@@ -12,6 +12,7 @@ comparing spellings compares bits.
 """
 
 import float_text
+import standins
 from refine import DECIMAL, POISON, float_format
 
 
@@ -27,8 +28,7 @@ def to_native(args: tuple[str, ...], params) -> tuple[str, ...]:
         if b is None:
             out.append(a)
             continue
-        width = 1 + fmt[0] + fmt[1]
-        out.append(str(b - (1 << width) if b >> (width - 1) else b))
+        out.append(standins.spell(b, 1 + fmt[0] + fmt[1]))
     return tuple(out)
 
 

@@ -167,12 +167,17 @@ impl Lexer<'_> {
         Ok(())
     }
 
-    fn take_name_chars(&mut self) -> String {
+    /// Skips the characters that pass `f`, and gives them.
+    fn take_while(&mut self, f: impl Fn(char) -> bool) -> &str {
         let start = self.at;
-        while self.peek().is_some_and(is_name_char) {
+        while self.peek().is_some_and(&f) {
             self.bump();
         }
-        self.text[start..self.at].to_string()
+        &self.text[start..self.at]
+    }
+
+    fn take_name_chars(&mut self) -> String {
+        self.take_while(is_name_char).to_string()
     }
 
     fn token(&mut self) -> Result<Tok, ParseError> {
@@ -259,9 +264,7 @@ impl Lexer<'_> {
         if self.peek() == Some('0') {
             self.bump();
         } else {
-            while self.peek().is_some_and(|c| c.is_ascii_digit()) {
-                self.bump();
-            }
+            self.take_while(|c| c.is_ascii_digit());
         }
         self.no_name_char_after(pos)?;
         Ok(self.text[start..self.at].to_string())
@@ -294,26 +297,18 @@ impl Lexer<'_> {
         if zero {
             self.bump();
         } else {
-            while self.peek().is_some_and(|c| c.is_ascii_digit()) {
-                self.bump();
-            }
+            self.take_while(|c| c.is_ascii_digit());
         }
         match (self.peek(), self.peek2()) {
             (Some('.'), Some(d)) if d.is_ascii_digit() => {
                 self.bump();
-                while self.peek().is_some_and(|c| c.is_ascii_digit()) {
-                    self.bump();
-                }
+                self.take_while(|c| c.is_ascii_digit());
                 self.exponent(pos)?;
                 return Ok(Tok::Float(self.text[start..self.at].to_string()));
             }
             (Some('x'), _) if zero && !negative => {
                 self.bump();
-                let digits = self.at;
-                while self.peek().is_some_and(is_hex_digit) {
-                    self.bump();
-                }
-                if self.at == digits {
+                if self.take_while(is_hex_digit).is_empty() {
                     return err(pos, "0x must be followed by lowercase hexadecimal digits");
                 }
                 self.no_name_char_after(pos)?;
@@ -382,11 +377,7 @@ impl Lexer<'_> {
             Some('t') => Ok('\t'),
             Some('u') if self.peek() == Some('{') => {
                 self.bump();
-                let start = self.at;
-                while self.peek().is_some_and(is_hex_digit) {
-                    self.bump();
-                }
-                let hex = self.text[start..self.at].to_string();
+                let hex = self.take_while(is_hex_digit).to_string();
                 if self.bump() != Some('}') || hex.is_empty() {
                     return err(
                         pos,

@@ -15,8 +15,9 @@ A text reads back only when it is that spelling: `decode` reads the text,
 then checks that the value it gives is spelled so. Before reading a
 decimal, it rejects one whose whole part or fraction has more than 64
 digits, or whose exponent is 10,000 or more in magnitude, which no
-spelling has, so reading never computes a huge power of ten. This module is written apart from the Lean and Rust
-code, and their tests are checked against it.
+spelling has, so reading never computes a huge power of ten. This module
+is written apart from the Lean and Rust code, and their tests are checked
+against it.
 """
 
 import re

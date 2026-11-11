@@ -122,7 +122,11 @@ impl Format {
         for n in 1..=i64::from(self.m) + 4 {
             let j = top - n + 1;
             let p = Big::from_u128(1).mul_pow10(j.unsigned_abs());
-            let (a, d) = by_pow10(&num, &den, j);
+            let (a, d) = if j >= 0 {
+                (num.clone(), den.mul(&p))
+            } else {
+                (num.mul(&p), den.clone())
+            };
             let (lo, rest) = a.div_rem(&d);
             let hi = lo.add(&Big::from_u128(1));
             let mut ok: Vec<&Big> = if rest.is_zero() {
