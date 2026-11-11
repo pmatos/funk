@@ -164,6 +164,9 @@ class Tests(unittest.TestCase):
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
         self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS)))
+        self.assertIn(Cell("values", "call", "one", "f32"), found)
+        values = [c for c in found if c.table == "values" and c.width]
+        self.assertEqual(len(values), 8 * 3)
 
     def test_the_cell_set(self):
         widths = (1, 8, 128)

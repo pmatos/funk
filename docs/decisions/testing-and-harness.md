@@ -213,7 +213,8 @@ cell.
 
 The float ops have a table of their own: a float constant, and `fcmp` with each
 predicate, at each float format of a side. The differential side has `f32` and
-`f64`, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`
+`f64`, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
+Passed and returned values are cells at each of these formats too
 (ADR-2026-11-11-1141).
 
 A test exercises each op of the function it runs and of every function it calls,

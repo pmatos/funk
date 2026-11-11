@@ -28,6 +28,7 @@ has neither operands nor attributes, is a cell at each width of its result
 from typing import NamedTuple
 
 from firtext import Op
+from refine import bits_of
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
@@ -131,13 +132,15 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
             if row == NOTHING:
                 out.append(Cell("values", op, row, ""))
             else:
-                out += [Cell("values", op, row, ty(w)) for w in widths]
+                types = (*map(ty, widths), *formats)
+                out += [Cell("values", op, row, t) for t in types]
     return out
 
 
 def is_float(t: str) -> bool:
     """Whether `t` is a float type: an alias or `float(e, m)`."""
-    return t in ("f16", "bf16", "f32", "f64", "f128") or t.startswith("float(")
+    b = bits_of(t)
+    return b is not None and not b[1]
 
 
 def allowed(op: str, m: int, n: int) -> bool:

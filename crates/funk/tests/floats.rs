@@ -68,32 +68,37 @@ fn holds(p: &str, c: Option<std::cmp::Ordering>) -> bool {
     }
 }
 
-/// The module of one function per predicate, `@P(%a: T, %b: T) -> i1`.
+/// The module of `@cmp(%a: T, %b: T)`, which gives each predicate's
+/// `fcmp` of `%a` and `%b`, in the order of [`FLOAT_PREDICATES`].
 fn fcmps(t: &str) -> String {
-    let funcs: Vec<String> = FLOAT_PREDICATES
+    let mut body: Vec<String> = FLOAT_PREDICATES
         .iter()
-        .map(|p| {
-            let op = format!("%r: i1 = fcmp {p} %a, %b");
-            func(p, &format!("%a: {t}, %b: {t}"), "i1", &[&op, "ret %r"])
-        })
+        .map(|p| format!("%{p}: i1 = fcmp {p} %a, %b"))
         .collect();
-    module(&funcs)
+    let names: Vec<String> = FLOAT_PREDICATES.iter().map(|p| format!("%{p}")).collect();
+    body.push(format!("ret {}", names.join(", ")));
+    let body: Vec<&str> = body.iter().map(String::as_str).collect();
+    let results = vec!["i1"; FLOAT_PREDICATES.len()].join(", ");
+    module(&[func("cmp", &format!("%a: {t}, %b: {t}"), &results, &body)])
 }
 
-fn check(exe: &Path, p: &str, a: &str, b: &str, c: Option<std::cmp::Ordering>) {
-    let want = if holds(p, c) { "true" } else { "false" };
-    expect(exe, &[&format!("@{p}"), a, b], &[want]);
+/// Runs `@cmp` on `a` and `b`, which compare as `c`, and checks each
+/// predicate's result.
+fn check(exe: &Path, a: &str, b: &str, c: Option<std::cmp::Ordering>) {
+    let want: Vec<&str> = FLOAT_PREDICATES
+        .iter()
+        .map(|p| if holds(p, c) { "true" } else { "false" })
+        .collect();
+    expect(exe, &["@cmp", a, b], &want);
 }
 
 #[test]
 fn every_predicate_runs_at_f32_on_the_hard_values() {
     let exe = build("fcmp-f32", &fcmps("f32"));
-    for p in FLOAT_PREDICATES {
-        for &a in &F32 {
-            for &b in &F32 {
-                let c = f32::from_bits(a).partial_cmp(&f32::from_bits(b));
-                check(&exe, p, &(a as i32).to_string(), &(b as i32).to_string(), c);
-            }
+    for &a in &F32 {
+        for &b in &F32 {
+            let c = f32::from_bits(a).partial_cmp(&f32::from_bits(b));
+            check(&exe, &(a as i32).to_string(), &(b as i32).to_string(), c);
         }
     }
 }
@@ -101,12 +106,10 @@ fn every_predicate_runs_at_f32_on_the_hard_values() {
 #[test]
 fn every_predicate_runs_at_f64_on_the_hard_values() {
     let exe = build("fcmp-f64", &fcmps("f64"));
-    for p in FLOAT_PREDICATES {
-        for &a in &F64 {
-            for &b in &F64 {
-                let c = f64::from_bits(a).partial_cmp(&f64::from_bits(b));
-                check(&exe, p, &(a as i64).to_string(), &(b as i64).to_string(), c);
-            }
+    for &a in &F64 {
+        for &b in &F64 {
+            let c = f64::from_bits(a).partial_cmp(&f64::from_bits(b));
+            check(&exe, &(a as i64).to_string(), &(b as i64).to_string(), c);
         }
     }
 }

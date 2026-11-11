@@ -18,13 +18,17 @@ backend lowers `f32` and `f64` only (ADR-2026-11-09-1549).
   cell at each float format of a side, in a table of its own.
 - The differential side has `f32` and `f64`. The interpreter-only side has
   `f16`, `bf16`, `f32`, `f64` and `f128`.
-- Ops at other float formats count towards no cell, as ops at other widths
-  do.
+- The rows of passed and returned values (`br`, `cond_br`, `ret`, `call`
+  and `func` with one or several values) have a cell at each float format
+  of a side too, as they have one at each width.
+- Ops and values at other float formats count towards no cell, as ops at
+  other widths do.
 
 ## Consequences
 
 - The `coverage-matrix` hook fails until the corpus tests each float cell,
   so every predicate runs natively at `f32` and `f64`, and on `fir-ref` at
-  every aliased format.
+  every aliased format. Floats passed in SSE registers, through block
+  arguments and back from calls (ADR-2026-11-11-1140) are cells as well.
 - A later float op, such as `fadd`, adds its row to `AT_FORMAT` in
   `scripts/harness/cells.py`.

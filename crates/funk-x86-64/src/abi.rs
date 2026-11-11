@@ -35,16 +35,6 @@ pub(crate) struct Arg {
     pub class: Class,
 }
 
-/// The `movq` operand of a register argument's place: a general-purpose
-/// register, or `%xmmN`.
-fn reg_name(loc: Loc) -> Option<String> {
-    match loc {
-        Loc::Reg(reg) => Some(reg.q().to_string()),
-        Loc::Xmm(n) => Some(format!("%xmm{n}")),
-        Loc::Stack(_) => None,
-    }
-}
-
 /// Stores a function's incoming arguments in their frame slots after the
 /// standard prologue has established `%rbp`. `args` gives the declared
 /// parameters in order, each of its class. `hidden` is the slot
@@ -71,10 +61,8 @@ pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Resul
     {
         for (loc, to) in locs.into_iter().zip([arg.slot, arg.slot.high()]) {
             match loc {
-                Loc::Reg(_) | Loc::Xmm(_) => {
-                    let reg = reg_name(loc).unwrap_or_default();
-                    asm.ins("movq", format_args!("{reg}, {to}"));
-                }
+                Loc::Reg(reg) => asm.ins("movq", format_args!("{}, {to}", reg.q())),
+                Loc::Xmm(n) => asm.ins("movq", format_args!("%xmm{n}, {to}")),
                 Loc::Stack(at) => {
                     let from = Mem {
                         disp: stack_arg_offset(at).ok_or(i)?,
@@ -115,7 +103,8 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
         for (loc, slot) in locs.iter().zip([a.slot, a.slot.high()]) {
             match *loc {
                 Loc::Stack(at) => stack[at / 8] = Some(slot),
-                reg => regs.push((reg_name(reg).unwrap_or_default(), slot)),
+                Loc::Reg(reg) => regs.push((reg.q().to_string(), slot)),
+                Loc::Xmm(n) => regs.push((format!("%xmm{n}"), slot)),
             }
         }
     }

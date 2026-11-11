@@ -28,6 +28,7 @@ use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
+use crate::width::Class;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -71,6 +72,9 @@ fn fcmp(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         return Err(format!("fcmp has no predicate {p}").into());
     };
     cx.width(&r.name)?;
+    if cx.class(a)? != Class::Sse {
+        return Err("fcmp compares floats".into());
+    }
     let (mov, ucomis) = match cx.width(a)? {
         32 => ("movss", "ucomiss"),
         64 => ("movsd", "ucomisd"),

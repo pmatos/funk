@@ -232,7 +232,11 @@ and from functions as System V does
 ([ADR-2026-11-11-1140](../adrs/2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md)):
 past the eight SSE registers onto the stack, back in `%xmm0` and `%xmm1`
 or in the result area, mixed with integers and an `i128`, through block
-arguments, and chosen by an `fcmp`. `float-types` now has interpreter-only
-tests that pass values of every format, poison among them.
+arguments, and chosen by an `fcmp`. `float-values-T` passes values of `T`
+through `br` and `cond_br` and back from calls with one result and with
+several, for the cells of passed and returned values at each format;
+it is differential at `f32` and `f64` and interpreter-only at every
+format. `float-types` now has interpreter-only tests that pass values of
+every format, poison among them.
 `reject/float-ops.toml` holds the float constants and `fcmp` texts that
 do not decode.

@@ -179,19 +179,20 @@ WHAT = {
 }
 
 
-def values_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
+def values_table(
+    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
+) -> list[str]:
+    types = (*map(cells.ty, widths), *formats)
     rows = []
     for op, kinds in cells.VALUES:
         for k in kinds:
             row = [f"`{op}`", WHAT[op][k]]
             if k == cells.NOTHING:
-                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(widths)
+                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(types)
             else:
-                row += [""] + [
-                    number(counts[Cell("values", op, k, cells.ty(w))]) for w in widths
-                ]
+                row += [""] + [number(counts[Cell("values", op, k, t)]) for t in types]
             rows.append(row)
-    return table(["op", "what", "no value", *(f"`i{w}`" for w in widths)], rows)
+    return table(["op", "what", "no value", *(f"`{t}`" for t in types)], rows)
 
 
 def render(counts: dict[str, Counter]) -> str:
@@ -226,7 +227,7 @@ def render(counts: dict[str, Counter]) -> str:
         lines += ["", f"### Width changes ({title.lower()})", ""]
         lines += casts_table(counts[side], widths)
         lines += ["", f"### Passed and returned values ({title.lower()})", ""]
-        lines += values_table(counts[side], widths)
+        lines += values_table(counts[side], widths, formats)
     return "\n".join(lines) + "\n"
 
 
