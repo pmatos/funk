@@ -52,10 +52,18 @@ pub fn int_type(width: u32) -> Type {
     Type::word(format!("i{width}"))
 }
 
+/// The alias of the format `float<e,m>`, if it has one.
+fn alias(e: u32, m: u32) -> Option<&'static str> {
+    FLOAT_ALIASES
+        .iter()
+        .find(|a| (a.1, a.2) == (e, m))
+        .map(|a| a.0)
+}
+
 /// The type `float<e,m>`, written by its alias when it has one.
 pub fn float_type(e: u32, m: u32) -> Type {
-    match FLOAT_ALIASES.iter().find(|a| (a.1, a.2) == (e, m)) {
-        Some((name, ..)) => Type::word(*name),
+    match alias(e, m) {
+        Some(name) => Type::word(name),
         None => Type::app(
             FLOAT,
             vec![Attr::int(i128::from(e)), Attr::int(i128::from(m))],
@@ -116,13 +124,11 @@ fn decode_float(args: &[Attr]) -> Option<Result<CoreType, String>> {
         return Some(Err(format!("{shown} has a negative number of bits")));
     }
     let width = |i: &crate::Int| i.as_str().parse::<u32>().ok().filter(|&w| w <= MAX_WIDTH);
-    let (Some(e), Some(m)) = (width(e), width(m)) else {
-        return Some(Err(format!("{shown} is wider than {MAX_WIDTH} bits")));
+    let (e, m) = match (width(e), width(m)) {
+        (Some(e), Some(m)) if 1 + e + m <= MAX_WIDTH => (e, m),
+        _ => return Some(Err(format!("{shown} is wider than {MAX_WIDTH} bits"))),
     };
-    if 1 + e + m > MAX_WIDTH {
-        return Some(Err(format!("{shown} is wider than {MAX_WIDTH} bits")));
-    }
-    if let Some((name, ..)) = FLOAT_ALIASES.iter().find(|a| (a.1, a.2) == (e, m)) {
+    if let Some(name) = alias(e, m) {
         return Some(Err(format!("{shown} is written {name}")));
     }
     Some(Ok(CoreType::Float { e, m }))
