@@ -1,6 +1,6 @@
 # A run shows a trace of external calls and volatile accesses, and refinement holds for every world that answers them
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1016 and ADR-2026-11-11-1017
 Tier: direction; area: semantics
 
 ## Context

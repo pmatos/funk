@@ -1,6 +1,6 @@
 # Inline assembly is an op tagged with its target, and running it is an event answered by the world
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1015
 Tier: direction; area: semantics
 
 ## Context
