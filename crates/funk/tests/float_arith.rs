@@ -42,6 +42,11 @@ impl Format {
         1 + self.e + self.m
     }
 
+    /// The bits of a value of the format: its low `width` bits.
+    fn mask(self) -> u64 {
+        u64::MAX >> (64 - self.width())
+    }
+
     fn is_nan(self, b: u64) -> bool {
         let exp = (b >> self.m) & ((1 << self.e) - 1);
         exp == (1 << self.e) - 1 && b & ((1 << self.m) - 1) != 0
@@ -162,14 +167,9 @@ fn native(name: &str, f: Format, op: &str, cases: &[Vec<u64>]) -> Vec<u64> {
         .strip_prefix("{\"values\":[")
         .and_then(|s| s.strip_suffix("]}"))
         .expect("a JSON line of values");
-    let mask = if f.width() == 64 {
-        u64::MAX
-    } else {
-        (1 << f.width()) - 1
-    };
     values
         .split(',')
-        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & mask)
+        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & f.mask())
         .collect()
 }
 
@@ -277,14 +277,9 @@ impl Rng {
 fn random_fma(f: Format, rng: &mut Rng) -> Vec<Vec<u64>> {
     let top = (1u64 << f.e) - 1;
     let bias = top / 2;
-    let mask = if f.width() == 64 {
-        u64::MAX
-    } else {
-        (1 << f.width()) - 1
-    };
     let mut cases = Vec::new();
     for _ in 0..128 {
-        cases.push((0..3).map(|_| rng.next() & mask).collect());
+        cases.push((0..3).map(|_| rng.next() & f.mask()).collect());
     }
     for _ in 0..256 {
         let a = rng.float(f, bias - 20, bias + 20);

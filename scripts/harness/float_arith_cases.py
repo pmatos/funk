@@ -73,18 +73,22 @@ FILES = [f"{m}-{t}" for m in MODULES for t in FORMATS]
 NAN_CHOICES = (0, -1, 1)
 
 
+# The reference's function of each op.
+REFERENCE = {
+    "fadd": ref.add,
+    "fsub": ref.sub,
+    "fmul": ref.mul,
+    "fdiv": ref.div,
+    "fneg": ref.negate,
+    "fabs": ref.fabs,
+    "sqrt": ref.sqrt,
+    "fma": ref.fma,
+}
+
+
 def result(f: Format, op: str, bits: list[int]) -> int:
     """The reference's result of `op` on `bits`."""
-    return {
-        "fadd": lambda a, b: ref.add(f, a, b),
-        "fsub": lambda a, b: ref.sub(f, a, b),
-        "fmul": lambda a, b: ref.mul(f, a, b),
-        "fdiv": lambda a, b: ref.div(f, a, b),
-        "fneg": lambda a: ref.negate(f, a),
-        "fabs": lambda a: ref.fabs(f, a),
-        "sqrt": lambda a: ref.sqrt(f, a),
-        "fma": lambda a, b, c: ref.fma(f, a, b, c),
-    }[op](*bits)
+    return REFERENCE[op](f, *bits)
 
 
 def is_nan(f: Format, b: int) -> bool:
