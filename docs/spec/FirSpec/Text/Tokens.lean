@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8624619368028891819")
+:::moduleDocs (fingerprint := "12236167940940888401")
 :::
 
-:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "6725213110965772062")
+:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "941515271070062022")
 *Definition: the spelling of a token.* Every
 {ref "The-fir-specification--Text-format--The-parser"}[token] $`t` has one
 spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
@@ -32,6 +32,9 @@ spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
 * $`\mathsf{word}~w` is spelled $`w`;
 * $`\mathsf{int}~i` is spelled with the decimal digits of $`i`, after `-`
   when $`i` is negative;
+* $`\mathsf{float}~l` is spelled as the float literal $`l` is
+  {ref "The-fir-specification--Text-format--Tokens"}[written], such as
+  `-1.5e-7` or `0x7fc00000`;
 * $`\mathsf{str}~s` is spelled $`s` quoted: between two `"`, each
   character in the one spelling that the
   {ref "The-fir-specification--Text-format--Tokens"}[token grammar] gives
@@ -45,7 +48,7 @@ printed module back compares what it reads with these spellings, so each
 token needs exactly one.
 :::
 
-:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "11058920808801410295")
+:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "10394463358271638325")
 *Definition: a token that can be written.* A token $`t` _can be written_,
 $`\mathrm{writable}(t)`, in these cases:
 
@@ -55,6 +58,9 @@ $`\mathrm{writable}(t)`, in these cases:
   one or more name characters;
 * $`\mathsf{word}~w` when $`w` is a word;
 * $`\mathsf{locref}~r` when $`r < 2^{32}`;
+* $`\mathsf{float}~l` when the literal $`l` can be written: its fraction
+  is one or more decimal digits, or its hexadecimal digits are one or more
+  lowercase hexadecimal digits;
 * $`\mathsf{eof}` never, since the printer does not write it;
 * every other token always: every symbol, integer, string and punctuation
   token.
@@ -72,7 +78,7 @@ shows that every well-formed module meets this.
 {ref "The-fir-specification--Text-format--Grammar"}[attribute], or of a
 type, which is written as one, are:
 
-$$`\begin{aligned} \mathrm{tokens}(\mathsf{word}~w) &= \mathsf{word}~w \\ \mathrm{tokens}(\mathsf{int}~i) &= \mathsf{int}~i \\ \mathrm{tokens}(\mathsf{str}~s) &= \mathsf{str}~s \\ \mathrm{tokens}(\mathsf{sym}~s) &= \mathsf{sym}~s \end{aligned}`
+$$`\begin{aligned} \mathrm{tokens}(\mathsf{word}~w) &= \mathsf{word}~w \\ \mathrm{tokens}(\mathsf{int}~i) &= \mathsf{int}~i \\ \mathrm{tokens}(\mathsf{str}~s) &= \mathsf{str}~s \\ \mathrm{tokens}(\mathsf{sym}~s) &= \mathsf{sym}~s \\ \mathrm{tokens}(\mathsf{float}~l) &= \mathsf{float}~l \end{aligned}`
 
 $$`\begin{aligned} & \mathrm{tokens}(\mathsf{app}~h~(a_1, \dots, a_n)) = \\ & \quad \mathsf{word}~h~\texttt{(}~\mathrm{tokens}(a_1)~\texttt{,}~\dots \\ & \quad \texttt{,}~\mathrm{tokens}(a_n)~\texttt{)} \end{aligned}`
 

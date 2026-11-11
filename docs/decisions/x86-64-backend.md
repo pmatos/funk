@@ -291,7 +291,8 @@ cycle into a chain. Every copy moves all 64 bits (ADR-2026-10-31-0335).
 `OUTPUT @FUNCTION ARG...` runs one function, with one argument per parameter. An
 argument is `true` or `false` at `i1`, and otherwise signed decimal. An `f32` or
 `f64` is its bits read as a signed integer, read and printed as an `i32` or
-`i64` is (ADR-2026-11-11-1138). On success
+`i64` is: a spelling internal to the harness, which converts it to and from
+the float literals of fir text (ADR-2026-11-11-1438). On success
 it prints one line such as `{"values":["V1","V2"]}` and exits with 0
 (ADR-2026-10-30-1233).
 

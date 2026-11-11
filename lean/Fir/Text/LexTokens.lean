@@ -6,17 +6,18 @@ import Fir.Text.LexNumbers
 The lexer reads a printed token back as itself, whatever follows it, as long
 as what follows does not start with a name character. That is maximal munch
 seen from the printer's side: a value, a label, a symbol written as a word,
-a location reference, a word or an integer ends at the first character that
-is not a name character, so the printer never writes one directly before a
-name character. Punctuation ends where it is, so it may be followed by
+a location reference, a word, an integer or a float literal ends at the
+first character that is not a name character, so the printer never writes
+one directly before a name character. Punctuation ends where it is, so it may be followed by
 anything, and the printer writes `(` and `:` directly before a word or a
 number, as in `h(i32)` and `"f":2:3`.
 
 The first three blocks below say this: characters at the end of a token,
 characters that lex to tokens, and characters that spell tokens. The
 theorems after them read each token that holds no string: punctuation,
-names, words, numbers and location references. The next section covers
-strings and symbols, and puts every token together.
+names, words, numbers and location references; a number followed by the
+end of a token starts no float literal. The sections after it cover
+strings and symbols, and float literals, and put every token together.
 -/
 
 namespace Fir.Text
@@ -268,6 +269,37 @@ theorem toDigits_cons (n : Nat) : ∃ d ds, Nat.toDigits 10 n = d :: ds :=
 theorem isNameChar_of_isDigit {c : Char} (h : c.isDigit = true) : isNameChar c = true := by
   simp [isNameChar, h]
 
+/-- The whole part of a printed number is all of its digits. -/
+theorem afterWhole_toDigits {n : Nat} {d : Char} {ds cs : List Char} (he : Nat.toDigits 10 n = d :: ds)
+    (hs : Boundary cs) : afterWhole d (ds ++ cs) = cs := by
+  unfold afterWhole
+  by_cases h0 : d = '0'
+  · have hn : n = 0 := by
+      apply Classical.byContradiction
+      intro hn
+      exact head_toDigits_ne_zero (b := 10) (by decide) (by decide) (Nat.pos_of_ne_zero hn)
+        (by rw [he, h0]; rfl)
+    subst hn h0
+    rw [Nat.toDigits_zero] at he
+    cases he
+    simp
+  · have hdig : ∀ x ∈ ds, x.isDigit = true := fun x hx =>
+      isDigit_of_toDigits (he ▸ List.mem_cons_of_mem d hx)
+    simp only [h0, ite_false, (takeWhile_digits hdig hs).2]
+
+/-- No float literal starts where a token ends. -/
+theorem lexFloat_of_boundary {neg : Bool} {d : Char} {cs : List Char} (h : Boundary (afterWhole d cs))
+    (p : TextPos) : lexFloat neg d cs p = none := by
+  unfold lexFloat
+  split
+  · rename_i heq
+    rw [heq] at h
+    exact absurd (h '.' rfl) (by decide)
+  · rename_i heq
+    rw [heq] at h
+    exact absurd (h 'x' rfl) (by decide)
+  · rfl
+
 /-- A natural number, as an integer token. -/
 theorem readsToken_nat {n : Nat} {d : Char} {ds cs : List Char} (he : Nat.toDigits 10 n = d :: ds)
     (hs : Boundary cs) : ReadsToken d (ds ++ cs) cs (.int n) := by
@@ -281,6 +313,8 @@ theorem readsToken_nat {n : Nat} {d : Char} {ds cs : List Char} (he : Nat.toDigi
   split <;> try (exfalso; revert hd; decide)
   simp only [ha, Bool.not_true, Bool.false_eq_true, ite_false, n8, n9, or_self, n10, n11, n12, hd,
     ite_true]
+  unfold lexNumber
+  rw [lexFloat_of_boundary ((afterWhole_toDigits he hs).symm ▸ hs)]
   unfold lexInt
   simp only [hl, ok_bind, ← he, digitsValue_toDigits]
   exact ⟨_, hr, rfl⟩
@@ -296,6 +330,8 @@ theorem readsToken_neg {m : Nat} {d : Char} {ds cs : List Char} (he : Nat.toDigi
   rw [lexToken.eq_10 _ _ _ _ (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (fun h => by subst h; revert hd; decide) h0]
   simp (config := { decide := true }) only [ite_true, ite_false, hd]
+  unfold lexNumber
+  rw [lexFloat_of_boundary ((afterWhole_toDigits he hs).symm ▸ hs)]
   unfold lexInt
   simp only [hl, ok_bind, ← he, digitsValue_toDigits]
   exact ⟨_, by simp; omega, rfl⟩

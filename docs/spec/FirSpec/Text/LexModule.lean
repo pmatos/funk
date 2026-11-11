@@ -124,7 +124,7 @@ be written, printed as its dialect set, its items and then its location
 table, spells $`\mathrm{tokens}(m)` before any characters.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "7324819918049803602")
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "4899345625060391832")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

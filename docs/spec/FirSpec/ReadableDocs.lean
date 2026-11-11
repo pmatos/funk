@@ -101,6 +101,8 @@ import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
 import FirSpec.Core.TypeTextLaws
 import FirSpec.Core.TextLaws
+import FirSpec.Core.FloatText
+import FirSpec.Core.FloatTextLaws
 import FirSpec.Text.Lex
 import FirSpec.Text.Read
 import FirSpec.Text.ReadLocs
@@ -110,6 +112,7 @@ import FirSpec.Text.Tokens
 import FirSpec.Text.LexNumbers
 import FirSpec.Text.LexTokens
 import FirSpec.Text.LexStrings
+import FirSpec.Text.LexFloats
 import FirSpec.Text.LexLayout
 import FirSpec.Text.LexPrint
 import FirSpec.Text.LexModule

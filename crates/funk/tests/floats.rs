@@ -1,7 +1,8 @@
 //! `f32` and `f64` run natively (#229): float constants, `fcmp` with each
 //! of its fourteen predicates, and floats passed to and returned from
-//! functions in SSE registers (ADR-2026-11-11-1140). A float is spelled as
-//! its bits read as a signed integer (ADR-2026-11-11-1138). Each comparison
+//! functions in SSE registers (ADR-2026-11-11-1140). A float constant is a
+//! float literal, and a built executable reads and writes a float as its
+//! bits read as a signed integer (ADR-2026-11-11-1438). Each comparison
 //! is checked against the host's own IEEE 754 comparison, on zeros of both
 //! signs, subnormals, ones, the largest finite values, infinities and NaNs,
 //! quiet and signalling, with payloads and either sign.
@@ -151,9 +152,9 @@ fn float_constants_give_their_bits() {
         "",
         "f32, f64, f32, i1, i1",
         &[
-            "%a: f32 = const -4194303",
-            "%b: f64 = const 9221120237041090561",
-            "%c: f32 = const -2147483648",
+            "%a: f32 = const 0xffc00001",
+            "%b: f64 = const 0x7ff8000000000001",
+            "%c: f32 = const -0.0",
             "%e: i1 = fcmp oeq %a, %a",
             "%u: i1 = fcmp uno %c, %c",
             "ret %a, %b, %c, %e, %u",

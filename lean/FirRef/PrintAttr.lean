@@ -64,6 +64,7 @@ def printAttrs (acc : String) : List AttrFrame → String
   | .attr (.int i) :: fs => printAttrs (acc ++ printInt i) fs
   | .attr (.str s) :: fs => printAttrs (acc ++ quote s) fs
   | .attr (.sym s) :: fs => printAttrs (acc ++ printSymbol s) fs
+  | .attr (.float l) :: fs => printAttrs (acc ++ l.print) fs
   | .attr (.app h []) :: fs => printAttrs (acc ++ h ++ "(" ++ ")") fs
   | .attr (.app h (a :: as)) :: fs => printAttrs (acc ++ h ++ "(") (.attr a :: .args as :: fs)
   | .args [] :: fs => printAttrs (acc ++ ")") fs
@@ -93,14 +94,14 @@ theorem printAttrs_eq (acc : String) (fs : List AttrFrame) :
     printAttrs acc fs = acc ++ String.join (fs.map AttrFrame.text) := by
   fun_induction printAttrs acc fs with
   | case1 acc => simp
-  | case6 acc h fs ih =>
+  | case7 acc h fs ih =>
     rw [ih]
     simp [AttrFrame.text, Attr.print, Attr.print.printList, String.append_assoc]
-  | case7 acc h a as fs ih =>
+  | case8 acc h a as fs ih =>
     rw [ih]
     simp only [AttrFrame.text, Attr.print, intercalate_printList, List.map_cons, String.join_cons,
       String.append_assoc]
-  | case9 acc a as fs ih =>
+  | case10 acc a as fs ih =>
     rw [ih]
     simp [AttrFrame.text, String.append_assoc]
   | _ => rename_i ih; rw [ih]; simp [AttrFrame.text, Attr.print, String.append_assoc]

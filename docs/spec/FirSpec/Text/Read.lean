@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10061496186304799929")
+:::moduleDocs (fingerprint := "1458625858650665418")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -124,19 +124,19 @@ reads a comma and an element with a given reader, as long as a comma
 follows: the elements after the first of a list separated by commas.
 :::
 
-:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "1542061365040448403")
+:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "18173360183907358644")
 *Definition: reading attributes and types.* An attribute is a word
 followed by `(`, which is the word applied to the attributes that follow,
-up to `)` and separated by commas; or a word, an integer, a string or a
-symbol, which is that attribute; or else an error, "expected an
+up to `)` and separated by commas; or a word, an integer, a float literal,
+a string or a symbol, which is that attribute; or else an error, "expected an
 attribute". In an applied attribute, a token other than a comma or `)`
 after an argument is an error.
 
 A type is read in the same way, but only from a word or a word applied to
 attributes; anything else is an error, "expected a type". The reader of
 the attributes of an op or an item reads attributes, each with its
-position, as long as the next token is a word, an integer, a string or a
-symbol.
+position, as long as the next token is a word, an integer, a float
+literal, a string or a symbol.
 :::
 
 :::readable Fir.Text.readDefType Fir.Text.readDef Fir.Text.readDefs (fingerprint := "627021762845200007")

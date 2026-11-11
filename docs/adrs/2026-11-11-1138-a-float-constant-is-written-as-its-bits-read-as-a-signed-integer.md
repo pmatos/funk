@@ -1,6 +1,6 @@
 # A float constant is written as its bits read as a signed integer
 
-Status: accepted
+Status: superseded by ADR-2026-11-11-1438
 Tier: direction; area: text-format
 
 ## Context

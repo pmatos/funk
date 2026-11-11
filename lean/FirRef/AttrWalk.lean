@@ -30,6 +30,7 @@ def writableLoop : List Attr → Bool
   | .word w :: st => if isWord w then writableLoop st else false
   | .app h args :: st => if isWord h then writableLoop (args ++ st) else false
   | .int _ :: st | .str _ :: st | .sym _ :: st => writableLoop st
+  | .float l :: st => if l.valid then writableLoop st else false
 termination_by st => argsWeight st
 decreasing_by all_goals simp only [argsWeight, attrWeight, argsWeight_append]; omega
 
@@ -53,7 +54,7 @@ def dialectsLoop (acc : List String) : List Attr → List String
   | [] => acc.reverse
   | .word w :: st => dialectsLoop ((wordDialect w).toList.reverse ++ acc) st
   | .app h args :: st => dialectsLoop ((wordDialect h).toList.reverse ++ acc) (args ++ st)
-  | .int _ :: st | .str _ :: st | .sym _ :: st => dialectsLoop acc st
+  | .int _ :: st | .str _ :: st | .sym _ :: st | .float _ :: st => dialectsLoop acc st
 termination_by st => argsWeight st
 decreasing_by all_goals simp only [argsWeight, attrWeight, argsWeight_append]; omega
 

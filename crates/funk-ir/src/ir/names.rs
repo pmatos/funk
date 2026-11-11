@@ -40,6 +40,36 @@ pub fn word_dialect(w: &str) -> Option<&str> {
     w.split_once('.').map(|(d, _)| d)
 }
 
+/// Whether `s` is a float literal as the lexer reads it back
+/// (`FloatLit.valid` in `lean/Fir/Syntax/Module.lean`): `-`, if any, a whole
+/// number with no leading zeros, `.`, one or more digits, and `e` and an
+/// integer with no leading zeros that is not `-0`, if any; or `0x` and one or
+/// more lowercase hexadecimal digits.
+pub fn is_float_lit(s: &str) -> bool {
+    fn whole(s: &str) -> bool {
+        s == "0" || (!s.starts_with('0') && !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()))
+    }
+    if let Some(hex) = s.strip_prefix("0x") {
+        return !hex.is_empty()
+            && hex
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
+    }
+    let body = s.strip_prefix('-').unwrap_or(s);
+    let (mantissa, exp) = match body.split_once('e') {
+        Some((m, e)) => (m, Some(e)),
+        None => (body, None),
+    };
+    let Some((int, frac)) = mantissa.split_once('.') else {
+        return false;
+    };
+    let exp_ok = exp.is_none_or(|e| match e.strip_prefix('-') {
+        Some(mag) => mag != "0" && whole(mag),
+        None => whole(e),
+    });
+    whole(int) && !frac.is_empty() && frac.bytes().all(|b| b.is_ascii_digit()) && exp_ok
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

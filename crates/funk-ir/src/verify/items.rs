@@ -8,7 +8,7 @@
 use std::collections::HashSet;
 
 use super::Diagnostic;
-use crate::ir::names::{is_dialect_word, is_name, is_word};
+use crate::ir::names::{is_dialect_word, is_float_lit, is_name, is_word};
 use crate::ir::tree::{Step, walk};
 use crate::ir::{Attr, DialectItem, SymbolTable};
 use crate::registry::{FuncContext, Registry, TypeCheck};
@@ -81,5 +81,6 @@ fn writable(a: &Attr) -> bool {
     walk(a).filter_map(Step::entered).all(|n| match n {
         Attr::Word(w) | Attr::App(w, _) => is_word(w),
         Attr::Int(_) | Attr::Str(_) | Attr::Sym(_) => true,
+        Attr::Float(s) => is_float_lit(s),
     })
 }

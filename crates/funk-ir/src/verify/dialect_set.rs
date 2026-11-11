@@ -143,7 +143,7 @@ fn in_attrs<'a>(
     attrs.iter().find_map(|a| {
         walk(a).filter_map(Step::entered).find_map(|n| match n {
             Attr::Word(w) | Attr::App(w, _) => outside(w),
-            Attr::Int(_) | Attr::Str(_) | Attr::Sym(_) => None,
+            Attr::Int(_) | Attr::Str(_) | Attr::Sym(_) | Attr::Float(_) => None,
         })
     })
 }

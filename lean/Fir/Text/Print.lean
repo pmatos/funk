@@ -45,6 +45,7 @@ def Attr.print : Attr → String
   | .str s => quote s
   | .sym s => printSymbol s
   | .app h args => h ++ "(" ++ ", ".intercalate (printList args) ++ ")"
+  | .float l => l.print
 where
   printList : List Attr → List String
     | [] => []

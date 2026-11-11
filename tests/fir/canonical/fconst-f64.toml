@@ -1,5 +1,5 @@
 # Tests of fconst-f64.fir: float constants at f64 give their bits, each
-# NaN's payload and sign included (ADR-2026-11-11-1138): +0, -0, the
+# NaN's payload and sign included (ADR-2026-11-11-1438): +0, -0, the
 # smallest subnormal, -1, the largest finite value, -inf, the quiet NaN,
 # a quiet NaN with its sign set and a payload, and a signalling NaN. A
 # NaN constant compared with itself is unordered.
@@ -8,5 +8,5 @@ tests = [
   { func = "@consts" },
   { func = "@one" },
   { func = "@nan_is_unordered" },
-  { func = "@consts", expect = ["0", "-9223372036854775808", "1", "-4616189618054758400", "9218868437227405311", "-4503599627370496", "9221120237041090560", "-2251799813685247", "9218868437227405313"] },
+  { func = "@consts", expect = ["0.0", "-0.0", "5.0e-324", "-1.0", "1.7976931348623157e308", "0xfff0000000000000", "0x7ff8000000000000", "0xfff8000000000001", "0x7ff0000000000001"] },
 ]
