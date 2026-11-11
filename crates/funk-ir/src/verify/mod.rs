@@ -11,6 +11,8 @@
 mod cfg;
 mod dialect_set;
 mod func;
+
+pub(crate) use func::all_blocks;
 mod locs;
 mod ops;
 

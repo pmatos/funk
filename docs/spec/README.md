@@ -49,7 +49,12 @@ the module's docs again in `lean/Fir/`, correct them, then set the
 fingerprint that the build prints (ADR-2026-11-09-1345).
 
 The build also fails when a module under `lean/Fir` has no section in
-`FirSpec.lean`.
+`FirSpec.lean`, or in a chapter that it includes as a document of its own.
+A chapter that would push `FirSpec.lean` over the file-size budget moves to
+`FirSpec/Chapters/`, as the chapter on execution has: a `#doc` whose title
+is the chapter's, which `FirSpec.lean` imports and includes with
+`{include 1 FirSpec.Chapters.Name}`. Its sections are at `(level := 1)`, one
+level below its own title.
 
 ## Appendix and build
 

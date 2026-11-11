@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14473149069114112062")
+:::moduleDocs (fingerprint := "16444527418876310937")
 :::
 
 :::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "4645807055663611004")
@@ -73,4 +73,14 @@ $`\mathsf{control}`.
 core op leaves out, it does not have: the three theorems above, for every
 core op instance. So a pass may rely on the core ops' effect sets
 (ADR-2026-11-09-1541).
+:::
+
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "405982124843031415")
+*Definition and theorem: the obligations reject a wrong declaration.* The
+declaration $`\mathrm{eff}'` gives each core op its set but
+$`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. A dialect
+lawful in its effects under $`\mathrm{eff}'` would make $`\mathsf{sdiv}_8`
+never end in UB, but $`\mathsf{sdiv}_8(1, 0)` is UB, so no such dialect
+exists: the obligations reject the declaration. The soundness proofs have
+teeth.
 :::

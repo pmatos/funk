@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10759067883333108595")
+:::moduleDocs (fingerprint := "7810143631135704361")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -35,6 +35,13 @@ Names and their types are about $`\mathrm{allblocks}(f)`, so that a value
 defined in a nested block still has one type. The two lists differ only
 when an op owns a region. Such a region is of a dialect's kind, and the
 rule of its kind says how values are scoped in it.
+:::
+
+:::readable Fir.Func.allOps (pin := Fir.Func.allBlocks) (fingerprint := "1831867855327346798")
+*Definition: every op of a function, at any depth.* $`\mathrm{allops}(f)`
+is the ops of each block of $`\mathrm{allblocks}(f)`, the blocks of the
+function $`f` at any depth, in order. Well-formedness asks something of
+each of them, and a function's effects are those of each of them.
 :::
 
 :::readable Fir.Block.defs Fir.Func.defs Fir.Func.typeOf Fir.Func.types (fingerprint := "16013911283360544923")

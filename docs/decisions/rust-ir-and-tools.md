@@ -84,7 +84,9 @@ takes an op's attributes and the types of its operands and results. It returns
 the op's `OpShape`, or why the op does not decode. `OpSpec::check` is the
 dialect's own rule. `OpSpec::effects`, which every op must give, is its set of
 effects; each core op's equals its Lean set (semantics-effects.md,
-ADR-2026-11-09-1541).
+ADR-2026-11-09-1541). `OpSpec::callee` names the function an op calls, `None`
+by default, and `Summaries` gives each function of a table the effects that
+a call of it may have (ADR-2026-11-10-2108).
 `TypeSpec::check` says whether a type decodes and whether it
 is valid. Registering rejects an op name that is not a word or is already
 registered (ADR-2026-10-30-1146).

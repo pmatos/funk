@@ -39,6 +39,12 @@ input_file effectCases where
   path := ".." / "tests" / "dialects" / "effects.cases"
   text := true
 
+/-- The cases that the summary tests share with the Rust tests, which
+`FirTest.SummaryCases` includes. -/
+input_file effectSummaryCases where
+  path := ".." / "tests" / "dialects" / "effect-summaries.cases"
+  text := true
+
 /-- The cases that the dialect-set tests share with the Rust tests.
 `FirTest.DialectSet` includes the files. -/
 input_file dialectSetCases where
@@ -58,5 +64,5 @@ input_file regionKindsCases where
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
 lean_lib FirTest where
-  needs := #[`@/useOnceCases, `@/effectCases, `@/dialectSetCases, `@/nestedModulesCases,
-    `@/regionKindsCases]
+  needs := #[`@/useOnceCases, `@/effectCases, `@/effectSummaryCases, `@/dialectSetCases,
+    `@/nestedModulesCases, `@/regionKindsCases]
