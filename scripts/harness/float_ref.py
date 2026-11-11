@@ -23,6 +23,9 @@ from fractions import Fraction
 
 TWO = Fraction(2)
 
+# The kinds of two factors whose product is NaN: an infinity and a zero.
+INF_TIMES_ZERO = (("inf", "zero"), ("zero", "inf"))
+
 
 class Format:
     """The format `float<e,m>`: `e` exponent bits and `m` explicit mantissa
@@ -179,7 +182,7 @@ def mul(f: Format, a: int, b: int) -> int:
     if da[0] == "nan" or db[0] == "nan":
         return f.nan()
     s = sign_of(da) != sign_of(db)
-    if {da[0], db[0]} == {"inf", "zero"}:
+    if (da[0], db[0]) in INF_TIMES_ZERO:
         return f.nan()
     if "inf" in (da[0], db[0]):
         return f.inf(s)
@@ -207,7 +210,7 @@ def fma(f: Format, a: int, b: int, c: int) -> int:
     da, db, dc = f.decode(a), f.decode(b), f.decode(c)
     if "nan" in (da[0], db[0], dc[0]):
         return f.nan()
-    if {da[0], db[0]} == {"inf", "zero"}:
+    if (da[0], db[0]) in INF_TIMES_ZERO:
         return f.nan()
     ps = sign_of(da) != sign_of(db)
     if "inf" in (da[0], db[0]):
@@ -271,4 +274,8 @@ def compare(f: Format, a: int, b: int):
         return (0, value_of(d))
 
     ka, kb = key(da), key(db)
-    return "lt" if ka < kb else ("gt" if ka > kb else "eq")
+    if ka < kb:
+        return "lt"
+    if ka > kb:
+        return "gt"
+    return "eq"

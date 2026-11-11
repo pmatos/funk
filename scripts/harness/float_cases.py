@@ -24,6 +24,8 @@ FORMATS = {
     "f128": (15, 112, "`f128`, `float<15,112>`"),
 }
 
+NAN_OPERAND = "a NaN operand gives the canonical NaN"
+
 SECTIONS = {
     "fadd": "Addition",
     "fsub": "Subtraction",
@@ -125,7 +127,7 @@ def hard_cases(f: Format) -> tuple[list, list]:
     c("fsub", [-M, M], "-inf", "-M - M overflows to -inf")
     c("fsub", ["inf", "inf"], "nan", "inf - inf is NaN")
     c("fsub", ["0", "inf"], "-inf", "+0 - inf = -inf")
-    c("fsub", [one, "nanp"], "nan", "a NaN operand gives the canonical NaN")
+    c("fsub", [one, "nanp"], "nan", NAN_OPERAND)
     c("fmul", [Fraction(3, 2), Fraction(3, 2)], Fraction(9, 4), "1.5 * 1.5 = 2.25")
     c(
         "fmul",
@@ -145,7 +147,7 @@ def hard_cases(f: Format) -> tuple[list, list]:
     c("fmul", ["-0", one], "-0", "-0 * 1 = -0")
     c("fmul", ["0", "inf"], "nan", "+0 * inf is NaN")
     c("fmul", [-one, "inf"], "-inf", "-1 * inf = -inf")
-    c("fmul", ["nanp", "0"], "nan", "a NaN operand gives the canonical NaN")
+    c("fmul", ["nanp", "0"], "nan", NAN_OPERAND)
     c("fdiv", [one, Fraction(3)], ("r", Fraction(1, 3)), "1 / 3, rounded to nearest")
     c("fdiv", [one, one + u], ("r", 1 / (one + u)), "1 / (1 + u), rounded to nearest")
     c("fdiv", [one, "0"], "inf", "1 / +0 = inf")
@@ -162,7 +164,7 @@ def hard_cases(f: Format) -> tuple[list, list]:
     c("fdiv", [s, M], "0", "s / M underflows far below s: to +0")
     c("fdiv", [M, s], "inf", "M / s overflows to inf")
     c("fdiv", ["-0", one], "-0", "-0 / 1 = -0")
-    c("fdiv", [one, "nanp"], "nan", "a NaN operand gives the canonical NaN")
+    c("fdiv", [one, "nanp"], "nan", NAN_OPERAND)
     c("ffma", [one, one, one], two, "1 * 1 + 1 = 2")
     c(
         "ffma",
@@ -207,7 +209,7 @@ def hard_cases(f: Format) -> tuple[list, list]:
     c("fsqrt", [-one], "nan", "sqrt -1 is NaN")
     c("fsqrt", ["inf"], "inf", "sqrt inf = inf")
     c("fsqrt", ["-inf"], "nan", "sqrt -inf is NaN")
-    c("fsqrt", ["nanp"], "nan", "a NaN operand gives the canonical NaN")
+    c("fsqrt", ["nanp"], "nan", NAN_OPERAND)
     c("fneg", ["0"], "-0", "neg +0 = -0")
     c("fneg", ["-inf"], "inf", "neg -inf = inf")
     c("fneg", [s], -s, "neg s = -s")

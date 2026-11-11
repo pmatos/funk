@@ -174,14 +174,10 @@ class AgainstTheHost(unittest.TestCase):
                 got, canonical(HOST[code], want), (code, op, [hex(b) for b in bits])
             )
 
-    def test_binary16(self):
-        self.check("e", 200, 1)
-
-    def test_binary32(self):
-        self.check("f", 200, 2)
-
-    def test_binary64(self):
-        self.check("d", 120, 3)
+    def test_binary16_binary32_and_binary64(self):
+        for code, count, seed in [("e", 200, 1), ("f", 200, 2), ("d", 120, 3)]:
+            with self.subTest(code):
+                self.check(code, count, seed)
 
     @unittest.skipUnless(hasattr(math, "fma"), "math.fma needs Python 3.13")
     def test_binary64_fma(self):
