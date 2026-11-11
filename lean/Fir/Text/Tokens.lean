@@ -3,7 +3,7 @@ import Fir.Text.Lex
 /-!
 # The tokens of a printed module
 
-These eight sections, from this one to the one on writable tokens, prove
+These nine sections, from this one to the one on writable tokens, prove
 that the lexer reads back what the printer writes: for every module whose
 tokens can all be written, lexing its printed text gives exactly its
 tokens, then the end of the text. This is the first step of the
@@ -12,7 +12,7 @@ the parser's three steps. With it, the rest of that proof deals with a list
 of tokens, never with characters, spaces or line feeds: the grammar step
 reads that list, and only it, into a syntax tree.
 
-They go in eight steps, one section each:
+They go in nine steps, one section each:
 
 * this section gives the one spelling of each token, which tokens can be
   written, and the tokens of every construct, in the order that the printer
@@ -24,6 +24,8 @@ They go in eight steps, one section each:
 * escapes and quoted symbols: strings and symbols are read back with their
   escapes, so every token that can be written is read back from its
   spelling;
+* reading printed float literals: a decimal and hexadecimal bits are read
+  back whole, part by part;
 * spaces, line feeds and lists: the lexer drops the printer's layout, and
   reads a list element by element;
 * attributes, locations and names: each of these, printed, is read back as
@@ -49,6 +51,7 @@ def Tok.spell : Tok → String
   | .word w => w
   | .int i => printInt i
   | .str s => quote s
+  | .float l => l.print
   | .lparen => "(" | .rparen => ")" | .lbrace => "{" | .rbrace => "}"
   | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->"
   | .eof => ""
@@ -60,6 +63,7 @@ def Tok.Writable : Tok → Prop
   | .value n | .label n => isName n
   | .word w => isWord w
   | .locRef r => r < Location.limit
+  | .float l => l.valid
   | .eof => False
   | _ => True
 
@@ -75,6 +79,7 @@ def Attr.tokens : Attr → List Tok
   | .int i => [.int i]
   | .str s => [.str s]
   | .sym s => [.sym s]
+  | .float l => [.float l]
   | .app h args => .word h :: .lparen :: [Tok.comma].intercalate (tokensList args) ++ [.rparen]
 where
   /-- The tokens of each attribute of a list. -/

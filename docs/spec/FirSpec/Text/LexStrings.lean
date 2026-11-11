@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Escapes and quoted symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "984651494282197179")
+:::moduleDocs (fingerprint := "14293073654072783962")
 :::
 
 :::readable Fir.Text.unicodeEscape_toDigits (pin := Fir.Text.unicodeEscape) (pin := Nat.toDigits) (fingerprint := "15463218578782466095")
@@ -73,7 +73,7 @@ given the spellings of the characters of $`s`, then `"`, then $`c`, gives
 $`s` and leaves $`c`.
 :::
 
-:::readable Fir.Text.readsToken_str (pin := Fir.Text.lexToken) (fingerprint := "16263822023326641052")
+:::readable Fir.Text.readsToken_str (pin := Fir.Text.lexToken) (fingerprint := "18402106761232902883")
 *Theorem: a string token is read.* For every
 {ref "The-fir-specification--Text-format--Tokens"}[string] $`s` and characters
 $`c`, the token that starts with `"`, followed by the spellings of the
@@ -82,7 +82,7 @@ $`c`. Unlike a name, a string ends at its closing quote, so $`c` may be
 anything.
 :::
 
-:::readable Fir.Text.readsToken_quotedSym Fir.Text.readsToken_wordSym (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "9945086928208896290")
+:::readable Fir.Text.readsToken_quotedSym Fir.Text.readsToken_wordSym (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "15992180265448534080")
 *Theorems: a symbol is read, quoted or bare.* For every string $`s` that is
 not a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word],
@@ -117,7 +117,18 @@ with $`a`, followed by $`s~c`, is read as $`t`, leaving $`c`, then $`a~s`
 number $`n`, its decimal digits spell $`\mathsf{int}~n`.
 :::
 
-:::readable Fir.Text.Tok.spells (pin := Fir.Text.Tok.spell) (pin := Fir.Text.Tok.Writable) (fingerprint := "3994231498170703044")
+:::readable Fir.Text.spells_float (pin := Fir.FloatLit.print) (pin := Fir.FloatLit.valid) (pin := Fir.Text.expChars) (fingerprint := "3848005901455791572")
+*Theorem: a float literal that can be written spells itself.* For every
+float literal $`l` that can be written,
+$`\mathrm{spells}(\mathrm{print}(l), \mathsf{float}~l)`: its spelling,
+followed by any characters at the end of a token, is read back as it, by
+the {ref "The-fir-specification--Text-format--Reading-printed-float-literals"}[theorems on float literals].
+A decimal's whole part is a natural number printed with its digits, so its
+first digit starts it; a negative decimal starts with `-`; and hexadecimal
+bits start with `0`, then `x`.
+:::
+
+:::readable Fir.Text.Tok.spells (pin := Fir.Text.Tok.spell) (pin := Fir.Text.Tok.Writable) (fingerprint := "7954031007255374294")
 *Theorem: every token that can be written spells itself.* For every token
 $`t` that
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written]:

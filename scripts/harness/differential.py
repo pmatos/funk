@@ -10,6 +10,7 @@ mechanics belong to `execution.py`.
 from dataclasses import dataclass
 from typing import Protocol
 
+import native_floats
 import sets
 import standins
 from corpus import Test
@@ -156,7 +157,7 @@ class _Run:
         if self.runs.unavailable is not None:
             return self.runs.unavailable, self._judge(self.runs.unavailable, decided)
         if POISON not in t.args:
-            native = self.runs.native(t.args)
+            native = self._run_native(t.args)
             return _returned(native), self._judge(native, decided)
         vectors = standins.vectors(t.args, self.params)
         if isinstance(vectors, str):
@@ -164,12 +165,12 @@ class _Run:
             return shown, self._judge(shown, decided)
         if decided is not None:
             # Even a decided test runs once for diagnostic evidence.
-            native = self.runs.native(vectors[0])
+            native = self._run_native(vectors[0])
             return f"{_returned(native)} on {' '.join(vectors[0])}", decided
         each = f"{len(vectors)} argument vectors with stand-ins for poison"
         shown = None
         for args in vectors:
-            native = self.runs.native(args)
+            native = self._run_native(args)
             j = self._judge(native, None)
             on = f"{_returned(native)} on {' '.join(args)}"
             if j.status == INVALID:
@@ -180,6 +181,12 @@ class _Run:
                 return f"{on}, one of {each}", j
             shown = shown or f"{on}, and passes on all {each}"
         return shown, j
+
+    def _run_native(self, args: tuple[str, ...]):
+        """Native code's result on `args`, with each float passed and read
+        back as its bits (`native_floats`)."""
+        native = self.runs.native(native_floats.to_native(args, self.params))
+        return native_floats.from_native(native, self.types)
 
     def _declared(self) -> Judgement | None:
         t = self.test

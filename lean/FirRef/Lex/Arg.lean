@@ -4,12 +4,12 @@ import FirRef.Lex.Stream
 `fir-ref run` reads each argument, and each choice of `--choices`, as one
 token of fir's text (ADR-2026-10-30-1856). `argAttr` is that reading by the
 spec's lexer: the text lexed whole with `Text.lex`, then matched against an
-integer or a word, then `eof`. The spec's lexer builds the list of the
+integer, a word or a float literal (ADR-2026-11-11-1438), then `eof`. The spec's lexer builds the list of the
 text's characters and measures a comment with `utf8Len`, which takes stack
 per character, so a long comment overflows a small stack (#135).
 
 `argAttrP` reads the same over positions: `nextTokP` reads the first token
-and, after an integer or a word, takes one more step, which must give `eof`
+and, after an integer, a word or a float literal, takes one more step, which must give `eof`
 and end the text. It builds no list of the text's characters, takes no
 stack per character and lexes at most two tokens. `argAttr_eq_argAttrP`
 proves the two equal on every text and registers the equation with
@@ -22,15 +22,17 @@ namespace FirRef
 open Fir Fir.Text
 
 /-- The attribute that the text `s` spells as one token: the spec's lexer
-reads `s` as an integer or a word, then `eof`. -/
+reads `s` as an integer, a word or a float literal, then `eof`. -/
 def argAttr (s : String) : Option Attr :=
   match Text.lex s with
   | .ok [⟨.int i, _⟩, ⟨.eof, _⟩] => some (Attr.int i)
   | .ok [⟨.word x, _⟩, ⟨.eof, _⟩] => some (Attr.word x)
+  | .ok [⟨.float l, _⟩, ⟨.eof, _⟩] => some (Attr.float l)
   | _ => none
 
 /-- `argAttr`, over positions: the first token of `s`, when it is an
-integer or a word and the lexer's next step gives `eof` and ends. -/
+integer, a word or a float literal and the lexer's next step gives `eof`
+and ends. -/
 def argAttrP (s : String) : Option Attr :=
   match nextTokP s.startPos ⟨1, 1⟩ with
   | .ok (⟨.int i, _⟩, some (j, q)) =>
@@ -40,6 +42,10 @@ def argAttrP (s : String) : Option Attr :=
   | .ok (⟨.word x, _⟩, some (j, q)) =>
     match nextTokP j q with
     | .ok (⟨.eof, _⟩, none) => some (Attr.word x)
+    | _ => none
+  | .ok (⟨.float l, _⟩, some (j, q)) =>
+    match nextTokP j q with
+    | .ok (⟨.eof, _⟩, none) => some (Attr.float l)
     | _ => none
   | _ => none
 

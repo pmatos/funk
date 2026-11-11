@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3656797889284274852")
+:::moduleDocs (fingerprint := "14143458553753815595")
 :::
 
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
@@ -88,7 +88,7 @@ Nothing is asked of an item's kind or symbol: decoding accepts only a
 whatever their symbol.
 :::
 
-:::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "13344365767966384269")
+:::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef Fir.Text.TokensWritable.float (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "7548386678348029364")
 *Lemmas: what a list of tokens that can be written says of its first
 token.* For every token $`t`, position and list of tokens
 $`\mathit{ts}`, when the list $`t` followed by $`\mathit{ts}` can be
@@ -98,10 +98,12 @@ $`\mathit{ts}`, when the list $`t` followed by $`\mathit{ts}` can be
 * when $`t` is a value $`\mathsf{value}~x` or a label
   $`\mathsf{label}~x`, $`x` is a name;
 * when $`t` is a word $`\mathsf{word}~w`, $`w` is a word;
-* when $`t` is a location reference $`\mathsf{locref}~r`, $`r < 2^{32}`.
+* when $`t` is a location reference $`\mathsf{locref}~r`, $`r < 2^{32}`;
+* when $`t` is a float literal $`\mathsf{float}~l`, $`l` can be written.
 
 These are the only facts about tokens that the readers below need: each
-reader takes a name, a word or a reference from the token it reads.
+reader takes a name, a word, a reference or a float literal from the token
+it reads.
 :::
 
 :::readable Fir.Text.fail_ne_ok (pin := Fir.Text.fail) (fingerprint := "3450482005068552809")

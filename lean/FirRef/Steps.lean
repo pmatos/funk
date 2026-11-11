@@ -1,8 +1,10 @@
-import Fir.Execution.Modes
+import Fir.Execution.MemoryCallSteps
+import Fir.Execution.MemoryModes
 
 /-!
-Facts about one step of the spec's interpreter, `Func.runOps`, in the tree
-of choices, that `FirRef.Machine` builds on (ADR-2026-11-04-2132).
+Facts about one step of the spec's interpreter, `Func.runOps`, in any
+monad, that `FirRef.Machine` builds on (ADR-2026-11-04-2132). The machine
+runs them in the state layer over the tree of choices.
 
 * One equation for each case of `Func.runOps`'s definition. Each says what
   the run does after the step through `afterExit`, `afterDenote` or
@@ -84,14 +86,15 @@ theorem jump_congr (f : Func d) {e₁ e₂ : Env d} (h : Same e₁ e₂) (succs 
           · simp only [hl, ht, ite_true, ite_false, Agree, stuck]
         · simp only [hl, ite_false, Agree]
 
-variable [DialectSignature d] [DialectCall d] {ε : Type} [DialectDenote d (ChoiceTree ε)]
+variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [MonadFrame m]
+  [DialectDenote d m]
 
 /-- The spec's computation of the rest of a run of `f` after its
 terminator `o`, on the operands `args`, exits to `x`, with `n` steps
 left. -/
 def afterExit (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
     (args : HVector toType (sig o.op)) (x : Exit) :
-    ExceptT Stuck (ChoiceTree ε) (Result (List (DVal d) × Nat)) :=
+    ExceptT Stuck m (Result (List (DVal d) × Nat)) :=
   match x with
   | .ret =>
     if sig o.op = f.results then pure (.ret (args.toDVals, n))
@@ -105,7 +108,7 @@ which is not a terminator and calls no function, gives `rs`, with the ops
 `os` after it and `n` steps left. -/
 def afterDenote (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
     (os : List (Operation d)) (rs : HVector toType (returnTypes o.op)) :
-    ExceptT Stuck (ChoiceTree ε) (Result (List (DVal d) × Nat)) := do
+    ExceptT Stuck m (Result (List (DVal d) × Nat)) := do
   let env' ← liftExcept (env.bind (o.results.map (·.1)) rs.toDVals
     "an op names a number of results other than it gives")
   Func.runOps M n f env' os
@@ -115,7 +118,7 @@ to `@s` gives `r`, with the ops `os` after it and `n` steps left after the
 call's own step. -/
 def afterCall (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
     (os : List (Operation d)) (s : Name) :
-    Result (List (DVal d) × Nat) → ExceptT Stuck (ChoiceTree ε) (Result (List (DVal d) × Nat))
+    Result (List (DVal d) × Nat) → ExceptT Stuck m (Result (List (DVal d) × Nat))
   | .fuelExhausted => pure .fuelExhausted
   | .ret (vs, k) =>
     if vs.map (·.1) = returnTypes o.op then do
@@ -124,11 +127,14 @@ def afterCall (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation
       Func.runOps M (min k n) f env' os
     else liftExcept (stuck s!"@{s} returns values of types other than its call's result types")
 
-theorem liftExcept_ok_bind {α β : Type} (a : α) (g : α → ExceptT Stuck (ChoiceTree ε) β) :
-    (liftExcept (ε := Stuck) (.ok a) >>= g) = g a := rfl
-
-theorem liftExcept_error_bind {α β : Type} (e : Stuck) (g : α → ExceptT Stuck (ChoiceTree ε) β) :
-    (liftExcept (.error e) >>= g) = liftExcept (.error e) := rfl
+omit [MonadFrame m] in
+/-- A check of the interpreter that fails ends the path stuck, whatever
+follows it. -/
+theorem liftExcept_error_bind [LawfulMonad m] {α β : Type} (e : Stuck)
+    (g : α → ExceptT Stuck m β) :
+    (liftExcept (.error e) >>= g) = (liftExcept (.error e) : ExceptT Stuck m β) := by
+  apply ExceptT.ext
+  simp [liftExcept]
 
 /-! # One equation for each case of `Func.runOps` -/
 
@@ -137,80 +143,77 @@ section Equations
 variable {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o : Operation d}
   {os : List (Operation d)}
 
-theorem runOps_zero : Func.runOps (m := ChoiceTree ε) M 0 f env os = pure .fuelExhausted := by
+theorem runOps_zero : Func.runOps (m := m) M 0 f env os = pure .fuelExhausted := by
   simp [Func.runOps]
 
-theorem runOps_nil : Func.runOps (m := ChoiceTree ε) M (n + 1) f env [] =
+theorem runOps_nil : Func.runOps (m := m) M (n + 1) f env [] =
     liftExcept (stuck "a block ends without a terminator") := by
   simp [Func.runOps]
 
-theorem runOps_region (h : o.ownsCoreRegion = true) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
+theorem runOps_region [LawfulMonad m] (h : o.ownsCoreRegion = true) :
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
       liftExcept (stuck "an op owns a region of the core's kind, and no rule runs one") := by
   rw [Func.runOps]
-  simp only [h, ite_true]
-  rfl
+  simp only [h, ite_true, stuck, liftExcept_error_bind]
 
 variable {args : HVector toType (sig o.op)}
 
-theorem runOps_operands (h : o.ownsCoreRegion = false) {e : Stuck}
+theorem runOps_operands [LawfulMonad m] (h : o.ownsCoreRegion = false) {e : Stuck}
     (ha : env.operands (sig o.op) o.operands = .error e) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
+    Func.runOps (m := m) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
   rw [Func.runOps]
-  simp only [h, ha]
-  rfl
+  simp only [h, ha, Bool.false_eq_true, ↓reduceIte, liftExcept_error_bind]
 
-theorem runOps_follows (h : o.ownsCoreRegion = false)
+theorem runOps_follows [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = true)
     (hos : (!os.isEmpty) = true) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
       liftExcept (stuck "an op follows the terminator of its block") := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hos]
-  rfl
+  simp only [h, ha, hT, hos, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck,
+    liftExcept_error_bind]
 
-theorem runOps_exit (h : o.ownsCoreRegion = false)
+theorem runOps_exit [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = true)
     (hos : (!os.isEmpty) = false) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
       ExceptT.lift (DialectDenote.exit o.op args) >>= afterExit M n f env o args := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hos]
+  simp only [h, ha, hT, hos, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck]
   rfl
 
-theorem runOps_denote (h : o.ownsCoreRegion = false)
+theorem runOps_denote [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     (hc : callee? o.op = none) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
       ExceptT.lift (DialectDenote.denote o.op args) >>= afterDenote M n f env o os := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hc]
+  simp only [h, ha, hT, hc, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
   rfl
 
-theorem runOps_noFunc (h : o.ownsCoreRegion = false)
+theorem runOps_noFunc [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
       liftExcept (stuck s!"@{s} is not a function of the module") := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg]
-  rfl
+  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck]
 
-theorem runOps_enter (h : o.ownsCoreRegion = false)
+theorem runOps_enter [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g) {e : Stuck}
     (he : g.enter args.toDVals = .error e) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
+    Func.runOps (m := m) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he]
-  rfl
+  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he,
+    liftExcept_error_bind]
 
-theorem runOps_call (h : o.ownsCoreRegion = false)
+theorem runOps_call [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
     {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g)
     {body : List (Operation d)} {genv : Env d} (he : g.enter args.toDVals = .ok (body, genv)) :
-    Func.runOps (m := ChoiceTree ε) M (n + 1) f env (o :: os) =
-      Func.runOps M n g genv body >>= afterCall M n f env o os s := by
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
+      inFrame (Func.runOps M n g genv body) >>= afterCall M n f env o os s := by
   rw [Func.runOps]
   simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he]
   rfl
@@ -227,23 +230,24 @@ variable (M : Module d)
 every name the same value. -/
 def RunsSame (n : Nat) : Prop :=
   ∀ (f : Func d) (e₁ e₂ : Env d) (os : List (Operation d)), Same e₁ e₂ →
-    Func.runOps (m := ChoiceTree ε) M n f e₁ os = Func.runOps M n f e₂ os
+    Func.runOps (m := m) M n f e₁ os = Func.runOps M n f e₂ os
 
-variable {M}
+variable {M} [LawfulMonad m]
 
-theorem afterDenote_congr {n : Nat} (hrun : RunsSame (ε := ε) M n) (f : Func d) {e₁ e₂ : Env d}
+theorem afterDenote_congr {n : Nat} (hrun : RunsSame (m := m) M n) (f : Func d) {e₁ e₂ : Env d}
     (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d))
     (rs : HVector toType (returnTypes o.op)) :
-    afterDenote (ε := ε) M n f e₁ o os rs = afterDenote M n f e₂ o os rs := by
+    afterDenote (m := m) M n f e₁ o os rs = afterDenote M n f e₂ o os rs := by
   unfold afterDenote
   simp only [bind_eq]
   split
-  · exact hrun f _ _ os (Same.append _ h)
+  · rw [liftExcept_ok_bind, liftExcept_ok_bind]
+    exact hrun f _ _ os (Same.append _ h)
   · rfl
 
-theorem afterExit_congr {n : Nat} (hrun : RunsSame (ε := ε) M n) (f : Func d) {e₁ e₂ : Env d}
+theorem afterExit_congr {n : Nat} (hrun : RunsSame (m := m) M n) (f : Func d) {e₁ e₂ : Env d}
     (h : Same e₁ e₂) (o : Operation d) (args : HVector toType (sig o.op)) (x : Exit) :
-    afterExit (ε := ε) M n f e₁ o args x = afterExit M n f e₂ o args x := by
+    afterExit (m := m) M n f e₁ o args x = afterExit M n f e₂ o args x := by
   cases x with
   | ret => rfl
   | goto i =>
@@ -256,12 +260,13 @@ theorem afterExit_congr {n : Nat} (hrun : RunsSame (ε := ε) M n) (f : Func d) 
     · exact hj.elim
     · exact hj.elim
     · obtain ⟨rfl, hs⟩ := hj
+      rw [liftExcept_ok_bind, liftExcept_ok_bind]
       exact hrun f e₁' e₂' b₁.body hs
 
-theorem afterCall_congr {n : Nat} (hrun : ∀ m ≤ n, RunsSame (ε := ε) M m) (f : Func d)
+theorem afterCall_congr {n : Nat} (hrun : ∀ j ≤ n, RunsSame (m := m) M j) (f : Func d)
     {e₁ e₂ : Env d} (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d)) (s : Name)
     (r : Result (List (DVal d) × Nat)) :
-    afterCall (ε := ε) M n f e₁ o os s r = afterCall M n f e₂ o os s r := by
+    afterCall (m := m) M n f e₁ o os s r = afterCall M n f e₂ o os s r := by
   cases r with
   | fuelExhausted => rfl
   | ret p =>
@@ -270,13 +275,14 @@ theorem afterCall_congr {n : Nat} (hrun : ∀ m ≤ n, RunsSame (ε := ε) M m) 
     split
     · simp only [bind_eq]
       split
-      · exact hrun _ (Nat.min_le_right k n) f _ _ os (Same.append _ h)
+      · rw [liftExcept_ok_bind, liftExcept_ok_bind]
+        exact hrun _ (Nat.min_le_right k n) f _ _ os (Same.append _ h)
       · rfl
     · rfl
 
 /-- Two environments that give every name the same value give the same
 run. -/
-theorem runOps_congr (n : Nat) : RunsSame (ε := ε) M n := by
+theorem runOps_congr (n : Nat) : RunsSame (m := m) M n := by
   induction n using Nat.strongRecOn with
   | _ n ih =>
     intro f e₁ e₂ os h
@@ -284,7 +290,7 @@ theorem runOps_congr (n : Nat) : RunsSame (ε := ε) M n := by
     | 0, _ => rw [runOps_zero, runOps_zero]
     | n + 1, [] => rw [runOps_nil, runOps_nil]
     | n + 1, o :: os =>
-      have ihn : ∀ m ≤ n, RunsSame (ε := ε) M m := fun m hm => ih m (Nat.lt_succ_of_le hm)
+      have ihn : ∀ j ≤ n, RunsSame (m := m) M j := fun j hj => ih j (Nat.lt_succ_of_le hj)
       by_cases hr : o.ownsCoreRegion = true
       · rw [runOps_region hr, runOps_region hr]
       have hr' := Bool.of_not_eq_true hr

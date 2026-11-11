@@ -91,6 +91,7 @@ def Attr.writable : Attr → Bool
   | .word w => isWord w
   | .int _ | .str _ | .sym _ => true
   | .app h args => isWord h && Attr.allWritable args
+  | .float l => l.valid
 
 /-- Whether every attribute of a list can be written. -/
 def Attr.allWritable : List Attr → Bool
@@ -100,7 +101,7 @@ end
 
 mutual
 theorem Attr.writable_iff : ∀ a : Attr, a.writable = true ↔ a.Writable
-  | .word _ | .int _ | .str _ | .sym _ => by simp [Attr.writable, Attr.Writable]
+  | .word _ | .int _ | .str _ | .sym _ | .float _ => by simp [Attr.writable, Attr.Writable]
   | .app _ args => by simp [Attr.writable, Attr.Writable, Attr.allWritable_iff args]
 
 theorem Attr.allWritable_iff : ∀ as : List Attr, Attr.allWritable as = true ↔ Attr.AllWritable as

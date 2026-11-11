@@ -10,8 +10,12 @@ canonical modules, which both tools accept, and so checks no rule of
 validation; a text it cannot read is an error.
 """
 
+import re
 from dataclasses import dataclass
 
+# A number: an integer, or a float literal with its exponent's sign
+# (ADR-2026-11-11-1438). Any name characters after it are read with it.
+NUMBER = re.compile(r"-?\d*(?:\.\d+e-\d+)?", re.ASCII)
 NAMECHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."
 PUNCT = "(){},:="
 
@@ -80,7 +84,7 @@ def tokens(text: str) -> list[Token]:
             out.append(Token(c, c, line))
             i += 1
         elif c.isascii() and (c.isdigit() or c == "-"):
-            end = names_end(text, i + 1)
+            end = names_end(text, max(NUMBER.match(text, i).end(), i + 1))
             out.append(Token("int", text[i:end], line))
             i = end
         elif c.isascii() and (c.isalpha() or c == "_"):

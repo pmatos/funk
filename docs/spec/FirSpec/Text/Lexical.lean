@@ -16,10 +16,10 @@ changes under it.
 
 #doc (Manual) "Tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12077581287172003301")
+:::moduleDocs (fingerprint := "14499131429193190193")
 :::
 
-:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "8663668452183596108")
+:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "6181810885127377459")
 *Definition: the characters that a string escapes, and the characters that
 a text may hold outside strings.* A character $`c` is _escaped_ when it is
 one of these:
@@ -88,11 +88,11 @@ errors, and each string has exactly one spelling, as the canonical text
 needs.
 :::
 
-:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "7802717031587735127")
+:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "10414318569984400172")
 *Definition: the tokens, and the one spelling of an integer and of a
 symbol.* The tokens of a text are these:
 
-$$`\begin{array}{rcl} \mathit{token} & ::= & \mathit{value} \mid \mathit{label} \mid \mathit{symbol} \\ & \mid & \mathit{locref} \mid \mathit{word} \mid \mathit{int} \\ & \mid & \mathit{string} \mid \mathit{punct} \\ \mathit{value} & ::= & \texttt{\%}~\mathit{name} \\ \mathit{label} & ::= & \texttt{\textasciicircum}~\mathit{name} \\ \mathit{symbol} & ::= & \texttt{@}~\mathit{word} \mid \texttt{@}~\mathit{string} \\ \mathit{locref} & ::= & \texttt{@}~\mathit{nat} \\ \mathit{nat} & ::= & \texttt{0} \mid \mathit{nz}~\mathit{digit}^* \\ \mathit{int} & ::= & \mathit{nat} \mid \texttt{-}~\mathit{nz}~\mathit{digit}^* \\ \mathit{nz} & ::= & \texttt{1} \mid \dots \mid \texttt{9} \\ \mathit{digit} & ::= & \texttt{0} \mid \mathit{nz} \\ \mathit{punct} & ::= & \texttt{(} \mid \texttt{)} \mid \texttt{\{} \mid \texttt{\}} \\ & \mid & \texttt{,} \mid \texttt{:} \mid \texttt{=} \mid \texttt{->} \end{array}`
+$$`\begin{array}{rcl} \mathit{token} & ::= & \mathit{value} \mid \mathit{label} \mid \mathit{symbol} \\ & \mid & \mathit{locref} \mid \mathit{word} \mid \mathit{int} \\ & \mid & \mathit{float} \mid \mathit{string} \mid \mathit{punct} \\ \mathit{value} & ::= & \texttt{\%}~\mathit{name} \\ \mathit{label} & ::= & \texttt{\textasciicircum}~\mathit{name} \\ \mathit{symbol} & ::= & \texttt{@}~\mathit{word} \mid \texttt{@}~\mathit{string} \\ \mathit{locref} & ::= & \texttt{@}~\mathit{nat} \\ \mathit{nat} & ::= & \texttt{0} \mid \mathit{nz}~\mathit{digit}^* \\ \mathit{int} & ::= & \mathit{nat} \mid \texttt{-}~\mathit{nz}~\mathit{digit}^* \\ \mathit{nz} & ::= & \texttt{1} \mid \dots \mid \texttt{9} \\ \mathit{digit} & ::= & \texttt{0} \mid \mathit{nz} \\ \mathit{punct} & ::= & \texttt{(} \mid \texttt{)} \mid \texttt{\{} \mid \texttt{\}} \\ & \mid & \texttt{,} \mid \texttt{:} \mid \texttt{=} \mid \texttt{->} \end{array}`
 
 $`\mathit{name}` and $`\mathit{word}` are the
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[names and words]
@@ -126,6 +126,26 @@ source range, are below $`2^{32}`. An integer of an attribute has no limit
 of its own: it is a value of its dialect, which bounds it, as a
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[core constant]
 must fit its type. The parser rejects a number out of its range at the
-number, and a number that runs into a name character, such as `007` or
-`1.5`.
+number, and a number that runs into a name character, such as `007`,
+`1.5x` or `1.e5`.
+:::
+
+:::readable Fir.Text.expText Fir.FloatLit.print (pin := Fir.FloatLit) (fingerprint := "869767723309194699")
+*Definition: the spelling of a float literal.* A float literal is a token
+of its own (ADR-2026-11-11-1438):
+
+$$`\begin{array}{rcl} \mathit{float} & ::= & \texttt{-}^?~\mathit{nat}~\texttt{.}~\mathit{digit}~\mathit{digit}^*~\mathit{exp}^? \\ & \mid & \texttt{0x}~\mathit{hex}~\mathit{hex}^* \\ \mathit{exp} & ::= & \texttt{e}~\mathit{int} \\ \mathit{hex} & ::= & \mathit{digit} \mid \texttt{a} \mid \dots \mid \texttt{f} \end{array}`
+
+A decimal $`\mathsf{dec}~s~w~f~x` is written `-` when $`s` is set, then
+$`\mathrm{printint}(w)`, `.`, the digits $`f`, and `e` and
+$`\mathrm{printint}(x)` when it has an exponent $`x`: `1.0`, `-0.5`,
+`1.5e-7`. Hexadecimal bits $`\mathsf{hex}~\mathit{ds}` are written `0x`
+and the digits $`\mathit{ds}`: `0x7fc00000`. The exponent, like every
+integer, has no leading zeros and is never `-0`. The literal is kept as it
+is written, leading zeros of its fraction and of its hexadecimal digits
+included; the
+{ref "The-fir-specification--Text-format--Float-constants-in-text"}[core dialect]
+says which literals spell a value of a float type. A whole number followed
+by `.` and a digit, or `0` followed by `x`, starts a float literal, so `1.`
+and `1.e5` are errors, as is `0X7F`, whose `X` runs into the `0`.
 :::

@@ -59,7 +59,6 @@ import Fir.Execution.ChoiceTree
 import Fir.Execution.MemoryEffect
 import Fir.Execution.MemoryState
 import Fir.Execution.Modes
-import Fir.Core.Modes
 import Fir.Execution.SetRuns
 import Fir.Execution.Monotone
 import Fir.Execution.Environment
@@ -96,9 +95,11 @@ import Fir.Execution.MemoryRefineUp
 import Fir.Execution.MemoryRefineDown
 import Fir.Execution.MemoryRefineRuns
 import Fir.Execution.MemoryReplace
+import Fir.Execution.MemoryModes
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
+import Fir.Core.Modes
 import Fir.Execution.Summary
 import Fir.Execution.SummaryLaws
 import Fir.Execution.SummaryFixpoint

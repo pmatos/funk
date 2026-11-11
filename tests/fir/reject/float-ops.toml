@@ -1,16 +1,18 @@
 # Must-reject texts of #229's float constants and fcmp. A float constant
-# is its bits read as a signed integer, so a number outside the signed
-# range of its format, or any other attribute, does not decode
-# (ADR-2026-11-11-1138). fcmp has one of fourteen predicates, compares
-# two values of one float format and gives an i1 (ADR-2026-11-11-1139).
+# is the one float literal of its bits: the shortest decimal that reads
+# back to them, or hexadecimal bits of the format's width for NaNs,
+# infinities and formats with no decimals. Every other literal, and every
+# other attribute, does not decode (ADR-2026-11-11-1438). fcmp has one of
+# fourteen predicates, compares two values of one float format and gives
+# an i1 (ADR-2026-11-11-1139).
 
 [[reject]]
 verdict = "parse-error"
-rule = "a float constant is its bits read as a signed integer: 2147483648 is out of the range of f32"
+rule = "a float constant is a float literal, not its bits read as an integer"
 text = '''
 func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
 ^e:
-  %c: f32 = const 2147483648 @0
+  %c: f32 = const 1065353216 @0
   ret %c @0
 }
 
@@ -21,11 +23,266 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "a float constant has one spelling: the unsigned reading of -0 does not decode at f32"
+rule = "a float constant has one spelling: 1.0 is not written 1.00"
 text = '''
 func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
 ^e:
-  %c: f32 = const 4294967295 @0
+  %c: f32 = const 1.00 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: 1.0 is not written 1.0e0"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1.0e0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: 0.1 is the shortest decimal of its bits at f32"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 0.100000001 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: a finite value of f32 is a decimal, not hexadecimal bits"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 0x3f800000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: 1.0e16 is written with an exponent"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 10000000000000000.0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: 0.5 is written plainly"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 5.0e-1 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: hexadecimal bits of f32 have eight digits"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 0x7fc0000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float constant has one spelling: hexadecimal bits of f32 have eight digits, leading zeros included"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 0x07fc00000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a decimal that reads as an infinity is no spelling: infinities are hexadecimal bits"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1.0e39 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a decimal with an exponent of 10,000 or more is no spelling"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1.0e10000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "hexadecimal bits are lowercase: 0x7FC00000 runs into the name character F"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 0x7FC00000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a decimal has digits after its point: 1. runs into the name character ."
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1. @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an exponent has digits: 1.0e runs into the name character e"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1.0e @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an exponent is never -0"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 1.0e-0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "hexadecimal bits have no sign"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const -0x7fc00000 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a whole part has no leading zeros"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %c: f32 = const 01.0 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "f16 has no decimal of 0.1 with more digits than it needs: 0.1 reads back as 0.0999755859375"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f16 {
+^e:
+  %c: f16 = const 0.0999755859375 @0
+  ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a format wider than f128 has no decimals: float(16, 3) is written in hexadecimal bits"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> float(16, 3) {
+^e:
+  %c: float(16, 3) = const 0.0 @0
   ret %c @0
 }
 

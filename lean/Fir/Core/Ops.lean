@@ -92,7 +92,7 @@ Constants:
 * `fconst e m v`: the constant `v` of the float type `float<e,m>`, given
   by its bits: a sign bit, `e` exponent bits and `m` mantissa bits. Every
   bit pattern is a constant, each NaN's payload and sign included. It has
-  no operands, so it is never poison (ADR-2026-11-11-1138).
+  no operands, so it is never poison (ADR-2026-11-11-1438).
 
 Arithmetic. The result wraps modulo `2^N` unless a flag says otherwise:
 

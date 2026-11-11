@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10244196718517803055")
+:::moduleDocs (fingerprint := "13439674276831334999")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
@@ -62,7 +62,25 @@ none of them is `func` or `module`, which are the core's, nor a word that
 the grammar reserves, such as `dialects` or `locs`.
 :::
 
-:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "2420144201630043887")
+:::readable Fir.Text.isHexDigit Fir.FloatLit Fir.FloatLit.valid (pin := Fir.FloatLit.print) (fingerprint := "11904308684752133396")
+*Definition: a float literal, as written.* A hexadecimal digit is a
+decimal digit or one of the lowercase letters `a` to `f`; uppercase letters
+are not digits. A float literal is one of two kinds (ADR-2026-11-11-1438):
+
+* $`\mathsf{dec}~s~w~f~x`, a decimal: `-` when the sign $`s` is set, the
+  natural number $`w`, `.`, the digits $`f` as they are written, and then,
+  when there is an exponent $`x`, `e` and $`x`, as in `-1.5e-7`;
+* $`\mathsf{hex}~\mathit{ds}`, `0x` and the digits $`\mathit{ds}` as they
+  are written, as in `0x7fc00000`.
+
+Leading zeros of $`f` and of $`\mathit{ds}` are part of the literal. A
+literal can be written when its fraction is one or more decimal digits, or
+its hexadecimal digits are one or more hexadecimal digits. Which literals
+spell a value of a float type is the
+{ref "The-fir-specification--Text-format--Float-constants-in-text"}[core dialect's rule].
+:::
+
+:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "5017374719707371876")
 *Definition: an attribute, or a type, as written.* The grammar writes the
 attributes of ops and items, and every type, as one kind of generic term:
 
@@ -73,6 +91,7 @@ int  \mathsf{int}~i
 str  \mathsf{str}~s
 sym  \mathsf{sym}~s
 app  \mathsf{app}~h~\mathit{attr}^*
+float \mathsf{float}~l
 ```
 
 Here $`w`, $`h` and $`s` are strings and $`i` an integer; $`w` and $`h`
@@ -82,7 +101,8 @@ $`\mathsf{int}~i` is the integer $`i`; $`\mathsf{str}~s` is the string
 $`s`, quoted; $`\mathsf{sym}~s` is a reference to the symbol $`s`, such as
 `@sum`; and $`\mathsf{app}~h~a_1 \dots a_n` is the word $`h` applied to the
 attributes $`a_1, \dots, a_n`, written `h(a₁, …, aₙ)`, such as
-`vec(4, i32)`.
+`vec(4, i32)`; and $`\mathsf{float}~l` is the float literal $`l`, such as
+`1.5` or `0x7fc00000`.
 
 The core dialect does not use the applied form. It is there so that other
 dialects can write structured attributes and types without a change to the
@@ -97,7 +117,7 @@ partial), and no definition of the spec is partial (ADR-2026-10-30-1452). It pla
 in the text format.
 :::
 
-:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (fingerprint := "17382987230614626094")
+:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (pin := Fir.FloatLit.valid) (fingerprint := "995596476100570680")
 *Definition: an attribute that can be written.* An attribute can be
 written as tokens when each word in it is a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word]:
@@ -107,6 +127,7 @@ written as tokens when each word in it is a
   written: a symbol whose name is not a word is quoted;
 * $`\mathsf{app}~h~a_1 \dots a_n` can be written when $`h` is a word and
   each of $`a_1, \dots, a_n` can be written.
+* $`\mathsf{float}~l` can be written when the literal $`l` can.
 
 A list of attributes can be written when each of them can. A module whose
 attributes cannot all be written has no text that reads back to it, so the

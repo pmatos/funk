@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10932335744813086371")
+:::moduleDocs (fingerprint := "12146602463463985695")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -48,11 +48,11 @@ branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (fingerprint := "12529195702843307171")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "363469737393490561")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{signed}_{1+e+m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -60,10 +60,11 @@ $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
 * $`\mathrm{constattr}_N(c)` is the word `true` or `false` when $`N = 1`, as
   $`c` is 1 or 0, and otherwise the integer that the $`N` bits of $`c` give
   when read as a two's-complement signed integer;
-* $`\mathrm{signed}_{1+e+m}(v)` is the integer that the $`1+e+m` bits of
-  a float give when read as a two's-complement signed integer, so `f32`'s
-  `1.0` is `1065353216` and its $`-0` is `-2147483648`
-  (ADR-2026-11-11-1138);
+* $`\mathrm{floatlit}_{e,m}(v)` is the one
+  {ref "The-fir-specification--Text-format--Float-constants-in-text"}[spelling]
+  of the float $`v`: its shortest decimal when that reads back, as `1.0` or
+  `-0.0` at `f32`, and otherwise its bits in hexadecimal, as `0x7fc00000`
+  (ADR-2026-11-11-1438);
 * $`\mathrm{flags}(\mathit{fl})` is the word `nuw` when the flag
   $`\mathsf{nuw}` is set, then the word `nsw` when $`\mathsf{nsw}` is set,
   so the flags come in this fixed order, each at most once;
@@ -75,7 +76,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (fingerprint := "6542961393573177894")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "2579582376094632660")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -101,10 +102,10 @@ $`\mathsf{i}W` are integer types.
   From an integer $`v`, no operands and the result type $`\mathsf{i}W`
   with $`W \neq 1`, it is $`\mathsf{const}_W~c`, where $`c` is the
   $`W`-bit constant whose signed reading is $`v`, when there is one. From
-  an integer $`v`, no operands and the result type
-  $`\mathsf{float}\langle e,m \rangle`, it is $`\mathsf{const}_{e,m}~v'`,
-  where $`v'` is the vector of $`1+e+m` bits whose signed reading is $`v`,
-  when there is one.
+  a float literal $`l`, no operands and the result type
+  $`\mathsf{float}\langle e,m \rangle`, it is $`\mathsf{const}_{e,m}~v`,
+  where $`v = \mathrm{decodelit}_{e,m}(l)`, when $`l` is the spelling of
+  the bits it reads as.
 * `icmp`: from the name of a predicate $`p`, the operand types
   $`\mathsf{i}A~\mathsf{i}B` with $`A = B`, and the result type
   $`\mathsf{i1}`, it is $`\mathsf{icmp}_A~p`.

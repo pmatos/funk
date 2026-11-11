@@ -35,6 +35,7 @@ impl Display for Attr {
                         Attr::Int(i) => write!(f, "{i}")?,
                         Attr::Str(s) => f.write_str(&quote(s))?,
                         Attr::Sym(s) => f.write_str(&print_symbol(s))?,
+                        Attr::Float(s) => f.write_str(s)?,
                         Attr::App(h, _) => write!(f, "{h}(")?,
                     }
                     first = matches!(a, Attr::App(..));
