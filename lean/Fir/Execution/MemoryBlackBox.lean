@@ -196,6 +196,36 @@ theorem MemBlackBox.sig {M M' : Module d} {bound : Nat} {g g' : Func d}
   rw [HVector.toDVals_types] at hty'
   exact hty'.trans bb.params
 
+/-- A path of a black box's target in its frame that is not stuck is a path
+of its run from given memories, on the arguments cast to its parameter
+types. -/
+theorem MemBlackBox.target_run {M M' : Module d} {bound : Nat} {g g' : Func d}
+    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' bound g g') {ts : List d.Ty}
+    {args' : HVector toType ts} {p' : List (Operation d) × Env d}
+    (hen' : g'.enter args'.toDVals = .ok p') {S' : Memories Mem unit} {m : Nat}
+    {x : Ev (Except Stuck (Result ((List (DVal d) × Memories Mem unit) × Nat)))}
+    (hx : Ev.NotStuck x) (h : (Func.memCall M' m g' p'.2 p'.1 S').run x) :
+    (g'.memRunsFrom M' ((args'.cast (bb.sig hen')).cast bb.params.symm, S') m) x.dropLeft := by
+  have hen'' : g'.enter ((args'.cast (bb.sig hen')).cast bb.params.symm).toDVals = .ok p' := by
+    rw [HVector.toDVals_cast, HVector.toDVals_cast]; exact hen'
+  exact (Func.memRunsFrom_run (fun st hd => by
+    match x, hd with
+    | .ok (.error _), _ => exact hx _ rfl)).2 ⟨p', hen'', _, h, rfl⟩
+
+omit [TyRefinement d.Ty] in
+/-- A path of a function's run from given memories, on arguments cast to its
+parameter types, that is not stuck is a path of its entry block's ops in a
+frame, without the steps it leaves. -/
+theorem Func.memRunsFrom_run_cast {M : Module d} {g : Func d} {ts : List d.Ty}
+    {args : HVector toType ts} (hsig : ts = g.params.map (·.2)) {S : Memories Mem unit} {N : Nat}
+    {x : Ev (Except Stuck (Result (List (DVal d) × Memories Mem unit)))}
+    (hx : Ev.NotStuck x) (h : (g.memRunsFrom M (args.cast hsig, S) N) x) :
+    ∃ p, g.enter args.toDVals = .ok p ∧ ∃ e, (Func.memCall M N g p.2 p.1 S).run e ∧
+      x = e.dropLeft := by
+  have hcast : (args.cast hsig).toDVals = args.toDVals := HVector.toDVals_cast _ _
+  obtain ⟨p, hp, e, he, hxe⟩ := (Func.memRunsFrom_run hx).1 h
+  exact ⟨p, hcast ▸ hp, e, he, hxe⟩
+
 /-- A return or UB of a black box's target in its frame, called on
 arguments that refine the source's from memories that refine the source's,
 is allowed by the source's callee in its frame, which starts. -/
@@ -210,21 +240,9 @@ theorem MemBlackBox.allowed {M M' : Module d} {bound : Nat} {g g' : Func d}
     ∃ p, g.enter args.toDVals = .ok p ∧
       MemAllowed (fun N => Func.memCall M N g p.2 p.1 S) e' := by
   have hsig := bb.sig hen'
-  have hen'' : g'.enter ((args'.cast hsig).cast bb.params.symm).toDVals = .ok p' := by
-    rw [HVector.toDVals_cast, HVector.toDVals_cast]; exact hen'
-  have hrun : ∀ {x}, Ev.NotStuck x → (Func.memCall M' n g' p'.2 p'.1 S').run x →
-      (g'.memRunsFrom M' ((args'.cast hsig).cast bb.params.symm, S') n) x.dropLeft :=
-    fun {x} hx h => (Func.memRunsFrom_run (fun st hd => by
-      match x, hd with
-      | .ok (.error _), _ => exact hx _ rfl)).2 ⟨p', hen'', _, h, rfl⟩
   have href := bb.refines _ _ S S' (HVector.forall₂_cast hsig hr) hS
-  have hcast : (args.cast hsig).toDVals = args.toDVals := HVector.toDVals_cast _ _
-  have inv : ∀ {N x}, Ev.NotStuck x → (g.memRunsFrom M (args.cast hsig, S) N) x →
-      ∃ p, g.enter args.toDVals = .ok p ∧ ∃ e, (Func.memCall M N g p.2 p.1 S).run e ∧
-        x = e.dropLeft := fun hx h => by
-    obtain ⟨p, hp, e, he, hxe⟩ := (Func.memRunsFrom_run hx).1 h
-    exact ⟨p, hcast ▸ hp, e, he, hxe⟩
-  match e', he', hrun hne he' with
+  have inv := fun {N x} => Func.memRunsFrom_run_cast (M := M) (args := args) (S := S) (N := N) (x := x) hsig
+  match e', he', bb.target_run hen' hne he' with
   | .ok (.ok (.ret (vs', k'))), _, hrun =>
     obtain ⟨s₀, hs₀, hle⟩ := href (.ret vs') ⟨n, hrun⟩
     match s₀, hs₀, hle with

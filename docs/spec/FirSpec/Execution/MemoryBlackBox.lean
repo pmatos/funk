@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7122691847001462072")
+:::moduleDocs (fingerprint := "2783609327080785706")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "16450805183566433580")
@@ -70,9 +70,13 @@ callee runs from the memories its caller reached, so a black box speaks of
 runs from every memories, not only from the empty ones.
 :::
 
-:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.allowed (fingerprint := "4319915142181417683")
+:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "13962237273322069261")
 *Theorems: a black-box call, allowed.* A call that enters a black box's
-target passes arguments of the parameter types of its source. A return or
+target passes arguments of the parameter types of its source. So a path of
+the target in its frame that is not stuck is a path of its run from given
+memories on those arguments, and a path of a run from given memories on
+arguments cast to the parameter types that is not stuck is a path of the
+entry block's ops in a frame. A return or
 UB of the target in its frame, called on arguments and from memories that
 refine the source's, is allowed by the source's callee in its frame, which
 starts: the black box's refinement gives a return of the source with values

@@ -146,20 +146,9 @@ theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     ∃ p, g.enter args.toDVals = .ok p ∧
       MemAllowedBelow (bound + 1) (fun N => Func.memCall M N g p.2 p.1 S) N₀ e' := by
   have hsig := bb.sig hen'
-  have hen'' : g'.enter ((args'.cast hsig).cast bb.params.symm).toDVals = .ok p' := by
-    rw [HVector.toDVals_cast, HVector.toDVals_cast]; exact hen'
-  have hrun : ∀ {m x}, Ev.NotStuck x → (Func.memCall M' m g' p'.2 p'.1 S').run x →
-      (g'.memRunsFrom M' ((args'.cast hsig).cast bb.params.symm, S') m) x.dropLeft :=
-    fun {_ x} hx h => (Func.memRunsFrom_run (fun st hd => by
-      match x, hd with
-      | .ok (.error _), _ => exact hx _ rfl)).2 ⟨p', hen'', _, h, rfl⟩
+  have hrun := fun {m x} => bb.target_run hen' (S' := S') (m := m) (x := x)
   have href := bb.refines _ _ S S' (HVector.forall₂_cast hsig hr) hS
-  have hcast : (args.cast hsig).toDVals = args.toDVals := HVector.toDVals_cast _ _
-  have inv : ∀ {N x}, Ev.NotStuck x → (g.memRunsFrom M (args.cast hsig, S) N) x →
-      ∃ p, g.enter args.toDVals = .ok p ∧ ∃ e, (Func.memCall M N g p.2 p.1 S).run e ∧
-        x = e.dropLeft := fun hx h => by
-    obtain ⟨p, hp, e, he, hxe⟩ := (Func.memRunsFrom_run hx).1 h
-    exact ⟨p, hcast ▸ hp, e, he, hxe⟩
+  have inv := fun {N x} => Func.memRunsFrom_run_cast (M := M) (args := args) (S := S) (N := N) (x := x) hsig
   have ofUB : ∀ {N : Nat} {r : String}, (g.memRunsFrom M (args.cast hsig, S) N).outcomes (.ub r) →
       ∃ p, g.enter args.toDVals = .ok p ∧
         MemAllowedBelow (bound + 1) (fun N => Func.memCall M N g p.2 p.1 S) N₀ e' := by

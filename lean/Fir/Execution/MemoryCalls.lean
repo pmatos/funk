@@ -163,13 +163,7 @@ theorem Func.memRunsFrom_enter (M : Module d) (f : Func d)
     (a : HVector toType (f.params.map (·.2))) (S : Memories Mem unit) (n : Nat)
     {body : List (Operation d)} {env : Env d} (hen : f.enter a.toDVals = .ok (body, env)) :
     f.memRunsFrom M (a, S) n = Result.finish id (Func.memCall M n f env body S) := by
-  have hrun : f.run M (m := StateT (Memories Mem unit) SetM) a n =
-      inFrame (Func.runOps M n f env body) >>= fun r => match r with
-        | .ret (vs, _) => pure (.ret vs)
-        | .fuelExhausted => pure .fuelExhausted := by
-    simp only [Func.run, hen]
-    exact pure_bind _ _
-  simp only [Func.memRunsFrom, hrun, fromState_bind, map_bind, Result.finish, Func.memCall, runFrom,
+  simp only [Func.memRunsFrom, Func.run_of_enter M f a n hen, fromState_bind, map_bind, Result.finish, Func.memCall, runFrom,
     bind_map_left]
   refine congrArg (fromState _ S >>= ·) (funext fun q => ?_)
   obtain ⟨r, S'⟩ := q
@@ -188,19 +182,11 @@ theorem Func.memRunsFrom_run {M : Module d} {f : Func d} {a : HVector toType (f.
   cases hen : f.enter a.toDVals with
   | error st =>
     refine ⟨fun h => ?_, fun ⟨_, h, _⟩ => nomatch h⟩
-    have hx : ∀ e', (fromState (f.run M (m := StateT (Memories Mem unit) SetM) a n) S).run e' →
-        e' = .ok (.error st) := by
-      intro e' h
-      simp only [Func.run, fromState_bind, hen, fromState_liftExcept] at h
-      rcases (run_bind _ _ _).1 h with ⟨_, h, -⟩ | ⟨er, h, he⟩ | ⟨_, h, -⟩
-      · cases (run_liftExcept _ _).1 h
-      · cases (run_liftExcept _ _).1 h
-        exact he
-      · cases (run_liftExcept _ _).1 h
+    have hx := fun {e'} => Func.fromState_run_stuck M f a n S hen (e := e')
     rcases (SetM.run_map _ _ _).1 h with ⟨_, h1, -⟩ | ⟨_, h1, rfl⟩ | ⟨_, h1, -⟩
-    · cases hx _ h1
+    · cases hx h1
     · exact absurd rfl (hne _)
-    · cases hx _ h1
+    · cases hx h1
   | ok p =>
     obtain ⟨body, env⟩ := p
     rw [Func.memRunsFrom_enter M f a S n hen]
