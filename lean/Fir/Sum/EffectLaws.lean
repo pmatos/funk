@@ -104,10 +104,8 @@ theorem makesNoPoison_inl {o : base.Op} (h : MakesNoPoison o) :
   · cases he
 
 variable [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
-
-variable [DialectMemDenote base] [DialectMemDenote (base.over e)]
-
-variable [DialectCall base] [DialectCall (base.over e)]
+  [DialectMemDenote base] [DialectMemDenote (base.over e)]
+  [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
 
 /-- Two dialects lawful in their effects make a sum lawful in its effects,
