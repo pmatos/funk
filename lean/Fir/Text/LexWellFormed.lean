@@ -52,6 +52,7 @@ theorem Attr.Writable.tokens : ∀ {a : Attr}, a.Writable → ∀ t ∈ a.tokens
   | .int _, _ => by simp [Attr.tokens, Tok.Writable]
   | .str _, _ => by simp [Attr.tokens, Tok.Writable]
   | .sym _, _ => by simp [Attr.tokens, Tok.Writable]
+  | .float _, h => by simpa [Attr.tokens, Tok.Writable, Attr.Writable] using h
   | .app _ args, h => by
     have hargs := Attr.AllWritable.tokens (as := args) h.2
     simp only [Attr.tokens]

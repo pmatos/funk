@@ -149,4 +149,10 @@ def listed (t : String) (args : List String) (s : Nat) : Bool :=
 /-- info: 'Fir.Core.sampled_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.sampled_stuck
 
+/-- info: 'Fir.Core.sampled_memOutcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.sampled_memOutcomes
+
+/-- info: 'Fir.Core.sampled_memStuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.sampled_memStuck
+
 end FirTest

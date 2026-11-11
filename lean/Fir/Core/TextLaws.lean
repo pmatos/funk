@@ -3,6 +3,7 @@ import Fir.Core.Text
 import Fir.Core.Validation
 import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
+import Fir.Core.FloatTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
@@ -149,7 +150,7 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     · subst h
       rcases bitVec_one_cases v with rfl | rfl <;> rfl
     · simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, constAttr_of_ne_one v h, h]
-  | fconst e m v => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode]
+  | fconst e m v => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatLit_floatLit]
   | fcmp p e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, find_fpred_name]
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
@@ -173,11 +174,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
         rename_i hw
         exact ⟨rfl, by simp [Op.attrs, constAttr_of_ne_one _ hw.1, hw.2], rfl, rfl⟩
       · cases h
-    · split at h
-      · cases h
-        rename_i hv
-        exact ⟨rfl, by simp [Op.attrs, hv], rfl, rfl⟩
-      · cases h
+    · obtain ⟨b, hb, rfl⟩ := Option.map_eq_some_iff.mp h
+      exact ⟨rfl, by simp [Op.attrs, floatLit_of_decode hb], rfl, rfl⟩
   · -- icmp
     split at h <;> (try cases h)
     rename_i p _ _
@@ -317,7 +315,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
       split <;> decide
     · simp [Op.attrs, constAttr_of_ne_one v h, Attr.AllWritable, Attr.Writable]
   | icmp p _ => exact ⟨p.name_isWord, trivial⟩
-  | fconst => simp [Op.attrs, Attr.AllWritable, Attr.Writable]
+  | fconst e m v => simp [Op.attrs, Attr.AllWritable, Attr.Writable, floatLit_valid]
   | fcmp p => exact ⟨p.name_isWord, trivial⟩
   | add _ f | sub _ f | mul _ f =>
     obtain ⟨nuw, nsw⟩ := f

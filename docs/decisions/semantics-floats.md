@@ -63,9 +63,10 @@ A format with an alias is written by it, and every other format as
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have two float ops:
 
-- A float constant is `const` at a float type, written as its bits read as a
-  signed integer, so every bit pattern, each NaN payload and sign included, has
-  one spelling (ADR-2026-11-11-1138). It is pure.
+- A float constant is `const` at a float type, written as its shortest
+  decimal that reads back, such as `1.0` or `0.1`, or else as `0x` and its
+  bits, such as `0x7fc00000`. Every bit pattern, each NaN payload and sign
+  included, has one spelling (ADR-2026-11-11-1438). It is pure.
 - `fcmp` compares two floats of one format with one of fourteen predicates,
   ordered or unordered, and gives an `i1`. The spec unpacks both operands and
   compares them with Lean's model, `UnpackedFloat.compare`. It is pure, never

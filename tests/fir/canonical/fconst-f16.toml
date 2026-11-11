@@ -1,11 +1,11 @@
 # Tests of fconst-f16.fir: float constants at f16 give their bits, each
-# NaN's payload and sign included (ADR-2026-11-11-1138): +0, -0, the
+# NaN's payload and sign included (ADR-2026-11-11-1438): +0, -0, the
 # smallest subnormal, -1, the largest finite value, -inf, the quiet NaN,
 # a quiet NaN with its sign set and a payload, and a signalling NaN. A
 # NaN constant compared with itself is unordered.
 # Each test is interpreter-only, as the backend does not lower f16.
 tests = [
-  { func = "@consts", expect = ["0", "-32768", "1", "-17408", "31743", "-1024", "32256", "-511", "31745"] },
-  { func = "@one", expect = ["-511"] },
+  { func = "@consts", expect = ["0.0", "-0.0", "6.0e-8", "-1.0", "65500.0", "0xfc00", "0x7e00", "0xfe01", "0x7c01"] },
+  { func = "@one", expect = ["0xfe01"] },
   { func = "@nan_is_unordered", expect = ["false", "true"] },
 ]

@@ -1,4 +1,4 @@
-import FirRef.Lex.Token
+import FirRef.Lex.Float
 
 /-!
 `lexTokenP` reads a token over positions, as the spec's `lexToken` does on
@@ -41,12 +41,15 @@ def lexTokenP (c : Char) (i : s.Pos) (p : TextPos) : Except ParseError (Tok × s
   else if c = '-' then
     match peekP i with
     | some ('>', j) => .ok (.arrow, j, p.advance 2)
-    | some ('0', _) => errorAt p "-0 is not an integer"
+    | some ('0', j) =>
+      match lexFloatP true '0' j p with
+      | some r => r
+      | none => errorAt p "-0 is not an integer"
     | some (d, j) =>
-      if d.isDigit then lexIntP true d j p
-      else errorAt p "- must start a negative integer or ->"
-    | none => errorAt p "- must start a negative integer or ->"
-  else if c.isDigit then lexIntP false c i p
+      if d.isDigit then lexNumberP true d j p
+      else errorAt p "- must start a negative number or ->"
+    | none => errorAt p "- must start a negative number or ->"
+  else if c.isDigit then lexNumberP false c i p
   else if isWordStart c then
     let w := takeWhileP isNameChar i []
     .ok (.word (String.ofList (c :: w)), skipWhileP isNameChar i, p.advance (1 + w.length))
@@ -107,7 +110,19 @@ theorem lexTokenP_eq (c : Char) (i : s.Pos) (p : TextPos) :
     · rw [hc] at hcs
       injection hcs with h₁ h₂
       subst h₁ h₂
-      rfl
+      simp only
+      have h := lexFloatP_eq true '0' j p
+      rcases hx : lexFloatP true '0' j p with _ | r <;>
+        rcases hy : lexFloat true '0' (chars j) p with _ | r' <;>
+        rw [hx, hy] at h <;>
+        simp only [Option.map_none, Option.map_some, reduceCtorEq, Option.some.injEq] at h
+      · rfl
+      · rcases map_agree h with ⟨e, h₁, h₂⟩ | ⟨⟨t, j₂, q⟩, ⟨t', ⟨r₂, hr⟩, q'⟩, h₁, h₂, hxy⟩
+        · rw [h₁, h₂]; rfl
+        · rw [h₁, h₂]
+          simp only [Prod.mk.injEq] at hxy
+          obtain ⟨rfl, rfl, rfl⟩ := hxy
+          simp only [okBind, pure, Except.pure, okExceptMap]
     · rw [hc] at hcs
       injection hcs with h₁ h₂
       subst h₁ h₂
@@ -122,7 +137,7 @@ theorem lexTokenP_eq (c : Char) (i : s.Pos) (p : TextPos) :
         injection heq with h₃ h₄
         subst h₃ h₄
         split
-        · rcases map_agree (lexIntP_eq true d j p) with
+        · rcases map_agree (lexNumberP_eq true d j p) with
             ⟨e, hx, hy⟩ | ⟨⟨t, j₂, q⟩, ⟨t', ⟨r, hr⟩, q'⟩, hx, hy, hxy⟩
           · rw [hx, hy]
             rfl
@@ -136,7 +151,7 @@ theorem lexTokenP_eq (c : Char) (i : s.Pos) (p : TextPos) :
     · rw [hc] at hcs
       cases hcs
   split
-  · exact lexIntP_eq false c i p
+  · exact lexNumberP_eq false c i p
   split
   · simp [takeWhileP_eq, chars_skipWhileP]
   · rfl

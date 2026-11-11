@@ -41,7 +41,7 @@
 //! seed gives one module.
 
 use super::{Rng, Widths, constant, name, string, symbol, width};
-use crate::dialects::core::{self, int_type};
+use crate::dialects::core::{self, int_type, spell_float};
 use crate::effects::Effects;
 use crate::ir::{
     Attr, Block, Def, DialectItem, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
@@ -492,10 +492,26 @@ fn insert(rng: &mut Rng, ops: &mut Vec<Op>, op: Op) {
 
 /// An attribute of any kind, often a string or an applied word, which
 /// nests below depth three.
+/// A float literal: the spelling of random bits of a format with
+/// decimals, or `0x` and up to eight hexadecimal digits, any of them.
+fn float_lit(rng: &mut Rng) -> Attr {
+    if rng.below(2) == 0 {
+        let e = 2 + rng.below(14) as u32;
+        let m = 1 + rng.below(48) as u32;
+        let bits = rng.next_u64() >> (63 - e - m);
+        return Attr::Float(spell_float(e, m, u128::from(bits)));
+    }
+    let digits: String = (0..=rng.below(8))
+        .map(|_| char::from_digit(rng.below(16) as u32, 16).expect("a digit below 16"))
+        .collect();
+    Attr::Float(format!("0x{digits}"))
+}
+
 fn attr(rng: &mut Rng, depth: u32) -> Attr {
     match rng.below(if depth < 3 { 7 } else { 5 }) {
         0 | 1 => Attr::Str(string(rng)),
         2 => Attr::Word(name(rng, true)),
+        3 if rng.below(2) == 0 => float_lit(rng),
         3 => {
             let w = width(rng, Widths::Any);
             constant(rng, w)

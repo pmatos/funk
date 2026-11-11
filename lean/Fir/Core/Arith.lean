@@ -16,7 +16,7 @@ every width, from 1 to the largest.
 
 * `const` gives its constant. It has no operands, so it is never poison.
   A float constant gives its bits, at every format, a NaN's payload and
-  sign included (ADR-2026-11-11-1138).
+  sign included (ADR-2026-11-11-1438).
 * `poison` gives the poison of its type, on every run. It has no operands
   either, so it propagates poison as `const` does: its poison is its own
   rule, not a poison operand's. It is never UB.

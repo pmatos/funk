@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the lexer accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8588507338123107690")
+:::moduleDocs (fingerprint := "7575859256654190330")
 :::
 
 :::readable Fir.Text.bind_eq_ok (fingerprint := "17647912058474426905")
@@ -44,7 +44,20 @@ in exactly this way, so these lemmas are what make its tokens names and
 words.
 :::
 
-:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "6050580012468359362")
+:::readable Fir.Text.map_eq_ok Fir.Text.lexFraction_writable Fir.Text.lexHex_writable Fir.Text.lexFloat_writable Fir.Text.lexNumber_writable (pin := Fir.Text.lexFraction) (pin := Fir.Text.lexHex) (pin := Fir.Text.lexFloat) (pin := Fir.Text.lexNumber) (pin := Fir.FloatLit.valid) (fingerprint := "3927361144757319295")
+*Theorems: every float literal and number that the lexer reads can be
+written.* A step that ends with a result and then has a map applied ends
+with a result only when the step did, and the map of its result is that
+result: the proofs take the readers of float literals apart with it. A
+decimal float literal that the lexer reads after `.` and a digit has that
+digit and every digit after it as its fraction, so its fraction is one or
+more digits; hexadecimal bits that it reads after `0x` are every lowercase
+hexadecimal digit after it, and it rejects them when there is none. So
+every float literal that it reads can be written, and so can every number
+it reads from a first digit, an integer or a float literal.
+:::
+
+:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "16150394269038920626")
 *Theorems: every token that the lexer reads can be written.* For every
 character $`c`, the characters after it, and position in the text, from
 which the reader counts where the next token starts and which its error
@@ -62,6 +75,7 @@ So can every integer that it reads after a first digit, with or without a
   after it, so it is a word;
 * after `@`, a number of $`2^{32}` or more is an error at the number, so a
   location reference $`\mathsf{locref}~r` has $`r < 2^{32}`;
+* a float literal can be written, by the theorems above;
 * a symbol, an integer, a string and a punctuation token can always be
   written.
 

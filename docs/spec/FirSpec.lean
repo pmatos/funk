@@ -194,6 +194,10 @@ unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 2)}
 
+{includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 2)}
+
+{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
+
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 2)}
 
 # Text format
@@ -204,6 +208,8 @@ unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 
+{includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
+
 {includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
 
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
@@ -211,6 +217,8 @@ unit and asks each op to be monotone from memories that refine others.
 {includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
+
+{includeReadable "." Fir.Core.FloatTextLaws "Float constants read back" FirSpec.Core.FloatTextLaws (level := 2)}
 
 {includeReadable "." Fir.Text.Lex "The parser" FirSpec.Text.Lex (level := 2)}
 
@@ -229,6 +237,8 @@ unit and asks each op to be monotone from memories that refine others.
 {includeReadable "." Fir.Text.LexTokens "Maximal munch" FirSpec.Text.LexTokens (level := 2)}
 
 {includeReadable "." Fir.Text.LexStrings "Escapes and quoted symbols" FirSpec.Text.LexStrings (level := 2)}
+
+{includeReadable "." Fir.Text.LexFloats "Reading printed float literals" FirSpec.Text.LexFloats (level := 2)}
 
 {includeReadable "." Fir.Text.LexLayout "Spaces, line feeds and lists" FirSpec.Text.LexLayout (level := 2)}
 

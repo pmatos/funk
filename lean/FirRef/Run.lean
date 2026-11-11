@@ -12,11 +12,14 @@ reports the result as one JSON object on one line (ADR-2026-10-30-1856,
 ADR-2026-10-30-2218, ADR-2026-10-31-0002).
 
 `freeze` of poison makes a choice, so a run may end in many ways.
-`fir-ref` runs the interpreter in the spec's tree of choices, with the
-core dialect's rules, and walks the tree in one of three modes, the
+`fir-ref` runs the interpreter in the state layer over the spec's tree of
+choices, from the empty memories, with the core dialect's rules, and walks
+the tree in one of three modes, the
 spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`, which Lean
 proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
-`Core.sampled_outcomes`):
+`Core.sampled_outcomes`, and for the runs with memory
+`Core.scripted_memOutcomes`, `Core.exhaustive_memOutcomes` and
+`Core.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no
@@ -36,11 +39,12 @@ result (ADR-2026-10-30-1855), and so is a choice sequence that does not
 fit the run.
 
 Arguments, choices and values are spelled as constants are in text: `true`
-and `false` at `i1`, and signed decimal at every other width, read with the
-spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
+and `false` at `i1`, signed decimal at every other width, and the one
+float literal of a float's bits at a float type (ADR-2026-11-11-1438), read
+with the spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
 lexer here as `argAttrP`, which lexes at most two tokens over the text's
 positions, with no stack per character (`argAttr_eq_argAttrP`). A value or
-an argument may also be `poison`, at any `iN`, so that a run may start from
+an argument may also be `poison`, at any `iN` or float type, so that a run may start from
 poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
 `freeze` chooses a value of its type.
 -/
@@ -71,15 +75,15 @@ def tyText (t : Core.Ty) : String := t.attr.print
 def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map Attr.print)
 
 /-- A value as `fir-ref run` spells it: as a constant of its type in text,
-or `poison`. A float is written as its bits read as a signed integer
-(ADR-2026-11-11-1138). -/
+or `poison`. A float is written as the one float literal of its bits
+(ADR-2026-11-11-1438). -/
 def valueText : DVal CoreDialect → String
   | ⟨.int w, v⟩ => match (v : PoisonOr (BitVec w)) with
     | .poison => "poison"
     | .value b => (Core.constAttr w b).print
   | ⟨.float e m, v⟩ => match (v : PoisonOr (BitVec (Core.floatWidth e m))) with
     | .poison => "poison"
-    | .value b => (Attr.int b.toInt).print
+    | .value b => (Attr.float (Core.floatLit e m b)).print
   | ⟨.ptr, v⟩ => nomatch (v : Empty)
 
 /-- The `const` op that the text `s` spells at the type `t`: the spec's
@@ -98,7 +102,7 @@ def constOf (w : Nat) (s : String) : Option (BitVec w) :=
   | _ => none
 
 /-- The constant that the text `s` spells at the float type `float<e,m>`
-(`constOpOf`): its bits read as a signed integer. -/
+(`constOpOf`): the one float literal of its bits. -/
 def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) :=
   match constOpOf (.float e m) s with
   | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
@@ -226,34 +230,42 @@ dialect, so they live in `fir-ref`'s command line, not in
 -/
 
 /-- `Core.scripted`, by the machine. -/
-def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
-    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
-  Machine.scripted M read f args fuel cs
+def runScripted {N : Type} [DecidableEq N] (unit : N → Nat) {σ : Type}
+    (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
+    Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  Machine.scripted (unit := unit) M read f args fuel cs
 
 @[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
-  funext σ read M f args fuel cs
+  funext N _ unit σ read M f args fuel cs
   exact (Machine.scripted_eq M read f args fuel cs).symm
 
 /-- `Core.exhaustive`, by the machine. -/
-def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+def runExhaustive {N : Type} [DecidableEq N] (unit : N → Nat) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (RunLeaf × Nat)) :=
-  Machine.exhaustive M f args fuel budget
+  Machine.exhaustive (unit := unit) M f args fuel budget
 
 @[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
-  funext M f args fuel budget
+  funext N _ unit M f args fuel budget
   exact (Machine.exhaustive_eq M f args fuel budget).symm
 
 /-- `Core.sampled`, by the machine. -/
-def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
+    (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     RunLeaf × List ChoiceTree.Chosen :=
-  Machine.sampled M draw f args fuel g
+  Machine.sampled (unit := unit) M draw f args fuel g
 
 @[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
-  funext γ draw M f args fuel g
+  funext N _ unit γ draw M f args fuel g
   exact (Machine.sampled_eq M draw f args fuel g).symm
+
+/-- The width of the units of each memory of a run of `fir-ref`, which
+names the core's memories by themselves (ADR-2026-11-11-1328). The core
+has no memory yet, so there is no width to give; the module's data layout
+will give them (#231). -/
+def coreUnit : Core.Mem → Nat := fun x => nomatch x
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
@@ -283,8 +295,11 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
           status := 2 }
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
-        | .ok vs, .scripted cs => scriptedReport name (Core.scripted constOf m f vs fuel cs)
-        | .ok vs, .exhaustive b => exhaustiveReport name b (Core.exhaustive m f vs fuel b)
-        | .ok vs, .sampled s => sampledReport name (Core.sampled draw m f vs fuel ⟨s.toUInt64⟩)
+        | .ok vs, .scripted cs =>
+          scriptedReport name (Core.scripted coreUnit constOf m f vs fuel cs)
+        | .ok vs, .exhaustive b =>
+          exhaustiveReport name b (Core.exhaustive coreUnit m f vs fuel b)
+        | .ok vs, .sampled s =>
+          sampledReport name (Core.sampled coreUnit draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef

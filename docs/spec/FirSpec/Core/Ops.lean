@@ -91,7 +91,8 @@ fconst  \mathsf{const}_{e,m}~v
 * $`\mathsf{const}_{e,m}~v` (`fconst` in the Lean) is the float of
   $`\mathsf{float}\langle e,m \rangle` whose bits are $`v`: a sign bit,
   $`e` exponent bits and $`m` mantissa bits. Every bit pattern is a
-  constant, a NaN's payload and sign included (ADR-2026-11-11-1138). It is
+  constant, a NaN's payload and sign included, and has one spelling in text
+  (ADR-2026-11-11-1438). It is
   never poison either.
 
 *Arithmetic* computes on integers of width $`N`. Results wrap modulo

@@ -139,8 +139,8 @@ termination_by ts => ts.length
 -/
 
 mutual
-/-- Reads an attribute: a word, an integer, a string, a symbol, or a word
-applied to attributes. -/
+/-- Reads an attribute: a word, an integer, a string, a symbol, a float
+literal, or a word applied to attributes. -/
 def readAttr : (ts : List Token) → Read1 Attr ts
   | ⟨.word w, _⟩ :: ⟨.lparen, _⟩ :: rest => do
     let (args, ⟨r, hr⟩) ← readAttrArgs rest
@@ -149,6 +149,7 @@ def readAttr : (ts : List Token) → Read1 Attr ts
   | ⟨.int i, _⟩ :: rest => .ok (.int i, ⟨rest, Nat.lt_succ_self _⟩)
   | ⟨.str s, _⟩ :: rest => .ok (.str s, ⟨rest, Nat.lt_succ_self _⟩)
   | ⟨.sym s, _⟩ :: rest => .ok (.sym s, ⟨rest, Nat.lt_succ_self _⟩)
+  | ⟨.float l, _⟩ :: rest => .ok (.float l, ⟨rest, Nat.lt_succ_self _⟩)
   | ts => fail ts "an attribute"
 termination_by ts => 2 * ts.length
 
@@ -183,7 +184,7 @@ def readType : (ts : List Token) → Read (Attr × TextPos) ts
 
 /-- Whether a token starts an attribute. -/
 def Tok.startsAttr : Tok → Bool
-  | .word _ | .int _ | .str _ | .sym _ => true
+  | .word _ | .int _ | .str _ | .sym _ | .float _ => true
   | _ => false
 
 /-- Reads attributes, each with its position, as long as one follows. -/

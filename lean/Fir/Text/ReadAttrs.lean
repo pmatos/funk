@@ -151,6 +151,11 @@ theorem Attr.reads : ∀ (a : Attr) (ts : List Token) (rest : List Tok),
     take_tok h
     rw [readAttr.eq_5]
     exact ⟨_, rfl, h⟩
+  | .float l, ts, rest, h, _ => by
+    simp only [Attr.tokens, List.singleton_append] at h
+    take_tok h
+    rw [readAttr.eq_6]
+    exact ⟨_, rfl, h⟩
   | .app w args, ts, rest, h, _ => by
     simp only [Attr.tokens, List.cons_append, List.append_assoc] at h
     take_tok h

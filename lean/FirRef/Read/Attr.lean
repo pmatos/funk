@@ -37,6 +37,7 @@ def attrLoop (s : σ) (got : Option Attr) (fs : List (String × List Attr)) :
     | some (⟨.int i, _⟩, s₁) => attrLoop s₁ (some (.int i)) fs
     | some (⟨.str x, _⟩, s₁) => attrLoop s₁ (some (.str x)) fs
     | some (⟨.sym x, _⟩, s₁) => attrLoop s₁ (some (.sym x)) fs
+    | some (⟨.float l, _⟩, s₁) => attrLoop s₁ (some (.float l)) fs
     | _ => failC s "an attribute"
   | some a =>
     match fs with
@@ -132,12 +133,13 @@ theorem attrLoop_eq (s : σ) (got : Option Attr) (fs : List (String × List Attr
     simp only [attrRun]
     rw [U_readAttr_word w p (not_head hn)]
     rfl
-  | case4 s fs i p s₁ h ih | case5 s fs i p s₁ h ih | case6 s fs i p s₁ h ih =>
+  | case4 s fs i p s₁ h ih | case5 s fs i p s₁ h ih | case6 s fs i p s₁ h ih
+  | case7 s fs i p s₁ h ih =>
     rw [ih, view_of_uncons h]
     simp only [attrRun]
     rw [readAttr]
     rfl
-  | case7 s fs hw hi hs hy =>
+  | case8 s fs hw hi hs hy hf =>
     rw [failC_eq]
     simp only [attrRun]
     rcases hv : uncons s with _ | ⟨⟨t, p⟩, s₁⟩
@@ -149,8 +151,9 @@ theorem attrLoop_eq (s : σ) (got : Option Attr) (fs : List (String × List Attr
         | exact absurd hv (hi _ _ _)
         | exact absurd hv (hs _ _ _)
         | exact absurd hv (hy _ _ _)
-  | case8 s a => rfl
-  | case9 s a w done fs p s₁ h ih =>
+        | exact absurd hv (hf _ _ _)
+  | case9 s a => rfl
+  | case10 s a w done fs p s₁ h ih =>
     rw [ih, view_of_uncons h]
     simp only [attrRun, attrFinish]
     rw [U_readMoreAttrArgs_comma]
@@ -160,12 +163,12 @@ theorem attrLoop_eq (s : σ) (got : Option Attr) (fs : List (String × List Attr
       rcases U (readMoreAttrArgs r) with e | ⟨bs, r'⟩
       · rfl
       · simp
-  | case10 s a w done fs p s₁ h ih =>
+  | case11 s a w done fs p s₁ h ih =>
     rw [ih, view_of_uncons h]
     simp only [attrRun, attrFinish]
     rw [readMoreAttrArgs]
     simp
-  | case11 s a w done fs hc hr =>
+  | case12 s a w done fs hc hr =>
     rw [failC_eq]
     simp only [attrRun, attrFinish]
     rcases hv : uncons s with _ | ⟨⟨t, p⟩, s₁⟩
@@ -206,6 +209,7 @@ def attrFrom (s : σ) (t : Token) (s₁ : σ) : Except ParseError (Attr × σ) :
   | ⟨.int i, _⟩ => attrLoop s₁ (some (.int i)) []
   | ⟨.str x, _⟩ => attrLoop s₁ (some (.str x)) []
   | ⟨.sym x, _⟩ => attrLoop s₁ (some (.sym x)) []
+  | ⟨.float l, _⟩ => attrLoop s₁ (some (.float l)) []
   | _ => failC s "an attribute"
 
 theorem attrFrom_eq {s s₁ : σ} {t : Token} (h : uncons s = some (t, s₁)) :
@@ -226,7 +230,7 @@ theorem attrFrom_eq {s s₁ : σ} {t : Token} (h : uncons s = some (t, s₁)) :
   all_goals first
     | (rename_i heq; rw [h] at heq; cases heq; rfl)
     | skip
-  rename_i hw hi hx hy
+  rename_i hw hi hx hy hf
   rcases t with ⟨tk, p⟩
   cases tk <;> first
     | rfl
@@ -234,6 +238,7 @@ theorem attrFrom_eq {s s₁ : σ} {t : Token} (h : uncons s = some (t, s₁)) :
     | exact absurd h (hi _ _ _)
     | exact absurd h (hx _ _ _)
     | exact absurd h (hy _ _ _)
+    | exact absurd h (hf _ _ _)
 
 theorem attrApp_eq {s s₁ s₂ : σ} {w : String} {p q : TextPos}
     (h : uncons s = some (⟨.word w, p⟩, s₁)) (h₁ : uncons s₁ = some (⟨.lparen, q⟩, s₂)) :

@@ -16,9 +16,9 @@ referred to by name, and the names are stored as the producer wrote them
 validation chapter, not of the terms: a term can be ill-formed, and
 validation says which terms are valid.
 
-This section gives names first, then attributes, then the terms from the
-inside out: a successor, an op with blocks and regions, a function, an item
-of a dialect's kind, an item and a module.
+This section gives names first, then float literals and attributes, then
+the terms from the inside out: a successor, an op with blocks and regions, a
+function, an item of a dialect's kind, an item and a module.
 -/
 
 namespace Fir
@@ -71,13 +71,38 @@ the dialect's own form, and an item of a dialect's kind holds them as these
 terms.
 -/
 
+/-- A lowercase hexadecimal digit. -/
+def Text.isHexDigit (c : Char) : Bool := c.isDigit || ('a' ≤ c && c ≤ 'f')
+
+/--
+A float literal, as written in text (ADR-2026-11-11-1438). `dec neg whole
+frac exp` is a decimal: `-` when `neg`, the natural number `whole`, `.`,
+the digits `frac` as they are written, and then, when `exp` is an integer,
+`e` and it, as in `-1.5e-7`. `hex ds` is `0x` and the hexadecimal digits
+`ds` as they are written, as in `0x7fc00000`. Leading zeros of `frac` and
+of `ds` are part of the literal. Which literals spell a value of a float
+type is the core dialect's rule.
+-/
+inductive FloatLit where
+  | dec (neg : Bool) (whole : Nat) (frac : List Char) (exp : Option Int)
+  | hex (digits : List Char)
+  deriving Repr, DecidableEq, Inhabited
+
+/-- A float literal that can be written: its fraction is one or more
+decimal digits, and its hexadecimal digits are one or more lowercase
+hexadecimal digits. -/
+def FloatLit.valid : FloatLit → Bool
+  | .dec _ _ frac _ => !frac.isEmpty && frac.all Char.isDigit
+  | .hex ds => !ds.isEmpty && ds.all Text.isHexDigit
+
 /--
 An attribute, or a type, as written in text: a word such as `nsw` or `i32`,
-an integer, a string, a symbol reference such as `@sum`, or a word applied to
-attributes, such as `vec(4, i32)`. The core dialect does not use the applied
-form; it is there so that other dialects can write structured attributes and
-types without a change to the grammar. A word applied to no attributes,
-`h()`, is not the word `h`.
+an integer, a string, a symbol reference such as `@sum`, a word applied to
+attributes, such as `vec(4, i32)`, or a float literal, such as `1.5` or
+`0x7fc00000`. The core dialect does not use the applied form; it is there
+so that other dialects can write structured attributes and types without a
+change to the grammar. A word applied to no attributes, `h()`, is not the
+word `h`.
 -/
 inductive Attr where
   | word (w : String)
@@ -85,6 +110,7 @@ inductive Attr where
   | str (s : String)
   | sym (s : String)
   | app (head : String) (args : List Attr)
+  | float (l : FloatLit)
   deriving Inhabited
 
 mutual
@@ -98,6 +124,7 @@ def Attr.repr : Attr → Nat → Std.Format
   | .sym s, p => Repr.addAppParen ("Fir.Attr.sym " ++ reprArg s) p
   | .app h args, p => Repr.addAppParen ("Fir.Attr.app " ++ reprArg h ++ " " ++
       .bracket "[" (.joinSep (Attr.reprList args) ("," ++ .line)) "]") p
+  | .float l, p => Repr.addAppParen ("Fir.Attr.float " ++ reprArg l) p
 
 /-- How `#eval` shows each attribute of a list. -/
 def Attr.reprList : List Attr → List Std.Format
@@ -114,6 +141,7 @@ def Attr.Writable : Attr → Prop
   | .word w => isWord w
   | .int _ | .str _ | .sym _ => True
   | .app h args => isWord h ∧ Attr.AllWritable args
+  | .float l => l.valid
 
 /-- Every attribute of a list can be written. -/
 def Attr.AllWritable : List Attr → Prop

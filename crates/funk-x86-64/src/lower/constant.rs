@@ -3,10 +3,10 @@
 //!
 //! A constant is written into its slot as a 64-bit immediate: its value read
 //! as a signed integer, so its low `N` bits are its bits. `true` is 1 and
-//! `false` is 0. A float constant at `f32` or `f64` is spelled the same way,
-//! its bits read as a signed integer (ADR-2026-11-11-1138), so it is written
-//! the same way too: SSE has no immediate operands, and the slot is what an
-//! op reads (ADR-2026-11-11-1140). An `i128` constant is two immediates, its low and its high
+//! `false` is 0. A float constant at `f32` or `f64` is a float literal
+//! (ADR-2026-11-11-1438), read into its bits, and is written as an integer
+//! of those bits: SSE has no immediate operands, and the slot is what an op
+//! reads (ADR-2026-11-11-1140). An `i128` constant is two immediates, its low and its high
 //! 64 bits, one into each of its slots (ADR-2026-11-03-010730).
 //!
 //! Native code holds no poison (ADR-2026-10-30-2248), and any value refines
@@ -15,6 +15,7 @@
 //! at `i1`, and the same on every run, so what native code gives for a
 //! poison never depends on what a slot held before (ADR-2026-11-03-1616).
 
+use funk_ir::dialects::core::{float_format, read_float};
 use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
@@ -42,6 +43,14 @@ fn constant(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
             .as_str()
             .parse()
             .map_err(|_| format!("the constant {v} does not fit 128 bits"))?,
+        Attr::Float(s) => {
+            let (e, m) = float_format(&result.ty).ok_or("a float literal defines a float")?;
+            // Verification has checked that `s` is the spelling of its bits.
+            match read_float(e, m, s) {
+                Some(bits) => bits as i128,
+                None => return Err(format!("{s} is no constant of {}", result.ty).into()),
+            }
+        }
         other => return Err(format!("the value of a const is an integer, not {other}").into()),
     };
     let slot = cx.slot(&result.name)?;

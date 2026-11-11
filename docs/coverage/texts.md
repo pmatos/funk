@@ -213,9 +213,10 @@ parameters, block arguments, call arguments and results.
 `float(1, 1)`, and ops that take integers at a float type.
 
 The texts of #229's third stage also use float constants and `fcmp`
-([ADR-2026-11-11-1138](../adrs/2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md),
+([ADR-2026-11-11-1438](../adrs/2026-11-11-1438-a-float-constant-is-its-shortest-decimal-or-its-bits-in-hexadecimal.md),
 [ADR-2026-11-11-1139](../adrs/2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md)).
-A float is spelled as its bits read as a signed integer.
+A float is spelled as its shortest decimal, as `1.0`, or as its bits in
+hexadecimal, as `0x7fc00000`.
 `fcmp-ordered-T` runs each of the seven ordered predicates, and
 `fcmp-unordered-T` each of the seven unordered ones, at `T`, one of `f16`,
 `bf16`, `f32`, `f64` and `f128`, on pairs of hard values: 1 and 2 in both orders, `-0` and `+0`,

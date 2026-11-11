@@ -56,7 +56,8 @@ tests = [
   in a TOML literal string, between single quotes.
 - `args` gives one argument per parameter, each spelled as a constant of
   its type: `true` or `false` at `i1`, signed decimal at every other width,
-  and a float's bits read as a signed integer (ADR-2026-11-11-1138); or
+  and a float as its constants are spelled, as `1.0` or `0x7fc00000`
+  (ADR-2026-11-11-1438); or
   `poison`, at any integer or float type (#123).
 - `fuel` is `fir-ref run`'s budget, one step per op; 1,000,000 by default.
 - Without `expect`, the test is differential. It runs on `fir-ref`, in
