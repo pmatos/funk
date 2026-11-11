@@ -60,7 +60,7 @@ ADR-2026-10-29-2017); its semantics asks for them in the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[execution chapter].
 :::
 
-:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (pin := Fir.DVal) (pin := Fir.Env) (fingerprint := "3498837778756605827")
+:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (pin := Fir.DVal) (pin := Fir.Env) (fingerprint := "16346307650661687842")
 *Definition: the values of a type.* A dialect $`D` gives each of its types
 $`t \in \mathrm{Ty}_D` the set of its values, written
 $`\llbracket t \rrbracket`. The Lean calls this map `toType`.
@@ -69,7 +69,9 @@ The values of an op's operands and results are drawn from these sets, so
 this is where execution gives meaning to types: a run binds each value name
 to an element of the set of its type. In the core dialect,
 $`\llbracket \mathsf{i}N \rrbracket` holds poison and the $`N`-bit
-integers, and $`\llbracket \mathsf{ptr} \rrbracket` is empty
+integers, $`\llbracket \mathsf{float}\langle e,m \rangle \rrbracket`
+holds poison and the bit patterns of $`1 + e + m` bits, and
+$`\llbracket \mathsf{ptr} \rrbracket` is empty
 ({ref "The-fir-specification--Execution--Core-values"}[core values]).
 :::
 

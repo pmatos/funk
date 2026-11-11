@@ -88,7 +88,15 @@ can come later if text parsing becomes a bottleneck (ADR-2026-10-29-2014).
 Text has no nesting limit. Every text the grammar accepts is read at any
 depth (ADR-2026-10-30-1549).
 
-Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`. A
+A float type is written by its alias when it has one: `f16`, `bf16`, `f32`,
+`f64` or `f128`. Every other format `float<e,m>` is written `float(e, m)`, the
+grammar's applied form, such as `float(5, 2)`. `float<e,m>` is notation, not
+text. `float(e, m)` of a format with an alias does not decode, so each format
+has one spelling, and neither does a negative number, another argument list, an
+alias applied to arguments or the bare word `float` (ADR-2026-11-11-0951).
+
+Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
+float type has at most as many bits in all (ADR-2026-11-11-0950). A
 location reference, a line and a column are below `2^32`. An integer
 attribute has no bound of its own: the dialect that reads it bounds it
 (ADR-2026-11-03-1000).

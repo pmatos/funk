@@ -126,7 +126,7 @@ def seven : String :=
 
 #guard ["i032", "i00", "u8", "index", "i32(1)", "i"].all fun ty =>
   rejectedAt (oneFunc ("func @f(%a: " ++ ty ++ ") {\n^e:\n  ret @0\n}\n")) 1 13 "does not decode"
-#guard rejectedAt (oneFunc "func @f() -> f32 {\n^e:\n  ret @0\n}\n") 1 14 "does not decode"
+#guard rejectedAt (oneFunc "func @f() -> f8 {\n^e:\n  ret @0\n}\n") 1 14 "does not decode"
 #guard rejectedAt (func ["%c: i8x = const 1 @0", "ret %a @0"]) 3 7 "does not decode"
 
 /-! # A value defined twice, at its second definition -/

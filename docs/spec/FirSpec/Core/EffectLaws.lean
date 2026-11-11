@@ -28,7 +28,7 @@ successor or return. $`\mathsf{call}` has no rule of its own, so it has no
 outcome by one.
 :::
 
-:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "16379849913816239761")
+:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "18403531860515470230")
 *Theorems: defined operands hold values.* An operand vector of one or two
 integers with no poison element holds values: $`(v)` is
 $`(\mathsf{value}~x)` for some $`x`, and $`(v_1, v_2)` is

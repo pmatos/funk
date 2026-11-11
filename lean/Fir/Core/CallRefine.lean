@@ -29,7 +29,8 @@ meets:
   each by the obligation that its family proves, at every width: every
   core op but `call`, whose way to go on is its callee's run;
 * every core type has finitely many values: poison and the 2^N bit
-  vectors of `iN`, and none of `ptr`. So every list of types has finitely
+  vectors of `iN`, poison and the bit vectors of `1 + e + m` bits of
+  `float<e,m>`, and none of `ptr`. So every list of types has finitely
   many argument vectors;
 * the refinement of core values is reflexive and transitive;
 * the symbols of a valid module are unique.
@@ -94,16 +95,20 @@ monotone, valid or not. -/
 theorem opsMonotone_all (f : Func CoreDialect) : f.OpsMonotone :=
   fun _ _ o _ h => Op.monotone_all o.op h
 
-/-- Every value of a core type: poison and each bit vector of `iN`, and
-none of `ptr`. -/
+/-- Every value of a core type: poison and each bit vector of `iN` or of a
+float type, and none of `ptr`. -/
 def Ty.values : (t : Ty) → List ⟦t⟧
   | .int w => .poison :: (ChoiceTree.allBits w).map .value
+  | .float e m => .poison :: (ChoiceTree.allBits (floatWidth e m)).map .value
   | .ptr => []
 
 /-- Every value of a core type is one of its values. -/
 theorem Ty.mem_values : ∀ {t : Ty} (v : ⟦t⟧), v ∈ t.values
   | .int _, .poison => List.mem_cons_self
   | .int _, .value b => List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
+  | .float _ _, .poison => List.mem_cons_self
+  | .float _ _, .value b =>
+    List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
   | .ptr, v => nomatch (v : Empty)
 
 /-- Every argument vector of the types `ts`. -/

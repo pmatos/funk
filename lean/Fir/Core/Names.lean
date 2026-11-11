@@ -64,6 +64,13 @@ theorem tyAttr_bare (t : Ty) : (tyAttr (d := CoreDialect) t).dialects = [] := by
     · exact absurd h (by decide)
     · simp only [toString, Nat.repr, String.toList_ofList] at h
       exact absurd (Nat.isDigit_of_mem_toDigits (by decide) (by decide) h) (by decide)
+  | float e m =>
+    cases hn : floatAlias e m with
+    | some n =>
+      simp only [tyAttr, Ty.attr, hn]
+      unfold floatAlias at hn
+      split at hn <;> cases hn <;> decide
+    | none => simp [tyAttr, Ty.attr, hn, Attr.dialects, Attr.dialectsAll, wordDialect]
   | ptr => simp [tyAttr, Ty.attr, Attr.dialects, wordDialect]
 
 /-- The core dialect's words name no dialect. -/

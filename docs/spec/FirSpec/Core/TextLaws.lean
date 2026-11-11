@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9021584873318814260")
+:::moduleDocs (fingerprint := "8435507245214842011")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -96,15 +96,29 @@ decimal digits of $`N`. The proofs about types below read the width back
 through it.
 :::
 
-:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "18360801033847354976")
+:::readable Fir.Core.aliasFormat_of_floatAlias Fir.Core.floatAlias_of_aliasFormat Fir.Core.Ty.decode_alias Fir.Core.Ty.decode_float (pin := Fir.Core.floatAlias) (pin := Fir.Core.aliasFormat) (pin := Fir.Core.decodeFloat) (fingerprint := "10301018937267886543")
+*Theorems: a float format and its alias name each other, and each float
+spelling reads back.* For every format $`(e, m)` and word $`n`,
+$`\mathrm{alias}(e, m) = n` exactly when $`\mathrm{format}(n) = (e, m)`.
+So the word $`n` reads back as $`\mathsf{float}\langle e,m \rangle`. And
+when $`(e, m)` has no alias and $`1 + e + m \le 16{,}777{,}215`,
+$`\texttt{float}(e, m)` reads back as
+$`\mathsf{float}\langle e,m \rangle`.
+:::
+
+:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "11487731498339909317")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
-$`\mathsf{i}N` with $`1 \le N \le 16{,}777{,}215`; the pointer type is
-not valid in M0. For every valid core type $`t`,
-$`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`. And for every attribute
-$`a` and type $`t`, if $`\mathrm{decodety}(a) = t` then
-$`\mathrm{tyattr}(t) = a`.
+$`\mathsf{i}N` with $`1 \le N \le 16{,}777{,}215`, or
+$`\mathsf{float}\langle e,m \rangle` with $`e \ge 2`, $`m \ge 1` and
+$`1 + e + m \le 16{,}777{,}215`; the pointer type is not valid in M0. For
+every valid core type $`t`, $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`.
+And for every attribute $`a` and type $`t`, if
+$`\mathrm{decodety}(a) = t` then $`\mathrm{tyattr}(t) = a`: in
+particular, a format that $`\texttt{float}(e, m)` reads back as is
+written $`\texttt{float}(e, m)`, since one with an alias does not decode
+from it.
 
 These are the third and fourth laws. The first needs the width to be at
 most 16,777,215, since a wider type does not read back.
@@ -115,7 +129,7 @@ most 16,777,215, since a wider type does not read back.
 instance $`o`, $`\mathrm{opname}(o)` is a word and every attribute of
 $`\mathrm{opattrs}(o)` can be written; the name of every predicate is a
 word; and for every valid core type $`t`, $`\mathrm{tyattr}(t)` is written
-as a type. These are the last three laws: what the core dialect writes fits
+as a type: a word, or the word $`\texttt{float}` applied to two integers. These are the last three laws: what the core dialect writes fits
 the grammar.
 :::
 

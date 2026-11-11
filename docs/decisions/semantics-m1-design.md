@@ -11,57 +11,8 @@ global data (ADR-2026-11-09-1546). A module holds functions only and declares
 no dialects (ADR-2026-11-09-1543). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
-today. process.md says what M1 covers.
-
-## What a run shows
-
-A run shows an ordered trace of events (ADR-2026-11-09-1540). The core dialect
-has two kinds of event:
-
-- An external call: the callee's symbol, its arguments, and the units reachable
-  from its pointer arguments when the call is made.
-- A volatile access: load or store, the accessed location as the observer sees
-  it, and the value read or written.
-
-The trace ends in one of three ways:
-
-- a return, with the returned values and the contents of the memory reachable
-  from globals and from returned pointers;
-- UB;
-- divergence.
-
-Two ends of a run match when some one-to-one renaming of allocations makes
-their reachable memory equal. Raw addresses are never compared. Memory that no
-observer can reach stays invisible, so a store to it can be removed.
-
-Another dialect may add events of its own, such as a device's I/O, since
-observations already come from the dialect (ADR-2026-11-09-1540).
-
-## The world and refinement
-
-A callee that funk did not compile answers from the world. For each call, the
-world gives its results and may write into memory that has escaped to it.
-Behaviour is stated for a given world. The world is not the environment of
-values in which a run looks names up (ADR-2026-11-09-1540).
-
-A target refines a source when it does so for every world. For each world,
-every trace the target shows is one the source shows, with poison refined as
-today. UB in the source allows only a target that first shows the source's
-events before the UB (ADR-2026-11-09-1540).
-
-Every refinement theorem gains a quantifier over worlds. The first theorems to
-be restated are those that #206 and #209 touch.
-
-Each test supplies a scripted world: the results of each external call, in
-order, and any writes into escaped memory. A test that calls an external
-function must come with its script. `fir-ref run` reports the trace and the end
-of the run (ADR-2026-11-09-1540).
-
-For a native run, the harness generates a stub library from the same script. It
-is linked in place of the external functions. It records each call (symbol,
-arguments, reachable bytes) and replays the scripted results. A wrapper that the
-harness generates dumps the reachable memory at return. The one judgement module
-compares the two sides (ADR-2026-11-06-1218, ADR-2026-11-09-1540).
+today. process.md says what M1 covers. semantics-m1-trace.md says what a run
+shows and how the world answers it.
 
 ## Memory
 
@@ -106,7 +57,8 @@ raw addresses (ADR-2026-11-09-1542).
 Memory ops carry an `ordering` attribute. M1 accepts only `nonatomic`, so a
 concurrency model (S6) needs no format change. Allocations carry a kind: stack,
 global, or heap through external calls. Managed memory can be added as another
-kind later (ADR-2026-11-09-1542).
+kind later (ADR-2026-11-09-1542). The world may create and free heap
+allocations when it answers an external call (ADR-2026-11-11-1017).
 
 Every theorem that relies on `ptr` having no values is restated. Call congruence
 is the first, in #214 (ADR-2026-11-09-1542).
@@ -137,7 +89,8 @@ as an assembler does (ADR-2026-11-09-1546).
 
 An `export` global is visible to code that funk did not compile, and is
 reachable memory for an observer. Weak, common and visibility linkage wait for
-the C frontend, M4 (ADR-2026-11-09-1546).
+the C frontend, M4 (ADR-2026-11-09-1546). An `internal` global is observable
+only once its address escapes (ADR-2026-11-11-1016).
 
 ## External declarations
 
@@ -236,7 +189,8 @@ lands, in its own ticket, by the same rule (ADR-2026-11-09-1541):
 - Stack allocation allocates.
 - Memory intrinsics read and write.
 - Volatile accesses are also observable.
-- External calls and inline assembly are observable.
+- External calls are observable. Inline assembly is observable unless its
+  effect set says otherwise (ADR-2026-11-11-1015).
 - `unreachable` and tail calls are control.
 
 The aegraph stays an optimizer view outside the spec. may-UB is the hook that
@@ -251,7 +205,9 @@ Three ops copy, move and set memory, over one memory and a length in its units
   alike. So a copied pointer keeps its provenance. Overlapping source and
   destination is UB.
 - Move does the same and allows overlap.
-- Set writes one byte value into each unit.
+- Set writes one unit value into each unit. The value is sized to the memory's
+  unit: an `i8` on the default memory, whose unit is an 8-bit byte unless the
+  layout says otherwise (ADR-2026-11-11-1018).
 
 Copy and move read the source memory and write the destination. Set writes. All
 three may be UB, for out-of-bounds access. The naive backend lowers them to
@@ -282,38 +238,10 @@ values in the core may be added later if a frontend needs them
 
 ## Floating point
 
-Floating point is one type family, `float<e,m>`, with `e` exponent bits and `m`
-explicit mantissa bits. The usual names are aliases: `f16`, `bf16`, `f32`, `f64`
-and `f128`. The spec and `fir-ref` handle every IEEE-shaped format. A format
-that is not IEEE-shaped, such as fp8 e4m3fn, is left to dialects
-(ADR-2026-11-09-1549).
-
-The semantics is strict IEEE 754. Denormals are honoured. Flush-to-zero is an
-explicit target attribute. When an op's IEEE result is a NaN, fir chooses any
-NaN bit pattern of the format, so payload and sign are nondeterministic. #219
-decides how `fir-ref` and the harness handle that choice (ADR-2026-11-09-1549).
-
-Every rounding op carries `round = rne`. Round to nearest even is the only value
-M1 accepts (ADR-2026-11-09-1549).
-
-The fast-math flags are (ADR-2026-11-09-1549):
-
-- `nnan`: a NaN operand or result makes the result poison.
-- `ninf`: an infinite operand or result makes the result poison.
-- `nsz`: the sign of a zero result is a free choice.
-- `contract` and `reassoc` are reserved words that the verifier rejects. They
-  are permissions for passes, not meanings of an op, and M2's optimizer decides
-  them.
-
-The spec defines fir's float ops on Lean's model, with a layer that adds the NaN
-choice. It defines the conversions between widths itself. Facts it needs are
-proved here, or checked with `decide` and `bv_decide`. Before relying on the
-model, the implementation confirms that each operation works for a format other
-than binary32 and binary64 (ADR-2026-11-09-1549).
-
-The naive backend lowers `f32` and `f64` with SSE in M1, and reports any other
-format as a diagnostic. A native result in a format it does not lower is judged
-by `fir-ref` alone (ADR-2026-11-09-1549).
+Floating point is one type family, `float<e,m>`, over every IEEE-shaped format,
+with strict IEEE 754 semantics and nondeterministic NaN bits
+(ADR-2026-11-09-1549). semantics-floats.md says what the ADRs decide and what
+holds today.
 
 ## Inline assembly
 
@@ -321,10 +249,18 @@ Inline assembly is an op tagged with its target. It holds a template,
 constraints, operands, results, clobbers and an explicit effect set, observable
 or not. A module for another target rejects it (ADR-2026-11-09-1552).
 
-Running an assembly block is an event of the trace. The world answers it with
-its results and with writes into memory that its declared effects allow.
-`fir-ref` takes the answer from the test's script, as for external calls
-(ADR-2026-11-09-1552).
+The effect set decides whether a block is an event (ADR-2026-11-11-1015):
+
+- With observable, running the block is an event of the trace, as GCC's
+  `asm volatile` is.
+- Without observable, the block adds no event. Passes may delete, merge or move
+  it within its declared reads and writes, as with GCC's plain `asm`.
+
+The world answers a block with its results and with writes into memory that its
+declared effects allow. `fir-ref` takes the answer from the test's script, as
+for external calls (ADR-2026-11-09-1552). The answer for a block without
+observable is keyed by the block and its operands, not by its position in the
+trace (ADR-2026-11-11-1015).
 
 M1 brings the spec, the parser, printer and verifier on both sides, and
 `fir-ref`. Until M4, the naive backend rejects inline assembly with a diagnostic,
