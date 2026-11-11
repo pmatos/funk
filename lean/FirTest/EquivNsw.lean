@@ -16,6 +16,11 @@ namespace FirTest.Equiv
 
 open Fir Core EquivSteps
 
+/- Each proof below unfolds the rules of the ops and of `PoisonOr`
+refinement, so `simp` does so by default in this file. -/
+attribute [local simp] addWith mulWith wrapValues addValues mulValues shlValues shiftValues
+  HRefinement.IsRefinedBy PoisonOr.IsRefinedBy
+
 /-! # Pair 3: `add nsw %x, %x` and `shl %x, 1`
 
 fir's `shl` has no flags, so the flagged pair keeps `shl` as it is. -/
@@ -29,8 +34,7 @@ theorem addNsw_shl_32 :
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
+      simp [h]
     bv_decide
 
 /-- At `i32`, `add nsw %x, %x` does not refine `shl %x, 1`: on `2^30`, `shl`
@@ -53,9 +57,7 @@ theorem addNsw_shl (w : Nat) (hw : 2 ≤ w) :
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [h, addWith, wrapValues, addValues, shlValues, shiftValues,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, Nat.one_mod_two_pow (n := w) (by omega),
-        show 1 < w by omega]
+      simp [h, Nat.one_mod_two_pow (n := w) (by omega), show 1 < w by omega]
     exact add_self_eq_shl x
 
 /-- At `i1`, `shl %x, 1` does not refine `add nsw %x, %x`: on `false`,
@@ -83,8 +85,7 @@ theorem mulNsw_addNsw_32 :
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;> cases h₂ : x.smulOverflow 2#32 <;>
-      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
+      simp [h₁, h₂] <;>
       bv_decide
 
 /-- At `i32`, `mul nsw %x, 2` refines `add nsw %x, %x`. -/
@@ -95,8 +96,7 @@ theorem addNsw_mulNsw_32 :
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;> cases h₂ : x.smulOverflow 2#32 <;>
-      simp [h₁, h₂, mulWith, addWith, wrapValues, mulValues, addValues,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
+      simp [h₁, h₂] <;>
       bv_decide
 
 /-! # Pair 3 at every width, and pair 4 at small widths -/
@@ -125,8 +125,7 @@ theorem shl_addNsw_fails (k : Nat) :
   intro h
   have h1 := (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).1 h
     (.value (BitVec.ofNat (k + 2) (2 ^ k)))
-  simp [shlValues, shiftValues, addWith, wrapValues, pow_saddOverflow,
-    HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, Nat.one_mod_two_pow (n := k + 2) (by omega)] at h1
+  simp [pow_saddOverflow, Nat.one_mod_two_pow (n := k + 2) (by omega)] at h1
 
 /-- `2`, read as signed, at a width of three bits or more. -/
 theorem two_toInt {w : Nat} (hw : 3 ≤ w) : (2#w).toInt = 2 := by
@@ -154,8 +153,7 @@ theorem mulNsw_addNsw (w : Nat) (hw : 3 ≤ w) :
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [← saddOverflow_eq_smulOverflow hw, h, mulWith, addWith, wrapValues, mulValues,
-        addValues, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
+      simp [← saddOverflow_eq_smulOverflow hw, h]
     exact BitVec.mul_two (x := x)
 
 /-- At every width of three bits or more, `mul nsw %x, 2` refines
@@ -167,8 +165,7 @@ theorem addNsw_mulNsw (w : Nat) (hw : 3 ≤ w) :
   | poison => trivial
   | value x =>
     cases h : x.saddOverflow x <;>
-      simp [← saddOverflow_eq_smulOverflow hw, h, mulWith, addWith, wrapValues, mulValues,
-        addValues, HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy]
+      simp [← saddOverflow_eq_smulOverflow hw, h]
     exact (BitVec.mul_two (x := x)).symm
 
 /-- At `i2`, `add nsw %x, %x` does not refine `mul nsw %x, 2`: `2` is `-2`
@@ -206,8 +203,7 @@ theorem addNsw_mulNsw_1 :
   | poison => trivial
   | value x =>
     cases h₁ : x.saddOverflow x <;>
-      simp [h₁, mulWith, addWith, wrapValues, mulValues, addValues,
-        HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy] <;>
+      simp [h₁] <;>
       bv_decide
 
 #guard runValid (pairsText 1) "@mul_nsw_two" ["true"] == returns ["false"]

@@ -103,6 +103,11 @@ namespace FirTest.Equiv
 
 open Fir Core EquivSteps
 
+/- Each proof below unfolds the rules of the ops and of `PoisonOr`
+refinement, so `simp` does so by default in this file. -/
+attribute [local simp] addWith mulWith wrapValues addValues mulValues shlValues shiftValues
+  HRefinement.IsRefinedBy PoisonOr.IsRefinedBy
+
 /-! # Pair 1: `add %x, %x` and `shl %x, 1` -/
 
 /-- At `i32`, `shl %x, 1` refines `add %x, %x`. -/
@@ -111,8 +116,7 @@ theorem add_shl_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (s
   cases x with
   | poison => trivial
   | value x =>
-    simp [addWith, wrapValues, addValues, shlValues, shiftValues, HRefinement.IsRefinedBy,
-      PoisonOr.IsRefinedBy]
+    simp
     bv_decide
 
 /-- At `i32`, `add %x, %x` refines `shl %x, 1`. -/
@@ -121,8 +125,7 @@ theorem shl_add_32 : funcRuns (pairs 32) (shlOne 32) ⊑ funcRuns (pairs 32) (ad
   cases x with
   | poison => trivial
   | value x =>
-    simp [addWith, wrapValues, addValues, shlValues, shiftValues, HRefinement.IsRefinedBy,
-      PoisonOr.IsRefinedBy]
+    simp
     bv_decide
 
 /-- Doubling is a shift by one, at every width. -/
@@ -137,8 +140,7 @@ theorem add_shl (w : Nat) (hw : 2 ≤ w) :
   cases x with
   | poison => trivial
   | value x =>
-    simp [addWith, wrapValues, addValues, shlValues, shiftValues, HRefinement.IsRefinedBy,
-      PoisonOr.IsRefinedBy, Nat.one_mod_two_pow (n := w) (by omega), show 1 < w by omega]
+    simp [Nat.one_mod_two_pow (n := w) (by omega), show 1 < w by omega]
     exact add_self_eq_shl x
 
 /-- At every width, `add %x, %x` refines `shl %x, 1`: at `i1` the shift is
@@ -152,7 +154,7 @@ theorem shl_add (w : Nat) : funcRuns (pairs w) (shlOne w) ⊑ funcRuns (pairs w)
     split
     · rename_i h
       have hw : 0 < w := Nat.pos_of_ne_zero fun h0 => by subst h0; simp at h
-      simp [HRefinement.IsRefinedBy, PoisonOr.IsRefinedBy, Nat.one_mod_two_pow hw]
+      simp [Nat.one_mod_two_pow hw]
       exact (add_self_eq_shl x).symm
     · trivial
 
@@ -174,8 +176,7 @@ theorem mul_add_32 : funcRuns (pairs 32) (mulTwo 32) ⊑ funcRuns (pairs 32) (ad
   cases x with
   | poison => trivial
   | value x =>
-    simp [mulWith, wrapValues, mulValues, addWith, addValues, HRefinement.IsRefinedBy,
-      PoisonOr.IsRefinedBy]
+    simp
     bv_decide
 
 /-- At `i32`, `mul %x, 2` refines `add %x, %x`. -/
@@ -184,8 +185,7 @@ theorem add_mul_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (m
   cases x with
   | poison => trivial
   | value x =>
-    simp [mulWith, wrapValues, mulValues, addWith, addValues, HRefinement.IsRefinedBy,
-      PoisonOr.IsRefinedBy]
+    simp
     bv_decide
 
 /-- At every width, `add %x, %x` refines `mul %x, 2`. -/
