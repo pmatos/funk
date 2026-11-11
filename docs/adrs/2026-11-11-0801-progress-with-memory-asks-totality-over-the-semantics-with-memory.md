@@ -1,6 +1,6 @@
 # Progress with memory asks each op to be total over the semantics with memory, and is proved beside progress in the set monad
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1002
 Tier: direction; area: semantics
 
 ## Context

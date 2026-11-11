@@ -149,6 +149,11 @@ instance lawfulEffects : LawfulDialectEffects ProbeDialect where
 the set monad, so `id` has an outcome from any memories. -/
 instance lawfulTotal : LawfulDialectTotal ProbeDialect := LawfulDialectTotal.ofLawful
 
+/-- The probe dialect is lawful in its monotonicity: it is lawful, and it
+lifts the set monad, so `id` is monotone with memory at each valid
+instance. -/
+instance lawfulMonotone : LawfulDialectMonotone ProbeDialect := LawfulDialectMonotone.ofLawful
+
 end Probe
 
 /-- The sum of the core dialect and the probe dialect. -/
@@ -164,6 +169,10 @@ instance coreProbe_lawfulEffects : LawfulDialectEffects CoreProbe :=
 /-- The sum is lawful in its totality, since both sides are. -/
 instance coreProbe_lawfulTotal : LawfulDialectTotal CoreProbe :=
   Dialect.sum.lawfulTotal fun _ h => h
+
+/-- The sum is lawful in its monotonicity, since both sides are. -/
+instance coreProbe_lawfulMonotone : LawfulDialectMonotone CoreProbe :=
+  Dialect.sum.lawfulMonotone fun _ h => h
 
 /-- `id` at `i0` is not a valid op instance. -/
 theorem probe0_not_typesValid : ¬ TypesValid (d := CoreProbe) (.inr (.id 0)) :=

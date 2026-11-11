@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3134613195537927620")
+:::moduleDocs (fingerprint := "10729238802549771833")
 :::
 
 :::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "17867899712697039806")
@@ -59,13 +59,15 @@ UB of the smaller run is one of the larger, and each of the larger is one
 of the smaller, unless the smaller can run out of fuel.
 :::
 
-:::readable Fir.fromState_fst Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "10140593824667432733")
+:::readable Fir.fromState_fst Fir.Func.run_of_enter Fir.Func.fromState_run_stuck Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "1257011703424659824")
 *Theorems: the run of a function with memory.* What a computation of the
 layer may end with from $`S`, without the memories it ends with, is what
-it ends with read from $`S`, without them. A function's run with memory from
-$`S`, when it starts, is its entry block's ops run from
-$`\mathrm{enter}(S)`, finished; when it cannot start, every path of it is
-stuck there.
+it ends with read from $`S`, without them. A function that starts runs its
+entry block's ops in a frame, and returns the values they return; one that
+cannot start is stuck there, on every path of its run from $`S`. So a
+function's run with memory from $`S`, when it starts, is its entry block's
+ops run from $`\mathrm{enter}(S)`, finished; when it cannot start, every
+path of it is stuck there.
 :::
 
 :::readable Fir.Func.memRuns_fuelMonotone (pin := Fir.FuelMonotone) (fingerprint := "17768983793765334376")
