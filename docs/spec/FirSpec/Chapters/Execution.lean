@@ -93,8 +93,6 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" FirSpec.Execution.Modes (level := 1)}
 
-{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 1)}
-
 {includeReadable "." Fir.Execution.SetRuns "Reading a run path by path" FirSpec.Execution.SetRuns (level := 1)}
 
 {includeReadable "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" FirSpec.Execution.Monotone (level := 1)}

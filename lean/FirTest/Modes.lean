@@ -235,6 +235,9 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
 /-- info: 'Fir.Core.scripted_memStuck' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.scripted_memStuck
 
+/-- info: 'Fir.Core.memTree_eq' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.memTree_eq
+
 /-- info: 'Fir.ChoiceTree.explore_isSome_iff' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.ChoiceTree.explore_isSome_iff
 

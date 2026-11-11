@@ -15,9 +15,11 @@ is the empty function until the data layout lands (ADR-2026-11-11-1328).
 
 `Core.exhaustive_memOutcomes`, `Core.scripted_memOutcomes` and
 `Core.sampled_memOutcomes`, with their `memStuck` siblings, prove the modes
-against `Func.memRuns` at every naming of the core's memories. The core's runs
-with memory are its runs, so the theorems against the run in the set monad,
-such as `Core.exhaustive_outcomes`, still hold. Reports, leaves and JSON are
+against `Func.memRuns` at every naming of the core's memories.
+`Core.memTree_eq` proves that the tree of a core run with memory is the tree of
+its run with no memory, so the modes report what they did before, path for
+path, and `Core.exhaustive_outcomes` and its siblings keep their proofs. That
+holds only while no core op touches memory. Reports, leaves and JSON are
 those of runs without memory: a path shows how it ends and not its memories,
 until observations at the end of a run are designed (#233,
 ADR-2026-11-11-1328).
@@ -36,4 +38,6 @@ for any lawful monad, and the tree of choices is a lawful monad
 
 The machine still takes no stack per step, per level of calls or per
 choice. A run of a million steps takes about a third more time than without
-memory; a run of the corpus takes the same (ADR-2026-11-11-1328).
+memory; a run of the corpus takes the same. `Memories.mem` grows by one
+closure per store, allocation or free, so stage 4 must change its
+representation before `fir-ref` runs memory ops (ADR-2026-11-11-1328).

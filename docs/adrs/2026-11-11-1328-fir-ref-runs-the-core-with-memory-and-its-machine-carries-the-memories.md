@@ -23,9 +23,11 @@ calls or per choice.
   three core modes walk it, and take the unit width of each memory,
   `unit`, as their first argument. `Core.exhaustive_memOutcomes`,
   `Core.scripted_memOutcomes` and `Core.sampled_memOutcomes` (and their
-  `memStuck` siblings) state them against `Func.memRuns` at every naming;
-  the old theorems against the run in the set monad follow, since the
-  core's runs with memory are its runs.
+  `memStuck` siblings) state them against `Func.memRuns` at every naming.
+  `Core.memTree_eq` proves that the tree of a core run with memory is the
+  tree of its run with no memory, so the modes report what they reported
+  before, path for path, and the old theorems against the run in the set
+  monad keep their proofs.
 - **Leaves carry no memories.** A mode reports how a path ends, so the
   tree drops the memories before the walk, and `fir-ref`'s reports, leaves
   and JSON are unchanged. Observations at the end of a run (#233) decide
@@ -51,7 +53,17 @@ calls or per choice.
 
 - Stage 4's memory ops run in `fir-ref` once the core's semantics in the
   layer over the tree gives them their rules, with no change to the
-  machine or to the modes' theorems.
+  machine, `Func.memTree` or the statements of the `*_memOutcomes` and
+  `*_memStuck` theorems. Stage 4 proves `Core.memMapsDenote` again for the
+  new rules. `Core.memTree_eq` and the theorems against the run in the
+  set monad hold only while no core op touches memory, so stage 4 restates
+  or drops them.
+- `Memories.mem` is a function, and each store, allocation or free wraps
+  it in one more closure. Today the core touches no memory and a frame
+  frees nothing, so the chain never grows. Once stage 4 allocates on the
+  stack, a long run would build a long chain, and a lookup would walk it.
+  Stage 4 must give the memories a representation whose lookups take no
+  stack per update before `fir-ref` runs memory ops.
 - Each op now runs through the layer's `bind`, so `fir-ref run` takes
   about 25 to 35% more time on a run of a million steps. On the corpus,
   where a run is short, the time is the same.

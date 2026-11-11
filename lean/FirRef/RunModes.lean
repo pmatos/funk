@@ -6,8 +6,8 @@ spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`
 (ADR-2026-10-30-2218, ADR-2026-10-31-0002). Each of them builds the tree
 with `Func.runOps`, which takes stack per step and per level of calls, and
 `ChoiceTree.sample` and `ChoiceTree.explore` add stack per choice. Here,
-each mode walks the states of `FirRef.Machine`, which carry the memories
-of the run (ADR-2026-11-11-1328), instead, in loops whose
+each mode walks the states of `FirRef.Machine` instead, which carry the
+memories of the run (ADR-2026-11-11-1328), in loops whose
 recursive calls are tail calls: `Machine.advance` takes the steps between
 two choices, scripted and sampled modes keep what they have read or drawn
 in an accumulator, and exhaustive mode keeps the states it has still to

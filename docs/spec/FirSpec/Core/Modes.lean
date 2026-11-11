@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14428347258875028617")
+:::moduleDocs (fingerprint := "11414522726157933595")
 :::
 
 :::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "17429499784111136466")
@@ -61,7 +61,7 @@ sets {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps the semanti
 of the core ops.
 
 This is the hypothesis of every theorem about the modes in the
-{ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[previous section],
+{ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[section on modes],
 discharged once for the core dialect. It holds because the rules are
 written once for any monad, and the set of a tree keeps its steps, its
 choices and its UB. So the theorems below hold for every core function,
@@ -183,13 +183,18 @@ then $`R^\rho_k` is stuck. Both follow from scripted mode's theorems,
 since the values sampled mode chose fit the run.
 :::
 
-:::readable Fir.Core.memRuns_run (pin := Fir.Func.memRuns_eq) (fingerprint := "1021498472608523745")
-*Theorem: a core run with memory is a core run.* For every unit widths
-$`u`, module $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`,
-the run with memory of $`f` on $`\vec{v}` at fuel $`k`, where the run
-names the core's memories by themselves, is its run in the set monad,
-$`R_k`: the core dialect
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifts the set monad].
+:::readable Fir.Core.memTree_eq (pin := Fir.MonadMorphism.liftState) (fingerprint := "8011919765119740936")
+*Theorem: the tree of a core run with memory is the tree of its run.* For
+every unit widths $`u`, module $`M`, function $`f`, arguments $`\vec{v}`
+and fuel $`k`, $`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` is the
+tree of the run of $`f` on $`\vec{v}` with $`k` steps, with no memory:
+the same paths, the same choices and the same leaves, in the same order.
+Each core op keeps the memories, so the run in the layer is the run in the
+tree, lifted, by the
+{ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
+and dropping the memories at each leaf gives the run in the tree back. So
+every mode reports, path for path, what it reported before runs had
+memory.
 :::
 
 :::readable Fir.Core.exhaustive_outcomes Fir.Core.exhaustive_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "2292959288162279249")
@@ -204,8 +209,9 @@ $$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \
 
 *Theorem: it lists a stuck path exactly when the run has one.* With the
 same hypotheses, $`R_k` is stuck exactly when some leaf of $`L` has the
-path end $`\mathsf{stuck}~s`, for some $`s`. Both are the theorems with
-memory, since a core run with memory is a core run.
+path end $`\mathsf{stuck}~s`, for some $`s`. Both are the
+{ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[theorems of the modes]
+on the tree of the run, by the theorem above.
 :::
 
 :::readable Fir.Core.scripted_outcomes Fir.Core.scripted_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "17629814800224753611")
