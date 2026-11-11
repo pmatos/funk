@@ -128,6 +128,8 @@ import FirSpec.Execution.Frame
 import FirSpec.Execution.MemoryEffect
 import FirSpec.Execution.MemoryState
 import FirSpec.Execution.MemoryRuns
+import FirSpec.Execution.StatePaths
+import FirSpec.Execution.MemoryMonotone
 import FirSpec.Execution.MemoryObligations
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Sum.Names

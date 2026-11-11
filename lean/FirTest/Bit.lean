@@ -169,6 +169,10 @@ instance : DialectCall BitDialect := ⟨fun _ => none⟩
 its rule in the set monad and keeps the memories. -/
 instance : DialectMemDenote BitDialect := DialectMemDenote.ofSetM
 
+/-- The bit dialect's semantics with memory lifts its semantics in the set
+monad. -/
+instance : LiftsSetM BitDialect := DialectMemDenote.ofSetM_liftsSetM
+
 /-! # The bit dialect's text is lawful -/
 
 /-- The bit dialect's text meets the seven laws. -/
@@ -289,10 +293,10 @@ instance lawful : LawfulDialectPoison BitDialect where
 defined result on a defined operand, are not terminators, and touch no
 memory. -/
 theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
-  neverUB o _ _ _ := fun args _ => by
+  neverUB o _ _ _ := NeverUB.ofSetM fun args _ => by
     cases o <;> match args with
       | .cons _ .nil => exact ⟨fun _ h => (by cases h), fun h => nomatch h⟩
-  makesNoPoison o _ _ _ := fun _ args hd _ hr => by
+  makesNoPoison o _ _ _ := MakesNoPoison.ofSetM fun _ args hd _ hr => by
     cases o <;> match args, hd, hr with
       | .cons a .nil, hd, hr =>
         cases a with

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7652720213210074280")
+:::moduleDocs (fingerprint := "14104930736448635013")
 :::
 
 :::readable Fir.DVals.Clean Fir.Env.Clean (fingerprint := "8528918267713506938")
@@ -38,10 +38,10 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (fingerprint := "9643212442418999716")
+:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (pin := Fir.LiftsSetM) (fingerprint := "3160737797783762661")
 *Theorems: the ops of a function leave out what its summary leaves out.*
-Let the dialect be lawful in its effects, and every function of $`M`
-valid. Let $`s` name the function $`f` of $`M`. From any ops of the blocks
+Let the dialect be lawful in its effects, its semantics with memory lift
+its semantics in the set monad, and every function of $`M` valid. Let $`s` name the function $`f` of $`M`. From any ops of the blocks
 of $`f`, at any budget:
 
 * if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, no run ends in UB;
@@ -50,14 +50,15 @@ of $`f`, at any budget:
 
 The proof is by induction on the budget. An op that runs by its own rule
 leaves out each effect that the summary leaves out, so the obligations of
-a lawful dialect cover it. A call runs its callee, whose summary is below
+a lawful dialect cover it, carried back to the set monad through the tie. A call runs its callee, whose summary is below
 its caller's, with less fuel, so the induction covers the callee's run,
 recursion included. For poison, the run keeps its environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (fingerprint := "15916412028685664532")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (fingerprint := "7889383545116582667")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
-its effects, every function of the module $`M` valid, and $`s` name the
+its effects, its semantics with memory lift its semantics in the set
+monad, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. For every budget of fuel:
 
 * if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, no run of $`f` ends in

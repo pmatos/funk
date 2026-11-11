@@ -142,15 +142,21 @@ instance : DialectCall ToyDialect := ⟨fun _ => none⟩
 its rule in the set monad and keeps the memories. -/
 instance : DialectMemDenote ToyDialect := DialectMemDenote.ofSetM
 
+/-- The toy dialect's semantics with memory lifts its semantics in the set
+monad. -/
+instance : LiftsSetM ToyDialect := DialectMemDenote.ofSetM_liftsSetM
+
 /-- The toy dialect is lawful in its effects: `toy.mask` is pure, and it is
 never UB, gives a defined result on a defined operand, is not a terminator,
 and touches no memory. -/
 theorem lawfulDialectEffects : LawfulDialectEffects ToyDialect where
   neverUB
-    | .mask .., _, _, _ => fun
+    | .mask w k, _, _, _ => NeverUB.ofSetM (d := ToyDialect) (op := Op.mask w k) fun
       | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => (nomatch h)⟩
   makesNoPoison
-    | .mask w k, _, _, _ => fun _ args hd _ hr => match args, hd, hr with
+    | .mask w k, _, _, _ => MakesNoPoison.ofSetM (d := ToyDialect) (op := Op.mask w k)
+      fun _ args hd _ hr =>
+      match args, hd, hr with
       | .cons a .nil, hd, hr => by
         cases a with
         | poison => exact absurd (.inl rfl) hd

@@ -58,6 +58,11 @@ obligations of each effect an op leaves out (ADR-2026-11-09-1541):
   poison.
 - Without control, the op is not a terminator.
 
+The first two are stated over the op's semantics with memory, wherever a
+run names the dialect's memories and from any memories (`NeverUB`,
+`MakesNoPoison`; ADR-2026-11-11-0623), so they hold of an op that touches
+memory too. The class asks for no semantics in the set monad.
+
 The memory-named effects have obligations over the op's semantics with
 memory (ADR-2026-11-11-0451, in `lean/Fir/Execution/MemoryObligations.lean`):
 
@@ -79,6 +84,16 @@ memory (ADR-2026-11-11-0451, in `lean/Fir/Execution/MemoryObligations.lean`):
 Every obligation but control's covers valid op instances that are
 terminators or have no callee, as the poison obligations do
 (ADR-2026-11-02-1514).
+
+A dialect whose ops touch no memory ties its two semantics: `LiftsSetM`
+says that its semantics with memory is its semantics in the set monad,
+lifted, at every naming (ADR-2026-11-11-0623). `DialectMemDenote.ofSetM`
+meets it, and so do sums and lifts whose sides do. Under the tie an op
+meets no may-UB and no may produce poison in the set monad exactly when it
+meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`), and
+theorems over runs in the set monad use them so. A dialect with a memory
+op has no tie.
+
 Observable has no obligation yet: M0's runs have no trace. The core dialect
 is lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no
 memory, so `DialectMemDenote.ofSetM` gives its semantics with memory and
@@ -118,7 +133,8 @@ refining ADR-2026-11-09-1541):
   module's functions have summaries of their own (ADR-2026-11-10-1510).
 - The summary is the least fixpoint of the calls, recursion included
   (`SymbolTable.summary_closed`, `SymbolTable.summary_le`). In a dialect
-  lawful in its effects and a module of valid functions, a function whose
+  lawful in its effects that lifts the set monad (ADR-2026-11-11-0623), and
+  a module of valid functions, a function whose
   summary leaves out may-UB never ends in UB, and one whose summary leaves
   out may produce poison returns no poison on arguments with none
   (`Module.summary_neverUB`, `Module.summary_noPoison`).

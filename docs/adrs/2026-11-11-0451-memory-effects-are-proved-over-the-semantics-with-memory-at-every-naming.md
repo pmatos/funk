@@ -1,6 +1,6 @@
 # An op's memory effects are proved over its semantics with memory, wherever a run names the memories
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-0623
 Tier: direction; area: semantics
 
 ## Context

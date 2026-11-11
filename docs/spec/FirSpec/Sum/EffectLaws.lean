@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A sum's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1602020451731626254")
+:::moduleDocs (fingerprint := "2690883195814480384")
 :::
 
 :::readable Fir.HVector.any_toSum (fingerprint := "8356120504750222703")
@@ -22,13 +22,20 @@ when the Lean changes under it.
 types, $`\uparrow v^*`, exactly when $`v^*` does at the base's.
 :::
 
-:::readable Fir.Dialect.sum.neverUB_inl Fir.Dialect.sum.makesNoPoison_inl (fingerprint := "18146934385481034571")
+:::readable Fir.Dialect.sum.neverUB_inl Fir.Dialect.sum.makesNoPoison_inl Fir.Dialect.sum.liftsSetM (fingerprint := "14214142245583905496")
 *Lemmas: a base op keeps its effects in the sum.* A base op that
 {ref "The-fir-specification--Execution--Effect-obligations"}[never ends in UB]
 in the base never does in the sum, and one that makes no poison in the
-base makes none in the sum. It runs by the base's rule on the same values,
-moved down and up, which keeps which of them are poison, and it ends in UB
-in the sum exactly when it does in the base.
+base makes none in the sum, wherever a run names the sum's memories by
+$`\rho`: it runs by the base's rule with memory at
+$`\rho \circ \mathrm{ofBase}`, on the same values, moved down and up,
+which keeps which of them are poison, and mapping its results changes no
+memory and adds no UB.
+
+*Theorem: a sum of dialects that lift the set monad lifts it.* When the
+semantics with memory of the base and of $`e` lift their semantics in the
+set monad, so does the sum's: each side's op runs by its rule in the set
+monad, with its results mapped, and keeps the memories.
 :::
 
 :::readable Fir.Dialect.sum.instDialectMemDenote Fir.Dialect.sum.ownRuleHas_inl Fir.Dialect.sum.ownRuleHas_inr (fingerprint := "17118347255317226753")
@@ -45,7 +52,7 @@ rule in the sum has every property that it has in the base at
 $`\rho \circ \mathrm{ofBase}` and that mapping the results keeps.
 :::
 
-:::readable Fir.Dialect.sum.lawfulEffects (fingerprint := "6947791787800025204")
+:::readable Fir.Dialect.sum.lawfulEffects (fingerprint := "3277287028581617465")
 *Theorem: the sum of dialects lawful in their effects is lawful in its
 effects.* Let the base and $`e` over the base be
 {ref "The-fir-specification--Execution--Effect-obligations"}[lawful in their effects],

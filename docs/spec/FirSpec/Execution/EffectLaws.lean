@@ -14,25 +14,41 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1445801162894727801")
+:::moduleDocs (fingerprint := "8277099554144718072")
 :::
 
-:::readable Fir.NeverUB (fingerprint := "7156262212872704501")
-*Definition: never UB.* An op $`o` _never ends in UB_ when, on every
-operand vector $`\vec{v}` and for every reason $`r`: if $`o` is not a
-terminator, $`\mathsf{ub}~r \notin \mathrm{denote}_o(\vec{v})`, and if it
-is a terminator, $`\mathsf{ub}~r \notin \mathrm{exit}_o(\vec{v})`.
-:::
-
-:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "1040631717548771490")
-*Definition: makes no poison.* An op $`o` that is not a terminator _makes
-no poison_ when, on every operand vector $`\vec{v}` with no poison
-element, every $`\vec{w}` with
+:::readable Fir.NeverUBSetM Fir.MakesNoPoisonSetM (pin := Fir.HVector.Any) (fingerprint := "12651468849163982976")
+*Definitions: never UB and makes no poison, in the set monad.* An op $`o`
+_never ends in UB in the set monad_ when, on every operand vector
+$`\vec{v}` and for every reason $`r`: if $`o` is not a terminator,
+$`\mathsf{ub}~r \notin \mathrm{denote}_o(\vec{v})`, and if it is a
+terminator, $`\mathsf{ub}~r \notin \mathrm{exit}_o(\vec{v})`. An op that is
+not a terminator _makes no poison in the set monad_ when, on every operand
+vector $`\vec{v}` with no poison element, every $`\vec{w}` with
 $`\mathsf{ok}~\vec{w} \in \mathrm{denote}_o(\vec{v})` has no poison
-element. A terminator gives no results, so it makes none.
+element.
 :::
 
-:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "16626236626511120339")
+:::readable Fir.NeverUB (pin := Fir.NoUB) (fingerprint := "3085899934357629232")
+*Definition: never UB.* An op $`o` _never ends in UB_ when, wherever a run
+names the dialect's memories by $`\rho`, on every operand vector
+$`\vec{v}`, from every memories $`S` and for every reason $`r`: if $`o` is
+not a terminator, $`\mathsf{ub}~r \notin \mathrm{denote}^\rho_o(\vec{v})(S)`,
+and if it is a terminator, $`\mathsf{ub}~r \notin \mathrm{exit}^\rho_o(\vec{v})(S)`,
+by the dialect's
+{ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory].
+:::
+
+:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "9911636833030463910")
+*Definition: makes no poison.* An op $`o` that is not a terminator _makes
+no poison_ when, wherever a run names the dialect's memories by $`\rho`, on
+every operand vector $`\vec{v}` with no poison element and from every
+memories $`S`, every $`\vec{w}` with
+$`\mathsf{ok}~(\vec{w}, S') \in \mathrm{denote}^\rho_o(\vec{v})(S)` has no
+poison element. A terminator gives no results, so it makes none.
+:::
+
+:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "6496766837932302871")
 *Definition: a dialect lawful in its effects.* A dialect is _lawful in its
 effects_ when its effect declarations are sound: an effect that an op
 leaves out, it does not have. For every
@@ -51,6 +67,10 @@ instance $`o` that is a terminator or has no callee:
 
 And for every op $`o`: if $`\mathsf{control} \notin \mathrm{eff}(o)`,
 then $`o` is not a terminator.
+
+Each obligation but the last speaks of the op's semantics with memory, so
+it holds of an op that touches memory, which has no semantics in the set
+monad (ADR-2026-11-11-0623).
 
 An op with a callee is left out of all but the last: it runs its callee,
 not a rule of its own, and has its callee's effects (ADR-2026-11-02-1514).

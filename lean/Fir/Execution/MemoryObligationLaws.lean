@@ -20,6 +20,15 @@ the tests. A sum and a lift run an op of a side by that side's rule with
 its results mapped, so they meet the obligations when their sides do
 (the sections on the sum and the lift of dialects lawful in their
 effects).
+
+No UB fares the same way: mapping keeps it, and a computation of the set
+monad with no UB, run in the state layer, has none from any memories. So
+such a dialect's semantics with memory lifts its semantics in the set
+monad, and its ops meet the obligations on may-UB and poison with memory
+when they meet them in the set monad. The last section goes back: in a
+dialect that lifts the set monad, an op that meets them with memory meets
+them in the set monad, which is how the theorems over runs in the set
+monad use them.
 -/
 
 namespace Fir
@@ -130,6 +139,33 @@ theorem ReadsNot.map (h : ReadsNot x c) : ReadsNot x (f <$> c) := by
     · obtain rfl : r = r' := hmatch
       exact ⟨.ub r, (SetM.stateMap_apply f c _ _).2 (.inr ⟨r, hc', rfl⟩), rfl⟩
 
+omit [DecidableEq Mem] in
+/-- Mapping the results keeps a computation that never ends in UB. -/
+theorem NoUB.map (h : NoUB c) : NoUB (f <$> c) := by
+  intro S r hc
+  rcases (SetM.stateMap_apply f c S _).1 hc with ⟨_, _, -, he⟩ | ⟨r', hr, he⟩
+  · cases he
+  · cases he
+    exact h S _ hr
+
+omit [DecidableEq Mem] in
+/-- A computation of the set monad that never ends in UB, run in the state
+layer, never ends in UB. -/
+theorem noUB_lift {c : SetM α} (h : ∀ r, ¬ c (.ub r)) :
+    NoUB (unit := unit) (StateT.lift c) := by
+  intro S r hc
+  rcases (SetM.lift_apply c S _).1 hc with ⟨_, -, he⟩ | ⟨r', hr, he⟩
+  · cases he
+  · cases he
+    exact h _ hr
+
+omit [DecidableEq Mem] in
+/-- A computation of the set monad that, run in the state layer, never ends
+in UB from some memories never ends in UB. -/
+theorem NoUB.of_lift {c : SetM α} (h : NoUB (unit := unit) (StateT.lift c))
+    (S : Memories Mem unit) (r : String) : ¬ c (.ub r) :=
+  fun hc => h S r ((SetM.lift_apply c S _).2 (.inr ⟨r, hc, rfl⟩))
+
 /-! # Dialects whose ops touch no memory -/
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
@@ -140,7 +176,11 @@ memories. -/
 @[instance_reducible] def DialectMemDenote.ofSetM [DialectDenote d SetM] : DialectMemDenote d :=
   ⟨fun _ _ => DialectDenote.liftState _⟩
 
-variable [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
+variable [DialectDenote d SetM]
+
+section
+
+variable [DialectCall d] [DialectValidation d]
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory writes no memory, at every
@@ -169,5 +209,54 @@ theorem DialectMemDenote.ofSetM_allocatesNot (op : d.Op) (_ : TypesValid op)
     (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).allocates.map ρ).Has x) :
     OwnRuleHas unit ρ (AllocatesNot x) op :=
   fun _ => ⟨fun _ => allocatesNot_lift x _, fun _ => allocatesNot_lift x _⟩
+
+end
+
+attribute [local instance] DialectMemDenote.ofSetM in
+/-- The semantics with memory of a dialect whose ops touch no memory lifts
+its semantics in the set monad: the two are tied. -/
+theorem DialectMemDenote.ofSetM_liftsSetM : LiftsSetM d :=
+  ⟨fun _ _ => rfl⟩
+
+attribute [local instance] DialectMemDenote.ofSetM in
+/-- An op of a dialect whose ops touch no memory that never ends in UB in the
+set monad never does with memory, at every naming. -/
+theorem NeverUB.ofSetM {op : d.Op} (h : NeverUBSetM op) : NeverUB op :=
+  fun _ _ args => ⟨fun ht => noUB_lift fun r => (h args r).1 ht,
+    fun ht => noUB_lift fun r => (h args r).2 ht⟩
+
+attribute [local instance] DialectMemDenote.ofSetM in
+/-- An op of a dialect whose ops touch no memory that makes no poison in the
+set monad makes none with memory, at every naming. -/
+theorem MakesNoPoison.ofSetM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoisonSetM op) :
+    MakesNoPoison op := by
+  intro ht N _ unit ρ args hnp S rs S' hden
+  rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
+  · cases he
+    exact h ht args hnp _ ha
+  · cases he
+
+/-! # Back to the set monad -/
+
+variable [DialectMemDenote d] [LiftsSetM d]
+
+/-- In a dialect that lifts the set monad, an op that never ends in UB with
+memory never does in the set monad. -/
+theorem NeverUB.setM {op : d.Op} (h : NeverUB op) : NeverUBSetM op := by
+  intro args r
+  have hu := h (N := Unit) (fun _ => 0) (fun _ => ()) args
+  rw [LiftsSetM.lifts] at hu
+  exact ⟨fun ht => NoUB.of_lift (hu.1 ht) Memories.empty r,
+    fun ht => NoUB.of_lift (hu.2 ht) Memories.empty r⟩
+
+/-- In a dialect that lifts the set monad, an op that makes no poison with
+memory makes none in the set monad. -/
+theorem MakesNoPoison.setM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoison op) :
+    MakesNoPoisonSetM op := by
+  intro ht args hnp rs hden
+  have hp := h ht (N := Unit) (fun _ => 0) (fun _ => ()) args hnp Memories.empty rs
+    Memories.empty
+  rw [LiftsSetM.lifts] at hp
+  exact hp ((SetM.lift_apply _ _ _).2 (.inl ⟨rs, hden, rfl⟩))
 
 end Fir
