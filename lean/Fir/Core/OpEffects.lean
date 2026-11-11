@@ -10,8 +10,9 @@ writes, allocates or frees memory, or adds an event to the trace: the core
 dialect has no memory yet, so its memories have no names, and M0's runs
 have no trace.
 
-* Pure: `const`, `and`, `or`, `xor`, `icmp`, `select`, `zext`, `sext`,
-  `trunc`, `freeze`, and `add`, `sub` and `mul` without flags. On operands
+* Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
+  `select`, `zext`, `sext`, `trunc`, `freeze`, and `add`, `sub` and `mul`
+  without flags. On operands
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
   chooses, and `freeze` gives defined bits.
@@ -44,8 +45,8 @@ for the rest, so a new core op does not build until it declares its
 effects (ADR-2026-11-03-0600). A flag of `add`, `sub` or `mul`, and `exact`
 on a division, may produce poison. -/
 def Op.effects : Op → Effects Mem
-  | .const .. | .and _ | .or _ | .xor _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
-  | .freeze _ | .call .. => {}
+  | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .fcmp .. | .select _ | .zext ..
+  | .sext .. | .trunc .. | .freeze _ | .call .. => {}
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }

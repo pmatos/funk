@@ -1,0 +1,22 @@
+# Tests of float-calls.fir: f32 and f64 passed to and returned from
+# functions as System V passes them (ADR-2026-11-11-1140): in %xmm0 to
+# %xmm7 apart from the integers, then on the stack, and back in %xmm0 and
+# %xmm1 or, with three eightbytes or more, in the result area; mixed
+# with integers and an i128; through block arguments; and chosen by an
+# fcmp. A float is spelled as its bits read as a signed integer
+# (ADR-2026-11-11-1138), and comes back as the same bits, a NaN with its
+# payload and sign included. Each test is differential.
+tests = [
+  { func = "@many", args = ["4611686018427387904", "-1", "1065353218", "4611686018427387907", "-4", "1065353221", "4611686018427387910", "-7", "1065353224", "4611686018427387913", "-10", "1065353227", "4611686018427387916", "-13", "1065353230", "4611686018427387919", "-16", "1065353233"] },
+  { func = "@call_many", args = ["4611686018427387904", "-1", "1065353218", "4611686018427387907", "-4", "1065353221", "4611686018427387910", "-7", "1065353224", "4611686018427387913", "-10", "1065353227", "4611686018427387916", "-13", "1065353230", "4611686018427387919", "-16", "1065353233"] },
+  { func = "@two", args = ["-4194303", "-4503599627370495"] },
+  { func = "@two", args = ["poison", "0"] },
+  { func = "@mixed", args = ["-9223372036854775808", "9221120237041090561"] },
+  { func = "@wide", args = ["-170141183460469231731687303715884105728", "2139095041"] },
+  { func = "@choose", args = ["true", "4607182418800017408", "-1"] },
+  { func = "@choose", args = ["false", "4607182418800017408", "-1"] },
+  { func = "@max", args = ["1065353216", "1073741824"] },
+  { func = "@max", args = ["-2147483648", "0"] },
+  { func = "@max", args = ["2143289344", "1065353216"] },
+  { func = "@max", args = ["1065353216", "2143289344"] },
+]

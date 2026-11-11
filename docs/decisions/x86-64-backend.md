@@ -80,9 +80,18 @@ instructions (ADR-2026-10-30-1231).
 Division below `i128` extends nothing except at `i1` (ADR-2026-10-31-0050). A
 branch or a `select` on an `i1` tests bit 0 (ADR-2026-10-30-1231).
 
-`width::check` accepts `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. Every other
-width is reported as unsupported where its value is defined
-(ADR-2026-10-30-1231, ADR-2026-11-03-010730).
+`width::check` accepts `i1`, `i8`, `i16`, `i32`, `i64`, `i128`, `f32` and
+`f64`. Every other width or float format is reported as unsupported where its
+value is defined (ADR-2026-10-30-1231, ADR-2026-11-03-010730,
+ADR-2026-11-11-1140).
+
+A value of `f32` or `f64` lives in one slot or SSE register. Its low 32 or 64
+bits are its bits, and the bits above are unspecified, as for an `iN`. A float
+constant is written to its slot as an integer immediate of its bits. `fcmp`
+loads its operands with `movss` or `movsd` into `%xmm0` and `%xmm1`, compares
+them with `ucomiss` or `ucomisd`, and reads the flags with one `setCC`, or two
+for `oeq` and `une`, which also test the parity flag that an unordered pair sets
+(ADR-2026-11-11-1140).
 
 An `i128` is two eightbytes. Each half is 64 bits of the value, and no bit is
 unspecified (ADR-2026-11-03-010730).
@@ -147,7 +156,9 @@ name. Exact link names for a C++ frontend will take a new ADR
 
 Integer arguments go in `%rdi`, `%rsi`, `%rdx`, `%rcx`, `%r8` and `%r9`, then on
 the stack. A funk function reads only the low `N` bits of each `iN` argument
-(ADR-2026-10-30-1232).
+(ADR-2026-10-30-1232). An `f32` or `f64` argument takes the next of `%xmm0` to
+`%xmm7`, counted apart from the integer registers, then the next eightbyte of
+the stack, in the order of the arguments (ADR-2026-11-11-1140).
 
 `abi::layout` maps a call's arguments, each of one or two eightbytes, to their
 places by System V's rules. An `i128` goes in two registers when two are free.
@@ -171,7 +182,10 @@ Each member is aligned to 8 bytes, or to 16 for an `i128`. A result of at most
 
 A function with no results returns nothing. One or two eightbytes come back in
 registers, the first in `%rax` and the second in `%rdx`. So one `i128` comes
-back in `%rdx:%rax` (ADR-2026-11-03-0109).
+back in `%rdx:%rax` (ADR-2026-11-03-0109). An `f32` or `f64` eightbyte is of
+class SSE and comes back in the next of `%xmm0` and `%xmm1` instead, so
+`f64, i64` comes back in `%xmm0` and `%rax`, as C returns `struct { double a;
+long b; }` (ADR-2026-11-11-1140).
 
 Three eightbytes or more all go in memory. The caller passes the address of a
 result area as the first argument, in `%rdi`. The call's own arguments follow
@@ -246,50 +260,10 @@ The op `poison` writes zero into each eightbyte of its result's slot, with
 value, since code cannot know at run time whether a value is poison
 (ADR-2026-11-03-1616).
 
-## Lowering `i128`
+## Lowering `i128` and division
 
-An op at `i128` loads each operand's low half into `%rax` and its high half into
-`%rdx`. It computes and stores both halves. `add` and `sub` carry between the
-halves with `adcq` and `sbbq`. `mul` is `mulq` of the low halves. The low 64
-bits of the two cross products are added into the high half. `and`, `or` and `xor` apply to each half.
-
-A shift uses `shldq` or `shrdq` and then two `cmovneq` for amounts from 64 to
-127, with no branch. `icmp eq` and `ne` `xorq` the halves and `orq` the two.
-Other predicates are `cmpq` and `sbbq`, then `setl`, `setge`, `setb` or `setae`.
-`select` uses one `cmovzq` per half.
-
-`zext` and `sext` extend the operand to 64 bits and fill the high half. `trunc`
-copies the low half. A branch passes an `i128` as two copies of its parallel
-move. Poison is not tracked per half. `freeze` copies both halves into its own
-two slots (ADR-2026-11-03-010730).
-
-## Division
-
-A zero or poison divisor is immediate UB in the source. So is `sdiv` or `srem`
-by `-1` of the signed minimum or of poison (ADR-2026-10-30-0818).
-
-Below `i128`, `sdiv` and `srem` are one `idiv`, and `udiv` and `urem` one `div`,
-of the op's own size. The dividend goes in `%rax` and the divisor in `%rcx`. The
-dividend is widened into the high half that the instruction reads. `i1` divides
-as `i8`, after both operands are extended (ADR-2026-10-31-0050).
-
-No code tests the divisor or the dividend. A zero divisor traps, and so does
-the signed minimum by `-1` at `i8` to `i64`. `exact` costs nothing. Native tests
-run only inputs whose result is not UB (ADR-2026-10-31-0050).
-
-At `i128`, each op calls one of `__funk_rt_sdiv128`, `__funk_rt_udiv128`,
-`__funk_rt_srem128` or `__funk_rt_urem128`. These are hand-written assembly in
-`crates/funk-x86-64/src/lower/div128.s`. `lower::module` appends that file once
-to a module's assembly when a function of it divides at `i128`. So `OUTPUT.o`
-stands alone. No routine is `.globl`, so two such objects link into one C
-program. No fir function's symbol starts with `__funk_rt_`
-(ADR-2026-11-03-0414).
-
-Each routine is a System V function `__int128 f(__int128 a, __int128 b)`. They
-use only caller-saved registers and leave `%rsp` as they found it. So nothing
-is saved around the call. A `b` below `2^64` takes two `divq`, and a larger one
-takes 64 steps of restoring division. A zero divisor traps in the first `divq`.
-There is no guard (ADR-2026-11-03-0415).
+How the backend lowers `i128` and the divisions is on
+x86-64-backend-lowering.md.
 
 ## `select`, branches and block arguments
 
@@ -315,7 +289,9 @@ cycle into a chain. Every copy moves all 64 bits (ADR-2026-10-31-0335).
 ## The built executable
 
 `OUTPUT @FUNCTION ARG...` runs one function, with one argument per parameter. An
-argument is `true` or `false` at `i1`, and otherwise signed decimal. On success
+argument is `true` or `false` at `i1`, and otherwise signed decimal. An `f32` or
+`f64` is its bits read as a signed integer, read and printed as an `i32` or
+`i64` is (ADR-2026-11-11-1138). On success
 it prints one line such as `{"values":["V1","V2"]}` and exits with 0
 (ADR-2026-10-30-1233).
 
@@ -376,6 +352,7 @@ does (ADR-2026-11-02-1132).
 A register allocator must treat as clobbered:
 
 - `%rax`, `%rcx` and `%rdx` by a division (ADR-2026-10-31-0050).
+- `%rax`, `%rcx`, `%xmm0` and `%xmm1` by an `fcmp` (ADR-2026-11-11-1140).
 - `%rax` and `%rcx` by a branch (ADR-2026-10-31-0334).
 - `%rax`, `%rcx` and `%rdx` by an `i128` op, and `%rsi` by a shift
   (ADR-2026-11-03-010730).

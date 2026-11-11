@@ -14,7 +14,8 @@ effects. Each effect that a core op leaves out, it does not have:
 * _No may produce poison._ On operands with no poison, every op that does
   not declare it gives a defined result: `add`, `sub` and `mul` without
   flags, the divisions without `exact` when they give a result, the bitwise
-  ops, `icmp`, `select`, the width changes, `const` and `freeze`.
+  ops, `icmp`, `fcmp`, `select`, the width changes, `const` at an integer
+  and at a float type, and `freeze`.
 * _No control._ Every core op that does not declare control is not a
   terminator.
 * _No write, read or allocation._ No core op touches memory: it runs by its
@@ -43,9 +44,10 @@ namespace Fir.Core
 gives its result, or its exit, at once. -/
 theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB = false →
     NeverUBSetM (d := CoreDialect) op
-  | .const .., _ | .poison _, _ => fun _ _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
+  | .const .., _ | .fconst .., _ | .poison _, _ =>
+    fun _ _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .add .., _ | .sub .., _ | .mul .., _ | .and _, _ | .or _, _ | .xor _, _ | .shl _, _
-  | .lshr _, _ | .ashr _, _ | .icmp .., _ => fun
+  | .lshr _, _ | .ashr _, _ | .icmp .., _ | .fcmp .., _ => fun
     | .cons _ (.cons _ .nil), _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .select _, _ => fun
     | .cons _ (.cons _ (.cons _ .nil)), _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
@@ -82,9 +84,26 @@ theorem defined₂ {a : PoisonOr (BitVec w)} {b : PoisonOr (BitVec w')}
     | poison => exact absurd (.inr (.inl rfl)) h
     | value y => exact ⟨x, y, rfl, rfl⟩
 
+/-- An operand vector of two floats with no poison holds defined values. -/
+theorem defined₂Float {a b : PoisonOr (BitVec (floatWidth e m))}
+    (h : ¬ (HVector.cons (f := toType) (a := Ty.float e m) a
+      (.cons (a := Ty.float e m) b .nil)).Any TyPoison.IsPoison) :
+    ∃ x y, a = .value x ∧ b = .value y := by
+  cases a with
+  | poison => exact absurd (.inl rfl) h
+  | value x =>
+    cases b with
+    | poison => exact absurd (.inr (.inl rfl)) h
+    | value y => exact ⟨x, y, rfl, rfl⟩
+
 /-- A vector of one value that is not poison holds no poison. -/
 theorem not_any_of_ne {v : PoisonOr (BitVec w)} (h : v ≠ .poison) :
     ¬ (HVector.cons (f := toType) (as := []) (a := i w) v .nil).Any TyPoison.IsPoison
+  | .inl h' => h h'
+
+/-- A vector of one float that is not poison holds no poison. -/
+theorem not_any_of_ne_float {v : PoisonOr (BitVec (floatWidth e m))} (h : v ≠ .poison) :
+    ¬ (HVector.cons (f := toType) (as := []) (a := Ty.float e m) v .nil).Any TyPoison.IsPoison
   | .inl h' => h h'
 
 /-- On defined operands, the rule of a division whose quotient is defined
@@ -116,6 +135,12 @@ none: on operands with no poison, it gives a defined result. -/
 theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayPoison = false →
     MakesNoPoisonSetM (d := CoreDialect) op
   | .const _ v, _ => fun _ _ _ _ h => by cases h; exact not_any_of_ne fun h => nomatch h
+  | .fconst .., _ => fun _ _ _ _ h => by cases h; exact not_any_of_ne_float fun h => nomatch h
+  | .fcmp .., _ => fun _ args hd _ hr => match args, hd, hr with
+    | .cons _ (.cons _ .nil), hd, hr => by
+      obtain ⟨x, y, rfl, rfl⟩ := defined₂Float hd
+      cases hr
+      exact not_any_of_ne fun h => nomatch h
   | .add _ f, h | .sub _ f, h | .mul _ f, h => by
     obtain rfl := flags_none h
     exact fun _ args hd _ hr => match args, hd, hr with

@@ -27,7 +27,7 @@ use crate::abi::{
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
 use crate::lower::at;
-use crate::width::{self, Ext, PAIR};
+use crate::width::{self, Class, Ext, PAIR};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
 /// wrappers call, among them those that read arguments and print results
@@ -112,10 +112,11 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
     let params = widths(f.params.iter().map(|d| &d.ty)).map_err(report)?;
     let results = widths(&f.results).map_err(report)?;
-    let layout = Layout::new(&results).map_err(report)?;
+    let layout = Layout::of_types(&f.results).map_err(report)?;
     let too_many = || report("the function has more values than a wrapper's frame holds".into());
-    let (args, arg_words) = slots(&params).ok_or_else(too_many)?;
-    let (outs, out_words) = slots(&results).ok_or_else(too_many)?;
+    let param_types = f.params.iter().map(|d| &d.ty);
+    let (args, arg_words) = slots(param_types).ok_or_else(too_many)?;
+    let (outs, out_words) = slots(&f.results).ok_or_else(too_many)?;
     let values = arg_words.max(out_words);
     let address = values + 1;
     let size = size_for(values + layout.hidden_arguments())
@@ -140,14 +141,14 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
         asm.ins("movl", format_args!("${w}, %esi"));
         asm.ins("call", format_args!("__funk_rt_arg"));
         asm.ins("movq", format_args!("%rax, {}", a.slot));
-        if a.words == 2 {
+        if a.class == Class::Pair {
             asm.ins("movq", format_args!("%rdx, {}", a.slot.high()));
         }
     }
     let mut passed = Vec::with_capacity(args.len() + 1);
     passed.extend(area.map(|a| Arg {
         slot: a.address,
-        words: 1,
+        class: Class::Int,
     }));
     passed.extend(&args);
     if let Some(area) = area {
@@ -172,20 +173,20 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
     Ok(stack_need(need, size, outgoing))
 }
 
-/// The slots in a wrapper's frame of values of `widths`, from `-8(%rbp)`
+/// The slots in a wrapper's frame of values of `types`, from `-8(%rbp)`
 /// down, and how many slots they take: two for an `i128`, its low half
 /// below, as in a function's frame (ADR-2026-11-03-010730). The arguments
 /// take these slots, and after the call the results take them again.
-fn slots(widths: &[u32]) -> Option<(Vec<Arg>, usize)> {
+fn slots<'t>(types: impl IntoIterator<Item = &'t Type>) -> Option<(Vec<Arg>, usize)> {
     let mut used = 0usize;
-    let mut out = Vec::with_capacity(widths.len());
-    for &w in widths {
-        let words = if w == PAIR { 2 } else { 1 };
-        used = used.checked_add(words)?;
+    let mut out = Vec::new();
+    for t in types {
+        let class = width::class(t);
+        used = used.checked_add(class.words())?;
         let disp = displacement(used)?;
         out.push(Arg {
             slot: Mem { disp },
-            words,
+            class,
         });
     }
     Some((out, used))
@@ -195,7 +196,7 @@ fn slots(widths: &[u32]) -> Option<(Vec<Arg>, usize)> {
 fn eightbytes(value: &Arg) -> impl Iterator<Item = Mem> {
     [value.slot, value.slot.high()]
         .into_iter()
-        .take(value.words)
+        .take(value.class.words())
 }
 
 /// The width of each of `types`, or why the backend does not lower one.

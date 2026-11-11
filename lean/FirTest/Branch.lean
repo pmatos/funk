@@ -197,22 +197,22 @@ example : (.ret [⟨.int 8, .poison⟩] : Outcome Core.Obs) ⊑
 
 /-! # The obligations' axioms -/
 
-/-- info: 'Fir.Core.br_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.br_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.br_total
 
-/-- info: 'Fir.Core.br_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.br_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.br_monotone
 
-/-- info: 'Fir.Core.br_goto_lt' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.br_goto_lt' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.br_goto_lt
 
-/-- info: 'Fir.Core.condBr_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.condBr_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.condBr_total
 
-/-- info: 'Fir.Core.condBr_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.condBr_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.condBr_monotone
 
-/-- info: 'Fir.Core.condBr_goto_lt' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.condBr_goto_lt' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.condBr_goto_lt
 
 end FirTest

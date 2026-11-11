@@ -212,6 +212,8 @@ unit and asks each op to be monotone from memories that refine others.
 
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
+{includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
+
 {includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
 
 {includeReadable "." Fir.Text.Lex "The parser" FirSpec.Text.Lex (level := 2)}

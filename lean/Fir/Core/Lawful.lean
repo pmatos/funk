@@ -9,9 +9,10 @@ is proved for every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 19 ops that propagate poison does, at every
-  width: `const`, `poison`, the arithmetic, the four divisions, the
-  bitwise ops and shifts, `icmp` and the width changes.
+* _Propagation._ Each of the 21 ops that propagate poison does, at every
+  width and float format: `const` at an integer and at a float type,
+  `poison`, the arithmetic, the four divisions, the bitwise ops and
+  shifts, `icmp`, `fcmp` and the width changes.
 * _A result on defined operands._ Each of them returns a result on some
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
@@ -40,6 +41,7 @@ namespace Fir.Core
 theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op = .propagates →
     PropagatesPoison (d := CoreDialect) op
   | .const w v, _ => const_propagatesPoison w v
+  | .fconst e m v, _ => fconst_propagatesPoison e m v
   | .add w f, _ => add_propagatesPoison w f
   | .sub w f, _ => sub_propagatesPoison w f
   | .mul w f, _ => mul_propagatesPoison w f
@@ -54,6 +56,7 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .lshr w, _ => lshr_propagatesPoison w
   | .ashr w, _ => ashr_propagatesPoison w
   | .icmp p w, _ => icmp_propagatesPoison p w
+  | .fcmp p e m, _ => fcmp_propagatesPoison p e m
   | .zext m n, _ => zext_propagatesPoison m n
   | .sext m n, _ => sext_propagatesPoison m n
   | .trunc m n, _ => trunc_propagatesPoison m n
@@ -73,6 +76,7 @@ zero, which validation gives. -/
 theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) op →
     Fir.poisonClass (d := CoreDialect) op = .propagates → ReturnsOnDefined (d := CoreDialect) op
   | .const w v, _, _ => const_returnsOnDefined w v
+  | .fconst e m v, _, _ => fconst_returnsOnDefined e m v
   | .add w f, _, _ => add_returnsOnDefined w f
   | .sub w f, _, _ => sub_returnsOnDefined w f
   | .mul w f, _, _ => mul_returnsOnDefined w f
@@ -87,6 +91,7 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .lshr w, _, _ => lshr_returnsOnDefined w
   | .ashr w, _, _ => ashr_returnsOnDefined w
   | .icmp p w, _, _ => icmp_returnsOnDefined p w
+  | .fcmp p e m, _, _ => fcmp_returnsOnDefined p e m
   | .zext m n, _, _ => zext_returnsOnDefined m n
   | .sext m n, _, _ => sext_returnsOnDefined m n
   | .trunc m n, _, _ => trunc_returnsOnDefined m n

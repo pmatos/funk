@@ -28,8 +28,18 @@ ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "tests" / "fir"
 MATRIX = ROOT / "docs" / "coverage" / "README.md"
 SIDES = (
-    ("differential", "Differential tests", cells.DIFFERENTIAL),
-    ("interpreter", "Interpreter-only tests", cells.INTERPRETER),
+    (
+        "differential",
+        "Differential tests",
+        cells.DIFFERENTIAL,
+        cells.FLOAT_DIFFERENTIAL,
+    ),
+    (
+        "interpreter",
+        "Interpreter-only tests",
+        cells.INTERPRETER,
+        cells.FLOAT_INTERPRETER,
+    ),
 )
 
 
@@ -86,8 +96,8 @@ def empty(counts: dict[str, Counter]) -> list[str]:
     """The cells that no test exercises, named as the matrix shows them."""
     return [
         f"{side}: {show(cell)}"
-        for side, _, widths in SIDES
-        for cell in cells.cells(widths)
+        for side, _, widths, formats in SIDES
+        for cell in cells.cells(widths, formats)
         if not counts[side][cell]
     ]
 
@@ -119,6 +129,17 @@ def ops_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
                 row + [number(counts[Cell("ops", op, a, cells.ty(w))]) for w in widths]
             )
     return table(["op", "flags or predicate", *(f"`i{w}`" for w in widths)], rows)
+
+
+def floats_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
+    rows = []
+    for op, attrs in cells.AT_FORMAT.items():
+        for a in attrs:
+            row = [f"`{op}`", f"`{a}`" if a else ""]
+            rows.append(
+                row + [number(counts[Cell("floats", op, a, f)]) for f in formats]
+            )
+    return table(["op", "predicate", *(f"`{f}`" for f in formats)], rows)
 
 
 def casts_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
@@ -158,24 +179,25 @@ WHAT = {
 }
 
 
-def values_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
+def values_table(
+    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
+) -> list[str]:
+    types = (*map(cells.ty, widths), *formats)
     rows = []
     for op, kinds in cells.VALUES:
         for k in kinds:
             row = [f"`{op}`", WHAT[op][k]]
             if k == cells.NOTHING:
-                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(widths)
+                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(types)
             else:
-                row += [""] + [
-                    number(counts[Cell("values", op, k, cells.ty(w))]) for w in widths
-                ]
+                row += [""] + [number(counts[Cell("values", op, k, t)]) for t in types]
             rows.append(row)
-    return table(["op", "what", "no value", *(f"`i{w}`" for w in widths)], rows)
+    return table(["op", "what", "no value", *(f"`{t}`" for t in types)], rows)
 
 
 def render(counts: dict[str, Counter]) -> str:
     """The matrix as Markdown."""
-    total = sum(len(cells.cells(w)) for _, _, w in SIDES)
+    total = sum(len(cells.cells(w, f)) for _, _, w, f in SIDES)
     gaps = empty(counts)
     lines = [
         "# Coverage matrix of the fir corpus",
@@ -196,14 +218,16 @@ def render(counts: dict[str, Counter]) -> str:
         "",
         f"{total} cells, {total - len(gaps)} with a test.",
     ]
-    for side, title, widths in SIDES:
+    for side, title, widths, formats in SIDES:
         lines += ["", f"## {title}", ""]
         lines += [f"### Ops at a width ({title.lower()})", ""]
         lines += ops_table(counts[side], widths)
+        lines += ["", f"### Float ops at a format ({title.lower()})", ""]
+        lines += floats_table(counts[side], formats)
         lines += ["", f"### Width changes ({title.lower()})", ""]
         lines += casts_table(counts[side], widths)
         lines += ["", f"### Passed and returned values ({title.lower()})", ""]
-        lines += values_table(counts[side], widths)
+        lines += values_table(counts[side], widths, formats)
     return "\n".join(lines) + "\n"
 
 

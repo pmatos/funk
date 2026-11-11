@@ -19,6 +19,17 @@ locs {
   @0 = unknown
 }
 
+=== const-f64 pure
+func @f(%a: i8, %b: i8, %c: i1) -> f64 {
+^entry:
+  %r: f64 = const -4503599627370495 @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === poison may-poison
 func @f(%a: i8, %b: i8, %c: i1) -> i8 {
 ^entry:
@@ -342,6 +353,17 @@ locs {
 func @f(%a: i8, %b: i8, %c: i1) -> i1 {
 ^entry:
   %r: i1 = icmp eq %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fcmp pure
+func @f(%a: f32, %b: f32, %c: i1) -> i1 {
+^entry:
+  %r: i1 = fcmp ult %a, %b @0
   ret %r @0
 }
 

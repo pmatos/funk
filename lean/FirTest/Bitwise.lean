@@ -151,76 +151,76 @@ The spec gives these ops no flags, so a flag on one does not decode. -/
 /-- info: 'Fir.Core.shiftValues_msb' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shiftValues_msb
 
-/-- info: 'Fir.Core.and_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.and_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_propagatesPoison
 
-/-- info: 'Fir.Core.and_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.and_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_returnsOnDefined
 
-/-- info: 'Fir.Core.and_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.and_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_total
 
-/-- info: 'Fir.Core.and_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.and_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.and_monotone
 
-/-- info: 'Fir.Core.or_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.or_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_propagatesPoison
 
-/-- info: 'Fir.Core.or_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.or_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_returnsOnDefined
 
-/-- info: 'Fir.Core.or_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.or_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_total
 
-/-- info: 'Fir.Core.or_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.or_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.or_monotone
 
-/-- info: 'Fir.Core.xor_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.xor_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_propagatesPoison
 
-/-- info: 'Fir.Core.xor_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.xor_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_returnsOnDefined
 
-/-- info: 'Fir.Core.xor_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.xor_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_total
 
-/-- info: 'Fir.Core.xor_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.xor_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.xor_monotone
 
-/-- info: 'Fir.Core.shl_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.shl_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_propagatesPoison
 
-/-- info: 'Fir.Core.shl_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.shl_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_returnsOnDefined
 
-/-- info: 'Fir.Core.shl_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.shl_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_total
 
-/-- info: 'Fir.Core.shl_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.shl_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.shl_monotone
 
-/-- info: 'Fir.Core.lshr_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.lshr_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_propagatesPoison
 
-/-- info: 'Fir.Core.lshr_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.lshr_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_returnsOnDefined
 
-/-- info: 'Fir.Core.lshr_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.lshr_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_total
 
-/-- info: 'Fir.Core.lshr_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.lshr_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lshr_monotone
 
-/-- info: 'Fir.Core.ashr_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ashr_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_propagatesPoison
 
-/-- info: 'Fir.Core.ashr_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ashr_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_returnsOnDefined
 
-/-- info: 'Fir.Core.ashr_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ashr_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_total
 
-/-- info: 'Fir.Core.ashr_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.ashr_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.ashr_monotone
 
 end FirTest

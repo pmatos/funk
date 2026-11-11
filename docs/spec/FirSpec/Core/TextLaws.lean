@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8435507245214842011")
+:::moduleDocs (fingerprint := "15890633455735722787")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -40,6 +40,14 @@ predicate $`p`, looking $`\mathrm{name}(p)` up in the list of the ten
 predicates finds $`p`; and for every string $`s`, a predicate found by
 looking $`s` up has the name $`s`. The proofs of the laws for
 $`\mathsf{icmp}` use them.
+:::
+
+:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "5854253884255476291")
+*Theorems: a float predicate is found by its name, and only by it.* For
+every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
+the fourteen float predicates finds $`p`; and for every string $`s`, a
+float predicate found by looking $`s` up has the name $`s`. The proofs of
+the laws for $`\mathsf{fcmp}` use them.
 :::
 
 :::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "683726526858554718")
@@ -71,7 +79,7 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "13547300689173556551")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "16142295724692806311")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -86,58 +94,26 @@ $`\mathrm{opname}(o) = n`, $`\mathrm{opattrs}(o) = a^*`,
 $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 
 These are the first two laws of a lawful text for the core dialect. The
-proofs go op by op, for every width, flag, predicate and list of types.
+proofs go op by op, for every width, flag, predicate, float format and
+float constant, and list of types. A float constant reads back because its
+signed reading names its bits exactly.
 :::
 
-:::readable Fir.Core.toList_int_attr (fingerprint := "2552526595169716876")
-*Theorem: how the integer type is spelt.* For every width $`N`, the
-characters of the word that writes $`\mathsf{i}N` are `i` followed by the
-decimal digits of $`N`. The proofs about types below read the width back
-through it.
-:::
-
-:::readable Fir.Core.aliasFormat_of_floatAlias Fir.Core.floatAlias_of_aliasFormat Fir.Core.Ty.decode_alias Fir.Core.Ty.decode_float (pin := Fir.Core.floatAlias) (pin := Fir.Core.aliasFormat) (pin := Fir.Core.decodeFloat) (fingerprint := "10301018937267886543")
-*Theorems: a float format and its alias name each other, and each float
-spelling reads back.* For every format $`(e, m)` and word $`n`,
-$`\mathrm{alias}(e, m) = n` exactly when $`\mathrm{format}(n) = (e, m)`.
-So the word $`n` reads back as $`\mathsf{float}\langle e,m \rangle`. And
-when $`(e, m)` has no alias and $`1 + e + m \le 16{,}777{,}215`,
-$`\texttt{float}(e, m)` reads back as
-$`\mathsf{float}\langle e,m \rangle`.
-:::
-
-:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "11487731498339909317")
-*Theorems: every valid core type reads back, and a type reads back only
-from its spelling.* A core type is
-{ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
-$`\mathsf{i}N` with $`1 \le N \le 16{,}777{,}215`, or
-$`\mathsf{float}\langle e,m \rangle` with $`e \ge 2`, $`m \ge 1` and
-$`1 + e + m \le 16{,}777{,}215`; the pointer type is not valid in M0. For
-every valid core type $`t`, $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`.
-And for every attribute $`a` and type $`t`, if
-$`\mathrm{decodety}(a) = t` then $`\mathrm{tyattr}(t) = a`: in
-particular, a format that $`\texttt{float}(e, m)` reads back as is
-written $`\texttt{float}(e, m)`, since one with an alias does not decode
-from it.
-
-These are the third and fourth laws. The first needs the width to be at
-most 16,777,215, since a wider type does not read back.
-:::
-
-:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.Op.attrs_writable Fir.Core.Ty.attr_isType (pin := Fir.isWord) (fingerprint := "520331799844498427")
-*Theorems: core ops and types are written as tokens.* For every core op
-instance $`o`, $`\mathrm{opname}(o)` is a word and every attribute of
-$`\mathrm{opattrs}(o)` can be written; the name of every predicate is a
-word; and for every valid core type $`t`, $`\mathrm{tyattr}(t)` is written
-as a type: a word, or the word $`\texttt{float}` applied to two integers. These are the last three laws: what the core dialect writes fits
-the grammar.
+:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "3131061245511129042")
+*Theorems: core ops are written as tokens.* For every core op instance
+$`o`, $`\mathrm{opname}(o)` is a word and every attribute of
+$`\mathrm{opattrs}(o)` can be written; and the name of every predicate,
+an integer one or a float one, is a word. With the
+{ref "The-fir-specification--Text-format--The-core-types-in-text-are-lawful"}[previous section],
+which proves that every valid core type is written as a type, these are
+the last three laws: what the core dialect writes fits the grammar.
 :::
 
 :::readable Fir.Core.lawfulDialectText Fir.Core.validIsWellFormed (pin := Fir.instLawfulDialectTextCoreDialect) (fingerprint := "2917827488444584806")
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 26 ops and every type, and
+core dialect, so its text is lawful, for all 28 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

@@ -327,7 +327,8 @@ fn division_is_lowered_at_every_width_of_the_backend() {
         let (out, _, _) = try_build(&format!("i128-div-i{w}"), &module(&[f]), &[]);
         assert_eq!(out.status.code(), Some(1));
         let err = text(&out.stderr);
-        let not = format!("the x86-64 backend lowers i1, i8, i16, i32, i64 and i128, not i{w}");
+        let not =
+            format!("the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32 and f64, not i{w}");
         assert_eq!(err.matches(&not).count(), 3, "{err}");
         assert_eq!(err.lines().count(), 3, "{err}");
     }

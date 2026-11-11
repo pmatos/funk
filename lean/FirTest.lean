@@ -16,6 +16,7 @@ import FirTest.Width
 import FirTest.PoisonOp
 import FirTest.Div
 import FirTest.Compare
+import FirTest.FloatCompare
 import FirTest.Branch
 import FirTest.Unreachable
 import FirTest.Loops
@@ -64,6 +65,10 @@ import FirTest.FloatModelFma
 import FirTest.FloatModelF16
 import FirTest.FloatModelBf16
 import FirTest.FloatModelF128
+import FirTest.EquivSteps
+import FirTest.EquivFuncs
+import FirTest.Equiv
+import FirTest.EquivNsw
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

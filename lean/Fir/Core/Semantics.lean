@@ -5,6 +5,7 @@ import Fir.Core.Bitwise
 import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
+import Fir.Core.FloatCompare
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -84,6 +85,7 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
   | .const w v => some fun _ => pure (.cons (constValue w v) .nil)
+  | .fconst e m v => some fun _ => pure (.cons (fconstValue e m v) .nil)
   | .poison w => some fun _ => pure (.cons (poisonValue w) .nil)
   | .add _ f => some fun
     | .cons a (.cons b .nil) => pure (.cons (addWith f a b) .nil)
@@ -113,6 +115,8 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a (.cons b .nil) => pure (.cons (ashrValues a b) .nil)
   | .icmp p _ => some fun
     | .cons a (.cons b .nil) => pure (.cons (icmpValues p a b) .nil)
+  | .fcmp p _ _ => some fun
+    | .cons a (.cons b .nil) => pure (.cons (fcmpValues p a b) .nil)
   | .select _ => some fun
     | .cons c (.cons a (.cons b .nil)) => pure (.cons (selectValues c a b) .nil)
   | .zext _ n => some fun
@@ -142,11 +146,12 @@ def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome || op.callTarget?.isSome
 
 -- Every core op has rules: one instance of each, `add` with each of its
--- flags and `icmp` with each of its predicates among them. `call`'s are
+-- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
 -- its callee's run: it has no entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
+#guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr]).hasRules

@@ -116,7 +116,7 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
 /-- info: 'Fir.Func.progress_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.progress_of_lawful
 
-/-- info: 'Fir.Core.Op.propagates_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.Op.propagates_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.propagates_all
 
 /-- info: 'Fir.Core.pos_of_typesValid' depends on axioms: [propext] -/
@@ -149,7 +149,7 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
 /-- info: 'FirTest.udiv8_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.udiv8_returnsOnDefined
 
-/-- info: 'FirTest.udiv0_noResult' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.udiv0_noResult' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.udiv0_noResult
 
 /-- info: 'FirTest.add_byRule' depends on axioms: [propext] -/
@@ -161,10 +161,10 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
 /-- info: 'FirTest.call_not_byRule' depends on axioms: [propext] -/
 #guard_msgs in #print axioms FirTest.call_not_byRule
 
-/-- info: 'FirTest.call_noOutcome' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.call_noOutcome' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.call_noOutcome
 
-/-- info: 'FirTest.call_not_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.call_not_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.call_not_total
 
 /-- info: 'FirTest.udiv8_total_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/

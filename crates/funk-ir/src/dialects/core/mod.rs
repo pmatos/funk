@@ -11,7 +11,8 @@
 //! family (#16) `icmp` with its predicates and `select`, the branches (#19)
 //! `br` and `cond_br`, and the calls (#20) `call`. #122 adds the constant
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
-//! `ret`. A later family adds a file and a line here.
+//! `ret`. #229 adds float constants to `const` and the float comparison
+//! `fcmp`. A later family adds a file and a line here.
 
 mod arith;
 mod bitwise;
@@ -26,9 +27,11 @@ mod width;
 
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
-pub use compare::PREDICATES;
+pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
-pub use types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_type, int_type, int_width};
+pub use types::{
+    CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_format, float_type, int_type, int_width,
+};
 pub use width::WIDTH_CHANGES;
 
 use crate::registry::Dialect;
@@ -60,6 +63,7 @@ pub fn dialect() -> Dialect {
         .op(div::Division("srem", false))
         .op(div::Division("urem", false))
         .op(compare::Icmp)
+        .op(compare::Fcmp)
         .op(compare::Select)
         .op(control::Br)
         .op(control::CondBr)

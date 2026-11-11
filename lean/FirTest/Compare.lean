@@ -186,22 +186,22 @@ def frozenAndForm : String := rewritten ["  %g: i1 = freeze %x @0", "  %s: i1 = 
 
 /-! # The obligations' axioms -/
 
-/-- info: 'Fir.Core.icmp_propagatesPoison' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.icmp_propagatesPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.icmp_propagatesPoison
 
-/-- info: 'Fir.Core.icmp_returnsOnDefined' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.icmp_returnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.icmp_returnsOnDefined
 
-/-- info: 'Fir.Core.icmp_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.icmp_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.icmp_total
 
-/-- info: 'Fir.Core.icmp_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.icmp_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.icmp_monotone
 
-/-- info: 'Fir.Core.select_total' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.select_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.select_total
 
-/-- info: 'Fir.Core.select_monotone' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.select_monotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.select_monotone
 
 end FirTest

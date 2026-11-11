@@ -65,13 +65,13 @@ theorem unreachable_control : Fir.isTerminator (d := CoreDialect) .unreachable =
 
 /-! # The theorems' axioms -/
 
-/-- info: 'Fir.Core.Op.neverUB_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.Op.neverUB_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.neverUB_all
 
-/-- info: 'Fir.Core.Op.makesNoPoison_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.Op.makesNoPoison_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.makesNoPoison_all
 
-/-- info: 'Fir.Core.lawfulDialectEffects' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.lawfulDialectEffects' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.lawfulDialectEffects
 
 end FirTest

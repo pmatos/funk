@@ -29,8 +29,21 @@ class Standins(unittest.TestCase):
             self.assertEqual(len(got), len(set(got)), ty)
             self.assertTrue(all(is_value(v, ty) for v in got), ty)
 
-    def test_a_type_that_is_no_integer_has_none(self):
-        for ty in ("ptr", "i0", "i08", "f32", ""):
+    def test_a_float_type_has_the_boundary_bit_patterns_of_its_bits(self):
+        # +0, the smallest subnormal, a NaN with its sign set, -0 and a NaN,
+        # each its bits read as a signed integer (ADR-2026-11-11-1138).
+        self.assertEqual(standins("f32"), ("0", "1", "-1", "-2147483648", "2147483647"))
+        self.assertEqual(standins("f16"), ("0", "1", "-1", "-32768", "32767"))
+        self.assertEqual(standins("float(2, 1)"), ("0", "1", "-1", "-8", "7"))
+        for ty in ("f16", "bf16", "f32", "f64", "f128", "float(5, 2)"):
+            got = standins(ty)
+            self.assertTrue(all(is_value(v, ty) for v in got), ty)
+        self.assertFalse(is_value("true", "f32"))
+        self.assertFalse(is_value("2147483648", "f32"))
+        self.assertTrue(is_value("-2147483648", "f32"))
+
+    def test_a_type_with_no_values_has_none(self):
+        for ty in ("ptr", "i0", "i08", "f8", "float", "float(5)", ""):
             self.assertIsNone(standins(ty), ty)
 
 

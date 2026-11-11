@@ -14,10 +14,10 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5517594513519362116")
+:::moduleDocs (fingerprint := "3710124410224607556")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "11594808089863998178")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "2198472613011765848")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
@@ -36,6 +36,15 @@ $`(\mathsf{value}~x, \mathsf{value}~y)`. A vector of one integer that is
 not poison has no poison element.
 :::
 
+:::readable Fir.Core.defined₂Float Fir.Core.not_any_of_ne_float (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "13304536426056681304")
+*Theorems: defined float operands hold values.* An operand vector of two
+floats of one format with no poison element holds values,
+$`(\mathsf{value}~x, \mathsf{value}~y)`; and a vector of one float that
+is not poison has no poison element. The proofs for $`\mathsf{fcmp}` and
+the float $`\mathsf{const}` use them, as those for $`\mathsf{icmp}` and
+the integer $`\mathsf{const}` use the theorems above.
+:::
+
 :::readable Fir.Core.ruleOfEv_divEv_defined (pin := Fir.Core.divEv) (pin := Fir.Core.ruleOfEv) (fingerprint := "3900238260210989617")
 *Theorem: a division whose quotient is defined makes no poison.* If the
 quotient $`q(x, y)` is a value for all $`x` and $`y`, then on two values
@@ -49,19 +58,19 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "7830821743847109644")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "994322812263647782")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
 $`\mathsf{udiv}` without $`\mathsf{exact}`, $`\mathsf{srem}`,
-$`\mathsf{urem}`, the bitwise ops, $`\mathsf{icmp}`, $`\mathsf{select}`,
-the width changes and $`\mathsf{freeze}` give defined results, at every
-width. $`\mathsf{select}` chooses one of its defined operands, and
+$`\mathsf{urem}`, the bitwise ops, $`\mathsf{icmp}`, $`\mathsf{fcmp}`,
+$`\mathsf{select}`, the width changes, $`\mathsf{freeze}` and the float
+$`\mathsf{const}` give defined results, at every width and format. $`\mathsf{select}` chooses one of its defined operands, and
 $`\mathsf{freeze}` gives bits. $`\mathsf{call}` gives no result by a rule
 of its own, and the terminators give none.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "6450297432809235542")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "17372891020387643556")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
@@ -84,7 +93,7 @@ whose ops touch no memory meets. So a pass may rely on the core ops'
 effect sets (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "531966677343437695")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "3690064311879343845")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. A dialect

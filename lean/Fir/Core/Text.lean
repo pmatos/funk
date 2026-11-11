@@ -12,6 +12,11 @@ results, which are written where those values are defined.
   a two's-complement signed integer, in decimal, so `i8` constants run from
   `-128` to `127`. Each bit pattern has one spelling: `const 1` and
   `const -1` at `i1` are errors.
+* A float constant is written as its bits read as a two's-complement
+  signed integer, in decimal, as an integer constant of the same width is:
+  `%one: f32 = const 1065353216 @1` is `1.0` and
+  `%z: f32 = const -2147483648 @1` is `-0`. Every bit pattern has one
+  spelling, each NaN's payload and sign included (ADR-2026-11-11-1138).
 * `add`, `sub` and `mul` have their flags as attributes, in a fixed order,
   `nuw` before `nsw`, each at most once: `%s: i32 = add nuw nsw %a, %b @1`.
 * `sdiv` and `udiv` have `exact` when it is set:
@@ -19,6 +24,8 @@ results, which are written where those values are defined.
 * `icmp` has one attribute, its predicate, from `eq` to `uge`, as LLVM
   writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
   `.`, which is kept for the names of dialects.
+* `fcmp` has one attribute, its predicate, from `oeq` to `uno`, as LLVM
+  writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-11-1139).
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -43,8 +50,9 @@ results, which are written where those values are defined.
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
 and sampled modes") are spelled the same way: `true` and `false` at `i1`,
-and signed decimal at every other width. An argument and a value in the
-output may also be `poison`, at any integer type: `fir-ref run` accepts a
+and signed decimal at every other width, a float's bits included. An
+argument and a value in the output may also be `poison`, at any integer
+or float type: `fir-ref run` accepts a
 poison argument, since the runs of a function that the execution chapter
 defines include runs on poison arguments, so differential tests cover them
 too. A choice may not be `poison`, since `freeze` chooses a value of its
@@ -65,13 +73,23 @@ def Pred.name : Pred → String
 /-- Every comparison predicate. -/
 def Pred.all : List Pred := [.eq, .ne, .slt, .sle, .sgt, .sge, .ult, .ule, .ugt, .uge]
 
+/-- The name of a float comparison predicate, as in `fcmp olt`. -/
+def FPred.name : FPred → String
+  | .oeq => "oeq" | .one => "one" | .olt => "olt" | .ole => "ole" | .ogt => "ogt"
+  | .oge => "oge" | .ord => "ord" | .ueq => "ueq" | .une => "une" | .ult => "ult"
+  | .ule => "ule" | .ugt => "ugt" | .uge => "uge" | .uno => "uno"
+
+/-- Every float comparison predicate. -/
+def FPred.all : List FPred :=
+  [.oeq, .one, .olt, .ole, .ogt, .oge, .ord, .ueq, .une, .ult, .ule, .ugt, .uge, .uno]
+
 /-- The name of a core op instance. -/
 def Op.name : Op → String
-  | .const .. => "const" | .add .. => "add" | .sub .. => "sub" | .mul .. => "mul"
+  | .const .. | .fconst .. => "const" | .add .. => "add" | .sub .. => "sub" | .mul .. => "mul"
   | .sdiv .. => "sdiv" | .udiv .. => "udiv" | .srem _ => "srem" | .urem _ => "urem"
   | .and _ => "and" | .or _ => "or" | .xor _ => "xor"
   | .shl _ => "shl" | .lshr _ => "lshr" | .ashr _ => "ashr"
-  | .icmp .. => "icmp" | .select _ => "select"
+  | .icmp .. => "icmp" | .fcmp .. => "fcmp" | .select _ => "select"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
@@ -89,7 +107,9 @@ def constAttr : (w : Nat) → BitVec w → Attr
 /-- The attributes of a core op instance. -/
 def Op.attrs : Op → List Attr
   | .const w v => [constAttr w v]
+  | .fconst _ _ v => [.int v.toInt]
   | .icmp p _ => [.word p.name]
+  | .fcmp p _ _ => [.word p.name]
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -136,11 +156,18 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
     | [.word "false"], [], [.int 1] => some (.const 1 0)
     | [.int v], [], [.int w] =>
       if w ≠ 1 ∧ (BitVec.ofInt w v).toInt = v then some (.const w (.ofInt w v)) else none
+    | [.int v], [], [.float e m] =>
+      if (BitVec.ofInt (floatWidth e m) v).toInt = v then some (.fconst e m (.ofInt _ v)) else none
     | _, _, _ => none
   | "icmp" => match as, ts, rs with
     | [.word p], [.int a, .int b], [.int 1] => do
       let pr ← Pred.all.find? (·.name == p)
       if a = b then some (.icmp pr a) else none
+    | _, _, _ => none
+  | "fcmp" => match as, ts, rs with
+    | [.word p], [.float e m, .float e' m'], [.int 1] => do
+      let pr ← FPred.all.find? (·.name == p)
+      if e = e' ∧ m = m' then some (.fcmp pr e m) else none
     | _, _, _ => none
   | "add" => do pure (.add (← binWidth ts rs) (← decodeWrap as))
   | "sub" => do pure (.sub (← binWidth ts rs) (← decodeWrap as))
@@ -236,8 +263,9 @@ def samples : List Op :=
    .sdiv 32 true, .udiv 32 false, .srem 8, .urem 8, .and 1, .or 33, .xor 128,
    .shl 32, .lshr 32, .ashr 32, .select 8, .zext 8 32, .sext 1 64, .trunc 64 7,
    .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .unreachable,
-   .call "f" [.int 8] [.int 1]] ++
-  Pred.all.map (.icmp · 32)
+   .call "f" [.int 8] [.int 1], .fconst 8 23 0x3f800000, .fconst 11 52 (-1), .fconst 2 1 0,
+   .fconst 5 10 0x7e01] ++
+  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
@@ -267,5 +295,24 @@ def samples : List Op :=
 #guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
 #guard Op.decode "poison" [] [] [.ptr] == none
 #guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
+-- A float constant is its bits read as a signed integer: `1.0`, `-0` and
+-- the quiet NaN of `f32` with its sign set.
+#guard Op.decode "const" [.int 1065353216] [] [.float 8 23] == some (.fconst 8 23 0x3f800000)
+#guard Op.decode "const" [.int (-2147483648)] [] [.float 8 23] == some (.fconst 8 23 0x80000000)
+#guard Op.decode "const" [.int (-4194304)] [] [.float 8 23] == some (.fconst 8 23 0xffc00000)
+#guard match (Op.fconst 8 23 0xffc00000).attrs with
+  | [.int v] => v == -4194304
+  | _ => false
+-- Each bit pattern has one spelling: the unsigned reading of `-0` does not
+-- fit, and neither does `true`.
+#guard Op.decode "const" [.int 2147483648] [] [.float 8 23] == none
+#guard Op.decode "const" [.int 4294967295] [] [.float 8 23] == none
+#guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
+#guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
+#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt 11 52)
+#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 8 23] [.int 1] == none
+#guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
+#guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
+#guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
 
 end Fir.Core

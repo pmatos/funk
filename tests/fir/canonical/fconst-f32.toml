@@ -1,0 +1,12 @@
+# Tests of fconst-f32.fir: float constants at f32 give their bits, each
+# NaN's payload and sign included (ADR-2026-11-11-1138): +0, -0, the
+# smallest subnormal, -1, the largest finite value, -inf, the quiet NaN,
+# a quiet NaN with its sign set and a payload, and a signalling NaN. A
+# NaN constant compared with itself is unordered.
+# Each test is differential, but the last, which is interpreter-only.
+tests = [
+  { func = "@consts" },
+  { func = "@one" },
+  { func = "@nan_is_unordered" },
+  { func = "@consts", expect = ["0", "-2147483648", "1", "-1082130432", "2139095039", "-8388608", "2143289344", "-4194303", "2139095041"] },
+]

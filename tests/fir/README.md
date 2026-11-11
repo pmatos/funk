@@ -55,8 +55,9 @@ tests = [
 - `func` is the function's symbol as text writes it. Write a quoted symbol
   in a TOML literal string, between single quotes.
 - `args` gives one argument per parameter, each spelled as a constant of
-  its type: `true` or `false` at `i1`, signed decimal at every other width;
-  or `poison`, at any integer type (#123).
+  its type: `true` or `false` at `i1`, signed decimal at every other width,
+  and a float's bits read as a signed integer (ADR-2026-11-11-1138); or
+  `poison`, at any integer or float type (#123).
 - `fuel` is `fir-ref run`'s budget, one step per op; 1,000,000 by default.
 - Without `expect`, the test is differential. It runs on `fir-ref`, in
   exhaustive mode, and as native code from `funk build`, and the native

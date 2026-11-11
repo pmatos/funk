@@ -1,0 +1,14 @@
+# Tests of float-values-f128.fir: values of f128 passed through block
+# arguments by br and cond_br, returned one and several at a time, and
+# given by calls with one result and with several, each coming back as
+# its bits: a NaN with its sign set and a payload, -0, 1 and the smallest
+# subnormal, and poison (ADR-2026-11-11-1138, ADR-2026-11-11-1141).
+# Each test is interpreter-only, as the backend does not lower f128.
+tests = [
+  { func = "@choose", args = ["true", "-2596148429267413814265248164610047", "-170141183460469231731687303715884105728"], expect = ["-2596148429267413814265248164610047"] },
+  { func = "@choose", args = ["false", "-2596148429267413814265248164610047", "-170141183460469231731687303715884105728"], expect = ["-170141183460469231731687303715884105728"] },
+  { func = "@choose", args = ["false", "85065399433376081038215121361612832768", "poison"], expect = ["poison"] },
+  { func = "@swap", args = ["85065399433376081038215121361612832768", "1"], expect = ["1", "85065399433376081038215121361612832768"] },
+  { func = "@calls", args = ["true", "-2596148429267413814265248164610047", "85065399433376081038215121361612832768"], expect = ["-2596148429267413814265248164610047", "85065399433376081038215121361612832768", "-2596148429267413814265248164610047"] },
+  { func = "@calls", args = ["false", "1", "-170141183460469231731687303715884105728"], expect = ["-170141183460469231731687303715884105728", "-170141183460469231731687303715884105728", "1"] },
+]

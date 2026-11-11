@@ -1,0 +1,5 @@
+# Words that are spelled right in this repository but that typos takes
+# for typos of others. olt is fcmp's ordered less-than predicate, as LLVM
+# names it (ADR-2026-11-11-1139).
+[default.extend-words]
+olt = "olt"

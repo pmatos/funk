@@ -4,7 +4,8 @@
 # negative number of bits, or a format wider than 16,777,215 bits in all
 # is a parse error. A format with fewer than 2 exponent bits or 1 mantissa
 # bit decodes, and validation rejects it, as it rejects i0
-# (ADR-2026-11-11-0950). No core op takes a float yet.
+# (ADR-2026-11-11-0950). float-ops.toml holds the float constants and
+# fcmp texts that do not decode.
 
 [[reject]]
 verdict = "validation-error"

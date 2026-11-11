@@ -1,6 +1,6 @@
 # A generated coverage matrix counts the corpus's tests of each op instance, width and side, and a hook fails when it is stale or a cell has no test
 
-Status: accepted; refined by ADR-2026-11-03-1618
+Status: accepted; refined by ADR-2026-11-03-1618 and ADR-2026-11-11-1141
 Tier: direction; area: testing-and-harness
 
 ## Context

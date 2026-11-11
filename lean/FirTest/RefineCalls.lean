@@ -295,7 +295,7 @@ theorems, their core instances and the tests above. -/
 /-- info: 'Fir.Func.runs_replaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runs_replaceBody_isRefinedBy
 
-/-- info: 'Fir.Core.Op.monotone_all' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Fir.Core.Op.monotone_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.monotone_all
 
 /-- info: 'Fir.Core.args_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -313,13 +313,13 @@ theorems, their core instances and the tests above. -/
 /-- info: 'FirTest.even_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.even_args
 
-/-- info: 'FirTest.g_ub' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.g_ub' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.g_ub
 
 /-- info: 'FirTest.ubModule'_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.ubModule'_valid
 
-/-- info: 'FirTest.g_isRefinedBy' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'FirTest.g_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.g_isRefinedBy
 
 /-- info: 'FirTest.count_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
