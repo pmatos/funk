@@ -145,6 +145,10 @@ instance lawfulEffects : LawfulDialectEffects ProbeDialect where
   readsNot := DialectMemDenote.ofSetM_readsNot
   allocatesNot := DialectMemDenote.ofSetM_allocatesNot
 
+/-- The probe dialect is lawful in its totality: it is lawful, and it lifts
+the set monad, so `id` has an outcome from any memories. -/
+instance lawfulTotal : LawfulDialectTotal ProbeDialect := LawfulDialectTotal.ofLawful
+
 end Probe
 
 /-- The sum of the core dialect and the probe dialect. -/
@@ -156,6 +160,10 @@ instance coreProbe_lawful : LawfulDialectPoison CoreProbe := Dialect.sum.lawfulP
 /-- The sum is lawful in its effects, since both sides are. -/
 instance coreProbe_lawfulEffects : LawfulDialectEffects CoreProbe :=
   Dialect.sum.lawfulEffects fun _ h => h
+
+/-- The sum is lawful in its totality, since both sides are. -/
+instance coreProbe_lawfulTotal : LawfulDialectTotal CoreProbe :=
+  Dialect.sum.lawfulTotal fun _ h => h
 
 /-- `id` at `i0` is not a valid op instance. -/
 theorem probe0_not_typesValid : ¬ TypesValid (d := CoreProbe) (.inr (.id 0)) :=

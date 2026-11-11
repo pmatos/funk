@@ -170,6 +170,50 @@ example (M : Module AllocDialect) (f : Func AllocDialect)
 /-- info: 'Fir.Func.memRuns_fuelMonotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_fuelMonotone
 
+/-! # Progress with an op that allocates -/
+
+/-- Validation of the alloc dialect accepts every type, op and function:
+these tests need only that it has one. -/
+instance : DialectValidation AllocDialect where
+  validTy _ := True
+  symbolRefs _ := []
+  validOp _ _ := True
+  validFunc _ _ _ := True
+
+/-- `alloc` has an outcome from any memories, wherever a run names the
+dialect's memory: an allocation always succeeds. -/
+theorem alloc_memTotal : MemTotal (d := AllocDialect) .alloc :=
+  fun _ _ _ => ⟨fun _ => HasOutcome.map _ fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+
+/-- The alloc dialect is lawful in its totality, with no semantics in the
+set monad. -/
+instance : LawfulDialectTotal AllocDialect := ⟨fun | .alloc, _, _ => alloc_memTotal⟩
+
+/-- Every function of the alloc dialect runs within its module with memory,
+at every naming: no op calls a function, and none is a terminator. -/
+theorem alloc_inModuleAt {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N)
+    (M : Module AllocDialect) (f : Func AllocDialect) : f.InModuleAt unit ρ M := by
+  letI := DialectMemDenote.denoteAt (d := AllocDialect) unit ρ
+  show f.MemInModule unit M
+  exact ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ _ _ h => (nomatch h), fun _ _ _ _ h => nomatch h⟩
+
+/-- A run with memory of the alloc dialect, whose op allocates, is never
+stuck and has an outcome at every budget, when its module's functions are
+valid. -/
+example {ctx : ModuleContext AllocDialect} {M : Module AllocDialect}
+    (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func AllocDialect} (hf : f ∈ M.funcs)
+    (args : HVector toType (f.params.map (·.2))) :
+    NeverStuck (f.memRuns (fun _ : Unit => 8) id M args) ∧
+      Progress (f.memRuns (fun _ : Unit => 8) id M args) :=
+  have hm := fun g _ => alloc_inModuleAt (fun _ : Unit => 8) id M g
+  ⟨Func.memNeverStuck _ _ hv hm hf args, Func.memProgress _ _ hv hm hf args⟩
+
+/-- info: 'Fir.Func.memNeverStuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memNeverStuck
+
+/-- info: 'Fir.Func.memProgress' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memProgress
+
 /-! # A run with no allocation
 
 The core dialect's own rules touch no memory: its runs with memory keep the

@@ -143,8 +143,9 @@ width, so that every memory of every dialect is an instance of it. It then
 makes memory an effect of a run: the memories of a run, the effect that
 ops ask for, the layer that adds the memories to a way of computing, the
 runs of a function with memory and how they end, their fuel monotonicity,
-and the obligations that an op's declaration of its effects on memory puts
-on its semantics.
+the obligations that an op's declaration of its effects on memory puts on
+its semantics, and progress with memory, which asks each op to be total
+from any memories.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
@@ -167,6 +168,14 @@ on its semantics.
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryObligationLaws "Meeting the memory obligations" FirSpec.Execution.MemoryObligationLaws (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryTotal "Totality with memory" FirSpec.Execution.MemoryTotal (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryCallSteps "The steps of a call, with memory" FirSpec.Execution.MemoryCallSteps (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryProgress "Progress and no stuck path, with memory" FirSpec.Execution.MemoryProgress (level := 2)}
+
+{includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 2)}
 
 # Text format
 
@@ -283,6 +292,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.LiftPoisonLaws "A lift's poison obligations" FirSpec.Sum.LiftPoisonLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.LiftEffectLaws "A lift's effect obligations" FirSpec.Sum.LiftEffectLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.TotalLaws "Totality of a sum and a lift" FirSpec.Sum.TotalLaws (level := 2)}
 
 # Architecture decision records
 %%%

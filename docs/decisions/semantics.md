@@ -238,6 +238,20 @@ semantics with memory at a naming of the memories, from the empty
 memories. They are fuel-monotone for every dialect, and for a dialect that
 lifts the set monad they are its runs (ADR-2026-11-11-0623).
 
+Runs with memory have progress for every dialect, whatever its ops do to the
+memories. No path is stuck when every function of the module is valid and
+runs within it with memory, at the run's naming (`Func.InModuleAt`, which
+states the rules for terminators over their exits from any memories). Each
+run has an outcome at every budget when the dialect is also lawful in its
+totality (`LawfulDialectTotal`): each op that runs by its own rule has an
+outcome from any memories, at every naming. That class asks for no semantics
+in the set monad. A dialect that lifts the set monad and is lawful meets it,
+and so do sums and lifts whose sides do. A valid core module meets both
+(`Core.memNeverStuck`, `Core.memProgress`). These proofs stand beside those
+for runs in the set monad, step by step; deriving one from the other is a
+later refactor over fuel monotonicity, progress and refinement together
+(ADR-2026-11-11-0801).
+
 The term carries op regions from M0 on, empty for core ops. Kinds and rules
 of regions: ADR-2026-11-10-1941. The CFG is the core dialect's region kind.
 Extensions compose as ADR-2026-11-09-1543 and ADR-2026-11-09-1544 say. Verified

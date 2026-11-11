@@ -1,6 +1,6 @@
 # Every effect obligation is stated over the semantics with memory, and a dialect that touches no memory ties its set-monad semantics to it
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-0801
 Tier: direction; area: semantics
 
 ## Context

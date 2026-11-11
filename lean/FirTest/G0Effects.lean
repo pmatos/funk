@@ -115,6 +115,24 @@ theorem allocatesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSigna
     (h : ¬ ((effects op).allocates.map ρ).Has x) : OwnRuleHas unit ρ (AllocatesNot x) op :=
   LawfulDialectEffects.allocatesNot op hv hc unit ρ x h
 
+/-- In every dialect lawful in its totality, a valid op that runs by its
+own rule has an outcome from any memories, wherever a run names the
+dialect's memories. -/
+theorem memTotal (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
+    [DialectCall d] [DialectValidation d] [DialectMemDenote d] [LawfulDialectTotal d]
+    (op : d.Op) (hv : TypesValid op) (hc : isTerminator op = true ∨ callee? op = none)
+    {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) :
+    OwnRuleHas unit ρ HasOutcome op :=
+  LawfulDialectTotal.total op hv hc unit ρ
+
+/-- Every lawful dialect that lifts the set monad is lawful in its
+totality. -/
+theorem lawfulTotal_ofLawful (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
+    [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
+    [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d] [LawfulDialectPoison d] :
+    LawfulDialectTotal d :=
+  LawfulDialectTotal.ofLawful
+
 /-- In every sum, the memories are the extension's, which name the base's:
 a memory has one name in the sum, whichever side names it. -/
 example (base e : Dialect) [DialectEffects base] [DialectEffects (base.over e)]

@@ -311,6 +311,10 @@ theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
 
 instance : LawfulDialectEffects BitDialect := lawfulDialectEffects
 
+/-- The bit dialect is lawful in its totality: it is lawful, and it lifts
+the set monad, so each op has an outcome from any memories. -/
+instance lawfulTotal : LawfulDialectTotal BitDialect := LawfulDialectTotal.ofLawful
+
 end Bit
 
 end FirTest

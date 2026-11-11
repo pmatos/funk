@@ -260,6 +260,10 @@ instance lawfulPoison : LawfulDialectPoison ToyDialect where
     | .mask .., _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
   monotone | .mask w k, _, _ => mask_monotone w k
 
+/-- The toy dialect is lawful in its totality: it is lawful, and it lifts
+the set monad, so `toy.mask` has an outcome from any memories. -/
+instance lawfulTotal : LawfulDialectTotal ToyDialect := LawfulDialectTotal.ofLawful
+
 end Toy
 
 end FirTest
