@@ -228,6 +228,13 @@ It differs from LeanMLIR on purpose in four places (ADR-2026-10-29-2030):
   as class constraints on the monad, such as `choose w` and immediate UB.
 - The parser and printer are fir's own, over the extrinsic syntax.
 
+Memory is an effect of a run. The state layer `StateT` over the way of
+computing carries the memories of a run, and the interpreter runs every
+function in a frame, which frees the function's stack allocations when it
+returns. In a monad with no memory, such as the set monad or the tree of
+choices, a frame changes nothing, so M0's runs are unchanged
+(ADR-2026-11-10-2350).
+
 The term carries op regions from M0 on, empty for core ops. Kinds and rules
 of regions: ADR-2026-11-10-1941. The CFG is the core dialect's region kind.
 Extensions compose as ADR-2026-11-09-1543 and ADR-2026-11-09-1544 say. Verified

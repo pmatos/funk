@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "What a call step needs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8199756570576633762")
+:::moduleDocs (fingerprint := "10045958537795726952")
 :::
 
 :::readable Fir.HasPath.bind (pin := Fir.HasPath) (fingerprint := "12286075038897393730")
@@ -77,7 +77,7 @@ Four facts follow, one for each way the interpreter builds a computation:
   $`t^*`.
 :::
 
-:::readable Fir.Func.runOps_returns (fingerprint := "3380631763683714867")
+:::readable Fir.Func.runOps_returns (fingerprint := "10329522121133653953")
 *Theorem: a function returns values of its result types.* Run any list of
 ops in the context of a function $`f` and a module $`M`, from any
 environment and with any amount of fuel. Every return of that run returns

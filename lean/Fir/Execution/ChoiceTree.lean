@@ -54,6 +54,10 @@ instance : MonadChoice (ChoiceTree ε) := ⟨fun w => .choose w .pure⟩
 
 instance : MonadUB (ChoiceTree ε) := ⟨.ub⟩
 
+/-- The tree of choices has no memory, so a frame is the computation
+itself. -/
+instance : MonadFrame (ChoiceTree ε) := ⟨fun t => t⟩
+
 /-- The set of the ways a tree's paths end. A path with no outcome adds
 nothing. -/
 def toSet : ChoiceTree ε α → SetM α
@@ -115,6 +119,10 @@ def toSetMorphism : MonadMorphism (ChoiceTree ε) SetM where
 /-- A choice of `w` bits is the set monad's choice. -/
 theorem toSet_choose (w : Nat) :
     (MonadChoice.choose w : ChoiceTree ε (BitVec w)).toSet = MonadChoice.choose w := rfl
+
+/-- `toSet` maps frames to frames: in both, a frame is the computation
+itself. -/
+theorem toSet_mapsFrame : (toSetMorphism (ε := ε)).MapsFrame := fun _ => rfl
 
 /-- UB is the set monad's UB. -/
 theorem toSet_ub (r : String) :

@@ -122,6 +122,11 @@ import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
 import FirSpec.Memory.Model
 import FirSpec.Memory.Laws
+import FirSpec.Memory.Frames
+import FirSpec.Memory.FrameLaws
+import FirSpec.Execution.MemoryEffect
+import FirSpec.Execution.MemoryState
+import FirSpec.Execution.MemoryRuns
 import FirSpec.Sum.Names
 import FirSpec.Validation.DialectSet
 import FirSpec.Core.Names

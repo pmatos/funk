@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15226715095221793585")
+:::moduleDocs (fingerprint := "6437237094318477812")
 :::
 
 :::readable Fir.Func.InModule (fingerprint := "12828239508909637856")
@@ -57,7 +57,7 @@ $`M`: it calls no function, so the rule for calls holds of none of its
 ops, and its terminators keep to the same two rules.
 :::
 
-:::readable Fir.Module.calls_noStuck Fir.Module.calls_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "4443838311131820592")
+:::readable Fir.Module.calls_noStuck Fir.Module.calls_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "6646656366771854317")
 *Theorem: in a module whose functions are all valid and run within it,
 the run from any op of any of its functions has no stuck path, and has a
 path when every op that runs by its own rule is total.* Let every

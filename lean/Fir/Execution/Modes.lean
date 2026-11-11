@@ -320,7 +320,7 @@ monad, when the tree's semantics of each op denotes the set monad's. -/
 theorem Func.run_toSet (h : (ChoiceTree.toSetMorphism (ε := ε)).MapsDenote (d := d))
     (M : Module d) (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     (f.run M (m := ChoiceTree ε) args fuel).run.toSet = f.run M (m := SetM) args fuel :=
-  congrArg ExceptT.run (Func.run_map h M f args fuel)
+  congrArg ExceptT.run (Func.run_map h ChoiceTree.toSet_mapsFrame M f args fuel)
 
 /-- Exhaustive mode, within its choice budget, gives exactly the outcomes of
 the run at the fuel budget it runs with. -/

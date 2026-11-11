@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14252181689426036138")
+:::moduleDocs (fingerprint := "1147497501033574720")
 :::
 
 :::readable Fir.ChoiceTree (fingerprint := "6945210103657211533")
@@ -105,4 +105,12 @@ of UB with $`r` is the set monad's UB with $`r`, $`\{\mathsf{ub}~r\}`.
 Op rules that are written once for any monad with these effects, such as
 those of the core dialect, therefore have the same meaning in trees as in
 the set monad.
+:::
+
+:::readable Fir.ChoiceTree.toSet_mapsFrame (pin := Fir.ChoiceTree.instMonadFrame) (fingerprint := "16826740269587007722")
+*Theorem: the set of a tree keeps frames.* A tree has no memory, so a
+frame of a tree is the tree itself, as a frame of the set monad is the
+computation itself; $`\mathrm{set}` therefore keeps frames, and the
+{ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem]
+applies to it.
 :::

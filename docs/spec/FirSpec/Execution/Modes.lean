@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive, scripted and sampled modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6704798835371754640")
+:::moduleDocs (fingerprint := "9913397997117995999")
 :::
 
 :::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "18031745832792441965")
@@ -222,7 +222,7 @@ $`\mathsf{stuck}~s`, for some $`s`, exactly when its path end is
 $`\mathsf{stuck}~s` for some $`s`.
 :::
 
-:::readable Fir.Func.run_toSet (fingerprint := "2626380901206003918")
+:::readable Fir.Func.run_toSet (fingerprint := "218765301515875500")
 *Theorem: a run in the tree of choices has the run in the set monad as
 its set.* Take any dialect, with what the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]
@@ -239,7 +239,7 @@ This is the theorem of the
 for the morphism from trees to sets.
 :::
 
-:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "13213461179338897438")
+:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "3512900382591629054")
 *Theorem: exhaustive mode gives exactly the outcomes of a run.* With the
 dialect and the hypothesis of the previous theorem, let $`R_k` be the run
 of $`f` in the set monad at fuel $`k`, and let exhaustive mode on the run's
@@ -258,7 +258,7 @@ speak of the run at one fuel budget, as the section on
 explains.
 :::
 
-:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "16967181894988904986")
+:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "17647192191096139031")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
 run.* With the dialect and the hypothesis of the theorems above, let
 scripted mode on the run's tree, with any $`\mathrm{read}` and choice

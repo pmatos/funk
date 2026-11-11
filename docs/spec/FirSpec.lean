@@ -64,7 +64,10 @@ The chapters follow the WebAssembly specification:
   refinement through calls.
 * _Memory_ gives fir's model of memory: allocations as logical blocks of
   abstract units, pointers with provenance, and the accesses that load,
-  store, allocate and free, with the laws they obey.
+  store, allocate and free, with the laws they obey. It then gives the
+  memories of a run, with a frame for each call, the memory effect, the
+  state layer that adds memory to a way of computing, and the runs with
+  memory of a function.
 * _Text format_ gives fir's one canonical text: its tokens, its grammar,
   the printer that fixes its layout, the round-trip properties, and the
   parser, with the proofs that parsing a printed well-formed module gives
@@ -135,11 +138,24 @@ functions, blocks and ops.
 
 Memory is logical blocks in typed memories (ADR-2026-11-09-1542). This
 chapter gives one memory of that model, written once for a unit of any
-width, so that every memory of every dialect is an instance of it.
+width, so that every memory of every dialect is an instance of it. It then
+makes memory an effect of a run: the memories of a run, the effect that
+ops ask for, the layer that adds the memories to a way of computing, and
+the runs of a function with memory.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
 {includeReadable "." Fir.Memory.Laws "Memory laws" FirSpec.Memory.Laws (level := 2)}
+
+{includeReadable "." Fir.Memory.Frames "The memories of a run" FirSpec.Memory.Frames (level := 2)}
+
+{includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryEffect "The memory effect" FirSpec.Execution.MemoryEffect (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryState "The state layer" FirSpec.Execution.MemoryState (level := 2)}
+
+{includeReadable "." Fir.Execution.MemoryRuns "Runs with memory" FirSpec.Execution.MemoryRuns (level := 2)}
 
 # Text format
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13684011806635327941")
+:::moduleDocs (fingerprint := "15626283038852106973")
 :::
 
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
@@ -62,6 +62,20 @@ $`m`, lifted to one whose paths may also end with an error, translates to
 $`\varphi(x)`, lifted the same way.
 :::
 
+:::readable Fir.MonadMorphism.MapsFrame Fir.MonadMorphism.except_inFrame (pin := Fir.MonadFrame) (pin := Fir.inFrame) (fingerprint := "15244815885718087586")
+*Definition: a translation that keeps frames.* Both monads run a call in
+a frame of their own, by their
+{ref "The-fir-specification--Memory--The-memory-effect"}[frame effect].
+A monad morphism $`\varphi` from $`m` to $`n` _keeps frames_ when, for
+every computation $`x` of $`m`,
+
+$$`\varphi(\mathrm{frame}^m(x)) = \mathrm{frame}^n(\varphi(x))`
+
+Then the translation that keeps errors keeps frames too: a computation
+whose paths may also end with an error, run in a frame, translates to its
+translation, run in a frame.
+:::
+
 :::readable Fir.MonadMorphism.MapsDenote (pin := Fir.DialectDenote) (fingerprint := "2618859953134783425")
 *Definition: a translation that keeps each op's semantics.* Let a dialect,
 with the values of its types and its signatures, give its ops a {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics]
@@ -78,12 +92,13 @@ Both what an op that is not a terminator gives and where a terminator
 goes are kept.
 :::
 
-:::readable Fir.Func.runOps_map Fir.Func.run_map (fingerprint := "17187019605106353245")
+:::readable Fir.Func.runOps_map Fir.Func.run_map (fingerprint := "14033910499676742431")
 *Theorem: the interpreter cannot tell the two monads apart.* Take any
 dialect, with what the interpreter needs of it: the values of its types,
 a test of whether two of its types are equal, its signatures, its calls,
-and a semantics of its ops in both $`m` and $`n`. Let $`\varphi` be a monad morphism from $`m` to $`n` that keeps the semantics
-of a dialect's ops, and $`\varphi_E` the translation that keeps errors,
+and a semantics of its ops in both $`m` and $`n`. Let $`\varphi` be a
+monad morphism from $`m` to $`n` that keeps the semantics of a dialect's
+ops and keeps frames, and $`\varphi_E` the translation that keeps errors,
 for the errors of a stuck path. For every module $`M` of the dialect, every
 function $`f`, every vector of arguments $`\vec{v}` of $`f`'s parameter
 types and every fuel budget $`k`,
@@ -97,8 +112,8 @@ included;
 the second, about a whole function, follows from it.
 
 The interpreter is written once, for any monad, so the proof translates it
-step by step: each op's step by the hypothesis, and every other step,
-such as looking up a value or calling a function, because the translation
-keeps the three steps. This is what ties `fir-ref`'s runs, in the tree of
+step by step: each op's step and each call's frame by the hypotheses, and
+every other step, such as looking up a value or calling a function,
+because the translation keeps the three steps. This is what ties `fir-ref`'s runs, in the tree of
 choices, to the run in the set monad that gives a function its meaning.
 :::

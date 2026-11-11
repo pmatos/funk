@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10351767067061231664")
+:::moduleDocs (fingerprint := "7225234932884847398")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -91,7 +91,7 @@ call of a black box is compared by the black box's facts. With no black
 box, $`M'` is $`M`, which is the case of refined arguments.
 :::
 
-:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "10367187128702594812")
+:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "11315071736428188523")
 *Definition and theorem: a caller goes on after its callee at the sum of
 their budgets.*
 For an end $`e` of a run of ops, $`e + k` is $`e` with $`k` more steps
@@ -123,7 +123,7 @@ budget together from its callee's budget and that of the rest of the
 caller's ops after the call.
 :::
 
-:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "1560621121885559639")
+:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "10888130400331570987")
 *Theorems: the run of a function is the run of its entry block.* For a
 function $`g` run in a module $`M`, an argument vector $`a` of its parameter
 types and a budget $`N`, the
@@ -157,7 +157,7 @@ types against the parameters', and the black box gives $`g'` the
 parameter types of $`g`.
 :::
 
-:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "2267193601829644512")
+:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "10521812976411731576")
 *Theorem: a black box's source allows what its target does.* Let
 $`(g, g')` be a black box from $`M` to $`M'`, and let the vectors of
 values $`a` and $`a'`, of the same types, satisfy $`a_i \sqsubseteq a'_i`

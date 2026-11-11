@@ -49,6 +49,7 @@ import FirTest.Effects
 import FirTest.EffectCases
 import FirTest.SummaryCases
 import FirTest.Memory
+import FirTest.MemoryRuns
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

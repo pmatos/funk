@@ -30,6 +30,7 @@ import Fir.Core.Values
 import Fir.Core.OpEffects
 import Fir.Core.Poison
 import Fir.Core.Unlawful
+import Fir.Execution.MemoryEffect
 import Fir.Execution.Interpreter
 import Fir.Core.Arith
 import Fir.Core.Wrap
@@ -53,6 +54,7 @@ import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
 import Fir.Execution.ChoiceTree
+import Fir.Execution.MemoryState
 import Fir.Execution.Modes
 import Fir.Core.Modes
 import Fir.Execution.SetRuns
@@ -75,6 +77,7 @@ import Fir.Execution.RefineRuns
 import Fir.Execution.Replace
 import Fir.Core.CallRefine
 import Fir.Execution.Lawful
+import Fir.Execution.MemoryRuns
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
 import Fir.Execution.Summary
@@ -83,6 +86,8 @@ import Fir.Execution.SummaryFixpoint
 import Fir.Execution.SummarySound
 import Fir.Memory.Model
 import Fir.Memory.Laws
+import Fir.Memory.Frames
+import Fir.Memory.FrameLaws
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.Print
