@@ -15,7 +15,8 @@ kind `toy.dataflow`, whose ops are unordered. Its rule: the region holds
 one block, which takes no arguments; every op of the block is an op of
 `toy`, and no op of `toy` is a terminator, so no op ends the block; and
 each value that an op of the block uses is a result of an op of the same
-block, before or after it, or a parameter of the function.
+block, before or after it, or a parameter of the function. Nodes may use
+each other's results in a cycle, as nothing orders them.
 
 === accept a-node-uses-a-later-node
 dialects toy
@@ -42,6 +43,22 @@ func @f() {
     ^g:
       %a: i32 = toy.node @0
       %b: i32 = toy.node %a, %a, %a @0
+  } @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept nodes-may-use-each-other
+dialects toy
+
+func @f() {
+^entry:
+  toy.graph { toy.dataflow
+    ^g:
+      %a: i8 = toy.node %b @0
+      %b: i8 = toy.node %a @0
   } @0
   ret @0
 }

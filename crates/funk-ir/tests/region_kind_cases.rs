@@ -163,9 +163,9 @@ fn cases() -> Vec<Case> {
 #[test]
 fn the_shared_cases_are_all_read() {
     let cases = cases();
-    assert_eq!(cases.len(), 15);
+    assert_eq!(cases.len(), 16);
     let count = |v| cases.iter().filter(|c| c.verdict == v).count();
-    assert_eq!(count(Verdict::Accept), 4);
+    assert_eq!(count(Verdict::Accept), 5);
     assert_eq!(count(Verdict::RejectByKind), 7);
 }
 
@@ -185,26 +185,47 @@ fn each_case_parses_prints_as_itself_and_gets_its_verdict() {
     }
 }
 
+/// The messages of the diagnostics of the case named `name`.
+fn messages(reg: &Registry, all: &[Case], name: &str) -> Vec<String> {
+    let c = all.iter().find(|c| c.name == name).unwrap();
+    verify(&parse(c.text, reg).unwrap(), reg)
+        .into_iter()
+        .map(|d| d.message)
+        .collect()
+}
+
 #[test]
 fn a_region_that_breaks_the_kind_says_why() {
     let reg = registry();
-    let why = |name: &str| {
-        let c = cases().into_iter().find(|c| c.name == name).unwrap();
-        let ds = verify(&parse(c.text, &reg).unwrap(), &reg);
-        assert_eq!(ds.len(), 1, "{name}: {ds:#?}");
-        ds[0].message.clone()
-    };
+    let all = cases();
     let prefix = "a region of toy.graph breaks the rule of its kind toy.dataflow: ";
+    let unscoped =
+        |x: &str| format!("%{x} is neither a result of an op of the region nor a parameter");
     for (case, reason) in [
-        ("two-blocks", "a dataflow region holds one block, not 2"),
-        ("a-block-argument", "^g takes arguments"),
-        ("a-core-op-inside", "add is not an op of toy"),
-        ("a-terminator-inside", "ret is not an op of toy"),
         (
-            "a-use-of-a-value-of-the-body",
-            "%s is neither a result of an op of the region nor a parameter",
+            "two-blocks",
+            "a dataflow region holds one block, not 2".to_string(),
         ),
+        ("a-block-argument", "^g takes arguments".to_string()),
+        ("a-core-op-inside", "add is not an op of toy".to_string()),
+        ("a-terminator-inside", "ret is not an op of toy".to_string()),
+        ("a-use-of-a-value-of-the-body", unscoped("s")),
+        ("a-use-of-another-graphs-node", unscoped("a")),
+        ("a-use-of-the-outer-graphs-node", unscoped("a")),
     ] {
-        assert_eq!(why(case), format!("{prefix}{reason}"), "{case}");
+        assert_eq!(
+            messages(&reg, &all, case),
+            [format!("{prefix}{reason}")],
+            "{case}"
+        );
     }
+}
+
+#[test]
+fn a_value_of_a_region_is_not_in_scope_in_the_body() {
+    // `lean/FirTest/RegionKindCases.lean` pins the same words.
+    assert_eq!(
+        messages(&registry(), &cases(), "a-use-of-a-node-in-the-body"),
+        ["%a is defined inside a region, and is not in scope here"]
+    );
 }

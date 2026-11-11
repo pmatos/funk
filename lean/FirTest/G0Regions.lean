@@ -51,6 +51,14 @@ theorem noCoreRegion_of_valid (d : Dialect) [DialectSignature d] [DialectValidat
     {i : Nat} {o : Operation d} (ho : b.body[i]? = some o) : o.ownsCoreRegion = false :=
   (h.ops b hb i o ho).1.noCoreRegion
 
+/-- In a valid function of every dialect, no op inside a region, at any
+depth, owns a region of the core's kind either. -/
+theorem innerNoCoreRegion_of_valid (d : Dialect) [DialectSignature d] [DialectValidation d]
+    {ctx : ModuleContext d} {f : Func d} (h : f.Valid ctx) {b : Block d} (hb : b ∈ f.allBlocks)
+    {o : Operation d} (ho : o ∈ b.body) {o' : Operation d} (ho' : o' ∈ o.innerOps) :
+    o'.ownsCoreRegion = false :=
+  (h.inner b hb o ho o' ho').1.noCoreRegion
+
 /-- The check of an op's regions decides their validity, for every dialect
 whose rules are decidable. -/
 theorem regionProblems_eq_nil (d : Dialect) [DialectSignature d] [DialectValidation d]

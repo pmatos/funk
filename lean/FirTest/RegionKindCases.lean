@@ -268,8 +268,8 @@ def Case.holds (c : Case) : Bool :=
 /-- The text of the case with this name. -/
 def caseText (name : String) : String := ((cases.find? (·.name == name)).map (·.text)).getD ""
 
-#guard cases.length == 15
-#guard (cases.filter (·.verdict == .accept)).length == 4
+#guard cases.length == 16
+#guard (cases.filter (·.verdict == .accept)).length == 5
 #guard (cases.filter (·.verdict == .rejectByKind)).length == 7
 #guard (cases.filter (!·.holds)).map (·.name) == []
 
