@@ -61,7 +61,7 @@ A format with an alias is written by it, and every other format as
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
-refinement, and the corpus holds them. They also have two float ops:
+refinement, and the corpus holds them. They also have these float ops:
 
 - A float constant is `const` at a float type, written as its shortest
   decimal that reads back, such as `1.0` or `0.1`, or else as `0x` and its
@@ -72,21 +72,38 @@ refinement, and the corpus holds them. They also have two float ops:
   compares them with Lean's model, `UnpackedFloat.compare`. It is pure, never
   UB, and never gives a NaN, and a poison operand gives poison
   (ADR-2026-11-11-1139).
+- The arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and
+  `fma`, on values of one format. Each runs Lean's model: it unpacks its
+  operands, runs the model's operation, rounded to nearest even, and packs the
+  result. When the model's result is a NaN, the op chooses `m + 1` bits, a sign
+  and a mantissa, and gives that NaN; a zero mantissa stands for the quiet NaN.
+  So a NaN result is any NaN of the format. `fneg` and `fabs` of a NaN are any
+  NaN too. Each op is pure and never UB, and a poison operand gives poison. A
+  format that validation rejects gives a chosen NaN, so that the rules are
+  total (ADR-2026-11-11-1800). Each op that rounds is written with
+  `round(rne)`, and `fneg` and `fabs` with no attribute (ADR-2026-11-11-1801).
+  The spec's section on float arithmetic says which parts come from the model
+  and which are fir's own. `frem` is not built: the model has no remainder.
 
 `fir-ref run` takes float arguments and prints float results in that spelling,
-and takes `poison` at a float type. The naive backend lowers `f32` and `f64`:
-it passes and returns them in SSE registers as System V does, and lowers the
-constants and `fcmp` (ADR-2026-11-11-1140). It reports every other format as a
-diagnostic where its value is defined. The corpus runs every predicate and the
-constants differentially at `f32` and `f64`, and on `fir-ref` against
+and takes `poison` at a float type. A NaN result makes a choice, so scripted
+mode needs `--choices` for it, and exhaustive mode at `f32` and `f64` passes its
+budget; #219 decides how `fir-ref` and the harness judge a NaN result. The naive
+backend lowers `f32` and `f64`: it passes and returns them in SSE registers as
+System V does, and lowers the constants and `fcmp` (ADR-2026-11-11-1140) and
+the arithmetic, with SSE2 and, for `fma`, a routine of a runtime helper
+(ADR-2026-11-11-1802). It reports every other format as a diagnostic where its
+value is defined. The corpus runs every predicate and the constants
+differentially at `f32` and `f64`, and on `fir-ref` against
 `scripts/harness/float_ref.py` at `f16`, `bf16` and `f128`, on zeros of both
-signs, subnormals, the largest finite values, infinities and NaNs.
+signs, subnormals, the largest finite values, infinities and NaNs. It runs the
+arithmetic on the hard inputs of every op, at every aliased format, with each
+result that is not a NaN differential at `f32` and `f64`, and each NaN result
+on `fir-ref` with a choice (ADR-2026-11-11-1803).
 
-No core op gives a NaN yet: the arithmetic is the next stage of #229, and #219
-decides how `fir-ref` and the harness judge a NaN result. `poison`, `select`
-and `freeze` take no float yet. The lawful and effect theorems of the core now
-depend on `Classical.choice`, since Lean's `UnpackedFloat.unpack` does; the
-axiom check allows it (ADR-2026-10-30-1452).
+`poison`, `select` and `freeze` take no float yet. The lawful and effect
+theorems of the core depend on `Classical.choice`, since Lean's
+`UnpackedFloat.unpack` does; the axiom check allows it (ADR-2026-10-30-1452).
 
 The check of Lean's float model at other formats is in
 `lean/FirTest/FloatModel.lean`, and the exact-rational reference that computed

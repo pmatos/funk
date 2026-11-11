@@ -84,6 +84,9 @@ theorem Op.monotone_all : (op : Op) →
   | .ashr w, _ => ashr_monotone w
   | .icmp p w, _ => icmp_monotone p w
   | .fcmp p e m, _ => fcmp_monotone p e m
+  | .fbin o e m, _ => fbin_monotone o e m
+  | .funary o e m, _ => funary_monotone o e m
+  | .fma e m, _ => fma_monotone e m
   | .select w, _ => select_monotone w
   | .zext m n, _ => zext_monotone m n
   | .sext m n, _ => sext_monotone m n

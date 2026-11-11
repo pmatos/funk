@@ -40,8 +40,9 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 (ADR-2026-11-09-1541, ADR-2026-11-09-2249):
 
 - Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
-  `select`, the width changes, `freeze`, and `add`, `sub` and `mul` without
-  flags. `call`'s own set is empty (ADR-2026-11-11-1139).
+  `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
+  flags, and the float arithmetic, whose NaN results are defined values.
+  `call`'s own set is empty (ADR-2026-11-11-1139, ADR-2026-11-11-1800).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, and `sdiv` and `udiv` with `exact`.
 - May-UB: the four divisions, `cond_br` and `unreachable`.

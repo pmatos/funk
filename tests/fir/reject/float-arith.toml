@@ -1,0 +1,201 @@
+# Must-reject texts of #229's float arithmetic: fadd, fsub, fmul, fdiv,
+# sqrt and fma carry round(rne), the one rounding mode, and fneg and fabs
+# carry no attribute (ADR-2026-11-11-1801). Every other attribute does not
+# decode, as a flag an op does not have does not. Each op takes values of
+# one float type, as many as it has operands, and gives one value of it
+# (ADR-2026-11-11-1800).
+
+[[reject]]
+verdict = "parse-error"
+rule = "fadd rounds, so it carries round(rne): with no attribute it does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "round to nearest even is the one rounding mode: round(rtz) does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fsub round(rtz) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the rounding mode is written round(rne), not as the word rne"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fmul rne %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fdiv has one attribute, round(rne), not two"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fdiv round(rne) round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sqrt rounds, so it carries round(rne)"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f64 {
+^e:
+  %r: f64 = sqrt %d @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fneg does not round and takes no attribute"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fneg round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fabs does not round and takes no attribute"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fabs round(rtz) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fma takes three operands, not two"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fma round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fadd adds two values of one format: an f32 and an f64 are a type mismatch"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd round(rne) %a, %d @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fadd gives a value of its operands' format, not an f64"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f64 {
+^e:
+  %r: f64 = fadd round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fadd adds floats; add adds integers"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> i32 {
+^e:
+  %r: i32 = fadd round(rne) %i, %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fneg negates one float, not two"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fneg %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fadd decodes at float(1, 1), and validation rejects the format, which has 1 exponent bit"
+text = '''
+func @f(%x: float(1, 1)) -> float(1, 1) {
+^e:
+  %r: float(1, 1) = fadd round(rne) %x, %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

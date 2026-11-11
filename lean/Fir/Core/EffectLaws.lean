@@ -10,12 +10,13 @@ effects. Each effect that a core op leaves out, it does not have:
 
 * _No may-UB._ Every core op but the four divisions, `cond_br` and
   `unreachable` never ends in UB. Each rule that gives a result gives it at once, `freeze`
-  after choosing bits, and `br` and `ret` go to their successor or return.
+  and the float arithmetic after choosing bits, and `br` and `ret` go to their successor or return.
 * _No may produce poison._ On operands with no poison, every op that does
   not declare it gives a defined result: `add`, `sub` and `mul` without
   flags, the divisions without `exact` when they give a result, the bitwise
   ops, `icmp`, `fcmp`, `select`, the width changes, `const` at an integer
-  and at a float type, and `freeze`.
+  and at a float type, `freeze`, and the float arithmetic, whose NaN
+  results are defined bits.
 * _No control._ Every core op that does not declare control is not a
   terminator.
 * _No write, read or allocation._ No core op touches memory: it runs by its
@@ -59,6 +60,9 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
         cases h), fun h => nomatch h⟩
   | .br, _ | .ret _, _ => fun _ _ => ⟨fun h => (nomatch h), fun _ h => (by cases h)⟩
   | .call .., _ => fun _ _ => ⟨fun _ h => h, fun h => nomatch h⟩
+  | .fbin o e m, _ => fbin_neverUB o e m
+  | .funary o e m, _ => funary_neverUB o e m
+  | .fma e m, _ => fma_neverUB e m
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
   | .unreachable, h => nomatch h
 
@@ -184,6 +188,9 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       cases he
       exact not_any_of_ne fun h => nomatch h
   | .call .., _ => fun _ _ _ _ hr => hr.elim
+  | .fbin o e m, _ => fbin_makesNoPoison o e m
+  | .funary o e m, _ => funary_makesNoPoison o e m
+  | .fma e m, _ => fma_makesNoPoison e m
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
   | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h => nomatch h
 

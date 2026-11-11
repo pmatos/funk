@@ -4,8 +4,9 @@
 //! A function's need is the stack it uses below the return address that its
 //! caller pushes: that address and its saved `%rbp`, its frame, and the
 //! deepest of its calls, each with the arguments it pushes and the callee's
-//! own need. A division at `i128` is a call of the runtime helper, which
-//! pushes no argument and needs `HELPER_STACK` bytes (ADR-2026-11-03-0415).
+//! own need. A division at `i128`, or an `fma` at `f32` or `f64`, is a
+//! call of a runtime helper, which pushes no argument and needs at most
+//! `HELPER_STACK` bytes (ADR-2026-11-03-0415).
 //! A call between two functions of one cycle, such as a function
 //! that calls itself or two that call each other, is left out: how deep a
 //! cycle goes depends on the arguments, so no figure from the code bounds
@@ -362,6 +363,28 @@ mod tests {
                 need(d, false),
                 need(16 + 32, false),
                 need(16 + 64 + d, false)
+            ]
+        );
+    }
+
+    /// An `fma` at `f32` or `f64` calls a runtime helper too, and needs
+    /// `HELPER_STACK` bytes below the frame.
+    #[test]
+    fn an_fma_needs_the_helper_s_stack() {
+        use funk_ir::{Registry, parse};
+        let func = |t: &str| {
+            format!(
+                "func @{t}(%a: {t}, %b: {t}, %c: {t}) -> {t} {{\n^entry:\n  \
+                 %r: {t} = fma round(rne) %a, %b, %c @0\n  ret %r @0\n}}\n\n"
+            )
+        };
+        let text = func("f32") + &func("f64") + "locs {\n  @0 = unknown\n}\n";
+        let m = parse(&text, &Registry::core()).unwrap();
+        assert_eq!(
+            needs(&m, &[64, 48]),
+            [
+                need(16 + 64 + HELPER_STACK, false),
+                need(16 + 48 + HELPER_STACK, false)
             ]
         );
     }

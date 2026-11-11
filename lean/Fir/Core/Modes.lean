@@ -92,6 +92,21 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
+    | .fbin o e m, .cons a (.cons b .nil) => by
+      show (ChoiceTree.bind (fbinValues o a b) _).toSet = _
+      rw [ChoiceTree.toSet_bind]
+      exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
+        (fbinValues_toSet (ε := Op) o a b)
+    | .funary o e m, .cons a .nil => by
+      show (ChoiceTree.bind (funaryValue o a) _).toSet = _
+      rw [ChoiceTree.toSet_bind]
+      exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
+        (funaryValue_toSet (ε := Op) o a)
+    | .fma e m, .cons a (.cons b (.cons c .nil)) => by
+      show (ChoiceTree.bind (fmaValues a b c) _).toSet = _
+      rw [ChoiceTree.toSet_bind]
+      exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
+        (fmaValues_toSet (ε := Op) a b c)
     | .sdiv _ x, args => ruleOfEv_toSet (sdivWith x) args
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args
@@ -105,7 +120,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .srem _, _ | .urem _, _ | .and _, _ | .or _, _ | .xor _, _ | .shl _, _ | .lshr _, _
     | .ashr _, _ | .icmp .., _ | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _
     | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ | .fconst .., _
-    | .fcmp .., _ => rfl
+    | .fcmp .., _ | .fbin .., _ | .funary .., _ | .fma .., _ => rfl
 
 /-- The core dialect's rules in the state layer over the tree of choices:
 each op runs by its rule in the tree and keeps the memories, as it runs with
