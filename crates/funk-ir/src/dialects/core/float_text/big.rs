@@ -154,22 +154,33 @@ impl Big {
     /// `(self / d, self % d)` by long division, one quotient bit at a time:
     /// the quotients that reading and spelling take are short.
     pub(super) fn div_rem(&self, d: &Big) -> (Big, Big) {
-        let mut q = Big::zero();
-        let mut r = self.clone();
-        if r.cmp(d) == Ordering::Less {
-            return (q, r);
+        if self.cmp(d) == Ordering::Less {
+            return (Big::zero(), self.clone());
         }
-        let mut shift = r.bit_len() - d.bit_len();
-        loop {
-            let ds = d.shl(shift);
+        let shift = self.bit_len() - d.bit_len();
+        let mut ds = d.shl(shift);
+        let mut q = vec![0u32; (shift / 32 + 1) as usize];
+        let mut r = self.clone();
+        for i in (0..=shift).rev() {
             if r.cmp(&ds) != Ordering::Less {
                 r = r.sub(&ds);
-                q = q.add(&Big::from_u128(1).shl(shift));
+                q[(i / 32) as usize] |= 1 << (i % 32);
             }
-            if shift == 0 {
-                return (q, r);
-            }
-            shift -= 1;
+            ds.shr1();
+        }
+        (Big(q).trim(), r)
+    }
+
+    /// `self / 2`, in place.
+    fn shr1(&mut self) {
+        let mut carry = 0u32;
+        for limb in self.0.iter_mut().rev() {
+            let low = *limb & 1;
+            *limb = (*limb >> 1) | (carry << 31);
+            carry = low;
+        }
+        if self.0.last() == Some(&0) {
+            self.0.pop();
         }
     }
 

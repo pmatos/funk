@@ -31,7 +31,7 @@ MAX_E, MAX_M = 15, 112
 MAX_DIGITS = 64
 MAX_EXP = 9999
 
-DECIMAL = re.compile(r"(-?)(0|[1-9][0-9]*)\.([0-9]+)(?:e(0|-?[1-9][0-9]*))?")
+DECIMAL = re.compile(r"(-?)(0|[1-9]\d*)\.(\d+)(?:e(0|-?[1-9]\d*))?", re.ASCII)
 HEX = re.compile(r"0x([0-9a-f]+)")
 
 

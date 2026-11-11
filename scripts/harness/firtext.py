@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 # A number: an integer, or a float literal with its exponent's sign
 # (ADR-2026-11-11-1438). Any name characters after it are read with it.
-NUMBER = re.compile(r"-?[0-9]*(?:\.[0-9]+e-[0-9]+)?")
+NUMBER = re.compile(r"-?\d*(?:\.\d+e-\d+)?", re.ASCII)
 NAMECHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."
 PUNCT = "(){},:="
 

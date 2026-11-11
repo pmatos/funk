@@ -15,7 +15,7 @@
 //! at `i1`, and the same on every run, so what native code gives for a
 //! poison never depends on what a slot held before (ADR-2026-11-03-1616).
 
-use funk_ir::dialects::core::{float_constant, float_format};
+use funk_ir::dialects::core::{float_format, read_float};
 use funk_ir::{Attr, Op};
 
 use super::{Cx, Lower, Unlowered};
@@ -45,9 +45,10 @@ fn constant(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
             .map_err(|_| format!("the constant {v} does not fit 128 bits"))?,
         Attr::Float(s) => {
             let (e, m) = float_format(&result.ty).ok_or("a float literal defines a float")?;
-            match float_constant(e, m, s) {
-                Ok(Some(bits)) => bits as i128,
-                _ => return Err(format!("{s} is no constant of {}", result.ty).into()),
+            // Verification has checked that `s` is the spelling of its bits.
+            match read_float(e, m, s) {
+                Some(bits) => bits as i128,
+                None => return Err(format!("{s} is no constant of {}", result.ty).into()),
             }
         }
         other => return Err(format!("the value of a const is an integer, not {other}").into()),

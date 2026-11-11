@@ -125,3 +125,17 @@ fn only_the_one_spelling_decodes() {
     assert_eq!(spell_float(5, 10, 0x7bff), "65500.0");
     assert_eq!(spell_float(15, 112, 1), "6.0e-4966");
 }
+
+#[test]
+fn the_reader_takes_any_exponent_and_every_f128_bit_pattern() {
+    let min = "1.0e-9223372036854775808";
+    assert!(float_constant(8, 23, min).is_err());
+    assert_eq!(read_float(8, 23, min), None);
+    let one = "0x3fff0000000000000000000000000000";
+    assert_eq!(read_float(15, 112, one), Some(0x3fff_u128 << 112));
+    assert_eq!(
+        read_float(15, 112, "0xffff8000000000000000000000000000"),
+        Some(0xffff8_u128 << 108)
+    );
+    assert_eq!(float_constant(15, 112, "1.0"), Ok(Some(0x3fff_u128 << 112)));
+}

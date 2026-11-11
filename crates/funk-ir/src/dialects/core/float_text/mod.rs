@@ -26,7 +26,7 @@ use crate::ir::names::is_float_lit;
 
 /// The bounds that the reader checks before reading a decimal.
 const MAX_DIGITS: usize = 64;
-const MAX_EXP: i64 = 9999;
+const MAX_EXP: u64 = 9999;
 
 /// Whether the finite values of `float<e,m>` are spelled in decimal.
 pub fn has_decimals(e: u32, m: u32) -> bool {
@@ -56,14 +56,19 @@ impl Format {
 
     /// The bits of `-1^neg · d · 10^k`, rounded to nearest even.
     fn read(self, neg: bool, d: &Big, k: i64) -> u128 {
+        self.read_scaled(neg, d, k, &Big::from_u128(1).mul_pow10(k.unsigned_abs()))
+    }
+
+    /// `read`, given `p = 10^|k|`.
+    fn read_scaled(self, neg: bool, d: &Big, k: i64, p: &Big) -> u128 {
         let sign = if neg { self.sign() } else { 0 };
         if d.is_zero() {
             return sign;
         }
         let (num, den) = if k >= 0 {
-            (d.mul_pow10(k as u64), Big::from_u128(1))
+            (d.mul(p), Big::from_u128(1))
         } else {
-            (d.clone(), Big::from_u128(1).mul_pow10(k.unsigned_abs()))
+            (d.clone(), p.clone())
         };
         // `t = floor(log2 x)`, from the lengths of the two, then exactly.
         let mut t = num.bit_len() as i64 - den.bit_len() as i64;
@@ -116,6 +121,7 @@ impl Format {
         let top = dec_exponent(&num, &den);
         for n in 1..=i64::from(self.m) + 4 {
             let j = top - n + 1;
+            let p = Big::from_u128(1).mul_pow10(j.unsigned_abs());
             let (a, d) = by_pow10(&num, &den, j);
             let (lo, rest) = a.div_rem(&d);
             let hi = lo.add(&Big::from_u128(1));
@@ -124,7 +130,7 @@ impl Format {
             } else {
                 vec![&lo, &hi]
             };
-            ok.retain(|c| self.read(neg, c, j) == b);
+            ok.retain(|c| self.read_scaled(neg, c, j, &p) == b);
             let c = match ok.as_slice() {
                 [c] => (*c).clone(),
                 [_, _] => {
@@ -235,38 +241,17 @@ fn read_decimal(f: Format, s: &str) -> Option<u128> {
         None => (body, 0),
     };
     let (whole, frac) = mantissa.split_once('.')?;
-    if whole.len() > MAX_DIGITS || frac.len() > MAX_DIGITS || exp.abs() > MAX_EXP {
+    if whole.len() > MAX_DIGITS || frac.len() > MAX_DIGITS || exp.unsigned_abs() > MAX_EXP {
         return None;
     }
     let d = Big::from_digits(&format!("{whole}{frac}"));
     Some(f.read(s.starts_with('-'), &d, exp - frac.len() as i64))
 }
 
-/// The bits that the float literal `s` reads as at `float<e,m>`, a format
-/// of at most 128 bits, before the check that `s` is their spelling
-/// (`readFloatLit` in `lean/Fir/Core/FloatText.lean`).
-pub fn read_float(e: u32, m: u32, s: &str) -> Option<u128> {
-    if !is_float_lit(s) || 1 + u64::from(e) + u64::from(m) > 128 {
-        return None;
-    }
-    if let Some(digits) = s.strip_prefix("0x") {
-        let b = u128::from_str_radix(digits, 16).ok()?;
-        let fits = digits.len() as u64 == hex_digits(e, m) && b >> (1 + e + m) == 0;
-        return fits.then_some(b);
-    }
-    if !has_decimals(e, m) {
-        return None;
-    }
-    read_decimal(Format { e, m }, s)
-}
-
-/// The bits that the float literal `s` spells at `float<e,m>`: `Ok(None)`
-/// when it spells some, but the format is wider than 128 bits; and why
-/// not, when it spells none.
-pub fn float_constant(e: u32, m: u32, s: &str) -> Result<Option<u128>, String> {
-    if !is_float_lit(s) {
-        return Err(format!("{s} is not a float literal"));
-    }
+/// The bits that the float literal `s` reads as at `float<e,m>`, before the
+/// check that `s` is their spelling: `Ok(None)` for hexadecimal bits of a
+/// format wider than 128 bits, and why not, when it reads as none.
+fn read_lit(e: u32, m: u32, s: &str) -> Result<Option<u128>, String> {
     let width = 1 + u64::from(e) + u64::from(m);
     if let Some(digits) = s.strip_prefix("0x") {
         let n = hex_digits(e, m);
@@ -282,23 +267,40 @@ pub fn float_constant(e: u32, m: u32, s: &str) -> Result<Option<u128>, String> {
         if width > 128 {
             return Ok(None);
         }
-        let b = u128::from_str_radix(digits, 16).expect("hexadecimal digits");
-        return canonical(e, m, s, b);
+        return Ok(Some(
+            u128::from_str_radix(digits, 16).expect("hexadecimal digits"),
+        ));
     }
     if !has_decimals(e, m) {
         return Err(format!(
             "a float of {width} bits with {e} exponent bits has no decimals: write its bits after 0x"
         ));
     }
-    let Some(b) = read_decimal(Format { e, m }, s) else {
-        return Err(format!(
-            "{s} has too many digits, or too large an exponent, to spell a float"
-        ));
-    };
-    canonical(e, m, s, b)
+    read_decimal(Format { e, m }, s).map(Some).ok_or_else(|| {
+        format!("{s} has too many digits, or too large an exponent, to spell a float")
+    })
 }
 
-fn canonical(e: u32, m: u32, s: &str, b: u128) -> Result<Option<u128>, String> {
+/// The bits that the float literal `s` reads as at `float<e,m>`, a format
+/// of at most 128 bits, before the check that `s` is their spelling
+/// (`readFloatLit` in `lean/Fir/Core/FloatText.lean`).
+pub fn read_float(e: u32, m: u32, s: &str) -> Option<u128> {
+    if !is_float_lit(s) {
+        return None;
+    }
+    read_lit(e, m, s).ok().flatten()
+}
+
+/// The bits that the float literal `s` spells at `float<e,m>`: `Ok(None)`
+/// when it spells some, but the format is wider than 128 bits; and why
+/// not, when it spells none.
+pub fn float_constant(e: u32, m: u32, s: &str) -> Result<Option<u128>, String> {
+    if !is_float_lit(s) {
+        return Err(format!("{s} is not a float literal"));
+    }
+    let Some(b) = read_lit(e, m, s)? else {
+        return Ok(None);
+    };
     let spelling = spell_float(e, m, b);
     if spelling == s {
         Ok(Some(b))
