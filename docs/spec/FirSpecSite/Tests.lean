@@ -249,6 +249,11 @@ open Lean in
 #guard notIncluded #["lean/Fir/A.lean"]
   "{includeLiterate \".\" Fir.A \"A\" (level := 2)}\n" == #[]
 
+#guard includedDocs "# Intro\n{include 1 FirSpec.Chapters.Execution}\nprose {include 1 X}\n" ==
+  #["FirSpec.Chapters.Execution"]
+
+#guard docPath "FirSpec.Chapters.Execution" == "FirSpec/Chapters/Execution.lean"
+
 /-!
 A readable section hides the Lean of an item that defines nothing under the
 block of the declaration it belongs to (#181).

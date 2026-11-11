@@ -35,6 +35,38 @@ impl MemSet {
             MemSet::Every => true,
         }
     }
+
+    /// The join of two sets (`MemSet.join`): every memory, if either is, and
+    /// otherwise the memories of `self`, then each memory of `other` that
+    /// `self` does not list.
+    pub fn join(&self, other: &MemSet) -> MemSet {
+        match (self, other) {
+            (MemSet::Every, _) | (_, MemSet::Every) => MemSet::Every,
+            (MemSet::These(ms), MemSet::These(ns)) => {
+                let mut out = ms.clone();
+                for n in ns {
+                    if !out.contains(n) {
+                        out.push(n.clone());
+                    }
+                }
+                MemSet::These(out)
+            }
+        }
+    }
+
+    /// The set with its memories in sorted order, each once: a set holds
+    /// what it lists, whatever the order.
+    pub fn sorted(&self) -> MemSet {
+        match self {
+            MemSet::Every => MemSet::Every,
+            MemSet::These(ms) => {
+                let mut ms = ms.clone();
+                ms.sort();
+                ms.dedup();
+                MemSet::These(ms)
+            }
+        }
+    }
 }
 
 /// An op's set of effects. Each memory-named effect names the memories it
@@ -88,6 +120,41 @@ impl Effects {
         observable: true,
         control: true,
     };
+
+    /// The join of two sets (`Effects.join`): each memory-named effect
+    /// touches the memories of both, and every other effect is there when
+    /// either has it.
+    pub fn join(&self, other: &Effects) -> Effects {
+        Effects {
+            reads: self.reads.join(&other.reads),
+            writes: self.writes.join(&other.writes),
+            allocates: self.allocates.join(&other.allocates),
+            may_ub: self.may_ub || other.may_ub,
+            may_poison: self.may_poison || other.may_poison,
+            observable: self.observable || other.observable,
+            control: self.control || other.control,
+        }
+    }
+
+    /// The effects of the set as a caller of its op sees them
+    /// (`Effects.callerView`): every effect but control, since a terminator
+    /// of a callee ends a block of the callee, not of its caller.
+    pub fn caller_view(&self) -> Effects {
+        Effects {
+            control: false,
+            ..self.clone()
+        }
+    }
+
+    /// The set with each set of memories in sorted order, each once.
+    pub fn sorted(&self) -> Effects {
+        Effects {
+            reads: self.reads.sorted(),
+            writes: self.writes.sorted(),
+            allocates: self.allocates.sorted(),
+            ..self.clone()
+        }
+    }
 }
 
 /// Writes a set of effects as the shared case files do: `pure`, or the
@@ -147,5 +214,31 @@ mod tests {
         assert_eq!(e.to_string(), "writes(a+b),may-ub");
         assert!(e.writes.has("b") && !e.writes.has("c") && !e.reads.has("a"));
         assert!(MemSet::Every.has("c"));
+    }
+
+    #[test]
+    fn joins_keep_every_effect_of_either_side() {
+        let these = |ms: &[&str]| MemSet::These(ms.iter().map(|m| m.to_string()).collect());
+        assert_eq!(
+            these(&["b", "a"]).join(&these(&["a", "c"])),
+            these(&["b", "a", "c"])
+        );
+        assert_eq!(these(&["a"]).join(&MemSet::Every), MemSet::Every);
+        assert_eq!(MemSet::Every.join(&MemSet::NONE), MemSet::Every);
+        assert_eq!(these(&["b", "a", "b"]).sorted(), these(&["a", "b"]));
+        let a = Effects {
+            reads: these(&["m"]),
+            may_ub: true,
+            ..Effects::PURE
+        };
+        let b = Effects {
+            may_poison: true,
+            control: true,
+            ..Effects::PURE
+        };
+        let j = a.join(&b);
+        assert_eq!(j.to_string(), "reads(m),may-ub,may-poison,control");
+        assert_eq!(j.caller_view().to_string(), "reads(m),may-ub,may-poison");
+        assert_eq!(Effects::PURE.join(&Effects::PURE), Effects::PURE);
     }
 }

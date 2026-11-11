@@ -6,7 +6,7 @@ parser, printer, validation and interpreter only through the dialect's
 classes, and its `decodeOp` and `opAttrs` hold its text. So the code of
 the spec's chapters for every dialect (`lean/Fir/`, but the dialects' own
 directories), of what `fir-ref` runs in their place (`lean/FirRef/`, but
-its command line) and of G0's Lean test must not:
+its command line) and of G0's Lean tests must not:
 
 * import a module of the core dialect or name anything of it: no name with
   a part `Core` or `CoreDialect`, as in `import Fir.Core.Ops`, and no
@@ -46,8 +46,8 @@ FIR_REF_COMMAND_LINE = {"Main", "Report", "Run", "RunArgs"}
 CORE_EXAMPLE = "lean/Fir/Text/Example.lean"
 # Files that end with the core dialect's corollaries of their results.
 NAME_CORE = {"lean/Fir/Text/PrintParse.lean", "lean/Fir/Text/ParseWellFormed.lean"}
-# G0's Lean test, whose statements must stay generic.
-G0_TEST = "lean/FirTest/G0.lean"
+# G0's Lean tests, whose statements must stay generic.
+G0_TESTS = {"lean/FirTest/G0.lean", "lean/FirTest/G0Effects.lean"}
 # The modules that G0's Lean test is split into, by subject.
 G0_TEST_DIR = "lean/FirTest/G0/"
 # A word of two letters or more: the core dialect's text has none shorter,
@@ -263,7 +263,7 @@ def is_generic(rel: str) -> bool:
         return False
     if rel.startswith(("lean/Fir/", G0_TEST_DIR)) or rel in {
         "lean/FirRef.lean",
-        G0_TEST,
+        *G0_TESTS,
     }:
         return True
     return rel.startswith("lean/FirRef/") and rel not in _command_line()

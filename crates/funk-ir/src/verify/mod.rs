@@ -15,6 +15,8 @@ mod items;
 mod locs;
 mod ops;
 
+pub(crate) use func::all_blocks;
+
 use std::collections::HashSet;
 use std::fmt;
 

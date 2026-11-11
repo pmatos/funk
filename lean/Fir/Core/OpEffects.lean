@@ -27,8 +27,8 @@ have no trace.
 
 `call`'s own rule does nothing but run its callee, so its own set is
 empty. That does not make a call pure: a call has its callee's effects too,
-which come from the callee's run, and a reader of a call's effects adds
-them.
+which come from the callee's run, and the effects of a call in place add
+its callee's summary (the section on function summaries).
 
 The proofs that each declaration is sound are in the section on the core
 dialect's effect obligations, after the rules.

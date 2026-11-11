@@ -225,7 +225,8 @@ Each new op costs one soundness proof per effect it leaves out
 (ADR-2026-11-09-1541).
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
-say. `call` carries its callee's effects. Each M1 op is classified when it
+say. `call` carries its callee's summary (semantics-effects.md,
+ADR-2026-11-10-2108). Each M1 op is classified when it
 lands, in its own ticket, by the same rule (ADR-2026-11-09-1541):
 
 - Loads read and may-UB.

@@ -2,6 +2,7 @@ import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
 import FirSpec.ReadableDocs
+import FirSpec.Chapters.Execution
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -128,127 +129,7 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.Check "The core dialect's rules, decided" FirSpec.Core.Check (level := 2)}
 
-# Execution
-
-{includeReadable "." Fir.Execution.Values "Values and refinement" FirSpec.Execution.Values (level := 2)}
-
-{includeLiterate "." Fir.Execution.PoisonUB "Poison and immediate UB" (level := 2)}
-
-{includeReadable "." Fir.Execution.Effects "Effects and op semantics" FirSpec.Execution.Effects (level := 2)}
-
-{includeReadable "." Fir.Execution.Behaviour "Outcomes and behaviours" FirSpec.Execution.Behaviour (level := 2)}
-
-{includeReadable "." Fir.Execution.Fuel "Fuel and progress" FirSpec.Execution.Fuel (level := 2)}
-
-{includeReadable "." Fir.Execution.Refinement "Refinement" FirSpec.Execution.Refinement (level := 2)}
-
-{includeReadable "." Fir.Execution.OpEffects "Effect sets" FirSpec.Execution.OpEffects (level := 2)}
-
-{includeReadable "." Fir.Execution.Propagation "Poison classes" FirSpec.Execution.Propagation (level := 2)}
-
-{includeReadable "." Fir.Execution.EffectLaws "Effect obligations" FirSpec.Execution.EffectLaws (level := 2)}
-
-{includeReadable "." Fir.Core.Values "Core values" FirSpec.Core.Values (level := 2)}
-
-{includeReadable "." Fir.Core.OpEffects "Core effects" FirSpec.Core.OpEffects (level := 2)}
-
-{includeReadable "." Fir.Core.Poison "Core poison classes" FirSpec.Core.Poison (level := 2)}
-
-{includeReadable "." Fir.Core.Unlawful "Semantics the obligations reject" FirSpec.Core.Unlawful (level := 2)}
-
-{includeReadable "." Fir.Execution.Interpreter "The interpreter" FirSpec.Execution.Interpreter (level := 2)}
-
-{includeReadable "." Fir.Core.Arith "Arithmetic rules" FirSpec.Core.Arith (level := 2)}
-
-{includeReadable "." Fir.Core.Wrap "Wrap flag rules" FirSpec.Core.Wrap (level := 2)}
-
-{includeReadable "." Fir.Core.Freeze "The freeze rule" FirSpec.Core.Freeze (level := 2)}
-
-{includeReadable "." Fir.Core.Bitwise "Bitwise and shift rules" FirSpec.Core.Bitwise (level := 2)}
-
-{includeReadable "." Fir.Core.Width "Width change rules" FirSpec.Core.Width (level := 2)}
-
-{includeReadable "." Fir.Core.Div "Division rules" FirSpec.Core.Div (level := 2)}
-
-{includeReadable "." Fir.Core.Compare "Comparison and selection rules" FirSpec.Core.Compare (level := 2)}
-
-{includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 2)}
-
-{includeReadable "." Fir.Core.Branch "Branch rules" FirSpec.Core.Branch (level := 2)}
-
-{includeReadable "." Fir.Core.Call "Call rules" FirSpec.Core.Call (level := 2)}
-
-{includeReadable "." Fir.Core.Semantics "Core op semantics" FirSpec.Core.Semantics (level := 2)}
-
-{includeReadable "." Fir.Core.ArithLaws "Constant obligations" FirSpec.Core.ArithLaws (level := 2)}
-
-{includeReadable "." Fir.Core.WrapLaws "Arithmetic obligations" FirSpec.Core.WrapLaws (level := 2)}
-
-{includeReadable "." Fir.Core.FreezeLaws "Freeze obligations" FirSpec.Core.FreezeLaws (level := 2)}
-
-{includeReadable "." Fir.Core.BitwiseLaws "Bitwise and shift obligations" FirSpec.Core.BitwiseLaws (level := 2)}
-
-{includeReadable "." Fir.Core.WidthLaws "Width change obligations" FirSpec.Core.WidthLaws (level := 2)}
-
-{includeReadable "." Fir.Core.DivLaws "Division obligations" FirSpec.Core.DivLaws (level := 2)}
-
-{includeReadable "." Fir.Core.CompareLaws "Comparison and selection obligations" FirSpec.Core.CompareLaws (level := 2)}
-
-{includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 2)}
-
-{includeReadable "." Fir.Core.BranchLaws "Branch obligations" FirSpec.Core.BranchLaws (level := 2)}
-
-{includeReadable "." Fir.Execution.Morphism "Monad morphisms" FirSpec.Execution.Morphism (level := 2)}
-
-{includeReadable "." Fir.Execution.ChoiceTree "Choice trees" FirSpec.Execution.ChoiceTree (level := 2)}
-
-{includeReadable "." Fir.Execution.Modes "Exhaustive, scripted and sampled modes" FirSpec.Execution.Modes (level := 2)}
-
-{includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 2)}
-
-{includeReadable "." Fir.Execution.SetRuns "Reading a run path by path" FirSpec.Execution.SetRuns (level := 2)}
-
-{includeReadable "." Fir.Execution.Monotone "The runs of a function, and fuel monotonicity" FirSpec.Execution.Monotone (level := 2)}
-
-{includeReadable "." Fir.Execution.Environment "The environment of a run" FirSpec.Execution.Environment (level := 2)}
-
-{includeReadable "." Fir.Execution.Progress "Progress and no stuck path" FirSpec.Execution.Progress (level := 2)}
-
-{includeReadable "." Fir.Execution.Scoped "Scope along a run" FirSpec.Execution.Scoped (level := 2)}
-
-{includeReadable "." Fir.Execution.Jumps "Progress with jumps and loops" FirSpec.Execution.Jumps (level := 2)}
-
-{includeReadable "." Fir.Execution.CallSteps "What a call step needs" FirSpec.Execution.CallSteps (level := 2)}
-
-{includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 2)}
-
-{includeReadable "." Fir.Core.Runs "The runs of core functions" FirSpec.Core.Runs (level := 2)}
-
-{includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 2)}
-
-{includeReadable "." Fir.Core.ValidRuns "Core functions with calls" FirSpec.Core.ValidRuns (level := 2)}
-
-{includeReadable "." Fir.Execution.RunPaths "The ways a step goes on" FirSpec.Execution.RunPaths (level := 2)}
-
-{includeReadable "." Fir.Execution.EnvRefine "Refined environments" FirSpec.Execution.EnvRefine (level := 2)}
-
-{includeReadable "." Fir.Execution.BlackBox "Calls as black boxes" FirSpec.Execution.BlackBox (level := 2)}
-
-{includeReadable "." Fir.Execution.RefineUp "Returns and UB, followed back" FirSpec.Execution.RefineUp (level := 2)}
-
-{includeReadable "." Fir.Execution.RefineDown "Running out of fuel, followed back" FirSpec.Execution.RefineDown (level := 2)}
-
-{includeReadable "." Fir.Execution.RefineRuns "Refined arguments" FirSpec.Execution.RefineRuns (level := 2)}
-
-{includeReadable "." Fir.Execution.Replace "Replacing a callee" FirSpec.Execution.Replace (level := 2)}
-
-{includeReadable "." Fir.Core.CallRefine "Refinement through core calls" FirSpec.Core.CallRefine (level := 2)}
-
-{includeReadable "." Fir.Execution.Lawful "What the lawful class gives" FirSpec.Execution.Lawful (level := 2)}
-
-{includeReadable "." Fir.Core.Lawful "The core dialect's poison obligations" FirSpec.Core.Lawful (level := 2)}
-
-{includeReadable "." Fir.Core.EffectLaws "The core dialect's effect obligations" FirSpec.Core.EffectLaws (level := 2)}
+{include 1 FirSpec.Chapters.Execution}
 
 # Memory
 

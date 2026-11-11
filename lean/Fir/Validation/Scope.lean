@@ -56,6 +56,10 @@ end
 /-- Every block of a function, at any depth. -/
 def Func.allBlocks (f : Func d) : List (Block d) := Block.allBlocks f.blocks
 
+/-- Every op of a function, at any depth: the ops of each of its blocks at
+any depth, in order. -/
+def Func.allOps (f : Func d) : List (Operation d) := f.allBlocks.flatMap (·.body)
+
 /-- The values a block defines: its arguments, then its ops' results. -/
 def Block.defs (b : Block d) : List (Name × d.Ty) :=
   b.params ++ b.body.flatMap (·.results)
