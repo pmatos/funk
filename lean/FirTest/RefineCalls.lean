@@ -208,15 +208,16 @@ theorem g_isRefinedBy :
 /-- So `@count`, which calls `@g` and itself, is refined by itself in the
 module with `@g`'s new body, which calls `@count` back. -/
 theorem count_isRefinedBy : funcRuns ubModule countFn ⊑ funcRuns ubModule' countFn :=
-  Core.caller_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs]) gBody g_isRefinedBy
-    (by simp [ubModule, Module.funcs]) (by decide)
+  Core.caller_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
+    (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy (by simp [ubModule, Module.funcs])
+    (by decide)
 
 /-- Every function of the module is refined by its counterpart with
 `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
     funcRuns ubModule f ⊑ funcRuns ubModule' (f.replaceBody gFn.name gBody) :=
-  Core.replaceBody_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs]) gBody
-    g_isRefinedBy hf
+  Core.replaceBody_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
+    (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy hf
 
 /-! # A callee replaced by itself, in mutual recursion -/
 
@@ -239,8 +240,9 @@ theorem odd_self_isRefinedBy :
 itself. -/
 theorem even_replace_isRefinedBy :
     funcRuns recModule evenFn ⊑ funcRuns (recModule.replaceBody oddFn.name oddFn.body) evenFn :=
-  Core.caller_isRefinedBy recModule_valid (by simp [recModule, Module.funcs]) oddFn.body
-    odd_self_isRefinedBy (by simp [recModule, Module.funcs]) (by decide)
+  Core.caller_isRefinedBy recModule_valid (by simp [recModule, Module.funcs])
+    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body odd_self_isRefinedBy
+    (by simp [recModule, Module.funcs]) (by decide)
 
 /-! # Axioms
 

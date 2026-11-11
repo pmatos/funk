@@ -75,7 +75,11 @@ def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map A
 
 /-- A value as `fir-ref run` spells it: as a constant of its type in text,
 or `poison`. A float is written as its bits read as a signed integer
-(ADR-2026-11-11-1138). -/
+(ADR-2026-11-11-1138). A pointer is written `ptr(A, O)`, for the
+allocation `A` it has provenance for and its offset `O`, and
+`ptr(none, O)` when it has no provenance. It names no address, which a
+pointer has only once it is exposed (ADR-2026-11-09-1542), and no run
+gives one until an op makes a pointer (#231). -/
 def valueText : DVal CoreDialect → String
   | ⟨.int w, v⟩ => match (v : PoisonOr (BitVec w)) with
     | .poison => "poison"
@@ -83,7 +87,11 @@ def valueText : DVal CoreDialect → String
   | ⟨.float e m, v⟩ => match (v : PoisonOr (BitVec (Core.floatWidth e m))) with
     | .poison => "poison"
     | .value b => (Attr.int b.toInt).print
-  | ⟨.ptr, v⟩ => nomatch (v : Empty)
+  | ⟨.ptr _, v⟩ => match (v : PoisonOr Memory.Pointer) with
+    | .poison => "poison"
+    | .value p =>
+      let a := match p.prov with | some a => toString a | none => "none"
+      s!"ptr({a}, {(Attr.int p.offset).print})"
 
 /-- The `const` op that the text `s` spells at the type `t`: the spec's
 lexer reads `s` as one token (`argAttr`, which `fir-ref` runs as
@@ -108,7 +116,9 @@ def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)
   | _ => none
 
 /-- An argument of type `t`: a constant of `t`, or `poison` at any `iN` and
-any float type, spelled as `valueText` spells it. -/
+any float type, spelled as `valueText` spells it. A pointer argument is
+`poison`: a run starts with no allocation, so no pointer has provenance
+for one. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
   | .int w, s => match constOf w s with
@@ -118,7 +128,8 @@ def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .float e m, s => match floatConstOf e m s with
     | some v => pure (.value v : PoisonOr (BitVec (Core.floatWidth e m)))
     | none => .error s!"{shown s} is not a value of type {tyText (.float e m)}"
-  | .ptr, s => .error s!"{shown s} is not a value of type ptr"
+  | .ptr _, "poison" => pure (.poison : PoisonOr Memory.Pointer)
+  | .ptr n, s => .error s!"{shown s} is not a value of type {tyText (.ptr n)}"
 
 /-- One argument for each type of `ts`. -/
 def readArgs : (ts : List Core.Ty) → List String → Except String (HVector toType ts)

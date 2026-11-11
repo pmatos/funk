@@ -154,7 +154,7 @@ def Op.hasRules (op : Op) : Bool :=
 #guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
-  (Op.call "f" [] [.ptr]).hasRules
+  (Op.call "f" [] [.ptr 0]).hasRules
 #guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
 
 end Fir.Core

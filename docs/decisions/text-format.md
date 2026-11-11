@@ -95,6 +95,13 @@ text. `float(e, m)` of a format with an alias does not decode, so each format
 has one spelling, and neither does a negative number, another argument list, an
 alias applied to arguments or the bare word `float` (ADR-2026-11-11-0951).
 
+A pointer type `ptr<0>`, the default memory's, is written `ptr`, so M0's texts
+are unchanged. `ptr<N>` of another memory is written `ptr(N)`, the grammar's
+applied form, such as `ptr(1)`. `ptr(0)` does not decode, so each pointer type
+has one spelling, and neither does a negative memory, one above 16,777,215,
+`ptr()` or another argument list. Whether the module has memory `N` is
+validation's rule (ADR-2026-11-11-1709).
+
 A float constant is `const` with one attribute: its bits read as a
 two's-complement signed integer of `1 + e + m` bits, in decimal, as an integer
 constant of that width is written. So `%one: f32 = const 1065353216` is `1.0`,

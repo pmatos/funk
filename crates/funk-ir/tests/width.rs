@@ -169,8 +169,7 @@ fn a_width_change_that_does_not_widen_or_narrow_parses_and_fails_validation() {
 }
 
 /// The diagnostics of `@f(%a: i32, %b: i64, %c: i8, %p: ptr) -> i32`, whose
-/// entry block holds a constant `%k: i32`, `op` at index 1, and `ret %a`,
-/// less those that reject a value of the reserved type `ptr`.
+/// entry block holds a constant `%k: i32`, `op` at index 1, and `ret %a`.
 fn verify_op(op: Op) -> Vec<Diagnostic> {
     let k = Op::new("const", LocRef(0))
         .attr(Attr::int(1))
@@ -190,9 +189,7 @@ fn verify_op(op: Op) -> Vec<Diagnostic> {
     let mut m = Module::new();
     m.locs.push(Location::Unknown);
     m.locs.insert(L, Location::Name("here".into()));
-    let mut ds = verify(&m.func(f), &Registry::core());
-    ds.retain(|d| !(d.op.is_none() && d.message.contains("ptr is reserved")));
-    ds
+    verify(&m.func(f), &Registry::core())
 }
 
 /// `op` with these attributes, these operands and results of these types,

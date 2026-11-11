@@ -3,8 +3,14 @@
 //!
 //! `iN` is written `i` and `N` in decimal with no leading zeros. A width above
 //! [`MAX_WIDTH`] does not decode (N3). `i0` decodes, and validation rejects
-//! it. `ptr` is reserved: it decodes, and validation in M0 rejects every
-//! value of type `ptr`.
+//! it.
+//!
+//! `ptr<N>` is the pointer of the memory `N` (ADR-2026-11-09-1542). The
+//! default memory's pointer, `ptr<0>`, is written `ptr`, and another memory's
+//! `ptr(N)`, so each pointer type has one spelling: `ptr(0)` does not decode,
+//! and neither does a memory above [`MAX_MEMORY`] (ADR-2026-11-11-1709).
+//! Validation accepts `ptr`, since every module has the default memory, and
+//! rejects `ptr(N)` until the data layout declares memories (#231).
 //!
 //! `float<e,m>` is written by its alias when it has one, `f16`, `bf16`,
 //! `f32`, `f64` or `f128`, and as `float(e, m)` otherwise, so each format has
@@ -18,6 +24,13 @@ use crate::{Attr, Type};
 
 /// The widest integer type, `i16777215`: `2^24 - 1` bits, MLIR's limit.
 pub const MAX_WIDTH: u32 = (1 << 24) - 1;
+
+/// The highest memory that a pointer type names, `2^24 - 1`, as LLVM bounds
+/// its address spaces.
+pub const MAX_MEMORY: u32 = (1 << 24) - 1;
+
+/// The head word of a pointer type: `ptr`, or `ptr(N)`.
+const PTR: &str = "ptr";
 
 /// The float formats with a name of their own, as `(name, e, m)`.
 pub const FLOAT_ALIASES: [(&str, u32, u32); 5] = [
@@ -43,13 +56,22 @@ pub enum CoreType {
         /// The explicit mantissa bits.
         m: u32,
     },
-    /// The reserved type `ptr`.
-    Ptr,
+    /// `ptr<N>`, a pointer into the memory `N`.
+    Ptr(u32),
 }
 
 /// The type `iN` with `N = width`.
 pub fn int_type(width: u32) -> Type {
     Type::word(format!("i{width}"))
+}
+
+/// The type `ptr<N>` with `N = memory`: `ptr` for the default memory, and
+/// `ptr(N)` for another.
+pub fn ptr_type(memory: u32) -> Type {
+    match memory {
+        0 => Type::word(PTR),
+        n => Type::app(PTR, vec![Attr::int(i128::from(n))]),
+    }
 }
 
 /// The alias of the format `float<e,m>`, if it has one.
@@ -80,7 +102,7 @@ pub fn core_type(ty: &Type) -> Option<CoreType> {
 pub fn int_width(ty: &Type) -> Option<u32> {
     match core_type(ty)? {
         CoreType::Int(w) => Some(w),
-        CoreType::Float { .. } | CoreType::Ptr => None,
+        CoreType::Float { .. } | CoreType::Ptr(_) => None,
     }
 }
 
@@ -88,7 +110,7 @@ pub fn int_width(ty: &Type) -> Option<u32> {
 pub fn float_format(ty: &Type) -> Option<(u32, u32)> {
     match core_type(ty)? {
         CoreType::Float { e, m } => Some((e, m)),
-        CoreType::Int(_) | CoreType::Ptr => None,
+        CoreType::Int(_) | CoreType::Ptr(_) => None,
     }
 }
 
@@ -96,10 +118,14 @@ pub fn float_format(ty: &Type) -> Option<(u32, u32)> {
 /// `float(e, m)` but is not written as the spec requires.
 fn decode(ty: &Type) -> Option<Result<CoreType, String>> {
     if let Some(args) = &ty.args {
-        return (ty.name == FLOAT).then(|| decode_float(args))?;
+        return match ty.name.as_str() {
+            FLOAT => decode_float(args),
+            PTR => decode_ptr(args),
+            _ => None,
+        };
     }
-    if ty.name == "ptr" {
-        return Some(Ok(CoreType::Ptr));
+    if ty.name == PTR {
+        return Some(Ok(CoreType::Ptr(0)));
     }
     let Some(digits) = ty.name.strip_prefix('i') else {
         let (_, e, m) = FLOAT_ALIASES.iter().find(|a| a.0 == ty.name)?;
@@ -142,6 +168,22 @@ fn decode_float(args: &[Attr]) -> Option<Result<CoreType, String>> {
     Some(Ok(CoreType::Float { e, m }))
 }
 
+/// `ptr(N)`: one integer, from 1 to [`MAX_MEMORY`]. `None` when the
+/// arguments are not one integer.
+fn decode_ptr(args: &[Attr]) -> Option<Result<CoreType, String>> {
+    let [Attr::Int(n)] = args else {
+        return None;
+    };
+    let shown = format!("{PTR}({})", n.as_str());
+    Some(match n.as_str().parse::<u32>() {
+        Ok(0) => Err(format!("{shown} is written {PTR}")),
+        Ok(n) if n <= MAX_MEMORY => Ok(CoreType::Ptr(n)),
+        _ => Err(format!(
+            "{shown} names no memory: memories run from 0 to {MAX_MEMORY}"
+        )),
+    })
+}
+
 /// The core dialect's types.
 pub(super) struct CoreTypes;
 
@@ -157,9 +199,10 @@ impl TypeSpec for CoreTypes {
                 "{ty} is not a float format: it needs at least 2 exponent bits and 1 mantissa bit"
             )),
             Ok(CoreType::Float { .. }) => TypeCheck::Valid,
-            Ok(CoreType::Ptr) => {
-                TypeCheck::Invalid("ptr is reserved: M0 has no values of type ptr".into())
-            }
+            Ok(CoreType::Ptr(0)) => TypeCheck::Valid,
+            Ok(CoreType::Ptr(n)) => TypeCheck::Invalid(format!(
+                "{ty} is a pointer of memory {n}, which the module does not have: only the default memory, 0, has pointers until a data layout declares more"
+            )),
         })
     }
 }
@@ -175,7 +218,7 @@ mod tests {
             core_type(&int_type(MAX_WIDTH)),
             Some(CoreType::Int(MAX_WIDTH))
         );
-        assert_eq!(core_type(&Type::word("ptr")), Some(CoreType::Ptr));
+        assert_eq!(core_type(&Type::word("ptr")), Some(CoreType::Ptr(0)));
         assert_eq!(core_type(&Type::word("i16777216")), None);
         assert_eq!(core_type(&Type::word("i032")), None);
         assert_eq!(core_type(&Type::word("u8")), None);
@@ -183,7 +226,7 @@ mod tests {
         let check = |s: &str| CoreTypes.check(&Type::word(s));
         assert_eq!(check("i32"), Some(TypeCheck::Valid));
         assert!(matches!(check("i0"), Some(TypeCheck::Invalid(_))));
-        assert!(matches!(check("ptr"), Some(TypeCheck::Invalid(_))));
+        assert_eq!(check("ptr"), Some(TypeCheck::Valid));
         assert!(matches!(
             check("i99999999999999999999"),
             Some(TypeCheck::Malformed(_))
@@ -236,5 +279,48 @@ mod tests {
         assert_eq!(CoreTypes.check(&Type::app(FLOAT, vec![Attr::int(5)])), None);
         assert_eq!(CoreTypes.check(&Type::app("f32", vec![])), None);
         assert_eq!(CoreTypes.check(&Type::word("float")), None);
+    }
+
+    fn ptr(n: i128) -> Type {
+        Type::app(PTR, vec![Attr::int(n)])
+    }
+
+    #[test]
+    fn each_pointer_type_has_one_spelling() {
+        assert_eq!(ptr_type(0), Type::word("ptr"));
+        assert_eq!(ptr_type(1), ptr(1));
+        for n in [0, 1, 7, MAX_MEMORY] {
+            assert_eq!(core_type(&ptr_type(n)), Some(CoreType::Ptr(n)));
+        }
+        assert!(matches!(
+            CoreTypes.check(&ptr(0)),
+            Some(TypeCheck::Malformed(r)) if r == "ptr(0) is written ptr"
+        ));
+        for n in [-1, i128::from(MAX_MEMORY) + 1, 1 << 40] {
+            assert!(
+                matches!(CoreTypes.check(&ptr(n)), Some(TypeCheck::Malformed(_))),
+                "{n}"
+            );
+        }
+        assert_eq!(CoreTypes.check(&Type::app(PTR, vec![])), None);
+        assert_eq!(
+            CoreTypes.check(&Type::app(PTR, vec![Attr::int(1), Attr::int(2)])),
+            None
+        );
+        assert_eq!(
+            CoreTypes.check(&Type::app(PTR, vec![Attr::word("x")])),
+            None
+        );
+    }
+
+    #[test]
+    fn only_the_default_memory_has_valid_pointers() {
+        assert_eq!(CoreTypes.check(&ptr_type(0)), Some(TypeCheck::Valid));
+        for n in [1, MAX_MEMORY] {
+            assert!(
+                matches!(CoreTypes.check(&ptr_type(n)), Some(TypeCheck::Invalid(_))),
+                "{n}"
+            );
+        }
     }
 }

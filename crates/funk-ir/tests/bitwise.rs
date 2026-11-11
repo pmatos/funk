@@ -146,15 +146,8 @@ fn a_flag_or_any_attribute_is_rejected_at_the_name() {
 
 const L: LocRef = LocRef(5);
 
-/// Whether `d` is the diagnostic of the function that rejects a value of
-/// the reserved type `ptr` (`verify_text.rs`), such as `%p` below.
-fn rejects_ptr(d: &Diagnostic) -> bool {
-    d.op.is_none() && d.message.contains(", ptr, is not valid: ptr is reserved")
-}
-
 /// The diagnostics of `@f(%a: i32, %b: i64, %p: ptr) -> i32`, whose entry
-/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`, less
-/// those that reject a value of type `ptr`.
+/// block holds a constant `%c: i32`, `op` at index 1, and `ret %a`.
 fn verify_op(op: Op) -> Vec<Diagnostic> {
     let c = Op::new("const", LocRef(0))
         .attr(Attr::int(1))
@@ -173,9 +166,7 @@ fn verify_op(op: Op) -> Vec<Diagnostic> {
     let mut m = Module::new();
     m.locs.push(Location::Unknown);
     m.locs.insert(L, Location::Name("here".into()));
-    let mut ds = verify(&m.func(f), &Registry::core());
-    ds.retain(|d| !rejects_ptr(d));
-    ds
+    verify(&m.func(f), &Registry::core())
 }
 
 /// Asserts that the verifier rejects `op` with one diagnostic at the op and

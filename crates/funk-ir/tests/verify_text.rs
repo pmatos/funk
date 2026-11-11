@@ -77,13 +77,20 @@ fn every_stated_type_is_valid() {
         "%c, i0",
     );
     rejects(
-        &one_func("func @f(%p: ptr) {\n^e:\n  ret @0\n}\n"),
-        "ptr is reserved",
+        &one_func("func @f(%p: ptr(1)) {\n^e:\n  ret @0\n}\n"),
+        "ptr(1) is a pointer of memory 1, which the module does not have",
     );
     rejects(
-        &one_func("func @f(%p: ptr) -> ptr {\n^e:\n  ret %p @0\n}\n"),
-        "a result type of the function, ptr",
+        &one_func("func @f(%p: ptr) -> ptr(2) {\n^e:\n  ret %p @0\n}\n"),
+        "a result type of the function, ptr(2)",
     );
+}
+
+#[test]
+fn the_default_memory_has_pointers() {
+    let text =
+        one_func("func @f(%p: ptr) -> ptr {\n^e:\n  br ^b(%p) @0\n^b(%q: ptr):\n  ret %q @0\n}\n");
+    assert_eq!(diagnostics(&text), vec![]);
 }
 
 #[test]

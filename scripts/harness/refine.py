@@ -40,8 +40,8 @@ FLOAT_ALIASES = {
 def bits_of(ty: str) -> tuple[int, bool] | None:
     """The bits of a value of `ty`, and whether it is an integer type: `N`
     for `iN`, and `1 + e + m` for `float<e,m>`, by its alias or as
-    `float(e, m)`. None for any other type, such as `ptr`, which has no
-    values. A float is spelled as its bits read as a signed integer, as an
+    `float(e, m)`. None for any other type, such as `ptr`, whose values
+    are pointers, not bits. A float is spelled as its bits read as a signed integer, as an
     integer of that width is (ADR-2026-11-11-1138)."""
     m = INT_TYPE.fullmatch(ty)
     if m is not None:

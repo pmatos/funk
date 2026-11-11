@@ -187,7 +187,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "zext takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+rule = "zext takes an integer operand, not a ptr"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -202,7 +202,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "zext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+rule = "zext defines an integer, not a ptr"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -307,7 +307,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sext takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+rule = "sext takes an integer operand, not a ptr"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -322,7 +322,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "sext defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+rule = "sext defines an integer, not a ptr"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -427,7 +427,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "trunc takes an integer operand, not a ptr; the ptr parameter also breaks a rule of validation, as ptr is reserved"
+rule = "trunc takes an integer operand, not a ptr"
 text = '''
 func @f(%a: i32, %p: ptr) -> i32 {
 ^entry:
@@ -442,7 +442,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "trunc defines an integer, not a ptr; the ptr result also breaks a rule of validation, as ptr is reserved"
+rule = "trunc defines an integer, not a ptr"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:

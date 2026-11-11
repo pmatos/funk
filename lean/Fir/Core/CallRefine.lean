@@ -28,10 +28,14 @@ meets:
 * every core terminator and every core op with no callee is monotone,
   each by the obligation that its family proves, at every width: every
   core op but `call`, whose way to go on is its callee's run;
-* every core type has finitely many values: poison and the 2^N bit
-  vectors of `iN`, poison and the bit vectors of `1 + e + m` bits of
-  `float<e,m>`, and none of `ptr`. So every list of types has finitely
-  many argument vectors;
+* the callee `@g` has finitely many argument vectors. An integer or
+  float type has finitely many values: poison and the 2^N bit vectors of
+  `iN`, poison and the bit vectors of `1 + e + m` bits of `float<e,m>`.
+  A pointer type has infinitely many: poison and a pointer for every
+  allocation and every offset. So congruence holds here for a callee with
+  no pointer parameter, whose parameter types have finitely many argument
+  vectors. A callee with a pointer parameter waits for congruence over
+  types with infinitely many values (#214);
 * the refinement of core values is reflexive and transitive;
 * the symbols of a valid module are unique.
 
@@ -97,32 +101,44 @@ monotone, valid or not. -/
 theorem opsMonotone_all (f : Func CoreDialect) : f.OpsMonotone :=
   fun _ _ o _ h => Op.monotone_all o.op h
 
-/-- Every value of a core type: poison and each bit vector of `iN` or of a
-float type, and none of `ptr`. -/
+/-- A core type has finitely many values when it is an integer or a float
+type. A pointer type has infinitely many. -/
+def Ty.Finite : Ty → Prop
+  | .int _ | .float _ _ => True
+  | .ptr _ => False
+
+/-- Every value of an integer or float type: poison and each bit vector of
+its width. A pointer type's values are infinitely many, so no list holds
+them, and it lists none. -/
 def Ty.values : (t : Ty) → List ⟦t⟧
   | .int w => .poison :: (ChoiceTree.allBits w).map .value
   | .float e m => .poison :: (ChoiceTree.allBits (floatWidth e m)).map .value
-  | .ptr => []
+  | .ptr _ => []
 
-/-- Every value of a core type is one of its values. -/
-theorem Ty.mem_values : ∀ {t : Ty} (v : ⟦t⟧), v ∈ t.values
-  | .int _, .poison => List.mem_cons_self
-  | .int _, .value b => List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
-  | .float _ _, .poison => List.mem_cons_self
-  | .float _ _, .value b =>
+/-- Every value of a core type with finitely many values is one of its
+values. -/
+theorem Ty.mem_values : ∀ {t : Ty}, t.Finite → ∀ v : ⟦t⟧, v ∈ t.values
+  | .int _, _, .poison => List.mem_cons_self
+  | .int _, _, .value b =>
     List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
-  | .ptr, v => nomatch (v : Empty)
+  | .float _ _, _, .poison => List.mem_cons_self
+  | .float _ _, _, .value b =>
+    List.mem_cons_of_mem _ (List.mem_map_of_mem (ChoiceTree.mem_allBits b))
+  | .ptr _, h, _ => h.elim
 
-/-- Every argument vector of the types `ts`. -/
+/-- Every argument vector of the types `ts`, when each has finitely many
+values. -/
 def argVectors : (ts : List Ty) → List (HVector toType ts)
   | [] => [.nil]
   | t :: ts => t.values.flatMap fun v => (argVectors ts).map (.cons v)
 
-/-- Every argument vector of the types `ts` is one of them. -/
-theorem mem_argVectors : ∀ {ts : List Ty} (a : HVector toType ts), a ∈ argVectors ts
-  | [], .nil => List.mem_singleton_self _
-  | _ :: _, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values v,
-      List.mem_map_of_mem (mem_argVectors a)⟩
+/-- Every argument vector of the types `ts`, each with finitely many
+values, is one of them. -/
+theorem mem_argVectors : ∀ {ts : List Ty}, (∀ t ∈ ts, t.Finite) →
+    ∀ a : HVector toType ts, a ∈ argVectors ts
+  | [], _, .nil => List.mem_singleton_self _
+  | _ :: _, h, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values (h _ List.mem_cons_self) v,
+      List.mem_map_of_mem (mem_argVectors (fun t ht => h t (List.mem_cons_of_mem _ ht)) a)⟩
 
 /-- Refined arguments: on arguments that refine others, a poison by any
 value, the observable behaviour of every function of every core module
@@ -134,26 +150,27 @@ theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
 
 variable {M : Module CoreDialect}
 
-/-- Congruence in the callee: replacing the body of a function `@g` of a
-valid core module with one under which `@g`, run in the new module,
-refines `@g` in the old, refines every function of the module, calls and
-recursion included. -/
+/-- Congruence in the callee: replacing the body of a function `@g` with
+no pointer parameter, of a valid core module, with one under which `@g`,
+run in the new module, refines `@g` in the old, refines every function of
+the module, calls and recursion included. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (b : Region CoreDialect)
+    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
     (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) :
     funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) (f.replaceBody g.name b) :=
   Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _, mem_argVectors⟩ h hf
+    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _, mem_argVectors hfin⟩ h hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
-is refined by itself in the module with `@g`'s new body. -/
+is refined by itself in the module with `@g`'s new body, when `@g` has no
+pointer parameter. -/
 theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (b : Region CoreDialect)
+    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
     (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
     funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) f := by
-  have := replaceBody_isRefinedBy hM hg b h hf
+  have := replaceBody_isRefinedBy hM hg hfin b h hf
   change funcRuns M f ⊑ funcRuns _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
 

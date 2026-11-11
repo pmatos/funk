@@ -209,17 +209,25 @@ def argVectors : (ts : List CoreProbe.Ty) → List (HVector toType ts)
   | .inl t :: ts => t.values.flatMap fun v => (argVectors ts).map (.cons v)
   | .inr t :: _ => t.elim
 
-/-- `argVectors ts` holds every vector of values of the types `ts`. -/
-theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (a : HVector toType ts), a ∈ argVectors ts
-  | [], .nil => List.mem_singleton_self _
-  | .inl _ :: _, .cons v a => List.mem_flatMap.2 ⟨v, Core.Ty.mem_values v,
-      List.mem_map_of_mem (mem_argVectors a)⟩
-  | .inr t :: _, _ => t.elim
+/-- A type of the sum, a core type, with finitely many values. -/
+def Finite : CoreProbe.Ty → Prop
+  | .inl t => t.Finite
+  | .inr t => t.elim
 
-/-- Congruence in the callee, for every valid module of `CoreProbe`, by the
-lawful class alone, whatever the new body. -/
+/-- `argVectors ts` holds every vector of values of the types `ts`, each
+with finitely many values. -/
+theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty}, (∀ t ∈ ts, Finite t) →
+    ∀ a : HVector toType ts, a ∈ argVectors ts
+  | [], _, .nil => List.mem_singleton_self _
+  | .inl _ :: _, h, .cons v a => List.mem_flatMap.2 ⟨v, Core.Ty.mem_values (h _ List.mem_cons_self) v,
+      List.mem_map_of_mem (mem_argVectors (fun t ht => h t (List.mem_cons_of_mem _ ht)) a)⟩
+  | .inr t :: _, _, _ => t.elim
+
+/-- Congruence in the callee, for every valid module of `CoreProbe` and a
+callee with no pointer parameter, by the lawful class alone, whatever the
+new body. -/
 theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func CoreProbe}
-    (hg : g ∈ M.funcs) (b : Region CoreProbe)
+    (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t) (b : Region CoreProbe)
     (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
     f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
@@ -228,7 +236,7 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
       fun {t} => Empty.elim t)
     (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
       fun {t} => Empty.elim t)
-    hM hg b ⟨argVectors _, mem_argVectors⟩ h hf
+    hM hg b ⟨argVectors _, mem_argVectors hfin⟩ h hf
 
 /-! # Axioms -/
 

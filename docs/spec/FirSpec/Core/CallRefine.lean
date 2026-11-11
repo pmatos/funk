@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12735778590939103088")
+:::moduleDocs (fingerprint := "16259356870740253104")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -35,26 +35,29 @@ below hold for every core module, valid or not, where the
 would give them only for valid modules.
 :::
 
-:::readable Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "17048973272107432166")
-*Definitions and theorems: every value of a core type, and every argument
-vector.* The values of a
-{ref "The-fir-specification--Execution--Core-values"}[core type] are
-listed:
+:::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "4362277538974857739")
+*Definitions and theorems: every value of a core type with finitely many
+values, and every argument vector.* An integer and a float type have
+finitely many values; a pointer type has infinitely many, one for every
+allocation and offset. The values of a
+{ref "The-fir-specification--Execution--Core-values"}[core type] with
+finitely many values are listed:
 
 * the values of $`\mathsf{i}N` are poison and the $`2^N` vectors of $`N`
   bits, in order from $`0` to $`2^N - 1`;
 * the values of $`\mathsf{float}\langle e,m \rangle` are poison and the
-  vectors of $`1 + e + m` bits, in the same order;
-* $`\mathsf{ptr}` has no values.
+  vectors of $`1 + e + m` bits, in the same order.
 
-The argument vectors of a list of types $`t_1, \dots, t_n` are listed too:
-every choice of a value of $`t_1`, then of $`t_2`, up to $`t_n`, and the
-one empty vector when $`n = 0`.
+No list holds the values of $`\mathsf{ptr}\langle N \rangle`, which lists
+none. The argument vectors of a list of types $`t_1, \dots, t_n` are
+listed too: every choice of a value of $`t_1`, then of $`t_2`, up to
+$`t_n`, and the one empty vector when $`n = 0`.
 
-*Theorems:* every value of a core type $`t` is in the list of values of
-$`t`, and every vector of values of the types $`t^*` is in the list of
-argument vectors of $`t^*`. So the parameter types of every core function
-have finitely many argument vectors, which
+*Theorems:* every value of a core type $`t` with finitely many values is
+in the list of values of $`t`, and when each of the types $`t^*` has
+finitely many values, every vector of values of $`t^*` is in the list of
+argument vectors of $`t^*`. So the parameter types of a core function with
+no pointer parameter have finitely many argument vectors, which
 {ref "The-fir-specification--Execution--Replacing-a-callee"}[congruence in the callee]
 asks.
 :::
@@ -84,11 +87,11 @@ as the section on
 proves, so the theorem compares real behaviours.
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "5212101390478933481")
+:::readable Fir.Core.replaceBody_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "8597197980571865364")
 *Theorem: congruence in the callee, for core functions.* Let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]
-core module, $`g` a function of $`M` with the symbol $`s`, and $`b` a
-region. Let the runs of $`g[s \leftarrow b]` in
+core module, $`g` a function of $`M` with the symbol $`s` and no pointer
+parameter, and $`b` a region. Let the runs of $`g[s \leftarrow b]` in
 $`M[s \leftarrow b]` refine the runs of $`g` in $`M`: on every argument
 vector, its observable behaviour in the new module refines that of $`g`
 in the old. Then for every function $`f` of $`M`, the runs of
@@ -101,8 +104,10 @@ of its function $`s`, as in the section on
 whose general theorem this is. The core dialect meets its hypotheses:
 every core function has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops], the refinement of core values is
-reflexive and transitive, every core type has finitely many values, and
-the symbols of a valid module are unique.
+reflexive and transitive, the parameter types of $`g` have finitely many
+values, and the symbols of a valid module are unique. A callee with a
+pointer parameter has infinitely many argument vectors, and congruence for
+it waits for the general theorem over such types (#214).
 
 The comparison is between real behaviours when the new function is valid
 in the old module's context: then the new module is valid, and neither
@@ -111,7 +116,7 @@ one whose entry block declares arguments, meets the hypothesis with an
 empty behaviour, which refines every source.
 :::
 
-:::readable Fir.Core.caller_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "4326848490518337587")
+:::readable Fir.Core.caller_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "16463603510413641815")
 *Theorem: every other function, a caller or not, is refined by itself.*
 Under the hypotheses of the previous theorem, for every function $`f` of
 $`M` whose symbol is not $`s`, the runs of $`f` itself in

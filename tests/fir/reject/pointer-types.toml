@@ -1,0 +1,219 @@
+# Must-reject texts of the pointer types (ADR-2026-11-09-1542,
+# ADR-2026-11-11-1709). ptr<0>, the default memory's pointer, is written
+# ptr, and ptr<N> of another memory ptr(N), so ptr(0), a negative memory, a
+# memory above 16777215 and any other argument list do not decode. Every
+# module has the default memory, and no module has another until the data
+# layout declares memories, so ptr(N) with N >= 1 decodes and validation
+# rejects it. A pointer of one memory is no pointer of another, but a text
+# that passes a ptr(1) where a ptr is expected also states the invalid type
+# ptr(1), so it breaks that rule too, and `rule` names both.
+
+[[reject]]
+verdict = "parse-error"
+rule = "the default memory's pointer is written ptr: ptr(0) does not decode"
+text = '''
+func @f(%p: ptr(0)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a pointer type names a memory from 0 to 16777215: ptr(-1) does not decode"
+text = '''
+func @f(%p: ptr(-1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a pointer type names a memory from 0 to 16777215: ptr(16777216), a result type, does not decode"
+text = '''
+func @f() -> ptr(16777216) {
+^e:
+  unreachable @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a pointer type is ptr or ptr(N) with one integer: ptr() does not decode"
+text = '''
+func @f(%p: ptr()) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a pointer type is ptr or ptr(N) with one integer: ptr(1, 2), an op's result type, does not decode"
+text = '''
+func @f(%p: ptr) -> ptr {
+^entry:
+  %q: ptr(1, 2) = call @f %p @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a pointer type is ptr or ptr(N) with one integer: ptr(global), a block argument's type, does not decode"
+text = '''
+func @f(%p: ptr) {
+^entry:
+  br ^b(%p) @0
+^b(%q: ptr(global)):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "poison defines an integer: a pointer is not one"
+text = '''
+func @f() -> ptr {
+^entry:
+  %p: ptr = poison @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes an integer: a pointer is not one"
+text = '''
+func @f(%p: ptr) -> ptr {
+^entry:
+  %q: ptr = freeze %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "select chooses between integers: pointers are not"
+text = '''
+func @f(%c: i1, %p: ptr, %q: ptr) -> ptr {
+^entry:
+  %r: ptr = select %c, %p, %q @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every type is valid: a parameter has no ptr(1) type, as the module has no memory 1"
+text = '''
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: a ptr(1) where it returns a ptr, a pointer of another memory; the parameter's type ptr(1) is also invalid"
+text = '''
+func @f(%p: ptr(1)) -> ptr {
+^e:
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a successor passes values of its block's argument types: a ptr(1) where ^b takes a ptr, a pointer of another memory; the parameter's type ptr(1) is also invalid"
+text = '''
+func @f(%p: ptr(1)) {
+^entry:
+  br ^b(%p) @0
+^b(%q: ptr):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "call passes its callee's parameter types: a ptr(3) where @g takes a ptr, a pointer of another memory; the parameter's type ptr(3) is also invalid"
+text = '''
+func @g(%p: ptr) {
+^e:
+  ret @0
+}
+
+func @f(%p: ptr(3)) {
+^e:
+  call @g %p @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: a ptr where it returns an i64"
+text = '''
+func @f(%p: ptr) -> i64 {
+^e:
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

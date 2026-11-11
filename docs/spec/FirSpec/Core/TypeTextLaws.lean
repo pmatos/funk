@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core types in text are lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15979261708569690121")
+:::moduleDocs (fingerprint := "4219413424004421706")
 :::
 
 :::readable Fir.Core.toList_int_attr (fingerprint := "2552526595169716876")
@@ -33,19 +33,23 @@ $`\texttt{float}(e, m)` reads back as
 $`\mathsf{float}\langle e,m \rangle`.
 :::
 
-:::readable Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "11487731498339909317")
+:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "4911415057033537285")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
 $`\mathsf{i}N` with $`1 \le N \le 16{,}777{,}215`, or
 $`\mathsf{float}\langle e,m \rangle` with $`e \ge 2`, $`m \ge 1` and
-$`1 + e + m \le 16{,}777{,}215`; the pointer type is not valid in M0. For
-every valid core type $`t`, $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`.
-And for every attribute $`a` and type $`t`, if
-$`\mathrm{decodety}(a) = t` then $`\mathrm{tyattr}(t) = a`: in
+$`1 + e + m \le 16{,}777{,}215`, or $`\mathsf{ptr}\langle 0 \rangle`, the
+pointer of the default memory. For every valid core type $`t`,
+$`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`. So does
+$`\mathsf{ptr}\langle N \rangle` for every memory
+$`1 \le N \le 16{,}777{,}215`, written $`\texttt{ptr}(N)`, ready for the
+memories that a data layout declares. And for every attribute $`a` and type
+$`t`, if $`\mathrm{decodety}(a) = t` then $`\mathrm{tyattr}(t) = a`: in
 particular, a format that $`\texttt{float}(e, m)` reads back as is
 written $`\texttt{float}(e, m)`, since one with an alias does not decode
-from it.
+from it, and a pointer type that $`\texttt{ptr}(N)` reads back as is
+written $`\texttt{ptr}(N)`, since $`\texttt{ptr}(0)` does not decode.
 
 These are the third and fourth laws of a lawful text, which the
 {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[next section]
@@ -56,7 +60,8 @@ wider type does not read back.
 :::readable Fir.Core.Ty.attr_isType (pin := Fir.isWord) (fingerprint := "6590097866977232082")
 *Theorem: every valid core type is written as a type.* For every valid
 core type $`t`, $`\mathrm{tyattr}(t)` is written as a type: a word, as
-$`\mathsf{i}N` and every alias are, or the word $`\texttt{float}` applied
-to two integers. This is the type's part of the last laws of a lawful
+$`\mathsf{i}N`, every alias and $`\texttt{ptr}` are, the word
+$`\texttt{float}` applied to two integers, or the word $`\texttt{ptr}`
+applied to one. This is the type's part of the last laws of a lawful
 text.
 :::

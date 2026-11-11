@@ -155,10 +155,18 @@ def withG (f : String) : String :=
 
 /-! # Core types -/
 
-#guard checks (oneFunc "func @f(%a: i0, %p: ptr) -> i0 {\n^e:\n  ret @0\n}\n")
+#guard checks (oneFunc "func @f(%a: i0, %p: ptr(1)) -> i0 {\n^e:\n  ret @0\n}\n")
   ["a result type of the function is not valid", "the type of %a is not valid",
    "the type of %p is not valid", "the op breaks its dialect's own rule"]
 #guard valid (oneFunc "func @f(%a: i1, %b: i16777215) {\n^e:\n  ret @0\n}\n")
+-- `ptr` is the default memory's pointer, which every module has; no module
+-- has memory 1 or 16777215 yet.
+#guard valid (oneFunc "func @f(%p: ptr) -> ptr {\n^e:\n  br ^b(%p) @0\n^b(%q: ptr):\n  ret %q @0\n}\n")
+#guard checks (oneFunc "func @f(%p: ptr(16777215)) {\n^e:\n  ret @0\n}\n")
+  ["the type of %p is not valid"]
+-- A pointer of one memory is no pointer of another.
+#guard checks (oneFunc "func @f(%p: ptr(1)) -> ptr {\n^e:\n  ret %p @0\n}\n")
+  ["the type of %p is not valid", "the op breaks its dialect's own rule"]
 #guard messages (entryOnly [op [] (.ret []) []] [("a", .int (maxWidth + 1))]) ==
   ["the type of %a is not valid"]
 

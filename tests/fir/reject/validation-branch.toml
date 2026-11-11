@@ -4,9 +4,10 @@
 # every block is reachable from the entry (Func.Valid and Func.SuccValid
 # in lean/Fir/Validation/Rules.lean, ADR-2026-10-30-0817). Each text
 # breaks one rule alone, but for two rules that cannot be broken alone,
-# whose texts break a second rule too, and `rule` names both. No value
-# has type ptr, so a branch that reaches a ptr block argument passes it
-# a value whose ptr type is also invalid. An undefined value has no
+# whose texts break a second rule too, and `rule` names both. A branch
+# that reaches a block argument of an invalid type, such as ptr(1), a
+# pointer of a memory that the module does not have, passes it a value of
+# that invalid type. An undefined value has no
 # type, so a successor that passes one also does not pass a value of the
 # right type. validation-func.toml keeps the older texts that gave ret a
 # successor, and branch.toml holds the texts of br and cond_br that do
@@ -302,12 +303,12 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a block argument has no ptr type: ^b's %x, which br reaches; no value has type ptr, so br passes it the parameter %p, whose ptr type is also invalid"
+rule = "a block argument has a valid type: ^b's %x, which br reaches, is a ptr(1), a pointer of memory 1, which the module does not have; so br passes it the parameter %p, whose ptr(1) type is also invalid"
 text = '''
-func @f(%p: ptr) {
+func @f(%p: ptr(1)) {
 ^entry:
   br ^b(%p) @0
-^b(%x: ptr):
+^b(%x: ptr(1)):
   ret @0
 }
 

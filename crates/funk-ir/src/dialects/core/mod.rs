@@ -30,7 +30,8 @@ pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
 pub use types::{
-    CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type, float_format, float_type, int_type, int_width,
+    CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
+    int_width, ptr_type,
 };
 pub use width::WIDTH_CHANGES;
 

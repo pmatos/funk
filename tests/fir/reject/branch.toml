@@ -5,7 +5,7 @@
 # that breaks one of these does not decode: each is a parse error at
 # the op's name (ADR-2026-10-30-0815). Every value is defined and every
 # successor names a block that takes what it passes, so the text breaks
-# nothing else, but for a ptr type, which validation would also reject.
+# nothing else.
 # The spec's op set calls cond_br condBr, a name that the text does not
 # accept. validation-branch.toml holds the texts of br and cond_br that
 # decode and break a rule of validation.
@@ -124,7 +124,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "br takes no operands: a ptr operand is not one; a ptr parameter is also invalid, but decoding fails first"
+rule = "br takes no operands: a ptr operand is not one"
 text = '''
 func @f(%p: ptr, %a: i32) -> i32 {
 ^entry:
@@ -156,7 +156,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "br defines no value, not a ptr; a ptr value is also invalid, but decoding fails first"
+rule = "br defines no value, not a ptr"
 text = '''
 func @f(%a: i32) -> i32 {
 ^entry:
@@ -298,7 +298,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "cond_br's condition is an i1, not a ptr; a ptr parameter is also invalid, but decoding fails first"
+rule = "cond_br's condition is an i1, not a ptr"
 text = '''
 func @f(%p: ptr, %a: i32) -> i32 {
 ^entry:
