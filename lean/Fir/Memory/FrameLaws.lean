@@ -36,7 +36,8 @@ variable [DecidableEq Mem]
 /-- Entering a call and leaving it at once changes nothing. -/
 theorem exit_enter (S : Memories Mem unit) : S.enter.exit = S := rfl
 
-/-- The memory that is replaced is the new one. -/
+/-- The memory that is replaced is the new one. This and the next are proved
+without axioms, as the memory obligations of the test dialects need. -/
 @[simp] theorem set_mem_self (S : Memories Mem unit) (x : Mem) (m : Memory (unit x)) :
     (S.set x m).mem x = m :=
   dite_eq_left rfl

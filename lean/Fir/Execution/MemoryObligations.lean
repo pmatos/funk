@@ -28,8 +28,9 @@ memory `x` of the run:
   of `x`.
 
 An op that neither writes nor allocates in `x` leaves `x` as it was.
-UB ends a path and shows no memory, so the obligations speak of the paths
-that end.
+UB ends a path and shows no memory, so no write and no allocation speak of
+the paths that end in results. No read speaks of UB too: from the other
+memory, UB comes for the same reason.
 
 A run names its memories, and a dialect names its own: the core's default
 memory may be the memory `0` of a run, and a dialect that a sum holds sees

@@ -72,11 +72,13 @@ memory (ADR-2026-11-11-0451, in `lean/Fir/Execution/MemoryObligations.lean`):
   (`AllocatesNot`); without a read, the op does not depend on the units of
   `x` (`ReadsNot`). A declaration of every memory covers every memory of the
   run.
-- They speak of the paths that end. A store does not read its memory: it
-  writes the same units whatever was there.
+- No write and no allocation speak of the paths that end in results; no
+  read matches UB with UB. A store does not read its memory: it writes the
+  same units whatever was there (`lean/FirTest/MemoryStoreReads.lean`).
 
-All but the last obligation cover valid op instances that are terminators
-or have no callee, as the poison obligations do (ADR-2026-11-02-1514).
+Every obligation but control's covers valid op instances that are
+terminators or have no callee, as the poison obligations do
+(ADR-2026-11-02-1514).
 Observable has no obligation yet: M0's runs have no trace. The core dialect
 is lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no
 memory, so `DialectMemDenote.ofSetM` gives its semantics with memory and

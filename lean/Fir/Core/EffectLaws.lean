@@ -179,9 +179,9 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   neverUB op _ _ := Core.Op.neverUB_all op
   makesNoPoison op _ _ := Core.Op.makesNoPoison_all op
   notControl := Core.Op.notControl_all
-  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
-  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
-  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
+  writesNot := DialectMemDenote.ofSetM_writesNot
+  readsNot := DialectMemDenote.ofSetM_readsNot
+  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 

@@ -36,8 +36,12 @@ in a sum, an op of the base sees its memories under the sum's names.
     memories that agree off `x`. Each unit of `x` is then the same in both
     runs, or is in each the unit it was before. A store to `x` does not read
     `x`, although whether it faults depends on the allocations of `x`.
-- **Paths that end.** UB shows no memory, so the obligations speak of the
-  paths that end in results.
+- **Paths that end.** UB shows no memory, so no write and no allocation
+  speak of the paths that end in results. No read matches UB with UB for
+  the same reason.
+- **Any unit width.** The semantics and the obligations hold at every unit
+  width of each memory, since the module's data layout, not the dialect,
+  gives the widths (ADR-2026-11-10-2350).
 - **Memory-free dialects.** `DialectMemDenote.ofSetM` lifts a semantics in
   the set monad. Such a dialect meets the obligations whatever it declares.
   The core, toy, bit and probe dialects use it.
@@ -62,6 +66,11 @@ This refines ADR-2026-11-09-1541.
 
 - An op that touches memory needs a `DialectMemDenote` that runs its rule
   through the memory effect, and one proof per memory effect it leaves out.
+- No may-UB and no may produce poison are still stated over the dialect's
+  semantics in the set monad, and nothing yet ties that semantics to
+  `DialectMemDenote`. A dialect whose ops touch memory has no semantics in
+  the set monad, so stage 2c of #231 restates those obligations over the
+  semantics with memory before the first memory op lands (stage 4).
 - `observable` still has no obligation. It comes with the trace
   (ADR-2026-11-09-1540).
 - Stage 2c of #231 restates progress, fuel monotonicity and refinement over

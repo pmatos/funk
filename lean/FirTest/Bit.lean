@@ -301,9 +301,9 @@ theorem lawfulDialectEffects : LawfulDialectEffects BitDialect where
           cases hr
           rintro (h | h) <;> cases h
   notControl _ _ := rfl
-  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
-  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
-  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
+  writesNot := DialectMemDenote.ofSetM_writesNot
+  readsNot := DialectMemDenote.ofSetM_readsNot
+  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
 
 instance : LawfulDialectEffects BitDialect := lawfulDialectEffects
 

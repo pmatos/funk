@@ -14,13 +14,12 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "923162801911803003")
+:::moduleDocs (fingerprint := "9167487277552049244")
 :::
 
-:::readable Fir.MemSet.map_map Fir.append_nil (fingerprint := "5109573099865184236")
+:::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
 *Theorem: renaming twice.* Renaming the memories of a set by $`f` and then
-by $`g` renames them by $`g \circ f`. A list followed by nothing is the
-list: $`l \mathbin{+\!\!+} [] = l`.
+by $`g` renames them by $`g \circ f`. A list is a prefix of itself.
 :::
 
 :::readable Fir.SetM.lift_apply Fir.SetM.stateMap_apply (fingerprint := "1188090380208771038")
@@ -49,7 +48,7 @@ then so does $`f \mathbin{<\$>} c`, for every $`f`: mapping changes the
 results and not the memories.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "16265963236920106000")
+:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "11032396194936030764")
 *Definition: the semantics with memory of a dialect whose ops touch no
 memory.* At every naming $`\rho`, each op runs by its rule in the set
 monad, lifted into the state layer, and keeps the memories.

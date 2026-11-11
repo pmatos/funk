@@ -36,11 +36,15 @@ theorem MemSet.map_map {A B C : Type} (f : A → B) (g : B → C) (s : MemSet A)
 
 variable {σ α β : Type}
 
-/-- A list with nothing after it is the list. Unlike the library's, this
-proof uses no axiom. -/
-theorem append_nil : ∀ l : List α, l ++ [] = l
-  | [] => rfl
-  | a :: l => congrArg (a :: ·) (append_nil l)
+/-- A list is a prefix of itself. The library's proof uses `propext`, and
+the effect laws of the test dialects are pinned axiom-free
+(`lean/FirTest/Mixed.lean`), so this one uses none. -/
+theorem prefix_refl (l : List α) : l <+: l :=
+  ⟨[], go l⟩
+where
+  go : ∀ l : List α, l ++ [] = l
+    | [] => rfl
+    | a :: l => congrArg (a :: ·) (go l)
 
 /-! # Computations that keep the memories -/
 
@@ -73,7 +77,7 @@ theorem writesNot_lift (c : SetM α) :
     WritesNot (unit := unit) x (StateT.lift c) := by
   intro S a S' h
   rcases (SetM.lift_apply c S _).1 h with ⟨_, -, he⟩ | ⟨_, -, he⟩ <;> cases he
-  exact ⟨[], append_nil _⟩
+  exact prefix_refl _
 
 /-- A computation with no memory allocates in no memory. -/
 theorem allocatesNot_lift (c : SetM α) :
@@ -136,27 +140,34 @@ memories. -/
 @[instance_reducible] def DialectMemDenote.ofSetM [DialectDenote d SetM] : DialectMemDenote d :=
   ⟨fun _ _ => DialectDenote.liftState _⟩
 
-variable [DialectDenote d SetM]
+variable [DialectDenote d SetM] [DialectCall d] [DialectValidation d]
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory writes no memory, at every
-naming. -/
-theorem DialectMemDenote.ofSetM_writesNot {N : Type} [DecidableEq N] (unit : N → Nat)
-    (ρ : DialectEffects.Mem d → N) (x : N) (op : d.Op) : OwnRuleHas unit ρ (WritesNot x) op :=
+naming, whatever it declares: the obligation as `LawfulDialectEffects`
+states it. -/
+theorem DialectMemDenote.ofSetM_writesNot (op : d.Op) (_ : TypesValid op)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).writes.map ρ).Has x) :
+    OwnRuleHas unit ρ (WritesNot x) op :=
   fun _ => ⟨fun _ => writesNot_lift x _, fun _ => writesNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory reads no memory, at every
-naming. -/
-theorem DialectMemDenote.ofSetM_readsNot {N : Type} [DecidableEq N] (unit : N → Nat)
-    (ρ : DialectEffects.Mem d → N) (x : N) (op : d.Op) : OwnRuleHas unit ρ (ReadsNot x) op :=
+naming, whatever it declares. -/
+theorem DialectMemDenote.ofSetM_readsNot (op : d.Op) (_ : TypesValid op)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).reads.map ρ).Has x) :
+    OwnRuleHas unit ρ (ReadsNot x) op :=
   fun _ => ⟨fun _ => readsNot_lift x _, fun _ => readsNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory allocates in no memory, at
-every naming. -/
-theorem DialectMemDenote.ofSetM_allocatesNot {N : Type} [DecidableEq N] (unit : N → Nat)
-    (ρ : DialectEffects.Mem d → N) (x : N) (op : d.Op) : OwnRuleHas unit ρ (AllocatesNot x) op :=
+every naming, whatever it declares. -/
+theorem DialectMemDenote.ofSetM_allocatesNot (op : d.Op) (_ : TypesValid op)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).allocates.map ρ).Has x) :
+    OwnRuleHas unit ρ (AllocatesNot x) op :=
   fun _ => ⟨fun _ => allocatesNot_lift x _, fun _ => allocatesNot_lift x _⟩
 
 end Fir

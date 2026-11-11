@@ -2,12 +2,16 @@ import Fir
 
 /-!
 Tests of the memory obligations: they reject a computation that has the
-effect they say it does not have. In the state layer over the set monad,
-with one memory of 8-bit units, an allocation allocates, a store writes and
-a load reads. A load writes nothing and allocates nothing, so a declaration
-of a load needs only a read of its memory. Which op declares what is the
-dialect's: these computations are the memory effect's own operations, not
-fir's ops.
+effect they say it does not have, and accept one that does not have it. In
+the state layer over the set monad, with one memory of 8-bit units, an
+allocation allocates, a store writes and a load reads. A load writes
+nothing and allocates nothing, so a declaration of a load needs only a read
+of its memory. An allocation writes no unit of the allocations that were
+there. A copy of a unit to another unit of the same memory reads it, though
+it gives no result: the rejected weaker form of _no read_ would accept it
+(ADR-2026-11-11-0451). `FirTest/MemoryStoreReads.lean` shows that a store
+does not read its memory. Which op declares what is the dialect's: these
+computations are the memory effect's own operations, not fir's ops.
 -/
 
 namespace FirTest.MemoryObligations
@@ -57,7 +61,7 @@ theorem load_writesNot : WritesNot () (MonadMemory.load (m := M) () p 1) := by
   cases S.load () p 1 with
   | ok us =>
     rintro ⟨⟩
-    exact ⟨[], append_nil _⟩
+    exact prefix_refl _
   | error f => rintro ⟨⟩
 
 /-- A load allocates in no memory: a path that ends keeps the memories. -/
@@ -70,5 +74,44 @@ theorem load_allocatesNot : AllocatesNot () (MonadMemory.load (m := M) () p 1) :
     rintro ⟨⟩
     exact ⟨rfl, rfl⟩
   | error f => rintro ⟨⟩
+
+/-- An allocation writes no unit of the allocations that were there: the new
+one follows them. -/
+theorem alloc_writesNot (k : AllocKind) (n : Nat) :
+    WritesNot () (MonadMemory.alloc (m := M) () k n) := by
+  intro S a S' h
+  cases h
+  show (S.mem ()).contents <+: ((S.alloc () k n).2.mem ()).contents
+  rw [Memories.alloc_mem_self]
+  exact ⟨[List.replicate n .poison], by simp [Memory.contents, Memory.alloc]⟩
+
+/-- A memory with one live heap allocation of two units, both the bits
+`0`. -/
+def zeros : Memory 8 := ⟨[⟨.heap, [.bits 0, .bits 0], true⟩]⟩
+
+/-- A memory of the same allocations as `zeros`, whose first unit holds the
+bits `1`. -/
+def oneZero : Memory 8 := ⟨[⟨.heap, [.bits 1, .bits 0], true⟩]⟩
+
+/-- The memories whose one memory is `zeros`. -/
+def two : Mems := (Memories.empty : Mems).set () zeros
+
+/-- Copies the first unit of the allocation `0` to its second. -/
+def copy : M Unit := do
+  let us ← MonadMemory.load (m := M) () ⟨some 0, 0⟩ 1
+  MonadMemory.store (m := M) () ⟨some 0, 1⟩ us
+
+/-- A copy within a memory reads it: from `zeros` it leaves the second unit
+`0`, and from `oneZero` it makes it `1`, which is neither `0` nor what
+`oneZero` held there. -/
+theorem copy_reads : ¬ ReadsNot () copy := by
+  intro h
+  obtain ⟨e', he', hm⟩ := h two oneZero (by decide) (.ok ((), two.set () zeros))
+    (.inl ⟨([.bits 0], two), rfl, rfl⟩)
+  rcases he' with ⟨⟨us, S₁⟩, h1, h2⟩ | ⟨r, h1, rfl⟩
+  · cases h1
+    cases h2
+    exact absurd (hm.2.2 0 1) (by decide)
+  · cases h1
 
 end FirTest.MemoryObligations

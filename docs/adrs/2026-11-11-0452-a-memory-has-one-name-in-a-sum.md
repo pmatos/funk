@@ -52,5 +52,9 @@ This refines ADR-2026-11-09-2306 and ADR-2026-11-10-1310.
   `Mem core ⊕ Empty`.
 - The type of a lift mentions `μ`, so every lift names its memory map, even
   one whose extension declares no effects.
+- `μ` is the caller's choice, as `ι` is, and nothing checks that it names
+  each memory of `dep` as `big` does. The right map for a base held in a
+  sum is `ofBase`, composed through each level of the sum, as `Deps.lean`
+  builds it.
 - The Rust registry names memories by strings. It does not mirror this
   yet, since no registered dialect has a memory (ADR-2026-11-10-0042).

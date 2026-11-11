@@ -137,9 +137,9 @@ instance lawfulEffects : LawfulDialectEffects ProbeDialect where
   neverUB _ _ _ h := nomatch h
   makesNoPoison _ _ _ h := nomatch h
   notControl _ h := nomatch h
-  writesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_writesNot unit ρ x op
-  readsNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_readsNot unit ρ x op
-  allocatesNot op _ _ _ _ unit ρ x _ := DialectMemDenote.ofSetM_allocatesNot unit ρ x op
+  writesNot := DialectMemDenote.ofSetM_writesNot
+  readsNot := DialectMemDenote.ofSetM_readsNot
+  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
 
 end Probe
 
