@@ -72,9 +72,11 @@ def Op.poisonClass : Op → PoisonClass
   | .trunc .. | .poison _ => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
-/-- A core value is poison when it is the poison of its `iN`. -/
+/-- A core value is poison when it is the poison of its `iN` or float
+type. -/
 def Ty.IsPoison : {t : Ty} → ⟦t⟧ → Prop
   | .int _, v => v = .poison
+  | .float _ _, v => v = .poison
   | .ptr, _ => False
 
 end Fir.Core
@@ -95,6 +97,7 @@ instance : TyPoison Core.Ty := ⟨Core.Ty.IsPoison⟩
 theorem Core.Ty.poison_isRefinedBy :
     ∀ {t : Core.Ty} (p v : ⟦t⟧), Core.Ty.IsPoison p → Core.Ty.IsRefinedBy p v
   | .int _, _, _, h => by subst h; trivial
+  | .float _ _, _, _, h => by subst h; trivial
   | .ptr, p, _, _ => nomatch (p : Empty)
 
 /-- `const` has no operands, so it propagates poison, whatever its

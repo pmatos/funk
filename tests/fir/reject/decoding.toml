@@ -93,9 +93,9 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "the core dialect has the types iN and ptr: f32, a result type, is not one"
+rule = "the core dialect has the types iN, float formats and ptr: f8, a result type, is not one"
 text = '''
-func @f() -> f32 {
+func @f() -> f8 {
 ^e:
   ret @0
 }

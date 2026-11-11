@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "675530781314827510")
+:::moduleDocs (fingerprint := "12735778590939103088")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -35,7 +35,7 @@ below hold for every core module, valid or not, where the
 would give them only for valid modules.
 :::
 
-:::readable Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (fingerprint := "11775136590190087809")
+:::readable Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "17048973272107432166")
 *Definitions and theorems: every value of a core type, and every argument
 vector.* The values of a
 {ref "The-fir-specification--Execution--Core-values"}[core type] are
@@ -43,6 +43,8 @@ listed:
 
 * the values of $`\mathsf{i}N` are poison and the $`2^N` vectors of $`N`
   bits, in order from $`0` to $`2^N - 1`;
+* the values of $`\mathsf{float}\langle e,m \rangle` are poison and the
+  vectors of $`1 + e + m` bits, in the same order;
 * $`\mathsf{ptr}` has no values.
 
 The argument vectors of a list of types $`t_1, \dots, t_n` are listed too:

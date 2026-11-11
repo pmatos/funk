@@ -1,0 +1,250 @@
+# Must-reject texts of #229's float types. A float format is written by
+# its alias, f16, bf16, f32, f64 or f128, when it has one, and as
+# float(e, m) otherwise (ADR-2026-11-11-0951): any other spelling, a
+# negative number of bits, or a format wider than 16,777,215 bits in all
+# is a parse error. A format with fewer than 2 exponent bits or 1 mantissa
+# bit decodes, and validation rejects it, as it rejects i0
+# (ADR-2026-11-11-0950). No core op takes a float yet.
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float format has at least 2 exponent bits: float(1, 1), a parameter's type, has 1"
+text = '''
+func @f(%x: float(1, 1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float format has at least 1 mantissa bit: float(2, 0), a result type, has none"
+text = '''
+func @f() -> float(2, 0) {
+^e:
+  unreachable @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float format has at least 2 exponent bits: float(0, 0), a block parameter's type, has none"
+text = '''
+func @f() {
+^e:
+  ret @0
+^b(%x: float(0, 0)):
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: an f32 where it returns an f64"
+text = '''
+func @f(%a: f32) -> f64 {
+^e:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: bf16 and f16 are different formats"
+text = '''
+func @f(%a: bf16) -> f16 {
+^e:
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format with a name is written by it: float(5, 10) is f16"
+text = '''
+func @f(%x: float(5, 10)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format with a name is written by it: float(8, 23) is f32"
+text = '''
+func @f() -> float(8, 23) {
+^e:
+  unreachable @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format has no negative number of bits: float(-1, 3)"
+text = '''
+func @f(%x: float(-1, 3)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format is at most 16,777,215 bits wide: float(2, 16777213) is one bit wider"
+text = '''
+func @f(%x: float(2, 16777213)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format is written float(e, m), with two numbers: float(5) has one"
+text = '''
+func @f(%x: float(5)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a float format is written float(e, m): float(i8, 3) has a type for e"
+text = '''
+func @f(%x: float(i8, 3)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an alias is a word: f16() applies it to nothing"
+text = '''
+func @f(%x: f16()) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "float alone is not a type"
+text = '''
+func @f(%x: float) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "f8 is not a type: only f16, bf16, f32, f64 and f128 name formats"
+text = '''
+func @f(%x: f8) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "add takes integers, not floats: it does not decode at f32"
+text = '''
+func @f(%a: f32, %b: f32) -> f32 {
+^e:
+  %r: f32 = add %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "icmp compares integers, not floats: it does not decode at f64"
+text = '''
+func @f(%a: f64, %b: f64) -> i1 {
+^e:
+  %r: i1 = icmp eq %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "freeze takes an integer: it does not decode at f16"
+text = '''
+func @f(%a: f16) -> f16 {
+^e:
+  %r: f16 = freeze %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

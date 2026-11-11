@@ -32,6 +32,13 @@ results, which are written where those values are defined.
   leading zeros, such as `i32`, and the pointer type is written `ptr`. A
   width above 16,777,215, the widest the core dialect has, is a parse error
   (ADR-2026-11-03-1000).
+* A float type is written by its alias when it has one: `f16`, `bf16`,
+  `f32`, `f64` or `f128`. Every other format `float<e,m>` is written
+  `float(e, m)`, in the applied form of the grammar, such as
+  `float(5, 2)`. So each format has one spelling: `float(8, 23)` does not
+  decode, since `f32` writes that format, and neither does a negative
+  number or a format wider than 16,777,215 bits in all
+  (ADR-2026-11-11-0951). `float(1, 1)` decodes, and validation rejects it.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -161,13 +168,41 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
     | _, _ => none
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
+/-- The alias of the float format `float<e,m>`, if it has one. -/
+def floatAlias : Nat → Nat → Option String
+  | 5, 10 => some "f16"
+  | 8, 7 => some "bf16"
+  | 8, 23 => some "f32"
+  | 11, 52 => some "f64"
+  | 15, 112 => some "f128"
+  | _, _ => none
+
+/-- The float format that an alias names: its exponent and mantissa bits. -/
+def aliasFormat : String → Option (Nat × Nat)
+  | "f16" => some (5, 10)
+  | "bf16" => some (8, 7)
+  | "f32" => some (8, 23)
+  | "f64" => some (11, 52)
+  | "f128" => some (15, 112)
+  | _ => none
+
 /-- How a core type is written. -/
 def Ty.attr : Ty → Attr
   | .int w => .word ("i" ++ toString w)
+  | .float e m => match floatAlias e m with
+    | some n => .word n
+    | none => .app "float" [.int e, .int m]
   | .ptr => .word "ptr"
 
-/-- Reads a core type: `ptr`, or `i` and a width of at most `maxWidth`, with
-no leading zeros. -/
+/-- Reads `float(e, m)`: a format with no alias, whose numbers are not
+negative and which is no wider than `maxWidth` bits in all. -/
+def decodeFloat (e m : Int) : Option Ty :=
+  if 0 ≤ e ∧ 0 ≤ m ∧ e + m + 1 ≤ maxWidth ∧ floatAlias e.toNat m.toNat = none then
+    some (.float e.toNat m.toNat)
+  else none
+
+/-- Reads a core type: `ptr`, `i` and a width of at most `maxWidth` with no
+leading zeros, a float format's alias, or `float(e, m)`. -/
 def Ty.decode : Attr → Option Ty
   | .word "ptr" => some .ptr
   | .word s => match s.toList with
@@ -175,7 +210,8 @@ def Ty.decode : Attr → Option Ty
       let digits := String.ofList ds
       (digits.toNat?).bind fun w =>
         if toString w = digits ∧ w ≤ maxWidth then some (.int w) else none
-    | _ => none
+    | _ => (aliasFormat s).map fun (e, m) => .float e m
+  | .app "float" [.int e, .int m] => decodeFloat e m
   | _ => none
 
 end Fir.Core
@@ -207,6 +243,16 @@ def samples : List Op :=
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
 
 #guard [Ty.int 1, .int 32, .int 128, .ptr].all fun t => Ty.decode t.attr == some t
+#guard [Ty.float 5 10, .float 8 7, .float 8 23, .float 11 52, .float 15 112, .float 2 1,
+  .float 5 2, .float 2 (maxWidth - 3)].all fun t => Ty.decode t.attr == some t
+#guard Ty.decode (.word "f32") == some (.float 8 23) && Ty.decode (.word "bf16") == some (.float 8 7)
+#guard Ty.decode (.app "float" [.int 5, .int 2]) == some (.float 5 2)
+#guard Ty.decode (.app "float" [.int 8, .int 23]) == none
+#guard Ty.decode (.app "float" [.int (-1), .int 3]) == none
+#guard Ty.decode (.app "float" [.int 2, .int (maxWidth - 2)]) == none
+#guard Ty.decode (.app "float" [.int 5]) == none && Ty.decode (.app "f16" []) == none
+#guard Ty.decode (.word "float") == none && Ty.decode (.word "f8") == none
+#guard Ty.decode (.app "float" [.int 1, .int 1]) == some (.float 1 1)
 #guard Ty.decode (.word "i032") == none && Ty.decode (.word "u8") == none
 #guard Op.decode "const" [.int 128] [] [.int 8] == none
 #guard Op.decode "add" [.word "nsw", .word "nuw"] [.int 8, .int 8] [.int 8] == none

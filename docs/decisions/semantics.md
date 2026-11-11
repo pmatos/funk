@@ -4,8 +4,9 @@ This page says what holds today about the meaning of fir. It summarizes the
 ADRs it cites and does not replace them. When this page and an ADR disagree,
 the page is wrong (ADR-2026-11-09-1610). See semantics-m1-design.md for the
 M1 design not built yet, semantics-m1-trace.md for what an M1 run shows,
-semantics-poison.md for poison, UB and `freeze`,
-semantics-dialects.md for sums, and semantics-effects.md for op effects.
+semantics-poison.md for poison, UB and `freeze`, semantics-dialects.md for
+sums, semantics-effects.md for op effects, and semantics-floats.md for
+floating point.
 
 ## Ground rule: fir reaches any hardware
 
@@ -18,7 +19,7 @@ This rule is G0, and it is a standing check. Every decision is checked against
 it, and none may close that door (ADR-2026-10-29-2016).
 
 Types and ops come from dialects, so there is no closed core enum. The core's
-`iN` and `ptr` are one dialect's types. One text grammar covers every
+`iN`, `float<e,m>` and `ptr` are one dialect's types. One text grammar covers every
 dialect, so a new dialect needs no parser change. The Lean semantics is
 parameterized over the dialect. Ops, types and effects come in through
 typeclasses. Lean proofs are stated over the dialect parameter where they can
@@ -103,7 +104,9 @@ the core dialect, not to a closed type system (ADR-2026-10-29-2007).
 An integer type `iN` has `1 <= N <= 16,777,215`, which is `2^24 - 1`. The IR
 and the Lean interpreter accept every width in that range. A wider type does
 not decode, in Lean and in Rust alike. A frontend that needs a wider integer
-has to split it (ADR-2026-11-03-1000).
+has to split it (ADR-2026-11-03-1000). A float type `float<e,m>` is no wider
+than that in all, and semantics-floats.md says which formats the core takes
+(ADR-2026-11-11-0950).
 
 Every other number that gives the text its structure is below `2^32`: a
 location reference, a line and a column. An integer attribute has no bound of

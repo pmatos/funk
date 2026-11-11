@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16835796905292211576")
+:::moduleDocs (fingerprint := "5457094228224241135")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -127,19 +127,42 @@ are in range, and whether a width change changes the width, are left to
 {ref "The-fir-specification--Validation--Core-rules"}[validation].
 :::
 
-:::readable Fir.Core.Ty.attr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (fingerprint := "2785724965273753220")
+:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "379769461603123496")
+*Definition: the aliases of float formats.* Five float formats have a name
+of their own (ADR-2026-11-09-1549), and $`\mathrm{alias}(e, m)` gives it:
+
+* $`\mathrm{alias}(5, 10)` is `f16`, IEEE binary16;
+* $`\mathrm{alias}(8, 7)` is `bf16`, bfloat16;
+* $`\mathrm{alias}(8, 23)` is `f32`, IEEE binary32;
+* $`\mathrm{alias}(11, 52)` is `f64`, IEEE binary64;
+* $`\mathrm{alias}(15, 112)` is `f128`, IEEE binary128.
+
+Every other format has no alias. $`\mathrm{format}(n)` reads the table the
+other way: the format that the alias $`n` names, if $`n` is one.
+:::
+
+:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (fingerprint := "6575948335157839013")
 *Definition: how a core type is written, and read back.* The
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[integer type]
 $`\mathsf{i}N` is written $`\mathrm{tyattr}(\mathsf{i}N)`, the word `i`
 followed by $`N` in decimal, and $`\mathrm{tyattr}` of the pointer type is
-the word `ptr`.
+the word `ptr`. A float type $`\mathsf{float}\langle e,m \rangle` is
+written as its alias when it has one, such as `f32`, and otherwise as the
+word `float` applied to $`e` and $`m`, as `float(5, 2)`
+(ADR-2026-11-11-0951).
 
 $`\mathrm{decodety}(a)` reads a type back. It is the pointer type when $`a`
 is the word `ptr`. It is $`\mathsf{i}N` when $`a` is a word made of `i` and
 the decimal digits of $`N`, with no leading zeros, and
-$`N \le 16{,}777{,}215`, the widest width of the core dialect. It is
-undefined otherwise, so `i032`, `u8` and `i16777216` do not decode. `i0`
-decodes, and validation rejects it.
+$`N \le 16{,}777{,}215`, the widest width of the core dialect. It is the
+float type that an alias names when $`a` is that alias. It is
+$`\mathsf{float}\langle e,m \rangle` when $`a` is
+$`\texttt{float}(e, m)` with $`e, m \ge 0`,
+$`1 + e + m \le 16{,}777{,}215`, and no alias for the format; the Lean
+calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
+`u8`, `i16777216`, `f8`, `float(8, 23)`, which is written `f32`, and
+`float(-1, 3)` do not decode. `i0` and `float(1, 1)` decode, and
+validation rejects them.
 :::
 
 :::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "12407850079966777447")
@@ -154,7 +177,7 @@ holds each of the 26 core ops at least once, with each of the ten
 predicates, at widths from 1 to 128, with and without each flag, and
 $`\mathsf{ret}` with and without operands. On every build, checks test
 that each of them reads back from its own name, attributes and types, and
-that misspellings such as `i032`, flags in the wrong order and `const 1`
-at `i1` do not. The proof for every op instance, of every width, is in the
+that misspellings such as `i032`, `float(8, 23)`, flags in the wrong order
+and `const 1` at `i1` do not. The proof for every op instance, of every width, is in the
 section {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[The core dialect's text is lawful].
 :::

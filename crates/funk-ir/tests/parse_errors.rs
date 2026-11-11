@@ -194,7 +194,7 @@ fn a_type_that_does_not_decode_is_rejected() {
         );
     }
     rejected_at(
-        &one_func("func @f() -> f32 {\n^e:\n  ret @0\n}\n"),
+        &one_func("func @f() -> f8 {\n^e:\n  ret @0\n}\n"),
         1,
         14,
         "not a type",

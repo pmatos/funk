@@ -17,7 +17,11 @@ and pack, `add`, `sub`, `mul`, `div`, `fma`, `sqrt`, `neg`, `abs` and
 and `f128`.
 
 Every expected bit pattern was computed apart from Lean's code, with exact
-rational arithmetic. A finite operand is the rational number it encodes. A
+rational arithmetic, by `scripts/harness/float_ref.py`.
+`scripts/harness/float_cases.py` writes the cases of the modules at `f16`,
+`bf16` and `f128` and the tables at `float<2,1>` below and in
+`FirTest.FloatModelFma`, and `scripts/harness/test_float_ref.py` checks
+that these modules hold exactly what it writes. A finite operand is the rational number it encodes. A
 finite nonzero result `x` is rounded at the quantum `q = 2^(k - m)`, where
 `k` is the larger of `⌊log₂ |x|⌋` and the smallest normal exponent: `x/q`
 goes to the nearest integer, a tie to the even one, and a result whose

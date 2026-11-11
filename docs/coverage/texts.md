@@ -201,3 +201,15 @@ function that is all `unreachable`, which is UB of the caller.
 `reject/unreachable.toml` holds its texts that do not decode or do not
 validate: with an attribute, an operand, a result or a successor, with
 an op after it, and with a block that only its place could reach.
+
+The texts of #229's second stage hold the float types
+([ADR-2026-11-11-0950](../adrs/2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md),
+[ADR-2026-11-11-0951](../adrs/2026-11-11-0951-a-float-type-is-written-by-its-alias-or-as-float-e-m.md)).
+`float-types` passes values of each alias, of formats written
+`float(e, m)`, the smallest, `float(2, 1)`, and the widest among them, as
+parameters, block arguments, call arguments and results. No core op takes
+a float yet and a float has no constants, so it has no tests: both tools
+parse, print and validate it. `reject/float-types.toml` holds its texts
+that do not decode, such as `float(8, 23)`, which is written `f32`, or do
+not validate, such as `float(1, 1)`, and ops that take integers at a
+float type.
