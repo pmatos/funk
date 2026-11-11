@@ -19,8 +19,9 @@
 //! An `i128` is a pair of eightbytes in two slots, and each op lowers it
 //! through a pair of registers, `%rax` for its low half and `%rdx` for its
 //! high one unless the op says otherwise (ADR-2026-11-03-010730). Division
-//! at `i128` calls a routine of the runtime helper, which the module's
-//! text then ends with, once (`div.rs`, ADR-2026-11-03-0414).
+//! at `i128` calls a routine of a runtime helper, as `fma` at `f32` and
+//! `f64` does, and the module's text then ends with each helper that it
+//! calls, once (`div.rs`, `farith.rs`, ADR-2026-11-03-0414).
 //!
 //! An `f32` or `f64` is its bits in one slot. A float constant writes them
 //! as an integer immediate, as any constant does, and `fcmp` loads its
@@ -49,18 +50,42 @@ use funk_ir::text::{print_op, print_symbol};
 use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
-pub use div::HELPER_STACK;
 
 use crate::abi::{self, Arg, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
 
+/// A runtime helper: the routine of it that an op calls, if any, its code,
+/// and the bytes of stack that a call of one of its routines uses below
+/// the caller's `%rsp`.
+type Helper = (fn(&Op) -> Option<&'static str>, &'static str, u64);
+
+/// Every runtime helper: the one that divides at `i128`, and the one that
+/// does `fma` at `f32` and `f64`.
+const HELPERS: [Helper; 2] = [
+    (div::helper, div::HELPER, div::HELPER_STACK),
+    (farith::helper, farith::HELPER, farith::HELPER_STACK),
+];
+
+/// The most stack that a call of a routine of any runtime helper uses
+/// below the caller's `%rsp`.
+pub const HELPER_STACK: u64 = {
+    let (mut i, mut most) = (0, 0);
+    while i < HELPERS.len() {
+        if HELPERS[i].2 > most {
+            most = HELPERS[i].2;
+        }
+        i += 1;
+    }
+    most
+};
+
 /// The routine of a runtime helper that `op` calls, if any: a division at
 /// `i128`, or `fma` at `f32` or `f64`. Each routine needs at most
 /// [`HELPER_STACK`] bytes of stack below its caller's `%rsp`.
 pub fn helper(op: &Op) -> Option<&'static str> {
-    div::helper(op).or_else(|| farith::helper(op))
+    HELPERS.iter().find_map(|(routine, _, _)| routine(op))
 }
 
 /// Why an op was not lowered.
@@ -254,10 +279,9 @@ pub struct Lowered {
     pub frames: Vec<i32>,
 }
 
-/// The assembly of every function of `m`, followed by the runtime helper
-/// that divides at `i128` when a function does, and the one that does
-/// `fma` at `f32` and `f64` when a function does, or a diagnostic for each part that
-/// the backend cannot lower. `m` must be valid.
+/// The assembly of every function of `m`, followed by each runtime helper
+/// whose routine a function calls, or a diagnostic for each part that the
+/// backend cannot lower. `m` must be valid.
 pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     let mut out = Vec::new();
@@ -270,11 +294,10 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
         }
     }
     let ops = || m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops);
-    if ops().any(|op| div::helper(op).is_some()) {
-        asm.raw(div::HELPER);
-    }
-    if ops().any(|op| farith::helper(op).is_some()) {
-        asm.raw(farith::HELPER);
+    for (routine, code, _) in HELPERS {
+        if ops().any(|op| routine(op).is_some()) {
+            asm.raw(code);
+        }
     }
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {

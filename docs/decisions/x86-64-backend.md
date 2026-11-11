@@ -332,8 +332,9 @@ over its calls, of what the call pushes plus the callee's need
 (ADR-2026-11-02-1132).
 
 `entry/stack.rs` counts pushed words from the layout that `abi::call` reads
-(ADR-2026-11-03-0108). A division at `i128` counts as a call needing 24 bytes
-(ADR-2026-11-03-0415).
+(ADR-2026-11-03-0108). A division at `i128` or an `fma` at `f32` or `f64`
+counts as a call needing 24 bytes, the most that a runtime helper's routine
+uses (ADR-2026-11-03-0415, ADR-2026-11-11-1802).
 
 Calls within a cycle do not count. A function from which no cycle is reachable
 gets exactly its figure, whatever `ulimit -s` says. A function from which a

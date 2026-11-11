@@ -11,7 +11,8 @@
 # does (ADR-2026-10-30-1232). The routines use only %rax, %rcx, %rdx,
 # %rsi, %rdi, %r8 to %r11 and %xmm0 to %xmm2, which System V lets a callee
 # clobber, and 16 bytes of stack below the caller's %rsp at most: the
-# return address and one push.
+# return address, and the one push of __funk_rt_fmaf or the return
+# address of __funk_rt_fma's call of .Lrt_fma_unpack.
 #
 # A NaN result may be any NaN (ADR-2026-11-09-1549), so the routines take
 # no care over which one they give.
@@ -55,6 +56,7 @@ __funk_rt_fmaf:
 	popq	%rax
 	cvtsd2ss	%xmm0, %xmm0
 	ret
+	.size	__funk_rt_fmaf, .-__funk_rt_fmaf
 
 # __funk_rt_fma(a, b, c) at f64. No wider format holds the product of two
 # f64, so the routine computes a * b + c exactly in integers and rounds it
@@ -289,6 +291,7 @@ __funk_rt_fma:
 .Lrt_fma_c:
 	movapd	%xmm2, %xmm0
 	ret
+	.size	__funk_rt_fma, .-__funk_rt_fma
 
 # The mantissa and exponent of the finite nonzero f64 in %rax: its value
 # is m * 2^e, with m in %rax, its bit 52 set, and e in %rcx. Uses %r9.

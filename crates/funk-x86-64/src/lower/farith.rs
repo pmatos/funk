@@ -37,6 +37,12 @@ use crate::width::Class;
 /// one.
 pub const HELPER: &str = include_str!("fma.s");
 
+/// The bytes of stack that a call of a routine of [`HELPER`] uses below
+/// the caller's `%rsp`: its return address, and the word that
+/// `__funk_rt_fmaf` pushes or the return address of `__funk_rt_fma`'s
+/// call of `.Lrt_fma_unpack`.
+pub const HELPER_STACK: u64 = 16;
+
 /// The routine of [`HELPER`] that `op` calls, if it is an `fma` at `f32`
 /// or `f64`.
 pub fn helper(op: &Op) -> Option<&'static str> {
@@ -203,5 +209,30 @@ mod tests {
         }
         assert!(labels.contains(&"__funk_rt_fmaf") && labels.contains(&"__funk_rt_fma"));
         assert!(!code().any(|l| l.contains(".globl")));
+    }
+
+    /// The routines go no deeper than [`HELPER_STACK`] says:
+    /// `__funk_rt_fmaf` pushes one word and calls nothing, `__funk_rt_fma`
+    /// pushes nothing and calls only `.Lrt_fma_unpack`, which, from its
+    /// label to the end of the file, pushes and calls nothing.
+    #[test]
+    fn the_helper_s_stack_is_its_return_address_and_one_word() {
+        let lines: Vec<&str> = code().map(str::trim).collect();
+        let at = |label: &str| lines.iter().position(|l| *l == label).unwrap();
+        let (fmaf, fma, unpack) = (
+            at("__funk_rt_fmaf:"),
+            at("__funk_rt_fma:"),
+            at(".Lrt_fma_unpack:"),
+        );
+        assert!(fmaf < fma && fma < unpack);
+        let count = |part: &[&str], m: &str| part.iter().filter(|l| l.starts_with(m)).count();
+        let (f32s, f64s, leaf) = (&lines[fmaf..fma], &lines[fma..unpack], &lines[unpack..]);
+        assert_eq!((count(f32s, "pushq"), count(f32s, "call")), (1, 0));
+        assert_eq!(count(f64s, "pushq"), 0);
+        for call in f64s.iter().filter(|l| l.starts_with("call")) {
+            assert!(call.ends_with(".Lrt_fma_unpack"), "{call}");
+        }
+        assert_eq!((count(leaf, "pushq"), count(leaf, "call")), (0, 0));
+        assert_eq!(HELPER_STACK, 8 + 8);
     }
 }
