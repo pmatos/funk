@@ -1,6 +1,7 @@
 # At the end of a run an observer sees export globals, returned pointers and escaped memory, and an internal global only once its address escapes
 
-Status: accepted
+Status: accepted; refined by ADR-2026-11-11-1444 and
+ADR-2026-11-11-1445
 Tier: direction; area: semantics
 
 ## Context

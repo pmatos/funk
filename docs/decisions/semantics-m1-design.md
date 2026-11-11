@@ -90,7 +90,9 @@ as an assembler does (ADR-2026-11-09-1546).
 An `export` global is visible to code that funk did not compile, and is
 reachable memory for an observer. Weak, common and visibility linkage wait for
 the C frontend, M4 (ADR-2026-11-09-1546). An `internal` global is observable
-only once its address escapes (ADR-2026-11-11-1016).
+only once its address escapes (ADR-2026-11-11-1016): an external call, an
+observable inline assembly block, a volatile store of the pointer or
+`ptr.expose` hands it out (ADR-2026-11-11-1444).
 
 ## External declarations
 
@@ -254,13 +256,16 @@ The effect set decides whether a block is an event (ADR-2026-11-11-1015):
 - With observable, running the block is an event of the trace, as GCC's
   `asm volatile` is.
 - Without observable, the block adds no event. Passes may delete, merge or move
-  it within its declared reads and writes, as with GCC's plain `asm`.
+  it within its declared reads and writes, as with GCC's plain `asm`. They may
+  merge or move it only when no write to the memories it reads comes between
+  (ADR-2026-11-11-1443).
 
 The world answers a block with its results and with writes into memory that its
 declared effects allow. `fir-ref` takes the answer from the test's script, as
 for external calls (ADR-2026-11-09-1552). The answer for a block without
-observable is keyed by the block and its operands, not by its position in the
-trace (ADR-2026-11-11-1015).
+observable is keyed by the block, its operands and the contents of the memories
+it declares it reads, not by its position in the trace (ADR-2026-11-11-1015,
+ADR-2026-11-11-1443).
 
 M1 brings the spec, the parser, printer and verifier on both sides, and
 `fir-ref`. Until M4, the naive backend rejects inline assembly with a diagnostic,
