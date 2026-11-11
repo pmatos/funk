@@ -81,6 +81,11 @@ both are. -/
 instance coreToy_lawfulTotal : LawfulDialectTotal CoreToy :=
   Dialect.sum.lawfulTotal fun _ h => h
 
+/-- The sum of the core and the toy dialect is lawful in its monotonicity,
+since both are. -/
+instance coreToy_lawfulMonotone : LawfulDialectMonotone CoreToy :=
+  Dialect.sum.lawfulMonotone fun _ h => h
+
 /-- The sum of three dialects is lawful: the inclusion of the core's types
 is lawful, and the bit dialect accepts each core type that the core
 accepts. -/
@@ -96,6 +101,12 @@ instance coreToyBit_lawfulEffects : LawfulDialectEffects CoreToyBit :=
 accepts each core type that the core accepts. -/
 instance coreToyBit_lawfulTotal : LawfulDialectTotal CoreToyBit :=
   Dialect.lift.sum_lawfulTotal fun _ h => h
+
+/-- The sum of three dialects is lawful in its monotonicity: the inclusion
+of the core's types is lawful, and the bit dialect accepts each core type
+that the core accepts. -/
+instance coreToyBit_lawfulMonotone : LawfulDialectMonotone CoreToyBit :=
+  Dialect.lift.sum_lawfulMonotone TyIncl.lawful_inl fun _ h => h
 
 /-- The effects of an op of the sum of three dialects, on the memories of
 its three dialects. -/

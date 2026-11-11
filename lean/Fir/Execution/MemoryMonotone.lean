@@ -282,6 +282,33 @@ theorem fromState_fst {ε : Type} (x : ExceptT ε (StateT σ SetM) α) (S : σ) 
   obtain ⟨r, S'⟩ := p
   cases r <;> rfl
 
+/-- A function that starts at its entry block's ops `body` in `env` runs
+them in a frame, and returns the values they return. -/
+theorem Func.run_of_enter (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) (n : Nat)
+    {body : List (Operation d)} {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
+    f.run M (m := StateT (Memories Mem unit) SetM) args n =
+      inFrame (Func.runOps M n f env body) >>= fun r => match r with
+        | .ret (vs, _) => pure (.ret vs)
+        | .fuelExhausted => pure .fuelExhausted := by
+  simp only [Func.run, hen]
+  exact pure_bind _ _
+
+/-- A function that cannot start is stuck there, on every path of its run
+from `S`. -/
+theorem Func.fromState_run_stuck (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) (n : Nat) (S : Memories Mem unit) {st : Stuck}
+    (hen : f.enter args.toDVals = .error st)
+    {e : Ev (Except Stuck (Result (List (DVal d)) × Memories Mem unit))}
+    (h : (fromState (f.run M (m := StateT (Memories Mem unit) SetM) args n) S).run e) :
+    e = .ok (.error st) := by
+  simp only [Func.run, fromState_bind, hen, fromState_liftExcept] at h
+  rcases (run_bind _ _ _).1 h with ⟨_, h, -⟩ | ⟨er, h, he⟩ | ⟨_, h, -⟩
+  · cases (run_liftExcept _ _).1 h
+  · cases (run_liftExcept _ _).1 h
+    exact he
+  · cases (run_liftExcept _ _).1 h
+
 /-- The run of a function with memory, from `S`, without the memories it
 ends with, when it starts: its entry block's ops, run from `S` with a frame
 entered, finished. -/
@@ -290,13 +317,7 @@ theorem Func.run_fromState (M : Module d) (f : Func d)
     {body : List (Operation d)} {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
     Prod.fst <$> fromState (f.run M (m := StateT (Memories Mem unit) SetM) args n) S =
       Result.finish Prod.fst (runFrom (Func.runOps M n f env body) S.enter) := by
-  have hrun : f.run M (m := StateT (Memories Mem unit) SetM) args n =
-      inFrame (Func.runOps M n f env body) >>= fun r => match r with
-        | .ret (vs, _) => pure (.ret vs)
-        | .fuelExhausted => pure .fuelExhausted := by
-    simp only [Func.run, hen]
-    exact pure_bind _ _
-  rw [hrun, fromState_bind, fromState_inFrame, bind_map_left, map_bind]
+  rw [Func.run_of_enter M f args n hen, fromState_bind, fromState_inFrame, bind_map_left, map_bind]
   simp only [Result.finish, runFrom, bind_map_left]
   refine congrArg (fromState _ S.enter >>= ·) (funext fun q => ?_)
   obtain ⟨r, S'⟩ := q
@@ -311,20 +332,12 @@ theorem Func.run_fromState_stuck (M : Module d) (f : Func d)
     (hen : f.enter args.toDVals = .error st) (e : Ev (Except Stuck (Result (List (DVal d)))))
     (h : (Prod.fst <$> fromState (f.run M (m := StateT (Memories Mem unit) SetM) args n) S).run e) :
     e = .ok (.error st) := by
-  have hx : ∀ e', (fromState (f.run M (m := StateT (Memories Mem unit) SetM) args n) S).run e' →
-      e' = .ok (.error st) := by
-    intro e' h
-    simp only [Func.run, fromState_bind, hen, fromState_liftExcept] at h
-    rcases (run_bind _ _ _).1 h with ⟨_, h, -⟩ | ⟨er, h, he⟩ | ⟨_, h, -⟩
-    · cases (run_liftExcept _ _).1 h
-    · cases (run_liftExcept _ _).1 h
-      exact he
-    · cases (run_liftExcept _ _).1 h
+  have hx := fun {e'} => Func.fromState_run_stuck M f args n S hen (e := e')
   rcases (SetM.run_map _ _ _).1 h with ⟨_, h1, -⟩ | ⟨_, h1, rfl⟩ | ⟨_, h1, -⟩
-  · cases hx _ h1
-  · cases hx _ h1
+  · cases hx h1
+  · cases hx h1
     rfl
-  · cases hx _ h1
+  · cases hx h1
 
 end
 

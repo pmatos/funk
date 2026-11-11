@@ -315,6 +315,10 @@ instance : LawfulDialectEffects BitDialect := lawfulDialectEffects
 the set monad, so each op has an outcome from any memories. -/
 instance lawfulTotal : LawfulDialectTotal BitDialect := LawfulDialectTotal.ofLawful
 
+/-- The bit dialect is lawful in its monotonicity: it is lawful, and it
+lifts the set monad, so each op is monotone with memory. -/
+instance lawfulMonotone : LawfulDialectMonotone BitDialect := LawfulDialectMonotone.ofLawful
+
 end Bit
 
 end FirTest

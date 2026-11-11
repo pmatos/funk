@@ -113,4 +113,75 @@ theorem List.isRefinedBy_trans [HRefinement α α] (h : ∀ {a b c : α}, a ⊑ 
   | [], _ :: _, _, hab, _ | _ :: _, [], _, hab, _ => hab.elim
   | [], [], _ :: _, _, hbc | _ :: _, _ :: _, [], _, hbc => hbc.elim
 
+/-- A pair refines another when each part refines the other's part. -/
+instance instHRefinementProd [HRefinement α α] [HRefinement β β] : HRefinement (α × β) (α × β) :=
+  ⟨fun p q => p.1 ⊑ q.1 ∧ p.2 ⊑ q.2⟩
+
+/-! # Lists that refine element by element -/
+
+section
+
+variable {α : Type} [HRefinement α α]
+
+
+/-- Lists that refine each other have the same length. -/
+theorem List.IsRefinedBy.length_eq : ∀ {l l' : List α}, l ⊑ l' → l.length = l'.length
+  | [], [], _ => rfl
+  | _ :: _, _ :: _, h => congrArg (· + 1) (List.IsRefinedBy.length_eq h.2)
+  | [], _ :: _, h | _ :: _, [], h => (h : False).elim
+
+/-- A list refines itself when each element does. -/
+theorem List.isRefinedBy_refl (h : ∀ a : α, a ⊑ a) : ∀ l : List α, l ⊑ l
+  | [] => trivial
+  | a :: l => ⟨h a, List.isRefinedBy_refl h l⟩
+
+/-- Refinement of lists keeps appending. -/
+theorem List.IsRefinedBy.append : ∀ {l l' m m' : List α}, l ⊑ l' → m ⊑ m' → l ++ m ⊑ l' ++ m'
+  | [], [], _, _, _, hm => hm
+  | _ :: _, _ :: _, _, _, h, hm => ⟨h.1, List.IsRefinedBy.append h.2 hm⟩
+  | [], _ :: _, _, _, h, _ | _ :: _, [], _, _, h, _ => (h : False).elim
+
+/-- Refinement of lists keeps dropping elements. -/
+theorem List.IsRefinedBy.drop : ∀ (n : Nat) {l l' : List α}, l ⊑ l' → l.drop n ⊑ l'.drop n
+  | 0, _, _, h => h
+  | _ + 1, [], [], _ => trivial
+  | n + 1, _ :: _, _ :: _, h => List.IsRefinedBy.drop n h.2
+  | _ + 1, [], _ :: _, h | _ + 1, _ :: _, [], h => (h : False).elim
+
+/-- Refinement of lists keeps taking elements. -/
+theorem List.IsRefinedBy.take : ∀ (n : Nat) {l l' : List α}, l ⊑ l' → l.take n ⊑ l'.take n
+  | 0, _, _, _ => trivial
+  | _ + 1, [], [], _ => trivial
+  | n + 1, _ :: _, _ :: _, h => ⟨h.1, List.IsRefinedBy.take n h.2⟩
+  | _ + 1, [], _ :: _, h | _ + 1, _ :: _, [], h => (h : False).elim
+
+/-- Lists that refine each other hold elements that refine each other at
+each index, or no element in both. -/
+theorem List.IsRefinedBy.getElem? : ∀ {l l' : List α}, l ⊑ l' → ∀ i : Nat,
+    (l[i]? = none ∧ l'[i]? = none) ∨ ∃ a a', l[i]? = some a ∧ l'[i]? = some a' ∧ a ⊑ a'
+  | [], [], _, _ => .inl ⟨rfl, rfl⟩
+  | _ :: _, _ :: _, h, 0 => .inr ⟨_, _, rfl, rfl, h.1⟩
+  | _ :: _, _ :: _, h, i + 1 => List.IsRefinedBy.getElem? h.2 i
+  | [], _ :: _, h, _ | _ :: _, [], h, _ => (h : False).elim
+
+/-- Replacing the element at one index by one that refines it keeps
+refinement. -/
+theorem List.IsRefinedBy.set : ∀ {l l' : List α}, l ⊑ l' → ∀ (i : Nat) {a a' : α}, a ⊑ a' →
+    l.set i a ⊑ l'.set i a'
+  | [], [], _, _, _, _, _ => trivial
+  | _ :: _, _ :: _, h, 0, _, _, ha => ⟨ha, h.2⟩
+  | _ :: _, _ :: _, h, i + 1, _, _, ha => ⟨h.1, List.IsRefinedBy.set h.2 i ha⟩
+  | [], _ :: _, h, _, _, _, _ | _ :: _, [], h, _, _, _, _ => (h : False).elim
+
+/-- Changing the element at one index by a map that keeps refinement keeps
+refinement. -/
+theorem List.IsRefinedBy.modify {g : α → α} (hg : ∀ {a a' : α}, a ⊑ a' → g a ⊑ g a') :
+    ∀ {l l' : List α}, l ⊑ l' → ∀ i : Nat, l.modify i g ⊑ l'.modify i g
+  | [], [], _, i => by rw [List.modify_nil]; trivial
+  | _ :: _, _ :: _, h, 0 => ⟨hg h.1, h.2⟩
+  | _ :: _, _ :: _, h, i + 1 => ⟨h.1, List.IsRefinedBy.modify hg h.2 i⟩
+  | [], _ :: _, h, _ | _ :: _, [], h, _ => (h : False).elim
+
+end
+
 end Fir

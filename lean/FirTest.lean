@@ -54,6 +54,7 @@ import FirTest.Memory
 import FirTest.MemoryRuns
 import FirTest.MemoryObligations
 import FirTest.MemoryStoreReads
+import FirTest.MemoryRefine
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
