@@ -28,11 +28,11 @@ Verso documents with `lean` code blocks, which would make `fir`, and `fir-ref`
 with it, depend on Verso.
 
 The package has three default targets
-([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)). The library `Fir`
-is the spec. The library `FirRef` and the executable `fir-ref` hold what is not
-the spec. The library `FirTest` holds the Lean tests. So `lake build` in `lean/`
-builds the spec, `fir-ref` and the tests, and runs the tests. The document
-renders `Fir` only.
+([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)).
+The library `Fir` is the spec. The library `FirRef` and the executable
+`fir-ref` hold what is not the spec. The library `FirTest` holds the Lean
+tests. So `lake build` in `lean/` builds the spec, `fir-ref` and the tests, and
+runs the tests. The document renders `Fir` only.
 
 `docs/spec/` is the Lake package `firspec` (ADR-2026-10-29-2135). It requires
 `fir` by path and `verso` at the git tag named like the toolchain. Its
@@ -61,8 +61,9 @@ the same PR (ADR-2026-10-30-1452).
 `docs/spec/` under the guards below, then builds as usual.
 
 `scripts/build-spec.sh --lean` builds `lean/` alone, under the same guards
-([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)). `fir-ref` is then `lean/.lake/build/bin/fir-ref`. Every
-script and hook that needs `fir-ref` calls this mode.
+([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)).
+`fir-ref` is then `lean/.lake/build/bin/fir-ref`. Every script and hook that
+needs `fir-ref` calls this mode.
 
 Every Lake run in `lean/` or `docs/spec/` goes through the script or applies
 both of its guards (ADR-2026-10-29-2135):

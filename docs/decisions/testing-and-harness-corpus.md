@@ -56,8 +56,9 @@ A hook fails when the matrix is stale or a cell has no test.
 A cell is an op instance of the core dialect at a width, on one side. An op
 instance is the op with its flag set, `exact` choice or `icmp` predicate. A flag
 that the spec does not give an op is not a cell, and a constant's value is not
-part of its cell. Width changes are cells for each pair of widths. Passed and
-returned values are cells for none, one or several values.
+part of its cell. Width changes are cells for each pair of widths, `zext` and
+`sext` to a wider one and `trunc` to a narrower one. Passed and returned values
+are cells for none, one or several values.
 `scripts/harness/cells.py` holds the exact set.
 
 The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. The
@@ -84,8 +85,9 @@ module is for, not what its tests run (ADR-2026-11-03-0557).
 regenerates it, after merging `main` when `main` changed the corpus too. A new
 op, flag or predicate fails the unit tests until `cells.py` has its cells. The
 `coverage-matrix` hook then fails until the corpus tests them. A new side or
-width is a change to ADR-2026-11-03-0557 and to `cells.py`. A matrix that would
-pass the file-size budget splits by side into files of `docs/coverage/`.
+width is a change to ADR-2026-11-03-0557 and to `cells.py`. One that would take
+the matrix past the file-size budget splits it by side into files of
+`docs/coverage/`.
 
 ### The cells of poison
 
@@ -104,9 +106,10 @@ fills these cells.
 Ported cases live in `tests/fir/llvm/` (ADR-2026-11-03-0643). Each is a canonical
 valid module and its sidecar. LLVM's licence sits beside them as `LICENSE.TXT`,
 the pinned commit's `llvm/LICENSE.TXT` but for the empty line that ends it,
-which the `end-of-file-fixer` hook removes, and `README.md` is the notice that lists each module with its source. `NAME` is
-the LLVM directory (`instsimplify`, `instcombine`, or `x86` for `CodeGen/X86`)
-and the stem of the test file, with a suffix where one file is split.
+which the `end-of-file-fixer` hook removes, and `README.md` is the notice that
+lists each module with its source. `NAME` is the LLVM directory
+(`instsimplify`, `instcombine`, or `x86` for `CodeGen/X86`) and the stem of the
+test file, with a suffix where one file is split.
 
 A sidecar has `source`, and each test has `from`. Each sidecar's comment starts
 "Derived from LLVM" and says how its cases were rewritten. Each function's ops
@@ -161,11 +164,11 @@ as `@NAME.folded` and runs on the same arguments. Where a file has only a RUN
 line, the folded form is the one it asks for, written by hand. A negative test
 runs on an argument where the fold would be wrong, if there is one. A negative
 test, and a code generation test, whose CHECK lines are assembly, declares the
-value its IR computes, worked out apart from `fir-ref`. Every expected value comes from LLVM's statement or separate working,
-never from a run of `fir-ref`, so a run that disagrees fails. A run whose module
-builds and whose result is a value is differential and declares that result. A
-run that gives poison or UB, or has a width the backend does not lower, is
-interpreter-only.
+value its IR computes, worked out apart from `fir-ref`. Every expected value
+comes from LLVM's statement or separate working, never from a run of
+`fir-ref`, so a run that disagrees fails. A run whose module builds and whose
+result is a value is differential and declares that result. A run that gives
+poison or UB, or has a width the backend does not lower, is interpreter-only.
 
 LLVM's CHECK lines fold some divisions that are UB to poison, where `fir-ref`
 reports UB: `sdiv i8 -128, -1` and `srem i8 -128, -1`, and the division by a

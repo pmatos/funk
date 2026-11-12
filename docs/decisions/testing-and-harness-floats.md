@@ -1,9 +1,9 @@
 # Current decisions: testing floating point
 
-This page continues [testing-and-harness.md](testing-and-harness.md). It says what holds today for how the
-corpus and the coverage matrix test #229's floating point. It is the record:
-when this page and an ADR disagree, the page wins, and the ADR is fixed or
-deleted (ADR-2026-11-09-1610).
+This page continues [testing-and-harness.md](testing-and-harness.md). It says
+what holds today for how the corpus and the coverage matrix test #229's
+floating point. It is the record: when this page and an ADR disagree, the page
+wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## The coverage matrix
 
@@ -42,10 +42,10 @@ interpreter-only test at every format. A NaN result is any NaN
 (ADR-2026-11-11-1800), so its test is interpreter-only, with a choice that names
 the NaN: the quiet NaN, every bit set, or the signalling NaN with only the
 lowest mantissa bit, in turn. Native code is not compared on a NaN result until
-#219 decides how one is judged. `test_float_arith_cases.py` checks that the committed files are what
-the generator writes, and checks every expected result against `float_ref.py`
-again. A new hard input reaches every format, both tools and the coverage
-matrix by running the generator.
+#219 decides how one is judged. `test_float_arith_cases.py` checks that the
+committed files are what the generator writes, and checks every expected
+result against `float_ref.py` again. A new hard input reaches every format,
+both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
 arithmetic, and `fma`'s runtime routines also on random operands

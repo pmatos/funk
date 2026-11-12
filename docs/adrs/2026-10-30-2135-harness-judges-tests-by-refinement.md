@@ -21,8 +21,9 @@ never counts as a pass, and it fails the run.
 - **Declared results.** A test may declare `results`, each with its values and
   a witness choice sequence that must give exactly them. Within the budget, the
   set must be exactly the declared results. Past it, a test that declares none
-  is invalid, and seeds 0 to 31 run in sampled mode, each of which must give a
-  declared result.
+  is invalid. A test that declares results runs seeds 0 to 31 in sampled mode,
+  each of which must give a declared result, and native code passes when its
+  values refine one declared result.
 - **An interpreter-only test** passes when `fir-ref` gives the expected result:
   the same values, poison included, UB with any reason, or fuel exhausted. It
   may name its path with `choices`; without it, a run that chooses fails.

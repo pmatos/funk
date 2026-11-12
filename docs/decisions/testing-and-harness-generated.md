@@ -41,9 +41,10 @@ Rejected: limiting the generator to the backend's widths alone. A planted wrong
 
 A false UB in a purely random function goes unnoticed. A second interpreter would
 cover it, and that is a direction call. A change to the generator changes which
-program each seed means. Bounded recursion is at most 15 deep per function. A
-random function that returns very deep could outgrow the native stack, which is
-that limit, not a miscompile.
+program each seed means. Bounded recursion is at most 15 deep per function, but
+random functions recurse until they return or fuel stops them. So a run that
+returns very deep could outgrow the native stack although the code is right; if
+one appears, it is the stack's limit, not a miscompile.
 
 ### Fresh seeds
 

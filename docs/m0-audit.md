@@ -34,8 +34,8 @@ ADR-2026-10-30-0818 are also refined by ADR-2026-11-03-1615. The
 coverage matrix has 783 cells, each with a test (ADR-2026-11-03-0557).
 The LLVM ports write LLVM's poison constant with `poison`, not
 `shl %n, %n`
-([testing-and-harness-corpus.md](decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)). `poison` is a core word for the G0
-checks (ADR-2026-11-03-1617).
+([testing-and-harness-corpus.md](decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)).
+`poison` is a core word for the G0 checks (ADR-2026-11-03-1617).
 
 Addendum, 2026-11-05: the close-out of #5 checked this audit again on
 `main` at `28b6f37`, after all 43 sub-issues of #5 had closed, and found
@@ -181,8 +181,8 @@ with `19697 checks: 19697 passed, 0 failed, 0 invalid`:
 
 `scripts/harness/check_invalid.py` also passes: the harness reports the
 fixture with a frozen divisor invalid
-([testing-and-harness.md](decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested)). The
-`fir-ref-test` and `fir-round-trip` hooks check that `fir-ref fmt`
+([testing-and-harness.md](decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested)).
+The `fir-ref-test` and `fir-round-trip` hooks check that `fir-ref fmt`
 reprints each text Rust prints, byte for byte (item 3).
 
 The harness builds, with `funk build`, the 184 modules that have a

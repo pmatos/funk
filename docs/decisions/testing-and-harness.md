@@ -136,7 +136,10 @@ zero`, `funk build` did not fail, every other check passed, and the harness
 exits with 1. A native crash is allowed, since UB in the set allows any result.
 `scripts/check-harness.sh` runs this check after the main run. A change to the
 report's layout, to the wording `the set holds UB` in `sets.py` or to the
-reason `sdiv by zero` must update `check_invalid.py`.
+reason `sdiv by zero` must update `check_invalid.py`. The fixtures are corpora
+in the format of `tests/fir/`, so a change to that format must keep them valid.
+The round-trip hooks and `crates/funk-ir/tests/corpus.rs` read `tests/fir/`
+only, so only the harness's run on a fixture checks that both tools accept it.
 
 Rejected: an `invalid = "ub"` key that passes such a test, which would report
 an invalid test as passed. Also rejected: expecting exit status 1 alone, which
@@ -187,8 +190,10 @@ Only the executable of a differential test runs under a limit. `funk`,
 limit is 1 GiB, `tools.DATA_LIMIT`, soft and hard, on both `RLIMIT_DATA` and
 `RLIMIT_AS`. It is one fixed size, so a verdict does not depend on the machine.
 A lower limit that the harness inherits stays in force. A runaway recursion
-then ends long before memory and swap fill (#92). Raising `DATA_LIMIT` changes
-this rule, on this page, in the same pull request.
+then ends long before memory and swap fill (#92). `tools.limit_data` sets the
+limit as the `preexec_fn` of the run, between `fork` and `exec`, which Python
+documents as unsafe in a process with threads, so the harness runs none.
+Raising `DATA_LIMIT` changes this rule, on this page, in the same pull request.
 
 Under `ulimit -s unlimited` the runtime halves its stack request until
 `RLIMIT_AS` lets one fit, and the harness relies on that. The limit changes no
@@ -227,10 +232,11 @@ reported as unavailable, with no alarm, in two cases. The backend cannot lower
 the module, or `fir-ref` cannot run the call.
 
 It binds to the loopback address, with no option to change that. Every request
-must name a loopback `Host`. Every POST must carry the page's own `Origin` and be
-`application/json`. It serves one request at a time, because native runs use
-`preexec_fn`. Native runs keep the harness's data limit. Each tool and native
-program has 10 seconds by default, set by `--timeout`.
+must name a loopback `Host`, which stops DNS rebinding. Every POST must carry
+the page's own `Origin` and be `application/json`. It serves one request at a
+time, because native runs use `preexec_fn`. Native runs keep the harness's data
+limit. Each tool and native program has 10 seconds by default, set by
+`--timeout`.
 
 Rejected: a Rust server, which would need a web dependency and a second copy of
 the harness's judgement.

@@ -8,8 +8,9 @@ Tier: direction; area: testing-and-harness
 - **A cell** is an op instance of the core dialect at a width, on one side,
   differential or interpreter-only. An op instance is the op with its flag set,
   `exact` choice or `icmp` predicate. Width changes are cells for each pair of
-  widths, and passed and returned values (`br`, `cond_br`, `ret`, `call`,
-  `func`) for none, one or several values.
+  widths, `zext` and `sext` to a wider one and `trunc` to a narrower one, and
+  passed and returned values (`br`, `cond_br`, `ret`, `call`, `func`) for none,
+  one or several values.
 - **Widths.** The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and
   `i128`; the interpreter-only side adds `i7` and `i33`. The float ops, and
   values, are cells at each float format of a side: `f32` and `f64`

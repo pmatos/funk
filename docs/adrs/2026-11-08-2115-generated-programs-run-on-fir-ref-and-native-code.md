@@ -32,12 +32,12 @@ backend code, where bugs appear. A first version that only limited the
 generator to backend widths let a planted wrong `ashr` at `i16` pass 500
 programs: out-of-range shifts gave poison, and most values never reached a
 `ret`. Bounded, defined functions make a wrong result show as a wrong value.
+A false UB in a random function goes unnoticed, since such a run is
+interpreter-only. A second interpreter would catch it, but the semantics lives
+only in Lean, so that is an open direction call, not a rejected option.
 
 ## Rejected alternatives
 
 - **Random functions alone.** Their values rarely reach a result, so a
   miscompile passes.
-- **A second interpreter to catch a false UB in a random function.** The
-  semantics lives only in Lean, so that is a direction call; until then such a
-  run is interpreter-only.
 - **Poison arguments in generated runs.** Each multiplies the native runs.
