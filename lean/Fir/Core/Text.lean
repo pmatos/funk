@@ -40,6 +40,9 @@ results, which are written where those values are defined.
   `%f: f32 = bitcast %b @1` the `f32` of an `i32`'s bits. Its integer has
   the float's width, `1 + e + m`; an op whose widths differ does not
   decode.
+* `sitofp` and `uitofp` have one attribute, `round(rne)`, and take an
+  integer of any width to a float of any format:
+  `%f: f64 = sitofp round(rne) %i @1`.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -112,7 +115,7 @@ def Op.name : Op → String
   | .icmp .. => "icmp" | .fcmp .. => "fcmp" | .select _ => "select"
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
-  | .toBits .. | .ofBits .. => "bitcast"
+  | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -132,7 +135,7 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p _ _ => [.word p.name]
-  | .fbin .. | .fma .. => [roundAttr]
+  | .fbin .. | .fma .. | .sitofp .. | .uitofp .. => [roundAttr]
   | .funary o .. => o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
@@ -225,6 +228,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "poison" => match ts, rs with
     | [], [.int w] => bare as (some (.poison w))
     | _, _ => none
+  | "sitofp" => decodeIntToFloat true as ts rs
+  | "uitofp" => decodeIntToFloat false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- The alias of the float format `float<e,m>`, if it has one. -/
@@ -308,7 +313,8 @@ def samples : List Op :=
   Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112] ++
   [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
    .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52] ++
-  [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112]
+  [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
+  [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
@@ -372,5 +378,11 @@ def samples : List Op :=
   some (.fma 8 23)
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
+-- `sitofp` and `uitofp` take an integer of any width to a float of any
+-- format, with `round(rne)`.
+#guard Op.decode "sitofp" [roundAttr] [.int 33] [.float 5 10] == some (.sitofp 33 5 10)
+#guard Op.decode "uitofp" [roundAttr] [.int 8] [.float 11 52] == some (.uitofp 8 11 52)
+#guard Op.decode "sitofp" [] [.int 32] [.float 8 23] == none
+#guard Op.decode "uitofp" [roundAttr] [.float 8 23] [.float 8 23] == none
 
 end Fir.Core

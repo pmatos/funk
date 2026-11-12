@@ -292,3 +292,21 @@ result is its operand's bits, so every case is differential at `f32` and
 `reject/float-bitcast.toml` holds the bit casts that do not decode, such
 as an integer of another width, two floats or two integers, and an
 attribute, and two at formats that validation rejects.
+
+The texts of #241's third stage use the conversions from integers to floats,
+`sitofp` and `uitofp`, with `round(rne)`
+([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md)).
+`float-sitofp-T` and `float-uitofp-T` convert an integer of each width that
+the backend lowers, `i1` to `i128`, to `T`, one of `f16`, `bf16`, `f32`, `f64`
+and `f128`, and
+`float-itofp-odd` converts `i7` and `i33` to each of them. The cases are the
+boundary integers of each width, signed and unsigned, the integers next to the
+format's precision, the integers halfway between two floats and next to them,
+the integers on either side of overflow, and poison. A conversion never gives
+a NaN, so every case of a lowered width is differential at `f32` and `f64`,
+and every case is interpreter-only with its expected result.
+`scripts/harness/float_itofp_cases.py` writes them
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-integer-to-float-corpus)).
+`reject/float-itofp.toml` holds the conversions that do not decode, such as
+one without `round(rne)`, with `round(rtz)` or a flag, from a float or to an
+integer, and two at a width or format that validation rejects.

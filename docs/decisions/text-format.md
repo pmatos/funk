@@ -254,6 +254,13 @@ Rejected: one name for each direction, which the types already tell apart, and
 any pair of widths decoding with validation rejecting the wrong ones, as for
 `zext`, which gives the spec an op instance that no program may hold.
 
+`sitofp` and `uitofp` round, so each has the one attribute `round(rne)`, as the
+float arithmetic does: `%f: f32 = sitofp round(rne) %i`. They take one value of
+an integer type of any width and give one of a float type of any format; any
+other attribute or pair of types does not decode, so validation has no rule of
+its own for them (#241). Rejected: no attribute, as LLVM writes them, which
+would make them the one op that rounds without saying how.
+
 Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
 whether a wrong rounding mode stays a parse error, as built, or is read and
 then rejected by the verifier, as #229's text says. Until the human rules,

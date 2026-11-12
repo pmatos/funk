@@ -268,3 +268,33 @@ that both directions keep every bit of the hard values of `floats.rs`, NaNs
 included. Rejected:
 `movd` or `movq` between a general register and an SSE register, which moves
 the same bits through one more register.
+
+## Conversions from integers
+
+`sitofp` and `uitofp` from `i1` to `i128` to `f32` or `f64` convert with
+SSE2's `cvtsi2ssq` or `cvtsi2sdq`, which convert a signed 64-bit integer,
+rounded as MXCSR says; its default mode is round to nearest even, as
+`round(rne)` asks (#241). An operand of at most 64 bits is extended to 64, by
+sign for `sitofp` and by zero for `uitofp`, since the bits above its width are
+unspecified ([x86-64-backend.md](x86-64-backend.md#values-and-widths)), and
+converted with one instruction.
+
+An unsigned `i64` of `2^63` or more is halved, with the bit it drops ORed into
+its lowest bit, converted and added to itself. The halved value has 63 bits,
+more than the 24 or 53 of the result and the round bit below them, so its
+lowest bit records only whether anything below was set, and the conversion
+rounds once; doubling is exact. An `i128` takes the magnitude of a negative
+`sitofp` operand, converts it as unsigned, and flips the result's sign bit. An
+unsigned value below `2^64` converts as above. Any other is shifted left until
+the high half's top bit is set; the high half, with its lowest bit ORed with
+whether the low half has a bit set, is halved and converted as above, and the
+result is multiplied by the power of two the shifts took off. That product is
+exact unless it overflows `f32`, which only an unsigned `i128` near `2^128`
+does, and then it is the infinity that rounding to nearest gives. The code is
+inline, at local labels, and calls no routine.
+`crates/funk/tests/float_int_to_float.rs` checks each path against the host's
+conversion on boundary values, ties and random values, with operands narrower
+than 64 bits truncated from `i64` values whose high bits are random. Rejected:
+a routine of a runtime helper for `i128`, as for `fma`, which the lowering
+cannot choose from the op alone, since an op names its operand but not its
+type.

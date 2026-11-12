@@ -23,7 +23,9 @@ has neither operands nor attributes, is a cell at each width of its result
   ADR-2026-11-03-0557).
 - A conversion is a cell for each pair of types it converts between at
   the side's float formats: `bitcast` from each format to the integer of
-  its width, and from that integer to the format (#241).
+  its width, and from that integer to the format (#241); `sitofp` and
+  `uitofp`, with `round(rne)`, from each width of the side to each of its
+  float formats (#241).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -104,6 +106,9 @@ CASTS = ("zext", "sext", "trunc")
 # The conversions between a float and another type, which have no
 # attributes: a cell for each pair of types, at the side's float formats.
 CONVERSIONS = ("bitcast",)
+# The conversions from an integer to a float, which carry `round(rne)`: a
+# cell for each width and float format of the side.
+INT_TO_FLOAT = ("sitofp", "uitofp")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -120,6 +125,7 @@ OPS = (
     *(op for op in AT_FORMAT if op != "const"),
     *CASTS,
     *CONVERSIONS,
+    *INT_TO_FLOAT,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -163,6 +169,12 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
         for f in formats
         for a, b in ((f, bits_type(f)), (bits_type(f), f))
     ]
+    out += [
+        Cell("conversions", op, ty(w), f)
+        for op in INT_TO_FLOAT
+        for w in widths
+        for f in formats
+    ]
     for op, rows in VALUES:
         for row in rows:
             if row == NOTHING:
@@ -200,6 +212,19 @@ def bitcast(op: Op) -> Cell:
     raise CellError(f"bitcast from {op.operands} to {op.results} is not a cell")
 
 
+def int_to_float(op: Op) -> Cell:
+    """The cell of a `sitofp` or `uitofp`: from an integer to a float, with
+    `round(rne)`. Any other text of it does not decode, so it is not a
+    cell."""
+    if op.attrs == ROUND and len(op.operands) == len(op.results) == 1:
+        [a], [b] = op.operands, op.results
+        if bits_of(a) is not None and bits_of(a)[1] and is_float(b):
+            return Cell("conversions", op.name, a, b)
+    raise CellError(
+        f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"
+    )
+
+
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
     """The cells of values that `op` passes, returns or gives."""
     if not types:
@@ -217,6 +242,8 @@ def of_op(op: Op) -> set[Cell]:
     error."""
     if op.name == "bitcast":
         return {bitcast(op)}
+    if op.name in INT_TO_FLOAT:
+        return {int_to_float(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

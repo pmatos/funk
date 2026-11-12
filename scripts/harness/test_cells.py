@@ -56,7 +56,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     them: the arm of an op that reads its attributes with `decodeWrap`,
     `decodeExact` or `Pred.all` takes theirs, a float op of arithmetic
     takes `round(rne)` or none, as `decodeFBin`, `decodeFma` and
-    `FUnary.attrsOk` read them, and an op of `plainBinOps`, or whose arm
+    `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
+    as `decodeIntToFloat` reads it, and an op of `plainBinOps`, or whose arm
     takes them through `bare`, takes none. A constant's value and a callee
     are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
@@ -73,6 +74,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFBin": round_attrs(floats),
         "decodeFma": round_attrs(floats),
         "decodeBitcast": ("",),
+        "decodeIntToFloat": round_attrs(floats),
     }
     unary = unary_attrs(floats)
     found = {}
@@ -121,7 +123,9 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             decoded_attrs(text, floats),
             {
-                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                op: cells.ROUND
+                if op in cells.INT_TO_FLOAT
+                else cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 for op in cells.OPS
             },
         )
@@ -140,7 +144,7 @@ class Tests(unittest.TestCase):
                 "[]",
             },
         )
-        self.assertEqual(flagged["[roundAttr]"], {"fbin", "fma"})
+        self.assertEqual(flagged["[roundAttr]"], {"fbin", "fma", "sitofp", "uitofp"})
         self.assertEqual(flagged["o.attrs"], {"funary"})
         self.assertEqual(round_attrs(floats), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
@@ -194,7 +198,7 @@ class Tests(unittest.TestCase):
     def test_a_bitcast_is_a_cell_for_each_pair_of_types(self):
         found = cells.cells((8,), ("f32", "f128"))
         self.assertEqual(
-            {c for c in found if c.table == "conversions"},
+            {c for c in found if c.op == "bitcast"},
             {
                 Cell("conversions", "bitcast", "f32", "i32"),
                 Cell("conversions", "bitcast", "i32", "f32"),
@@ -215,6 +219,30 @@ class Tests(unittest.TestCase):
             Op("bitcast", (), ("i32",), ("i32",), ()),
             Op("bitcast", (), (), ("i32",), ()),
             Op("bitcast", (), ("f32", "f32"), ("i32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
+    def test_a_conversion_from_an_integer_is_a_cell_for_each_width_and_format(self):
+        found = cells.cells((8, 128), ("f32",))
+        self.assertEqual(
+            {c for c in found if c.op in cells.INT_TO_FLOAT},
+            {
+                Cell("conversions", op, w, "f32")
+                for op in ("sitofp", "uitofp")
+                for w in ("i8", "i128")
+            },
+        )
+        si = Op("sitofp", ("round(rne)",), ("i33",), ("bf16",), ())
+        self.assertEqual(of_op(si), {Cell("conversions", "sitofp", "i33", "bf16")})
+        ui = Op("uitofp", ("round(rne)",), ("i1",), ("f64",), ())
+        self.assertEqual(of_op(ui), {Cell("conversions", "uitofp", "i1", "f64")})
+        for bad in [
+            Op("sitofp", (), ("i32",), ("f32",), ()),
+            Op("sitofp", ("round(rtz)",), ("i32",), ("f32",), ()),
+            Op("uitofp", ("round(rne)",), ("f32",), ("f32",), ()),
+            Op("uitofp", ("round(rne)",), ("i32",), ("i64",), ()),
+            Op("sitofp", ("round(rne)",), ("i32", "i32"), ("f32",), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)

@@ -43,7 +43,7 @@ fn is_round_rne(a: &Attr) -> bool {
 
 /// Checks that the attributes of the float op `op` are `round(rne)` when
 /// it rounds and none when it does not, or says why they are not.
-fn decode_rounding(op: &str, rounds: bool, attrs: &[Attr]) -> Result<(), String> {
+pub(super) fn decode_rounding(op: &str, rounds: bool, attrs: &[Attr]) -> Result<(), String> {
     match (rounds, attrs) {
         (true, [a]) if is_round_rne(a) => Ok(()),
         (true, [Attr::App(head, _)]) if head == "round" => Err(format!(

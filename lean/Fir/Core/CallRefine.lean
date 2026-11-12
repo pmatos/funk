@@ -94,6 +94,8 @@ theorem Op.monotone_all : (op : Op) →
   | .trunc m n, _ => trunc_monotone m n
   | .toBits e m, _ => toBits_monotone e m
   | .ofBits e m, _ => ofBits_monotone e m
+  | .sitofp n e m, _ => intToFloat_monotone n e m true
+  | .uitofp n e m, _ => intToFloat_monotone n e m false
   | .freeze w, _ => freeze_monotone w
   | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone

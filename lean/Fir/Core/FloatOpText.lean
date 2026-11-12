@@ -1,7 +1,7 @@
 import Fir.Core.Signature
 
 /-!
-# How the float arithmetic and the bit casts are written
+# How the float arithmetic, the bit casts and the conversions are written
 
 Each float op of arithmetic is written with its name, and each one that
 rounds carries the attribute `round(rne)`: round to nearest, ties to even,
@@ -17,7 +17,10 @@ ADR-2026-11-11-1801). So
   `a * b + c`, rounded once;
 * `%b: i32 = bitcast %f @1` takes a value of a float type and gives its
   bits as an integer of its width, and `%f: f32 = bitcast %b @1` the other
-  way. It has no attribute: it does not round.
+  way. It has no attribute: it does not round;
+* `%f: f32 = sitofp round(rne) %i @1` takes a value of an integer type, of
+  any width, and gives the integer it holds, read as signed, as a value of
+  a float type, rounded; `uitofp` reads it as unsigned.
 
 `round(rne)` is written in the applied form of the grammar, as
 `float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
@@ -25,8 +28,9 @@ attribute does not decode, and neither does `fadd round(rtz) %a, %b` or
 `fneg round(rne) %a`. A rounding mode other than `rne` is text that does
 not decode, as a flag the op does not have is, so `funk verify` and
 `fir-ref` reject it. The operands and the result of an op of arithmetic
-have one float type, a bit cast's integer has its float's width, and an
-op whose types are otherwise does not decode.
+have one float type, a bit cast's integer has its float's width, a
+conversion from an integer takes an integer type and gives a float type,
+and an op whose types are otherwise does not decode.
 
 This section gives the names of the ops, their attributes, and how an op
 is read back, with the facts that the proof of the round trip uses.
@@ -90,6 +94,13 @@ def decodeBitcast (as : List Attr) : List Ty → List Ty → Option Op
   | [.int w], [.float e m] => if as.isEmpty ∧ w = floatWidth e m then some (.ofBits e m) else none
   | _, _ => none
 
+/-- Reads `sitofp`, with `signed`, or `uitofp`: `round(rne)`, one operand
+of an integer type and one result of a float type. -/
+def decodeIntToFloat (signed : Bool) (as : List Attr) : List Ty → List Ty → Option Op
+  | [.int n], [.float e m] =>
+    if isRoundAttrs as then some (if signed then .sitofp n e m else .uitofp n e m) else none
+  | _, _ => none
+
 /-! # Facts for the round trip -/
 
 /-- Attributes that read as `round(rne)` are exactly `round(rne)`. -/
@@ -140,5 +151,15 @@ theorem floatOpFormat_replicate (k e m : Nat) :
 #guard decodeBitcast [] [.float 8 23] [.int 64] == none &&
   decodeBitcast [] [.int 32] [.int 32] == none && decodeBitcast [] [.float 8 23] [.float 8 23] == none
 #guard decodeBitcast [roundAttr] [.float 8 23] [.int 32] == none
+
+-- A conversion from an integer needs `round(rne)`, an integer operand and a
+-- float result, of any width and format.
+#guard decodeIntToFloat true [roundAttr] [.int 32] [.float 8 23] == some (.sitofp 32 8 23)
+#guard decodeIntToFloat false [roundAttr] [.int 1] [.float 15 112] == some (.uitofp 1 15 112)
+#guard decodeIntToFloat true [] [.int 32] [.float 8 23] == none &&
+  decodeIntToFloat true [.app "round" [.word "rtz"]] [.int 32] [.float 8 23] == none
+#guard decodeIntToFloat false [roundAttr] [.float 8 23] [.int 32] == none &&
+  decodeIntToFloat false [roundAttr] [.int 32] [.int 32] == none &&
+  decodeIntToFloat true [roundAttr] [.int 32, .int 32] [.float 8 23] == none
 
 end Fir.Core

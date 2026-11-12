@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15853948219595643618")
+:::moduleDocs (fingerprint := "16905822547084170470")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -93,12 +93,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "3288734493566011892")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "12838571556658361392")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in ten families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in eleven families.
 
 *Constants* put a fixed value in the program.
 
@@ -231,6 +231,22 @@ toBits,ofBits \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} \mid \mathsf{bitcast}_{e,m
   whose bits are those of an $`\mathsf{i}N`. No bit changes, a NaN's sign
   and payload included. Neither is ever UB, and a poison operand gives
   poison.
+
+*Conversions from integers* give the float nearest an integer
+(ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
+```
+
+* $`\mathsf{sitofp}_{N,e,m}` reads an $`\mathsf{i}N` as a signed integer,
+  and $`\mathsf{uitofp}_{N,e,m}` as an unsigned one, and each gives that
+  integer as a value of $`\mathsf{float}\langle e,m \rangle`, rounded to
+  nearest, ties to even, in Lean's float model. An integer too large for
+  the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
+  is ever UB or gives a NaN, and a poison operand gives poison.
 
 *Poison control* writes poison and stops it.
 

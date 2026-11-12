@@ -180,13 +180,42 @@ every bit (`lean/Fir/Core/FloatBitcast.lean`).
   formats of one width, such as `f16` and `bf16`, which #241 does not ask
   for.
 
+`sitofp` and `uitofp` convert an integer to a float (stage 3). Each takes one
+value of `iN`, of any width, and gives one of `float<e,m>`, of any format; in
+the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
+`intToFloat` (`lean/Fir/Core/FloatOfInt.lean`).
+
+- `sitofp` reads the operand's bits in two's complement and `uitofp` as
+  unsigned, so the `i8` value with every bit set is `-1` to one and `255` to
+  the other.
+- The model's `UnpackedFloat.ofInt` takes the integer to a number, rounded to
+  nearest, ties to even, and `UnpackedFloat.pack` writes its bits. So an
+  integer the format holds is exact, a tie such as `2^24 + 1` at `f32` goes to
+  the even neighbour, an integer past the largest finite value plus half an
+  ulp is an infinity of its sign, as IEEE 754's overflow under rounding to
+  nearest is, and zero is `+0`. This is IEEE 754's `convertFromInt` and LLVM's
+  `sitofp` and `uitofp`.
+- `ofInt` never gives a NaN, so at every valid format the result is one bit
+  pattern and the rule chooses nothing (`intToFloat_valid`). Only at a format
+  that validation rejects does it choose a NaN, as the arithmetic does, so
+  that the rule is total.
+- Each carries `round(rne)`, the one mode M1 has; #229's open question on
+  rounding modes decides no other here. A poison operand gives poison. It is
+  never UB, and it is pure.
+
+Rejected: building the conversion from the arithmetic, such as the sum of the
+integer's bits as powers of two, which rounds more than once; and a rule of
+fir's own that rounds the integer itself, a second definition of rounding
+beside the model's.
+
 ## What holds today
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
-arithmetic above, float constants, and `bitcast` between a float and the
-integer of its width. A float constant is `const` at a float
+arithmetic above, float constants, `bitcast` between a float and the
+integer of its width, and `sitofp` and `uitofp` from every integer type to
+every float type. A float constant is `const` at a float
 type, written as its shortest decimal that reads back, such as `1.0` or `0.1`,
 or else as `0x` and its bits, such as `0x7fc00000`. Every bit pattern, each NaN
 payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
@@ -201,7 +230,9 @@ never a NaN, so it is differential already. The naive backend lowers `f32` and
 `f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and
 lowers the constants, `fcmp` and the arithmetic, with SSE2 and, for `fma`, a
-routine of a runtime helper, and `bitcast` as a copy of a slot
+routine of a runtime helper, `bitcast` as a copy of a slot, and `sitofp` and
+`uitofp` with `cvtsi2ssq` and `cvtsi2sdq`, in a few steps for an unsigned
+`i64` or an `i128`
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md)). It reports every
 other format as a diagnostic where its value is defined. The corpus runs every
 predicate and the constants differentially at `f32` and `f64`, and on `fir-ref`
@@ -214,6 +245,10 @@ result on `fir-ref` with a choice
 It runs `bitcast` both ways at every aliased format, on the same edges, each
 case differential at `f32` and `f64`, NaNs included
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-bit-cast-corpus)).
+It runs `sitofp` and `uitofp` from every width of each side to every aliased
+format, on boundary integers, ties and the edges of overflow, each case of a
+width the backend lowers differential at `f32` and `f64`
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-integer-to-float-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's

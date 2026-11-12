@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3534021308547204995")
+:::moduleDocs (fingerprint := "13111860021414672188")
 :::
 
 :::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "13778199030025655354")
@@ -58,6 +58,16 @@ float $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`. So
 $`\mathtt{bitcast}` from an $`\mathsf{f32}` to an $`\mathsf{i64}`, between
 two floats or two integers, or with $`\mathtt{round(rne)}` does not
 decode.
+:::
+
+:::readable Fir.Core.decodeIntToFloat (pin := Fir.Core.isRoundAttrs) (fingerprint := "621521718397619832")
+*Definition: reading a conversion from an integer back.*
+$`\mathtt{sitofp}` and $`\mathtt{uitofp}` decode from the attributes
+$`[\mathtt{round(rne)}]`, one operand type $`\mathsf{i}N` and one result
+type $`\mathsf{float}\langle e,m \rangle`, for any $`N`, $`e` and $`m`, as
+$`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`. So a
+conversion with no attribute or with $`\mathtt{round(rtz)}`, from a float
+or to an integer, does not decode.
 :::
 
 :::readable Fir.Core.eq_of_isRoundAttrs Fir.Core.FUnary.attrs_of_attrsOk Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "1937090943893134182")

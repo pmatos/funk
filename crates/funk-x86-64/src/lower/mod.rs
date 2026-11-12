@@ -37,7 +37,9 @@
 //! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
 //! pass and return in SSE registers
 //! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
-//! bit cast copies a slot (`bitcast.rs`).
+//! bit cast copies a slot (`bitcast.rs`). A conversion from an integer
+//! converts with SSE2, in a few steps for an unsigned `i64` or an `i128`
+//! (`int_to_float.rs`).
 
 mod arith;
 mod bitcast;
@@ -51,6 +53,7 @@ mod div;
 mod farith;
 mod fcompare;
 mod freeze;
+mod int_to_float;
 mod moves;
 
 use std::collections::HashMap;
@@ -279,6 +282,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
         .or_else(|| bitcast::lowering(name))
+        .or_else(|| int_to_float::lowering(name))
 }
 
 /// A module's functions, lowered.
