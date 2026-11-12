@@ -52,29 +52,30 @@ fn bitcasts(t: &str, i: &str, sign: &str) -> String {
     ])
 }
 
-#[test]
-fn bitcast_keeps_every_bit_at_f32() {
-    let exe = build("bitcast-f32", &bitcasts("f32", "i32", "-2147483648"));
-    for b in F32 {
-        let x = (b as i32).to_string();
+/// Builds the bit casts at the float type `t`, of `w` bits, and checks each
+/// of `bits` through them.
+fn check(t: &str, w: u32, bits: impl IntoIterator<Item = u64>) {
+    let signed = |b: u64| (((b << (64 - w)) as i64) >> (64 - w)).to_string();
+    let sign = 1u64 << (w - 1);
+    let exe = build(
+        &format!("bitcast-{t}"),
+        &bitcasts(t, &format!("i{w}"), &signed(sign)),
+    );
+    for b in bits {
+        let x = signed(b);
         expect(&exe, &["@bits", &x], &[&x]);
         expect(&exe, &["@float", &x], &[&x]);
         expect(&exe, &["@both", &x], &[&x]);
-        let flipped = ((b ^ 0x8000_0000) as i32).to_string();
-        expect(&exe, &["@flip", &x], &[&flipped]);
+        expect(&exe, &["@flip", &x], &[&signed(b ^ sign)]);
     }
 }
 
 #[test]
+fn bitcast_keeps_every_bit_at_f32() {
+    check("f32", 32, F32.map(u64::from));
+}
+
+#[test]
 fn bitcast_keeps_every_bit_at_f64() {
-    let sign = i64::MIN.to_string();
-    let exe = build("bitcast-f64", &bitcasts("f64", "i64", &sign));
-    for b in F64 {
-        let x = (b as i64).to_string();
-        expect(&exe, &["@bits", &x], &[&x]);
-        expect(&exe, &["@float", &x], &[&x]);
-        expect(&exe, &["@both", &x], &[&x]);
-        let flipped = ((b ^ (1 << 63)) as i64).to_string();
-        expect(&exe, &["@flip", &x], &[&flipped]);
-    }
+    check("f64", 64, F64);
 }

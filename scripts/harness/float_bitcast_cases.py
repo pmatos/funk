@@ -29,22 +29,11 @@ type: a float as its shortest decimal or its hexadecimal bits
 """
 
 import sys
-from pathlib import Path
 
+from float_arith_cases import CANONICAL, DIFFERENTIAL, FORMATS
 from float_ref import Format
 from float_text import spell
 
-ROOT = Path(__file__).resolve().parents[2]
-CANONICAL = ROOT / "tests" / "fir" / "canonical"
-
-FORMATS = {
-    "f16": (5, 10),
-    "bf16": (8, 7),
-    "f32": (8, 23),
-    "f64": (11, 52),
-    "f128": (15, 112),
-}
-DIFFERENTIAL = ("f32", "f64")
 FILES = [f"float-bitcast-{t}" for t in FORMATS]
 
 
