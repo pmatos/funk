@@ -32,7 +32,7 @@ of each value it defines, and then those of each op of its blocks, at any
 depth. The dialects of an item $`i` of a dialect's kind are, in order, the
 dialect of its kind, those of the words of each type that $`i` states, and
 those of its attributes: a kind of item's word joins the dialect set too
-(ADR-2026-11-10-2224).
+(ADR-2026-11-09-1543).
 :::
 
 :::readable Fir.SymbolTable.InDialectSet Fir.Module.InDialectSet (fingerprint := "10087329034650690103")

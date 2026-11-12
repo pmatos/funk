@@ -1,5 +1,5 @@
 # Tests of trunc-poison.fir: a poison operand gives trunc a poison
-# result (ADR-2026-10-30-0818), at every valid pair among i1, i7, i8,
+# result (ADR-2026-10-29-2006), at every valid pair among i1, i7, i8,
 # i16, i32, i33 and i64. %p = add nsw %a, 1 is poison when %a is the
 # signed maximum, and the function returns trunc %p. On the row 0, %p is
 # 1, and the result is trunc of it.

@@ -161,7 +161,7 @@ Each op declares a set of effects drawn from this list (ADR-2026-11-09-1541):
 - allocates or frees in memory `m`;
 - may-UB;
 - may produce poison: a poison result on operands with no poison, beside the
-  op's poison class (ADR-2026-11-09-2249);
+  op's poison class (ADR-2026-11-09-1541);
 - observable: it adds an event to the trace;
 - control: it is a terminator.
 
@@ -187,7 +187,7 @@ Each new op costs one soundness proof per effect it leaves out
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
 say. `call` carries its callee's summary (semantics-effects.md,
-ADR-2026-11-10-2108). Each M1 op is classified when it
+ADR-2026-11-09-1541). Each M1 op is classified when it
 lands, in its own ticket, by the same rule (ADR-2026-11-09-1541):
 
 - Loads read and may-UB.

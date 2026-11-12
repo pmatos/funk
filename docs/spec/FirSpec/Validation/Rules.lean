@@ -227,7 +227,7 @@ the dialect registers it; its parameters are named by distinct names; every
 type it states, its parameters' and its results', is valid for the dialect;
 every attribute can be written as a token; and the item obeys the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect's rule]
-for its kind, through the identity view (ADR-2026-11-10-2224). The dialect
+for its kind, through the identity view (ADR-2026-11-09-1543). The dialect
 reads its kinds by name, so a sum of dialects sends the item to the
 dialect that registers its kind.
 :::
@@ -300,5 +300,5 @@ types. Every op of a valid function has an op instance with valid types,
 since the rules check its operand and result types against the types of
 the values it uses and defines. The
 {ref "The-fir-specification--Execution--What-the-lawful-class-gives"}[poison obligations]
-speak only of such op instances (ADR-2026-11-02-1515).
+speak only of such op instances (ADR-2026-10-29-2006).
 :::

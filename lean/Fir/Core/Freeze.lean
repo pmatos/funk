@@ -12,7 +12,7 @@ that result then sees the same bits, so `sub %f, %f` of a frozen poison
 other bits (ADR-2026-10-29-2017).
 
 `freeze` is an exception to poison propagation, with this rule of its own
-(ADR-2026-10-30-0818): its result is never poison. It is never UB. The rule
+(ADR-2026-10-29-2006): its result is never poison. It is never UB. The rule
 is written once, for every way of computing that can choose bits. In the
 set of the ways a run may end, it gives every value of the type, and in
 `fir-ref`'s tree of choices it is one choice of N bits.

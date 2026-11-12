@@ -1,60 +1,49 @@
 # Dialects extend fir through prefixed names, registered kinds of item and a dialect set that each module declares
 
-Status: accepted; refined by ADR-2026-11-10-1510 and ADR-2026-11-10-2224
+Status: accepted; refined by ADR-2026-11-10-1510
 Tier: direction; area: semantics
-
-## Context
-
-This is decision H4 of the fir v0 decision record, which marks it
-Foundational. M0 already makes ops and types data: a registry of dialects
-in Rust (ADR-2026-10-30-1146) and typeclasses in Lean (G0,
-ADR-2026-10-29-2016). Combining dialects exists only for tests: a sum that
-routes names starting with `toy.` to a test dialect over shared types,
-whose ADR said it decided nothing about H4 (ADR-2026-11-09-2306 replaced
-it). A module
-holds functions only, and a new kind of item needs a parser change
-(ADR-2026-11-03-0600). Modules declare no dialects, though the record's P3
-and H5 say they should. The human ruled on
-[#202](https://github.com/pmatos/funk/issues/202) on 2026-11-09.
 
 ## Decision
 
 - **Prefixed names.** Every dialect other than the core writes its ops,
-  types and attributes as `name.word`. Core words stay bare.
+  types, attributes and kinds of item as `name.word`. Core words stay bare.
 - **Sums of dialects.** A module's dialects combine as a sum routed by the
-  prefix, for ops, types and attributes alike. The sum moves from
-  `lean/FirTest/` into the spec. A dialect declares the dialects it depends
-  on, and may name their types, which is how an extension op takes a core
-  value.
-- **Kinds of item.** A dialect registers kinds of item through the one
-  grammar, as it registers ops, so a new kind needs no parser change. The
-  core registers `func`, `global` (ADR-2026-11-09-1546), external
-  declarations (ADR-2026-11-09-1547) and `module`. A `module` item holds a
-  nested symbol table, so nested and device modules exist
-  ([#211](https://github.com/pmatos/funk/issues/211)).
-- **A dialect set per module.** Each module declares the dialects it uses.
-  The verifier rejects any op, type, attribute or kind of item from a
-  dialect outside the set. A nested module declares its own set, which is
-  how a host module holds a device module.
+  prefix, for ops, types and attributes alike. A dialect declares the
+  dialects it depends on, and may name their types, which is how an
+  extension op takes a core value. ADR-2026-11-09-2306 says how the spec
+  builds the sum.
+- **Kinds of item.** A dialect registers kinds of item, each a word of its
+  own with its own rule, written by the one item production with an empty
+  body, so a new kind needs no parser change. The core's `func` and `module`
+  are terms of their own, and a `module` item nests a symbol table.
+- **A dialect set per module.** Each module declares the dialects it uses,
+  and the verifier rejects any op, type, attribute or kind of item from a
+  dialect outside the set. A nested module declares its own set, which is how
+  a host module holds a device module. A module that declares none uses the
+  core alone.
 - **Region kinds.** The format and the dialect classes admit region kinds
-  other than the core's CFG region, such as unordered dataflow regions
-  (G0, E0 in ADR-2026-10-29-2005). No other kind is built in M1.
-- **Effects and observations** come from the dialect too
-  (ADR-2026-11-09-1541, ADR-2026-11-09-1540).
+  other than the core's CFG region, each registered by a dialect with its own
+  rule.
+- **Effects and observations** come from the dialect too.
 
-## Alternatives
+[semantics-dialects.md](../decisions/semantics-dialects.md) states what holds.
+The human ruled this on 2026-11-09, on #202.
 
-- **Every extension must have a verified lowering to core,** as the record
-  proposed. A quantum or photonic dialect cannot lower to a CPU-shaped
-  core, so this would fail G0. ADR-2026-11-09-1544 replaces it.
-- **A fixed list of kinds of item in the core.** Less machinery, but every
-  new kind would be a core change.
+## Why
 
-## Consequences
+G0 asks that fir reach hardware that M0 does not target. Ops and types were
+already data, in Rust's registry and Lean's classes; prefixed names, sums and
+registered kinds let a dialect add types, attributes and items as well, with
+no change to the core, the grammar or the parser. A declared set makes what a
+module may use checkable.
 
-- The toy routing rule becomes the general rule, and test dialects keep the
-  `toy.` prefix.
-- The round-trip and validation proofs are restated over sums of dialects
-  and over registered kinds of item.
-- Every existing module needs a dialect set. A module that declares none
-  uses the core alone, so M0's texts stay valid.
+## Rejected alternatives
+
+- **Every extension must have a verified lowering to core,** as the decision
+  record proposed. A quantum or photonic dialect cannot lower to a CPU-shaped
+  core, so this would fail G0 (ADR-2026-11-09-1544).
+- **A fixed list of kinds of item in the core.** Every new kind would be a
+  core change.
+- **A typed item instance per dialect,** with a decoder and round-trip laws.
+  It changes the structure every dialect builds, and no M1 kind needs more
+  than attributes and a signature.

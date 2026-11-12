@@ -53,7 +53,7 @@ ult,ule,ugt,uge   \mathsf{ult} \mid \mathsf{ule} \mid \mathsf{ugt} \mid \mathsf{
 
 :::readable Fir.Core.FPred (fingerprint := "7187194159295087930")
 *Float predicates.* A float comparison asks one of fourteen questions about
-two floats (ADR-2026-11-11-1139). It compares the numbers they encode, so
+two floats (ADR-2026-11-09-1549). It compares the numbers they encode, so
 $`-0` equals $`+0`. A NaN encodes no number, and a pair with a NaN is
 _unordered_. The $`\mathsf{o}` predicates are _ordered_: each is false on
 an unordered pair. The $`\mathsf{u}` predicates are _unordered_: each is
@@ -73,7 +73,7 @@ ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
 
 :::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "15404010338068231471")
 *Float operations.* The float arithmetic has four ops of two operands and
-three of one (ADR-2026-11-11-1800). Each that rounds rounds to nearest,
+three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
 ties to even.
 
 ```grammar Fir.Core.FBin
@@ -184,7 +184,7 @@ select \mathsf{select}_N
 
 *Float arithmetic* computes on floats of one format
 $`\mathsf{float}\langle e,m \rangle`, by Lean's float model
-(ADR-2026-11-11-1800).
+(ADR-2026-11-09-1549).
 
 ```grammar Fir.Core.Op
 \mathit{op}

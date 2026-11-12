@@ -46,7 +46,7 @@ compiler learns facts from a branch, such as the condition being 1 in the
 first successor, and those facts would be wrong if a branch on poison
 could go either way, as the section on
 {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[poison and immediate UB]
-explains (ADR-2026-10-29-2006, ADR-2026-10-30-0818). The values that the
+explains (ADR-2026-10-29-2006). The values that the
 successors pass reach the block's arguments unchanged. $`\mathsf{cond\_br}`
 ends in one of these ways and never chooses, so this definition is a
 function to its ending.

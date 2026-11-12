@@ -31,7 +31,7 @@ dialect's `Op` type, from which the op's operand and result types follow.
 An op instance whose operand and result types validation accepts
 (`TypesValid`), such as `udiv` at `i8` but not at `i0`. Every op of a
 valid function is one. The poison obligations speak only of valid op
-instances (ADR-2026-11-02-1515).
+instances (ADR-2026-10-29-2006).
 
 **attribute**:
 A constant part of an op that is not a value, such as the flag `nsw`, the
@@ -172,7 +172,7 @@ poison is not UB in itself, but some uses are: branching on it (S1), and any
 use where some value it could take would be UB, such as dividing by it, or
 dividing it by `-1` with `sdiv` or `srem`, since it could be the signed
 minimum. A program writes a poison value with the core op `poison`, as
-in `%p: i32 = poison` (ADR-2026-11-03-1615).
+in `%p: i32 = poison` (ADR-2026-10-29-2006).
 _Avoid_: undef (fir has none)
 
 **poison class**:
@@ -183,8 +183,7 @@ three in Lean. An exception, such as `select` or `freeze`, states its own
 rule. Every op of every dialect declares its class. The obligations speak
 of valid op instances, and every one that runs by its own rule, a
 terminator or an op with no callee, is total and monotone: refining its
-operands refines what it does (ADR-2026-11-02-1514,
-ADR-2026-11-02-1515).
+operands refines what it does (ADR-2026-10-29-2006).
 
 **freeze**:
 The op that stops poison: `freeze` of poison yields an arbitrary but fixed

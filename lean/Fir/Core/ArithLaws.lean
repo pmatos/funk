@@ -18,13 +18,13 @@ behaviour refines its behaviour on those others, calls and recursion
 included, as the section on refinement through core calls proves. Each
 proof is about fir's execution rules, read in the set monad.
 
-`const` propagates poison (ADR-2026-10-30-0818), at an integer type and
+`const` propagates poison (ADR-2026-10-29-2006), at an integer type and
 at a float type alike. The core poison classes
 section proves that it meets its poison clauses and is monotone whatever
 its semantics. Below, its rule gives the rest: it returns a result on
 operands with no poison, and it is total.
 
-`poison` meets them the same way (ADR-2026-11-03-1615). Its one operand
+`poison` meets them the same way (ADR-2026-10-29-2006). Its one operand
 vector is the empty one, which holds no poison, and on it `poison` returns
 its result, the poison of its type: a result on defined operands, which is
 all that obligation asks, and an outcome, which is all that totality asks.

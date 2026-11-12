@@ -3,7 +3,7 @@ import FirTest.OverCore
 /-!
 A test dialect named `bit`, with a type of its own, written over the core:
 the second prefix that a sum of three dialects needs
-(ADR-2026-11-10-1310). Every other test dialect is named `toy`
+(ADR-2026-11-09-2306). Every other test dialect is named `toy`
 (ADR-2026-10-30-1146), and a sum holds two dialects only under different
 names.
 

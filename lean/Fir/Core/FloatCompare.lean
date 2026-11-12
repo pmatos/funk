@@ -4,7 +4,7 @@ import Fir.Core.Text
 /-!
 # Float comparison
 
-This section gives `fcmp` its rule (ADR-2026-11-11-1139). It is never UB,
+This section gives `fcmp` its rule (ADR-2026-11-09-1549). It is never UB,
 and its result is never a NaN.
 
 `fcmp` takes a predicate and two values of `float<e,m>`, and gives an
@@ -25,11 +25,11 @@ not, and `lt`, `le`, `gt` and `ge` as their names say. `ord` holds when
 the pair is ordered, and `uno` when it is not. So `fcmp oeq %x, %x` is
 false and `fcmp une %x, %x` true exactly when `%x` is a NaN.
 
-`fcmp` propagates poison (ADR-2026-10-30-0818): a poison operand gives a
+`fcmp` propagates poison (ADR-2026-10-29-2006): a poison operand gives a
 poison `i1`.
 
 Lean's model needs at least 2 exponent bits and 1 mantissa bit. Validation
-rejects every other format (ADR-2026-11-11-0950), so no valid program
+rejects every other format (ADR-2026-11-09-1549), so no valid program
 compares in one. So that the rule is still total, every pair of such a
 format is unordered.
 -/

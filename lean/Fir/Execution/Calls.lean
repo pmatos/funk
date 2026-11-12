@@ -45,7 +45,7 @@ Showing that no path is stuck needs nothing more of the ops' semantics.
 Progress needs each op that runs by its own rule, a terminator or an op
 with no callee, to be total, so that each step has a way to go on. An op
 with a callee goes on by its callee's run, which the induction covers,
-and needs no rule of its own (ADR-2026-11-02-1514). A callee's run that
+and needs no rule of its own (ADR-2026-10-29-2006). A callee's run that
 ends with UB or out of fuel ends its caller's run so, and that is a way
 for it to end.
 -/

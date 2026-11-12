@@ -1,7 +1,7 @@
 import FirTest.DialectSet
 
 /-!
-Kinds of item that a dialect registers (ADR-2026-11-10-2224), on the shared
+Kinds of item that a dialect registers (ADR-2026-11-09-1543), on the shared
 cases of `tests/dialects/item-kinds.cases`, which
 `crates/funk-ir/tests/item_kinds.rs` reads too, so the two validators agree
 on each of them.

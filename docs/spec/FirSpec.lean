@@ -299,7 +299,7 @@ built one dialect at a time on the core (ADR-2026-11-09-1543,
 ADR-2026-11-09-2306). Every word says which dialect it belongs to, by its
 prefix, and the sum reads each word with that dialect. An extension is
 written over the dialects it depends on, and joins a sum that holds them,
-and more, by a lift through an inclusion of types (ADR-2026-11-10-1310), so
+and more, by a lift through an inclusion of types (ADR-2026-11-09-2306), so
 extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.Names "Words and dialect sets" FirSpec.Sum.Names (level := 2)}

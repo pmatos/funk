@@ -98,7 +98,7 @@ of `func`, then its attributes, then its empty body:
 * ` {`, a line feed, $`n` spaces, `}` and a line feed.
 
 So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
-of the kind `toy.cell` (ADR-2026-11-10-2224).
+of the kind `toy.cell` (ADR-2026-11-09-1543).
 :::
 
 :::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "13951144100222046326")

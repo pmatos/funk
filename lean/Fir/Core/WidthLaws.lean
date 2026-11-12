@@ -6,7 +6,7 @@ import Fir.Core.Poison
 
 `zext`, `sext` and `trunc` meet the obligations of the poison classes
 section, at every pair of widths. They propagate poison
-(ADR-2026-10-30-0818), so each meets both poison clauses, returns a result
+(ADR-2026-10-29-2006), so each meets both poison clauses, returns a result
 on an operand that is not poison, and is total and monotone.
 
 None of them is ever UB, so the clause "UB only by the op's own rules"

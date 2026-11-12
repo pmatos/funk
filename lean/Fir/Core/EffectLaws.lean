@@ -29,7 +29,7 @@ follow from what each rule does in the set monad.
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
-(ADR-2026-11-02-1514).
+(ADR-2026-10-29-2006).
 
 The obligations have teeth: the last section declares the core ops' effects
 with `sdiv` left without may-UB, and shows that the obligations reject that

@@ -3,7 +3,7 @@
 # carry no attribute (ADR-2026-11-11-1801). Every other attribute does not
 # decode, as a flag an op does not have does not. Each op takes values of
 # one float type, as many as it has operands, and gives one value of it
-# (ADR-2026-11-11-1800).
+# (ADR-2026-11-09-1549).
 
 [[reject]]
 verdict = "parse-error"

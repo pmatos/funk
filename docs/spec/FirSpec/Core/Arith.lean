@@ -55,6 +55,6 @@ writes the remainder of $`k` divided by $`2^N`. The sum wraps, as two's
 complement addition does, so the same rule serves signed and unsigned
 integers, and it is never UB. A poison operand gives poison: $`\mathsf{add}`
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison]
-(ADR-2026-10-30-0818). The flags $`\mathsf{nuw}` and $`\mathsf{nsw}` are
+(ADR-2026-10-29-2006). The flags $`\mathsf{nuw}` and $`\mathsf{nsw}` are
 the next section's.
 :::

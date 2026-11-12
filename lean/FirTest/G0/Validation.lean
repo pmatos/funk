@@ -8,7 +8,7 @@ proof, as in `FirTest.G0`. It builds only while validation stays
 parameterized over the dialect, and `scripts/check_g0.py` checks that no
 statement here is narrowed to the core dialect. It covers the check of a
 module, its dialect sets, the rule over a whole function, and the kinds of
-item that a dialect registers, with their rules (ADR-2026-11-10-2224).
+item that a dialect registers, with their rules (ADR-2026-11-09-1543).
 -/
 
 namespace FirTest.G0
@@ -44,7 +44,7 @@ theorem validFunc_of_valid (d : Dialect) [DialectSignature d] [DialectValidation
   h.dialect
 
 /-- A valid item of a dialect's kind obeys its dialect's rule for its kind,
-for every dialect (ADR-2026-11-10-2224). -/
+for every dialect (ADR-2026-11-09-1543). -/
 theorem validItem_of_valid (d : Dialect) [DialectValidation d] {ctx : FuncContext d}
     {i : DialectItem d} (h : i.Valid ctx) : validItem (DialectView.id d) ctx i :=
   h.dialect

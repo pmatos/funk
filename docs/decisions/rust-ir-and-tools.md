@@ -105,7 +105,7 @@ could disagree.
 
 `Item` follows the spec and is `#[non_exhaustive]`: `Func`, `Module` for a
 nested module (ADR-2026-11-10-1510), and `Dialect` for an item of a kind
-that a dialect registers (ADR-2026-11-10-2224). A dialect registers such a
+that a dialect registers (ADR-2026-11-09-1543). A dialect registers such a
 kind with `Dialect::item_kind` and an `ItemKindSpec`, whose `check` is the
 kind's rule; registration puts the kind under the dialect's prefix and
 rejects a kind of the core. A module is the symbol table of its own items.
@@ -117,7 +117,7 @@ dialect's own rule. `OpSpec::effects`, which every op must give, is its set of
 effects; each core op's equals its Lean set (semantics-effects.md,
 ADR-2026-11-09-1541). `OpSpec::callee` names the function an op calls, `None`
 by default, and `Summaries` gives each function of a table the effects that
-a call of it may have (ADR-2026-11-10-2108).
+a call of it may have (ADR-2026-11-09-1541).
 `TypeSpec::check` says whether a type decodes and whether it
 is valid. Registering rejects an op name that is not a word or is already
 registered, and a failed registration changes nothing (ADR-2026-10-30-1146).
@@ -219,7 +219,7 @@ with `walk` or `Region::parts`. Other crates walk the public fields with an
 explicit stack of their own. A walk that recurses once per level is a bug
 anywhere. The same holds for calls: the pass that summarizes each function's
 effects walks the call graph with its path on the heap, so a long chain of calls
-takes no stack per call (ADR-2026-11-10-2108). Memory bounds depth, not the stack. The canonical text of nested
+takes no stack per call (ADR-2026-11-09-1541). Memory bounds depth, not the stack. The canonical text of nested
 regions grows with the square of their depth, so `funk fmt` streams it
 ([rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#funk-fmt)).
 

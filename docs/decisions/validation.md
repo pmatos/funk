@@ -38,7 +38,7 @@ one item of the table, of any kind; each function is valid against the
 table's own symbols; each item of a dialect's kind is valid
 (`DialectItem.Valid`: a kind that a dialect registers, distinct parameter
 names, valid types, attributes that can be written and the dialect's rule
-for the kind, ADR-2026-11-10-2224); and the set names each dialect once, by
+for the kind, ADR-2026-11-09-1543); and the set names each dialect once, by
 a word. `Module.Valid` asks a valid location table and a valid table at each
 level. One location table serves every table (ADR-2026-11-10-1510).
 
@@ -67,7 +67,7 @@ and nothing more (ADR-2026-11-09-2257):
   rules: `validTy` for every type, `validOp` for every context and op,
   `validFunc` for every function, `validRegion` for every region of a kind it
   registers (ADR-2026-11-10-1941) and `validItem` for every item of a kind it
-  registers (ADR-2026-11-10-2224).
+  registers (ADR-2026-11-09-1543).
 
 A module's dialect set has a rule of its own, `Module.InDialectSet`, in
 `lean/Fir/Validation/DialectSet.lean`, beside `Module.Valid`. It reads the
@@ -143,7 +143,7 @@ could then return too few values (ADR-2026-11-09-2353).
 An extension lifted into a larger sum follows the same rule against what it
 depends on. Its op sees only the symbols whose types are all its own or its
 dependencies', and is valid only where the function's result types all are
-(ADR-2026-11-10-1310).
+(ADR-2026-11-09-2306).
 
 ## Region kinds
 

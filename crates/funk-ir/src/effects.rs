@@ -83,7 +83,7 @@ pub struct Effects {
     /// The op may end in immediate UB.
     pub may_ub: bool,
     /// On operands with no poison, a result of the op may be poison
-    /// (ADR-2026-11-09-2249).
+    /// (ADR-2026-11-09-1541).
     pub may_poison: bool,
     /// The op may add an event to the trace of the run.
     pub observable: bool,

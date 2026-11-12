@@ -20,7 +20,7 @@
 //! is registered under its dialect's name as an op is, and a
 //! [`RegionKindSpec`] is the kind's rule, `validRegion`. A kind of item is
 //! registered the same way, and an [`ItemKindSpec`] is its rule,
-//! `validItem` (ADR-2026-11-10-2224).
+//! `validItem` (ADR-2026-11-09-1543).
 
 mod error;
 mod item_kind;
@@ -110,7 +110,7 @@ pub trait OpSpec: Send + Sync {
     /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
     /// interpreter runs the callee of an op that is not a terminator, and
     /// the op has its callee's effects too, which [`Summaries`] adds
-    /// (ADR-2026-11-10-2108).
+    /// (ADR-2026-11-09-1541).
     ///
     /// [`Summaries`]: crate::Summaries
     fn callee(&self, _op: &OpTypes<'_>) -> Option<String> {

@@ -14,7 +14,7 @@
 //! parameters' types, the types that each block defines, then each op's
 //! name, attributes and region kinds. An item of a dialect's kind writes
 //! the words of its kind, of its types and of its attributes
-//! (ADR-2026-11-10-2224), and gets one diagnostic in the same way, in the
+//! (ADR-2026-11-09-1543), and gets one diagnostic in the same way, in the
 //! order of `DialectItem.wordDialects`.
 
 use std::collections::HashSet;

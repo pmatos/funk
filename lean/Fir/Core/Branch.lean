@@ -20,12 +20,12 @@ when `%c` is `false`. A poison condition is immediate UB
 (ADR-2026-10-29-2006). It is never a free choice between the two
 successors: a compiler learns facts from a branch, and the section on
 poison and immediate UB explains why those facts would be wrong if a
-branch on poison could go either way (ADR-2026-10-30-0818). Its UB has the
+branch on poison could go either way (ADR-2026-10-29-2006). Its UB has the
 reason `cond_br on poison`, which names the op and its case. Reasons are
 for people: refinement ignores them.
 
 Both are exceptions to poison propagation that pass values on as they are
-(ADR-2026-10-30-0818). A successor's values reach the block's arguments
+(ADR-2026-10-29-2006). A successor's values reach the block's arguments
 unchanged, so a poison value arrives as poison. `cond_br`'s condition is
 the one value that they do not pass on, and a poison condition is UB.
 

@@ -5,7 +5,7 @@ Tests of #229's float constants and `fcmp` on `FirRef.runBytes`, which
 computes what `fir-ref run` writes. A float argument, result or constant is
 the one float literal of its bits (ADR-2026-11-11-1438), and `poison` is an
 argument of every float type. `fcmp` runs with each of its fourteen
-predicates (ADR-2026-11-11-1139) at `f32`, `f64`, `f16`, `bf16`, `f128` and
+predicates (ADR-2026-11-09-1549) at `f32`, `f64`, `f16`, `bf16`, `f128` and
 `float<2,1>`, on zeros of both signs, subnormals, ones, the largest finite
 values, infinities and NaNs, quiet and signalling, with payloads and either
 sign.

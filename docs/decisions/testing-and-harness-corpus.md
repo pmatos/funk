@@ -43,7 +43,7 @@ A new test is a new line or file in `tests/fir/`, with no code change
 
 ### The tests of the select rewrites
 
-ADR-2026-10-30-0818 forbids two rewrites of `select`, and each has a named test.
+ADR-2026-10-29-2006 forbids two rewrites of `select`, and each has a named test.
 `select-and` tests the rewrite into `and`. `select-cond-br`, and
 `FirTest.Branch` in Lean, test the rewrite into `cond_br`, which came with #19,
 since #16 had no `cond_br`.

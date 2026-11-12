@@ -1,5 +1,5 @@
 # Must-reject texts of poison, the constant op of #122
-# (ADR-2026-11-03-1615). It has no attributes and no operands, and
+# (ADR-2026-10-29-2006). It has no attributes and no operands, and
 # defines one integer. It has no validation rule beyond its signature, so
 # a text that breaks one does not decode: each is a parse error at the
 # op's name (ADR-2026-10-29-2014).

@@ -57,7 +57,7 @@ otherwise.
 *Definition: a word of a dialect.* A word of a dialect other than the
 core is a word that holds a `.`, such as `toy.cell`; the part before its
 first `.` names its dialect. Every word of a dialect is a word. The kinds
-of item that dialects register are such words (ADR-2026-11-10-2224), so
+of item that dialects register are such words (ADR-2026-11-09-1543), so
 none of them is `func` or `module`, which are the core's, nor a word that
 the grammar reserves, such as `dialects` or `locs`.
 :::
@@ -250,7 +250,7 @@ transformed on its own.
 :::readable Fir.DialectItem Fir.DialectItem.types (pin := Fir.DialectItem.print) (fingerprint := "343753791736889547")
 *Definition: an item of a dialect's kind.* A dialect registers kinds of
 item of its own, as it registers ops, so a new kind needs no new syntax
-(ADR-2026-11-10-2224). An item of such a kind holds what the one
+(ADR-2026-11-09-1543). An item of such a kind holds what the one
 production of an item writes, with an empty body:
 
 ```grammar Fir.DialectItem
@@ -269,7 +269,7 @@ then its results.
 :::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.dialect? (fingerprint := "2482776140988760982")
 *Definition: an item.* An item is one entry of a module: a function, a
 module nested in it (ADR-2026-11-10-1510), or an item of a kind that a
-dialect registers (ADR-2026-11-10-2224):
+dialect registers (ADR-2026-11-09-1543):
 
 ```grammar Fir.Item
 \mathit{item}

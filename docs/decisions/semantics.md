@@ -106,7 +106,7 @@ and the Lean interpreter accept every width in that range. A wider type does
 not decode, in Lean and in Rust alike. A frontend that needs a wider integer
 has to split it (ADR-2026-11-03-1000). A float type `float<e,m>` is no wider
 than that in all, and semantics-floats.md says which formats the core takes
-(ADR-2026-11-11-0950).
+(ADR-2026-11-09-1549).
 
 Every other number that gives the text its structure is below `2^32`: a
 location reference, a line and a column. An integer attribute has no bound of
@@ -148,7 +148,7 @@ per-compile refinement checking (S8, not decided), checks this relation and no
 other (ADR-2026-10-29-2008).
 
 Monotonicity makes refinement compositional. Replacing one part of a function
-with a part that refines it refines the whole function (ADR-2026-10-30-0818).
+with a part that refines it refines the whole function (ADR-2026-10-29-2006).
 
 The core dialect's behaviour is a set of outcomes. Its refinement is set
 refinement: each outcome of the target is allowed by some outcome of the
@@ -254,7 +254,7 @@ choices, a frame changes nothing, so M0's runs are unchanged
 (ADR-2026-11-10-2350). A function's runs with memory run its dialect's
 semantics with memory at a naming of the memories, from the empty
 memories. They are fuel-monotone for every dialect, and for a dialect that
-lifts the set monad they are its runs (ADR-2026-11-11-0623).
+lifts the set monad they are its runs (semantics-effects.md).
 
 Runs with memory have progress for every dialect, whatever its ops do to the
 memories. No path is stuck when every function of the module is valid and
@@ -290,7 +290,7 @@ not a class constraint on the monad (ADR-2026-11-02-0836).
 set monad. The interpreter never reaches it. Where the spec counts which ops
 have rules, an op with a callee has them. A statement proved op by op must leave
 out the ops with a callee. M2's rewrite rules need the same exclusion, tracked
-by #96 (ADR-2026-11-02-1514).
+by #96 (ADR-2026-10-29-2006).
 
 Fuel stays the interpreter's argument, not state in the monad. Every op takes
 one step, a call included. `Func.runOps` returns the steps it leaves with the

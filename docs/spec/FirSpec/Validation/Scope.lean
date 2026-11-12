@@ -208,7 +208,7 @@ dialect $`d` adds six things of its own:
   of $`d`, and the rule of each for an item $`i` of that kind, in a function
   context and through a view, written $`C, v \vdash_d i~\text{valid}`. The
   rule reads the item's attributes, and says what the kind holds
-  (ADR-2026-11-10-2224). A dialect that registers no kind of item has no
+  (ADR-2026-11-09-1543). A dialect that registers no kind of item has no
   such rule.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give

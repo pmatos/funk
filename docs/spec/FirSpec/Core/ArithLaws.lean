@@ -52,7 +52,7 @@ these two depend on its rule, so they are proved here.
 *Theorem: $`\mathsf{poison}` returns a result on defined operands, and is
 total.* For every width $`w`, under fir's execution rules,
 $`\mathsf{poison}_w` returns a result on defined operands and is total
-(ADR-2026-11-03-1615).
+(ADR-2026-10-29-2006).
 
 *Theorem: $`\mathsf{poison}` gives the poison of its type, and nothing
 else.* For every width $`w`, the only way $`\mathsf{poison}_w` ends, on

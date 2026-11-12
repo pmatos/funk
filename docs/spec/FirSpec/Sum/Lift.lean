@@ -85,7 +85,7 @@ $$`\hat\mu(n) = \begin{cases} \mathsf{inl}\ \mu(x) & \text{if } \mathrm{split}(n
 
 So $`\hat\mu(\mathrm{ofBase}(x)) = \mathsf{inl}\ \mu(x)`: the lift names
 each memory of $`d` as $`B` does, and the memory has one name in
-$`B \boxplus e{\uparrow}_\iota` (ADR-2026-11-11-0452). An op of the lift has
+$`B \boxplus e{\uparrow}_\iota` (ADR-2026-11-09-2306). An op of the lift has
 $`e`'s
 {ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
 with its memories renamed by $`\hat\mu`.

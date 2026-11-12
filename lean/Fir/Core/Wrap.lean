@@ -6,7 +6,7 @@ import Fir.Core.Arith
 This section gives `sub` and `mul` their rules, and `add`, `sub` and `mul`
 their flags. Without flags, each op gives its exact result modulo 2^N: it
 wraps, as two's complement does, and it is never UB. A poison operand
-gives poison: the three ops propagate poison (ADR-2026-10-30-0818).
+gives poison: the three ops propagate poison (ADR-2026-10-29-2006).
 
 A flag is a promise about the exact result, and a broken promise gives
 poison, not UB (ADR-2026-10-29-2006):

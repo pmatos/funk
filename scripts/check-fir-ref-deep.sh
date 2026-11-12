@@ -141,7 +141,7 @@ deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
 # An item of a dialect's kind keeps its attributes at any depth, and
-# validate walks them by loops (ADR-2026-11-10-2224). The core registers no
+# validate walks them by loops (ADR-2026-11-09-1543). The core registers no
 # kind and the module names no dialect, so validate rejects the item.
 item_diag() {
     printf '{"kind":"validation-error","message":"%s","func":"c","block":null,"op":null,"loc":null}' \

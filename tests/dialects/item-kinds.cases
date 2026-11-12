@@ -1,4 +1,4 @@
-Cases for the kinds of item that a dialect registers (ADR-2026-11-10-2224),
+Cases for the kinds of item that a dialect registers (ADR-2026-11-09-1543),
 shared by the two validators' tests: `lean/FirTest/ItemKinds.lean` and
 `crates/funk-ir/tests/item_kinds.rs`. Each case starts with a line of three
 equals signs, `accept` or `reject`, and its name. The cases run in the sum

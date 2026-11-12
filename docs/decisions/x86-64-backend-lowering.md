@@ -50,7 +50,7 @@ may leave the `jmp` out, when its block comes next, so the edges are ordered to
 let that edge end it. A `cond_br` whose two edges both copy costs one local
 label and one extra jump.
 
-A branch on poison is immediate UB (ADR-2026-10-30-0818), and goes one way or
+A branch on poison is immediate UB (ADR-2026-10-29-2006), and goes one way or
 the other. `cond_br` loads its condition into `%rax`, a copy goes through
 `%rax`, and a cycle of copies through `%rcx`, so a branch may clobber both.
 
@@ -133,7 +133,7 @@ value or per half, which nothing reads.
 ## Division
 
 A zero or poison divisor is immediate UB in the source. So is `sdiv` or `srem`
-by `-1` of the signed minimum or of poison (ADR-2026-10-30-0818). The human
+by `-1` of the signed minimum or of poison (ADR-2026-10-29-2006). The human
 ruled the poison dividend by `-1` UB on 2026-10-30, so that a backend needs no
 guard.
 
@@ -228,7 +228,7 @@ each, `addss`, `subss`, `mulss`, `divss`, `sqrtss` or their `sd` forms, on
 nearest even. Nothing sets its flush-to-zero or denormals-are-zero bits, so
 subnormals are honoured. `fneg` and `fabs` flip or clear the sign bit in `%rax`
 with `btcq` or `btrq`, which is IEEE 754's negate and abs, also on a NaN, and
-refines fir's any NaN (ADR-2026-11-11-1800). A NaN result is whatever the
+refines fir's any NaN (ADR-2026-11-09-1549). A NaN result is whatever the
 instruction or routine gives.
 
 SSE2 has no fused multiply-add, and FMA3 is not in every x86-64. So `fma` loads

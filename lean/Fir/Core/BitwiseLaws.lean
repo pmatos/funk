@@ -4,7 +4,7 @@ import Fir.Core.WrapLaws
 # The bitwise ops and shifts are lawful
 
 `and`, `or`, `xor`, `shl`, `lshr` and `ashr` meet the obligations of the
-poison classes section. They propagate poison (ADR-2026-10-30-0818), so
+poison classes section. They propagate poison (ADR-2026-10-29-2006), so
 each meets both poison clauses, returns a result on some operands with no
 poison, and is total and monotone.
 

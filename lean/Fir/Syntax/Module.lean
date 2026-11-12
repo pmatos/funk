@@ -230,7 +230,7 @@ structure Func (d : Dialect) where
   body : Region d
 
 /--
-An item of a kind that a dialect registers (ADR-2026-11-10-2224): what the
+An item of a kind that a dialect registers (ADR-2026-11-09-1543): what the
 one production of an item writes, `kind @sym(params) -> results attrs { }`,
 with an empty body. Its kind is a word of the dialect, such as `toy.cell`,
 never `func` or `module`, which are the core's. Its attributes are terms of
@@ -250,7 +250,7 @@ def DialectItem.types (i : DialectItem d) : List d.Ty := i.params.map (·.2) ++ 
 
 /--
 An item of a module: a function, a nested module (ADR-2026-11-10-1510), or
-an item of a kind that a dialect registers (ADR-2026-11-10-2224).
+an item of a kind that a dialect registers (ADR-2026-11-09-1543).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
 example a device module inside a host module. A `module` item is such a

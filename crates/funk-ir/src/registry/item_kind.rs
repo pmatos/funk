@@ -1,4 +1,4 @@
-//! Kinds of item that a dialect registers (ADR-2026-11-10-2224): the
+//! Kinds of item that a dialect registers (ADR-2026-11-09-1543): the
 //! `itemKindNames` and `validItem` of `DialectValidation`, in
 //! `lean/Fir/Validation/Scope.lean`.
 //!

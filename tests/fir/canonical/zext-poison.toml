@@ -1,5 +1,5 @@
 # Tests of zext-poison.fir: a poison operand gives zext a poison result
-# (ADR-2026-10-30-0818), at every valid pair among i1, i7, i8, i16, i32,
+# (ADR-2026-10-29-2006), at every valid pair among i1, i7, i8, i16, i32,
 # i33 and i64. %p = add nsw %a, %one, with %one = 1 (true at i1), is
 # poison when %a is the signed maximum, or true at i1, where true + true
 # = -2 overflows; the function returns zext %p. On the row 0, false at

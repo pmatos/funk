@@ -1,5 +1,5 @@
 # Tests of poison-op-i7.fir: the op poison at i7 (#122,
-# ADR-2026-11-03-1615). Its result is poison on every run, and each
+# ADR-2026-10-29-2006). Its result is poison on every run, and each
 # function passes it to one kind of op. The backend does not lower i7,
 # so every test is interpreter-only. Most observe the poison
 # (ADR-2026-11-03-0557): fir-ref returns it alone, through add,

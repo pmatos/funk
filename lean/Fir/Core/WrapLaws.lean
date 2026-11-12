@@ -5,7 +5,7 @@ import Fir.Core.ArithLaws
 
 `add`, `sub` and `mul`, with each of the four combinations of their flags,
 meet the obligations of the poison classes section. They propagate poison
-(ADR-2026-10-30-0818), so each meets both poison clauses, returns a result
+(ADR-2026-10-29-2006), so each meets both poison clauses, returns a result
 on some operands with no poison, and is total and monotone.
 
 None of them is ever UB, so the clause "UB only by the op's own rules"

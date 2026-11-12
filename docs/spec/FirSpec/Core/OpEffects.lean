@@ -41,7 +41,7 @@ $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ 
 
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float arithmetic is pure: a NaN result is a defined
-value, and M1 has no floating-point exceptions (ADR-2026-11-11-1800).
+value, and M1 has no floating-point exceptions (ADR-2026-11-09-1549).
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its
