@@ -14,29 +14,69 @@ next number". A minute is rarer to share, but parallel agents shared one:
 pre-commit hook rejects a misnamed ADR and two ADRs with one id, and CI runs
 it on each PR's merge with `main` (ADR-2026-10-30-1329).
 
+## The pages are the record
+
+Each area has a page in [`docs/decisions/`](../decisions/), `AREA.md`, that says
+what holds today and cites the ADRs it rests on. A page that outgrows the file
+size budget continues in a sibling, `AREA-TOPIC.md`. The page is the record:
+when a page and an ADR disagree, the page wins, and the ADR is fixed or deleted.
+
+- Each direction rule on a page keeps one line on the main alternative that was
+  rejected, and why, so that no agent proposes it again.
+- A rule that the human ruled says so on the page, with the date, also when the
+  ADR that recorded the ruling is deleted or folded into another.
+- A PR that adds or changes a direction ADR updates its area page in the same
+  PR.
+
+## When to write one
+
+Write an ADR only for a direction decision that binds more than one module, or
+a future dialect or target. These do not get an ADR; they go in the module's
+doc comment or on the area page:
+
+- how a proof is structured inside;
+- following an external standard that the code already follows, such as an ABI
+  or IEEE 754;
+- a choice that the next PR of the same ticket may revise;
+- how one tool does one thing, such as a lookup structure or a helper's flag.
+
+To decide, ask whether someone changing a different module, dialect or target
+needs to know the decision. If not, write the doc comment.
+
+CI warns, without failing, when a pull request adds more than two ADRs, so that
+the reviewer looks again at each one (`scripts/check_adr_ids.py
+--warn-added`).
+
 ## How to write one
 
 - **One decision per ADR.** If you need "and also", write two.
-- **Concise.** Most ADRs fit on one screen. Cut anything a reader does not need
-  to understand or apply the decision.
+- **Three sections:** Decision, Why and Rejected alternatives, with no
+  narrative context. About 300 words.
 - **Clear terms.** Plain words, short sentences, concrete names (files, flags,
   types). State the decision as a fact, not a hope; no hedging, no filler.
 - **Written for a cold reader.** Assume no access to the conversation that led
-  here: say what was decided, why, and what it costs.
-- **Immutable once accepted.** To change a decision, write a new ADR and set the
-  old one's status to `superseded by ADR-…`. Fix typos freely. The status
-  paragraph, its `Tier:` line included, is metadata and may change.
+  here.
+- **Edited in place.** When a decision changes, edit its ADR and its area page
+  in the same PR; git keeps the history. There are no refining ADRs and no
+  `superseded` status, and `adr_index.py` rejects a status that does not start
+  with `accepted`. Older ADRs still carry `refined by` and `extended by`
+  links until #307 folds each chain into one ADR.
 
-## When not to write one
+## Deleting one
 
-Write an ADR for a decision that binds more than one module, or that a future
-agent would otherwise rediscover or undo by accident. Implementation detail
-that only one module needs goes in that module's doc comment.
+Delete the file and add a row to [`removed.json`](removed.json): the file's
+name, where its rule lives now, and the last commit on `main` that changed the
+file, `git log -1 --abbrev=12 --format=%h origin/main -- docs/adrs/FILE`. A
+commit of the pull request's branch would not do: the squash merge leaves it
+off `main`. Where its rule lives
+is an ADR, `ADR-…`, or a page section, `docs/decisions/PAGE.md#ANCHOR`. Rewrite
+every citation of the deleted id in the same PR, in code, tests, the spec and
+the pages.
 
-To decide, ask whether someone changing a different module needs to know the
-decision. If not, and the reason fits in the doc comment beside the code, write
-the doc comment. Choices of how a single tool does one thing, such as a lookup
-structure or which flag a helper takes, belong there.
+The rows become the Removed table of [`INDEX.md`](INDEX.md). The `adr-ids` hook
+never lets a removed id be used again. A citation of a removed id fails the
+`adr-citations` hook and the spec build, and the message names where the rule
+lives now.
 
 ## Tier and area
 
@@ -50,16 +90,13 @@ The last line of each ADR's status paragraph is `Tier: TIER; area: AREA`
   `rust-ir-and-tools`, `x86-64-backend`, `testing-and-harness`, `spec-site` and
   `process`.
 
-[`INDEX.md`](INDEX.md) lists every ADR with its tier, area and what holds now.
-It is generated, so never edit it by hand. After changing an ADR's title, status
-or tier line, stage the ADR and run `python3 scripts/adr_index.py --write`. The
-`adr-index` hook fails when the index is stale, an ADR has no tier and area, or
-an accepted ADR is cited by no page of its area.
-
-Each area has a page in [`docs/decisions/`](../decisions/), `AREA.md`, that says
-what holds today and cites the ADRs it rests on. A page that outgrows the file
-size budget continues in a sibling, `AREA-TOPIC.md`. A PR that adds or refines a
-direction ADR updates its area page in the same PR.
+[`INDEX.md`](INDEX.md) lists every ADR with its tier, area and what holds now,
+then the Removed table. It is generated, so never edit it by hand. After
+changing an ADR's title, status or tier line, or `removed.json`, stage the
+change and run `python3 scripts/adr_index.py --write`. The `adr-index` hook
+fails when the index is stale, an ADR has no tier and area, an ADR is cited by
+no page of its area, or a row of `removed.json` names an ADR or page section
+that does not exist.
 
 ## Published with the spec
 
@@ -87,19 +124,15 @@ the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
 Status: accepted
 Tier: direction; area: process
 
-## Context
-
-The problem and the forces behind it: facts and constraints only.
-
 ## Decision
 
 What we do, concretely enough to check whether code follows it.
 
-## Alternatives
+## Why
 
-Optional. Each serious option we rejected, and why, in a line or two.
+The facts and constraints that make this the right choice.
 
-## Consequences
+## Rejected alternatives
 
-What becomes easier, what becomes harder, what we gave up.
+Each serious option we rejected, and why, in a line or two.
 ```

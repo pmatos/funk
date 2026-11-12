@@ -12,7 +12,9 @@ docs/spec/FirSpecSite/citation-cases.json, so the two cannot drift
 (ADR-2026-11-05-1709).
 
 The check reads every text file that git tracks, not only the ones a commit
-changes, since renaming or deleting an ADR breaks citations elsewhere. The
+changes, since renaming or deleting an ADR breaks citations elsewhere. A
+citation of a deleted ADR, one with a row in docs/adrs/removed.json, fails
+with where its rule lives now. The
 files of FIXTURES hold bad citations on purpose, as test data, and are not
 checked; each must still hold one, or the list has gone stale.
 """
@@ -22,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from check_adr_ids import adr_id
+from check_adr_ids import RemovedError, adr_id, removed_adrs
 
 FIXTURES = {
     "docs/spec/FirSpecSite/Tests.lean": "the spec checker's tests of linking and rendering",
@@ -105,9 +107,11 @@ def citations(text: str) -> list[tuple[int, str, bool]]:
     ]
 
 
-def check_text(known, path: str, text: str) -> list[str]:
+def check_text(known, path: str, text: str, removed=None) -> list[str]:
     """Return one message per citation in `text`, the contents of `path`,
-    that names no ADR in `known`."""
+    that names no ADR in `known`. `removed` maps the id of each removed ADR
+    to where its rule lives now."""
+    removed = removed or {}
     found = []
     for pos, ident, well_formed in citations(text):
         line, col = line_column(text, pos)
@@ -115,6 +119,11 @@ def check_text(known, path: str, text: str) -> list[str]:
             found.append(
                 f"{path}:{line}:{col}: ADR-{ident} is not an ADR id,"
                 " which ends in HHMM or HHMMSS"
+            )
+        elif ident in removed:
+            found.append(
+                f"{path}:{line}:{col}: ADR-{ident} was removed; its rule lives"
+                f" in {removed[ident]} now (docs/adrs/INDEX.md, Removed)"
             )
         elif ident not in known:
             found.append(f"{path}:{line}:{col}: ADR-{ident} names no ADR in docs/adrs/")
@@ -152,12 +161,17 @@ def problems(root: Path, fixtures) -> tuple[list[str], int]:
             if ident is not None:
                 known.add(ident)
     found = []
+    try:
+        removed = {row.id: row.now for row in removed_adrs(root)}
+    except RemovedError as e:
+        found.append(str(e))
+        removed = {}
     count = 0
     for path in tracked:
         text = read_text(root / path)
         if text is None or "ADR-" not in text:
             text = ""
-        errors = check_text(known, path, text)
+        errors = check_text(known, path, text, removed)
         if path in fixtures:
             if not errors:
                 found.append(

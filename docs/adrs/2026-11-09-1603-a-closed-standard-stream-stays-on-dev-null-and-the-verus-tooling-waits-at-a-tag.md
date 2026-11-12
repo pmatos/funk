@@ -5,7 +5,7 @@ Tier: direction; area: rust-ir-and-tools
 
 ## Context
 
-ADR-2026-11-02-2253 added `funk-start-fds`, a start-up constructor, so
+An earlier ADR added `funk-start-fds`, a start-up constructor, so
 that funk exits with 2, as `fir-ref` does, when a standard stream is
 closed at start-up. It was the workspace's only unsafe code, so
 ADR-2026-11-03-0808 and ADR-2026-11-03-0809 gave it a Verus proof.
@@ -41,7 +41,8 @@ the crate and the tooling, keep the rule, and tag the tooling.
   still has the crate and the tooling. The first real unsafe code, likely
   the M6 JIT, restores the tooling from that tag instead of rebuilding it.
 
-This supersedes ADR-2026-11-02-2253. It refines ADR-2026-11-03-0808: the
+It replaces that earlier ADR, now deleted (`INDEX.md`, Removed). It
+refines ADR-2026-11-03-0808: the
 rule stands, and its verified module, trusted base, digests and hooks wait
 at the tag. It refines ADR-2026-11-03-0809 too: the Verus and `vstd` pins
 wait at the tag. It refines ADR-2026-11-03-0107: its "Closed at start"

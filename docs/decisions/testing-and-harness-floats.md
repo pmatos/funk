@@ -1,9 +1,9 @@
 # Current decisions: testing floating point
 
 This page continues testing-and-harness.md. It says what holds today for how the
-corpus and the coverage matrix test #229's floating point. It only summarizes
-the ADRs it cites (ADR-2026-11-09-1610). When this page and an ADR disagree, the
-page has a bug.
+corpus and the coverage matrix test #229's floating point. It is the record:
+when this page and an ADR disagree, the page wins, and the ADR is fixed or
+deleted (ADR-2026-11-09-1610).
 
 ## The coverage matrix
 

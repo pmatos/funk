@@ -1,9 +1,8 @@
 # Current decisions: semantics, poison and UB
 
 This page continues semantics.md. It says what holds today about poison,
-immediate UB and `freeze`. It summarizes the ADRs it cites and does not
-replace them. When this page and an ADR disagree, the page is wrong
-(ADR-2026-11-09-1610).
+immediate UB and `freeze`. It is the record: when this page and an ADR disagree,
+the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## Poison, UB and freeze
 

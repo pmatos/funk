@@ -5,7 +5,7 @@ Tier: direction; area: text-format
 
 ## Context
 
-ADR-2026-11-11-1138 wrote a float constant as its bits read as a signed
+An earlier ADR wrote a float constant as its bits read as a signed
 integer, so `1.0` at `f32` was `const 1065353216`. The human ruled on #229
 (2026-11-11) that float constants are written as LLVM writes them: a plain
 decimal, such as `1.0` or `0.5`, when that decimal reads back to exactly
@@ -58,7 +58,7 @@ NaN payload and sign included. Formats run from `float<2,1>` to formats of
   the harness, which converts each float argument to it before a native
   run and each float result back, exactly (`scripts/harness/native_floats.py`).
 
-This supersedes ADR-2026-11-11-1138.
+It replaces that earlier ADR, now deleted (`INDEX.md`, Removed).
 
 ## Alternatives
 

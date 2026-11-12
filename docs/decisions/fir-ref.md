@@ -1,8 +1,8 @@
 # Current decisions: fir-ref
 
 This page states what holds today for `fir-ref`, the reference interpreter's
-executable. It summarizes the ADRs it cites. When this page and an ADR
-disagree, the page is wrong (ADR-2026-11-09-1610).
+executable. It is the record: when this page and an ADR disagree, the page wins,
+and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## What a run means
 

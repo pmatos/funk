@@ -1,9 +1,8 @@
 # Current decisions: semantics, the M1 design
 
-This page continues semantics.md. It says what the ADRs decide about the
-meaning of fir in M1. It summarizes the ADRs it cites and does not replace
-them. When this page and an ADR disagree, the page is wrong
-(ADR-2026-11-09-1610).
+This page continues semantics.md. It says what the ADRs decide about the meaning
+of fir in M1. It is the record: when this page and an ADR disagree, the page
+wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools do not implement them
 yet. `ptr` has values but no ops yet (ADR-2026-11-09-1542). M0 has no

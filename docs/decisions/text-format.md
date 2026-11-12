@@ -1,8 +1,8 @@
 # Current decisions: text format and parsing
 
-This page says what holds today for fir's text format and its parsers. It
-only summarizes the ADRs it cites (ADR-2026-11-09-1610). When this page and
-an ADR disagree, the page has a bug.
+This page says what holds today for fir's text format and its parsers. It is the
+record: when this page and an ADR disagree, the page wins, and the ADR is fixed
+or deleted (ADR-2026-11-09-1610).
 
 ## One canonical text
 

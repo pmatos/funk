@@ -1,8 +1,8 @@
 # Current decisions: process
 
-This page says what holds today for how funk is built and changed. It only
-summarizes the ADRs it cites. When this page and an ADR disagree, the page has
-the bug (ADR-2026-11-09-1610).
+This page says what holds today for how funk is built and changed. It is the
+record: when this page and an ADR it cites disagree, the page wins, and the ADR
+is fixed or deleted (ADR-2026-11-09-1610).
 
 ## Who decides what
 
@@ -260,13 +260,55 @@ that passed its check. `pages.yml` deploys, so it never saves a cache.
 
 ## ADRs
 
-### Tier, area, index and pages
+### The pages are the record
+
+The pages of `docs/decisions/` are the record of what holds
+(ADR-2026-11-09-1610). The human ruled this on 2026-11-11 in #307: "This is
+git - if we delete a file it's never lost." When a page and an ADR disagree,
+the page wins, and the ADR is fixed or deleted. Rejected: pages that only
+summarize immutable ADRs, which grew chains of refining ADRs that no one reads.
+
+- Each direction rule on a page keeps one line on the main rejected
+  alternative and why, so that no agent proposes it again.
+- A rule that the human ruled says so, with the date, also when the ADR that
+  recorded the ruling is deleted or folded into another.
+- A PR that adds or changes a direction ADR updates its area page in the same
+  PR.
+
+There is one page per area, citing the ADRs it rests on. A page that outgrows
+the file-size budget continues in a sibling, `AREA-TOPIC.md`.
+
+### What an ADR is
+
+An ADR is only a direction decision that binds more than one module, or a
+future dialect or target (ADR-2026-11-09-1610). Its form is Decision, Why and
+Rejected alternatives, in about 300 words. These go in the module's doc comment
+or on the area page instead:
+
+- a proof's internal structure;
+- an external standard the code already follows, such as an ABI or IEEE 754;
+- a choice that the next PR of the same ticket may revise;
+- implementation detail that only one module needs.
+
+An ADR is edited in place when its decision changes, since git keeps the
+history. There are no refining ADRs and no `superseded` status. Rejected: a new
+ADR for each change, which made same-day write-then-supersede pairs. Older ADRs
+keep their `refined by` and `extended by` links until #307 folds each chain
+into one ADR.
+
+CI warns, and never fails, when a pull request adds more than two ADRs. The
+step `Warn when a pull request adds more than two ADRs` of the `static` job
+runs `scripts/check_adr_ids.py --warn-added` on a pull request. It counts the
+ADR ids at HEAD, the merge, that HEAD^1, its base, does not have, so the job
+checks out two commits. It prints a GitHub `::warning::` and exits with 0. It is
+a step, not a hook, because `pre-commit run --all-files` has no base to count
+from. It is the one exception to "every check is a hook": it never fails, and
+the human asked for it in #307. Do not move it into a hook.
+
+### Tier, area, index and removed ADRs
 
 Every ADR ends its status paragraph with one line, `Tier: TIER; area: AREA`
-(ADR-2026-11-09-1610). This line is metadata, so adding or correcting it does
-not break immutability.
-
-The tier follows one test:
+(ADR-2026-11-09-1610). The tier follows one test:
 
 - `direction` says what fir is, or sets a rule that every change follows. A
   change to another module or tool would be bound by it.
@@ -277,19 +319,19 @@ The area is one of nine: `semantics`, `text-format`, `validation`, `fir-ref`,
 `process`. An ADR that spans areas sits where a reader would look for it.
 
 `scripts/adr_index.py --write` generates `docs/adrs/INDEX.md`. It has one line
-per ADR: tier, area, title and what holds now. What holds now is the ADR and
-every ADR that its `refined by` and `extended by` links reach. A superseded ADR
-shows what holds of its successor. The `adr-index` hook fails when the index is
-stale or an ADR has no tier and area.
+per ADR: tier, area, title and what holds now, which is the ADR and every ADR
+that its `refined by` and `extended by` links reach. It links each ADR to its
+page. A status that does not start with `accepted` fails.
 
-`docs/decisions/` holds one page per area in plain prose, each citing the ADRs
-it rests on. A page that outgrows the file-size budget continues in a sibling,
-`AREA-TOPIC.md`. ADRs stay immutable, and the pages only summarize them. The
-index links each ADR to its page. The hook also fails when no page of an
-accepted ADR's own area cites it.
+A deleted ADR gets a row in `docs/adrs/removed.json`: its file, where its rule
+lives now, and the last commit on `main` that changed the file. Where the rule
+lives is an ADR, or a page section, `docs/decisions/PAGE.md#ANCHOR`. The index
+ends with these rows as its Removed table, each linking the old file at that
+commit.
 
-Implementation detail that only one module needs goes in that module's doc
-comment, not in a new ADR. `docs/adrs/README.md` says how to decide.
+The `adr-index` hook fails when the index is stale or an ADR has no tier and
+area. It also fails when no page of an ADR's own area cites it, and when a row
+of `removed.json` names an ADR, page or heading that does not exist.
 
 ### ADR ids
 
@@ -301,7 +343,8 @@ the minute form and the seconds form are two ids.
 The `adr-ids` hook, `scripts/check_adr_ids.py`, fails on a name that does not
 have one of the two forms. It needs ASCII digits, a real date and time, and a
 slug of lower-case words joined by hyphens. It also fails when two files share
-an id, and names every file with that id.
+an id, and names every file with that id. And it fails when an ADR takes the
+id of a row of `removed.json`, since a removed id is never used again.
 
 The hook does not take pre-commit's file list. So a commit that adds one ADR is
 still checked against the ADRs already on `main`. It reads git's index, not the
@@ -327,7 +370,9 @@ The hook ports the grammar of the spec checker, which is
 `docs/spec/FirSpecSite/Citation.lean`. The spec build still checks citations in
 its own sources (ADR-2026-10-30-1439).
 
-A citation ends at its last digit, so it matches a whole id. Four or six digits
+A citation of a removed ADR fails, and the message names where its rule lives
+now, from `removed.json`. The spec build reads the same file and fails the same
+way. A citation ends at its last digit, so it matches a whole id. Four or six digits
 after the date are an id, and any other number is malformed. A placeholder is
 not a citation. Code spans and fenced code blocks are blanked first, because
 code is quoted, not cited.

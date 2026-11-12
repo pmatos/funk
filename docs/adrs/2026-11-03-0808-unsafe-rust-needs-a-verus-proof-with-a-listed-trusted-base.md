@@ -5,7 +5,7 @@ Tier: direction; area: rust-ir-and-tools
 
 ## Context
 
-ADR-2026-11-02-2253 lets one module of `funk-start-fds` hold the
+An earlier ADR let one module of `funk-start-fds` hold the
 workspace's only unsafe code: a start-up constructor in `.init_array` that
 calls `fcntl(fd, F_GETFD)` on descriptors 0 to 2 and records which were
 closed. Review alone kept it sound.
@@ -192,13 +192,14 @@ rest.
       every digest.
 - **A change to the trusted base or to #117's specification**, which
   changes a pinned text, or a new verified module needs a new ADR and a
-  human ruling, as ADR-2026-11-02-2253 asks of a new exception. That ADR
+  human ruling, as the earlier ADR asked of a new exception. That ADR
   restates every digest, since this one is immutable, and `ADR` in
   `scripts/check_unsafe_code.py` points at it: the test that the ADR lists
   every digest reads that file alone.
 
-This refines ADR-2026-11-02-2253: its module stays the only unsafe code,
-and now carries a proof.
+This refines that earlier ADR: its module stays the only unsafe code,
+and now carries a proof. ADR-2026-11-09-1603 later removed the module and
+replaced that ADR, now deleted (`INDEX.md`, Removed).
 
 ## Alternatives
 

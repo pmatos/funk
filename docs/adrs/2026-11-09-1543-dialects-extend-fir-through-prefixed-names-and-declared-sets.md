@@ -9,8 +9,9 @@ This is decision H4 of the fir v0 decision record, which marks it
 Foundational. M0 already makes ops and types data: a registry of dialects
 in Rust (ADR-2026-10-30-1146) and typeclasses in Lean (G0,
 ADR-2026-10-29-2016). Combining dialects exists only for tests: a sum that
-routes names starting with `toy.` to a test dialect over shared types
-(ADR-2026-10-30-2040), which says it decides nothing about H4. A module
+routes names starting with `toy.` to a test dialect over shared types,
+whose ADR said it decided nothing about H4 (ADR-2026-11-09-2306 replaced
+it). A module
 holds functions only, and a new kind of item needs a parser change
 (ADR-2026-11-03-0600). Modules declare no dialects, though the record's P3
 and H5 say they should. The human ruled on

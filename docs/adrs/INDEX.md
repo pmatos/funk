@@ -8,8 +8,7 @@ cited by no page of its area in `docs/decisions/`. ADR-2026-11-09-1610
 says what the tiers mean.
 
 The last column is what holds now: the ADR and every ADR that its
-`refined by` and `extended by` links reach, in order, or, when it is
-superseded, what holds of its successor.
+`refined by` and `extended by` links reach, in order.
 
 ## Direction
 
@@ -89,7 +88,7 @@ superseded, what holds of its successor.
 | [ADR-2026-11-09-1553](2026-11-09-1553-proper-tail-calls-are-explicit-terminators.md) | [semantics](../decisions/semantics.md) | A proper tail call is an explicit terminator that validation checks, and a chain of them runs in bounded space | this ADR |
 | [ADR-2026-11-09-1554](2026-11-09-1554-the-public-api-is-decided-at-the-start-of-m3.md) | [process](../decisions/process.md) | The public API's shape is decided at the start of M3 | this ADR |
 | [ADR-2026-11-09-1603](2026-11-09-1603-a-closed-standard-stream-stays-on-dev-null-and-the-verus-tooling-waits-at-a-tag.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | A closed standard stream stays on /dev/null, and the Verus tooling waits at a tag | this ADR |
-| [ADR-2026-11-09-1610](2026-11-09-1610-adrs-have-a-tier-an-area-and-a-generated-index.md) | [process](../decisions/process.md) | ADRs carry a tier and an area, a generated index lists them, and area pages say what holds | this ADR |
+| [ADR-2026-11-09-1610](2026-11-09-1610-adrs-have-a-tier-an-area-and-a-generated-index.md) | [process](../decisions/process.md) | ADRs carry a tier and an area, a generated index lists them, and area pages are the record | this ADR |
 | [ADR-2026-11-09-1645](2026-11-09-1645-funk-s-speed-is-guarded-by-instruction-counts.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk's speed is guarded by instruction counts against a committed baseline | this ADR |
 | [ADR-2026-11-09-1941](2026-11-09-1941-a-new-fir-ref-fast-path-needs-the-depth-rule-or-a-clearly-too-slow-case.md) | [fir-ref](../decisions/fir-ref.md) | A new `fir-ref` fast path needs the depth rule or a case that is clearly too slow | this ADR |
 | [ADR-2026-11-09-2249](2026-11-09-2249-may-produce-poison-means-poison-from-operands-with-no-poison.md) | [semantics](../decisions/semantics.md) | May produce poison means a poison result from operands with no poison, and the poison class sits beside it | this ADR |
@@ -117,7 +116,6 @@ superseded, what holds of its successor.
 | [ADR-2026-11-11-1017](2026-11-11-1017-the-world-may-create-and-free-heap-allocations-when-it-answers-an-external-call.md) | [semantics](../decisions/semantics.md) | The world may create and free heap allocations when it answers an external call | this ADR, ADR-2026-11-11-1445 |
 | [ADR-2026-11-11-1018](2026-11-11-1018-set-writes-one-unit-value-sized-to-the-memory-s-unit.md) | [semantics](../decisions/semantics.md) | Setting memory writes one unit value, sized to the memory's unit | this ADR |
 | [ADR-2026-11-11-1019](2026-11-11-1019-no-caller-relies-on-an-unmarked-i1-result-being-0-or-1.md) | [x86-64-backend](../decisions/x86-64-backend.md) | No caller relies on an unmarked `i1` result being 0 or 1 in all of `%rax` | this ADR |
-| [ADR-2026-11-11-1138](2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md) | [text-format](../decisions/text-format.md) | A float constant is written as its bits read as a signed integer | ADR-2026-11-11-1438 |
 | [ADR-2026-11-11-1139](2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md) | [semantics](../decisions/semantics.md) | fcmp compares floats by Lean's model, with fourteen predicates | this ADR |
 | [ADR-2026-11-11-1140](2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md) | [x86-64-backend](../decisions/x86-64-backend.md) | f32 and f64 pass and return in SSE registers, as System V classifies them | this ADR |
 | [ADR-2026-11-11-1438](2026-11-11-1438-a-float-constant-is-its-shortest-decimal-or-its-bits-in-hexadecimal.md) | [text-format](../decisions/text-format.md) | A float constant is its shortest decimal, or its bits in hexadecimal | this ADR |
@@ -151,7 +149,6 @@ superseded, what holds of its successor.
 | [ADR-2026-10-30-1742](2026-10-30-1742-validation-check-at-any-depth.md) | [validation](../decisions/validation.md) | `fir-ref` validates at any depth by replacing the spec's one walk of nested blocks | this ADR, ADR-2026-11-03-1715, ADR-2026-11-05-0025, ADR-2026-11-05-0745 |
 | [ADR-2026-10-30-1855](2026-10-30-1855-core-ops-without-rules.md) | [fir-ref](../decisions/fir-ref.md) | A core op without execution rules has no outcome, and `fir-ref run` reports it, until its family lands | this ADR, ADR-2026-11-02-0836, ADR-2026-11-02-1514 |
 | [ADR-2026-10-30-1856](2026-10-30-1856-fir-ref-run-result.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref run FILE @FUNC ARG...` runs one function and prints its result as one JSON object | this ADR, ADR-2026-10-30-2217, ADR-2026-10-30-2218, ADR-2026-10-31-0002, ADR-2026-11-02-0836, ADR-2026-11-02-1514, ADR-2026-11-03-1847, ADR-2026-11-05-0806 |
-| [ADR-2026-10-30-2040](2026-10-30-2040-test-dialect-sum-routes-op-names.md) | [testing-and-harness](../decisions/testing-and-harness.md) | In the Lean tests, the sum of the core dialect and a test dialect sends op names that start with `toy.` to the test dialect | ADR-2026-11-09-2306, ADR-2026-11-10-1306, ADR-2026-11-10-1310, ADR-2026-11-10-1510, ADR-2026-11-10-1941, ADR-2026-11-10-2224, ADR-2026-11-11-0452 |
 | [ADR-2026-10-30-2049](2026-10-30-2049-differential-harness-in-python.md) | [testing-and-harness](../decisions/testing-and-harness.md) | The differential harness is a Python program, `scripts/harness/`, that `scripts/check-harness.sh` runs over the corpus | this ADR, ADR-2026-10-31-0003, ADR-2026-10-31-0208, ADR-2026-11-02-2250, ADR-2026-11-03-1847, ADR-2026-11-05-1408, ADR-2026-11-05-1633, ADR-2026-11-05-1954, ADR-2026-11-09-1602, ADR-2026-11-09-1645 |
 | [ADR-2026-10-30-2217](2026-10-30-2217-choice-tree-denotes-the-set-monad.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref` runs the interpreter in a tree of choices, which a monad morphism maps to the spec's set monad | this ADR, ADR-2026-11-02-0836, ADR-2026-11-02-1514 |
 | [ADR-2026-10-30-2218](2026-10-30-2218-fir-ref-run-modes.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref run` follows the path that `--choices` names by default, and lists every outcome with `--exhaustive` | this ADR, ADR-2026-10-31-0002 |
@@ -165,12 +162,10 @@ superseded, what holds of its successor.
 | [ADR-2026-11-02-1021](2026-11-02-1021-a-funk-caller-extends-no-argument.md) | [x86-64-backend](../decisions/x86-64-backend.md) | A call between funk functions passes each argument as its slot holds it, and extends none | this ADR, ADR-2026-11-09-1547 |
 | [ADR-2026-11-02-1102](2026-11-02-1102-a-frame-of-a-page-or-more-is-probed.md) | [x86-64-backend](../decisions/x86-64-backend.md) | A frame of a page or more is probed | this ADR |
 | [ADR-2026-11-02-1132](2026-11-02-1132-a-run-s-stack-covers-its-calls.md) | [x86-64-backend](../decisions/x86-64-backend.md) | A run's stack covers its calls, a recursive run's stack follows `ulimit -s`, and a run that outgrows its stack says so | this ADR, ADR-2026-11-03-0108, ADR-2026-11-03-0415, ADR-2026-11-09-1602 |
-| [ADR-2026-11-02-1156](2026-11-02-1156-call-stand-in-is-ub.md) | [semantics](../decisions/semantics.md) | The stand-in for `call` in the set monad is immediate UB | ADR-2026-11-02-1514 |
 | [ADR-2026-11-02-1350](2026-11-02-1350-callee-congruence-runs-the-new-callee-in-the-new-module.md) | [semantics](../decisions/semantics.md) | Congruence in the callee compares the new callee in the new module with the old in the old | this ADR |
 | [ADR-2026-11-02-1426](2026-11-02-1426-general-congruence-asks-for-finitely-many-argument-vectors.md) | [semantics](../decisions/semantics.md) | The general congruence theorem asks for finitely many argument vectors | this ADR |
 | [ADR-2026-11-02-1428](2026-11-02-1428-one-emitter-for-outgoing-funk-calls.md) | [x86-64-backend](../decisions/x86-64-backend.md) | One emitter owns outgoing funk calls and their stack accounting | this ADR |
 | [ADR-2026-11-02-2250](2026-11-02-2250-harness-runs-native-code-under-a-data-limit.md) | [testing-and-harness](../decisions/testing-and-harness.md) | The harness runs the executable of a differential test, and only it, under a data limit of 1 GiB | this ADR, ADR-2026-11-09-1602 |
-| [ADR-2026-11-02-2253](2026-11-02-2253-one-constructor-records-closed-standard-descriptors.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | One start-up constructor records closed standard descriptors, the workspace's only unsafe code | ADR-2026-11-09-1603 |
 | [ADR-2026-11-03-0028](2026-11-03-0028-round-trip-proof-follows-the-parsers-steps.md) | [text-format](../decisions/text-format.md) | The round-trip proof follows the parser's three steps | this ADR |
 | [ADR-2026-11-03-0107](2026-11-03-0107-funk-uses-its-standard-streams-through-duplicate-descriptors.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk reads and writes its standard streams through files on duplicates of their descriptors | this ADR, ADR-2026-11-09-1603 |
 | [ADR-2026-11-03-010730](2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md) | [x86-64-backend](../decisions/x86-64-backend.md) | An i128 is a pair of eightbytes in two slots, and each op lowers it through a register pair | this ADR, ADR-2026-11-03-0414 |
@@ -212,3 +207,16 @@ superseded, what holds of its successor.
 | [ADR-2026-11-11-1328](2026-11-11-1328-fir-ref-runs-the-core-with-memory-and-its-machine-carries-the-memories.md) | [fir-ref](../decisions/fir-ref.md) | fir-ref runs the core with memory, and its machine carries the memories | this ADR |
 | [ADR-2026-11-11-1802](2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md) | [x86-64-backend](../decisions/x86-64-backend.md) | The backend lowers float arithmetic with SSE2, and fma with a routine of a runtime helper | this ADR |
 | [ADR-2026-11-11-1803](2026-11-11-1803-the-float-arithmetic-corpus-is-generated-from-the-exact-rational-reference.md) | [testing-and-harness](../decisions/testing-and-harness.md) | The float arithmetic corpus is generated from the exact-rational reference | this ADR |
+
+## Removed
+
+Each deleted ADR, from `removed.json`. Its id is never used again. The
+rule it held lives in the second column now, and the last column
+links the last commit on main that changed the file, which still holds it.
+
+| ADR | Its rule lives in | Last commit that held it |
+| --- | --- | --- |
+| `ADR-2026-10-30-2040` | [ADR-2026-11-09-2306](2026-11-09-2306-the-spec-sums-a-base-and-an-extension-over-it.md) | [`9c25a4693689`](https://github.com/pmatos/funk/blob/9c25a4693689/docs/adrs/2026-10-30-2040-test-dialect-sum-routes-op-names.md) |
+| `ADR-2026-11-02-1156` | [ADR-2026-11-02-1514](2026-11-02-1514-a-call-has-no-op-level-rule.md) | [`c09a05f4f8fb`](https://github.com/pmatos/funk/blob/c09a05f4f8fb/docs/adrs/2026-11-02-1156-call-stand-in-is-ub.md) |
+| `ADR-2026-11-02-2253` | [ADR-2026-11-09-1603](2026-11-09-1603-a-closed-standard-stream-stays-on-dev-null-and-the-verus-tooling-waits-at-a-tag.md) | [`c09a05f4f8fb`](https://github.com/pmatos/funk/blob/c09a05f4f8fb/docs/adrs/2026-11-02-2253-one-constructor-records-closed-standard-descriptors.md) |
+| `ADR-2026-11-11-1138` | [ADR-2026-11-11-1438](2026-11-11-1438-a-float-constant-is-its-shortest-decimal-or-its-bits-in-hexadecimal.md) | [`f4e43679273c`](https://github.com/pmatos/funk/blob/f4e43679273c/docs/adrs/2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md) |

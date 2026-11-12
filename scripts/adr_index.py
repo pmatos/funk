@@ -5,21 +5,27 @@ Usage: adr_index.py [--write]
 Each ADR ends its status paragraph with a line `Tier: TIER; area: AREA`
 (ADR-2026-11-09-1610). The check reads the ADRs that git tracks, as the other
 ADR hooks do, so stage a new ADR before running `--write`.
+
+The index ends with the Removed table, one row per deleted ADR, from
+docs/adrs/removed.json. A row says where the rule lives now: an ADR, or a
+page of docs/decisions/ and, after `#`, the anchor of one of its headings.
 """
 
 import argparse
 import re
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from check_adr_citations import citations
-from check_adr_ids import adr_id
+from check_adr_ids import REMOVED, Removed, RemovedError, adr_id, removed_adrs
 
 ADR_DIR = "docs/adrs"
 DECISIONS_DIR = "docs/decisions"
 INDEX = "INDEX.md"
+REPO_URL = "https://github.com/pmatos/funk"
 TIERS = ("direction", "implementation")
 AREAS = (
     "semantics",
@@ -35,9 +41,9 @@ AREAS = (
 
 CITED = r"ADR-([0-9]{4}-[0-9]{2}-[0-9]{2}-(?:[0-9]{6}|[0-9]{4}))"
 CITED_LIST = rf"{CITED}(?:(?:, | and ){CITED})*"
-SUPERSEDED = re.compile(rf"superseded by {CITED}")
 FOLLOWED = re.compile(rf"(?:refined|extended) by ({CITED_LIST})")
 TIER_LINE = re.compile(r"Tier: (\S+); area: (\S+)")
+PAGE_SECTION = re.compile(rf"{DECISIONS_DIR}/([^/#\s]+\.md)(?:#([a-z0-9_-]+))?")
 
 
 class AdrError(Exception):
@@ -51,23 +57,25 @@ class Adr:
     title: str
     tier: str
     area: str
-    superseded_by: str | None = None
     followed_by: list[str] = field(default_factory=list)
 
 
-def parse_status(file: str, status: str) -> tuple[str | None, list[str]]:
-    """Return who supersedes the ADR, and the ADRs that refine or extend it."""
+def parse_status(file: str, status: str) -> list[str]:
+    """Return the ADRs that refine or extend the ADR."""
     first, *clauses = status.split("; ")
-    superseded = SUPERSEDED.fullmatch(first)
+    if first != "accepted":
+        raise AdrError(
+            f"{file}: Status must start with accepted. An ADR is edited in place"
+            " when its decision changes, and a replaced one is deleted with a"
+            f" row in {ADR_DIR}/{REMOVED} (docs/adrs/README.md)"
+        )
     followed: list[str] = []
     for clause in clauses:
         match = FOLLOWED.fullmatch(clause)
         if match is None:
             raise AdrError(f"{file}: cannot read this part of Status: {clause!r}")
         followed += re.findall(CITED, match[1])
-    if superseded is None and first != "accepted":
-        raise AdrError(f"{file}: Status must start with accepted or superseded by")
-    return superseded[1] if superseded else None, followed
+    return followed
 
 
 def parse_adr(file: str, text: str) -> Adr:
@@ -99,13 +107,12 @@ def parse_adr(file: str, text: str) -> Adr:
             f"{file}: the area must be one of {', '.join(AREAS)}, not {area}"
         )
     status = " ".join(" ".join(lines[:-1]).removeprefix("Status: ").split())
-    superseded_by, followed_by = parse_status(file, status)
-    return Adr(ident, file, blocks[0][2:], tier, area, superseded_by, followed_by)
+    return Adr(ident, file, blocks[0][2:], tier, area, parse_status(file, status))
 
 
 def holds(adrs: list[Adr]) -> dict[str, list[str]]:
     """Map each ADR's id to the ids that hold now: itself and every ADR its
-    chain reaches, or, when it is superseded, what holds of its successor."""
+    chain reaches."""
     by_id = {adr.id: adr for adr in adrs}
     done: dict[str, list[str]] = {}
 
@@ -119,19 +126,30 @@ def holds(adrs: list[Adr]) -> dict[str, list[str]]:
             raise AdrError(
                 f"ADR-{path[-1]}: its Status names ADR-{ident}, which does not exist"
             )
-        if adr.superseded_by:
-            found = held(adr.superseded_by, (*path, ident))
-        else:
-            reached = {i for n in adr.followed_by for i in held(n, (*path, ident))}
-            found = sorted(reached | {ident})
+        reached = {i for n in adr.followed_by for i in held(n, (*path, ident))}
+        found = sorted(reached | {ident})
         done[ident] = found
         return found
 
     return {adr.id: held(adr.id, ()) for adr in adrs}
 
 
-def render(adrs: list[Adr]) -> str:
-    """Return the text of INDEX.md for `adrs`."""
+def removed_row(row: Removed, files: dict[str, str]) -> str:
+    """Return the Removed table's row of `row`. `files` maps each ADR's id to
+    its file. `removed_problems` says when the place it names does not exist."""
+    if row.now.startswith("ADR-") and row.now[4:] in files:
+        now = f"[{row.now}]({files[row.now[4:]]})"
+    elif PAGE_SECTION.fullmatch(row.now):
+        page = row.now.removeprefix(f"{DECISIONS_DIR}/")
+        now = f"[{page}](../decisions/{page})"
+    else:
+        now = row.now.replace("|", "\\|")
+    held = f"[`{row.commit}`]({REPO_URL}/blob/{row.commit}/{ADR_DIR}/{row.file})"
+    return f"| `ADR-{row.id}` | {now} | {held} |"
+
+
+def render(adrs: list[Adr], removed: Sequence[Removed] = ()) -> str:
+    """Return the text of INDEX.md for `adrs` and the rows of removed.json."""
     held = holds(adrs)
     lines = [
         "# Index of ADRs",
@@ -144,8 +162,7 @@ def render(adrs: list[Adr]) -> str:
         "says what the tiers mean.",
         "",
         "The last column is what holds now: the ADR and every ADR that its",
-        "`refined by` and `extended by` links reach, in order, or, when it is",
-        "superseded, what holds of its successor.",
+        "`refined by` and `extended by` links reach, in order.",
     ]
     for tier in TIERS:
         rows = sorted((a for a in adrs if a.tier == tier), key=lambda a: a.id)
@@ -158,6 +175,19 @@ def render(adrs: list[Adr]) -> str:
             title = adr.title.replace("|", "\\|")
             area = f"[{adr.area}](../decisions/{adr.area}.md)"
             lines.append(f"| [ADR-{adr.id}]({adr.file}) | {area} | {title} | {now} |")
+    files = {adr.id: adr.file for adr in adrs}
+    lines += [
+        "",
+        "## Removed",
+        "",
+        f"Each deleted ADR, from `{REMOVED}`. Its id is never used again. The",
+        "rule it held lives in the second column now, and the last column",
+        "links the last commit on main that changed the file, which still holds it.",
+        "",
+        "| ADR | Its rule lives in | Last commit that held it |",
+        "| --- | --- | --- |",
+    ]
+    lines += [removed_row(row, files) for row in sorted(removed, key=lambda r: r.id)]
     return "\n".join(lines) + "\n"
 
 
@@ -187,9 +217,62 @@ def area_of_page(name: str) -> str | None:
     return None
 
 
+def slugs(text: str) -> set[str]:
+    """Return the anchors of the ATX headings in `text`, outside fenced code,
+    as GitHub makes them: the text of a link or code span kept, lower case,
+    without punctuation, spaces as hyphens, and `-1`, `-2` on repeats."""
+    found: set[str] = set()
+    in_fence = False
+    for line in text.splitlines():
+        if line.lstrip(" ").startswith(("```", "~~~")):
+            in_fence = not in_fence
+        heading = (
+            None if in_fence else re.fullmatch(r" {0,3}#{1,6} +(.*?)(?: +#+)? *", line)
+        )
+        if heading:
+            words = re.sub(r"\[([^]]*)\]\([^)]*\)", r"\1", heading[1]).lower()
+            base = re.sub(r"[^\w\- ]", "", words).replace(" ", "-")
+            slug, n = base, 0
+            while slug in found:
+                n += 1
+                slug = f"{base}-{n}"
+            found.add(slug)
+    return found
+
+
+def removed_problems(
+    root: Path, removed: Sequence[Removed], adrs: list[Adr]
+) -> list[str]:
+    """Return one message per row of removed.json whose rule lives nowhere:
+    in an ADR that does not exist, or a page or heading that does not."""
+    found = []
+    ids = {adr.id for adr in adrs}
+    pages = set(tracked(root, DECISIONS_DIR))
+    anchors: dict[str, set[str]] = {}
+    for row in removed:
+        where = f"{ADR_DIR}/{REMOVED}: ADR-{row.id} lives in {row.now}"
+        match = PAGE_SECTION.fullmatch(row.now)
+        if row.now.startswith("ADR-"):
+            if row.now[4:] not in ids:
+                found.append(f"{where}, which is not an ADR of {ADR_DIR}/")
+        elif match is None:
+            found.append(
+                f"{where}, which is neither ADR-ID nor {DECISIONS_DIR}/PAGE.md#ANCHOR"
+            )
+        elif match[1] not in pages:
+            found.append(f"{where}, but {DECISIONS_DIR}/{match[1]} is not tracked")
+        elif match[2]:
+            if match[1] not in anchors:
+                page = root / DECISIONS_DIR / match[1]
+                anchors[match[1]] = slugs(page.read_text(encoding="utf-8"))
+            if match[2] not in anchors[match[1]]:
+                found.append(f"{where}, but that page has no heading #{match[2]}")
+    return found
+
+
 def page_problems(root: Path, adrs: list[Adr]) -> list[str]:
     """Return one message per page of no area, per area with no page, and per
-    accepted ADR that no page of its area cites outside code."""
+    ADR that no page of its area cites outside code."""
     found = []
     names = sorted(tracked(root, DECISIONS_DIR))
     cited: dict[str, set[str]] = {area: set() for area in AREAS}
@@ -204,7 +287,7 @@ def page_problems(root: Path, adrs: list[Adr]) -> list[str]:
         if f"{area}.md" not in names:
             found.append(f"{DECISIONS_DIR}/{area}.md: the page of this area is missing")
     for adr in adrs:
-        if adr.superseded_by is None and adr.id not in cited[adr.area]:
+        if adr.id not in cited[adr.area]:
             found.append(
                 f"ADR-{adr.id}: no page of {DECISIONS_DIR}/ for its area"
                 f" {adr.area} cites it"
@@ -233,15 +316,16 @@ def run(root: Path, write: bool, err) -> int:
     if adrs is None:
         return 1
     try:
-        text = render(adrs)
-    except AdrError as e:
+        removed = removed_adrs(root)
+        text = render(adrs, removed)
+    except (AdrError, RemovedError) as e:
         print(e, file=err)
         return 1
     index = root / ADR_DIR / INDEX
     if write:
         index.write_text(text, encoding="utf-8")
     status = 0
-    for problem in page_problems(root, adrs):
+    for problem in page_problems(root, adrs) + removed_problems(root, removed, adrs):
         print(problem, file=err)
         status = 1
     committed = index.read_text(encoding="utf-8") if index.exists() else None

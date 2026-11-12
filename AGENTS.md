@@ -69,23 +69,28 @@ the parts relevant to it; make sure the work moves the roadmap forward.
 
 ## ADRs
 
-Record every significant decision as an ADR in `docs/adrs/`: anything a future
-agent would otherwise have to rediscover or might undo by accident. ADRs are
-concise and written in clear terms: one decision each, plain words, short
-sentences, no filler; most fit on one screen. Naming, rules and template:
+Write an ADR in `docs/adrs/` only for a direction decision that binds more than
+one module, or a future dialect or target. Its form is Decision, Why and
+Rejected alternatives, in about 300 words. A proof's internal structure, an
+external standard the code already follows (an ABI, IEEE 754), a choice the
+next PR of the same ticket may revise, and detail that only one module needs
+go in that module's doc comment or on the area page. CI warns when a PR adds
+more than two ADRs. Naming, rules and template:
 [`docs/adrs/README.md`](docs/adrs/README.md).
 
-Implementation detail that only one module needs goes in that module's doc
-comment, not in a new ADR. Ask whether someone changing a different module
-needs to know it; if not, write the doc comment. Each ADR carries a tier and an
-area, and [`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with what holds
-now (ADR-2026-11-09-1610).
+An ADR is edited in place when its decision changes; git keeps the history.
+There are no refining ADRs and no `superseded` status. A deleted ADR gets a row
+in [`docs/adrs/removed.json`](docs/adrs/removed.json), and every citation of it
+is rewritten in the same PR. Each ADR carries a tier and an area, and
+[`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with what holds now and
+the removed ones (ADR-2026-11-09-1610).
 
-An agent starting cold reads the area pages in
-[`docs/decisions/`](docs/decisions/) first: each says what holds today, so no
-one has to follow "refined by" chains. A PR that adds or refines a direction ADR
-updates its area page in the same PR. The pages summarize the ADRs and never
-replace them. When a page and an ADR disagree, that is a bug in the page.
+The area pages in [`docs/decisions/`](docs/decisions/) are the record. An agent
+starting cold reads them first: each says what holds today. When a page and an
+ADR disagree, the page wins, and the ADR is fixed or deleted. Each direction
+rule on a page keeps one line on the main rejected alternative, and a rule the
+human ruled says so, with the date. A PR that adds or changes a direction ADR
+updates its area page in the same PR.
 
 ## Every change goes through a PR
 

@@ -1,12 +1,11 @@
 # Current decisions: semantics
 
-This page says what holds today about the meaning of fir. It summarizes the
-ADRs it cites and does not replace them. When this page and an ADR disagree,
-the page is wrong (ADR-2026-11-09-1610). See semantics-m1-design.md for the
-M1 design not built yet, semantics-m1-trace.md for what an M1 run shows,
-semantics-poison.md for poison, UB and `freeze`, semantics-dialects.md for
-sums, semantics-effects.md for op effects, and semantics-floats.md for
-floating point.
+This page says what holds today about the meaning of fir. It is the record: when
+this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
+(ADR-2026-11-09-1610). See semantics-m1-design.md for the M1 design not built
+yet, semantics-m1-trace.md for what an M1 run shows, semantics-poison.md for
+poison, UB and `freeze`, semantics-dialects.md for sums, semantics-effects.md
+for op effects, and semantics-floats.md for floating point.
 
 ## Ground rule: fir reaches any hardware
 

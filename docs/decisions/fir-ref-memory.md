@@ -1,8 +1,8 @@
 # Current decisions: fir-ref, runs with memory
 
 This page continues fir-ref.md. It says how `fir-ref` runs a program with
-memory. It summarizes the ADRs it cites and does not replace them. When this
-page and an ADR disagree, the page is wrong (ADR-2026-11-09-1610).
+memory. It is the record: when this page and an ADR disagree, the page wins, and
+the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## The modes run with memory
 

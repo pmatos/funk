@@ -1,9 +1,8 @@
 # Current decisions: semantics, sums of dialects
 
-This page continues semantics.md. It says what holds today about how
-dialects combine in the spec. It summarizes the ADRs it cites and does not
-replace them. When this page and an ADR disagree, the page is wrong
-(ADR-2026-11-09-1610).
+This page continues semantics.md. It says what holds today about how dialects
+combine in the spec. It is the record: when this page and an ADR disagree, the
+page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## The sum in the spec
 

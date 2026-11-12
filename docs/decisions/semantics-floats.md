@@ -1,9 +1,9 @@
 # Current decisions: semantics, floating point
 
 This page continues semantics-m1-design.md. It says what the ADRs decide about
-floating point in fir, and what holds in the spec and the tools today. It
-summarizes the ADRs it cites and does not replace them. When this page and an
-ADR disagree, the page is wrong (ADR-2026-11-09-1610).
+floating point in fir, and what holds in the spec and the tools today. It is the
+record: when this page and an ADR disagree, the page wins, and the ADR is fixed
+or deleted (ADR-2026-11-09-1610).
 
 ## The design
 
