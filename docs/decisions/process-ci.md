@@ -75,8 +75,8 @@ logs long: they hold the output of `cargo test`, the Lean build and the harness.
 
 `fir-random-nightly` and `fir-fuzz` are hooks of the `manual` stage.
 `.github/workflows/nightly.yml` runs them daily and on request, and no pull
-request runs them (ADR-2026-11-08-2116). Pull requests run fixed seeds, which
-keeps a local pass a prediction of a CI pass.
+request runs them (ADR-2026-11-08-2116). Pull requests run fixed seeds, so a
+local run of `fir-random` gives CI's result.
 
 ## The smoke test before a push
 
@@ -89,10 +89,10 @@ to do."
 
 The smoke test is one command:
 `pre-commit run --all-files --hook-stage pre-push`. The config sets
-`default_stages: [pre-commit, pre-push]`, so every hook joins the `pre-push`
-stage unless it sets its own `stages`. The slow hooks set
-`stages: [pre-commit]`: a hook that builds Lean, runs `cargo test` or runs the
-harness. They are `rust-test`, `rust-speed`, `fir-spec`, `fir-ref-test`,
+`default_stages: [pre-commit, commit-msg, pre-push]`, so every hook joins the
+`pre-push` stage unless it sets its own `stages`. The slow hooks set
+`stages: [pre-commit]`: a hook that builds Lean, runs `cargo test`, counts
+instructions under valgrind or runs the harness. They are `rust-test`, `rust-speed`, `fir-spec`, `fir-ref-test`,
 `fir-round-trip`, `fir-harness` and `fir-random`. A new hook follows the same
 rule. `fir-random-nightly` and `fir-fuzz` stay in the `manual` stage.
 
@@ -105,12 +105,13 @@ took 19 s, and `rust-clippy` took 3 s from a clean target directory.
 as it is written, and CI's `PR title` check is the gate.
 
 Nothing else changes. The commit hooks still run on the staged files at each
-commit, and their stage holds every hook. CI still runs every hook on every
-file, and a pull request still merges only when every required check is green
-on its final head. No check is bypassed: no `--no-verify`, no `SKIP=`. One side
-effect: before `default_stages` was set, every hook without `stages` also ran in
-the `commit-msg` stage, on the message file. Now only `conventional-pre-commit`
-does.
+commit: their stage holds every hook but `conventional-pre-commit` and the two
+`manual` ones. The hooks without `stages` still also run on the commit message,
+since `default_stages` keeps `commit-msg`, so `hidden-chars` and
+`detect-private-key` still check it. The slow hooks left that stage, but their
+`files` patterns never matched the message file. CI still runs every hook on
+every file, and a pull request still merges only when every required check is
+green on its final head. No check is bypassed: no `--no-verify`, no `SKIP=`.
 
 Rejected: a full `pre-commit run --all-files` before every push. It took 20
 minutes or more, for the Rust tests, the Lean suite, the harness and the spec

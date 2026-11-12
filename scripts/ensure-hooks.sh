@@ -52,7 +52,8 @@ hooks_installed || fail "pre-commit and commit-msg must both be executable pre-c
 # to stdout too, because a SessionStart hook that exits 0 shows only stdout.
 if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
     warning="Warning: elan, the Lean toolchain manager, is not installed.
-The fir-spec, fir-ref-test and fir-round-trip hooks need it. A commit that
+The fir-spec, fir-ref-test, fir-round-trip, fir-harness and fir-random
+hooks need it. A commit that
 changes lean/, docs/spec/, tests/fir/, the Rust crates or the Rust toolchain
 runs one of them, and so does every full 'pre-commit run --all-files'. The
 smoke run before a push runs none of them.
@@ -65,10 +66,11 @@ fi
 # (docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
 if ! command -v cargo >/dev/null && [[ ! -x "$HOME/.cargo/bin/cargo" ]]; then
     warning="Warning: cargo, from the Rust toolchain manager rustup, is not installed.
-The rust-fmt, rust-clippy, rust-test and fir-round-trip hooks need it. A
-commit that changes the Rust crates, the Rust toolchain, tests/fir/ or lean/
-runs one of them. The smoke run before a push runs rust-fmt and rust-clippy,
-and every full 'pre-commit run --all-files' runs all four.
+The rust-fmt, rust-clippy, rust-test, rust-speed, fir-round-trip,
+fir-harness and fir-random hooks need it. A commit that changes the Rust
+crates, the Rust toolchain, tests/fir/ or lean/ runs one of them, and so does
+every full 'pre-commit run --all-files'. The smoke run before a push runs only
+rust-fmt and rust-clippy.
 Install rustup as https://rustup.rs says; it installs the toolchain that
 rust-toolchain.toml pins on first use."
     echo "$warning"
@@ -90,9 +92,9 @@ elif [[ "${ld_version%%$'\n'*}" != "GNU ld"* ]]; then
 fi
 if [[ -n "$binutils_problem" ]]; then
     warning="Warning: $binutils_problem
-funk build and the rust-test hook, which runs on every full
-'pre-commit run --all-files' but not in the smoke run before a push, need GNU
-binutils (as and ld) on an x86-64 Linux host. Install binutils with your
+funk build and the rust-test, fir-harness and fir-random hooks, which run on
+every full 'pre-commit run --all-files' but not in the smoke run before a push,
+need GNU binutils (as and ld) on an x86-64 Linux host. Install binutils with your
 system's package manager, or work on such a host."
     echo "$warning"
     echo "$warning" >&2
@@ -104,8 +106,7 @@ if ! command -v valgrind >/dev/null; then
 The rust-speed hook needs it. A commit that changes the Rust crates, the
 Cargo files or the Rust toolchain runs it, and so does every full
 'pre-commit run --all-files'. The smoke run before a push does not. Install
-valgrind with your system's package
-manager."
+valgrind with your system's package manager."
     echo "$warning"
     echo "$warning" >&2
 fi

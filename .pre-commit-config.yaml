@@ -1,9 +1,10 @@
 default_install_hook_types: [pre-commit, commit-msg]
-# A hook runs on commit, and in the smoke run before a push:
-# `pre-commit run --all-files --hook-stage pre-push`. The slow hooks, which
-# build Lean, run cargo test or run the harness, set `stages: [pre-commit]`:
-# only CI runs them on every file (ADR-2026-11-05-1408).
-default_stages: [pre-commit, pre-push]
+# A hook runs on commit, on the commit message as before, and in the smoke
+# run before a push: `pre-commit run --all-files --hook-stage pre-push`. A
+# slow hook, one that builds Lean, runs cargo test, counts instructions under
+# valgrind or runs the harness, sets `stages: [pre-commit]`: CI runs it on
+# every file (ADR-2026-11-05-1408).
+default_stages: [pre-commit, commit-msg, pre-push]
 # The fir-spec hook's `unsupported_script` language needs pre-commit 4.4.0.
 minimum_pre_commit_version: 4.4.0
 

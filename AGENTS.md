@@ -151,8 +151,9 @@ commands until it succeeds. Start agents in another worktree with
 - Every check lives in `.pre-commit-config.yaml`, which keeps local and CI one
   list. Add new linters and formatters there, not in a workflow, and give each
   new hook a step in one job of `.github/workflows/ci.yml`: the `ci-hooks`
-  hook fails until it has one. A new hook that builds Lean, runs `cargo test`
-  or runs the harness sets `stages: [pre-commit]`.
+  hook fails until it has one. A new slow hook, one that builds Lean, runs
+  `cargo test`, counts instructions under valgrind or runs the harness, sets
+  `stages: [pre-commit]`.
 
 ## File-size budget
 
