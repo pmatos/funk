@@ -18,7 +18,7 @@ explains poison and immediate UB in plain words.
 # Poison and UB in short
 
 These rules follow the poison semantics of ADR-2026-10-29-2006 and LLVM, as
-ADR-2026-10-30-0818 records them:
+that ADR records them:
 
 * A poison operand gives a poison result, unless the op says otherwise. The
   ops that say otherwise are `select`, `freeze`, the terminators and `call`;
@@ -74,7 +74,7 @@ unordered: it is true when either operand is a NaN. Otherwise each compares
 the numbers that the operands encode, so `-0` equals `+0`: `eq` is equal,
 `ne` not equal, `lt` less than, `le` less or equal, `gt` greater than and
 `ge` greater or equal. `ord` holds when neither operand is a NaN, and `uno`
-when either is (ADR-2026-11-11-1139).
+when either is (ADR-2026-11-09-1549).
 -/
 inductive FPred where
   | oeq | one | olt | ole | ogt | oge | ord
@@ -83,7 +83,7 @@ inductive FPred where
 
 /--
 A float op of two operands, each rounded to nearest even
-(ADR-2026-11-11-1800): `fadd` adds, `fsub` subtracts the second operand
+(ADR-2026-11-09-1549): `fadd` adds, `fsub` subtracts the second operand
 from the first, `fmul` multiplies and `fdiv` divides the first by the
 second.
 -/
@@ -92,7 +92,7 @@ inductive FBin where
   deriving Repr, DecidableEq, Inhabited
 
 /--
-A float op of one operand (ADR-2026-11-11-1800): `fneg` negates, `fabs`
+A float op of one operand (ADR-2026-11-09-1549): `fneg` negates, `fabs`
 gives the absolute value, and `sqrt` the square root, rounded to nearest
 even. Only `sqrt` rounds: a negation or an absolute value is a float of
 the format.
@@ -147,10 +147,10 @@ Comparison and selection:
   even when it is poison; the one chosen is given as it is, poison or not.
 * `fcmp p e m`: compares two values of `float<e,m>` with predicate `p`,
   giving an `i1`, by the numbers they encode in Lean's float model. It is
-  never UB, and a poison operand gives poison (ADR-2026-11-11-1139).
+  never UB, and a poison operand gives poison (ADR-2026-11-09-1549).
 
 Float arithmetic, by Lean's float model, with a NaN result that is any NaN
-of the format (ADR-2026-11-11-1800). Each is never UB, and a poison operand
+of the format (ADR-2026-11-09-1549). Each is never UB, and a poison operand
 gives poison:
 
 * `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two

@@ -243,7 +243,7 @@ The rules a dialect adds to validation.
   dialect that registers no kind, as the core does, has neither.
 * `itemKindNames` lists the kinds of item that the dialect registers, each a
   word of the dialect, and `validItem` is the dialect's rule for an item of
-  one of them (ADR-2026-11-10-2224). The rule sees the item of the `host`
+  one of them (ADR-2026-11-09-1543). The rule sees the item of the `host`
   dialect that holds it through a view, as `validFunc` does, and the symbols
   of the item's table. It reads the kind from the item, and says what each
   kind's parameters, results and attributes must be. A dialect that

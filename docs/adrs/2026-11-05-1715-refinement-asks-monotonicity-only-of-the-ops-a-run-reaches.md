@@ -7,7 +7,7 @@ Tier: implementation; area: semantics
 
 The refinement engine asked, as `hmono`, that every terminator and every
 op with no callee be monotone at every op instance of the dialect, valid
-or not. Since ADR-2026-11-02-1515, `LawfulDialectPoison` covers only
+or not. Since ADR-2026-10-29-2006, `LawfulDialectPoison` covers only
 valid op instances. So a dialect that is lawful only on valid instances
 could not get function-level refinement from the class alone
 ([#99](https://github.com/pmatos/funk/issues/99)). The core dialect met
@@ -25,7 +25,7 @@ instances. The core theorems keep their statements.
 - The engine asks monotonicity only of the ops a run can reach: the ops
   of the source module's functions, and of the function that runs.
   `Func.OpsMonotone f` says that every terminator and every op with no
-  callee of `f` is monotone. The guard of ADR-2026-11-02-1514 is
+  callee of `f` is monotone. The guard of ADR-2026-10-29-2006 is
   unchanged; only what it ranges over is narrowed.
 - `Func.runOps_allowed` and `Func.runOps_allowedBelow` carry the
   invariant that `f`'s ops are monotone and so are the ops `os` that
@@ -49,7 +49,8 @@ instances. The core theorems keep their statements.
   statements. They take `Core.opsMonotone_all`: every core function's
   ops are monotone, valid or not.
 
-This refines ADR-2026-11-02-1515, whose Consequences left this open.
+This refines ADR-2026-10-29-2006, whose rule on valid op instances left this
+open.
 
 ## Alternatives
 

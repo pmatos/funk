@@ -105,5 +105,5 @@ unless one of its operand types has no value
 (`docs/decisions/fir-ref.md#an-op-without-rules`).
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
-instead. So a call has no op-level obligation (ADR-2026-11-02-1514).
+instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
 :::

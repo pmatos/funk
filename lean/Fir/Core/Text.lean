@@ -30,7 +30,7 @@ results, which are written where those values are defined.
   writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
   `.`, which is kept for the names of dialects.
 * `fcmp` has one attribute, its predicate, from `oeq` to `uno`, as LLVM
-  writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-11-1139).
+  writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
   has one attribute, `round(rne)`, and `fneg` and `fabs` have none:
   `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). The

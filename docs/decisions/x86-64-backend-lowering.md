@@ -50,7 +50,7 @@ may leave the `jmp` out, when its block comes next, so the edges are ordered to
 let that edge end it. A `cond_br` whose two edges both copy costs one local
 label and one extra jump.
 
-A branch on poison is immediate UB (ADR-2026-10-30-0818), and goes one way or
+A branch on poison is immediate UB (ADR-2026-10-29-2006), and goes one way or
 the other. `cond_br` loads its condition into `%rax`, a copy goes through
 `%rax`, and a cycle of copies through `%rcx`, so a branch may clobber both.
 
@@ -133,7 +133,7 @@ value or per half, which nothing reads.
 ## Division
 
 A zero or poison divisor is immediate UB in the source. So is `sdiv` or `srem`
-by `-1` of the signed minimum or of poison (ADR-2026-10-30-0818). The human
+by `-1` of the signed minimum or of poison (ADR-2026-10-29-2006). The human
 ruled the poison dividend by `-1` UB on 2026-10-30, so that a backend needs no
 guard.
 
@@ -228,7 +228,7 @@ each, `addss`, `subss`, `mulss`, `divss`, `sqrtss` or their `sd` forms, on
 nearest even. Nothing sets its flush-to-zero or denormals-are-zero bits, so
 subnormals are honoured. `fneg` and `fabs` flip or clear the sign bit in `%rax`
 with `btcq` or `btrq`, which is IEEE 754's negate and abs, also on a NaN, and
-refines fir's any NaN (ADR-2026-11-11-1800). A NaN result is whatever the
+refines fir's any NaN (ADR-2026-11-09-1549). A NaN result is whatever the
 instruction or routine gives.
 
 SSE2 has no fused multiply-add, and FMA3 is not in every x86-64. So `fma` loads
@@ -249,6 +249,8 @@ overflow included. NaN and infinite operands, and zeros, take SSE's
 arithmetic.
 
 Rejected: FMA3's `vfmadd`, since a program that uses it fails on an x86-64
-without FMA3, and raising the instruction set needs the human's ruling;
+without FMA3, and the default stays baseline x86-64 (the human ruled on
+2026-11-12 that CPU extensions come in through a `--cpu` flag in M2; see
+[the roadmap](../roadmap.md));
 `fma` from the C library, since most modules link none; and double-double
 arithmetic at `f64`, which loses exactness near overflow and among subnormals.

@@ -289,4 +289,4 @@ Their shared helpers are in `lean/FirTest/OverCore.lean`. A name that starts
 with `toy.` goes to the test dialect, and every other name to the core
 (ADR-2026-11-09-1543). The bit dialect, `lean/FirTest/Bit.lean`, is named
 `bit`, so that `lean/FirTest/Deps.lean` can sum the core, the toy dialect and
-the bit dialect, lifted into the sum of the other two (ADR-2026-11-10-1310).
+the bit dialect, lifted into the sum of the other two (ADR-2026-11-09-2306).

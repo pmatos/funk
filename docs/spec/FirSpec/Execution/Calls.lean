@@ -90,7 +90,7 @@ scope; it runs with fewer steps than the caller had, so the induction
 covers it, however deep the calls go; it returns values of the call's
 result types, which bind; and the caller goes on with the steps the
 callee leaves, fewer again. An op with a callee needs no rule of its
-own: its way to go on is its callee's run (ADR-2026-11-02-1514). A callee
+own: its way to go on is its callee's run (ADR-2026-10-29-2006). A callee
 that ends with UB or out of fuel ends its caller so, and that is a way
 to end.
 :::

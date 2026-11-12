@@ -39,7 +39,7 @@ valid, since it would hold no bits. A float format needs 2 exponent bits
 and 1 mantissa bit to hold zeros, subnormal and normal numbers,
 infinities and NaNs: these are the smallest widths of Lean's float model,
 on which the float ops are defined, and the core accepts every format of
-that model (ADR-2026-11-11-0950). $`\mathsf{float}\langle 2,1 \rangle`
+that model (ADR-2026-11-09-1549). $`\mathsf{float}\langle 2,1 \rangle`
 is the smallest valid format. Every module has the default memory, so
 $`\mathsf{ptr}`, which is $`\mathsf{ptr}\langle 0 \rangle`, is valid. No
 module has another memory until the data layout declares memories (#231),

@@ -30,7 +30,7 @@ says: return from the function. The
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter] then
 returns the operands $`v_1, \dots, v_n` as they are, any number of them
 (ADR-2026-10-30-0816), poison included: $`\mathsf{ret}` is an exception to
-poison propagation that passes values on (ADR-2026-10-30-0818). It is never
+poison propagation that passes values on (ADR-2026-10-29-2006). It is never
 UB.
 :::
 
@@ -47,5 +47,5 @@ a compiler may assume that no run does, and may delete the code that only
 leads to it. It is an exception to poison propagation that is always UB,
 which the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison classes]
-allow (ADR-2026-10-30-0818).
+allow (ADR-2026-10-29-2006).
 :::

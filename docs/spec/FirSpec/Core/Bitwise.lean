@@ -31,7 +31,7 @@ Here $`a_i` is bit $`i` of $`a`, counting from the lowest, and $`\oplus` is
 exclusive or. At $`\mathsf{i1}` the three ops are the boolean ops on the
 bits 0 and 1. None of them is ever UB, and all three
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison]
-(ADR-2026-10-30-0818).
+(ADR-2026-10-29-2006).
 :::
 
 :::readable Fir.Core.shiftValues (fingerprint := "11993629658997560653")

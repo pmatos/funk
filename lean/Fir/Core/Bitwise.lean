@@ -6,7 +6,7 @@ import Fir.Core.Values
 This section gives the bitwise ops `and`, `or` and `xor`, and the shifts
 `shl`, `lshr` and `ashr`, their rules. Each takes two values of `iN` and
 gives one. None of them has flags, and none is ever immediate UB. All six
-propagate poison (ADR-2026-10-30-0818): a poison operand gives poison.
+propagate poison (ADR-2026-10-29-2006): a poison operand gives poison.
 
 * `and`, `or` and `xor` work on each bit alone: bit i of the result is the
   and, the or or the exclusive or of bit i of each operand. At `i1` they

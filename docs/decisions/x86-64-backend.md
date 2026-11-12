@@ -12,10 +12,19 @@ built executable and its stack) and
 
 No target is built into the IR (ADR-2026-10-29-2016).
 
-The backend is the library `crates/funk-x86-64`. It depends only on `funk-ir`,
-which does not depend on it. The driver `funk` depends on both. A later target
-is a crate of its own. Code that two targets share moves to a shared crate when
-the second target arrives (ADR-2026-10-30-1228).
+The backend is the library `crates/funk-x86-64`. It holds only what is specific
+to x86-64. A later target is a crate of its own. What is not target-specific
+lives in generic crates: `funk-codegen` for machine code over virtual
+registers, the register allocators and scheduling, and `funk-opt` for the
+optimization passes on fir. Register allocators sit behind one interface, and
+linear scan is the first. funk writes its own allocator rather than use
+`regalloc2` (ADR-2026-10-30-1228).
+
+`funk-ir` depends on no other funk crate. A target crate may depend on `funk-ir`
+and `funk-codegen`, and the driver `funk` depends on all of them. The human
+ruled this split on 2026-11-12. Rejected: keeping all backend code in the x86
+crate until a second target arrives, which was the M0 rule. Until M2's first
+ticket (#319) lands, `funk-codegen` and `funk-opt` do not exist yet.
 
 Its modules split by responsibility. `asm` writes assembly text. `width` says
 how a value lives in a register. `abi` says how a function looks from outside.
@@ -212,7 +221,7 @@ built executable runs each function on a stack of its own
 ## Poison
 
 Any value refines poison (ADR-2026-10-29-2008). The op `poison` gives a poison
-result (ADR-2026-11-03-1615).
+result (ADR-2026-10-29-2006).
 
 Native code has no poison value: every value is the bits in its slot. An op
 whose source result is poison still stores some bits, and nothing relies on
@@ -264,7 +273,7 @@ value.
 It must read only bit 0 of every `i1`. No optimizer may turn a `select` into a
 `cond_br` without freezing its condition first, or `select %c, %x, false` into
 `and %c, %x` (`lean/Fir/Execution/PoisonUB.lean`). It may treat a `cond_br` on
-poison as UB, as the spec does (ADR-2026-10-30-0818).
+poison as UB, as the spec does (ADR-2026-10-29-2006).
 
 It must not make a division run where the source would not, such as by hoisting
 it above the branch that tests its divisor: natively that adds a trap. It may

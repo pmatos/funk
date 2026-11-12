@@ -9,7 +9,7 @@ remainder of that division, which for `srem` has the sign of the dividend.
 The `s` ops read their operands as two's-complement signed integers, the
 `u` ops as unsigned ones. They are ops whose failure the hardware cannot
 defer, so, with a branch on poison, they are the core ops with immediate
-UB (ADR-2026-10-30-0818). The first rule below gives the cases, in order:
+UB (ADR-2026-10-29-2006). The first rule below gives the cases, in order:
 
 * A poison divisor is immediate UB, because it might be zero, and so is a
   zero divisor.
@@ -20,7 +20,7 @@ UB (ADR-2026-10-30-0818). The first rule below gives the cases, in order:
 * Otherwise a poison dividend gives poison. That includes `udiv` and
   `urem` by all ones, which have no -1 case.
 
-ADR-2026-10-30-0818 makes a poison dividend by -1 immediate UB. UB there
+ADR-2026-10-29-2006 makes a poison dividend by -1 immediate UB. UB there
 keeps every division monotone, and lets a backend emit a bare `idiv` or `div`,
 with no guard. The rejected rule, a poison result, is not monotone, as the
 section on semantics the obligations reject shows.

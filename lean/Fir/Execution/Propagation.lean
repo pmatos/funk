@@ -6,7 +6,7 @@ import Fir.Validation.Rules
 # Poison classes
 
 A poison operand gives a poison result, unless the op says otherwise
-(ADR-2026-10-30-0818). That rule is a property that each op must have, so it
+(ADR-2026-10-29-2006). That rule is a property that each op must have, so it
 is checked, not only stated. Every op of every dialect declares its _poison
 class_, with its other effects in the dialect's effect class (the section on
 effect sets), so that a dialect added for new hardware states it too
@@ -112,7 +112,7 @@ is not a terminator, and the exit of a terminator. So they cover only the
 ops that the interpreter runs by these rules: terminators, and ops with no
 callee. An op with a callee runs its callee, never a rule of its own (the
 call effect), so it has no rule at op level, and no op-level obligation:
-its meaning is its callee's run (ADR-2026-11-02-1514).
+its meaning is its callee's run (ADR-2026-10-29-2006).
 
 Monotonicity is what makes refinement compositional. A run only passes
 values from op to op, and from a caller to its callee and back, so when
@@ -143,7 +143,7 @@ induction over the callee's run (the section on progress with calls).
 
 The obligations speak only of valid op instances: those whose operand and
 result types validation accepts (the general rules, in the validation
-chapter; ADR-2026-11-02-1515). Validation rejects every other instance in
+chapter; ADR-2026-10-29-2006). Validation rejects every other instance in
 every function, so no valid program runs one, and every op of a valid
 function is a valid instance. An instance that validation rejects may break
 an obligation without harm: at `i0`, which the core dialect's validation

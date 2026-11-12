@@ -23,7 +23,7 @@
 //!   tables of their own (ADR-2026-11-10-1510);
 //! - items of a kind from [`ITEM_KINDS`], with parameters, results and
 //!   attributes, which every reader decodes whichever dialect registers
-//!   the kind, and no registry here does (ADR-2026-11-10-2224).
+//!   the kind, and no registry here does (ADR-2026-11-09-1543).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results

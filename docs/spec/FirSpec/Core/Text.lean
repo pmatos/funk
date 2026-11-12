@@ -32,7 +32,7 @@ parser looks a name up in that list to read a predicate back.
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[float predicates]
 of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 `one`, `olt`, `ole`, `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`,
-`ugt`, `uge` or `uno` (ADR-2026-11-11-1139). They are listed in that order,
+`ugt`, `uge` or `uno` (ADR-2026-11-09-1549). They are listed in that order,
 and the parser looks a name up in that list to read a predicate back.
 :::
 

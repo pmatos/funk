@@ -75,7 +75,7 @@ enum Decoded {
 /// parameters, results or attributes, and its dialect set and items in its
 /// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
 /// function with no blocks or a module with no items. An item whose kind is
-/// a word of a dialect has an empty body (ADR-2026-11-10-2224), whichever
+/// a word of a dialect has an empty body (ADR-2026-11-09-1543), whichever
 /// dialect registers its kind, as validation asks. Every other item is of a
 /// kind the parser does not know.
 fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {

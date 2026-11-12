@@ -4,7 +4,7 @@
 # infinities and formats with no decimals. Every other literal, and every
 # other attribute, does not decode (ADR-2026-11-11-1438). fcmp has one of
 # fourteen predicates, compares two values of one float format and gives
-# an i1 (ADR-2026-11-11-1139).
+# an i1 (ADR-2026-11-09-1549).
 
 [[reject]]
 verdict = "parse-error"

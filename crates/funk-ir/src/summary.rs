@@ -1,5 +1,5 @@
 //! Function summaries: the effects that a call of each function of a symbol
-//! table may have (`lean/Fir/Execution/Summary.lean`, ADR-2026-11-10-2108).
+//! table may have (`lean/Fir/Execution/Summary.lean`, ADR-2026-11-09-1541).
 //!
 //! An op's [`Effects`] are those of its own rule; an op that calls a
 //! function has its callee's too. A function's summary joins what a caller

@@ -5,7 +5,7 @@ import FirTest.EffectCases
 The effect summaries of functions, on the shared cases of
 `tests/dialects/effect-summaries.cases`, which
 `crates/funk-ir/tests/summaries.rs` reads too, so Rust's summaries are
-`SymbolTable.summary` (ADR-2026-11-10-2108).
+`SymbolTable.summary` (ADR-2026-11-09-1541).
 
 Each case gives the summary of every function of every symbol table of its
 module, by the path of symbols that leads to it. A set is written as in

@@ -7,7 +7,8 @@ Tier: direction; area: semantics
 
 The refinement theorems for runs with memory held only for a dialect that
 lifts the set monad: its runs with memory are its runs in the set monad
-(ADR-2026-11-11-0623). An op that touches memory has no semantics in the
+([semantics-effects.md](../decisions/semantics-effects.md#soundness)).
+An op that touches memory has no semantics in the
 set monad, so nothing said that its runs refine. Stage 2c-3 of
 [#231](https://github.com/pmatos/funk/issues/231) gives runs with memory
 their refinement before the first memory op lands (stage 4).

@@ -166,12 +166,11 @@ of funk are on `main`:
   instance that validation accepts meets the poison obligations
   (`LawfulDialectPoison CoreDialect`); a call has no op-level rule, since
   its meaning is its callee's run
-  ([ADR-2026-11-02-1514](adrs/2026-11-02-1514-a-call-has-no-op-level-rule.md),
-  [ADR-2026-11-02-1515](adrs/2026-11-02-1515-poison-obligations-cover-valid-op-instances.md)).
+  ([ADR-2026-10-29-2006](adrs/2026-10-29-2006-poison-and-freeze.md)).
 - The execution rule of `poison` in Lean
   ([#122](https://github.com/pmatos/funk/issues/122)): it gives the
   poison of its type on every run
-  ([ADR-2026-11-03-1615](adrs/2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md)).
+  ([ADR-2026-10-29-2006](adrs/2026-10-29-2006-poison-and-freeze.md)).
 - A `fir-ref` that gives its verdict on a text nested to any depth and runs a
   function for any number of steps, with no stack per level of nesting, per
   step or per level of calls, that reads an operand in time that does not grow

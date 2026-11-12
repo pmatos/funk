@@ -6,7 +6,7 @@ import Fir.Core.Poison
 
 `sdiv`, `udiv`, `srem` and `urem`, with and without `exact`, meet the
 obligations of the poison classes section. They propagate poison
-(ADR-2026-10-30-0818), so each meets both poison clauses, returns a result
+(ADR-2026-10-29-2006), so each meets both poison clauses, returns a result
 on some operands with no poison, and is total and monotone:
 
 * _Poison out._ On a poison operand, a division is UB or gives poison,
@@ -42,7 +42,7 @@ at every width above zero, and only there.
 
 This is why a lawful dialect is asked to meet the obligations only on op
 instances whose types validation accepts: fir narrows the class rather
-than change the rule for a zero divisor (ADR-2026-11-02-1515). Validation
+than change the rule for a zero divisor (ADR-2026-10-29-2006). Validation
 accepts `iN` only for `N ≥ 1`, so the four ops meet the class at every
 width it covers, and division at `i0` keeps its rule.
 -/

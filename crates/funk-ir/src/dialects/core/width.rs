@@ -5,7 +5,7 @@
 //! and `N` decode, so a text whose op changes to the same width, or in the
 //! wrong direction, parses. Validation then rejects it: `zext` and `sext`
 //! strictly widen, with `M < N`, and `trunc` strictly narrows, with `N < M`
-//! (ADR-2026-10-30-0818).
+//! (ADR-2026-10-29-2006).
 
 use super::type_list;
 use super::types::int_width;

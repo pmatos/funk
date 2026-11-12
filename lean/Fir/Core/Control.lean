@@ -10,7 +10,7 @@ gives `br` and `cond_br` theirs.
 `ret` sends control back to the caller, and the interpreter returns its
 operands as they are, any number of them (ADR-2026-10-30-0816). Poison is
 returned as poison: `ret` is one of the exceptions to poison propagation
-that pass values on (ADR-2026-10-30-0818). Validation makes the returned
+that pass values on (ADR-2026-10-29-2006). Validation makes the returned
 values the function's result types.
 
 `unreachable` sends control nowhere: reaching it is immediate UB
@@ -19,7 +19,7 @@ successors. A producer puts it where it knows control never goes, such as
 after a call that never returns, and a compiler may then assume that no
 run reaches it. Its UB has the reason `unreachable reached`. It is an
 exception to poison propagation that is always UB, which the poison
-classes section allows (ADR-2026-10-30-0818).
+classes section allows (ADR-2026-10-29-2006).
 -/
 
 namespace Fir.Core

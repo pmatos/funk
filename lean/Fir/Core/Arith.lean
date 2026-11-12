@@ -22,7 +22,7 @@ every width, from 1 to the largest.
   rule, not a poison operand's. It is never UB.
 * `add` without flags gives the sum of its operands modulo 2^N: it wraps,
   as two's complement does, and it is never UB. A poison operand gives
-  poison: `add` propagates poison (ADR-2026-10-30-0818).
+  poison: `add` propagates poison (ADR-2026-10-29-2006).
 
 Every core op has its rules. What a dialect's semantics does with an op that
 has none is in the section on the core op semantics

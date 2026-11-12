@@ -80,7 +80,7 @@ refine others refines the call on those others. This is the counterpart,
 for a whole function, of
 {ref "The-fir-specification--Execution--Poison-classes"}[monotonicity],
 which speaks only of ops that run by their own rule: a call has no rule
-of its own (ADR-2026-11-02-1514). A compiler may then, for example, pass
+of its own (ADR-2026-10-29-2006). A compiler may then, for example, pass
 a defined value where the source passed poison, or replace an argument
 by one that a pass has refined.
 :::

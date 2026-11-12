@@ -6,9 +6,9 @@ import Fir.Execution.Replace
 
 The lawful class, which holds the poison obligations of a dialect, speaks
 only of op instances whose types validation accepts
-(ADR-2026-11-02-1515), and its totality and monotonicity only of those
+(ADR-2026-10-29-2006), and its totality and monotonicity only of those
 that run by their own rule: a terminator, or an op with no callee
-(ADR-2026-11-02-1514). That is enough for every valid module, because a
+(ADR-2026-10-29-2006). That is enough for every valid module, because a
 valid module holds no other instance:
 
 * every op of a valid function is a valid op instance. Validation checks

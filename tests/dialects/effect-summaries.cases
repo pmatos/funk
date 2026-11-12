@@ -1,4 +1,4 @@
-Cases for the effect summaries of functions (ADR-2026-11-10-2108), shared by
+Cases for the effect summaries of functions (ADR-2026-11-09-1541), shared by
 two tests: `lean/FirTest/SummaryCases.lean` and
 `crates/funk-ir/tests/summaries.rs`. Each case starts with a line of three
 equals signs and its name. Each line after it that starts with `@` gives

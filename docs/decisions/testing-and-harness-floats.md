@@ -39,7 +39,7 @@ operand orders, and a poison operand per op. Each expected result is
 
 A result that is not a NaN is a differential test at `f32` and `f64`, and an
 interpreter-only test at every format. A NaN result is any NaN
-(ADR-2026-11-11-1800), so its test is interpreter-only, with a choice that names
+(ADR-2026-11-09-1549), so its test is interpreter-only, with a choice that names
 the NaN: the quiet NaN, every bit set, or the signalling NaN with only the
 lowest mantissa bit, in turn. Native code is not compared on a NaN result until
 #219 decides how one is judged. `test_float_arith_cases.py` checks that the

@@ -1,4 +1,4 @@
-//! The effect summaries of functions (ADR-2026-11-10-2108), on the shared
+//! The effect summaries of functions (ADR-2026-11-09-1541), on the shared
 //! cases of `tests/dialects/effect-summaries.cases`, which
 //! `lean/FirTest/SummaryCases.lean` reads too, so each summary here is
 //! `SymbolTable.summary`. Each case gives the summary of every function of

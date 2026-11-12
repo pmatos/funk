@@ -10,7 +10,7 @@
 //! of its bits (ADR-2026-11-11-1438, `float_text`).
 //!
 //! `poison` has no attributes, no operands and one `iN` result, the poison
-//! of its type (ADR-2026-11-03-1615).
+//! of its type (ADR-2026-10-29-2006).
 
 use super::types::{CoreType, core_type, int_width};
 use crate::Attr;

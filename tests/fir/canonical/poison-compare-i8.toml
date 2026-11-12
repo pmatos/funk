@@ -1,5 +1,5 @@
 # Tests of poison-compare-i8.fir: the poison rules of icmp and select at
-# i8 (#16, ADR-2026-10-30-0818). Neither op is ever UB.
+# i8 (#16, ADR-2026-10-29-2006). Neither op is ever UB.
 # %p = add nsw %a, 1 is poison when %a is the signed maximum, 127.
 # icmp propagates poison: P_left returns icmp P %p, %b and P_right
 # icmp P %b, %p, for each predicate P, with %b = 0.

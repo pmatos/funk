@@ -4,7 +4,7 @@ import Fir.Sum.Dialect
 An extension is written over the dialects it depends on: its classes are
 stated for `dep.over e`, whose types are `dep`'s and its own. A module may
 hold more dialects than `e` depends on, so `e` must also work over a larger
-base `big` that holds `dep` (ADR-2026-11-10-1310). What `e` needs of `big`
+base `big` that holds `dep` (ADR-2026-11-09-2306). What `e` needs of `big`
 is an _inclusion_ of `dep`'s types in `big`'s: each type of `dep` is a type
 of `big`, `big` can say which of its types are `dep`'s, and a value of a
 type of `dep` is a value of that type in `big`, and back.

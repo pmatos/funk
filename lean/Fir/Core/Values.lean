@@ -6,7 +6,7 @@ import Fir.Memory.Model
 The values of the core dialect, defined below, how they refine, and what
 an observer sees of a core function's return. A value of a float type is
 its raw bit pattern, as a value of an integer type is: which bits an op
-gives, a NaN's among them, is the op's rule (ADR-2026-11-11-0950). A value
+gives, a NaN's among them, is the op's rule (ADR-2026-11-09-1549). A value
 of a pointer type `ptr<N>` is poison or a pointer of the memory model: the
 allocation it has provenance for, if any, and an offset into it, in the
 units of the memory `N` (ADR-2026-11-09-1542). Which memory a pointer

@@ -17,7 +17,7 @@ have no trace.
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
   chooses, and `freeze` gives defined bits. A float op's NaN is a defined
-  value, and M1 has no floating-point exceptions (ADR-2026-11-11-1800).
+  value, and M1 has no floating-point exceptions (ADR-2026-11-09-1549).
 * May produce poison: `poison`; `add`, `sub` and `mul` with a flag, which
   give poison when the flag is broken; and the shifts, which give poison
   for an amount of `N` or more.

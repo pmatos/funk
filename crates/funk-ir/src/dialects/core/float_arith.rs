@@ -1,6 +1,6 @@
 //! Float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`,
 //! `sqrt` and `fma` (`decodeFBin`, `decodeFUnary` and `decodeFma` in
-//! `lean/Fir/Core/FloatOpText.lean`; ADR-2026-11-11-1800).
+//! `lean/Fir/Core/FloatOpText.lean`; ADR-2026-11-09-1549).
 //!
 //! Each op takes values of one float type and defines one value of it:
 //! two operands for `fadd`, `fsub`, `fmul` and `fdiv`, one for `fneg`,

@@ -7,7 +7,8 @@ Progress asks each op that runs by its own rule, a terminator or an op with
 no callee, to have a way to go on (the section on progress with calls). An
 op that touches memory has no semantics in the set monad, so this
 obligation speaks of the op's semantics with memory, as the effect
-obligations do (ADR-2026-11-11-0623, ADR-2026-11-11-0801):
+obligations do (ADR-2026-11-11-0801;
+`docs/decisions/semantics-effects.md#soundness`):
 
 * _Total with memory_: wherever a run names the dialect's memories, from
   any memories, on every operand vector, an op that is not a terminator has
@@ -16,7 +17,7 @@ obligations do (ADR-2026-11-11-0623, ADR-2026-11-11-0801):
 
 It looks only at what runs by the op's own rule, and speaks only of valid
 op instances, as the poison obligations do. An op with a callee goes on by
-its callee's run, and needs no rule of its own (ADR-2026-11-02-1514).
+its callee's run, and needs no rule of its own (ADR-2026-10-29-2006).
 
 It holds as the obligation on may-UB does:
 

@@ -12,6 +12,11 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-10-30-0818-poison-propagation.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "6de9e3d20dda"
+    },
+    {
       "file": "2026-10-30-1031-publish-spec-to-github-pages.md",
       "now": "docs/decisions/spec-site.md#publishing-the-site",
       "commit": "c09a05f4f8fb"
@@ -188,12 +193,22 @@
     },
     {
       "file": "2026-11-02-1156-call-stand-in-is-ub.md",
-      "now": "ADR-2026-11-02-1514",
+      "now": "ADR-2026-10-29-2006",
       "commit": "c09a05f4f8fb"
     },
     {
       "file": "2026-11-02-1428-one-emitter-for-outgoing-funk-calls.md",
       "now": "docs/decisions/x86-64-backend-abi.md#one-emitter-for-funk-calls",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1514-a-call-has-no-op-level-rule.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-11-02-1515-poison-obligations-cover-valid-op-instances.md",
+      "now": "ADR-2026-10-29-2006",
       "commit": "c09a05f4f8fb"
     },
     {
@@ -270,6 +285,11 @@
       "file": "2026-11-03-1614-a-ported-llvm-name-that-fails-the-spelling-check-is-corrected.md",
       "now": "docs/decisions/testing-and-harness-corpus.md#names-the-spelling-check-rejects",
       "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "46ee1b2caf5b3a2af4f6d9011c314250446462fc"
     },
     {
       "file": "2026-11-03-1616-the-x86-64-backend-lowers-poison-to-zero-in-every-eightbyte.md",
@@ -397,6 +417,11 @@
       "commit": "cbe2c7463225"
     },
     {
+      "file": "2026-11-09-2249-may-produce-poison-means-poison-from-operands-with-no-poison.md",
+      "now": "ADR-2026-11-09-1541",
+      "commit": "8fee7f1cdaf9"
+    },
+    {
       "file": "2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md",
       "now": "ADR-2026-10-30-1146",
       "commit": "42cfa8571948"
@@ -407,6 +432,41 @@
       "commit": "9129af691846"
     },
     {
+      "file": "2026-11-10-1310-an-extension-lifts-into-any-sum-that-holds-what-it-depends-on.md",
+      "now": "ADR-2026-11-09-2306",
+      "commit": "1627f2a2b440"
+    },
+    {
+      "file": "2026-11-10-2108-a-call-carries-its-callee-s-summary.md",
+      "now": "ADR-2026-11-09-1541",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-11-10-2224-a-dialect-registers-kinds-of-item-each-with-its-own-rule.md",
+      "now": "ADR-2026-11-09-1543",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-11-11-0451-memory-effects-are-proved-over-the-semantics-with-memory-at-every-naming.md",
+      "now": "docs/decisions/semantics-effects.md#soundness",
+      "commit": "7dc0f13ae143"
+    },
+    {
+      "file": "2026-11-11-0452-a-memory-has-one-name-in-a-sum.md",
+      "now": "ADR-2026-11-09-2306",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-11-11-0623-every-effect-obligation-is-stated-over-the-semantics-with-memory.md",
+      "now": "docs/decisions/semantics-effects.md#soundness",
+      "commit": "7eee446e4ae2"
+    },
+    {
+      "file": "2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "1dd505a5a450"
+    },
+    {
       "file": "2026-11-11-1019-no-caller-relies-on-an-unmarked-i1-result-being-0-or-1.md",
       "now": "ADR-2026-10-30-1232",
       "commit": "924a13bded83"
@@ -415,6 +475,11 @@
       "file": "2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md",
       "now": "ADR-2026-11-11-1438",
       "commit": "f4e43679273c"
+    },
+    {
+      "file": "2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "506720bb5741"
     },
     {
       "file": "2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md",
@@ -430,6 +495,11 @@
       "file": "2026-11-11-1328-fir-ref-runs-the-core-with-memory-and-its-machine-carries-the-memories.md",
       "now": "docs/decisions/fir-ref-memory.md#the-modes-run-with-memory",
       "commit": "6e70da1fc416"
+    },
+    {
+      "file": "2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "0d492b1d4d6e"
     },
     {
       "file": "2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md",

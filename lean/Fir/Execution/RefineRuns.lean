@@ -15,7 +15,7 @@ the class alone. A call passes its arguments to its callee, so a call on
 arguments that refine others refines the call on those others. This is
 the counterpart, for a whole function, of monotonicity, which speaks only
 of ops that run by their own rule: an op with a callee has no rule of its
-own (ADR-2026-11-02-1514).
+own (ADR-2026-10-29-2006).
 
 Both function-level theorems are instances of one. Take a function of a
 source module, and the same function of a target module whose calls name

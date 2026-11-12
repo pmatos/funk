@@ -11,7 +11,7 @@ declare an effect that it never has. Each effect left out carries an
 obligation. The first two are stated over the op's semantics with memory
 (the section on memory obligations), wherever a run names the dialect's
 memories and from any memories, as the memory-named effects are
-(ADR-2026-11-11-0451):
+(`docs/decisions/semantics-effects.md#soundness`):
 
 * _No may-UB_: the op never ends in UB, and the exit of a terminator never
   does.
@@ -30,7 +30,7 @@ As the poison obligations do, the first two look only at what runs by the
 op's own rule: the meaning of an op that is not a terminator, and the exit
 of a terminator. So they cover the terminators and the ops with no callee.
 An op with a callee runs its callee, never a rule of its own, and has its
-callee's effects (ADR-2026-11-02-1514). They speak only of valid op
+callee's effects (ADR-2026-10-29-2006). They speak only of valid op
 instances, as the poison obligations do.
 
 The memory-named effects have the obligations of the section on memory

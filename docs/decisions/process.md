@@ -87,7 +87,8 @@ Rejected: keeping M1's old goal, an IR that "real programs and the frontends"
 can lower to. #201 found that M1's scope did not deliver it.
 
 Vectors and structured control flow (H6) stay with the milestones that need them.
-S8 stays with M2's optimizer track (ADR-2026-11-05-2255).
+S8 is M9, which runs after M2. M2's optimizer passes land checked by tests only.
+The human ruled both on 2026-11-12, in #341 (ADR-2026-11-05-2255).
 
 The later milestones are:
 
@@ -99,6 +100,7 @@ The later milestones are:
 - M7, x86 to arm64 binary translation;
 - M8, WebAssembly backend, for wasm32 and wasm64, tested with wasmtime
   (ADR-2026-11-11-1450). Its number does not set the order of work.
+- M9, per-compile refinement checks (S8), after M2.
 
 Accepted ADRs, spike reports, issues and comments older than this numbering keep
 their wording. In them, M1 to M6 mean today's M2 to M7. Living docs use the new

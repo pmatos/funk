@@ -31,13 +31,13 @@ treats poison operands (the section on poison classes): the op's poison
 behaviour is declared in one place, with its other effects. The poison
 class and _may produce poison_ say different things: the class is about
 poison operands, and the effect about operands with no poison
-(ADR-2026-11-09-2249).
+(ADR-2026-11-09-1541).
 
 The effects of an op are those of its own rule. An op with a callee also
-has its callee's, whose meaning is the callee's run (ADR-2026-11-02-1514):
+has its callee's, whose meaning is the callee's run (ADR-2026-10-29-2006):
 the section on function summaries gives each function the effects that a
 call of it may have, and each op in place its own effects with its
-callee's (ADR-2026-11-10-2108). The spec proves each declaration sound in the section on effect
+callee's (ADR-2026-11-09-1541). The spec proves each declaration sound in the section on effect
 obligations: an effect that an op leaves out, it does not have.
 -/
 

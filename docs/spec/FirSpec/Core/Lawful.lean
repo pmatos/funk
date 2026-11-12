@@ -59,10 +59,10 @@ result on defined operands.*
 
 $`\mathsf{poison}` returns one on the empty vector, where its result is
 poison: the obligation asks for a result, not for a defined one
-(ADR-2026-11-03-1615). The four divisions return one only at a width
+(ADR-2026-10-29-2006). The four divisions return one only at a width
 above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
-to be valid (ADR-2026-11-02-1515).
+to be valid (ADR-2026-10-29-2006).
 :::
 
 :::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "11432556231224688115")
@@ -81,7 +81,7 @@ validation accepts meets the
 * _Totality_ and _monotonicity_: every terminator and every op with no
   callee, every core op but $`\mathsf{call}`, is total and monotone, at
   every width. A call is left out, since its meaning is its callee's run
-  (ADR-2026-11-02-1514).
+  (ADR-2026-10-29-2006).
 
 The core dialect is declared lawful with this proof. So every generic
 theorem that asks for a lawful dialect holds for the core dialect: for

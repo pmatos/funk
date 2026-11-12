@@ -32,7 +32,7 @@ $`2^N`, as in the
 {ref "The-fir-specification--Execution--Arithmetic-rules"}[arithmetic rules].
 Like $`\mathsf{add}`, both wrap as two's complement does, are never UB, and
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison]
-(ADR-2026-10-30-0818).
+(ADR-2026-10-29-2006).
 :::
 
 :::readable Fir.Core.wrapValues (pin := Fir.Core.WrapFlags) (fingerprint := "8525004174366977493")

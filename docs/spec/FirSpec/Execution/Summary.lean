@@ -111,5 +111,5 @@ $`\mathrm{eff}(o) \sqcup \mathrm{sum}_t(s)` when it calls a function
 $`s` of $`t`, and
 $`\mathrm{eff}(o) \sqcup \mathrm{caller}(\top_{\mathit{eff}})` when it
 calls a symbol that names no function of $`t`. So a call carries its
-callee's effects (ADR-2026-11-10-2108).
+callee's effects (ADR-2026-11-09-1541).
 :::

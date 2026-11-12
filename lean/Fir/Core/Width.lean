@@ -22,7 +22,7 @@ rules. Each takes one value of `iM` and gives one value of `iN`:
 
 None of them is ever UB, and none gives poison on a value. A poison
 operand gives poison: the three ops propagate poison
-(ADR-2026-10-30-0818).
+(ADR-2026-10-29-2006).
 
 Validation admits `zext` and `sext` only when they widen, and `trunc` only
 when it narrows (the core rules of validation). The rules still give a

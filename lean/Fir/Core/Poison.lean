@@ -6,7 +6,7 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 31 core ops has a class (ADR-2026-10-30-0818).
+Every one of the 31 core ops has a class (ADR-2026-10-29-2006).
 
 Twenty-four ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
@@ -19,7 +19,7 @@ obligation of a result on defined operands too: its one operand vector,
 the empty one, holds no poison, and on it `poison` returns a result, the
 poison of its type. The obligation asks for a result, not for a defined
 one; it rules out an op that is always UB, and `poison` never is
-(ADR-2026-11-03-1615). The four divisions are immediate UB on a poison
+(ADR-2026-10-29-2006). The four divisions are immediate UB on a poison
 divisor, and propagate a poison dividend, but for one case: `sdiv` and
 `srem` by `-1` are immediate UB on a poison dividend. Their obligation
 allows both kinds of UB, because a defined value in place of the poison
@@ -48,7 +48,7 @@ with the fuel budget that the caller has left (ADR-2026-11-02-0836): the
 callee of `call @g` is `@g`. The set monad has no module and no such
 effect, so `call` has no rule there, and no op-level obligation: the
 obligations ask totality and monotonicity only of terminators and of ops
-with no callee (ADR-2026-11-02-1514). Their counterparts for calls hold at
+with no callee (ADR-2026-10-29-2006). Their counterparts for calls hold at
 function level (the section on refinement through core calls): a call on
 arguments that refine others refines the call on those others, and
 congruence in the callee: replacing a callee's body refines every caller

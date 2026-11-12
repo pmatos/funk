@@ -72,7 +72,7 @@ the core's kind.
 :::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeModule (fingerprint := "4604988247452874103")
 *Definition: decoding an item and a module.* An item decodes as a function,
 as a nested module (ADR-2026-11-10-1510) or as an item of a dialect's kind
-(ADR-2026-11-10-2224):
+(ADR-2026-11-09-1543):
 
 * a `func` with attributes is an error at its first attribute;
 * a `func` whose body holds a dialect set is an error at its kind, "a
