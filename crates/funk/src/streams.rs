@@ -1,4 +1,5 @@
-//! funk's standard input, output and error (ADR-2026-11-03-0107).
+//! funk's standard input, output and error
+//! (`docs/decisions/rust-ir-and-tools-funk.md#standard-streams`).
 //!
 //! The standard library's handles take `EBADF` for the end of the input on
 //! standard input and for a successful write on standard output and error.

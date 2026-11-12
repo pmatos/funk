@@ -10,7 +10,7 @@
 //!
 //! The blocks and ops of a body are walked in depth-first order, which is
 //! the order of the text and of their positions, so that regions nest to any
-//! depth (ADR-2026-10-30-1333).
+//! depth (`docs/decisions/rust-ir-and-tools.md#nesting`).
 
 use std::collections::HashMap;
 
@@ -38,10 +38,10 @@ pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
 }
 
 /// Decodes items in order, each at any depth. Modules nest to any depth
-/// (ADR-2026-10-30-1333), so the lists of items that enclose the one being
-/// decoded wait on a stack, and a nested module's items are built in a
-/// [`Nest`]: each item is decoded whole before the next, depth first, as the
-/// spec's decoder does.
+/// (`docs/decisions/rust-ir-and-tools.md#nesting`), so the lists of items that
+/// enclose the one being decoded wait on a stack, and a nested module's items
+/// are built in a [`Nest`]: each item is decoded whole before the next, depth
+/// first, as the spec's decoder does.
 fn items(s: Vec<SItem>, reg: &Registry) -> Result<Vec<Item>, ParseError> {
     let mut built = Nest::new(s.len());
     let mut todo = vec![s.into_iter()];

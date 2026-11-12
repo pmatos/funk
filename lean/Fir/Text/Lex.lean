@@ -8,10 +8,11 @@ tree that leaves types, attributes and ops generic. Last, it decodes that
 tree through the dialect: each type with the dialect's reader of types, and
 each op with its reader of ops, from its name, its attributes and the types
 of its operands and results. Each step stops at its first error, and the
-steps run in the order of `funk`'s (ADR-2026-10-30-1032), so the two
+steps run in the order of `funk`'s
+(`docs/decisions/rust-ir-and-tools-funk.md#report-format`), so the two
 parsers reject a text with one error at the same position. A text with
 several errors is rejected at the first error of the earliest step; the two
-parsers may then report different errors, which ADR-2026-10-30-1032 allows.
+parsers may then report different errors, which that page allows.
 
 Each step is a total function: it never loops and never fails for want of
 fuel, and the proof that parsing a printed module gives the module back

@@ -10,7 +10,8 @@
 //! and a line feed at the end of every line.
 //!
 //! Attributes and regions nest to any depth, so they are printed from the
-//! steps of a walk, not by recursive calls (ADR-2026-10-30-1333).
+//! steps of a walk, not by recursive calls
+//! (`docs/decisions/rust-ir-and-tools.md#nesting`).
 
 use std::fmt::{self, Display, Write};
 

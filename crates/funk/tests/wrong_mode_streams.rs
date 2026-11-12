@@ -1,4 +1,5 @@
-//! funk on a standard stream open in the wrong mode (ADR-2026-11-03-0107):
+//! funk on a standard stream open in the wrong mode
+//! (`docs/decisions/rust-ir-and-tools-funk.md#standard-streams`):
 //! a standard input open only for writing, or a standard output or error
 //! open only for reading. Every read or write on such a descriptor fails
 //! with `EBADF`, and funk reports it as `fir-ref` does.

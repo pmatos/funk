@@ -1,5 +1,5 @@
 //! `funk build`: its outputs, its reports and its exit status
-//! (ADR-2026-10-30-1326).
+//! (`docs/decisions/rust-ir-and-tools-funk.md#funk-build`).
 
 mod common;
 

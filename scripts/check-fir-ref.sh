@@ -108,9 +108,10 @@ case "$1" in
         validates "$tmp/open.fir" 1 '"verdict":"parse-error".*"line":2,"column":1' || status=1
         validates "$tmp/missing.fir" 2 '"verdict":"io-error"' || status=1
         # Errors that are not about a file exit with 2, as funk's do
-        # (ADR-2026-10-30-1032): an argument that is not UTF-8, a full disk,
-        # and a reader that stops reading, which gets no message. The pipe
-        # holds less than the reports of 4,000 files, so the write fails.
+        # (docs/decisions/rust-ir-and-tools-funk.md#commands-and-verdicts): an
+        # argument that is not UTF-8, a full disk, and a reader that stops
+        # reading, which gets no message. The pipe holds less than the
+        # reports of 4,000 files, so the write fails.
         rc=0
         "$fir_ref" validate $'bad\xff.fir' 2>"$tmp/err" || rc=$?
         if [[ $rc -ne 2 ]] || ! grep -q 'is not UTF-8' "$tmp/err"; then

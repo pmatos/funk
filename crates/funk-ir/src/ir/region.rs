@@ -1,5 +1,5 @@
-//! Regions nest to any depth (ADR-2026-10-30-1333): an op owns regions,
-//! which hold blocks of ops, which own regions in turn.
+//! Regions nest to any depth (`docs/decisions/rust-ir-and-tools.md#nesting`):
+//! an op owns regions, which hold blocks of ops, which own regions in turn.
 //!
 //! A [`Part`] is a region, a block or an op, and a walk over parts reaches
 //! every block and op under a region, at any depth. `Region` is where the

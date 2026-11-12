@@ -10,7 +10,8 @@ Tier: implementation; area: fir-ref
 rejected by the parser with the reason and the position, or rejected by
 validation with the reasons. The harness of
 [#13](https://github.com/pmatos/funk/issues/13) compares it with
-`funk verify --json`, whose report ADR-2026-10-30-1032 fixes, and compares
+`funk verify --json`, whose report
+[rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format) fixes, and compares
 verdicts, never messages. `fir-ref`'s command line follows `funk`'s
 (ADR-2026-10-30-1425).
 

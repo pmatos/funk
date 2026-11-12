@@ -1,5 +1,5 @@
-//! `funk fmt --write` replaces a file all at once, keeps its permissions,
-//! and touches nothing else (ADR-2026-10-30-1032).
+//! `funk fmt --write` replaces a file all at once, keeps its permissions, and
+//! touches nothing else (`docs/decisions/rust-ir-and-tools-funk.md#funk-fmt`).
 
 #![cfg(unix)]
 

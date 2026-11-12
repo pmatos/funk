@@ -303,8 +303,8 @@ fn output_that_cannot_be_written_is_an_io_error() {
 }
 
 /// Standard output is buffered by line and standard error is not
-/// (ADR-2026-11-03-0107), so on one file each file's output and
-/// diagnostics come in the order funk reaches them.
+/// (`docs/decisions/rust-ir-and-tools-funk.md#standard-streams`), so on one
+/// file each file's output and diagnostics come in the order funk reaches them.
 #[cfg(unix)]
 #[test]
 fn standard_output_and_error_interleave_in_order_on_one_file() {

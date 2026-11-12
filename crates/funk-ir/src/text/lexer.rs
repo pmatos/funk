@@ -69,7 +69,7 @@ pub(super) struct Token {
 }
 
 /// Reads the tokens of a text one at a time, so that no list of them takes
-/// memory (ADR-2026-10-30-1333).
+/// memory (`docs/decisions/rust-ir-and-tools.md#nesting`).
 pub(super) struct Lexer<'t> {
     text: &'t str,
     at: usize,

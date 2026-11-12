@@ -41,7 +41,8 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
     `fir-ref` only: a list of values, each a value or `"poison"`, or
     `"ub"`, or `"fuel-exhausted"`.
 - **A module with a differential test builds whole.** `funk build` builds a
-  module all or nothing (ADR-2026-10-30-1326), so every function of such a
+  module all or nothing
+  ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#funk-build)), so every function of such a
   module is one the backend lowers. A function that the backend does not
   lower, such as one at `i7` or with several results, goes in a module
   whose tests are all interpreter-only.

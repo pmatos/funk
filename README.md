@@ -175,9 +175,8 @@ them. `funk verify FILE` checks a file, and prints nothing when it is valid.
 and the executable `OUTPUT`, which runs one function: `OUTPUT @FUNCTION ARG...`.
 `funk asm FILE` prints the assembly of its functions.
 `--json` reports one JSON line per file. `funk --help` lists the options.
-[ADR-2026-10-30-1032](docs/adrs/2026-10-30-1032-funk-reports.md) and
-[ADR-2026-10-30-1326](docs/adrs/2026-10-30-1326-funk-build-command.md)
-give the reports and exit codes, and
+[docs/decisions/rust-ir-and-tools-funk.md](docs/decisions/rust-ir-and-tools-funk.md)
+gives the reports and exit codes, and
 [ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)
 how the executable is run.
 

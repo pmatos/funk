@@ -97,7 +97,8 @@ They name the value, the op's index and its block (ADR-2026-11-09-2257).
 
 Rejected: a reason in the class, such as `whyNot`. It needs another field and
 a law tying it to the rule, and tools compare verdicts, never messages
-(ADR-2026-10-30-1032, ADR-2026-11-09-2257).
+([rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#report-format),
+ADR-2026-11-09-2257).
 
 The spec's check walks nested blocks once. `Func.problems` calls
 `Func.allBlocks` and passes the list to `Func.problemsIn`. `Func.problemsIn`

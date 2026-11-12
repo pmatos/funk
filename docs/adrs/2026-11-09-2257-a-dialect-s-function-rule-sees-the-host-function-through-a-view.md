@@ -42,7 +42,8 @@ This refines the use-once hook of ADR-2026-10-29-2016.
 A dialect states its rules plainly, once, and gets the check, and so
 `fir-ref validate`. A function rule written over a view holds in any sum of
 dialects (ADR-2026-11-09-2306), where a `Func` of the sum is a function of
-neither side. Tools compare verdicts, never words (ADR-2026-10-30-1032).
+neither side. Tools compare verdicts, never words
+([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format)).
 
 ## Rejected alternatives
 

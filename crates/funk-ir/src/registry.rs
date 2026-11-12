@@ -12,7 +12,7 @@
 //! [`OpSpec::callee`] is `callee?` (`DialectCall`).
 //!
 //! A word belongs to the dialect named before its first `.`, and a bare word
-//! to the core (ADR-2026-11-09-1543, ADR-2026-11-10-0042). Registration
+//! to the core (ADR-2026-11-09-1543, ADR-2026-10-30-1146). Registration
 //! checks that each op of a dialect is written under the dialect's name, so
 //! the map of op names routes each op to its dialect. A type goes to the
 //! dialect that its head word names, and only that dialect's [`TypeSpec`]s

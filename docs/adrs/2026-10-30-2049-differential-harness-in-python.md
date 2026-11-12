@@ -20,7 +20,8 @@ test tool that judges the toolchain, not part of it.
 Facts:
 
 - Every tool reports in JSON: `funk verify --json` and `fir-ref validate`
-  (ADR-2026-10-30-1032, ADR-2026-10-30-1741), `fir-ref run`
+  ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format),
+  ADR-2026-10-30-1741), `fir-ref run`
   (ADR-2026-10-30-1856), and a built executable (ADR-2026-10-30-1233).
 - The Rust workspace has no third-party crates, and only a JSON writer
   (ADR-2026-10-30-1030). Python's standard library reads JSON, and TOML

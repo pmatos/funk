@@ -50,7 +50,7 @@ pub(super) struct BodyPos {
 
 impl Drop for SBody {
     /// Items nest to any depth, so they are dropped one at a time
-    /// (ADR-2026-10-30-1333).
+    /// (`docs/decisions/rust-ir-and-tools.md#nesting`).
     fn drop(&mut self) {
         if let SBody::Items(_, items) = self {
             drop_all(std::mem::take(items), |item, rest| {

@@ -1,5 +1,5 @@
 //! `Debug` for trees of any depth, in the text that `#[derive(Debug)]`
-//! writes (ADR-2026-10-30-1333).
+//! writes (`docs/decisions/rust-ir-and-tools.md#nesting`).
 //!
 //! A derived `Debug` recurses once per level, and its `{:#?}` form indents
 //! a nested value by wrapping the formatter. [`DebugTree`] writes the same

@@ -33,7 +33,8 @@ of its own will come later.
 - **Outputs.** `funk build -o OUTPUT FILE` writes the object file
   `OUTPUT.o` and the executable `OUTPUT`. The assembly files and the
   entry's object go to a temporary directory, which funk removes;
-  ADR-2026-10-30-1326 says how the outputs are moved into place.
+  [rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#funk-build) says how the outputs are
+  moved into place.
 - **A tool that prints is a tool that failed.** If `as` or `ld` cannot run,
   exits with an error, or prints anything, such as a warning, the build
   fails with the tool's words (a `tool-error`).

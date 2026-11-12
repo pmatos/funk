@@ -42,7 +42,7 @@ symbol table of its own (ADR-2026-11-10-1510).
 - **No stack per call.** The spec finds the functions a call reaches by a
   walk that keeps its work in lists. Rust's `Summaries` takes one pass over
   the call graph's strongly connected components, with its path on the heap
-  (ADR-2026-10-30-1333). A summary is a set, so Rust keeps its memories
+  ([rust-ir-and-tools.md](../decisions/rust-ir-and-tools.md#nesting)). A summary is a set, so Rust keeps its memories
   sorted. `tests/dialects/effect-summaries.cases` checks that Rust's
   summaries equal Lean's.
 

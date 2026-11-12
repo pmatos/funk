@@ -50,7 +50,8 @@ set has 25 ops, and the coverage matrix 783 cells, each with a test.
 `.github/workflows/ci.yml` runs `pre-commit run --all-files` at line
 109, and CI run 42014416532 passed every hook at `28b6f37`. #117 added
 four hooks in PR #118: `verus-proof`, `verus-report-test`, `unsafe-code`
-and `unsafe-code-test` (ADR-2026-11-03-0808, ADR-2026-11-03-0809). S7's
+and `unsafe-code-test` (ADR-2026-11-03-0808; the Verus pin is now on
+[rust-ir-and-tools.md](decisions/rust-ir-and-tools.md#unsafe-code)). S7's
 ADR is now refined by ADR-2026-10-29-2030, and H8's ADR,
 ADR-2026-10-29-2013, now also records the human's choice 16, the spelling
 of a source range.

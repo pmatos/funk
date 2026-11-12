@@ -12,7 +12,8 @@
 //! line and prints its results (ADR-2026-10-30-1233), on a stack that
 //! covers every call it makes (ADR-2026-11-02-1132).
 //! [`build`] assembles both with `as` and links them with `ld` into an
-//! object file and an executable (ADR-2026-10-30-1326), with the host's C
+//! object file and an executable
+//! (`docs/decisions/rust-ir-and-tools-funk.md#funk-build`), with the host's C
 //! library only when the module's object file needs it
 //! (ADR-2026-11-10-1303).
 //!

@@ -1,8 +1,9 @@
 //! `funk fmt --check` needs memory linear in its input, not in the
 //! canonical text (#51): the canonical text of nested regions grows with
-//! the square of their depth (ADR-2026-10-30-1333), so a small file that is
-//! not canonical can have a canonical text far larger than any memory
-//! budget, and it still gets its verdict (ADR-2026-10-30-1032).
+//! the square of their depth (`docs/decisions/rust-ir-and-tools.md#nesting`),
+//! so a small file that is not canonical can have a canonical text far
+//! larger than any memory budget, and it still gets its verdict
+//! (`docs/decisions/rust-ir-and-tools-funk.md#funk-fmt`).
 
 #![cfg(unix)]
 

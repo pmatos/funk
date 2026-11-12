@@ -10,7 +10,8 @@
 //! fir has no limit on how deeply attributes, regions and items nest
 //! (ADR-2026-10-30-1549), so nothing here recurses once per level: every
 //! walk keeps its path on the heap, and any text or module parses, prints,
-//! verifies, compares and drops on a small stack (ADR-2026-10-30-1333).
+//! verifies, compares and drops on a small stack
+//! (`docs/decisions/rust-ir-and-tools.md#nesting`).
 //!
 //! ```
 //! use funk_ir::{Registry, parse, print, verify};

@@ -1,4 +1,5 @@
-//! Modules nest to any depth (ADR-2026-11-10-1510, ADR-2026-10-30-1333): a
+//! Modules nest to any depth (ADR-2026-11-10-1510,
+//! `docs/decisions/rust-ir-and-tools.md#nesting`): a
 //! [`NestedModule`] holds items, which may be modules in turn.
 //!
 //! `NestedModule` is where the nesting of items turns, so it writes by

@@ -5,10 +5,11 @@
 //! and types are written as generic terms, so a new dialect needs no new
 //! syntax and no change to these types (G0, ADR-2026-10-29-2016).
 //!
-//! Attributes nest to any depth (ADR-2026-10-30-1333), so `Attr` writes by
-//! hand, without recursion, the traits that `#[derive]` would write
-//! recursively: `Clone`, `PartialEq`, `Hash`, `Debug` and `Drop`. A type
-//! holds attributes, and derives its traits from theirs.
+//! Attributes nest to any depth
+//! (`docs/decisions/rust-ir-and-tools.md#nesting`), so `Attr` writes by hand,
+//! without recursion, the traits that `#[derive]` would write recursively:
+//! `Clone`, `PartialEq`, `Hash`, `Debug` and `Drop`. A type holds attributes,
+//! and derives its traits from theirs.
 
 use std::fmt;
 use std::hash::{Hash, Hasher};
