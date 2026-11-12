@@ -51,8 +51,5 @@ deliberately disguised change.
 
 - **`deny` in place of `forbid` in the workspace.** Any module could then
   allow unsafe code in one line, and only review would catch it.
-- **vstd's `PAtomicI32`**, whose permission tokens give its value. Its
-  permissions would need a ghost invariant of the static; a ghost token that
-  trusts one fact is smaller.
 - **Verus's `#[verus_spec]` attributes** in place of `verus!`: its loop
   invariants need the unstable `proc_macro_hygiene` feature.
