@@ -13,6 +13,7 @@ use super::attr::{Attr, Type};
 use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
 use super::nested::NestedModule;
+use super::region::Part;
 
 /// A definition of a value: its name, without `%`, and its type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -141,6 +142,20 @@ impl Func {
             params: self.params.iter().map(|d| d.ty.clone()).collect(),
             results: self.results.clone(),
         }
+    }
+
+    /// Every type that the function states (`Func.types`): its results,
+    /// its parameters, then the arguments and op results of each block, at
+    /// any depth.
+    pub fn types(&self) -> impl Iterator<Item = &Type> {
+        let defs = self.body.parts().flat_map(|part| match part {
+            Part::Block(b) => Some(b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
+            _ => None,
+        });
+        self.results
+            .iter()
+            .chain(self.params.iter().map(|p| &p.ty))
+            .chain(defs.flatten().map(|d| &d.ty))
     }
 }
 

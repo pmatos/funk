@@ -19,7 +19,7 @@ use std::collections::HashSet;
 
 use super::Diagnostic;
 use crate::ir::layout::memory;
-use crate::ir::{ByteOrder, Func, MemLayout, Part, Table, Type};
+use crate::ir::{ByteOrder, MemLayout, Table, Type};
 use crate::registry::Registry;
 
 /// The rules of the layout's entries (`DataLayout.problems`): each entry's
@@ -75,7 +75,7 @@ pub(super) fn check_memories(
 ) {
     let missing = |ty: &Type| reg.type_memory(ty).filter(|&n| memory(layout, n).is_none());
     for f in t.funcs() {
-        if let Some(n) = func_types(f).find_map(missing) {
+        if let Some(n) = f.types().find_map(missing) {
             out.push(problem(&f.name, n));
         }
     }
@@ -92,18 +92,4 @@ fn problem(sym: &str, n: u32) -> Diagnostic {
         None,
         format!("a type names memory {n}, which the data layout does not declare"),
     )
-}
-
-/// The types that a function states, in the order of `Func.types`: its
-/// results, its parameters, then the arguments and op results of each
-/// block, at any depth.
-fn func_types(f: &Func) -> impl Iterator<Item = &Type> {
-    let defs = f.body.parts().flat_map(|part| match part {
-        Part::Block(b) => Some(b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
-        _ => None,
-    });
-    f.results
-        .iter()
-        .chain(f.params.iter().map(|p| &p.ty))
-        .chain(defs.flatten().map(|d| &d.ty))
 }

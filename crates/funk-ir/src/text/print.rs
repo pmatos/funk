@@ -22,6 +22,12 @@ use crate::ir::{
     Succ, Type,
 };
 
+impl Display for MemLayout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_type())
+    }
+}
+
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Whether the next attribute is the first of its list.
@@ -260,14 +266,7 @@ fn write_layout(out: &mut impl Write, layout: &[MemLayout]) -> fmt::Result {
     if layout.is_empty() {
         return Ok(());
     }
-    out.write_str("layout ")?;
-    for (i, e) in layout.iter().enumerate() {
-        if i > 0 {
-            out.write_str(", ")?;
-        }
-        write!(out, "{}", e.to_type())?;
-    }
-    out.write_str("\n\n")
+    writeln!(out, "layout {}\n", Commas(layout))
 }
 
 /// Items at indentation `n`, each followed by an empty line. A nested

@@ -1,7 +1,8 @@
 //! The verifier: every rule of `Module.Valid` (`lean/Fir/Validation/`), with
 //! each dialect's own rules through the registry and the rules of the data
-//! layout, and the rule of the module's dialect sets, `Module.InDialectSet`, for each symbol table of
-//! the module: its own and that of each nested module, at any depth.
+//! layout, and the rule of the module's dialect sets, `Module.InDialectSet`,
+//! for each symbol table of the module: its own and that of each nested
+//! module, at any depth.
 //!
 //! A module that parsed can still be invalid, and the IR can hold what no
 //! text can, such as an ill-typed op that a pass made, so the verifier checks
