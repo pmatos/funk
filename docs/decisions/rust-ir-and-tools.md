@@ -138,7 +138,7 @@ generator and unit tests. Code that builds, lowers or runs one dialect's
 programs may name its ops. That covers the dialect's files, the generator, the
 x86-64 backend, `funk`'s command line and the tests. `crates/funk-ir/tests/g0.rs`
 keeps this line in `rust-test`. A word that names a core op counts as a core
-word in generic code, whatever else it means (ADR-2026-11-03-1617).
+word in generic code, whatever else it means (ADR-2026-11-03-0600).
 
 The core dialect is `dialects/core/`. Its types are in `types.rs`, and each op
 family has a file of its own, registered in `dialects/core/mod.rs`. A new
@@ -226,7 +226,7 @@ regions grows with the square of their depth, so `funk fmt` streams it
 ### Constants near a width's limit
 
 A core `const` must fit its type, and a width goes up to 16,777,215 bits
-(ADR-2026-11-03-1000). `funk-ir` holds a constant as its decimal spelling.
+(ADR-2026-10-29-2007). `funk-ir` holds a constant as its decimal spelling.
 `Int::fits_signed` decides most digit counts from bounds on log2(10). When the
 count does not decide, it computes `2^(w-1)` in decimal and compares it with the
 magnitude, digit count first, then digit by digit: below fits, equal fits only
@@ -256,8 +256,8 @@ The rule stays: any unsafe Rust needs a Verus proof with a listed trusted base
 unsafe rust code at all we need to use verus to prove it's fine". The same day
 the human ruled the honest-mistake guard: the checks catch careless or
 well-meaning changes, and review of the diff is the defence against a
-deliberately disguised one. Lowering `forbid` needs a new ADR and a human
-ruling. A new verified module, or a change to a trusted base or to the
+deliberately disguised one. Lowering `forbid` needs a human ruling, and its PR
+edits ADR-2026-11-03-0808 in place. A new verified module, or a change to a trusted base or to the
 specification it is proved against, needs a human ruling, and its PR edits
 ADR-2026-11-03-0808 in place with every new digest, so the reviewer sees each
 one change. Rejected: `deny` in place of `forbid`, since any module could then

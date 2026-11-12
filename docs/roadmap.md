@@ -99,7 +99,7 @@ compares, `select`, width changes, `freeze`, branches with block arguments,
 calls (including recursion) and return. No memory: `ptr` is reserved as a type
 but has no ops. The full op set is in the epic. A function's observable
 behaviour in M0 is its returned values, UB, or fuel exhaustion. A function may
-return any number of values, none included (ADR-2026-10-30-0816). That is
+return any number of values, none included (ADR-2026-10-29-2008). That is
 narrower than S4's full definition, which also counts calls to external
 symbols and reachable memory, because every M0 callee is inside the module.
 The `i128` division helper is the one exception, and it is tested on its own.

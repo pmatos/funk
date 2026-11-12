@@ -21,7 +21,7 @@ far. It starts with the function's parameters bound to the arguments, and
 runs the entry block op by op:
 
 * A terminator says where control goes. On `ret` the run returns the
-  terminator's operands, any number of them (ADR-2026-10-30-0816). On a
+  terminator's operands, any number of them (ADR-2026-10-29-2008). On a
   jump to a successor, it binds the arguments of the block that the
   successor names to the values that the successor passes
   (ADR-2026-10-29-2010), and runs that block.
@@ -47,7 +47,7 @@ runs the entry block op by op:
 Every op takes one step of fuel, the terminator and the call included. A
 run with no fuel left before an op runs out of fuel. A callee runs on the
 steps that its caller has left, and gives back the steps it leaves, so the
-caller and all its callees share one budget (ADR-2026-11-02-0836). A run
+caller and all its callees share one budget (ADR-2026-10-29-2009). A run
 gives back at most the steps it was given, so every run ends, however deep
 its calls go: a run that recurses without end runs out of fuel.
 

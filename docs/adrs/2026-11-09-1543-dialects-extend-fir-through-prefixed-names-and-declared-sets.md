@@ -1,6 +1,6 @@
 # Dialects extend fir through prefixed names, registered kinds of item and a dialect set that each module declares
 
-Status: accepted; refined by ADR-2026-11-10-1510
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
@@ -15,7 +15,8 @@ Tier: direction; area: semantics
 - **Kinds of item.** A dialect registers kinds of item, each a word of its
   own with its own rule, written by the one item production with an empty
   body, so a new kind needs no parser change. The core's `func` and `module`
-  are terms of their own, and a `module` item nests a symbol table.
+  are terms of their own, and a `module` item nests a symbol table, written
+  as ADR-2026-11-10-1510 says.
 - **A dialect set per module.** Each module declares the dialects it uses,
   and the verifier rejects any op, type, attribute or kind of item from a
   dialect outside the set. A nested module declares its own set, which is how

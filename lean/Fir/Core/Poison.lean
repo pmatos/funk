@@ -44,7 +44,7 @@ them together: the core dialect is lawful. Tests check the rules
 of the exceptions. `call` has no op-level obligation, as below.
 
 `call` gets its meaning from the call effect, which the interpreter runs
-with the fuel budget that the caller has left (ADR-2026-11-02-0836): the
+with the fuel budget that the caller has left (ADR-2026-10-29-2009): the
 callee of `call @g` is `@g`. The set monad has no module and no such
 effect, so `call` has no rule there, and no op-level obligation: the
 obligations ask totality and monotonicity only of terminators and of ops

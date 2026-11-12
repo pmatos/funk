@@ -20,7 +20,7 @@ valid module holds no other instance:
   general refinement theorems follow the target's run into its callees,
   and ask monotonicity only of the ops that the run can reach: the ops of
   the function that runs and of the source module's functions
-  (ADR-2026-11-05-1715);
+  (`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`);
 * the class gives the totality that progress with calls asks of every
   terminator and every op with no callee of the module. A function of a
   module whose functions are all valid and run within the module has an

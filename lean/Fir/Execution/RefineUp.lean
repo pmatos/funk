@@ -14,7 +14,7 @@ recursion are included.
 Monotonicity is asked only of the ops that the run can reach, not of
 every op instance of the dialect. So a dialect whose ops are monotone
 only at valid op instances meets it for every function of a valid module
-(ADR-2026-11-05-1715), as the section on what the lawful class gives
+(`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`), as the section on what the lawful class gives
 proves.
 
 The proof is by strong induction on the target's budget, for every

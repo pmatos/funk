@@ -9,7 +9,8 @@ monotone (the section on poison obligations): on operands that refine
 others, each way it may end is allowed by a way it may end on those others.
 An op that touches memory has no semantics in the set monad, so this
 obligation speaks of the op's semantics with memory, as the effect
-obligations and totality do (ADR-2026-11-11-0801;
+obligations and totality do
+(`docs/decisions/semantics-interpreter.md#memory-and-progress-with-memory`;
 `docs/decisions/semantics-effects.md#soundness`).
 Its operands may refine others, and so may the memories it starts from
 (the section on refining memories):

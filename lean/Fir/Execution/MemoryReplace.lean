@@ -29,11 +29,13 @@ the hypothesis.
 The black box needs its bound: on each argument vector and from each
 memories, the new function diverges, or from some budget on never runs out
 of fuel. For runs in the set monad, finitely many argument vectors give one
-budget for all (ADR-2026-11-02-1426). The memories a call starts from are
+budget for all
+(`docs/decisions/semantics-refinement.md#congruence-in-the-callee`). The memories a call starts from are
 infinitely many, so no such argument gives a bound here, and the theorem
 asks for it: one budget past which no run of the new function from any
 memories runs out of fuel unless it diverges. Removing this hypothesis is
-[#214](https://github.com/pmatos/funk/issues/214) (ADR-2026-11-11-1002).
+[#214](https://github.com/pmatos/funk/issues/214)
+(`docs/decisions/semantics-refinement.md#refinement-with-memory`).
 
 For a dialect lawful in its monotonicity, every function of a valid module
 refines itself on refined arguments and memories by the class alone, at

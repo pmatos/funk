@@ -11,13 +11,13 @@ always a location reference.
 
 A call is not computed by a rule of its own. Its meaning is the run of its
 callee, which the interpreter runs as the call effect of the section on
-effects (ADR-2026-11-02-0836). The core dialect says only which function
+effects (ADR-2026-10-29-2009). The core dialect says only which function
 each op calls: `call @g` calls `@g`, and no other core op calls one. A
 call then runs so:
 
 * _Arguments and results._ The call's operands are the callee's
   arguments, in order, and the values that the callee returns are the
-  call's results, any number of each, none included (ADR-2026-10-30-0816).
+  call's results, any number of each, none included (ADR-2026-10-29-2008).
   Validation's rule for `call @g`, in the core rules, asks that `@g` is a
   function of the module whose parameter types are the call's operand
   types and whose result types are the call's result types. So a call in

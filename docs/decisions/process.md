@@ -252,9 +252,10 @@ or on the area page instead:
 
 An ADR is edited in place when its decision changes, since git keeps the
 history. There are no refining ADRs and no `superseded` status. Rejected: a new
-ADR for each change, which made same-day write-then-supersede pairs. Older ADRs
-keep their `refined by` and `extended by` links until #307 folds each chain
-into one ADR.
+ADR for each change, which made same-day write-then-supersede pairs. #307
+folded every chain of `refined by` and `extended by` links into one ADR, so a
+status is `accepted` alone, and an ADR that builds on another cites it in its
+text.
 
 CI warns, and never fails, when a pull request adds more than two ADRs. The
 step `Warn when a pull request adds more than two ADRs` of the `static` job

@@ -3,7 +3,7 @@ import FirTest.OverCore
 
 /-!
 Tests of refinement for a dialect whose ops are monotone only at valid op
-instances (#99, ADR-2026-11-05-1715).
+instances (#99, `docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`).
 
 The probe dialect has one op over the core dialect's integers, `id w` at
 `iN` with `N = w`, and no text format. It gives its operand back at

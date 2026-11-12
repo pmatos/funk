@@ -1,6 +1,6 @@
 # funk's Rust code is one Cargo workspace on a pinned stable toolchain, checked by pre-commit hooks
 
-Status: accepted; refined by ADR-2026-11-05-1408
+Status: accepted
 Tier: direction; area: rust-ir-and-tools
 
 ## Decision

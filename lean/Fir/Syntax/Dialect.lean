@@ -5,7 +5,7 @@ dialect is one dialect, and a dialect for a GPU or a quantum processor would
 be another.
 
 The definitions below keep the shape of those of LeanMLIR, a formalization
-of MLIR in Lean (ADR-2026-10-29-2030), so that the semantics of an op ports
+of MLIR in Lean (ADR-2026-10-29-2009), so that the semantics of an op ports
 between the two mechanically. The _terms_ are the syntax trees of programs:
 modules, functions, blocks and ops. They are fir's own, and they are
 extrinsically typed: a term does not carry its type; validation assigns and

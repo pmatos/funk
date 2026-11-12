@@ -29,7 +29,7 @@ rule. The human ruled this on 2026-11-09, on #210.
 
 M1 brings aggregates in as far as calling conventions and the frontends need
 them. fir functions already return any number of values
-(ADR-2026-10-30-0816), which covers tuples and multiple returns, and
+(ADR-2026-10-29-2008), which covers tuples and multiple returns, and
 frontends copy structs with memory intrinsics (ADR-2026-11-09-1551). System V
 passes a small struct in registers, and classifying it needs each field's
 offset and scalar kind, not only its size.

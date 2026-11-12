@@ -1,6 +1,6 @@
 # A region names its kind by a word after its opening brace
 
-Status: accepted; refined by ADR-2026-11-10-1941
+Status: accepted
 Tier: direction; area: text-format
 
 ## Decision

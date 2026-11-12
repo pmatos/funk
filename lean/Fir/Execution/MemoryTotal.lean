@@ -7,7 +7,7 @@ Progress asks each op that runs by its own rule, a terminator or an op with
 no callee, to have a way to go on (the section on progress with calls). An
 op that touches memory has no semantics in the set monad, so this
 obligation speaks of the op's semantics with memory, as the effect
-obligations do (ADR-2026-11-11-0801;
+obligations do (`docs/decisions/semantics-interpreter.md#memory-and-progress-with-memory`;
 `docs/decisions/semantics-effects.md#soundness`):
 
 * _Total with memory_: wherever a run names the dialect's memories, from

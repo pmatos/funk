@@ -44,7 +44,7 @@ every function that is valid in some context has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 
 The general refinement theorems ask monotonicity only of the ops that a
-run can reach (ADR-2026-11-05-1715), and those are valid op instances in
+run can reach (`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`), and those are valid op instances in
 a valid module, by the previous theorem.
 :::
 

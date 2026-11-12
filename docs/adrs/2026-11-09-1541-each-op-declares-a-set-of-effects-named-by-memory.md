@@ -1,6 +1,6 @@
 # Each op declares a set of effects, named by memory, and the spec proves the declaration sound
 
-Status: accepted; refined by ADR-2026-11-11-0801
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision

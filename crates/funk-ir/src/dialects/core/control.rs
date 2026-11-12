@@ -13,7 +13,7 @@
 //! define, still decodes (ADR-2026-10-29-2014).
 //!
 //! `ret` returns its operands: any number of values of core types, none
-//! included (ADR-2026-10-30-0816). It returns the function's result types,
+//! included (ADR-2026-10-29-2008). It returns the function's result types,
 //! which validation checks.
 //!
 //! `unreachable` has no operands, results, attributes or successors, and

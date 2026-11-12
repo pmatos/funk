@@ -160,9 +160,9 @@ through the hook's `exclude` pattern.
 
 `unsafe_code = "forbid"` applies to the whole workspace, and the workspace has
 no unsafe code. Any unsafe Rust needs a Verus proof, and lowering `forbid`
-needs a new ADR and a human ruling (ADR-2026-11-03-0808). The first unsafe code
-restores the Verus tooling from the tag `verus-tooling-m0` instead of
-rebuilding it (ADR-2026-11-09-1603).
+needs a human ruling and an edit of ADR-2026-11-03-0808 in place. The first
+unsafe code restores the Verus tooling from the tag `verus-tooling-m0` instead
+of rebuilding it (ADR-2026-11-09-1603).
 
 ## Working safely
 

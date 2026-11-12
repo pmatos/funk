@@ -3,7 +3,7 @@ import Fir.Text.Read
 /-!
 The location table has a fixed syntax, the same for every dialect, so the
 grammar step reads it in full. Its numbers are checked against their limits
-(ADR-2026-11-03-1000) where they stand: a line or a column of 2³² or more is
+(ADR-2026-10-29-2007) where they stand: a line or a column of 2³² or more is
 an error at the number. Whether the table is well formed, with its
 references in order and each location built from earlier ones, is a rule of
 validation.

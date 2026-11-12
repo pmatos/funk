@@ -250,7 +250,7 @@ unreachable \mathsf{unreachable}
   poison is immediate UB.
 * $`\mathsf{ret}~t^*` returns its operands, of the types $`t^*`, from the
   function: any number of them, each a value or poison
-  (ADR-2026-10-30-0816).
+  (ADR-2026-10-29-2008).
 * $`\mathsf{unreachable}` has no operands and no successors, and reaching
   it is immediate UB (ADR-2026-11-09-1548). A producer puts it where
   control never goes, such as after a call that never returns.

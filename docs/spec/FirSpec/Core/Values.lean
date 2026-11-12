@@ -59,7 +59,7 @@ do: same type, and a value that refines.
 :::readable Fir.Core.Obs (pin := Fir.List.IsRefinedBy) (pin := Fir.instHRefinementDVal) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "16613570527610667338")
 *Definition: the observation of a core function.* What an observer sees of
 a return of a core function is the list of typed values it returns, any
-number of them (ADR-2026-10-30-0816). A returned list is refined by a list
+number of them (ADR-2026-10-29-2008). A returned list is refined by a list
 of the same length, position by position, as
 {ref "The-fir-specification--Execution--Values-and-refinement"}[lists] are,
 and each typed value by one of the same type whose value refines it:

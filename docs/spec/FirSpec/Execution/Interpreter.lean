@@ -180,7 +180,7 @@ with memory, it frees the callee's stack allocations when the callee
 returns (ADR-2026-11-09-1548); with no memory, it changes nothing. Each op takes one
 step, the terminator and the call included, and a callee runs on the steps
 its caller has left, so a caller and all its callees share one budget
-(ADR-2026-11-02-0836). A run gives back at most the steps it was given, as
+(ADR-2026-10-29-2009). A run gives back at most the steps it was given, as
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function]
 shows, so $`\min(k, n)` is $`k`; the minimum makes it plain that the
 budget shrinks at every step, so that every run ends, however deep its

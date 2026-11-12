@@ -31,7 +31,7 @@ returning non-zero (ADR-2026-10-29-2017).
 Every op takes one step of fuel, a call included. A callee runs with the
 fuel its caller has left, and the caller goes on with what the callee gives
 back. A callee that runs out of fuel ends the run that way. Its UB and stuck
-paths are its caller's (ADR-2026-11-02-0836).
+paths are its caller's (ADR-2026-10-29-2009).
 
 A call has no op-level rule. Its meaning is its callee's run. The interpreter
 runs the callee of every op that has one before it looks at `denote`.
@@ -64,7 +64,7 @@ A new op family adds its rule to `Core.Op.denote?` or `Core.Op.exit?`, and
 `Core.mapsDenote` covers it, usually by `rfl`. A new effect needs its node in
 the tree, its image in the set monad, and its case in the morphism's proofs.
 Calls need none of these, since the interpreter's call path uses only `pure`,
-`bind` and `liftExcept` (ADR-2026-11-02-0836). A change to the interpreter
+`bind` and `liftExcept` (ADR-2026-10-29-2009). A change to the interpreter
 that uses another monad operation extends `Func.runOps_map`'s proof.
 
 Rejected: a list monad that carries every path. Scripted mode would need a

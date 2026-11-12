@@ -8,7 +8,7 @@ ends. This section gives `ret` and `unreachable` their rules, and the next
 gives `br` and `cond_br` theirs.
 
 `ret` sends control back to the caller, and the interpreter returns its
-operands as they are, any number of them (ADR-2026-10-30-0816). Poison is
+operands as they are, any number of them (ADR-2026-10-29-2008). Poison is
 returned as poison: `ret` is one of the exceptions to poison propagation
 that pass values on (ADR-2026-10-29-2006). Validation makes the returned
 values the function's result types.

@@ -178,7 +178,7 @@ def lexString (cs : List Char) (p start : TextPos) : Except ParseError (String �
 A number has no leading zeros, and no token that holds a name or a number
 runs into a name character: maximal munch reads a name character after it as
 part of it, so `@1x`, `007` and `1.5x` are errors at the number. A location
-reference is below 2³² (ADR-2026-11-03-1000); an integer has no limit here, since the
+reference is below 2³² (ADR-2026-10-29-2007); an integer has no limit here, since the
 dialect that reads it bounds it. A whole number followed by `.` and a
 digit, or `0` followed by `x`, is the start of a float literal, read whole
 as it is written; the core dialect bounds it (ADR-2026-11-11-1438).

@@ -221,7 +221,7 @@ fn the_generic_modules_write_no_word_of_the_core_dialect() {
 /// `poison` names a core op and S1's deferred-UB value. It is a word of
 /// the core dialect all the same: generic code does not write it alone as
 /// a string, and may write a message or a sentence that holds it, which is
-/// not a word (ADR-2026-11-03-1617).
+/// not a word (ADR-2026-11-03-0600).
 #[test]
 fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
     let words = core_words();

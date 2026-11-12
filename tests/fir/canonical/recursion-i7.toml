@@ -5,7 +5,7 @@
 # while %n is above 1 read as unsigned, and adds with add, which wraps.
 # even and odd call each other on %n - 1 down to zero, so -1 counts down
 # through every value of the type. Each call takes one step of fuel, and
-# its callee runs on the steps that are left (ADR-2026-11-02-0836).
+# its callee runs on the steps that are left (ADR-2026-10-29-2009).
 # The backend does not lower i7, so each test is interpreter-only and
 # states the result that fir-ref must give. A run of more than 20,000
 # steps runs at a budget of 1,000 steps instead, and expects

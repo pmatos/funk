@@ -2,7 +2,7 @@
 # (#20). forever calls itself, and ping and pong call each other, before
 # they return. Each call takes one step, and its callee runs on the
 # steps that are left, so all the calls of a run share its budget
-# (ADR-2026-11-02-0836). A run that never ends runs out of fuel at every
+# (ADR-2026-10-29-2009). A run that never ends runs out of fuel at every
 # budget; running out at one budget is not divergence
 # (lean/Fir/Execution/Behaviour.lean). Each test sets fir-ref run's
 # budget, --fuel, with fuel, and is interpreter-only: it expects

@@ -5,7 +5,7 @@
 //! `call` has one attribute, its callee's symbol (H3,
 //! ADR-2026-10-29-2012), as in `%s: i32 = call @sum %ten @6`, and any number
 //! of operands and results of core types, none included
-//! (ADR-2026-10-30-0816). It decodes at any types, so a call that does not
+//! (ADR-2026-10-29-2008). It decodes at any types, so a call that does not
 //! match its callee still parses; validation rejects it. The callee may be
 //! any function of the module, the caller itself included.
 

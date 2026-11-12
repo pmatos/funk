@@ -221,7 +221,7 @@ symbol (H3, ADR-2026-10-29-2012).
 `params` are the function's parameters. They are the arguments of the
 entry block, the first block of `body`, which declares none of its own.
 `results` are the types the function returns: any number of them, none
-included (ADR-2026-10-30-0816).
+included (ADR-2026-10-29-2008).
 -/
 structure Func (d : Dialect) where
   name : Name

@@ -66,7 +66,7 @@ keeps for every dialect (`docs/decisions/fir-ref.md#an-op-without-rules`):
   (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 
 `call` takes its meaning from the call effect, which the interpreter runs
-(ADR-2026-11-02-0836). The interpreter runs the callee of every op that
+(ADR-2026-10-29-2009). The interpreter runs the callee of every op that
 has one before it looks at the op's own meaning, so `call` has no rule
 here, and its meaning in the set of the ways a run may end has no
 outcome, which no run reaches. It has no op-level obligation either: the

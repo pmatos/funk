@@ -19,7 +19,8 @@ file, [#119](https://github.com/pmatos/funk/pull/119), mends:
   interpreter-only tests, so CI never ran it as native code (item 2).
   #119 adds its differential tests.
 - No ADR recorded the human's ruling N3, which caps widths, so S2's ADR
-  read wider than the spec (item 1). #119 adds ADR-2026-11-03-1000.
+  read wider than the spec (item 1). #119 adds an ADR for N3, which #307
+  later folded into S2's, ADR-2026-10-29-2007.
 
 Line numbers are those of `ca5fd9f`; #119 changes none of the files they
 point into. Corpus counts include #119's tests. #5 stayed open after #23
@@ -35,7 +36,7 @@ refinements into S1. The coverage matrix has 783 cells, each with a test (ADR-20
 The LLVM ports write LLVM's poison constant with `poison`, not
 `shl %n, %n`
 ([testing-and-harness-corpus.md](decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)).
-`poison` is a core word for the G0 checks (ADR-2026-11-03-1617).
+`poison` is a core word for the G0 checks (ADR-2026-11-03-0600).
 
 Addendum, 2026-11-05: the close-out of #5 checked this audit again on
 `main` at `28b6f37`, after all 43 sub-issues of #5 had closed, and found
@@ -53,7 +54,8 @@ set has 25 ops, and the coverage matrix 783 cells, each with a test.
 four hooks in PR #118: `verus-proof`, `verus-report-test`, `unsafe-code`
 and `unsafe-code-test` (ADR-2026-11-03-0808; the Verus pin is now on
 [rust-ir-and-tools.md](decisions/rust-ir-and-tools.md#unsafe-code)). S7's
-ADR is now refined by ADR-2026-10-29-2030, and H8's ADR,
+ADR was then refined by fir's own Lean calculus, which #307 later folded
+into it, ADR-2026-10-29-2009, and H8's ADR,
 ADR-2026-10-29-2013, now also records the human's choice 16, the spelling
 of a source range.
 
@@ -116,8 +118,8 @@ No item is missing, and none is weaker than #23 states it.
 | --- | --- | --- |
 | E0, effect ordering | ADR-2026-10-29-2005 | accepted |
 | S1, poison and `freeze` | ADR-2026-10-29-2006 | accepted; refined then, folded into S1 by #307 |
-| S2, integers `iN` | ADR-2026-10-29-2007 | accepted; refined by ADR-2026-11-03-1000 |
-| S4, refinement | ADR-2026-10-29-2008 | accepted; refined by ADR-2026-10-30-0816 |
+| S2, integers `iN` | ADR-2026-10-29-2007 | accepted; refined then, folded into S2 by #307 |
+| S4, refinement | ADR-2026-10-29-2008 | accepted; refined then, folded into S4 by #307 |
 | S7, semantics in Lean | ADR-2026-10-29-2009 | accepted |
 | H1, block arguments | ADR-2026-10-29-2010 | accepted |
 | H2, isolated from above | ADR-2026-10-29-2011 | accepted |
@@ -125,11 +127,11 @@ No item is missing, and none is weaker than #23 states it.
 | H8, source locations | ADR-2026-10-29-2013 | accepted |
 | P3, one text format | ADR-2026-10-29-2014 | accepted |
 | P1, literate Lean spec | ADR-2026-11-05-2012, which holds P1 now | accepted |
-| G0, any hardware | ADR-2026-10-29-2016 | accepted; refined by ADR-2026-10-30-1146 and ADR-2026-11-03-0600 |
+| G0, any hardware | ADR-2026-10-29-2016 | accepted; refined then by ADR-2026-10-30-1146 and ADR-2026-11-03-0600 |
 
 The decisions that the epic's work list asks for were ADRs too when the
 audit was made: `freeze` in the oracle (ADR-2026-10-29-2017), fir's own
-Lean calculus after the spike of #24 (ADR-2026-10-29-2030), assembly
+Lean calculus after the spike of #24 (now in ADR-2026-10-29-2009), assembly
 through GNU `as` and `ld`
 ([x86-64-backend.md](decisions/x86-64-backend.md#assembly-and-linking)) and
 spilling every value
@@ -143,8 +145,8 @@ the [rulings comment](https://github.com/pmatos/funk/issues/5#issuecomment-65069
 on #5) caps widths at 16,777,215, MLIR's limit. Lean (`maxWidth`,
 `lean/Fir/Core/Types.lean:30`) and Rust (`MAX_WIDTH`,
 `crates/funk-ir/src/dialects/core/types.rs:13`) follow N3, but no ADR
-held it until #119 added ADR-2026-11-03-1000, which records N3 and
-refines S2. It changes no semantics: the spec already said so.
+held it until #119 added an ADR that records N3 and refines S2, which
+#307 later folded into ADR-2026-10-29-2007. It changes no semantics: the spec already said so.
 
 The spec is literate Lean rendered with Verso. `docs/spec/FirSpec.lean`
 renders 115 modules of `lean/` in the Wasm spec's four chapters (abstract

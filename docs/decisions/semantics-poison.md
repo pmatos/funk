@@ -135,7 +135,8 @@ that meets the guard: every core op but `call`. Rejected: a stand-in rule for
 `call`, immediate UB in the set monad, so that it would meet the op-level
 obligations. It claimed a meaning that a call does not have, and as a source it
 was refined by every computation, so a statement proved op by op would hold for
-every rewrite of a call. semantics.md says how `call`'s `denote` reads now.
+every rewrite of a call. semantics-interpreter.md says how `call`'s `denote`
+reads now.
 
 ### Valid op instances
 
@@ -160,7 +161,8 @@ table and the function's result types, that an op instance alone does not have;
 validation checks its rules in each function. The refinement engine asks
 monotonicity only of the ops a run can reach, so the class gives refinement for
 valid modules, and the core dialect meets it at every width, `i0` included, with
-`Core.Op.monotone_all` (ADR-2026-11-05-1715).
+`Core.Op.monotone_all`
+([semantics-refinement.md](semantics-refinement.md#the-ops-a-run-reaches)).
 
 ## The poison op
 

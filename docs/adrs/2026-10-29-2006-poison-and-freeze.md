@@ -1,6 +1,6 @@
 # Deferred UB is one poison value with `freeze`, and fir has no `undef`
 
-Status: accepted; refined by ADR-2026-11-05-1715
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
