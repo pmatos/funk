@@ -13,9 +13,9 @@ Tier: direction; area: text-format
   either field (`2 <= e <= 15`, `1 <= m <= 112`), is written as the shortest
   decimal that reads back to its bits: `const 1.0`, `0.1`, `-0.0`, `1.5e-7`.
   Of two shortest, the nearer wins, then the one with an even last digit.
-- **Hexadecimal bits.** Every other value, NaNs and infinities among them, is
-  `0x` and its bits in exactly `ceil((1 + e + m) / 4)` digits, as
-  `0x7fc00000`.
+- **Hexadecimal bits.** Every other value, NaNs and infinities among them,
+  and every value of a wider format, zeros included, is `0x` and its bits in
+  exactly `ceil((1 + e + m) / 4)` digits, as `0x7fc00000`.
 - **Reading.** A decimal reads as its exact value rounded to the format, to
   nearest with ties to even, by Lean's float model.
 - **One spelling.** A literal decodes only when it is the spelling of the bits
@@ -33,9 +33,10 @@ reader's bounds.
 A value of `float<e,m>` is its raw bit pattern, each NaN payload and sign
 included (ADR-2026-11-11-0950). Each value keeps exactly one printed spelling,
 so `print(parse(t)) == t` holds (ADR-2026-10-29-2014), and constants read as
-numbers. The human ruled on 2026-11-11, on #229: "Decimal float, hex
-fallback", as LLVM writes them. The shortest decimal, the tie rules and the
-bound on formats are the agent's choices that implement the ruling.
+numbers. The human ruled on 2026-11-11: "Decimal float, hex fallback", as
+LLVM writes them; the orchestrator recorded the ruling on #229. The shortest
+decimal, the tie rules and the bound on formats are the agent's choices that
+implement the ruling.
 
 ## Rejected alternatives
 

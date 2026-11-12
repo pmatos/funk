@@ -62,10 +62,11 @@ kind's word (ADR-2026-11-10-2224) join the rule too.
 `Module.problems`, then those of `Module.setProblems`. A function that writes
 a word outside the set gets one problem, naming the first such dialect in the
 order of `Func.wordDialects`: the types the function states, then each op's
-name and attributes. `tests/dialects/dialect-set.cases` holds must-accept and
-must-reject cases that both validators read. A dialect's dependencies
-(ADR-2026-11-10-0042) do not constrain the set: a module that names `toy`
-need not name what `toy` depends on beyond the core (ADR-2026-11-10-1306).
+name, attributes and region kinds. `tests/dialects/dialect-set.cases` holds must-accept and
+must-reject cases that both validators read (ADR-2026-11-10-1306). A
+dialect's dependencies (ADR-2026-11-10-0042) do not yet constrain the set: a
+module that names `toy` need not name what `toy` depends on beyond the core.
+ADR-2026-11-10-0042 says that the set will use them; no check does yet.
 
 Rejected: a `module` item that holds the items, with the set as its
 attribute, since it would change every M0 text; the set in parentheses,
@@ -82,7 +83,7 @@ optional dialect set, `dialects gpu` and an empty line, then its items, each
 followed by an empty line. An empty body, `{ }`, is a module with no dialect
 and no items. The grammar is
 `body ::= '{' (('dialects' word (',' word)*)? item* | block*) '}'`. A
-`module` with a header or with blocks does not decode, and neither does a
+`module` with parameters, results, attributes or blocks does not decode, and neither does a
 `func` whose body holds a dialect set or items (ADR-2026-11-10-1510).
 
 The body is printed two spaces deeper than the `module` line, and its `}` at
@@ -151,8 +152,8 @@ grammar's applied form, such as `float(5, 2)`. `float<e,m>` is notation, not
 text. `float(e, m)` of a format with an alias does not decode, so each format
 has one spelling, and neither does a negative number, another argument list, an
 alias applied to arguments or the bare word `float` (ADR-2026-11-11-0951). The
-human ruled on 2026-11-11, on #229: "Leave it as is. No need for angle
-brackets then." Rejected: `float<e,m>` in text, which needs angle brackets in
+human ruled on 2026-11-11: "Leave it as is. No need for angle brackets then."
+The orchestrator recorded the ruling on #229. Rejected: `float<e,m>` in text, which needs angle brackets in
 both parsers and new round-trip proofs for one type family; and aliases as a
 second spelling, which breaks `print(parse(t)) == t`.
 
@@ -171,8 +172,8 @@ data layout without text.
 ## Float constants
 
 A float constant is `const` with one float literal, as LLVM writes it
-(ADR-2026-11-11-1438). The human ruled on 2026-11-11, on #229: "Decimal
-float, hex fallback". The agent that built it chose the details below.
+(ADR-2026-11-11-1438). The human ruled on 2026-11-11: "Decimal float, hex
+fallback"; the orchestrator recorded it on #229. The agent that built it chose the details below.
 
 A zero, or a finite value of a format no wider than `f128` in either field
 (`2 <= e <= 15`, `1 <= m <= 112`), is the shortest decimal that reads back to
@@ -270,7 +271,7 @@ laws of `LawfulDialectText`. #11 proves those laws for the core dialect
 (ADR-2026-10-29-2014).
 
 Round trips are tested within Rust and across Rust and Lean, including under
-fuzzing (ADR-2026-10-29-2014). Lean proves that parsing a printed well-formed
+fuzzing. Lean proves that parsing a printed well-formed
 module gives it back, and that every module that `Fir.parse` gives is well
 formed, for every dialect whose text is lawful
 ([text-format-proofs.md](text-format-proofs.md)).
@@ -294,12 +295,12 @@ Every other error, such as an undefined successor argument, is a validation
 error on a module that parsed (ADR-2026-10-29-2014).
 
 A type mismatch or an undefined operand in text is a parse error. Its tests
-are parser tests, not verifier tests (ADR-2026-10-29-2014). An op that a
+are parser tests, not verifier tests. An op that a
 builder or a pass made ill-typed is a validation error (ADR-2026-10-30-1146).
 
-Lean's and Rust's parsers must reject the same texts. Tests compare only
-whether a text is rejected, not the wording of the reason
-(ADR-2026-10-29-2014).
+Lean's and Rust's parsers must reject the same texts
+(ADR-2026-10-29-2014). Tests compare only whether a text is rejected, not the
+wording of the reason.
 
 ## Locations
 
@@ -310,7 +311,8 @@ valid value (ADR-2026-10-29-2013). The human chose this on 2026-10-29 (H8 on
 An op cannot be built without a location. The `funk-ir` builder requires one,
 and the verifier checks that every op has one. Every pass must give each op
 it creates a location (ADR-2026-10-29-2013). Rejected: an optional location,
-which a pass drops by accident with nothing to notice.
+which a pass drops by accident with nothing to notice
+(ADR-2026-10-29-2013).
 
 A location is `unknown` or one of these kinds: a source range, a name,
 `callsite(callee at caller)`, `fused(a, b)` or `derived(op)`. The spec gives

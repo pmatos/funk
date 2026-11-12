@@ -15,8 +15,8 @@ Tier: direction; area: text-format
   (ADR-2026-11-10-1306), then each item followed by an empty line. `{ }` is a
   module with no dialect and no items. The grammar is
   `body ::= '{' (('dialects' word (',' word)*)? item* | block*) '}'`. A
-  `module` with a header or with blocks, and a `func` whose body holds a
-  dialect set or items, do not decode.
+  `module` with parameters, results, attributes or blocks, and a `func`
+  whose body holds a dialect set or items, do not decode.
 - **Layout.** The body is printed two spaces deeper than the `module` line,
   and its `}` at that line's indentation. An empty line has no spaces. A
   function at indentation `n` writes its header, labels and `}` at `n` and its

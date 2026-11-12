@@ -25,8 +25,8 @@ applied to attributes, `h(a, b)`, and has no angle brackets. So both parsers
 read float types as they read any type, and only the core dialect's decoding
 of types changes. The usual formats read as in LLVM and MLIR.
 
-The human ruled on 2026-11-11, on #229: "Leave it as is. No need for angle
-brackets then."
+The human ruled on 2026-11-11: "Leave it as is. No need for angle brackets
+then." The orchestrator recorded the ruling on #229.
 
 ## Rejected alternatives
 

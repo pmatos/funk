@@ -33,7 +33,8 @@ end cannot write an empty range, and the `-` separator makes the lexer depend
 on context. The human ruled the spelling above on 2026-10-30 (choice 16 of the
 rulings on #5). An exclusive end writes an empty range as end equal to start,
 the word `to` lexes without context, and a byte column does not depend on how
-a tool counts characters.
+a tool counts characters. A short reference into one table keeps op lines
+short.
 
 ## Rejected alternatives
 
@@ -41,5 +42,3 @@ a tool counts characters.
 - **The sketch `file:line:col-line:col`**, with an inclusive end and a `-`
   separator. It cannot write an empty range, and the lexer would need context
   to read the `-`.
-- **The location written in full on each op line.** Op lines would grow long;
-  a short reference into one table keeps them short.

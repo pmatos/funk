@@ -56,5 +56,5 @@ what the readers it calls give on the tokens left to them:
 * a region's blocks come from the reader of blocks.
 
 No case looks inside a reader that it calls, as in the round trip's
-lemmas.
+lemmas (`docs/decisions/text-format-proofs.md`).
 :::
