@@ -20,10 +20,18 @@ Tier: direction; area: process
   case it checks.
 - In CI, each test suite writes its counts to the job summary and to the log.
   The `rust-speed` hook's counts can fail only in CI (ADR-2026-11-09-1645).
+- Locally, before a push, an agent runs only the smoke test:
+  `pre-commit run --all-files --hook-stage pre-push`. Every hook runs in the
+  `pre-push` stage except the slow ones, which set `stages: [pre-commit]`:
+  those that build Lean, run `cargo test` or run the harness. CI runs every
+  hook, and a pull request still merges only when its required checks are
+  green on its final head.
 
 The human asked on 2026-11-05, in #148, for one CI job per suite, each its own
-check, with each suite's counts in the job summary and the log. What each job
-holds, the counts and the caches are on
+check, with each suite's counts in the job summary and the log. On 2026-11-12,
+in #346, they ruled that locally "we should just run a smoke test to catch the
+most obvious issues and then let CI do what its meant to do." What each job
+holds, the counts, the caches and the smoke test are on
 [process-ci.md](../decisions/process-ci.md).
 
 ## Why
@@ -44,3 +52,5 @@ not the sum: the first run of this layout took 10 min 32 s, against 19 min
   lists would reach `run` through expressions.
 - **Hand the built `lean/` to `cross` as an artifact.** `cross` would wait for
   `lean`, so the run would take longer.
+- **A full `pre-commit run --all-files` before every push.** It took 20
+  minutes or more, and CI runs the same hooks again on every push.

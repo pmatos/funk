@@ -135,14 +135,24 @@ commands until it succeeds. Start agents in another worktree with
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.
-- Run `pre-commit run --all-files` before pushing. CI runs the same hooks on
-  every file, one job per suite, so a local pass predicts a CI pass
-  (ADR-2026-11-05-1408). The one exception is `rust-speed`: only CI can fail
-  a count over its margin (ADR-2026-11-09-1645).
+- Before pushing, run the smoke test,
+  `pre-commit run --all-files --hook-stage pre-push`. It runs the fast hooks
+  on every file in under a minute: formatting, lint, the file-size budget, the
+  ADR and citation checks and the Python tests. It needs `pre-commit` and
+  `rustup`, not elan, binutils or valgrind. A fixer that changes a file fails
+  the run: commit the fix and run it again.
+- The slow hooks set `stages: [pre-commit]`, so the smoke test skips them: the
+  Rust tests, `rust-speed`, the Lean suite, the spec build and the
+  differential harness. CI runs every hook on every file, one job per suite
+  (ADR-2026-11-05-1408), and a full local `pre-commit run --all-files` is not
+  needed before a push. Run one slow hook by id when it helps. A PR merges
+  only when every required check is green on its final head, and only CI can
+  fail `rust-speed` (ADR-2026-11-09-1645).
 - Every check lives in `.pre-commit-config.yaml`, which keeps local and CI one
   list. Add new linters and formatters there, not in a workflow, and give each
   new hook a step in one job of `.github/workflows/ci.yml`: the `ci-hooks`
-  hook fails until it has one.
+  hook fails until it has one. A new hook that builds Lean, runs `cargo test`
+  or runs the harness sets `stages: [pre-commit]`.
 
 ## File-size budget
 

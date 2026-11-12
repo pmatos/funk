@@ -1,9 +1,9 @@
 # Current decisions: CI and its checks
 
 This page continues [process.md](process.md). It says how CI runs funk's checks,
-how the suites report their counts, and what CI caches. It is the record: when
-this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
-(ADR-2026-11-09-1610).
+what an agent runs locally before a push, how the suites report their counts,
+and what CI caches. It is the record: when this page and an ADR disagree, the
+page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## Suites and the gate
 
@@ -77,6 +77,46 @@ logs long: they hold the output of `cargo test`, the Lean build and the harness.
 `.github/workflows/nightly.yml` runs them daily and on request, and no pull
 request runs them (ADR-2026-11-08-2116). Pull requests run fixed seeds, which
 keeps a local pass a prediction of a CI pass.
+
+## The smoke test before a push
+
+Before a push, an agent runs a smoke test, not every hook
+(ADR-2026-11-05-1408). On 2026-11-12, in #346, while a pull request waited on a
+long local `pre-commit run --all-files`, the human asked: "If CI already runs
+this, does it matter?" They then ruled: "Maybe locally we should just run a
+smoke test to catch the most obvious issues and then let CI do what its meant
+to do."
+
+The smoke test is one command:
+`pre-commit run --all-files --hook-stage pre-push`. The config sets
+`default_stages: [pre-commit, pre-push]`, so every hook joins the `pre-push`
+stage unless it sets its own `stages`. The slow hooks set
+`stages: [pre-commit]`: a hook that builds Lean, runs `cargo test` or runs the
+harness. They are `rust-test`, `rust-speed`, `fir-spec`, `fir-ref-test`,
+`fir-round-trip`, `fir-harness` and `fir-random`. A new hook follows the same
+rule. `fir-random-nightly` and `fir-fuzz` stay in the `manual` stage.
+
+So the smoke test runs every hook of the `static` job, `rust-fmt`,
+`rust-clippy`, `rust-speed-test`, `fir-harness-test` and `coverage-matrix`. It
+needs `pre-commit` and `rustup`, not elan, binutils or valgrind. Measured on
+2026-11-12 on a 24-core machine: 38 hooks in 38 s, of which `fir-harness-test`
+took 19 s, and `rust-clippy` took 3 s from a clean target directory.
+`conventional-pre-commit` is a `commit-msg` hook: it checks each commit message
+as it is written, and CI's `PR title` check is the gate.
+
+Nothing else changes. The commit hooks still run on the staged files at each
+commit, and their stage holds every hook. CI still runs every hook on every
+file, and a pull request still merges only when every required check is green
+on its final head. No check is bypassed: no `--no-verify`, no `SKIP=`. One side
+effect: before `default_stages` was set, every hook without `stages` also ran in
+the `commit-msg` stage, on the message file. Now only `conventional-pre-commit`
+does.
+
+Rejected: a full `pre-commit run --all-files` before every push. It took 20
+minutes or more, for the Rust tests, the Lean suite, the harness and the spec
+build, and CI runs them again on every push. Rejected: a script that lists the
+smoke hooks' ids. The list would live apart from `.pre-commit-config.yaml` and
+drift from it, where a hook's stage sits beside the hook.
 
 ## Counts
 
