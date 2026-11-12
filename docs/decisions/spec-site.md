@@ -150,9 +150,9 @@ The gaps that got no check:
 - A stale fingerprint forces a look, not a correct rewrite. That stays with
   review, and the PR template has a checkbox for it. No check looks for a
   change in the prose.
-- Pins stay explicit, with no transitive hashing. A block that restates a
-  definition without pinning it goes unnoticed. Writing a block still includes
-  pinning each definition its prose restates (ADR-2026-11-05-2012).
+- Since pins stay explicit, a block that restates a definition without
+  pinning it goes unnoticed. Writing a block still includes pinning each
+  definition its prose restates (ADR-2026-11-05-2012).
 - A module doc can restate a definition from another module without any pin
   covering it. So can a module that declares nothing.
 
