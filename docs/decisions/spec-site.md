@@ -265,10 +265,10 @@ The workflow restores the toolchain and `docs/spec/.lake/packages` from the
 cache that `ci.yml` saves, with the same key. It never saves a cache. The Lean
 setup steps exist in three copies: the `lean` and `cross` jobs and `pages.yml`
 (ADR-2026-11-05-1408). The `pages.yml` copy has four steps and no save
-(ADR-2026-11-05-1954). Comments say to change all three together. If the keys
-drift, the deploy still works but builds Verso every time. The first deploy
-after a toolchain bump builds Verso too, when `ci.yml` on `main` has not yet
-saved the new cache.
+([process-ci.md](process-ci.md#caches)). Comments say to change all three
+together. If the keys drift, the deploy still works but builds Verso every
+time. The first deploy after a toolchain bump builds Verso too, when `ci.yml`
+on `main` has not yet saved the new cache.
 
 Rejected: a composite action in `.github/actions/` for the shared steps.
 zizmor's `self-repository` audit asks for a form that actionlint rejects, and

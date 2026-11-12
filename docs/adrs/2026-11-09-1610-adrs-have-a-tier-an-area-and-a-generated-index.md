@@ -3,18 +3,6 @@
 Status: accepted
 Tier: direction; area: process
 
-## Context
-
-`docs/adrs/` holds 131 ADRs written in 12 days. The decisions that bind an
-agent are lost among records of how one tool does one thing. What holds is
-spread over chains of `refined by` status lines. The M0 close-out audit asked
-for tiers and an index (#170). The human ruled on 2026-11-09: tiers, a
-generated index, a rule for when not to write an ADR, and one page per area
-that says what holds today. On 2026-11-11, in
-[#307](https://github.com/pmatos/funk/issues/307), the human ruled that the
-pages are the record and that ADRs are cut down to short direction
-decisions: "This is git - if we delete a file it's never lost."
-
 ## Decision
 
 Every ADR ends its status paragraph with one line, `Tier: TIER; area: AREA`.
@@ -63,10 +51,28 @@ module needs go in the module's doc comment or on the area page.
 `docs/adrs/README.md` says how to decide. CI warns, without failing, when a
 pull request adds more than two ADRs.
 
-## Consequences
+The human ruled on 2026-11-09, in #170: tiers, a generated index, a rule for
+when not to write an ADR, and one page per area that says what holds today. On
+2026-11-11, in [#307](https://github.com/pmatos/funk/issues/307), the human
+ruled that the pages are the record and that ADRs are cut down to short
+direction decisions: "This is git - if we delete a file it's never lost."
+
+## Why
+
+`docs/adrs/` held 131 ADRs written in 12 days. The decisions that bind an
+agent were lost among records of how one tool does one thing, and what held
+was spread over chains of `refined by` status lines. The M0 close-out audit
+asked for tiers and an index (#170).
 
 An agent starting cold can find the direction decisions in one table, and
 reads what holds on one page per area. Each new ADR costs one more line and one
 more hook run. An ADR's tier is a judgement call, recorded where it can be
 corrected. Deleting an ADR costs a row in `removed.json` and a rewrite of each
 citation of it.
+
+## Rejected alternatives
+
+- **Pages that only summarize immutable ADRs.** They grew chains of refining
+  ADRs that no one reads.
+- **A new ADR for each change of a decision.** It made same-day
+  write-then-supersede pairs.

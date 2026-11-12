@@ -45,7 +45,8 @@ installs rustup, the pinned Rust toolchain, GNU binutils and valgrind.
 
 `scripts/ci-install.sh` runs each installer step. It downloads `rustup-init`
 only on a cache miss. It checks the file against the SHA-256 written in the
-workflow on every run (ADR-2026-11-05-1954).
+workflow on every run
+([process-ci.md](process-ci.md#installer-downloads)).
 `scripts/ensure-hooks.sh` warns when cargo is missing (ADR-2026-10-30-1030).
 
 ### The speed guard

@@ -122,7 +122,8 @@ It is 2 on a usage error or a tool that cannot be started.
 
 The `fir-harness` hook runs `scripts/check-harness.sh`, and `fir-harness-test`
 runs the unit tests (ADR-2026-10-30-2049). `fir-harness-test` runs through the
-shared Python test runner (ADR-2026-11-05-1633).
+shared Python test runner
+([process-ci.md](process-ci.md#the-python-test-runner)).
 
 ### Native code runs under a data limit
 

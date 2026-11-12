@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Installs rustup or elan in a CI setup step (ADR-2026-11-05-1954).
+# Installs rustup or elan in a CI setup step
+# (docs/decisions/process-ci.md#installer-downloads).
 # Usage: scripts/ci-install.sh rustup|elan
 # The step's env pins the installer: RUSTUP_VERSION and RUSTUP_SHA256, or
 # ELAN_VERSION and ELAN_SHA256. The installer is downloaded to RUNNER_TEMP

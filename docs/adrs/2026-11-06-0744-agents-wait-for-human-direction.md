@@ -3,14 +3,6 @@
 Status: accepted
 Tier: direction; area: process
 
-## Context
-
-The M0 close-out audit found agents choosing answers to direction questions
-while the human was away, widening tickets and starting work against the
-human's ordering. Recording those choices afterward did not authorize them.
-The human approved the three rules proposed in
-[#171](https://github.com/pmatos/funk/issues/171) on 2026-11-06.
-
 ## Decision
 
 Every agent, including an orchestrator, follows this approval boundary:
@@ -24,11 +16,20 @@ Every agent, including an orchestrator, follows this approval boundary:
 
 Routine implementation choices, such as naming and test details, may proceed
 within the ticket's scope and must be recorded. Existing authorized checks
-can proceed. [AGENTS.md](../../AGENTS.md) holds these standing rules.
+can proceed. [AGENTS.md](../../AGENTS.md) holds these standing rules. The PR
+and merge rules of ADR-2026-10-28-0725 continue to apply.
 
-## Consequences
+The human approved these three rules as written on 2026-11-06, in #171.
 
-Work that depends on a direction ruling may wait while independent work
-continues. A cold-starting agent can distinguish a human ruling from an
-implementation choice without treating silence as approval. The PR and merge
-rules of ADR-2026-10-28-0725 and ADR-2026-11-03-1612 continue to apply.
+## Why
+
+The M0 close-out audit found agents choosing answers to direction questions
+while the human was away, widening tickets and starting work against the
+human's ordering. With these rules, a cold-starting agent can tell a human
+ruling from an implementation choice without treating silence as approval.
+Work that depends on a ruling may wait while independent work continues.
+
+## Rejected alternatives
+
+- **Decide, then record the choice afterward.** That is what the audit found:
+  recording a direction choice afterward did not authorize it.

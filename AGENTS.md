@@ -105,7 +105,7 @@ checks, `pre-commit` and `PR title`, are green.
    it the commit message on `main`. Body: what changed and why, `Closes #N`.
 4. If the PR is behind `main`, merge `main` into it, or use GitHub's "Update
    branch", and wait for its checks on the new head. The ruleset blocks a PR
-   that is behind `main` from merging (ADR-2026-11-03-1612).
+   that is behind `main` from merging (ADR-2026-10-28-0725).
 
    `docs/adrs/INDEX.md` is generated, so never resolve a conflict in it by hand.
    Resolve and stage every other conflict first. Then run
