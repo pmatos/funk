@@ -6,14 +6,16 @@ Tier: direction; area: process
 ## Context
 
 The spec build fails on a citation of an ADR that does not exist
-(ADR-2026-10-30-1439), but it reads only the spec's sources: the Lean files
+([the spec's appendix](../decisions/spec-site.md#the-adr-appendix-and-its-citations)),
+but it reads only the spec's sources: the Lean files
 of `lean/`, the files at the top of `docs/spec/` and the ADRs. A citation in
 `AGENTS.md`, the roadmap, a workflow, the hook config or Rust and Python code
 was not checked, so renaming an ADR under its citations (ADR-2026-10-30-1329)
 left them pointing at nothing
 ([#44](https://github.com/pmatos/funk/issues/44)).
 
-ADR-2026-10-30-1439 rejected a Python checker because two definitions of a
+[The spec's appendix](../decisions/spec-site.md#the-adr-appendix-and-its-citations)
+rejected a Python checker because two definitions of a
 citation could disagree. On 2026-11-05 the human decided #44: a fast Python
 pre-commit hook checks every citation in every tracked text file, with the
 Lean checker's grammar, an explicit list of fixtures, its own test hook, and
@@ -61,7 +63,7 @@ test cases that both checkers share, so the definitions cannot drift.
   Verso to build, which takes minutes in a fresh clone; the human asked for a
   fast hook.
 - **Two test suites of their own.** Nothing would notice when the grammars
-  part, which is the risk ADR-2026-10-30-1439 named.
+  part, which is the risk the spec's appendix named.
 
 ## Consequences
 
@@ -71,5 +73,5 @@ test cases that both checkers share, so the definitions cannot drift.
   the cases it holds, so a change to either adds a case.
 - A new file of test data with bad citations goes on the list, with its
   reason.
-- ADR-2026-10-30-1439's last consequence, that citations outside the spec's
-  sources are not checked, no longer holds.
+- The spec's appendix used to leave citations outside the spec's sources
+  unchecked. That no longer holds.

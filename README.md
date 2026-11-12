@@ -150,7 +150,7 @@ more detail.
 
 The rendered spec is also published at <https://p.ocmatos.com/funk/>. It is
 rebuilt and deployed from every push to `main`
-([ADR-2026-10-30-1031](docs/adrs/2026-10-30-1031-publish-spec-to-github-pages.md)),
+([how the site is published](docs/decisions/spec-site.md#publishing-the-site)),
 and each page names the commit it was built from.
 
 ## Build funk

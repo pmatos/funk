@@ -6,7 +6,8 @@ the run's last digit, so `ADR-2026-10-30-1031` never matches the start of
 length is a malformed citation. Placeholders such as `ADR-YYYY-MM-DD-HHMM`
 are not citations, and a citation in a code span or a fenced code block is
 quoted, not cited. This is the grammar of the spec's checker,
-docs/spec/FirSpecSite/Citation.lean (ADR-2026-10-30-1439), ported line for
+docs/spec/FirSpecSite/Citation.lean
+(docs/decisions/spec-site.md#the-adr-appendix-and-its-citations), ported line for
 line, and both test suites read the cases of
 docs/spec/FirSpecSite/citation-cases.json, so the two cannot drift
 (ADR-2026-11-05-1709).

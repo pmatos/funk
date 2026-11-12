@@ -9,7 +9,7 @@ import FirSpecSite.Rendered
 /-!
 What `firspec` adds to the document before Verso renders it, and what it
 checks after: the appendix of ADRs and the links of ADR citations
-(ADR-2026-10-30-1439).
+(`docs/decisions/spec-site.md#the-adr-appendix-and-its-citations`).
 -/
 
 namespace FirSpecSite

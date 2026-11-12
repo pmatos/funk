@@ -30,7 +30,7 @@ A proof by native evaluation (`native_decide`, `decide +native` or
 `e = true`, named after the declaration, `_native`, the tactic and `ax_…`.
 The check allows such an axiom only when it compiles and runs `e` again
 itself and gets `true`, so the proof trusts the compiler and nothing else
-(ADR-2026-10-30-1838). The bans on `unsafe`, `partial`, `implemented_by` and
+(ADR-2026-10-30-1452). The bans on `unsafe`, `partial`, `implemented_by` and
 `extern` keep the compiled code equal to the definitions that the proofs are
 about. A `@[csimp]` swap is allowed because it is proved, but only from the
 standard axioms: the compiler applies every swap when the check runs a claim
@@ -39,7 +39,7 @@ true and so confirm that axiom.
 
 Lean does not keep an `example`, so the check cannot see one. A `sorry` in an
 example gives a warning, and `lean/` builds with `lake build --wfail`, so it
-fails the build (ADR-2026-10-30-1837). Native evaluation is allowed in an
+fails the build (ADR-2026-10-30-1452). Native evaluation is allowed in an
 example, as it is anywhere.
 -/
 

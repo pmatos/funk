@@ -94,7 +94,7 @@ memory are its runs (`Func.memRuns_eq`), so each result holds of them too
 
 What the proofs trust: Lean's standard axioms, and for pair 4 at `i32`
 alone one axiom of native evaluation, where `bv_decide` ran its SAT
-solver (ADR-2026-10-30-1838). For pairs 1 to 3, `bv_decide`'s own
+solver (ADR-2026-10-30-1452). For pairs 1 to 3, `bv_decide`'s own
 rewriting closed the equation before any SAT call, so nothing native is
 trusted.
 -/

@@ -1,100 +1,52 @@
-# The Lean build fails on sorry, non-standard axioms, unsafe, partial, implemented_by and extern
+# The Lean build fails on sorry, untrusted axioms, unsafe code and any warning, and trusts native evaluation
 
-Status: accepted; refined by ADR-2026-10-30-1837 and ADR-2026-10-30-1838
+Status: accepted
 Tier: direction; area: spec-site
-
-## Context
-
-[#11](https://github.com/pmatos/funk/issues/11) proves that parsing a printed
-module gives the module back, and that the core dialect's text is lawful.
-Its acceptance criteria ask for a check in `.pre-commit-config.yaml` that
-fails the build on a `sorry`, or on any axiom other than Lean's standard
-three: `propext`, `Classical.choice` and `Quot.sound`. The check must run
-Lake only through `scripts/build-spec.sh` or with its git guards
-(ADR-2026-10-29-2135).
-
-Facts, checked on 2026-10-30 with Lean `v4.35.0`:
-
-- A `sorry` makes a declaration depend on the axiom `sorryAx`, and
-  `native_decide` on an axiom of its own. `Lean.collectAxioms` lists the
-  axioms that a declaration depends on, through every declaration it uses.
-- `partial`, `unsafe`, `implemented_by` and `extern` add no axiom, yet each
-  one lets compiled code differ from what the proofs are about. A `partial`
-  definition is an opaque constant whose code is its `_unsafe_rec`.
-  Well-founded recursion also makes an `_unsafe_rec`, for the compiler,
-  beside a definition that has a value. An `extern` definition with a body
-  is proved about through its body and runs as the C function it names.
-- A derived `Repr` instance of a type that holds a list of itself, such as
-  `Attr`, is `partial`.
-- Lake builds only the modules that a library's root imports. The root of
-  `FirTest` can import the roots of `Fir` and `FirRef` and the executable's
-  `FirRef.Main`, and so see every module that Lake builds in `lean/`. A
-  file in `lean/Fir/` that no module imports is not built, yet the spec
-  document can still render it with `includeLiterate`.
-- The environment lists the declarations of each imported module, and
-  separately those of the module being elaborated, up to the current
-  command.
-- Lean does not keep an `example`, so an example is not a declaration and
-  the environment does not list it. A `sorry` in one is a warning, which
-  `lake build` reports without failing; `lake build --wfail` fails on any
-  warning. `native_decide` in one gives no warning.
 
 ## Decision
 
-- `FirTest/Axioms.lean` defines the command `#check_axioms`. The root of
-  `FirTest` imports every module of `lean/` and runs
+- The root of `FirTest` imports every module of `lean/` and runs
   `#check_axioms Fir FirRef FirTest` as its last command. It fails, naming
-  each declaration, when a declaration of those libraries, or of the root
-  itself, does one of these:
-  - depends on an axiom other than `propext`, `Classical.choice` and
-    `Quot.sound`;
+  each declaration, on one that:
+  - depends on an axiom other than `propext`, `Classical.choice`,
+    `Quot.sound` or an axiom of native evaluation;
   - is `unsafe`, or is an opaque constant with an `_unsafe_rec`, which is
     what `partial` makes;
   - has an `implemented_by` or an `extern` attribute.
-- It also fails when:
-  - a `.lean` file in `lean/`, other than `lakefile.lean` and the files
-    under a hidden directory such as `.lake`, is not imported by the root,
-    or its module is not under one of the roots it names;
-  - a root has no declaration, so that a renamed library is not skipped in
-    silence;
-  - any text but white space follows it, since it would not see a command
-    there.
-- The check runs whenever Lake builds `FirTest`: in the `fir-spec` hook,
-  through `scripts/build-spec.sh`, and in every script that calls
-  `scripts/build-spec.sh --lean`. It needs no new Lake call. The hook's name
-  says that it checks axioms.
-- `Attr`'s `Repr` instance is written by structural recursion, not derived.
-- `FirTest/Axioms.lean` imports Lean's own modules (`Lean.Util.CollectAxioms`,
-  the attributes and the elaborator). They are part of the toolchain, not a
-  dependency of the package `fir`.
+- An axiom counts as native evaluation only when its claim is `e = true`
+  for a closed `e : Bool` and the check runs `e` again and gets `true`
+  ([the page](../decisions/spec-site-lean-build.md#what-lean-code-in-lean-may-not-do)
+  has the exact test). So `native_decide`, `decide +native` and native
+  `bv_decide` are allowed. The human ruled to trust Lean's compiler on
+  2026-10-30, in #52.
+- A `@[csimp]` swap rests on `propext`, `Classical.choice` and `Quot.sound`
+  alone. The human accepted this narrowing on 2026-11-02, in #52.
+- `scripts/build-spec.sh` builds `lean/` with `lake build --wfail`, so any
+  warning fails the build, a `sorry` inside an `example` included. The human
+  ruled this on 2026-10-30, in #52. The build in `docs/spec/` stays a plain
+  `lake build`, because Verso's build can warn about code we do not own.
+- Code that must be `partial`, `unsafe` or `extern` stays out of `lean/`
+  until this ADR is edited to allow it.
 
-## Alternatives
+## Why
 
-- **A text search for `sorry`, `partial` and the rest.** It cannot see the
-  axioms that a declaration uses through other declarations, nor the code
-  that a deriving handler or a macro writes, and prose may use the words.
-- **`#print axioms` for each theorem.** Each new theorem would need a line,
-  and a missing line would pass in silence.
-- **A separate executable or hook that loads the built modules.** It would
-  be a second Lake entry point to guard, for what building `FirTest`
-  already does.
+`fir-ref` runs the definitions that the proofs are about, so the code that
+Lean compiles must not differ from them, and no proof may rest on a claim
+nobody checked. An `example` is not a declaration, so the check never sees
+one; only `--wfail` catches a `sorry` in it. Native evaluation adds Lean's
+compiler and runtime to the trusted base, and the bans on `unsafe`,
+`partial`, `implemented_by` and `extern` keep compiled code equal to the
+proved definitions. A swap proved from a native axiom could make that
+axiom's false claim run as `true` when the check runs it again.
 
-## Consequences
+## Rejected alternatives
 
-- No declaration in `lean/` can rest on `sorry`, `native_decide` or another
-  axiom, and `fir-ref` runs the definitions that the proofs are about.
-  [#47](https://github.com/pmatos/funk/issues/47) proves its fast
-  implementations equal with `@[csimp]`, which the check allows.
-- A `sorry` or `native_decide` inside an `example` is not caught: an
-  example is not a declaration, so the check never sees it. No declaration
-  can use an example, so no theorem rests on one; a reviewer still rejects
-  it. Failing the build on warnings (`lake build --wfail`) would catch the
-  `sorry` case, which Lean warns about, but not `native_decide`, which it
-  does not. That would make a gate stricter, so it is pending the human's
-  decision in [#52](https://github.com/pmatos/funk/issues/52).
-- A new module or library of `lean/` is imported by the root of `FirTest`,
-  and a new library is named in its `#check_axioms`; a stray `.lean` file in
-  `lean/`, tracked or not, fails the build.
-- A type that holds a list of itself writes its `Repr` instance by hand.
-- Code that must be `partial`, `unsafe` or `extern` cannot live in `lean/`
-  without a new ADR.
+- **A text search for `sorry`, `partial` and the rest.** It cannot see
+  axioms used through other declarations, nor code that a macro writes, and
+  prose may use the words.
+- **`#print axioms` for each theorem.** A missing line passes in silence.
+- **A separate executable or hook that loads the built modules.** It is a
+  second Lake entry point to guard.
+- **A text check that bans `native_decide`.** Proposed, then dropped when the
+  human chose to trust the compiler.
+- **Keeping warnings as warnings.** A `sorry` inside an `example` would pass.

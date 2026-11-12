@@ -2,10 +2,11 @@
 
 The rendered spec is published at <https://p.ocmatos.com/funk/>. It is
 rebuilt and deployed from every push to `main`, and each page names the
-commit it was built from (ADR-2026-10-30-1031, ADR-2026-10-30-1046).
+commit it was built from
+([how the site is published](../decisions/spec-site.md#publishing-the-site)).
 
 fir's specification is literate Lean, rendered with Verso
-(ADR-2026-10-29-2015). Its chapters are the Lean modules of the package `fir`
+(ADR-2026-11-05-2012). Its chapters are the Lean modules of the package `fir`
 in [`lean/`](../../lean), where each definition sits beside its prose. This
 directory is the Verso document that renders them:
 [`FirSpec.lean`](FirSpec.lean) gives the order of the chapters and the prose
@@ -46,7 +47,8 @@ pins them with one `:::moduleDocs (fingerprint := "…")` directive, closed by
 `:::` on the next line. That fingerprint covers every declaration of the
 module, so a change to what the module declares fails this pin too. Read
 the module's docs again in `lean/Fir/`, correct them, then set the
-fingerprint that the build prints (ADR-2026-11-09-1345).
+fingerprint that the build prints
+([module docs](../decisions/spec-site.md#module-docs-and-every-module)).
 
 The build also fails when a module under `lean/Fir` has no section in
 `FirSpec.lean`, or in a chapter that it includes as a document of its own.
@@ -60,10 +62,11 @@ level below its own title.
 
 The document ends with an appendix that renders every ADR in
 [`docs/adrs/`](../adrs), and every ADR citation in the spec and the ADRs,
-such as ADR-2026-10-29-2015, links to the ADR's page. The library in
+such as ADR-2026-11-05-2012, links to the ADR's page. The library in
 [`FirSpecSite/`](FirSpecSite) adds both when `firspec` renders the
 document, and the build fails, naming the file and line, on a citation of
-an ADR that does not exist (ADR-2026-10-30-1439).
+an ADR that does not exist
+([the ADR appendix](../decisions/spec-site.md#the-adr-appendix-and-its-citations)).
 
 Build the Lean code and render the document with:
 

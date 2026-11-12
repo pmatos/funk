@@ -368,7 +368,8 @@ CI runs it with `--all-files`.
 
 The hook ports the grammar of the spec checker, which is
 `docs/spec/FirSpecSite/Citation.lean`. The spec build still checks citations in
-its own sources (ADR-2026-10-30-1439).
+its own sources
+([spec-site.md](spec-site.md#the-adr-appendix-and-its-citations)).
 
 A citation of a removed ADR fails, and the message names where its rule lives
 now, from `removed.json`. The spec build reads the same file and fails the same

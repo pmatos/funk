@@ -18,7 +18,7 @@ bitwise ops and shifts, comparison and selection, width changes, `freeze`
 and the constant `poison`, branches with block arguments, calls and
 return.
 
-The specification is literate Lean (ADR-2026-10-29-2015). Its formal content
+The specification is literate Lean (ADR-2026-11-05-2012). Its formal content
 is the Lean definitions of the package `fir` in the repository's `lean/`
 directory, and the prose beside them explains them. This document renders
 both from the same source on every change, so the readable specification

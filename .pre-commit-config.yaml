@@ -77,7 +77,7 @@ repos:
         files: ^(lean/|scripts/((test_)?check_g0|run_unittests)\.py$)
       # The spec renders the ADRs as its appendix and checks every ADR
       # citation in lean/, the top-level files of docs/spec/ and docs/adrs/
-      # (ADR-2026-10-30-1439).
+      # (docs/decisions/spec-site.md#the-adr-appendix-and-its-citations).
       - id: fir-spec
         name: Build fir's Lean package, check its axioms and render the spec
         entry: scripts/build-spec.sh

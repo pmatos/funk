@@ -2,7 +2,8 @@ import FirSpecSite.Sources
 
 /-!
 Every module under `lean/Fir` must be a section of the document, so a new
-module cannot be left out of the spec (ADR-2026-11-09-1345). The check
+module cannot be left out of the spec
+(`docs/decisions/spec-site.md#module-docs-and-every-module`). The check
 compares the files under `lean/Fir` with the sections that
 `docs/spec/FirSpec.lean` includes, and those of each chapter that it
 includes as a document of its own, such as `FirSpec.Chapters.Execution`.

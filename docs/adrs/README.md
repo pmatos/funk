@@ -101,7 +101,9 @@ that does not exist.
 ## Published with the spec
 
 The spec's appendix renders each ADR as a page, and every ADR citation in
-the spec and the ADRs links to it (ADR-2026-10-30-1439). So:
+the spec and the ADRs links to it
+([spec-site.md](../decisions/spec-site.md#the-adr-appendix-and-its-citations)).
+So:
 
 - Start with the decision as a level-1 heading, then the `Status:` line, as
   the template does.

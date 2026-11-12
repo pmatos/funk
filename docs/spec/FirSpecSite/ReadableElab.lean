@@ -25,8 +25,10 @@ and so the spec build, naming the place and what to do:
   declaration of `M` must be explained by exactly one of them.
 * `:::moduleDocs (fingerprint := "…")` in the document module `D` pins the
   fingerprint of all the declarations of `M`, for the `/-! -/` docs of `M`,
-  which render on the same page (ADR-2026-11-09-1345). A change to what the
-  module says fails the build until they are read again and the pin updated.
+  which render on the same page
+  (`docs/decisions/spec-site.md#module-docs-and-every-module`). A change to
+  what the module says fails the build until they are read again and the pin
+  updated.
 -/
 
 open Lean Elab Term

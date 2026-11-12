@@ -121,6 +121,8 @@ Facts:
   ADR-2026-10-29-2135, ADR-2026-10-30-1030, ADR-2026-11-03-0809,
   ADR-2026-10-30-1229 and ADR-2026-10-30-2049, which say that the CI job
   installs elan, Rust, Verus and binutils: the suite jobs install them now;
-  and ADR-2026-10-30-1031, whose `pages.yml` copies the Lean setup steps of
+  and the Pages workflow
+  ([spec-site.md](../decisions/spec-site.md#publishing-the-site)), whose
+  `pages.yml` copies the Lean setup steps of
   `ci.yml`: `ci.yml` now holds two copies, in the `lean` and `cross` jobs,
   and the comments say to change all three together.

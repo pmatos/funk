@@ -2,6 +2,26 @@
   "about": "One row per deleted ADR: its file, where its rule lives now (an ADR, or docs/decisions/PAGE.md#ANCHOR), and the last commit on main that changed the file. scripts/adr_index.py renders the rows as the Removed table of INDEX.md, and the adr-ids hook never lets a removed id be used again (docs/adrs/README.md).",
   "removed": [
     {
+      "file": "2026-10-29-2015-literate-lean-spec.md",
+      "now": "ADR-2026-11-05-2012",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1031-publish-spec-to-github-pages.md",
+      "now": "docs/decisions/spec-site.md#publishing-the-site",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1046-rendered-pages-name-their-commit.md",
+      "now": "docs/decisions/spec-site.md#every-page-names-its-commit",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1439-adr-appendix-and-citation-links.md",
+      "now": "docs/decisions/spec-site.md#the-adr-appendix-and-its-citations",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-10-30-1740-decidable-dialect-rules.md",
       "now": "ADR-2026-11-09-2257",
       "commit": "0f4590f30dbc"
@@ -9,6 +29,16 @@
     {
       "file": "2026-10-30-1742-validation-check-at-any-depth.md",
       "now": "docs/decisions/validation-fir-ref.md#how-fir-ref-runs-the-check",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1837-lean-build-fails-on-warnings.md",
+      "now": "ADR-2026-10-30-1452",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1838-axiom-check-allows-native-evaluation.md",
+      "now": "ADR-2026-10-30-1452",
       "commit": "c09a05f4f8fb"
     },
     {
@@ -39,6 +69,26 @@
     {
       "file": "2026-11-05-0745-fir-ref-checks-a-location-table-with-core-s-loops.md",
       "now": "docs/decisions/validation-fir-ref.md#location-tables",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-2251-a-long-chapter-moves-to-the-readable-layer-in-several-prs.md",
+      "now": "docs/decisions/spec-site.md#moving-sections-to-the-readable-layer",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-225128-a-section-that-declares-nothing-keeps-include-literate.md",
+      "now": "docs/decisions/spec-site.md#moving-sections-to-the-readable-layer",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-06-0224-a-by-cases-without-a-decidable-instance-runs-under-classical.md",
+      "now": "docs/decisions/spec-site-lean-build.md#a-by_cases-without-an-instance-runs-under-classical",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-09-1345-the-spec-build-pins-module-docs-and-requires-every-fir-module.md",
+      "now": "docs/decisions/spec-site.md#module-docs-and-every-module",
       "commit": "c09a05f4f8fb"
     },
     {
