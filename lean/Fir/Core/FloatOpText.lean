@@ -1,7 +1,7 @@
 import Fir.Core.Signature
 
 /-!
-# How the float arithmetic is written
+# How the float arithmetic and the bit casts are written
 
 Each float op of arithmetic is written with its name, and each one that
 rounds carries the attribute `round(rne)`: round to nearest, ties to even,
@@ -16,15 +16,19 @@ ADR-2026-11-11-1801). So
 * `%n: f16 = fneg %a @1` and `%p: f16 = fabs %a @1` take one value and
   give one, and have no attribute: they do not round;
 * `%f: bf16 = fma round(rne) %a, %b, %c @1` takes three values and gives
-  `a * b + c`, rounded once.
+  `a * b + c`, rounded once;
+* `%b: i32 = bitcast %f @1` takes a value of a float type and gives its
+  bits as an integer of its width, and `%f: f32 = bitcast %b @1` the other
+  way. It has no attribute: it does not round.
 
 `round(rne)` is written in the applied form of the grammar, as
 `float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
 attribute does not decode, and neither does `fadd round(rtz) %a, %b`,
-`frem round(rne) %a, %b` or `fneg round(rne) %a`. A rounding mode other than `rne` is text that does
-not decode, as a flag the op does not have is, so `funk verify` and
-`fir-ref` reject it. The operands and the result have one float type, and
-an op whose types differ does not decode.
+`frem round(rne) %a, %b` or `fneg round(rne) %a`. A rounding mode other
+than `rne` is text that does not decode, as a flag the op does not have
+is, so `funk verify` and `fir-ref` reject it. The operands and the result of an op of arithmetic
+have one float type, a bit cast's integer has its float's width, and an
+op whose types are otherwise does not decode.
 
 This section gives the names of the ops, their attributes, and how an op
 is read back, with the facts that the proof of the round trip uses.
@@ -96,6 +100,13 @@ type. -/
 def decodeFma (as : List Attr) (ts rs : List Ty) : Option Op :=
   if isRoundAttrs as then (floatOpFormat 3 ts rs).map fun (e, m) => .fma e m else none
 
+/-- Reads `bitcast`: no attributes, and one operand and one result, a
+float type and an integer type of its width, in either order. -/
+def decodeBitcast (as : List Attr) : List Ty → List Ty → Option Op
+  | [.float e m], [.int w] => if as.isEmpty ∧ w = floatWidth e m then some (.toBits e m) else none
+  | [.int w], [.float e m] => if as.isEmpty ∧ w = floatWidth e m then some (.ofBits e m) else none
+  | _, _ => none
+
 /-! # Facts for the round trip -/
 
 /-- Attributes that read as `round(rne)` are exactly `round(rne)`. -/
@@ -147,5 +158,12 @@ theorem floatOpFormat_replicate (k e m : Nat) :
 #guard floatOpFormat 2 [.float 8 23, .float 11 52] [.float 8 23] == none
 #guard floatOpFormat 1 [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard floatOpFormat 1 [.int 32] [.int 32] == none
+-- A bit cast reads from the types which way it goes, and its widths must
+-- match.
+#guard decodeBitcast [] [.float 8 23] [.int 32] == some (.toBits 8 23)
+#guard decodeBitcast [] [.int 16] [.float 8 7] == some (.ofBits 8 7)
+#guard decodeBitcast [] [.float 8 23] [.int 64] == none &&
+  decodeBitcast [] [.int 32] [.int 32] == none && decodeBitcast [] [.float 8 23] [.float 8 23] == none
+#guard decodeBitcast [roundAttr] [.float 8 23] [.int 32] == none
 
 end Fir.Core

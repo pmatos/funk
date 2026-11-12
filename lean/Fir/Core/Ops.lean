@@ -4,7 +4,8 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls, and the float constants, comparisons and arithmetic.
+branches and calls, and the float constants, comparisons, arithmetic and
+bit casts.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -170,6 +171,16 @@ Width changes:
 * `sext m n`: sign-extends an `iM` to an `iN`, where `M < N`.
 * `trunc m n`: keeps the low `N` bits of an `iM`, where `N < M`.
 
+Bit casts, which read the same bits as another type
+(ADR-2026-11-09-1549):
+
+* `toBits e m`: the bits of a value of `float<e,m>`, as an `iN` with
+  `N = 1 + e + m`. A NaN's sign and payload come through as they are.
+* `ofBits e m`: the bits of an `iN`, with `N = 1 + e + m`, as a value of
+  `float<e,m>`.
+
+Each is never UB, and a poison operand gives poison.
+
 Poison control:
 
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
@@ -225,6 +236,8 @@ inductive Op where
   | zext (m n : Nat)
   | sext (m n : Nat)
   | trunc (m n : Nat)
+  | toBits (e m : Nat)
+  | ofBits (e m : Nat)
   | freeze (w : Nat)
   | poison (w : Nat)
   | br

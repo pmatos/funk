@@ -64,7 +64,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
     | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
     | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
-    | .fbin .. | .funary .. | .fma .. => intro h; exact False.elim h
+    | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. => intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho
     revert args h
@@ -94,7 +94,7 @@ theorem total_of_tracer {f : Func CoreDialect} (ht : InTracer f) :
   | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
   | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
   | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
-  | .fbin .. | .funary .. | .fma .. => intro h; exact False.elim h
+  | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. => intro h; exact False.elim h
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 

@@ -266,8 +266,9 @@ its operands through one pushed word onto the x87 stack and runs `fprem1`, IEEE
 `fprem`, C's `fmod` with the quotient truncated, for `fmod`. Each reduces the
 exponent by 32 to 63 bits at a time, as the processor chooses, and sets C2
 while it is partial, so the routine loops until C2 is clear: 34 to 66 times for
-the largest `f64` by the smallest subnormal. Both are exact whatever the x87 precision control says, and
-the result is exact in the format, so the store to `f32` or `f64` is exact.
+the largest `f64` by the smallest subnormal. Both are exact whatever the x87
+precision control says, and the result is exact in the format, so the store to
+`f32` or `f64` is exact.
 They give a NaN on `y = 0` or an infinite `x`, `x` itself on an infinite `y`,
 and a zero with `x`'s sign, as the spec does. A routine uses `%rax`, `%xmm0`,
 `%xmm1` and the x87 stack, which it leaves empty, and 16 bytes of stack.
@@ -279,3 +280,17 @@ Rejected: `fmod` and `remainder` from the C library, since most modules link
 none; and a routine on the integer unit that shifts and subtracts the
 mantissas, which is longer, slower on far-apart operands, and needs its own
 proof of the rounding of the quotient, where `fprem1` is IEEE 754's own.
+
+## Bit casts
+
+`bitcast` between `f32` and `i32`, or `f64` and `i64`, copies its operand's
+slot to its result's through `%rax`. A float is its bits in a slot, as an
+integer is, and the bits of either above its width are unspecified, so no
+instruction converts: no SSE instruction runs, and a NaN's sign and payload,
+a signalling NaN's included, come through as they are, as fir's rule asks
+(ADR-2026-11-09-1549). An `f16`, `bf16` or `f128` side is reported where it is
+defined, as for every float op. `crates/funk/tests/float_bitcast.rs` checks
+that both directions keep every bit of the hard values of `floats.rs`, NaNs
+included. Rejected:
+`movd` or `movq` between a general register and an SSE register, which moves
+the same bits through one more register.

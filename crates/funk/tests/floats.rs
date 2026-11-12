@@ -13,42 +13,8 @@ mod common;
 
 use std::path::Path;
 
-use common::{build, expect, func, module};
+use common::{F32, F64, build, expect, func, module};
 use funk_ir::dialects::core::FLOAT_PREDICATES;
-
-/// The hard bit patterns of `f32`.
-const F32: [u32; 14] = [
-    0x0000_0000, // +0
-    0x8000_0000, // -0
-    0x0000_0001, // the smallest subnormal
-    0x8000_0001,
-    0x007f_ffff, // the largest subnormal
-    0x3f80_0000, // 1.0
-    0xbf80_0000, // -1.0
-    0x7f7f_ffff, // the largest finite value
-    0x7f80_0000, // +inf
-    0xff80_0000, // -inf
-    0x7fc0_0000, // the quiet NaN
-    0xffc0_0001, // a quiet NaN with its sign set and a payload
-    0x7f80_0001, // a signalling NaN
-    0xffff_ffff,
-];
-
-/// The hard bit patterns of `f64`.
-const F64: [u64; 12] = [
-    0,
-    0x8000_0000_0000_0000,
-    1,
-    0x000f_ffff_ffff_ffff,
-    0x3ff0_0000_0000_0000,
-    0xbff0_0000_0000_0000,
-    0x7fef_ffff_ffff_ffff,
-    0x7ff0_0000_0000_0000,
-    0xfff0_0000_0000_0000,
-    0x7ff8_0000_0000_0000,
-    0xfff0_0000_0000_0001,
-    0x7ff4_0000_0000_0000,
-];
 
 /// Whether the float predicate `p` holds of two values that compare as `c`,
 /// `None` when they are unordered (`FPred.holds` in

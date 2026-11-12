@@ -1,0 +1,139 @@
+# Must-reject texts of #241's bit casts: bitcast takes no attribute and
+# goes between a float type float<e,m> and the integer type of its width,
+# i(1 + e + m), in either direction (ADR-2026-11-09-1549). Any other pair
+# of types does not decode.
+
+[[reject]]
+verdict = "parse-error"
+rule = "a bit cast's integer has the float's width: f32 to i64 does not decode"
+text = '''
+func @f(%a: f32) -> i64 {
+^e:
+  %r: i64 = bitcast %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a bit cast's integer has the float's width: i32 to f64 does not decode"
+text = '''
+func @f(%i: i32) -> f64 {
+^e:
+  %r: f64 = bitcast %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "f16 and i32 differ in width, so bitcast between them does not decode"
+text = '''
+func @f(%h: f16) -> i32 {
+^e:
+  %r: i32 = bitcast %h @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "bitcast goes between a float and an integer: two floats of one width do not decode"
+text = '''
+func @f(%h: f16) -> bf16 {
+^e:
+  %r: bf16 = bitcast %h @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "bitcast goes between a float and an integer: two integers do not decode"
+text = '''
+func @f(%i: i32) -> i32 {
+^e:
+  %r: i32 = bitcast %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "bitcast does not round, so it takes no attribute: round(rne) does not decode"
+text = '''
+func @f(%a: f32) -> i32 {
+^e:
+  %r: i32 = bitcast round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "bitcast takes one operand"
+text = '''
+func @f(%a: f32) -> i32 {
+^e:
+  %r: i32 = bitcast %a, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "bitcast decodes from float(1, 1) to i3, and validation rejects the format, which has 1 exponent bit"
+text = '''
+func @f(%x: float(1, 1)) -> i3 {
+^e:
+  %r: i3 = bitcast %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "bitcast decodes from i2 to float(1, 0), and validation rejects the format, which has 1 exponent bit and no mantissa bit"
+text = '''
+func @f(%i: i2) -> float(1, 0) {
+^e:
+  %r: float(1, 0) = bitcast %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

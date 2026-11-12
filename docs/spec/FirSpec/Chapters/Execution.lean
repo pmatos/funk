@@ -67,6 +67,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.FloatRem "Float remainder rules" FirSpec.Core.FloatRem (level := 1)}
 
+{includeReadable "." Fir.Core.FloatBitcast "Bit cast rules" FirSpec.Core.FloatBitcast (level := 1)}
+
 {includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 1)}
 
 {includeReadable "." Fir.Core.Branch "Branch rules" FirSpec.Core.Branch (level := 1)}
@@ -92,6 +94,8 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Core.FloatCompareLaws "Float comparison obligations" FirSpec.Core.FloatCompareLaws (level := 1)}
 
 {includeReadable "." Fir.Core.FloatArithLaws "Float arithmetic obligations" FirSpec.Core.FloatArithLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatBitcastLaws "Bit cast obligations" FirSpec.Core.FloatBitcastLaws (level := 1)}
 
 {includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 1)}
 

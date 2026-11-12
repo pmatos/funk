@@ -71,6 +71,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "bare": ("",),
         "decodeCast": ("",),
         "decodeFma": round_attrs(floats),
+        "decodeBitcast": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -118,6 +119,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
+        self.assertEqual(definition(floats, "decodeBitcast").count("as.isEmpty"), 2)
         self.assertEqual(
             decoded_attrs(text, floats),
             {
@@ -190,6 +192,34 @@ class Tests(unittest.TestCase):
         ]:
             with self.subTest(edit=name), self.assertRaises(AssertionError):
                 self.assert_cells_follow(edited)
+
+    def test_a_bitcast_is_a_cell_for_each_pair_of_types(self):
+        found = cells.cells((8,), ("f32", "f128"))
+        self.assertEqual(
+            {c for c in found if c.table == "conversions"},
+            {
+                Cell("conversions", "bitcast", "f32", "i32"),
+                Cell("conversions", "bitcast", "i32", "f32"),
+                Cell("conversions", "bitcast", "f128", "i128"),
+                Cell("conversions", "bitcast", "i128", "f128"),
+            },
+        )
+        to_bits = Op("bitcast", (), ("bf16",), ("i16",), ())
+        self.assertEqual(
+            of_op(to_bits), {Cell("conversions", "bitcast", "bf16", "i16")}
+        )
+        of_bits = Op("bitcast", (), ("i64",), ("f64",), ())
+        self.assertEqual(of_op(of_bits), {Cell("conversions", "bitcast", "i64", "f64")})
+        for bad in [
+            Op("bitcast", ("round(rne)",), ("f32",), ("i32",), ()),
+            Op("bitcast", (), ("f32",), ("i64",), ()),
+            Op("bitcast", (), ("f32",), ("f32",), ()),
+            Op("bitcast", (), ("i32",), ("i32",), ()),
+            Op("bitcast", (), (), ("i32",), ()),
+            Op("bitcast", (), ("f32", "f32"), ("i32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
 
     def test_float_ops_are_cells_at_their_format(self):
         cmp = Op("fcmp", ("olt",), ("f64", "f64"), ("i1",), ())

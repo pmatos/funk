@@ -13,10 +13,12 @@
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
 //! `ret`. #229 adds float constants to `const`, the float comparison
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
-//! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`. A
-//! later family adds a file and a line here.
+//! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`.
+//! #241 adds the bit cast `bitcast` between a float and an integer of its
+//! width. A later family adds a file and a line here.
 
 mod arith;
+mod bitcast;
 mod bitwise;
 mod call;
 mod compare;
@@ -76,7 +78,8 @@ pub fn dialect() -> Dialect {
         .op(control::CondBr)
         .op(control::Ret)
         .op(control::Unreachable)
-        .op(call::Call);
+        .op(call::Call)
+        .op(bitcast::Bitcast);
     float_arith::FloatArith::all().fold(core, Dialect::op)
 }
 

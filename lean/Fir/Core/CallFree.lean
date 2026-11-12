@@ -6,6 +6,7 @@ import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.FloatCompareLaws
 import Fir.Core.FloatArithLaws
+import Fir.Core.FloatBitcastLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Jumps
 
@@ -76,6 +77,8 @@ theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect
   | .zext m n, _ => zext_total m n
   | .sext m n, _ => sext_total m n
   | .trunc m n, _ => trunc_total m n
+  | .toBits e m, _ => toBits_total e m
+  | .ofBits e m, _ => ofBits_total e m
   | .freeze w, _ => freeze_total w
   | .poison w, _ => poison_total w
   | .br, _ => br_total

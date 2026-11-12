@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11644605133510641012")
+:::moduleDocs (fingerprint := "16970177798770597399")
 :::
 
 :::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "906894083440061025")
@@ -49,6 +49,18 @@ $`\mathsf{sqrt}`, and three for $`\mathsf{fma}`. So
 $`\mathtt{fadd~\%a, \%b}` with no attribute, $`\mathtt{round(rtz)}`,
 $`\mathtt{frem~round(rne)~\%a, \%b}`, and an $`\mathsf{f32}` added to an
 $`\mathsf{f64}` do not decode.
+:::
+
+:::readable Fir.Core.decodeBitcast (pin := Fir.Core.floatWidth) (fingerprint := "16509005206996759472")
+*Definition: reading a bit cast back.* $`\mathtt{bitcast}` decodes from
+no attributes, one operand type and one result type, one of them
+$`\mathsf{float}\langle e,m \rangle` and the other $`\mathsf{i}N` with
+$`N = 1+e+m`. From the float to the integer it is
+$`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}`, and from the integer to the
+float $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`. So
+$`\mathtt{bitcast}` from an $`\mathsf{f32}` to an $`\mathsf{i64}`, between
+two floats or two integers, or with $`\mathtt{round(rne)}` does not
+decode.
 :::
 
 :::readable Fir.Core.eq_of_isRoundAttrs Fir.Core.FBin.attrs_of_attrsOk Fir.Core.FUnary.attrs_of_attrsOk Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "11995233360236892250")

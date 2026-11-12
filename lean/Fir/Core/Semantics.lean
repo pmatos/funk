@@ -7,6 +7,7 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
+import Fir.Core.FloatBitcast
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -139,6 +140,10 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (sextValue n a) .nil)
   | .trunc _ n => some fun
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
+  | .toBits _ _ => some fun
+    | .cons a .nil => pure (.cons (bitcastValue a) .nil)
+  | .ofBits _ _ => some fun
+    | .cons a .nil => pure (.cons (bitcastValue a) .nil)
   | _ => none
 
 /-- The rule of each core terminator, in any monad with the UB effect;
@@ -170,6 +175,7 @@ def Op.hasRules (op : Op) : Bool :=
 #guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
 #guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o 5 10).hasRules
 #guard (Op.fma 11 52).hasRules
+#guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr 0]).hasRules

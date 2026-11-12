@@ -154,6 +154,23 @@ class CheckCiHooks(unittest.TestCase):
             found, [".github/workflows/ci.yml, job a runs tests without --all-files"]
         )
 
+    def test_default_stages_with_pre_commit_keep_hooks_gated(self):
+        self.config({**CONFIG, "default_stages": ["pre-commit", "pre-push"]})
+        good = ci(a=job("lint", "tests"), **{"pre-commit": gate("a")})
+        self.assertEqual(self.found(good), [])
+
+    def test_default_stages_without_pre_commit_need_a_hook_stage(self):
+        self.config({**CONFIG, "default_stages": ["pre-push"]})
+        found = self.found(ci(a=job("lint", "tests"), **{"pre-commit": gate("a")}))
+        self.assertEqual(
+            found,
+            [
+                f".github/workflows/ci.yml, job a runs {hook} without"
+                " --hook-stage and one of its stages, pre-push"
+                for hook in ("lint", "tests")
+            ],
+        )
+
     def test_a_commit_msg_hook_needs_its_stage(self):
         title = {"jobs": {"pr-title": job("msg")}}
         self.workflow("pr-title.yml", title)
