@@ -97,7 +97,7 @@ a block's arguments, then the definitions of its ops, then those of the
 blocks after it; an op's results, then the definitions of the blocks of its
 regions, then those of the ops after it. The first pass does not look up
 an op's operands. Each theorem takes what the pass does with the parts it
-holds as hypotheses, as the round trip's lemmas do (ADR-2026-11-03-0028).
+holds as hypotheses, as the round trip's lemmas do.
 :::
 
 :::readable Fir.Text.SBlock.adds Fir.Text.SOp.adds Fir.Text.SRegion.adds (pin := Fir.Text.Adds) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "16051247237858677610")

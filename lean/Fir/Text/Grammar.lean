@@ -136,7 +136,7 @@ those values are defined in the function.
 
 A text that follows the grammar but does not decode is not a module. A parser
 rejects it with a reason and the position in the text where the reason
-applies (ADR-2026-10-30-0815):
+applies (ADR-2026-10-29-2014):
 
 * a number out of its range;
 * a string or quoted symbol not in its one spelling, such as an escape the

@@ -3,7 +3,7 @@
 # passes belong to its one successor. cond_br decodes with no
 # attributes, one operand, its i1 condition, and no results. A text
 # that breaks one of these does not decode: each is a parse error at
-# the op's name (ADR-2026-10-30-0815). Every value is defined and every
+# the op's name (ADR-2026-10-29-2014). Every value is defined and every
 # successor names a block that takes what it passes, so the text breaks
 # nothing else.
 # The spec's op set calls cond_br condBr, a name that the text does not

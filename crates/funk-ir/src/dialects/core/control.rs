@@ -10,7 +10,7 @@
 //! successor, which validation checks against the block it names
 //! (`Func.SuccValid`), with the dominance of every value it passes. A
 //! successor that names no block, or passes a value the function does not
-//! define, still decodes (ADR-2026-10-30-0815).
+//! define, still decodes (ADR-2026-10-29-2014).
 //!
 //! `ret` returns its operands: any number of values of core types, none
 //! included (ADR-2026-10-30-0816). It returns the function's result types,

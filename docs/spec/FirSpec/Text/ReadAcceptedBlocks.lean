@@ -55,6 +55,6 @@ what the readers it calls give on the tokens left to them:
   that can be written, by the case of the reader of regions;
 * a region's blocks come from the reader of blocks.
 
-No case looks inside a reader that it calls (ADR-2026-11-03-0028,
-ADR-2026-11-03-0328).
+No case looks inside a reader that it calls, as in the round trip's
+lemmas.
 :::

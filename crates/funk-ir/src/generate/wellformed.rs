@@ -1,6 +1,6 @@
 //! A generator of random well-formed modules that are not all valid (#146).
 //!
-//! The round trip holds for every well-formed module (ADR-2026-10-30-0815,
+//! The round trip holds for every well-formed module (ADR-2026-10-29-2014,
 //! `Module.WellFormed` in `lean/Fir/Text/RoundTrip.lean`), a larger set than
 //! the valid modules that [`super::module`] makes. This generator starts from
 //! one of those and adds what validation rejects but the text can still

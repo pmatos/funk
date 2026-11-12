@@ -1,7 +1,7 @@
 //! A generator of random valid modules, for property tests and for the
 //! cross-checks with the Lean side (#10, #13).
 //!
-//! The modules are valid, so they are well formed (ADR-2026-10-30-0815), and
+//! The modules are valid, so they are well formed (ADR-2026-10-29-2014), and
 //! every number in them is within its limit. They cover quoted symbols, `true`
 //! and `false`, constants at the bounds of their widths, every kind of
 //! location, and functions with zero, one and several results, of one block or

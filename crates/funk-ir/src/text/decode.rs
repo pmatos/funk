@@ -5,7 +5,7 @@
 //! each op from its name, its attributes and the types of its operands and
 //! results, found where those values are defined in the function. A text
 //! that follows the grammar but does not decode is not a module: it is a
-//! parse error with a position (ADR-2026-10-30-0815). Successor arguments are
+//! parse error with a position (ADR-2026-10-29-2014). Successor arguments are
 //! not decoded: one that the function does not define is a validation error.
 //!
 //! The blocks and ops of a body are walked in depth-first order, which is

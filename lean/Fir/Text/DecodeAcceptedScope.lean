@@ -19,10 +19,10 @@ definition in the same way, so the first pass adds exactly the definitions
 that the second gives the function. With the parameters, they are the
 function's definitions in another order, as the round trip shows.
 
-As in the round trip's proof (ADR-2026-11-03-0028), the lemmas for blocks,
-ops and regions take what the pass does with the parts they hold as
-hypotheses, and three short theorems, proved together by recursion on the
-tree, tie them together.
+As in the round trip's proof (`docs/decisions/text-format-proofs.md`), the
+lemmas for blocks, ops and regions take what the pass does with the parts
+they hold as hypotheses, and three short theorems, proved together by
+recursion on the tree, tie them together.
 -/
 
 namespace Fir.Text

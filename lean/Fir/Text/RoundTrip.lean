@@ -2,8 +2,7 @@ import Fir.Text.Print
 import Fir.Validation.Rules
 
 /-!
-Two properties tie the parser to the printer (ADR-2026-10-29-2014, as
-refined by ADR-2026-10-30-0815):
+Two properties tie the parser to the printer (ADR-2026-10-29-2014):
 
 * parsing the text of a well-formed module gives the module back;
 * printing what the parser reads from the text of a well-formed module

@@ -7,7 +7,7 @@
 //! spelling, and [`write_module`] writes it to any sink.
 //! `parse(print(m)) == m` for every well-formed module, and
 //! `print(parse(t)) == t` for every text printed from one
-//! (ADR-2026-10-30-0815).
+//! (ADR-2026-10-29-2014).
 
 mod chars;
 mod decode;

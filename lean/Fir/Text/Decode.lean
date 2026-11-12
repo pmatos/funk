@@ -12,7 +12,7 @@ depth, and builds its _scope_: each value it defines, with its type. The
 second decodes each op in that scope.
 
 A text that follows the grammar but does not decode is rejected, with the
-position of the part that does not decode (ADR-2026-10-30-0815):
+position of the part that does not decode (ADR-2026-10-29-2014):
 
 * an item whose kind is neither `func`, `module` nor a word of a dialect,
   at its kind. An item of a dialect's kind decodes whichever dialect

@@ -2,7 +2,7 @@
 //! printer (`Op.decode` in `lean/Fir/Core/Text.lean`). It has no
 //! attributes and no operands, so its name comes right before its
 //! location: `%p: i32 = poison @0`. In text, a use that does not decode is
-//! a parse error at the op's name (ADR-2026-10-30-0815); in IR that a
+//! a parse error at the op's name (ADR-2026-10-29-2014); in IR that a
 //! builder made, it is a validation error at the op and its location.
 
 mod common;

@@ -2,7 +2,7 @@
 //! `srem` and `urem` (#18), through the builder, the verifier, the parser
 //! and the printer (`Op.decode` and `decodeExact` in
 //! `lean/Fir/Core/Text.lean`). In text, a use that does not decode is a
-//! parse error at the op's name (ADR-2026-10-30-0815); in IR that a builder
+//! parse error at the op's name (ADR-2026-10-29-2014); in IR that a builder
 //! made, it is a validation error at the op and its location.
 
 mod common;

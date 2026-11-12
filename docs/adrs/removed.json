@@ -7,6 +7,11 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-10-30-0815-round-trip-covers-well-formed-modules.md",
+      "now": "ADR-2026-10-29-2014",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-10-30-1031-publish-spec-to-github-pages.md",
       "now": "docs/decisions/spec-site.md#publishing-the-site",
       "commit": "c09a05f4f8fb"
@@ -57,6 +62,16 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-11-03-0028-round-trip-proof-follows-the-parsers-steps.md",
+      "now": "docs/decisions/text-format-proofs.md#printing-then-parsing",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0328-parsed-module-proof-uses-the-readers-induction.md",
+      "now": "docs/decisions/text-format-proofs.md#parsed-modules-are-well-formed",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-11-03-1612-pull-requests-merge-only-when-up-to-date.md",
       "now": "ADR-2026-10-28-0725",
       "commit": "c09a05f4f8fb"
@@ -74,6 +89,11 @@
     {
       "file": "2026-11-05-0745-fir-ref-checks-a-location-table-with-core-s-loops.md",
       "now": "docs/decisions/validation-fir-ref.md#location-tables",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-1131-a-source-range-is-written-as-mlir-writes-it.md",
+      "now": "ADR-2026-10-29-2013",
       "commit": "c09a05f4f8fb"
     },
     {

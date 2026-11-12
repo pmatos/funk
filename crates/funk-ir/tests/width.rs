@@ -2,7 +2,7 @@
 //! the verifier, the parser and the printer (`decodeCast` in
 //! `lean/Fir/Core/Text.lean`, `Op.Valid` in `lean/Fir/Core/Validation.lean`).
 //! A use that does not decode, such as an attribute on `zext`, is a parse
-//! error at the op's name in text (ADR-2026-10-30-0815). A width change that
+//! error at the op's name in text (ADR-2026-10-29-2014). A width change that
 //! decodes but does not strictly widen, or strictly narrow, is a validation
 //! error at the op and its location, in text and in IR that a builder made.
 

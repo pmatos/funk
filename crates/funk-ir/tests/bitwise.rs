@@ -2,7 +2,7 @@
 //! `ashr` (#15), through the builder, the verifier, the parser and the
 //! printer (`plainBinOps` and `Op.decode` in `lean/Fir/Core/Text.lean`).
 //! In text, a use that does not decode is a parse error at the op's name
-//! (ADR-2026-10-30-0815); in IR that a builder made, it is a validation
+//! (ADR-2026-10-29-2014); in IR that a builder made, it is a validation
 //! error at the op and its location. None of the six has flags.
 
 mod common;

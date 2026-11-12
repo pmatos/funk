@@ -5,7 +5,7 @@
 # parameter's type, and as many results as the callee returns, each of
 # its type (Op.symbolRefs and Op.Valid in lean/Fir/Core/Validation.lean).
 # A call decodes at any types, so a call that does not match its callee
-# is a validation error, not a parse error (ADR-2026-10-30-0815). A call
+# is a validation error, not a parse error (ADR-2026-10-29-2014). A call
 # of a symbol that names no function breaks both rules, since no
 # signature is there for it to match, and its rule names both. A callee
 # may come before or after its caller, or be the caller itself.

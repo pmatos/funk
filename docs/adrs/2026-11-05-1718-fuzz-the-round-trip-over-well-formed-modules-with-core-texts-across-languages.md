@@ -5,7 +5,7 @@ Tier: implementation; area: testing-and-harness
 
 ## Context
 
-P3's round trip holds for every well-formed module (ADR-2026-10-30-0815),
+P3's round trip holds for every well-formed module (ADR-2026-10-29-2014),
 a larger set than the valid modules that `generate::module` makes. Issue
 #146 found that no fuzzing reached the rest: ops that own regions, string
 and applied attributes, fused locations of fewer than two references,
