@@ -77,7 +77,9 @@ A `@[csimp]` theorem on the spec's instance would also work, at each use
 compiled after it. The instances were chosen because `#synth` can pin them in
 a test that needs no run at depth. Rejected too: a rule that `fir-ref` never
 uses `decide` on validity. It is a trap: a later `if m.Valid` would take stack
-per level, and no test would catch it.
+per level, and no test would catch it. Compiling the spec's instances after
+the theorems cannot be done: the spec cannot import `lean/FirRef/`, which
+imports it.
 
 `lean/FirTest/Validate.lean` pins the instances that `#synth` finds. It also
 runs `decide` on a module nested 1,000,000 levels deep. That module is not
@@ -152,6 +154,9 @@ checks that may each branch to one shared exit took 50 seconds of CPU time at
 32,768 blocks. Rejected too: a memoized search per dominating block, which
 stays quadratic on a chain, and checking a tree of unproved code with the
 spec's search as a fallback, which stays quadratic on invalid functions.
+Proving Lengauer and Tarjan's theorems, or certifying the tree with a
+low-high order, was rejected too: those proofs are longer than the
+invariant, and the check makes them unnecessary for correctness.
 
 `scripts/check-fir-ref.sh test` runs two cases of a million blocks under soft
 limits of CPU time. A chain, each block using the value of the block before it,
@@ -180,7 +185,10 @@ per entry or per reference. It gives the spec's answer, byte for byte.
 
 Rejected: an instance of high priority for `∀ x ∈ l, p x` in `lean/FirRef/`.
 It would change how every module that imports it decides such a proposition,
-for one use.
+for one use. Rejected too: changing the spec's check, which keeps its
+readable definition (`pairwise_lt_iff_zip` states the order of references
+with `List.zip`), and a loop of its own with an accumulator, since core's
+loops already take no stack and the proof would be longer.
 
 `lean/FirTest/LocTable.lean` checks a table of 1,000,000 entries and a fused
 location of 1,000,003 references. Each has errors at the start, in the middle

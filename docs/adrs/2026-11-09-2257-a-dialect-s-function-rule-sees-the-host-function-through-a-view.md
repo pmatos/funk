@@ -11,8 +11,9 @@ Tier: direction; area: validation
   (`lean/Fir/Validation/Check.lean`), whose fields decide each of the
   dialect's own rules. Those rules, in `DialectValidation`, stay
   propositions; a dialect proves them decidable, as the core does in
-  `lean/Fir/Core/Check.lean`. `Module.problems_eq_nil_iff` proves the check
-  equal to `Module.Valid`, which gives `Decidable m.Valid`.
+  `lean/Fir/Core/Check.lean`. `Module.problems_eq_nil_iff` proves that the
+  check finds no problem exactly when the module is valid, which gives
+  `Decidable m.Valid`.
 - **A rule over a whole function.** `DialectValidation` has `validFunc`, and
   `Func.Valid` requires it; it states what no op rule can, such as a value
   used exactly once. It is polymorphic in the dialect `host` that holds the
@@ -27,9 +28,10 @@ Tier: direction; area: validation
   one in `fir-ref`. `funk-ir` must come to run only the rules of a module's
   declared dialects, as the sum of that set does in Lean.
 - **No reason in Lean.** When a dialect's own rule fails, the check gives a
-  fixed message with the op's index and block, or, for a function rule, the
-  function's entry block and its first op's location. It prints neither the
-  type nor the op instance. The Rust rule returns its reason.
+  fixed message with the op's index and block. It prints neither the type
+  nor the op instance. The Rust rule returns its reason. Both sides report a
+  broken function rule at the function's entry block, with its first op's
+  location.
 - **Shared cases.** `tests/dialects/use-once.cases` is read by a use-once
   toy dialect on each side, and is an input of the `FirTest` library in
   `lean/lakefile.lean`, since Lake does not rebuild a module when a file it

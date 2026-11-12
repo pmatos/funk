@@ -11,7 +11,7 @@ a function with a block that its entry does not reach. The verifier names that
 block in its reason. The rule is `reachable` in `Func.Valid`, in
 `lean/Fir/Validation/Rules.lean`. The spec proves the rejection as
 `deadBlock_rejected`, in `lean/Fir/Core/Rejects.lean`. The human ruled this
-on 2026-10-30 (choice 20 of the rulings on #5) (ADR-2026-10-30-0817).
+on 2026-10-30, as choice 20 of the rulings on #5 (ADR-2026-10-30-0817).
 
 Dominance has its standard meaning. Block `a` dominates block `b` when every
 path from the entry to `b` passes through `a`. It needs no case for
@@ -123,7 +123,7 @@ supplying its own rule. A dialect's rule would not compose when the sum moved
 into the spec (ADR-2026-11-09-2257).
 
 A broken function rule is reported at the function's entry block, with the
-location of its first op. `tests/dialects/use-once.cases` holds the cases of a
+location of its first op, by both validators. `tests/dialects/use-once.cases` holds the cases of a
 use-once toy dialect, which the Lean and Rust tests both read
 (ADR-2026-11-09-2257).
 
