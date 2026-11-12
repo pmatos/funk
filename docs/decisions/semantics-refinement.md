@@ -12,10 +12,10 @@ memory. semantics-m1-trace.md says what an M1 run shows.
 A target is correct if each of its observable behaviours is allowed by the
 source. Source UB allows any target that first shows the source's events before
 the UB (ADR-2026-11-09-1540). A poison result is refined by any value.
-Refinement is defined over a domain of observations that the semantics
-supplies. Each dialect supplies its observations (ADR-2026-10-29-2008). This
-is S4, agreed with the human on 2026-10-29 (#5). Rejected: asking the target to behave as the source does, which leaves
-it no freedom where the source has UB or poison.
+Refinement is defined over a domain of observations that the semantics supplies.
+Each dialect supplies its observations (ADR-2026-10-29-2008). This is S4, agreed
+with the human on 2026-10-29 (#5). Rejected: asking the target to behave as the
+source does, which leaves it no freedom where the source has UB or poison.
 
 Core functions, `ret` and `call` have any number of results, none included. No
 validation rule limits them. What a returning run shows is the list of its
@@ -39,8 +39,8 @@ refinement. A poison result from `fir-ref` matches any native value. A test
 whose `fir-ref` result is UB is invalid, never a pass. `freeze` makes the
 source's behaviour a set of outcomes, and ADR-2026-10-29-2017 says how the
 harness checks a native result against that set. Any later check, such as
-per-compile refinement checking (S8, not decided), checks this relation and no other
-(ADR-2026-10-29-2008).
+per-compile refinement checking (S8, not decided), checks this relation and no
+other (ADR-2026-10-29-2008).
 
 Monotonicity makes refinement compositional. Replacing one part of a function
 with a part that refines it refines the whole function (ADR-2026-10-29-2006).
@@ -84,39 +84,39 @@ The refinement engine asks monotonicity only of the ops a run can reach. Those
 are the ops of the source module's functions and of the function that runs:
 `Func.OpsMonotone f` says that every terminator and every op with no callee of
 `f` is monotone. `Func.runs_isRefinedBy_of_calls`, `Func.runs_args_isRefinedBy`
-and `Func.runs_replaceBody_isRefinedBy` take it over the source module, and
-the first two take it for the function that runs. `Func.Valid.opsMonotone`
-gives it for a valid function from monotonicity at valid op instances alone,
-in `lean/Fir/Execution/Lawful.lean`. So a lawful dialect gets both
-function-level refinement theorems for valid modules from the class alone, as
-the test dialect `CoreProbe` does in `lean/FirTest/LawfulRefine.lean`.
-`Core.args_isRefinedBy` and `Core.replaceBody_isRefinedBy` keep their
-statements through `Core.opsMonotone_all`: every core function's ops are
-monotone, valid or not. So `Core.args_isRefinedBy` holds for every function of
-every core module, valid or not. The human ruled on 2026-11-05 (#99) to do this before M1 adds
-memory. Rejected: asking monotonicity at valid op instances in the engine, with
-a valid module, since `Core.args_isRefinedBy` could not then keep its
-statement; and threading `Func.InModule`, which progress needs but refinement
-does not, since it treats a stuck path as allowed.
+and `Func.runs_replaceBody_isRefinedBy` take it over the source module, and the
+first two take it for the function that runs. `Func.Valid.opsMonotone` gives it
+for a valid function from monotonicity at valid op instances alone, in
+`lean/Fir/Execution/Lawful.lean`. So a lawful dialect gets both function-level
+refinement theorems for valid modules from the class alone, as the test dialect
+`CoreProbe` does in `lean/FirTest/LawfulRefine.lean`. `Core.args_isRefinedBy`
+and `Core.replaceBody_isRefinedBy` keep their statements through
+`Core.opsMonotone_all`: every core function's ops are monotone, valid or not. So
+`Core.args_isRefinedBy` holds for every function of every core module, valid or
+not. The human ruled on 2026-11-05 (#99) to do this before M1 adds memory.
+Rejected: asking monotonicity at valid op instances in the engine, with a valid
+module, since `Core.args_isRefinedBy` could not then keep its statement; and
+threading `Func.InModule`, which progress needs but refinement does not, since
+it treats a stuck path as allowed.
 
 ## Congruence in the callee
 
 Replacing a callee is replacing a body. `M.replaceBody s b` is the module `M`
 with the region `b` in place of the body of its function `@s`. Every function
 keeps its symbol, its parameters and its result types, so the runs of the old
-and the new function have one type and need no cast. Congruence assumes that
-the new `@g`, run in the new module, refines the old `@g`, run in the old. It
+and the new function have one type and need no cast. Congruence assumes that the
+new `@g`, run in the new module, refines the old `@g`, run in the old. It
 concludes the same relation for every function of the module
 (`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, which ask that the
-module be valid and that `@g` have no pointer parameter). It needs nothing of the new body, because a call of
-`@g` is a black box whose behaviour the hypothesis gives. When the new body
-calls back into the module, proving the hypothesis may need its own
-induction. A body that gets
-stuck at once meets the hypothesis with an empty behaviour, so the comparison
-is between real behaviours when the new function is valid in the old module's
-context (`Module.valid_replaceBody`). Rejected: the new callee run in the old
-module, which is false: if `@g` returns `0`, the body `call @g` refines it in
-the old module, but in the new one it calls itself and never returns.
+module be valid and that `@g` have no pointer parameter). It needs nothing of
+the new body, because a call of `@g` is a black box whose behaviour the
+hypothesis gives. When the new body calls back into the module, proving the
+hypothesis may need its own induction. A body that gets stuck at once meets the
+hypothesis with an empty behaviour, so the comparison is between real behaviours
+when the new function is valid in the old module's context
+(`Module.valid_replaceBody`). Rejected: the new callee run in the old module,
+which is false: if `@g` returns `0`, the body `call @g` refines it in the old
+module, but in the new one it calls itself and never returns.
 
 `Func.runs_replaceBody_isRefinedBy` asks that the parameter types of `@g` have
 finitely many argument vectors. Then one budget bounds every run of the new
@@ -150,11 +150,11 @@ a pointer's provenance that the source keeps.
 A dialect lawful in its monotonicity (`LawfulDialectMonotone`) has each valid
 terminator and each valid op with no callee monotone over its semantics with
 memory, at every naming and from memories that refine others (`MemMonotone`;
-ADR-2026-11-09-1541).
-It is a class of its own, as `LawfulDialectTotal` is (semantics-interpreter.md).
-A dialect that lifts the set monad and is lawful meets it, and so do sums and
-lifts whose sides do. An op that touches memory proves `MemMonotone` with the
-laws by which the memory model's operations keep refinement.
+ADR-2026-11-09-1541). It is a class of its own, as `LawfulDialectTotal` is
+(semantics-interpreter.md). A dialect that lifts the set monad and is lawful
+meets it, and so do sums and lifts whose sides do. An op that touches memory
+proves `MemMonotone` with the laws by which the memory model's operations keep
+refinement.
 
 Refinement then compares runs from given memories, the end memories included,
 since a callee runs from its caller's memories (`Func.memRunsFrom`). Refined

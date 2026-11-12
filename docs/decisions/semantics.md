@@ -34,8 +34,8 @@ grammar with one production per op, which is costly to open once code depends
 on it.
 
 Types and ops come from dialects, so there is no closed core enum. The core's
-`iN`, `float<e,m>` and `ptr` are one dialect's types. One text grammar covers every
-dialect, so a new dialect needs no parser change. The Lean semantics is
+`iN`, `float<e,m>` and `ptr` are one dialect's types. One text grammar covers
+every dialect, so a new dialect needs no parser change. The Lean semantics is
 parameterized over the dialect. Ops, types and effects come in through
 typeclasses. Lean proofs are stated over the dialect parameter where they can
 be, so a new dialect does not reopen them. Checks that a closed `enum` would
@@ -59,8 +59,8 @@ reaches a dialect's ops only through the registry or the dialect's classes.
 Generic code is most of `funk-ir` and of the Lean spec. Code that builds, lowers
 or runs one dialect's programs may name its ops. That code is the dialect's own
 files, the x86-64 backend and the command lines of `funk` and `fir-ref`. It is
-also the tests and the corpus. The grammar's own words, such as `func`, are not per-op code
-(ADR-2026-11-03-0600).
+also the tests and the corpus. The grammar's own words, such as `func`, are not
+per-op code (ADR-2026-11-03-0600).
 
 CI keeps this line. `crates/funk-ir/tests/g0.rs` and `scripts/check_g0.py` fail
 on per-op code in generic code. `lean/FirTest/G0.lean` breaks when generic code
