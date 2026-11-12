@@ -92,9 +92,9 @@ The smoke test is one command:
 `default_stages: [pre-commit, commit-msg, pre-push]`, so every hook joins the
 `pre-push` stage unless it sets its own `stages`. The slow hooks set
 `stages: [pre-commit]`: a hook that builds Lean, runs `cargo test`, counts
-instructions under valgrind or runs the harness. They are `rust-test`, `rust-speed`, `fir-spec`, `fir-ref-test`,
-`fir-round-trip`, `fir-harness` and `fir-random`. A new hook follows the same
-rule. `fir-random-nightly` and `fir-fuzz` stay in the `manual` stage.
+instructions under valgrind or runs the harness. They are `rust-test`,
+`rust-speed`, `fir-spec`, `fir-ref-test`, `fir-round-trip`, `fir-harness` and
+`fir-random`. A new hook follows the same rule. `fir-random-nightly` and `fir-fuzz` stay in the `manual` stage.
 
 So the smoke test runs every hook of the `static` job, `rust-fmt`,
 `rust-clippy`, `rust-speed-test`, `fir-harness-test` and `coverage-matrix`. It

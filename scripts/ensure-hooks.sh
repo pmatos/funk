@@ -53,10 +53,9 @@ hooks_installed || fail "pre-commit and commit-msg must both be executable pre-c
 if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
     warning="Warning: elan, the Lean toolchain manager, is not installed.
 The fir-spec, fir-ref-test, fir-round-trip, fir-harness and fir-random
-hooks need it. A commit that
-changes lean/, docs/spec/, tests/fir/, the Rust crates or the Rust toolchain
-runs one of them, and so does every full 'pre-commit run --all-files'. The
-smoke run before a push runs none of them.
+hooks need it. A commit that changes lean/, docs/spec/, tests/fir/, the Rust
+crates or the Rust toolchain runs one of them, and so does every full
+'pre-commit run --all-files'. The smoke run before a push runs none of them.
 Install it as https://github.com/leanprover/elan#installation says."
     echo "$warning"
     echo "$warning" >&2
@@ -94,8 +93,8 @@ if [[ -n "$binutils_problem" ]]; then
     warning="Warning: $binutils_problem
 funk build and the rust-test, fir-harness and fir-random hooks, which run on
 every full 'pre-commit run --all-files' but not in the smoke run before a push,
-need GNU binutils (as and ld) on an x86-64 Linux host. Install binutils with your
-system's package manager, or work on such a host."
+need GNU binutils (as and ld) on an x86-64 Linux host. Install binutils with
+your system's package manager, or work on such a host."
     echo "$warning"
     echo "$warning" >&2
 fi
