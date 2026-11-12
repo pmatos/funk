@@ -15,8 +15,8 @@ effects. Each effect that a core op leaves out, it does not have:
   not declare it gives a defined result: `add`, `sub` and `mul` without
   flags, the divisions without `exact` when they give a result, the bitwise
   ops, `icmp`, `fcmp`, `select`, the width changes, `const` at an integer
-  and at a float type, `freeze`, and the float arithmetic, whose NaN
-  results are defined bits.
+  and at a float type, `freeze`, the float arithmetic, whose NaN
+  results are defined bits, and the bit casts.
 * _No control._ Every core op that does not declare control is not a
   terminator.
 * _No write, read or allocation._ No core op touches memory: it runs by its
@@ -53,6 +53,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .select _, _ => fun
     | .cons _ (.cons _ (.cons _ .nil)), _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .zext .., _ | .sext .., _ | .trunc .., _ => fun
+    | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
+  | .toBits .., _ | .ofBits .., _ => fun
     | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .freeze w, _ => fun
     | .cons a .nil, _ => ⟨fun _ h => (by
@@ -182,6 +184,18 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       obtain ⟨x, rfl⟩ := defined₁ hd
       cases hr
       exact not_any_of_ne fun h => nomatch h
+  | .toBits .., _ => fun _ args hd _ hr => match args, hd, hr with
+    | .cons a .nil, hd, hr => by
+      cases a with
+      | poison => exact absurd (.inl rfl) hd
+      | value x =>
+        cases hr
+        exact not_any_of_ne fun h => nomatch h
+  | .ofBits .., _ => fun _ args hd _ hr => match args, hd, hr with
+    | .cons _ .nil, hd, hr => by
+      obtain ⟨x, rfl⟩ := defined₁ hd
+      cases hr
+      exact not_any_of_ne_float fun h => nomatch h
   | .freeze w, _ => fun _ args _ _ hr => match args, hr with
     | .cons a .nil, hr => by
       obtain ⟨b, he, _⟩ := (freeze_denote w a _).1 hr

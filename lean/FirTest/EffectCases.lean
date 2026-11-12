@@ -68,10 +68,10 @@ def Case.holds (c : Case) : Bool :=
   | some o => render Empty.elim (effects (d := CoreDialect) o) == c.set
   | none => false
 
-#guard cases.length == 47
+#guard cases.length == 49
 #guard (cases.filter (!·.holds)).map (·.name) == []
 -- The cases pin every core op.
-#guard ((cases.filterMap Case.op).map Core.Op.name).eraseDups.length == 35
+#guard ((cases.filterMap Case.op).map Core.Op.name).eraseDups.length == 36
 #guard (Core.samples.map Core.Op.name).all fun n =>
   (cases.filterMap Case.op).any (·.name == n)
 

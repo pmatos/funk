@@ -32,6 +32,8 @@ def Op.sig : Op → List Ty
   | .fma e m => [.float e m, .float e m, .float e m]
   | .select w => [i 1, i w, i w]
   | .zext m _ | .sext m _ | .trunc m _ => [i m]
+  | .toBits e m => [.float e m]
+  | .ofBits e m => [i (floatWidth e m)]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -45,6 +47,8 @@ def Op.returnTypes : Op → List Ty
   | .fconst e m _ | .fbin _ e m | .funary _ e m | .fma e m => [.float e m]
   | .icmp _ _ | .fcmp .. => [i 1]
   | .zext _ n | .sext _ n | .trunc _ n => [i n]
+  | .toBits e m => [i (floatWidth e m)]
+  | .ofBits e m => [.float e m]
   | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs
 

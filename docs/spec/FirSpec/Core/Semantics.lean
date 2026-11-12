@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4221374963765117764")
+:::moduleDocs (fingerprint := "3513308976552938675")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "8211522301814288648")
+:::readable Fir.Core.Op.denote? (fingerprint := "4416583306068748455")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -51,7 +51,10 @@ result:
   which choose the bits of a NaN result;
 * $`\mathsf{zext}_{M \to N}`, $`\mathsf{sext}_{M \to N}` and
   $`\mathsf{trunc}_{M \to N}`: the
-  {ref "The-fir-specification--Execution--Width-change-rules"}[width change rules].
+  {ref "The-fir-specification--Execution--Width-change-rules"}[width change rules];
+* $`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}` and
+  $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`: the
+  {ref "The-fir-specification--Execution--Bit-cast-rules"}[bit cast rule].
 
 $`\mathsf{call}` and the terminators have none here: a call's meaning is
 the run of its callee, and a terminator's rule says where control goes.
@@ -72,14 +75,14 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7852276650248616456")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "15142631100982668539")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
 set of flags, $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
-predicates, at a valid format and at one that validation rejects, and each
-float op of arithmetic, among them, and
+predicates, at a valid format and at one that validation rejects, each
+float op of arithmetic, and both bit casts, among them, and
 $`\mathsf{call}` counts through its callee.
 
 *Definition: the core dialect's semantics.* In the

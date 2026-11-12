@@ -14,7 +14,7 @@ and, in the `func` rows, the results of the function it runs. An
 empty entry is not a cell: a width change that the spec does not
 allow, or a width for a row that passes no value.
 
-1002 cells, 1002 with a test.
+1016 cells, 1016 with a test.
 
 ## Differential tests
 
@@ -88,6 +88,8 @@ allow, or a width for a row that passes no value.
 | `fabs` |  | 3 | 3 |
 | `sqrt` | `round(rne)` | 10 | 10 |
 | `fma` | `round(rne)` | 13 | 13 |
+| `bitcast` | `float to bits` | 17 | 17 |
+| `bitcast` | `bits to float` | 17 | 17 |
 
 ### Width changes (differential tests)
 
@@ -121,14 +123,14 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 855 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2823 | 1474 | 1156 | 1557 | 1323 | 2377 | 113 | 111 |
+| `ret` | returns one value |  | 2823 | 1474 | 1156 | 1574 | 1340 | 2377 | 130 | 128 |
 | `ret` | returns several values |  | 282 | 431 | 265 | 246 | 399 | 539 | 9 | 9 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2823 | 1474 | 1156 | 1557 | 1323 | 2377 | 111 | 109 |
+| `func` | returns one value |  | 2823 | 1474 | 1156 | 1574 | 1340 | 2377 | 128 | 126 |
 | `func` | returns several values |  | 282 | 431 | 265 | 237 | 399 | 503 | 9 | 9 |
 
 ## Interpreter-only tests
@@ -203,6 +205,8 @@ allow, or a width for a row that passes no value.
 | `fabs` |  | 4 | 4 | 3 | 3 | 4 |
 | `sqrt` | `round(rne)` | 13 | 13 | 12 | 12 | 13 |
 | `fma` | `round(rne)` | 15 | 15 | 14 | 14 | 15 |
+| `bitcast` | `float to bits` | 17 | 17 | 16 | 16 | 17 |
+| `bitcast` | `bits to float` | 17 | 17 | 16 | 16 | 17 |
 
 ### Width changes (interpreter-only tests)
 
@@ -242,12 +246,12 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2263 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 | 128 | 128 | 121 | 119 | 128 |
+| `ret` | returns one value |  | 2263 | 1298 | 530 | 538 | 632 | 1336 | 543 | 818 | 145 | 145 | 137 | 135 | 145 |
 | `ret` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2263 | 1298 | 531 | 504 | 616 | 1336 | 527 | 801 | 126 | 126 | 119 | 117 | 126 |
+| `func` | returns one value |  | 2263 | 1298 | 531 | 538 | 632 | 1336 | 543 | 818 | 143 | 143 | 135 | 133 | 143 |
 | `func` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |

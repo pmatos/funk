@@ -36,9 +36,11 @@
 //! (`farith.rs`,
 //! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
 //! pass and return in SSE registers
-//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
+//! bit cast copies a slot (`bitcast.rs`).
 
 mod arith;
+mod bitcast;
 mod bitwise;
 mod call;
 mod cast;
@@ -276,6 +278,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| farith::lowering(name))
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
+        .or_else(|| bitcast::lowering(name))
 }
 
 /// A module's functions, lowered.

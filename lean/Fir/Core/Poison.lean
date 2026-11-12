@@ -6,13 +6,14 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 31 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 33 core ops has a class (ADR-2026-10-29-2006).
 
-Twenty-four ops propagate poison: `const`, the float constant `fconst`,
+Twenty-six ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
-`xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, and
-the three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul` and
-`fdiv`), `funary` (`fneg`, `fabs` and `sqrt`) and `fma`.
+`xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
+three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul` and
+`fdiv`), `funary` (`fneg`, `fabs` and `sqrt`) and `fma`, and the two bit
+casts `toBits` and `ofBits`.
 `const`, `fconst` and `poison` have no operands, so they propagate poison
 whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -72,7 +73,8 @@ the rest, so a new core op does not build until it declares its class
 def Op.poisonClass : Op → PoisonClass
   | .const .. | .fconst .. | .add .. | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _
   | .urem _ | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .fcmp ..
-  | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _ => .propagates
+  | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
+  | .toBits .. | .ofBits .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a

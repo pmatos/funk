@@ -278,3 +278,16 @@ a choice that names the NaN, until #219. `reject/float-arith.toml` holds
 the texts of these ops that do not decode, such as `fadd` without
 `round(rne)` or with `round(rtz)`, and one at a format that validation
 rejects.
+
+The texts of #241's first stage also use the bit cast `bitcast`
+([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md)).
+`float-bitcast-T` casts a value of `T`, one of `f16`, `bf16`, `f32`,
+`f64` and `f128`, to the integer of its width and back, on zeros of both
+signs, subnormals, the smallest normal, one, the largest finite values,
+infinities and NaNs with payloads and either sign, and on poison. Each
+result is its operand's bits, so every case is differential at `f32` and
+`f64`, NaNs included, and interpreter-only at every format.
+`scripts/harness/float_bitcast_cases.py` writes them
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-bit-cast-corpus)).
+`reject/float-bitcast.toml` holds the bit casts that do not decode: an
+integer of another width, two floats or two integers, and an attribute.

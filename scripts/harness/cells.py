@@ -21,6 +21,9 @@ has neither operands nor attributes, is a cell at each width of its result
   differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
   `f64` and `f128` for interpreter-only tests (#229,
   ADR-2026-11-03-0557).
+- `bitcast` is a cell in each direction at each float format of the side:
+  from the float to an integer of its width, and from that integer to the
+  float (#241).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -83,8 +86,11 @@ AT_WIDTH = {
 }
 # The attribute of a float op that rounds (`roundAttr`).
 ROUND = ("round(rne)",)
+# The two directions of `bitcast`, `toBits` and `ofBits`: a cell each.
+TO_BITS, OF_BITS = "float to bits", "bits to float"
+BITCAST = (TO_BITS, OF_BITS)
 # The float ops at a format, in the order of `Op`, with the attributes
-# that are cells.
+# that are cells, and `bitcast` with its directions.
 AT_FORMAT = {
     "const": ("",),
     "fcmp": FPREDS,
@@ -96,6 +102,7 @@ AT_FORMAT = {
     "fabs": ("",),
     "sqrt": ROUND,
     "fma": ROUND,
+    "bitcast": BITCAST,
 }
 CASTS = ("zext", "sext", "trunc")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
@@ -186,6 +193,12 @@ def of_op(op: Op) -> set[Cell]:
     """The cells that an op exercises, at any width. An op that the core
     dialect does not have, or an attribute that is not a cell, is an
     error."""
+    if op.name == "bitcast":
+        if op.attrs:
+            raise CellError(f"bitcast {' '.join(op.attrs)} is not a cell")
+        if is_float(op.operands[0]):
+            return {Cell("floats", "bitcast", TO_BITS, op.operands[0])}
+        return {Cell("floats", "bitcast", OF_BITS, op.results[0])}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

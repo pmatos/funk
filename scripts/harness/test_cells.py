@@ -72,6 +72,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeCast": ("",),
         "decodeFBin": round_attrs(floats),
         "decodeFma": round_attrs(floats),
+        "decodeBitcast": ("",),
     }
     unary = unary_attrs(floats)
     found = {}
@@ -116,10 +117,13 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
+        self.assertEqual(definition(floats, "decodeBitcast").count("as.isEmpty"), 2)
         self.assertEqual(
             decoded_attrs(text, floats),
             {
-                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                op: ("",)
+                if op == "bitcast"
+                else cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 for op in cells.OPS
             },
         )
@@ -202,7 +206,17 @@ class Tests(unittest.TestCase):
             of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
-        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8))
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8 + 2))
+        to_bits = Op("bitcast", (), ("f16",), ("i16",), ())
+        self.assertEqual(
+            of_op(to_bits), {Cell("floats", "bitcast", cells.TO_BITS, "f16")}
+        )
+        of_bits = Op("bitcast", (), ("i64",), ("f64",), ())
+        self.assertEqual(
+            of_op(of_bits), {Cell("floats", "bitcast", cells.OF_BITS, "f64")}
+        )
+        with self.assertRaises(CellError):
+            of_op(Op("bitcast", ("round(rne)",), ("f32",), ("i32",), ()))
         add = Op("fadd", ("round(rne)",), ("f32", "f32"), ("f32",), ())
         self.assertEqual(of_op(add), {Cell("floats", "fadd", "round(rne)", "f32")})
         fma = Op("fma", ("round(rne)",), ("bf16",) * 3, ("bf16",), ())

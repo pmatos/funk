@@ -146,12 +146,47 @@ on #310, that `frem` is the IEEE 754 remainder, with the quotient rounded to
 nearest, ties to even, and that C's `fmod`, with the quotient truncated, is
 built alongside it. #310 builds both.
 
+## The conversions
+
+#241 adds the conversions of ADR-2026-11-09-1549 in four stages, as its stage
+plan says: bit casts, then `fpext` and `fptrunc`, then integer to float, then
+float to integer.
+
+Open questions to the human, raised on 2026-11-12 on #241 and not yet ruled.
+How float to integer rounds: #241 gives `round = rne` to integer to float and
+to `fptrunc`, and nothing to `fptosi` and `fptoui`, which in C, LLVM and SSE's
+`cvttss2si` truncate toward zero, so `2.7` gives `2` and `-2.7` gives `-2`;
+stage 4 waits on it. Which op converts between two formats where neither holds
+the other, such as `bf16` and `f16`: the stage plan proposes `fpext` only where
+the target holds every value of the source, and `fptrunc`, rounding to nearest
+even, for every other pair; stage 2 waits on that pair.
+
+`bitcast` reads the same bits as another type of the same width. From
+`float<e,m>` it gives an `iN` with `N = 1 + e + m`, and from that `iN` it
+gives a `float<e,m>`; the spec has one op instance for each direction,
+`toBits e m` and `ofBits e m`, with one rule, `bitcastValue`, which keeps
+every bit (`lean/Fir/Core/FloatBitcast.lean`).
+
+- A value of a float type is its bit pattern, so the rule changes no bit. It
+  reads no number: Lean's model takes no part, nothing rounds, and no NaN is
+  chosen. A NaN's sign and payload come through as they are, both ways, and
+  every bit pattern of `iN` is a float, a signalling NaN's included. This is
+  IEEE 754's view of an encoding as its bits, and LLVM's `bitcast`.
+- A poison operand gives poison, and a value gives a value. It is never UB,
+  and it is pure.
+- Its widths must match: an op whose integer has another width, or that
+  casts between two floats or two integers, does not decode, so validation
+  has no rule of its own for it. Rejected: bit casts between two float
+  formats of one width, such as `f16` and `bf16`, which #241 does not ask
+  for.
+
 ## What holds today
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
-arithmetic above, and float constants. A float constant is `const` at a float
+arithmetic above, float constants, and `bitcast` between a float and the
+integer of its width. A float constant is `const` at a float
 type, written as its shortest decimal that reads back, such as `1.0` or `0.1`,
 or else as `0x` and its bits, such as `0x7fc00000`. Every bit pattern, each NaN
 payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
@@ -166,7 +201,7 @@ never a NaN, so it is differential already. The naive backend lowers `f32` and
 `f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and
 lowers the constants, `fcmp` and the arithmetic, with SSE2 and, for `fma`, a
-routine of a runtime helper
+routine of a runtime helper, and `bitcast` as a copy of a slot
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md)). It reports every
 other format as a diagnostic where its value is defined. The corpus runs every
 predicate and the constants differentially at `f32` and `f64`, and on `fir-ref`
@@ -176,6 +211,9 @@ the arithmetic on the hard inputs of every op, at every aliased format, with
 each result that is not a NaN differential at `f32` and `f64`, and each NaN
 result on `fir-ref` with a choice
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
+It runs `bitcast` both ways at every aliased format, on the same edges, each
+case differential at `f32` and `f64`, NaNs included
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-bit-cast-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's
