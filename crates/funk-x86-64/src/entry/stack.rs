@@ -4,9 +4,9 @@
 //! A function's need is the stack it uses below the return address that its
 //! caller pushes: that address and its saved `%rbp`, its frame, and the
 //! deepest of its calls, each with the arguments it pushes and the callee's
-//! own need. A division at `i128`, or an `fma` at `f32` or `f64`, is a call
-//! of a runtime helper, which pushes no argument and needs at most
-//! `HELPER_STACK` bytes
+//! own need. A division at `i128`, or an `fma`, `frem` or `fmod` at `f32`
+//! or `f64`, is a call of a runtime helper, which pushes no argument and
+//! needs at most `HELPER_STACK` bytes
 //! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 //! A call between two functions of one cycle, such as a function
 //! that calls itself or two that call each other, is left out: how deep a
@@ -368,25 +368,26 @@ mod tests {
         );
     }
 
-    /// An `fma` at `f32` or `f64` calls a runtime helper too, and needs
-    /// `HELPER_STACK` bytes below the frame.
+    /// An `fma`, `frem` or `fmod` at `f32` or `f64` calls a runtime helper
+    /// too, and needs `HELPER_STACK` bytes below the frame.
     #[test]
-    fn an_fma_needs_the_helper_s_stack() {
+    fn fma_frem_and_fmod_need_the_helper_s_stack() {
         use funk_ir::{Registry, parse};
-        let func = |t: &str| {
+        let func = |name: &str, t: &str, op: &str| {
             format!(
-                "func @{t}(%a: {t}, %b: {t}, %c: {t}) -> {t} {{\n^entry:\n  \
-                 %r: {t} = fma round(rne) %a, %b, %c @0\n  ret %r @0\n}}\n\n"
+                "func @{name}(%a: {t}, %b: {t}, %c: {t}) -> {t} {{\n^entry:\n  \
+                 %r: {t} = {op} @0\n  ret %r @0\n}}\n\n"
             )
         };
-        let text = func("f32") + &func("f64") + "locs {\n  @0 = unknown\n}\n";
+        let text = func("a", "f32", "fma round(rne) %a, %b, %c")
+            + &func("b", "f64", "fma round(rne) %a, %b, %c")
+            + &func("c", "f32", "frem %a, %b")
+            + &func("d", "f64", "fmod %a, %b")
+            + "locs {\n  @0 = unknown\n}\n";
         let m = parse(&text, &Registry::core()).unwrap();
         assert_eq!(
-            needs(&m, &[64, 48]),
-            [
-                need(16 + 64 + HELPER_STACK, false),
-                need(16 + 48 + HELPER_STACK, false)
-            ]
+            needs(&m, &[64, 48, 32, 16]),
+            [64, 48, 32, 16].map(|f| need(16 + f + HELPER_STACK, false))
         );
     }
 

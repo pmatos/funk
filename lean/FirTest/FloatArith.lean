@@ -1,10 +1,10 @@
 import FirTest.Modes
 
 /-!
-Tests of #229's float arithmetic on `FirRef.runBytes`, which computes what
-`fir-ref run` writes (ADR-2026-11-09-1549, ADR-2026-11-11-1801). Each op
-runs on its hard inputs in the corpus, `float-binary-T` and
-`float-unary-fma-T`, against `scripts/harness/float_ref.py`; these check
+Tests of the float arithmetic of #229 and #310 on `FirRef.runBytes`, which
+computes what `fir-ref run` writes (ADR-2026-11-09-1549,
+ADR-2026-11-11-1801). Each op runs on its hard inputs in the corpus,
+`float-binary-T`, `float-unary-fma-T` and `float-rem-T`, against `scripts/harness/float_ref.py`; these check
 what the corpus does not: that a result which is not a NaN takes no
 choice, that a NaN result is the NaN its choice names, in scripted and in
 exhaustive mode, and that `round(rne)` is the one attribute of an op that
@@ -26,7 +26,7 @@ def floatOp (op attr ty : String) (n : Nat) : String :=
 
 /-- What scripted mode reports on `op` at `ty` on `args`, with `cs`. -/
 def farith (op ty : String) (args : List String) (cs : List String := []) : RunReport :=
-  let attr := if op == "fneg" || op == "fabs" then "" else " round(rne)"
+  let attr := if ["fneg", "fabs", "frem", "fmod"].contains op then "" else " round(rne)"
   runText (floatOp op attr ty args.length) "@f" args (mode := .scripted cs)
 
 -- A result that is not a NaN is one value, with no choice, at every format.
@@ -40,6 +40,10 @@ def farith (op ty : String) (args : List String) (cs : List String := []) : RunR
 #guard farith "fneg" "f32" ["0.0"] == returns ["-0.0"]
 #guard farith "fabs" "f64" ["-1.5"] == returns ["1.5"]
 #guard farith "fma" "f32" ["1.0", "1.0", "1.0"] == returns ["2.0"]
+-- #310's examples: `5.5 frem 2` is `-0.5`, and `5.5 fmod 2` is `1.5`.
+#guard farith "frem" "f64" ["5.5", "2.0"] == returns ["-0.5"]
+#guard farith "fmod" "f64" ["5.5", "2.0"] == returns ["1.5"]
+#guard farith "fmod" "f16" ["-4.0", "2.0"] == returns ["-0.0"]
 -- A tie goes to the even neighbour: `1 + 2^-24` at `f32` is `1`.
 #guard farith "fadd" "f32" ["1.0", "5.9604645e-8"] == returns ["1.0"]
 -- A poison operand gives poison, with no choice.
@@ -68,6 +72,8 @@ NaN. -/
 #guard farith "fabs" "bf16" ["0xffff"] ["0"] == returns ["0x7fc0"] 1
 #guard farith "fma" "f128" ["0x7fff8000000000000000000000000000", "1.0", "1.0"] ["0"] ==
   returns ["0x7fff8000000000000000000000000000"] 1
+-- A remainder by zero is any NaN.
+#guard farith "frem" "f32" ["1.0", "0.0"] ["-1"] == returns ["0xffffffff"] 1
 -- Exhaustive mode lists every NaN of `float<2,1>`, whose two NaNs are 7
 -- and 15, written `0x7` and `0xf`.
 #guard explore (floatOp "fsub" " round(rne)" "float(2, 1)" 2) ["0x6", "0x6"] ==
@@ -81,8 +87,10 @@ def withAttr (op attr : String) (n : Nat) : RunReport :=
   runText (floatOp op attr "f32" n) "@f" ((List.replicate n "1.0"))
 
 #guard withAttr "fadd" " round(rne)" 2 == returns ["2.0"]
+#guard withAttr "frem" "" 2 == returns ["0.0"]
 #guard [("fadd", "", 2), ("fadd", " round(rtz)", 2), ("fmul", " rne", 2), ("sqrt", "", 1),
-  ("fneg", " round(rne)", 1), ("fma", " round(rne) round(rne)", 3)].all fun (op, attr, n) =>
+  ("fneg", " round(rne)", 1), ("fma", " round(rne) round(rne)", 3),
+  ("fmod", " round(rne)", 2)].all fun (op, attr, n) =>
     (withAttr op attr n).status == 1
 
 end FirTest

@@ -415,6 +415,28 @@ locs {
   @0 = unknown
 }
 
+=== frem pure
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod pure
+func @f(%a: f64, %b: f64, %c: i1) -> f64 {
+^entry:
+  %r: f64 = fmod %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === fneg pure
 func @f(%a: f128, %b: f128, %c: i1) -> f128 {
 ^entry:

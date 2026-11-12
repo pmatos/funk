@@ -70,6 +70,7 @@ import FirTest.FloatModelFma
 import FirTest.FloatModelF16
 import FirTest.FloatModelBf16
 import FirTest.FloatModelF128
+import FirTest.FloatRem
 import FirTest.EquivSteps
 import FirTest.EquivFuncs
 import FirTest.Equiv

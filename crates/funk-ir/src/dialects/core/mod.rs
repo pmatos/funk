@@ -13,10 +13,10 @@
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
 //! `ret`. #229 adds float constants to `const`, the float comparison
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
-//! `fabs`, `sqrt` and `fma`. #241 adds the bit cast `bitcast` between a
-//! float and an integer of its width, and the conversions from integers
-//! to floats `sitofp` and `uitofp`. A later family adds a file and a line
-//! here.
+//! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`.
+//! #241 adds the bit cast `bitcast` between a float and an integer of its
+//! width, and the conversions from integers to floats `sitofp` and
+//! `uitofp`. A later family adds a file and a line here.
 
 mod arith;
 mod bitcast;

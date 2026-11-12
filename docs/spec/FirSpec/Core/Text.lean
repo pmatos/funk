@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4335997303223168266")
+:::moduleDocs (fingerprint := "177051942795577566")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -52,11 +52,11 @@ the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
 the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "7839012296453660857")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "442232313540447983")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}) = \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -84,7 +84,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "9165972572583470857")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "1645440977341616965")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -121,8 +121,8 @@ $`\mathsf{i}W` are integer types.
   $`\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e',m' \rangle`
   with $`e = e'` and $`m = m'`, and the result type $`\mathsf{i1}`, it is
   $`\mathsf{fcmp}_{e,m}~p`.
-* `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`: as
-  the section on
+* `fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `fneg`, `fabs`,
+  `sqrt` and `fma`: as the section on
   {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
   reads them, from their attributes and their float types.
 * `add`, `sub` and `mul`: when $`\mathrm{width}(t^*, r^*) = A` and
@@ -213,7 +213,7 @@ calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
 validation rejects them.
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "15769433947503691688")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "1624387118991640566")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the blocks
 above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
