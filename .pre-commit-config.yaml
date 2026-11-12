@@ -1,4 +1,10 @@
 default_install_hook_types: [pre-commit, commit-msg]
+# A hook runs on commit, on the commit message as before, and in the smoke
+# run before a push: `pre-commit run --all-files --hook-stage pre-push`. A
+# slow hook, one that builds Lean, runs cargo test, counts instructions under
+# valgrind or runs the harness, sets `stages: [pre-commit]`: CI runs it on
+# every file (ADR-2026-11-05-1408).
+default_stages: [pre-commit, commit-msg, pre-push]
 # The fir-spec hook's `unsupported_script` language needs pre-commit 4.4.0.
 minimum_pre_commit_version: 4.4.0
 
@@ -82,6 +88,7 @@ repos:
         name: Build fir's Lean package, check its axioms and render the spec
         entry: scripts/build-spec.sh
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(lean/|docs/spec/|docs/adrs/|scripts/build-spec\.sh$)
       # The Rust checks run over the whole workspace (ADR-2026-10-30-1030).
@@ -107,6 +114,7 @@ repos:
         entry: scripts/check-rust.sh
         args: [test]
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(check-rust|rust-env)\.sh$)
       # Counts funk's instructions on large inputs against a committed
@@ -117,6 +125,7 @@ repos:
         name: funk's instruction counts stay within 10% of the baseline
         entry: scripts/check-rust-speed.sh
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         verbose: true
         files: ^(crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/((check-rust-speed|rust-env)\.sh|rust_speed\.py|rust-speed-baseline\.json)$)
@@ -134,6 +143,7 @@ repos:
         entry: scripts/check-fir-ref.sh
         args: [test]
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref(-run|-deep)?)\.sh$)
       - id: fir-round-trip
@@ -141,6 +151,7 @@ repos:
         entry: scripts/check-fir-ref.sh
         args: [round-trip]
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec|check-fir-ref|rust-env)\.sh$)
       # The differential harness
@@ -152,6 +163,7 @@ repos:
         name: fir-ref and native code agree on the corpus (the differential harness)
         entry: scripts/check-harness.sh
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-harness\.sh$|rust-env\.sh$|harness/))
       # Generated programs on fir-ref and as native code, and random texts
@@ -160,6 +172,7 @@ repos:
         name: fir-ref and native code agree on generated programs
         entry: scripts/check-random-programs.sh
         language: unsupported_script
+        stages: [pre-commit]
         pass_filenames: false
         files: ^(lean/|crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-random-programs\.sh$|rust-env\.sh$|harness/))
       # The same script with fresh seeds, and the fuzzers. Only the nightly

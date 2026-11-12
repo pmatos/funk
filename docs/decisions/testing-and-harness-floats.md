@@ -9,7 +9,10 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 The float ops have a table of their own: a float constant, `fcmp` with each
 predicate, and each op of float arithmetic with its attribute, at each float
-format of a side. The differential side has `f32` and `f64`, which the backend
+format of a side. The conversions have another, with a cell for each pair of
+types that a conversion goes between: `bitcast` from each float format of the
+side to the integer of its width, and back. A later conversion adds its pairs
+to `cells.CONVERSIONS` and to `coverage.conversions_table`. The differential side has `f32` and `f64`, which the backend
 lowers, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
 Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
@@ -50,3 +53,18 @@ both tools and the coverage matrix by running the generator.
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
 arithmetic, and `fma`'s runtime routines also on random operands
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).
+
+## The bit-cast corpus
+
+`scripts/harness/float_bitcast_cases.py` writes `float-bitcast-FORMAT` of
+`tests/fir/canonical/` at every aliased format: `@to_bits` casts a float to
+the integer of its width and `@of_bits` casts back, on zeros of both signs,
+the smallest and largest subnormals, the smallest normal, one, the largest
+finite values, infinities, and NaNs, quiet and signalling, with payloads and
+either sign, and on poison (#241). A bit cast chooses nothing, so each case,
+a NaN's included, is differential at `f32` and `f64`, and interpreter-only at
+every format with its operand's bits as the expected result; so is each
+poison case, with poison expected.
+`test_float_bitcast_cases.py` checks that the committed files are what the
+generator writes, reads each expected result back with `float_text.py`, and
+checks the edges against the host's `struct` at `f16`, `f32` and `f64`.

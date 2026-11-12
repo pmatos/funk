@@ -254,3 +254,17 @@ without FMA3, and the default stays baseline x86-64 (the human ruled on
 [the roadmap](../roadmap.md));
 `fma` from the C library, since most modules link none; and double-double
 arithmetic at `f64`, which loses exactness near overflow and among subnormals.
+
+## Bit casts
+
+`bitcast` between `f32` and `i32`, or `f64` and `i64`, copies its operand's
+slot to its result's through `%rax`. A float is its bits in a slot, as an
+integer is, and the bits of either above its width are unspecified, so no
+instruction converts: no SSE instruction runs, and a NaN's sign and payload,
+a signalling NaN's included, come through as they are, as fir's rule asks
+(ADR-2026-11-09-1549). An `f16`, `bf16` or `f128` side is reported where it is
+defined, as for every float op. `crates/funk/tests/float_bitcast.rs` checks
+that both directions keep every bit of the hard values of `floats.rs`, NaNs
+included. Rejected:
+`movd` or `movq` between a general register and an SSE register, which moves
+the same bits through one more register.

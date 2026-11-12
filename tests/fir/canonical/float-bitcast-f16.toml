@@ -1,0 +1,43 @@
+# Tests of float-bitcast-f16.fir: bitcast from f16 to i16 and
+# back (ADR-2026-11-09-1549), on zeros of both signs, subnormals, the
+# smallest normal, one, the largest finite values, infinities and
+# NaNs with payloads and either sign. Each result is its operand's
+# bits. Written by scripts/harness/float_bitcast_cases.py.
+# Each test is interpreter-only: the backend does not lower
+# f16, so fir-ref alone runs it and must give what it expects.
+tests = [
+  { func = "@to_bits", args = ["0.0"], expect = ["0"] },
+  { func = "@of_bits", args = ["0"], expect = ["0.0"] },
+  { func = "@to_bits", args = ["-0.0"], expect = ["-32768"] },
+  { func = "@of_bits", args = ["-32768"], expect = ["-0.0"] },
+  { func = "@to_bits", args = ["6.0e-8"], expect = ["1"] },
+  { func = "@of_bits", args = ["1"], expect = ["6.0e-8"] },
+  { func = "@to_bits", args = ["-6.0e-8"], expect = ["-32767"] },
+  { func = "@of_bits", args = ["-32767"], expect = ["-6.0e-8"] },
+  { func = "@to_bits", args = ["6.1e-5"], expect = ["1023"] },
+  { func = "@of_bits", args = ["1023"], expect = ["6.1e-5"] },
+  { func = "@to_bits", args = ["6.104e-5"], expect = ["1024"] },
+  { func = "@of_bits", args = ["1024"], expect = ["6.104e-5"] },
+  { func = "@to_bits", args = ["1.0"], expect = ["15360"] },
+  { func = "@of_bits", args = ["15360"], expect = ["1.0"] },
+  { func = "@to_bits", args = ["-1.0"], expect = ["-17408"] },
+  { func = "@of_bits", args = ["-17408"], expect = ["-1.0"] },
+  { func = "@to_bits", args = ["65500.0"], expect = ["31743"] },
+  { func = "@of_bits", args = ["31743"], expect = ["65500.0"] },
+  { func = "@to_bits", args = ["-65500.0"], expect = ["-1025"] },
+  { func = "@of_bits", args = ["-1025"], expect = ["-65500.0"] },
+  { func = "@to_bits", args = ["0x7c00"], expect = ["31744"] },
+  { func = "@of_bits", args = ["31744"], expect = ["0x7c00"] },
+  { func = "@to_bits", args = ["0xfc00"], expect = ["-1024"] },
+  { func = "@of_bits", args = ["-1024"], expect = ["0xfc00"] },
+  { func = "@to_bits", args = ["0x7e00"], expect = ["32256"] },
+  { func = "@of_bits", args = ["32256"], expect = ["0x7e00"] },
+  { func = "@to_bits", args = ["0xfe01"], expect = ["-511"] },
+  { func = "@of_bits", args = ["-511"], expect = ["0xfe01"] },
+  { func = "@to_bits", args = ["0x7c01"], expect = ["31745"] },
+  { func = "@of_bits", args = ["31745"], expect = ["0x7c01"] },
+  { func = "@to_bits", args = ["0xffff"], expect = ["-1"] },
+  { func = "@of_bits", args = ["-1"], expect = ["0xffff"] },
+  { func = "@to_bits", args = ["poison"], expect = ["poison"] },
+  { func = "@of_bits", args = ["poison"], expect = ["poison"] },
+]

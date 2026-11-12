@@ -251,6 +251,15 @@ that no valid program sets; no attribute, which drops the hook that keeps
 today's texts' meaning when another mode comes; and the bare word `rne`,
 which says nothing about what it sets.
 
+`bitcast` has no attribute, and its types say which way it goes:
+`%b: i32 = bitcast %f` gives the bits of an `f32`, and `%f: f32 = bitcast %b`
+the `f32` of an `i32`'s bits. Its integer has the float's width, `1 + e + m`,
+and any other pair of types, two floats or two integers among them, does not
+decode, as `fadd` on two types does not, so validation has no rule for it.
+Rejected: one name for each direction, which the types already tell apart, and
+any pair of widths decoding with validation rejecting the wrong ones, as for
+`zext`, which gives the spec an op instance that no program may hold.
+
 Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
 whether a wrong rounding mode stays a parse error, as built, or is read and
 then rejected by the verifier, as #229's text says. Until the human rules,
