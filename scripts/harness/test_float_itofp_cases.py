@@ -57,7 +57,7 @@ def wrong_expectations(module: str, text: str) -> list[str]:
         e, m = FORMATS[t]
         f = Format(e, m)
         x = int_value(w, signed, arg)
-        got = f.zero() if x == 0 else f.round(Fraction(x))
+        got = cases.reference(f, x)
         if decode(e, m, want) != got:
             wrong.append(str(test))
     return wrong
@@ -98,7 +98,7 @@ class Tests(unittest.TestCase):
                             continue
                         with self.subTest(t=t, w=w, signed=signed, x=x):
                             host = host_bits(f, ffmt, ifmt, x)
-                            want = f.zero() if x == 0 else f.round(Fraction(x))
+                            want = cases.reference(f, x)
                             self.assertEqual(host, want)
 
     def test_the_cases_reach_each_edge(self):

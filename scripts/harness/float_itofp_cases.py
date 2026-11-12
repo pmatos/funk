@@ -95,10 +95,15 @@ def int_text(w: int, x: int) -> str:
     return str(b - 2**w if b >= 2 ** (w - 1) else b)
 
 
+def reference(f: Format, x: int) -> int:
+    """The bits of the reference's result of converting `x` to `f`: `+0`
+    for zero, and `x` rounded to nearest even otherwise."""
+    return f.zero() if x == 0 else f.round(Fraction(x))
+
+
 def expected(f: Format, x: int) -> str:
-    """The reference's result of converting `x` to `f`."""
-    e, m = f.e, f.m
-    return spell(e, m, f.zero() if x == 0 else f.round(Fraction(x)))
+    """The spelling of the reference's result of converting `x` to `f`."""
+    return spell(f.e, f.m, reference(f, x))
 
 
 def func_text(name: str, op: str, w: int, t: str) -> str:
