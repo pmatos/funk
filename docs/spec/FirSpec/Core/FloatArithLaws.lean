@@ -52,8 +52,9 @@ A result vector of one defined float holds no poison.
 :::
 
 :::readable Fir.Core.fbin_propagatesPoison Fir.Core.fbin_returnsOnDefined Fir.Core.fbin_total Fir.Core.fbin_monotone Fir.Core.fbin_neverUB Fir.Core.fbin_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "13516318182819415769")
-*Theorem: $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` and
-$`\mathsf{fdiv}` are lawful, at every format.* Under fir's execution
+*Theorem: $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
+$`\mathsf{fdiv}`, $`\mathsf{frem}` and $`\mathsf{fmod}` are lawful, at
+every format.* Under fir's execution
 rules, each meets every obligation of an op that
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison],
 and the obligations of a pure op:

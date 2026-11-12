@@ -83,13 +83,16 @@ inductive FPred where
   deriving Repr, DecidableEq, Inhabited
 
 /--
-A float op of two operands, each rounded to nearest even
-(ADR-2026-11-09-1549): `fadd` adds, `fsub` subtracts the second operand
-from the first, `fmul` multiplies and `fdiv` divides the first by the
-second.
+A float op of two operands (ADR-2026-11-09-1549): `fadd` adds, `fsub`
+subtracts the second operand from the first, `fmul` multiplies and `fdiv`
+divides the first by the second, each rounded to nearest even. `frem` and
+`fmod` give the remainder of the first by the second, `x - n * y`, which
+is exact, so they do not round: `frem`'s `n` is the quotient rounded to
+nearest, ties to even, IEEE 754's remainder, and `fmod`'s is the quotient
+truncated, C's `fmod` and LLVM's `frem` (#310).
 -/
 inductive FBin where
-  | fadd | fsub | fmul | fdiv
+  | fadd | fsub | fmul | fdiv | frem | fmod
   deriving Repr, DecidableEq, Inhabited
 
 /--
@@ -154,8 +157,9 @@ Float arithmetic, by Lean's float model, with a NaN result that is any NaN
 of the format (ADR-2026-11-09-1549). Each is never UB, and a poison operand
 gives poison:
 
-* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two
-  values of `float<e,m>`, rounded to nearest even.
+* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or
+  `fmod`, of two values of `float<e,m>`; all but `frem` and `fmod`, whose
+  result is exact, round to nearest even.
 * `funary o e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
   `float<e,m>`; `sqrt` rounds to nearest even.
 * `fma e m`: `a * b + c` of three values of `float<e,m>`, rounded once,

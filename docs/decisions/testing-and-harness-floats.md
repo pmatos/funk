@@ -32,13 +32,20 @@ lives under `scripts/harness/`, with its tests under the existing
 ## The arithmetic corpus
 
 `scripts/harness/float_arith_cases.py` writes the modules and tests
-`float-binary-FORMAT` (`fadd`, `fsub`, `fmul`, `fdiv`) and
-`float-unary-fma-FORMAT` (`fneg`, `fabs`, `sqrt`, `fma`) of
-`tests/fir/canonical/`, at every aliased format. Its cases are the hard inputs
-of `float_cases.hard_cases`: results halfway between two floats, subnormals,
-`-0`, overflow to infinity and NaN operands, with `fsub` and `fdiv` in both
-operand orders, and a poison operand per op. Each expected result is
-`float_ref.py`'s.
+`float-binary-FORMAT` (`fadd`, `fsub`, `fmul`, `fdiv`),
+`float-unary-fma-FORMAT` (`fneg`, `fabs`, `sqrt`, `fma`) and
+`float-rem-FORMAT` (`frem`, `fmod`) of `tests/fir/canonical/`, at every
+aliased format. Its cases are the hard inputs of `float_cases.hard_cases`:
+results halfway between two floats, subnormals, `-0`, overflow to infinity and
+NaN operands, with `fsub` and `fdiv` in both operand orders, and a poison
+operand per op. The remainders take theirs from `float_rem_cases.hard_cases`:
+quotients halfway between two integers, operands far apart, subnormal
+results, zeros of both signs, infinities and NaN operands, each in both
+operand orders. Each expected result is `float_ref.py`'s, whose `remainder`
+and `fmod` its tests check against the host's `math.remainder` and
+`math.fmod`. `float_rem_cases.py` also writes `lean/FirTest/FloatRem.lean`,
+the known answers of the spec's remainder at `f16`, `bf16`, `f64` and
+`f128`, and on every input at `float<2,1>`.
 
 A result that is not a NaN is a differential test at `f32` and `f64`, and an
 interpreter-only test at every format. A NaN result is any NaN
@@ -51,8 +58,10 @@ result against `float_ref.py` again. A new hard input reaches every format,
 both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
-arithmetic, and `fma`'s runtime routines also on random operands
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).
+arithmetic, and the runtime routines of `fma`, `frem` and `fmod` also on random
+operands ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).
+The host's `%` is C's `fmod`, and the test builds IEEE 754's remainder from it
+exactly.
 
 ## The bit-cast corpus
 

@@ -71,6 +71,7 @@ import FirSpec.Core.Div
 import FirSpec.Core.Compare
 import FirSpec.Core.FloatCompare
 import FirSpec.Core.FloatArith
+import FirSpec.Core.FloatRem
 import FirSpec.Core.FloatBitcast
 import FirSpec.Core.Control
 import FirSpec.Core.Branch

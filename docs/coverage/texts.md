@@ -292,3 +292,13 @@ result is its operand's bits, so every case is differential at `f32` and
 `reject/float-bitcast.toml` holds the bit casts that do not decode, such
 as an integer of another width, two floats or two integers, and an
 attribute, and two at formats that validation rejects.
+
+The texts of #310 also use the remainders `frem`, IEEE 754's, and `fmod`,
+C's ([semantics-floats.md](../decisions/semantics-floats.md#the-remainders)).
+`float-rem-T` runs both at each `T`, on the hard inputs of
+`scripts/harness/float_rem_cases.py`: quotients halfway between two
+integers, subnormals, `-0`, operands far apart, infinities and NaN
+operands, each in both operand orders, and a poison operand, as
+`float_arith_cases.py` writes them. `reject/float-arith.toml` holds
+`frem round(rne)`, which does not decode, since a remainder does not
+round.

@@ -1,4 +1,4 @@
-"""Writes the corpus of #229's float arithmetic
+"""Writes the corpus of the float arithmetic of #229 and #310
 (docs/decisions/testing-and-harness-floats.md#the-arithmetic-corpus).
 
 Usage: python scripts/harness/float_arith_cases.py
@@ -7,14 +7,16 @@ Usage: python scripts/harness/float_arith_cases.py
 It prints, or with `--write` writes, the modules and tests of
 `tests/fir/canonical/` named in `FILES`: at each of `f16`, `bf16`, `f32`,
 `f64` and `f128`, one module of `fadd`, `fsub`, `fmul` and `fdiv`
-(`float-binary-FORMAT`) and one of `fneg`, `fabs`, `sqrt` and `fma`
-(`float-unary-fma-FORMAT`). `test_float_arith_cases.py` checks that the
+(`float-binary-FORMAT`), one of `fneg`, `fabs`, `sqrt` and `fma`
+(`float-unary-fma-FORMAT`) and one of `frem` and `fmod`
+(`float-rem-FORMAT`). `test_float_arith_cases.py` checks that the
 committed files hold exactly what it writes, and checks each expected
 result against `float_ref.py` again.
 
-The cases are the hard inputs of `float_cases.hard_cases`: results halfway
-between two floats, subnormals, `-0`, overflow to infinity and NaN
-operands, with each case of `fsub` and `fdiv` in both operand orders, and a
+The cases are the hard inputs of `float_cases.hard_cases` and, for `frem`
+and `fmod`, `float_rem_cases.hard_cases`: results halfway between two
+floats, subnormals, `-0`, overflow to infinity and NaN operands, with each
+case of `fsub`, `fdiv`, `frem` and `fmod` in both operand orders, and a
 poison operand for each op. Each expected result is what `float_ref.py`
 computes, apart from Lean, rounding to nearest even.
 
@@ -36,6 +38,7 @@ from pathlib import Path
 
 import float_cases
 import float_ref as ref
+import float_rem_cases
 from float_ref import Format
 from float_text import spell
 
@@ -52,7 +55,7 @@ FORMATS = {
 DIFFERENTIAL = ("f32", "f64")
 
 # Each module: its name before the format, and its ops with their number
-# of operands and the name of their cases in `float_cases.hard_cases`.
+# of operands and the name of their cases among its hard inputs (`HARD`).
 MODULES = {
     "float-binary": [
         ("fadd", 2, "fadd"),
@@ -66,8 +69,40 @@ MODULES = {
         ("sqrt", 1, "fsqrt"),
         ("fma", 3, "ffma"),
     ],
+    "float-rem": [
+        ("frem", 2, "frem"),
+        ("fmod", 2, "fmod"),
+    ],
 }
 FILES = [f"{m}-{t}" for m in MODULES for t in FORMATS]
+
+
+def arith_hard(f: Format) -> list:
+    return float_cases.hard_cases(f)[0]
+
+
+ARITH_HEADER = [
+    "# (ADR-2026-11-09-1549), on the hard inputs: results halfway between",
+    "# two floats, subnormals, -0, overflow to infinity and NaN operands.",
+]
+# Each module's hard inputs, and the lines of its tests' header that say
+# what they are.
+HARD = {
+    "float-binary": (arith_hard, ARITH_HEADER),
+    "float-unary-fma": (arith_hard, ARITH_HEADER),
+    "float-rem": (
+        float_rem_cases.hard_cases,
+        [
+            "# (ADR-2026-11-09-1549), on the hard inputs: quotients halfway",
+            "# between two integers, subnormals, -0, operands far apart,",
+            "# infinities and NaN operands.",
+        ],
+    ),
+}
+# The ops that do not round, and so carry no `round(rne)`.
+EXACT = ("fneg", "fabs", "frem", "fmod")
+# The ops whose operands do not commute, whose cases run in both orders.
+ORDERED = ("fsub", "fdiv", "frem", "fmod")
 
 # The choices of a NaN result, in turn: `m + 1` bits, the top one the
 # sign, read as a signed integer.
@@ -84,6 +119,8 @@ REFERENCE = {
     "fabs": ref.fabs,
     "sqrt": ref.sqrt,
     "fma": ref.fma,
+    "frem": ref.remainder,
+    "fmod": ref.fmod,
 }
 
 
@@ -107,17 +144,18 @@ def nan_bits(f: Format, c: int) -> int:
     return (c >> f.m) * f.sign_bit | f.top << f.m | mantissa
 
 
-def cases(f: Format, ops: list[tuple[str, int, str]]) -> list[tuple[str, list[int]]]:
-    """The cases of each op: its operands' bits."""
-    hard, _ = float_cases.hard_cases(f)
+def cases(f: Format, name: str) -> list[tuple[str, list[int]]]:
+    """The cases of each op of the module `name`: its operands' bits."""
+    ops = MODULES[name]
+    hard = HARD[name][0](f)
     out = []
-    for op, _, name in ops:
+    for op, _, key in ops:
         for case_op, args, _, _ in hard:
-            if case_op != name:
+            if case_op != key:
                 continue
             bits = [float_cases.bits_of(f, a) for a in args]
             out.append((op, bits))
-            if op in ("fsub", "fdiv") and bits[0] != bits[1]:
+            if op in ORDERED and bits[0] != bits[1]:
                 out.append((op, bits[::-1]))
     return out
 
@@ -127,7 +165,7 @@ def module_text(t: str, ops: list[tuple[str, int, str]]) -> str:
     out = []
     for op, n, _ in ops:
         params = ", ".join(f"%{x}: {t}" for x in "abc"[:n])
-        attr = "" if op in ("fneg", "fabs") else " round(rne)"
+        attr = "" if op in EXACT else " round(rne)"
         operands = ", ".join(f"%{x}" for x in "abc"[:n])
         out.append(
             f"func @{op}({params}) -> {t} {{\n^entry:\n"
@@ -136,16 +174,16 @@ def module_text(t: str, ops: list[tuple[str, int, str]]) -> str:
     return "\n".join(out) + "\nlocs {\n  @0 = unknown\n}\n"
 
 
-def tests_text(name: str, t: str, ops: list[tuple[str, int, str]]) -> str:
+def tests_text(name: str, t: str) -> str:
     """The tests of the module `name` at the type `t`."""
     e, m = FORMATS[t]
     f = Format(e, m)
+    ops = MODULES[name]
     names = ", ".join(op for op, _, _ in ops)
     native = t in DIFFERENTIAL
     head = [
-        f"# Tests of {name}.fir: {names} at {t}",
-        "# (ADR-2026-11-09-1549), on the hard inputs: results halfway between",
-        "# two floats, subnormals, -0, overflow to infinity and NaN operands.",
+        f"# Tests of {name}-{t}.fir: {names} at {t}",
+        *HARD[name][1],
         "# Written by scripts/harness/float_arith_cases.py, which computes each",
         "# expected result with scripts/harness/float_ref.py, apart from Lean.",
     ]
@@ -168,7 +206,7 @@ def tests_text(name: str, t: str, ops: list[tuple[str, int, str]]) -> str:
     ]
     lines = []
     turn = 0
-    for op, bits in cases(f, ops):
+    for op, bits in cases(f, name):
         args = ", ".join(f'"{spell(e, m, b)}"' for b in bits)
         r = result(f, op, bits)
         if is_nan(f, r):
@@ -202,7 +240,7 @@ def files() -> dict[str, str]:
     for name, ops in MODULES.items():
         for t in FORMATS:
             out[f"{name}-{t}.fir"] = module_text(t, ops)
-            out[f"{name}-{t}.toml"] = tests_text(f"{name}-{t}", t, ops)
+            out[f"{name}-{t}.toml"] = tests_text(name, t)
     return out
 
 

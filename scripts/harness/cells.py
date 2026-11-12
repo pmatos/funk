@@ -16,10 +16,10 @@ has neither operands nor attributes, is a cell at each width of its result
   `trunc`.
 - A float constant, `fcmp` with each predicate of `FPred.all`, and each
   op of float arithmetic, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
-  with `round(rne)` and `fneg` and `fabs` with no attribute, is a cell at
-  each float format of the matrix's side: `f32` and `f64` for
-  differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
-  `f64` and `f128` for interpreter-only tests (#229,
+  with `round(rne)` and `frem`, `fmod`, `fneg` and `fabs` with no
+  attribute, is a cell at each float format of the matrix's side: `f32`
+  and `f64` for differential tests, which the backend lowers, and `f16`,
+  `bf16`, `f32`, `f64` and `f128` for interpreter-only tests (#229, #310,
   ADR-2026-11-03-0557).
 - A conversion is a cell for each pair of types it converts between at
   the side's float formats: `bitcast` from each format to the integer of
@@ -95,6 +95,8 @@ AT_FORMAT = {
     "fsub": ROUND,
     "fmul": ROUND,
     "fdiv": ROUND,
+    "frem": ("",),
+    "fmod": ("",),
     "fneg": ("",),
     "fabs": ("",),
     "sqrt": ROUND,

@@ -100,8 +100,8 @@ the same entry file.
 `funk build` decides from the object file's symbol table, not from a list that
 lowering keeps, so it cannot miss a symbol that a lowering forgot. So the
 module's object must define every routine of funk's own that it calls, as it
-does the `i128` division and `fma` routines: a call to a routine of the entry
-file would link with the C library for nothing.
+does the `i128` division, `fma` and remainder routines: a call to a routine of
+the entry file would link with the C library for nothing.
 
 The human ruled on 2026-11-11 (#274) that M1 links with the host's shared
 glibc. A pinned static musl is filed as #295. How the runtime starts and exits
@@ -254,8 +254,9 @@ A register allocator must treat as clobbered:
 
 - `%rax`, `%rcx` and `%rdx` by a division.
 - `%rax`, `%rcx`, `%xmm0` and `%xmm1` by an `fcmp`.
-- `%xmm0` by a float op of arithmetic, `%rax` by `fneg` and `fabs`, and every
-  caller-saved register by an `fma`.
+- `%xmm0` by a float op of arithmetic, `%rax` by `fneg` and `fabs`, every
+  caller-saved register by an `fma`, and `%rax`, `%xmm0`, `%xmm1` and the x87
+  stack by an `frem` or `fmod`.
 - `%rax` and `%rcx` by a branch.
 - `%rax`, `%rcx` and `%rdx` by an `i128` op, and `%rsi` by a shift. It needs
   register pairs for `i128`.

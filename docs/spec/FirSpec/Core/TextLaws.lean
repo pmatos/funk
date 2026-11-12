@@ -79,10 +79,10 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "8843025048437953350")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "3122977627371042591")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
-If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` or
-$`\mathsf{fdiv}` decodes from the attributes $`a^*` and the types $`t^*`
+If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
+$`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
 and $`r^*`, as the section on
 {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
 reads it, the op it gives has its name, the attributes $`a^*` and the

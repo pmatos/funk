@@ -54,7 +54,10 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
       apply wordDialect_eq_none
       cases p <;> decide
     simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hq]
-  | fbin | fma => simp [opAttrs, Op.attrs, roundAttr, Attr.dialectsAll, Attr.dialects, wordDialect]
+  | fbin o =>
+    cases o <;> simp [opAttrs, Op.attrs, FBin.attrs, roundAttr, Attr.dialectsAll, Attr.dialects,
+      wordDialect]
+  | fma => simp [opAttrs, Op.attrs, roundAttr, Attr.dialectsAll, Attr.dialects, wordDialect]
   | funary o =>
     cases o <;> simp [opAttrs, Op.attrs, FUnary.attrs, roundAttr, Attr.dialectsAll, Attr.dialects,
       wordDialect]

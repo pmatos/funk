@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15853948219595643618")
+:::moduleDocs (fingerprint := "7998645118820612847")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -71,14 +71,15 @@ ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
 ```
 :::
 
-:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "15404010338068231471")
-*Float operations.* The float arithmetic has four ops of two operands and
+:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "4350115894855268594")
+*Float operations.* The float arithmetic has six ops of two operands and
 three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
 ties to even.
 
 ```grammar Fir.Core.FBin
 \mathit{fbin}
 fadd,fsub,fmul,fdiv   \mathsf{fadd} \mid \mathsf{fsub} \mid \mathsf{fmul} \mid \mathsf{fdiv}
+frem,fmod             \mathsf{frem} \mid \mathsf{fmod}
 ```
 
 ```grammar Fir.Core.FUnary
@@ -89,6 +90,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
 * $`\mathsf{fadd}` adds, $`\mathsf{fsub}` subtracts the second operand
   from the first, $`\mathsf{fmul}` multiplies and $`\mathsf{fdiv}` divides
   the first by the second.
+* $`\mathsf{frem}` and $`\mathsf{fmod}` give the remainder of the first
+  by the second, $`x - n \times y`, which is exact, so neither rounds. For
+  $`\mathsf{frem}`, IEEE 754's remainder, $`n` is the quotient rounded to
+  nearest, ties to even; for $`\mathsf{fmod}`, C's `fmod`, it is the
+  quotient truncated. LLVM's `frem` is $`\mathsf{fmod}`, not
+  $`\mathsf{frem}` (#310).
 * $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
