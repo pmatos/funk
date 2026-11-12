@@ -7,8 +7,9 @@ Each ADR ends its status paragraph with a line `Tier: TIER; area: AREA`
 ADR hooks do, so stage a new ADR before running `--write`.
 
 The index ends with the Removed table, one row per deleted ADR, from the
-tables of docs/adrs/removed/, one per area. A row says where the rule lives now: an ADR, or a
-page of docs/decisions/ and, after `#`, the anchor of one of its headings.
+tables of docs/adrs/removed/, one per area. A row says where the rule lives
+now: an ADR, or a page of docs/decisions/ and, after `#`, the anchor of one of
+its headings.
 """
 
 import argparse
@@ -255,8 +256,7 @@ def removed_problems(
     pages = set(tracked(root, DECISIONS_DIR))
     anchors: dict[str, set[str]] = {}
     for row in removed:
-        table = row.table or f"{ADR_DIR}/{REMOVED}/"
-        where = f"{table}: ADR-{row.id} lives in {row.now}"
+        where = f"{row.table}: ADR-{row.id} lives in {row.now}"
         match = PAGE_SECTION.fullmatch(row.now)
         if row.now.startswith("ADR-"):
             if row.now[4:] not in ids:
