@@ -26,7 +26,7 @@ Tier: direction; area: process
   to match.
 - **Out of M1:** concurrency (S6), exceptions and unwinding, vectors, contract
   ops and structured control flow (H6) stay with the milestones that need
-  them. S8 stays with M2's optimizer track.
+  them. S8 is M9, which runs after M2 (the human, 2026-11-12, in #341).
 
 The human ruled on 2026-11-05: "before we have a full x86 backend, we will
 need to have a complete IR spec. Getting the IR right is one of the most

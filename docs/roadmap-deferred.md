@@ -19,7 +19,7 @@ before the first step that does, as the table says.
 | S3 | Memory model (Foundational; G0: several memories and address spaces) | Decided: ADR-2026-11-09-1542 |
 | S5 | Floating point | Decided: ADR-2026-11-09-1549 |
 | S6 | Concurrency | M4 at the latest (C and C++ atomics) |
-| S8 | SMT equivalence checking (Foundational) | A milestone of its own, as the human ruled on 2026-11-12; its place is open on [#341](https://github.com/pmatos/funk/issues/341) |
+| S8 | SMT equivalence checking (Foundational) | M9, after M2, as the human ruled on 2026-11-12: [#341](https://github.com/pmatos/funk/issues/341) |
 | H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Decided: ADR-2026-11-09-1543, ADR-2026-11-09-1544 |
 | H6 | Structured control flow | When a frontend or pass needs it |
 | H7 | Effect classes beyond "pure" and "call" (Foundational) | Decided: ADR-2026-11-09-1541 |
