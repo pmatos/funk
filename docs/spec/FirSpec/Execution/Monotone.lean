@@ -234,5 +234,6 @@ not validity, and nothing of the ops, calls and recursion included. Only
 the interpreter counts fuel, an op never sees it, and a callee gives
 back to its caller the steps it leaves (ADR-2026-11-02-0836). For a
 function that reaches an op with no execution rule, it holds only
-vacuously on the paths that reach that op (ADR-2026-10-30-1855).
+vacuously on the paths that reach that op
+(`docs/decisions/fir-ref.md#an-op-without-rules`).
 :::

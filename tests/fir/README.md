@@ -72,7 +72,7 @@ tests = [
   `poison`: it runs on each combination of stand-ins in its place,
   the boundary bit patterns of its type, and each result must refine one
   of `fir-ref`'s outcomes on the poison
-  ([ADR-2026-11-03-1847](../../docs/adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
+  ([fir-ref.md](../../docs/decisions/fir-ref.md#poison-arguments)).
 - `results` declares a differential test's results, each a list of
   `values` and a `witness`: the choices on which `fir-ref run --choices`
   gives them. A test whose run chooses more than 16 bits on one path must
@@ -155,7 +155,7 @@ locs {
   `results.fir`, `seven.fir`, `symbols.fir` and `widths.fir`, and of
   `noncanonical/add.fir`, with `fir-ref run`, and checks each result
   against a table in `scripts/check-fir-ref-run.sh`, which it calls
-  (ADR-2026-10-30-1856). Editing one of those files means updating that
+  ([fir-ref-command-line.md](../../docs/decisions/fir-ref-command-line.md#fir-ref-run)). Editing one of those files means updating that
   table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
   prints from them, byte for byte (ADR-2026-10-30-1250).
 

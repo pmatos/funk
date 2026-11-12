@@ -55,7 +55,7 @@ ADR-2026-11-10-1941 does the same for region kinds.
   only.
 - **Depth.** A reader keeps an item's attributes at any depth, so
   `fir-ref` walks them with loops, `writableLoop` and `dialectsLoop`, by
-  the depth rule (ADR-2026-11-09-1941).
+  the depth rule (ADR-2026-10-30-1450).
 
 ## Alternatives
 

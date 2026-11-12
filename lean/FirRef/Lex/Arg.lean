@@ -2,7 +2,8 @@ import FirRef.Lex.Stream
 
 /-!
 `fir-ref run` reads each argument, and each choice of `--choices`, as one
-token of fir's text (ADR-2026-10-30-1856). `argAttr` is that reading by the
+token of fir's text (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
+`argAttr` is that reading by the
 spec's lexer: the text lexed whole with `Text.lex`, then matched against an
 integer, a word or a float literal (ADR-2026-11-11-1438), then `eof`. The spec's lexer builds the list of the
 text's characters and measures a comment with `utf8Len`, which takes stack

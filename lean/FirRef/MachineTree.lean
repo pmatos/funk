@@ -2,8 +2,9 @@ import FirRef.Machine
 
 /-!
 The proof that `FirRef.Machine` computes the spec's tree of a run with
-memory (ADR-2026-11-04-2132, ADR-2026-11-11-1328): `Machine.advance_tree`
-says that where the machine stops stands for the spec's tree of the state
+memory (`docs/decisions/fir-ref-memory.md#the-machine-carries-the-memories`):
+`Machine.advance_tree` says that where the machine stops stands for the spec's
+tree of the state
 it starts from. Each case of
 `advance` is one case of `Func.runOps`'s definition (`FirRef.Steps`), on
 the spec environment of the state's bindings (`Bindings.toEnv`). A step

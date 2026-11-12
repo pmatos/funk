@@ -14,7 +14,8 @@ compile every later call of `Attr.print` as a call of `printAttr`
 
 This module imports `FirRef.PrintInt`, so `printAttrs` is compiled after
 `printInt_eq_printDecimal` and writes integers with `printDecimal`, which
-splits long ones at powers of ten (#41, ADR-2026-11-03-1603).
+splits long ones at powers of ten (#41,
+`docs/decisions/fir-ref-fast-paths.md#printing`).
 -/
 
 namespace FirRef

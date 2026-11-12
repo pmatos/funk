@@ -26,7 +26,7 @@ every width, from 1 to the largest.
 
 Every core op has its rules. What a dialect's semantics does with an op
 that has none is in the section on the core op semantics
-(ADR-2026-10-30-1855).
+(`docs/decisions/fir-ref.md#an-op-without-rules`).
 -/
 
 namespace Fir.Core

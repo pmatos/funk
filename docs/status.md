@@ -136,7 +136,7 @@ of funk are on `main`:
   it is, and native code then runs on stand-ins in its place, the
   boundary bit patterns of its type
   ([#123](https://github.com/pmatos/funk/issues/123),
-  [ADR-2026-11-03-1847](adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
+  [fir-ref.md](decisions/fir-ref.md#poison-arguments)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
   bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
   `freeze` and `ret` in Lean
@@ -147,9 +147,9 @@ of funk are on `main`:
   function in scripted mode, along the path that its choices name, in
   exhaustive mode, which lists every outcome, or in sampled mode, which
   draws its choices from a seed; Lean proves all three sound
-  ([ADR-2026-10-30-2217](adrs/2026-10-30-2217-choice-tree-denotes-the-set-monad.md),
-  [ADR-2026-10-30-2218](adrs/2026-10-30-2218-fir-ref-run-modes.md),
-  [ADR-2026-10-31-0002](adrs/2026-10-31-0002-fir-ref-run-draws-choices-from-a-seed.md)).
+  ([fir-ref.md](decisions/fir-ref.md#the-tree-of-choices),
+  [fir-ref-command-line.md](decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes),
+  [fir-ref-command-line.md](decisions/fir-ref-command-line.md#sampled-mode)).
 - The execution rules of `sdiv`, `udiv`, `srem` and `urem`, with `exact`, in
   Lean ([#18](https://github.com/pmatos/funk/issues/18)). `fir-ref run`
   reports their immediate UB, a zero or poison divisor and the signed
@@ -188,9 +188,9 @@ of funk are on `main`:
   registered with `@[csimp]`, on Lean's standard axioms only
   ([ADR-2026-10-30-1450](adrs/2026-10-30-1450-fir-ref-runs-proved-implementations.md),
   [how `fir-ref` runs the check](decisions/validation-fir-ref.md#how-fir-ref-runs-the-check),
-  [ADR-2026-11-03-1810](adrs/2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md),
-  [ADR-2026-11-04-2132](adrs/2026-11-04-2132-fir-ref-run-walks-a-machine-with-explicit-call-frames.md),
-  [ADR-2026-11-05-0442](adrs/2026-11-05-0442-fir-ref-run-moves-old-values-into-a-map-when-lookups-have-paid-for-it.md)).
+  [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#lexing-and-reading),
+  [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#running),
+  [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#the-bindings-map)).
   On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt`
   and `fir-ref validate` on texts nested a million levels deep and on a
   block of a million ops, and `scripts/check-fir-ref-run.sh` checks

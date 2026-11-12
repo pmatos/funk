@@ -2,7 +2,8 @@ import FirTest.Parse
 import FirRef.RunArgs
 
 /-!
-Tests of the interpreter and of `fir-ref run` (ADR-2026-10-30-1856), on
+Tests of the interpreter and of `fir-ref run`
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`), on
 `FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
 status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
 several results and none, fuel, each stuck case that a text reaches, calls
@@ -125,7 +126,8 @@ def body (header : String) (lines : List String) : String :=
 A function that calls itself without end runs out of fuel, in either mode:
 each call takes a step, and its callee runs on the steps that are left
 (#20). Before #20 gave `call` its meaning, `fir-ref` reported these runs
-as an error, an op without rules (ADR-2026-10-30-1855); no core op is
+as an error, an op without rules
+(`docs/decisions/fir-ref.md#an-op-without-rules`); no core op is
 without rules now. `FirTest.Calls` tests calls that return. -/
 
 #guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = call @f %a @0", "  ret %s @0"])

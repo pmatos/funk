@@ -321,7 +321,8 @@ grow in M0. M4's design of exceptions and unwinding chooses between a validation
 rule and values on `Exit` (ADR-2026-11-02-2248).
 
 `fir-ref run` walks a machine with explicit call frames. The machine is proved
-equal to the spec's interpreter (ADR-2026-11-04-2132).
+equal to the spec's interpreter
+([fir-ref-fast-paths.md](fir-ref-fast-paths.md#running)).
 
 The core law files have no use for `bv_decide` today. `bitVec_one_cases` is
 proved by `revert v; decide`. The two proofs at symbolic width stay as they are,

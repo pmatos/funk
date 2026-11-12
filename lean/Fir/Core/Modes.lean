@@ -7,8 +7,8 @@ import Fir.Execution.MemoryModes
 `fir-ref run` runs the core dialect's rules in the tree of choices. Each op
 runs its rule, the same rule that the set monad's semantics runs; an op
 without rules ends its path with no outcome, for that op, as the set monad
-gives it none (ADR-2026-10-30-1855). `fir-ref` reports such a path as an
-error.
+gives it none (`docs/decisions/fir-ref.md#an-op-without-rules`). `fir-ref`
+reports such a path as an error.
 
 Each op's semantics in the tree has the set monad's as its set: the rules
 are written once for any monad, and the set of a tree keeps the steps of
@@ -35,7 +35,7 @@ through core calls proves. So the differential test harness, which
 checks compiled code against `fir-ref`, runs native code, which holds no
 poison, on poison stand-ins in place of each poison argument, and judges
 each result against the outcomes that `fir-ref` lists for the run on the
-poison (ADR-2026-11-03-1847).
+poison (`docs/decisions/fir-ref.md#poison-arguments`).
 -/
 
 namespace Fir.Core

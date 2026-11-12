@@ -1,6 +1,6 @@
 # The harness judges a differential test by its set of outcomes, and checks declared results by their witnesses and by seeded runs
 
-Status: accepted; extended by ADR-2026-10-31-0208 and ADR-2026-11-03-1847
+Status: accepted; extended by ADR-2026-10-31-0208
 Tier: direction; area: testing-and-harness
 
 ## Context
@@ -16,7 +16,7 @@ on one outcome, and ADR-2026-10-30-2050's format has no place for
 declared results or for the path of an interpreter-only test.
 ADR-2026-10-30-2049's harness runs each test once, with
 `fir-ref run --fuel N`. `fir-ref run` has exhaustive, scripted and sampled
-modes (ADR-2026-10-30-2218, ADR-2026-10-31-0002).
+modes ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)).
 
 ## Decision
 
@@ -65,6 +65,6 @@ modes (ADR-2026-10-30-2218, ADR-2026-10-31-0002).
   ADR-2026-10-30-2049 lists.
 - Seeded runs only sample: a declaration can still miss a result that no
   seed draws. Boundary bit patterns come up in one draw in four
-  (ADR-2026-10-31-0002), so the likeliest misses are drawn.
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#sampled-mode)), so the likeliest misses are drawn.
 - #18 adds the corpus test whose set holds UB, a frozen divisor that can
   be zero; until then a unit test on a hand-built set covers that rule.

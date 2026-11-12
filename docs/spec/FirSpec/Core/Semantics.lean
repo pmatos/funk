@@ -101,7 +101,8 @@ An op with no rule has no outcome. That is not a stand-in meaning: the
 {ref "The-fir-specification--Execution--Poison-classes"}[totality obligation]
 rejects it, so the poison obligations of a dialect cannot be proved while
 one of its valid op instances that runs by its own rule lacks its rules,
-unless one of its operand types has no value (ADR-2026-10-30-1855).
+unless one of its operand types has no value
+(`docs/decisions/fir-ref.md#an-op-without-rules`).
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-11-02-1514).

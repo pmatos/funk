@@ -16,8 +16,9 @@ or invalid, and an invalid test never counts as a pass.
   function returns a list of values, any number of them
   (ADR-2026-10-30-0816).
 - `fir-ref run` gives one of four results: the returned values, UB with a
-  reason, fuel exhausted, or stuck (ADR-2026-10-30-1856). An executable
-  prints its values, or exits with 2 or dies by a signal
+  reason, fuel exhausted, or stuck
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)).
+  An executable prints its values, or exits with 2 or dies by a signal
   (ADR-2026-10-30-1233).
 - ADR-2026-10-29-2017 leaves open how the harness treats fuel exhausted,
   and says #13 records it. Comment 6507458782 on #13 does.
@@ -38,8 +39,9 @@ or invalid, and an invalid test never counts as a pass.
     interpreter-only test that expects fuel exhausted.
   - Stuck fails the test.
   - A tool error fails the test: `fir-ref` exits with 2 (such as an op
-    without execution rules, ADR-2026-10-30-1855), the executable exits
-    with 2 or dies by a signal, or `funk build` does not build the module.
+    without execution rules,
+    [fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)), the executable
+    exits with 2 or dies by a signal, or `funk build` does not build the module.
 - **An interpreter-only test** passes when `fir-ref` gives the expected
   result: the same values, poison included, or UB with any reason, or
   fuel exhausted. Stuck, or any other result, fails it.

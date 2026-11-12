@@ -53,7 +53,7 @@ tables nested in it. Both validators report in that order: the location
 table's problems, each table's problems, then each table's dialect-set
 problems. A problem in a nested module names its function as one at the top
 level does; the report's schema has no field for the module
-(ADR-2026-10-30-1741).
+([fir-ref-command-line.md](fir-ref-command-line.md#fir-ref-validate)).
 
 ## The spec's check
 

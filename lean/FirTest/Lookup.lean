@@ -3,7 +3,8 @@ import FirTest.Modes
 /-!
 Tests of how `fir-ref run` looks names up (#47). It keeps the values that a
 run has defined in `FirRef.Bindings`, recent ones in a list and older ones
-in a map that lookups move them into (ADR-2026-11-05-0442), and must give
+in a map that lookups move them into
+(`docs/decisions/fir-ref-fast-paths.md#the-bindings-map`), and must give
 exactly what the spec's environment gives, on functions that validation
 rejects too.
 

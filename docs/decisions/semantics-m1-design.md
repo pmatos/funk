@@ -335,8 +335,9 @@ The second dialect in tree is shaped like a GPU kernel language
 
 `fir-ref` runs one work-item of a kernel, with its ids given as inputs. Ops whose
 meaning needs other work-items, such as barriers, are left out or admitted
-without execution rules (ADR-2026-10-30-1855). A launch op in host code is out
-of M1. M1's results are not a model of a whole kernel. The semantics grows into
+without execution rules ([fir-ref.md](fir-ref.md#an-op-without-rules)). A launch
+op in host code is out of M1. M1's results are not a model of a whole kernel.
+The semantics grows into
 a full kernel model only when S6 decides concurrency (ADR-2026-11-09-1545).
 
 The dialect is terminal. It has no lowering to core and no native backend in M1

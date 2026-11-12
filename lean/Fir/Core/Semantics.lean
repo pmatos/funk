@@ -33,9 +33,10 @@ chosen, ask for the choice effect, and the divisions,
   calls a function. Every core op has rules: each family gave its ops
   theirs, and the call rules name the callee of `call`.
 
-An op has no rules when its dialect's semantics gives it none.
-ADR-2026-10-30-1855 decided what such an op does while its family had not
-landed, and the spec keeps that rule for every dialect:
+An op has no rules when its dialect's semantics gives it none. What such
+an op did while its family had not landed
+(`docs/decisions/fir-ref.md#an-op-without-rules`) is the rule the spec
+keeps for every dialect:
 
 * In the spec, it has no outcome: on every operand vector, its meaning is
   the empty set. That is not a stand-in semantics. The totality obligation
@@ -63,7 +64,7 @@ landed, and the spec keeps that rule for every dialect:
   module, calls and recursion included.
 * `fir-ref run` prints no outcome for a run that reaches such an op. It
   says that the op has no execution rules, as an error
-  (ADR-2026-10-30-1856).
+  (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 
 `call` takes its meaning from the call effect, which the interpreter runs
 (ADR-2026-11-02-0836). The interpreter runs the callee of every op that

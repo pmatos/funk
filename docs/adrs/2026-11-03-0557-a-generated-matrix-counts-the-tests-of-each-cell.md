@@ -75,7 +75,8 @@ outcome, not the ops it ran.
 - **Cells by file name.** A name says what a module is for, not what
   its tests run.
 - **A trace mode in `fir-ref`** to count only the ops that a run takes.
-  It is a change to `fir-ref`'s command line (ADR-2026-10-30-1425) of
+  It is a change to `fir-ref`'s command line
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#shared-by-every-command)) of
   its own.
 - **Width changes by source width and target width apart.** It would
   hide a missing pair, such as `i7` to `i128`.

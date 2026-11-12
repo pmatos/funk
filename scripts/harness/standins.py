@@ -1,12 +1,13 @@
 """The values that native code gets in place of a poison argument (#123,
-ADR-2026-11-03-1847).
+docs/decisions/fir-ref.md#poison-arguments).
 
 A test's arguments may hold `poison`, which `fir-ref run` takes as it is.
 Native code holds no poison (ADR-2026-10-30-2248), and a built executable
 reads each argument as a constant, so a differential test runs native code
 on stand-ins: defined values in place of each poison. The stand-ins of
 `iN`, and of a float type of `N` bits, are its boundary bit patterns, the
-ones that `fir-ref run --seed` favours (ADR-2026-10-31-0002): 0, 1, all
+ones that `fir-ref run --seed` favours
+(docs/decisions/fir-ref-command-line.md#sampled-mode): 0, 1, all
 ones, the signed minimum and the signed maximum, each once, so `false` and
 `true` at `i1`. At a float type they are `+0`, the smallest subnormal, a
 NaN with its sign set, `-0` and a NaN, each spelled as its one float

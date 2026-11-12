@@ -37,7 +37,7 @@ choose      \mathsf{choose}~w~(b \mapsto \mathit{tree}_b)
 * $`\mathsf{no\_outcome}~e` (`noOutcome` in the Lean): the path ends with
   no outcome at all, for the reason $`e`. An op without execution rules
   ends its path so, since the set monad gives it the empty set of ways to
-  end (ADR-2026-10-30-1855).
+  end (`docs/decisions/fir-ref.md#an-op-without-rules`).
 * $`\mathsf{choose}~w~(b \mapsto \mathit{tree}_b)`: the path chooses $`w`
   bits, and goes on with the subtree $`\mathit{tree}_b` for the bits
   $`b`. The node has one subtree for each of the $`2^w` vectors of $`w`

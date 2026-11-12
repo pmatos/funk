@@ -247,7 +247,8 @@ function.
 What an op does when it runs: the results it gives, the UB it hits, or where
 a terminator sends control. Each op family of the core dialect has them
 in Lean, so every core op does, `call` through its callee's run. An op
-without them has no outcome in the spec (ADR-2026-10-30-1855), and
+without them has no outcome in the spec
+([fir-ref.md](docs/decisions/fir-ref.md#an-op-without-rules)), and
 `fir-ref run` reports such an op as an error, never as a result.
 
 **fuel monotonicity**:
@@ -335,7 +336,8 @@ _Avoid_: verdict (a verdict says whether a text parses and validates)
 **poison stand-in**:
 A defined value of `iN` that native code runs a differential test on in
 place of a poison argument: one of the type's boundary bit patterns, 0, 1,
-all ones, the signed minimum or the signed maximum (ADR-2026-11-03-1847).
+all ones, the signed minimum or the signed maximum
+([fir-ref.md](docs/decisions/fir-ref.md#poison-arguments)).
 _Avoid_: stand-in alone (the spec's prose also uses it for a placeholder
 rule of an op, and `test_main.py` for a fake tool)
 

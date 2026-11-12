@@ -7,7 +7,7 @@ the terms of the previous chapter can say things that make no sense, such
 as using a value that is never defined, and validation rules them out.
 Execution gives a meaning to valid modules only: the interpreter runs any
 module, but only the runs of a valid one mean something
-(ADR-2026-10-30-1856).
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation

@@ -42,6 +42,11 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-10-30-1425-fir-ref-command-line.md",
+      "now": "docs/decisions/fir-ref-command-line.md#shared-by-every-command",
+      "commit": "aa092c8aabfe"
+    },
+    {
       "file": "2026-10-30-1439-adr-appendix-and-citation-links.md",
       "now": "docs/decisions/spec-site.md#the-adr-appendix-and-its-citations",
       "commit": "c09a05f4f8fb"
@@ -50,6 +55,11 @@
       "file": "2026-10-30-1740-decidable-dialect-rules.md",
       "now": "ADR-2026-11-09-2257",
       "commit": "0f4590f30dbc"
+    },
+    {
+      "file": "2026-10-30-1741-fir-ref-validate-report.md",
+      "now": "docs/decisions/fir-ref-command-line.md#fir-ref-validate",
+      "commit": "aa092c8aabfe"
     },
     {
       "file": "2026-10-30-1742-validation-check-at-any-depth.md",
@@ -67,9 +77,34 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-10-30-1855-core-ops-without-rules.md",
+      "now": "docs/decisions/fir-ref.md#an-op-without-rules",
+      "commit": "f0aa94b68f98"
+    },
+    {
+      "file": "2026-10-30-1856-fir-ref-run-result.md",
+      "now": "docs/decisions/fir-ref-command-line.md#fir-ref-run",
+      "commit": "aa092c8aabfe"
+    },
+    {
       "file": "2026-10-30-2040-test-dialect-sum-routes-op-names.md",
       "now": "ADR-2026-11-09-2306",
       "commit": "9c25a4693689"
+    },
+    {
+      "file": "2026-10-30-2217-choice-tree-denotes-the-set-monad.md",
+      "now": "docs/decisions/fir-ref.md#the-tree-of-choices",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-2218-fir-ref-run-modes.md",
+      "now": "docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-31-0002-fir-ref-run-draws-choices-from-a-seed.md",
+      "now": "docs/decisions/fir-ref-command-line.md#sampled-mode",
+      "commit": "c09a05f4f8fb"
     },
     {
       "file": "2026-11-02-1156-call-stand-in-is-ub.md",
@@ -102,6 +137,11 @@
       "commit": "3bab9b6cba4c"
     },
     {
+      "file": "2026-11-03-1603-fir-ref-writes-integers-split-at-powers-of-ten.md",
+      "now": "docs/decisions/fir-ref-fast-paths.md#printing",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-11-03-1612-pull-requests-merge-only-when-up-to-date.md",
       "now": "ADR-2026-10-28-0725",
       "commit": "c09a05f4f8fb"
@@ -112,13 +152,38 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md",
+      "now": "docs/decisions/fir-ref-fast-paths.md#lexing-and-reading",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md",
+      "now": "docs/decisions/fir-ref.md#poison-arguments",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-04-2132-fir-ref-run-walks-a-machine-with-explicit-call-frames.md",
+      "now": "docs/decisions/fir-ref-fast-paths.md#running",
+      "commit": "6e70da1fc416"
+    },
+    {
       "file": "2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md",
       "now": "docs/decisions/validation-fir-ref.md#decide-on-validity",
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-11-05-0442-fir-ref-run-moves-old-values-into-a-map-when-lookups-have-paid-for-it.md",
+      "now": "docs/decisions/fir-ref-fast-paths.md#the-bindings-map",
+      "commit": "7cd97a62e05b"
+    },
+    {
       "file": "2026-11-05-0745-fir-ref-checks-a-location-table-with-core-s-loops.md",
       "now": "docs/decisions/validation-fir-ref.md#location-tables",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-0806-fir-ref-run-reads-an-argument-with-at-most-two-steps-of-its-lexer.md",
+      "now": "docs/decisions/fir-ref-fast-paths.md#lexing-and-reading",
       "commit": "c09a05f4f8fb"
     },
     {
@@ -162,6 +227,11 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-11-09-1941-a-new-fir-ref-fast-path-needs-the-depth-rule-or-a-clearly-too-slow-case.md",
+      "now": "ADR-2026-10-30-1450",
+      "commit": "cbe2c7463225"
+    },
+    {
       "file": "2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md",
       "now": "ADR-2026-10-30-1146",
       "commit": "42cfa8571948"
@@ -170,6 +240,11 @@
       "file": "2026-11-11-1138-a-float-constant-is-written-as-its-bits-read-as-a-signed-integer.md",
       "now": "ADR-2026-11-11-1438",
       "commit": "f4e43679273c"
+    },
+    {
+      "file": "2026-11-11-1328-fir-ref-runs-the-core-with-memory-and-its-machine-carries-the-memories.md",
+      "now": "docs/decisions/fir-ref-memory.md#the-modes-run-with-memory",
+      "commit": "6e70da1fc416"
     }
   ]
 }

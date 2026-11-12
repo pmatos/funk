@@ -88,7 +88,8 @@ validation, until exceptions and unwinding are designed
 These checks are not all of validation. The interpreter checks that a
 value is defined, not that its definition dominates its use. So a run of a
 function that validation rejects may end with an outcome, which means
-nothing: only a valid function's runs mean something (ADR-2026-10-30-1856).
+nothing: only a valid function's runs mean something
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 No path of a valid function's run is stuck. That is proved for every
 function of a module whose functions are all valid, meet the conditions
 above on their terminators, and call only functions of the module, of the

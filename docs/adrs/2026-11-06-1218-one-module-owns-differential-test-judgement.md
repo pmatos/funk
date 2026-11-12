@@ -26,7 +26,8 @@ emission and counts. The existing refinement and outcome-set rules remain
 in `refine.py` and `sets.py`.
 
 This is a behavior-preserving refactor of the existing checks, under
-ADR-2026-10-30-2135, ADR-2026-10-31-0003 and ADR-2026-11-03-1847. Report
+ADR-2026-10-30-2135, ADR-2026-10-31-0003 and
+[fir-ref.md](../decisions/fir-ref.md#poison-arguments). Report
 text, tool-call order, stand-in order, seeds and judgement precedence stay as
 they were. In particular, a reference-side judgement still wins over native
 failure, and a decided test still runs native code once when possible for

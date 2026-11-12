@@ -13,8 +13,8 @@ The tests of poison operands run the same rules through `runIn`, whose
 arguments may be `poison`, as `fir-ref run`'s may (#123), and others make
 poison with a broken flag. `FirTest.Loops` tests loops. Every function
 that these tests run is valid, so its runs mean something
-(ADR-2026-10-30-1856), but for one, whose successor ends without a
-terminator: UB ends its run first.
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`), but for one, whose
+successor ends without a terminator: UB ends its run first.
 -/
 
 namespace FirTest

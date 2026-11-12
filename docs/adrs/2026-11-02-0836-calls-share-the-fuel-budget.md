@@ -34,12 +34,16 @@ This refines three accepted ADRs:
   shares the fuel budget". The call effect is not a constraint on the
   monad: it is the run's, and a dialect names its calls through
   `DialectCall`.
-- ADR-2026-10-30-2217 says that #20's call effect "needs its node in the
-  tree, its image in the set monad, and its case in the morphism's
-  proofs". It needs none of them: the interpreter's call path uses only
+- The rule for the tree of choices
+  ([fir-ref.md](../decisions/fir-ref.md#the-tree-of-choices)) said that
+  #20's call effect "needs its node in the tree, its image in the set monad, and
+  its case in the morphism's proofs". It needs none of them: the interpreter's
+  call path uses only
   `pure`, `bind` and `liftExcept`, so `Func.runOps_map` covers it.
-- ADR-2026-10-30-1855 says that each ticket from #14 to #20 adds its ops'
-  rules to `Op.denote?` and `Op.exit?`. `call` takes its meaning from its
+- The rule for ops without rules
+  ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)) said that each
+  ticket from #14 to #20 adds its ops' rules to `Op.denote?` and `Op.exit?`.
+  `call` takes its meaning from its
   callee, which #20 names in `DialectCall CoreDialect`.
 
 ## Decision
@@ -100,7 +104,8 @@ This refines three accepted ADRs:
   included, whatever its ops do (`Func.fuelMonotone`), since only the
   interpreter counts fuel. For a function that reaches an op without rules
   it holds only vacuously on the paths that reach the op, and makes no
-  claim about how such a function behaves (ADR-2026-10-30-1855).
+  claim about how such a function behaves
+  ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)).
 - `Progress` and `NeverStuck` for runs with calls are #20's to prove.
 - `Func.runOps` is defined by well-founded recursion, which Lean makes
   irreducible, and `Func.run` runs it. Proofs unfold it with its equation

@@ -54,7 +54,8 @@ callee.
 It replaces that earlier ADR, now deleted (`INDEX.md`, Removed). It
 refines ADR-2026-10-30-0818,
 which asked every op to be total and monotone; ADR-2026-11-02-0836, whose
-consequences describe the stand-in; and ADR-2026-10-30-1855, since a
+consequences describe the stand-in; and the rule for ops without rules
+([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)), since a
 `call` with `none` in `Op.denote?` is not an op without rules.
 
 ## Consequences

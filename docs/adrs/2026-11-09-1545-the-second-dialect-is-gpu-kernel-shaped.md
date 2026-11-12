@@ -27,8 +27,8 @@ out of M1. The human ruled on
 - **One work-item in M1.** `fir-ref` runs one work-item of a kernel, with
   its ids given as inputs. Ops whose meaning needs other work-items, such
   as barriers, are left out or admitted without execution rules
-  (ADR-2026-10-30-1855). A launch op in host code is out of M1. M1's
-  results are not a model of a whole kernel.
+  ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)). A launch op in
+  host code is out of M1. M1's results are not a model of a whole kernel.
 - **Terminal.** The dialect has no lowering to core and no native backend
   in M1 (ADR-2026-11-09-1544).
 - **What the G0 checks show with it.**

@@ -2,7 +2,8 @@ import FirTest.Interpreter
 
 /-!
 Tests of #14's ops and of `fir-ref run`'s exhaustive and scripted modes
-(ADR-2026-10-30-2218), on `FirRef.runBytes`: `sub` and `mul`, the flags of
+(`docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes`), on
+`FirRef.runBytes`: `sub` and `mul`, the flags of
 `add`, `sub` and `mul` at several widths, poison that a broken flag gives
 and that propagates to the returned values, and `freeze`, whose choices
 scripted mode takes from `--choices` and exhaustive mode tries in turn. A

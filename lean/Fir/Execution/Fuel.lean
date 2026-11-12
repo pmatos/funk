@@ -28,7 +28,8 @@ module, of every dialect, calls included, whatever its ops do (the section
 "The runs of a function, and fuel monotonicity"): only the interpreter
 counts fuel, and a callee gives back to its caller the steps it leaves
 (ADR-2026-11-02-0836). For a function that reaches an op to which its
-dialect gives no execution rule (ADR-2026-10-30-1855), fuel monotonicity
+dialect gives no execution rule
+(`docs/decisions/fir-ref.md#an-op-without-rules`), fuel monotonicity
 holds only vacuously on the paths that reach that op, and says nothing
 about how the function behaves there.
 

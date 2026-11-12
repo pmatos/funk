@@ -8,8 +8,8 @@ import FirRef.RunModes
 /-!
 What `fir-ref run` does with a file: it parses it with the core dialect,
 runs one of its functions with the spec's interpreter, `Func.run`, and
-reports the result as one JSON object on one line (ADR-2026-10-30-1856,
-ADR-2026-10-30-2218, ADR-2026-10-31-0002).
+reports the result as one JSON object on one line
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 
 `freeze` of poison makes a choice, so a run may end in many ways.
 `fir-ref` runs the interpreter in the state layer over the spec's tree of
@@ -35,8 +35,8 @@ proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
 
 Each says how many choices a path made. An op without rules has no outcome
 in the spec, so a path that reaches one is reported as an error, not as a
-result (ADR-2026-10-30-1855), and so is a choice sequence that does not
-fit the run.
+result (`docs/decisions/fir-ref.md#an-op-without-rules`), and so is a choice
+sequence that does not fit the run.
 
 Arguments, choices and values are spelled as constants are in text: `true`
 and `false` at `i1`, signed decimal at every other width, and the one
@@ -174,7 +174,7 @@ def pathFields : PathEnd Core.Obs Core.Op → Except Core.Op (List (String × St
   | .noOutcome op => .error op
 
 /-- The error of a run that reaches an op without rules
-(ADR-2026-10-30-1855). -/
+(`docs/decisions/fir-ref.md#an-op-without-rules`). -/
 def noRules (name : String) (op : Core.Op) : RunReport :=
   { err := s!"fir-ref: {name}: {opText op} has no execution rules yet", status := 2 }
 
@@ -235,7 +235,8 @@ def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf × N
 
 `runBytes` below calls the spec's `Core.scripted`, `Core.exhaustive` and
 `Core.sampled`. The theorems here make Lean compile those calls as calls of
-`FirRef.Machine`'s walks of the run (ADR-2026-11-04-2132), which take no
+`FirRef.Machine`'s walks of the run
+(`docs/decisions/fir-ref-fast-paths.md#running`), which take no
 stack per step, per level of calls or per choice. They name the core
 dialect, so they live in `fir-ref`'s command line, not in
 `FirRef.RunModes` (G0, ADR-2026-11-03-0600).
@@ -274,7 +275,8 @@ def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
   exact (Machine.sampled_eq M draw f args fuel g).symm
 
 /-- The width of the units of each memory of a run of `fir-ref`, which
-names the core's memories by themselves (ADR-2026-11-11-1328). The core
+names the core's memories by themselves
+(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`). The core
 has no memory yet, so there is no width to give; the module's data layout
 will give them (#231). -/
 def coreUnit : Core.Mem → Nat := fun x => nomatch x

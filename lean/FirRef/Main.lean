@@ -8,7 +8,7 @@ import FirRef.RunArgs
 `fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). It
 reads texts with the spec's parser and the core dialect, and prints them
 with the spec's printer, `Module.print`. Its command line follows `funk`'s
-(ADR-2026-10-30-1425).
+(`docs/decisions/fir-ref-command-line.md#shared-by-every-command`).
 
 fir has no nesting limit (#36), so `fir-ref` must give a verdict at any
 depth. It runs implementations of the spec's functions that take no stack
@@ -19,7 +19,8 @@ long integers, which `FirRef.printDecimal` splits at powers of ten (#41),
 and `Fir.parse` as `FirRef.parse`, which lexes each token once, from the
 text's positions, as its readers reach it, lexes the whole text again only
 when they fail, to find a lexer error, and decodes with
-`FirRef.decodeModule` (ADR-2026-11-03-1810).
+`FirRef.decodeModule`
+(`docs/decisions/fir-ref-fast-paths.md#lexing-and-reading`).
 `validate` runs the spec's validation check, which walks nested blocks with
 `FirRef.allBlocks` (`FirRef.Validate`). `run` runs the spec's interpreter
 in its tree of choices, in scripted, exhaustive or sampled mode

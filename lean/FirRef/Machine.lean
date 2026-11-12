@@ -4,13 +4,15 @@ import FirRef.RunAt
 /-!
 `fir-ref run` runs the spec's interpreter in the state layer over the tree
 of choices, from the empty memories, and walks the tree
-(ADR-2026-10-30-2218, the spec's section on modes with memory). The spec's
+(`docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes`, the
+spec's section on modes with memory). The spec's
 `Func.runOps` recurses once per op it runs, through the tree's `bind`, and
 a call runs its callee inside the caller's recursion, so the compiled
 interpreter takes stack for every step and for every level of calls (#47).
 This module is the machine that `fir-ref` runs instead
-(ADR-2026-11-04-2132): `Machine.advance` takes the steps of a run in a loop
-whose recursive calls are all tail calls, and keeps each caller that waits
+(`docs/decisions/fir-ref-fast-paths.md#running`): `Machine.advance` takes the
+steps of a run in a loop whose recursive calls are all tail calls, and keeps
+each caller that waits
 for its callee on an explicit stack of frames. It stops where the run ends
 or makes a choice, and gives what is left after each value of the choice as
 a state of the machine, so that the walkers of `FirRef.RunModes` can follow
@@ -21,11 +23,13 @@ calls the dialect's rules as the spec does, and keeps the values that the
 run has defined in `FirRef.Bindings`, in place of the spec's list `Env`, so
 that the lookups of a run take time near linear in the values it binds and
 the lookups it makes, not in the values defined after each operand
-(ADR-2026-11-05-0442). `Bindings.args`, `bindResults`, `bind`, `jump` and
+(`docs/decisions/fir-ref-fast-paths.md#the-bindings-map`). `Bindings.args`,
+`bindResults`, `bind`, `jump` and
 `enter` are `Env.operands`, `Env.bind`, `Func.jump` and `Func.enter` on
 bindings, proved to fit them in `FirRef.BindingsSteps`.
 
-The machine carries the memories of the run (ADR-2026-11-11-1328). A state
+The machine carries the memories of the run
+(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`). A state
 that runs ops holds the memories they start from, an op's tree holds the
 memories after each of its paths, and a function that returns holds the
 memories it returns with. Each function runs in a frame of its own: the

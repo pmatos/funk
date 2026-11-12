@@ -19,5 +19,5 @@ compiled after it, so every module of `FirRef` that calls the spec's
 parser, printer or validation check, or reads an argument, imports this
 one first, through `FirRef.Utf8`. The run modes' implementations name the
 core dialect, so `FirRef.Run` registers their theorems instead, before
-`runBytes` (ADR-2026-11-04-2132).
+`runBytes` (`docs/decisions/fir-ref-fast-paths.md#running`).
 -/
