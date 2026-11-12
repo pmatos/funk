@@ -71,7 +71,7 @@ has one before it looks at the op's own meaning, so `call` has no rule
 here, and its meaning in the set of the ways a run may end has no
 outcome, which no run reaches. It has no op-level obligation either: the
 poison obligations ask totality and monotonicity only of terminators and
-of ops that call no function (ADR-2026-11-02-1514). The obligations of
+of ops that call no function (ADR-2026-10-29-2006). The obligations of
 each family are proved in sections of their own after this one, from the
 constant obligations to the branch obligations.
 -/

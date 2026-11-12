@@ -6,7 +6,7 @@ import Fir.Core.Poison
 
 `fcmp`, with each of its fourteen predicates and at every format, meets the
 obligations of the poison classes section, as `icmp` does. It propagates
-poison (ADR-2026-10-30-0818), so it meets both poison clauses, returns a
+poison (ADR-2026-10-29-2006), so it meets both poison clauses, returns a
 result on some operands with no poison, and is total and monotone.
 
 It is never UB: it has one outcome, a result, on every operand vector, so

@@ -8,10 +8,10 @@ import Fir.Execution.ChoiceTree
 
 `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`, at every
 format, meet the obligations of the poison classes section. Each
-propagates poison (ADR-2026-10-30-0818), so it meets both poison clauses,
+propagates poison (ADR-2026-10-29-2006), so it meets both poison clauses,
 returns a result on some operands with no poison, and is total and
 monotone. Each also meets the effect obligations of a pure op
-(ADR-2026-11-11-1800): it is never UB, and on operands with no poison it
+(ADR-2026-11-09-1549): it is never UB, and on operands with no poison it
 gives a defined result.
 
 On defined operands each rule gives the model's result, or any NaN when

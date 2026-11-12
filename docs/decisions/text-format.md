@@ -30,7 +30,7 @@ as `toy.cell`, written `kind @sym(params) -> results attrs {` and then `}`
 on the next line: its body is empty. Every reader decodes such an item,
 whichever dialects it holds; a body that is not empty does not decode, and
 any other bare kind is still a parse error, so M0 texts are unchanged
-(ADR-2026-11-10-2224).
+(ADR-2026-11-09-1543).
 
 Rejected: sugar or alternative spellings. Each one breaks
 `print(parse(t)) == t`, or needs a normalizing step in both implementations
@@ -56,7 +56,7 @@ depth. Both validators check this as `Module.InDialectSet`, in
 dialect's text gives, so it sits beside `Module.Valid`, not in it, and the
 theorems about valid modules need no text (ADR-2026-11-10-1306). A region
 kind's word (ADR-2026-11-10-1941) and an item kind's word
-(ADR-2026-11-10-2224) join the rule too.
+(ADR-2026-11-09-1543) join the rule too.
 
 `funk verify` and `fir-ref validate` report the problems of
 `Module.problems`, then those of `Module.setProblems`. A function that writes
@@ -142,7 +142,7 @@ has a canonical form
 ([rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#commands-and-verdicts)).
 
 Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
-float type has at most as many bits in all (ADR-2026-11-11-0950). A
+float type has at most as many bits in all (ADR-2026-11-09-1549). A
 location reference, a line and a column are below `2^32`. An integer
 attribute has no bound of its own: the dialect that reads it bounds it
 (ADR-2026-11-03-1000).
@@ -231,7 +231,7 @@ and hexadecimal for every value, which the human did not rule
 
 `fcmp` writes its predicate as LLVM does, one of `oeq`, `one`, `olt`, `ole`,
 `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:
-`%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-11-1139).
+`%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-09-1549).
 
 Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
 has one attribute, `round(rne)`, in the applied form:

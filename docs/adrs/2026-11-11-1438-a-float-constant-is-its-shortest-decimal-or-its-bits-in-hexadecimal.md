@@ -31,7 +31,7 @@ reader's bounds.
 ## Why
 
 A value of `float<e,m>` is its raw bit pattern, each NaN payload and sign
-included (ADR-2026-11-11-0950). Each value keeps exactly one printed spelling,
+included (ADR-2026-11-09-1549). Each value keeps exactly one printed spelling,
 so `print(parse(t)) == t` holds (ADR-2026-10-29-2014), and constants read as
 numbers. The human ruled on 2026-11-11: "Decimal float, hex fallback", as
 LLVM writes them; the orchestrator recorded the ruling on #229. The shortest

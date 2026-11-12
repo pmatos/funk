@@ -6,7 +6,7 @@ import Fir.Execution.Replace
 # Calls refine as their arguments and callees do
 
 `call` is a poison exception with no rule of its own, and no obligation
-of its own (ADR-2026-11-02-1514). The obligations' counterparts for calls
+of its own (ADR-2026-10-29-2006). The obligations' counterparts for calls
 hold for whole functions, for the functions of every core module, calls
 and recursion included:
 
@@ -44,7 +44,7 @@ with no callee among the ops of the modules' functions and of the
 function that runs (ADR-2026-11-05-1715). The core dialect meets it with
 its ops' own obligations, which hold at every width, `i0` included, so
 for every function of every module, valid or not. The lawful class covers
-only the instances that validation accepts (ADR-2026-11-02-1515), so it
+only the instances that validation accepts (ADR-2026-10-29-2006), so it
 gives it only for the functions of valid modules (the section on what the
 lawful class gives); these theorems ask for no valid module, so they use
 the ops' own obligations.

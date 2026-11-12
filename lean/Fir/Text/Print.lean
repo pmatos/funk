@@ -23,7 +23,7 @@ is:
 * an item of a dialect's kind written as a function's header, with its
   kind in place of `func`, then each attribute after a space, then ` {` and,
   on the next line, its closing `}` at its indentation
-  (ADR-2026-11-10-2224);
+  (ADR-2026-11-09-1543);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing

@@ -7,11 +7,11 @@ import Fir.Validation.Scope
 
 An op's set of effects holds the effects of its own rule. An op with a
 callee runs its callee, so it has its callee's effects too
-(ADR-2026-11-02-1514): a call has every effect that some op of its callee
+(ADR-2026-10-29-2006): a call has every effect that some op of its callee
 has, or of a function that the callee calls in turn. This section gives
 each function of a symbol table its _summary_, the effects that a call of
 it may have, and so gives each op in place its effects with its callee's
-(ADR-2026-11-10-2108).
+(ADR-2026-11-09-1541).
 
 * _A join of effect sets._ Two sets of effects join into the set that has
   every effect of either: a memory-named effect touches the memories of

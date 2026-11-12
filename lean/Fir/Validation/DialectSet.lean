@@ -16,7 +16,7 @@ set may name, and that the module's words keep to it:
   region of an op, and each word of each type that a function states, at
   any depth; and the kind of each item of a dialect's kind, each word of
   each type that it states and each word of its attributes
-  (ADR-2026-11-10-2224).
+  (ADR-2026-11-09-1543).
 
 A module nested in another has a dialect set of its own, not its parent's
 (ADR-2026-11-10-1510), so the rule holds for each symbol table of a module:

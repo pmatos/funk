@@ -16,17 +16,17 @@ constant obligations to the branch obligations:
 * _A result on defined operands._ Each of them returns a result on some
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
-  defined one (ADR-2026-11-03-1615). The four divisions do only at a
+  defined one (ADR-2026-10-29-2006). The four divisions do only at a
   width above zero, and validation accepts `iN` only for N of at least
   1, so they do at every valid width. This is the one obligation that needs the
-  instance to be valid (ADR-2026-11-02-1515).
+  instance to be valid (ADR-2026-10-29-2006).
 * _Poison is refined by every value._ A poison of a core type is refined
   by every value of that type: of `iN` at every width, of every float
   format, and of every pointer type, whose values are pointers.
 * _Totality and monotonicity._ Every core terminator and every core op
   with no callee is total and monotone, at every width: every core op but
   `call`, which the obligations leave out, since its meaning is its
-  callee's run (ADR-2026-11-02-1514).
+  callee's run (ADR-2026-10-29-2006).
 
 So every generic theorem that asks for a lawful dialect holds for the core
 dialect. For example, every function of a valid core module has an

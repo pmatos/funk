@@ -8,7 +8,7 @@
 //! `i1` condition and two `iN` and defines one `iN`, with no attributes.
 //! `fcmp` has one attribute, one of [`FLOAT_PREDICATES`], and takes two
 //! values of one float type and defines one `i1`: `%lt: i1 = fcmp olt %a,
-//! %b` (ADR-2026-11-11-1139). Validation has no rule for any of them beyond
+//! %b` (ADR-2026-11-09-1549). Validation has no rule for any of them beyond
 //! its signature (`Op.Valid` in `lean/Fir/Core/Validation.lean`).
 
 use super::type_list;

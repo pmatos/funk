@@ -295,7 +295,7 @@ def SymbolTable.context (keys : List LocRef) (t : SymbolTable d) : ModuleContext
 An item of a dialect's kind is valid, in the context of its table's
 symbols, when its kind is a word of a dialect that the dialect registers,
 its parameters have distinct names, its types are valid, its attributes can
-be written, and it obeys the dialect's rule for items (ADR-2026-11-10-2224).
+be written, and it obeys the dialect's rule for items (ADR-2026-11-09-1543).
 -/
 structure DialectItem.Valid (ctx : FuncContext d) (i : DialectItem d) : Prop where
   kind : isDialectWord i.kind
@@ -376,7 +376,7 @@ of every value that a valid function defines. For the core dialect that is
 pointer of the default memory. Every op of a valid function
 has an op instance with valid types, as the section on what the lawful
 class gives proves, and the poison obligations speak only of such op
-instances (ADR-2026-11-02-1515).
+instances (ADR-2026-10-29-2006).
 -/
 
 /-- Validation accepts the types of the op instance `op`: each of its

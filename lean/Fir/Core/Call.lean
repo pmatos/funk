@@ -24,7 +24,7 @@ call then runs so:
   a valid module always finds its callee, and passes and receives values
   of the right types.
 * _Poison passes through, both ways._ `call` is an exception to poison
-  propagation that passes values on as they are (ADR-2026-10-30-0818). A
+  propagation that passes values on as they are (ADR-2026-10-29-2006). A
   poison operand is a poison argument: the callee sees poison, and
   whatever it does with it, the call does. A poison that the callee
   returns is a poison result of the call. A poison argument does not make
@@ -43,7 +43,7 @@ The interpreter never looks at it, since it runs the callee of every op
 that has one first, and `fir-ref` never reaches it. Its meaning is its
 callee's run, and nothing else.
 
-So `call` has no op-level obligation (ADR-2026-11-02-1514). The poison
+So `call` has no op-level obligation (ADR-2026-10-29-2006). The poison
 obligations ask totality and monotonicity only of the ops that the
 interpreter runs by their own rule: terminators, and ops that call no
 function. An op's meaning sees no module, so it cannot run a callee. Any

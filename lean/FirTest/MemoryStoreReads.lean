@@ -1,7 +1,7 @@
 import Fir
 
 /-!
-A store does not read its memory (ADR-2026-11-11-0451): replace the memory
+A store does not read its memory (ADR-2026-11-09-1541): replace the memory
 by any memory of the same allocations, and the store faults for the same
 reason or writes the same units at the same place, leaving every other unit
 as it was in each. So a dialect may declare a store with a write and no

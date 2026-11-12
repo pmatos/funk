@@ -28,7 +28,7 @@ or the same place, on those others. A function _has monotone ops_ when
 the ops of each of its blocks do.
 
 A call is left out: it has no rule of its own, and what it does is its
-callee's run, which the proofs follow instead (ADR-2026-11-02-1514). The
+callee's run, which the proofs follow instead (ADR-2026-10-29-2006). The
 proofs ask this only of the ops that a run can reach, not of every op
 instance of the dialect (ADR-2026-11-05-1715), so a dialect whose ops are
 monotone only at valid op instances still meets it for every function of

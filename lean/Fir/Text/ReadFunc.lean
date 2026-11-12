@@ -21,7 +21,7 @@ the results.
 
 An item of a dialect's kind reads back the same way, with its attributes
 read between its results and its `{`, and its empty body read as no blocks
-(ADR-2026-11-10-2224). Its attributes start with a word, a number, a string
+(ADR-2026-11-09-1543). Its attributes start with a word, a number, a string
 or a symbol, never with `->`, `,` or `(`, so they do not change the way the
 reader goes.
 -/

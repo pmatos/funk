@@ -12,7 +12,7 @@ takes the words from the strings of `lean/Fir/Core/Text.lean`, and
 whole strings, so a message that holds a word, such as
 `a poison divisor`, is not one.
 
-ADR-2026-11-03-1615 adds the op `poison`. Its name is also S1's word for
+ADR-2026-10-29-2006 adds the op `poison`. Its name is also S1's word for
 the deferred-UB value, which the generic spec is about: `PoisonOr`,
 `TyPoison`, `PoisonClass`. A check that reads words cannot tell which of
 the two a string means. On `main` at #122, no generic file of either

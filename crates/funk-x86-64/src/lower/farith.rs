@@ -13,7 +13,7 @@
 //! `fneg` and `fabs` change only the sign bit, so they work on the bits in
 //! `%rax`: `btc` flips bit 31 or 63, and `btr` clears it. That is IEEE
 //! 754's negate and abs, also on a NaN, whose result fir lets be any NaN
-//! (ADR-2026-11-11-1800).
+//! (ADR-2026-11-09-1549).
 //!
 //! SSE has no fused multiply-add, and FMA3 is not in every x86-64, so
 //! `fma` loads its operands into `%xmm0` to `%xmm2` and calls a routine of

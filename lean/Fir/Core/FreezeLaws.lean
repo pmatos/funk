@@ -4,7 +4,7 @@ import Fir.Core.Poison
 /-!
 # Freeze is lawful
 
-`freeze` is an exception to poison propagation (ADR-2026-10-30-0818), so of
+`freeze` is an exception to poison propagation (ADR-2026-10-29-2006), so of
 the obligations of the poison classes section it meets two: it is total
 and monotone. In the set monad, `freeze` of a value gives that value, and
 `freeze` of poison gives every value of its type, each as one way the op

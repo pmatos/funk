@@ -1,5 +1,5 @@
 # Tests of poison-branch-i16.fir: the poison and UB rules of br and
-# cond_br at i16 (#19, ADR-2026-10-30-0818). %p = add nsw %a, 1 is
+# cond_br at i16 (#19, ADR-2026-10-29-2006). %p = add nsw %a, 1 is
 # poison when %a is the signed maximum, 32767.
 # - A poison block argument arrives as poison: br and cond_br pass their
 #   successors' values on as they are. br_poison passes %p to ^next,

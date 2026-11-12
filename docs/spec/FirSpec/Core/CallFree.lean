@@ -33,7 +33,7 @@ operand vector, its semantics, or its exit for a terminator, has some
 outcome. Each op's family proves it in its obligations, from
 $`\mathsf{const}` to $`\mathsf{ret}`. $`\mathsf{call}` is left out: a run
 never uses its semantics, and goes on by its callee's run
-(ADR-2026-11-02-1514).
+(ADR-2026-10-29-2006).
 :::
 
 :::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "4176371976083455809")

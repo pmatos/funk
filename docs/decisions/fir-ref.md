@@ -36,7 +36,7 @@ paths are its caller's (ADR-2026-11-02-0836).
 A call has no op-level rule. Its meaning is its callee's run. The interpreter
 runs the callee of every op that has one before it looks at `denote`.
 `Core.Op.denote?` gives `none` for `call`, but `call` does not count as an op
-without rules (ADR-2026-11-02-1514).
+without rules (ADR-2026-10-29-2006).
 
 ### The tree of choices
 
@@ -76,7 +76,7 @@ rejected: defining the semantics through the tree, since the spec's
 
 `Core.Op.denote?` and `Core.Op.exit?` give each core op its family's rule, or
 `none` while its family has not landed (`lean/Fir/Core/Semantics.lean`). `call`
-gives `none` too, but its meaning is its callee's run (ADR-2026-11-02-1514). In
+gives `none` too, but its meaning is its callee's run (ADR-2026-10-29-2006). In
 `DialectDenote CoreDialect SetM`, an op without rules has no outcome: the empty
 set on every operand vector. A run that reaches it has no way to end on that
 path. `fir-ref run` reports it as an error, never as stuck or UB

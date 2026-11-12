@@ -7,7 +7,7 @@ import Fir.Execution.Lawful
 
 A pass may rely on a function's summary as it relies on an op's effects,
 because the summary is proved sound: an effect that it leaves out, a run
-of the function does not have (ADR-2026-11-10-2108). In a dialect lawful in
+of the function does not have (ADR-2026-11-09-1541). In a dialect lawful in
 its effects whose semantics with memory lifts its semantics in the set
 monad (the section on runs with memory), for a function of a module whose
 functions are all valid:
@@ -16,7 +16,7 @@ functions are all valid:
   ends in UB, at any budget of fuel.
 * _No may produce poison_: when its summary leaves out may produce poison,
   a run of the function on arguments with no poison returns no poison
-  (ADR-2026-11-09-2249).
+  (ADR-2026-11-09-1541).
 
 The proofs follow a run op by op, by induction on its fuel, as the proofs
 of progress with calls do. Each op that runs by its own rule leaves out

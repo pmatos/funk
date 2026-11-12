@@ -3,7 +3,7 @@ This section explains, in plain words, why fir has two kinds of undefined
 behaviour, how they differ, and what `freeze` does. It defines nothing: the
 rules it explains are the op rules of the abstract syntax chapter and the
 definitions of this chapter, which follow the poison semantics of
-ADR-2026-10-29-2006 and ADR-2026-10-30-0818.
+ADR-2026-10-29-2006.
 
 # Two kinds of failure
 
@@ -20,7 +20,7 @@ branch condition, a divisor, or the dividend of `sdiv` or `srem` by `-1`.
 Poison is deferred UB: a failure that is recorded in a value, and that
 becomes UB only if it is used in such a place. A program may also write
 poison itself, with the core dialect's constant `poison`
-(ADR-2026-11-03-1615), as LLVM's programs write its `poison` constant.
+(ADR-2026-10-29-2006), as LLVM's programs write its `poison` constant.
 
 # Why defer at all
 

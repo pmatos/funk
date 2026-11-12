@@ -30,7 +30,7 @@ result types is a valid type of the dialect.
 Validation checks each operand's type against the type of the value it
 names, gives each result the type of a value that $`f` defines, and
 accepts only valid types among the types that $`f` states. The poison
-obligations speak only of such op instances (ADR-2026-11-02-1515), so
+obligations speak only of such op instances (ADR-2026-10-29-2006), so
 this is what lets them speak for every op of a valid module.
 :::
 

@@ -3,7 +3,7 @@ import FirTest.Mixed
 
 /-!
 A sum of three dialects: the core and two extensions of it with different
-prefixes, each written over the core alone (ADR-2026-11-10-1310). The toy
+prefixes, each written over the core alone (ADR-2026-11-09-2306). The toy
 dialect `toy` and the bit dialect `bit` know nothing of each other. The sum
 `CoreToy ⊞ BitOverToy` adds the bit dialect to the sum of the core and the
 toy dialect by lifting it: an inclusion of the core's types in those of

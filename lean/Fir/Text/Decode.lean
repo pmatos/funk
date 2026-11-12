@@ -16,7 +16,7 @@ position of the part that does not decode (ADR-2026-10-29-2014):
 
 * an item whose kind is neither `func`, `module` nor a word of a dialect,
   at its kind. An item of a dialect's kind decodes whichever dialect
-  registers it: that is validation's question (ADR-2026-11-10-2224);
+  registers it: that is validation's question (ADR-2026-11-09-1543);
 * a `func` with attributes, at its first attribute; a `func` whose body
   holds a dialect set, at its kind; and one whose body holds items, at the
   first;
@@ -177,7 +177,7 @@ def decodeDialectItem (kind : String) (kindPos : TextPos) (name : String) (param
 mutual
 /-- Decodes an item: a `func`, a `module`, whose body is its dialect set
 and its items (ADR-2026-11-10-1510), or an item of a dialect's kind
-(ADR-2026-11-10-2224). An empty body is no blocks, so it is a module with no
+(ADR-2026-11-09-1543). An empty body is no blocks, so it is a module with no
 items. -/
 def decodeItem : SItem → Except ParseError (Item d)
   | ⟨kind, kindPos, name, params, results, attrs, body⟩ =>

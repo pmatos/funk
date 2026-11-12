@@ -5,7 +5,7 @@ An extension `e` written over the dialects it depends on, `dep`, states its
 classes for `dep.over e`. To add `e` to a sum `big` that holds `dep` and
 more, `big ⊞ e` needs `e`'s classes for `big.over e`. The _lift_ of `e` by
 an inclusion `ι` of `dep`'s types in `big`'s gives them, from `e`'s own
-classes and `big`'s (ADR-2026-11-10-1310). So two extensions written over
+classes and `big`'s (ADR-2026-11-09-2306). So two extensions written over
 the core combine: `core ⊞ a ⊞ b.lift core ι μ`, where `ι` includes the
 core's types in those of `core ⊞ a`, and `μ` names the core's memories as
 `core ⊞ a` names them.

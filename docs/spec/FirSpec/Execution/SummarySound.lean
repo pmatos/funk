@@ -67,5 +67,5 @@ function $`f` of $`M`. For every budget of fuel:
   arguments with no poison returns no poison.
 
 A pass may rely on a summary as it relies on an op's effects
-(ADR-2026-11-10-2108).
+(ADR-2026-11-09-1541).
 :::

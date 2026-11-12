@@ -23,7 +23,7 @@ A type of the core dialect.
   bits and `m` explicit mantissa bits: a sign bit, then the exponent, then
   the mantissa, `1 + e + m` bits in all (ADR-2026-11-09-1549). Validation
   accepts `e ≥ 2` and `m ≥ 1`, every format of Lean's float model
-  (ADR-2026-11-11-0950). `f16`, `bf16`, `f32`, `f64` and `f128` are
+  (ADR-2026-11-09-1549). `f16`, `bf16`, `f32`, `f64` and `f128` are
   `float<5,10>`, `float<8,7>`, `float<8,23>`, `float<11,52>` and
   `float<15,112>`.
 * `ptr n` is `ptr<N>` with `N = n`: a pointer into the memory `n`

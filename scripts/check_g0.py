@@ -36,8 +36,8 @@ CORE_POISON = "lean/Fir/Core/Poison.lean"
 POISON_DEF = "def Op.poisonClass"
 CORE_EFFECTS = "lean/Fir/Core/OpEffects.lean"
 EFFECTS_DEF = "def Op.effects"
-# The dialects' own files. A new dialect's directory is added here, with an
-# ADR that moves the line.
+# The dialects' own files. A new dialect's directory is added here, and
+# ADR-2026-11-03-0600, which draws the line, is edited in place to match.
 DIALECT_DIRS = ("lean/Fir/Core/",)
 # fir-ref's command line: its entry point, its reports, and `fir-ref run` and
 # its arguments. It runs the core dialect, so it may name it.

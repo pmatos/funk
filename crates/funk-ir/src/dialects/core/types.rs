@@ -17,7 +17,7 @@
 //! one spelling: `float(8, 23)` does not decode (ADR-2026-11-11-0951). A
 //! format wider than [`MAX_WIDTH`] bits in all does not decode, and
 //! validation rejects one with fewer than 2 exponent bits or 1 mantissa bit
-//! (ADR-2026-11-11-0950).
+//! (ADR-2026-11-09-1549).
 
 use crate::registry::{TypeCheck, TypeSpec};
 use crate::{Attr, Type};

@@ -161,7 +161,7 @@ $`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
 :::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "5103561852968972671")
 *Definition: how an op of a sum runs.* The memories of the sum are
 $`e`'s, $`M_e`, which name the base's: so a memory has one name in the
-sum, whichever side names it (ADR-2026-11-11-0452). An op of the sum has
+sum, whichever side names it (ADR-2026-11-09-2306). An op of the sum has
 its side's
 {ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
 a base op's with its memories renamed by $`\mathrm{ofBase}`:

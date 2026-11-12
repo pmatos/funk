@@ -2,7 +2,7 @@ import FirTest.Modes
 
 /-!
 Tests of #229's float arithmetic on `FirRef.runBytes`, which computes what
-`fir-ref run` writes (ADR-2026-11-11-1800, ADR-2026-11-11-1801). Each op
+`fir-ref run` writes (ADR-2026-11-09-1549, ADR-2026-11-11-1801). Each op
 runs on its hard inputs in the corpus, `float-binary-T` and
 `float-unary-fma-T`, against `scripts/harness/float_ref.py`; these check
 what the corpus does not: that a result which is not a NaN takes no

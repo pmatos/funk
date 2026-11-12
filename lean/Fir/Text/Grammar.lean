@@ -10,7 +10,7 @@ its regions and its location reference, in that order. An item is always
 its kind, its symbol, its parameters, its results, its attributes and its
 body. Types and attributes are written as generic terms. So a new dialect
 adds words, and needs no change to this grammar or to the parser, and so
-does a kind of item that a dialect registers (ADR-2026-11-10-2224). A float
+does a kind of item that a dialect registers (ADR-2026-11-09-1543). A float
 or a nested symbol reference needs new tokens: a change to the tokens of
 the previous section.
 

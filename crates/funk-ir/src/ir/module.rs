@@ -144,7 +144,7 @@ impl Func {
 }
 
 /// An item of a kind that a dialect registers (`DialectItem` in
-/// `lean/Fir/Syntax/Module.lean`, ADR-2026-11-10-2224): what the one
+/// `lean/Fir/Syntax/Module.lean`, ADR-2026-11-09-1543): what the one
 /// production of an item writes, `kind @sym(params) -> results attrs { }`,
 /// with an empty body. Its kind is a word of the dialect, such as
 /// `toy.cell`, and the dialect's [`ItemKindSpec`](crate::registry::ItemKindSpec)
@@ -186,7 +186,7 @@ impl DialectItem {
 /// An item of a module. Every item is written
 /// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
 /// `func` and `module` (ADR-2026-11-10-1510), and a dialect registers kinds
-/// of its own (ADR-2026-11-10-2224).
+/// of its own (ADR-2026-11-09-1543).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Item {

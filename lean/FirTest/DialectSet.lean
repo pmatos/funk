@@ -12,7 +12,7 @@ flag dialect's type `toy.flag` and its ops `toy.flag` and `toy.test`, and
 `toy.note`, which takes any attributes and gives nothing, so an attribute
 can name a dialect. A module may write a word of `toy` only when its
 dialect set names `toy`. The tagged dialect also registers two kinds of
-item, `toy.cell` and `toy.alias` (ADR-2026-11-10-2224), which
+item, `toy.cell` and `toy.alias` (ADR-2026-11-09-1543), which
 `FirTest.ItemKinds` checks.
 -/
 

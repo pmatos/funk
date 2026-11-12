@@ -212,7 +212,7 @@ built executable runs each function on a stack of its own
 ## Poison
 
 Any value refines poison (ADR-2026-10-29-2008). The op `poison` gives a poison
-result (ADR-2026-11-03-1615).
+result (ADR-2026-10-29-2006).
 
 Native code has no poison value: every value is the bits in its slot. An op
 whose source result is poison still stores some bits, and nothing relies on
@@ -264,7 +264,7 @@ value.
 It must read only bit 0 of every `i1`. No optimizer may turn a `select` into a
 `cond_br` without freezing its condition first, or `select %c, %x, false` into
 `and %c, %x` (`lean/Fir/Execution/PoisonUB.lean`). It may treat a `cond_br` on
-poison as UB, as the spec does (ADR-2026-10-30-0818).
+poison as UB, as the spec does (ADR-2026-10-29-2006).
 
 It must not make a division run where the source would not, such as by hoisting
 it above the branch that tests its divisor: natively that adds a trap. It may

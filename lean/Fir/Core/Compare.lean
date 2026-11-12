@@ -16,13 +16,13 @@ signed, but it is 255 read as unsigned, which is greater. At `i1`, `true`
 is -1 read as signed and 1 read as unsigned, so `icmp slt true, false`
 gives `true` and `icmp ult true, false` gives `false`.
 
-`icmp` propagates poison (ADR-2026-10-30-0818): a poison operand gives a
+`icmp` propagates poison (ADR-2026-10-29-2006): a poison operand gives a
 poison `i1`. So `icmp eq %p, %p` of a poison `%p` is poison, not `true`.
 
 `select c, a, b` takes an `i1` condition and two values of `iN`, and gives
 one of them: `a` when `c` is `true`, and `b` when it is `false`. It is an
 exception to poison propagation, with a rule of its own
-(ADR-2026-10-30-0818):
+(ADR-2026-10-29-2006):
 
 * A poison condition gives poison.
 * The value not chosen does not matter, even when it is poison.

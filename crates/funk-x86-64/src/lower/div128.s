@@ -19,7 +19,7 @@
 # No routine tests its divisor. A zero divisor traps in the first divq, as
 # a division at i64 traps, and sdiv and srem of the signed minimum by -1
 # give some value; both are immediate UB in the source
-# (ADR-2026-10-30-0818), which any behaviour refines.
+# (ADR-2026-10-29-2006), which any behaviour refines.
 
 	.text
 

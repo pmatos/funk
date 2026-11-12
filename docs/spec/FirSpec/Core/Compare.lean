@@ -48,7 +48,7 @@ poison when $`a` or $`b` is poison.
 
 $`\mathsf{icmp}` is never UB, and it
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison]
-(ADR-2026-10-30-0818). So $`\mathsf{icmp}~\mathsf{eq}` of a poison with
+(ADR-2026-10-29-2006). So $`\mathsf{icmp}~\mathsf{eq}` of a poison with
 itself is poison, not 1.
 :::
 
@@ -64,7 +64,7 @@ The value not chosen does not matter, even when it is poison, and the value
 chosen is given as it is, poison or not. So $`\mathsf{select}` is an
 exception to
 {ref "The-fir-specification--Execution--Poison-classes"}[poison propagation]
-(ADR-2026-10-30-0818): it gives poison only through its condition or the
+(ADR-2026-10-29-2006): it gives poison only through its condition or the
 value it chooses. That is why $`\mathsf{select}_1(c, x, 0)` is not
 $`\mathsf{and}_1(c, x)`: when $`c` is 0, the first gives 0 whatever $`x` is,
 and the second gives poison when $`x` is poison. It is never UB.

@@ -91,5 +91,5 @@ ADR-2026-11-09-1541).
 
 The poison class says how the op treats poison operands; the effect
 $`\mathsf{mayPoison}` says whether a result may be poison when no operand is
-(ADR-2026-11-09-2249).
+(ADR-2026-11-09-1541).
 :::

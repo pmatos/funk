@@ -48,7 +48,7 @@ above, and each call names a function of the module of the call's type. A
 run may then call any function of the module, itself included, as deep as
 its fuel allows (the section on progress with calls), when every terminator
 and every op with no callee is total: an op with a callee goes on by its
-callee's run, and needs no rule of its own (ADR-2026-11-02-1514). Every
+callee's run, and needs no rule of its own (ADR-2026-10-29-2006). Every
 function of a valid core module runs within the module, and every core op
 but `call` is total. So both hold for every function of every valid core
 module. They are statements about the run in the set monad, choices

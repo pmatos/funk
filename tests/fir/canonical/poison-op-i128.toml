@@ -1,5 +1,5 @@
 # Tests of poison-op-i128.fir: the op poison at i128 (#122,
-# ADR-2026-11-03-1615). Its result is poison on every run, and each
+# ADR-2026-10-29-2006). Its result is poison on every run, and each
 # function passes it to one kind of op.
 #
 # The differential tests run poison as native code, which builds and

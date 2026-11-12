@@ -5,7 +5,7 @@ import Fir.Execution.Summary
 
 The summary of each function of a symbol table is a solution of the
 inequalities that the calls between its functions set, and the least one
-(ADR-2026-11-10-2108). An assignment of an effect set to each symbol of a
+(ADR-2026-11-09-1541). An assignment of an effect set to each symbol of a
 table is _closed_ when, for each function and each op of it at any depth:
 
 * what a caller sees of the op's own effects is below the function's set,

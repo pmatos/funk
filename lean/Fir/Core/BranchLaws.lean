@@ -5,7 +5,7 @@ import Fir.Core.Poison
 # Branches are lawful
 
 `br` and `cond_br` are exceptions to poison propagation
-(ADR-2026-10-30-0818), so of the obligations of the poison classes section
+(ADR-2026-10-29-2006), so of the obligations of the poison classes section
 they meet two: they are total and monotone. Both look at the op's exit.
 
 * _Totality._ `br` goes to its successor on every operand vector. `cond_br`

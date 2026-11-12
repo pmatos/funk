@@ -9,7 +9,7 @@ widest type; and what each kind of op does with that poison. Ops that
 propagate poison give poison, `select` gives it only when it chooses it,
 `freeze` chooses a value for it, and a branch on it or a division by it is
 immediate UB. These tests need no `poison` argument, which `fir-ref run`
-also takes (#123): the op makes the poison (ADR-2026-11-03-1615).
+also takes (#123): the op makes the poison (ADR-2026-10-29-2006).
 -/
 
 namespace FirTest

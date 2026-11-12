@@ -144,7 +144,7 @@ def tests_text(name: str, t: str, ops: list[tuple[str, int, str]]) -> str:
     native = t in DIFFERENTIAL
     head = [
         f"# Tests of {name}.fir: {names} at {t}",
-        "# (ADR-2026-11-11-1800), on the hard inputs: results halfway between",
+        "# (ADR-2026-11-09-1549), on the hard inputs: results halfway between",
         "# two floats, subnormals, -0, overflow to infinity and NaN operands.",
         "# Written by scripts/harness/float_arith_cases.py, which computes each",
         "# expected result with scripts/harness/float_ref.py, apart from Lean.",

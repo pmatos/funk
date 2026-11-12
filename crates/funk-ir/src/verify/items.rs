@@ -1,5 +1,5 @@
 //! The rules of an item of a dialect's kind (`DialectItem.Valid` in
-//! `lean/Fir/Validation/Rules.lean`, ADR-2026-11-10-2224), in the order of
+//! `lean/Fir/Validation/Rules.lean`, ADR-2026-11-09-1543), in the order of
 //! `DialectItem.problems`: its kind is a word of a dialect, its parameters
 //! are named by distinct names, its types are valid, its attributes can be
 //! written, and a dialect registers its kind and the item obeys that

@@ -176,7 +176,7 @@ as `freeze-i7` does. `zext-i7`, `sext-i7`, `trunc-i7` and their `i33`
 twins also change widths to and from `i128`.
 
 The texts of #122 also use `poison`, the constant whose result is poison
-([ADR-2026-11-03-1615](../adrs/2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md)).
+([ADR-2026-10-29-2006](../adrs/2026-10-29-2006-poison-and-freeze.md)).
 Until then fir had no poison constant, and a text made poison with an op
 whose rule gives it, such as `add nsw` on the signed maximum.
 `poison-op-iN` returns it, alone and beside a value, adds it, compares
@@ -207,7 +207,7 @@ validate: with an attribute, an operand, a result or a successor, with
 an op after it, and with a block that only its place could reach.
 
 The texts of #229's second stage hold the float types
-([ADR-2026-11-11-0950](../adrs/2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md),
+([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md),
 [ADR-2026-11-11-0951](../adrs/2026-11-11-0951-a-float-type-is-written-by-its-alias-or-as-float-e-m.md)).
 `float-types` passes values of each alias, of formats written
 `float(e, m)`, the smallest, `float(2, 1)`, and the widest among them, as
@@ -218,7 +218,7 @@ parameters, block arguments, call arguments and results.
 
 The texts of #229's third stage also use float constants and `fcmp`
 ([ADR-2026-11-11-1438](../adrs/2026-11-11-1438-a-float-constant-is-its-shortest-decimal-or-its-bits-in-hexadecimal.md),
-[ADR-2026-11-11-1139](../adrs/2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md)).
+[ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md)).
 A float is spelled as its shortest decimal, as `1.0`, or as its bits in
 hexadecimal, as `0x7fc00000`.
 `fcmp-ordered-T` runs each of the seven ordered predicates, and
@@ -262,7 +262,7 @@ another memory now.
 
 The texts of #229's fourth stage also use the float arithmetic `fadd`,
 `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`
-([ADR-2026-11-11-1800](../adrs/2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md),
+([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md),
 [ADR-2026-11-11-1801](../adrs/2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md)).
 `float-binary-T` runs `fadd`, `fsub`, `fmul` and `fdiv`, and
 `float-unary-fma-T` runs `fneg`, `fabs`, `sqrt` and `fma`, at `T`, one of

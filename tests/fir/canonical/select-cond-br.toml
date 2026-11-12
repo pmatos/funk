@@ -1,7 +1,7 @@
 # Tests of select-cond-br.fir: select %c, %x, %y may not become a
 # cond_br on %c whose successors pass %x and %y to one block, where %c
 # may be poison; cond_br on %f = freeze %c may (#19, moved here from
-# #16; lean/Fir/Execution/PoisonUB.lean, ADR-2026-10-30-0818). %c is
+# #16; lean/Fir/Execution/PoisonUB.lean, ADR-2026-10-29-2006). %c is
 # add nsw %a, %b at i1, where true is -1: false when %a and %b are both
 # false, true when exactly one is true, and poison when both are true,
 # as -1 + -1 overflows. select_form is the source; cond_br_form is the

@@ -5,7 +5,7 @@ import Fir.Text.LexLayout
 
 The printer writes each construct below as the spellings of its tokens, in
 its one layout: an attribute, a location, a definition, a use of a value, a
-successor and an item of a dialect's kind (ADR-2026-11-10-2224), whose
+successor and an item of a dialect's kind (ADR-2026-11-09-1543), whose
 attributes are each written after a space. Each theorem assumes only that the tokens can be written, and
 reads the text one piece at a time, as the printer writes it.
 -/

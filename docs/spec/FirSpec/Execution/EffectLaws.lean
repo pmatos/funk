@@ -70,10 +70,10 @@ then $`o` is not a terminator.
 
 Each obligation but the last speaks of the op's semantics with memory, so
 it holds of an op that touches memory, which has no semantics in the set
-monad (ADR-2026-11-11-0623).
+monad (ADR-2026-11-09-1541).
 
 An op with a callee is left out of all but the last: it runs its callee,
-not a rule of its own, and has its callee's effects (ADR-2026-11-02-1514).
+not a rule of its own, and has its callee's effects (ADR-2026-10-29-2006).
 $`\mathsf{observable}` has no obligation yet, since a run of M0 has no
 trace.
 :::

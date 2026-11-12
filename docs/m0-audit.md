@@ -29,8 +29,9 @@ Addendum, 2026-11-03: [#122](https://github.com/pmatos/funk/issues/122)
 came after this audit and changes five of its facts; the evidence below
 is that of `ca5fd9f`, and #122 did not check it again. The core op set
 has 25 ops: `poison` is a constant whose result is poison, of class
-`propagates`, so 19 ops propagate and six are exceptions, and S1 and
-ADR-2026-10-30-0818 are also refined by ADR-2026-11-03-1615. The
+`propagates`, so 19 ops propagate and six are exceptions, and S1
+(ADR-2026-10-29-2006) was refined to add it; #307 later folded those refinements into
+S1. The
 coverage matrix has 783 cells, each with a test (ADR-2026-11-03-0557).
 The LLVM ports write LLVM's poison constant with `poison`, not
 `shl %n, %n`
@@ -115,7 +116,7 @@ No item is missing, and none is weaker than #23 states it.
 | Decision of #5 | ADR | Status line |
 | --- | --- | --- |
 | E0, effect ordering | ADR-2026-10-29-2005 | accepted |
-| S1, poison and `freeze` | ADR-2026-10-29-2006 | accepted; refined by ADR-2026-10-30-0818 |
+| S1, poison and `freeze` | ADR-2026-10-29-2006 | accepted; refined then, folded into S1 by #307 |
 | S2, integers `iN` | ADR-2026-10-29-2007 | accepted; refined by ADR-2026-11-03-1000 |
 | S4, refinement | ADR-2026-10-29-2008 | accepted; refined by ADR-2026-10-30-0816 |
 | S7, semantics in Lean | ADR-2026-10-29-2009 | accepted |
@@ -156,7 +157,7 @@ normative spec. It is complete enough to implement from:
   added `poison`, has its text (`Core.lawfulDialectText`
   covers each), its validation rule and its execution rule
   (`Core.lawfulDialectPoison` proves that every valid instance of every
-  op but `call` is total; `call` runs its callee, ADR-2026-11-02-1514);
+  op but `call` is total; `call` runs its callee, ADR-2026-10-29-2006);
 - `funk-ir`, `funk` and `funk-x86-64` implement it, and the harness checks
   them against it (item 2);
 - #113 read every chapter's prose against its Lean definitions, and the

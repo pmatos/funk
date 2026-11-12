@@ -34,7 +34,7 @@ a set $`A`. A vector of $`N` bits exists for every $`N`, so every width is
 treated alike (ADR-2026-10-29-2007). A float value is its bit pattern, as
 IEEE 754 encodes it: a sign bit, then the exponent, then the mantissa. So
 two NaNs with different bits are different values, and the ops of a float
-type say which bits they give (ADR-2026-11-11-0950). A pointer, of the set
+type say which bits they give (ADR-2026-11-09-1549). A pointer, of the set
 $`\mathit{Ptr}`, is the allocation it has provenance for, if any, and an
 offset into it, in the units of its memory (ADR-2026-11-09-1542). It has no
 address. Which memory a pointer belongs to is its type's business, so a

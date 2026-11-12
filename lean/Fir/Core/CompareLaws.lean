@@ -6,7 +6,7 @@ import Fir.Core.Poison
 
 `icmp`, with each of its ten predicates, and `select` meet the obligations
 of the poison classes section. `icmp` propagates poison
-(ADR-2026-10-30-0818), so it meets both poison clauses, returns a result on
+(ADR-2026-10-29-2006), so it meets both poison clauses, returns a result on
 some operands with no poison, and is total and monotone. `select` is an
 exception, with a rule of its own for poison, so of those obligations it
 meets two: it is total and monotone.

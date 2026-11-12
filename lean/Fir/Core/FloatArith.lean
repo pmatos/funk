@@ -4,9 +4,9 @@ import Fir.Core.Ops
 /-!
 # Float arithmetic
 
-This section gives the float arithmetic its rules (ADR-2026-11-09-1549,
-ADR-2026-11-11-1800): `fadd`, `fsub`, `fmul` and `fdiv` of two operands,
-`fneg`, `fabs` and `sqrt` of one, and `fma` of three. Each takes and gives
+This section gives the float arithmetic its rules (ADR-2026-11-09-1549):
+`fadd`, `fsub`, `fmul` and `fdiv` of two operands, `fneg`, `fabs` and
+`sqrt` of one, and `fma` of three. Each takes and gives
 values of one format `float<e,m>`. None is ever UB, and a poison operand
 gives a poison result.
 
@@ -49,10 +49,10 @@ fir's own are:
   `fabs`, carries `round(rne)`, and round to nearest even is the only
   mode M1 has, so the rules have none to read.
 * _Poison._ A poison operand gives a poison result
-  (ADR-2026-10-30-0818); the model has no poison.
+  (ADR-2026-10-29-2006); the model has no poison.
 * _Formats the model does not have._ The model needs at least 2 exponent
   bits and 1 mantissa bit. Validation rejects every other format
-  (ADR-2026-11-11-0950), so no valid program computes in one. So that the
+  (ADR-2026-11-09-1549), so no valid program computes in one. So that the
   rules are still total, every result in such a format is a NaN chosen as
   above.
 * _No exceptions, no flush to zero._ M1 has no floating-point exceptions
