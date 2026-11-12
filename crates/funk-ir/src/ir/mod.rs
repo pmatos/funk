@@ -5,6 +5,7 @@ mod attr;
 mod build;
 mod debug;
 mod int;
+pub mod layout;
 mod location;
 mod module;
 pub mod names;
@@ -14,6 +15,7 @@ pub(crate) mod tree;
 
 pub use attr::{Attr, Type};
 pub use int::{Int, Nat};
+pub use layout::{ByteOrder, MemLayout};
 pub use location::{LocRef, LocTable, Location};
 pub use module::{
     Block, Def, DialectItem, Func, FuncType, Item, Module, Op, Region, Succ, SymbolTable,

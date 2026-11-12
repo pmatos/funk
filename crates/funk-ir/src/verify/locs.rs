@@ -1,4 +1,4 @@
-//! The location table (`LocTable.Valid` in `lean/Fir/Validation/Rules.lean`).
+//! The location table (`LocTable.Valid` in `lean/Fir/Validation/LocTable.lean`).
 //!
 //! Each entry has a distinct reference, in increasing order, so one table has
 //! one spelling. A location built from others refers only to entries before

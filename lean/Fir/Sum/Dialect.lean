@@ -298,6 +298,9 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
   regionKindNames := regionKindNames (d := base) ++ regionKindNames (d := base.over e)
   validRegion := ValidRegion
   itemKindNames := itemKindNames (d := base) ++ itemKindNames (d := base.over e)
+  tyMemory
+    | .inl t => tyMemory t
+    | .inr t => tyMemory (d := base.over e) (.inr t)
   validItem := ValidItem
 
 /-- The sum's rules can be decided when each side's can. -/

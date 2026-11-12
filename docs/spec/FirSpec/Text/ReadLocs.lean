@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reading the location table and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1149782529116021061")
+:::moduleDocs (fingerprint := "14150072841635515876")
 :::
 
 :::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "14401333200745503308")
@@ -52,9 +52,9 @@ follows. The entries are kept in the order they are written; whether
 their references increase is checked by validation, not here.
 :::
 
-:::readable Fir.Text.readModule (pin := Fir.Text.readDialects) (fingerprint := "14734074965958306714")
+:::readable Fir.Text.readModule (pin := Fir.Text.readDialects) (fingerprint := "6889099564702019463")
 *Definition: reading a module.* A module is its dialect set, then its
-items, read at the top level, then its location table, which must start with the word `locs`,
+data layout, then its items, read at the top level, then its location table, which must start with the word `locs`,
 then the end of the text. Anything else after the items is an error,
 "expected an item or the location table", and anything after the table is
 an error, "expected the end of the text after the location table".

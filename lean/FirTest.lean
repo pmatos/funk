@@ -29,6 +29,7 @@ import FirTest.ReadDeep
 import FirTest.ValidateOps
 import FirTest.Validate
 import FirTest.ValidateNested
+import FirTest.Layout
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore

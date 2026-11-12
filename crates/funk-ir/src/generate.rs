@@ -107,6 +107,7 @@ pub fn module_of(rng: &mut Rng, widths: Widths) -> Module {
     let keys: Vec<LocRef> = locs.entries.iter().map(|(r, _)| *r).collect();
     let mut m = Module {
         dialects: Vec::new(),
+        layout: Vec::new(),
         items: Vec::new(),
         locs,
     };

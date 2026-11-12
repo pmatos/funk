@@ -32,6 +32,11 @@ the previous section.
   its body in the same way. So no kind is named `dialects` either. The core
   is in every set and is never named, and a module that names no dialect
   writes no set.
+* A module's data layout follows its dialect set, when it declares a
+  memory: the word `layout`, then an entry for each memory, separated by
+  commas, as in `layout memory(1, unit(16), pointer(32), little)`
+  (ADR-2026-11-12-1821). So no kind is named `layout` either. A module with
+  the empty layout writes none, and a nested module has none of its own.
 * A function's parameters are written in its header, and are the arguments
   of its entry block. The entry block, like every block, is written with its
   label, as in `^entry:`.
@@ -72,6 +77,73 @@ one of these terms of a particular form.
 def Attr.IsType : Attr → Prop
   | a@(.word _) | a@(.app ..) => a.Writable
   | _ => False
+
+/-!
+# The data layout in text
+
+The data layout is written as `layout`, then one entry for each memory it
+declares, separated by commas. An entry is an attribute of the generic
+shape: `memory(N, unit(U), pointer(P), O)`, with the memory's number `N`,
+its unit's width `U` in bits, its pointers' width `P` in bits and its byte
+order `O`, `little` or `big`, always written; then `align(A)` when the
+entry gives its pointers an alignment of `A` units, and the word
+`nonintegral` when the memory is non-integral, in that order. So
+`memory(1, unit(16), pointer(32), little, align(4), nonintegral)` declares
+memory 1 with 16-bit units, 32-bit pointers aligned to 4 units, little
+endian and non-integral. Each number is at most `2^24 - 1`, the bound of
+an integer type's width and of a pointer type's memory. Every other
+attribute is no entry: it does not decode (ADR-2026-11-12-1821).
+-/
+
+/-- The word that writes a byte order. -/
+def ByteOrder.word : ByteOrder → String
+  | .little => "little"
+  | .big => "big"
+
+/-- The byte order that a word writes, if any. -/
+def ByteOrder.decode : String → Option ByteOrder
+  | "little" => some .little
+  | "big" => some .big
+  | _ => none
+
+/-- How an entry of the layout is written. -/
+def MemLayout.attr (e : MemLayout) : Attr :=
+  .app "memory" ([.int e.mem, .app "unit" [.int e.unit], .app "pointer" [.int e.pointer],
+    .word e.order.word] ++ (e.align.map fun a => .app "align" [.int a]).toList ++
+    (if e.nonIntegral then [.word "nonintegral"] else []))
+
+/-- The numbers of an entry are within the limit, so it can be read back. -/
+def MemLayout.InLimits (e : MemLayout) : Prop :=
+  e.mem ≤ MemLayout.limit ∧ e.unit ≤ MemLayout.limit ∧ e.pointer ≤ MemLayout.limit ∧
+    ∀ a ∈ e.align, a ≤ MemLayout.limit
+
+/-- The number that an integer of an entry writes: one from 0 to the
+limit. -/
+def MemLayout.number (i : Int) : Option Nat :=
+  if 0 ≤ i ∧ i ≤ MemLayout.limit then some i.toNat else none
+
+/-- The alignment and the non-integral flag that the attributes after an
+entry's byte order write. -/
+def MemLayout.decodeTail : List Attr → Option (Option Nat × Bool)
+  | [] => some (none, false)
+  | [.word w] => if w = "nonintegral" then some (none, true) else none
+  | [.app h [.int a]] => if h = "align" then (MemLayout.number a).map (some ·, false) else none
+  | [.app h [.int a], .word w] =>
+    if h = "align" ∧ w = "nonintegral" then (MemLayout.number a).map (some ·, true) else none
+  | _ => none
+
+/-- The entry of the layout that an attribute writes, if any. -/
+def MemLayout.decode : Attr → Option MemLayout
+  | .app m (.int n :: .app u [.int w] :: .app p [.int q] :: .word o :: rest) =>
+    if m = "memory" ∧ u = "unit" ∧ p = "pointer" then do
+      let mem ← MemLayout.number n
+      let unit ← MemLayout.number w
+      let pointer ← MemLayout.number q
+      let order ← ByteOrder.decode o
+      let (align, nonIntegral) ← MemLayout.decodeTail rest
+      pure ⟨mem, unit, pointer, order, align, nonIntegral⟩
+    else none
+  | _ => none
 
 /-!
 # Ops and types in text
@@ -147,6 +219,7 @@ applies (ADR-2026-10-29-2014):
   attributes or blocks; and an item of a dialect's kind with a body that is
   not empty;
 * a type that does not decode;
+* an entry of the data layout that does not decode;
 * a value that a function defines twice: an operand's type is found at its
   definition, so each value has one;
 * an operand that the function does not define, or defines in another

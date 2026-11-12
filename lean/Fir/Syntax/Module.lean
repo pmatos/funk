@@ -1,5 +1,6 @@
 import Fir.Syntax.Dialect
 import Fir.Syntax.Location
+import Fir.Syntax.Layout
 
 /-!
 A module holds items: functions, modules nested in it, and items of the
@@ -267,15 +268,22 @@ inductive Item (d : Dialect) where
   | dialect (i : DialectItem d)
 
 /--
-A module: its dialect set, its items, then its location table. In text the
-dialect set starts the module and the table ends it.
+A module: its dialect set, its data layout, its items, then its location
+table. In text the dialect set starts the module, the layout follows it, and
+the table ends the module.
 
 The dialect set names the dialects, other than the core, whose words the
 module may write (ADR-2026-11-09-1543). The core is in every module's set
 and is never named. A module that names none uses the core alone.
+
+The data layout declares the module's memories (ADR-2026-11-12-1821). It is
+the module's, at the top: a nested module has none of its own, and the
+pointer types of its functions name the memories of the module that holds
+it. A module whose layout is empty has the default memory alone.
 -/
 structure Module (d : Dialect) where
   dialects : List Name := []
+  layout : DataLayout := []
   items : List (Item d)
   locs : LocTable
 

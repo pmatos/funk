@@ -1,11 +1,15 @@
 import Fir.Validation.Dominance
+import Fir.Validation.Layout
+import Fir.Validation.LocTable
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
 its location table is well formed and each of its symbol tables, its own
 and that of each nested module, is valid: its symbols are unique, each of
 its functions is valid, each of its items of a dialect's kind is valid, and
-its dialect set names each dialect once, by a word. A function is valid
+its dialect set names each dialect once, by a word, and its data layout is
+valid and declares each memory that a type of the module names
+(ADR-2026-11-12-1821). A function is valid
 when its blocks, its ops and its successors obey the rules below, and each
 op obeys its dialect's rule.
 
@@ -252,32 +256,6 @@ structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
   dialect : validFunc (DialectView.id d) ⟨ctx.symbols⟩ f
 
 /-!
-# The location table
-
-Each entry of the table has a distinct reference, and the entries are in
-increasing order of reference, so one table has one spelling. A location
-that is built from others refers only to entries before it, so no location
-refers to itself, directly or not. A fused location fuses at least two.
-Every reference, line and column is below 2³².
-
-A source range starts at line 1 or later, and does not end before it starts.
-When both of its columns are known (not 0) and it starts and ends on one
-line, its end column is at least its start column. An end equal to the
-start is an empty range.
--/
-
-/-- A location is well formed. -/
-def Location.WellFormed : Location → Prop
-  | .range _ l₁ c₁ l₂ c₂ => 1 ≤ l₁ ∧ (l₁ < l₂ ∨ (l₁ = l₂ ∧ (c₁ = 0 ∨ c₂ = 0 ∨ c₁ ≤ c₂)))
-  | .fused locs => 2 ≤ locs.length
-  | _ => True
-
-/-- The location table is well formed. -/
-def LocTable.Valid (t : LocTable) : Prop :=
-  (t.map (·.1)).Pairwise (· < ·) ∧ t.InLimits ∧
-  ∀ e ∈ t, e.2.WellFormed ∧ ∀ r ∈ e.2.refs, r < e.1 ∧ r ∈ t.map (·.1)
-
-/-!
 # Modules
 -/
 
@@ -324,13 +302,17 @@ structure SymbolTable.Valid (keys : List LocRef) (t : SymbolTable d) : Prop wher
   dialectsUnique : t.dialects.Nodup
 
 /--
-A module is valid when its location table is well formed and each of its
-symbol tables is valid: its own, and that of each module nested in it, at
-any depth (ADR-2026-11-10-1510). One location table serves them all.
+A module is valid when its location table is well formed, each of its
+symbol tables is valid, its own and that of each module nested in it, at
+any depth (ADR-2026-11-10-1510), its data layout is valid, and the layout
+declares each memory that its types name (ADR-2026-11-12-1821). One
+location table and one layout serve every table.
 -/
 structure Module.Valid (m : Module d) : Prop where
   locs : LocTable.Valid m.locs
   tables : ∀ t ∈ m.tables, t.Valid (m.locs.map (·.1))
+  layout : m.layout.Valid
+  memories : m.MemoriesDeclared
 
 /-- A valid module's own table is valid. -/
 theorem Module.Valid.table {m : Module d} (h : m.Valid) : m.table.Valid (m.locs.map (·.1)) :=
@@ -352,19 +334,32 @@ theorem Module.Valid.dialectNames {m : Module d} (h : m.Valid) : ∀ x ∈ m.dia
 theorem Module.Valid.dialectsUnique {m : Module d} (h : m.Valid) : m.dialects.Nodup :=
   h.table.dialectsUnique
 
-/-- A module with no nested module is valid when its location table and its
-own table are. -/
+omit [DialectSignature d] [DialectValidation d] in
+/-- A module whose items are all functions has no item of a dialect's
+kind. -/
+theorem Module.dialectItems_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.isSome) :
+    m.table.dialectItems = [] := by
+  refine List.filterMap_eq_nil_iff.mpr fun j hj => ?_
+  have := flat j hj
+  cases j <;> simp_all [Item.func?, Item.dialect?]
+
+/-- A module with no nested module is valid when its location table, its
+own table and its layout are, and the layout declares the memories of its
+functions' types. -/
 theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.isSome)
     (symbolsUnique : (m.items.map Item.name).Nodup) (locs : LocTable.Valid m.locs)
     (funcs : ∀ f ∈ m.funcs, f.Valid m.context) (dialectNames : ∀ x ∈ m.dialects, isWord x)
-    (dialectsUnique : m.dialects.Nodup) : m.Valid := by
-  refine ⟨locs, fun t ht => ?_⟩
-  simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
-  subst ht
-  refine ⟨symbolsUnique, funcs, fun i hi => ?_, dialectNames, dialectsUnique⟩
-  obtain ⟨j, hj, he⟩ := List.mem_filterMap.mp hi
-  have := flat j hj
-  cases j <;> simp_all [Item.func?, Item.dialect?]
+    (dialectsUnique : m.dialects.Nodup) (layout : m.layout.Valid := by decide)
+    (memories : ∀ f ∈ m.funcs, ∀ ty ∈ f.types, m.layout.HasMemoryOf ty := by decide +kernel) :
+    m.Valid := by
+  have hd := Module.dialectItems_of_flat flat
+  refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_⟩
+  · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
+    subst ht
+    exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, dialectNames, dialectsUnique⟩
+  · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
+    subst ht
+    exact ⟨memories, fun i hi => by simp [hd] at hi⟩
 
 /-!
 # Valid op instances

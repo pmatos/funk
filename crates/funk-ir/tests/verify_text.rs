@@ -78,11 +78,11 @@ fn every_stated_type_is_valid() {
     );
     rejects(
         &one_func("func @f(%p: ptr(1)) {\n^e:\n  ret @0\n}\n"),
-        "ptr(1) is a pointer of memory 1, which the module does not have",
+        "a type names memory 1, which the data layout does not declare",
     );
     rejects(
         &one_func("func @f(%p: ptr) -> ptr(2) {\n^e:\n  ret %p @0\n}\n"),
-        "a result type of the function, ptr(2)",
+        "a type names memory 2, which the data layout does not declare",
     );
 }
 

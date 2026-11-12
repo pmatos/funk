@@ -243,11 +243,11 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `ret` | returns one value |  | 2263 | 1298 | 530 | 504 | 616 | 1336 | 527 | 801 | 128 | 128 | 121 | 119 | 128 |
-| `ret` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
+| `ret` | returns several values |  | 54 | 186 | 38 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `func` | returns one value |  | 2263 | 1298 | 531 | 504 | 616 | 1336 | 527 | 801 | 126 | 126 | 119 | 117 | 126 |
-| `func` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |
+| `func` | returns several values |  | 54 | 186 | 38 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |

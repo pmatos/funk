@@ -33,8 +33,9 @@ then its `}`. An item of a dialect's kind is an item of its kind with its
 symbol, its parameters, its result types and its attributes, and its body
 is no blocks. Each op is its results, its name and attributes as the
 dialect writes them, its operands, its successors, its regions and its
-location reference. Each type is the attribute that writes it. The dialect
-set and the location table are the module's own.
+location reference. Each type is the attribute that writes it, and so is
+each entry of the data layout. The dialect set and the location table are
+the module's own.
 
 The tree that the grammar reads holds the position of each part that
 decoding can reject, taken from the tokens. A module has no positions, so
@@ -104,7 +105,8 @@ def SItem.eraseList : List SItem → List SItem
 end
 
 /-- A module's tree without its positions. -/
-def SModule.erase (s : SModule) : SModule := ⟨s.dialects, SItem.eraseList s.items, s.locs⟩
+def SModule.erase (s : SModule) : SModule :=
+  ⟨s.dialects, s.layout.map eraseAt, SItem.eraseList s.items, s.locs⟩
 
 theorem SOp.eraseList_eq_map : ∀ os : List SOp, SOp.eraseList os = os.map SOp.erase
   | [] => rfl
@@ -189,9 +191,10 @@ theorem Item.treeList_eq_map : ∀ is : List (Item d), Item.treeList is = is.map
   | [] => rfl
   | i :: is => by rw [Item.treeList, Item.treeList_eq_map is, List.map_cons]
 
-/-- The tree of a module: its dialect set, its items' trees and its location
-table. -/
-def Module.tree (m : Module d) : SModule := ⟨m.dialects, m.items.map Item.tree, m.locs⟩
+/-- The tree of a module: its dialect set, the attributes that write its
+layout's entries, its items' trees and its location table. -/
+def Module.tree (m : Module d) : SModule :=
+  ⟨m.dialects, m.layout.map (·.attr, .zero), m.items.map Item.tree, m.locs⟩
 
 theorem Operation.treeList_eq_map :
     ∀ os : List (Operation d), Operation.treeList os = os.map Operation.tree
@@ -314,11 +317,14 @@ theorem SItem.erase_eq_funcTree {si : SItem} {f : Func d} (h : si.erase = f.tree
     | blocks bs => exact ⟨bs, rfl, by simpa [SBody.erase] using h₇⟩
     | items _ _ => simp [SBody.erase] at h₇
 
-/-- A module's tree, without positions, holds its dialect set, its items' trees and its
-location table. -/
+/-- A module's tree, without positions, holds its dialect set, what its layout's
+entries write, its items' trees and its location table. -/
 theorem SModule.erase_eq_tree {s : SModule} {m : Module d} (h : s.erase = m.tree) :
-    s.dialects = m.dialects ∧ s.items.map SItem.erase = m.items.map Item.tree ∧
-      s.locs = m.locs := by
-  simpa [SModule.erase, Module.tree, SItem.eraseList_eq_map] using h
+    s.dialects = m.dialects ∧ s.layout.map Prod.fst = m.layout.map MemLayout.attr ∧
+      s.items.map SItem.erase = m.items.map Item.tree ∧ s.locs = m.locs := by
+  simp only [SModule.erase, Module.tree, SModule.mk.injEq, SItem.eraseList_eq_map] at h
+  obtain ⟨h₁, h₂, h₃, h₄⟩ := h
+  refine ⟨h₁, ?_, h₃, h₄⟩
+  simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) h₂
 
 end Fir

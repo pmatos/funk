@@ -10,6 +10,7 @@
 use std::collections::HashMap;
 
 use super::attr::{Attr, Type};
+use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
 use super::nested::NestedModule;
 
@@ -233,7 +234,8 @@ impl Item {
     }
 }
 
-/// A module: its dialect set, its items, then its location table.
+/// A module: its dialect set, its data layout, its items, then its location
+/// table.
 ///
 /// A module is a symbol table over its own items. A nested module is an
 /// item, [`NestedModule`], with a symbol table of its own, so nothing here
@@ -244,6 +246,10 @@ pub struct Module {
     /// words the module writes, in the order the text writes them. Empty
     /// for a module of the core alone (ADR-2026-11-10-1306).
     pub dialects: Vec<String>,
+    /// The data layout: an entry for each memory it declares, in the order
+    /// the text writes them (ADR-2026-11-12-1821). Empty for a module with
+    /// the default memory alone. A nested module has none of its own.
+    pub layout: Vec<MemLayout>,
     /// The items, in order.
     pub items: Vec<Item>,
     /// The location table.

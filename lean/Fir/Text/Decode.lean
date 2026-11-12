@@ -24,6 +24,8 @@ position of the part that does not decode (ADR-2026-10-29-2014):
   and one whose body holds blocks, at its kind;
 * an item of a dialect's kind whose body is not empty, at its kind;
 * a type that does not decode, at the type;
+* an entry of the data layout that does not decode, at the entry
+  (ADR-2026-11-12-1821);
 * a value defined twice, at its second definition;
 * an operand that its function does not define, at the operand;
 * an op that does not decode, at its name.
@@ -207,9 +209,16 @@ theorem decodeItems_eq_mapM : ∀ is : List SItem,
   | i :: is => by
     rw [decodeItems, List.mapM_cons, decodeItems_eq_mapM is]
 
+/-- Decodes an entry of the data layout, at its position. -/
+def decodeMemLayout : Attr × TextPos → Except ParseError MemLayout
+  | (a, p) => match MemLayout.decode a with
+    | some e => pure e
+    | none => errorAt p ("not an entry of the data layout, which is written " ++
+        "memory(N, unit(U), pointer(P), little or big), then align(A) and nonintegral if given")
+
 /-- Decodes a module. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do
-  pure ⟨m.dialects, ← m.items.mapM decodeItem, m.locs⟩
+  pure ⟨m.dialects, ← m.layout.mapM decodeMemLayout, ← m.items.mapM decodeItem, m.locs⟩
 
 end Fir.Text
 

@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Accepted items: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5004954702079656391")
+:::moduleDocs (fingerprint := "1031541180037873395")
 :::
 
 :::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "620551015558347730")
@@ -25,6 +25,12 @@ word, since it reads a word token, and the reader of a dialect set gives
 words only: the name after `dialects`, and each name after a comma, at the
 start of a module or of a body of items. Each leaves tokens that can be
 written.
+:::
+
+:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "12524413370669765468")
+*Theorem: the entries of a layout as read are types.* For every list of
+tokens that can be written, the reader of a data layout gives entries
+written as types, and leaves tokens that can be written.
 :::
 
 :::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "18280148590814923405")

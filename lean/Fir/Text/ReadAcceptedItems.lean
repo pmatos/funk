@@ -43,6 +43,22 @@ theorem readDialects_writable (ts : List Token) :
   · cases h
     exact ⟨by simp, hw⟩
 
+/-- On tokens that can be written, the reader of a data layout reads
+entries written as types. -/
+theorem readLayout_writable (ts : List Token) :
+    ReadsWritable readLayout (fun es => ∀ e ∈ es, e.1.IsType) ts := by
+  intro hw a r h
+  unfold readLayout at h
+  split at h
+  · bind_step h with ⟨⟨e, r₁, hr₁⟩, e₁, h⟩
+    bind_step h with ⟨⟨es, r₂, hr₂⟩, e₂, h⟩
+    cases h
+    obtain ⟨k₁, w₁⟩ := readType_writable _ hw.tail _ _ e₁
+    obtain ⟨k₂, w₂⟩ := readMore_writable readType_writable _ w₁ _ _ e₂
+    exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ k₁) (k₂ y), w₂⟩
+  · cases h
+    exact ⟨by simp, hw⟩
+
 /-- On tokens that can be written, the readers of items give items that can
 be written. -/
 theorem readItems_writable :

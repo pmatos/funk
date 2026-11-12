@@ -156,6 +156,9 @@ instance instDialectValidation [DialectValidation big] [DialectValidation (dep.o
   validRegion v k ctx f r := validRegion (d := dep.over e) (projView v) k ctx f r
   itemKindNames := itemKindNames (d := dep.over e)
   validItem v ctx i := validItem (d := dep.over e) (projView v) ctx i
+  tyMemory
+    | .inl t => tyMemory t
+    | .inr t => tyMemory (d := dep.over e) (.inr t)
 
 /-- The lift's rules can be decided when `big`'s and `e`'s can. -/
 instance instDecidableDialectValidation [DialectValidation big] [DialectValidation (dep.over e)]

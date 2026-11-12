@@ -112,11 +112,21 @@ class Tests(unittest.TestCase):
         self.assertEqual(list(functions), ["@g", "@h"])
         self.assertEqual(functions["@g"].params, ())
 
+    def test_a_data_layout_is_skipped(self):
+        text = (
+            "dialects toy\n\n"
+            "layout memory(1, unit(8), pointer(32), little), "
+            "memory(2, unit(16), pointer(64), big, align(4), nonintegral)\n\n"
+            "func @f(%p: ptr(1)) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        self.assertEqual(read(text)["@f"].params, ("ptr(1)",))
+
     def test_texts_it_cannot_read(self):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),
             ("global @g() {\n}\nlocs {\n}\n", "an item of kind global"),
             ("module @m() {\n  func @f() {\n", "a nested module does not end"),
+            ("layout memory(1, unit(8)", "an entry of the data layout does not end"),
             ("func @f() {\n^e:\n  ret @0\n}\n", "expected word"),
             ("locs {\n}\nfunc", "text after the location table"),
             ('func @"f() {\n', "a string does not end"),

@@ -4,7 +4,7 @@
 //! A valid table has entries in increasing order of reference, each built
 //! only from entries before it, with well-formed ranges and fused locations
 //! of two or more references (`LocTable.Valid` in
-//! `lean/Fir/Validation/Rules.lean`). A well-formed one needs only that its
+//! `lean/Fir/Validation/LocTable.lean`). A well-formed one needs only that its
 //! numbers are below `2^32`, which every `u32` is.
 
 use super::super::{Rng, range, string};
