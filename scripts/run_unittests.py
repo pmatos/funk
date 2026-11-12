@@ -1,5 +1,6 @@
 """Runs a Python test hook's tests as its old `python ...` entry did, and
-in CI writes their counts to the job summary (#150, ADR-2026-11-05-1633).
+in CI writes their counts to the job summary (#150,
+docs/decisions/process-ci.md#the-python-test-runner).
 
 Usage: python scripts/run_unittests.py HOOK FILE [ARG...]
        python scripts/run_unittests.py HOOK -m unittest [ARG...]

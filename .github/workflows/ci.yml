@@ -129,7 +129,7 @@ jobs:
       # toolchain that rust-toolchain.toml pins (ADR-2026-10-30-1030). The
       # cross job copies the next five steps, all but the save; change both
       # together. An installer's restore and install steps both hold its
-      # pins: a bump edits both (ADR-2026-11-05-1954).
+      # pins: a bump edits both (docs/decisions/process-ci.md#installer-downloads).
       - name: Restore the rustup installer
         id: rustup-installer
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -218,7 +218,7 @@ jobs:
       # The fir-spec hook builds the Lean code and the spec (ADR-2026-10-29-2135).
       # pages.yml and the cross job copy the next five steps, all but the
       # save; change all three together. Both elan steps hold its pins: a
-      # bump edits both (ADR-2026-11-05-1954).
+      # bump edits both (docs/decisions/process-ci.md#installer-downloads).
       - name: Restore the elan installer
         id: elan-installer
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

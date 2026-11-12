@@ -104,7 +104,8 @@ manifest. The cache is saved once Verso is built, even if
 a later hook fails. A cancelled run does not save it. `docs/spec/.lake/build`
 is never cached, so the document is always rebuilt from its sources.
 
-The elan tarball is cached too (ADR-2026-11-05-1954). `scripts/ci-install.sh
+The elan tarball is cached too
+([process-ci.md](process-ci.md#installer-downloads)). `scripts/ci-install.sh
 elan` downloads it only on a cache miss. It checks the file against its SHA-256
 on every run. The `lean` job saves that cache. `cross` and `pages.yml` only
 restore it.
