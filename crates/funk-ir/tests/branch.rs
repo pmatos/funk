@@ -1,7 +1,7 @@
 //! The branches `br` and `cond_br` (#19) through the builder, the parser,
 //! the printer and the verifier (`Op.decode` in `lean/Fir/Core/Text.lean`).
 //! In text, a use that does not decode, such as a `cond_br` whose condition
-//! is not `i1`, is a parse error at the op's name (ADR-2026-10-30-0815); in
+//! is not `i1`, is a parse error at the op's name (ADR-2026-10-29-2014); in
 //! IR that a builder made, it is a validation error at the op and its
 //! location. `branch_verify.rs` holds the rules of the control-flow graph.
 
@@ -136,7 +136,7 @@ fn successors_may_repeat_a_block_or_a_value() {
 fn a_successor_that_validation_rejects_still_parses() {
     // A successor's label and arguments are not decoded: an unknown block, a
     // value the function does not define and a wrong count all parse, and
-    // print as they were written (ADR-2026-10-30-0815).
+    // print as they were written (ADR-2026-10-29-2014).
     for line in [
         "br ^nowhere",
         "br ^b(%undefined)",

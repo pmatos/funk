@@ -21,7 +21,8 @@ text twice gives what formatting it once gives, and every tool that reads
 fir text gets a module that it can write back as it is.
 
 The proof follows the parser's three steps, as the round trip's does
-(ADR-2026-11-03-0028), and each step gives what the next one needs:
+(`docs/decisions/text-format-proofs.md`), and each step gives what the next
+one needs:
 
 1. the lexer reads only tokens that can be written: value names and labels
    made of one or more name characters, words that start with a letter or

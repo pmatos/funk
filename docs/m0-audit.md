@@ -51,8 +51,8 @@ set has 25 ops, and the coverage matrix 783 cells, each with a test.
 109, and CI run 42014416532 passed every hook at `28b6f37`. #117 added
 four hooks in PR #118: `verus-proof`, `verus-report-test`, `unsafe-code`
 and `unsafe-code-test` (ADR-2026-11-03-0808, ADR-2026-11-03-0809). S7's
-ADR is now refined by ADR-2026-10-29-2030, and H8's by
-ADR-2026-11-05-1131, which records the human's choice 16, the spelling
+ADR is now refined by ADR-2026-10-29-2030, and H8's ADR,
+ADR-2026-10-29-2013, now also records the human's choice 16, the spelling
 of a source range.
 
 ## The Lean criteria
@@ -95,7 +95,7 @@ What the statements cover, against the criteria's words:
   call runs its callee. The narrower theorems for #10's tracer subset
   (`Core.tracer_*`) and for functions with no call (`Core.callFree_*`)
   came first; they are not the evidence.
-- `PrintThenParse` is about well-formed modules (ADR-2026-10-30-0815).
+- `PrintThenParse` is about well-formed modules (ADR-2026-10-29-2014).
   Every valid module is well formed, so it holds for valid modules too
   (`Module.Valid.parse_print`, `lean/Fir/Text/PrintParse.lean:78`).
   `fir-ref` parses with `FirRef.parse`, which `FirRef.parse_eq_parse`
@@ -121,7 +121,7 @@ No item is missing, and none is weaker than #23 states it.
 | H2, isolated from above | ADR-2026-10-29-2011 | accepted |
 | H3, globals by symbol | ADR-2026-10-29-2012 | accepted |
 | H8, source locations | ADR-2026-10-29-2013 | accepted |
-| P3, one text format | ADR-2026-10-29-2014 | accepted; refined by ADR-2026-10-30-0815 |
+| P3, one text format | ADR-2026-10-29-2014 | accepted |
 | P1, literate Lean spec | ADR-2026-11-05-2012, which holds P1 now | accepted |
 | G0, any hardware | ADR-2026-10-29-2016 | accepted; refined by ADR-2026-10-30-1146 and ADR-2026-11-03-0600 |
 

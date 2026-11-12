@@ -1,7 +1,7 @@
 //! Comparison and selection: `icmp` with each of its ten predicates and
 //! `select` (#16), through the builder, the verifier, the parser and the
 //! printer (`Op.decode` in `lean/Fir/Core/Text.lean`). In text, a use that
-//! does not decode is a parse error at the op's name (ADR-2026-10-30-0815);
+//! does not decode is a parse error at the op's name (ADR-2026-10-29-2014);
 //! in IR that a builder made, it is a validation error at the op and its
 //! location.
 

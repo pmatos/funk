@@ -1,7 +1,7 @@
 # Must-reject texts of unreachable (#228, ADR-2026-11-09-1548). It decodes
 # with no attributes, no operands and no results: a text that breaks one
 # of these does not decode, and is a parse error at the op's name
-# (ADR-2026-10-30-0815). It has no successors and is a terminator, so a
+# (ADR-2026-10-29-2014). It has no successors and is a terminator, so a
 # text that gives it one, puts an op after it, or leaves a block that
 # only its place could reach, decodes and breaks a rule of validation.
 # Every value is defined and every successor names a block of the

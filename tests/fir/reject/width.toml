@@ -1,7 +1,7 @@
 # Must-reject texts of #17's width changes: zext, sext and trunc. Each
 # decodes with no attributes, one iM operand and one iN result, at any
 # widths M and N; a text that does not decode is a parse error at the
-# op's name (ADR-2026-10-30-0815). A zext or sext that does not strictly
+# op's name (ADR-2026-10-29-2014). A zext or sext that does not strictly
 # widen, or a trunc that does not strictly narrow, the same width
 # included, decodes, and validation rejects it (ADR-2026-10-30-0818).
 

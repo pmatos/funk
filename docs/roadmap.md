@@ -50,7 +50,7 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
   `print(parse(t)) == t` for every text `t` printed from one. Every valid
   module is well formed. A text that does not decode, such as one with an
   undefined operand or a type mismatch, is a parse error with a location
-  (ADR-2026-10-30-0815).
+  (ADR-2026-10-29-2014).
 - **Every piece of Rust is either generated from Lean or checked against it.**
   Rewrite rules proven in Lean are emitted as Rust. Hand-written parts, such as
   backends, register allocation and scheduling, are checked by differential

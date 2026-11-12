@@ -3,7 +3,7 @@
 # and ashr, do not decode, nor does any other attribute. These ops have
 # no validation rule beyond their signatures, so a text that breaks one
 # does not decode: each is a parse error at the op's name
-# (ADR-2026-10-30-0815). bitwise.toml holds those of and, or and xor.
+# (ADR-2026-10-29-2014). bitwise.toml holds those of and, or and xor.
 
 [[reject]]
 verdict = "parse-error"

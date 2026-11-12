@@ -1,6 +1,6 @@
 //! Texts that follow the grammar but do not decode, and texts that break the
 //! grammar or the lexical rules, are parse errors with a position
-//! (ADR-2026-10-30-0815; `lean/Fir/Text/Grammar.lean`, "Reading a text").
+//! (ADR-2026-10-29-2014; `lean/Fir/Text/Grammar.lean`, "Reading a text").
 
 mod common;
 

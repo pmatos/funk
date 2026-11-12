@@ -38,7 +38,7 @@ name their ops is H4, which is not decided.
   already registered.
 - **No per-op code outside the dialect.** The parser reads the one grammar,
   then decodes each op and type through the registry; a failure is a parse
-  error (ADR-2026-10-30-0815). The printer writes every op the same way. The
+  error (ADR-2026-10-29-2014). The printer writes every op the same way. The
   verifier looks up operand types and calls the same `decode`, so an op
   that a builder or a pass made ill-typed is a validation error.
 - **One file per op family.** The core dialect is `dialects/core/`: its

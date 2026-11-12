@@ -1,7 +1,7 @@
 # Must-reject texts of #18's ops: sdiv and udiv with their flag exact,
 # srem and urem. These ops have no validation rule beyond their
 # signatures, so a text that breaks one does not decode: each is a parse
-# error at the op's name (ADR-2026-10-30-0815).
+# error at the op's name (ADR-2026-10-29-2014).
 
 [[reject]]
 verdict = "parse-error"

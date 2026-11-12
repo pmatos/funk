@@ -1,7 +1,7 @@
 # Must-reject texts of #14's ops: sub and mul, the flags nuw and nsw of
 # add, sub and mul, and freeze. These ops have no validation rule beyond
 # their signatures, so a text that breaks one does not decode: each is a
-# parse error at the op's name (ADR-2026-10-30-0815). decoding.toml holds
+# parse error at the op's name (ADR-2026-10-29-2014). decoding.toml holds
 # add's other texts.
 
 [[reject]]

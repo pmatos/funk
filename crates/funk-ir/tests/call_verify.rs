@@ -11,7 +11,7 @@
 //!
 //! A call without one symbol attribute does not decode, and a use of a
 //! value that another function defines is undefined in the caller: both
-//! are parse errors with a position (ADR-2026-10-30-0815).
+//! are parse errors with a position (ADR-2026-10-29-2014).
 
 mod common;
 

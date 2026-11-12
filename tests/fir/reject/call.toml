@@ -2,7 +2,7 @@
 # with exactly one attribute, its callee's symbol, and with any number
 # of operands and results of any core types (Op.decode in
 # lean/Fir/Core/Text.lean). Any other list of attributes does not
-# decode: each is a parse error at the op's name (ADR-2026-10-30-0815).
+# decode: each is a parse error at the op's name (ADR-2026-10-29-2014).
 # @1 is always a location reference, so call @1 is a call with no
 # attribute. A symbol has one spelling, so a quoted word is a parse
 # error at the symbol. An operand is a value that the caller defines, so

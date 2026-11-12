@@ -88,7 +88,7 @@ pub trait OpSpec: Send + Sync {
 
     /// Decodes the op instance used at `op`: its shape, or why no instance
     /// of this op has these attributes, operand types and result types. A
-    /// text whose op does not decode is a parse error (ADR-2026-10-30-0815).
+    /// text whose op does not decode is a parse error (ADR-2026-10-29-2014).
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String>;
 
     /// The dialect's own rule for a decoded op, beyond its signature, such as

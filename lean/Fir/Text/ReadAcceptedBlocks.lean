@@ -13,10 +13,10 @@ regions. A block's label comes from a label token.
 The five readers call one another, to any depth. They are proved together,
 by induction that follows the readers' own recursion. Each case of the
 induction is one reader on one shape of tokens, and takes what the readers
-it calls do on the tokens left to them as hypotheses: the structure that
-ADR-2026-11-03-0028 records for the round trip's lemmas, which
-ADR-2026-11-03-0328 applies to this proof. No case looks inside a reader
-that it calls.
+it calls do on the tokens left to them as hypotheses: the structure of the
+round trip's lemmas, applied through functional induction
+(`docs/decisions/text-format-proofs.md#parsed-modules-are-well-formed`). No
+case looks inside a reader that it calls.
 -/
 
 namespace Fir.Text

@@ -4,7 +4,7 @@
 # with no attributes, an i1 condition and two values of one iN, and one
 # iN result. Neither op has a validation rule beyond its signature, so a
 # text that breaks one does not decode: each is a parse error at the
-# op's name (ADR-2026-10-30-0815). Every operand is defined, so both
+# op's name (ADR-2026-10-29-2014). Every operand is defined, so both
 # tools report the op, even for the old spelling icmp.slt, which names
 # no op.
 

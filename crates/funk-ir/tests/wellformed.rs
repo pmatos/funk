@@ -1,6 +1,6 @@
 //! The round trips over well-formed modules that are not all valid (#146):
 //! `parse(print(m)) == m` and `print(parse(t)) == t` hold for every
-//! well-formed module (ADR-2026-10-30-0815), not only for the valid ones
+//! well-formed module (ADR-2026-10-29-2014), not only for the valid ones
 //! that `property.rs` checks. The modules come from
 //! `generate::wellformed`, and the tests check that they hold every shape
 //! that validation rejects and the round trip must still cover.
