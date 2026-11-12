@@ -80,7 +80,7 @@ theorem constAttr_of_ne_one {w : Nat} (v : BitVec w) (h : w ≠ 1) :
   | _ + 2, _ => rfl
 
 /-- An `i1` constant is `1` or `0`. The proof checks both values with
-`decide` (ADR-2026-11-09-1315). -/
+`decide` (`docs/decisions/semantics-interpreter.md#bit-vector-proofs`). -/
 theorem bitVec_one_cases (v : BitVec 1) : v = 1 ∨ v = 0 := by revert v; decide
 
 /-! # Decoding what was encoded -/

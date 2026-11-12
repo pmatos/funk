@@ -133,7 +133,7 @@ refining that poison to the signed minimum would turn a result into UB,
 which is not a refinement.
 
 A call gets its meaning from the call effect, which the interpreter runs
-(ADR-2026-11-02-0836), not from the set monad these obligations are stated
+(ADR-2026-10-29-2009), not from the set monad these obligations are stated
 in. A rule for it in the set monad could only be a stand-in, with a meaning
 that a call does not have, such as immediate UB, and obligations met by a
 stand-in would say nothing about calls. So the obligations leave out the

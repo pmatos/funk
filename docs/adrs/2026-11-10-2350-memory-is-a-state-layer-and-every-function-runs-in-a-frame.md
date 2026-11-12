@@ -11,7 +11,7 @@ Tier: direction; area: semantics
 - **Memory is an effect.** A class on the monad, `MonadMemory`, gives
   allocating, freeing, loading and storing on a named memory, and a faulting
   access is UB. A dialect whose ops touch memory states their semantics in a
-  monad with that class, as it states choice and UB (ADR-2026-10-29-2030).
+  monad with that class, as it states choice and UB (ADR-2026-10-29-2009).
 - **Every function runs in a frame.** The interpreter says only where a call
   starts and returns, through the frame effect `MonadFrame`, and imports
   nothing of the memory model (G0, ADR-2026-10-29-2016).
@@ -23,7 +23,7 @@ Tier: direction; area: semantics
   call, run it, then free the frame's stack allocations.
 
 [semantics-m1-design.md](../decisions/semantics-m1-design.md) says how the
-spec builds it, and semantics.md what holds today.
+spec builds it, and semantics-interpreter.md what holds today.
 
 ## Why
 

@@ -1,6 +1,6 @@
 # Each op declares a set of effects, named by memory, and the spec proves the declaration sound
 
-Status: accepted; refined by ADR-2026-11-11-0801
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
@@ -21,13 +21,22 @@ Tier: direction; area: semantics
   without may-UB never ends in UB, and so on. The obligations are stated
   over the op's semantics with memory, wherever a run names the dialect's
   memories.
+- **Totality and monotonicity with memory.** Each valid op that is a
+  terminator or has no callee also has an outcome, and is monotone, over its
+  semantics with memory, from any memories at every naming
+  (`LawfulDialectTotal`, `LawfulDialectMonotone`). Each is a class of its
+  own that asks for no semantics in the set monad, so a dialect with memory
+  ops proves it directly, and a lawful dialect that lifts the set monad gets
+  it from its poison laws. Progress and refinement of runs with memory rest on them.
 - **Calls.** A call's effects are its own rule's and its callee's summary:
   the join of every effect but control of each op the callee may reach,
   computed per symbol table and proved sound.
 
 [semantics-effects.md](../decisions/semantics-effects.md) states what holds,
 the obligations and the human's rulings: #208 (2026-11-09) and #226, option B
-(2026-11-10). semantics-m1-design.md says how M1's ops are classified.
+(2026-11-10). semantics-interpreter.md and semantics-refinement.md state the
+totality and monotonicity obligations, and semantics-m1-design.md says how
+M1's ops are classified.
 
 ## Why
 

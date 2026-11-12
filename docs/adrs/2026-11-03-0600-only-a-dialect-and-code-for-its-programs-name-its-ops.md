@@ -1,6 +1,6 @@
 # Only a dialect, and code that builds, lowers or runs its programs, name its ops; tests in Rust and Lean keep it so
 
-Status: accepted; refined by ADR-2026-11-03-1617
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
@@ -19,6 +19,11 @@ Tier: direction; area: semantics
 - **Code that may name ops** builds, lowers or runs one dialect's programs:
   the dialect's files, the module generator, the x86-64 backend, `funk`'s
   and `fir-ref`'s command lines, the tests and the corpus.
+- **A word that names a core op is a core word** in generic code, whatever
+  else it means. Generic code does not write it alone as a string; it names
+  the concept with the spec's definitions, such as `PoisonOr.poison`, and
+  leaves the spelling to code that may name ops. A string that holds the word
+  among other text stays allowed. Neither check has a list of exempt words.
 - **Every op declares its poison class and effects.** The core lists each op
   by its constructor in `Core.Op.poisonClass` and `Core.Op.effects`, with no
   case for the rest, so a new core op does not build until it declares them.
@@ -30,6 +35,7 @@ Tier: direction; area: semantics
   `check_g0.py`, and moving the line edits this ADR in place.
 
 semantics.md states the rule; each check's module docs say what it reads.
+The human named the op `poison` on 2026-11-03 (#122).
 
 ## Why
 
@@ -44,5 +50,7 @@ stops a later change from reopening the door.
   from its live registration; a script would need a copy.
 - **Lean theorems alone.** A generic definition could test an op's name as a
   string and keep every theorem true.
+- **A list of exempt generic terms, such as `poison`.** It would let per-op
+  code for the op `poison` into generic code unseen.
 - **Moving the two corollaries into `lean/Fir/Core/`.** It changes the spec's
   chapters for no gain.

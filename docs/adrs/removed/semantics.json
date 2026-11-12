@@ -1,13 +1,38 @@
 {
   "removed": [
     {
+      "file": "2026-10-29-2030-fir-lean-semantics-own-calculus.md",
+      "now": "ADR-2026-10-29-2009",
+      "commit": "7cd97a62e05b"
+    },
+    {
+      "file": "2026-10-30-0816-any-number-of-results.md",
+      "now": "ADR-2026-10-29-2008",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-10-30-0818-poison-propagation.md",
       "now": "ADR-2026-10-29-2006",
       "commit": "6de9e3d20dda"
     },
     {
+      "file": "2026-11-02-0836-calls-share-the-fuel-budget.md",
+      "now": "ADR-2026-10-29-2009",
+      "commit": "1cf08fb10914"
+    },
+    {
       "file": "2026-11-02-1156-call-stand-in-is-ub.md",
       "now": "ADR-2026-10-29-2006",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1350-callee-congruence-runs-the-new-callee-in-the-new-module.md",
+      "now": "docs/decisions/semantics-refinement.md#congruence-in-the-callee",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1426-general-congruence-asks-for-finitely-many-argument-vectors.md",
+      "now": "docs/decisions/semantics-refinement.md#congruence-in-the-callee",
       "commit": "c09a05f4f8fb"
     },
     {
@@ -21,9 +46,29 @@
       "commit": "c09a05f4f8fb"
     },
     {
+      "file": "2026-11-03-1000-numbers-have-mlir-s-limits.md",
+      "now": "ADR-2026-10-29-2007",
+      "commit": "c09a05f4f8fb"
+    },
+    {
       "file": "2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md",
       "now": "ADR-2026-10-29-2006",
       "commit": "46ee1b2caf5b3a2af4f6d9011c314250446462fc"
+    },
+    {
+      "file": "2026-11-03-1617-a-word-that-names-a-core-op-is-a-core-word-in-generic-code-whatever-else-it-means.md",
+      "now": "ADR-2026-11-03-0600",
+      "commit": "1cf08fb10914"
+    },
+    {
+      "file": "2026-11-05-1715-refinement-asks-monotonicity-only-of-the-ops-a-run-reaches.md",
+      "now": "docs/decisions/semantics-refinement.md#the-ops-a-run-reaches",
+      "commit": "1cf08fb10914"
+    },
+    {
+      "file": "2026-11-09-1315-core-law-files-have-no-use-for-bv-decide.md",
+      "now": "docs/decisions/semantics-interpreter.md#bit-vector-proofs",
+      "commit": "7cd97a62e05b"
     },
     {
       "file": "2026-11-09-2249-may-produce-poison-means-poison-from-operands-with-no-poison.md",
@@ -61,9 +106,19 @@
       "commit": "7eee446e4ae2"
     },
     {
+      "file": "2026-11-11-0801-progress-with-memory-asks-totality-over-the-semantics-with-memory.md",
+      "now": "docs/decisions/semantics-interpreter.md#memory-and-progress-with-memory",
+      "commit": "1cf08fb10914"
+    },
+    {
       "file": "2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md",
       "now": "ADR-2026-11-09-1549",
       "commit": "1dd505a5a450"
+    },
+    {
+      "file": "2026-11-11-1002-refinement-with-memory-refines-memories-unit-by-unit-from-any-memories.md",
+      "now": "docs/decisions/semantics-refinement.md#refinement-with-memory",
+      "commit": "1cf08fb10914"
     },
     {
       "file": "2026-11-11-1015-an-inline-assembly-block-is-an-event-only-when-its-effect-set-says-observable.md",

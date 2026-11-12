@@ -29,7 +29,7 @@ when the terminator $`o` ends its block, and $`\mathsf{ret}` on the right
 says: return from the function. The
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter] then
 returns the operands $`v_1, \dots, v_n` as they are, any number of them
-(ADR-2026-10-30-0816), poison included: $`\mathsf{ret}` is an exception to
+(ADR-2026-10-29-2008), poison included: $`\mathsf{ret}` is an exception to
 poison propagation that passes values on (ADR-2026-10-29-2006). It is never
 UB.
 :::

@@ -199,7 +199,7 @@ class Rules(unittest.TestCase):
     def test_a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word(self):
         # `poison` names a core op and S1's deferred-UB value. Generic code
         # may not write it alone as a string, whatever it means there, but
-        # may write a sentence that holds it (ADR-2026-11-03-1617).
+        # may write a sentence that holds it (ADR-2026-11-03-0600).
         core = CORE_TEXT_SAMPLE.replace('"ret"', '"ret" | .poison _ => "poison"')
         generic = (
             'def kind : String := "poison"\n'

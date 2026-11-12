@@ -23,7 +23,7 @@ body: the new function is `@g` with the new body. If the runs of the new
 function in the new module refine the runs of `@g` in the old, as
 refinement of functions asks, then each function of the old module is
 refined by its counterpart in the new one: itself, or the new function
-when it is `@g` (ADR-2026-11-02-1350).
+when it is `@g` (`docs/decisions/semantics-refinement.md#congruence-in-the-callee`).
 
 The hypothesis compares the new function in the new module with `@g` in
 the old. A callee that calls back, itself or its callers, calls the new
@@ -64,7 +64,8 @@ diverges, or from some budget on never runs out of fuel. Each argument
 vector has such a budget, since a run that runs out of fuel with more
 steps runs out with fewer. One budget serves them all when the parameter
 types of `@g` have finitely many argument vectors, as every core type
-has. The proof needs this (ADR-2026-11-02-1426). Without it, one budget
+has. The proof needs this
+(`docs/decisions/semantics-refinement.md#congruence-in-the-callee`). Without it, one budget
 may not bound them all: a caller whose arguments to `@g` grow without
 limit can make the new function run longer and longer before it returns.
 A dialect whose choices each have finitely many options, as the section

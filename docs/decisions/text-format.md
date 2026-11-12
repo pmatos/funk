@@ -145,7 +145,7 @@ Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
 float type has at most as many bits in all (ADR-2026-11-09-1549). A
 location reference, a line and a column are below `2^32`. An integer
 attribute has no bound of its own: the dialect that reads it bounds it
-(ADR-2026-11-03-1000).
+(ADR-2026-10-29-2007).
 
 ## Types
 
@@ -287,7 +287,7 @@ A text that follows the grammar but does not decode is not a module. The
 parser rejects it with a reason and a position (ADR-2026-10-29-2014). These
 texts are rejected:
 
-- a number out of range, located at the number (ADR-2026-11-03-1000);
+- a number out of range, located at the number (ADR-2026-10-29-2007);
 - a string or symbol not in its one spelling;
 - an item of an unknown kind;
 - a type that does not decode;

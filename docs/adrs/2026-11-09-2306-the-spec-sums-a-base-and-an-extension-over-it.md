@@ -1,6 +1,6 @@
 # The spec sums a base dialect and an extension over it, routing ops and types by prefix
 
-Status: accepted; refined by ADR-2026-11-10-1306
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
@@ -24,6 +24,8 @@ Tier: direction; area: semantics
 - **Laws.** The sum and the lift are lawful when their sides are, `e` writes
   its words under a name new to the base, and `e` accepts the types it
   depends on. Core ops carry core types only.
+- **The set.** A module names the dialects of its sum on its first line
+  (ADR-2026-11-10-1306).
 
 [semantics-dialects.md](../decisions/semantics-dialects.md) states each rule
 and the theorems.

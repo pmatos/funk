@@ -184,7 +184,7 @@ Control flow. These ops are the terminators:
   first when the condition is `true` and to the second when it is `false`.
   Branching on poison is immediate UB.
 * `ret ts`: returns its operands, of types `ts`, from the function: any
-  number of values, each a value or poison (ADR-2026-10-30-0816).
+  number of values, each a value or poison (ADR-2026-10-29-2008).
 * `unreachable`: has no operands and no successors, and reaching it is
   immediate UB (ADR-2026-11-09-1548). A producer puts it where control
   never goes, such as after a call that never returns.

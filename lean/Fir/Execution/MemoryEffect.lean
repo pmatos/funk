@@ -8,7 +8,7 @@ Memory is an effect of a run, beside choice and UB: an op that loads, stores
 or allocates asks the run for it, as `freeze` asks for a choice of bits. A
 dialect whose ops touch memory states its semantics in a monad that has the
 memory effect, and any way of running a program that provides it can run
-those ops (ADR-2026-10-29-2030).
+those ops (ADR-2026-10-29-2009).
 
 The memory effect gives the four operations of the memory model on the
 memories of a run, each named by its memory: allocating, freeing, loading

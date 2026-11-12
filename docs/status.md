@@ -16,7 +16,7 @@ of funk are on `main`:
   [LeanMLIR](https://github.com/opencompl/lean-mlir), an SSA framework in
   Lean. The other is fir's own calculus. The project's human lead chose fir's
   own calculus
-  ([ADR-2026-10-29-2030](adrs/2026-10-29-2030-fir-lean-semantics-own-calculus.md)).
+  ([ADR-2026-10-29-2009](adrs/2026-10-29-2009-lean-reference-interpreter.md)).
 - The fir v0 spec. Its chapters are Lean modules in `lean/`, with prose beside
   each definition. [Verso](https://github.com/leanprover/verso), Lean's
   documentation tool, renders them as HTML from `docs/spec/`. The spec gives

@@ -11,7 +11,8 @@ the memories.
 
 The proof is the proof for runs in the set monad (the section on progress
 with calls), read from given memories (the section on how a run with memory
-ends), and stands beside it (ADR-2026-11-11-0801). It is by induction on
+ends), and stands beside it
+(`docs/decisions/semantics-interpreter.md#memory-and-progress-with-memory`). It is by induction on
 the budget, for every function of the module at once, from any op of any
 of its blocks on, and from any memories. Its invariant is the one of the
 section on jumps: before an op, the environment holds every value in scope

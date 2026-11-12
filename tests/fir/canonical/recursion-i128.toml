@@ -7,7 +7,7 @@
 # wraps. scale calls itself %n times and multiplies %k by itself on the
 # way back, so it gives %k^(%n + 1) modulo 2^128, with %k on both sides
 # of 2^64. Each call takes one step of fuel, and its callee runs on the
-# steps that are left (ADR-2026-11-02-0836).
+# steps that are left (ADR-2026-10-29-2009).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 # A differential test recurses as deep as native code's stack allows

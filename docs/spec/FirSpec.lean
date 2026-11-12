@@ -347,5 +347,5 @@ named at the foot of each page.
 An ADR's id is the UTC time it was written, and the spec and the ADRs cite
 it as `ADR-` followed by the id, such as ADR-2026-10-30-1329, which also says
 how ids stay unique. Every citation links to the ADR's page. An accepted
-ADR is not rewritten: a later ADR refines or supersedes it, and its status
-names the later one.
+ADR is edited in place when its decision changes, and git keeps its
+history. A deleted ADR's id is never used again.

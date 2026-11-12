@@ -3,7 +3,8 @@ import FirRef
 
 /-!
 G0's check on the Lean side, for refinement of runs with memory
-(ADR-2026-11-03-0600, ADR-2026-11-11-1002), split from `FirTest.G0` by
+(ADR-2026-11-03-0600,
+`docs/decisions/semantics-refinement.md#refinement-with-memory`), split from `FirTest.G0` by
 subject. Each statement below is made of an arbitrary dialect `d`, or an
 arbitrary base and extension, with the spec's own proof, so it builds only
 while those stay parameterized over the dialect. `scripts/check_g0.py`

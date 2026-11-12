@@ -5,7 +5,7 @@
 # while %n is above 1 read as unsigned, and adds with add, which wraps.
 # even and odd call each other on %n - 1 down to zero, so -1 counts down
 # through every value of the type. Each call takes one step of fuel, and
-# its callee runs on the steps that are left (ADR-2026-11-02-0836).
+# its callee runs on the steps that are left (ADR-2026-10-29-2009).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 # deep counts %n down on an i64 and adds the i8 %x on the way back, so it

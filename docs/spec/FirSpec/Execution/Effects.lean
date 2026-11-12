@@ -76,7 +76,7 @@ The interpreter gives an op only values of its operand types. It checks
 each operand's type before it runs the op, and the path is
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[stuck]
 when one does not match, which validation rules out. The shape follows
-LeanMLIR's (ADR-2026-10-29-2030).
+LeanMLIR's (ADR-2026-10-29-2009).
 :::
 
 :::readable Fir.DialectCall (fingerprint := "3266187945828972356")

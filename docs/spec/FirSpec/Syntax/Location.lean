@@ -110,7 +110,7 @@ $$`\begin{aligned} & \forall (r = \mathit{loc}) \in T.\ r < 2^{32} \\ & \quad \w
 The Lean spells $`\mathrm{nums}` as `numbers`, and calls the limit
 `limit` and the condition `InLimits`. The limit lets every
 implementation hold references, lines and columns in 32 bits, as MLIR does
-(ADR-2026-11-03-1000).
+(ADR-2026-10-29-2007).
 {ref "The-fir-specification--Validation--The-general-rules"}[Validation]
 rejects a table that is not within
 limits, and checks with $`\mathrm{refs}` that each location refers only to

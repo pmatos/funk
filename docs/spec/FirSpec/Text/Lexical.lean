@@ -120,7 +120,7 @@ digit other than 0.
   integer, and the only other token with `-` is `->`.
 
 Numbers have limits, so that every implementation can hold them in integers
-of a fixed width, as MLIR does (ADR-2026-11-03-1000). The numbers that give
+of a fixed width, as MLIR does (ADR-2026-10-29-2007). The numbers that give
 the text its structure, a location reference and a line and a column of a
 source range, are below $`2^{32}`. An integer of an attribute has no limit
 of its own: it is a value of its dialect, which bounds it, as a

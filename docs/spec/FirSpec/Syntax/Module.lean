@@ -231,7 +231,7 @@ name,params,results,body \begin{array}{l} \{\mathsf{name}~s, \\ \enspace \mathsf
 
 $`s` is the function's symbol, any string. $`\mathsf{params}` are its
 parameters, and $`\mathsf{results}` the types of what it returns: any
-number of them, none included (ADR-2026-10-30-0816). In text, a function is
+number of them, none included (ADR-2026-10-29-2008). In text, a function is
 written `func @s(%x: t, …) -> t, … { … }`, with its blocks between the
 braces, and with no arrow when it returns nothing. Its body is a region of
 the core's kind, and its text names no kind: a word after the `{` of an

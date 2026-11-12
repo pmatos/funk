@@ -5,7 +5,7 @@ The interpreter is written once, for every dialect, and it counts its steps
 against a budget, its fuel (ADR-2026-10-29-2009). It does not fix how the
 effects of ops are carried out. Each dialect states the effects its ops
 need, and any way of running a program that provides those effects can run
-its ops (ADR-2026-10-29-2030). The core dialect needs two, below: choosing
+its ops (ADR-2026-10-29-2009). The core dialect needs two, below: choosing
 arbitrary bits, and immediate UB. Calls need a third, the call effect at the
 end of this section, which the run itself provides, since a call shares the
 run's fuel budget.
@@ -34,7 +34,7 @@ class MonadUB (m : Type → Type) where
 # The semantics of an op
 
 Each dialect gives its ops their meaning in one place, in the shape that
-LeanMLIR gives it (ADR-2026-10-29-2030). An op that is not a terminator maps
+LeanMLIR gives it (ADR-2026-10-29-2009). An op that is not a terminator maps
 its operand values to its result values. A terminator says where control
 goes next.
 -/
@@ -75,7 +75,7 @@ A call runs another function of the module, by its symbol, as `call @g`
 does. It is an effect of the run, not one that a dialect provides, for two
 reasons: an op's meaning sees only the op and its operands, not the module,
 so it cannot find the callee; and all calls share the run's fuel budget,
-which is the interpreter's (ADR-2026-11-02-0836). So a dialect does not give
+which is the interpreter's (ADR-2026-10-29-2009). So a dialect does not give
 a call a meaning of its own. It names the function that the op calls, and
 the interpreter runs that function:
 

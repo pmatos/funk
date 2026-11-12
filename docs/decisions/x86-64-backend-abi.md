@@ -85,7 +85,7 @@ calls one declared with `float` and `double`.
 
 ## Results
 
-fir functions and calls have any number of results (ADR-2026-10-30-0816). A
+fir functions and calls have any number of results (ADR-2026-10-29-2008). A
 funk function returns them as System V returns a C structure with one member
 per result, in order (ADR-2026-10-30-1232). C can call every funk function
 whose symbol is its name as such a function.

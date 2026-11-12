@@ -1,5 +1,5 @@
 # Tests of call-several.fir: functions and calls with several results
-# (#20, ADR-2026-10-30-0816). swap returns its three arguments in
+# (#20, ADR-2026-10-29-2008). swap returns its three arguments in
 # reverse order, and call_swap binds the three values that a call of
 # swap returns in order, and returns them in reverse order again: its
 # own arguments. divmod returns the quotient and the remainder of a

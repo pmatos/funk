@@ -1,7 +1,6 @@
 # Floating point is strict IEEE 754 over a generic family of formats, with nondeterministic NaNs and three fast-math flags
 
-Status: accepted; refined by ADR-2026-11-11-0951, ADR-2026-11-11-1438 and
-ADR-2026-11-11-1801
+Status: accepted
 Tier: direction; area: semantics
 
 ## Decision
@@ -30,6 +29,8 @@ Tier: direction; area: semantics
 [semantics-floats.md](../decisions/semantics-floats.md) states each rule and
 the human's rulings: #203 (2026-11-09), #229's bounds (2026-11-11) and #310's
 remainder (2026-11-12). The rounding-mode question on #229 is still open.
+The text writes float types, constants and the rounding attribute as
+ADR-2026-11-11-0951, ADR-2026-11-11-1438 and ADR-2026-11-11-1801 say.
 
 ## Why
 

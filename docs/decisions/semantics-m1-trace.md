@@ -7,7 +7,7 @@ fixed or deleted (ADR-2026-11-09-1610). ADR-2026-11-09-1540 holds the
 direction decision.
 
 These are decided designs, and the spec and the tools do not implement them
-yet. semantics.md says what a run shows in M0.
+yet. semantics-refinement.md says what a run shows in M0.
 
 ## What a run shows
 

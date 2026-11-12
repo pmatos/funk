@@ -3,7 +3,7 @@ import FirTest.ValidateOps
 
 /-!
 Tests of the runs of a function: the fuel that calls share
-(ADR-2026-11-02-0836), and the axioms of the proofs of fuel monotonicity,
+(ADR-2026-10-29-2009), and the axioms of the proofs of fuel monotonicity,
 progress and the no-stuck obligation.
 
 `call @g` calls `@g` (#20). The runs below show that a call charges its

@@ -120,7 +120,7 @@ holds for no $`m \geq \beta`.
 
 With $`Q(a, m)` "the new callee runs out of fuel at $`m` on $`a`", this
 gives the black box its bound when the callee's parameter types have
-finitely many argument vectors (ADR-2026-11-02-1426). Without that, one
+finitely many argument vectors (`docs/decisions/semantics-refinement.md#congruence-in-the-callee`). Without that, one
 bound may not serve them all: a caller whose arguments grow without limit
 can make the new callee run longer and longer before it returns.
 :::
@@ -145,7 +145,7 @@ module, and suppose that:
 
 Then for every function $`f` of $`M`, the runs of $`f[s \leftarrow b]` in
 $`M'` refine the runs of $`f` in $`M`: $`f` itself, or $`g'` when $`f`
-is $`g`. Calls and recursion are included (ADR-2026-11-02-1350).
+is $`g`. Calls and recursion are included (`docs/decisions/semantics-refinement.md#congruence-in-the-callee`).
 
 This is what makes a compiler's pass over one function sound for the
 whole program: replace a callee by a body that, run in the new module,

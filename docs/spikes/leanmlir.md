@@ -2,7 +2,7 @@
 
 Issue [#24](https://github.com/pmatos/funk/issues/24), run on 2026-10-29.
 The decision it supports is in
-[ADR-2026-10-29-2030](../adrs/2026-10-29-2030-fir-lean-semantics-own-calculus.md).
+[ADR-2026-10-29-2009](../adrs/2026-10-29-2009-lean-reference-interpreter.md).
 
 ## The question
 

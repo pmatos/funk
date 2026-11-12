@@ -13,7 +13,7 @@ supplies its observations and how they refine, so that fir can reach any
 kind of hardware (ADR-2026-10-29-2016); refinement is not wired to integer
 return values. In M0 the observation is the list of returned
 values, each a value or poison, since a function may return any number of
-values (ADR-2026-10-30-0816). A function that returns one `iN` therefore has
+values (ADR-2026-10-29-2008). A function that returns one `iN` therefore has
 the four outcomes of `fir-ref`: a value, poison, UB with a reason, and fuel
 exhausted. The reason that UB carries is for people: refinement ignores it.
 
@@ -134,7 +134,7 @@ end SetM
 Execution gives valid modules their meaning, but `fir-ref run` also runs
 modules that have not been validated. So a path of a run can also end
 _stuck_, defined below. A valid module never gets stuck
-(ADR-2026-10-29-2030): no path of its runs is stuck, and they have an
+(ADR-2026-11-02-2248): no path of its runs is stuck, and they have an
 outcome at every budget. These are the no-stuck and progress obligations of
 the next section.
 -/

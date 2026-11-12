@@ -1,6 +1,6 @@
 # fir's Lean code is pinned to a stable Lean release, has no dependencies, and is built by one script
 
-Status: accepted; refined by ADR-2026-11-05-1408
+Status: accepted
 Tier: direction; area: spec-site
 
 ## Decision
@@ -20,7 +20,8 @@ Tier: direction; area: spec-site
   applies both of its guards. It unsets each variable that
   `git rev-parse --local-env-vars` lists. It sets `GIT_CEILING_DIRECTORIES`
   to `lean/.lake/packages` and `docs/spec/.lake/packages`. The script also
-  unsets `GH_TOKEN` and `GITHUB_TOKEN`.
+  unsets `GH_TOKEN` and `GITHUB_TOKEN`. ADR-2026-11-05-1408 says how CI runs
+  its hooks.
 
 ## Why
 

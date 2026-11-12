@@ -1,6 +1,6 @@
 //! `call` (#20): a call by symbol to any function of the module, the caller
 //! itself and mutual recursion included, with any number of arguments and
-//! results, none included (ADR-2026-10-30-0816). It goes through the core
+//! results, none included (ADR-2026-10-29-2008). It goes through the core
 //! dialect's registry: the parser, the printer, the builder and the
 //! verifier have no code of their own for it (ADR-2026-10-30-1146).
 

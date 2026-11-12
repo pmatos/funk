@@ -1,6 +1,6 @@
 # CI runs each suite of hooks as its own job, and a gate job named pre-commit needs them all
 
-Status: accepted; refined by ADR-2026-11-09-1645
+Status: accepted
 Tier: direction; area: process
 
 ## Decision
@@ -19,6 +19,7 @@ Tier: direction; area: process
   one job, and a new job a place in the gate's `needs`. The page lists each
   case it checks.
 - In CI, each test suite writes its counts to the job summary and to the log.
+  The `rust-speed` hook's counts can fail only in CI (ADR-2026-11-09-1645).
 
 The human asked on 2026-11-05, in #148, for one CI job per suite, each its own
 check, with each suite's counts in the job summary and the log. What each job

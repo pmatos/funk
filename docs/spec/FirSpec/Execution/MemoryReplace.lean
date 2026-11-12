@@ -37,7 +37,7 @@ Each call of $`g` is a black box with memory, whose refinement is refined
 arguments and memories for $`g` in $`M`, then the hypothesis. Runs in the
 set monad get $`B` from finitely many argument vectors; the memories a call
 starts from are infinitely many, so here $`B` is a hypothesis, which #214
-removes (ADR-2026-11-11-1002).
+removes (`docs/decisions/semantics-refinement.md#refinement-with-memory`).
 :::
 
 :::readable Fir.Func.Valid.memOpsMonotone (fingerprint := "5311296940911276230")

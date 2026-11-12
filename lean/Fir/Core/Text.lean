@@ -46,7 +46,7 @@ results, which are written where those values are defined.
   `unreachable @1`.
 * The integer type of width N is written `i` and N in decimal with no
   leading zeros, such as `i32`. A width above 16,777,215, the widest the
-  core dialect has, is a parse error (ADR-2026-11-03-1000).
+  core dialect has, is a parse error (ADR-2026-10-29-2007).
 * The pointer type of the default memory, `ptr<0>`, is written `ptr`.
   The pointer type `ptr<N>` of another memory is written `ptr(N)`, in the
   applied form of the grammar, such as `ptr(1)`. So each pointer type has

@@ -68,7 +68,7 @@ dialects. Validation rejects a format with fewer bits, as it rejects `i0`; such
 a type still decodes, so the text reads it and the verifier names it. A value of
 `float<e,m>` has `1 + e + m` bits, and a format wider than 16,777,215 bits in
 all, the widest integer type, does not decode (ADR-2026-11-09-1549,
-ADR-2026-11-03-1000). A dialect that needs a format with fewer bits, or one that
+ADR-2026-10-29-2007). A dialect that needs a format with fewer bits, or one that
 is not IEEE-shaped, brings its own type.
 
 A value of `float<e,m>` is its raw bit pattern or poison. Values refine as

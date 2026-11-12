@@ -45,7 +45,7 @@ Tier: direction; area: validation
   valid op does. `fir-ref`'s machine has the same check. A kind whose
   regions run will need a hook that gives its semantics the region.
 
-This refines ADR-2026-11-10-1530 and ADR-2026-11-10-1306.
+It builds on ADR-2026-11-10-1530 and ADR-2026-11-10-1306.
 
 ## Why
 

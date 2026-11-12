@@ -41,7 +41,8 @@ meets:
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
-function that runs (ADR-2026-11-05-1715). The core dialect meets it with
+function that runs
+(`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`). The core dialect meets it with
 its ops' own obligations, which hold at every width, `i0` included, so
 for every function of every module, valid or not. The lawful class covers
 only the instances that validation accepts (ADR-2026-10-29-2006), so it

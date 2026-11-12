@@ -25,8 +25,8 @@ Tier: direction; area: rust-ir-and-tools
 - **Changing it.** A new verified module, or a change to a trusted base or
   to the specification it is proved against, needs a human ruling. Its PR
   edits this ADR in place with the trusted items and every new digest, so
-  the reviewer sees each one change. Lowering `forbid` needs a new ADR and a
-  human ruling (AGENTS.md).
+  the reviewer sees each one change. Lowering `forbid` needs a human ruling,
+  and its PR edits this ADR in place (AGENTS.md).
 - **Outside a verified module**, `unsafe_code = "forbid"` holds, and each
   library root holds `#![doc(test(attr(forbid(unsafe_code))))]`, because
   cargo does not pass `[lints]` to doctests.
