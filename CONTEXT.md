@@ -335,7 +335,8 @@ _Avoid_: verdict (a verdict says whether a text parses and validates)
 **poison stand-in**: A defined value of `iN` that native code runs a
 differential test on in place of a poison argument: one of the type's boundary
 bit patterns, 0, 1, all ones, the signed minimum or the signed maximum
-([fir-ref.md](docs/decisions/fir-ref.md#poison-arguments)). _Avoid_: stand-in
+([testing-and-harness.md](docs/decisions/testing-and-harness.md#poison-arguments)).
+_Avoid_: stand-in
 alone (the spec's prose also uses it for a placeholder rule of an op, and
 `test_main.py` for a fake tool)
 

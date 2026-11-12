@@ -1,7 +1,8 @@
 # Derived from LLVM: llvm/test/Transforms/InstSimplify/shift.ll, ported to
 # fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
 # LICENSE.TXT beside this file, and README.md says how the cases were
-# chosen and rewritten (ADR-2026-11-03-0644).
+# chosen and rewritten
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 #
 # Each test runs one function at the arguments given, and its from names
 # the LLVM function, or its CHECK lines, that the function is. A shift by
@@ -23,7 +24,8 @@
 #
 # @poison to @poison6 shift by poison or shift poison, which each writes
 # with fir's op poison, as LLVM writes its poison constant
-# (ADR-2026-11-03-1619). @almost_all_ones_left_right and
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
+# @almost_all_ones_left_right and
 # @all_ones_left_right_not_same_shift are negative tests: on 31, and on 4
 # and 2, they give 0 and -4, not -1.
 #

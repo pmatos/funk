@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs the differential harness over tests/fir/ (#13, ADR-2026-10-30-2049):
+# Runs the differential harness over tests/fir/
+# (#13, docs/decisions/testing-and-harness.md#the-harness-program):
 # the one command for the whole corpus. The pre-commit hook fir-harness
 # calls it, locally and in CI. It builds fir-ref (build-spec.sh --lean) and
 # funk, has funk-ir's generator print its modules, and runs
@@ -8,8 +9,9 @@
 # fir-ref and as native code. Then scripts/harness/check_invalid.py runs the
 # harness on each fixture corpus of scripts/harness/fixtures/ and checks that
 # it reports the fixture's test invalid: #18's frozen divisor
-# (ADR-2026-10-31-0208), and a recursion deeper than native code's stack
-# (ADR-2026-11-09-1602).
+# (docs/decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested),
+# and a recursion deeper than native code's stack
+# (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack).
 set -euo pipefail
 
 if [[ $# -ne 0 ]]; then

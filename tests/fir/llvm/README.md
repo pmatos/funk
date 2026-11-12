@@ -20,7 +20,7 @@ licence.
 
 [ADR-2026-11-03-0643](../../../docs/adrs/2026-11-03-0643-ported-llvm-tests-keep-llvm-s-licence-and-name-their-source.md)
 decides this layout and how the licence is kept, and
-[ADR-2026-11-03-0644](../../../docs/adrs/2026-11-03-0644-llvm-cases-are-chosen-for-m0-s-ops-and-rewritten-by-fixed-rules.md)
+[testing-and-harness-corpus.md](../../../docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)
 how the cases were chosen and rewritten.
 
 ## How the cases were rewritten
@@ -33,7 +33,8 @@ how the cases were chosen and rewritten.
   `-4611686018427387906`.
 - fir has no `undef`: a case that rests on it is left out. LLVM's
   `poison` constant is fir's op `poison`, as in `%p: i32 = poison`
-  (ADR-2026-11-03-1619). Until #122 gave fir that op, a case wrote it as
+  ([testing-and-harness-corpus.md](../../../docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)).
+  Until #122 gave fir that op, a case wrote it as
   `%p = shl %n, %n` with `%n` the width, which is poison.
 - A flag that fir does not have, such as `shl nuw`, `zext nneg` or
   `or disjoint`, is dropped only where it can never give poison, and
@@ -42,7 +43,7 @@ how the cases were chosen and rewritten.
   returned instead, and a struct of two values is two results.
 - LLVM's names of functions are kept, but a word that the repository's
   spelling check rejects is spelled correctly
-  ([ADR-2026-11-03-1614](../../../docs/adrs/2026-11-03-1614-a-ported-llvm-name-that-fails-the-spelling-check-is-corrected.md)).
+  ([testing-and-harness-corpus.md](../../../docs/decisions/testing-and-harness-corpus.md#names-the-spelling-check-rejects)).
 - Vectors, floating point, pointers, memory, calls to functions that the
   file does not define, intrinsics and `switch` are left out.
 

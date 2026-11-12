@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Fuzzes the Rust parser and verifier (#165, ADR-2026-11-08-2117), then has
+# Fuzzes the Rust parser and verifier
+# (#165, docs/decisions/testing-and-harness-generated.md#fuzzing), then has
 # fir-ref fmt read every input the fuzzer kept. The manual-stage hook
 # fir-fuzz calls it, in the nightly workflow.
 #

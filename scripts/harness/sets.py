@@ -1,4 +1,4 @@
-"""How the harness judges a run that makes choices (ADR-2026-10-31-0003).
+"""How the harness judges a run that makes choices (ADR-2026-10-30-2135).
 
 `fir-ref run --exhaustive` lists every outcome of a run, within a budget
 on the bits that one path chooses. A run that makes no choice has one

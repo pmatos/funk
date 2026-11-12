@@ -1,5 +1,5 @@
 """The values that native code gets in place of a poison argument (#123,
-docs/decisions/fir-ref.md#poison-arguments).
+docs/decisions/testing-and-harness.md#poison-arguments).
 
 A test's arguments may hold `poison`, which `fir-ref run` takes as it is.
 Native code holds no poison (ADR-2026-10-30-2248), and a built executable

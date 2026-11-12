@@ -1,5 +1,5 @@
 """Keeps an input that crashed a fuzzer, once the bug is fixed (#165,
-ADR-2026-11-08-2117).
+docs/decisions/testing-and-harness-generated.md#fuzzing).
 
 Usage: fuzz_to_corpus.py --funk FUNK [--rule RULE] [--corpus DIR] ARTIFACT
 

@@ -44,7 +44,8 @@ operand and as both, at the seven widths. #18's differential test with
 a frozen divisor that can be zero is invalid, so it is not in this
 corpus: it is in the fixture corpus `scripts/harness/fixtures/invalid/`,
 and `scripts/check-harness.sh` checks that the harness reports it
-invalid because `the set holds UB (sdiv by zero)` (ADR-2026-10-31-0208).
+invalid because `the set holds UB (sdiv by zero)`
+([testing-and-harness.md](../decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested)).
 `reject/div.toml` holds the texts of these ops that do not decode.
 
 The texts of #16 also use `icmp` and `select`. `icmp-iN` runs `icmp`
@@ -87,7 +88,8 @@ of its own (ADR-2026-10-30-1549). A recursive run's stack follows
 `recursion-i64` and `recursion-i128` recurse up to 100,000 calls on it,
 and their sidecars give the figures. A deeper run reports that it ran
 out of stack, and the harness reports its test invalid, not a mismatch
-(ADR-2026-11-09-1602): `scripts/harness/fixtures/out-of-stack/` checks
+([testing-and-harness.md](../decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)):
+`scripts/harness/fixtures/out-of-stack/` checks
 that verdict.
 `call-args` passes seven and eight arguments of mixed widths, some on
 the stack;
@@ -182,7 +184,7 @@ it, which is UB, at `i1`, `i7`, `i8`, `i16`, `i32`, `i33`, `i64` and
 `i128`. At the backend's widths the
 differential tests run it as native code, which gives zero for it, and
 the interpreter-only tests that fill its cells observe the poison
-([ADR-2026-11-03-1618](../adrs/2026-11-03-1618-poison-s-differential-cells-are-filled-by-native-runs-and-its-interpreter-only-cells-by-observing-it.md)).
+([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-cells-of-poison)).
 `reject/poison.toml` holds its texts that do not decode.
 
 The tests of #123 pass `poison` as an argument. `poison-arg-iN` runs
@@ -267,7 +269,7 @@ halfway between two floats, subnormals, `-0`, overflow to infinity and
 NaN operands, `fsub` and `fdiv` in both operand orders, and a poison
 operand. `scripts/harness/float_arith_cases.py` writes them, with each
 expected result that `scripts/harness/float_ref.py` computes
-([ADR-2026-11-11-1803](../adrs/2026-11-11-1803-the-float-arithmetic-corpus-is-generated-from-the-exact-rational-reference.md)).
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-arithmetic-corpus)).
 A result that is not a NaN is differential at `f32` and `f64` and
 interpreter-only at every format; a NaN result is interpreter-only, with
 a choice that names the NaN, until #219. `reject/float-arith.toml` holds

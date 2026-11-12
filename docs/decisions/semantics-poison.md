@@ -90,4 +90,5 @@ obligations only for the instances that its validation accepts. Division at
 `i0` keeps its rule (ADR-2026-11-02-1515).
 
 Ticket #16 tests the rewrite of `select` into `and`, and #19 tests the rewrite
-into `cond_br` (ADR-2026-10-31-0524).
+into `cond_br`
+([testing-and-harness-corpus.md](testing-and-harness-corpus.md#the-tests-of-the-select-rewrites)).

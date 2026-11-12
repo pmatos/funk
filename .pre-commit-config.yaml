@@ -126,7 +126,8 @@ repos:
         pass_filenames: false
         files: ^scripts/((test_)?rust_speed\.py|rust-speed-baseline\.json|run_unittests\.py)$
       # fir-ref's checks build lean/ through build-spec.sh --lean, under its
-      # git guards (ADR-2026-10-29-2135, ADR-2026-10-30-1250).
+      # git guards (ADR-2026-10-29-2135,
+      # docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
       - id: fir-ref-test
         name: The Lean tests pass, and fir-ref round-trips the corpus
         entry: scripts/check-fir-ref.sh
@@ -141,8 +142,9 @@ repos:
         language: unsupported_script
         pass_filenames: false
         files: ^(lean/|crates/|tests/fir/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec|check-fir-ref|rust-env)\.sh$)
-      # The differential harness (ADR-2026-10-30-2049): funk verify and
-      # fir-ref validate give every text of tests/fir/ and every generated
+      # The differential harness
+      # (docs/decisions/testing-and-harness.md#the-harness-program): funk verify
+      # and fir-ref validate give every text of tests/fir/ and every generated
       # module the same verdict, and native code refines fir-ref on every
       # test. It needs elan, rustup and GNU as and ld.
       - id: fir-harness
@@ -160,7 +162,8 @@ repos:
         pass_filenames: false
         files: ^(lean/|crates/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|scripts/(build-spec\.sh$|check-random-programs\.sh$|rust-env\.sh$|harness/))
       # The same script with fresh seeds, and the fuzzers. Only the nightly
-      # workflow runs them (ADR-2026-11-08-2116, ADR-2026-11-08-2117).
+      # workflow runs them (ADR-2026-11-08-2116,
+      # docs/decisions/testing-and-harness-generated.md#fuzzing).
       - id: fir-random-nightly
         name: fir-ref and native code agree on fresh generated programs
         entry: scripts/check-random-programs.sh --fresh 10000

@@ -16,7 +16,7 @@ from sets import BudgetExceeded, Outcomes, Path
 
 TIMEOUT = 120
 # The most data and address space that a built executable may map
-# (ADR-2026-11-02-2250).
+# (docs/decisions/testing-and-harness.md#native-code-runs-under-a-data-limit).
 DATA_LIMIT = 1 << 30
 
 ACCEPTED = "accepted"
@@ -223,7 +223,8 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
 def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
     """The values that a built executable prints (ADR-2026-10-30-1233):
     `{"values":[...]}` and exit status 0, and nothing on standard error; or
-    that the run outgrew its stack (ADR-2026-11-09-1602)."""
+    that the run outgrew its stack
+    (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)."""
     if ran.status != 0:
         ran_out = RAN_OUT.fullmatch(ran.stderr)
         if ran.status == 2 and not ran.stdout and ran_out:

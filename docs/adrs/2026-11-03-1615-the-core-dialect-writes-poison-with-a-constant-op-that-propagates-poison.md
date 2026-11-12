@@ -8,7 +8,8 @@ Tier: direction; area: semantics
 S1 (ADR-2026-10-29-2006) gives fir one deferred-UB value, poison, but no
 way to write it: a program got poison only from an op's rule, such as a
 broken flag or a shift by `N` or more. The ports of LLVM's tests stood in
-for LLVM's `poison` constant with `shl %n, %n` (ADR-2026-11-03-0644).
+for LLVM's `poison` constant with `shl %n, %n`
+([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)).
 
 The human ruled on 2026-11-03, by dialog, that the core dialect gains a
 poison constant now, in M0
@@ -55,7 +56,9 @@ This refines S1 and ADR-2026-10-30-0818: poison can now be written, and
 the class list gains one op. How the backend lowers it, how G0's check
 reads its name, how the coverage matrix counts it and how the LLVM ports
 use it are ADR-2026-11-03-1616, ADR-2026-11-03-1617,
-ADR-2026-11-03-1618 and ADR-2026-11-03-1619.
+[testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-cells-of-poison)
+and
+[testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 
 ## Alternatives
 

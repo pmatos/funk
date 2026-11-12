@@ -1,68 +1,48 @@
-# The harness judges a differential test by refinement: UB and fuel exhausted make it invalid, and stuck or a tool error fails it
+# The harness judges a differential test by refinement over its set of outcomes: UB and fuel exhausted make it invalid, and stuck or a tool error fails it
 
-Status: accepted; extended by ADR-2026-10-31-0003
+Status: accepted
 Tier: direction; area: testing-and-harness
-
-## Context
-
-The differential harness of
-[#13](https://github.com/pmatos/funk/issues/13) runs each test of the
-corpus on `fir-ref run` and, for a differential test, as native code from
-`funk build` (ADR-2026-10-30-2049). It reports each test as passed, failed
-or invalid, and an invalid test never counts as a pass.
-
-- Correctness is refinement: the native result must refine `fir-ref`'s,
-  and a poison result is refined by any value (ADR-2026-10-29-2008). A
-  function returns a list of values, any number of them
-  (ADR-2026-10-30-0816).
-- `fir-ref run` gives one of four results: the returned values, UB with a
-  reason, fuel exhausted, or stuck
-  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)).
-  An executable prints its values, or exits with 2 or dies by a signal
-  (ADR-2026-10-30-1233).
-- ADR-2026-10-29-2017 leaves open how the harness treats fuel exhausted,
-  and says #13 records it. Comment 6507458782 on #13 does.
-- No run of a valid module is stuck (`NeverStuck`).
-- UB reasons are for people: refinement ignores them (#13).
 
 ## Decision
 
-- **A differential test** is judged on `fir-ref`'s result:
-  - Values: both lists have the same length, and each native value equals
-    `fir-ref`'s, or is any value of its result type where `fir-ref`
-    returns poison. The harness reads the result types from the function's
-    signature line in the canonical text. A match passes the test, and
-    anything else fails it.
-  - UB makes the test invalid: source UB allows any result.
-  - Fuel exhausted makes the test invalid too: the result depends on the
-    budget. The author raises the test's fuel budget, or makes it an
-    interpreter-only test that expects fuel exhausted.
-  - Stuck fails the test.
-  - A tool error fails the test: `fir-ref` exits with 2 (such as an op without
-    execution rules,
-    [fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)), the executable
-    exits with 2 or dies by a signal, or `funk build` does not build the
-    module.
-- **An interpreter-only test** passes when `fir-ref` gives the expected
-  result: the same values, poison included, or UB with any reason, or
-  fuel exhausted. Stuck, or any other result, fails it.
+The harness reports each test as passed, failed or invalid. An invalid test
+never counts as a pass, and it fails the run.
 
-## Alternatives
+- **A differential test** runs on `fir-ref` in exhaustive mode, at its fuel
+  budget and a choice budget of 16 bits, and as native code from `funk build`.
+  Native code passes when its values refine one outcome of the set: the lists
+  have the same length, and each value is equal, or any value of its type where
+  `fir-ref` gives poison.
+- A stuck path fails the test, even in a set that also holds UB. Otherwise UB,
+  or fuel exhausted, anywhere in the set makes it invalid. A tool error fails
+  it: `fir-ref` exiting with 2, an executable that exits with 2 or dies by a
+  signal, or a module that `funk build` does not build. UB reasons are never
+  compared.
+- **Declared results.** A test may declare `results`, each with its values and
+  a witness choice sequence that must give exactly them. Within the budget, the
+  set must be exactly the declared results. Past it, a test that declares none
+  is invalid, and seeds 0 to 31 run in sampled mode, each of which must give a
+  declared result.
+- **An interpreter-only test** passes when `fir-ref` gives the expected result:
+  the same values, poison included, UB with any reason, or fuel exhausted. It
+  may name its path with `choices`; without it, a run that chooses fails.
 
-- **Fuel exhausted as a pass.** The run stopped before a result, so it
-  says nothing about what native code returns.
-- **Fuel exhausted as a failure.** Neither tool is wrong; the test is. An
-  invalid test fails the run all the same, and its line says what the
-  author changes.
-- **Compare UB reasons.** Refinement ignores them, and the two tools need
-  not word them alike.
+## Why
 
-## Consequences
+`freeze` of poison makes a run's behaviour a set of outcomes, and correctness
+is refinement (ADR-2026-10-29-2017, ADR-2026-10-29-2008). Source UB allows any
+result, so a test that reaches it proves nothing about native code. A run out
+of fuel depends on the budget, not on either tool. No run of a valid module is
+stuck (`NeverStuck`), so stuck is a bug.
 
-- The tracer subset gives no poison and no UB, so until #14 only the
-  unit tests of `scripts/harness/refine.py` reach those branches.
-- #14's sets of outcomes and #31's several native values extend
-  `refine.py` and `tools.py`.
-- The signature reader knows the canonical text, not every dialect: a type
-  written with a string that holds a parenthesis would confuse it. Core
-  types have none.
+## Rejected alternatives
+
+- **Fuel exhausted as a pass, or as a failure.** It says nothing about native
+  code, and neither tool is wrong: the test is.
+- **Compare UB reasons.** Refinement ignores them, and the tools need not word
+  them alike.
+- **Sample on every declared test.** Within the budget the set is exact.
+- **A per-test choice budget.** The budget bounds the harness's cost; a test
+  past it declares its results.
+- **Fail rather than invalidate a sampled UB.** A sampled outcome is a member of
+  the set.

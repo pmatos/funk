@@ -99,7 +99,8 @@ differentially at `f32` and `f64`, and on `fir-ref` against
 signs, subnormals, the largest finite values, infinities and NaNs. It runs the
 arithmetic on the hard inputs of every op, at every aliased format, with each
 result that is not a NaN differential at `f32` and `f64`, and each NaN result
-on `fir-ref` with a choice (ADR-2026-11-11-1803).
+on `fir-ref` with a choice
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's

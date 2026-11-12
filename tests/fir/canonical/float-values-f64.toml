@@ -2,7 +2,7 @@
 # arguments by br and cond_br, returned one and several at a time, and
 # given by calls with one result and with several, each coming back as
 # its bits: a NaN with its sign set and a payload, -0, 1 and the smallest
-# subnormal, and poison (ADR-2026-11-11-1438, ADR-2026-11-11-1141).
+# subnormal, and poison (ADR-2026-11-11-1438, ADR-2026-11-03-0557).
 # Each test is differential, but for those with expect: fir-ref and
 # native code run it, and the native result must equal fir-ref's. A test
 # with expect is interpreter-only, and fir-ref must give the result that

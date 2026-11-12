@@ -2,7 +2,8 @@
 # llvm/test/Transforms/InstSimplify/2010-12-20-Boolean.ll, ported to fir
 # by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
 # LICENSE.TXT beside this file, and README.md says how the cases were
-# chosen and rewritten (ADR-2026-11-03-0644).
+# chosen and rewritten
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 #
 # Each test runs one function on both values of i1, and its from names the
 # LLVM function that the function is. At i1, x + x is false, false - x and

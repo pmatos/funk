@@ -52,8 +52,9 @@ outside the module. The human ruled on
   script. It is linked in place of the external functions. It records each
   call (symbol, arguments, reachable bytes) and replays the scripted
   results. A wrapper that the harness generates dumps the reachable memory
-  at return. ADR-2026-11-06-1218's single judgement module compares the two
-  sides ([#213](https://github.com/pmatos/funk/issues/213)).
+  at return. The harness's single judgement module
+  ([testing-and-harness.md](../decisions/testing-and-harness.md#where-the-judgement-lives))
+  compares the two sides ([#213](https://github.com/pmatos/funk/issues/213)).
 - **Dialects add events.** The events above are the core dialect's. Another
   dialect may add events of its own, such as a device's I/O, since
   observations already come from the dialect (G0, ADR-2026-10-29-2016).

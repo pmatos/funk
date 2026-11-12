@@ -27,7 +27,8 @@ thousands of modules and a cache to keep working. Rejected too: chapters as
 Verso documents with `lean` code blocks, which would make `fir`, and `fir-ref`
 with it, depend on Verso.
 
-The package has three default targets (ADR-2026-10-30-1250). The library `Fir`
+The package has three default targets
+([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)). The library `Fir`
 is the spec. The library `FirRef` and the executable `fir-ref` hold what is not
 the spec. The library `FirTest` holds the Lean tests. So `lake build` in `lean/`
 builds the spec, `fir-ref` and the tests, and runs the tests. The document
@@ -60,7 +61,7 @@ the same PR (ADR-2026-10-30-1452).
 `docs/spec/` under the guards below, then builds as usual.
 
 `scripts/build-spec.sh --lean` builds `lean/` alone, under the same guards
-(ADR-2026-10-30-1250). `fir-ref` is then `lean/.lake/build/bin/fir-ref`. Every
+([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)). `fir-ref` is then `lean/.lake/build/bin/fir-ref`. Every
 script and hook that needs `fir-ref` calls this mode.
 
 Every Lake run in `lean/` or `docs/spec/` goes through the script or applies
@@ -87,7 +88,8 @@ LeanMLIR spike runs Lake outside both packages, and its report,
 The build needs `elan` on `PATH`, and the script adds `~/.elan/bin` when it is
 not there. `scripts/ensure-hooks.sh` warns when elan is missing and says how to
 install it. It does not fail. A commit that changes the Rust crates still needs
-elan, because the `fir-round-trip` hook builds `lean/` (ADR-2026-10-30-1250).
+elan, because the `fir-round-trip` hook builds `lean/`
+([testing-and-harness.md](testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)).
 
 The `fir-spec` hook runs the script when a file under `lean/` or `docs/spec/`
 changes, or the script itself. It also runs when a file

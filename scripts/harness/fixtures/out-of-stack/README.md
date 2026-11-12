@@ -8,5 +8,6 @@ invalid and exits with 1. `scripts/check-harness.sh` runs
 `scripts/harness/check_invalid.py` after the main run, which runs the harness
 on this corpus with the real tools under an 8 MiB stack limit, and passes
 only when that test, and nothing else, is reported invalid because `native
-code outgrew its 8388608 bytes of stack` (ADR-2026-11-09-1602).
+code outgrew its 8388608 bytes of stack`
+([testing-and-harness.md](../../../../docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)).
 `reject/down.toml` holds one must-reject text, since a corpus must hold one.

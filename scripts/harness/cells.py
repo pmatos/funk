@@ -8,7 +8,7 @@ flag sets of `decodeWrap`, `sdiv` and `udiv` those of `decodeExact`, and
 attributes but not cells, and the other ops have no attributes. A flag or
 predicate that the spec does not give an op is not a cell. `poison`, which
 has neither operands nor attributes, is a cell at each width of its result
-(ADR-2026-11-03-1618).
+(ADR-2026-11-03-0557).
 
 - An op at a width is a cell for each width of the matrix's side.
 - A width change, `zext`, `sext` or `trunc`, is a cell for each pair of
@@ -20,12 +20,12 @@ has neither operands nor attributes, is a cell at each width of its result
   each float format of the matrix's side: `f32` and `f64` for
   differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
   `f64` and `f128` for interpreter-only tests (#229,
-  ADR-2026-11-11-1141).
+  ADR-2026-11-03-0557).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
   runs, `func`. One value or several are cells at each width and float
-  format of the side (ADR-2026-11-11-1141). `unreachable` passes nothing,
+  format of the side (ADR-2026-11-03-0557). `unreachable` passes nothing,
   so it is one cell.
 """
 

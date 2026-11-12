@@ -96,50 +96,20 @@ invalid, while these modules are valid.
 
 ## What the harness takes from a run
 
-A native result passes when it refines one outcome of the run's set. A poison
-outcome matches any native value (ADR-2026-10-29-2017, ADR-2026-10-31-0003). A stuck path or a
-tool error fails a differential test. UB, or fuel exhausted on any path,
-makes it invalid (ADR-2026-10-30-2135, ADR-2026-10-31-0003).
-
-Every differential test runs in exhaustive mode at its fuel budget and the
-default choice budget. A test past that budget is invalid unless it declares
-its allowed results. Each declared result carries a witness choice sequence,
-and scripted mode must reproduce the values from it. Within the budget, the
-set must be exactly the declared results. Past the budget, seeds 0 to 31 run
-in sampled mode, and each must give a declared result (ADR-2026-10-31-0003).
-The seeded checks are by sampling, so they can miss a rare outcome
-(ADR-2026-10-29-2017). The full rules belong to the testing-and-harness area.
+The harness judges a native result by refinement against the set of outcomes
+that `fir-ref` gives: a poison outcome matches any native value, and seeded
+checks only sample, so they can miss a rare outcome (ADR-2026-10-29-2017). The
+rules, declared results and witnesses included, are on
+[testing-and-harness.md](testing-and-harness.md#how-a-test-is-judged)
+(ADR-2026-10-30-2135).
 
 ### Poison arguments
 
 The human ruled on 2026-11-03 that `fir-ref run` takes `poison` as an argument,
 as in `fir-ref run f.fir @g 3 poison`, and that the harness uses it in
-differential tests too (#123). A test's `args` may hold `poison`, and the
-harness passes it to `fir-ref` as it is.
-
-Native code holds no poison, so it runs on stand-ins in each poison argument's
-place: the boundary bit patterns that sampled mode favours, once on each
-combination, up to `5 ** k` runs for `k` poison arguments
-(`scripts/harness/standins.py`). Each result is judged against `fir-ref`'s
-outcomes on the poison, and past the choice budget a failing vector also runs
-on `fir-ref`. The harness's rules for this, stand-ins at float types included,
-are on
-[testing-and-harness.md](testing-and-harness.md#poison-arguments). The report
-names the first vector that fails, and past the budget `fir-ref`'s outcome on
-it.
-
-This is sound. A run with a value in place of poison refines the run with
-poison (`Core.args_isRefinedBy`, calls and recursion included), and correct
-native code refines `fir-ref` on defined values, so by transitivity
-(`Core.behaviour_isRefinedBy_trans`) a correct result on stand-ins refines the
-behaviour on the poison. Within the budget a failure is a bug of native code
-on the vector it names. Past it, seeded runs may miss UB that a stand-in
-reaches, hence the run on the vector. The test is weaker than one on the
-stand-ins' own values: where the poison reaches a result, any value passes.
-
-Rejected: one stand-in, such as 0, which `poison` lowers to. Bugs gather at the
-boundary bit patterns. Also rejected: random stand-ins, whose failures would
-not reproduce.
+differential tests too (#123). How the harness runs native code on stand-ins
+in its place, and why that is sound, is on
+[testing-and-harness.md](testing-and-harness.md#poison-arguments).
 
 ## How fir-ref stays equal to the spec
 

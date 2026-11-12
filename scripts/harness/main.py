@@ -1,4 +1,5 @@
-"""The differential harness of #13 (ADR-2026-10-30-2049): it runs the corpus
+"""The differential harness of #13
+(docs/decisions/testing-and-harness.md#the-harness-program): it runs the corpus
 of `tests/fir/` on `fir-ref` and as native code from `funk build`.
 
 Usage: main.py --funk FUNK --fir-ref FIR_REF --generated DIR CORPUS

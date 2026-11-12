@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Builds funk and fir-ref and starts the fir explorer on this machine
-# (ADR-2026-11-08-1806). Usage: scripts/explorer.sh [--no-build] [--port N]
+# (docs/decisions/testing-and-harness.md#the-fir-explorer).
+# Usage: scripts/explorer.sh [--no-build] [--port N]
 # [--timeout SECONDS]. --no-build uses the tools already built.
 set -euo pipefail
 

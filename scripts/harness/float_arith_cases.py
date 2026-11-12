@@ -1,4 +1,5 @@
-"""Writes the corpus of #229's float arithmetic (ADR-2026-11-11-1803).
+"""Writes the corpus of #229's float arithmetic
+(docs/decisions/testing-and-harness-floats.md#the-arithmetic-corpus).
 
 Usage: python scripts/harness/float_arith_cases.py
        python scripts/harness/float_arith_cases.py --write

@@ -1,5 +1,5 @@
 //! What the fuzz targets of `fuzz/` and the property tests check of a text
-//! (#165, ADR-2026-11-08-2117).
+//! (#165, docs/decisions/testing-and-harness-generated.md#fuzzing).
 
 use crate::text::parse_bytes;
 use crate::{Module, Registry, parse, print, verify};

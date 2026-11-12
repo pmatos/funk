@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Runs fir-ref over fir texts (ADR-2026-10-30-1250). The pre-commit hooks
-# fir-ref-test and fir-round-trip call it, locally and in CI.
+# Runs fir-ref over fir texts
+# (docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
+# The pre-commit hooks fir-ref-test and fir-round-trip call it, locally and
+# in CI.
 #   test        Builds the Lean package, which runs the Lean tests, then
 #               checks print(parse(t)) == t on every canonical text of
 #               tests/fir/, in canonical/ and in llvm/, the modules ported

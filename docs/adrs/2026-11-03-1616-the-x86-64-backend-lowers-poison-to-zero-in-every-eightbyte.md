@@ -43,6 +43,6 @@ is written, so the backend knows it at compile time.
 
 - A native run cannot tell `poison` from `const 0`, so the coverage
   matrix counts its differential tests by what they run
-  (ADR-2026-11-03-1618).
+  ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-cells-of-poison)).
 - An optimizer (M1) may lower `poison` to anything, or fold it away,
   under the same rule.

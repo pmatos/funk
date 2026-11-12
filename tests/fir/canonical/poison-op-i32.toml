@@ -6,14 +6,14 @@
 # must refine fir-ref's outcome. Native code holds no poison: it gives
 # zero for one (ADR-2026-11-03-1616), and any value refines a poison
 # result, so these tests show that poison lowers and runs, not what it
-# gives (ADR-2026-11-03-1618). A function that freezes the poison gives
+# gives (ADR-2026-11-03-0557). A function that freezes the poison gives
 # whatever freeze chooses, and sub %f, %f gives 0 whatever it chose.
 # At i32 that choice is past the budget of 16 bits, so
 # @poison_freeze_sub declares its one result, 0, with a witness, and
 # @poison_freeze, whose results are every value, is interpreter-only.
 #
 # Most interpreter-only tests observe the poison
-# (ADR-2026-11-03-1618): fir-ref returns it alone, through add,
+# (ADR-2026-11-03-0557): fir-ref returns it alone, through add,
 # through select on the arm that chooses it, and beside a value; icmp
 # eq %p, %p is poison, not true; freeze chooses a value for it; and a
 # branch on it or a division by it is UB. @poison_unused,

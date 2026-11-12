@@ -2,8 +2,8 @@
 
 The corpus runner supplies function types and an adapter for tool runs; it
 does not coordinate witnesses, samples, poison stand-ins or rechecks.
-The rules remain those of ADR-2026-10-30-2135, ADR-2026-10-31-0003 and
-docs/decisions/fir-ref.md#poison-arguments, and for a generated run
+The rules remain those of ADR-2026-10-30-2135 and
+docs/decisions/testing-and-harness.md#poison-arguments, and for a generated run
 ADR-2026-11-08-2115. Process mechanics belong to `execution.py`.
 """
 
