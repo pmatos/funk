@@ -33,9 +33,7 @@ Tier: direction; area: validation
   broken function rule at the function's entry block, with its first op's
   location.
 - **Shared cases.** `tests/dialects/use-once.cases` is read by a use-once
-  toy dialect on each side, and is an input of the `FirTest` library in
-  `lean/lakefile.lean`, since Lake does not rebuild a module when a file it
-  includes changes.
+  toy dialect on each side (an `input_file` of `lean/lakefile.lean`).
 
 This refines the use-once hook of ADR-2026-10-29-2016.
 
