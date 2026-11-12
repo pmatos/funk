@@ -9,8 +9,9 @@
 //! results far below the smallest normal number, and results that
 //! overflow; for `frem` and `fmod`, operands far apart and quotients
 //! halfway between two integers. The host's `%` is C's `fmod`, and
-//! [`remainder`] builds IEEE 754's remainder from it exactly. A NaN result may be any NaN (ADR-2026-11-09-1549), so
-//! where the host gives a NaN the test asks only for a NaN.
+//! [`remainder`] builds IEEE 754's remainder from it exactly. A NaN result
+//! may be any NaN (ADR-2026-11-09-1549), so where the host gives a NaN the
+//! test asks only for a NaN.
 //!
 //! Each batch is one function that applies its op to constants and returns
 //! every result, so one build and one run check many cases.
@@ -18,7 +19,7 @@
 mod common;
 
 use common::{build, func, module, run, text};
-use funk_ir::dialects::core::spell_float;
+use funk_ir::dialects::core::{FLOAT_ARITH_OPS, spell_float};
 
 /// A float format the backend lowers, with the host's arithmetic on it.
 #[derive(Clone, Copy)]
@@ -166,9 +167,11 @@ fn hard(f: Format) -> Vec<u64> {
 
 /// The text of op `op`, with its attribute when it rounds.
 fn op_text(op: &str) -> String {
-    match op {
-        "fneg" | "fabs" | "frem" | "fmod" => op.to_string(),
-        _ => format!("{op} round(rne)"),
+    let rounds = FLOAT_ARITH_OPS.iter().any(|&(name, _, r)| name == op && r);
+    if rounds {
+        format!("{op} round(rne)")
+    } else {
+        op.to_string()
     }
 }
 
