@@ -1,0 +1,114 @@
+{
+  "removed": [
+    {
+      "file": "2026-10-30-1229-assembly-through-gnu-as-and-ld.md",
+      "now": "docs/decisions/x86-64-backend.md#assembly-and-linking",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-10-30-1230-spill-every-value.md",
+      "now": "docs/decisions/x86-64-backend.md#frames-and-slots",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1231-integer-widths-in-registers.md",
+      "now": "docs/decisions/x86-64-backend.md#values-and-widths",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1233-build-and-run-a-function.md",
+      "now": "docs/decisions/x86-64-backend-executable.md#running-one-function",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-10-31-0050-division-is-one-bare-sized-div.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#division",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-31-0215-select-is-one-cmov-on-bit-0.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#select",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-31-0334-blocks-keep-their-order-and-branches-jump-to-labels.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#branches",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-31-0335-block-arguments-are-one-parallel-move.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#block-arguments",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1021-a-funk-caller-extends-no-argument.md",
+      "now": "docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1102-a-frame-of-a-page-or-more-is-probed.md",
+      "now": "docs/decisions/x86-64-backend.md#stack-probes",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1132-a-run-s-stack-covers-its-calls.md",
+      "now": "docs/decisions/x86-64-backend-executable.md#the-runs-stack",
+      "commit": "6de9e3d20dda"
+    },
+    {
+      "file": "2026-11-02-1428-one-emitter-for-outgoing-funk-calls.md",
+      "now": "docs/decisions/x86-64-backend-abi.md#one-emitter-for-funk-calls",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#lowering-i128",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0108-an-i128-passes-in-two-registers-or-sixteen-aligned-bytes.md",
+      "now": "docs/decisions/x86-64-backend-abi.md#arguments",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0109-results-return-as-a-system-v-structure.md",
+      "now": "ADR-2026-10-30-1232",
+      "commit": "924a13bded83"
+    },
+    {
+      "file": "2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#division-at-i128",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0415-the-i128-division-routines-are-system-v-functions.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#division-at-i128",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1616-the-x86-64-backend-lowers-poison-to-zero-in-every-eightbyte.md",
+      "now": "docs/decisions/x86-64-backend.md#poison",
+      "commit": "6de9e3d20dda"
+    },
+    {
+      "file": "2026-11-10-1303-link-with-the-host-c-library-when-the-module-needs-it.md",
+      "now": "docs/decisions/x86-64-backend.md#linking-with-the-host-c-library",
+      "commit": "9129af691846"
+    },
+    {
+      "file": "2026-11-11-1019-no-caller-relies-on-an-unmarked-i1-result-being-0-or-1.md",
+      "now": "ADR-2026-10-30-1232",
+      "commit": "924a13bded83"
+    },
+    {
+      "file": "2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md",
+      "now": "docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers",
+      "commit": "f0aa94b68f98"
+    },
+    {
+      "file": "2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md",
+      "now": "docs/decisions/x86-64-backend-lowering.md#float-arithmetic",
+      "commit": "0d492b1d4d6e"
+    }
+  ]
+}

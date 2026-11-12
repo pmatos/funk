@@ -8,7 +8,7 @@ The check reads the files themselves, so each message gives the file, line
 and column, and it also covers Lean comments, which the document shows as
 code. A citation in a code span or a fenced code block is quoted, not cited,
 and is not checked: the document shows it as code, without a link. A
-citation of a deleted ADR, one with a row in `docs/adrs/removed.json`, fails
+citation of a deleted ADR, one with a row in `docs/adrs/removed/`, fails
 with where its rule lives now, as the `adr-citations` hook says it.
 -/
 
@@ -38,12 +38,12 @@ def sourceFiles (root : System.FilePath) : IO (Array String) := do
   let adrs ← filesUnder root "docs/adrs" (fun _ => true) (·.endsWith ".md")
   return (lean ++ spec ++ adrs).qsort (· < ·)
 
-/-- The file of the rows of deleted ADRs, relative to the repository. -/
-def removedFile : String := "docs/adrs/removed.json"
+/-- The directory of the tables of deleted ADRs, one per area, relative to the repository. -/
+def removedDir : String := "docs/adrs/removed"
 
 /--
-Each deleted ADR's id and where its rule lives now, from the text of
-`removed.json`. The `adr-ids` hook checks the rest of each row.
+Each deleted ADR's id and where its rule lives now, from the text of one
+removed table. The `adr-ids` hook checks the rest of each row.
 -/
 def parseRemoved (text : String) : Except String (Array (String × String)) := do
   let table ← Lean.Json.parse text
@@ -52,10 +52,21 @@ def parseRemoved (text : String) : Except String (Array (String × String)) := d
     let some id := adrIdOfFileName? file | throw s!"{file} is not an ADR file name"
     return (id, ← row.getObjValAs? String "now")
 
-/-- The rows of `removed.json` in the repository at `root`, or none when it is absent. -/
+/--
+The rows of the tables of `removedDir` in the repository at `root`, in the
+order of their names, or none when the directory is absent. The build reads
+the tables on disk, tracked or not; the `adr-ids` hook reads the tracked ones
+and fails on any other file under `removedDir`, so a commit's tables are the
+same on both sides.
+-/
 def loadRemoved (root : System.FilePath) : IO (Except String (Array (String × String))) := do
-  unless ← (root / removedFile).pathExists do return .ok #[]
-  return (parseRemoved (← IO.FS.readFile (root / removedFile))).mapError (s!"{removedFile}: {·}")
+  unless ← (root / removedDir).isDir do return .ok #[]
+  let mut rows := #[]
+  for file in (← filesUnder root removedDir (fun _ => true) (·.endsWith ".json")).qsort (· < ·) do
+    match parseRemoved (← IO.FS.readFile (root / file)) with
+    | .ok more => rows := rows ++ more
+    | .error e => return .error s!"{file}: {e}"
+  return .ok rows
 
 /--
 One message per citation in `text`, the contents of `file`, that names no ADR.
@@ -76,7 +87,7 @@ def checkText (known : String → Bool) (removed : String → Option String) (fi
 
 /--
 One message per citation in the spec's sources that names no ADR in `ids`, or
-that names a deleted ADR of `removed.json`.
+that names a deleted ADR of `removedDir`.
 -/
 def checkSources (root : System.FilePath) (ids : Array String) : IO (Array String) := do
   let (removed, loadErrors) := match ← loadRemoved root with

@@ -15,7 +15,7 @@ Tier: direction; area: process
   checked against those already on `main`. It fails on a name without one of
   the two forms (ASCII digits, a real date and time, a slug of lower-case
   words joined by hyphens), on two files with one id, and on an id that a row
-  of `docs/adrs/removed.json` holds. It cannot tell which ADR is newer, so it
+  of `docs/adrs/removed/` holds. It cannot tell which ADR is newer, so it
   accepts either form; review keeps the seconds form for a taken minute.
 - CI runs the hook in the `static` job, on each pull request's merge with
   `main`. A pull request merges only when it is up to date with `main`

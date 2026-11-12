@@ -285,15 +285,16 @@ per ADR: tier, area, title and what holds now, which is the ADR and every ADR
 that its `refined by` and `extended by` links reach. It links each ADR to its
 page. A status that does not start with `accepted` fails.
 
-A deleted ADR gets a row in `docs/adrs/removed.json`: its file, where its rule
-lives now, and the last commit on `main` that changed the file. Where the rule
-lives is an ADR, or a page section, `docs/decisions/PAGE.md#ANCHOR`. The index
-ends with these rows as its Removed table, each linking the old file at that
-commit.
+A deleted ADR gets a row in the table of its area,
+`docs/adrs/removed/AREA.json`: its file, where its rule lives now, and the last
+commit on `main` that changed the file. One table per area keeps each under the
+file-size budget. Where the rule lives is an ADR, or a page section,
+`docs/decisions/PAGE.md#ANCHOR`. The index ends with these rows as its Removed
+table, each linking the old file at that commit.
 
 The `adr-index` hook fails when the index is stale or an ADR has no tier and
 area. It also fails when no page of an ADR's own area cites it, and when a row
-of `removed.json` names an ADR, page or heading that does not exist.
+of a removed table names an ADR, page or heading that does not exist.
 
 ### ADR ids
 
@@ -314,7 +315,7 @@ The `adr-ids` hook, `scripts/check_adr_ids.py`, fails on a name that does not
 have one of the two forms. It needs ASCII digits, a real date and time, and a
 slug of lower-case words joined by hyphens. It also fails when two files share
 an id, and names every file with that id. And it fails when an ADR takes the
-id of a row of `removed.json`, since a removed id is never used again.
+id of a row of a removed table, since a removed id is never used again.
 
 The hook does not take pre-commit's file list. So a commit that adds one ADR is
 still checked against the ADRs already on `main`. It reads git's index, not the
@@ -347,8 +348,8 @@ its own sources
 ([spec-site.md](spec-site.md#the-adr-appendix-and-its-citations)).
 
 A citation of a removed ADR fails, and the message names where its rule lives
-now, from `removed.json`. The spec build reads the same file and fails the same
-way. A citation ends at its last digit, so it matches a whole id. Four or six digits
+now, from the removed tables. The spec build reads the same tables and fails
+the same way. A citation ends at its last digit, so it matches a whole id. Four or six digits
 after the date are an id, and any other number is malformed. A placeholder is
 not a citation. Code spans and fenced code blocks are blanked first, because
 code is quoted, not cited. The grammar does not read the date. A citation names
