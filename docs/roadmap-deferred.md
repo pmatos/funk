@@ -19,7 +19,7 @@ before the first step that does, as the table says.
 | S3 | Memory model (Foundational; G0: several memories and address spaces) | Decided: ADR-2026-11-09-1542 |
 | S5 | Floating point | Decided: ADR-2026-11-09-1549 |
 | S6 | Concurrency | M4 at the latest (C and C++ atomics) |
-| S8 | SMT equivalence checking (Foundational) | Before the first hand-written pass needs per-compile checks |
+| S8 | SMT equivalence checking (Foundational) | M2, before its first optimizer pass: [#341](https://github.com/pmatos/funk/issues/341) |
 | H4, H5 | Dialects and extensions (H4 Foundational; G0: extensions add types and attributes, not only ops) | Decided: ADR-2026-11-09-1543, ADR-2026-11-09-1544 |
 | H6 | Structured control flow | When a frontend or pass needs it |
 | H7 | Effect classes beyond "pure" and "call" (Foundational) | Decided: ADR-2026-11-09-1541 |
@@ -35,7 +35,7 @@ can come back without a break:
 | Left out of v0 | Likely needed by |
 | --- | --- |
 | Exceptions and unwinding | M4 (C++) |
-| Vectors and SIMD | M2 or M5, and M7 (SSE and AVX) |
+| Vectors and SIMD | M5 and M7 (SSE and AVX); not M2, as the human ruled on 2026-11-12 |
 | Contract ops (`assume`, `assert`, `requires`, `ensures`) | M3 (Vow) |
 | Garbage-collected or managed memory | A frontend that needs it |
 | Non-default FP rounding and FP exceptions | M4 or M5 |

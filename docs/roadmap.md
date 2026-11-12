@@ -263,6 +263,33 @@ pure ops (H7), and location propagation by the rewrite engine (H8). Each rule
 or pass is checked against the Lean semantics before it lands, and S8 must be
 decided before the first pass that depends on it.
 
+**Rulings for M2**, from the human on 2026-11-12
+([#164](https://github.com/pmatos/funk/issues/164#issuecomment-6820504273)):
+
+- M2 may start before M1 closes, as long as the foundations that each step
+  needs are in place.
+- The backend is checked by differential tests against `fir-ref`, on the
+  corpus and on random programs. A formal model of x86 waits for later.
+- Register allocation starts as linear scan, behind an interface that lets
+  other allocators be tried. funk writes its own allocator. The allocator,
+  scheduling and the optimizer live in generic crates, not in the x86 crate
+  (ADR-2026-10-30-1228).
+- CPU extensions come in through a `--cpu` flag, a few at a time. The default
+  stays baseline x86-64.
+- Vectors and SIMD are not part of M2.
+- Nothing is called proven unless it is. A Lean proof of a pass covers the
+  transformation, not the hand-written Rust that performs it. That Rust is
+  checked by tests and by S8's per-compile check
+  ([#341](https://github.com/pmatos/funk/issues/341)).
+
+**Done when** the register-allocating backend has replaced spill-everything
+for every op of M1, S8 is decided and its first stage checks every change the
+optimizer makes, every sub-issue of the epic is closed, and native
+results refine `fir-ref`'s on the whole corpus and on random programs, with CI
+running all of it. The bar is correctness
+only: M2 sets no target for the speed or size of the generated code, and
+optimization comes later.
+
 ### M3: Vow frontend
 
 A frontend for [Vow](https://github.com/vow-lang/vow) that lowers to fir, so

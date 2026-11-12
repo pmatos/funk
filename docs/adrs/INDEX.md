@@ -35,6 +35,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-10-30-0818](2026-10-30-0818-poison-propagation.md) | [semantics](../decisions/semantics.md) | Poison propagates unless an op says otherwise, and every op declares its poison class | this ADR, ADR-2026-11-02-1514, ADR-2026-11-02-1515, ADR-2026-11-03-1615, ADR-2026-11-05-1715 |
 | [ADR-2026-10-30-1030](2026-10-30-1030-rust-workspace-and-toolchain.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk's Rust code is one Cargo workspace on a pinned stable toolchain, checked by pre-commit hooks | this ADR, ADR-2026-11-05-1408, ADR-2026-11-09-1645 |
 | [ADR-2026-10-30-1146](2026-10-30-1146-generic-ops-and-registry.md) | [rust-ir-and-tools](../decisions/rust-ir-and-tools.md) | funk-ir holds ops as generic data and checks them through a registry of dialects, routed by each word's dialect prefix | this ADR, ADR-2026-11-09-1543, ADR-2026-11-10-1510, ADR-2026-11-10-2224 |
+| [ADR-2026-10-30-1228](2026-10-30-1228-x86-64-backend-crate.md) | [x86-64-backend](../decisions/x86-64-backend.md) | Each target is a crate of its own, and register allocation and passes live in generic crates | this ADR |
 | [ADR-2026-10-30-1232](2026-10-30-1232-funk-function-abi.md) | [x86-64-backend](../decisions/x86-64-backend.md) | A funk function is a System V AMD64 function, with a symbol made from its fir name | this ADR |
 | [ADR-2026-10-30-1329](2026-10-30-1329-adr-ids-are-unique.md) | [process](../decisions/process.md) | ADR ids are unique: a taken minute adds the seconds, and a hook checks it | this ADR |
 | [ADR-2026-10-30-1450](2026-10-30-1450-fir-ref-runs-proved-implementations.md) | [fir-ref](../decisions/fir-ref.md) | `fir-ref` runs implementations of the spec's functions that are proved equal to them and registered with `@[csimp]` | this ADR |
@@ -118,7 +119,6 @@ The last column is what holds now: the ADR and every ADR that its
 
 | ADR | Area | Subject | Holds now |
 | --- | --- | --- | --- |
-| [ADR-2026-10-30-1228](2026-10-30-1228-x86-64-backend-crate.md) | [x86-64-backend](../decisions/x86-64-backend.md) | The x86-64 backend is the crate funk-x86-64, with one lowering file per op family | this ADR |
 | [ADR-2026-11-02-1350](2026-11-02-1350-callee-congruence-runs-the-new-callee-in-the-new-module.md) | [semantics](../decisions/semantics.md) | Congruence in the callee compares the new callee in the new module with the old in the old | this ADR |
 | [ADR-2026-11-02-1426](2026-11-02-1426-general-congruence-asks-for-finitely-many-argument-vectors.md) | [semantics](../decisions/semantics.md) | The general congruence theorem asks for finitely many argument vectors | this ADR |
 | [ADR-2026-11-05-1715](2026-11-05-1715-refinement-asks-monotonicity-only-of-the-ops-a-run-reaches.md) | [semantics](../decisions/semantics.md) | Refinement asks monotonicity only of the ops a run can reach | this ADR |
