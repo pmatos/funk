@@ -2,9 +2,10 @@
 
 This page continues [rust-ir-and-tools.md](rust-ir-and-tools.md). It says what
 the `funk` command does: its commands, verdicts and exit statuses, its report,
-and how it uses its standard streams. These are rules of one crate, `funk`, so
-they have no ADR. The harness and `fir-ref` read the verdicts and the JSON
-report, so this page is that interface's record (ADR-2026-11-09-1610).
+and how it uses its standard streams. `fir-ref` follows its verdicts, exit
+statuses and JSON report (ADR-2026-10-30-1425, ADR-2026-10-30-1741), and the
+harness reads them, so this page is that interface's record
+(ADR-2026-11-09-1610).
 
 ## Commands and verdicts
 
@@ -13,8 +14,8 @@ funk has four commands: `funk fmt [--check | --write] [--json] FILE...`,
 `funk asm [--json] FILE`. `fmt` parses and prints, and does not validate: every
 module that parses has a canonical form, since the printer is the formatter
 (ADR-2026-10-29-2014). `verify` parses and validates. `build` also lowers and
-writes outputs. `asm` lowers and writes no file. For `fmt`, `verify` and
-`build`, `-` is standard input.
+writes outputs. `asm` lowers and writes no file. For every command, `-` is
+standard input; it may be given once, and `fmt --write -` is a usage error.
 
 Each file gets one verdict: `accepted`, `parse-error`, `validation-error` or
 `io-error`. `build` and `asm` add `unsupported` and `tool-error`.

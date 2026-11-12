@@ -6,8 +6,8 @@ Tier: direction; area: rust-ir-and-tools
 ## Decision
 
 - **An op is data.** `funk_ir::Op` has, in the spec's order, `results`,
-  `name`, `attrs`, `operands`, `succs`, `regions` and `loc`. The name is a
-  string; attributes and types are generic terms, as the text writes them.
+  `name`, `attrs`, `operands`, `succs`, `regions` and `loc`; `succs` is the
+  part that G0's list (ADR-2026-10-29-2016) lacked. The name is a string; attributes and types are generic terms, as the text writes them.
   `loc` is a `LocRef`, so no op exists without a location. `Item` follows
   the spec's items and is `#[non_exhaustive]`.
 - **A registry of dialects.** A `Dialect` gives `OpSpec`s, one per op name,

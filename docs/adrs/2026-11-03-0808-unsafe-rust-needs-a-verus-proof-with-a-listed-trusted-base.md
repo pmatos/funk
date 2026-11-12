@@ -13,10 +13,11 @@ Tier: direction; area: rust-ir-and-tools
   foreign function, a link section or the value of a standard-library
   atomic, is trusted: Verus assumes its specification. Each trusted item is
   marked TRUSTED in the code with its specification, and this ADR lists it.
-- **The texts are pinned.** A check keeps a digest of the tokens of each
-  trusted item, of the specification and of the function proved against it,
-  and fails when a text no longer has its digest. This ADR lists every
-  digest, and the check reads them from this file.
+- **The texts are pinned.** Where a verified module exists, a check keeps a
+  digest of the tokens of each trusted item, of the specification and of the
+  function proved against it, and fails when a text no longer has its
+  digest. This ADR then lists every digest, and the check reads them from
+  this file.
 - **What the check guards against.** It catches careless or well-meaning
   changes: an `unsafe` block, an `assume` left from a proof in progress, a
   trusted item's specification strengthened to get a proof through. Review

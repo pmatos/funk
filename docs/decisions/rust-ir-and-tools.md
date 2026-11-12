@@ -168,10 +168,11 @@ dialects whose types its ops may take. Registering rejects a dependency that
 is not registered yet (`MissingDependency`), so dependencies form no cycle,
 and `Registry::dependencies` gives them back. The core depends on nothing, and
 the test dialects depend on the core. A module names its dialect set
-([text-format.md](text-format.md#the-dialect-set)). Nothing yet checks that a
-dialect's ops take only types of the dialects it depends on. The set is to use
-the dependencies, and no check does yet (ADR-2026-10-30-1146). The rest of the
-design is in semantics-m1-design.md.
+([text-format.md](text-format.md#the-dialect-set)), which is to use the
+dependencies. Nothing yet checks that a dialect's ops take only types of the
+dialects it depends on, or that a module's dialect set holds what its dialects
+depend on (ADR-2026-10-30-1146). The rest of the design is in
+semantics-m1-design.md.
 
 ### Nesting
 
@@ -214,7 +215,9 @@ Since `Attr` and `Region` implement `Drop`, code cannot move a field out of an
 owned one. It borrows, clones or uses `std::mem::take`. Code in `funk-ir` walks
 with `walk` or `Region::parts`. Other crates walk the public fields with an
 explicit stack of their own. A walk that recurses once per level is a bug
-anywhere. Memory bounds depth, not the stack. The canonical text of nested
+anywhere. The same holds for calls: the pass that summarizes each function's
+effects walks the call graph with its path on the heap, so a long chain of calls
+takes no stack per call (ADR-2026-11-10-2108). Memory bounds depth, not the stack. The canonical text of nested
 regions grows with the square of their depth, so `funk fmt` streams it
 ([rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#funk-fmt)).
 
@@ -224,12 +227,14 @@ A core `const` must fit its type, and a width goes up to 16,777,215 bits
 (ADR-2026-11-03-1000). `funk-ir` holds a constant as its decimal spelling.
 `Int::fits_signed` decides most digit counts from bounds on log2(10). When the
 count does not decide, it computes `2^(w-1)` in decimal and compares it with the
-magnitude, digit count first, then digit by digit. The digits are never
-converted to binary, which was quadratic: minutes per constant (#37).
+magnitude, digit count first, then digit by digit: below fits, equal fits only
+when negative, above does not. The digits are never converted to binary, which
+was quadratic: minutes per constant (#37). `Nat::from_decimal` stays quadratic,
+so nothing on the path that checks a constant may use it.
 
 `2^k` is built by squaring and doubling, in base-10^5 limbs, in
 `crates/funk-ir/src/ir/int/decimal.rs`. Each thread keeps the last power it
-built in `LAST_POW2`. Squaring uses an NTT over `2^64 - 2^32 + 1`, in
+built in `LAST_POW2`, about 8 MB at `i16777215`. Squaring uses an NTT over `2^64 - 2^32 + 1`, in
 `ir/int/ntt.rs`, with no `unsafe`. Every `u32` width is exact, and an `assert!`
 guards the bound. Correctness rests on tests against the quadratic code and on
 the coefficient bound. A change of base must recheck that bound. Rejected:
