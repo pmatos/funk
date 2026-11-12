@@ -78,3 +78,26 @@ input_file floatTextCases where
 lean_lib FirTest where
   needs := #[`@/useOnceCases, `@/effectCases, `@/effectSummaryCases, `@/dialectSetCases,
     `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases, `@/floatTextCases]
+
+/-- The paths of the package's `.lean` files, outside hidden directories such
+as `.lake`, sorted, one per line. `#check_axioms` in `FirCheck` reads the same
+list from the disk, and Lake would not see that read by itself. Only the
+paths are traced, so adding, removing or renaming a file reruns the check, and
+editing one does not rerun it by this trace. -/
+target sourcePaths pkg : String := Job.async do
+  let dir := pkg.dir
+  let hidden (p : System.FilePath) := (p.fileName.getD "").startsWith "."
+  let files ← dir.walkDir fun p => pure (p == dir || !hidden p)
+  let depth := dir.components.length
+  let paths := files.filter (·.extension == some "lean") |>.map fun file =>
+    "/".intercalate (file.components.drop depth)
+  let list := "\n".intercalate (paths.qsort (· < ·)).toList
+  addPureTrace list "the paths of the Lean sources"
+  return list
+
+/-- The check that every declaration of `lean/` is trusted and every source
+file is imported (ADR-2026-10-30-1452). It is a library of its own so that
+only its one module reruns when the list of files changes. -/
+@[default_target]
+lean_lib FirCheck where
+  needs := #[`@/sourcePaths]

@@ -278,7 +278,9 @@ Rejected: `lake test` with a test driver, a second Lake entry point to guard.
 Also rejected: tests at elaboration time with file I/O, which would depend on
 Lake's working directory and would not run the `fir-ref` binary.
 
-`fir-round-trip` needs both toolchains. `lean/.lake` is not cached in CI.
+`fir-round-trip` needs both toolchains. On a pull request, CI restores
+`lean/.lake/build` from `main` first
+([process-ci.md](process-ci.md#lean-builds)).
 
 The Lean tests that mix core and toy ops use the spec's sum of dialects,
 `CoreDialect ⊞ e` (ADR-2026-11-09-2306). The toy, use-once and probe test

@@ -5,7 +5,8 @@ Tier: direction; area: spec-site
 
 ## Decision
 
-- The root of `FirTest` imports every module of `lean/` and runs
+- The root of `FirTest` imports every module of `lean/`. The library
+  `FirCheck`, one module that imports it, runs
   `#check_axioms Fir FirRef FirTest` as its last command. It fails, naming
   each declaration, on one that:
   - depends on an axiom other than `propext`, `Classical.choice`,
@@ -14,8 +15,8 @@ Tier: direction; area: spec-site
     what `partial` makes;
   - has an `implemented_by` or an `extern` attribute.
 
-  It also fails when a `.lean` file of `lean/` is not imported by the root
-  or lies outside the roots it names, when a root has no declaration, and
+  It also fails when a `.lean` file of `lean/`, other than its own, is not
+  imported by it or lies outside the roots it names, when a root has no declaration, and
   when any text follows it.
 - An axiom counts as native evaluation only when its claim is `e = true`
   for a closed `e : Bool` and the check runs `e` again and gets `true`

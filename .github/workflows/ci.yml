@@ -250,15 +250,29 @@ jobs:
           key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
       - name: Install the Lean toolchain
         run: elan toolchain install "$(cat lean/lean-toolchain)"
+      # A pull request restores lean/ and docs/spec/ as main built them, and
+      # Lake rebuilds what changed. main builds from scratch and saves
+      # (ADR-2026-11-12-1430). The cross job reuses this step by its anchor.
+      - &lean-build
+        name: Restore the Lean builds from main
+        id: lean-build
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          KEY: lean-build-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'lean/lake*', 'docs/spec/lake*') }}-
+        with:
+          path: |
+            lean/.lake/build
+            docs/spec/.lake/build
+          key: ${{ env.KEY }}
+          restore-keys: ${{ env.KEY }}
+          lookup-only: ${{ github.event_name != 'pull_request' }}
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run fir-spec --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run fir-ref-test --all-files --verbose --show-diff-on-failure
       # Saved even when a hook fails, so the next run need not rebuild Verso,
       # but only once Verso is built and never from a cancelled run: a partial
-      # cache would take the key. docs/spec/.lake/build is never cached, so
-      # the document is always rebuilt from its sources. Only this job, which
-      # builds Verso, saves it.
+      # cache would take the key. Only this job, which builds Verso, saves it.
       - name: Save the Lean toolchain and Verso build
         if: >-
           !cancelled() && steps.lean-cache.outputs.cache-hit != 'true' &&
@@ -269,9 +283,18 @@ jobs:
             ~/.elan/toolchains
             docs/spec/.lake/packages
           key: ${{ steps.lean-cache.outputs.cache-primary-key }}
+      # Only main saves, when every hook passed, keyed by its commit.
+      - name: Save the Lean builds
+        if: success() && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            lean/.lake/build
+            docs/spec/.lake/build
+          key: ${{ steps.lean-build.outputs.cache-primary-key }}${{ github.sha }}
 
   # The checks that run Rust and Lean together: they build both fir-ref and
-  # funk, and lean/ is built here again, beside the lean job.
+  # funk, and Lake builds lean/ here again, beside the lean job.
   cross:
     name: Cross-language suite
     runs-on: ubuntu-26.04
@@ -310,6 +333,8 @@ jobs:
           key: lean-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'docs/spec/lake-manifest.json') }}
       - name: Install the Lean toolchain
         run: elan toolchain install "$(cat lean/lean-toolchain)"
+      # The lean job's step, by its YAML anchor.
+      - *lean-build
       # Copied from the rust job, which saves the rustup installer; change
       # both together.
       - name: Restore the rustup installer

@@ -113,6 +113,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-11-1709](2026-11-11-1709-a-pointer-type-is-written-ptr-or-ptr-n.md) | [text-format](../decisions/text-format.md) | A pointer type is written ptr for the default memory, or ptr(N) for memory N | this ADR |
 | [ADR-2026-11-11-1800](2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md) | [semantics](../decisions/semantics.md) | Float arithmetic runs Lean's model, and a NaN result is any NaN, chosen by sign and mantissa | this ADR |
 | [ADR-2026-11-11-1801](2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md) | [text-format](../decisions/text-format.md) | A float op that rounds is written with round(rne), and no other mode decodes | this ADR |
+| [ADR-2026-11-12-1430](2026-11-12-1430-pull-requests-reuse-main-s-lean-builds.md) | [process](../decisions/process.md) | Pull requests reuse main's Lean builds, and main builds them from scratch | this ADR |
 
 ## Implementation
 

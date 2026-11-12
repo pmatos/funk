@@ -74,9 +74,6 @@ import FirTest.EquivNsw
 
 /-!
 The Lean tests. Building this library runs their checks. This root module
-imports every module of `lean/`, and its last command checks that each of
-their declarations, and each of its own, is trusted (ADR-2026-10-30-1452).
-Nothing may follow that command, since the check would not see it.
+imports every module of `lean/`, so that `FirCheck`, which imports it, can
+check that each of their declarations is trusted (ADR-2026-10-30-1452).
 -/
-
-#check_axioms Fir FirRef FirTest
