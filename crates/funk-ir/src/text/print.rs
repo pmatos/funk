@@ -18,8 +18,15 @@ use std::fmt::{self, Display, Write};
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
 use crate::ir::{
-    Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, Module, Op, Part, Succ, Type,
+    Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, MemLayout, Module, Op, Part,
+    Succ, Type,
 };
+
+impl Display for MemLayout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_type())
+    }
+}
 
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -253,6 +260,15 @@ fn write_dialects(out: &mut impl Write, names: &[String], n: usize) -> fmt::Resu
     writeln!(out, "dialects {}\n", Commas(names))
 }
 
+/// A data layout, `layout` and its entries separated by commas, then an
+/// empty line, or nothing when it is empty.
+fn write_layout(out: &mut impl Write, layout: &[MemLayout]) -> fmt::Result {
+    if layout.is_empty() {
+        return Ok(());
+    }
+    writeln!(out, "layout {}\n", Commas(layout))
+}
+
 /// Items at indentation `n`, each followed by an empty line. A nested
 /// module's body is two spaces deeper than its `module` line, and its `}` at
 /// that line's indentation (ADR-2026-11-10-1510). Modules nest to any depth,
@@ -301,6 +317,7 @@ fn write_locs(out: &mut impl Write, t: &LocTable) -> fmt::Result {
 /// of `out`, which a sink may return to end the text early.
 pub fn write_module(out: &mut impl Write, m: &Module) -> fmt::Result {
     write_dialects(out, &m.dialects, 0)?;
+    write_layout(out, &m.layout)?;
     write_items(out, &m.items, 0)?;
     write_locs(out, &m.locs)
 }

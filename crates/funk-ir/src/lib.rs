@@ -38,8 +38,8 @@ pub mod verify;
 
 pub use effects::{Effects, MemSet};
 pub use ir::{
-    Attr, Block, Def, DialectItem, Func, FuncType, Int, Item, LocRef, LocTable, Location, Module,
-    NestedModule, Op, Region, Succ, SymbolTable, Type,
+    Attr, Block, ByteOrder, Def, DialectItem, Func, FuncType, Int, Item, LocRef, LocTable,
+    Location, MemLayout, Module, NestedModule, Op, Region, Succ, SymbolTable, Type,
 };
 pub use registry::{
     Dialect, FuncContext, FuncSpec, ItemKindSpec, OpContext, OpShape, OpSpec, OpTypes,

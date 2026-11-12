@@ -10,8 +10,9 @@ the ADR is fixed or deleted (ADR-2026-11-09-1610).
 run in the state layer over the tree of choices, from the empty memories,
 with the memories dropped at the end of each path. Each mode takes the unit
 width of each memory first. `fir-ref` names the core's memories by themselves,
-and `FirRef.coreUnit` gives their widths; the core has no memory yet, so it
-is the empty function until the data layout lands. The core's semantics in the
+and `FirRef.coreUnit` gives their widths; no core op names a memory yet, so
+it is the empty function until stage 4 of #231 gives the core's memories
+the widths of the module's data layout (ADR-2026-11-12-1821). The core's semantics in the
 layer over the tree lifts its rules in the tree, as its semantics with memory
 lifts its rules in the set monad (`DialectMemDenote.ofSetM`), and
 `Core.memMapsDenote` ties the two at every naming.

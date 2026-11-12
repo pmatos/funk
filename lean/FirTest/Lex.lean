@@ -49,7 +49,7 @@ def tricky : Module CoreDialect where
     (4294967295, .range "f\t\u202e.c" 4294967295 0 1 4294967295)]
 
 #guard lexesToTokens Example.sumModule && lexesToTokens tricky
-#guard lexesToTokens (nested 3) && lexesToTokens (Module.mk (d := CoreDialect) [] [] [])
+#guard lexesToTokens (nested 3) && lexesToTokens (Module.mk (d := CoreDialect) [] [] [] [])
 #guard tricky.tokens.length > 100
 
 -- Each token's spelling lexes to the token alone.
@@ -60,7 +60,7 @@ def tricky : Module CoreDialect where
 
 -- Tokens that cannot be written do not lex back: an empty value name, a
 -- label that is not a name, and a location reference of `2^32`.
-#guard !lexesToTokens (Module.mk (d := CoreDialect) []
+#guard !lexesToTokens (Module.mk (d := CoreDialect) [] []
   [.func ⟨"f", [], [], ⟨none, [⟨"a b", [], [op [("", i 8)] (.const 8 0) [] 0]⟩]⟩⟩] [])
 #guard !lexesTo (Tok.locRef 4294967296).spell [.locRef 4294967296]
 

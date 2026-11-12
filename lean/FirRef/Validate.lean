@@ -157,11 +157,28 @@ def tableProblems (held : Std.HashSet LocRef) (t : SymbolTable d) : List Problem
 
 @[csimp] theorem problems_eq_tableProblems : @SymbolTable.problems = @tableProblems := rfl
 
-/-- `Module.problems`, compiled after `problems_eq_tableProblems` and
-`tables_eq_moduleTables`. -/
+/-- `Func.types`, compiled after `allBlocks_eq_allBlocks`: the check of the
+memories that a module's types name lists each function's types, and the
+spec's code of `Func.types` calls the spec's walk. -/
+def funcTypes (f : Func d) : List d.Ty :=
+  f.results ++ (f.params ++ f.allBlocks.flatMap Block.defs).map (·.2)
+
+@[csimp] theorem types_eq_funcTypes : @Func.types = @funcTypes := rfl
+
+/-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes`. -/
+def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
+  t.funcs.filterMap (fun f => memoryProblem f.name (l.missing f.types)) ++
+  t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types))
+
+@[csimp] theorem memoryProblems_eq_tableMemoryProblems :
+    @SymbolTable.memoryProblems = @tableMemoryProblems := rfl
+
+/-- `Module.problems`, compiled after `problems_eq_tableProblems`,
+`memoryProblems_eq_tableMemoryProblems` and `tables_eq_moduleTables`. -/
 def moduleProblems (m : Module d) : List Problem :=
   let held := Std.HashSet.ofList (m.locs.map (·.1))
-  m.locs.problems ++ m.tables.flatMap (·.problems held)
+  m.locs.problems ++ m.tables.flatMap (·.problems held) ++ m.layout.problems ++
+    m.tables.flatMap (·.memoryProblems m.layout)
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
 

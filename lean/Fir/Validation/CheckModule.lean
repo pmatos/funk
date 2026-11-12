@@ -1,10 +1,12 @@
 import Fir.Validation.CheckFuncs
+import Fir.Validation.CheckLayout
 
 /-!
 The check of a module follows the rule of a valid module: its location
 table, then each of its symbol tables, its own and that of each nested
 module: the symbols of its items, each function, in the context of the
-table, each item of a dialect's kind, then its dialect set. It builds the
+table, each item of a dialect's kind, then its dialect set; then its data
+layout, and the memories that each table's types name. It builds the
 set of the module's location references once, and each table's symbols
 once, as hash tables, and every function looks them up.
 
@@ -216,17 +218,20 @@ theorem SymbolTable.problems_eq_nil_iff (keys : List LocRef) (t : SymbolTable d)
     fun ⟨a, b, i, c, e⟩ => ⟨⟨⟨⟨a, b⟩, i⟩, c⟩, e⟩⟩
 
 /-- The problems of a module: those of its location table, then those of
-each of its symbol tables, in order. -/
+each of its symbol tables, in order, then those of its data layout, then
+those of the memories that each table's types name. -/
 def Module.problems (m : Module d) : List Problem :=
   let held := Std.HashSet.ofList (m.locs.map (·.1))
-  m.locs.problems ++ m.tables.flatMap (·.problems held)
+  m.locs.problems ++ m.tables.flatMap (·.problems held) ++ m.layout.problems ++
+    m.tables.flatMap (·.memoryProblems m.layout)
 
 /-- The validation check decides `Module.Valid`: a module has no problems
 exactly when it is valid. -/
 theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid := by
   simp only [Module.problems, List.append_eq_nil_iff, LocTable.problems_eq_nil,
-    List.flatMap_eq_nil_iff, SymbolTable.problems_eq_nil_iff]
-  exact ⟨fun ⟨a, b⟩ => ⟨a, b⟩, fun ⟨a, b⟩ => ⟨a, b⟩⟩
+    List.flatMap_eq_nil_iff, SymbolTable.problems_eq_nil_iff, DataLayout.problems_eq_nil,
+    SymbolTable.memoryProblems_eq_nil]
+  exact ⟨fun ⟨⟨⟨a, b⟩, c⟩, e⟩ => ⟨a, b, c, e⟩, fun ⟨a, b, c, e⟩ => ⟨⟨⟨a, b⟩, c⟩, e⟩⟩
 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 

@@ -99,21 +99,24 @@ def readLocs (ts : List Token) : Read LocTable ts := do
 /-!
 # A module
 
-A module is its dialect set, its items, then its location table, then the
-end of the text. The reader of a dialect set, with the readers of items,
-reads the set. A module that names no dialect has no set in its text, and
-the word `dialects` is no item's kind.
+A module is its dialect set, its data layout, its items, then its location
+table, then the end of the text. The reader of a dialect set, with the
+readers of items, reads the set, and the reader of a layout its entries. A
+module that names no dialect has no set in its text, one with the empty
+layout has no layout, and the words `dialects` and `layout` are no item's
+kind.
 -/
 
 /-- Reads a module from its tokens. -/
 def readModule (ts : List Token) : Except ParseError SModule := do
   let (dialects, a₀) ← readDialects ts
-  let (items, a) ← readItems true a₀.1
+  let (layout, a₁) ← readLayout a₀.1
+  let (items, a) ← readItems true a₁.1
   match a.1 with
   | ts'@(⟨.word "locs", _⟩ :: _) => do
     let (locs, b) ← readLocs ts'
     let ((), _) ← expect .eof "the end of the text after the location table" b.1
-    pure ⟨dialects, items, locs⟩
+    pure ⟨dialects, layout, items, locs⟩
   | ts' => fail ts' "an item or the location table, `locs { ... }`"
 
 end Fir.Text

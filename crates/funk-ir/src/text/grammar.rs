@@ -60,6 +60,7 @@ impl<'t> Parser<'t> {
 
     fn module(&mut self) -> Result<SModule, ParseError> {
         let dialects = self.dialects()?;
+        let layout = self.layout()?;
         let mut items = Vec::new();
         loop {
             match self.peek() {
@@ -72,6 +73,7 @@ impl<'t> Parser<'t> {
         self.expect(&Tok::Eof, "the end of the text after the location table")?;
         Ok(SModule {
             dialects,
+            layout,
             items,
             locs,
         })
@@ -91,6 +93,23 @@ impl<'t> Parser<'t> {
             }
         }
         Ok(names)
+    }
+
+    /// `layout ::= 'layout' type (',' type)*`, the data layout that follows a
+    /// module's dialect set, or none. Each entry is read as a type, and
+    /// decoding says whether it is an entry.
+    fn layout(&mut self) -> Result<Vec<(Type, TextPos)>, ParseError> {
+        let mut entries = Vec::new();
+        if matches!(self.peek(), Tok::Word(w) if w == "layout") {
+            self.advance();
+            loop {
+                entries.push(self.ty()?);
+                if !self.eat(&Tok::Comma) {
+                    break;
+                }
+            }
+        }
+        Ok(entries)
     }
 
     /// Reads the rest of the text, and returns its first error in the

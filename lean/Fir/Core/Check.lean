@@ -47,7 +47,7 @@ theorem deadBlock_problems {lk : Lookup CoreDialect} {ctx : ModuleContext CoreDi
   fun e => deadBlock_rejected ctx ((Func.problems_eq_nil h).mp e)
 
 /-- `deadBlock` alone in a module whose location table has `@0`. -/
-def deadModule : Module CoreDialect := ⟨[], [.func deadBlock], [(0, .unknown)]⟩
+def deadModule : Module CoreDialect := ⟨[], [], [.func deadBlock], [(0, .unknown)]⟩
 
 #guard deadModule.problems ==
   [{ message := "block ^dead is not reachable from the entry", func := some "f",

@@ -14,8 +14,9 @@ of a module gives the same module with a new body in place of the body of
 types, and every other function keeps its body. A caller reaches a callee
 only by its symbol (ADR-2026-10-29-2012), so this replaces the callee
 `@g` for every caller at once. The symbol table, and so the context of
-validation, stays the same: the new module is valid when the old one is
-and the new function is valid in that context.
+validation, stays the same, and so do the dialect set and the data layout:
+the new module is valid when the old one is and the new function is valid
+in that context, with its types naming memories that the layout declares.
 
 _The statement._ In a module whose symbols are unique, as they are in
 every valid module, let `@g` be a function of the module, and replace its
@@ -97,7 +98,7 @@ def Item.replaceBody (s : Name) (b : Region d) : Item d → Item d
 /-- The module `M`, with the body `b` in place of the body of its function
 whose symbol is `s`: every other part of it is unchanged. -/
 def Module.replaceBody (M : Module d) (s : Name) (b : Region d) : Module d :=
-  ⟨M.dialects, M.items.map (Item.replaceBody s b), M.locs⟩
+  ⟨M.dialects, M.layout, M.items.map (Item.replaceBody s b), M.locs⟩
 
 /-- The functions of `M` with a body replaced are those of `M`, each with
 its body replaced when its symbol is `s`. -/
@@ -179,11 +180,29 @@ variable [DialectSignature d] [DialectValidation d]
 
 /-- A valid module with a body replaced is valid when its function `@s`
 with the new body is valid in the module's context, which the replacement
-keeps. -/
+keeps, and the module's layout declares the memories of its types. -/
 theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : Region d}
-    (h : ∀ g ∈ M.funcs, g.name = s → ({ g with body := b } : Func d).Valid M.context) :
+    (h : ∀ g ∈ M.funcs, g.name = s → ({ g with body := b } : Func d).Valid M.context)
+    (hm : ∀ g ∈ M.funcs, g.name = s →
+      ∀ ty ∈ ({ g with body := b } : Func d).types, M.layout.HasMemoryOf ty) :
     (M.replaceBody s b).Valid := by
-  refine ⟨hM.locs, fun t ht => ?_⟩
+  refine ⟨hM.locs, fun t ht => ?_, hM.layout, fun t ht => ?_⟩
+  rotate_left
+  · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
+    rcases ht with rfl | ht
+    · refine ⟨fun f hf => ?_, fun i hi => ?_⟩
+      · have hf' : f ∈ (M.replaceBody s b).funcs := hf
+        rw [Module.funcs_replaceBody] at hf'
+        obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
+        by_cases hs : g.name = s
+        · rw [Func.replaceBody_of_eq hs]
+          exact hm g hg hs
+        · rw [Func.replaceBody_of_ne hs]
+          exact (hM.memories _ (List.mem_cons_self ..)).funcs g hg
+      · have hi' : i ∈ (M.replaceBody s b).table.dialectItems := hi
+        rw [Module.dialectItems_replaceBody] at hi'
+        exact (hM.memories _ (List.mem_cons_self ..)).dialectItems i hi'
+    · exact hM.memories t (List.mem_cons_of_mem _ ht)
   simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
   rcases ht with rfl | ht
   · refine ⟨?_, fun f hf => ?_, fun i hi => ?_, hM.dialectNames, hM.dialectsUnique⟩

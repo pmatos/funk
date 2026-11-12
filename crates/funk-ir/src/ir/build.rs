@@ -29,6 +29,7 @@
 //! ```
 
 use super::attr::{Attr, Type};
+use super::layout::MemLayout;
 use super::location::LocRef;
 use super::module::{Block, Def, Func, Item, Module, Op, Region, Succ};
 
@@ -154,6 +155,12 @@ impl Module {
     /// Names the dialect `name` at the end of the dialect set.
     pub fn dialect(mut self, name: impl Into<String>) -> Module {
         self.dialects.push(name.into());
+        self
+    }
+
+    /// Declares a memory at the end of the data layout.
+    pub fn memory(mut self, entry: MemLayout) -> Module {
+        self.layout.push(entry);
         self
     }
 

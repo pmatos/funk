@@ -75,6 +75,11 @@ attribute, since it would change every M0 text; the set in parentheses,
 unknown word at parse time, since a builder or a pass can make a module that
 no text wrote (ADR-2026-11-10-1306).
 
+The data layout follows the dialect set, on a line of its own that starts
+with the word `layout`, and a module with the empty layout writes none:
+[text-format-layout.md](text-format-layout.md) gives its spelling and rules
+(ADR-2026-11-12-1821).
+
 ## Nested modules
 
 A `module` item is a module nested in another: `module @dev() { ... }`, with
@@ -166,7 +171,8 @@ are unchanged. `ptr<N>` of another memory is written `ptr(N)`, the grammar's
 applied form, such as `ptr(1)`. `ptr(0)` does not decode, so each pointer type
 has one spelling, and neither does a negative memory, one above 16,777,215
 (LLVM's bound on address spaces), `ptr()` or another argument list. Whether
-the module has memory `N` is validation's rule. A dialect that adds memories
+the module has memory `N` is validation's rule: its data layout must declare
+`N` ([text-format-layout.md](text-format-layout.md#valid-layouts)). A dialect that adds memories
 names their pointers in its own types; `ptr(N)` is the core's
 (ADR-2026-11-11-1709). Rejected: `ptr<N>` in text, for the reason
 `float<e,m>` was; `ptr(0)` as a second spelling of `ptr`; and rejecting an
@@ -233,9 +239,10 @@ and hexadecimal for every value, which the human did not rule
 `ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:
 `%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-09-1549).
 
-Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
-has one attribute, `round(rne)`, in the applied form:
-`%s: f32 = fadd round(rne) %a, %b`. `fneg` and `fabs` do not round and have
+Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fma`,
+`sitofp` and `uitofp`, has one attribute, `round(rne)`, in the applied form:
+`%s: f32 = fadd round(rne) %a, %b`. `sitofp` and `uitofp` take an integer of
+any width to a float of any format, and no other pair of types decodes (#241). `fneg` and `fabs` do not round and have
 none. Any other attribute does not decode, so a missing mode, `round(rtz)`, the
 bare word `rne`, two attributes and `fneg round(rne)` are parse errors. The op
 carries no mode, since M1 has one; a later mode adds a decoding and a field
@@ -253,13 +260,6 @@ decode, as `fadd` on two types does not, so validation has no rule for it.
 Rejected: one name for each direction, which the types already tell apart, and
 any pair of widths decoding with validation rejecting the wrong ones, as for
 `zext`, which gives the spec an op instance that no program may hold.
-
-`sitofp` and `uitofp` round, so each has the one attribute `round(rne)`, as the
-float arithmetic does: `%f: f32 = sitofp round(rne) %i`. They take one value of
-an integer type of any width and give one of a float type of any format; any
-other attribute or pair of types does not decode, so validation has no rule of
-its own for them (#241). Rejected: no attribute, as LLVM writes them, which
-would make them the one op that rounds without saying how.
 
 Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
 whether a wrong rounding mode stays a parse error, as built, or is read and

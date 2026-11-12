@@ -136,6 +136,14 @@ pub trait TypeSpec: Send + Sync {
     /// What the dialect says about `ty`, or `None` if `ty` is not one of its
     /// types.
     fn check(&self, ty: &Type) -> Option<TypeCheck>;
+
+    /// The memory that `ty` points into, by its number in the module's
+    /// data layout, if `ty` is a pointer type of the dialect
+    /// (`DialectValidation.tyMemory`). A dialect without pointer types
+    /// names none.
+    fn memory(&self, _ty: &Type) -> Option<u32> {
+        None
+    }
 }
 
 /// What a dialect's function rule may look at beside the function: the
@@ -473,5 +481,12 @@ impl Registry {
             .iter()
             .find_map(|t| t.check(ty))
             .unwrap_or_else(|| TypeCheck::Malformed(format!("{ty} is not a type of {name}")))
+    }
+
+    /// The memory that `ty` points into, as the dialect that its head word
+    /// names says, if it names one.
+    pub fn type_memory(&self, ty: &Type) -> Option<u32> {
+        let name = word_dialect(&ty.name).unwrap_or(CORE);
+        self.dialect(name)?.types.iter().find_map(|t| t.memory(ty))
     }
 }

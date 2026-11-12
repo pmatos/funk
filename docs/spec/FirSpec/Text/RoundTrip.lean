@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6200904237100752930")
+:::moduleDocs (fingerprint := "13078688161419937493")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -51,7 +51,7 @@ $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`, and each of its attributes
 can be written. Its symbol may be any string.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "3091985326477444571")
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "12062401946120036104")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 
@@ -71,8 +71,9 @@ Its symbol may be any string, since a symbol that is not a word is quoted.
 An item is well formed when it is a well-formed function, a nested module
 whose dialect set names each dialect by a word and each of whose items is
 well formed, at any depth, or a well-formed item of a dialect's kind. A module is _well formed_ when each
-dialect of its set is named by a word, each of its items is well formed,
-and its
+dialect of its set is named by a word, each number of its data layout is
+within the {ref "The-fir-specification--Text-format--Grammar"}[limit] of
+an entry, each of its items is well formed, and its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is within limits: every reference, line and column in it is below
 $`2^{32}`. So each function of a well-formed module is well formed.
@@ -135,7 +136,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "15101585842264551662")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "7347656030747688238")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -147,6 +148,7 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
   are well formed, at any depth: an item of a dialect's kind is, since its
   kind is a word of a dialect, its parameters are named by names, its
   types are valid and its attributes can be written;
+* the numbers of a valid entry of a data layout are within the limit;
 * every valid module of $`d` is well formed.
 
 The proof reads each condition of well-formedness off a rule of validation
@@ -156,8 +158,9 @@ value names that are names, labels that are names, valid types, a body of
 the core's kind, regions of ops whose kinds are words, operand and result
 types that match the op instance, successors whose labels are names and
 that pass values that the function defines, and location references that
-are keys of the table, whose keys are below $`2^{32}`, and dialect sets
-whose names are words, the module's own and each nested module's. The
+are keys of the table, whose keys are below $`2^{32}`, dialect sets
+whose names are words, the module's own and each nested module's, and a
+data layout whose entries are valid, so within the limit. The
 laws give op names that are words, attributes that can be written, and
 valid types that are written as types and read back. A nested module is
 well formed when its set's names are words and its items are well formed,

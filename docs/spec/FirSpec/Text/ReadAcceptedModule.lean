@@ -61,7 +61,7 @@ location reference token, and its location is within the limits. So every
 number of the table is below $`2^{32}`.
 :::
 
-:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "18411574549067702597")
+:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "1249121129268629092")
 *Theorem: the grammar step.* For every list of tokens $`\mathit{ts}` that
 {ref "The-fir-specification--Text-format--What-the-lexer-accepts"}[can be written],
 and every module $`s` as read: when the
@@ -74,8 +74,8 @@ Here $`\mathrm{readmodule}(\mathit{ts}) = \mathsf{ok}(s)` says that the
 reader of a module reads $`s` from $`\mathit{ts}` without an error, and
 $`s` can be written when the names of its dialect set are words, each of
 its items can be written and its location table is within the limits. The
-reader reads the dialect set, then the items, then the table, then
-$`\mathsf{eof}`. With the lexer's step, the first two steps of the parser
+reader reads the dialect set, then the data layout, then the items, then
+the table, then $`\mathsf{eof}`. With the lexer's step, the first two steps of the parser
 give a module as read that can be written, from every text that they
 accept.
 :::

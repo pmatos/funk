@@ -80,7 +80,7 @@ def regionFn : Func CoreDialect where
     op [] (.ret [i 8]) ["c"]]⟩]⟩
 
 /-- The module of `@f`. -/
-def regionModule : Module CoreDialect := ⟨[], [.func regionFn], [(0, .unknown)]⟩
+def regionModule : Module CoreDialect := ⟨[], [], [.func regionFn], [(0, .unknown)]⟩
 
 /-- `@f` is well formed: its names are unique and can be written, its types
 are valid, and each op's operands have the types of its signature. -/
@@ -105,6 +105,7 @@ theorem regionFn_wellFormed : regionFn.WellFormed where
 /-- The module of `@f` is well formed. -/
 theorem regionModule_wellFormed : regionModule.WellFormed where
   dialects := by simp [regionModule]
+  layout := by simp [regionModule]
   items f hf := by
     simp only [regionModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
@@ -147,7 +148,7 @@ local macro "func_wellFormed" : tactic => `(tactic| exact {
 def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨none, []⟩⟩
 
 /-- The module of `@e`. -/
-def emptyModule : Module CoreDialect := ⟨[], [.func emptyFn], [(0, .unknown)]⟩
+def emptyModule : Module CoreDialect := ⟨[], [], [.func emptyFn], [(0, .unknown)]⟩
 
 -- The body is `{` and `}`, with no block between them.
 #guard emptyModule.print == "func @e() {\n}\n\nlocs {\n  @0 = unknown\n}\n"
@@ -155,6 +156,7 @@ def emptyModule : Module CoreDialect := ⟨[], [.func emptyFn], [(0, .unknown)]�
 /-- The module of `@e` is well formed. -/
 theorem emptyModule_wellFormed : emptyModule.WellFormed where
   dialects := by simp [emptyModule]
+  layout := by simp [emptyModule]
   items f hf := by
     simp only [emptyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
@@ -177,6 +179,7 @@ theorem emptyModule_parse_print : Fir.parse emptyModule.print = .ok emptyModule 
 levels deep. -/
 theorem nested_wellFormed : (nested 3).WellFormed where
   dialects := by simp [nested]
+  layout := by simp [nested]
   items f hf := by
     simp only [nested, List.mem_cons,
       List.not_mem_nil, or_false] at hf
@@ -194,6 +197,7 @@ callsite, derived, name and range locations, whose references, lines and
 columns go up to `2^32 - 1`. -/
 theorem tricky_wellFormed : tricky.WellFormed where
   dialects := by simp [tricky]
+  layout := by simp [tricky]
   items f hf := by
     simp only [tricky, List.mem_cons,
       List.not_mem_nil, or_false] at hf
@@ -225,11 +229,12 @@ def toyFn : Func ToyDialect :=
     ⟨none, [⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
 
 /-- The module of `@m`. -/
-def toyModule : Module ToyDialect := ⟨[], [.func toyFn], [(0, .unknown)]⟩
+def toyModule : Module ToyDialect := ⟨[], [], [.func toyFn], [(0, .unknown)]⟩
 
 /-- The module of `@m` is well formed. -/
 theorem toyModule_wellFormed : toyModule.WellFormed where
   dialects := by simp [toyModule]
+  layout := by simp [toyModule]
   items f hf := by
     simp only [toyModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf
@@ -258,7 +263,7 @@ def mixedFn : Func CoreToy :=
     ⟨[], .inl (.ret [i 8, i 8]), ["m", "s"], [], [], 0⟩]⟩]⟩⟩
 
 /-- The mixed module, as abstract syntax. -/
-def mixedModule : Module CoreToy := ⟨["toy"], [.func mixedFn], [(0, .unknown), (1, .name "mask")]⟩
+def mixedModule : Module CoreToy := ⟨["toy"], [], [.func mixedFn], [(0, .unknown), (1, .name "mask")]⟩
 
 #guard mixedModule.print == mixed
 
@@ -284,6 +289,7 @@ theorem mixedFn_wellFormed : mixedFn.WellFormed where
 /-- The mixed module is well formed. -/
 theorem mixedModule_wellFormed : mixedModule.WellFormed where
   dialects := by simp only [mixedModule, List.mem_singleton, forall_eq]; decide
+  layout := by simp [mixedModule]
   items f hf := by
     simp only [mixedModule, List.mem_cons,
       List.not_mem_nil, or_false] at hf

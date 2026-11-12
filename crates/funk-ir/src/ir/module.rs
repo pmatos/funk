@@ -10,8 +10,10 @@
 use std::collections::HashMap;
 
 use super::attr::{Attr, Type};
+use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
 use super::nested::NestedModule;
+use super::region::Part;
 
 /// A definition of a value: its name, without `%`, and its type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -141,6 +143,20 @@ impl Func {
             results: self.results.clone(),
         }
     }
+
+    /// Every type that the function states (`Func.types`): its results,
+    /// its parameters, then the arguments and op results of each block, at
+    /// any depth.
+    pub fn types(&self) -> impl Iterator<Item = &Type> {
+        let defs = self.body.parts().flat_map(|part| match part {
+            Part::Block(b) => Some(b.params.iter().chain(b.ops.iter().flat_map(|o| &o.results))),
+            _ => None,
+        });
+        self.results
+            .iter()
+            .chain(self.params.iter().map(|p| &p.ty))
+            .chain(defs.flatten().map(|d| &d.ty))
+    }
 }
 
 /// An item of a kind that a dialect registers (`DialectItem` in
@@ -233,7 +249,8 @@ impl Item {
     }
 }
 
-/// A module: its dialect set, its items, then its location table.
+/// A module: its dialect set, its data layout, its items, then its location
+/// table.
 ///
 /// A module is a symbol table over its own items. A nested module is an
 /// item, [`NestedModule`], with a symbol table of its own, so nothing here
@@ -244,6 +261,10 @@ pub struct Module {
     /// words the module writes, in the order the text writes them. Empty
     /// for a module of the core alone (ADR-2026-11-10-1306).
     pub dialects: Vec<String>,
+    /// The data layout: an entry for each memory it declares, in the order
+    /// the text writes them (ADR-2026-11-12-1821). Empty for a module with
+    /// the default memory alone. A nested module has none of its own.
+    pub layout: Vec<MemLayout>,
     /// The items, in order.
     pub items: Vec<Item>,
     /// The location table.

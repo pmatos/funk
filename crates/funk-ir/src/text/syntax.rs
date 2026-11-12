@@ -62,9 +62,11 @@ impl Drop for SBody {
     }
 }
 
-/// `module ::= dialects? item* locs`.
+/// `module ::= dialects? layout? item* locs`.
 pub(super) struct SModule {
     pub dialects: Vec<String>,
+    /// Each entry of the data layout as written, with its position.
+    pub layout: Vec<(Type, TextPos)>,
     pub items: Vec<SItem>,
     pub locs: LocTable,
 }

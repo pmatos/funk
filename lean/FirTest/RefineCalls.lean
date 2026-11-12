@@ -70,7 +70,7 @@ def gFn : Func CoreDialect where
       op [] (.ret [i 32]) ["r"] 0]⟩]⟩
 
 /-- The module of `@count` and `@g`. -/
-def ubModule : Module CoreDialect := ⟨[], [.func countFn, .func gFn], [(0, .unknown)]⟩
+def ubModule : Module CoreDialect := ⟨[], [], [.func countFn, .func gFn], [(0, .unknown)]⟩
 
 /-- `@g` hits UB on every argument, at two steps. -/
 theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
@@ -186,12 +186,19 @@ theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubMod
 
 /-- The module with `@g`'s new body is valid too. -/
 theorem ubModule'_valid : ubModule'.Valid :=
-  Module.valid_replaceBody ubModule_valid fun g hg hs => by
-    simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil, List.mem_cons,
-      List.not_mem_nil, or_false] at hg
-    rcases hg with rfl | rfl
-    · exact absurd hs (by decide)
-    · exact gFn'_valid
+  Module.valid_replaceBody ubModule_valid
+    (fun g hg hs => by
+      simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil,
+        List.mem_cons, List.not_mem_nil, or_false] at hg
+      rcases hg with rfl | rfl
+      · exact absurd hs (by decide)
+      · exact gFn'_valid)
+    (fun g hg hs => by
+      simp only [ubModule, Module.funcs, List.filterMap_cons, Item.func?, List.filterMap_nil,
+        List.mem_cons, List.not_mem_nil, or_false] at hg
+      rcases hg with rfl | rfl
+      · exact absurd hs (by decide)
+      · decide +kernel)
 
 -- The validation check accepts both modules. `@count` hits UB, in `@g`,
 -- and with `@g`'s new body it calls itself back without end.

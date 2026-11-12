@@ -99,6 +99,14 @@ The `locs { ... }` table that ends a module's text and gives the location that
 each `@N` reference on an op stands for.
 _Avoid_: debug table
 
+**data layout**:
+The line after a module's dialect set, `layout memory(N, unit(U),
+pointer(P), little)`, that declares the module's memories: each one's unit
+width, pointer width, byte order, pointer alignment and whether it is
+non-integral. A module without one has memory 0 alone, with 8-bit units and
+64-bit pointers. A nested module shares its parent's.
+_Avoid_: target triple, datalayout string
+
 **verdict**:
 What a tool says about a text: accepted, rejected by the parser (a parse
 error, with a text position), or rejected by validation (a validation

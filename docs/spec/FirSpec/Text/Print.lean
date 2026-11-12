@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18125984063402587496")
+:::moduleDocs (fingerprint := "16568702145132850578")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
@@ -129,15 +129,24 @@ feed (ADR-2026-11-10-1510). Items at the indentation $`n` are each written,
 followed by an empty line.
 :::
 
-:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "5894661627180521872")
+:::readable Fir.printLayout (pin := Fir.MemLayout.attr) (fingerprint := "13349458363325272084")
+*Definition: a data layout in text.* The empty layout is written as
+nothing. Any other is the word `layout`, a space, what each entry writes,
+separated by `, `, then a line feed and an empty line. So
+`layout memory(1, unit(16), pointer(32), little)` and an empty line declare
+memory 1.
+:::
+
+:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "6873696991008772264")
 *Definition: the location table, and a module, in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is written `locs {` and a line feed, then each entry $`r = \mathit{loc}`
 in the order the table stores them, as the line `  @r = loc`, indented by
 two spaces, then `}` and a line feed. A module is its dialect set, then its
-items, each followed by an empty line, both at the indentation 0, and then
-its location table. So every text ends with a line feed, and a module with
-no dialects and no items is `locs {` and `}` on two lines. The
+data layout, then its items, each followed by an empty line, all at the
+indentation 0, and then its location table. So every text ends with a line
+feed, and a module with no dialects, the empty layout and no items is
+`locs {` and `}` on two lines. The
 {ref "The-fir-specification--Text-format--Example"}[example] shows a
 module in this layout.
 :::

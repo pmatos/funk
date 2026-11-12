@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17623863330440996922")
+:::moduleDocs (fingerprint := "9336698127366885027")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -125,7 +125,7 @@ As for region kinds, the laws of names send each kind of item to the
 dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "1536494424229976565")
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "4136442762810378712")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:
@@ -134,7 +134,7 @@ $$`\mathrm{sig}(\mathsf{inl}\ p) = (\mathsf{inl}\ t)^* \text{ where } \mathrm{si
 
 and the same for its result types, whether it ends a block, its number
 of successors and the kinds of its regions. A type of the sum is valid as
-its side says, an op refers
+its side says, names the memory that its side says, an op refers
 to the symbols that its side says, and obeys its side's rule as above. A
 function of the sum obeys the function rule of each side, each through its
 own view:
