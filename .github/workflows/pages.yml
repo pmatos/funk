@@ -1,6 +1,6 @@
 # Publishes the rendered fir spec to GitHub Pages from every push to main
-# (docs/decisions/spec-site.md#publishing-the-site). Pull requests never deploy; CI builds the document
-# through the fir-spec pre-commit hook instead.
+# (docs/decisions/spec-site.md#publishing-the-site). Pull requests never
+# deploy; CI builds the document through the fir-spec pre-commit hook instead.
 name: Pages
 
 on:

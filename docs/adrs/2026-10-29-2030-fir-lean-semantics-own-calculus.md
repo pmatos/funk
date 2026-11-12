@@ -98,7 +98,7 @@ to H4 and H5.
 
 - `lean/` is not tied to LeanMLIR's frozen nightly, so it can follow stable
   Lean and Verso releases. Its toolchain and dependencies, Mathlib included,
-  are decided by #8's Lean toolchain ADR (P1, ADR-2026-11-05-2012).
+  are decided by #8's Lean toolchain ADR (ADR-2026-10-29-2135).
 - The print-then-parse theorem (#11) is an induction over plain inductives.
   Locations and names are part of the term.
 - This ADR does not decide how #14 builds the choice effect. The spike ran

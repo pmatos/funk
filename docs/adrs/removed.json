@@ -82,11 +82,6 @@
       "commit": "c09a05f4f8fb"
     },
     {
-      "file": "2026-11-06-0224-a-by-cases-without-a-decidable-instance-runs-under-classical.md",
-      "now": "docs/decisions/spec-site-lean-build.md#a-by_cases-without-an-instance-runs-under-classical",
-      "commit": "c09a05f4f8fb"
-    },
-    {
       "file": "2026-11-09-1345-the-spec-build-pins-module-docs-and-requires-every-fir-module.md",
       "now": "docs/decisions/spec-site.md#module-docs-and-every-module",
       "commit": "c09a05f4f8fb"

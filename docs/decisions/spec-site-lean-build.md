@@ -9,7 +9,9 @@ deleted (ADR-2026-11-09-1610).
 
 `lean/lean-toolchain` is the one pin (ADR-2026-10-29-2135). It names a stable
 Lean release, now `leanprover/lean4:v4.35.0`. `docs/spec/lean-toolchain` is a
-symlink to it. Nightlies and release candidates are not used.
+symlink to it. Verso's `{includeLiterate}` runs `elan run <toolchain> lake
+query` in the document's directory, so `docs/spec/` needs that file.
+Nightlies and release candidates are not used.
 
 Rejected: a nightly toolchain. Verso and Mathlib tag stable releases, and
 nightlies are hard to reproduce.
@@ -88,7 +90,7 @@ install it. It does not fail. A commit that changes the Rust crates still needs
 elan, because the `fir-round-trip` hook builds `lean/` (ADR-2026-10-30-1250).
 
 The `fir-spec` hook runs the script when a file under `lean/` or `docs/spec/`
-changes, or the script itself (ADR-2026-10-29-2135). It also runs when a file
+changes, or the script itself. It also runs when a file
 in `docs/adrs/` changes, because the spec renders the ADRs
 ([the ADR appendix](spec-site.md#the-adr-appendix-and-its-citations)). So
 committing an ADR renders the spec, which takes several minutes in a fresh
@@ -98,7 +100,7 @@ The `lean` job of `ci.yml` runs `fir-spec` (ADR-2026-11-05-1408). It installs
 elan and the pinned toolchain, and it is the one job that saves the Verso
 build. The `cross` job builds `lean/` again. CI caches the toolchain and
 `docs/spec/.lake/packages`, keyed on the toolchain file and the document's
-manifest (ADR-2026-10-29-2135). The cache is saved once Verso is built, even if
+manifest. The cache is saved once Verso is built, even if
 a later hook fails. A cancelled run does not save it. `docs/spec/.lake/build`
 is never cached, so the document is always rebuilt from its sources.
 
@@ -165,8 +167,11 @@ The check also fails in these cases (ADR-2026-10-30-1452):
 - A root has no declaration, so a renamed library is not skipped in silence.
 - Any text but white space follows the check.
 
-`lakefile.lean` and hidden directories such as `.lake` are exempt from the file
-checks. `FirTest/Axioms.lean` imports Lean's own modules, such as
+Lake builds only the modules that a library's root imports. A file in
+`lean/Fir/` that nothing imports is never built or checked, yet the spec could
+still render it with `{includeLiterate}`; so it fails. `lakefile.lean` and
+hidden directories such as `.lake` are exempt from the file checks.
+`FirTest/Axioms.lean` imports Lean's own modules, such as
 `Lean.Util.CollectAxioms`. They are part of the toolchain, not a dependency of
 the package `fir`.
 
@@ -192,11 +197,11 @@ pass.
 ### A `by_cases` without an instance runs under `classical`
 
 A `by_cases` under `lean/` on a proposition with no `Decidable` instance needs
-`classical` before it, in the same tactic block. `by_cases` turns on
-`Classical.propDecidable` through `open Classical`, which uses a process-wide
-list of scoped extensions. In Lean v4.35.0, Verso's elaboration of module docs
-swaps that list for an empty one on the main thread while proofs elaborate on
-other threads ([leanprover/lean4#15817](https://github.com/leanprover/lean4/issues/15817)).
+`classical` before it, in the same tactic block (ADR-2026-11-06-0224).
+`by_cases` turns on `Classical.propDecidable` through `open Classical`, which
+uses a process-wide list of scoped extensions. In Lean v4.35.0, Verso's
+elaboration of module docs swaps that list for an empty one on the main thread
+while proofs elaborate on other threads ([leanprover/lean4#15817](https://github.com/leanprover/lean4/issues/15817)).
 A missing `classical` then fails at random, not on every build; it failed one
 Pages build of `main` (#184). `classical` adds the instance as a local one,
 without the list.

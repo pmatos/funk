@@ -80,9 +80,8 @@ The check that keeps this true is `#check_axioms`, the last command of
 `lean/FirTest.lean`. It fails the build of `lean/` when any of its
 declarations depends on an axiom other than the three standard ones and
 the axioms of native evaluation that it confirms by running their claims
-again, so `sorryAx` fails it (ADR-2026-10-30-1452),
-and `lake build --wfail`
-fails on a `sorry` in an `example` (ADR-2026-10-30-1452). The `fir-spec`
+again, so `sorryAx` fails it, and `lake build --wfail` fails on a `sorry` in
+an `example` (ADR-2026-10-30-1452). The `fir-spec`
 hook runs both on every pull request. The word `sorry` appears in `lean/`
 only in the prose of `lean/FirTest/Axioms.lean`.
 

@@ -70,7 +70,8 @@ The readable layer adds nothing to `lean/`.
 
 After the pilot of `Fir.Core.Ops` and `Fir.Execution.CallSteps`, the spec moves
 chapter by chapter. The order is abstract syntax, validation, execution, then
-text format (ADR-2026-11-05-2012). A chapter moves in one PR or, when it is
+text format. The human approved this rollout with the pilot on 2026-11-05
+(#161). A chapter moves in one PR or, when it is
 long, in several PRs. Each of those PRs covers a run of consecutive sections.
 A section that has not moved keeps rendering with `{includeLiterate}`, so the
 spec is whole between the PRs. A chapter may mix readable and literate
@@ -144,7 +145,7 @@ Every module under `lean/Fir` is in the spec. `firspec` fails when
 `docs/spec/FirSpec.lean` has no `{includeReadable}` or `{includeLiterate}` line
 for a module. These checks run in the `fir-spec` hook.
 
-Some gaps are accepted:
+The gaps that got no check:
 
 - A stale fingerprint forces a look, not a correct rewrite. That stays with
   review, and the PR template has a checkbox for it. No check looks for a
@@ -164,10 +165,10 @@ The spec's last part is the appendix "Architecture decision records", tagged
 `adrs`. The human asked on 2026-10-30 (#46) for the ADRs to be published there
 and for every citation to link to them. When `firspec` renders, it reads each
 ADR in `docs/adrs/` in name order, every `.md` file but `README.md` and
-`INDEX.md`. It parses each with MD4Lean and adds one
-part per ADR, after an index table of id, decision and status. Nothing is
-generated into the tree, so the site matches the commit it names. The
-`fir-spec` hook runs when a file in `docs/adrs/` changes.
+`INDEX.md`. It parses each with MD4Lean and adds one part per ADR, after an
+index table of id, decision and status. Nothing is generated into the tree,
+so the site matches the commit it names. The `fir-spec` hook runs when a file
+in `docs/adrs/` changes.
 
 Rejected: generating Verso files from the ADRs before `lake build`. It needs a
 conversion step, a place for the output outside git, and a way for Lake to
@@ -205,8 +206,8 @@ the ADRs with their status lines. These rules apply:
   they are.
 - A citation of no ADR fails the build, with its file, line and column. Before
   rendering, `firspec` reads for this the Lean files of `lean/`, the files at
-  the top of `docs/spec/` and the ADRs. A malformed id fails too. A citation matches a whole id, with four or six digits
-  after the date.
+  the top of `docs/spec/` and the ADRs. A malformed id fails too. A citation
+  matches a whole id, with four or six digits after the date.
 - After rendering, `firspec` checks that every ADR has its page. It also checks
   that every citation in each page's prose is inside a link to that ADR.
 
@@ -265,7 +266,9 @@ cache that `ci.yml` saves, with the same key. It never saves a cache. The Lean
 setup steps exist in three copies: the `lean` and `cross` jobs and `pages.yml`
 (ADR-2026-11-05-1408). The `pages.yml` copy has four steps and no save
 (ADR-2026-11-05-1954). Comments say to change all three together. If the keys
-drift, the deploy still works but builds Verso every time.
+drift, the deploy still works but builds Verso every time. The first deploy
+after a toolchain bump builds Verso too, when `ci.yml` on `main` has not yet
+saved the new cache.
 
 Rejected: a composite action in `.github/actions/` for the shared steps.
 zizmor's `self-repository` audit asks for a form that actionlint rejects, and

@@ -13,6 +13,10 @@ Tier: direction; area: spec-site
   - is `unsafe`, or is an opaque constant with an `_unsafe_rec`, which is
     what `partial` makes;
   - has an `implemented_by` or an `extern` attribute.
+
+  It also fails when a `.lean` file of `lean/` is not imported by the root
+  or lies outside the roots it names, when a root has no declaration, and
+  when any text follows it.
 - An axiom counts as native evaluation only when its claim is `e = true`
   for a closed `e : Bool` and the check runs `e` again and gets `true`
   ([the page](../decisions/spec-site-lean-build.md#what-lean-code-in-lean-may-not-do)
@@ -23,8 +27,10 @@ Tier: direction; area: spec-site
   alone. The human accepted this narrowing on 2026-11-02, in #52.
 - `scripts/build-spec.sh` builds `lean/` with `lake build --wfail`, so any
   warning fails the build, a `sorry` inside an `example` included. The human
-  ruled this on 2026-10-30, in #52. The build in `docs/spec/` stays a plain
-  `lake build`, because Verso's build can warn about code we do not own.
+  ruled this on 2026-10-30, in #52. A toolchain bump that deprecates a name
+  used in `lean/` fixes those uses in the same PR. The build in `docs/spec/`
+  stays a plain `lake build`, because Verso's build can warn about code we
+  do not own.
 - Code that must be `partial`, `unsafe` or `extern` stays out of `lean/`
   until this ADR is edited to allow it.
 
