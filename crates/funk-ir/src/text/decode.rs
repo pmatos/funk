@@ -18,7 +18,9 @@ use super::syntax::{BodyPos, DefPos, SBody, SItem, SModule};
 use super::{ParseError, TextPos};
 use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
-use crate::ir::{Def, DialectItem, Func, Item, Module, NestedModule, Op, Part, Region, Type};
+use crate::ir::{
+    Def, DialectItem, Func, Item, MemLayout, Module, NestedModule, Op, Part, Region, Type,
+};
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
 fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
@@ -30,8 +32,21 @@ fn err<T>(pos: TextPos, reason: impl Into<String>) -> Result<T, ParseError> {
 
 /// Decodes a module read by the grammar.
 pub(super) fn module(s: SModule, reg: &Registry) -> Result<Module, ParseError> {
+    let layout = s
+        .layout
+        .iter()
+        .map(|(ty, pos)| {
+            MemLayout::decode(ty).ok_or_else(|| ParseError {
+                pos: *pos,
+                reason: format!(
+                    "{ty} is not an entry of the data layout, which is written memory(N, unit(U), pointer(P), little or big), then align(A) and nonintegral if given"
+                ),
+            })
+        })
+        .collect::<Result<_, _>>()?;
     Ok(Module {
         dialects: s.dialects,
+        layout,
         items: items(s.items, reg)?,
         locs: s.locs,
     })

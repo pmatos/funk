@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What decoding accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7839409479275318693")
+:::moduleDocs (fingerprint := "6111608245691226456")
 :::
 
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "7523009022168863131")
@@ -100,7 +100,12 @@ above. The last two theorems call one another, and are proved together by
 induction on the items.
 :::
 
-:::readable Fir.decodeModule_wellFormed (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (pin := Fir.Text.SModule.Writable) (fingerprint := "2326822557149601051")
+:::readable Fir.decodeLayout_inLimits (pin := Fir.Text.decodeMemLayout) (fingerprint := "3187506564852275340")
+*Theorem: decoded entries are within the limit.* When the entries of a data
+layout as written decode, each entry they decode to is within the limit.
+:::
+
+:::readable Fir.decodeModule_wellFormed (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (pin := Fir.Text.SModule.Writable) (fingerprint := "14496348441520802811")
 *Theorem: the decoding step.* Let $`d` be a dialect with a signature,
 validation rules and a text, whose text is lawful. For every module $`s`
 as read that can be written, and every module $`m` of $`d`: when $`s`
@@ -111,8 +116,9 @@ $$`\begin{aligned} & s \text{ can be written} \\ & \wedge\ \mathrm{decodemodule}
 
 Here $`\mathrm{decodemodule}(s) = \mathsf{ok}(m)` says that $`s` decodes
 to $`m` without an error. Each item of $`m` is decoded from an item of
-$`s`, so it is well formed; and $`m` keeps the dialect set of $`s`, whose
-names are words, and its location table, which is within the limits. These
-are the three conditions of a well-formed module. This is the last of the
+$`s`, so it is well formed; each entry of the layout of $`m` decodes, so
+its numbers are within the limit; and $`m` keeps the dialect set of $`s`,
+whose names are words, and its location table, which is within the limits.
+These are the four conditions of a well-formed module. This is the last of the
 parser's three steps.
 :::

@@ -9,8 +9,9 @@
 //! default memory's pointer, `ptr<0>`, is written `ptr`, and another memory's
 //! `ptr(N)`, so each pointer type has one spelling: `ptr(0)` does not decode,
 //! and neither does a memory above [`MAX_MEMORY`] (ADR-2026-11-11-1709).
-//! Validation accepts `ptr`, since every module has the default memory, and
-//! rejects `ptr(N)` until the data layout declares memories (#231).
+//! Validation accepts every pointer type that decodes, and the module's data
+//! layout says which memories the module has: the default memory always,
+//! and `N` when the layout declares it (ADR-2026-11-12-1821).
 //!
 //! `float<e,m>` is written by its alias when it has one, `f16`, `bf16`,
 //! `f32`, `f64` or `f128`, and as `float(e, m)` otherwise, so each format has
@@ -204,11 +205,18 @@ impl TypeSpec for CoreTypes {
                 "{ty} is not a float format: it needs at least 2 exponent bits and 1 mantissa bit"
             )),
             Ok(CoreType::Float { .. }) => TypeCheck::Valid,
-            Ok(CoreType::Ptr(0)) => TypeCheck::Valid,
-            Ok(CoreType::Ptr(n)) => TypeCheck::Invalid(format!(
-                "{ty} is a pointer of memory {n}, which the module does not have: only the default memory, 0, has pointers until a data layout declares more"
-            )),
+            Ok(CoreType::Ptr(_)) => TypeCheck::Valid,
         })
+    }
+
+    fn memory(&self, ty: &Type) -> Option<u32> {
+        if ty.name != PTR {
+            return None;
+        }
+        match decode(ty)? {
+            Ok(CoreType::Ptr(n)) => Some(n),
+            _ => None,
+        }
     }
 }
 
@@ -319,13 +327,12 @@ mod tests {
     }
 
     #[test]
-    fn only_the_default_memory_has_valid_pointers() {
-        assert_eq!(CoreTypes.check(&ptr_type(0)), Some(TypeCheck::Valid));
-        for n in [1, MAX_MEMORY] {
-            assert!(
-                matches!(CoreTypes.check(&ptr_type(n)), Some(TypeCheck::Invalid(_))),
-                "{n}"
-            );
+    fn every_pointer_type_names_its_memory() {
+        for n in [0, 1, MAX_MEMORY] {
+            assert_eq!(CoreTypes.check(&ptr_type(n)), Some(TypeCheck::Valid), "{n}");
+            assert_eq!(CoreTypes.memory(&ptr_type(n)), Some(n));
         }
+        assert_eq!(CoreTypes.memory(&int_type(8)), None);
+        assert_eq!(CoreTypes.memory(&ptr(0)), None);
     }
 }

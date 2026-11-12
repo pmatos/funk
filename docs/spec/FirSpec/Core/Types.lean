@@ -19,7 +19,7 @@ changes under it.
 :::moduleDocs (fingerprint := "15458445134579424081")
 :::
 
-:::readable Fir.Core.Ty Fir.Core.maxWidth Fir.Core.maxMemory Fir.Core.floatWidth (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.decode) (fingerprint := "5210273977835234036")
+:::readable Fir.Core.Ty Fir.Core.maxWidth Fir.Core.maxMemory Fir.Core.floatWidth (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.decode) (fingerprint := "17770481132875150779")
 *Definition: the core types.* A type of the core dialect is an integer type
 $`\mathsf{i}N`, for a width $`N`, a float type
 $`\mathsf{float}\langle e,m \rangle`, for an exponent width $`e` and a
@@ -71,7 +71,10 @@ validation accept $`\mathsf{i}N` only when $`1 \le N \le N_{\max}`, so
 $`\mathsf{i0}` is never a valid type, accept
 $`\mathsf{float}\langle e,m \rangle` only when $`e \ge 2`, $`m \ge 1`
 and $`1 + e + m \le N_{\max}`, and accept
-$`\mathsf{ptr}\langle N \rangle` only for a memory that the module has.
+$`\mathsf{ptr}\langle N \rangle` for every memory number up to
+`maxMemory`; the module's
+{ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout]
+says which memories the module has.
 The text format reads no integer type wider than $`N_{\max}`, no float type
 wider than $`N_{\max}` bits in all, and no pointer type of a memory above
 `maxMemory`.

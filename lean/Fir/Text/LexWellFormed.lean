@@ -306,6 +306,16 @@ theorem dialectsTokens_writable {ds : List Name} (h : ∀ x ∈ ds, isWord x) :
       List.mem_singleton, forall_eq]
     exact h
 
+/-- The tokens of a data layout can be written: each entry writes a type. -/
+theorem layoutTokens_writable (l : DataLayout) : ∀ t ∈ layoutTokens l, t.Writable := by
+  unfold layoutTokens
+  split
+  · simp
+  · refine List.forall_mem_cons.mpr ⟨by unfold Tok.Writable; decide,
+      forall_mem_intercalate_of comma_writable fun ts hts => ?_⟩
+    obtain ⟨e, -, rfl⟩ := List.mem_map.mp hts
+    exact Attr.Writable.tokens (MemLayout.attr_isType e).writable
+
 omit [DialectSignature d] in
 /-- Every token of a well-formed item of a dialect's kind can be written. -/
 theorem DialectItem.WellFormed.tokens {i : DialectItem d} (h : i.WellFormed) :
@@ -359,7 +369,8 @@ end
 theorem Module.WellFormed.tokens_writable {m : Module d} (h : m.WellFormed) :
     ∀ t ∈ m.tokens, t.Writable := by
   simp only [Module.tokens, List.forall_mem_append, List.forall_mem_flatMap]
-  exact ⟨⟨dialectsTokens_writable h.dialects, fun i hi => (h.items i hi).tokens⟩, h.locs.tokens⟩
+  exact ⟨⟨⟨dialectsTokens_writable h.dialects, layoutTokens_writable m.layout⟩,
+    fun i hi => (h.items i hi).tokens⟩, h.locs.tokens⟩
 
 /-- The lexer reads the printed text of a well-formed module as its tokens. -/
 theorem Module.WellFormed.lex_print {m : Module d} (h : m.WellFormed) :

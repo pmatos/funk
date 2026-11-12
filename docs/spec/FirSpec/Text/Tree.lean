@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13201938321690760624")
+:::moduleDocs (fingerprint := "11231969440696766188")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -59,10 +59,11 @@ of blocks erases its blocks, and a body of items keeps its dialect set and
 erases its items.
 :::
 
-:::readable Fir.Text.SModule.erase (pin := Fir.Text.SModule) (fingerprint := "4321630760763797544")
+:::readable Fir.Text.SModule.erase (pin := Fir.Text.SModule) (fingerprint := "11988839544364478106")
 *Definition: a module as written, without positions.* $`\mathrm{erase}` of
-a module as written erases each of its items and keeps its dialect set and
-its location table, which hold no position.
+a module as written erases the position of each entry of its data layout,
+erases each of its items, and keeps its dialect set and its location table,
+which hold no position.
 
 A tree $`s` _erases to_ a tree $`t` when $`\mathrm{erase}(s) = t`: the
 two differ at most in their positions.
@@ -125,10 +126,11 @@ its body is no blocks, as the grammar reads an empty body. The trees of a
 list of items are the tree of each, in order.
 :::
 
-:::readable Fir.Module.tree (pin := Fir.Module) (fingerprint := "8609683091975040167")
+:::readable Fir.Module.tree (pin := Fir.Module) (fingerprint := "6439568865264180641")
 *Definition: the tree of a module.* The tree of a module $`m`,
-$`\mathrm{tree}(m)`, holds its dialect set, the trees of its items, in
-order, and its location table.
+$`\mathrm{tree}(m)`, holds its dialect set, what each entry of its data
+layout writes, at the zero position, the trees of its items, in order, and
+its location table.
 
 It is what the grammar would read from the text of $`m` if the text had
 no positions. The
@@ -204,10 +206,11 @@ of a function $`f`, then:
   $`f`.
 :::
 
-:::readable Fir.SModule.erase_eq_tree (fingerprint := "3293235613611274622")
+:::readable Fir.SModule.erase_eq_tree (fingerprint := "11972018301769556854")
 *Theorem: what a module that erases to a module's tree holds.* For every
 dialect with a text format, if a module as written $`s` erases to the tree
-of a module $`m`, then the dialect set of $`s` is that of $`m`, the items
-of $`s` erase to the trees of the items of $`m`, and the location table of
-$`s` is that of $`m`.
+of a module $`m`, then the dialect set of $`s` is that of $`m`, the entries
+of the layout of $`s` are, positions aside, what the entries of the layout
+of $`m` write, the items of $`s` erase to the trees of the items of $`m`,
+and the location table of $`s` is that of $`m`.
 :::

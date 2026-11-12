@@ -55,4 +55,23 @@ def messages (name : String) : List String :=
   | .error e => e.pos == ⟨1, 1⟩ && e.reason == "an item of a dialect's kind has an empty body"
   | .ok _ => false
 
+/-- A `toy.cell` whose parameter is a pointer of memory 1, after the layout
+line `layout`, which may be empty. -/
+def ptrCell (layout : String) : String :=
+  "dialects toy\n\n" ++ layout ++ "toy.cell @c(%x: ptr(1)) -> toy.flag 1 {\n}\n\nlocs {\n}\n"
+
+/-- The messages of the problems of a text, of validity and of its dialect
+set. -/
+def textMessages (text : String) : List String :=
+  match (Fir.parse text : Except ParseError (Module CoreTag)) with
+  | .ok m => m.allProblems.map (·.message)
+  | .error e => [e.reason]
+
+-- The layout declares each memory that a type of an item of a dialect's kind
+-- names, as it does for a function (ADR-2026-11-12-1821).
+#guard textMessages (ptrCell "") == ["the item breaks the rule of its kind \"toy.cell\"",
+  "a type names memory 1, which the data layout does not declare"]
+#guard textMessages (ptrCell "layout memory(1, unit(8), pointer(32), little)\n\n") ==
+  ["the item breaks the rule of its kind \"toy.cell\""]
+
 end FirTest.ItemKindCases

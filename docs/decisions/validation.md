@@ -28,6 +28,11 @@ Rejected: LLVM's rule, which accepts unreachable blocks as dominated by every
 block. Dead code could then hold cyclic definitions, which every verifier and
 pass would have to tolerate (ADR-2026-10-30-0817).
 
+A valid module's data layout is valid, and declares the memory of every
+pointer type that the module states, so `ptr(N)` is valid exactly when the
+layout declares `N`; [text-format-layout.md](text-format-layout.md#valid-layouts)
+gives the rules (ADR-2026-11-12-1821).
+
 ## Nested modules
 
 A module holds a symbol table at each level of nesting: its own, and that

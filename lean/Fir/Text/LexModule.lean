@@ -6,8 +6,8 @@ import Fir.Text.LexPrint
 The printer writes every op on a line of its own, and every block, region,
 item and the location table end with a line feed or a `}`. So each of them
 is read before whatever follows it, and a module is read piece by piece,
-from its dialect set, which ends with a line feed too, to the end of its
-location table, and a nested module the same way, from its `module` line
+from its dialect set and its data layout, which end with a line feed too,
+to the end of its location table, and a nested module the same way, from its `module` line
 to its `}`.
 
 The result is the last theorem below: for every module whose tokens can be
@@ -220,6 +220,24 @@ theorem spellsDialects (n : Nat) (ns : List Name) (hw : ∀ t ∈ dialectsTokens
       (boundary_space _) <| Lexes.space <| spells_commaSep hn _ _ (boundary_cons (by decide)) <|
       Lexes.lf <| Lexes.lf hl) n
 
+/-- A data layout, then an empty line, reads back as its tokens, before any
+text. -/
+theorem spellsLayout (l : DataLayout) (hw : ∀ t ∈ layoutTokens l, t.Writable) :
+    SpellsAny (printLayout l).toList (layoutTokens l) := by
+  by_cases he : l.isEmpty = true
+  · simpa [printLayout, layoutTokens, he] using SpellsAny.nil
+  · have hall := forall_mem_intercalate (sep := [Tok.comma]) (tss := l.map (·.attr.tokens))
+      fun t ht => hw t (by simp only [layoutTokens, he]; exact List.mem_cons_of_mem _ ht)
+    have hn : SpellsEach (l.map (·.attr.print)) (l.map (·.attr.tokens)) :=
+      SpellsEach.map fun e he =>
+        Attr.spells _ (hall _ (List.mem_map_of_mem (f := (·.attr.tokens)) he))
+    intro cs us hl
+    simp only [printLayout, layoutTokens, he, Bool.false_eq_true, ite_false,
+      String.toList_append, String.reduceToList, List.append_assoc, List.cons_append,
+      List.nil_append]
+    exact Lexes.lit "layout" ['l', 'a', 'y', 'o', 'u', 't'] (boundary_space _) <| Lexes.space <|
+      spells_commaSep hn _ _ (boundary_cons (by decide)) <| Lexes.lf <| Lexes.lf hl
+
 mutual
 /-- An item at indentation `n` reads back as its tokens, before any text. -/
 theorem Item.spells (n : Nat) :
@@ -286,7 +304,8 @@ theorem Module.spells (m : Module d) (hw : ∀ t ∈ m.tokens, t.Writable) :
     SpellsAny m.print.toList m.tokens := by
   simp only [Module.print, Module.tokens, String.toList_append, List.forall_mem_append,
     ← Item.tokensList_eq_flatMap] at hw ⊢
-  exact SpellsAny.append_any (SpellsAny.append_any (spellsDialects 0 m.dialects hw.1.1)
+  exact SpellsAny.append_any (SpellsAny.append_any (SpellsAny.append_any
+    (spellsDialects 0 m.dialects hw.1.1.1) (spellsLayout m.layout hw.1.1.2))
     (Item.spellsList 0 m.items hw.1.2)) (LocTable.spells m.locs hw.2)
 
 /-- Lexing printed text: for every module whose tokens can be written, the

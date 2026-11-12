@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7036100540345057642")
+:::moduleDocs (fingerprint := "11736073222786734163")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "3535621606043965172")
@@ -69,7 +69,7 @@ that scope. So its errors are found in that order. Its body is a region of
 the core's kind.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeModule (fingerprint := "4604988247452874103")
+:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "11347327637802767802")
 *Definition: decoding an item and a module.* An item decodes as a function,
 as a nested module (ADR-2026-11-10-1510) or as an item of a dialect's kind
 (ADR-2026-11-09-1543):
@@ -94,13 +94,16 @@ as a nested module (ADR-2026-11-10-1510) or as an item of a dialect's kind
 * an item of any other kind is an error at its kind, "unknown item kind".
 
 A list of items decodes each item in order, and stops at the first error.
-A module decodes its items so, and keeps its dialect set and its location
-table as they were read. Decoding rejects no dialect set: whether a set
+A module decodes each entry of its data layout, in order, then its items,
+and keeps its dialect set and its location table as they were read. An
+entry that
+{ref "The-fir-specification--Text-format--Grammar"}[does not decode] is an
+error at its position, "not an entry of the data layout". Decoding rejects no dialect set: whether a set
 names known dialects, and whether the module's words keep to it, is a rule
 of validation, and so is whether a dialect registers the kind of an item.
 :::
 
-:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "10010423170018483077")
+:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "9881850505275781228")
 *Definition: the parser.* The parser of a dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text] reads a text in
 three steps, and stops at the first error, with its position: it

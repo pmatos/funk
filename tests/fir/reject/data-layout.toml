@@ -1,0 +1,345 @@
+# Must-reject texts of the data layout (ADR-2026-11-12-1821). A module
+# declares its memories on one line after its dialect set: `layout`, then
+# entries `memory(N, unit(U), pointer(P), O)`, then `align(A)` and
+# `nonintegral` when given. Any other attribute, and any number above
+# 16777215, does not decode. A valid entry has a unit and pointers of at
+# least one bit, an alignment that is a power of two, and the byte order
+# little, the only one M1 admits (the human's ruling of 2026-11-11 on
+# #231); a valid layout declares each memory once; and every pointer type
+# names memory 0 or a memory that the layout declares, in a nested module
+# too.
+
+[[reject]]
+verdict = "parse-error"
+rule = "an entry of the data layout gives its memory, unit, pointer width and byte order: memory(1) does not decode"
+text = '''
+layout memory(1)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a byte order is little or big: middle does not decode"
+text = '''
+layout memory(1, unit(8), pointer(32), middle)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a layout's numbers are from 0 to 16777215: memory 16777216 does not decode"
+text = '''
+layout memory(16777216, unit(8), pointer(32), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a layout's numbers are from 0 to 16777215: a negative memory does not decode"
+text = '''
+layout memory(-1, unit(8), pointer(32), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a layout's numbers are from 0 to 16777215: pointers of 16777216 bits do not decode"
+text = '''
+layout memory(1, unit(8), pointer(16777216), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an entry gives its unit before its pointer width"
+text = '''
+layout memory(1, pointer(32), unit(8), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an entry gives align(A) before nonintegral"
+text = '''
+layout memory(1, unit(8), pointer(32), little, nonintegral, align(2))
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "align takes one integer: the bare word align does not decode"
+text = '''
+layout memory(1, unit(8), pointer(32), little, align)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "each entry is memory(...): mem(2) does not decode"
+text = '''
+layout memory(1, unit(8), pointer(32), little), mem(2)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a layout names at least one entry: layout alone reads the next item as one"
+text = '''
+layout
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the data layout follows the dialect set, not the other way round"
+text = '''
+layout memory(1, unit(8), pointer(32), little)
+
+dialects toy
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a nested module has no data layout of its own"
+text = '''
+module @dev() {
+  layout memory(1, unit(8), pointer(32), little)
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every pointer type names a memory that the module has: a module with no layout has no memory 1"
+text = '''
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "every pointer type names a memory that the layout declares: this one declares memory 2, not 1"
+text = '''
+layout memory(2, unit(8), pointer(32), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "M1 admits only little-endian memories: a big memory decodes, and validation rejects it"
+text = '''
+layout memory(1, unit(8), pointer(32), big)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a layout declares each memory once"
+text = '''
+layout memory(1, unit(8), pointer(32), little), memory(1, unit(8), pointer(32), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a unit has at least one bit"
+text = '''
+layout memory(1, unit(0), pointer(32), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a pointer has at least one bit"
+text = '''
+layout memory(1, unit(8), pointer(0), little)
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an alignment is a power of two: 3 is not"
+text = '''
+layout memory(1, unit(8), pointer(32), little, align(3))
+
+func @f(%p: ptr(1)) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ret returns the function's result types: a ptr(1) where it returns a ptr(2), a pointer of another memory that the layout also declares"
+text = '''
+layout memory(1, unit(8), pointer(32), little), memory(2, unit(8), pointer(32), little)
+
+func @f(%p: ptr(1)) -> ptr(2) {
+^e:
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's pointer types name the memories of the module that holds it, and a module with no layout has no memory 1"
+text = '''
+module @dev() {
+  func @g(%p: ptr(1)) {
+  ^e:
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''

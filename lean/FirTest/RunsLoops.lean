@@ -57,7 +57,7 @@ def forever : Func CoreDialect where
       op [] .br [] 0 [⟨"loop", ["b"]⟩]]⟩]⟩
 
 /-- A module that holds `@forever`. -/
-def foreverModule : Module CoreDialect := ⟨[], [.func forever], [(0, .unknown)]⟩
+def foreverModule : Module CoreDialect := ⟨[], [], [.func forever], [(0, .unknown)]⟩
 
 #guard foreverModule.problems.isEmpty
 #guard foreverModule.print == "\n".intercalate [

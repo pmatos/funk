@@ -1,4 +1,5 @@
 import Fir.Text.Print
+import Fir.Text.LayoutLaws
 import Fir.Validation.Rules
 
 /-!
@@ -105,10 +106,12 @@ theorem Item.wellFormedList_iff : ∀ is : List (Item d),
   | i :: is => by simp [Item.WellFormedList, Item.wellFormedList_iff is]
 
 /-- A module can be written and read back: each dialect of its set is named
-by a word, each of its items can be written and read back, and each number
-in its location table is in range. -/
+by a word, each number of its data layout is in range, each of its items
+can be written and read back, and each number in its location table is in
+range. -/
 structure Module.WellFormed (m : Module d) : Prop where
   dialects : ∀ x ∈ m.dialects, isWord x
+  layout : ∀ e ∈ m.layout, e.InLimits
   items : ∀ i ∈ m.items, i.WellFormed
   locs : m.locs.InLimits
 
@@ -247,9 +250,13 @@ decreasing_by
   simp only [Item.module.sizeOf_spec] at this
   omega
 
+/-- The numbers of a valid entry of the data layout are in range. -/
+theorem MemLayout.Valid.inLimits {e : MemLayout} (h : e.Valid) : e.InLimits :=
+  ⟨h.mem, h.unit.2, h.pointer.2, fun a ha => (h.align a ha).2⟩
+
 /-- Every valid module of a dialect with lawful text is well formed. -/
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
-  fun m hm => ⟨hm.dialectNames,
+  fun m hm => ⟨hm.dialectNames, fun e he => (hm.layout.entries e he).inLimits,
     SymbolTable.Valid.itemsWellFormed hm.locs m.dialects m.items hm.table
       (fun u hu => hm.tables u (List.mem_cons_of_mem _ hu)),
     hm.locs.2.1⟩

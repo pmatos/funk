@@ -42,13 +42,16 @@ A pointer type names its memory. The core `ptr` is `ptr<0>`, and other memories
 are `ptr<N>`. A dialect may add memories of its own. A pointer moves between
 memories only through an op that a dialect provides (ADR-2026-11-09-1542). The
 spec and the tools have the pointer types: a value of `ptr<N>` is poison or a
-pointer, refined only by itself. Every module has memory 0, so `ptr` is valid,
-and `ptr<N>` for `N ≥ 1` waits for the data layout to declare memory `N`
-(#231).
+pointer, refined only by itself. Every module has memory 0, so `ptr` is valid
+in every module, and `ptr<N>` for `N ≥ 1` is valid when the module's data
+layout declares memory `N` (ADR-2026-11-12-1821).
 
 The module's data layout gives each memory its unit of addressing and its
 pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes
-and offsets in a memory count its units (ADR-2026-11-09-1542).
+and offsets in a memory count its units (ADR-2026-11-09-1542). It also gives
+each memory its byte order, `little` alone in M1, its pointers' alignment and
+whether it is non-integral; [text-format-layout.md](text-format-layout.md)
+says what holds for it (ADR-2026-11-12-1821).
 
 Only exposed allocations have integer addresses. `fir-ref` assigns them from one
 canonical layout: in allocation order, aligned and deterministic. That is one of

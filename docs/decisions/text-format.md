@@ -75,6 +75,11 @@ attribute, since it would change every M0 text; the set in parentheses,
 unknown word at parse time, since a builder or a pass can make a module that
 no text wrote (ADR-2026-11-10-1306).
 
+The data layout follows the dialect set, on a line of its own that starts
+with the word `layout`, and a module with the empty layout writes none:
+[text-format-layout.md](text-format-layout.md) gives its spelling and rules
+(ADR-2026-11-12-1821).
+
 ## Nested modules
 
 A `module` item is a module nested in another: `module @dev() { ... }`, with
@@ -166,7 +171,8 @@ are unchanged. `ptr<N>` of another memory is written `ptr(N)`, the grammar's
 applied form, such as `ptr(1)`. `ptr(0)` does not decode, so each pointer type
 has one spelling, and neither does a negative memory, one above 16,777,215
 (LLVM's bound on address spaces), `ptr()` or another argument list. Whether
-the module has memory `N` is validation's rule. A dialect that adds memories
+the module has memory `N` is validation's rule: its data layout must declare
+`N` ([text-format-layout.md](text-format-layout.md#valid-layouts)). A dialect that adds memories
 names their pointers in its own types; `ptr(N)` is the core's
 (ADR-2026-11-11-1709). Rejected: `ptr<N>` in text, for the reason
 `float<e,m>` was; `ptr(0)` as a second spelling of `ptr`; and rejecting an

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6297424869189875216")
+:::moduleDocs (fingerprint := "3440740289277073700")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
@@ -180,11 +180,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "8528412600476982322")
+:::readable Fir.DialectValidation (fingerprint := "512433812722031166")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds six things of its own:
+dialect $`d` adds seven things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -209,12 +209,18 @@ dialect $`d` adds six things of its own:
   context and through a view, written $`C, v \vdash_d i~\text{valid}`. The
   rule reads the item's attributes, and says what the kind holds
   (ADR-2026-11-09-1543). A dialect that registers no kind of item has no
-  such rule.
+  such rule;
+* $`\mathrm{memory}_d(t)`, the memory that its pointer type $`t` points
+  into, by its number in the module's data layout, and none for a type
+  that names no memory. Validation requires the layout to declare each
+  memory that a type names (ADR-2026-11-12-1821). A dialect without
+  pointer types names none.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
-The core dialect has no rule over a whole function. It registers no kind of
+The core dialect has no rule over a whole function. Its pointer type
+$`\mathsf{ptr}\langle N \rangle` names the memory $`N`. It registers no kind of
 item: its kinds, `func` and `module`, have rules of their own in the next
 sections. It registers no region kind either: the rule of its own kind, a
 control-flow graph, is the rule of a function's body.

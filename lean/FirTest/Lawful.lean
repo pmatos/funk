@@ -8,9 +8,10 @@ guards of the poison obligations, and the axioms of their proofs.
 * _Valid op instances._ `udiv` at `i8` is one, so the instance gives it a
   result on defined operands. `udiv` at `i0` is not, and it has no such
   result (`Core.div_zero_width`): the guard is what lets the class hold.
-  A `call` with an operand of `ptr(1)`, a memory that no module has yet,
-  is not one either, but a `call` with an `i8` result is, and so is one
-  with a `ptr` operand.
+  A `call` with an operand of a pointer type whose memory is above
+  `2^24 - 1` is not one either, but a `call` with an `i8` result is, and so
+  is one with a `ptr` or a `ptr(1)` operand: whether the module has memory
+  1 is the rule of its data layout, not of the type.
 * _Ops that run by their own rule._ `add` meets the guard, as an op with no
   callee, and `ret` as a terminator; `call` does not. In the set monad,
   `call` has no outcome, so it is not total at op level, even at a valid
@@ -38,8 +39,14 @@ theorem udiv8_typesValid : TypesValid (d := CoreDialect) (.udiv 8 false) := by
 theorem udiv0_not_typesValid : ¬ TypesValid (d := CoreDialect) (.udiv 0 false) := by
   unfold TypesValid; decide
 
-/-- A `call` with a `ptr(1)` operand is not: no module has memory 1 yet. -/
-theorem callPtr1_not_typesValid : ¬ TypesValid (d := CoreDialect) (.call "f" [.ptr 1] []) := by
+/-- A `call` with an operand of a memory above `2^24 - 1` is not. -/
+theorem callPtrHigh_not_typesValid :
+    ¬ TypesValid (d := CoreDialect) (.call "f" [.ptr (maxMemory + 1)] []) := by
+  unfold TypesValid; decide
+
+/-- A `call` with a `ptr(1)` operand is: the module's data layout, not the
+type, says whether memory 1 exists. -/
+theorem callPtr1_typesValid : TypesValid (d := CoreDialect) (.call "f" [.ptr 1] []) := by
   unfold TypesValid; decide
 
 /-- A `call` with a `ptr` operand is: every module has the default
@@ -146,8 +153,8 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
 /-- info: 'FirTest.udiv0_not_typesValid' depends on axioms: [propext] -/
 #guard_msgs in #print axioms FirTest.udiv0_not_typesValid
 
-/-- info: 'FirTest.callPtr1_not_typesValid' depends on axioms: [propext] -/
-#guard_msgs in #print axioms FirTest.callPtr1_not_typesValid
+/-- info: 'FirTest.callPtrHigh_not_typesValid' depends on axioms: [propext] -/
+#guard_msgs in #print axioms FirTest.callPtrHigh_not_typesValid
 
 /-- info: 'FirTest.callPtr_typesValid' depends on axioms: [propext] -/
 #guard_msgs in #print axioms FirTest.callPtr_typesValid

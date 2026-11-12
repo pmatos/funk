@@ -14,14 +14,14 @@ changes under it.
 
 #doc (Manual) "Example: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3180108140818141476")
+:::moduleDocs (fingerprint := "15614714651354990337")
 :::
 
-:::readable Fir.Example.sum Fir.Example.sum10 Fir.Example.sumModule (fingerprint := "3180108140818141476")
+:::readable Fir.Example.sum Fir.Example.sum10 Fir.Example.sumModule (fingerprint := "15614714651354990337")
 *Definition: the example module.* The module above, as
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[abstract syntax]:
 the function `@sum`, the function `@sum10` and the location table with the
-seven entries `@0` to `@6`. Each op of the text is one op of the abstract
+seven entries `@0` to `@6`, with no dialect set and the empty data layout. Each op of the text is one op of the abstract
 syntax, with the same results, op instance, operands, successors and
 location reference. For example, the line
 

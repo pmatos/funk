@@ -1,11 +1,14 @@
 import Fir.Syntax.Dialect
 import Fir.Syntax.Location
+import Fir.Syntax.Layout
 import Fir.Syntax.Module
 import Fir.Core.Types
 import Fir.Core.Ops
 import Fir.Core.Signature
 import Fir.Validation.Scope
 import Fir.Validation.Dominance
+import Fir.Validation.Layout
+import Fir.Validation.LocTable
 import Fir.Validation.Rules
 import Fir.Core.Validation
 import Fir.Core.Rejects
@@ -15,6 +18,7 @@ import Fir.Validation.Graph
 import Fir.Validation.Check
 import Fir.Validation.CheckOps
 import Fir.Validation.CheckFuncs
+import Fir.Validation.CheckLayout
 import Fir.Validation.CheckModule
 import Fir.Core.Check
 import Fir.Execution.Values
@@ -115,6 +119,7 @@ import Fir.Memory.FrameLaws
 import Fir.Memory.Refine
 import Fir.Text.Lexical
 import Fir.Text.Grammar
+import Fir.Text.LayoutLaws
 import Fir.Text.Print
 import Fir.Text.RoundTrip
 import Fir.Text.Lex

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1458625858650665418")
+:::moduleDocs (fingerprint := "15028945711754093569")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -91,15 +91,17 @@ a dialect set and items decode; the tree reads other kinds so that a later
 kind needs no change to this step.
 :::
 
-:::readable Fir.Text.SModule (fingerprint := "9705118001543986064")
+:::readable Fir.Text.SModule (fingerprint := "2899039248715767664")
 *Definition: a module as written.* A module is read as its dialect set,
-the names it writes after the word `dialects`, then its items, then its
+the names it writes after the word `dialects`, then the entries of its data
+layout, each attribute it writes after the word `layout` with its position,
+then its items, then its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table],
 which has a fixed syntax and is read in full:
 
 ```grammar Fir.Text.SModule
 \mathit{smodule}
-dialects,items,locs \begin{array}{l} \{\mathsf{dialects}~\mathit{name}^*, \\ \enspace \mathsf{items}~\mathit{sitem}^*, \\ \enspace \mathsf{locs}~\mathit{table}\,\} \end{array}
+dialects,layout,items,locs \begin{array}{l} \{\mathsf{dialects}~\mathit{name}^*, \\ \enspace \mathsf{layout}~(a, p)^*, \\ \enspace \mathsf{items}~\mathit{sitem}^*, \\ \enspace \mathsf{locs}~\mathit{table}\,\} \end{array}
 ```
 :::
 
@@ -182,6 +184,15 @@ not a word is an error, "expected the name of a dialect". Otherwise the set
 is empty, and nothing is read. A set starts a module, and a body of items
 (ADR-2026-11-10-1510). A set that names no dialect is not written, so this
 reads nothing of it.
+:::
+
+:::readable Fir.Text.readLayout (pin := Fir.Text.readType) (fingerprint := "17250570661354131244")
+*Definition: reading a data layout.* When the tokens start with the word
+`layout`, the layout is the type after it, with its position, then each
+type after a comma, as long as a comma follows; each entry is read as a
+type, a word or a word applied to attributes, and decoding says whether it
+is an entry. Otherwise the layout is empty, and nothing is read. A layout
+follows a module's dialect set, and a body of items has none.
 :::
 
 :::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "8229966294769205176")

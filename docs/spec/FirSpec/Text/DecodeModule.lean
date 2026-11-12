@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module decoded back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7958503940249937813")
+:::moduleDocs (fingerprint := "15814474905113288281")
 :::
 
 :::readable Fir.bind_eq_of (fingerprint := "12224089499088332229")
@@ -86,7 +86,14 @@ an item of a dialect's kind decodes back by the theorem above. The last two theo
 another, and are proved together by induction on the items.
 :::
 
-:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "4661324548460288479")
+:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "18149788252979388033")
+*Theorem: a data layout decodes back.* For every data layout whose entries
+are within the limit, and all entries as written that are, positions
+aside, what its entries write, decoding them, in order, gives the layout
+back.
+:::
+
+:::readable Fir.Module.WellFormed.decodeModule_eq (pin := Fir.Text.decodeModule) (pin := Fir.Module.WellFormed) (fingerprint := "1557950398911582143")
 *Theorem: the decoding step gives a well-formed module back from its
 tree.* For every dialect with signatures, validation
 rules and a text format whose text is

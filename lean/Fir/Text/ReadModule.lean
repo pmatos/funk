@@ -60,6 +60,34 @@ theorem readDialects_reads (ns : List Name) :
     simp only [readDialectName, ok_bind, h₁]
     exact ⟨_, _, rfl, by simpa using h₂, h₃⟩
 
+/-- `readLayout` reads the tokens of a data layout as the attributes that
+its entries write, before any token but a comma, `(` and the word
+`layout`. -/
+theorem readLayout_reads (l : DataLayout) :
+    Reads readLayout (List.map eraseAt) (l.map (·.attr, TextPos.zero)) (layoutTokens l)
+      (fun t => t ≠ .comma ∧ t ≠ .lparen ∧ t ≠ .word "layout") := by
+  intro ts rest h hs
+  cases l with
+  | nil =>
+    simp only [layoutTokens, List.isEmpty_nil, ite_true, List.nil_append] at h
+    rw [readLayout.eq_2 _ fun p ts' he => not_cons_of_head h (fun u hu => (hs u hu).2.2) p ts' he]
+    exact ⟨[], _, rfl, rfl, h⟩
+  | cons e es =>
+    simp only [layoutTokens, List.isEmpty_cons, Bool.false_eq_true, ite_false, List.map_cons,
+      intercalate_cons, flatMap_comma_map, List.cons_append, List.append_assoc] at h
+    take_tok h
+    replace h := readType_reads (MemLayout.attr_isType e) _ _ h
+      (head?_append _ (by cases es <;> simp) fun t ht => (hs t ht).2.1)
+    obtain ⟨⟨a, q⟩, ⟨r₁, hr₁⟩, hT, hT', h⟩ := h
+    replace h := Reads.more (stop := (· ≠ .lparen)) (by decide)
+      (stop' := fun t => t ≠ .comma ∧ t ≠ .lparen ∧ t ≠ .word "layout")
+      (fun t ht => ⟨ht.2.1, ht.1⟩)
+      (fun y _ => readType_reads (MemLayout.attr_isType y)) _ _ h hs
+    obtain ⟨more, r, hM, hM', h⟩ := h
+    rw [readLayout.eq_1]
+    simp only [hT, ok_bind, hM]
+    exact ⟨_, _, rfl, by simp [hT', hM'], h⟩
+
 /-- The word that starts an item: its kind. -/
 def Item.kind : Item d → String
   | .func _ => "func"
@@ -101,10 +129,11 @@ theorem head_items (is : List (Item d)) (rest : List Tok) (P : Tok → Prop)
     cases i <;> simp [Item.tokensList, Item.tokens, Func.tokens, DialectItem.tokens, hk]
     exact hk.2.2 _ hi.1
 
-/-- A word of a dialect is neither `dialects` nor `locs`, nor a comma. -/
+/-- A word of a dialect is neither `dialects`, `locs` nor `layout`. -/
 theorem isDialectWord_not_reserved {w : String} (h : isDialectWord w) :
-    w ≠ "dialects" ∧ w ≠ "locs" :=
-  ⟨by rintro rfl; exact absurd h (by decide), by rintro rfl; exact absurd h (by decide)⟩
+    w ≠ "dialects" ∧ w ≠ "locs" ∧ w ≠ "layout" :=
+  ⟨by rintro rfl; exact absurd h (by decide), by rintro rfl; exact absurd h (by decide),
+    by rintro rfl; exact absurd h (by decide)⟩
 
 /-- What ends a list of items: the word `locs` at the top of a module, and
 `}` in the body of an item. -/
@@ -234,7 +263,7 @@ theorem Item.readsList (top : Bool) : ∀ is : List (Item d), Item.TypesWritable
     obtain ⟨sis, ⟨r', hr''⟩, h₄, h₅, h₆⟩ := hrs r rest h₃ hs
     have hk : ¬(top = true ∧ i.kind = "locs") := by
       cases i <;> simp [Item.kind]
-      exact fun _ => (isDialectWord_not_reserved hi.1).2
+      exact fun _ => (isDialectWord_not_reserved hi.1).2.1
     rw [readItems.eq_1]
     simp only [hk, ↓reduceIte, h₁, ok_bind, h₄]
     exact ⟨_, _, rfl, by simp [SItem.eraseList, Item.treeList, h₂, h₅], h₆⟩
@@ -249,27 +278,36 @@ theorem readModule_tokens {m : Module d}
     {ts : List Token} (h : ts.map (·.tok) = m.tokens ++ [.eof]) :
     ∃ s, readModule ts = .ok s ∧ s.erase = m.tree := by
   simp only [Module.tokens, List.append_assoc] at h
-  have hst : ∀ t ∈ (m.items.flatMap Item.tokens ++ (m.locs.tokens ++ [Tok.eof])).head?,
-      t ≠ .comma ∧ t ≠ .word "dialects" := by
+  rw [← Item.tokensList_eq_flatMap] at h
+  have hI : ∀ t ∈ (Item.tokensList m.items ++ (m.locs.tokens ++ [Tok.eof])).head?,
+      t ≠ .comma ∧ t ≠ .lparen ∧ t ≠ .word "dialects" ∧ t ≠ .word "layout" := by
     apply head?_append
-    · rw [← Item.tokensList_eq_flatMap]
-      simpa using head_items m.items [] (fun t => t ≠ .comma ∧ t ≠ .word "dialects")
-        ⟨by simp, by simp, fun w hw => by simp [(isDialectWord_not_reserved hw).1]⟩
+    · simpa using head_items m.items []
+        (fun t => t ≠ .comma ∧ t ≠ .lparen ∧ t ≠ .word "dialects" ∧ t ≠ .word "layout")
+        ⟨by simp, by simp, fun w hw => by
+          simp [(isDialectWord_not_reserved hw).1, (isDialectWord_not_reserved hw).2.2]⟩
         (fun i hi => ht i (List.mem_of_mem_head? hi)) (by simp)
     · simp [LocTable.tokens]
-  rw [← Item.tokensList_eq_flatMap] at h
-  obtain ⟨ns, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readDialects_reads m.dialects ts _ h
-    (by rw [← Item.tokensList_eq_flatMap] at hst; exact hst)
-  obtain ⟨items, ⟨r, hr⟩, h₁, h₂, h₃⟩ := Item.readsList true m.items
-    ((Item.typesWritableList_iff _).mpr ht) r₀ _ h₀'' (by simp [LocTable.tokens, itemsEnd])
+  have hL : ∀ t ∈ (layoutTokens m.layout ++
+      (Item.tokensList m.items ++ (m.locs.tokens ++ [Tok.eof]))).head?,
+      t ≠ .comma ∧ t ≠ .word "dialects" := by
+    apply head?_append
+    · unfold layoutTokens; split <;> simp
+    · exact fun t ht => ⟨(hI t ht).1, (hI t ht).2.2.1⟩
+  obtain ⟨ns, ⟨r₀, hr₀⟩, h₀, h₀', h₀''⟩ := readDialects_reads m.dialects ts _ h hL
+  obtain ⟨es, ⟨r₁, hr₁⟩, h₁, h₁', h₁''⟩ := readLayout_reads m.layout r₀ _ h₀''
+    fun t ht => ⟨(hI t ht).1, (hI t ht).2.1, (hI t ht).2.2.2⟩
+  obtain ⟨items, ⟨r, hr⟩, h₂, h₂', h₃⟩ := Item.readsList true m.items
+    ((Item.typesWritableList_iff _).mpr ht) r₁ _ h₁'' (by simp [LocTable.tokens, itemsEnd])
   have h₃' : r.map (·.tok) = .word "locs" :: (m.locs.tokens.tail ++ [.eof]) := by
     simpa [LocTable.tokens] using h₃
   obtain ⟨q, r', rfl, -⟩ := map_tok_cons h₃'
   obtain ⟨locs, ⟨r₂, hr₂⟩, h₄, h₅, h₆⟩ := LocTable.reads m.locs hl _ [.eof] h₃ fun _ _ => trivial
   take_tok h₆
   rw [readModule.eq_1]
-  simp only [h₀, ok_bind, h₁, h₄, expect_cons]
-  exact ⟨_, rfl, by simp [SModule.erase, Module.tree, ← h₀', ← Item.treeList_eq_map, h₂, ← h₅]⟩
+  simp only [h₀, ok_bind, h₁, h₂, h₄, expect_cons]
+  exact ⟨_, rfl, by
+    simp [SModule.erase, Module.tree, ← h₀', h₁', ← Item.treeList_eq_map, h₂', ← h₅]⟩
 
 variable [DialectSignature d]
 
