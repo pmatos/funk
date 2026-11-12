@@ -113,7 +113,8 @@ fn convert(cx: &mut Cx<'_>, op: &Op, signed: bool) -> Result<(), Unlowered> {
 }
 
 /// Converts the unsigned 64-bit value in `%rax` into `%xmm0`, and goes on
-/// at `done`. It clobbers `%rax` and `%rcx`.
+/// at `done`, which follows its code unless the caller jumps there. It
+/// clobbers `%rax` and `%rcx`.
 fn unsigned64(cx: &mut Cx<'_>, f: &Format, done: &str) {
     let cvt = format!("cvtsi2{}q", f.suffix);
     let half = cx.local_label();
@@ -125,7 +126,6 @@ fn unsigned64(cx: &mut Cx<'_>, f: &Format, done: &str) {
     halve_and_convert(cx, f, Reg::Rax, Reg::Rcx);
     cx.asm
         .ins(&format!("add{}", f.suffix), format_args!("%xmm0, %xmm0"));
-    cx.asm.ins("jmp", format_args!("{done}"));
 }
 
 /// Converts `top / 2`, with the bit that the halving drops ORed into the
@@ -159,6 +159,7 @@ fn pair(cx: &mut Cx<'_>, f: &Format, signed: bool) {
     cx.asm.ins("testq", format_args!("%rdx, %rdx"));
     cx.asm.ins("jnz", format_args!("{big}"));
     unsigned64(cx, f, &done);
+    cx.asm.ins("jmp", format_args!("{done}"));
     cx.asm.label(&big);
     // %cl: the leading zeros of the high half, which the shifts take off.
     cx.asm.ins("bsrq", format_args!("%rdx, %rcx"));

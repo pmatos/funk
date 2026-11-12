@@ -31,6 +31,15 @@ def int_value(w: int, signed: bool, text: str) -> int:
     return b - 2**w if signed and b >= 2 ** (w - 1) else b
 
 
+def host_bits(f: Format, ffmt: str, ifmt: str, x: int) -> int:
+    """The bits of `x` as the host's `struct` packs it into `f`, an
+    infinity when it is too large."""
+    try:
+        return struct.unpack(ifmt, struct.pack(ffmt, float(x)))[0]
+    except OverflowError:
+        return f.inf(x < 0)
+
+
 def wrong_expectations(module: str, text: str) -> list[str]:
     """The tests of a committed test file whose expected result is not the
     reference's."""
@@ -88,12 +97,7 @@ class Tests(unittest.TestCase):
                         if t != "f64" and abs(x) >= 2**53:
                             continue
                         with self.subTest(t=t, w=w, signed=signed, x=x):
-                            try:
-                                host = struct.unpack(ifmt, struct.pack(ffmt, float(x)))[
-                                    0
-                                ]
-                            except OverflowError:
-                                host = f.inf(x < 0)
+                            host = host_bits(f, ffmt, ifmt, x)
                             want = f.zero() if x == 0 else f.round(Fraction(x))
                             self.assertEqual(host, want)
 

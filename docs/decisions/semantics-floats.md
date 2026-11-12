@@ -191,7 +191,7 @@ the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
 - The model's `UnpackedFloat.ofInt` takes the integer to a number, rounded to
   nearest, ties to even, and `UnpackedFloat.pack` writes its bits. So an
   integer the format holds is exact, a tie such as `2^24 + 1` at `f32` goes to
-  the even neighbour, an integer past the largest finite value plus half an
+  the even neighbour, an integer at or past the largest finite value plus half an
   ulp is an infinity of its sign, as IEEE 754's overflow under rounding to
   nearest is, and zero is `+0`. This is IEEE 754's `convertFromInt` and LLVM's
   `sitofp` and `uitofp`.

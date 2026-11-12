@@ -218,7 +218,8 @@ def int_to_float(op: Op) -> Cell:
     cell."""
     if op.attrs == ROUND and len(op.operands) == len(op.results) == 1:
         [a], [b] = op.operands, op.results
-        if bits_of(a) is not None and bits_of(a)[1] and is_float(b):
+        operand = bits_of(a)
+        if operand is not None and operand[1] and is_float(b):
             return Cell("conversions", op.name, a, b)
     raise CellError(
         f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"

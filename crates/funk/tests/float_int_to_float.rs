@@ -101,6 +101,9 @@ fn cases(w: u32, bits: &mut Bits) -> Vec<u128> {
             }
         }
     }
+    // Each value negated too, so that `sitofp` meets negative ties and a
+    // negative `i128` whose magnitude fits in 64 bits.
+    out.extend(out.clone().into_iter().map(u128::wrapping_neg));
     for _ in 0..16 {
         out.push(bits.wide());
     }
@@ -162,6 +165,7 @@ fn check(f: Format, op: &str) {
             .split(',')
             .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64)
             .collect();
+        assert_eq!(got.len(), batch.len(), "{stdout}");
         let mask = u64::MAX >> (64 - f.bits);
         for (&v, &g) in batch.iter().zip(&got) {
             let want = host(f, w, v, signed);
@@ -202,6 +206,10 @@ fn the_cases_reach_every_path_of_the_lowering() {
     let c128 = cases(128, &mut bits);
     assert!(c128.contains(&(1 << 127)) && c128.contains(&u128::MAX));
     assert!(c128.iter().any(|&v| v >> 64 == 0 && v >> 63 == 1));
+    // A negative i128 whose magnitude is in [2^63, 2^64), and one with bits
+    // below the f64 tie at 2^63.
+    assert!(c128.contains(&(1u128 << 63).wrapping_neg()));
+    assert!(c128.contains(&((1u128 << 63) + (1 << 10) + 1).wrapping_neg()));
     assert_eq!(host(F32, 128, u128::MAX, false), 0x7f80_0000);
     assert_eq!(host(F32, 128, 1 << 127, true), 0xff00_0000);
     assert_eq!(host(F64, 1, 1, true), (-1.0f64).to_bits());
