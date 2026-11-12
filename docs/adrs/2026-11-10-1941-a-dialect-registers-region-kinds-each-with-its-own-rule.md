@@ -17,7 +17,7 @@ Tier: direction; area: validation
   does (ADR-2026-11-09-2257). It says how values are scoped in a region of
   its kind, which ops end its blocks and where its successors go. In Rust a
   dialect registers a `RegionKindSpec` with `Dialect::region_kind`, under
-  its prefix (ADR-2026-11-10-0042), and a kind of the core is rejected.
+  its prefix (ADR-2026-10-30-1146), and a kind of the core is rejected.
 - **Valid regions** (`Func.RegionsValid`): an op owns one region per kind
   its op instance states, in order; each kind is registered; each region
   obeys its kind's rule. No core op states a region.

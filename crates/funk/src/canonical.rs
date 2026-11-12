@@ -1,7 +1,7 @@
 //! The canonical text of a module, compared with a file or streamed out,
 //! never held whole: the canonical text of nested regions grows with the
-//! square of their depth (ADR-2026-10-30-1333), so it can be far larger
-//! than the file it comes from.
+//! square of their depth, so it can be far larger than the file it comes
+//! from (`docs/decisions/rust-ir-and-tools-funk.md#funk-fmt`).
 
 use std::fmt::{self, Display, Write};
 

@@ -150,7 +150,7 @@ refining ADR-2026-11-09-1541):
 memories named by strings. `OpSpec::effects` is required, so every op of
 every Rust dialect declares its set, the test dialects included.
 `Registry::effects` gives an op's set through the dialect that its prefix
-names, as a sum gives each op its own side's set (ADR-2026-11-10-0042). No
+names, as a sum gives each op its own side's set (ADR-2026-10-30-1146). No
 registered dialect has a memory yet, so how Rust keeps each dialect's
 memories apart is left to the first dialect that adds one.
 

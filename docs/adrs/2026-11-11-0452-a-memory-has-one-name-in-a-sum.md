@@ -57,4 +57,4 @@ This refines ADR-2026-11-09-2306 and ADR-2026-11-10-1310.
   sum is `ofBase`, composed through each level of the sum, as `Deps.lean`
   builds it.
 - The Rust registry names memories by strings. It does not mirror this
-  yet, since no registered dialect has a memory (ADR-2026-11-10-0042).
+  yet, since no registered dialect has a memory (ADR-2026-10-30-1146).

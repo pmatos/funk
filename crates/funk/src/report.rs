@@ -1,5 +1,5 @@
 //! What funk reports for each file, as text for people and as JSON for
-//! agents (ADR-2026-10-30-1032, ADR-2026-10-30-1326).
+//! agents (`docs/decisions/rust-ir-and-tools-funk.md#report-format`).
 //!
 //! The JSON report of a file says whether the parser rejected it
 //! (`parse-error`), validation rejected it (`validation-error`), the backend

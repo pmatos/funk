@@ -23,7 +23,8 @@ ACCEPTED = "accepted"
 PARSE_ERROR = "parse-error"
 VALIDATION_ERROR = "validation-error"
 # The exit status that goes with each verdict on one file
-# (ADR-2026-10-30-1032, ADR-2026-10-30-1741).
+# (docs/decisions/rust-ir-and-tools-funk.md#commands-and-verdicts,
+# ADR-2026-10-30-1741).
 STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
 # The kinds of what `fir-ref run --exhaustive` prints (ADR-2026-10-30-2218).
 OUTCOMES = "outcomes"
@@ -236,7 +237,8 @@ def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
 
 def verdict(ran: Ran) -> Verdict | str:
     """The verdict on one file of `funk verify --json` or `fir-ref
-    validate` (ADR-2026-10-30-1032, ADR-2026-10-30-1741)."""
+    validate` (docs/decisions/rust-ir-and-tools-funk.md#report-format,
+    ADR-2026-10-30-1741)."""
     if ran.status not in (0, 1, 2):
         return failure(ran)
     obj = one_json_line(ran.stdout)
@@ -266,7 +268,7 @@ def build(funk: str, source, exe):
 
 def build_failure(ran: Ran) -> str | None:
     """Why `funk build --json` built nothing, or None when it built
-    (ADR-2026-10-30-1326)."""
+    (docs/decisions/rust-ir-and-tools-funk.md#funk-build)."""
     obj = one_json_line(ran.stdout)
     if obj is None:
         return no_report(ran) if ran.status in (0, 1, 2) else failure(ran)

@@ -1,6 +1,7 @@
 //! `funk build`: compiles one file with the x86-64 backend into an object
-//! file and an executable (ADR-2026-10-30-1326). `funk asm`: prints the
-//! assembly of the file's functions.
+//! file and an executable. `funk asm`: prints the assembly of the file's
+//! functions (`docs/decisions/rust-ir-and-tools-funk.md`, "funk build" and
+//! "funk asm").
 
 use std::path::Path;
 

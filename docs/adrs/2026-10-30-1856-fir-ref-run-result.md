@@ -58,7 +58,7 @@ option is a decision taken without the human's ruling (rulings comment on
     validation rules out.
 
   Strings escape as `fir-ref validate`'s and `funk`'s reports escape them
-  (ADR-2026-10-30-1032). Reasons are for people: tools compare the kind
+  ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format)). Reasons are for people: tools compare the kind
   and the values only.
 - **Exit status.** 0 for `return`, `ub` and `fuel-exhausted`. 1 for
   `stuck`, and for a text that does not parse, which prints

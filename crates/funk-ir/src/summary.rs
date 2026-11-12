@@ -10,18 +10,17 @@
 //! holds the caller, so [`Summaries::of`] takes the items of one table: a
 //! module's, or a nested module's.
 //!
-//! The spec defines each summary by a walk over the functions that one
-//! function reaches, and proves it the least fixpoint of the calls and
-//! sound: a function whose summary leaves out may-UB never ends in UB, and
-//! one whose summary leaves out may produce poison returns no poison on
-//! arguments with none. Here every summary comes from one pass over the
-//! call graph's strongly connected components, callees first: the functions
-//! of a component reach each other, so they share a summary. The pass keeps
-//! its path on the heap, so a long chain of calls or a deep recursion takes
-//! no stack per call (ADR-2026-10-30-1333). A summary is a set, so its
+//! The spec defines each summary by a walk over the functions that one function
+//! reaches, and proves it the least fixpoint of the calls and sound: a function
+//! whose summary leaves out may-UB never ends in UB, and one whose summary
+//! leaves out may produce poison returns no poison on arguments with none. Here
+//! every summary comes from one pass over the call graph's strongly connected
+//! components, callees first: the functions of a component reach each other, so
+//! they share a summary. The pass keeps its path on the heap, so a long chain
+//! of calls or a deep recursion takes no stack per call
+//! (`docs/decisions/rust-ir-and-tools.md#nesting`). A summary is a set, so its
 //! memories are kept in sorted order; the shared cases of
-//! `tests/dialects/effect-summaries.cases` check that each one equals
-//! Lean's.
+//! `tests/dialects/effect-summaries.cases` check that each one equals Lean's.
 
 use std::collections::HashMap;
 

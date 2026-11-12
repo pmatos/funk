@@ -8,7 +8,7 @@
 //! in its [`OpShape`](super::OpShape), and the verifier checks each region
 //! against the rule of its kind. Registration puts each kind under its
 //! dialect's prefix, as it does each op, so one map of kind names routes a
-//! kind to the dialect that registers it (ADR-2026-11-10-0042).
+//! kind to the dialect that registers it (ADR-2026-10-30-1146).
 
 use super::FuncContext;
 use crate::ir::{Func, Region};

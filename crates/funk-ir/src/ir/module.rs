@@ -94,7 +94,8 @@ pub struct Block {
 /// a dialect's kind is a word of that dialect, such as `toy.graph`.
 ///
 /// Regions nest to any depth, so `Region` writes its `Clone`, `PartialEq`,
-/// `Hash`, `Debug` and `Drop` without recursion (ADR-2026-10-30-1333).
+/// `Hash`, `Debug` and `Drop` without recursion
+/// (`docs/decisions/rust-ir-and-tools.md#nesting`).
 /// Because it implements `Drop`, its blocks cannot be moved out of an owned
 /// `Region`: take them with [`std::mem::take`].
 #[derive(Default)]

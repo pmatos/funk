@@ -12,7 +12,8 @@ limits numbers (N3), but not nesting.
 `funk-ir` (#9) handled nesting recursively. On its 1 GiB reserved stack,
 `funk` gave a verdict on a text nested a million levels deep, but one
 nested 3 million levels deep aborted it with a stack overflow and no
-verdict, which breaks ADR-2026-10-30-1032. A library caller on a 2 to 8 MB
+verdict, which breaks the one verdict per file of
+[rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#commands-and-verdicts). A library caller on a 2 to 8 MB
 thread failed after a few thousand levels. The spec's Lean parser and
 printer (#10) recurse the same way. #36 asked for a direction call: a
 nesting limit, or none.
@@ -41,7 +42,8 @@ point in introducing a random nesting limit."
 
 - A walk over nested text or IR keeps its path on the heap, or does
   something equivalent, which takes more code than recursion.
-  ADR-2026-10-30-1333 records how `funk-ir` does it.
+  [rust-ir-and-tools.md](../decisions/rust-ir-and-tools.md#nesting) records how `funk-ir`
+  does it.
 - `fir-ref` and the spec's Lean parser and printer follow the same rule;
   #47 tracks them.
 - The tests of each tool nest texts deeper than a recursive walk on a small

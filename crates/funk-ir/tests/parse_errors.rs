@@ -456,7 +456,7 @@ fn text_that_breaks_the_grammar_is_rejected() {
 
 /// The parser reads tokens as the grammar needs them, and still reports the
 /// first error of the earliest phase: tokens, then the grammar, then
-/// decoding (ADR-2026-10-30-1032).
+/// decoding (`docs/decisions/rust-ir-and-tools-funk.md#report-format`).
 #[test]
 fn an_error_of_an_earlier_phase_wins_wherever_it_stands() {
     let tokens_after_grammar = "func {\n}\n\nlocs {\n}\n%";

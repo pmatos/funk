@@ -1,7 +1,7 @@
-//! funk needs no large stack (ADR-2026-10-30-1333): on texts nested a
-//! million levels deep in attributes, regions and items, it gives its usual
-//! verdicts with a main thread of 1 MiB, where a walk that recursed once per
-//! level would overflow within a few thousand levels.
+//! funk needs no large stack (`docs/decisions/rust-ir-and-tools.md#nesting`):
+//! on texts nested a million levels deep in attributes, regions and items,
+//! it gives its usual verdicts with a main thread of 1 MiB, where a walk
+//! that recursed once per level would overflow within a few thousand levels.
 
 #![cfg(unix)]
 

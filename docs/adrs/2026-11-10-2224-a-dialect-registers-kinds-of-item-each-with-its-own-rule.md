@@ -32,7 +32,7 @@ ADR-2026-11-10-1941 does the same for region kinds.
   through a `DialectView` and the symbols of its table, as `validFunc`
   does, so it is written once and holds in any sum. In Rust a dialect
   registers an `ItemKindSpec` with `Dialect::item_kind`; registration puts
-  each kind under the dialect's prefix, as for ops (ADR-2026-11-10-0042),
+  each kind under the dialect's prefix, as for ops (ADR-2026-10-30-1146),
   and rejects a kind of the core.
 - **A valid item** (`DialectItem.Valid`): its kind is a word of a dialect
   that the dialect registers, its parameters have distinct names, its

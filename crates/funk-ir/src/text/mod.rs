@@ -64,7 +64,7 @@ impl std::error::Error for ParseError {}
 /// A text with several errors is rejected at the first error of the
 /// earliest phase: characters and tokens, then the grammar, then decoding,
 /// which checks each function's definitions before its ops
-/// (ADR-2026-10-30-1032).
+/// (`docs/decisions/rust-ir-and-tools-funk.md#report-format`).
 pub fn parse(text: &str, reg: &Registry) -> Result<Module, ParseError> {
     let syntax = grammar::module(text)?;
     decode::module(syntax, reg)

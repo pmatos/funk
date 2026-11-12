@@ -1,7 +1,7 @@
 //! `funk`, the driver: `funk fmt` prints fir in its canonical form,
 //! `funk verify` checks it, `funk asm` prints the x86-64 assembly of its
 //! functions, and `funk build` compiles it to x86-64. Each reports as text,
-//! or as JSON with `--json` (ADR-2026-10-30-1032, ADR-2026-10-30-1326).
+//! or as JSON with `--json` (`docs/decisions/rust-ir-and-tools-funk.md`).
 
 mod build;
 mod canonical;

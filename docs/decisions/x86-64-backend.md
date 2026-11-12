@@ -50,8 +50,9 @@ needs glibc's development files. Any other module stays static, with no C
 library (ADR-2026-11-10-1303).
 
 `funk build -o OUTPUT FILE` writes `OUTPUT.o` and `OUTPUT`. The intermediate
-files go to a temporary directory, which funk removes. ADR-2026-10-30-1326 says
-how the outputs are moved into place.
+files go to a temporary directory, which funk removes.
+[rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#funk-build) says how the
+outputs are moved into place.
 
 A tool that prints is a tool that failed. If `as` or `ld` cannot run, exits
 with an error or prints anything, the build fails with a `tool-error`.

@@ -1,5 +1,5 @@
 //! Trees of any depth, walked and built with explicit stacks
-//! (ADR-2026-10-30-1333).
+//! (`docs/decisions/rust-ir-and-tools.md#nesting`).
 //!
 //! fir has no limit on how deeply attributes, regions and items nest
 //! (ADR-2026-10-30-1549), so no code here recurses once per level on the

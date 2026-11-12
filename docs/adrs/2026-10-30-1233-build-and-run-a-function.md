@@ -11,7 +11,8 @@ must call a built function with arguments and read its returned values, to
 compare them with `fir-ref`'s. `fir-ref run FILE @func ARGS...` (#10)
 spells values as fir constants: `true` and `false` at `i1`, and signed
 decimal at every other width. `funk build -o OUTPUT FILE` writes the
-executable `OUTPUT` (ADR-2026-10-30-1326). Code that funk generates cannot
+executable `OUTPUT` ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#funk-build)).
+Code that funk generates cannot
 be loaded into a Rust process: the workspace forbids `unsafe`. A frame
 holds 8 bytes per value (ADR-2026-10-30-1230), so a function with a million
 values needs more stack than the 8 MiB that Linux gives a process by

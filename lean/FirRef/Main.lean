@@ -199,8 +199,9 @@ end FirRef
 
 /-- The entry point of `fir-ref`. When it cannot write its output, it says so
 on standard error if it can, and exits with 2, as `funk` does
-(ADR-2026-10-30-1032); a reader that stopped reading, as `head` does, gets no
-message. Read errors never reach here: each file's report carries them. -/
+(`docs/decisions/rust-ir-and-tools-funk.md#commands-and-verdicts`); a reader
+that stopped reading, as `head` does, gets no message. Read errors never
+reach here: each file's report carries them. -/
 def main (args : List String) : IO UInt32 := do
   try
     let status ← FirRef.run args

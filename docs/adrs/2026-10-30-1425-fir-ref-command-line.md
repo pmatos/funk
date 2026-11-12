@@ -9,7 +9,8 @@ Tier: implementation; area: fir-ref
 The harness of [#13](https://github.com/pmatos/funk/issues/13) runs it and
 `funk` on the same texts. It compares their verdicts, and the position of
 a parse error in a text with one error, never their wording, as
-ADR-2026-10-30-1032 says of `funk`'s reports.
+[rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format) says of
+`funk`'s reports.
 [#10](https://github.com/pmatos/funk/issues/10) gives `fir-ref` three
 commands: `fmt`, then `validate` and `run`, whose JSON output it specifies.
 
@@ -21,7 +22,8 @@ commands: `fmt`, then `validate` and `run`, whose JSON output it specifies.
   `funk fmt` does. `--check` prints the name of each file that is not
   canonical instead. A FILE of `-` is standard input, and `--` ends the
   options. `validate` and `run` follow.
-- **Exit status.** The status of ADR-2026-10-30-1032: 0 when every file is
+- **Exit status.** The status of `funk fmt` and `funk verify`
+  ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#commands-and-verdicts)): 0 when every file is
   accepted, and canonical under `--check`; 1 when one is rejected, or not
   canonical under `--check`; 2 on a usage or I/O error.
 - **Parse errors.** A parse error is one line on standard error,

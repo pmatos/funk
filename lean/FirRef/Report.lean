@@ -3,7 +3,8 @@ import FirRef.Utf8
 
 /-!
 What `fir-ref validate` reports on a file: one JSON object on one line, in
-the schema of `funk verify --json` (ADR-2026-10-30-1032), so that #13
+the schema of `funk verify --json`
+(`docs/decisions/rust-ir-and-tools-funk.md#report-format`), so that #13
 compares the two tools' verdicts with no translation. ADR-2026-10-30-1741
 records the schema. The object has the file, its verdict and its
 diagnostics:

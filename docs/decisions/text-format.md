@@ -66,7 +66,7 @@ name, attributes and region kinds. `tests/dialects/dialect-set.cases` holds
 must-accept and must-reject cases that both validators read
 (ADR-2026-11-10-1306). A dialect's dependencies do not yet constrain the set:
 a module that names `toy` need not name what `toy` depends on beyond the
-core. ADR-2026-11-10-0042 says that the set will use them; no check does
+core. ADR-2026-10-30-1146 says that the set is to use them; no check does
 yet.
 
 Rejected: a `module` item that holds the items, with the set as its
@@ -138,7 +138,8 @@ Text has no nesting limit. Every text the grammar accepts is read at any
 depth (ADR-2026-10-30-1549).
 
 `funk fmt` parses a file but does not validate it. Every module that parses
-has a canonical form (ADR-2026-10-30-1032).
+has a canonical form
+([rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#commands-and-verdicts)).
 
 Numbers have limits. An integer type `iN` has `1 <= N <= 16,777,215`, and a
 float type has at most as many bits in all (ADR-2026-11-11-0950). A
