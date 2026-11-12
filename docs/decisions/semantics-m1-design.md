@@ -57,12 +57,13 @@ A value takes whole units of the memory it is stored in, placed in the
 memory's byte order (ADR-2026-11-12-2125). An `iN` takes `ceil(N / U)` units
 of `U` bits: a store sets the bits past `N` to zero, and a load ignores them,
 so an `i1` loaded from `0xFF` is 1. A `ptr<N>` takes `ceil(P / U)` units,
-one fragment of the pointer each, where `P` is memory `N`'s pointer width.
-Poison takes as many poison units. A load gives poison from a poison unit,
-an integer load from a pointer's fragments, and a pointer load from anything
-but its own fragments in order. The encoding laws take the byte order as a
-parameter and hold at every order (`lean/Fir/Memory/EncodeLaws.lean`). The
-human ruled odd widths, punned loads and the byte-order parameter on
+each a fragment of the pointer with the memory number `N`, where `P` is
+memory `N`'s pointer width. Poison takes as many poison units. A load gives
+poison from a poison unit, an integer load from a pointer's fragments, and
+a `ptr<N>` load from anything but one pointer's fragments of memory `N` in
+order, so an integer copy of memory carries no pointer. The encoding laws
+take the byte order as a parameter and hold at every order
+(`lean/Fir/Memory/EncodeLaws.lean`). The human ruled odd widths, punned loads and the byte-order parameter on
 2026-11-11, on #231. Rejected: reject widths that are not a multiple of the
 unit, so `i1` and `i20` could never be stored; and immediate UB for a
 punned load, which makes copying memory as integers UB.

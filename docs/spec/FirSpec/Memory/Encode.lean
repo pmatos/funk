@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Values in units: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7844819549544033442")
+:::moduleDocs (fingerprint := "16029578052532037151")
 :::
 
 :::readable Fir.ByteOrder.place (fingerprint := "1492561779768503232")
@@ -74,25 +74,29 @@ so does a pointer's fragment: a punned load gives poison (the human's
 ruling of 2026-11-11 on #231; ADR-2026-11-12-2125).
 :::
 
-:::readable Fir.Memory.fragments (fingerprint := "2237464729352554685")
-*Definition: a pointer's fragments.* The $`k` fragments of $`p`, least
-significant first, are $`\mathsf{frag}~p~0 \ldots \mathsf{frag}~p~(k-1)`.
+:::readable Fir.Memory.fragments (fingerprint := "6762547574621767447")
+*Definition: a pointer's fragments.* The $`k` fragments of the pointer
+$`p` of the memory $`m`, least significant first, are
+$`\mathsf{frag}~m~p~0 \ldots \mathsf{frag}~m~p~(k-1)`.
 :::
 
-:::readable Fir.Memory.encodePtr (fingerprint := "6638618960890015960")
-*Definition: a pointer in units.* A value of a pointer type that takes
-$`k` units, placed in the byte order $`o`:
+:::readable Fir.Memory.encodePtr (fingerprint := "5372565945392989224")
+*Definition: a pointer in units.* A value of the pointer type of the
+memory $`m`, which takes $`k` units, placed in the byte order $`o`:
 
-$$`\mathrm{enc}_o(p) = \mathrm{place}_o(\mathsf{frag}~p~0 \ldots \mathsf{frag}~p~(k-1)) \qquad \mathrm{enc}_o(\mathsf{poison}) = \mathsf{poison}^{k}`
+$$`\mathrm{enc}_o(p) = \mathrm{place}_o(\mathsf{frag}~m~p~0 \ldots \mathsf{frag}~m~p~(k-1)) \qquad \mathrm{enc}_o(\mathsf{poison}) = \mathsf{poison}^{k}`
 
-Each unit holds a fragment of the pointer, so a pointer copied unit by
-unit keeps its provenance (ADR-2026-11-09-1542).
+Each unit holds a fragment of the pointer and its memory, so a pointer
+copied unit by unit keeps its provenance (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Memory.decodePtr (fingerprint := "14405273252292590101")
+:::readable Fir.Memory.decodePtr (fingerprint := "2491161686553248570")
 *Definition: units as a pointer.* Units $`\vec{x}` decode in the byte order
-$`o` as a value of a pointer type that takes $`k` units to $`p` when
-$`\mathrm{place}_o(\vec{x})` is the $`k` fragments of $`p`, in order, and
-to $`\mathsf{poison}` otherwise: units of bits, poison, fragments of two
-pointers or fragments out of order are not a pointer.
+$`o` as a value of the pointer type of the memory $`m`, which takes $`k`
+units, to $`p` when $`\mathrm{place}_o(\vec{x})` is the $`k` fragments of
+$`p` of $`m`, in order, and to $`\mathsf{poison}` otherwise: units of
+bits, poison, fragments of two pointers, fragments out of order and a
+pointer of another memory are not a pointer of $`m`. In one memory a
+pointer of $`m` always takes the same $`k` units, so its first units alone
+are not one either.
 :::

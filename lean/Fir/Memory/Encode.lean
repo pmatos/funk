@@ -15,9 +15,11 @@ values uses them, so they are written once, over `PoisonOr (BitVec w)` and
   When `w` is not a multiple of `u`, its last unit has bits to spare: the
   encoding sets them to zero, and the decoding ignores them, whatever they
   hold. The human ruled this on 2026-11-11, on #231.
-* A pointer takes as many units as its memory's pointer width needs, and
-  each holds one of its fragments, so a pointer copied unit by unit keeps
-  its provenance (ADR-2026-11-09-1542).
+* A pointer of the memory `m` takes as many units as `m`'s pointer width
+  needs, and each holds one of its fragments, with `m`. So a pointer copied
+  unit by unit keeps its provenance (ADR-2026-11-09-1542), and a pointer of
+  one memory never decodes as a pointer of another, since a pointer moves
+  between memories only through an op (ADR-2026-11-09-1542).
 * Poison takes the same number of units, each of them poison.
 * The memory's byte order places the units: `little` puts the least
   significant first, at the lowest offset, and `big` the most significant.
@@ -26,8 +28,9 @@ values uses them, so they are written once, over `PoisonOr (BitVec w)` and
 
 Decoding is defined for any units, so a load always has a value. Units that
 are not the encoding of a value of the type decode to poison: an integer
-from a unit that is poison or a pointer's fragment, and a pointer from
-anything but its own fragments, in order. So a punned load gives poison,
+from a unit that is poison or a pointer's fragment, and a pointer of `m`
+from anything but the fragments of one pointer of `m`, in order. So a
+punned load gives poison,
 as the human ruled on 2026-11-11, on #231, and a pointer that is partly
 overwritten is no longer a pointer. Units of the wrong number decode to
 poison too, though a load reads exactly the units of its type.
@@ -79,22 +82,26 @@ def decodeInt (u w : Nat) (o : ByteOrder) (us : List (MemUnit u)) : PoisonOr (Bi
     | none => .poison
   else .poison
 
-/-- The `k` fragments of the pointer `p`, least significant first. -/
-def fragments {u : Nat} (k : Nat) (p : Pointer) : List (MemUnit u) :=
-  (List.range k).map (.frag p)
+/-- The `k` fragments of the pointer `p` of the memory `m`, least
+significant first. -/
+def fragments {u : Nat} (m k : Nat) (p : Pointer) : List (MemUnit u) :=
+  (List.range k).map (.frag m p)
 
-/-- The encoding of a value of a pointer type in `k` units placed in the
-byte order `o`: the pointer's fragments, or `k` poison units. -/
-def encodePtr {u : Nat} (k : Nat) (o : ByteOrder) : PoisonOr Pointer → List (MemUnit u)
+/-- The encoding of a value of the pointer type of the memory `m` in `k`
+units placed in the byte order `o`: the pointer's fragments, or `k` poison
+units. -/
+def encodePtr {u : Nat} (m k : Nat) (o : ByteOrder) : PoisonOr Pointer → List (MemUnit u)
   | .poison => List.replicate k .poison
-  | .value p => o.place (fragments k p)
+  | .value p => o.place (fragments m k p)
 
-/-- The decoding of units in the byte order `o` as a value of a pointer
-type that takes `k` units: the pointer `p` when they are the `k` fragments
-of `p`, in order; poison otherwise. -/
-def decodePtr {u : Nat} (k : Nat) (o : ByteOrder) (us : List (MemUnit u)) : PoisonOr Pointer :=
+/-- The decoding of units in the byte order `o` as a value of the pointer
+type of the memory `m`, which takes `k` units: the pointer `p` when they
+are the `k` fragments of `p` of `m`, in order; poison otherwise. In one
+memory a pointer of `m` always takes the same `k` units, so the first units
+of a pointer of `m` are never a pointer of `m`. -/
+def decodePtr {u : Nat} (m k : Nat) (o : ByteOrder) (us : List (MemUnit u)) : PoisonOr Pointer :=
   match o.place us with
-  | .frag p _ :: _ => if o.place us = fragments k p then .value p else .poison
+  | xs@(.frag _ p _ :: _) => if xs = fragments m k p then .value p else .poison
   | _ => .poison
 
 end Memory

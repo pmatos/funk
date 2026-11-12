@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Laws of values in units: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17779421343732612243")
+:::moduleDocs (fingerprint := "15694537916672545565")
 :::
 
 :::readable Fir.ByteOrder.place_place Fir.ByteOrder.length_place Fir.ByteOrder.mem_place Fir.ByteOrder.place_replicate (fingerprint := "17239911817336278410")
@@ -29,7 +29,7 @@ the units hold every bit of the value. If also $`w > 0`, there is at
 least one unit.
 :::
 
-:::readable Fir.Memory.length_digits Fir.Memory.length_encodeInt Fir.Memory.length_fragments Fir.Memory.length_encodePtr (fingerprint := "18215605909154878319")
+:::readable Fir.Memory.length_digits Fir.Memory.length_encodeInt Fir.Memory.length_fragments Fir.Memory.length_encodePtr (fingerprint := "1905220626643777648")
 *Theorem: an encoding takes the type's size.* An integer of $`w` bits,
 poison included, takes $`\lceil w/u \rceil` units, and a pointer type that
 takes $`k` units takes $`k`, for a pointer or poison, at every byte order.
@@ -66,27 +66,34 @@ included,
 $$`\mathrm{dec}_o(\mathrm{enc}_o(v)) = v`
 :::
 
-:::readable Fir.Memory.decodePtr_encodePtr (fingerprint := "1201210544938447313")
+:::readable Fir.Memory.decodePtr_encodePtr (fingerprint := "5669161125417443993")
 *Theorem: the pointer law.* If a pointer takes $`k > 0` units, then for
 every byte order $`o` and every value $`v` of the pointer type, poison
 included, $`\mathrm{dec}_o(\mathrm{enc}_o(v)) = v`. The decoded pointer
 keeps its provenance.
 :::
 
-:::readable Fir.Memory.mem_digits Fir.Memory.exists_mem_encodePtr (fingerprint := "2334556086378682468")
+:::readable Fir.Memory.decodePtr_encodePtr_ne (fingerprint := "16880774723411578717")
+*Theorem: a pointer stays in its memory.* If $`m \ne m'`, decoding as a
+pointer of $`m'` the encoding of a value of the pointer type of $`m`
+gives $`\mathsf{poison}`, at any byte orders and sizes: a pointer moves
+between memories only through an op (ADR-2026-11-09-1542).
+:::
+
+:::readable Fir.Memory.mem_digits Fir.Memory.exists_mem_encodePtr (fingerprint := "14722379440978062053")
 *Theorem: what the units are.* Every unit of an integer's digits is bits.
 A pointer type that takes $`k > 0` units has, in each encoding, a unit
 that is not bits: a fragment, or poison.
 :::
 
-:::readable Fir.Memory.decodeInt_encodePtr Fir.Memory.decodePtr_encodeInt (fingerprint := "2420642749408575033")
+:::readable Fir.Memory.decodeInt_encodePtr Fir.Memory.decodePtr_encodeInt (fingerprint := "15931158911768043818")
 *Theorem: punned decodings give poison.* At any byte orders $`o` and
 $`o'`, decoding as an integer the encoding of a pointer type that takes
 $`k > 0` units gives $`\mathsf{poison}`, and so does decoding as a
 pointer an integer's encoding.
 :::
 
-:::readable Fir.Memory.load_store_encodeInt Fir.Memory.load_store_encodePtr (fingerprint := "13725776296374384105")
+:::readable Fir.Memory.load_store_encodeInt Fir.Memory.load_store_encodePtr (fingerprint := "16000281041400501184")
 *Theorem: through memory.* If storing $`\mathrm{enc}_o(v)` through $`p`
 gives $`M'`, then loading from $`M'` the units of $`v`'s type through
 $`p`, and decoding them, gives $`v` back, poison included: for an integer

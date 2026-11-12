@@ -23,20 +23,6 @@ a valid layout.
 
 namespace Fir
 
-/-- Each memory of a valid layout has pointers of at least one bit, the
-default memory included. -/
-theorem DataLayout.pointer_pos {l : DataLayout} (hl : l.Valid) {n : Nat} {e : MemLayout}
-    (h : l.memory? n = some e) : 0 < e.pointer := by
-  unfold DataLayout.memory? at h
-  split at h
-  · rename_i he
-    cases h
-    exact (hl.entries _ (List.mem_of_find?_eq_some he)).pointer.1
-  · split at h
-    · cases h
-      decide
-    · cases h
-
 namespace Core
 
 open Memory
@@ -52,17 +38,18 @@ def Ty.units? (l : DataLayout) (u : Nat) : Ty → Option Nat
   | .float _ _ => none
 
 /-- The encoding of a value of the type `t` in `u`-bit units placed in the
-byte order `o`, under the layout `l`, when `t` has a size. -/
+byte order `o`, under the layout `l`, when `t` has a size. A pointer's
+fragments record its memory. -/
 def Ty.encode? (l : DataLayout) (u : Nat) (o : ByteOrder) : (t : Ty) → ⟦t⟧ → Option (List (MemUnit u))
   | .int _, v => some (encodeInt u o v)
-  | .ptr n, v => (l.memory? n).map fun e => encodePtr (unitsFor u e.pointer) o v
+  | .ptr n, v => ((Ty.ptr n).units? l u).map fun k => encodePtr n k o v
   | .float _ _, _ => none
 
 /-- The decoding of `u`-bit units in the byte order `o` as a value of the
 type `t`, under the layout `l`, when `t` has a size. -/
 def Ty.decode? (l : DataLayout) (u : Nat) (o : ByteOrder) : (t : Ty) → List (MemUnit u) → Option ⟦t⟧
   | .int w, us => some (decodeInt u w o us)
-  | .ptr n, us => (l.memory? n).map fun e => decodePtr (unitsFor u e.pointer) o us
+  | .ptr n, us => ((Ty.ptr n).units? l u).map fun k => decodePtr n k o us
   | .float _ _, _ => none
 
 /-- A value's encoding takes the size of its type. -/
@@ -74,9 +61,9 @@ theorem Ty.encode?_length {l : DataLayout} {u : Nat} {o : ByteOrder} {t : Ty} {v
     exact congrArg some (length_encodeInt (u := u) o (w := w) v).symm
   | ptr n =>
     simp only [Ty.encode?, Option.map_eq_some_iff] at h
-    obtain ⟨e, he, rfl⟩ := h
-    simp only [Ty.units?, he, Option.map_some]
-    exact congrArg some (length_encodePtr (u := u) _ o v).symm
+    obtain ⟨k, hk, rfl⟩ := h
+    rw [hk]
+    exact congrArg some (length_encodePtr (u := u) n k o v).symm
   | float _ _ => cases h
 
 /-- Every integer type has a size, and so has a pointer type whose memory
@@ -96,8 +83,10 @@ theorem Ty.decode?_encode? {l : DataLayout} (hl : l.Valid) {u : Nat} (hu : 0 < u
     exact congrArg some (decodeInt_encodeInt hu o (w := w) (by simp only [Ty.Valid] at ht; omega) v)
   | ptr n =>
     simp only [Ty.encode?, Option.map_eq_some_iff] at h
-    obtain ⟨e, he, rfl⟩ := h
-    simp only [Ty.decode?, he]
+    obtain ⟨k, hk, rfl⟩ := h
+    simp only [Ty.units?, Option.map_eq_some_iff] at hk
+    obtain ⟨e, he, rfl⟩ := hk
+    simp only [Ty.decode?, Ty.units?, he, Option.map_some]
     exact congrArg some (decodePtr_encodePtr (unitsFor_pos hu (DataLayout.pointer_pos hl he)) o v)
   | float _ _ => cases h
 

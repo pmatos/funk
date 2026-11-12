@@ -14,12 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's values in memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1698454689595369772")
-:::
-
-:::readable Fir.DataLayout.pointer_pos (fingerprint := "15452446704807025419")
-*Theorem: pointers have bits.* Each memory of a valid layout, the
-default memory included, has pointers of at least one bit.
+:::moduleDocs (fingerprint := "3384552910637559386")
 :::
 
 :::readable Fir.Core.Ty.units? (fingerprint := "14989890563056299282")
@@ -33,7 +28,7 @@ for it. A float type has no size, nor has a pointer type whose memory
 $`l` does not declare.
 :::
 
-:::readable Fir.Core.Ty.encode? Fir.Core.Ty.decode? (fingerprint := "9388341738214022395")
+:::readable Fir.Core.Ty.encode? Fir.Core.Ty.decode? (fingerprint := "9373974658110521377")
 *Definition: the core's values in units.* A value of $`\mathsf{i}N` is
 encoded and decoded as an integer of $`N` bits, and a value of
 $`\mathsf{ptr}\langle N\rangle` as a pointer type that takes

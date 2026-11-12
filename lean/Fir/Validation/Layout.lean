@@ -44,6 +44,20 @@ structure DataLayout.Valid (l : DataLayout) : Prop where
   entries : ∀ e ∈ l, e.Valid
   unique : (l.map (·.mem)).Nodup
 
+/-- Each memory of a valid layout has pointers of at least one bit, the
+default memory included. -/
+theorem DataLayout.pointer_pos {l : DataLayout} (hl : l.Valid) {n : Nat} {e : MemLayout}
+    (h : l.memory? n = some e) : 0 < e.pointer := by
+  unfold DataLayout.memory? at h
+  split at h
+  · rename_i he
+    cases h
+    exact (hl.entries _ (List.mem_of_find?_eq_some he)).pointer.1
+  · split at h
+    · cases h
+      decide
+    · cases h
+
 variable {d : Dialect} [DialectValidation d]
 
 /-- The layout has the memory that a type names, if it names one. -/

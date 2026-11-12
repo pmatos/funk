@@ -37,8 +37,8 @@ def b2 : MemUnit 8 := .bits 0x07
 
 -- A pointer stored unit by unit keeps its fragments.
 #guard (do
-    let M ← m2.2.store ⟨some 1, 0⟩ [.frag m1.1 0, .frag m1.1 1]
-    M.load m2.1 2) == .ok [.frag m1.1 0, .frag m1.1 1]
+    let M ← m2.2.store ⟨some 1, 0⟩ [.frag 0 m1.1 0, .frag 0 m1.1 1]
+    M.load m2.1 2) == .ok [.frag 0 m1.1 0, .frag 0 m1.1 1]
 
 -- Each fault of an access.
 #guard m2.2.load ⟨none, 0⟩ 1 == .error .noProvenance

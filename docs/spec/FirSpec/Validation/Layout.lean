@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13831520872116749827")
+:::moduleDocs (fingerprint := "10127504593038420527")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -43,6 +43,11 @@ pointer into an integer and back are rejected on such a memory
 *Definition: a valid data layout.* A data layout is valid when each of its
 entries is, and it declares each memory once: the numbers of its entries
 are distinct.
+:::
+
+:::readable Fir.DataLayout.pointer_pos (fingerprint := "15452446704807025419")
+*Theorem: pointers have bits.* Each memory of a valid layout, the
+default memory included, has pointers of at least one bit.
 :::
 
 :::readable Fir.DataLayout.HasMemoryOf Fir.DataLayout.decidableHasMemoryOf (fingerprint := "14715638795206739839")

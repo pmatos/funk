@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2710814930418249509")
+:::moduleDocs (fingerprint := "6874093456780205899")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -39,7 +39,7 @@ access through the pointer must be in bounds. A pointer with no
 provenance, $`(\epsilon, o)`, can access no allocation.
 :::
 
-:::readable Fir.Memory.MemUnit (fingerprint := "5111969052292565827")
+:::readable Fir.Memory.MemUnit (fingerprint := "6901355222307291109")
 *Definition: a unit.* A unit of a memory whose units are $`u` bits wide
 holds concrete bits, poison, or a fragment of a pointer:
 
@@ -47,14 +47,17 @@ holds concrete bits, poison, or a fragment of a pointer:
 \mathit{unit}
 bits     \mathsf{bits}~b
 poison   \mathsf{poison}
-frag     \mathsf{frag}~p~i
+frag     \mathsf{frag}~m~p~i
 ```
 
 * $`\mathsf{bits}~b`: the $`u` bits $`b`.
 * $`\mathsf{poison}`: poison. Fresh memory holds it.
-* $`\mathsf{frag}~p~i`: the fragment $`i` of the pointer $`p`. A pointer
-  stored to memory takes several units, one fragment each, so a pointer
-  copied unit by unit keeps its provenance (ADR-2026-11-09-1542).
+* $`\mathsf{frag}~m~p~i`: the fragment $`i` of the pointer $`p` of the
+  memory $`m`. A pointer stored to memory takes several units, one fragment
+  each, so a pointer copied unit by unit keeps its provenance
+  (ADR-2026-11-09-1542). A unit has no type, so the fragment records the
+  memory its pointer belongs to, and a pointer of one memory is never read
+  back as a pointer of another (ADR-2026-11-12-2125).
 :::
 
 :::readable Fir.Memory.AllocKind (fingerprint := "3213965169790151508")

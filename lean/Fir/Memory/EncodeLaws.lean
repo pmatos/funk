@@ -13,7 +13,8 @@ rest on:
 * An integer's encoding is the integer itself, with every bit past its
   width zero, and its decoding ignores those bits.
 * A punned decoding gives poison: an integer from a pointer's encoding,
-  and a pointer from an integer's.
+  a pointer from an integer's, and a pointer of one memory from a pointer
+  of another's.
 -/
 
 namespace Fir
@@ -66,12 +67,13 @@ theorem length_encodeInt (o : ByteOrder) {w : Nat} (v : PoisonOr (BitVec w)) :
   cases v <;> simp [encodeInt, ByteOrder.length_place, length_digits]
 
 /-- There are `k` fragments. -/
-theorem length_fragments (k : Nat) (p : Pointer) : (fragments k p : List (MemUnit u)).length = k := by
+theorem length_fragments (m k : Nat) (p : Pointer) :
+    (fragments m k p : List (MemUnit u)).length = k := by
   simp [fragments]
 
 /-- A pointer's encoding takes its `k` units, poison's too. -/
-theorem length_encodePtr (k : Nat) (o : ByteOrder) (v : PoisonOr Pointer) :
-    (encodePtr k o v : List (MemUnit u)).length = k := by
+theorem length_encodePtr (m k : Nat) (o : ByteOrder) (v : PoisonOr Pointer) :
+    (encodePtr m k o v : List (MemUnit u)).length = k := by
   cases v <;> simp [encodePtr, ByteOrder.length_place, length_fragments]
 
 /-!
@@ -153,14 +155,33 @@ theorem decodeInt_encodeInt (hu : 0 < u) (o : ByteOrder) {w : Nat} (hw : 0 < w)
 
 /-- Decoding an encoding gives the value back, poison included, at every
 byte order: the pointer law, for a pointer that takes at least one unit. -/
-theorem decodePtr_encodePtr {k : Nat} (hk : 0 < k) (o : ByteOrder) (v : PoisonOr Pointer) :
-    decodePtr k o (encodePtr (u := u) k o v) = v := by
+theorem decodePtr_encodePtr {m k : Nat} (hk : 0 < k) (o : ByteOrder) (v : PoisonOr Pointer) :
+    decodePtr m k o (encodePtr (u := u) m k o v) = v := by
   obtain ⟨k, rfl⟩ : ∃ j, k = j + 1 := ⟨k - 1, by omega⟩
   cases v with
   | poison =>
     simp only [decodePtr, encodePtr, ByteOrder.place_replicate]
     rw [List.replicate_succ]
   | value p => simp [decodePtr, encodePtr, ByteOrder.place_place, fragments, List.range_succ_eq_map]
+
+/-- A pointer of one memory never decodes as a pointer of another: the
+units of a pointer type of the memory `m`, decoded as the pointer type of
+`m' ≠ m`, give poison, at any byte orders and sizes. -/
+theorem decodePtr_encodePtr_ne {m m' k k' : Nat} (hm : m ≠ m') (o o' : ByteOrder)
+    (v : PoisonOr Pointer) : decodePtr m' k' o (encodePtr (u := u) m k o' v) = .poison := by
+  unfold decodePtr
+  split
+  · rename_i q j rest h
+    split
+    · rename_i heq
+      have h1 : MemUnit.frag _ q j ∈ (fragments m' k' q : List (MemUnit u)) :=
+        heq ▸ List.mem_cons_self
+      have h2 := ByteOrder.mem_place.1 (h ▸ List.mem_cons_self)
+      simp only [fragments, List.mem_map, MemUnit.frag.injEq] at h1
+      cases v <;> simp [encodePtr, ByteOrder.mem_place, fragments] at h2
+      grind
+    · rfl
+  · rfl
 
 /-- Every unit of an integer's digits is bits. -/
 theorem mem_digits {k n : Nat} {x : MemUnit u} (hx : x ∈ digits u k n) : ∃ b, x = .bits b := by
@@ -172,17 +193,17 @@ theorem mem_digits {k n : Nat} {x : MemUnit u} (hx : x ∈ digits u k n) : ∃ b
     · exact ih hx
 
 /-- A pointer's encoding has a unit that is not bits. -/
-theorem exists_mem_encodePtr {k : Nat} (hk : 0 < k) (o : ByteOrder) (v : PoisonOr Pointer) :
-    ∃ x ∈ (encodePtr k o v : List (MemUnit u)), ∀ b, x ≠ .bits b := by
+theorem exists_mem_encodePtr {m k : Nat} (hk : 0 < k) (o : ByteOrder) (v : PoisonOr Pointer) :
+    ∃ x ∈ (encodePtr m k o v : List (MemUnit u)), ∀ b, x ≠ .bits b := by
   obtain ⟨k, rfl⟩ : ∃ j, k = j + 1 := ⟨k - 1, by omega⟩
   cases v with
   | poison => exact ⟨.poison, by simp [encodePtr], by simp⟩
-  | value p => exact ⟨.frag p 0, by simp [encodePtr, ByteOrder.mem_place, fragments], by simp⟩
+  | value p => exact ⟨.frag m p 0, by simp [encodePtr, ByteOrder.mem_place, fragments], by simp⟩
 
 /-- A punned load of an integer gives poison: decoding a pointer's units as
 an integer, at any byte order. -/
-theorem decodeInt_encodePtr {k : Nat} (hk : 0 < k) (o o' : ByteOrder) (w : Nat)
-    (v : PoisonOr Pointer) : decodeInt u w o (encodePtr k o' v) = .poison := by
+theorem decodeInt_encodePtr {m k : Nat} (hk : 0 < k) (o o' : ByteOrder) (w : Nat)
+    (v : PoisonOr Pointer) : decodeInt u w o (encodePtr m k o' v) = .poison := by
   obtain ⟨x, hx, hb⟩ := exists_mem_encodePtr (u := u) hk o' v
   unfold decodeInt
   split
@@ -191,12 +212,12 @@ theorem decodeInt_encodePtr {k : Nat} (hk : 0 < k) (o o' : ByteOrder) (w : Nat)
 
 /-- A punned load of a pointer gives poison: decoding an integer's units as
 a pointer, at any byte order. -/
-theorem decodePtr_encodeInt (k : Nat) (o o' : ByteOrder) {w : Nat} (v : PoisonOr (BitVec w)) :
-    decodePtr k o (encodeInt u o' v) = .poison := by
+theorem decodePtr_encodeInt (m k : Nat) (o o' : ByteOrder) {w : Nat} (v : PoisonOr (BitVec w)) :
+    decodePtr m k o (encodeInt u o' v) = .poison := by
   unfold decodePtr
   split
-  · rename_i p i rest h
-    have hx : MemUnit.frag p i ∈ encodeInt u o' v :=
+  · rename_i m' p i rest h
+    have hx : MemUnit.frag m' p i ∈ encodeInt u o' v :=
       ByteOrder.mem_place.1 (h ▸ List.mem_cons_self)
     cases v with
     | poison => simp [encodeInt] at hx
@@ -221,9 +242,9 @@ theorem load_store_encodeInt {M M' : Memory u} {p : Pointer} (hu : 0 < u) (o : B
 /-- A load after a store of a pointer's encoding, decoded, gives the
 pointer back, its provenance included: a pointer stored to memory keeps
 it. -/
-theorem load_store_encodePtr {M M' : Memory u} {p : Pointer} {k : Nat} (hk : 0 < k)
-    (o : ByteOrder) {v : PoisonOr Pointer} (h : M.store p (encodePtr k o v) = .ok M') :
-    (M'.load p k).map (decodePtr k o) = .ok v := by
+theorem load_store_encodePtr {M M' : Memory u} {p : Pointer} {m k : Nat} (hk : 0 < k)
+    (o : ByteOrder) {v : PoisonOr Pointer} (h : M.store p (encodePtr m k o v) = .ok M') :
+    (M'.load p k).map (decodePtr m k o) = .ok v := by
   have hl := Memory.load_store_same h
   rw [length_encodePtr] at hl
   simp [hl, Except.map, decodePtr_encodePtr hk o]
