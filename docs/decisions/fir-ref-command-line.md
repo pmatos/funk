@@ -48,19 +48,12 @@ files, and its verdict is its exit status.
 `Module.problems`. A FILE of `-` may appear at most once. It has no options,
 and its output is always JSON.
 
-It writes one object per file, on one line, in the order of the files:
-`{"file": ..., "verdict": ..., "diagnostics": [...]}`. This is the schema of
-`funk verify --json`. `verdict` is `accepted`, `parse-error`,
-`validation-error` or `io-error`.
-
-A diagnostic has a `kind` (`parse-error`, `validation-error` or `io-error`)
-and a `message`. A parse error adds `line` and `column`, in UTF-8 bytes from 1,
-and only the parser's first error appears. A validation error adds `func`,
-`block`, `op` (the op's index in its block) and `loc`, each `null` when it does
-not apply. `loc` is `{"ref": N, "location": "..."}`, with the location as the
-table prints it, or `null` when the table lacks the reference. There is one
-validation error for each problem the check finds, in the check's order.
-Strings escape as `funk`'s do.
+It writes one object per file, on one line, in the order of the files, in the
+schema of `funk verify --json`: `file`, `verdict` and `diagnostics`, with the
+fields and escapes of
+[rust-ir-and-tools-funk.md](rust-ir-and-tools-funk.md#report-format). Only the
+parser's first error appears, and there is one validation error for each
+problem the check finds, in the check's order.
 
 The exit status is 0 when every file is accepted and 1 when one is rejected.
 It is 2 on a usage or I/O error, and the largest status over the files wins.
