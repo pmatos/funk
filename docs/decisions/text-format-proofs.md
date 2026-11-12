@@ -4,7 +4,8 @@ This page continues [text-format.md](text-format.md). It says how the Lean
 proofs about fir's text are structured: the round trip,
 `printThenParse`, and the proof that a parsed module is well formed,
 `parse_wellFormed`. These are rules for one group of Lean modules under
-`lean/Fir/Text/`, so they have no ADR. The page is the record (ADR-2026-11-09-1610).
+`lean/Fir/Text/`, so they have no ADR. The page is the record
+(ADR-2026-11-09-1610).
 
 The proofs may not change what the printer and the parser compute: both are
 spec definitions.
@@ -21,14 +22,19 @@ The proof has one step for each step of the parser, joined at exact forms.
 Each step's result states what the next step reads, whatever the positions:
 
 1. `lex_print`: `lex m.print` gives the tokens `Module.tokens m`, then `eof`
-   ([`Tokens.lean`](../../lean/Fir/Text/Tokens.lean), [`LexModule.lean`](../../lean/Fir/Text/LexModule.lean)).
+   ([`Tokens.lean`](../../lean/Fir/Text/Tokens.lean),
+   [`LexModule.lean`](../../lean/Fir/Text/LexModule.lean)).
 2. `readModule_tokens`: on any tokens of those kinds, `readModule` gives a
-   tree that erases to `Module.tree m` ([`Tree.lean`](../../lean/Fir/Text/Tree.lean), [`ReadModule.lean`](../../lean/Fir/Text/ReadModule.lean)).
+   tree that erases to `Module.tree m`
+   ([`Tree.lean`](../../lean/Fir/Text/Tree.lean),
+   [`ReadModule.lean`](../../lean/Fir/Text/ReadModule.lean)).
 3. `Module.WellFormed.decodeModule_eq`: on any tree that erases to
-   `Module.tree m`, `decodeModule` gives `m` ([`DecodeModule.lean`](../../lean/Fir/Text/DecodeModule.lean)).
+   `Module.tree m`, `decodeModule` gives `m`
+   ([`DecodeModule.lean`](../../lean/Fir/Text/DecodeModule.lean)).
 
-`printThenParse`, in [`PrintParse.lean`](../../lean/Fir/Text/PrintParse.lean), joins the three. Each step states the
-hypotheses it needs, and `Module.WellFormed` gives them all.
+`printThenParse`, in [`PrintParse.lean`](../../lean/Fir/Text/PrintParse.lean),
+joins the three. Each step states the hypotheses it needs, and
+`Module.WellFormed` gives them all.
 
 One predicate per step says what a reader does with a part. `Spells` is for
 the lexer and `Reads` for the grammar. `Defines` and `Decodes` are for the two
@@ -74,22 +80,24 @@ Rejected:
   is needed. It changes what the printer or the parser computes;
 - first proving that decoding ignores positions, then decoding
   `Module.tree m` itself. It needs a mutual induction of its own, and the
-  inversion lemmas of [`Tree.lean`](../../lean/Fir/Text/Tree.lean) already give each part of the tree at any
-  positions.
+  inversion lemmas of [`Tree.lean`](../../lean/Fir/Text/Tree.lean) already
+  give each part of the tree at any positions.
 
 ## Parsed modules are well formed
 
-#105 proves `parse_wellFormed`, in [`ParseWellFormed.lean`](../../lean/Fir/Text/ParseWellFormed.lean): every module that
-`Fir.parse` gives is well formed, for every dialect whose text is lawful. The
-proof follows the same three steps, joined at `TokensWritable` and
+#105 proves `parse_wellFormed`, in
+[`ParseWellFormed.lean`](../../lean/Fir/Text/ParseWellFormed.lean): every
+module that `Fir.parse` gives is well formed, for every dialect whose text is
+lawful. The proof follows the same three steps, joined at `TokensWritable` and
 `SModule.Writable`.
 
 It is given only a text, so it has no module or tree to recurse on while the
 grammar reads tokens. The readers are defined by well-founded recursion on the
 number of tokens (`termination_by ts => 2 * ts.length` and the like in
-[`Read.lean`](../../lean/Fir/Text/Read.lean)), so there is no structural recursion on the tokens either. Lean
-derives a functional induction principle for each group of mutual readers:
-`readBlocks.induct`, `readItems.induct` and `readAttr.mutual_induct`.
+[`Read.lean`](../../lean/Fir/Text/Read.lean)), so there is no structural
+recursion on the tokens either. Lean derives a functional induction principle
+for each group of mutual readers: `readBlocks.induct`, `readItems.induct`
+and `readAttr.mutual_induct`.
 
 A lemma about a group of mutual readers is proved by the group's functional
 induction principle, with one motive per reader. Each case is one reader on
@@ -99,18 +107,19 @@ case unfolds a reader that it calls. This is the round trip's rule, applied
 through functional induction instead of structural recursion on the module.
 
 A step of a reader or of the decoder is taken apart with `bind_step`, in
-[`LexAccepted.lean`](../../lean/Fir/Text/LexAccepted.lean). It drops the hypothesis it consumes, so a goal does not
-hold a step's program twice.
+[`LexAccepted.lean`](../../lean/Fir/Text/LexAccepted.lean). It drops the
+hypothesis it consumes, so a goal does not hold a step's program twice.
 
 The two passes of decoding recurse on the tree. They keep the round trip's
 shape: step lemmas that are not recursive, joined by short mutual theorems.
 
 A change to a reader's recursion changes its induction principle, and the
 build fails at the cases whose shape changed. The proofs of blocks and of
-items have pages of their own ([`ReadAcceptedBlocks.lean`](../../lean/Fir/Text/ReadAcceptedBlocks.lean),
-[`ReadAcceptedItems.lean`](../../lean/Fir/Text/ReadAcceptedItems.lean)), and so do the second pass and the decoding of
-functions. Each induction names one motive per reader of its group, so its
-call is long.
+items have pages of their own
+([`ReadAcceptedBlocks.lean`](../../lean/Fir/Text/ReadAcceptedBlocks.lean),
+[`ReadAcceptedItems.lean`](../../lean/Fir/Text/ReadAcceptedItems.lean)), and
+so do the second pass and the decoding of functions. Each induction names one
+motive per reader of its group, so its call is long.
 
 Rejected:
 

@@ -51,22 +51,23 @@ A valid module names each dialect once, by a word. Each name must be a
 dialect that the reader holds, other than the core (`names d` in Lean, a
 registered dialect in Rust), and every word of the module must name the core
 or a dialect of its set: op names, attribute words and type words, at any
-depth. Both validators check this beside `Module.Valid`, as
-`Module.InDialectSet` in `lean/Fir/Validation/DialectSet.lean`. The rule
-reads words, which the dialect's text gives, so it sits beside
-`Module.Valid`, not in it, and the theorems about valid modules need no text
-(ADR-2026-11-10-1306). A region kind's word (ADR-2026-11-10-1941) and an item
-kind's word (ADR-2026-11-10-2224) join the rule too.
+depth. Both validators check this as `Module.InDialectSet`, in
+`lean/Fir/Validation/DialectSet.lean`. The rule reads words, which the
+dialect's text gives, so it sits beside `Module.Valid`, not in it, and the
+theorems about valid modules need no text (ADR-2026-11-10-1306). A region
+kind's word (ADR-2026-11-10-1941) and an item kind's word
+(ADR-2026-11-10-2224) join the rule too.
 
 `funk verify` and `fir-ref validate` report the problems of
 `Module.problems`, then those of `Module.setProblems`. A function that writes
 a word outside the set gets one problem, naming the first such dialect in the
 order of `Func.wordDialects`: the types the function states, then each op's
-name, attributes and region kinds. `tests/dialects/dialect-set.cases` holds must-accept and
-must-reject cases that both validators read (ADR-2026-11-10-1306). A
-dialect's dependencies (ADR-2026-11-10-0042) do not yet constrain the set: a
-module that names `toy` need not name what `toy` depends on beyond the core.
-ADR-2026-11-10-0042 says that the set will use them; no check does yet.
+name, attributes and region kinds. `tests/dialects/dialect-set.cases` holds
+must-accept and must-reject cases that both validators read
+(ADR-2026-11-10-1306). A dialect's dependencies do not yet constrain the set:
+a module that names `toy` need not name what `toy` depends on beyond the
+core. ADR-2026-11-10-0042 says that the set will use them; no check does
+yet.
 
 Rejected: a `module` item that holds the items, with the set as its
 attribute, since it would change every M0 text; the set in parentheses,
@@ -83,8 +84,9 @@ optional dialect set, `dialects gpu` and an empty line, then its items, each
 followed by an empty line. An empty body, `{ }`, is a module with no dialect
 and no items. The grammar is
 `body ::= '{' (('dialects' word (',' word)*)? item* | block*) '}'`. A
-`module` with parameters, results, attributes or blocks does not decode, and neither does a
-`func` whose body holds a dialect set or items (ADR-2026-11-10-1510).
+`module` with parameters, results, attributes or blocks does not decode, and
+neither does a `func` whose body holds a dialect set or items
+(ADR-2026-11-10-1510).
 
 The body is printed two spaces deeper than the `module` line, and its `}` at
 that line's indentation. An empty line has no spaces. A function at
@@ -153,9 +155,10 @@ text. `float(e, m)` of a format with an alias does not decode, so each format
 has one spelling, and neither does a negative number, another argument list, an
 alias applied to arguments or the bare word `float` (ADR-2026-11-11-0951). The
 human ruled on 2026-11-11: "Leave it as is. No need for angle brackets then."
-The orchestrator recorded the ruling on #229. Rejected: `float<e,m>` in text, which needs angle brackets in
-both parsers and new round-trip proofs for one type family; and aliases as a
-second spelling, which breaks `print(parse(t)) == t`.
+The orchestrator recorded the ruling on #229. Rejected: `float<e,m>` in text,
+which needs angle brackets in both parsers and new round-trip proofs for one
+type family; and aliases as a second spelling, which breaks
+`print(parse(t)) == t`.
 
 A pointer type `ptr<0>`, the default memory's, is written `ptr`, so M0's texts
 are unchanged. `ptr<N>` of another memory is written `ptr(N)`, the grammar's
@@ -173,7 +176,8 @@ data layout without text.
 
 A float constant is `const` with one float literal, as LLVM writes it
 (ADR-2026-11-11-1438). The human ruled on 2026-11-11: "Decimal float, hex
-fallback"; the orchestrator recorded it on #229. The agent that built it chose the details below.
+fallback"; the orchestrator recorded it on #229. The agent that built it chose
+the details below.
 
 A zero, or a finite value of a format no wider than `f128` in either field
 (`2 <= e <= 15`, `1 <= m <= 112`), is the shortest decimal that reads back to
