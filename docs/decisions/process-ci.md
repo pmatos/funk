@@ -36,7 +36,7 @@ built `lean/` to `cross` as an artifact. `cross` would wait for `lean`, and the
 run would take longer. Rejected: caching `lean/.lake` across runs. A cache hit
 would skip the `#guard` checks.
 
-Each hook is one step,
+Each hook is one step, which runs
 `uvx pre-commit@4.6.2 run ID --all-files --verbose --show-diff-on-failure`.
 Each step runs even when one before it failed. `--verbose` prints a hook's
 output and time when it passes. No job sets `SKIP`.

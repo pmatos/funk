@@ -14,13 +14,10 @@ Tier: direction; area: process
 - A gate job, `pre-commit`, needs every suite job, always runs, and passes
   only when each of them succeeded. It keeps the name of the check that the
   ruleset requires (ADR-2026-10-28-0725).
-- The `ci-hooks` hook (`scripts/check_ci_hooks.py`) fails when a hook runs in
-  no step or in more than one, when a hook of the `pre-commit` stage runs
-  outside `ci.yml`, when a step runs an id that is not a hook or no id, when
-  a hook runs without `--all-files` (a hook of another stage: without its
-  `--hook-stage`), when anything sets `SKIP`, and when the gate does not need
-  every other job or does not always run. So a new hook needs a step in one
-  job, and a new job a place in the gate's `needs`.
+- The `ci-hooks` hook (`scripts/check_ci_hooks.py`) fails when the config,
+  the workflows' steps and the gate disagree. So a new hook needs a step in
+  one job, and a new job a place in the gate's `needs`. The page lists each
+  case it checks.
 - In CI, each test suite writes its counts to the job summary and to the log.
 
 The human asked on 2026-11-05, in #148, for one CI job per suite, each its own
