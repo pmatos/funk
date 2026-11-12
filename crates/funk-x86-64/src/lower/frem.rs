@@ -13,8 +13,8 @@
 use funk_ir::Op;
 use funk_ir::dialects::core::float_format;
 
+use super::farith::call_routine;
 use super::{Cx, Lower, Unlowered};
-use crate::width::Class;
 
 /// The runtime helper: the routines that do `frem` and `fmod` at `f32` and
 /// `f64`, as assembly, which [`super::module`] appends once to a module
@@ -53,25 +53,8 @@ fn remainder(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([a, b], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err(format!("{} takes two operands and defines one value", op.name).into());
     };
-    if cx.class(a)? != Class::Sse {
-        return Err(format!("{} works on floats", op.name).into());
-    }
-    let mov = match cx.width(a)? {
-        32 => "movss",
-        64 => "movsd",
-        w => {
-            return Err(format!("{} works on f32 or f64, not a value of {w} bits", op.name).into());
-        }
-    };
     let routine = helper(op).ok_or("frem and fmod at f32 or f64 call the runtime helper")?;
-    for (n, x) in [a, b].into_iter().enumerate() {
-        let slot = cx.slot(x)?;
-        cx.asm.ins(mov, format_args!("{slot}, %xmm{n}"));
-    }
-    cx.asm.ins("call", format_args!("{routine}"));
-    let sr = cx.slot(&r.name)?;
-    cx.asm.ins("movq", format_args!("%xmm0, {sr}"));
-    Ok(())
+    call_routine(cx, op, routine, &[a.as_str(), b], &r.name)
 }
 
 #[cfg(test)]

@@ -8,25 +8,25 @@
 # Each routine is a System V function of two floats that returns one: x in
 # %xmm0, y in %xmm1, and the remainder in %xmm0. Every symbol is local to
 # the object file, with no .globl, and starts with __funk_rt_, which no fir
-# function's symbol does (ADR-2026-10-30-1232). The routines use only %rax,
-# %xmm0 and the x87 stack, which System V lets a callee clobber and which
-# each routine leaves empty, and 16 bytes of stack below the caller's
-# %rsp: the return address and the one push.
+# function's symbol does (ADR-2026-10-30-1232). The routines read %xmm1
+# and write only %rax, %xmm0 and the x87 stack, which System V lets a
+# callee clobber and which each routine leaves empty, and 16 bytes of
+# stack below the caller's %rsp: the return address and the one push.
 #
 # The remainder comes from the x87 unit, which every x86-64 has. fprem1 is
 # IEEE 754's remainder: x - n * y with n the quotient x / y rounded to
 # nearest, ties to even. fprem is C's fmod, with n truncated toward zero.
-# Each reduces the exponent of x by at most 63 at a time and sets C2, bit
-# 10 of the status word, while the reduction is partial, so the routine
-# runs it until C2 is clear. Both are exact, whatever the x87 precision
-# control says, and loading an f32 or f64, its subnormals included, is
-# exact too. The remainder is a multiple of the smaller quantum of x and y
-# no larger than |y|, so the format holds it and the store to f32 or f64
-# is exact. A zero remainder has the sign of x, a finite x with an
-# infinite y gives x, and y = 0 or an infinite x gives a NaN. A NaN result
-# may be any NaN (ADR-2026-11-09-1549), so the routines take no care over
-# which one they give. The x87 exceptions stay masked, as System V starts
-# them, so none traps.
+# Each reduces the exponent of x by 32 to 63 at a time, as the processor
+# chooses, and sets C2, bit 10 of the status word, while the reduction is
+# partial, so the routine runs it until C2 is clear. Both are exact,
+# whatever the x87 precision control says, and loading an f32 or f64, its
+# subnormals included, is exact too. The remainder is a multiple of the
+# smaller quantum of x and y no larger than |y|, so the format holds it
+# and the store to f32 or f64 is exact. A zero remainder has the sign of
+# x, a finite x with an infinite y gives x, and y = 0 or an infinite x
+# gives a NaN. A NaN result may be any NaN (ADR-2026-11-09-1549), so the
+# routines take no care over which one they give. The x87 exceptions stay
+# masked, as System V starts them, so none traps.
 
 	.text
 

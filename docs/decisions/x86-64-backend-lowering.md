@@ -264,9 +264,9 @@ SSE has no remainder. So `frem` and `fmod` load their operands into `%xmm0` and
 its operands through one pushed word onto the x87 stack and runs `fprem1`, IEEE
 754's remainder with the quotient rounded to nearest even, for `frem`, or
 `fprem`, C's `fmod` with the quotient truncated, for `fmod`. Each reduces the
-exponent by at most 63 bits at a time and sets C2 while it is partial, so the
-routine loops until C2 is clear: about 34 times for the largest `f64` by the
-smallest subnormal. Both are exact whatever the x87 precision control says, and
+exponent by 32 to 63 bits at a time, as the processor chooses, and sets C2
+while it is partial, so the routine loops until C2 is clear: 34 to 66 times for
+the largest `f64` by the smallest subnormal. Both are exact whatever the x87 precision control says, and
 the result is exact in the format, so the store to `f32` or `f64` is exact.
 They give a NaN on `y = 0` or an infinite `x`, `x` itself on an infinite `y`,
 and a zero with `x`'s sign, as the spec does. A routine uses `%rax`, `%xmm0`,

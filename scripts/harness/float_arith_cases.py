@@ -55,7 +55,7 @@ FORMATS = {
 DIFFERENTIAL = ("f32", "f64")
 
 # Each module: its name before the format, and its ops with their number
-# of operands and the name of their cases in `float_cases.hard_cases`.
+# of operands and the name of their cases among its hard inputs (`HARD`).
 MODULES = {
     "float-binary": [
         ("fadd", 2, "fadd"),
@@ -75,6 +75,30 @@ MODULES = {
     ],
 }
 FILES = [f"{m}-{t}" for m in MODULES for t in FORMATS]
+
+
+def arith_hard(f: Format) -> list:
+    return float_cases.hard_cases(f)[0]
+
+
+ARITH_HEADER = [
+    "# (ADR-2026-11-09-1549), on the hard inputs: results halfway between",
+    "# two floats, subnormals, -0, overflow to infinity and NaN operands.",
+]
+# Each module's hard inputs, and the lines of its tests' header that say
+# what they are.
+HARD = {
+    "float-binary": (arith_hard, ARITH_HEADER),
+    "float-unary-fma": (arith_hard, ARITH_HEADER),
+    "float-rem": (
+        float_rem_cases.hard_cases,
+        [
+            "# (ADR-2026-11-09-1549), on the hard inputs: quotients halfway",
+            "# between two integers, subnormals, -0, operands far apart,",
+            "# infinities and NaN operands.",
+        ],
+    ),
+}
 # The ops that do not round, and so carry no `round(rne)`.
 EXACT = ("fneg", "fabs", "frem", "fmod")
 # The ops whose operands do not commute, whose cases run in both orders.
@@ -120,13 +144,14 @@ def nan_bits(f: Format, c: int) -> int:
     return (c >> f.m) * f.sign_bit | f.top << f.m | mantissa
 
 
-def cases(f: Format, ops: list[tuple[str, int, str]]) -> list[tuple[str, list[int]]]:
-    """The cases of each op: its operands' bits."""
-    hard = float_cases.hard_cases(f)[0] + float_rem_cases.hard_cases(f)
+def cases(f: Format, name: str) -> list[tuple[str, list[int]]]:
+    """The cases of each op of the module `name`: its operands' bits."""
+    ops = MODULES[name]
+    hard = HARD[name][0](f)
     out = []
-    for op, _, name in ops:
+    for op, _, key in ops:
         for case_op, args, _, _ in hard:
-            if case_op != name:
+            if case_op != key:
                 continue
             bits = [float_cases.bits_of(f, a) for a in args]
             out.append((op, bits))
@@ -149,27 +174,16 @@ def module_text(t: str, ops: list[tuple[str, int, str]]) -> str:
     return "\n".join(out) + "\nlocs {\n  @0 = unknown\n}\n"
 
 
-def tests_text(name: str, t: str, ops: list[tuple[str, int, str]]) -> str:
+def tests_text(name: str, t: str) -> str:
     """The tests of the module `name` at the type `t`."""
     e, m = FORMATS[t]
     f = Format(e, m)
+    ops = MODULES[name]
     names = ", ".join(op for op, _, _ in ops)
     native = t in DIFFERENTIAL
-    hard = (
-        [
-            "# (ADR-2026-11-09-1549), on the hard inputs: quotients halfway",
-            "# between two integers, subnormals, -0, operands far apart,",
-            "# infinities and NaN operands.",
-        ]
-        if name.startswith("float-rem")
-        else [
-            "# (ADR-2026-11-09-1549), on the hard inputs: results halfway between",
-            "# two floats, subnormals, -0, overflow to infinity and NaN operands.",
-        ]
-    )
     head = [
-        f"# Tests of {name}.fir: {names} at {t}",
-        *hard,
+        f"# Tests of {name}-{t}.fir: {names} at {t}",
+        *HARD[name][1],
         "# Written by scripts/harness/float_arith_cases.py, which computes each",
         "# expected result with scripts/harness/float_ref.py, apart from Lean.",
     ]
@@ -192,7 +206,7 @@ def tests_text(name: str, t: str, ops: list[tuple[str, int, str]]) -> str:
     ]
     lines = []
     turn = 0
-    for op, bits in cases(f, ops):
+    for op, bits in cases(f, name):
         args = ", ".join(f'"{spell(e, m, b)}"' for b in bits)
         r = result(f, op, bits)
         if is_nan(f, r):
@@ -226,7 +240,7 @@ def files() -> dict[str, str]:
     for name, ops in MODULES.items():
         for t in FORMATS:
             out[f"{name}-{t}.fir"] = module_text(t, ops)
-            out[f"{name}-{t}.toml"] = tests_text(f"{name}-{t}", t, ops)
+            out[f"{name}-{t}.toml"] = tests_text(name, t)
     return out
 
 
