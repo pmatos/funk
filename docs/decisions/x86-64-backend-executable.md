@@ -46,7 +46,7 @@ JSON readers.
 
 ## The entry file and its runtime
 
-The entry file holds a runtime in assembly with no libc,
+The entry file holds a runtime in assembly that needs no libc,
 `crates/funk-x86-64/src/entry/runtime.s` and `entry/values.s`, which follows it
 in the entry file. The value routines moved to `values.s` to keep `runtime.s`
 within the file-size budget. For each function the entry file adds a wrapper,

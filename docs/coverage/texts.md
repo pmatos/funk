@@ -86,8 +86,7 @@ recurses as deep as native code's stack allows; fir has no depth limit
 of its own (ADR-2026-10-30-1549). A recursive run's stack follows
 `ulimit -s`, 8 MiB by default
 ([x86-64-backend-executable.md](../decisions/x86-64-backend-executable.md#the-runs-stack)).
-`recursion-i8`,
-`recursion-i64` and `recursion-i128` recurse up to 100,000 calls on it,
+`recursion-i8`, `recursion-i64` and `recursion-i128` recurse up to 100,000 calls on it,
 and their sidecars give the figures. A deeper run reports that it ran
 out of stack, and the harness reports its test invalid, not a mismatch
 ([testing-and-harness.md](../decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)):

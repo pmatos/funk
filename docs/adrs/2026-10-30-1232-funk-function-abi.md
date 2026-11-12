@@ -11,9 +11,9 @@ Tier: direction; area: x86-64-backend
   `i128` and floats included.
 - **Results are a structure.** A function returns its results as System V
   returns a C structure with one member per result, in order, each aligned to
-  8 bytes, or to 16 for an `i128`. No result returns nothing. One or two
-  eightbytes come back in registers. Three or more go in an area whose address
-  the caller passes as the first argument.
+  8 bytes, or to 16 for an `i128`. With no results it returns nothing. One or
+  two eightbytes come back in registers. Three or more go in an area whose
+  address the caller passes as the first argument.
 - **Narrow results.** An `iN` result is in the low `N` bits of its eightbyte.
   The backend may return an unmarked `i1` as 0 or 1 in all 64 bits, but no
   caller, funk's own code included, relies on any bit above bit 0. A caller

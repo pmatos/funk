@@ -55,7 +55,8 @@ which never returns a defined value, can meet that.
 This refines S1 and ADR-2026-10-30-0818: poison can now be written, and
 the class list gains one op. How the backend lowers it, how G0's check
 reads its name, how the coverage matrix counts it and how the LLVM ports
-use it are [x86-64-backend.md](../decisions/x86-64-backend.md#poison), ADR-2026-11-03-1617,
+use it are [x86-64-backend.md](../decisions/x86-64-backend.md#poison),
+ADR-2026-11-03-1617,
 [testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-cells-of-poison)
 and
 [testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).

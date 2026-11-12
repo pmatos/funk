@@ -23,7 +23,7 @@
 //! one per half
 //! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). It returns
 //! as two eightbytes: alone in `%rdx:%rax`, and among other results in the
-//! area (`docs/decisions/x86-64-backend-abi.md#arguments`,
+//! area (`docs/decisions/x86-64-backend-abi.md#results`,
 //! ADR-2026-10-30-1232).
 //!
 //! `unreachable` is `ud2`. A run that reaches it is UB in the source, so

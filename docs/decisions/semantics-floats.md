@@ -97,8 +97,8 @@ routine of a runtime helper
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md)).
 It reports every other format as a diagnostic where its value is defined. The
 corpus runs every predicate and the constants differentially at `f32` and
-`f64`, and on `fir-ref` against `scripts/harness/float_ref.py` at `f16`, `bf16` and `f128`, on zeros of both
-signs, subnormals, the largest finite values, infinities and NaNs. It runs the
+`f64`, and on `fir-ref` against `scripts/harness/float_ref.py` at `f16`,
+`bf16` and `f128`, on zeros of both signs, subnormals, the largest finite values, infinities and NaNs. It runs the
 arithmetic on the hard inputs of every op, at every aliased format, with each
 result that is not a NaN differential at `f32` and `f64`, and each NaN result
 on `fir-ref` with a choice

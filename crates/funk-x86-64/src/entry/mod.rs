@@ -3,7 +3,8 @@
 //!
 //! It is one assembly file: the fixed runtime in `runtime.s` and `values.s`, which
 //! parses arguments and prints results at every width
-//! (`docs/decisions/x86-64-backend-abi.md#arguments`), then what this module
+//! (`docs/decisions/x86-64-backend-executable.md#the-entry-file-and-its-runtime`),
+//! then what this module
 //! writes for the module being built. That is a wrapper for each function, which
 //! parses the function's arguments, calls it by the System V convention and prints
 //! each of its results, in order (ADR-2026-10-30-1232), and the table
