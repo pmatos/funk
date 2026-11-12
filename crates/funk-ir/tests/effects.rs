@@ -72,7 +72,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_core_op_has_the_effects_of_its_lean_declaration() {
     let reg = Registry::core();
     let cs = cases();
-    assert_eq!(cs.len(), 47);
+    assert_eq!(cs.len(), 49);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }

@@ -41,6 +41,7 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
+import Fir.Core.FloatRem
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call

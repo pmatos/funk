@@ -52,9 +52,10 @@ What the check found:
   and packing a NaN loses its payload, so a fir constant must keep its
   bits rather than go through the model.
 * `compare` needs its operands in canonical form, and `unpack` gives that.
-* The model has no remainder, so #229 does not build `frem`. It has no
-  conversion between formats either, which ADR-2026-11-09-1549 already
-  leaves to the spec.
+* The model has no remainder, so #229 does not build `frem`; #310 builds
+  `frem` and `fmod` on fir's own remainder (`Fir.Core.FloatRem`), which
+  `FirTest.FloatRem` checks. It has no conversion between formats either,
+  which ADR-2026-11-09-1549 already leaves to the spec.
 * `UnpackedFloat.ofScientific`, which reads a decimal `m * 10^e`, is wrong
   at some formats: it returns `+0` whenever `e < -(2^E + log₂ m)`, for `E`
   exponent bits, whatever the mantissa width. At `float<2,100>`, whose

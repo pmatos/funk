@@ -32,7 +32,8 @@ results, which are written where those values are defined.
 * `fcmp` has one attribute, its predicate, from `oeq` to `uno`, as LLVM
   writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
-  has one attribute, `round(rne)`, and `fneg` and `fabs` have none:
+  has one attribute, `round(rne)`, and `frem`, `fmod`, `fneg` and `fabs`
+  have none:
   `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). The
   section on how the float arithmetic is written says more.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
@@ -126,8 +127,8 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p _ _ => [.word p.name]
-  | .fbin .. | .fma .. => [roundAttr]
-  | .funary o .. => o.attrs
+  | .fma .. => [roundAttr]
+  | .fbin o .. | .funary o .. => o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -190,6 +191,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fsub" => decodeFBin .fsub as ts rs
   | "fmul" => decodeFBin .fmul as ts rs
   | "fdiv" => decodeFBin .fdiv as ts rs
+  | "frem" => decodeFBin .frem as ts rs
+  | "fmod" => decodeFBin .fmod as ts rs
   | "fneg" => decodeFUnary .fneg as ts rs
   | "fabs" => decodeFUnary .fabs as ts rs
   | "sqrt" => decodeFUnary .sqrt as ts rs
@@ -300,7 +303,7 @@ def samples : List Op :=
    .fconst 5 10 0x7e01] ++
   Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112] ++
   [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
-   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52]
+   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52, .fbin .frem 8 23, .fbin .fmod 2 1]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
@@ -359,6 +362,7 @@ def samples : List Op :=
 #guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
+#guard Op.decode "frem" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
   some (.fma 8 23)

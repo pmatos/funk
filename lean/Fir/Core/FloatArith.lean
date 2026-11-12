@@ -1,12 +1,13 @@
 import Fir.Core.Values
 import Fir.Core.Ops
+import Fir.Core.FloatRem
 
 /-!
 # Float arithmetic
 
 This section gives the float arithmetic its rules (ADR-2026-11-09-1549):
-`fadd`, `fsub`, `fmul` and `fdiv` of two operands, `fneg`, `fabs` and
-`sqrt` of one, and `fma` of three. Each takes and gives
+`fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` of two operands, `fneg`,
+`fabs` and `sqrt` of one, and `fma` of three. Each takes and gives
 values of one format `float<e,m>`. None is ever UB, and a poison operand
 gives a poison result.
 
@@ -45,9 +46,14 @@ fir's own are:
 * _`fneg` and `fabs` of a NaN._ They go through the model too, so the
   negation or the absolute value of a NaN is any NaN, not only the
   operand with its sign bit flipped or cleared.
-* _The rounding attribute._ Every op that rounds, all but `fneg` and
-  `fabs`, carries `round(rne)`, and round to nearest even is the only
-  mode M1 has, so the rules have none to read.
+* _The remainders._ The model has no remainder, so `frem` and `fmod`
+  compute `Fir.Core.remainder`, which fir defines on the model's numbers
+  (`Fir.Core.FloatRem`). It gives a NaN where IEEE 754 does: `y = 0`, an
+  infinite `x`, and a NaN operand. Every other rule here holds for them
+  as for `fadd`.
+* _The rounding attribute._ Every op that rounds, all but `frem`,
+  `fmod`, `fneg` and `fabs`, carries `round(rne)`, and round to nearest
+  even is the only mode M1 has, so the rules have none to read.
 * _Poison._ A poison operand gives a poison result
   (ADR-2026-10-29-2006); the model has no poison.
 * _Formats the model does not have._ The model needs at least 2 exponent
@@ -59,8 +65,7 @@ fir's own are:
   and no flags to read them, and subnormal operands and results are
   honoured: flush to zero is a target attribute, which M1 does not have.
 
-The model has no remainder, so fir has no `frem` (#229), and the
-conversions between formats are left to a later ticket.
+The conversions between formats are left to a later ticket.
 -/
 
 namespace Fir.Core
@@ -96,12 +101,16 @@ def floatResult {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m : Nat)
     if u.isNaN then anyNaN e m else pure (.value (UnpackedFloat.pack f u))
   else anyNaN e m
 
-/-- What each float op of two operands computes in Lean's model. -/
+/-- What each float op of two operands computes in Lean's model: the
+model's operation, or, for `frem` and `fmod`, fir's remainder on the
+model's numbers. -/
 def FBin.model : FBin → (f : Format) → UnpackedFloat → UnpackedFloat → UnpackedFloat
   | .fadd => UnpackedFloat.add
   | .fsub => UnpackedFloat.sub
   | .fmul => UnpackedFloat.mul
   | .fdiv => UnpackedFloat.div
+  | .frem => remainder true
+  | .fmod => remainder false
 
 /-- What each float op of one operand computes in Lean's model. -/
 def FUnary.model : FUnary → (f : Format) → UnpackedFloat → UnpackedFloat
@@ -109,9 +118,9 @@ def FUnary.model : FUnary → (f : Format) → UnpackedFloat → UnpackedFloat
   | .fabs => fun _ => UnpackedFloat.abs
   | .sqrt => UnpackedFloat.sqrt
 
-/-- The rule of `fadd`, `fsub`, `fmul` and `fdiv` in `float<e,m>`: the
-model's result, or any NaN when it is a NaN, and poison when either
-operand is poison. -/
+/-- The rule of `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` in
+`float<e,m>`: the model's result, or any NaN when it is a NaN, and poison
+when either operand is poison. -/
 def fbinValues {μ : Type → Type} [Monad μ] [MonadChoice μ] (o : FBin) :
     PoisonOr (BitVec (floatWidth e m)) → PoisonOr (BitVec (floatWidth e m)) →
       μ (PoisonOr (BitVec (floatWidth e m)))

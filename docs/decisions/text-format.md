@@ -235,9 +235,11 @@ and hexadecimal for every value, which the human did not rule
 
 Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
 has one attribute, `round(rne)`, in the applied form:
-`%s: f32 = fadd round(rne) %a, %b`. `fneg` and `fabs` do not round and have
-none. Any other attribute does not decode, so a missing mode, `round(rtz)`, the
-bare word `rne`, two attributes and `fneg round(rne)` are parse errors. The op
+`%s: f32 = fadd round(rne) %a, %b`. `frem`, `fmod`, `fneg` and `fabs` do not
+round, since their result is exact, and have none: `%q: f64 = frem %a, %b`.
+Any other attribute does not decode, so a missing mode, `round(rtz)`, the bare
+word `rne`, two attributes, `fneg round(rne)` and `frem round(rne)` are parse
+errors. The op
 carries no mode, since M1 has one; a later mode adds a decoding and a field
 (ADR-2026-11-09-1549, ADR-2026-11-11-1801). Rejected: decoding every IEEE
 mode and letting validation reject all but `rne`, which gives each op a field

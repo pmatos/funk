@@ -246,6 +246,31 @@ def sqrt(f: Format, a: int) -> int:
     return f.finish(n * q, False)
 
 
+def remainder(f: Format, a: int, b: int, nearest: bool = True) -> int:
+    """`a - n * b`: with `nearest`, IEEE 754's remainder, where `n` is
+    `a / b` rounded to the nearest integer, a tie to the even one;
+    without, C's `fmod`, where `n` is `a / b` truncated. The result is
+    exact, and a zero result has `a`'s sign. `b = 0`, an infinite `a` and
+    a NaN operand give the canonical NaN, and a finite `a` with an
+    infinite `b` gives `a`."""
+    da, db = f.decode(a), f.decode(b)
+    if "nan" in (da[0], db[0]) or da[0] == "inf" or db[0] == "zero":
+        return f.nan()
+    if db[0] == "inf" or da[0] == "zero":
+        return a
+    x, y = abs(da[1]), abs(db[1])
+    t = x / y
+    n = nearest_even(t) if nearest else t.numerator // t.denominator
+    r = x - n * y
+    neg = da[1] < 0
+    return f.encode(-r, not neg) if r < 0 else f.encode(r, neg)
+
+
+def fmod(f: Format, a: int, b: int) -> int:
+    """C's `fmod`: `remainder` with the quotient truncated."""
+    return remainder(f, a, b, nearest=False)
+
+
 def negate(f: Format, a: int) -> int:
     """`-a`; a NaN gives the canonical NaN, as in Lean's model."""
     return f.nan() if f.decode(a)[0] == "nan" else a ^ f.sign_bit

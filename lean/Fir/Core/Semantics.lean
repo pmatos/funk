@@ -167,7 +167,7 @@ def Op.hasRules (op : Op) : Bool :=
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
-#guard [FBin.fadd, .fsub, .fmul, .fdiv].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
+#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
 #guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o 5 10).hasRules
 #guard (Op.fma 11 52).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&

@@ -10,6 +10,8 @@ ADR-2026-11-11-1801). So
 
 * `%s: f32 = fadd round(rne) %a, %b @1`, and `fsub`, `fmul` and `fdiv`
   likewise, take two values of one float type and give one of it;
+* `%q: f64 = frem %a, %b @1` and `%q: f64 = fmod %a, %b @1` take two
+  values and give one, and have no attribute: their result is exact;
 * `%r: f64 = sqrt round(rne) %a @1` takes one value and gives one;
 * `%n: f16 = fneg %a @1` and `%p: f16 = fabs %a @1` take one value and
   give one, and have no attribute: they do not round;
@@ -18,8 +20,8 @@ ADR-2026-11-11-1801). So
 
 `round(rne)` is written in the applied form of the grammar, as
 `float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
-attribute does not decode, and neither does `fadd round(rtz) %a, %b` or
-`fneg round(rne) %a`. A rounding mode other than `rne` is text that does
+attribute does not decode, and neither does `fadd round(rtz) %a, %b`,
+`frem round(rne) %a, %b` or `fneg round(rne) %a`. A rounding mode other than `rne` is text that does
 not decode, as a flag the op does not have is, so `funk verify` and
 `fir-ref` reject it. The operands and the result have one float type, and
 an op whose types differ does not decode.
@@ -33,6 +35,7 @@ namespace Fir.Core
 /-- The name of a float op of two operands. -/
 def FBin.name : FBin → String
   | .fadd => "fadd" | .fsub => "fsub" | .fmul => "fmul" | .fdiv => "fdiv"
+  | .frem => "frem" | .fmod => "fmod"
 
 /-- The name of a float op of one operand. -/
 def FUnary.name : FUnary → String
@@ -40,6 +43,13 @@ def FUnary.name : FUnary → String
 
 /-- The attribute of an op that rounds: `round(rne)`. -/
 def roundAttr : Attr := .app "round" [.word "rne"]
+
+/-- The attributes of a float op of two operands: `round(rne)` for
+`fadd`, `fsub`, `fmul` and `fdiv`, and none for `frem` and `fmod`, which
+do not round. -/
+def FBin.attrs : FBin → List Attr
+  | .fadd | .fsub | .fmul | .fdiv => [roundAttr]
+  | .frem | .fmod => []
 
 /-- The attributes of a float op of one operand: `round(rne)` for `sqrt`,
 and none for `fneg` and `fabs`, which do not round. -/
@@ -58,10 +68,17 @@ def floatOpFormat (k : Nat) : List Ty → List Ty → Option (Nat × Nat)
   | ts, [.float e m] => if ts = List.replicate k (.float e m) then some (e, m) else none
   | _, _ => none
 
-/-- Reads `fadd`, `fsub`, `fmul` or `fdiv`: `round(rne)`, two operands and
-one result of one float type. -/
+/-- Whether attributes are those of a float op of two operands: exactly
+`round(rne)` for `fadd`, `fsub`, `fmul` and `fdiv`, and none for `frem`
+and `fmod`. -/
+def FBin.attrsOk : FBin → List Attr → Bool
+  | .fadd, as | .fsub, as | .fmul, as | .fdiv, as => isRoundAttrs as
+  | .frem, as | .fmod, as => as.isEmpty
+
+/-- Reads `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or `fmod`: its
+attributes, two operands and one result of one float type. -/
 def decodeFBin (o : FBin) (as : List Attr) (ts rs : List Ty) : Option Op :=
-  if isRoundAttrs as then (floatOpFormat 2 ts rs).map fun (e, m) => .fbin o e m else none
+  if o.attrsOk as then (floatOpFormat 2 ts rs).map fun (e, m) => .fbin o e m else none
 
 /-- Whether attributes are those of a float op of one operand: exactly
 `round(rne)` for `sqrt`, and none for `fneg` and `fabs`. -/
@@ -87,6 +104,14 @@ theorem eq_of_isRoundAttrs {as : List Attr} (h : isRoundAttrs as = true) : as = 
   split at h
   · rfl
   · cases h
+
+/-- Attributes that read as those of a float op of two operands are its
+own. -/
+theorem FBin.attrs_of_attrsOk {o : FBin} {as : List Attr} (h : o.attrsOk as = true) :
+    o.attrs = as := by
+  cases o with
+  | fadd | fsub | fmul | fdiv => exact (eq_of_isRoundAttrs h).symm
+  | frem | fmod => exact (List.isEmpty_iff.mp h).symm
 
 /-- Attributes that read as those of a float op of one operand are its
 own. -/

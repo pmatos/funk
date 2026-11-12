@@ -13,7 +13,8 @@
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
 //! `ret`. #229 adds float constants to `const`, the float comparison
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
-//! `fabs`, `sqrt` and `fma`. A later family adds a file and a line here.
+//! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`. A
+//! later family adds a file and a line here.
 
 mod arith;
 mod bitwise;
