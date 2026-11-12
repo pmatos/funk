@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13350109140198078490")
+:::moduleDocs (fingerprint := "15853948219595643618")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -93,12 +93,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "13742069391112286988")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "3288734493566011892")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in nine families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in ten families.
 
 *Constants* put a fixed value in the program.
 
@@ -215,6 +215,22 @@ trunc     \mathsf{trunc}_{M \to N}
 * $`\mathsf{zext}` fills the new high bits of an $`\mathsf{i}M` with
   zeros, and $`\mathsf{sext}` with its sign bit, giving an $`\mathsf{i}N`.
 * $`\mathsf{trunc}` keeps the low $`N` bits of an $`\mathsf{i}M`.
+
+*Bit casts* read the same bits as another type (ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+toBits,ofBits \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} \mid \mathsf{bitcast}_{e,m}^{\mathsf{i} \to}
+```
+
+* $`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}` (`toBits` in the Lean)
+  gives the bits of a value of $`\mathsf{float}\langle e,m \rangle` as an
+  $`\mathsf{i}N` with $`N = 1+e+m`, and
+  $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}` (`ofBits`) gives the float
+  whose bits are those of an $`\mathsf{i}N`. No bit changes, a NaN's sign
+  and payload included. Neither is ever UB, and a poison operand gives
+  poison.
 
 *Poison control* writes poison and stops it.
 

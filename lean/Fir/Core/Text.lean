@@ -35,6 +35,11 @@ results, which are written where those values are defined.
   has one attribute, `round(rne)`, and `fneg` and `fabs` have none:
   `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). The
   section on how the float arithmetic is written says more.
+* `bitcast` has no attributes, and its types say which way it reads the
+  bits: `%b: i32 = bitcast %f @1` gives the bits of an `f32`, and
+  `%f: f32 = bitcast %b @1` the `f32` of an `i32`'s bits. Its integer has
+  the float's width, `1 + e + m`; an op whose widths differ does not
+  decode.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -107,6 +112,7 @@ def Op.name : Op → String
   | .icmp .. => "icmp" | .fcmp .. => "fcmp" | .select _ => "select"
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
+  | .toBits .. | .ofBits .. => "bitcast"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -205,6 +211,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "zext" => decodeCast .zext as ts rs
   | "sext" => decodeCast .sext as ts rs
   | "trunc" => decodeCast .trunc as ts rs
+  | "bitcast" => decodeBitcast as ts rs
   | "freeze" => match ts, rs with
     | [.int a], [.int b] => if a = b then bare as (some (.freeze a)) else none
     | _, _ => none
@@ -300,7 +307,8 @@ def samples : List Op :=
    .fconst 5 10 0x7e01] ++
   Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112] ++
   [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
-   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52]
+   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52] ++
+  [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o

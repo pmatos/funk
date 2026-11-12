@@ -92,6 +92,8 @@ theorem Op.monotone_all : (op : Op) →
   | .zext m n, _ => zext_monotone m n
   | .sext m n, _ => sext_monotone m n
   | .trunc m n, _ => trunc_monotone m n
+  | .toBits e m, _ => toBits_monotone e m
+  | .ofBits e m, _ => ofBits_monotone e m
   | .freeze w, _ => freeze_monotone w
   | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone

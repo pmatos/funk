@@ -103,7 +103,7 @@ def empty(counts: dict[str, Counter]) -> list[str]:
 
 
 def show(cell: Cell) -> str:
-    if cell.table == "casts":
+    if cell.table in ("casts", "conversions"):
         return f"{cell.op} from {cell.row} to {cell.width}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
@@ -152,6 +152,16 @@ def casts_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
                 row.append(number(counts[cell]) if cells.allowed(op, m, n) else "")
             rows.append(row)
     return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
+
+
+def conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
+    rows = []
+    for f in formats:
+        i = cells.bits_type(f)
+        for a, b in ((f, i), (i, f)):
+            cell = Cell("conversions", "bitcast", a, b)
+            rows.append(["`bitcast`", f"`{a}`", f"`{b}`", number(counts[cell])])
+    return table(["op", "from", "to", "tests"], rows)
 
 
 WHAT = {
@@ -226,6 +236,8 @@ def render(counts: dict[str, Counter]) -> str:
         lines += floats_table(counts[side], formats)
         lines += ["", f"### Width changes ({title.lower()})", ""]
         lines += casts_table(counts[side], widths)
+        lines += ["", f"### Conversions ({title.lower()})", ""]
+        lines += conversions_table(counts[side], formats)
         lines += ["", f"### Passed and returned values ({title.lower()})", ""]
         lines += values_table(counts[side], widths, formats)
     return "\n".join(lines) + "\n"

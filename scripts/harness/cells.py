@@ -21,6 +21,9 @@ has neither operands nor attributes, is a cell at each width of its result
   differential tests, which the backend lowers, and `f16`, `bf16`, `f32`,
   `f64` and `f128` for interpreter-only tests (#229,
   ADR-2026-11-03-0557).
+- A conversion is a cell for each pair of types it converts between at
+  the side's float formats: `bitcast` from each format to the integer of
+  its width, and from that integer to the format (#241).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -98,6 +101,9 @@ AT_FORMAT = {
     "fma": ROUND,
 }
 CASTS = ("zext", "sext", "trunc")
+# The conversions between a float and another type, which have no
+# attributes: a cell for each pair of types, at the side's float formats.
+CONVERSIONS = ("bitcast",)
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -113,15 +119,17 @@ OPS = (
     *AT_WIDTH,
     *(op for op in AT_FORMAT if op != "const"),
     *CASTS,
+    *CONVERSIONS,
     *(op for op, _ in VALUES if op != "func"),
 )
 
 
 class Cell(NamedTuple):
-    """`table` is `ops`, `floats`, `casts` or `values`. `row` is a flag set
-    or predicate, the source width of a width change, or what a value row
-    passes; `width` is a width or a float format, or empty where nothing is
-    passed."""
+    """`table` is `ops`, `floats`, `casts`, `conversions` or `values`.
+    `row` is a flag set or predicate, the source type of a width change or a
+    conversion, or what a value row passes; `width` is a width, a float
+    format or the result type of a width change or a conversion, or empty
+    where nothing is passed."""
 
     table: str
     op: str
@@ -150,6 +158,11 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
             out += [
                 Cell("casts", op, ty(m), ty(n)) for n in widths if allowed(op, m, n)
             ]
+    out += [
+        Cell("conversions", "bitcast", a, b)
+        for f in formats
+        for a, b in ((f, bits_type(f)), (bits_type(f), f))
+    ]
     for op, rows in VALUES:
         for row in rows:
             if row == NOTHING:
@@ -166,9 +179,25 @@ def is_float(t: str) -> bool:
     return b is not None and not b[1]
 
 
+def bits_type(f: str) -> str:
+    """The integer type of the width of the float type `f`."""
+    return ty(bits_of(f)[0])
+
+
 def allowed(op: str, m: int, n: int) -> bool:
     """Whether the spec has the width change `op` from `iM` to `iN`."""
     return n < m if op == "trunc" else m < n
+
+
+def bitcast(op: Op) -> Cell:
+    """The cell of a `bitcast`: from a float to the integer of its width, or
+    back. Any other text of it does not decode, so it is not a cell."""
+    if not op.attrs and len(op.operands) == len(op.results) == 1:
+        [a], [b] = op.operands, op.results
+        for f, i in ((a, b), (b, a)):
+            if is_float(f) and bits_of(i) == (bits_of(f)[0], True):
+                return Cell("conversions", "bitcast", a, b)
+    raise CellError(f"bitcast from {op.operands} to {op.results} is not a cell")
 
 
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
@@ -186,6 +215,8 @@ def of_op(op: Op) -> set[Cell]:
     """The cells that an op exercises, at any width. An op that the core
     dialect does not have, or an attribute that is not a cell, is an
     error."""
+    if op.name == "bitcast":
+        return {bitcast(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

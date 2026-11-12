@@ -13,7 +13,7 @@ have no trace.
 * Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
   `select`, `zext`, `sext`, `trunc`, `freeze`, `add`, `sub` and `mul`
   without flags, and the float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`,
-  `fneg`, `fabs`, `sqrt` and `fma`. On operands
+  `fneg`, `fabs`, `sqrt` and `fma`, and the bit casts. On operands
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
   chooses, and `freeze` gives defined bits. A float op's NaN is a defined
@@ -48,7 +48,8 @@ effects (ADR-2026-11-03-0600). A flag of `add`, `sub` or `mul`, and `exact`
 on a division, may produce poison. -/
 def Op.effects : Op → Effects Mem
   | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .fcmp .. | .fbin .. | .funary ..
-  | .fma .. | .select _ | .zext .. | .sext .. | .trunc .. | .freeze _ | .call .. => {}
+  | .fma .. | .select _ | .zext .. | .sext .. | .trunc .. | .freeze _ | .call .. | .toBits ..
+  | .ofBits .. => {}
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }
