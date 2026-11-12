@@ -249,6 +249,8 @@ overflow included. NaN and infinite operands, and zeros, take SSE's
 arithmetic.
 
 Rejected: FMA3's `vfmadd`, since a program that uses it fails on an x86-64
-without FMA3, and raising the instruction set needs the human's ruling;
+without FMA3, and the default stays baseline x86-64 (the human ruled on
+2026-11-12 that CPU extensions come in through a `--cpu` flag in M2; see
+[the roadmap](../roadmap.md));
 `fma` from the C library, since most modules link none; and double-double
 arithmetic at `f64`, which loses exactness near overflow and among subnormals.

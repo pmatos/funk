@@ -77,6 +77,7 @@ These hold across the whole roadmap. Each is, or will be, an ADR.
 | M6 | JIT compilation | [milestone 6](https://github.com/pmatos/funk/milestone/6) |
 | M7 | x86 to arm64 binary translation | [milestone 7](https://github.com/pmatos/funk/milestone/7) |
 | M8 | WebAssembly backend | [milestone 9](https://github.com/pmatos/funk/milestone/9) |
+| M9 | Per-compile refinement checks (S8) | [milestone 10](https://github.com/pmatos/funk/milestone/10) |
 
 The milestones were renumbered on 2026-11-05, when the IR got a milestone of
 its own ahead of the backend (ADR-2026-11-05-2255). In an ADR, issue or
@@ -230,8 +231,7 @@ that the harness checks it natively. Making that code good is M2's job.
 functions, vectors, contract ops, structured control flow (H6) and the rest of
 the [deferred list](roadmap-deferred.md) stay with the milestones that need
 them; M1 leaves
-hooks for the first three (ADR-2026-11-09-1548). S8 stays with M2's optimizer
-track.
+hooks for the first three (ADR-2026-11-09-1548). S8 is M9, after M2.
 
 **Done when** every M1 decision is an accepted ADR; the spec covers each item,
 formal and readable; `fir-ref` runs it; the Rust tools agree with `fir-ref` on
@@ -253,15 +253,38 @@ time, checking each against the Lean interpreter before starting the next:
    it.
 
 Calling conventions grow with the IR: aggregates, varargs and what the memory
-model brought in. As hand-written passes multiply, per-compile refinement
-checks (SMT, S8) start to matter here.
+model brought in.
 
 **Optimizer track.** M2 also starts the mid-end, as a track that runs beside
 the backend work: rewrite rules proven in Lean and emitted as Rust matchers by
-a generator, a growing rule library, verified DCE and CSE, an aegraph view of
-pure ops (H7), and location propagation by the rewrite engine (H8). Each rule
-or pass is checked against the Lean semantics before it lands, and S8 must be
-decided before the first pass that depends on it.
+a generator, a growing rule library, DCE and CSE, an aegraph view of pure ops
+(H7), and location propagation by the rewrite engine (H8). Each rule or pass is
+tested against `fir-ref` before it lands. S8 checks them per compile later, in
+M9.
+
+**Rulings for M2**, from the human on 2026-11-12
+([#164](https://github.com/pmatos/funk/issues/164#issuecomment-6820504273)):
+
+- M2 may start before M1 closes, as long as the foundations that each step
+  needs are in place.
+- The backend is checked by differential tests against `fir-ref`, on the
+  corpus and on random programs. A formal model of x86 waits for later.
+- Register allocation starts as linear scan, behind an interface that lets
+  other allocators be tried. funk writes its own allocator. The allocator,
+  scheduling and the optimizer live in generic crates, not in the x86 crate
+  (ADR-2026-10-30-1228).
+- CPU extensions come in through a `--cpu` flag, a few at a time. The default
+  stays baseline x86-64.
+- Vectors and SIMD are not part of M2.
+- Nothing is called proven unless it is. A Lean proof of a pass covers the
+  transformation, not the hand-written Rust that performs it. In M2 that Rust
+  is checked by tests only. S8 checks it later, in M9.
+
+**Done when** the register-allocating backend has replaced spill-everything
+for every op of M1, every sub-issue of the epic is closed, and native results
+refine `fir-ref`'s on the whole corpus and on random programs, with CI running
+all of it. The bar is correctness only: M2 sets no target for the speed or
+size of the generated code, and optimization comes later.
 
 ### M3: Vow frontend
 
@@ -309,6 +332,13 @@ flow, several memories, and values owned by the host. Epic:
 The epic will be split into tasks later. Open questions include how fir's
 control-flow graph lowers to Wasm's structured blocks and loops, irreducible
 control flow included. Its order relative to M2 to M7 is not set.
+
+### M9: Per-compile refinement checks (S8)
+
+**Goal.** After an optimizer pass changes a function, an SMT solver checks
+that the new function refines the old one (S8). M9 runs after M2, whose passes
+it checks. The human split it out of M2 on 2026-11-12. Its decisions wait on
+[#341](https://github.com/pmatos/funk/issues/341).
 
 ## Decisions deferred past M0
 
