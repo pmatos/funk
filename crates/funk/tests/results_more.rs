@@ -1,4 +1,4 @@
-//! Several results natively (#31, ADR-2026-11-03-0109): mixed widths in one
+//! Several results natively (#31, ADR-2026-10-30-1232): mixed widths in one
 //! list of results, calls with six or more arguments whose results go in
 //! memory, so that the result area's address pushes an argument onto the
 //! stack, and direct and mutual recursion that returns several values at

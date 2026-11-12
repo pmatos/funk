@@ -7,7 +7,7 @@
 # states fir-ref's result: the quotient, or poison where the division
 # leaves a remainder, read as signed. Where fir-ref gives poison, any
 # native value refines it: the helper gives the plain quotient
-# (ADR-2026-11-03-0415).
+# (docs/decisions/x86-64-backend-lowering.md#division-at-i128).
 tests = [
   { func = "@sdiv_exact", args = ["7", "7"] },
   { func = "@sdiv_exact", args = ["7", "7"], expect = ["1"] },

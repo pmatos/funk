@@ -1,16 +1,17 @@
 //! A function's frame under spill-everything register allocation
-//! (ADR-2026-10-30-1230).
+//! (`docs/decisions/x86-64-backend.md#frames-and-slots`).
 //!
 //! Every value a function defines, parameters first, then each block's
 //! arguments and each op's results in order, has an 8-byte slot of its own
 //! below `%rbp`: the first at `-8(%rbp)`, the next at `-16(%rbp)`. An
 //! `i128` has two slots next to each other, its low half at the lower
-//! address (ADR-2026-11-03-010730). An op loads its operands from their slots
-//! into scratch registers, computes, and stores each result into its slot.
-//! No value stays in a register from one op to the next.
+//! address (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). An
+//! op loads its operands from their slots into scratch registers, computes,
+//! and stores each result into its slot. No value stays in a register from
+//! one op to the next.
 //!
 //! Below the values' slots, a frame holds what the result convention needs
-//! (ADR-2026-11-03-0109): a slot for the address of the function's own
+//! (ADR-2026-10-30-1232): a slot for the address of the function's own
 //! result area when its results go in memory, a slot for the address that
 //! it passes to a call whose results go in memory, and at its bottom the
 //! area for those calls, as large as the largest that one of them needs.
@@ -147,8 +148,9 @@ pub fn size_for(n: usize) -> Option<i32> {
 /// stack argument after its padding, is at most a page below the last
 /// access, so the stack grows in order, and a frame too large for its stack
 /// faults on the guard page below it rather than writing past it
-/// (ADR-2026-11-02-1102). The probe loop counts in `%r11`, which carries no
-/// argument, so the parameters are still in their registers after it.
+/// (`docs/decisions/x86-64-backend.md#stack-probes`). The probe loop counts
+/// in `%r11`, which carries no argument, so the parameters are still in
+/// their registers after it.
 pub fn prologue(asm: &mut Asm, size: i32) {
     asm.ins("pushq", format_args!("%rbp"));
     asm.ins("movq", format_args!("%rsp, %rbp"));
@@ -211,7 +213,7 @@ mod tests {
 
     /// After the values: the slot for the function's own result area's
     /// address, the slot for the address it passes, and at the bottom the
-    /// largest area that one of its calls needs (ADR-2026-11-03-0109).
+    /// largest area that one of its calls needs (ADR-2026-10-30-1232).
     #[test]
     fn a_frame_holds_what_results_in_memory_need() {
         let text = "func @three() -> i8, i8, i8 {\n^entry:\n  %c: i8 = const 1 @0\n  ret %c, %c, %c @0\n}\n\n\

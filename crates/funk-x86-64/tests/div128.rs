@@ -1,9 +1,10 @@
 //! How `sdiv`, `udiv`, `srem` and `urem` are lowered at `i128` (#22): a
 //! call of a System V routine of the runtime helper, with the operands in
 //! `%rsi:%rdi` and `%rcx:%rdx` and the result in `%rdx:%rax`
-//! (ADR-2026-11-03-0415), and the helper once at the end of the module's
-//! assembly, under local symbols, when a function calls it
-//! (ADR-2026-11-03-0414).
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`), and
+//! the helper once at the end of the module's assembly, under local
+//! symbols, when a function calls it
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;

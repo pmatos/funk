@@ -13,7 +13,7 @@
 #
 # Each function divides an i128 by a constant beyond 64 bits: 2^66, -2^66
 # and -2^66 - 3, which native code divides through the runtime helper of
-# ADR-2026-11-03-0415.
+# docs/decisions/x86-64-backend-lowering.md#division-at-i128.
 #
 # Every function of the file is here.
 source = { file = "llvm/test/CodeGen/X86/i128-sdiv.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }

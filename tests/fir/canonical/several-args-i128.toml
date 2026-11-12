@@ -2,22 +2,22 @@
 # go in memory (#21, #31). Natively the result area's address is the
 # call's first argument, in %rdi, so the arguments move along by one, and
 # an i128 that finds one register left goes on the stack whole, 16-byte
-# aligned (ADR-2026-11-03-0108, ADR-2026-11-03-0109). spillN folds its
-# arguments into an i128, multiplying by 1000003 and adding the next, and
-# returns the fold, its low 8 bits and its last i128 argument.
-# spill_callN adds one to each of its arguments, passes them to spillN in
-# reverse order, so that the two lay out different lists, and returns the
-# last i128, the i8 and the sum of the two i128s. The lists: an i128
-# after four i64s, which finds only %r9 left; three i128s, the third on
-# the stack; an i64 and three i128s; five i64s and an i128; two i128s, an
-# i64 and an i128; six i64s, an i128 past a hole on the stack, and an
-# i64; and a mix of widths. fibs steps (a, b) to (b, a + b) n times by
-# calling itself on n - 1, and returns the pair around n, with b past
-# 2^64 and wrapping past 2^127; recursion goes at most 20 deep. The
-# arguments are the boundary bit patterns of their types, and at i128
-# values on either side of 2^63 and 2^64 and a value whose halves differ.
-# Each test is differential: fir-ref and native code run it, and the
-# native result must refine fir-ref's.
+# aligned (docs/decisions/x86-64-backend-abi.md#arguments,
+# ADR-2026-10-30-1232). spillN folds its arguments into an i128,
+# multiplying by 1000003 and adding the next, and returns the fold, its
+# low 8 bits and its last i128 argument. spill_callN adds one to each of
+# its arguments, passes them to spillN in reverse order, so that the two
+# lay out different lists, and returns the last i128, the i8 and the sum
+# of the two i128s. The lists: an i128 after four i64s, which finds only
+# %r9 left; three i128s, the third on the stack; an i64 and three i128s;
+# five i64s and an i128; two i128s, an i64 and an i128; six i64s, an i128
+# past a hole on the stack, and an i64; and a mix of widths. fibs steps
+# (a, b) to (b, a + b) n times by calling itself on n - 1, and returns
+# the pair around n, with b past 2^64 and wrapping past 2^127; recursion
+# goes at most 20 deep. The arguments are the boundary bit patterns of
+# their types, and at i128 values on either side of 2^63 and 2^64 and a
+# value whose halves differ. Each test is differential: fir-ref and
+# native code run it, and the native result must refine fir-ref's.
 tests = [
   { func = "@spill_call0", args = ["0", "1", "-1", "-9223372036854775808", "9223372036854775808"] },
   { func = "@spill_call0", args = ["-1", "-9223372036854775808", "9223372036854775807", "0", "-9223372036854775809"] },

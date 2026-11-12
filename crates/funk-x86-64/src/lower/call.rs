@@ -2,15 +2,18 @@
 //!
 //! Width checks and result storage live here. [`crate::abi::call`] owns
 //! outgoing argument placement, symbol spelling and stack cleanup
-//! (ADR-2026-11-02-1428). Arguments and results move as their slots hold
-//! them, without extension (ADR-2026-11-02-1021). Every value lives in its
-//! slot, so nothing needs saving around the call. A call has any number of
-//! results, which [`crate::abi::results`] lays out (ADR-2026-11-03-0109):
-//! when they go in memory, the call passes the address of its frame's
-//! result area first, and copies each result out of the area after it. An
-//! `i128` passes as two eightbytes (ADR-2026-11-03-0108), and comes back in
+//! (`docs/decisions/x86-64-backend-abi.md#one-emitter-for-funk-calls`).
+//! Arguments and results move as their slots hold them, without extension
+//! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`).
+//! Every value lives in its slot, so nothing needs saving around the call.
+//! A call has any number of results, which [`crate::abi::results`] lays out
+//! (ADR-2026-10-30-1232): when they go in memory, the call passes the
+//! address of its frame's result area first, and copies each result out of
+//! the area after it. An `i128` passes as two eightbytes
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`), and comes back in
 //! two: alone in `%rdx:%rax`, and among other results in the area. An `f32`
-//! or `f64` passes and comes back in an SSE register (ADR-2026-11-11-1140).
+//! or `f64` passes and comes back in an SSE register
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 
 use funk_ir::{Attr, Op};
 

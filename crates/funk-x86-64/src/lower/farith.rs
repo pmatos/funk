@@ -1,6 +1,7 @@
 //! Float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fneg`,
 //! `fabs` and `fma` (`dialects/core/float_arith.rs` in `funk-ir`), at
-//! `f32` and `f64` (ADR-2026-11-11-1802).
+//! `f32` and `f64`
+//! (`docs/decisions/x86-64-backend-lowering.md#float-arithmetic`).
 //!
 //! Each op that rounds, but `fma`, is one SSE instruction, which rounds to
 //! nearest even, as MXCSR's default mode does and as `round(rne)` asks:

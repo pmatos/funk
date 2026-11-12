@@ -1,9 +1,10 @@
 //! How `call` is lowered (#20): System V between funk functions
 //! (ADR-2026-10-30-1232), the arguments past the sixth pushed with padding
 //! to keep `%rsp` 16-byte aligned, no extension of any argument or result
-//! (ADR-2026-11-02-1021), the callee's symbol as ADR-2026-10-30-1232 spells
-//! it, no callee-saved register but `%rbp` ever written, and no call that
-//! lands more than a page below the stack's last access.
+//! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`),
+//! the callee's symbol as ADR-2026-10-30-1232 spells it, no callee-saved
+//! register but `%rbp` ever written, and no call that lands more than a
+//! page below the stack's last access.
 
 use funk_ir::{Module, Registry, parse};
 use funk_x86_64::compile;
@@ -35,7 +36,7 @@ fn chain(n: usize, types: &[&str]) -> String {
 
 /// [`chain`], where `@callee` returns its first parameter `r` times and
 /// `@caller` returns all `r` results of its call: in memory when `r` is
-/// more than two (ADR-2026-11-03-0109).
+/// more than two (ADR-2026-10-30-1232).
 fn returning(n: usize, r: usize, types: &[&str]) -> String {
     let ty = |k: usize| types[k % types.len()];
     let params = |rev: bool| -> String {
@@ -229,7 +230,8 @@ fn a_call_keeps_the_stack_aligned_and_saves_no_register() {
 /// page below the deepest one already made, counting in bytes below the
 /// function's entry, where the caller wrote the return address: the slots
 /// at `-N(%rbp)`, each push, the probe loop's pages and each call's return
-/// address (ADR-2026-10-30-1230, ADR-2026-11-02-1102).
+/// address (`docs/decisions/x86-64-backend.md#frames-and-slots`,
+/// `docs/decisions/x86-64-backend.md#stack-probes`).
 fn check_no_access_skips_a_page(asm: &str) {
     let (mut below, mut deepest, mut pages) = (0i64, 0i64, 1i64);
     let touch = |at: i64, deepest: &mut i64, line: &str| {
@@ -278,7 +280,8 @@ fn check_no_access_skips_a_page(asm: &str) {
 /// A call lands at most a page below the last access, from frames of 0 to
 /// 13 values and of about one and two pages, with no argument and with
 /// stack arguments, and with results in a result area at the frame's
-/// bottom: a frame of exactly a page is probed (ADR-2026-11-02-1102).
+/// bottom: a frame of exactly a page is probed
+/// (`docs/decisions/x86-64-backend.md#stack-probes`).
 #[test]
 fn a_call_lands_at_most_a_page_below_the_last_access() {
     let consts = |n: usize| -> String {
@@ -355,7 +358,7 @@ fn entry_restores_outgoing_space_and_reserves_its_peak() {
             format!("\taddq\t${outgoing}, %rsp\n")
         };
         // The result goes in the first slot, whose argument the call no
-        // longer needs, and is printed from there (ADR-2026-11-03-0109).
+        // longer needs, and is printed from there (ADR-2026-10-30-1232).
         assert!(
             after_call.starts_with(&format!(
                 "{cleanup}\tmovq\t%rax, -8(%rbp)\n\tmovq\t-8(%rbp), %rdi\n"

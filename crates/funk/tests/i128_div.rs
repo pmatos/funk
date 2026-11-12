@@ -1,13 +1,14 @@
 //! Division at `i128` (#22): `sdiv` and `udiv`, each with and without
 //! `exact`, `srem` and `urem`, run natively through the runtime helper
-//! (ADR-2026-11-03-0414, ADR-2026-11-03-0415) and checked against Rust's
-//! `i128` and `u128` arithmetic. The values cross `2^63` and `2^64`, take
-//! both signs, and take each path of the helper: a divisor below `2^64`,
-//! with a dividend whose high half is below it or not, and a divisor of
-//! `2^64` or more, near its multiples. A run whose source is UB, a zero
-//! divisor or `sdiv` and `srem` of the signed minimum by `-1`, is not
-//! made: natively it may trap. Where a broken `exact` gives poison, a run
-//! asks only for a value of the type (ADR-2026-10-30-2248).
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`) and
+//! checked against Rust's `i128` and `u128` arithmetic. The values cross
+//! `2^63` and `2^64`, take both signs, and take each path of the helper:
+//! a divisor below `2^64`, with a dividend whose high half is below it or
+//! not, and a divisor of `2^64` or more, near its multiples. A run whose
+//! source is UB, a zero divisor or `sdiv` and `srem` of the signed
+//! minimum by `-1`, is not made: natively it may trap. Where a broken
+//! `exact` gives poison, a run asks only for a value of the type
+//! (ADR-2026-10-30-2248).
 
 mod common;
 

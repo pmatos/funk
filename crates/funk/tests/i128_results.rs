@@ -1,10 +1,11 @@
 //! `i128` among several results (#21, #31), run natively and checked
 //! against Rust's `i128` arithmetic. A function returns its results as
-//! System V returns a structure (ADR-2026-11-03-0109): one `i128` alone in
+//! System V returns a structure (ADR-2026-10-30-1232): one `i128` alone in
 //! `%rdx:%rax`, and next to any other result in the caller's result area,
 //! at an offset that is a multiple of 16, its low half first. The area's
 //! address is the call's first argument, so an `i128` argument may find no
-//! pair of registers left and go on the stack (ADR-2026-11-03-0108).
+//! pair of registers left and go on the stack
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`).
 
 mod common;
 

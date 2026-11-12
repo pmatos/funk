@@ -1,4 +1,4 @@
-//! Where a funk function's results go (ADR-2026-11-03-0109): as System V
+//! Where a funk function's results go (ADR-2026-10-30-1232): as System V
 //! returns a structure with one member per result, each aligned to 8 bytes,
 //! or to 16 for an `i128`.
 //!
@@ -6,13 +6,15 @@
 //! half first. Results of one or two eightbytes come back in registers, as
 //! System V classifies them: each INTEGER eightbyte in the next of `%rax`
 //! and `%rdx`, and each SSE eightbyte, an `f32` or an `f64`, in the next of
-//! `%xmm0` and `%xmm1` (ADR-2026-11-11-1140). More go in a result area that
-//! the caller provides in its frame:
+//! `%xmm0` and `%xmm1`
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). More
+//! go in a result area that the caller provides in its frame:
 //! it passes the area's address as the call's first argument, and the
 //! callee writes every result there and returns the address in `%rax`.
 //! An `i1` result is 0 or 1 in all of its eightbyte; every other result is
 //! in the low bits of its eightbyte, as a slot holds it. The caller stores
-//! each eightbyte in a slot as it comes (ADR-2026-11-02-1021).
+//! each eightbyte in a slot as it comes
+//! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`).
 //!
 //! `ret`, `call` and the entry wrapper all lay out and move their results
 //! here, so the convention has one definition.
@@ -161,7 +163,8 @@ impl Layout {
 
     /// What a caller does before the call when the results go in memory:
     /// it stores the address of its frame's result area in the slot that
-    /// the call passes first (ADR-2026-11-02-1428).
+    /// the call passes first
+    /// (`docs/decisions/x86-64-backend-abi.md#one-emitter-for-funk-calls`).
     pub fn pass(&self, asm: &mut Asm, area: Area) {
         let rax = RESULT_REG.q();
         asm.ins("leaq", format_args!("{}, {rax}", area.base));

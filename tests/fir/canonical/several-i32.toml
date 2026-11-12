@@ -1,5 +1,5 @@
 # Tests of several-i32.fir: functions and calls with any number of
-# results at i32 (#31, ADR-2026-11-03-0109). none returns nothing, and
+# results at i32 (#31, ADR-2026-10-30-1232). none returns nothing, and
 # call_none calls it and returns its argument. two returns a + b and a,
 # which come back in registers natively; three returns a - b, a + b and
 # b, and eight a, a + 1, ... a + 7, with add and sub, which wrap: more

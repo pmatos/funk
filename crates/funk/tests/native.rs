@@ -1,6 +1,7 @@
 //! Functions that `funk build` compiles run natively: parameters, `const`
 //! and `add` at every width the backend lowers, parameters on the stack, and
-//! functions with no result (ADR-2026-10-30-1233).
+//! functions with no result
+//! (`docs/decisions/x86-64-backend-executable.md#running-one-function`).
 
 mod common;
 

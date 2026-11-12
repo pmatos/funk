@@ -1,4 +1,5 @@
-//! Lowering a module's functions to assembly (ADR-2026-10-30-1230).
+//! Lowering a module's functions to assembly
+//! (`docs/decisions/x86-64-backend.md#frames-and-slots`).
 //!
 //! Each op family of the core dialect has a file of its own here, as in
 //! `funk-ir`'s `dialects/core/`, and lowers its ops by name. A later family
@@ -7,29 +8,35 @@
 //! [`Diagnostic`] at the op or block, each width and each op that the
 //! backend cannot lower: all of them, in one pass.
 //!
-//! Blocks are laid out in the order of the function's body, each at its
-//! own label, and a branch jumps to its successor's label unless that
-//! block comes next (ADR-2026-10-31-0334). A branch copies the values it
-//! passes into its successor's arguments as one parallel move (`moves.rs`,
-//! ADR-2026-10-31-0335). A call follows System V, with no extension of
-//! its arguments (`call.rs`, ADR-2026-11-02-1021). `ret` and `call` place
-//! and read any number of results as `abi::results` lays them out
-//! (ADR-2026-11-03-0109).
+//! Blocks are laid out in the order of the function's body, each at its own
+//! label, and a branch jumps to its successor's label unless that block
+//! comes next (`docs/decisions/x86-64-backend-lowering.md#branches`). A
+//! branch copies the values it passes into its successor's arguments as one
+//! parallel move (`moves.rs`,
+//! `docs/decisions/x86-64-backend-lowering.md#block-arguments`). A call
+//! follows System V, with no extension of its arguments (`call.rs`,
+//! `docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`).
+//! `ret` and `call` place and read any number of results as `abi::results`
+//! lays them out (ADR-2026-10-30-1232).
 //!
 //! An `i128` is a pair of eightbytes in two slots, and each op lowers it
 //! through a pair of registers, `%rax` for its low half and `%rdx` for its
-//! high one unless the op says otherwise (ADR-2026-11-03-010730). Division
-//! at `i128` calls a routine of a runtime helper, as `fma` at `f32` and
-//! `f64` does, and the module's text then ends with each helper that it
-//! calls, once (`div.rs`, `farith.rs`, ADR-2026-11-03-0414).
+//! high one unless the op says otherwise
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). Division at
+//! `i128` calls a routine of a runtime helper, as `fma` at `f32` and `f64`
+//! does, and the module's text then ends with each helper that it calls,
+//! once (`div.rs`, `farith.rs`,
+//! `docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 //!
 //! An `f32` or `f64` is its bits in one slot. A float constant writes them
 //! as an integer immediate, as any constant does, and `fcmp` loads its
 //! operands into SSE registers (`fcompare.rs`), as the float arithmetic
 //! does, but for `fneg` and `fabs`, which change the sign bit in `%rax`,
 //! and `fma`, which calls a routine of a runtime helper of its own
-//! (`farith.rs`, ADR-2026-11-11-1802). Floats pass and return in SSE
-//! registers (ADR-2026-11-11-1140).
+//! (`farith.rs`,
+//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
+//! pass and return in SSE registers
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 
 mod arith;
 mod bitwise;
@@ -370,7 +377,7 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
     frame::prologue(&mut cx.asm, cx.frame.size());
     // The address of the function's result area, when its results go in
     // memory, arrives first, as an argument of one eightbyte, and its
-    // parameters after it (ADR-2026-11-03-0109).
+    // parameters after it (ADR-2026-10-30-1232).
     let mut incoming = Vec::with_capacity(f.params.len());
     for d in &f.params {
         let Some(slot) = cx.frame.slot(&d.name) else {

@@ -1,13 +1,14 @@
 # Tests of div-symbol-i128.fir: functions named as the routines of the
 # runtime helper that divides at i128, and as one of its labels, which
-# fir quotes (#22, ADR-2026-11-03-0414). Each routine is a local symbol
-# of the module's object file, and no fir function's symbol is one of
-# them: a name that starts with _ or that is not a word gets a symbol of
-# __funk_sym_ and its bytes in hexadecimal. Each named function divides
-# at i128, so calls the helper, and then adds, subtracts or xors a
-# constant of its own; plain divides with each op, and via calls each
-# named function and adds their results. A call that reached the wrong
-# code would give another sum.
+# fir quotes (#22,
+# docs/decisions/x86-64-backend-lowering.md#division-at-i128). Each
+# routine is a local symbol of the module's object file, and no fir
+# function's symbol is one of them: a name that starts with _ or that is
+# not a word gets a symbol of __funk_sym_ and its bytes in hexadecimal.
+# Each named function divides at i128, so calls the helper, and then
+# adds, subtracts or xors a constant of its own; plain divides with each
+# op, and via calls each named function and adds their results. A call
+# that reached the wrong code would give another sum.
 # Each test is differential: fir-ref and native code run it, and the
 # native results must equal fir-ref's.
 tests = [

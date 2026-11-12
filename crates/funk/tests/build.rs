@@ -92,7 +92,9 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
 }
 
 /// Division at `i128` calls the runtime helper, which the object file
-/// holds (ADR-2026-11-03-0414), and the executable runs it.
+/// holds
+/// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`),
+/// and the executable runs it.
 #[test]
 fn division_at_i128_builds_with_the_helper_in_the_object_file() {
     let (out, exe, _) = try_build("wide-div", WIDE_DIV, &[]);
@@ -126,7 +128,7 @@ fn a_function_with_several_results_builds_and_prints_each() {
 
 /// A result of a width that the backend does not lower is reported where
 /// its value is defined, as any value is, once, in a function of several
-/// results (ADR-2026-11-03-0109).
+/// results (ADR-2026-10-30-1232).
 #[test]
 fn a_result_of_an_unsupported_width_is_reported_at_its_op() {
     let fir = PAIR

@@ -3,31 +3,33 @@
 //!
 //! Bit `i` of `and`, `or` and `xor` depends only on bit `i` of each operand,
 //! so one 64-bit `andq`, `orq` or `xorq` computes the op at every width,
-//! whatever the bits above `N` hold (ADR-2026-10-30-1231).
+//! whatever the bits above `N` hold
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`).
 //!
 //! A shift is one 64-bit `shlq`, `shrq` or `sarq` by `%cl`. Its amount is
 //! read as unsigned, so it is first zero-extended from `N` bits. The low `N`
 //! bits of `shl` depend only on the low `N` bits of its value, but a right
 //! shift brings the bits above `N` down, so `lshr` zero-extends its value
-//! and `ashr` sign-extends it (ADR-2026-10-30-1231). x86 masks the count of
-//! a 64-bit shift to its low 6 bits. An amount below `N` is below 64, so the
-//! mask keeps it: every shift by less than `N` is exact, at every width,
-//! `i1` included, where the only such amount is `0`. No code tests the
-//! amount: a shift by `N` or more gives poison, which any value of the type
-//! refines (ADR-2026-10-29-2008), so it gives whatever the masked shift
+//! and `ashr` sign-extends it
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`). x86 masks the
+//! count of a 64-bit shift to its low 6 bits. An amount below `N` is below
+//! 64, so the mask keeps it: every shift by less than `N` is exact, at every
+//! width, `i1` included, where the only such amount is `0`. No code tests
+//! the amount: a shift by `N` or more gives poison, which any value of the
+//! type refines (ADR-2026-10-29-2008), so it gives whatever the masked shift
 //! gives (ADR-2026-10-30-2248).
 //!
-//! At `i128` (ADR-2026-11-03-010730), `and`, `or` and `xor` apply to each
-//! half. A shift reads its amount's low half only: an amount below 128 is
-//! that half, and any other gives poison. The value's halves are shifted
-//! together by `%cl` with `shldq` or `shrdq`, which move bits from one half
-//! into the other, and the half they fill is shifted with `shlq`, `shrq` or
-//! `sarq`. x86 masks those counts to 6 bits, so that is the shift by the
-//! amount modulo 64. When bit 6 of `%cl` is set, the amount is 64 or more
-//! and the halves must move one place further: two `cmovneq` put the
-//! shifted half into the other, and fill it with zeros or, for `ashr`, the
-//! sign. No code branches on the amount, and an amount of 128 or more gives
-//! whatever that sequence gives for its low 7 bits.
+//! At `i128` (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`),
+//! `and`, `or` and `xor` apply to each half. A shift reads its amount's low
+//! half only: an amount below 128 is that half, and any other gives poison.
+//! The value's halves are shifted together by `%cl` with `shldq` or `shrdq`,
+//! which move bits from one half into the other, and the half they fill is
+//! shifted with `shlq`, `shrq` or `sarq`. x86 masks those counts to 6 bits,
+//! so that is the shift by the amount modulo 64. When bit 6 of `%cl` is set,
+//! the amount is 64 or more and the halves must move one place further: two
+//! `cmovneq` put the shifted half into the other, and fill it with zeros or,
+//! for `ashr`, the sign. No code branches on the amount, and an amount of
+//! 128 or more gives whatever that sequence gives for its low 7 bits.
 
 use funk_ir::Op;
 

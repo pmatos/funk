@@ -1,7 +1,7 @@
 //! Functions and calls with any number of results (#31), run natively at
 //! every width the backend lowers. One or two results come back in `%rax`
 //! and `%rdx`, and more in a result area that the caller provides, whose
-//! address the call passes first (ADR-2026-11-03-0109). Each caller here
+//! address the call passes first (ADR-2026-10-30-1232). Each caller here
 //! uses every result of its calls and passes some on to another call, and
 //! the executable prints every result, in order. Sums that wrap leave bits
 //! above the width in their slots, such as 128 for `127 + 1` at `i8`, so

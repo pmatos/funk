@@ -3,7 +3,9 @@
 A corpus in the format of `tests/fir/` (ADR-2026-10-30-2050) that the main
 run of the harness does not read. Its one test, `canonical/down.toml`,
 recurses 1,000,000 deep: `fir-ref` returns, and native code runs out of its
-stack and says so in one line (ADR-2026-11-02-1132). The harness reports it
+stack and says so in one line
+([x86-64-backend-executable.md](../../../../docs/decisions/x86-64-backend-executable.md#the-runs-stack)).
+The harness reports it
 invalid and exits with 1. `scripts/check-harness.sh` runs
 `scripts/harness/check_invalid.py` after the main run, which runs the harness
 on this corpus with the real tools under an 8 MiB stack limit, and passes

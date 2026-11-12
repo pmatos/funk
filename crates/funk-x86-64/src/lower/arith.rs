@@ -4,15 +4,17 @@
 //! Each op wraps modulo `2^N`. The low `N` bits of a 64-bit sum, difference
 //! or product depend only on the low `N` bits of the operands, so one 64-bit
 //! `addq`, `subq` or `imulq` computes the op at every width up to 64,
-//! whatever the bits above `N` hold (ADR-2026-10-30-1231).
+//! whatever the bits above `N` hold
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`).
 //!
-//! At `i128` the halves are in `%rax` and `%rdx` (ADR-2026-11-03-010730).
-//! `add` is `addq` of the low halves and `adcq` of the high ones, which adds
-//! the carry, and `sub` is `subq` and `sbbq`, which subtracts the borrow.
-//! `mul` keeps the low 128 bits of the product: `mulq` gives the whole
-//! 128-bit product of the low halves, and the two cross products, each the
-//! low 64 bits of one low half times the other high half, add into its high
-//! half. The product of the high halves is a multiple of `2^128`.
+//! At `i128` the halves are in `%rax` and `%rdx`
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). `add` is
+//! `addq` of the low halves and `adcq` of the high ones, which adds the
+//! carry, and `sub` is `subq` and `sbbq`, which subtracts the borrow. `mul`
+//! keeps the low 128 bits of the product: `mulq` gives the whole 128-bit
+//! product of the low halves, and the two cross products, each the low 64
+//! bits of one low half times the other high half, add into its high half.
+//! The product of the high halves is a multiple of `2^128`.
 //!
 //! A broken `nuw` or `nsw` gives poison, which any value of the type
 //! refines (ADR-2026-10-29-2008), so a flagged op is lowered as the op

@@ -1,9 +1,10 @@
 //! `sdiv` and `udiv` with and without `exact`, `srem` and `urem`, run
 //! natively at every width the backend lowers (#18), on dividends and
-//! divisors of both signs and the boundary values. A run whose result is
-//! UB in the spec, a zero divisor or the signed minimum divided by `-1`, is
-//! skipped: native code may do anything there (ADR-2026-10-31-0050). Where
-//! `exact` is broken the result is poison, which any value refines
+//! divisors of both signs and the boundary values. A run whose result is UB
+//! in the spec, a zero divisor or the signed minimum divided by `-1`, is
+//! skipped: native code may do anything there
+//! (`docs/decisions/x86-64-backend-lowering.md#division`). Where `exact` is
+//! broken the result is poison, which any value refines
 //! (ADR-2026-10-29-2008), so there a test asks only for a value of the type.
 
 mod common;

@@ -2,9 +2,9 @@
 //! changes, and native runs at every pair of the widths the backend lowers
 //! that validation admits, on the boundary values of the operand's width.
 //! A value of `iM` is the low `M` bits of its slot, and the bits above are
-//! unspecified (ADR-2026-10-30-1231), so each change also runs on an
-//! operand that `add` computed, whose slot holds other bits above `M` than
-//! an argument's.
+//! unspecified (`docs/decisions/x86-64-backend.md#values-and-widths`), so
+//! each change also runs on an operand that `add` computed, whose slot
+//! holds other bits above `M` than an argument's.
 
 mod common;
 

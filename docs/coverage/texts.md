@@ -84,7 +84,9 @@ seven widths. A run that never ends is interpreter-only, since a
 differential test that runs out of fuel is invalid. A differential test
 recurses as deep as native code's stack allows; fir has no depth limit
 of its own (ADR-2026-10-30-1549). A recursive run's stack follows
-`ulimit -s`, 8 MiB by default (ADR-2026-11-02-1132). `recursion-i8`,
+`ulimit -s`, 8 MiB by default
+([x86-64-backend-executable.md](../decisions/x86-64-backend-executable.md#the-runs-stack)).
+`recursion-i8`,
 `recursion-i64` and `recursion-i128` recurse up to 100,000 calls on it,
 and their sidecars give the figures. A deeper run reports that it ran
 out of stack, and the harness reports its test invalid, not a mismatch
@@ -119,12 +121,13 @@ poison, declared as its one result `0` with a witness. `branch-i128`,
 `permute-i128` and `loop-i128` pass `i128` block arguments, and
 `call-i128`, `call-args-i128` and `recursion-i128` pass and return
 `i128`s across calls, in register pairs and on the stack, in each layout
-of ADR-2026-11-03-0108. `tracer-i128` states what `fir-ref` gives for
+of [x86-64-backend-abi.md](../decisions/x86-64-backend-abi.md#arguments).
+`tracer-i128` states what `fir-ref` gives for
 `const`, `add` and `ret` at `i128`, and repeats each run with a defined
 result as a differential test.
 
 The texts of #31 return several values natively, as
-[ADR-2026-11-03-0109](../adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)
+[ADR-2026-10-30-1232](../adrs/2026-10-30-1232-funk-function-abi.md)
 lays them out: one or two in registers, more in a result area that the
 caller provides. `several-iN` returns no value, two, three and eight,
 passes the results of one call on to others, recurses directly and
@@ -151,7 +154,7 @@ the stack, and recurses 20 deep returning two `i128`s around an `i64`.
 
 The texts of #22 divide at `i128`, which native code does through a
 runtime helper
-([ADR-2026-11-03-0415](../adrs/2026-11-03-0415-the-i128-division-routines-are-system-v-functions.md)).
+([x86-64-backend-lowering.md](../decisions/x86-64-backend-lowering.md#division-at-i128)).
 `div-sdiv-i128`, `div-udiv-i128`, `div-srem-i128` and `div-urem-i128`
 run each op on every pair of 13 values of both signs, below and above
 `2^64` and near the signed minimum; a pair that is UB in the spec is an
@@ -161,7 +164,7 @@ with an interpreter-only twin. `poison-div-i128` passes poison to each
 op as either operand and as both. `div-calls-i128` returns quotients
 and remainders among several results and passes them across calls, and
 `div-symbol-i128` names functions after the helper's routines
-([ADR-2026-11-03-0414](../adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md)).
+([x86-64-backend-lowering.md](../decisions/x86-64-backend-lowering.md#division-at-i128)).
 
 The texts of #23 fill the cells of the coverage matrix that had no
 test. `branch-no-args` runs `br` to blocks that take no arguments, as a
@@ -232,7 +235,7 @@ other formats, where `scripts/harness/float_ref.py` computed the expected
 results apart from Lean; a few interpreter-only tests at `f32` and `f64`
 check `fir-ref` against it too. `float-calls` passes `f32` and `f64` to
 and from functions as System V does
-([ADR-2026-11-11-1140](../adrs/2026-11-11-1140-f32-and-f64-pass-and-return-in-sse-registers.md)):
+([x86-64-backend-abi.md](../decisions/x86-64-backend-abi.md#floats-in-sse-registers)):
 past the eight SSE registers onto the stack, back in `%xmm0` and `%xmm1`
 or in the result area, mixed with integers and an `i128`, through block
 arguments, and chosen by an `fcmp`. `float-values-T` passes values of `T`

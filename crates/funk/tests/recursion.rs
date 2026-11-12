@@ -1,7 +1,8 @@
-//! The stack of a recursive run (ADR-2026-11-02-1132): it follows the
-//! process's stack limit, `ulimit -s`, as a C or Rust program's does, so
-//! recursion goes as deep as that limit allows, and a run that outgrows its
-//! stack says so in one line, with exit status 2.
+//! The stack of a recursive run
+//! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`): it
+//! follows the process's stack limit, `ulimit -s`, as a C or Rust program's
+//! does, so recursion goes as deep as that limit allows, and a run that
+//! outgrows its stack says so in one line, with exit status 2.
 //!
 //! A run whose outcome depends on `ulimit -s` sets it for its own process,
 //! through `sh`, since the limit that the tests inherit differs from machine
@@ -210,7 +211,8 @@ fn with_no_stack_limit_a_data_limit_bounds_a_recursive_run() {
 }
 
 /// The program's path, which the report starts with, shows each control
-/// byte as `\xHH`, as every other report does (ADR-2026-10-30-1233).
+/// byte as `\xHH`, as every other report does
+/// (`docs/decisions/x86-64-backend-executable.md#running-one-function`).
 #[test]
 fn the_report_shows_control_bytes_in_the_program_s_path_escaped() {
     let exe = build("recursion-path", &recursive());

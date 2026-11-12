@@ -5,19 +5,19 @@
 # each of its parameters, with add, which wraps, so a narrow value such
 # as 127 + 1 at i8 leaves 128 in its slot: a callee reads only the low N
 # bits of an argument, and the caller extends none
-# (ADR-2026-11-02-1021). It passes them in reverse order to @mix7 or
-# @mix8, whose parameters have those types in that order. Each
-# sign-extends its arguments to i64 and folds them in order: it
-# multiplies what it has by 1000003 and adds the next one, with mul and
-# add, which wrap. So an argument in the wrong place, or read from the
-# wrong bits, changes the result. The arguments are the boundary bit
-# patterns of their types, 0, 1, -1, the signed minimum and the signed
-# maximum (false and true at i1), rotated so that each parameter takes
-# each of them. No test gives two parameters of one type the same
-# pattern, so a swap of two arguments of one type changes the result:
-# call7 gives %f the opposite of %a and %g the i8 pattern two places on
-# from %b's, and call8 starts the two of each type at different places
-# in the rotation.
+# (docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions).
+# It passes them in reverse order to @mix7 or @mix8, whose parameters
+# have those types in that order. Each sign-extends its arguments to i64
+# and folds them in order: it multiplies what it has by 1000003 and adds
+# the next one, with mul and add, which wrap. So an argument in the
+# wrong place, or read from the wrong bits, changes the result. The
+# arguments are the boundary bit patterns of their types, 0, 1, -1, the
+# signed minimum and the signed maximum (false and true at i1), rotated
+# so that each parameter takes each of them. No test gives two
+# parameters of one type the same pattern, so a swap of two arguments of
+# one type changes the result: call7 gives %f the opposite of %a and %g
+# the i8 pattern two places on from %b's, and call8 starts the two of
+# each type at different places in the rotation.
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native result must refine fir-ref's.
 tests = [

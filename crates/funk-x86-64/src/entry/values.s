@@ -1,11 +1,13 @@
-# The runtime's values (ADR-2026-10-30-1233): it reads each argument of a
-# function from the command line, and prints each result, at every width
-# that the backend lowers, i1 to i128. This file follows runtime.s in the
-# entry file, and uses its routines and its data.
+# The runtime's values
+# (docs/decisions/x86-64-backend-executable.md#running-one-function): it
+# reads each argument of a function from the command line, and prints each
+# result, at every width that the backend lowers, i1 to i128. This file
+# follows runtime.s in the entry file, and uses its routines and its data.
 #
 # Every routine works on 128 bits. A value of at most 64 bits is the low
 # half, sign-extended to 64 bits; an i128 is a pair of halves, the low one
-# in one register and the high one in another (ADR-2026-11-03-010730).
+# in one register and the high one in another
+# (docs/decisions/x86-64-backend-lowering.md#lowering-i128).
 
 	.text
 

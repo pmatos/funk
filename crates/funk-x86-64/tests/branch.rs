@@ -1,8 +1,10 @@
 //! How `br` and `cond_br` are lowered (#19): blocks in the order of the
 //! body, each at its label, a jump unless the successor comes next
-//! (ADR-2026-10-31-0334), a test of bit 0 of the condition
-//! (ADR-2026-10-30-1231), and the values a successor passes copied into its
-//! block's arguments as one parallel move (ADR-2026-10-31-0335).
+//! (`docs/decisions/x86-64-backend-lowering.md#branches`), a test of bit 0
+//! of the condition (`docs/decisions/x86-64-backend.md#values-and-widths`),
+//! and the values a successor passes copied into its block's arguments as
+//! one parallel move
+//! (`docs/decisions/x86-64-backend-lowering.md#block-arguments`).
 
 use funk_ir::{LocRef, Registry, parse};
 use funk_x86_64::compile;

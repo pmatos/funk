@@ -1,8 +1,9 @@
 //! How ops at `i128` are lowered (#21): each value is a pair of slots, its
 //! low half at the lower address, and each op works on a pair of registers
-//! (ADR-2026-11-03-010730); calls pass an `i128` in two registers or in 16
-//! aligned bytes of the stack, and return it in `%rdx:%rax`
-//! (ADR-2026-11-03-0108).
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`); calls pass
+//! an `i128` in two registers or in 16 aligned bytes of the stack, and
+//! return it in `%rdx:%rax`
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`).
 
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
 use funk_ir::{Registry, parse};

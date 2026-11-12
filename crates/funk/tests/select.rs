@@ -1,11 +1,12 @@
 //! `select`, run natively at every width the backend lowers (#16): with
 //! each condition on every pair of boundary values, with a condition that
 //! an `icmp` computed, and with a condition whose slot holds bits above bit
-//! 0, which `select` must not read (ADR-2026-10-30-1231,
-//! ADR-2026-10-31-0215). A poison condition, or a poison value that
-//! `select` chooses, gives poison, which any value refines
-//! (ADR-2026-10-29-2008); a poison value that it does not choose does not
-//! matter.
+//! 0, which `select` must not read
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`,
+//! `docs/decisions/x86-64-backend-lowering.md#select`). A poison condition,
+//! or a poison value that `select` chooses, gives poison, which any value
+//! refines (ADR-2026-10-29-2008); a poison value that it does not choose
+//! does not matter.
 
 mod common;
 

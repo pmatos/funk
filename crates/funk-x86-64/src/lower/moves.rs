@@ -1,11 +1,12 @@
 //! The parallel move of a branch's block arguments.
 //!
-//! A branch passes values to its successor's arguments all at once: `br
-//! ^loop(%b, %a)` from `^loop(%a, %b)` swaps them. Each value has a slot of
-//! its own (ADR-2026-10-30-1230), so the branch copies slots into slots,
-//! and a copy must not overwrite a slot that a later copy still reads.
-//! [`sequence`] orders the copies so that none does, and breaks each cycle
-//! of them, such as a swap or a rotation, with one scratch register.
+//! A branch passes values to its successor's arguments all at once:
+//! `br ^loop(%b, %a)` from `^loop(%a, %b)` swaps them. Each value has a
+//! slot of its own (`docs/decisions/x86-64-backend.md#frames-and-slots`),
+//! so the branch copies slots into slots, and a copy must not overwrite a
+//! slot that a later copy still reads. [`sequence`] orders the copies so
+//! that none does, and breaks each cycle of them, such as a swap or a
+//! rotation, with one scratch register.
 
 /// Where a copy reads its value: a slot, or the scratch register that holds
 /// the value a cycle's first slot had.

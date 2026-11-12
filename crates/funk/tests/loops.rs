@@ -2,8 +2,9 @@
 //! the backend lowers: the spec's `@sum` (`lean/Fir/Text/Example.lean`), an
 //! iterative factorial and Euclid's gcd. Each loop passes its state round
 //! as block arguments, so each trip is a parallel move
-//! (ADR-2026-10-31-0335), and each test of a loop is a `cond_br` on an
-//! `icmp` (ADR-2026-10-30-1231).
+//! (`docs/decisions/x86-64-backend-lowering.md#block-arguments`), and each
+//! test of a loop is a `cond_br` on an `icmp`
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`).
 //!
 //! A loop runs once per unit of its input, so the inputs here are the
 //! boundary values of each width that end within 2^15 trips, and small

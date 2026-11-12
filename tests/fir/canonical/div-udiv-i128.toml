@@ -4,14 +4,15 @@
 # -0x0123456789abcdeffedcba9876543210, whose halves differ. So dividends
 # and divisors take both signs, and divisors are below 2^64, where the
 # helper divides by one 64-bit digit, and above it, where it divides bit
-# by bit (ADR-2026-11-03-0415).
+# by bit (docs/decisions/x86-64-backend-lowering.md#division-at-i128).
 # Each test without expect is differential: fir-ref and native code run
 # it, and the native code calls the runtime helper, so the native result
 # must equal fir-ref's.
 # A pair that is UB in the spec, a zero divisor, is an interpreter-only
-# test that expects ub; native code traps there (ADR-2026-11-03-0415).
-# fir-ref's UB reason names its case, but the harness matches ub to any
-# reason (ADR-2026-10-30-2135).
+# test that expects ub; native code traps there
+# (docs/decisions/x86-64-backend-lowering.md#division-at-i128). fir-ref's
+# UB reason names its case, but the harness matches ub to any reason
+# (ADR-2026-10-30-2135).
 tests = [
   { func = "@udiv", args = ["0", "0"], expect = "ub" },
   { func = "@udiv", args = ["0", "1"] },

@@ -2,7 +2,7 @@
 # several results, at i7, a width that the backend does not lower, so
 # every test is interpreter-only and states fir-ref's result, a list of
 # the returned values, each a value or poison (#31,
-# ADR-2026-11-03-0109). Recursion goes at most 20 deep. UB in a callee
+# ADR-2026-10-30-1232). Recursion goes at most 20 deep. UB in a callee
 # that returns several values is UB of its caller, and recursion that
 # never ends runs out of fuel.
 tests = [

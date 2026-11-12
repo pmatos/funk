@@ -1,5 +1,6 @@
 //! Division and remainder: `sdiv`, `udiv`, `srem` and `urem`
-//! (`dialects/core/div.rs` in `funk-ir`; ADR-2026-10-31-0050).
+//! (`dialects/core/div.rs` in `funk-ir`;
+//! `docs/decisions/x86-64-backend-lowering.md#division`).
 //!
 //! Each op is one `idiv` (`sdiv`, `srem`) or `div` (`udiv`, `urem`) of the
 //! op's own size: `b`, `w`, `l` or `q` for `i8`, `i16`, `i32` and `i64`.
@@ -8,9 +9,10 @@
 //! instruction also reads: by sign with `cbtw`, `cwtd`, `cltd` or `cqto`,
 //! by zero with `movzbl %al, %eax`, which clears `%ah`, or with
 //! `xorl %edx, %edx`. The quotient is in `%al`, `%ax`, `%eax` or `%rax`;
-//! the remainder in `%ah`, `%dx`, `%edx` or `%rdx`. `i1` has no division
-//! of its own: both operands are extended to 64 bits
-//! (ADR-2026-10-30-1231) and divided as `i8`.
+//! the remainder in `%ah`, `%dx`, `%edx` or `%rdx`. `i1` has no division of
+//! its own: both operands are extended to 64 bits
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`) and divided as
+//! `i8`.
 //!
 //! No code tests the divisor. A zero divisor, and the signed minimum
 //! divided by `-1`, are immediate UB in the source, so whatever `idiv` or
@@ -20,11 +22,12 @@
 //!
 //! No instruction divides 128 bits by 128 bits, so each op at `i128` is a
 //! call of a routine of the runtime helper `div128.s`, which the module's
-//! own object file carries (ADR-2026-11-03-0414). The call passes the
-//! operands and takes the result as System V passes and returns an
-//! `__int128`, and the routine clobbers only registers that System V lets
-//! a callee clobber, none of which holds a value from one op to the next
-//! (ADR-2026-11-03-0415).
+//! own object file carries
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`). The call
+//! passes the operands and takes the result as System V passes and returns
+//! an `__int128`, and the routine clobbers only registers that System V
+//! lets a callee clobber, none of which holds a value from one op to the
+//! next (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 
 use funk_ir::Op;
 use funk_ir::dialects::core::{CoreType, core_type};
@@ -162,7 +165,8 @@ mod tests {
     }
 
     /// The routines touch no register that System V makes a callee save,
-    /// at any size, and push as much as they pop (ADR-2026-11-03-0415).
+    /// at any size, and push as much as they pop
+    /// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
     #[test]
     fn the_helper_touches_only_caller_saved_registers() {
         let saved = ["bx", "bl", "bh", "bp", "r12", "r13", "r14", "r15"];
@@ -180,7 +184,8 @@ mod tests {
 
     /// Every label is a local `__funk_rt_` symbol, which no fir function's
     /// symbol is, or starts with `.Lrt_div128_`, which no block's or
-    /// function's local label does (ADR-2026-11-03-0414).
+    /// function's local label does
+    /// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
     #[test]
     fn the_helper_s_labels_stay_apart_from_the_module_s() {
         let labels: Vec<&str> = code()

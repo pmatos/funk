@@ -8,7 +8,8 @@
 //! value of the type. At `i1` the amounts are `false` (0) and `true` (1,
 //! which is `N`). A shift whose operands are sums that wrap, so that the
 //! bits above `N` in their registers are not an extension of their values,
-//! gives the exact result too (ADR-2026-10-30-1231).
+//! gives the exact result too
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`).
 
 mod common;
 

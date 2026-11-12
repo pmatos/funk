@@ -73,7 +73,8 @@ rust-toolchain.toml pins on first use."
     echo "$warning" >&2
 fi
 # The rust-test hook runs funk build, which needs GNU as and ld on an
-# x86-64 Linux host (ADR-2026-10-30-1229).
+# x86-64 Linux host
+# (docs/decisions/x86-64-backend.md#assembly-and-linking).
 host=$(uname -sm)
 as_version=$(as --version 2>/dev/null || true)
 ld_version=$(ld --version 2>/dev/null || true)

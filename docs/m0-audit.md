@@ -130,7 +130,9 @@ No item is missing, and none is weaker than #23 states it.
 The decisions that the epic's work list asks for are ADRs too: `freeze`
 in the oracle (ADR-2026-10-29-2017), fir's own Lean calculus after the
 spike of #24 (ADR-2026-10-29-2030), assembly through GNU `as` and `ld`
-(ADR-2026-10-30-1229) and spilling every value (ADR-2026-10-30-1230).
+([x86-64-backend.md](decisions/x86-64-backend.md#assembly-and-linking)) and
+spilling every value
+([x86-64-backend.md](decisions/x86-64-backend.md#frames-and-slots)).
 None of these ADRs is superseded.
 
 S2's ADR says that the IR and the Lean interpreter accept any `N >= 1`,

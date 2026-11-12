@@ -1,9 +1,10 @@
 //! How a funk function looks from outside (ADR-2026-10-30-1232): its symbol in the
 //! object file, where its arguments arrive and, in [`results`], where its
-//! results go (ADR-2026-11-03-0109), by the System V AMD64 calling convention.
-//! An `i128` passes as two eightbytes (ADR-2026-11-03-0108), and an `f32`
-//! or `f64` in an SSE register (ADR-2026-11-11-1140); `layout.rs` says
-//! where each one goes.
+//! results go (ADR-2026-10-30-1232), by the System V AMD64 calling convention.
+//! An `i128` passes as two eightbytes
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`), and an `f32` or `f64` in an
+//! SSE register (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`);
+//! `layout.rs` says where each one goes.
 
 mod layout;
 
@@ -84,14 +85,15 @@ pub(crate) fn receive(asm: &mut Asm, args: &[Arg], hidden: Option<Mem>) -> Resul
 /// [`layout`] puts them: the eightbytes on the stack are pushed from the
 /// top down, a hole of padding as a `subq`, then the registers are loaded.
 /// When the results go in memory, the first argument is the address of the
-/// result area, of one eightbyte (ADR-2026-11-03-0109). The call restores
+/// result area, of one eightbyte (ADR-2026-10-30-1232). The call restores
 /// `%rsp` and leaves the results where [`results`] puts them. The returned
 /// byte count is its peak outgoing argument space, padding included, but
 /// not the return address: entry stack reservation accounts for that
 /// separately. A size error appends no assembly.
 ///
 /// This owns placement and accounting for both fir calls and executable
-/// entry code (ADR-2026-11-02-1428).
+/// entry code
+/// (`docs/decisions/x86-64-backend-abi.md#one-emitter-for-funk-calls`).
 pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, String> {
     let classes: Vec<Class> = args.iter().map(|a| a.class).collect();
     let layout = layout(&classes);
@@ -134,7 +136,7 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
 /// The class of each argument of a call, in the order that [`layout`]
 /// places them: `hidden` arguments of one INTEGER eightbyte first, which is the
 /// address of the result area when the results go in memory
-/// ([`results::Layout::hidden_arguments`], ADR-2026-11-03-0109), then each
+/// ([`results::Layout::hidden_arguments`], ADR-2026-10-30-1232), then each
 /// of `args`. The address takes `%rdi`, so an `i128` argument looks for its
 /// pair of registers from `%rsi` on. The callee's prologue and the entry's
 /// stack figure read a call by this; [`call`] gets the address as its first
@@ -148,7 +150,8 @@ pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = Class>) -> Ve
 /// The 8-byte words that [`call`] pushes, before the return address, for
 /// arguments of the classes `classes`: those that [`layout`] puts on the
 /// stack, and the padding between and after them. The entry's stack figure
-/// reads a call by it too (ADR-2026-11-02-1132).
+/// reads a call by it too
+/// (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 pub(crate) fn pushed_words(classes: &[Class]) -> usize {
     layout(classes).stack / 8
 }

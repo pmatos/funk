@@ -1,5 +1,5 @@
 # Tests of several-i128.fir: an i128 among several results (#21, #31,
-# ADR-2026-11-03-0109). Natively, results that take more than two
+# ADR-2026-10-30-1232). Natively, results that take more than two
 # eightbytes go in a result area that the caller provides, and an i128
 # there takes two eightbytes at an offset that is a multiple of 16, its
 # low half first. first, middle and last return an i128 first, between

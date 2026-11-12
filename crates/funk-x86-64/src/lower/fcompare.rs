@@ -1,5 +1,6 @@
-//! Float comparison: `fcmp` (`dialects/core/compare.rs` in `funk-ir`),
-//! at `f32` and `f64` (ADR-2026-11-11-1140).
+//! Float comparison: `fcmp` (`dialects/core/compare.rs` in `funk-ir`), at
+//! `f32` and `f64`
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 //!
 //! `movss` or `movsd` loads each operand from its slot into `%xmm0` and
 //! `%xmm1`, and one `ucomiss` or `ucomisd` compares them. It sets the flags
