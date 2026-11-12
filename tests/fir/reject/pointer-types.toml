@@ -2,11 +2,13 @@
 # ADR-2026-11-11-1709). ptr<0>, the default memory's pointer, is written
 # ptr, and ptr<N> of another memory ptr(N), so ptr(0), a negative memory, a
 # memory above 16777215 and any other argument list do not decode. Every
-# module has the default memory, and no module has another until the data
-# layout declares memories, so ptr(N) with N >= 1 decodes and validation
-# rejects it. A pointer of one memory is no pointer of another, but a text
-# that passes a ptr(1) where a ptr is expected also states the invalid type
-# ptr(1), so it breaks that rule too, and `rule` names both.
+# module has the default memory, and another only when its data layout
+# declares it (ADR-2026-11-12-1821), so ptr(N) with N >= 1 decodes, and
+# validation rejects it in a module with no layout. A pointer of one memory
+# is no pointer of another, but a text that passes a ptr(1) where a ptr is
+# expected also states the type ptr(1) of a memory the module does not have,
+# so it breaks that rule too, and `rule` names both. reject/data-layout.toml
+# has the cases with a layout.
 
 [[reject]]
 verdict = "parse-error"
@@ -142,7 +144,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "every type is valid: a parameter has no ptr(1) type, as the module has no memory 1"
+rule = "every pointer type names a memory that the module has: a parameter of type ptr(1), in a module with no memory 1"
 text = '''
 func @f(%p: ptr(1)) {
 ^e:
@@ -156,7 +158,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "ret returns the function's result types: a ptr(1) where it returns a ptr, a pointer of another memory; the parameter's type ptr(1) is also invalid"
+rule = "ret returns the function's result types: a ptr(1) where it returns a ptr, a pointer of another memory; the module has no memory 1 either"
 text = '''
 func @f(%p: ptr(1)) -> ptr {
 ^e:
@@ -170,7 +172,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "a successor passes values of its block's argument types: a ptr(1) where ^b takes a ptr, a pointer of another memory; the parameter's type ptr(1) is also invalid"
+rule = "a successor passes values of its block's argument types: a ptr(1) where ^b takes a ptr, a pointer of another memory; the module has no memory 1 either"
 text = '''
 func @f(%p: ptr(1)) {
 ^entry:
@@ -186,7 +188,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "call passes its callee's parameter types: a ptr(3) where @g takes a ptr, a pointer of another memory; the parameter's type ptr(3) is also invalid"
+rule = "call passes its callee's parameter types: a ptr(3) where @g takes a ptr, a pointer of another memory; the module has no memory 3 either"
 text = '''
 func @g(%p: ptr) {
 ^e:

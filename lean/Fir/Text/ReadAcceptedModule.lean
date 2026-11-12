@@ -173,8 +173,10 @@ theorem readModule_writable {ts : List Token} {s : SModule} (h : readModule ts =
   unfold readModule at h
   bind_step h with ⟨⟨ns, a₀⟩, e₀, h⟩
   obtain ⟨k₀, w₀⟩ := readDialects_writable _ hw _ _ e₀
+  bind_step h with ⟨⟨layout, a₁⟩, e₀', h⟩
+  obtain ⟨-, w₀'⟩ := readLayout_writable _ w₀ _ _ e₀'
   bind_step h with ⟨⟨items, a⟩, e₁, h⟩
-  obtain ⟨k₁, w₁⟩ := readItems_writable _ _ w₀ _ _ e₁
+  obtain ⟨k₁, w₁⟩ := readItems_writable _ _ w₀' _ _ e₁
   dsimp only at h
   split at h
   · rename_i heq

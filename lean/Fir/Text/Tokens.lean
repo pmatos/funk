@@ -159,6 +159,10 @@ def Func.tokens (f : Func d) : List Tok :=
 def dialectsTokens (ns : List Name) : List Tok :=
   if ns.isEmpty then [] else .word "dialects" :: [Tok.comma].intercalate (ns.map ([.word ·]))
 
+/-- The tokens of a data layout: none when it is empty. -/
+def layoutTokens (l : DataLayout) : List Tok :=
+  if l.isEmpty then [] else .word "layout" :: [Tok.comma].intercalate (l.map (·.attr.tokens))
+
 /-- The tokens of an item of a dialect's kind: its header, as a function's,
 its attributes, and an empty body. -/
 def DialectItem.tokens (i : DialectItem d) : List Tok :=
@@ -194,6 +198,7 @@ def LocTable.tokens (t : LocTable) : List Tok :=
 
 /-- The tokens of a module, in the order that the printer writes them. -/
 def Module.tokens (m : Module d) : List Tok :=
-  dialectsTokens m.dialects ++ m.items.flatMap Item.tokens ++ m.locs.tokens
+  dialectsTokens m.dialects ++ layoutTokens m.layout ++ m.items.flatMap Item.tokens ++
+    m.locs.tokens
 
 end Fir

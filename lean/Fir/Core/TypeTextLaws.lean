@@ -57,9 +57,9 @@ theorem Ty.decode_ptr {n : Nat} (h : n + 1 ≤ maxMemory) :
 theorem Ty.decode_attr (t : Ty) (h : t.Valid) : Ty.decode t.attr = some t := by
   cases t with
   | ptr n =>
-    have : n = 0 := h
-    subst this
-    rfl
+    cases n with
+    | zero => rfl
+    | succ k => exact Ty.decode_ptr h
   | float e m =>
     cases hn : floatAlias e m with
     | some n =>

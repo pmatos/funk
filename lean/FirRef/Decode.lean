@@ -197,13 +197,14 @@ theorem decodeLoop_eq (fs : List (DFrame d)) : decodeLoop fs = dRun fs := by
 /-- A module decoded: `Text.decodeModule`, with no stack per level of
 regions or of nested modules, and none per block or op. -/
 def decodeModule (m : SModule) : Except ParseError (Module d) := do
-  pure ⟨m.dialects, ← decodeLoop [.items [] m.items], m.locs⟩
+  pure ⟨m.dialects, ← m.layout.mapM Text.decodeMemLayout, ← decodeLoop [.items [] m.items],
+    m.locs⟩
 
 /-- `decodeModule` decodes as the spec's decoder does, errors included, so
 `fir-ref` runs it in place of `Text.decodeModule`. -/
 @[csimp] theorem decodeModule_eq_decodeModule : @Text.decodeModule = @decodeModule := by
   funext d _ m
   simp only [decodeModule, Text.decodeModule, decodeLoop_eq, dRun, dFinish, ← decodeItems_eq_mapM]
-  cases decodeItems (d := d) m.items <;> rfl
+  cases m.layout.mapM Text.decodeMemLayout <;> cases decodeItems (d := d) m.items <;> rfl
 
 end FirRef

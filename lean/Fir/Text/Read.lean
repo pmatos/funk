@@ -77,10 +77,11 @@ inductive SBody where
   | items (dialects : List Name) (is : List SItem)
 end
 
-/-- A module as written: its dialect set, its items, then its location
-table. -/
+/-- A module as written: its dialect set, the entries of its data layout,
+each with its position, its items, then its location table. -/
 structure SModule where
   dialects : List Name
+  layout : List (Attr × TextPos)
   items : List SItem
   locs : LocTable
 
@@ -363,6 +364,15 @@ the word `dialects` is no item's kind.
 def readDialectName : (ts : List Token) → Read Name ts
   | ⟨.word w, _⟩ :: rest => .ok (w, ⟨rest, Nat.le_succ _⟩)
   | ts => fail ts "the name of a dialect"
+
+/-- Reads a data layout, `layout` and its entries, each with its position,
+or none. Each entry is read as a type: a word applied to attributes. -/
+def readLayout : (ts : List Token) → Read (List (Attr × TextPos)) ts
+  | ⟨.word "layout", _⟩ :: rest => do
+    let (e, ⟨r, hr⟩) ← readType rest
+    let (es, ⟨r', hr'⟩) ← readMore readType r
+    pure (e :: es, ⟨r', by simp; omega⟩)
+  | ts => .ok ([], .here ts)
 
 /-- Reads a dialect set, `dialects a, b`, or none. -/
 def readDialects : (ts : List Token) → Read (List Name) ts

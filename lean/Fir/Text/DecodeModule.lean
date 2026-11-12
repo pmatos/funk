@@ -3,7 +3,8 @@ import Fir.Text.DecodeBlocks
 /-!
 # Decoding the tree of a module
 
-A module's tree decodes item by item. A function's item is a `func` with no
+A module's tree decodes its data layout entry by entry, each entry from the
+attribute it writes, and then item by item. A function's item is a `func` with no
 attributes whose body is its blocks. So the decoder of items takes its
 branch for blocks, the only one that printed text reaches: the grammar reads
 every function body of a printed module as blocks, the empty `{ }` included,
@@ -183,15 +184,31 @@ theorem Item.WellFormed.decodeItems_eq : ∀ {is : List (Item d)}, Item.WellForm
     rfl
 end
 
+/-- The entries of a data layout decode back from the attributes they write,
+at any positions, when their numbers are within the limit. -/
+theorem decodeLayout_eq : ∀ {es : List MemLayout}, (∀ e ∈ es, e.InLimits) →
+    ∀ {ss : List (Attr × TextPos)}, ss.map Prod.fst = es.map MemLayout.attr →
+      ss.mapM Text.decodeMemLayout = .ok es
+  | [], _, [], _ => rfl
+  | [], _, _ :: _, h => by simp at h
+  | _ :: _, _, [], h => by simp at h
+  | e :: es, hw, (a, p) :: ss, h => by
+    simp only [List.map_cons, List.cons.injEq] at h
+    obtain ⟨rfl, h⟩ := h
+    rw [List.mapM_cons]
+    simp only [Text.decodeMemLayout, MemLayout.decode_attr (hw e (List.mem_cons_self ..))]
+    rw [decodeLayout_eq (fun x hx => hw x (List.mem_cons_of_mem _ hx)) h]
+    rfl
+
 /-- The decoding step: on any tree that erases to the tree of a well-formed
 module, at any positions, `decodeModule` gives the module back. -/
 theorem Module.WellFormed.decodeModule_eq {m : Module d} (hm : m.WellFormed) {s : SModule}
     (h : s.erase = m.tree) : Text.decodeModule s = .ok m := by
-  obtain ⟨hn, hi, hl⟩ := SModule.erase_eq_tree h
+  obtain ⟨hn, hL, hi, hl⟩ := SModule.erase_eq_tree h
   rw [← SItem.eraseList_eq_map, ← Item.treeList_eq_map] at hi
   have hw := Item.WellFormed.decodeItems_eq ((Item.wellFormedList_iff _).mpr hm.items) hi
   rw [decodeItems_eq_mapM] at hw
-  simp only [Text.decodeModule, hw, ok_bind, hl, hn]
+  simp only [Text.decodeModule, decodeLayout_eq hm.layout hL, hw, ok_bind, hl, hn]
   rfl
 
 end Fir

@@ -174,7 +174,7 @@ lines (ADR-2026-11-10-1510).
     ⟨"1", [], [], ⟨none, [⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
   "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
 
-#guard (Module.print (d := CoreDialect) ⟨[], [.module "dev" ["gpu"]
+#guard (Module.print (d := CoreDialect) ⟨[], [], [.module "dev" ["gpu"]
     [.func ⟨"k", [], [], ⟨none, [⟨"entry", [], [op [] (.ret []) [] 0]⟩]⟩⟩], .module "none" [] []],
     [(0, .unknown)]⟩) ==
   "module @dev() {\n  dialects gpu\n\n  func @k() {\n  ^entry:\n    ret @0\n  }\n\n}\n\n" ++
@@ -182,7 +182,7 @@ lines (ADR-2026-11-10-1510).
 
 #guard (Attr.app "h" []).print == "h()" && (Attr.word "h").print == "h"
 
-#guard (Module.print (d := CoreDialect) ⟨[], [], []⟩) == "locs {\n}\n" &&
+#guard (Module.print (d := CoreDialect) ⟨[], [], [], []⟩) == "locs {\n}\n" &&
   sumModule.print.endsWith "\n"
 
 /-!

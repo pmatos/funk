@@ -15,7 +15,7 @@ changes under it. The grammar of a module opens the section.
 
 #doc (Manual) "Grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12645794505445791752")
+:::moduleDocs (fingerprint := "11286964170652614300")
 :::
 
 A module is written by the grammar below, in the tokens of the
@@ -33,6 +33,27 @@ $`\mathsf{app}~h~a_1 \dots a_n`, and it can be written. An integer, a
 string or a symbol is never a type. This is the grammar's
 $`\mathit{type} ::= \mathit{word} \mid \mathit{word}~\texttt{(}~\mathit{attrs}^?~\texttt{)}`,
 which the parser reads where a type stands.
+:::
+
+:::readable Fir.ByteOrder.word Fir.ByteOrder.decode Fir.MemLayout.attr Fir.MemLayout.InLimits Fir.MemLayout.number Fir.MemLayout.decodeTail Fir.MemLayout.decode (pin := Fir.MemLayout.limit) (fingerprint := "12587074212398096770")
+*Definition: the data layout in text.* A module's
+{ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout]
+is written on one line after its dialect set: the word `layout`, then each
+entry, separated by commas (ADR-2026-11-12-1821). A byte order is written
+by its word, `little` or `big`, and the entry $`e` is written as the
+attribute
+
+$$`\mathrm{attr}(e) = \texttt{memory}(n,\ \texttt{unit}(u),\ \texttt{pointer}(p),\ \mathit{order}\ [,\ \texttt{align}(a)]\ [,\ \texttt{nonintegral}])`
+
+with `align(a)` when the entry gives an alignment and `nonintegral` when
+the memory is non-integral, in that order. An entry is _within the limit_
+when each of its numbers, the alignment included, is at most
+$`2^{24} - 1`. Decoding is the inverse: an attribute of exactly this shape
+whose integers are from 0 to the limit, and whose order is one of the two
+words, decodes to its entry; every other attribute decodes to none, so a
+missing part, a part out of place, another word, a negative number and a
+number above the limit are no entry. A memory whose order is `big` decodes,
+and validation rejects it.
 :::
 
 :::readable Fir.DialectText (fingerprint := "7609871035768420774")
@@ -57,7 +78,7 @@ operands and results are defined. The parser has no code for any op of any
 dialect beyond these functions.
 :::
 
-:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "974270530901337506")
+:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "803134570142578926")
 *Definition: a dialect whose text is lawful.* Let $`d` be a dialect with its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature], which
 gives each op instance $`o` its operand types $`\mathrm{sig}(o)` and its

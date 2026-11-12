@@ -162,15 +162,23 @@ class Reader:
 
     def items(self) -> list[Function]:
         """The functions of a symbol table: its dialect set, if it has one,
-        then its items. A nested module's functions are in its own table,
-        which no call of this one reaches (ADR-2026-11-10-1510), so its
-        body is skipped."""
+        its data layout, if it has one, then its items. A nested module's
+        functions are in its own table, which no call of this one reaches
+        (ADR-2026-11-10-1510), so its body is skipped. The layout says
+        nothing that the matrix counts, so its entries are skipped
+        (ADR-2026-11-12-1821)."""
         if self.at("word") and self.peek().text == "dialects":
             self.take("word")
             self.take("word")
             while self.at(","):
                 self.take(",")
                 self.take("word")
+        if self.at("word") and self.peek().text == "layout":
+            self.take("word")
+            self.entry()
+            while self.at(","):
+                self.take(",")
+                self.entry()
         found = []
         while self.at("word") and self.peek().text != "locs":
             if self.peek().text == "module":
@@ -178,6 +186,18 @@ class Reader:
             else:
                 found.append(self.item())
         return found
+
+    def entry(self) -> None:
+        """Skips an entry of the data layout: a word applied to attributes."""
+        self.take("word")
+        self.take("(")
+        depth = 1
+        while depth:
+            t = self.peek()
+            if t is None:
+                raise TextError("an entry of the data layout does not end")
+            depth += {"(": 1, ")": -1}.get(t.kind, 0)
+            self.i += 1
 
     def nested(self) -> None:
         self.take("word")

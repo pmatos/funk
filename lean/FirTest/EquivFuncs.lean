@@ -70,7 +70,7 @@ abbrev shlOne (w : Nat) : Func CoreDialect := unary "shl_one" w [
 
 /-- The module of the five functions at `iN`, with `N = w`. -/
 def pairs (w : Nat) : Module CoreDialect :=
-  ⟨[], [addSelf w, shlOne w, mulTwo w, addNswSelf w, mulNswTwo w].map .func, [(0, .unknown)]⟩
+  ⟨[], [], [addSelf w, shlOne w, mulTwo w, addNswSelf w, mulNswTwo w].map .func, [(0, .unknown)]⟩
 
 /-- The module's text, as `fir-ref` reads it. -/
 def pairsText (w : Nat) : String := (pairs w).print

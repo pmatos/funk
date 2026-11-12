@@ -99,6 +99,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Syntax.Module "Modules, functions, blocks and ops" FirSpec.Syntax.Module (level := 2)}
 
+{includeReadable "." Fir.Syntax.Layout "Data layouts" FirSpec.Syntax.Layout (level := 2)}
+
 {includeReadable "." Fir.Core.Types "Core types" FirSpec.Core.Types (level := 2)}
 
 {includeReadable "." Fir.Core.Ops "Core ops" FirSpec.Core.Ops (level := 2)}
@@ -110,6 +112,10 @@ functions, blocks and ops.
 {includeReadable "." Fir.Validation.Scope "Scope and symbols" FirSpec.Validation.Scope (level := 2)}
 
 {includeReadable "." Fir.Validation.Dominance "Dominance" FirSpec.Validation.Dominance (level := 2)}
+
+{includeReadable "." Fir.Validation.Layout "The data layout's rules" FirSpec.Validation.Layout (level := 2)}
+
+{includeReadable "." Fir.Validation.LocTable "The location table's rule" FirSpec.Validation.LocTable (level := 2)}
 
 {includeReadable "." Fir.Validation.Rules "The general rules" FirSpec.Validation.Rules (level := 2)}
 
@@ -128,6 +134,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Validation.CheckOps "Checking ops" FirSpec.Validation.CheckOps (level := 2)}
 
 {includeReadable "." Fir.Validation.CheckFuncs "Checking functions" FirSpec.Validation.CheckFuncs (level := 2)}
+
+{includeReadable "." Fir.Validation.CheckLayout "Checking the data layout" FirSpec.Validation.CheckLayout (level := 2)}
 
 {includeReadable "." Fir.Validation.CheckModule "Checking modules" FirSpec.Validation.CheckModule (level := 2)}
 
@@ -205,6 +213,8 @@ unit and asks each op to be monotone from memories that refine others.
 {includeReadable "." Fir.Text.Lexical "Tokens" FirSpec.Text.Lexical (level := 2)}
 
 {includeReadable "." Fir.Text.Grammar "Grammar" FirSpec.Text.Grammar (level := 2)}
+
+{includeReadable "." Fir.Text.LayoutLaws "The data layout's text, proved" FirSpec.Text.LayoutLaws (level := 2)}
 
 {includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 

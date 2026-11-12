@@ -4,7 +4,8 @@ import FirRef.Read.Locs
 /-!
 `fir-ref` reads a module's tokens with `FirRef.readModule`, not with the
 spec's `Text.readModule`. `readModuleC` reads a module from a cursor: its
-items with the items machine, then its location table, whose entries
+dialect set, its data layout, its items with the items machine, then its
+location table, whose entries
 `readLocEntriesC` reads with an accumulator. `readModuleC_eq` proves it
 equal to the spec's reader on the cursor's tokens, errors included, and
 `@[csimp]` makes Lean compile every later call of `Text.readModule` as a
@@ -117,7 +118,10 @@ element of a list. -/
 def readModuleC (s : σ) : Except ParseError SModule :=
   match readDialectsC s with
   | .error e => .error e
-  | .ok (ns, s₀) =>
+  | .ok (ns, s₀') =>
+  match readLayoutC s₀' with
+  | .error e => .error e
+  | .ok (layout, s₀) =>
   match readItemsC s₀ with
   | .ok (items, s₁) =>
     match uncons s₁ with
@@ -125,7 +129,7 @@ def readModuleC (s : σ) : Except ParseError SModule :=
       match readLocsC s₁ with
       | .ok (locs, s₂) =>
         match expectC .eof "the end of the text after the location table" s₂ with
-        | .ok _ => .ok ⟨ns, items, locs⟩
+        | .ok _ => .ok ⟨ns, layout, items, locs⟩
         | .error e => .error e
       | .error e => .error e
     | _ => failC s₁ "an item or the location table, `locs { ... }`"
@@ -133,7 +137,12 @@ def readModuleC (s : σ) : Except ParseError SModule :=
 
 theorem readModuleC_eq (s : σ) : readModuleC s = Text.readModule (view s) := by
   unfold readModuleC Text.readModule
-  rcases agree (readDialectsC_eq s) with ⟨e, hx, hy⟩ | ⟨ns, s₀, r₀, hr₀, hx, hy, hv⟩
+  rcases agree (readDialectsC_eq s) with ⟨e, hx, hy⟩ | ⟨ns, s₀', r₀, hr₀, hx, hy, hv⟩
+  · rw [hx, hy]; rfl
+  rw [hx, hy]
+  subst hv
+  simp only [okBind]
+  rcases agree (readLayoutC_eq s₀') with ⟨e, hx, hy⟩ | ⟨layout, s₀, r₀', hr₀', hx, hy, hv⟩
   · rw [hx, hy]; rfl
   rw [hx, hy]
   subst hv

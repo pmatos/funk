@@ -12,8 +12,9 @@ only the runs of a valid one mean something
 This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
-a rule over a whole function, and rules for the kinds of region and of item
-that it registers, as the last definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
+a rule over a whole function, rules for the kinds of region and of item
+that it registers, and the memory that each of its pointer types names, as
+the last definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
 The rules are propositions. The validation check, at the end of this
@@ -249,6 +250,11 @@ The rules a dialect adds to validation.
   kind's parameters, results and attributes must be. A dialect that
   registers no kind, as the core does, has neither: the core's kinds,
   `func` and `module`, are terms of their own.
+* `tyMemory` gives the memory that a pointer type points into, by its
+  number in the module's data layout, and `none` for a type that names no
+  memory. Validation requires that the layout declare each memory that a
+  type names (ADR-2026-11-12-1821). A dialect without pointer types names
+  none.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -261,7 +267,8 @@ class DialectValidation (d : Dialect) where
   itemKindNames : List Name := []
   validItem : {host : Dialect} → DialectView d host → FuncContext host → DialectItem host →
     Prop := fun _ _ _ => False
+  tyMemory : d.Ty → Option Nat := fun _ => none
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem)
+  itemKindNames validItem tyMemory)
 
 end Fir

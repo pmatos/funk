@@ -22,7 +22,7 @@ namespace FirTest
 open Fir Fir.Core
 
 /-- A module of the items `is`, with the location table `@0 = unknown`. -/
-def itemsModule (is : List (Item CoreDialect)) : Module CoreDialect := ⟨[], is, [(0, .unknown)]⟩
+def itemsModule (is : List (Item CoreDialect)) : Module CoreDialect := ⟨[], [], is, [(0, .unknown)]⟩
 
 /-- A function `@name` whose one block calls `@callee` and returns. -/
 def caller (name callee : Name) : Func CoreDialect :=

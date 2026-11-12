@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6106019203592123269")
+:::moduleDocs (fingerprint := "11002072048922252901")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -117,14 +117,22 @@ $`n` spaces, the word `dialects`, a space, the names separated by a comma
 and a space, and two line feeds.
 :::
 
-:::readable Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "15335076232817219196")
-*Theorem: a printed module spells its tokens before any characters.* For
-every dialect with a text format, every module $`m` whose tokens can all
-be written, printed as its dialect set, its items and then its location
-table, spells $`\mathrm{tokens}(m)` before any characters.
+:::readable Fir.spellsLayout (pin := Fir.printLayout) (pin := Fir.layoutTokens) (fingerprint := "1094278957999977389")
+*Theorem: a printed data layout spells its tokens.* For every data layout
+whose tokens can all be written, its printed text spells its tokens before
+any characters: the word `layout`, a space, each entry's attribute
+separated by a comma and a space, which lexes as the comma, then two line
+feeds. The empty layout prints nothing and has no tokens.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "4899345625060391832")
+:::readable Fir.Module.spells (pin := Fir.Module.print) (fingerprint := "8855251879240709476")
+*Theorem: a printed module spells its tokens before any characters.* For
+every dialect with a text format, every module $`m` whose tokens can all
+be written, printed as its dialect set, its data layout, its items and then
+its location table, spells $`\mathrm{tokens}(m)` before any characters.
+:::
+
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "417661429239291392")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

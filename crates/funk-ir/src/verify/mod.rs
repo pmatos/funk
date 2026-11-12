@@ -1,7 +1,8 @@
 //! The verifier: every rule of `Module.Valid` (`lean/Fir/Validation/`), with
-//! each dialect's own rules through the registry, and the rule of the
-//! module's dialect sets, `Module.InDialectSet`, for each symbol table of
-//! the module: its own and that of each nested module, at any depth.
+//! each dialect's own rules through the registry and the rules of the data
+//! layout, and the rule of the module's dialect sets, `Module.InDialectSet`,
+//! for each symbol table of the module: its own and that of each nested
+//! module, at any depth.
 //!
 //! A module that parsed can still be invalid, and the IR can hold what no
 //! text can, such as an ill-typed op that a pass made, so the verifier checks
@@ -12,6 +13,7 @@ mod cfg;
 mod dialect_set;
 mod func;
 mod items;
+mod layout;
 mod locs;
 mod ops;
 
@@ -113,9 +115,11 @@ impl fmt::Display for Diagnostic {
 ///
 /// The module is checked one symbol table at a time (ADR-2026-11-10-1510):
 /// its own, then that of each nested module, at any depth, each with its
-/// own symbols and dialect set and the module's one location table. The
-/// diagnostics come in the spec's order: the location table, each table's
-/// problems (`SymbolTable.problems`), then each table's dialect set
+/// own symbols and dialect set and the module's one location table and data
+/// layout. The diagnostics come in the spec's order: the location table,
+/// each table's problems (`SymbolTable.problems`), the layout's entries
+/// (`DataLayout.problems`), the memories that each table's types name
+/// (`SymbolTable.memoryProblems`), then each table's dialect set
 /// (`SymbolTable.setProblems`). A problem in a nested module names its
 /// function, as one at the top level does.
 pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
@@ -127,6 +131,10 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
     let tables = m.tables();
     for &t in &tables {
         check_table(t, &keys, reg, &mut out);
+    }
+    layout::check_entries(&m.layout, &mut out);
+    for &t in &tables {
+        layout::check_memories(t, &m.layout, reg, &mut out);
     }
     for &t in &tables {
         dialect_set::check_words(t, reg, &mut out);
