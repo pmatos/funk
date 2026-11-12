@@ -262,7 +262,9 @@ its latest commit and may skip the ones between. A failed build skips the
 deploy, so the previous site stays up.
 
 The workflow restores the toolchain and `docs/spec/.lake/packages` from the
-cache that `ci.yml` saves, with the same key. It never saves a cache. The Lean
+cache that `ci.yml` saves, with the same key. It never saves a cache, and it
+builds `lean/` and `docs/spec/` from scratch: it restores no Lean build from
+`main` ([process-ci.md](process-ci.md#lean-builds)). The Lean
 setup steps exist in three copies: the `lean` and `cross` jobs and `pages.yml`
 (ADR-2026-11-05-1408). The `pages.yml` copy has four steps and no save
 ([process-ci.md](process-ci.md#caches)). Comments say to change all three
