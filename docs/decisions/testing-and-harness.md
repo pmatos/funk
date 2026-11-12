@@ -261,6 +261,10 @@ Tests over files run the built `fir-ref`, through `scripts/check-fir-ref.sh`. It
 has Rust print every text of `tests/fir/` and the first 600 generated modules,
 and `fir-ref fmt --check` must find each canonical.
 
+`check-fir-ref.sh test` keeps its own table of `fir-ref run` results, which
+tests `fir-ref`'s command line. New expected results go in the corpus's
+sidecars.
+
 `scripts/build-spec.sh --lean` is the one guarded build of `fir-ref`. Every
 script and hook that needs `fir-ref` calls it, and none runs Lake itself.
 

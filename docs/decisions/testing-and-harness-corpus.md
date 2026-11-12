@@ -103,7 +103,8 @@ fills these cells.
 
 Ported cases live in `tests/fir/llvm/` (ADR-2026-11-03-0643). Each is a canonical
 valid module and its sidecar. LLVM's licence sits beside them as `LICENSE.TXT`,
-and `README.md` is the notice that lists each module with its source. `NAME` is
+the pinned commit's `llvm/LICENSE.TXT` but for the empty line that ends it,
+which the `end-of-file-fixer` hook removes, and `README.md` is the notice that lists each module with its source. `NAME` is
 the LLVM directory (`instsimplify`, `instcombine`, or `x86` for `CodeGen/X86`)
 and the stem of the test file, with a suffix where one file is split.
 
@@ -140,7 +141,10 @@ functions in under the same rules.
 LLVM's text is rewritten into fir by fixed rules. Unreachable blocks are
 deleted, phis become block arguments, and labels are written `^name`. LLVM's
 names of functions and blocks are kept, and so are most of its names of values.
-A constant operand becomes a `const` op, with fir's signed spelling. LLVM's
+Where a port names a value anew, it does not use a name that LLVM gives another
+value of the function. A constant operand becomes a `const` op: `i1` constants
+are `true` and `false`, and other constants take fir's signed spelling, so
+LLVM's unsigned `i64 13835058055282163710` is `-4611686018427387906`. LLVM's
 `poison` constant of type `iN` becomes `%p: iN = poison`, at the location of the
 ops that use it. A flag that fir's op lacks is dropped only where it can never
 give poison in that function, and the sidecar says why. Where it can, the
@@ -149,16 +153,24 @@ pointer is returned, a struct of two values is two results, and parameter and
 function attributes are dropped. Each sidecar's comment says which rewrites its
 cases needed and which functions are left out.
 
-Each fold becomes runs of the input function at chosen arguments. Where the
-folded form has ops, it is ported as `@NAME.folded` and runs on the same
-arguments. Every expected value comes from LLVM's statement or separate working,
+Each fold becomes runs of the input function at chosen arguments: boundary bit
+patterns, and values at the edge of the fold's condition. A run expects the
+folded value where the input is defined, and the input's poison or UB where it
+is not, which LLVM's value refines. Where the folded form has ops, it is ported
+as `@NAME.folded` and runs on the same arguments. Where a file has only a RUN
+line, the folded form is the one it asks for, written by hand. A negative test
+runs on an argument where the fold would be wrong, if there is one. A negative
+test, and a code generation test, whose CHECK lines are assembly, declares the
+value its IR computes, worked out apart from `fir-ref`. Every expected value comes from LLVM's statement or separate working,
 never from a run of `fir-ref`, so a run that disagrees fails. A run whose module
 builds and whose result is a value is differential and declares that result. A
 run that gives poison or UB, or has a width the backend does not lower, is
 interpreter-only.
 
 LLVM's CHECK lines fold some divisions that are UB to poison, where `fir-ref`
-reports UB. LangRef makes those divisions UB too, so the poison is LLVM's
+reports UB: `sdiv i8 -128, -1` and `srem i8 -128, -1`, and the division by a
+`false` that both paths give in `div-i1.ll`'s `@*_by_zero_indirect_is_poison`
+functions. LangRef makes those divisions UB too, so the poison is LLVM's
 refinement of that UB, not a difference of semantics.
 
 ### Names the spelling check rejects
