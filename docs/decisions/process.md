@@ -215,8 +215,9 @@ selection and binary detection.
 
 Every check is a hook of `.pre-commit-config.yaml`, and CI runs each suite of
 hooks as its own job behind one gate job, `pre-commit` (ADR-2026-11-05-1408).
-[process-ci.md](process-ci.md) says what each job holds, how the suites report
-their counts, and what CI caches.
+[process-ci.md](process-ci.md) says what each job holds, the smoke test an
+agent runs before a push, how the suites report their counts, and what CI
+caches.
 
 ## ADRs
 
