@@ -49,7 +49,7 @@ hang.
 | Swap | Where | Class | Why |
 | --- | --- | --- | --- |
 | `printInt_eq_printDecimal` | `PrintInt.lean:177` | speed-only | `Int.repr` is quadratic in digits (ADR-2026-11-03-1603); neither it nor the module claims a stack need |
-| `problemsIn_eq_problemsIn` | `Dominance.lean:164` | speed-only | The spec's `search` is a tail-call loop (`lean/Fir/Validation/Search.lean:70-76`); ADR-2026-11-03-1715 gives a time reason; `check-fir-ref.sh:240` sets no small stack |
+| `problemsIn_eq_problemsIn` | `Dominance.lean:164` | speed-only | The spec's `search` is a tail-call loop (`lean/Fir/Validation/Search.lean:70-76`); [the validation page](../decisions/validation-fir-ref.md#dominance-in-fir-ref) gives a time reason; `check-fir-ref.sh:240` sets no small stack |
 | `print_eq_printAttr` | `PrintAttr.lean:110` | depth | The spec recurses per level |
 | `print_eq_printModule` | `PrintModule.lean:188` | depth | Per level and per list element; `ops` in `check-fir-ref-deep.sh` |
 | `decodeModule_eq_decodeModule` | `Decode.lean:61` | depth | Two passes recurse per level, block and op |
@@ -57,7 +57,7 @@ hang.
 | `parse_eq_parse` | `Parse.lean:76` | depth | The spec compiles `Fir.parse` before the theorems above, and `FirRef.parse` reads from a `LexCursor` (ADR-2026-11-03-1810), so this swap also carries the path of the `Lex/Cursor` row below |
 | `argAttr_eq_argAttrP` | `Lex/Arg.lean:48` | depth | `utf8Len` takes stack per comment character ([#135](https://github.com/pmatos/funk/issues/135)); `check-fir-ref-run.sh:200` |
 | `problems_eq_locTableProblems` | `LocTable.lean:45` | depth | `List.zip` recurses per entry ([#136](https://github.com/pmatos/funk/issues/136)); `check-fir-ref.sh:154` |
-| `allBlocks_eq_allBlocks` | `Validate.lean:111` | depth | The spec's walk recurses per level (ADR-2026-10-30-1742) |
+| `allBlocks_eq_allBlocks` | `Validate.lean:111` | depth | The spec's walk recurses per level ([the validation page](../decisions/validation-fir-ref.md#how-fir-ref-runs-the-check)) |
 | `problems_eq_funcProblems` | `Validate.lean:122` | depth | `rfl` ordering device for `allBlocks` |
 | `problems_eq_moduleProblems` | `Validate.lean:132` | depth | Same |
 | `scripted_eq_runScripted` | `Run.lean:215` | depth | ADR-2026-11-04-2132; `check-fir-ref-run.sh:168` |

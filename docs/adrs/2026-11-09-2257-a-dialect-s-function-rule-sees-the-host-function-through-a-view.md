@@ -1,75 +1,58 @@
-# A dialect's function rule sees the host function through a view
+# A dialect's validation rules are decidable propositions, and its function rule sees the host function through a view
 
 Status: accepted
 Tier: direction; area: validation
 
-## Context
-
-ADR-2026-10-29-2016 says that the verifier will need a hook for use-once
-(linear) values. A use-once rule is about every use of a value in a
-function, so no rule of one op can state it.
-
-A module's dialects combine as a sum routed by prefix, the sum moves into the
-spec, and it covers types as well as ops (ADR-2026-11-09-1543).
-ADR-2026-11-09-1545 leaves use-once values to the toy test of
-[#167](https://github.com/pmatos/funk/issues/167).
-
-A `Func (SumDialect Ty Op₁ Op₂)` is not a function of either side. A rule
-typed `Func d → Prop` therefore cannot be lifted through the sum, and mapping
-the function to one side would drop the other side's ops and their uses.
-
 ## Decision
 
-- **The rule.** `DialectValidation` gains `validFunc`, and `Func.Valid` gains
-  a field that requires it. In `funk-ir`, a dialect registers a `FuncSpec`
-  with `Dialect::func_rule`, and `verify` runs every registered rule on every
-  function. The core dialect has no such rule.
-- **A view of the host.** `validFunc` is polymorphic in the dialect `host`
-  that holds the dialect, and takes a `DialectView d host`, which maps a
-  host op or type to `d`'s, or to `none` when it belongs to another dialect.
-  The rule sees the whole function, and a sum gives each side its own view,
-  so a dialect's rule is written once and works in any sum. The Rust rule
-  needs no view, because ops and types are data there.
-- **Its context.** The rule reads the module's symbol table, in a
-  `FuncContext`. It does not take `ModuleContext`, because the check holds a
-  `Lookup`, which cannot give back the location table's keys.
-- **Every function.** Validation calls the rule also on a function that
-  breaks other rules, so a rule assumes nothing about the function.
-- **Location.** A function has no location of its own. A broken function rule
-  is reported at the function's entry block, with the location reference of
-  its first op, on both sides.
-- **No reason in Lean.** As for op rules (ADR-2026-10-30-1740), the Lean rule
-  is a decidable proposition, and the check gives a fixed message. The Rust
-  rule returns its reason. Tools compare verdicts, never words
-  (ADR-2026-10-30-1032).
-- **The test.** A use-once toy dialect on each side reads the same
-  `tests/dialects/use-once.cases`, so the two validators face the same
-  must-accept and must-reject texts. The file is an input of the `FirTest`
-  library in `lean/lakefile.lean`, because Lake does not rebuild a module
-  when a file that it includes changes.
+- **The check asks two things of a dialect, and nothing more.** The spec's
+  check, `Module.problems` (`lean/Fir/Validation/CheckModule.lean`), takes
+  `[DecidableEq d.Ty]` and an instance of `DecidableDialectValidation d`
+  (`lean/Fir/Validation/Check.lean`), whose fields decide each of the
+  dialect's own rules. Those rules, in `DialectValidation`, stay
+  propositions; a dialect proves them decidable, as the core does in
+  `lean/Fir/Core/Check.lean`. `Module.problems_eq_nil_iff` proves the check
+  equal to `Module.Valid`, which gives `Decidable m.Valid`.
+- **A rule over a whole function.** `DialectValidation` has `validFunc`, and
+  `Func.Valid` requires it; it states what no op rule can, such as a value
+  used exactly once. It is polymorphic in the dialect `host` that holds the
+  dialect, and takes a `DialectView d host`, which maps a host op or type to
+  `d`'s, or to `none`. It reads the module's symbol table in a
+  `FuncContext`. Validation calls it on every function, also one that breaks
+  other rules. In `funk-ir` a dialect registers a `FuncSpec` with
+  `Dialect::func_rule`, and `verify` runs every registered rule; ops and
+  types are data there, so it needs no view. The core has no such rule.
+  A rule pays for its own walk of the function, which must meet the
+  no-nesting-limit rule (ADR-2026-10-30-1549) before a real dialect uses
+  one in `fir-ref`. `funk-ir` must come to run only the rules of a module's
+  declared dialects, as the sum of that set does in Lean.
+- **No reason in Lean.** When a dialect's own rule fails, the check gives a
+  fixed message with the op's index and block, or, for a function rule, the
+  function's entry block and its first op's location. It prints neither the
+  type nor the op instance. The Rust rule returns its reason.
+- **Shared cases.** `tests/dialects/use-once.cases` is read by a use-once
+  toy dialect on each side, and is an input of the `FirTest` library in
+  `lean/lakefile.lean`, since Lake does not rebuild a module when a file it
+  includes changes.
 
-This refines ADR-2026-10-29-2016, and extends the class of
-ADR-2026-10-30-1740 with a third rule to decide.
+This refines the use-once hook of ADR-2026-10-29-2016.
 
-## Alternatives
+## Why
 
-- **`validFunc : ModuleContext d → Func d → Prop`, with each sum supplying
-  its own rule.** It is simpler now. But a dialect's rule would not compose
-  when the sum moves into the spec, and the hook would have to be reshaped
-  after dialects depend on it. The Rust registry already composes the rules.
-- **A located reason in the class.** It would point at the broken use, at
-  the cost of another field and a law tying it to the rule, which
-  ADR-2026-10-30-1740 rejected for op rules.
+A dialect states its rules plainly, once, and gets the check, and so
+`fir-ref validate`. A function rule written over a view holds in any sum of
+dialects (ADR-2026-11-09-2306), where a `Func` of the sum is a function of
+neither side. Tools compare verdicts, never words (ADR-2026-10-30-1032).
 
-## Consequences
+## Rejected alternatives
 
-- A new dialect states a function rule once, and it holds in every sum.
-- A rule that walks a function pays for its own walk. The core dialect pays
-  nothing, and the walk of a rule must meet the no-nesting-limit rule
-  (ADR-2026-10-30-1549) before a real dialect uses one in `fir-ref`.
-- A use-once failure points at the entry block, not at the broken use.
-- The ticket that moves the sum into the spec keeps this shape, with
-  `DialectView.ty` carrying the projection of the summed types.
-- `funk-ir` runs every registered rule today. When a module declares its
-  dialect set (ADR-2026-11-09-1543), the verifier must run only the rules of
-  the declared dialects, as the sum of that set does in Lean.
+- **Boolean rules in `DialectValidation`.** Every dialect would write each
+  rule twice, as a `Bool` and as the proposition that proofs use.
+- **A reason in the class, such as `whyNot`, or a located reason.** Another
+  field, with a law tying it to the rule.
+- **`DialectText` for messages.** A third instance and its printer for every
+  dialect that wants the check.
+- **`validFunc : ModuleContext d → Func d → Prop`, supplied per sum.** It
+  would not compose when the sum moved into the spec. `ModuleContext` is
+  also out because the check holds a `Lookup`, which cannot give back the
+  location table's keys.

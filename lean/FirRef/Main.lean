@@ -21,7 +21,7 @@ text's positions, as its readers reach it, lexes the whole text again only
 when they fail, to find a lexer error, and decodes with
 `FirRef.decodeModule` (ADR-2026-11-03-1810).
 `validate` runs the spec's validation check, which walks nested blocks with
-`FirRef.allBlocks` (ADR-2026-10-30-1742). `run` runs the spec's interpreter
+`FirRef.allBlocks` (`FirRef.Validate`). `run` runs the spec's interpreter
 in its tree of choices, in scripted, exhaustive or sampled mode
 (`FirRef.Run`).
 -/
