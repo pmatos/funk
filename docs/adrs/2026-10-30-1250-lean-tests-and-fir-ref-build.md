@@ -5,10 +5,11 @@ Tier: implementation; area: testing-and-harness
 
 ## Context
 
-ADR-2026-10-29-2135 makes `lean/` the Lake package `fir`, with no
-dependencies, built by `scripts/build-spec.sh` under two git guards. It
-leaves to [#10](https://github.com/pmatos/funk/issues/10) how the Lean code
-is tested and how the `fir-ref` executable is built. ADR-2026-10-30-1425
+ADR-2026-10-29-2135 makes `lean/` the Lake package `fir`, with no dependencies,
+built by `scripts/build-spec.sh` under two git guards. It leaves to
+[#10](https://github.com/pmatos/funk/issues/10) how the Lean code is tested and
+how the `fir-ref` executable is built.
+[fir-ref-command-line.md](../decisions/fir-ref-command-line.md#shared-by-every-command)
 gives `fir-ref`'s command line.
 
 Facts:

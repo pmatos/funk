@@ -9,14 +9,14 @@ The runs of a function of a module are its runs in the set monad, on each
 argument vector of its parameter types, at each budget. Their observable
 behaviour is what the function does.
 
-They are fuel-monotone, for every function of every module of every
-dialect, whatever its ops do. Of a function that reaches an op without
-rules, this holds only vacuously on the paths that reach the op
-(ADR-2026-10-30-1855). The proof needs no property of the ops, because the
-interpreter alone counts the fuel: an op never sees it, and a call hands
-its callee the steps that the caller has left and goes on with what the
-callee gives back. It rests on two facts, each proved by induction on the
-budget:
+They are fuel-monotone, for every function of every module of every dialect,
+whatever its ops do. Of a function that reaches an op without rules, this holds
+only vacuously on the paths that reach the op
+(`docs/decisions/fir-ref.md#an-op-without-rules`). The proof needs no property
+of the ops, because the interpreter alone counts the fuel: an op never sees it,
+and a call hands its callee the steps that the caller has left and goes on with
+what the callee gives back. It rests on two facts, each proved by induction on
+the budget:
 
 * _A run gives back at most the fuel it was given_, so a caller goes on
   with exactly the steps its callee leaves.

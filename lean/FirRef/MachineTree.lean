@@ -1,16 +1,17 @@
 import FirRef.Machine
 
 /-!
-The proof that `FirRef.Machine` computes the spec's tree of a run with
-memory (ADR-2026-11-04-2132, ADR-2026-11-11-1328): `Machine.advance_tree`
-says that where the machine stops stands for the spec's tree of the state
-it starts from. Each case of
-`advance` is one case of `Func.runOps`'s definition (`FirRef.Steps`), on
-the spec environment of the state's bindings (`Bindings.toEnv`). A step
-of the machine may leave bindings whose spec environment is another list,
-since a lookup may move `young` into `old` and a bind puts values in front
-of `young`; `Machine.runOps_congr` says that the spec's run does not tell
-the two apart, since they give every name the same value.
+The proof that `FirRef.Machine` computes the spec's tree of a run with memory
+(`docs/decisions/fir-ref-fast-paths.md#running`,
+`docs/decisions/fir-ref-memory.md#the-machine-carries-the-memories`):
+`Machine.advance_tree` says that where the machine stops stands for the spec's
+tree of the state it starts from. Each case of `advance` is one case of
+`Func.runOps`'s definition (`FirRef.Steps`), on the spec environment of the
+state's bindings (`Bindings.toEnv`). A step of the machine may leave bindings
+whose spec environment is another list, since a lookup may move `young` into
+`old` and a bind puts values in front of `young`; `Machine.runOps_congr` says
+that the spec's run does not tell the two apart, since they give every name the
+same value.
 -/
 
 namespace FirRef.Machine

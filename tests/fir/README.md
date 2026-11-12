@@ -61,18 +61,17 @@ tests = [
   `poison`, at any integer or float type (#123).
 - `fuel` is `fir-ref run`'s budget, one step per op; 1,000,000 by default.
 - Without `expect`, the test is differential. It runs on `fir-ref`, in
-  exhaustive mode, and as native code from `funk build`, and the native
-  result must refine one of `fir-ref`'s outcomes: the same number of
-  values, each equal, or anything of its type where `fir-ref` returns
-  poison. A run that makes no choice has one outcome. UB or fuel exhausted
-  among the outcomes makes the test invalid, which counts as a failure:
-  raise the fuel budget, or make the test interpreter-only. A native run
-  that outgrows its stack makes the test invalid too: recurse less deep,
-  or raise `ulimit -s` (ADR-2026-11-09-1602). Native code takes no
-  `poison`: it runs on each combination of stand-ins in its place,
-  the boundary bit patterns of its type, and each result must refine one
-  of `fir-ref`'s outcomes on the poison
-  ([ADR-2026-11-03-1847](../../docs/adrs/2026-11-03-1847-fir-ref-run-takes-poison-arguments-and-native-code-runs-on-stand-ins.md)).
+  exhaustive mode, and as native code from `funk build`, and the native result
+  must refine one of `fir-ref`'s outcomes: the same number of values, each
+  equal, or anything of its type where `fir-ref` returns poison. A run that
+  makes no choice has one outcome. UB or fuel exhausted among the outcomes
+  makes the test invalid, which counts as a failure: raise the fuel budget, or
+  make the test interpreter-only. A native run that outgrows its stack makes
+  the test invalid too: recurse less deep, or raise `ulimit -s`
+  (ADR-2026-11-09-1602). Native code takes no `poison`: it runs on each
+  combination of stand-ins in its place, the boundary bit patterns of its type,
+  and each result must refine one of `fir-ref`'s outcomes on the poison
+  ([fir-ref.md](../../docs/decisions/fir-ref.md#poison-arguments)).
 - `results` declares a differential test's results, each a list of
   `values` and a `witness`: the choices on which `fir-ref run --choices`
   gives them. A test whose run chooses more than 16 bits on one path must
@@ -149,15 +148,16 @@ locs {
   test.
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
   texts in Rust, those of `llvm/` among the canonical ones.
-- `scripts/check-fir-ref.sh test` checks them, `llvm/` too, with
-  `fir-ref fmt`, and that `fir-ref validate` accepts each one. It also
-  runs functions of `add.fir`, `locations.fir`, `names.fir`,
-  `results.fir`, `seven.fir`, `symbols.fir` and `widths.fir`, and of
-  `noncanonical/add.fir`, with `fir-ref run`, and checks each result
-  against a table in `scripts/check-fir-ref-run.sh`, which it calls
-  (ADR-2026-10-30-1856). Editing one of those files means updating that
-  table. `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust
-  prints from them, byte for byte (ADR-2026-10-30-1250).
+- `scripts/check-fir-ref.sh test` checks them, `llvm/` too, with `fir-ref fmt`,
+  and that `fir-ref validate` accepts each one. It also runs functions of
+  `add.fir`, `locations.fir`, `names.fir`, `results.fir`, `seven.fir`,
+  `symbols.fir` and `widths.fir`, and of `noncanonical/add.fir`, with
+  `fir-ref run`, and checks each result against a table in
+  `scripts/check-fir-ref-run.sh`, which it calls
+  ([fir-ref-command-line.md](../../docs/decisions/fir-ref-command-line.md#fir-ref-run)).
+  Editing one of those files means updating that table.
+  `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust prints from
+  them, byte for byte (ADR-2026-10-30-1250).
 
 ## The texts
 

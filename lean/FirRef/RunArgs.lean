@@ -1,8 +1,8 @@
 import FirRef.Run
 
 /-!
-The command line of `fir-ref run` (ADR-2026-10-30-1856,
-ADR-2026-10-30-2218, ADR-2026-10-31-0002):
+The command line of `fir-ref run`
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`):
 
 `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] | --seed S] FILE @FUNC [ARG...]`
 

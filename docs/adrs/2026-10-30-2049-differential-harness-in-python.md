@@ -21,8 +21,10 @@ Facts:
 
 - Every tool reports in JSON: `funk verify --json` and `fir-ref validate`
   ([rust-ir-and-tools-funk.md](../decisions/rust-ir-and-tools-funk.md#report-format),
-  ADR-2026-10-30-1741), `fir-ref run`
-  (ADR-2026-10-30-1856), and a built executable (ADR-2026-10-30-1233).
+  [fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-validate)),
+  `fir-ref run`
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)),
+  and a built executable (ADR-2026-10-30-1233).
 - The Rust workspace has no third-party crates, and only a JSON writer
   (ADR-2026-10-30-1030). Python's standard library reads JSON, and TOML
   from Python 3.11 (`tomllib`).
@@ -44,11 +46,12 @@ Facts:
   corpus's texts and the generator's modules into a temporary directory,
   and runs `main.py --funk FUNK --fir-ref FIR_REF --generated DIR tests/fir`.
 - **Verdicts.** Each text goes through `funk verify --json` and
-  `fir-ref validate`, one process per text. Corpus and generated modules
-  must be accepted by both. A must-reject text must get the verdict its
-  file names from both, `parse-error` or `validation-error`; a parse error
-  must be at the same line and column, since the text breaks one rule
-  (ADR-2026-10-30-1741). Counts and messages are never compared.
+  `fir-ref validate`, one process per text. Corpus and generated modules must
+  be accepted by both. A must-reject text must get the verdict its file names
+  from both, `parse-error` or `validation-error`; a parse error must be at the
+  same line and column, since the text breaks one rule
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-validate)).
+  Counts and messages are never compared.
 - **Tests.** The tests of a module run only when both tools accept it. A
   module with a differential test is built once with `funk build`. Each
   test runs `fir-ref run --fuel N -- FILE @FUNC ARG...`, and a differential

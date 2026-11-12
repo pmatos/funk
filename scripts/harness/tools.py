@@ -24,9 +24,10 @@ PARSE_ERROR = "parse-error"
 VALIDATION_ERROR = "validation-error"
 # The exit status that goes with each verdict on one file
 # (docs/decisions/rust-ir-and-tools-funk.md#commands-and-verdicts,
-# ADR-2026-10-30-1741).
+# docs/decisions/fir-ref-command-line.md#fir-ref-validate).
 STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
-# The kinds of what `fir-ref run --exhaustive` prints (ADR-2026-10-30-2218).
+# The kinds of what `fir-ref run --exhaustive` prints
+# (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes).
 OUTCOMES = "outcomes"
 BUDGET_EXCEEDED = "choice-budget-exceeded"
 # The one line that a run that outgrows its stack writes, after its exit
@@ -151,7 +152,8 @@ def strings(value) -> tuple[str, ...] | None:
 
 
 def read_outcome(obj: dict) -> Outcome | None:
-    """One outcome, as `fir-ref run` writes it (ADR-2026-10-30-1856):
+    """One outcome, as `fir-ref run` writes it
+    (docs/decisions/fir-ref-command-line.md#fir-ref-run):
     `return` with its values, `ub` or `stuck` with a reason, or
     `fuel-exhausted`."""
     kind = obj.get("kind")
@@ -173,9 +175,9 @@ def count(value) -> int | None:
 
 def path(ran: Ran) -> Path | str:
     """What `fir-ref run` reports in scripted or sampled mode
-    (ADR-2026-10-30-2218, ADR-2026-10-31-0002): one outcome, with the number
-    of `choices` the path made and, in sampled mode, the `sequence` it drew.
-    The exit status is 1 for `stuck`, and 0 otherwise."""
+    (docs/decisions/fir-ref-command-line.md#fir-ref-run): one outcome, with the
+    number of `choices` the path made and, in sampled mode, the `sequence` it
+    drew. The exit status is 1 for `stuck`, and 0 otherwise."""
     if ran.status not in (0, 1):
         return failure(ran)
     obj = one_json_line(ran.stdout)
@@ -192,9 +194,10 @@ def path(ran: Ran) -> Path | str:
 
 
 def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
-    """What `fir-ref run --exhaustive` reports (ADR-2026-10-30-2218): every
-    outcome of the run and the most `choices` that one path made, with exit
-    status 1 when one is `stuck` and 0 otherwise; or that a path would
+    """What `fir-ref run --exhaustive` reports
+    (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes):
+    every outcome of the run and the most `choices` that one path made, with
+    exit status 1 when one is `stuck` and 0 otherwise; or that a path would
     choose more bits than the `budget`, with exit status 0."""
     if ran.status not in (0, 1):
         return failure(ran)
@@ -238,7 +241,7 @@ def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
 def verdict(ran: Ran) -> Verdict | str:
     """The verdict on one file of `funk verify --json` or `fir-ref
     validate` (docs/decisions/rust-ir-and-tools-funk.md#report-format,
-    ADR-2026-10-30-1741)."""
+    docs/decisions/fir-ref-command-line.md#fir-ref-validate)."""
     if ran.status not in (0, 1, 2):
         return failure(ran)
     obj = one_json_line(ran.stdout)

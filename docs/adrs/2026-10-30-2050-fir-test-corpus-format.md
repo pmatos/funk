@@ -1,7 +1,7 @@
 # The fir test corpus keeps canonical modules, TOML sidecars of tests, non-canonical inputs and TOML files of must-reject texts apart
 
-Status: accepted; extended by ADR-2026-10-31-0003, ADR-2026-10-31-0208,
-ADR-2026-11-03-0643 and ADR-2026-11-03-1847
+Status: accepted; extended by ADR-2026-10-31-0003, ADR-2026-10-31-0208
+and ADR-2026-11-03-0643
 Tier: direction; area: testing-and-harness
 
 ## Context
@@ -33,8 +33,9 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
 - **A test** is one entry of `tests`, a list of TOML inline tables:
   - `func`: the function's symbol as text writes it, such as `@add3`, or
     `'@"a b"'` in a TOML literal string.
-  - `args`: one string per parameter, each spelled as a constant of its
-    type (ADR-2026-10-30-1856); none by default.
+  - `args`: one string per parameter, each spelled as a constant of its type
+    ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run));
+    none by default.
   - `fuel`: the budget of `fir-ref run`, 1,000,000 steps by default.
   - `expect`: absent for a differential test, which runs on `fir-ref` and
     as native code. Present for an interpreter-only test, which runs on

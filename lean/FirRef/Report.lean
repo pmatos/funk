@@ -2,12 +2,12 @@ import Fir
 import FirRef.Utf8
 
 /-!
-What `fir-ref validate` reports on a file: one JSON object on one line, in
-the schema of `funk verify --json`
+What `fir-ref validate` reports on a file: one JSON object on one line, in the
+schema of `funk verify --json`
 (`docs/decisions/rust-ir-and-tools-funk.md#report-format`), so that #13
-compares the two tools' verdicts with no translation. ADR-2026-10-30-1741
-records the schema. The object has the file, its verdict and its
-diagnostics:
+compares the two tools' verdicts with no translation.
+`docs/decisions/fir-ref-command-line.md#fir-ref-validate` records the schema.
+The object has the file, its verdict and its diagnostics:
 
 * `accepted`: the text parses and the module is valid, with no diagnostics;
 * `parse-error`: one diagnostic with the parser's reason, and the line and

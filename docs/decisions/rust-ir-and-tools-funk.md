@@ -3,8 +3,9 @@
 This page continues [rust-ir-and-tools.md](rust-ir-and-tools.md). It says what
 the `funk` command does: its commands, verdicts and exit statuses, its report,
 and how it uses its standard streams. `fir-ref` follows its verdicts, exit
-statuses and JSON report (ADR-2026-10-30-1425, ADR-2026-10-30-1741), and the
-harness reads them, so this page is that interface's record
+statuses and JSON report
+([fir-ref-command-line.md](fir-ref-command-line.md#shared-by-every-command)),
+and the harness reads them, so this page is that interface's record
 (ADR-2026-11-09-1610).
 
 ## Commands and verdicts

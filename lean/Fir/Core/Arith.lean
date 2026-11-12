@@ -24,9 +24,9 @@ every width, from 1 to the largest.
   as two's complement does, and it is never UB. A poison operand gives
   poison: `add` propagates poison (ADR-2026-10-30-0818).
 
-Every core op has its rules. What a dialect's semantics does with an op
-that has none is in the section on the core op semantics
-(ADR-2026-10-30-1855).
+Every core op has its rules. What a dialect's semantics does with an op that
+has none is in the section on the core op semantics
+(`docs/decisions/fir-ref.md#an-op-without-rules`).
 -/
 
 namespace Fir.Core

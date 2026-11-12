@@ -27,7 +27,7 @@ same rule, written once for any monad, that the set monad's semantics
 runs. Where an op has no rule, as $`\mathsf{call}` has none, since its
 meaning is its callee's run, the tree ends the path with
 $`\mathsf{no\_outcome}~p`, naming the op $`p`, as the set monad gives it
-no way to end (ADR-2026-10-30-1855).
+no way to end (`docs/decisions/fir-ref.md#an-op-without-rules`).
 `fir-ref` reports such a path as an error.
 
 *Theorem: $`\mathsf{freeze}`'s rule has the same meaning in both monads.*
@@ -105,7 +105,7 @@ from the empty memories:
 `fir-ref` computes these, and sampled mode below, and nothing else, to
 report a run. It names the core's memories by themselves; the core has no
 memory yet, so no unit width is needed until the module's data layout
-gives them (ADR-2026-11-11-1328).
+gives them (`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`).
 :::
 
 :::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "11139068504129417113")

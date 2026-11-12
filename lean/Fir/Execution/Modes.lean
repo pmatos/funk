@@ -4,7 +4,7 @@ import Fir.Execution.ChoiceTree
 # Exhaustive, scripted and sampled runs
 
 `fir-ref` has three ways to walk a tree of choices (ADR-2026-10-29-2017,
-ADR-2026-10-31-0002):
+`docs/decisions/fir-ref-command-line.md#sampled-mode`):
 
 * _Exhaustive mode_ visits every path, so it finds every way the run may
   end. The number of paths doubles with each bit chosen, so it takes a
@@ -24,12 +24,12 @@ ADR-2026-10-31-0002):
   scripted mode on them follows the same path. So sampled mode, too, gives
   a member of the run's set of outcomes, whatever the generator.
 
-All three modes report how many choices a path made, so that a run that
-makes no choice is known to have one outcome. The choice budget is not the
-fuel budget: each mode runs the interpreter at one fuel budget _n_, so the
-theorems speak of the outcomes of the run at budget _n_, as the section on
-outcomes and behaviours says. `fir-ref`'s command line and JSON are
-ADR-2026-10-30-2218's.
+All three modes report how many choices a path made, so that a run that makes
+no choice is known to have one outcome. The choice budget is not the fuel
+budget: each mode runs the interpreter at one fuel budget _n_, so the theorems
+speak of the outcomes of the run at budget _n_, as the section on outcomes and
+behaviours says. `fir-ref`'s command line and JSON are in
+`docs/decisions/fir-ref-command-line.md#fir-ref-run`.
 
 Below come, in order: the leaves that a walk reports, exhaustive mode and
 its theorems, scripted mode and its theorem, sampled mode and its

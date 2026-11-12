@@ -1,27 +1,27 @@
 import FirRef.MachineTree
 
 /-!
-`fir-ref run` walks the spec's tree of a run in one of three modes, the
-spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`
-(ADR-2026-10-30-2218, ADR-2026-10-31-0002). Each of them builds the tree
-with `Func.runOps`, which takes stack per step and per level of calls, and
-`ChoiceTree.sample` and `ChoiceTree.explore` add stack per choice. Here,
-each mode walks the states of `FirRef.Machine` instead, which carry the
-memories of the run (ADR-2026-11-11-1328), in loops whose
-recursive calls are tail calls: `Machine.advance` takes the steps between
-two choices, scripted and sampled modes keep what they have read or drawn
-in an accumulator, and exhaustive mode keeps the states it has still to
-explore, and each choice's values it has still to visit, on a work list,
-in the order that the spec visits them. So no mode takes stack per step,
-per level of calls or per choice.
+`fir-ref run` walks the spec's tree of a run in one of three modes, the spec's
+`Core.scripted`, `Core.exhaustive` and `Core.sampled`
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`). Each of them builds the
+tree with `Func.runOps`, which takes stack per step and per level of calls, and
+`ChoiceTree.sample` and `ChoiceTree.explore` add stack per choice. Here, each
+mode walks the states of `FirRef.Machine` instead, which carry the memories of
+the run (`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`), in
+loops whose recursive calls are tail calls: `Machine.advance` takes the steps
+between two choices, scripted and sampled modes keep what they have read or
+drawn in an accumulator, and exhaustive mode keeps the states it has still to
+explore, and each choice's values it has still to visit, on a work list, in the
+order that the spec visits them. So no mode takes stack per step, per level of
+calls or per choice.
 
-`Machine.scripted_eq`, `Machine.exhaustive_eq` and `Machine.sampled_eq`
-prove, for every dialect, that each mode by the machine gives what the
-spec's walk of the run's tree gives, from `Machine.advance_tree`.
-`FirRef.Run` registers the three in place of the core dialect's modes with
-`@[csimp]`, before `fir-ref run`'s code, since only `fir-ref`'s command
-line may name the core dialect here (ADR-2026-10-30-1450,
-ADR-2026-11-03-0600, ADR-2026-11-04-2132).
+`Machine.scripted_eq`, `Machine.exhaustive_eq` and `Machine.sampled_eq` prove,
+for every dialect, that each mode by the machine gives what the spec's walk of
+the run's tree gives, from `Machine.advance_tree`. `FirRef.Run` registers the
+three in place of the core dialect's modes with `@[csimp]`, before
+`fir-ref run`'s code, since only `fir-ref`'s command line may name the core
+dialect here (ADR-2026-10-30-1450, ADR-2026-11-03-0600,
+`docs/decisions/fir-ref-fast-paths.md#running`).
 -/
 
 namespace FirRef

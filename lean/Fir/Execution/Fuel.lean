@@ -24,13 +24,13 @@ drop a path, as the section on the interpreter explains, every path of a
 valid function's run ends in an outcome.
 
 The proofs are general. Fuel monotonicity holds for every function of every
-module, of every dialect, calls included, whatever its ops do (the section
-"The runs of a function, and fuel monotonicity"): only the interpreter
-counts fuel, and a callee gives back to its caller the steps it leaves
-(ADR-2026-11-02-0836). For a function that reaches an op to which its
-dialect gives no execution rule (ADR-2026-10-30-1855), fuel monotonicity
-holds only vacuously on the paths that reach that op, and says nothing
-about how the function behaves there.
+module, of every dialect, calls included, whatever its ops do (the section "The
+runs of a function, and fuel monotonicity"): only the interpreter counts fuel,
+and a callee gives back to its caller the steps it leaves
+(ADR-2026-11-02-0836). For a function that reaches an op to which its dialect
+gives no execution rule (`docs/decisions/fir-ref.md#an-op-without-rules`), fuel
+monotonicity holds only vacuously on the paths that reach that op, and says
+nothing about how the function behaves there.
 
 Progress and the no-stuck obligation hold for every valid function that
 runs within itself: no op calls a function, a terminator that jumps names

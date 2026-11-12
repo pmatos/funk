@@ -4,10 +4,10 @@ import FirRef.Read.Eof
 
 /-!
 `fir-ref` parses with `FirRef.parse`, not with the spec's `Fir.parse`
-(ADR-2026-10-30-1450). The spec lexes a text into a list of tokens, reads
-the list into a tree, and decodes the tree. `FirRef.parse` keeps neither a
-list of the text's characters nor a list of its tokens
-(ADR-2026-11-03-1810):
+(ADR-2026-10-30-1450). The spec lexes a text into a list of tokens, reads the
+list into a tree, and decodes the tree. `FirRef.parse` keeps neither a list of
+the text's characters nor a list of its tokens
+(`docs/decisions/fir-ref-fast-paths.md#lexing-and-reading`):
 
 * `readModuleC` reads the tree from a `LexCursor`, with readers that take
   no stack per level of nesting. The cursor holds its next token, already

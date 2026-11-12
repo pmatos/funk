@@ -23,10 +23,10 @@ Every part of the text is appended to one accumulator, which each function
 below takes and returns, so that Lean appends to it in place. The theorem
 `printInt_eq_printDecimal` proves `printDecimal` equal to `printInt`, and
 `@[csimp]` makes Lean compile every later call of `printInt` as a call of
-`printDecimal` (ADR-2026-10-30-1450). `FirRef.PrintAttr` imports this
-module: its `printAttrs` writes the integers of attributes, and Lean
-compiles it there, where it would otherwise inline `printInt` and call
-`Int.repr` (ADR-2026-11-03-1603).
+`printDecimal` (ADR-2026-10-30-1450). `FirRef.PrintAttr` imports this module:
+its `printAttrs` writes the integers of attributes, and Lean compiles it there,
+where it would otherwise inline `printInt` and call `Int.repr`
+(`docs/decisions/fir-ref-fast-paths.md#printing`).
 -/
 
 namespace FirRef

@@ -53,9 +53,9 @@ ADR-2026-11-10-1941 does the same for region kinds.
   validity gives each fact the text needs.
 - **What runs.** Nothing: `Module.funcs` and `funk build` read functions
   only.
-- **Depth.** A reader keeps an item's attributes at any depth, so
-  `fir-ref` walks them with loops, `writableLoop` and `dialectsLoop`, by
-  the depth rule (ADR-2026-11-09-1941).
+- **Depth.** A reader keeps an item's attributes at any depth, so `fir-ref`
+  walks them with loops, `writableLoop` and `dialectsLoop`, by the depth rule
+  (ADR-2026-10-30-1450).
 
 ## Alternatives
 

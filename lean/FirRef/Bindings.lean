@@ -2,12 +2,13 @@ import Std.Data.TreeMap
 import Fir.Execution.Interpreter
 
 /-!
-The values that `fir-ref run` has defined, by name (ADR-2026-11-05-0442).
-The spec's environment, `Env`, is a list that every op and every jump puts
-values in front of, and `Env.value` looks a name up from the front, so an
-operand takes time for each value defined after it, and in a loop the list
-grows with the steps run (#47). `Bindings` gives every name the value that
-the spec's list gives it, in two parts:
+The values that `fir-ref run` has defined, by name
+(`docs/decisions/fir-ref-fast-paths.md#the-bindings-map`). The spec's
+environment, `Env`, is a list that every op and every jump puts values in front
+of, and `Env.value` looks a name up from the front, so an operand takes time
+for each value defined after it, and in a loop the list grows with the steps
+run (#47). `Bindings` gives every name the value that the spec's list gives it,
+in two parts:
 
 * `young`, a list of the latest values, the latest first, as in the spec.
   Binds put values in front of it, as the spec does, so a run whose ops

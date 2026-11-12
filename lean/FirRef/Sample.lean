@@ -1,11 +1,12 @@
 import Fir
 
 /-!
-How `fir-ref run --seed S` draws its choices (ADR-2026-10-31-0002). Sampled
-mode, the spec's `Core.sampled`, takes any generator: whatever it draws,
-the values form a choice sequence that fits the run, so the outcome is one
-of the run's (`Core.sampled_fits`, `Core.sampled_outcomes`). This file is
-the generator that `fir-ref` gives it.
+How `fir-ref run --seed S` draws its choices
+(`docs/decisions/fir-ref-command-line.md#sampled-mode`). Sampled mode, the
+spec's `Core.sampled`, takes any generator: whatever it draws, the values form
+a choice sequence that fits the run, so the outcome is one of the run's
+(`Core.sampled_fits`, `Core.sampled_outcomes`). This file is the generator that
+`fir-ref` gives it.
 
 The generator is SplitMix64, seeded with S. A choice of `w` bits takes one
 draw of 64 bits, and in one draw out of four it is one of the boundary bit

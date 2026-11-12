@@ -79,7 +79,8 @@ case "$1" in
             echo "fir-ref does not reprint a string of ten million characters on a 256 KiB stack" >&2
             status=1
         fi
-        # fir-ref validate reports one JSON verdict per file (ADR-2026-10-30-1741).
+        # fir-ref validate reports one JSON verdict per file
+        # (docs/decisions/fir-ref-command-line.md#fir-ref-validate).
         corpus=(tests/fir/canonical/*.fir tests/fir/noncanonical/*.fir tests/fir/llvm/*.fir)
         rc=0
         "$fir_ref" validate "${corpus[@]}" >"$tmp/corpus.json" || rc=$?

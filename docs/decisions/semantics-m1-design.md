@@ -333,9 +333,10 @@ The second dialect in tree is shaped like a GPU kernel language
 - It adds a memory in a non-default address space, such as work-group shared
   memory, with effects named by that memory.
 
-`fir-ref` runs one work-item of a kernel, with its ids given as inputs. Ops whose
-meaning needs other work-items, such as barriers, are left out or admitted
-without execution rules (ADR-2026-10-30-1855). A launch op in host code is out
+`fir-ref` runs one work-item of a kernel, with its ids given as inputs. Ops
+whose meaning needs other work-items, such as barriers, are left out or
+admitted without execution rules
+([fir-ref.md](fir-ref.md#an-op-without-rules)). A launch op in host code is out
 of M1. M1's results are not a model of a whole kernel. The semantics grows into
 a full kernel model only when S6 decides concurrency (ADR-2026-11-09-1545).
 
