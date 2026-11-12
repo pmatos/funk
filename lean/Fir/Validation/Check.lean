@@ -33,7 +33,7 @@ two things, and nothing more:
 * that its five rules can be decided, as the first definition below says.
 
 The core dialect gives both: its types can be compared, and the last
-section of this chapter decides its rules. ADR-2026-10-30-1740 records
+section of this chapter decides its rules. ADR-2026-11-09-2257 records
 why the check asks for these and no more.
 -/
 

@@ -15,7 +15,7 @@ recursion, once per level of regions and once per block of a list. Here,
 loop whose recursive calls are tail calls, so it takes no stack per level.
 `allBlocks_eq_allBlocks` proves the two equal, and `@[csimp]` makes Lean
 compile every later call of `Func.allBlocks` as a call of `allBlocks`
-(ADR-2026-10-30-1450, ADR-2026-10-30-1742).
+(ADR-2026-10-30-1450).
 
 The spec compiles `Func.problems`, `SymbolTable.problems` and
 `Module.problems` before that theorem exists, so their compiled code calls
@@ -39,7 +39,7 @@ own module compiled it, so they run the spec's walk. `decidableValid` and
 the theorems and proved equal to the spec's by `rfl`. Their priority puts
 them first wherever this module is imported, so there `decide m.Valid` and
 `decide (f.Valid ctx)` run `moduleProblems` and `funcProblems`, at any
-depth (ADR-2026-11-05-0025).
+depth (`docs/decisions/validation-fir-ref.md`, "`decide` on validity").
 -/
 
 namespace FirRef

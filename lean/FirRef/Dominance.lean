@@ -18,8 +18,9 @@ The copies below are the spec's `siteDominates`, `useProblems`,
 decides dominance, which they take as an argument. The theorem
 `problemsIn_eq_problemsIn` proves `problemsIn` equal to the spec's, problems
 and their order included, and `@[csimp]` makes Lean compile every later
-call of `Func.problemsIn` as a call of `problemsIn` (ADR-2026-10-30-1450,
-ADR-2026-10-30-1742). The rest of the check stays the spec's.
+call of `Func.problemsIn` as a call of `problemsIn` (ADR-2026-10-30-1450).
+The rest of the check stays the spec's. `docs/decisions/validation-fir-ref.md`
+records the design, its cost and the alternatives it rejected.
 -/
 
 namespace FirRef

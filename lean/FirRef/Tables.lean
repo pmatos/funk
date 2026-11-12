@@ -9,7 +9,7 @@ items, in a loop whose recursive calls are tail calls, so it takes no stack
 per level (ADR-2026-10-30-1549). `tablesIn_eq_tablesIn` proves the two
 equal, and `@[csimp]` makes Lean compile every later call of
 `Item.tablesIn` as a call of `tablesIn`, as `FirRef.allBlocks` does for
-blocks (ADR-2026-10-30-1742).
+blocks (`FirRef.Validate`).
 
 The spec compiles `Module.tables` before that theorem exists, so its code
 calls the spec's walk. `moduleTables` is its copy, compiled after it and

@@ -187,10 +187,9 @@ of funk are on `main`:
   validation walk and interpreter that are proved equal to them and
   registered with `@[csimp]`, on Lean's standard axioms only
   ([ADR-2026-10-30-1450](adrs/2026-10-30-1450-fir-ref-runs-proved-implementations.md),
-  [ADR-2026-10-30-1742](adrs/2026-10-30-1742-validation-check-at-any-depth.md),
+  [how `fir-ref` runs the check](decisions/validation-fir-ref.md#how-fir-ref-runs-the-check),
   [ADR-2026-11-03-1810](adrs/2026-11-03-1810-fir-ref-lexes-each-token-when-a-reader-asks-for-it.md),
   [ADR-2026-11-04-2132](adrs/2026-11-04-2132-fir-ref-run-walks-a-machine-with-explicit-call-frames.md),
-  [ADR-2026-11-05-0025](adrs/2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md),
   [ADR-2026-11-05-0442](adrs/2026-11-05-0442-fir-ref-run-moves-old-values-into-a-map-when-lookups-have-paid-for-it.md)).
   On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt`
   and `fir-ref validate` on texts nested a million levels deep and on a
