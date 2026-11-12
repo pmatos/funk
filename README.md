@@ -85,9 +85,9 @@ func @sum(%n: i32) -> i32 {
 
 ## Status
 
-The roadmap plans eight milestones, and each one is a
+The roadmap plans ten milestones, and each one is a
 [GitHub milestone](https://github.com/pmatos/funk/milestones). M0 is done.
-M1 has started, and M2 to M7 have not.
+M1 has started, and M2 to M9 have not.
 
 | Milestone | Goal |
 | --- | --- |
@@ -99,6 +99,8 @@ M1 has started, and M2 to M7 have not.
 | M5 | Compile the Linux kernel |
 | M6 | JIT compilation |
 | M7 | x86 to arm64 binary translation |
+| M8 | WebAssembly backend |
+| M9 | Per-compile refinement checks (S8) |
 
 Issue [#177](https://github.com/pmatos/funk/issues/177) is the M1 epic. Its
 sub-issues track the work of M1, one issue for each piece. Issue
@@ -111,7 +113,7 @@ sub-issues track the work of M1, one issue for each piece. Issue
 | --- | --- |
 | `lean/` | The Lean package `fir`: the spec's chapters as Lean modules with prose, `fir-ref` and the Lean tests |
 | `docs/spec/` | The Lean package `firspec`: the Verso document that renders the spec |
-| `docs/roadmap.md` | The roadmap: milestones M0 to M7 |
+| `docs/roadmap.md` | The roadmap: milestones M0 to M9 |
 | `docs/status.md` | What exists on `main` today, and what does not |
 | `docs/adrs/` | The ADRs, one decision per file, and how to write one |
 | `docs/spikes/` | Spike reports |
