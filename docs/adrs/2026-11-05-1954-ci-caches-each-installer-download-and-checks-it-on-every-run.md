@@ -48,7 +48,8 @@ Facts:
   cache holds only a file that passed its check. One saver per key means
   two jobs of one run never race to save it; the savers are the jobs that
   already save the Rust and Lean toolchains (ADR-2026-11-05-1408).
-  `pages.yml` deploys, so it never saves a cache (ADR-2026-10-30-1031).
+  `pages.yml` deploys, so it never saves a cache
+  ([spec-site.md](../decisions/spec-site.md#publishing-the-site)).
 - **Unchanged**: the toolchain installs (`rustup toolchain install`,
   `elan toolchain install`), `apt-get`, `uvx`, Lake's fetches and every
   other cache.
@@ -76,5 +77,7 @@ Facts:
   ADR-2026-11-03-0809, whose jobs download and check each installer: they
   now check it on every run and download it on a miss. It refines
   ADR-2026-11-05-1408, which lists CI's caches and which job saves each,
-  and ADR-2026-10-30-1031, whose `pages.yml` copies the Lean setup steps:
+  and the Pages workflow
+  ([spec-site.md](../decisions/spec-site.md#publishing-the-site)), whose
+  `pages.yml` copies the Lean setup steps:
   the copies are now four steps, without the save.

@@ -40,8 +40,9 @@ def htmlMultiDir (args : List String) (dir : System.FilePath := "_out") (on : Bo
 
 /--
 Renders the document with its appendix of ADRs and its ADR citations linked
-(ADR-2026-10-30-1439), then checks the citations on the rendered pages. It
-runs in `docs/spec/`, two levels below the repository's root.
+(`docs/decisions/spec-site.md#the-adr-appendix-and-its-citations`), then
+checks the citations on the rendered pages. It runs in `docs/spec/`, two
+levels below the repository's root.
 -/
 def main (args : List String) : IO UInt32 := do
   let report (errors : Array String) : IO UInt32 := do

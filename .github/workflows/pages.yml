@@ -1,6 +1,6 @@
 # Publishes the rendered fir spec to GitHub Pages from every push to main
-# (ADR-2026-10-30-1031). Pull requests never deploy; CI builds the document
-# through the fir-spec pre-commit hook instead.
+# (docs/decisions/spec-site.md#publishing-the-site). Pull requests never
+# deploy; CI builds the document through the fir-spec pre-commit hook instead.
 name: Pages
 
 on:

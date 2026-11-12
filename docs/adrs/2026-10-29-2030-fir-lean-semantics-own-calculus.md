@@ -90,7 +90,7 @@ to H4 and H5.
   interpreter uses coinductive choice trees, and S7 (ADR-2026-10-29-2009)
   says "not interaction trees". It stubs out locations (`Location := Unit`;
   H8). Its values have no names (P3). Its IR is a pointer graph, which fits
-  neither the literate spec (P1, ADR-2026-10-29-2015) nor the round-trip
+  neither the literate spec (P1, ADR-2026-11-05-2012) nor the round-trip
   proof (#11). S7 is the row the human would have to reopen to choose it;
   the H8, P3 and P1 gaps would then need work in VeIR or beside it.
 
@@ -98,7 +98,7 @@ to H4 and H5.
 
 - `lean/` is not tied to LeanMLIR's frozen nightly, so it can follow stable
   Lean and Verso releases. Its toolchain and dependencies, Mathlib included,
-  are decided by #8's Lean toolchain ADR (P1, ADR-2026-10-29-2015).
+  are decided by #8's Lean toolchain ADR (ADR-2026-10-29-2135).
 - The print-then-parse theorem (#11) is an induction over plain inductives.
   Locations and names are part of the term.
 - This ADR does not decide how #14 builds the choice effect. The spike ran

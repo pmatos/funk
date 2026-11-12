@@ -3,7 +3,8 @@
 # Usage: scripts/build-spec.sh [--update] [OUTPUT_DIR]
 #        scripts/build-spec.sh --lean
 # The rendered HTML goes to OUTPUT_DIR, by default docs/spec/_out. Every page
-# names the commit it was built from (ADR-2026-10-30-1046).
+# names the commit it was built from
+# (docs/decisions/spec-site.md#every-page-names-its-commit).
 # --update first runs `lake update` in docs/spec/, under the same guards, for
 # a toolchain bump. Never run a bare `lake update` there.
 # --lean builds only the Lean package in lean/: the spec's definitions, the
@@ -74,7 +75,7 @@ fi
 cd "$repo_root/lean"
 # lean/ has no dependencies, so every warning is in our own code and fails the
 # build. docs/spec/ keeps a plain build: Verso's warnings are not ours
-# (ADR-2026-10-30-1837).
+# (ADR-2026-10-30-1452).
 lake build --wfail
 if [[ "$lean_only" == true ]]; then
     exit 0

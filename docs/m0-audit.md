@@ -80,9 +80,8 @@ The check that keeps this true is `#check_axioms`, the last command of
 `lean/FirTest.lean`. It fails the build of `lean/` when any of its
 declarations depends on an axiom other than the three standard ones and
 the axioms of native evaluation that it confirms by running their claims
-again, so `sorryAx` fails it (ADR-2026-10-30-1452, ADR-2026-10-30-1838),
-and `lake build --wfail`
-fails on a `sorry` in an `example` (ADR-2026-10-30-1837). The `fir-spec`
+again, so `sorryAx` fails it, and `lake build --wfail` fails on a `sorry` in
+an `example` (ADR-2026-10-30-1452). The `fir-spec`
 hook runs both on every pull request. The word `sorry` appears in `lean/`
 only in the prose of `lean/FirTest/Axioms.lean`.
 
@@ -123,7 +122,7 @@ No item is missing, and none is weaker than #23 states it.
 | H3, globals by symbol | ADR-2026-10-29-2012 | accepted |
 | H8, source locations | ADR-2026-10-29-2013 | accepted |
 | P3, one text format | ADR-2026-10-29-2014 | accepted; refined by ADR-2026-10-30-0815 |
-| P1, literate Lean spec | ADR-2026-10-29-2015 | accepted |
+| P1, literate Lean spec | ADR-2026-11-05-2012, which holds P1 now | accepted |
 | G0, any hardware | ADR-2026-10-29-2016 | accepted; refined by ADR-2026-10-30-1146 and ADR-2026-11-03-0600 |
 
 The decisions that the epic's work list asks for are ADRs too: `freeze`
@@ -162,7 +161,8 @@ normative spec. It is complete enough to implement from:
 The `fir-spec` hook (`scripts/build-spec.sh`) builds `lean/` with
 `--wfail`, checks the axioms and renders the document on every pull
 request. `.github/workflows/pages.yml` publishes it from every push to
-`main` at <https://p.ocmatos.com/funk/> (ADR-2026-10-30-1031).
+`main` at <https://p.ocmatos.com/funk/>
+([spec-site.md](decisions/spec-site.md#publishing-the-site)).
 
 ### 2. Lean and Rust agree on every corpus program, and native results refine Lean's
 

@@ -7,7 +7,7 @@ Tier: implementation; area: semantics
 
 Issue [#175](https://github.com/pmatos/funk/issues/175) asked for the
 bitvector lemmas of the core dialect's law files to be proved by
-`bv_decide` wherever that shortens them. ADR-2026-10-30-1838 allows the
+`bv_decide` wherever that shortens them. ADR-2026-10-30-1452 allows the
 native axioms that this adds.
 
 A survey of `lean/Fir/Core/` found very few such lemmas. The `*Laws.lean`

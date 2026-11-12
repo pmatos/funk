@@ -29,7 +29,9 @@ path = "FirSpecSite/citation-cases.json"
 text = true
 
 # The appendix of ADRs and the links of ADR citations, which firspec adds to the
-# document when it renders it (ADR-2026-10-30-1439). Its tests run when it builds.
+# document when it renders it
+# (docs/decisions/spec-site.md#the-adr-appendix-and-its-citations). Its tests run
+# when it builds.
 [[lean_lib]]
 name = "FirSpecSite"
 globs = ["FirSpecSite.*"]

@@ -66,7 +66,7 @@ Putting every value into a map would double that run's steps.
   `Machine.advance_tree` holds as before. The `@[csimp]` theorems of
   `FirRef.Run` keep their statements; their axioms are now Lean's three
   standard ones, since `Std.TreeMap`'s lemmas use `Classical.choice`
-  (ADR-2026-10-30-1838 allows all three).
+  (ADR-2026-10-30-1452 allows all three).
 
 ## Alternatives
 
