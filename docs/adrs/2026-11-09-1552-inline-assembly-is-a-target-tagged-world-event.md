@@ -10,19 +10,15 @@ Tier: direction; area: semantics
   (ADR-2026-11-09-1541). A module for another target rejects it.
 - **The effect set decides.** With observable, running the block is an event
   of the trace (ADR-2026-11-09-1540), as GCC's `asm volatile` is. Without it,
-  the block adds no event, as GCC's plain `asm`: passes may delete it, merge
-  it with an equal block or move it within its declared reads and writes. They
-  merge or move it only when no write to the memories it reads comes between,
-  a write by the block itself included.
-- **The answer.** The world answers a block with its results and with the
-  writes its declared effects allow. An observable block is answered in trace
-  order. One without observable is answered by the block, its operands and the
-  contents of the memories it declares it reads, so the same block on the same
-  inputs gets the same answer wherever it runs. `fir-ref` takes the answer
-  from the test's script.
+  the block adds no event, as GCC's plain `asm`, and passes may delete, merge
+  or move it within its declared reads and writes.
+- **The answer.** The world answers a block with its results and the writes
+  its effects allow: an observable block in trace order, and one without
+  observable by the block, its operands and the contents of the memories it
+  declares it reads. `fir-ref` takes the answer from the test's script.
 - **In M1:** the spec, the parser, printer and verifier on both sides, and
   `fir-ref`. Until M4 the naive backend rejects inline assembly with a
-  diagnostic. The C frontend brings constraint handling.
+  diagnostic.
 
 [semantics-m1-design.md](../decisions/semantics-m1-design.md) states each
 rule. The human ruled this on 2026-11-09, on #220, and on 2026-11-11 on #251

@@ -107,22 +107,28 @@ def parse_removed(text: str) -> list[Removed]:
 
 
 def removed_adrs(root: Path) -> list[Removed]:
-    """Return the rows of the removed tables at `root`, docs/adrs/removed/*.json,
-    in the order of their paths. Only tables that git tracks count: like every
-    ADR hook, this reads what a commit holds."""
-    out = git("ls-files", "-z", "--", f"{ADR_DIR}{REMOVED}/", cwd=root)
+    """Return the rows of the removed tables at `root`,
+    docs/adrs/removed/AREA.json, in the order of their paths. Only tables that
+    git tracks count: like every ADR hook, this reads what a commit holds. Any
+    other file under removed/ fails, so that no table's rows go unread."""
+    directory = f"{ADR_DIR}{REMOVED}/"
+    out = git("ls-files", "-z", "--", directory, cwd=root)
     found: list[Removed] = []
-    for path in sorted(p for p in out.split("\0") if p.endswith(".json")):
+    tables: dict[str, str] = {}
+    for path in sorted(p for p in out.split("\0") if p):
+        name = path.removeprefix(directory)
+        if "/" in name or not name.endswith(".json"):
+            raise RemovedError(f"{path}: not a removed table, {directory}AREA.json")
         try:
             rows = parse_removed((root / path).read_text(encoding="utf-8"))
         except RemovedError as e:
             raise RemovedError(f"{path}: {e}") from e
         for row in rows:
-            twin = next((r for r in found if r.id == row.id), None)
-            if twin is not None:
+            if row.id in tables:
                 raise RemovedError(
-                    f"{path}: ADR-{row.id} has a row already, in {twin.table}"
+                    f"{path}: ADR-{row.id} has a row already, in {tables[row.id]}"
                 )
+            tables[row.id] = path
             found.append(replace(row, table=path))
     return found
 

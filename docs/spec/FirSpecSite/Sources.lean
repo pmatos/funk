@@ -54,7 +54,10 @@ def parseRemoved (text : String) : Except String (Array (String × String)) := d
 
 /--
 The rows of the tables of `removedDir` in the repository at `root`, in the
-order of their names, or none when the directory is absent.
+order of their names, or none when the directory is absent. The build reads
+the tables on disk, tracked or not; the `adr-ids` hook reads the tracked ones
+and fails on any other file under `removedDir`, so a commit's tables are the
+same on both sides.
 -/
 def loadRemoved (root : System.FilePath) : IO (Except String (Array (String × String))) := do
   unless ← (root / removedDir).isDir do return .ok #[]

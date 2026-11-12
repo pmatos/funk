@@ -5,35 +5,30 @@ Tier: direction; area: semantics
 
 ## Decision
 
-- **A trace of events.** A run shows an ordered trace of the core dialect's
-  events: an external call, with its symbol, its arguments and the units
-  reachable from its pointer arguments; a volatile access; and an inline
-  assembly block whose effect set says observable (ADR-2026-11-09-1552).
-  Another dialect may add events of its own.
+- **A trace of events.** A run shows an ordered trace of events: external
+  calls, volatile accesses and observable inline assembly blocks
+  (ADR-2026-11-09-1552). Another dialect may add events of its own.
 - **How a run ends.** A return, UB or divergence. At a return an observer sees
-  the returned values and the live contents of every `export` global and of
-  the memory that escaped, and of the memory reachable from them or from the
-  returned pointers. An allocation that the world freed is not compared.
+  the returned values and the live memory of every `export` global, of what
+  escaped and of what is reachable from them or from the returned pointers.
 - **Escape.** An address escapes when an op hands it to code outside the
-  program, as in LLVM's capture tracking: an external call that gets it as an
-  argument, an observable inline assembly block, a volatile store of the
-  pointer, or `ptr.expose`. An `internal` global is observable only once its
-  address escapes, so until then a store to it can be removed.
+  program, as in LLVM's capture tracking. Until then an `internal` global is
+  not observed, so a store to it can be removed.
 - **Up to renaming.** Two ends of a run match when some one-to-one renaming of
   allocations makes their observed memory equal. Raw addresses are never
   compared.
 - **The world.** A callee that funk did not compile answers from the world:
-  its results, writes into escaped memory, and heap allocations it creates,
-  frees or hands over. A fresh allocation has escaped from the start, and
-  `malloc` stays an external declaration.
+  its results, writes into escaped memory, and heap allocations it creates or
+  frees. `malloc` stays an external declaration.
 - **Refinement.** A target refines a source when, for every world, each trace
   it shows is one the source shows, with poison refined as today. UB in the
   source allows only a target that first shows the source's events.
 
-[semantics-m1-trace.md](../decisions/semantics-m1-trace.md) states each rule
-and how tests script the world. The human ruled this on 2026-11-09, on #207,
-and on 2026-11-11 on #251 (what an observer sees, heap from the world) and on
-#299 (escape, live memory only).
+[semantics-m1-trace.md](../decisions/semantics-m1-trace.md) states each rule:
+what each event holds, the ways an address escapes, and how tests script the
+world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
+(what an observer sees, heap from the world) and on #299 (escape, live memory
+only).
 
 ## Why
 

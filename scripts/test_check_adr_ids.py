@@ -237,6 +237,21 @@ class Repository(unittest.TestCase):
             (tables / "semantics.json").write_text("{}\n")
             self.assertIn("docs/adrs/removed/semantics.json: ", run_script(repo).stderr)
 
+    def test_a_file_under_removed_that_is_not_a_table_fails(self):
+        for name in ("semantics.jsn", "old/semantics.json"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                repo = Path(tmp)
+                stray = repo / "docs" / "adrs" / "removed" / name
+                stray.parent.mkdir(parents=True)
+                stray.write_text(table(row()) + "\n")
+                git(repo, "init", "-q")
+                git(repo, "add", "docs/adrs/removed")
+                result = run_script(repo)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    f"docs/adrs/removed/{name}: not a removed table", result.stderr
+                )
+
     def test_an_id_with_rows_in_two_tables_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

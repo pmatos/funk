@@ -73,8 +73,8 @@ The G0 checks show these things with it (ADR-2026-11-09-1545):
   dialect set that includes it.
 
 Use-once (linear) values stay covered by the toy test of #167. The
-implementation of this dialect, in #212, waits for memory and for nested
-modules (ADR-2026-11-09-1545).
+implementation of this dialect, in #212, waits for memory
+(ADR-2026-11-09-1545). Nested modules have landed (#211).
 
 The human ruled this on 2026-11-09, on #202. Rejected: a small quantum-style
 dialect, which tests neither nested modules nor several memories; it remains a

@@ -314,6 +314,12 @@ class Running(unittest.TestCase):
             self.assertEqual(status, 1)
             self.assertIn(problem, message)
 
+    def test_a_file_in_a_subdirectory_is_not_an_adr(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
+        self.add("old/2030-01-01-0002-b.md", adr_text())
+        self.assertEqual(self.run_it(write=True), (0, ""))
+
     def test_an_untracked_removed_table_is_ignored(self):
         self.add("2030-01-01-0001-a.md", adr_text())
         self.add_pages("2030-01-01-0001")

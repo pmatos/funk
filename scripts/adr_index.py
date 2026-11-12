@@ -201,7 +201,11 @@ def tracked(root: Path, directory: str) -> list[str]:
         capture_output=True,
         text=True,
     ).stdout
-    return [Path(path).name for path in out.split("\0") if path]
+    return [
+        Path(path).name
+        for path in out.split("\0")
+        if path and Path(path).parent == Path(directory)
+    ]
 
 
 def tracked_adrs(root: Path) -> list[str]:
