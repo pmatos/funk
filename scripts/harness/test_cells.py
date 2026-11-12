@@ -121,9 +121,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             decoded_attrs(text, floats),
             {
-                op: ("",)
-                if op == "bitcast"
-                else cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 for op in cells.OPS
             },
         )
@@ -193,6 +191,34 @@ class Tests(unittest.TestCase):
             with self.subTest(edit=name), self.assertRaises(AssertionError):
                 self.assert_cells_follow(edited)
 
+    def test_a_bitcast_is_a_cell_for_each_pair_of_types(self):
+        found = cells.cells((8,), ("f32", "f128"))
+        self.assertEqual(
+            {c for c in found if c.table == "conversions"},
+            {
+                Cell("conversions", "bitcast", "f32", "i32"),
+                Cell("conversions", "bitcast", "i32", "f32"),
+                Cell("conversions", "bitcast", "f128", "i128"),
+                Cell("conversions", "bitcast", "i128", "f128"),
+            },
+        )
+        to_bits = Op("bitcast", (), ("bf16",), ("i16",), ())
+        self.assertEqual(
+            of_op(to_bits), {Cell("conversions", "bitcast", "bf16", "i16")}
+        )
+        of_bits = Op("bitcast", (), ("i64",), ("f64",), ())
+        self.assertEqual(of_op(of_bits), {Cell("conversions", "bitcast", "i64", "f64")})
+        for bad in [
+            Op("bitcast", ("round(rne)",), ("f32",), ("i32",), ()),
+            Op("bitcast", (), ("f32",), ("i64",), ()),
+            Op("bitcast", (), ("f32",), ("f32",), ()),
+            Op("bitcast", (), ("i32",), ("i32",), ()),
+            Op("bitcast", (), (), ("i32",), ()),
+            Op("bitcast", (), ("f32", "f32"), ("i32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
     def test_float_ops_are_cells_at_their_format(self):
         cmp = Op("fcmp", ("olt",), ("f64", "f64"), ("i1",), ())
         self.assertEqual(of_op(cmp), {Cell("floats", "fcmp", "olt", "f64")})
@@ -206,17 +232,7 @@ class Tests(unittest.TestCase):
             of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
-        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8 + 2))
-        to_bits = Op("bitcast", (), ("f16",), ("i16",), ())
-        self.assertEqual(
-            of_op(to_bits), {Cell("floats", "bitcast", cells.TO_BITS, "f16")}
-        )
-        of_bits = Op("bitcast", (), ("i64",), ("f64",), ())
-        self.assertEqual(
-            of_op(of_bits), {Cell("floats", "bitcast", cells.OF_BITS, "f64")}
-        )
-        with self.assertRaises(CellError):
-            of_op(Op("bitcast", ("round(rne)",), ("f32",), ("i32",), ()))
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8))
         add = Op("fadd", ("round(rne)",), ("f32", "f32"), ("f32",), ())
         self.assertEqual(of_op(add), {Cell("floats", "fadd", "round(rne)", "f32")})
         fma = Op("fma", ("round(rne)",), ("bf16",) * 3, ("bf16",), ())

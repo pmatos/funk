@@ -289,5 +289,6 @@ result is its operand's bits, so every case is differential at `f32` and
 `f64`, NaNs included, and interpreter-only at every format.
 `scripts/harness/float_bitcast_cases.py` writes them
 ([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-bit-cast-corpus)).
-`reject/float-bitcast.toml` holds the bit casts that do not decode: an
-integer of another width, two floats or two integers, and an attribute.
+`reject/float-bitcast.toml` holds the bit casts that do not decode, such
+as an integer of another width, two floats or two integers, and an
+attribute, and two at formats that validation rejects.

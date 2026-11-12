@@ -48,8 +48,8 @@ effects (ADR-2026-11-03-0600). A flag of `add`, `sub` or `mul`, and `exact`
 on a division, may produce poison. -/
 def Op.effects : Op → Effects Mem
   | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .fcmp .. | .fbin .. | .funary ..
-  | .fma .. | .select _ | .zext .. | .sext .. | .trunc .. | .freeze _ | .call .. => {}
-  | .toBits .. | .ofBits .. => {}
+  | .fma .. | .select _ | .zext .. | .sext .. | .trunc .. | .freeze _ | .call .. | .toBits ..
+  | .ofBits .. => {}
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }

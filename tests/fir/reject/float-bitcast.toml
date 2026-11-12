@@ -122,3 +122,18 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "validation-error"
+rule = "bitcast decodes from i2 to float(1, 0), and validation rejects the format, which has 1 exponent bit and no mantissa bit"
+text = '''
+func @f(%i: i2) -> float(1, 0) {
+^e:
+  %r: float(1, 0) = bitcast %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -72,5 +72,7 @@ tests = [
   { func = "@of_bits", args = ["-1"] },
   { func = "@of_bits", args = ["-1"], expect = ["0xffffffffffffffff"] },
   { func = "@to_bits", args = ["poison"] },
+  { func = "@to_bits", args = ["poison"], expect = ["poison"] },
   { func = "@of_bits", args = ["poison"] },
+  { func = "@of_bits", args = ["poison"], expect = ["poison"] },
 ]

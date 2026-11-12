@@ -8,9 +8,11 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 ## The coverage matrix
 
 The float ops have a table of their own: a float constant, `fcmp` with each
-predicate, each op of float arithmetic with its attribute, and `bitcast` in
-each direction, from a float to its bits and from bits to a float, at each
-float format of a side. The differential side has `f32` and `f64`, which the backend
+predicate, and each op of float arithmetic with its attribute, at each float
+format of a side. The conversions have another, with a cell for each pair of
+types that a conversion goes between: `bitcast` from each float format of the
+side to the integer of its width, and back. A later conversion adds its pairs
+to `cells.CONVERSIONS` and to `coverage.conversions_table`. The differential side has `f32` and `f64`, which the backend
 lowers, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
 Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
@@ -61,7 +63,8 @@ the smallest and largest subnormals, the smallest normal, one, the largest
 finite values, infinities, and NaNs, quiet and signalling, with payloads and
 either sign, and on poison (#241). A bit cast chooses nothing, so each case,
 a NaN's included, is differential at `f32` and `f64`, and interpreter-only at
-every format with its operand's bits as the expected result.
+every format with its operand's bits as the expected result; so is each
+poison case, with poison expected.
 `test_float_bitcast_cases.py` checks that the committed files are what the
 generator writes, reads each expected result back with `float_text.py`, and
 checks the edges against the host's `struct` at `f16`, `f32` and `f64`.

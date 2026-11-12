@@ -89,7 +89,7 @@ class Tests(unittest.TestCase):
                         self.assertEqual(math.copysign(1, x), -1 if kind[1] else 1)
                         self.assertEqual(x == 0, kind[0] == "zero")
                         self.assertEqual(math.isinf(x), kind[0] == "inf")
-                        self.assertEqual(decode(e, m, cases.spell(e, m, b)), b)
+                    self.assertEqual(decode(e, m, cases.spell(e, m, b)), b)
 
     def test_every_case_runs_both_ways_and_differentially_where_lowered(self):
         for t in FORMATS:
@@ -100,7 +100,7 @@ class Tests(unittest.TestCase):
             with self.subTest(t=t):
                 for func in ("@to_bits", "@of_bits"):
                     checked = [x for x in tests if x["func"] == func and "expect" in x]
-                    self.assertEqual(len(checked), n + (t not in cases.DIFFERENTIAL))
+                    self.assertEqual(len(checked), n + 1)
                     plain = [
                         x for x in tests if x["func"] == func and "expect" not in x
                     ]

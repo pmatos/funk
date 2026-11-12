@@ -264,6 +264,7 @@ instruction converts: no SSE instruction runs, and a NaN's sign and payload,
 a signalling NaN's included, come through as they are, as fir's rule asks
 (ADR-2026-11-09-1549). An `f16`, `bf16` or `f128` side is reported where it is
 defined, as for every float op. `crates/funk/tests/float_bitcast.rs` checks
-both directions against the host's `to_bits` and `from_bits`. Rejected:
+that both directions keep every bit of the hard values of `floats.rs`, NaNs
+included. Rejected:
 `movd` or `movq` between a general register and an SSE register, which moves
 the same bits through one more register.

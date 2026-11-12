@@ -129,10 +129,9 @@ def tests_text(t: str) -> str:
     for func in ("@to_bits", "@of_bits"):
         if native:
             lines.append(f'  {{ func = "{func}", args = ["poison"] }},')
-        else:
-            lines.append(
-                f'  {{ func = "{func}", args = ["poison"], expect = ["poison"] }},'
-            )
+        lines.append(
+            f'  {{ func = "{func}", args = ["poison"], expect = ["poison"] }},'
+        )
     return "\n".join(head) + "\ntests = [\n" + "\n".join(lines) + "\n]\n"
 
 

@@ -88,8 +88,6 @@ allow, or a width for a row that passes no value.
 | `fabs` |  | 3 | 3 |
 | `sqrt` | `round(rne)` | 10 | 10 |
 | `fma` | `round(rne)` | 13 | 13 |
-| `bitcast` | `float to bits` | 17 | 17 |
-| `bitcast` | `bits to float` | 17 | 17 |
 
 ### Width changes (differential tests)
 
@@ -113,6 +111,15 @@ allow, or a width for a row that passes no value.
 | `trunc` | `i32` | 8 | 9 | 5 |  |  |  |
 | `trunc` | `i64` | 6 | 5 | 5 | 18 |  |  |
 | `trunc` | `i128` | 13 | 89 | 12 | 12 | 60 |  |
+
+### Conversions (differential tests)
+
+| op | from | to | tests |
+| --- | --- | --- | --- |
+| `bitcast` | `f32` | `i32` | 17 |
+| `bitcast` | `i32` | `f32` | 17 |
+| `bitcast` | `f64` | `i64` | 17 |
+| `bitcast` | `i64` | `f64` | 17 |
 
 ### Passed and returned values (differential tests)
 
@@ -205,8 +212,6 @@ allow, or a width for a row that passes no value.
 | `fabs` |  | 4 | 4 | 3 | 3 | 4 |
 | `sqrt` | `round(rne)` | 13 | 13 | 12 | 12 | 13 |
 | `fma` | `round(rne)` | 15 | 15 | 14 | 14 | 15 |
-| `bitcast` | `float to bits` | 17 | 17 | 16 | 16 | 17 |
-| `bitcast` | `bits to float` | 17 | 17 | 16 | 16 | 17 |
 
 ### Width changes (interpreter-only tests)
 
@@ -237,6 +242,21 @@ allow, or a width for a row that passes no value.
 | `trunc` | `i64` | 3 | 7 | 2 | 2 | 2 | 7 |  |  |
 | `trunc` | `i128` | 7 | 7 | 6 | 6 | 6 | 7 | 14 |  |
 
+### Conversions (interpreter-only tests)
+
+| op | from | to | tests |
+| --- | --- | --- | --- |
+| `bitcast` | `f16` | `i16` | 17 |
+| `bitcast` | `i16` | `f16` | 17 |
+| `bitcast` | `bf16` | `i16` | 17 |
+| `bitcast` | `i16` | `bf16` | 17 |
+| `bitcast` | `f32` | `i32` | 17 |
+| `bitcast` | `i32` | `f32` | 17 |
+| `bitcast` | `f64` | `i64` | 17 |
+| `bitcast` | `i64` | `f64` | 17 |
+| `bitcast` | `f128` | `i128` | 17 |
+| `bitcast` | `i128` | `f128` | 17 |
+
 ### Passed and returned values (interpreter-only tests)
 
 | op | what | no value | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `f16` | `bf16` | `f32` | `f64` | `f128` |
@@ -246,12 +266,12 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2263 | 1298 | 530 | 538 | 632 | 1336 | 543 | 818 | 145 | 145 | 137 | 135 | 145 |
+| `ret` | returns one value |  | 2263 | 1298 | 530 | 538 | 633 | 1336 | 544 | 818 | 145 | 145 | 138 | 136 | 145 |
 | `ret` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2263 | 1298 | 531 | 538 | 632 | 1336 | 543 | 818 | 143 | 143 | 135 | 133 | 143 |
+| `func` | returns one value |  | 2263 | 1298 | 531 | 538 | 633 | 1336 | 544 | 818 | 143 | 143 | 136 | 134 | 143 |
 | `func` | returns several values |  | 54 | 186 | 37 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |
