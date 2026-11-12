@@ -24,9 +24,9 @@ out of M1. The human ruled on
   - It adds a memory in a non-default address space, such as work-group
     shared memory (ADR-2026-11-09-1542), with effects named by that memory
     (ADR-2026-11-09-1541).
-- **One work-item in M1.** `fir-ref` runs one work-item of a kernel, with
-  its ids given as inputs. Ops whose meaning needs other work-items, such
-  as barriers, are left out or admitted without execution rules
+- **One work-item in M1.** `fir-ref` runs one work-item of a kernel, with its
+  ids given as inputs. Ops whose meaning needs other work-items, such as
+  barriers, are left out or admitted without execution rules
   ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)). A launch op in
   host code is out of M1. M1's results are not a model of a whole kernel.
 - **Terminal.** The dialect has no lowering to core and no native backend

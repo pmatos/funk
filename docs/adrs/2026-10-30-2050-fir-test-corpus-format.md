@@ -33,8 +33,9 @@ the `fir_texts` example and `scripts/check-fir-ref.sh`
 - **A test** is one entry of `tests`, a list of TOML inline tables:
   - `func`: the function's symbol as text writes it, such as `@add3`, or
     `'@"a b"'` in a TOML literal string.
-  - `args`: one string per parameter, each spelled as a constant of its
-    type ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)); none by default.
+  - `args`: one string per parameter, each spelled as a constant of its type
+    ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run));
+    none by default.
   - `fuel`: the budget of `fir-ref run`, 1,000,000 steps by default.
   - `expect`: absent for a differential test, which runs on `fir-ref` and
     as native code. Present for an interpreter-only test, which runs on

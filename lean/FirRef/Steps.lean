@@ -2,10 +2,10 @@ import Fir.Execution.MemoryCallSteps
 import Fir.Execution.MemoryModes
 
 /-!
-Facts about one step of the spec's interpreter, `Func.runOps`, in any
-monad, that `FirRef.Machine` builds on
-(`docs/decisions/fir-ref-fast-paths.md#running`). The machine
-runs them in the state layer over the tree of choices.
+Facts about one step of the spec's interpreter, `Func.runOps`, in any monad,
+that `FirRef.Machine` builds on
+(`docs/decisions/fir-ref-fast-paths.md#running`). The machine runs them in the
+state layer over the tree of choices.
 
 * One equation for each case of `Func.runOps`'s definition. Each says what
   the run does after the step through `afterExit`, `afterDenote` or

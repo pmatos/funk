@@ -38,10 +38,11 @@ or invalid, and an invalid test never counts as a pass.
     budget. The author raises the test's fuel budget, or makes it an
     interpreter-only test that expects fuel exhausted.
   - Stuck fails the test.
-  - A tool error fails the test: `fir-ref` exits with 2 (such as an op
-    without execution rules,
+  - A tool error fails the test: `fir-ref` exits with 2 (such as an op without
+    execution rules,
     [fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)), the executable
-    exits with 2 or dies by a signal, or `funk build` does not build the module.
+    exits with 2 or dies by a signal, or `funk build` does not build the
+    module.
 - **An interpreter-only test** passes when `fir-ref` gives the expected
   result: the same values, poison included, or UB with any reason, or
   fuel exhausted. Stuck, or any other result, fails it.

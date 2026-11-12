@@ -27,7 +27,7 @@ This design changes neither `Run` nor `DialectDenote`.
 Fuel is a device of the Lean definitions. It must not change what a
 program means, nor any result of `fir-ref`.
 
-This refines three accepted ADRs:
+This refines one accepted ADR and two rules now on the fir-ref page:
 
 - ADR-2026-10-29-2030 says that a dialect states the effects it needs as
   class constraints on the monad, and that "calls (#20) add an effect that
@@ -38,13 +38,13 @@ This refines three accepted ADRs:
   ([fir-ref.md](../decisions/fir-ref.md#the-tree-of-choices)) said that
   #20's call effect "needs its node in the tree, its image in the set monad, and
   its case in the morphism's proofs". It needs none of them: the interpreter's
-  call path uses only
-  `pure`, `bind` and `liftExcept`, so `Func.runOps_map` covers it.
+  call path uses only `pure`, `bind` and `liftExcept`, so `Func.runOps_map`
+  covers it.
 - The rule for ops without rules
   ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)) said that each
   ticket from #14 to #20 adds its ops' rules to `Op.denote?` and `Op.exit?`.
-  `call` takes its meaning from its
-  callee, which #20 names in `DialectCall CoreDialect`.
+  `call` takes its meaning from its callee, which #20 names in
+  `DialectCall CoreDialect`.
 
 ## Decision
 
@@ -100,12 +100,11 @@ This refines three accepted ADRs:
   `OpTotal` and `OpMonotone` look at.
 - No result of `fir-ref` changes: no core op calls a function yet, each op
   still takes one step, and a function's run returns what it returned.
-- Fuel monotonicity holds for every function of every module, calls
-  included, whatever its ops do (`Func.fuelMonotone`), since only the
-  interpreter counts fuel. For a function that reaches an op without rules
-  it holds only vacuously on the paths that reach the op, and makes no
-  claim about how such a function behaves
-  ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)).
+- Fuel monotonicity holds for every function of every module, calls included,
+  whatever its ops do (`Func.fuelMonotone`), since only the interpreter counts
+  fuel. For a function that reaches an op without rules it holds only vacuously
+  on the paths that reach the op, and makes no claim about how such a function
+  behaves ([fir-ref.md](../decisions/fir-ref.md#an-op-without-rules)).
 - `Progress` and `NeverStuck` for runs with calls are #20's to prove.
 - `Func.runOps` is defined by well-founded recursion, which Lean makes
   irreducible, and `Func.run` runs it. Proofs unfold it with its equation

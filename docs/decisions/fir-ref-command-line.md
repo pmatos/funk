@@ -76,9 +76,10 @@ and has no text output to choose from.
 
 ## `fir-ref run`
 
-The full form is `fir-ref run [--fuel N] [--choices C,C,...] [--seed S]
-[--exhaustive [--choice-bits B]] FILE @FUNC [ARG...]`. Options come anywhere
-before `--`, and each takes the next argument as its value.
+The full form is `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive
+[--choice-bits B] | --seed S] FILE @FUNC [ARG...]`. Options come anywhere
+before `--`, and each takes the next argument as its value. An argument such as
+`-5` is not an option.
 
 `fir-ref run` parses FILE with the core dialect, without validating it, and
 runs the function. A `return`, `ub` or `fuel-exhausted` result means something
@@ -144,7 +145,9 @@ A witness of a test is a `--choices` text.
 one line on standard error, `fir-ref: @f: the choices do not fit the run:
 REASON`, nothing on standard output, and exit status 2. The run makes a choice
 after the sequence ends, the sequence has values left when the path ends, or a
-value is not a constant of its choice's type. A stale witness fails loudly.
+value is not a constant of its choice's type. A stale witness fails loudly. A
+path that reaches an op without rules reports that error instead, even with
+values left.
 
 **Exhaustive mode** is `--exhaustive`. It tries a choice's values from zero up,
 read as unsigned. `--choice-bits B` bounds the bits that one path chooses in

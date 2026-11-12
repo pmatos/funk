@@ -121,32 +121,29 @@ of funk are on `main`:
   ([ADR-2026-11-08-2116](adrs/2026-11-08-2116-fresh-seeds-run-only-in-a-manual-stage-nightly-hook.md),
   [ADR-2026-11-08-2117](adrs/2026-11-08-2117-fuzz-the-rust-parser-and-verifier-without-a-sanitizer.md)).
 - The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
-  `./scripts/check-harness.sh` checks that `funk verify` and
-  `fir-ref validate` give the same verdict on every text of
-  [`tests/fir/`](../tests/fir/) and on modules from the Rust generator. It
-  runs each test of the corpus on `fir-ref` and, where the backend can
-  build it, as native code, and checks that the native result refines
-  one of `fir-ref`'s outcomes. A test whose run chooses more than the
-  choice budget declares its results, each with a witness that the
-  harness checks, and seeded runs sample the rest
+  `./scripts/check-harness.sh` checks that `funk verify` and `fir-ref validate`
+  give the same verdict on every text of [`tests/fir/`](../tests/fir/) and on
+  modules from the Rust generator. It runs each test of the corpus on `fir-ref`
+  and, where the backend can build it, as native code, and checks that the
+  native result refines one of `fir-ref`'s outcomes. A test whose run chooses
+  more than the choice budget declares its results, each with a witness that
+  the harness checks, and seeded runs sample the rest
   ([ADR-2026-10-30-2049](adrs/2026-10-30-2049-differential-harness-in-python.md),
   [ADR-2026-10-30-2135](adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
   [ADR-2026-10-31-0003](adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
-  A test may pass `poison` as an argument, which `fir-ref run` takes as
-  it is, and native code then runs on stand-ins in its place, the
-  boundary bit patterns of its type
-  ([#123](https://github.com/pmatos/funk/issues/123),
+  A test may pass `poison` as an argument, which `fir-ref run` takes as it is,
+  and native code then runs on stand-ins in its place, the boundary bit
+  patterns of its type ([#123](https://github.com/pmatos/funk/issues/123),
   [fir-ref.md](decisions/fir-ref.md#poison-arguments)).
-- The execution rules of `const`, `add`, `sub`, `mul`, their flags, the
-  bitwise ops and shifts, the width changes `zext`, `sext` and `trunc`,
-  `freeze` and `ret` in Lean
-  ([#10](https://github.com/pmatos/funk/issues/10),
+- The execution rules of `const`, `add`, `sub`, `mul`, their flags, the bitwise
+  ops and shifts, the width changes `zext`, `sext` and `trunc`, `freeze` and
+  `ret` in Lean ([#10](https://github.com/pmatos/funk/issues/10),
   [#14](https://github.com/pmatos/funk/issues/14),
   [#15](https://github.com/pmatos/funk/issues/15),
   [#17](https://github.com/pmatos/funk/issues/17)). `fir-ref run` runs a
   function in scripted mode, along the path that its choices name, in
-  exhaustive mode, which lists every outcome, or in sampled mode, which
-  draws its choices from a seed; Lean proves all three sound
+  exhaustive mode, which lists every outcome, or in sampled mode, which draws
+  its choices from a seed; Lean proves all three sound
   ([fir-ref.md](decisions/fir-ref.md#the-tree-of-choices),
   [fir-ref-command-line.md](decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes),
   [fir-ref-command-line.md](decisions/fir-ref-command-line.md#sampled-mode)).
@@ -177,24 +174,23 @@ of funk are on `main`:
   ([#122](https://github.com/pmatos/funk/issues/122)): it gives the
   poison of its type on every run
   ([ADR-2026-11-03-1615](adrs/2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md)).
-- A `fir-ref` that gives its verdict on a text nested to any depth and
-  runs a function for any number of steps, with no stack per level of
-  nesting, per step or per level of calls, that reads an operand in time
-  that does not grow with the values defined after it, and that prints in
-  time linear in the text it writes
-  ([#47](https://github.com/pmatos/funk/issues/47)). It runs
-  implementations of the spec's parser, readers, decoder, printer,
-  validation walk and interpreter that are proved equal to them and
-  registered with `@[csimp]`, on Lean's standard axioms only
+- A `fir-ref` that gives its verdict on a text nested to any depth and runs a
+  function for any number of steps, with no stack per level of nesting, per
+  step or per level of calls, that reads an operand in time that does not grow
+  with the values defined after it, and that prints in time linear in the text
+  it writes ([#47](https://github.com/pmatos/funk/issues/47)). It runs
+  implementations of the spec's parser, readers, decoder, printer, validation
+  walk and interpreter that are proved equal to them and registered with
+  `@[csimp]`, on Lean's standard axioms only
   ([ADR-2026-10-30-1450](adrs/2026-10-30-1450-fir-ref-runs-proved-implementations.md),
   [how `fir-ref` runs the check](decisions/validation-fir-ref.md#how-fir-ref-runs-the-check),
   [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#lexing-and-reading),
   [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#running),
   [fir-ref-fast-paths.md](decisions/fir-ref-fast-paths.md#the-bindings-map)).
-  On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt`
-  and `fir-ref validate` on texts nested a million levels deep and on a
-  block of a million ops, and `scripts/check-fir-ref-run.sh` checks
-  `fir-ref run` on a loop and a recursion of a million steps.
+  On a 256 KiB stack, `scripts/check-fir-ref-deep.sh` checks `fir-ref fmt` and
+  `fir-ref validate` on texts nested a million levels deep and on a block of a
+  million ops, and `scripts/check-fir-ref-run.sh` checks `fir-ref run` on a
+  loop and a recursion of a million steps.
 
 The open sub-issues of [#177](https://github.com/pmatos/funk/issues/177) list
 the parts of M1 that do not exist yet.

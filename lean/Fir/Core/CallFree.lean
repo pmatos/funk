@@ -28,12 +28,12 @@ sections:
   validation rule. So no path of its run is stuck, and, its ops being
   total, its run has an outcome at every budget.
 
-A function with a `call` op is left out here: its run runs other
-functions of its module, so these theorems, which ask only that the
-function itself be valid, cannot cover it. They came first, while `call`
-had no rules (`docs/decisions/fir-ref.md#an-op-without-rules`). The section on
-core functions with calls extends them to calls and recursion, for every
-function of a valid module.
+A function with a `call` op is left out here: its run runs other functions of
+its module, so these theorems, which ask only that the function itself be
+valid, cannot cover it. They came first, while `call` had no rules
+(`docs/decisions/fir-ref.md#an-op-without-rules`). The section on core
+functions with calls extends them to calls and recursion, for every function of
+a valid module.
 -/
 
 namespace Fir.Core

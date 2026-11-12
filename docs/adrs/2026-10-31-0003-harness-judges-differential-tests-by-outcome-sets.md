@@ -5,18 +5,18 @@ Tier: direction; area: testing-and-harness
 
 ## Context
 
-ADR-2026-10-29-2017 makes a run's behaviour a set of outcomes once
-`freeze` of poison chooses a value, and gives the harness its rule: a
-native result passes if it is in the set; a run with no choice is compared
-exactly; a test is invalid when its set holds UB, or when its choices
-exceed the budget and it declares no results. A declared result comes with
-a witness that scripted mode checks, and seeded runs check that no sampled
-outcome falls outside the list (#14). ADR-2026-10-30-2135 judges a test
-on one outcome, and ADR-2026-10-30-2050's format has no place for
-declared results or for the path of an interpreter-only test.
-ADR-2026-10-30-2049's harness runs each test once, with
-`fir-ref run --fuel N`. `fir-ref run` has exhaustive, scripted and sampled
-modes ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)).
+ADR-2026-10-29-2017 makes a run's behaviour a set of outcomes once `freeze` of
+poison chooses a value, and gives the harness its rule: a native result passes
+if it is in the set; a run with no choice is compared exactly; a test is
+invalid when its set holds UB, or when its choices exceed the budget and it
+declares no results. A declared result comes with a witness that scripted mode
+checks, and seeded runs check that no sampled outcome falls outside the list
+(#14). ADR-2026-10-30-2135 judges a test on one outcome, and
+ADR-2026-10-30-2050's format has no place for declared results or for the path
+of an interpreter-only test. ADR-2026-10-30-2049's harness runs each test once,
+with `fir-ref run --fuel N`. `fir-ref run` has exhaustive, scripted and sampled
+modes
+([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-run)).
 
 ## Decision
 
@@ -63,8 +63,9 @@ modes ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#fir-ref-ru
   the budget costs one more run per witness and 32 sampled runs.
 - `scripts/harness/sets.py` holds these rules, beside the modules that
   ADR-2026-10-30-2049 lists.
-- Seeded runs only sample: a declaration can still miss a result that no
-  seed draws. Boundary bit patterns come up in one draw in four
-  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#sampled-mode)), so the likeliest misses are drawn.
+- Seeded runs only sample: a declaration can still miss a result that no seed
+  draws. Boundary bit patterns come up in one draw in four
+  ([fir-ref-command-line.md](../decisions/fir-ref-command-line.md#sampled-mode)),
+  so the likeliest misses are drawn.
 - #18 adds the corpus test whose set holds UB, a frozen divisor that can
   be zero; until then a unit test on a hand-built set covers that rule.

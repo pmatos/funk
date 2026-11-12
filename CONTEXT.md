@@ -243,11 +243,10 @@ symbol, runs it with the fuel the caller has left, and binds what it returns
 to the call's results. A dialect only says which of its ops call which
 function.
 
-**execution rules**:
-What an op does when it runs: the results it gives, the UB it hits, or where
-a terminator sends control. Each op family of the core dialect has them
-in Lean, so every core op does, `call` through its callee's run. An op
-without them has no outcome in the spec
+**execution rules**: What an op does when it runs: the results it gives, the UB
+it hits, or where a terminator sends control. Each op family of the core
+dialect has them in Lean, so every core op does, `call` through its callee's
+run. An op without them has no outcome in the spec
 ([fir-ref.md](docs/decisions/fir-ref.md#an-op-without-rules)), and
 `fir-ref run` reports such an op as an error, never as a result.
 
@@ -333,13 +332,12 @@ an interpreter-only test passes when its outcome matches what it expects.
 An invalid test proves nothing and never counts as a pass.
 _Avoid_: verdict (a verdict says whether a text parses and validates)
 
-**poison stand-in**:
-A defined value of `iN` that native code runs a differential test on in
-place of a poison argument: one of the type's boundary bit patterns, 0, 1,
-all ones, the signed minimum or the signed maximum
-([fir-ref.md](docs/decisions/fir-ref.md#poison-arguments)).
-_Avoid_: stand-in alone (the spec's prose also uses it for a placeholder
-rule of an op, and `test_main.py` for a fake tool)
+**poison stand-in**: A defined value of `iN` that native code runs a
+differential test on in place of a poison argument: one of the type's boundary
+bit patterns, 0, 1, all ones, the signed minimum or the signed maximum
+([fir-ref.md](docs/decisions/fir-ref.md#poison-arguments)). _Avoid_: stand-in
+alone (the spec's prose also uses it for a placeholder rule of an op, and
+`test_main.py` for a fake tool)
 
 **invalid test**:
 A differential test that can prove nothing: an outcome in its set is UB or

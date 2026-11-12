@@ -155,8 +155,8 @@ shared hash map copies its whole bucket array on its first insert.
 ## What each fast path is for
 
 Each `@[csimp]` theorem under `lean/FirRef/` is listed with its class: depth
-(the spec's function takes stack per level of nesting, per list element or per
-step), speed-only, or an ordering device (`rfl`, a copy compiled after a
+(the spec's function takes stack per level of nesting, per list element, per
+step or per call), speed-only, or an ordering device (`rfl`, a copy compiled after a
 theorem so that `fir-ref`'s calls reach the fast path). The classes come from
 reading the code and what the depth checks cover. The list is the split made
 for #169, with the swaps added since.

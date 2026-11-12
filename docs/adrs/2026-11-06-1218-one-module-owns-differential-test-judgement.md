@@ -27,13 +27,13 @@ in `refine.py` and `sets.py`.
 
 This is a behavior-preserving refactor of the existing checks, under
 ADR-2026-10-30-2135, ADR-2026-10-31-0003 and
-[fir-ref.md](../decisions/fir-ref.md#poison-arguments). Report
-text, tool-call order, stand-in order, seeds and judgement precedence stay as
-they were. In particular, a reference-side judgement still wins over native
-failure, and a decided test still runs native code once when possible for
-evidence. A recheck collects all seeds, ignores seed tool errors, prefers UB
-to fuel exhaustion and otherwise keeps the original failure, including on
-stuck. It does not use the outcome-set rule, whose precedence differs.
+[fir-ref.md](../decisions/fir-ref.md#poison-arguments). Report text, tool-call
+order, stand-in order, seeds and judgement precedence stay as they were. In
+particular, a reference-side judgement still wins over native failure, and a
+decided test still runs native code once when possible for evidence. A recheck
+collects all seeds, ignores seed tool errors, prefers UB to fuel exhaustion and
+otherwise keeps the original failure, including on stuck. It does not use the
+outcome-set rule, whose precedence differs.
 
 ## Consequences
 

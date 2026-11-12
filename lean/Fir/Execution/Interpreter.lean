@@ -85,16 +85,16 @@ has results. That condition is the dialect's obligation, not a rule of
 validation, until exceptions and unwinding are designed
 (ADR-2026-11-02-2248).
 
-These checks are not all of validation. The interpreter checks that a
-value is defined, not that its definition dominates its use. So a run of a
-function that validation rejects may end with an outcome, which means
-nothing: only a valid function's runs mean something
-(`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
-No path of a valid function's run is stuck. That is proved for every
-function of a module whose functions are all valid, meet the conditions
-above on their terminators, and call only functions of the module, of the
-types of their calls: jumps, loops, calls and recursion included, so for
-every function of every valid core module (see the sections on progress).
+These checks are not all of validation. The interpreter checks that a value is
+defined, not that its definition dominates its use. So a run of a function that
+validation rejects may end with an outcome, which means nothing: only a valid
+function's runs mean something
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`). No path of a valid
+function's run is stuck. That is proved for every function of a module whose
+functions are all valid, meet the conditions above on their terminators, and
+call only functions of the module, of the types of their calls: jumps, loops,
+calls and recursion included, so for every function of every valid core module
+(see the sections on progress).
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; only an op's semantics can branch.

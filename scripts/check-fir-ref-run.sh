@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Checks fir-ref run (docs/decisions/fir-ref-command-line.md#fir-ref-run).
-# check-fir-ref.sh test calls it
-# with the fir-ref that it builds: scripts/check-fir-ref-run.sh FIR_REF.
-# fir-ref run runs functions of tests/fir/ and prints the result that each
-# one should give (#10), runs a function that freezes poison in scripted
-# and exhaustive mode (#14), runs bitwise ops and shifts (#15), runs icmp
-# and select (#16), runs loops with br and cond_br, a branch on poison and a
-# loop that never ends (#19), and runs calls: a function named by a quoted
-# symbol returns its callee's result, and a call without end runs out of
-# fuel (#20). On a 256 KiB stack, that loop and that call run out of a
-# million steps in each mode (#47). It runs functions on poison arguments,
-# and rejects poison where it is not an argument of an integer type (#123).
-# It rejects an argument that is a long comment, on a 256 KiB stack (#135).
+# check-fir-ref.sh test calls it with the fir-ref that it builds:
+# scripts/check-fir-ref-run.sh FIR_REF. fir-ref run runs functions of
+# tests/fir/ and prints the result that each one should give (#10), runs a
+# function that freezes poison in scripted and exhaustive mode (#14), runs
+# bitwise ops and shifts (#15), runs icmp and select (#16), runs loops with br
+# and cond_br, a branch on poison and a loop that never ends (#19), and runs
+# calls: a function named by a quoted symbol returns its callee's result, and a
+# call without end runs out of fuel (#20). On a 256 KiB stack, that loop and
+# that call run out of a million steps in each mode (#47). It runs functions on
+# poison arguments, and rejects poison where it is not an argument of an
+# integer type (#123). It rejects an argument that is a long comment, on a 256
+# KiB stack (#135).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -29,12 +29,11 @@ unset GH_TOKEN GITHUB_TOKEN
 status=0
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-# fir-ref run runs the functions of the corpus and prints each
-# result as one JSON object
-# (docs/decisions/fir-ref-command-line.md#fir-ref-run). runs FILE STATUS
-# OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and
-# prints OUTPUT, a JSON result on standard output or a message on
-# standard error, and nothing on the other stream.
+# fir-ref run runs the functions of the corpus and prints each result as one
+# JSON object (docs/decisions/fir-ref-command-line.md#fir-ref-run). runs FILE
+# STATUS OUTPUT ARGS...: fir-ref run FILE ARGS... exits with STATUS and prints
+# OUTPUT, a JSON result on standard output or a message on standard error, and
+# nothing on the other stream.
 runs() {
     local file=$1 want_rc=$2 want=$3 rc=0 out err want_out want_err
     shift 3

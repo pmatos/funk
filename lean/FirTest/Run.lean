@@ -3,15 +3,15 @@ import FirRef.RunArgs
 
 /-!
 Tests of the interpreter and of `fir-ref run`
-(`docs/decisions/fir-ref-command-line.md#fir-ref-run`), on
-`FirRef.runBytes`, which computes what `fir-ref run` writes and its exit
-status: each kind of result, the widths 1, 7, 8, 33, 64, 128 and 16777215,
-several results and none, fuel, each stuck case that a text reaches, calls
-without end, `poison` arguments (#123), and argument errors, among them a
-comment of a million characters (#135), with the axioms of
-`argAttr_eq_argAttrP`, which reads an argument over positions. Most of these
-runs make no choice, in scripted mode with no choices, the default;
-`FirTest.Modes` tests the modes on runs that choose.
+(`docs/decisions/fir-ref-command-line.md#fir-ref-run`), on `FirRef.runBytes`,
+which computes what `fir-ref run` writes and its exit status: each kind of
+result, the widths 1, 7, 8, 33, 64, 128 and 16777215, several results and none,
+fuel, each stuck case that a text reaches, calls without end, `poison`
+arguments (#123), and argument errors, among them a comment of a million
+characters (#135), with the axioms of `argAttr_eq_argAttrP`, which reads an
+argument over positions. Most of these runs make no choice, in scripted mode
+with no choices, the default; `FirTest.Modes` tests the modes on runs that
+choose.
 
 `FirTest.Interpreter` tests the interpreter's paths that these ops do not
 reach, and `scripts/check-fir-ref.sh test` runs the built `fir-ref` on the
@@ -123,11 +123,10 @@ def body (header : String) (lines : List String) : String :=
 
 /-! # Calls without end
 
-A function that calls itself without end runs out of fuel, in either mode:
-each call takes a step, and its callee runs on the steps that are left
-(#20). Before #20 gave `call` its meaning, `fir-ref` reported these runs
-as an error, an op without rules
-(`docs/decisions/fir-ref.md#an-op-without-rules`); no core op is
+A function that calls itself without end runs out of fuel, in either mode: each
+call takes a step, and its callee runs on the steps that are left (#20). Before
+#20 gave `call` its meaning, `fir-ref` reported these runs as an error, an op
+without rules (`docs/decisions/fir-ref.md#an-op-without-rules`); no core op is
 without rules now. `FirTest.Calls` tests calls that return. -/
 
 #guard runText (body "func @f(%a: i8) -> i8" ["^e:", "  %s: i8 = call @f %a @0", "  ret %s @0"])

@@ -3,15 +3,15 @@ import Fir.Sum.Names
 import FirRef.PrintAttr
 
 /-!
-`fir-ref` walks the attributes of an item of a dialect's kind with loops,
-not with the spec's `Attr.allWritable` and `Attr.dialectsAll`, which recurse
-once per level of an applied attribute. Every reader decodes such an item
-whatever its dialect, and keeps its attributes as the text writes them, so
-a text can nest them to any depth (ADR-2026-11-10-2224). `writableLoop` and
-`dialectsLoop` keep what is left to walk on a stack of attributes, so they
-take no stack per level (the depth rule, ADR-2026-10-30-1450). The theorems
-below prove each equal to the spec's function, and `@[csimp]` makes Lean
-compile every later call of the spec's as a call of the loop.
+`fir-ref` walks the attributes of an item of a dialect's kind with loops, not
+with the spec's `Attr.allWritable` and `Attr.dialectsAll`, which recurse once
+per level of an applied attribute. Every reader decodes such an item whatever
+its dialect, and keeps its attributes as the text writes them, so a text can
+nest them to any depth (ADR-2026-11-10-2224). `writableLoop` and `dialectsLoop`
+keep what is left to walk on a stack of attributes, so they take no stack per
+level (the depth rule, ADR-2026-10-30-1450). The theorems below prove each
+equal to the spec's function, and `@[csimp]` makes Lean compile every later
+call of the spec's as a call of the loop.
 -/
 
 namespace FirRef

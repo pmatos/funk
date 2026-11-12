@@ -2,10 +2,10 @@ import FirTest.Modes
 
 /-!
 Tests of `fir-ref run --seed`, sampled mode
-(`docs/decisions/fir-ref-command-line.md#sampled-mode`): its
-generator, its command line, and its reports. Each value it draws is one
-of the run's outcomes, as exhaustive mode lists them, and the sequence it
-prints, given to `--choices`, follows the same path to the same report.
+(`docs/decisions/fir-ref-command-line.md#sampled-mode`): its generator, its
+command line, and its reports. Each value it draws is one of the run's
+outcomes, as exhaustive mode lists them, and the sequence it prints, given to
+`--choices`, follows the same path to the same report.
 -/
 
 namespace FirTest

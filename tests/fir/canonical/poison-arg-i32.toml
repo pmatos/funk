@@ -11,17 +11,16 @@
 # poison argument returns a value. freeze_sub freezes the poison and
 # subtracts it from itself, which gives 0 whatever freeze chooses.
 #
-# Each test without expect is differential. fir-ref runs it on the
-# poison; native code, which holds no poison, runs it once on each
-# vector of stand-ins in place of the poison: 0, 1, all ones, the signed
-# minimum and the signed maximum of its type, so false and true at i1,
-# in every combination (docs/decisions/fir-ref.md#poison-arguments). Each native
-# result must refine fir-ref's. Where the poison reaches the result, fir-ref
-# returns
-# poison, and any value refines it; where it does not, as in select,
-# cond_br and call_first on a poison they do not choose, and in
-# freeze_sub, native code must give the defined value on every stand-in.
-# A run that is UB is interpreter-only, since UB allows any result.
+# Each test without expect is differential. fir-ref runs it on the poison;
+# native code, which holds no poison, runs it once on each vector of stand-ins
+# in place of the poison: 0, 1, all ones, the signed minimum and the signed
+# maximum of its type, so false and true at i1, in every combination
+# (docs/decisions/fir-ref.md#poison-arguments). Each native result must refine
+# fir-ref's. Where the poison reaches the result, fir-ref returns poison, and
+# any value refines it; where it does not, as in select, cond_br and call_first
+# on a poison they do not choose, and in freeze_sub, native code must give the
+# defined value on every stand-in. A run that is UB is interpreter-only, since
+# UB allows any result.
 #
 # freeze of a poison i32 chooses more than the choice budget of 16 bits,
 # so the differential freeze_sub declares its one result, 0, with a

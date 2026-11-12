@@ -5,10 +5,10 @@ import Fir.Execution.MemoryModes
 # The core dialect's exhaustive, scripted and sampled runs
 
 `fir-ref run` runs the core dialect's rules in the tree of choices. Each op
-runs its rule, the same rule that the set monad's semantics runs; an op
-without rules ends its path with no outcome, for that op, as the set monad
-gives it none (`docs/decisions/fir-ref.md#an-op-without-rules`). `fir-ref`
-reports such a path as an error.
+runs its rule, the same rule that the set monad's semantics runs; an op without
+rules ends its path with no outcome, for that op, as the set monad gives it
+none (`docs/decisions/fir-ref.md#an-op-without-rules`). `fir-ref` reports such
+a path as an error.
 
 Each op's semantics in the tree has the set monad's as its set: the rules
 are written once for any monad, and the set of a tree keeps the steps of
@@ -27,15 +27,15 @@ the set monad too. `fir-ref` computes the exhaustive, scripted and sampled
 modes defined below, and nothing else, to report a run. The values that
 sampled mode chose fit the run, so it inherits scripted mode's theorems.
 
-The theorems hold on every argument vector of the function's parameter
-types, poison included, and `fir-ref run` takes `poison` as an argument of
-any `iN`. A run on a poison argument is refined by the run with any value
-in its place, calls and recursion included, as the section on refinement
-through core calls proves. So the differential test harness, which
-checks compiled code against `fir-ref`, runs native code, which holds no
-poison, on poison stand-ins in place of each poison argument, and judges
-each result against the outcomes that `fir-ref` lists for the run on the
-poison (`docs/decisions/fir-ref.md#poison-arguments`).
+The theorems hold on every argument vector of the function's parameter types,
+poison included, and `fir-ref run` takes `poison` as an argument of any `iN`. A
+run on a poison argument is refined by the run with any value in its place,
+calls and recursion included, as the section on refinement through core calls
+proves. So the differential test harness, which checks compiled code against
+`fir-ref`, runs native code, which holds no poison, on poison stand-ins in
+place of each poison argument, and judges each result against the outcomes that
+`fir-ref` lists for the run on the poison
+(`docs/decisions/fir-ref.md#poison-arguments`).
 -/
 
 namespace Fir.Core

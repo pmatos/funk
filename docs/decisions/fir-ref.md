@@ -118,18 +118,15 @@ differential tests too (#123). A test's `args` may hold `poison`, and the
 harness passes it to `fir-ref` as it is.
 
 Native code holds no poison, so it runs on stand-ins in each poison argument's
-place. The stand-ins are the boundary bit patterns that sampled mode favours:
-0, 1, all ones, the signed minimum and the signed maximum. Native code runs
-once on each combination, up to `5 ** k` runs for `k` poison arguments, fewer
-where the patterns coincide (`scripts/harness/standins.py`). Each result is
-judged against `fir-ref`'s outcomes on the poison, by the harness's rules. The
-test passes when every result passes, and the report names the first vector
-that does not.
-
-Past the choice budget, a failing vector gets one more check. The harness
-runs `fir-ref` on that vector, exhaustively or on each seed. UB or a path out
-of fuel there makes the test invalid. Otherwise the failure stands, and the
-report shows `fir-ref`'s outcome on the vector.
+place: the boundary bit patterns that sampled mode favours, once on each
+combination, up to `5 ** k` runs for `k` poison arguments
+(`scripts/harness/standins.py`). Each result is judged against `fir-ref`'s
+outcomes on the poison, and past the choice budget a failing vector also runs
+on `fir-ref`. The harness's rules for this, stand-ins at float types included,
+are on
+[testing-and-harness.md](testing-and-harness.md#poison-arguments). The report
+names the first vector that fails, and past the budget `fir-ref`'s outcome on
+it.
 
 This is sound. A run with a value in place of poison refines the run with
 poison (`Core.args_isRefinedBy`, calls and recursion included), and correct

@@ -3,15 +3,14 @@ import Fir.Execution.Morphism
 /-!
 # The tree of choices
 
-A computation of the set monad says which ways a run may end, but no
-program can list them in general: the set is given by which ways belong
-to it, not as a list, and it may be infinite. `fir-ref` runs the
-interpreter in a monad that it can walk instead, the _tree of choices_
-(ADR-2026-10-29-2017, `docs/decisions/fir-ref.md#the-tree-of-choices`). A
-computation in it is a tree. A leaf says how a path ends: with a result, with
-immediate UB, or
-with no outcome at all, the empty set that an op without execution rules
-has (`docs/decisions/fir-ref.md#an-op-without-rules`). A node is a choice of _w_
+A computation of the set monad says which ways a run may end, but no program
+can list them in general: the set is given by which ways belong to it, not as a
+list, and it may be infinite. `fir-ref` runs the interpreter in a monad that it
+can walk instead, the _tree of choices_ (ADR-2026-10-29-2017,
+`docs/decisions/fir-ref.md#the-tree-of-choices`). A computation in it is a
+tree. A leaf says how a path ends: with a result, with immediate UB, or with no
+outcome at all, the empty set that an op without execution rules has
+(`docs/decisions/fir-ref.md#an-op-without-rules`). A node is a choice of _w_
 bits, with one subtree for each value the bits may take.
 
 Trees are a lawful monad: running a tree then `pure` gives the tree, and

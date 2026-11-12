@@ -1,13 +1,13 @@
 import FirRef.Lex.Stream
 
 /-!
-`fir-ref run` reads each argument, and each choice of `--choices`, as one
-token of fir's text (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
-`argAttr` is that reading by the
-spec's lexer: the text lexed whole with `Text.lex`, then matched against an
-integer, a word or a float literal (ADR-2026-11-11-1438), then `eof`. The spec's lexer builds the list of the
-text's characters and measures a comment with `utf8Len`, which takes stack
-per character, so a long comment overflows a small stack (#135).
+`fir-ref run` reads each argument, and each choice of `--choices`, as one token
+of fir's text (`docs/decisions/fir-ref-command-line.md#fir-ref-run`). `argAttr`
+is that reading by the spec's lexer: the text lexed whole with `Text.lex`, then
+matched against an integer, a word or a float literal (ADR-2026-11-11-1438),
+then `eof`. The spec's lexer builds the list of the text's characters and
+measures a comment with `utf8Len`, which takes stack per character, so a long
+comment overflows a small stack (#135).
 
 `argAttrP` reads the same over positions: `nextTokP` reads the first token
 and, after an integer, a word or a float literal, takes one more step, which must give `eof`

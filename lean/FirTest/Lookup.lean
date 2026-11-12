@@ -1,12 +1,12 @@
 import FirTest.Modes
 
 /-!
-Tests of how `fir-ref run` looks names up (#47). It keeps the values that a
-run has defined in `FirRef.Bindings`, recent ones in a list and older ones
-in a map that lookups move them into
+Tests of how `fir-ref run` looks names up (#47). It keeps the values that a run
+has defined in `FirRef.Bindings`, recent ones in a list and older ones in a map
+that lookups move them into
 (`docs/decisions/fir-ref-fast-paths.md#the-bindings-map`), and must give
-exactly what the spec's environment gives, on functions that validation
-rejects too.
+exactly what the spec's environment gives, on functions that validation rejects
+too.
 
 The runs below read block arguments bound again on each jump, values from
 before a loop, values of blocks that do not dominate the read, and a

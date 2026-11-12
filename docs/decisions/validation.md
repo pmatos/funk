@@ -49,10 +49,10 @@ The rule of the dialect set, `Module.InDialectSet`, holds for each table
 against its own set (ADR-2026-11-10-1510).
 
 `Module.tables` lists the tables, the module's own first, each before the
-tables nested in it. Both validators report in that order: the location
-table's problems, each table's problems, then each table's dialect-set
-problems. A problem in a nested module names its function as one at the top
-level does; the report's schema has no field for the module
+tables nested in it. Both validators report in that order: the location table's
+problems, each table's problems, then each table's dialect-set problems. A
+problem in a nested module names its function as one at the top level does; the
+report's schema has no field for the module
 ([fir-ref-command-line.md](fir-ref-command-line.md#fir-ref-validate)).
 
 ## The spec's check
