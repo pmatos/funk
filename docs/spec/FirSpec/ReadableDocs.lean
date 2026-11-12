@@ -140,6 +140,9 @@ import FirSpec.Memory.Model
 import FirSpec.Memory.Laws
 import FirSpec.Memory.Frames
 import FirSpec.Memory.FrameLaws
+import FirSpec.Memory.Encode
+import FirSpec.Memory.EncodeLaws
+import FirSpec.Core.Encode
 import FirSpec.Execution.Frame
 import FirSpec.Execution.MemoryEffect
 import FirSpec.Execution.MemoryState

@@ -88,6 +88,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-11-1801](2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md) | [text-format](../decisions/text-format.md) | A float op that rounds is written with round(rne), and no other mode decodes | this ADR |
 | [ADR-2026-11-12-1430](2026-11-12-1430-pull-requests-reuse-main-s-lean-builds.md) | [process](../decisions/process.md) | Pull requests reuse main's Lean builds, and main builds them from scratch | this ADR |
 | [ADR-2026-11-12-1821](2026-11-12-1821-a-module-declares-its-memories-in-a-data-layout-line.md) | [text-format](../decisions/text-format.md) | A module declares its memories in a data layout line after its dialect set | this ADR |
+| [ADR-2026-11-12-2125](2026-11-12-2125-a-value-takes-whole-units-in-its-memory-s-byte-order.md) | [semantics](../decisions/semantics.md) | A value takes whole units of its memory, placed in the memory's byte order | this ADR |
 
 ## Implementation
 
