@@ -17,28 +17,25 @@ Tier: direction; area: semantics
   end with core corollaries: they may name the core dialect, but not write
   its words. The grammar's own words, such as `func`, are not per-op code.
 - **Code that may name ops** builds, lowers or runs one dialect's programs:
-  the dialect's own files, the module generator, the x86-64 backend,
-  `funk`'s and `fir-ref`'s command lines, the tests and the corpus.
+  the dialect's files, the module generator, the x86-64 backend, `funk`'s
+  and `fir-ref`'s command lines, the tests and the corpus.
 - **Every op declares its poison class and effects.** The core lists each op
   by its constructor in `Core.Op.poisonClass` and `Core.Op.effects`, with no
   case for the rest, so a new core op does not build until it declares them.
-- **CI keeps the line.** `crates/funk-ir/tests/g0.rs` (hook `rust-test`) and
-  `scripts/check_g0.py` (hook `g0`) fail on per-op code in generic code, and
-  `lean/FirTest/G0.lean` restates the spec's generic definitions and theorems
-  for an arbitrary dialect, so narrowing one to the core breaks the build.
-  Each check covers a place unless this line excludes it, so a new file is
-  checked. The source checks read words, not meaning; the theorems, an empty
-  registry and the test dialects check behaviour. A new dialect's directory joins `DIALECT_DIRS` in `check_g0.py`,
-  and moving the line edits this ADR in place.
+- **CI keeps the line.** `crates/funk-ir/tests/g0.rs` and
+  `scripts/check_g0.py` fail on per-op code in generic code, and
+  `lean/FirTest/G0.lean` breaks when a generic definition or theorem narrows
+  to the core. Each check covers a place unless this line excludes it, so a
+  new file is checked. A new dialect's directory joins `DIALECT_DIRS` in
+  `check_g0.py`, and moving the line edits this ADR in place.
 
 semantics.md states the rule; each check's module docs say what it reads.
 
 ## Why
 
 G0 (ADR-2026-10-29-2016) keeps fir open to dialects that M0 does not have.
-Some code must name ops, such as the core dialect and its backend, so the line
-between the code that may and the code that may not must be explicit, and
-only a check in CI stops a later change from reopening the door.
+Some code must name ops, so the line must be explicit, and only a check in CI
+stops a later change from reopening the door.
 
 ## Rejected alternatives
 

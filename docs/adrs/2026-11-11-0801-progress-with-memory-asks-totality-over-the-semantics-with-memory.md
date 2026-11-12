@@ -7,7 +7,8 @@ Tier: direction; area: semantics
 
 Progress in the set monad asks each op that runs by its own rule to be
 total there (`OpTotal`, in `LawfulDialectPoison`). An op that touches
-memory has no semantics in the set monad (ADR-2026-11-09-1541), so that
+memory has no semantics in the set monad
+([semantics-effects.md](../decisions/semantics-effects.md#soundness)), so that
 obligation says nothing of a load or a store, and progress said nothing of
 runs with memory beyond the dialects that lift the set monad. `Func.InModule`
 has the same gap: its rules for terminators speak of their exits in the set

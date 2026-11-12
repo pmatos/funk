@@ -159,22 +159,22 @@ payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
 `fir-ref run` takes float arguments and prints float results in that spelling,
 and takes `poison` at a float type. It gives one result, with no choice, for
 every result that is not a NaN, so `funk` and `fir-ref` compare those
-differentially. A NaN result makes a choice, so scripted mode needs
-`--choices` for it, and exhaustive mode at `f32` and `f64` passes its 16-bit
-budget; #219 decides how `fir-ref` and the harness judge a NaN result. `fcmp`'s
-result is never a NaN, so it is differential already. The naive backend lowers
-`f32` and `f64`: it passes and returns them in SSE registers as System V does
+differentially. A NaN result makes a choice, so scripted mode needs `--choices`
+for it, and exhaustive mode at `f32` and `f64` passes its 16-bit budget; #219
+decides how `fir-ref` and the harness judge a NaN result. `fcmp`'s result is
+never a NaN, so it is differential already. The naive backend lowers `f32` and
+`f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and
 lowers the constants, `fcmp` and the arithmetic, with SSE2 and, for `fma`, a
 routine of a runtime helper
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md)).
-It reports every other format as a diagnostic where its value is defined. The
-corpus runs every predicate and the constants differentially at `f32` and
-`f64`, and on `fir-ref` against `scripts/harness/float_ref.py` at `f16`,
-`bf16` and `f128`, on zeros of both signs, subnormals, the largest finite values, infinities and NaNs. It runs the
-arithmetic on the hard inputs of every op, at every aliased format, with each
-result that is not a NaN differential at `f32` and `f64`, and each NaN result
-on `fir-ref` with a choice
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md)). It reports every
+other format as a diagnostic where its value is defined. The corpus runs every
+predicate and the constants differentially at `f32` and `f64`, and on `fir-ref`
+against `scripts/harness/float_ref.py` at `f16`, `bf16` and `f128`, on zeros of
+both signs, subnormals, the largest finite values, infinities and NaNs. It runs
+the arithmetic on the hard inputs of every op, at every aliased format, with
+each result that is not a NaN differential at `f32` and `f64`, and each NaN
+result on `fir-ref` with a choice
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect

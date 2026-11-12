@@ -124,18 +124,18 @@ the standard axioms (`Core.lawfulDialectPoison`).
 
 Total and monotone cover only the ops that the interpreter runs by their own
 rule: terminators and ops with no callee
-(`isTerminator op = true ∨ callee? op = none`). A call's meaning is its callee's
-run, so `call` has no op-level rule (ADR-2026-10-29-2006). The human ruled this
-on 2026-11-02, on #20. The hypotheses that ask every op to be total or monotone
-carry the same guard: those of the progress proof with calls
-(`Module.calls_hasPath`, `Func.progress_of_inModule`) and those of the
-refinement engine (`Func.runOps_allowed`, `Func.runs_isRefinedBy_of_calls` and
-the theorems under them). `Core.Op.total_all` and `Core.Op.monotone_all`
-hold for every core op that meets the guard: every core op but `call`. Rejected: a stand-in rule for `call`, immediate UB in
-the set monad, so that it would meet the op-level obligations. It claimed a
-meaning that a call does not have, and as a source it was refined by every
-computation, so a statement proved op by op would hold for every rewrite of a
-call. semantics.md says how `call`'s `denote` reads now.
+(`isTerminator op = true ∨ callee? op = none`). A call's meaning is its callee's run, so `call` has no op-level rule
+(ADR-2026-10-29-2006). The human ruled this on 2026-11-02, on #20. The
+hypotheses that ask every op to be total or monotone carry the same guard: those
+of the progress proof with calls (`Module.calls_hasPath`,
+`Func.progress_of_inModule`) and those of the refinement engine
+(`Func.runOps_allowed`, `Func.runs_isRefinedBy_of_calls` and the theorems under
+them). `Core.Op.total_all` and `Core.Op.monotone_all` hold for every core op
+that meets the guard: every core op but `call`. Rejected: a stand-in rule for
+`call`, immediate UB in the set monad, so that it would meet the op-level
+obligations. It claimed a meaning that a call does not have, and as a source it
+was refined by every computation, so a statement proved op by op would hold for
+every rewrite of a call. semantics.md says how `call`'s `denote` reads now.
 
 ### Valid op instances
 
@@ -155,16 +155,16 @@ Division at `i0` keeps its rule, and is the reason for the narrowing: at `i0`
 every divisor is zero, so no division returns a result on defined operands
 (`Core.div_zero_width`). Rejected: change division at width zero, which changes
 the rule of an instance that no valid module holds only to make the class
-provable. Rejected too: ask `validOp` as well, which needs a context, the
-symbol table and the function's result types, that an op instance alone does
-not have; validation checks its rules in each function. The refinement engine asks monotonicity only of the ops a run can
-reach, so the class gives refinement for valid modules, and the core dialect
-meets it at every width, `i0` included, with `Core.Op.monotone_all`
-(ADR-2026-11-05-1715).
+provable. Rejected too: ask `validOp` as well, which needs a context, the symbol
+table and the function's result types, that an op instance alone does not have;
+validation checks its rules in each function. The refinement engine asks
+monotonicity only of the ops a run can reach, so the class gives refinement for
+valid modules, and the core dialect meets it at every width, `i0` included, with
+`Core.Op.monotone_all` (ADR-2026-11-05-1715).
 
 ## The poison op
 
-The core dialect writes poison with `poison`, its 25th op
+The core dialect writes poison with the op `poison`
 (ADR-2026-10-29-2006). The human ruled on 2026-11-03, on #122, that the core
 gains it in M0. Rejected by the human: a reserved operand `%poison`, which
 changes the generic grammar.

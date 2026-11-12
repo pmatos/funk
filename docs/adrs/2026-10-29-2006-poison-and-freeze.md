@@ -20,6 +20,9 @@ Tier: direction; area: semantics
   totality and monotonicity. They cover only op instances whose types
   validation accepts, and totality and monotonicity only ops that run by their
   own rule: a call has none, since its meaning is its callee's run.
+- Passes must not turn a `select` into a branch unless its condition is
+  frozen, nor `select %c, %x, false` into `and %c, %x` when `%x` may be
+  poison.
 - The core dialect writes poison with the op `poison`, of class `propagates`.
 
 [semantics-poison.md](../decisions/semantics-poison.md) states each rule, the

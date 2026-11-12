@@ -12,14 +12,15 @@ Tier: direction; area: semantics
   poison class sits beside the set, in the one class `DialectEffects`.
 - **Named by memory.** Reads, writes, allocation and freeing name the memory
   they touch, and effects on different memories commute. An external call,
-  an indirect call and inline assembly without a narrower declaration carry
+  an indirect call to an unknown function and inline assembly without a narrower declaration carry
   every effect on every memory that can have escaped to them.
 - **Declared by the dialect,** for its own ops and the memories it adds, in
   Lean and in Rust's `OpSpec`. Rust's sets are checked against Lean's.
 - **Proved sound.** For each effect an op leaves out, the spec proves the
   obligation: an op without a write to *m* keeps the units of *m*, one
-  without may-UB never ends in UB, and so on. The obligations are stated over the op's semantics with memory,
-  wherever a run names the dialect's memories.
+  without may-UB never ends in UB, and so on. The obligations are stated
+  over the op's semantics with memory, wherever a run names the dialect's
+  memories.
 - **Calls.** A call's effects are its own rule's and its callee's summary:
   the join of every effect but control of each op the callee may reach,
   computed per symbol table and proved sound.

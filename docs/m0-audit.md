@@ -30,9 +30,8 @@ came after this audit and changes five of its facts; the evidence below
 is that of `ca5fd9f`, and #122 did not check it again. The core op set
 has 25 ops: `poison` is a constant whose result is poison, of class
 `propagates`, so 19 ops propagate and six are exceptions, and S1
-(ADR-2026-10-29-2006) was refined to add it; #307 later folded those refinements into
-S1. The
-coverage matrix has 783 cells, each with a test (ADR-2026-11-03-0557).
+(ADR-2026-10-29-2006) was refined to add it; #307 later folded those
+refinements into S1. The coverage matrix has 783 cells, each with a test (ADR-2026-11-03-0557).
 The LLVM ports write LLVM's poison constant with `poison`, not
 `shl %n, %n`
 ([testing-and-harness-corpus.md](decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten)).

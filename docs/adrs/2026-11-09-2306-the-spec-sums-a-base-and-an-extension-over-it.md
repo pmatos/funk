@@ -13,28 +13,27 @@ Tier: direction; area: semantics
   with each class lifted side by side. Its memories are `e`'s, and a base op's
   effects are renamed into them, so a memory has one name in the sum. Any
   number of dialects is a nested sum, `core ⊞ a ⊞ b`.
-- **Routing.** A word belongs to the dialect named before its first `.`, and
-  a bare word to the core. The sum sends each op and type to its side, a type
-  by its head word; attributes go with their op.
+- **Routing.** A word belongs to the dialect named before its first `.`, a
+  bare word to the core. Types go by their head word, attributes with their
+  op.
 - **Lifts.** An extension written over the dialects it depends on joins any
   sum that holds them: `e.lift dep ι μ` carries an inclusion `ι` of `dep`'s
   types in a larger base and a map `μ` of its memories. A lifted op sees only
   what `e` can write, under the human's #227 ruling of 2026-11-10 on
   ADR-2026-11-09-2353.
-- **Laws.** The sum and the lift are lawful in text, poison and effects when
-  their sides are, `e` writes its words under a name new to the base, and `e`
-  accepts the types it depends on. Core ops carry core types only.
+- **Laws.** The sum and the lift are lawful when their sides are, `e` writes
+  its words under a name new to the base, and `e` accepts the types it
+  depends on. Core ops carry core types only.
 
 [semantics-dialects.md](../decisions/semantics-dialects.md) states each rule
 and the theorems.
 
 ## Why
 
-ADR-2026-11-09-1543 combines a module's dialects as a sum routed by prefix,
-and lets a dialect name the types of the dialects it depends on. Writing an
-extension over its base, and lifting it into a larger sum, lets extensions
-written apart, such as a GPU dialect and a test dialect, share one module,
-while routing in the sum keeps the base's own rules on its types and memories.
+ADR-2026-11-09-1543 combines a module's dialects as a sum routed by prefix.
+Writing an extension over its base, and lifting it into a larger sum, lets
+extensions written apart, such as a GPU dialect and a test dialect, share one
+module, while the base keeps its own rules on its types and memories.
 
 ## Rejected alternatives
 

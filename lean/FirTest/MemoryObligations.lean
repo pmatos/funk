@@ -9,7 +9,8 @@ nothing and allocates nothing, so a declaration of a load needs only a read
 of its memory. An allocation writes no unit of the allocations that were
 there. A copy of a unit to another unit of the same memory reads it, though
 it gives no result: the rejected weaker form of _no read_ would accept it
-(ADR-2026-11-09-1541). `FirTest/MemoryStoreReads.lean` shows that a store
+(`docs/decisions/semantics-effects.md#soundness`).
+`FirTest/MemoryStoreReads.lean` shows that a store
 does not read its memory. Which op declares what is the dialect's: these
 computations are the memory effect's own operations, not fir's ops.
 -/

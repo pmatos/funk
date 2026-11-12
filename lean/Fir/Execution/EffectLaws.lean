@@ -11,7 +11,7 @@ declare an effect that it never has. Each effect left out carries an
 obligation. The first two are stated over the op's semantics with memory
 (the section on memory obligations), wherever a run names the dialect's
 memories and from any memories, as the memory-named effects are
-(ADR-2026-11-09-1541):
+(`docs/decisions/semantics-effects.md#soundness`):
 
 * _No may-UB_: the op never ends in UB, and the exit of a terminator never
   does.

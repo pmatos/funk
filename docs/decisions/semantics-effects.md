@@ -55,8 +55,9 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 
 - Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
   `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
-  flags, and the float arithmetic, whose NaN results are defined values.
-  `call`'s own set is empty (ADR-2026-11-09-1549).
+  flags, and the float arithmetic, whose NaN results are defined values
+  (ADR-2026-11-09-1549). `call`'s own set is empty: its callee's summary
+  carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, and `sdiv` and `udiv` with `exact`.
 - May-UB: the four divisions, `cond_br` and `unreachable`.
@@ -118,29 +119,29 @@ terminators or have no callee, as the poison obligations do
 (ADR-2026-10-29-2006).
 
 A dialect whose ops touch no memory ties its two semantics: `LiftsSetM`, in
-`lean/Fir/Execution/MemoryRuns.lean`, says that its semantics with memory is
-its semantics in the set monad, lifted, at every naming.
-`DialectMemDenote.ofSetM` meets it, and so do sums and lifts whose sides do.
-Under the tie an op meets no may-UB and no may produce poison in the set monad
-exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`,
-and `.ofSetM` back), and theorems over runs in the set monad that use these
-two obligations assume the tie. Theorems that do not use them, such as fuel
-monotonicity, progress and refinement of runs in the set monad, take no tie.
-A dialect with a memory op has no tie: its theorems speak of its runs with
-memory. Runs with memory, `Func.memRuns unit ρ M f`, run
-`DialectMemDenote.denoteAt unit ρ` from the empty memories, and under the tie
-they are the runs in the set monad (`Func.memRuns_eq`). Rejected: a tie for every dialect, memory ops included. A load has no
-meaning in the set monad, so the tie would make it UB or give it no outcome
-there, and the runs in the set monad would mean nothing for programs that
-touch memory.
+`lean/Fir/Execution/MemoryRuns.lean`, says that its semantics with memory is its
+semantics in the set monad, lifted, at every naming. `DialectMemDenote.ofSetM`
+meets it, and so do sums and lifts whose sides do. Under the tie an op meets no
+may-UB and no may produce poison in the set monad exactly when it meets them
+with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
+theorems over runs in the set monad that use these two obligations assume the
+tie. Theorems that do not use them, such as fuel monotonicity, progress and
+refinement of runs in the set monad, take no tie. A dialect with a memory op has
+no tie: its theorems speak of its runs with memory. Runs with memory,
+`Func.memRuns unit ρ M f`, run `DialectMemDenote.denoteAt unit ρ` from the empty
+memories, and under the tie they are the runs in the set monad
+(`Func.memRuns_eq`). Rejected: a tie for every dialect, memory ops included. A
+load has no meaning in the set monad, so the tie would make it UB or give it no
+outcome there, and the runs in the set monad would mean nothing for programs
+that touch memory.
 
-Observable has no obligation yet: M0's runs have no trace. The core dialect
-is lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no
-memory, so `DialectMemDenote.ofSetM` gives its semantics with memory and
-meets every memory obligation, whatever it declares. `lean/FirTest/G0Effects.lean`
-restates the class and its obligations for every dialect. The obligations
-reject a wrong declaration: with `sdiv` declared without may-UB, the core
-dialect is not lawful in its effects (`Core.Unlawful.sdivNoUB_unlawful`). And
+Observable has no obligation yet: M0's runs have no trace. The core dialect is
+lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no memory, so
+`DialectMemDenote.ofSetM` gives its semantics with memory and meets every memory
+obligation, whatever it declares. `lean/FirTest/G0Effects.lean` restates the
+class and its obligations for every dialect. The obligations reject a wrong
+declaration: with `sdiv` declared without may-UB, the core dialect is not lawful
+in its effects (`Core.Unlawful.sdivNoUB_unlawful`). And
 `lean/FirTest/MemoryObligations.lean` shows that an allocation allocates, a
 store writes and a load reads.
 

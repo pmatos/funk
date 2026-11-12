@@ -12,9 +12,9 @@ takes the words from the strings of `lean/Fir/Core/Text.lean`, and
 whole strings, so a message that holds a word, such as
 `a poison divisor`, is not one.
 
-ADR-2026-10-29-2006 adds the op `poison`. Its name is also S1's word for
-the deferred-UB value, which the generic spec is about: `PoisonOr`,
-`TyPoison`, `PoisonClass`. A check that reads words cannot tell which of
+The core gained the op `poison` on #122 (ADR-2026-10-29-2006). Its name is
+also S1's word for the deferred-UB value, which the generic spec is about:
+`PoisonOr`, `TyPoison`, `PoisonClass`. A check that reads words cannot tell which of
 the two a string means. On `main` at #122, no generic file of either
 language writes `"poison"` alone: generic Lean names the value with
 Lean's names, and `fir-ref`'s command line, which spells it in its
