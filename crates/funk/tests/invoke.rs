@@ -1,6 +1,7 @@
 //! How a built executable is invoked: the function by its fir name, its
 //! arguments spelled as fir constants, and a bad command line reported in
-//! one line on standard error with exit status 2 (ADR-2026-10-30-1233).
+//! one line on standard error with exit status 2
+//! (`docs/decisions/x86-64-backend-executable.md#running-one-function`).
 
 mod common;
 

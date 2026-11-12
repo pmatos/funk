@@ -3,18 +3,18 @@
 //! knows how values sit in registers.
 //!
 //! A value of `iN` is the low `N` bits of its slot, and the bits above are
-//! unspecified (ADR-2026-10-30-1231). So `zext` and `sext` read their
-//! operand's top bit and the bits above it: each extends its operand from
-//! `M` bits to all 64 with [`width::extend`], by zero or by sign, and the
-//! low `N` bits of that are the result. `trunc` reads no bit above `N`: the
-//! low `N` bits of its operand's slot are already its result, so it is a
-//! copy, whatever the bits above hold.
+//! unspecified (`docs/decisions/x86-64-backend.md#values-and-widths`). So
+//! `zext` and `sext` read their operand's top bit and the bits above it:
+//! each extends its operand from `M` bits to all 64 with [`width::extend`],
+//! by zero or by sign, and the low `N` bits of that are the result. `trunc`
+//! reads no bit above `N`: the low `N` bits of its operand's slot are
+//! already its result, so it is a copy, whatever the bits above hold.
 //!
 //! An `i128` result's low half is the operand extended to 64 bits, and its
 //! high half is zero for `zext`, and for `sext` 64 copies of the extended
 //! value's top bit, which `sarq $63` makes. `trunc` from `i128` copies its
 //! operand's low half, whose low `N` bits are the result
-//! (ADR-2026-11-03-010730).
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
 
 use funk_ir::Op;
 

@@ -1,5 +1,6 @@
 # Tests of call-args-i128.fir: calls with i128 arguments in each place
-# that System V gives them (#21, ADR-2026-11-03-0108). An i128 takes two
+# that System V gives them (#21,
+# docs/decisions/x86-64-backend-abi.md#arguments). An i128 takes two
 # registers when two are left, low half first, and otherwise 16 bytes of
 # the stack, aligned to 16, after a hole of 8 bytes when the stack
 # arguments before it end mid-way; a narrower argument after it still
@@ -8,12 +9,12 @@
 # foldN, whose parameters have those types in that order, so the two lay
 # out different lists: call0 and fold0 pass three i128s in registers,
 # call1 and fold1 four, the last on the stack; call2 passes an i128 on
-# the stack after five i64s and an i64 in %r9 after it, and fold2 an
-# i128 in %rsi and %rdx and two i64s on the stack; call3 passes an i128
-# past a hole; call4 leaves %r9 unused; call5 and call6 mix i128s with
-# i1, i8, i16, i32 and i64 arguments in both. Each foldN sign-extends its
-# arguments to i128 and folds them in order: it multiplies what it has
-# by 1000003 and adds the next one, with mul and add, which wrap. So an
+# the stack after five i64s and an i64 in %r9 after it, and fold2 an i128
+# in %rsi and %rdx and two i64s on the stack; call3 passes an i128 past a
+# hole; call4 leaves %r9 unused; call5 and call6 mix i128s with i1, i8,
+# i16, i32 and i64 arguments in both. Each foldN sign-extends its
+# arguments to i128 and folds them in order: it multiplies what it has by
+# 1000003 and adds the next one, with mul and add, which wrap. So an
 # argument in the wrong place, or a half read from the wrong eightbyte,
 # changes the result. The i128 arguments are the boundary bit patterns
 # and values whose halves differ, and the others the boundary bit

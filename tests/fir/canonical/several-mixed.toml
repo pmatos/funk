@@ -1,6 +1,6 @@
 # Tests of several-mixed.fir: several results of mixed widths, and calls
 # with six or more arguments whose results go in memory (#31,
-# ADR-2026-11-03-0109). mixed returns seven results of i1, i8, i16, i32
+# ADR-2026-10-30-1232). mixed returns seven results of i1, i8, i16, i32
 # and i64: more than the two registers hold, so natively they go in a
 # result area that the caller provides, at eight bytes each. Its i1
 # result !a is a + true, whose slot natively holds 2 for true, and b + 1

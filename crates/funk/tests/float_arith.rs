@@ -1,13 +1,13 @@
 //! The float arithmetic runs natively at `f32` and `f64` (#229,
-//! ADR-2026-11-11-1802): `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fneg`,
-//! `fabs` and `fma`. Each result is checked against the host's own IEEE 754
-//! arithmetic, on the hard values (zeros of both signs, subnormals, ones,
-//! the largest finite values, infinities and NaNs) and, for `fma`, whose
-//! lowering calls a routine of its own, on many random operands as well:
-//! products that cancel against the addend, results far below the smallest
-//! normal number, and results that overflow. A NaN result may be any NaN
-//! (ADR-2026-11-09-1549), so where the host gives a NaN the test asks only
-//! for a NaN.
+//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`): `fadd`,
+//! `fsub`, `fmul`, `fdiv`, `sqrt`, `fneg`, `fabs` and `fma`. Each result is
+//! checked against the host's own IEEE 754 arithmetic, on the hard values
+//! (zeros of both signs, subnormals, ones, the largest finite values,
+//! infinities and NaNs) and, for `fma`, whose lowering calls a routine of
+//! its own, on many random operands as well: products that cancel against
+//! the addend, results far below the smallest normal number, and results
+//! that overflow. A NaN result may be any NaN (ADR-2026-11-09-1549), so
+//! where the host gives a NaN the test asks only for a NaN.
 //!
 //! Each batch is one function that applies its op to constants and returns
 //! every result, so one build and one run check many cases.

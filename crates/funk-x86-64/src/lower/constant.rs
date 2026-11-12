@@ -1,19 +1,20 @@
 //! Constants: `const` and `poison` (`dialects/core/constant.rs` in
 //! `funk-ir`).
 //!
-//! A constant is written into its slot as a 64-bit immediate: its value read
-//! as a signed integer, so its low `N` bits are its bits. `true` is 1 and
-//! `false` is 0. A float constant at `f32` or `f64` is a float literal
-//! (ADR-2026-11-11-1438), read into its bits, and is written as an integer
-//! of those bits: SSE has no immediate operands, and the slot is what an op
-//! reads (ADR-2026-11-11-1140). An `i128` constant is two immediates, its low and its high
-//! 64 bits, one into each of its slots (ADR-2026-11-03-010730).
+//! A constant is written into its slot as a 64-bit immediate: its value read as a signed
+//! integer, so its low `N` bits are its bits. `true` is 1 and `false` is 0. A float
+//! constant at `f32` or `f64` is a float literal (ADR-2026-11-11-1438), read into its
+//! bits, and is written as an integer of those bits: SSE has no immediate operands, and
+//! the slot is what an op reads
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). An `i128` constant is
+//! two immediates, its low and its high 64 bits, one into each of its slots
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
 //!
-//! Native code holds no poison (ADR-2026-10-30-2248), and any value refines
-//! it, so `poison` writes zero into every eightbyte of its slot: one at
-//! `i1` to `i64`, two at `i128`. Zero is a value of every width, `false`
-//! at `i1`, and the same on every run, so what native code gives for a
-//! poison never depends on what a slot held before (ADR-2026-11-03-1616).
+//! Native code holds no poison (ADR-2026-10-30-2248), and any value refines it, so
+//! `poison` writes zero into every eightbyte of its slot: one at `i1` to `i64`, two at
+//! `i128`. Zero is a value of every width, `false` at `i1`, and the same on every run, so
+//! what native code gives for a poison never depends on what a slot held before
+//! (`docs/decisions/x86-64-backend.md#poison`).
 
 use funk_ir::dialects::core::{float_format, read_float};
 use funk_ir::{Attr, Op};

@@ -1,5 +1,5 @@
 //! How `ret` and `call` move any number of results (#31,
-//! ADR-2026-11-03-0109): one or two eightbytes in `%rax` and `%rdx`, more
+//! ADR-2026-10-30-1232): one or two eightbytes in `%rax` and `%rdx`, more
 //! in a result area at the bottom of the caller's frame, whose address the
 //! call passes first, so that the callee's parameters move along by one. A
 //! result of a width that the backend does not lower is reported where it

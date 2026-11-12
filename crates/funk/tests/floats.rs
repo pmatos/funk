@@ -1,11 +1,13 @@
 //! `f32` and `f64` run natively (#229): float constants, `fcmp` with each
 //! of its fourteen predicates, and floats passed to and returned from
-//! functions in SSE registers (ADR-2026-11-11-1140). A float constant is a
-//! float literal, and a built executable reads and writes a float as its
-//! bits read as a signed integer (ADR-2026-11-11-1438). Each comparison
-//! is checked against the host's own IEEE 754 comparison, on zeros of both
-//! signs, subnormals, ones, the largest finite values, infinities and NaNs,
-//! quiet and signalling, with payloads and either sign.
+//! functions in SSE registers
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
+//! float constant is a float literal, and a built executable reads and
+//! writes a float as its bits read as a signed integer
+//! (ADR-2026-11-11-1438). Each comparison is checked against the host's own
+//! IEEE 754 comparison, on zeros of both signs, subnormals, ones, the
+//! largest finite values, infinities and NaNs, quiet and signalling, with
+//! payloads and either sign.
 
 mod common;
 

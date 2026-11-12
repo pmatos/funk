@@ -1,7 +1,8 @@
 //! How `icmp` and `select` are lowered (#16): `icmp` extends both operands
 //! from `N` bits as its predicate reads them, then is one `cmpq` and one
-//! `setCC` (ADR-2026-10-30-1231); `select` tests bit 0 of its condition and
-//! is one `cmovzq`, with no branch (ADR-2026-10-31-0215).
+//! `setCC` (`docs/decisions/x86-64-backend.md#values-and-widths`); `select`
+//! tests bit 0 of its condition and is one `cmovzq`, with no branch
+//! (`docs/decisions/x86-64-backend-lowering.md#select`).
 
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;

@@ -1,8 +1,9 @@
 //! A program whose object file references a symbol it does not define links
 //! with the host's C library, and one that does not stays static
-//! (ADR-2026-11-10-1303). fir cannot declare a C function yet (#239), so the
-//! program that calls one is the entry point of a compiled module with its
-//! function's assembly written by hand.
+//! (`docs/decisions/x86-64-backend.md#linking-with-the-host-c-library`). fir
+//! cannot declare a C function yet (#239), so the program that calls one is
+//! the entry point of a compiled module with its function's assembly written
+//! by hand.
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

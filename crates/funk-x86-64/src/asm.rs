@@ -1,6 +1,7 @@
-//! Assembly text in GNU `as`'s AT&T syntax (ADR-2026-10-30-1229): the
-//! registers and stack slots that instructions name, and the writer that
-//! collects the lines of a file.
+//! Assembly text in GNU `as`'s AT&T syntax
+//! (`docs/decisions/x86-64-backend.md#assembly-and-linking`): the registers
+//! and stack slots that instructions name, and the writer that collects the
+//! lines of a file.
 //!
 //! AT&T syntax writes every register with `%`, so a symbol never reads as a
 //! register, whatever its name.
@@ -59,7 +60,8 @@ pub struct Mem {
 impl Mem {
     /// The eightbyte just above this one: the high half of an `i128` whose
     /// low half is here, since a pair holds its low half at the lower
-    /// address (ADR-2026-11-03-010730).
+    /// address
+    /// (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
     pub fn high(self) -> Mem {
         Mem {
             disp: self.disp + 8,

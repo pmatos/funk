@@ -1,19 +1,20 @@
-//! The entry point of an executable that `funk build` links (ADR-2026-10-30-1233).
+//! The entry point of an executable that `funk build` links
+//! (`docs/decisions/x86-64-backend-executable.md#running-one-function`).
 //!
-//! It is one assembly file: the fixed runtime in `runtime.s` and
-//! `values.s`, which parses arguments and prints results at every width
-//! (ADR-2026-11-03-0108), then what this module writes for the module
-//! being built. That is a wrapper for each
-//! function, which parses the function's arguments, calls it by the System V
-//! convention and prints each of its results, in order
-//! (ADR-2026-11-03-0109), and the table `__funk_functions`, which
-//! gives each function's name as fir writes it (`@f`, `@"a b"`), its number
-//! of parameters, its wrapper, the bytes of stack that a run of it needs
-//! with every call it makes (`stack.rs`), and whether it is recursive. The
-//! runtime finds a function in the table by the name on the command line,
-//! reserves that stack, or for a recursive function up to the process's
-//! stack limit (`ulimit -s`), and calls the wrapper on it
-//! (ADR-2026-11-02-1132).
+//! It is one assembly file: the fixed runtime in `runtime.s` and `values.s`, which
+//! parses arguments and prints results at every width
+//! (`docs/decisions/x86-64-backend-executable.md#the-entry-file-and-its-runtime`),
+//! then what this module
+//! writes for the module being built. That is a wrapper for each function, which
+//! parses the function's arguments, calls it by the System V convention and prints
+//! each of its results, in order (ADR-2026-10-30-1232), and the table
+//! `__funk_functions`, which gives each function's name as fir writes it (`@f`,
+//! `@"a b"`), its number of parameters, its wrapper, the bytes of stack that a run
+//! of it needs with every call it makes (`stack.rs`), and whether it is recursive.
+//! The runtime finds a function in the table by the name on the command line,
+//! reserves that stack, or for a recursive function up to the process's stack
+//! limit (`ulimit -s`), and calls the wrapper on it
+//! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 
 mod stack;
 
@@ -37,8 +38,8 @@ const RUNTIME: &str = concat!(include_str!("runtime.s"), include_str!("values.s"
 /// The line that goes before the entry's assembly when the program links
 /// with the C library: it turns on the runtime's `.ifdef .Lfunk_libc`
 /// parts, which flush the C library's streams and leave through its `exit`
-/// (ADR-2026-11-10-1303). Without it the runtime assembles as it always
-/// has.
+/// (`docs/decisions/x86-64-backend.md#linking-with-the-host-c-library`).
+/// Without it the runtime assembles as it always has.
 pub const LIBC: &str = "\t.set\t.Lfunk_libc, 1\n";
 
 /// The stack that the runtime's routines need below a wrapper, with room to
@@ -107,7 +108,7 @@ pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
 /// which after the call holds an eightbyte of a result instead, and more
 /// slots when the results take more eightbytes than the arguments. When
 /// the results go in memory it also holds the slot for the result area's
-/// address and, at its bottom, the area (ADR-2026-11-03-0109).
+/// address and, at its bottom, the area (ADR-2026-10-30-1232).
 fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnostic> {
     let report = |why: String| at(f, f.body.blocks.first(), None, why);
     let params = widths(f.params.iter().map(|d| &d.ty)).map_err(report)?;
@@ -175,8 +176,10 @@ fn wrapper(asm: &mut Asm, i: usize, f: &Func, need: u64) -> Result<u64, Diagnost
 
 /// The slots in a wrapper's frame of values of `types`, from `-8(%rbp)`
 /// down, and how many slots they take: two for an `i128`, its low half
-/// below, as in a function's frame (ADR-2026-11-03-010730). The arguments
-/// take these slots, and after the call the results take them again.
+/// below, as in a function's frame
+/// (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). The
+/// arguments take these slots, and after the call the results take them
+/// again.
 fn slots<'t>(types: impl IntoIterator<Item = &'t Type>) -> Option<(Vec<Arg>, usize)> {
     let mut used = 0usize;
     let mut out = Vec::new();

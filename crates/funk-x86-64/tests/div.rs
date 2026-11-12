@@ -1,7 +1,7 @@
 //! How `sdiv`, `udiv`, `srem` and `urem` are lowered (#18): one bare
 //! `idiv` or `div` of the op's own size, with no guard against a zero
 //! divisor or the signed minimum divided by `-1`, the same with `exact` as
-//! without (ADR-2026-10-31-0050).
+//! without (`docs/decisions/x86-64-backend-lowering.md#division`).
 
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;

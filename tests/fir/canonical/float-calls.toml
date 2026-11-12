@@ -1,9 +1,10 @@
 # Tests of float-calls.fir: f32 and f64 passed to and returned from
-# functions as System V passes them (ADR-2026-11-11-1140): in %xmm0 to
-# %xmm7 apart from the integers, then on the stack, and back in %xmm0 and
-# %xmm1 or, with three eightbytes or more, in the result area; mixed
-# with integers and an i128; through block arguments; and chosen by an
-# fcmp. A float is spelled as the one float literal of its bits
+# functions as System V passes them
+# (docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers): in
+# %xmm0 to %xmm7 apart from the integers, then on the stack, and back in
+# %xmm0 and %xmm1 or, with three eightbytes or more, in the result area;
+# mixed with integers and an i128; through block arguments; and chosen by
+# an fcmp. A float is spelled as the one float literal of its bits
 # (ADR-2026-11-11-1438), and comes back as the same bits, a NaN with its
 # payload and sign included. Each test is differential.
 tests = [

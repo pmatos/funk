@@ -1,10 +1,10 @@
 //! How `ret`, `call` and the entry wrapper move an `i128` among several
 //! results (#21, #31). One `i128` alone comes back in `%rdx:%rax`; next to
 //! any other result it goes in the result area, at an offset that is a
-//! multiple of 16, its low half first (ADR-2026-11-03-0109). The area's
+//! multiple of 16, its low half first (ADR-2026-10-30-1232). The area's
 //! address is the call's first argument, so an `i128` argument that would
 //! have had `%r8:%r9` finds one register left and goes on the stack
-//! (ADR-2026-11-03-0108).
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`).
 
 use funk_ir::{Module, Registry, parse};
 use funk_x86_64::compile;

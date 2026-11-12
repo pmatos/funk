@@ -128,7 +128,7 @@ without extension; calls to code funk did not compile may need other rules.
 **result area**:
 Stack space in a caller's frame where a callee writes its results when
 they take more than the two registers `%rax` and `%rdx`. The caller passes
-its address as the call's first argument (ADR-2026-11-03-0109). It is
+its address as the call's first argument (ADR-2026-10-30-1232). It is
 backend stack space, like a slot, not fir memory.
 _Avoid_: return buffer, sret
 

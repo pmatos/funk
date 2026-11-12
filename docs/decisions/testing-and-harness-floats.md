@@ -49,4 +49,4 @@ both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
 arithmetic, and `fma`'s runtime routines also on random operands
-(ADR-2026-11-11-1802).
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).

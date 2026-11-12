@@ -70,7 +70,7 @@ of funk are on `main`:
   `i64` and `i128` into an object file and an executable for Linux. An
   `i128` is a pair of eightbytes, and each op lowers it through a pair of
   registers
-  ([ADR-2026-11-03-010730](adrs/2026-11-03-010730-an-i128-is-a-pair-of-eightbytes.md)).
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#lowering-i128)).
   Native code holds no poison: a broken `nuw` or `nsw` gives the
   wrapped result, a broken `exact` the plain quotient, a shift by `N` or
   more gives what x86's masked shift gives (at `i128`, what the pair's
@@ -78,40 +78,39 @@ of funk are on `main`:
   its operand
   ([ADR-2026-10-30-2248](adrs/2026-10-30-2248-native-code-holds-no-poison.md)).
   A `poison` writes zero into each eightbyte of its result's slot
-  ([ADR-2026-11-03-1616](adrs/2026-11-03-1616-the-x86-64-backend-lowers-poison-to-zero-in-every-eightbyte.md)).
+  ([x86-64-backend.md](decisions/x86-64-backend.md#poison)).
   A division is one bare `div` or `idiv` of its own size, with no guard
-  ([ADR-2026-10-31-0050](adrs/2026-10-31-0050-division-is-one-bare-sized-div.md)),
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#division)),
   and at `i128` a call of a System V routine, with no guard either, of a
   hand-written helper that the module's object file carries under local
   symbols
-  ([ADR-2026-11-03-0414](adrs/2026-11-03-0414-the-i128-division-helper-lives-in-the-module-s-object-file.md),
-  [ADR-2026-11-03-0415](adrs/2026-11-03-0415-the-i128-division-routines-are-system-v-functions.md)).
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#division-at-i128)).
   A `select` tests bit 0 of its condition and is one `cmov`, with no
   branch
-  ([ADR-2026-10-31-0215](adrs/2026-10-31-0215-select-is-one-cmov-on-bit-0.md)).
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#select)).
   Blocks keep their order, a branch jumps unless its block comes next,
   and a `cond_br` tests bit 0 of its condition
-  ([ADR-2026-10-31-0334](adrs/2026-10-31-0334-blocks-keep-their-order-and-branches-jump-to-labels.md)).
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#branches)).
   A branch copies the values it passes into its block's arguments as one
   parallel move
-  ([ADR-2026-10-31-0335](adrs/2026-10-31-0335-block-arguments-are-one-parallel-move.md)).
+  ([x86-64-backend-lowering.md](decisions/x86-64-backend-lowering.md#block-arguments)).
   A call follows System V and extends no argument
   ([ADR-2026-10-30-1232](adrs/2026-10-30-1232-funk-function-abi.md),
-  [ADR-2026-11-02-1021](adrs/2026-11-02-1021-a-funk-caller-extends-no-argument.md)),
+  [x86-64-backend-abi.md](decisions/x86-64-backend-abi.md#calls-between-funk-functions)),
   and passes an `i128` in two registers or in 16 aligned bytes of the
   stack
-  ([ADR-2026-11-03-0108](adrs/2026-11-03-0108-an-i128-passes-in-two-registers-or-sixteen-aligned-bytes.md)).
+  ([x86-64-backend-abi.md](decisions/x86-64-backend-abi.md#arguments)).
   Functions and calls return any number of results, as System V returns
   a structure: one or two eightbytes in `%rax` and `%rdx`, so one `i128`
   in `%rdx:%rax`, and more in a result area that the caller provides
-  ([ADR-2026-11-03-0109](adrs/2026-11-03-0109-results-return-as-a-system-v-structure.md)).
+  ([ADR-2026-10-30-1232](adrs/2026-10-30-1232-funk-function-abi.md)).
   The executable runs one function from the command line and prints its
   results as JSON
-  ([ADR-2026-10-30-1233](adrs/2026-10-30-1233-build-and-run-a-function.md)).
+  ([x86-64-backend-executable.md](decisions/x86-64-backend-executable.md#running-one-function)).
   It runs the function on a stack that covers every call the function
   makes, or for a recursive function up to the process's stack limit
   (`ulimit -s`), and a run that outgrows its stack says so in one line
-  ([ADR-2026-11-02-1132](adrs/2026-11-02-1132-a-run-s-stack-covers-its-calls.md)).
+  ([x86-64-backend-executable.md](decisions/x86-64-backend-executable.md#the-runs-stack)).
 - Generated programs and fuzzing
   ([#165](https://github.com/pmatos/funk/issues/165)).
   `./scripts/check-random-programs.sh` runs 500 generated programs on

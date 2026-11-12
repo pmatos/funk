@@ -1,11 +1,12 @@
 # Tests of div-i8-ax.fir: the i8 lowering on its own (#18). idivb and
 # divb divide %ax by a byte, and leave the quotient in %al and the
-# remainder in %ah (ADR-2026-10-31-0050): sdiv and srem sign-extend the
-# dividend into %ah, udiv and urem zero-extend it, and the remainder
-# moves down from %ah. Dividends of both signs, several with the top bit
-# set, by divisors of both signs give quotients and remainders of both
-# signs, and unsigned remainders with the top bit set. div-i8.toml runs
-# the boundary bit patterns and exact.
+# remainder in %ah (docs/decisions/x86-64-backend-lowering.md#division):
+# sdiv and srem sign-extend the dividend into %ah, udiv and urem
+# zero-extend it, and the remainder moves down from %ah. Dividends of
+# both signs, several with the top bit set, by divisors of both signs
+# give quotients and remainders of both signs, and unsigned remainders
+# with the top bit set. div-i8.toml runs the boundary bit patterns and
+# exact.
 # Each test is differential: fir-ref and native code run it, and the
 # native result must equal fir-ref's. None is UB: no divisor is 0 or -1.
 tests = [

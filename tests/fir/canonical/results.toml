@@ -3,7 +3,7 @@
 # result must refine fir-ref's, value by value. several returns three
 # values, more than the two registers that hold results natively, so
 # natively they go in a result area that the caller provides
-# (ADR-2026-11-03-0109).
+# (ADR-2026-10-30-1232).
 tests = [
   { func = "@none" },
   { func = "@one", args = ["-7"] },

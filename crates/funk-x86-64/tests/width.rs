@@ -1,6 +1,7 @@
 //! How `zext`, `sext` and `trunc` are lowered (#17): `zext` and `sext`
 //! extend their operand from its width to 64 bits, by zero or by sign, and
-//! `trunc` is a copy (ADR-2026-10-30-1231).
+//! `trunc` is a copy
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`).
 
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;

@@ -1,6 +1,8 @@
 //! Where System V AMD64 passes the arguments of a call: an integer in the
 //! six argument registers, a float in the eight SSE registers, then on the
-//! stack (ADR-2026-10-30-1232, ADR-2026-11-03-0108, ADR-2026-11-11-1140).
+//! stack (ADR-2026-10-30-1232,
+//! `docs/decisions/x86-64-backend-abi.md#arguments`,
+//! `docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 //!
 //! An argument of one eightbyte, `i1` to `i64`, takes the next free
 //! register, or else the next eightbyte of the stack. An `i128` takes the
@@ -16,7 +18,7 @@
 //! `float` or a `double`.
 //!
 //! When a call's results go in memory, the address of the result area is
-//! its first argument, of one eightbyte (ADR-2026-11-03-0109), as C passes
+//! its first argument, of one eightbyte (ADR-2026-10-30-1232), as C passes
 //! the address of a structure it returns in memory. The list that this
 //! layout reads then starts with it (`abi::passed`), so it takes `%rdi`
 //! and every argument after it moves along: an `i128` that would have had

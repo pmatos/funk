@@ -1,12 +1,13 @@
 //! The stack that a run of each function needs, with its calls
-//! (ADR-2026-11-02-1132).
+//! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 //!
 //! A function's need is the stack it uses below the return address that its
 //! caller pushes: that address and its saved `%rbp`, its frame, and the
 //! deepest of its calls, each with the arguments it pushes and the callee's
-//! own need. A division at `i128`, or an `fma` at `f32` or `f64`, is a
-//! call of a runtime helper, which pushes no argument and needs at most
-//! `HELPER_STACK` bytes (ADR-2026-11-03-0415).
+//! own need. A division at `i128`, or an `fma` at `f32` or `f64`, is a call
+//! of a runtime helper, which pushes no argument and needs at most
+//! `HELPER_STACK` bytes
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 //! A call between two functions of one cycle, such as a function
 //! that calls itself or two that call each other, is left out: how deep a
 //! cycle goes depends on the arguments, so no figure from the code bounds
@@ -128,7 +129,7 @@ fn value_classes(f: &Func) -> HashMap<&str, Class> {
 
 /// The class of each argument that the call `op` passes, as `abi::call`
 /// lays them out: the address of its result area first when its results go
-/// in memory (ADR-2026-11-03-0109), then its operands, of the classes that
+/// in memory (ADR-2026-10-30-1232), then its operands, of the classes that
 /// `types` gives. Lowering has checked the layout, so one
 /// that fails here cannot be built and counts nothing more.
 fn passed(op: &Op, types: &HashMap<&str, Class>) -> Vec<Class> {
@@ -317,7 +318,7 @@ mod tests {
     }
 
     /// A call whose results go in memory passes the area's address first,
-    /// so six arguments push one word and its padding (ADR-2026-11-03-0109).
+    /// so six arguments push one word and its padding (ADR-2026-10-30-1232).
     #[test]
     fn the_address_of_a_result_area_counts_among_the_arguments() {
         let i64 = funk_ir::dialects::core::int_type(64);

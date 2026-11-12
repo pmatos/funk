@@ -2,10 +2,12 @@
 //! example module, run natively (#20).
 //!
 //! The arguments past the sixth go on the stack (ADR-2026-10-30-1232), and
-//! no argument is extended (ADR-2026-11-02-1021): each caller here passes
-//! the sum of a parameter and 1, whose slot holds bits above the value's
-//! width where the sum wraps, such as 128 for `127 + 1` at `i8`, and each
-//! callee reads only the low bits of the one argument it returns.
+//! no argument is extended
+//! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`):
+//! each caller here passes the sum of a parameter and 1, whose slot holds
+//! bits above the value's width where the sum wraps, such as 128 for
+//! `127 + 1` at `i8`, and each callee reads only the low bits of the one
+//! argument it returns.
 
 mod common;
 

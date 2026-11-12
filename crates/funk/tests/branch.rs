@@ -1,8 +1,10 @@
 //! `br` and `cond_br` (#19), run natively at every width the backend
 //! lowers: block arguments that swap, rotate and pass one value to several
 //! arguments on every trip round a loop, which the branch copies as one
-//! parallel move (ADR-2026-10-31-0335), and conditions whose slots hold
-//! bits above bit 0, which `cond_br` must not read (ADR-2026-10-30-1231).
+//! parallel move
+//! (`docs/decisions/x86-64-backend-lowering.md#block-arguments`), and
+//! conditions whose slots hold bits above bit 0, which `cond_br` must not
+//! read (`docs/decisions/x86-64-backend.md#values-and-widths`).
 
 mod common;
 

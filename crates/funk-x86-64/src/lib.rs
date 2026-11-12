@@ -2,32 +2,40 @@
 //! (ADR-2026-10-30-1228).
 //!
 //! [`compile`] lowers a valid module to two assembly files in GNU `as`'s
-//! AT&T syntax (ADR-2026-10-30-1229). The module's file holds one function
-//! per fir function, each a global symbol that follows the System V AMD64
-//! calling convention (ADR-2026-10-30-1232), so C code can link to it, and,
-//! when a function divides at `i128` or does `fma` at `f32` or `f64`,
-//! the runtime helper that it calls, under local symbols
-//! (ADR-2026-11-03-0414). The entry file holds the
-//! entry point of an executable that runs one function from the command
-//! line and prints its results (ADR-2026-10-30-1233), on a stack that
-//! covers every call it makes (ADR-2026-11-02-1132).
+//! AT&T syntax (`docs/decisions/x86-64-backend.md#assembly-and-linking`).
+//! The module's file holds one function per fir function, each a global
+//! symbol that follows the System V AMD64 calling convention
+//! (ADR-2026-10-30-1232), so C code can link to it, and, when a function
+//! divides at `i128` or does `fma` at `f32` or `f64`, the runtime helper
+//! that it calls, under local symbols
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`). The
+//! entry file holds the entry point of an executable that runs one function
+//! from the command line and prints its results
+//! (`docs/decisions/x86-64-backend-executable.md#running-one-function`), on
+//! a stack that covers every call it makes
+//! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 //! [`build`] assembles both with `as` and links them with `ld` into an
 //! object file and an executable
-//! (`docs/decisions/rust-ir-and-tools-funk.md#funk-build`), with the host's C
-//! library only when the module's object file needs it
-//! (ADR-2026-11-10-1303).
+//! (`docs/decisions/rust-ir-and-tools-funk.md#funk-build`), with the host's
+//! C library only when the module's object file needs it
+//! (`docs/decisions/x86-64-backend.md#linking-with-the-host-c-library`).
 //!
 //! Register allocation is the baseline: every value has a stack slot, and
-//! each op loads its operands and stores its results (ADR-2026-10-30-1230).
-//! The backend lowers `i1`, `i8`, `i16`, `i32` and `i64`
-//! (ADR-2026-10-30-1231), and `i128` as a pair of eightbytes
-//! (ADR-2026-11-03-010730), whose division calls a System V routine of
-//! the helper (ADR-2026-11-03-0415), and functions and calls with any
-//! number of results, which come back as System V returns a structure: in
-//! `%rax` and `%rdx`, or in a result area that the caller provides
-//! (ADR-2026-11-03-0109). A call between funk functions extends no argument
-//! (ADR-2026-11-02-1021), and passes an `i128` in two registers or in 16
-//! aligned bytes of the stack (ADR-2026-11-03-0108).
+//! each op loads its operands and stores its results
+//! (`docs/decisions/x86-64-backend.md#frames-and-slots`). The backend
+//! lowers `i1`, `i8`, `i16`, `i32` and `i64`
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`), and `i128` as a
+//! pair of eightbytes
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`), whose
+//! division calls a System V routine of the helper
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`), and
+//! functions and calls with any number of results, which come back as
+//! System V returns a structure: in `%rax` and `%rdx`, or in a result area
+//! that the caller provides (ADR-2026-10-30-1232). A call between funk
+//! functions extends no argument
+//! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`),
+//! and passes an `i128` in two registers or in 16 aligned bytes of the
+//! stack (`docs/decisions/x86-64-backend-abi.md#arguments`).
 //! Anything else is reported as a [`Diagnostic`] that carries the IR
 //! location of the op, or of the block for a parameter.
 //!
@@ -115,7 +123,8 @@ pub fn build(m: &Module, exe: &Path) -> Result<Outputs, BuildError> {
 ///
 /// When the object file references a symbol that it does not define, the
 /// executable links with the host's C library; otherwise it is static and
-/// links nothing else (ADR-2026-11-10-1303).
+/// links nothing else
+/// (`docs/decisions/x86-64-backend.md#linking-with-the-host-c-library`).
 ///
 /// Every file is first written to a temporary directory next to `exe`. The
 /// object file and then the executable are moved into place only once both

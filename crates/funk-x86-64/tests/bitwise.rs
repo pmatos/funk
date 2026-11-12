@@ -1,7 +1,9 @@
 //! How the bitwise ops and shifts are lowered (#15): `and`, `or` and `xor`
 //! are one 64-bit instruction at every width; a shift zero-extends its
 //! amount, extends the value of a right shift as the shift reads it, and is
-//! one 64-bit shift by `%cl` (ADR-2026-10-30-1231, ADR-2026-10-30-2248).
+//! one 64-bit shift by `%cl`
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`,
+//! ADR-2026-10-30-2248).
 
 use funk_ir::{Registry, parse};
 use funk_x86_64::compile;

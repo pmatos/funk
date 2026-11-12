@@ -1,17 +1,18 @@
-# The runtime of an executable that `funk build` links (ADR-2026-10-30-1233).
+# The runtime of an executable that `funk build` links
+# (docs/decisions/x86-64-backend-executable.md#running-one-function).
 #
 # The executable runs one function of the module: `PROGRAM @FUNCTION ARG...`.
 # The runtime finds the function in the table `__funk_functions`, which the
 # entry generator writes after this file, and checks the argument count. It
 # reserves the stack that the table gives for the function, which covers
-# every call it makes, or for a recursive function up to the process's
-# stack limit (ADR-2026-11-02-1132), with a guard page below it, and calls
-# the function's wrapper on that stack. The wrapper parses each argument with
-# `__funk_rt_arg`, calls the function, and prints each result with
-# `__funk_rt_value`, both in values.s, which follows this file. The runtime
-# then prints the line {"values":[...]} on
-# standard output and exits with 0. A bad command line, a stack that cannot
-# be reserved, or a run that outgrows its stack is reported in one line on
+# every call it makes, or for a recursive function up to the process's stack
+# limit (docs/decisions/x86-64-backend-executable.md#the-runs-stack), with a
+# guard page below it, and calls the function's wrapper on that stack. The
+# wrapper parses each argument with `__funk_rt_arg`, calls the function, and
+# prints each result with `__funk_rt_value`, both in values.s, which follows
+# this file. The runtime then prints the line {"values":[...]} on standard
+# output and exits with 0. A bad command line, a stack that cannot be
+# reserved, or a run that outgrows its stack is reported in one line on
 # standard error, with exit status 2.
 #
 # It uses no libc: only the Linux system calls write (1), mmap (9),
@@ -21,11 +22,12 @@
 # convention.
 #
 # When the module calls into the C library, `funk build` links with it and
-# defines .Lfunk_libc before this file (ADR-2026-11-10-1303). Then the
-# runtime also registers the dynamic loader's finalizer with __cxa_atexit,
-# flushes the C library's streams with fflush(NULL) before it writes
-# standard output, so what the function wrote comes first, and leaves a
-# successful run through exit(0). Every other way out stays exit_group.
+# defines .Lfunk_libc before this file
+# (docs/decisions/x86-64-backend.md#linking-with-the-host-c-library). Then
+# the runtime also registers the dynamic loader's finalizer with
+# __cxa_atexit, flushes the C library's streams with fflush(NULL) before it
+# writes standard output, so what the function wrote comes first, and leaves
+# a successful run through exit(0). Every other way out stays exit_group.
 
 	.text
 
@@ -198,11 +200,11 @@ __funk_rt_main:
 # may reserve: the soft limit on the process's stack (ulimit -s, by
 # getrlimit), rounded down to a page, or the machine's memory and swap when
 # they are less. A recursive run follows ulimit -s, as a C or Rust program
-# does (ADR-2026-11-02-1132): 8 MiB by default, so a recursion without end
-# reports at once that it ran out, instead of filling memory and swap
-# first. ulimit -s unlimited (RLIM_INFINITY, all ones) leaves memory and
-# swap as the bound, so fir keeps no depth limit of its own; so does a
-# failed getrlimit.
+# does (docs/decisions/x86-64-backend-executable.md#the-runs-stack): 8 MiB
+# by default, so a recursion without end reports at once that it ran out,
+# instead of filling memory and swap first. ulimit -s unlimited
+# (RLIM_INFINITY, all ones) leaves memory and swap as the bound, so fir
+# keeps no depth limit of its own; so does a failed getrlimit.
 __funk_rt_recursive_stack:
 	pushq	%rbx
 	subq	$16, %rsp		# a struct rlimit: rlim_cur, rlim_max
@@ -271,10 +273,11 @@ __funk_rt_catch_overflow:
 
 # __funk_rt_overflow(signal, info, context): the SIGSEGV handler. Every
 # access to the stack is at most a page below one made before it
-# (ADR-2026-11-02-1102), so a run that outgrows its stack faults first in
-# the guard page. That fault is reported in one line, with exit status 2;
-# the buffered output is never written, so standard output stays empty,
-# but for what the C library wrote out before the fault.
+# (docs/decisions/x86-64-backend.md#stack-probes), so a run that outgrows
+# its stack faults first in the guard page. That fault is reported in one
+# line, with exit status 2; the buffered output is never written, so
+# standard output stays empty, but for what the C library wrote out before
+# the fault.
 # Any other SIGSEGV is not the runtime's to report, and SA_RESETHAND has
 # put the default action back. After any other fault the handler returns,
 # so the instruction faults again and ends the process with the fault's own

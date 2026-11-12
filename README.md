@@ -177,7 +177,7 @@ and the executable `OUTPUT`, which runs one function: `OUTPUT @FUNCTION ARG...`.
 `--json` reports one JSON line per file. `funk --help` lists the options.
 [docs/decisions/rust-ir-and-tools-funk.md](docs/decisions/rust-ir-and-tools-funk.md)
 gives the reports and exit codes, and
-[ADR-2026-10-30-1233](docs/adrs/2026-10-30-1233-build-and-run-a-function.md)
+[docs/decisions/x86-64-backend-executable.md](docs/decisions/x86-64-backend-executable.md)
 how the executable is run.
 
 ## Explore fir in a browser

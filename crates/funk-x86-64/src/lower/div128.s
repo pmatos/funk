@@ -1,18 +1,20 @@
 # The runtime helper that divides at i128 (#22). The backend appends this
 # file, once, to the assembly of a module in which a function divides at
-# i128, so the module's object file carries it (ADR-2026-11-03-0414).
+# i128, so the module's object file carries it
+# (docs/decisions/x86-64-backend-lowering.md#division-at-i128).
 #
 # Each of sdiv, udiv, srem and urem at i128 is a call of its own routine
 # below. Every symbol is local to the object file, with no .globl, and
 # starts with __funk_rt_, which no fir function's symbol does
 # (ADR-2026-10-30-1232). Each routine is a System V function of two
 # __int128 arguments that returns an __int128: a in %rdi (its low half)
-# and %rsi (its high half), b in %rdx and %rcx, and the result in %rax
-# and %rdx, written high:low below. It uses only %rax, %rcx, %rdx,
-# %rsi, %rdi and %r8 to %r11, which System V lets a callee clobber, and
-# 24 bytes of stack below the caller's %rsp at most: its return address,
-# the sign that the signed ones push, and their calls of
-# __funk_rt_magnitudes and __funk_rt_udivmod128 (ADR-2026-11-03-0415).
+# and %rsi (its high half), b in %rdx and %rcx, and the result in %rax and
+# %rdx, written high:low below. It uses only %rax, %rcx, %rdx, %rsi, %rdi
+# and %r8 to %r11, which System V lets a callee clobber, and 24 bytes of
+# stack below the caller's %rsp at most: its return address, the sign that
+# the signed ones push, and their calls of __funk_rt_magnitudes and
+# __funk_rt_udivmod128
+# (docs/decisions/x86-64-backend-lowering.md#division-at-i128).
 #
 # No routine tests its divisor. A zero divisor traps in the first divq, as
 # a division at i64 traps, and sdiv and srem of the signed minimum by -1

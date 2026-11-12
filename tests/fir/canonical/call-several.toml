@@ -7,7 +7,7 @@
 # Each test is differential: fir-ref and native code run it, and the
 # native result must refine fir-ref's, value by value. Natively swap's
 # three results go in a result area that its caller provides, and
-# divmod's two in registers (#31, ADR-2026-11-03-0109).
+# divmod's two in registers (#31, ADR-2026-10-30-1232).
 tests = [
   { func = "@call_swap", args = ["0", "1", "false"] },
   { func = "@call_swap", args = ["1", "-1", "true"] },

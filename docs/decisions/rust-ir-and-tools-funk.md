@@ -94,8 +94,10 @@ to the old file keeps the old text.
 
 `funk build` reads, parses and validates `FILE`, then lowers it. It writes the
 object file `OUTPUT.o` and the executable `OUTPUT`. The executable runs one
-function (ADR-2026-10-30-1233). `OUTPUT` is a path even when it reads as a flag,
-such as `-h`. The command prints nothing when it succeeds.
+function
+([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+`OUTPUT` is a path even when it reads as a flag, such as `-h`. The command
+prints nothing when it succeeds.
 
 The build is all or nothing. It writes every file to a new hidden directory next
 to `OUTPUT`. It moves `OUTPUT.o` and then `OUTPUT` into place, only once both are

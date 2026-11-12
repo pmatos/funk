@@ -1,9 +1,10 @@
-//! Division at `i128` (#22) among several results, as a call's argument
-//! and result, and in recursion, run natively and checked against Rust's
-//! `i128` and `u128` arithmetic; a module whose functions have the names of
-//! the helper's routines (ADR-2026-11-03-0414); two object files that both
-//! carry the helper, linked into one program; and the widths at which the
-//! backend divides.
+//! Division at `i128` (#22) among several results, as a call's argument and
+//! result, and in recursion, run natively and checked against Rust's `i128`
+//! and `u128` arithmetic; a module whose functions have the names of the
+//! helper's routines
+//! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`); two
+//! object files that both carry the helper, linked into one program; and
+//! the widths at which the backend divides.
 
 mod common;
 
@@ -36,7 +37,7 @@ fn refs(vs: &[String]) -> Vec<&str> {
 
 /// `@divmod` returns its quotient and remainder, two `i128`s, and
 /// `@udivmod3` returns `i128, i64, i128`: four and five eightbytes, so
-/// both go in the caller's result area (ADR-2026-11-03-0109). Callers pass
+/// both go in the caller's result area (ADR-2026-10-30-1232). Callers pass
 /// the results on, as arguments and as results, and `@recompose`
 /// multiplies them back into the dividend.
 #[test]
@@ -263,7 +264,8 @@ fn start(urem: u128) -> String {
 
 /// Each object file holds the helper under local symbols, so a program
 /// links both with `ld` and no runtime of its own, and each function
-/// calls its own copy (ADR-2026-11-03-0414).
+/// calls its own copy
+/// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 #[test]
 fn two_object_files_with_the_helper_link_into_one_program() {
     let qa = func(

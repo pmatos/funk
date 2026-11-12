@@ -31,7 +31,8 @@ STATUS = {ACCEPTED: 0, PARSE_ERROR: 1, VALIDATION_ERROR: 1, "io-error": 2}
 OUTCOMES = "outcomes"
 BUDGET_EXCEEDED = "choice-budget-exceeded"
 # The one line that a run that outgrows its stack writes, after its exit
-# status of 2 (ADR-2026-11-02-1132).
+# status of 2
+# (docs/decisions/x86-64-backend-executable.md#the-runs-stack).
 RAN_OUT = re.compile(r".* ran out of the ([0-9]+) bytes of stack reserved for it\n")
 
 
@@ -221,7 +222,8 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
 
 
 def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
-    """The values that a built executable prints (ADR-2026-10-30-1233):
+    """The values that a built executable prints
+    (docs/decisions/x86-64-backend-executable.md#running-one-function):
     `{"values":[...]}` and exit status 0, and nothing on standard error; or
     that the run outgrew its stack
     (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)."""

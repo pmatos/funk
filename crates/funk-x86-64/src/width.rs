@@ -1,22 +1,26 @@
-//! Integer widths in registers (ADR-2026-10-30-1231, ADR-2026-11-03-010730).
+//! Integer widths in registers
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`,
+//! `docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
 //!
-//! The backend holds a value of `iN`, `N` at most 64, in one 64-bit
-//! register or stack slot: its low `N` bits are the value, and the bits
-//! above them are unspecified. An op whose result depends only on its
-//! operands' low bits, such as `add`, works on all 64 bits and ignores the
-//! rest. An op that reads the bits above `N`, such as a comparison, a right
-//! shift, `zext`, or a division at `i1` (ADR-2026-10-31-0050), first extends
+//! The backend holds a value of `iN`, `N` at most 64, in one 64-bit register
+//! or stack slot: its low `N` bits are the value, and the bits above them
+//! are unspecified. An op whose result depends only on its operands' low
+//! bits, such as `add`, works on all 64 bits and ignores the rest. An op
+//! that reads the bits above `N`, such as a comparison, a right shift,
+//! `zext`, or a division at `i1`
+//! (`docs/decisions/x86-64-backend-lowering.md#division`), first extends
 //! those operands with [`extend`]. The same rule holds for the arguments a
 //! funk function receives and the results it returns (ADR-2026-10-30-1232).
 //!
 //! A value of `i128` is a pair of eightbytes, each 64 bits of the value with
 //! none unspecified: the low eightbyte in one register or slot, the high one
-//! in another (ADR-2026-11-03-010730).
+//! in another (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
 //!
 //! A value of `f32` or `f64` is its bits, in the low 32 or 64 bits of one
 //! slot or SSE register, the bits above unspecified, as for an `iN`
-//! (ADR-2026-11-11-1140). [`check`] gives its width, 32 or 64, and
-//! [`class`] says that it passes in SSE registers.
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
+//! [`check`] gives its width, 32 or 64, and [`class`] says that it passes in
+//! SSE registers.
 
 use funk_ir::Type;
 use funk_ir::dialects::core::{CoreType, core_type};
@@ -56,7 +60,7 @@ pub fn lowered(ty: &Type) -> (Result<u32, String>, Class) {
 }
 
 /// How a value passes to and from a function, by System V's classes
-/// (ADR-2026-11-11-1140).
+/// (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Class {
     /// One eightbyte of class INTEGER: `i1` to `i64`.

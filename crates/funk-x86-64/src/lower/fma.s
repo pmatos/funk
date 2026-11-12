@@ -2,7 +2,8 @@
 # multiply-add, so fma is a call of a routine below. The backend appends
 # this file, once, to the assembly of a module in which a function does
 # fma at f32 or f64, so the module's object file carries it, as it does
-# the helper that divides at i128 (ADR-2026-11-11-1802).
+# the helper that divides at i128
+# (docs/decisions/x86-64-backend-lowering.md#float-arithmetic).
 #
 # Each routine is a System V function of three floats that returns one:
 # a in %xmm0, b in %xmm1, c in %xmm2, and a * b + c, rounded once to

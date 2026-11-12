@@ -2,10 +2,11 @@
 //! backend lowers (#16), on every pair of boundary values, among them pairs
 //! that are in one order read as signed and in the other read as unsigned.
 //! A value of `iN` is the low `N` bits of its slot, and the bits above are
-//! unspecified (ADR-2026-10-30-1231), so each predicate also runs on
-//! operands that a wrapping `add` or a `shl` computed, whose slots hold
-//! other bits above `N` than an argument's. A poison operand gives a poison
-//! `i1`, which any value refines (ADR-2026-10-29-2008).
+//! unspecified (`docs/decisions/x86-64-backend.md#values-and-widths`), so
+//! each predicate also runs on operands that a wrapping `add` or a `shl`
+//! computed, whose slots hold other bits above `N` than an argument's. A
+//! poison operand gives a poison `i1`, which any value refines
+//! (ADR-2026-10-29-2008).
 
 mod common;
 

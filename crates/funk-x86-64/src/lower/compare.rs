@@ -3,28 +3,28 @@
 //!
 //! `icmp` reads its operands whole, so it first extends each from `N` bits
 //! to 64 with [`extend`]: by sign for the signed predicates, and by zero for
-//! the unsigned ones and for `eq` and `ne` (ADR-2026-10-30-1231). Then one
-//! `cmpq` and the predicate's `setCC` write the result, `0` or `1`, to
-//! `%al`, and `%rax` is stored. Bit 0 of the slot is the `i1`; the bits
-//! above it, which keep `%a`'s from bit 8 up, are unspecified, as every
-//! value's are.
+//! the unsigned ones and for `eq` and `ne`
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`). Then one `cmpq`
+//! and the predicate's `setCC` write the result, `0` or `1`, to `%al`, and
+//! `%rax` is stored. Bit 0 of the slot is the `i1`; the bits above it, which
+//! keep `%a`'s from bit 8 up, are unspecified, as every value's are.
 //!
-//! `select` tests bit 0 of its condition and nothing above it, and keeps
-//! its first value or moves in its second with one `cmovzq`, with no branch
-//! (ADR-2026-10-31-0215). The low `N` bits of the chosen slot are the
-//! result. Neither op is ever UB, and native code holds no poison
-//! (ADR-2026-10-30-2248): where the source gives poison, from a poison
-//! operand of `icmp` or a poison condition or chosen value of `select`,
-//! any value of the type refines it.
+//! `select` tests bit 0 of its condition and nothing above it, and keeps its
+//! first value or moves in its second with one `cmovzq`, with no branch
+//! (`docs/decisions/x86-64-backend-lowering.md#select`). The low `N` bits of
+//! the chosen slot are the result. Neither op is ever UB, and native code
+//! holds no poison (ADR-2026-10-30-2248): where the source gives poison,
+//! from a poison operand of `icmp` or a poison condition or chosen value of
+//! `select`, any value of the type refines it.
 //!
-//! At `i128` (ADR-2026-11-03-010730), `eq` and `ne` `xorq` each half of `%a`
-//! with `%b`'s and `orq` the two: the result is zero when the values are
-//! equal. Every other predicate is one of `<` and `>=`, signed or
-//! unsigned, of `%a` and `%b` or of `%b` and `%a`: `cmpq` of the low halves
-//! and `sbbq` of the high ones leave the flags of the whole 128-bit
-//! subtraction but its zero flag, so `setl`, `setge`, `setb` or `setae`
-//! reads them. `select` moves in each half of its second value with a
-//! `cmovzq` of its own.
+//! At `i128` (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`),
+//! `eq` and `ne` `xorq` each half of `%a` with `%b`'s and `orq` the two: the
+//! result is zero when the values are equal. Every other predicate is one of
+//! `<` and `>=`, signed or unsigned, of `%a` and `%b` or of `%b` and `%a`:
+//! `cmpq` of the low halves and `sbbq` of the high ones leave the flags of
+//! the whole 128-bit subtraction but its zero flag, so `setl`, `setge`,
+//! `setb` or `setae` reads them. `select` moves in each half of its second
+//! value with a `cmovzq` of its own.
 
 use funk_ir::{Attr, Op};
 

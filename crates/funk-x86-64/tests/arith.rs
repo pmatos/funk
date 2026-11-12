@@ -1,7 +1,9 @@
 //! How `add`, `sub`, `mul` and `freeze` are lowered (#14): one 64-bit
 //! instruction at every width, the same with any flags, and `freeze` as a
-//! copy into its own slot (ADR-2026-10-30-1231, ADR-2026-10-30-2248); and
-//! `poison` (#122), as zero in its slot (ADR-2026-11-03-1616).
+//! copy into its own slot
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`,
+//! ADR-2026-10-30-2248); and `poison` (#122), as zero in its slot
+//! (`docs/decisions/x86-64-backend.md#poison`).
 
 use funk_ir::dialects::core::WRAP_FLAG_SETS;
 use funk_ir::{Registry, parse};

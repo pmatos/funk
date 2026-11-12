@@ -15,8 +15,9 @@
 # unsigned: by 2^66, by 2^128 - 2^66 and by 2^128 - 2^66 - 3, which LLVM
 # writes as the negative constants that fir writes too, and by 7, 11, 22,
 # 56 and 67, which LLVM lowers with a magic multiply, and native code here
-# through the runtime helper of ADR-2026-11-03-0415. Each runs on the same
-# values.
+# through the runtime helper of
+# docs/decisions/x86-64-backend-lowering.md#division-at-i128. Each runs on
+# the same values.
 #
 # Every function of the file is here.
 source = { file = "llvm/test/CodeGen/X86/i128-udiv.ll", commit = "7a941dfb2877a0b8cf30323fefa85ad019e0b0f5" }

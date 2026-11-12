@@ -5,14 +5,15 @@ Tier: direction; area: semantics
 
 ## Context
 
-ADR-2026-10-30-1232 says a funk call to code that funk did not compile must
-extend `i8` and `i16` arguments as the callee's C type requires, and pass an
-`i1` as 0 or 1, and that fir types carry no sign, so a marker is needed.
-ADR-2026-11-02-1021 leaves the marker to the ticket that lets fir declare
-such functions. Under ADR-2026-11-09-1543 an external declaration is a kind
-of item. ADR-2026-11-09-1548 puts calls to variadic external functions in
-M1. The human ruled on
-[#209](https://github.com/pmatos/funk/issues/209) on 2026-11-09.
+ADR-2026-10-30-1232 says that code funk did not compile expects an `i8` or
+`i16` argument extended as its C type requires, and an `i1` as 0 or 1, and
+that fir types carry no sign, so such a call needs a marker.
+A call between funk functions extends nothing, and the backend left the marker
+to the ticket that lets fir declare such functions
+([x86-64-backend-abi.md](../decisions/x86-64-backend-abi.md#calls-between-funk-functions)).
+Under ADR-2026-11-09-1543 an external declaration is a kind of item.
+ADR-2026-11-09-1548 puts calls to variadic external functions in M1. The human
+ruled on [#209](https://github.com/pmatos/funk/issues/209) on 2026-11-09.
 
 ## Decision
 
@@ -29,7 +30,8 @@ M1. The human ruled on
   - a marked result is extended by the callee, and the caller may rely on
     it;
   - with no marker, nothing is guaranteed, and neither side may rely on
-    the upper bits, as ADR-2026-11-02-1021 has it for funk calls.
+    the upper bits, as for calls between funk functions
+    ([x86-64-backend-abi.md](../decisions/x86-64-backend-abi.md#calls-between-funk-functions)).
 - **Validation.** The verifier rejects a marker on a type that is not an
   integer narrower than 32 bits.
 - Frontends set the markers to match the C ABI.

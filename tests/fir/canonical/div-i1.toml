@@ -7,9 +7,10 @@
 # A pair that is UB in the spec, a zero divisor or sdiv and srem of
 # true, the signed minimum, by true, which is -1, would make a
 # differential test invalid, so it is an interpreter-only test that
-# expects ub; native code may trap there (ADR-2026-10-31-0050).
-# fir-ref's UB reason names its case, such as "sdiv by zero" or "srem of
-# the signed minimum by -1", but the harness matches ub to any reason
+# expects ub; native code may trap there
+# (docs/decisions/x86-64-backend-lowering.md#division). fir-ref's UB
+# reason names its case, such as "sdiv by zero" or "srem of the signed
+# minimum by -1", but the harness matches ub to any reason
 # (ADR-2026-10-30-2135).
 # Each defined pair of sdiv exact and udiv exact is also an
 # interpreter-only test, which checks that fir-ref gives poison exactly

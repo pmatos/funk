@@ -1,5 +1,5 @@
 # Tests of several-pairs-i128.fir: an i128 next to one more result (#21,
-# #31, ADR-2026-11-03-0109). wide returns an i128 and an i64, and narrow
+# #31, ADR-2026-10-30-1232). wide returns an i128 and an i64, and narrow
 # an i64 and an i128: three eightbytes, so natively they go in a result
 # area, the i128 at offset 0 or 16. two returns two i128s, four
 # eightbytes. Each returns its arguments plus one, and use_NAME calls

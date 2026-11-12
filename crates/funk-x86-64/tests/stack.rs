@@ -1,8 +1,10 @@
 //! Frames of a page or more are probed, and a built executable runs each
 //! function on a stack it reserves for it, so the process's stack limit does
-//! not bound a frame (ADR-2026-10-30-1230, ADR-2026-10-30-1233). That stack
-//! covers every call the function can make; a recursive function gets the
-//! process's stack limit instead when that is more (ADR-2026-11-02-1132).
+//! not bound a frame (`docs/decisions/x86-64-backend.md#frames-and-slots`,
+//! `docs/decisions/x86-64-backend-executable.md#running-one-function`). That
+//! stack covers every call the function can make; a recursive function gets
+//! the process's stack limit instead when that is more
+//! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};

@@ -166,10 +166,11 @@ jobs:
           rustup toolchain install
           cargo --version
       # funk build runs GNU as and ld, and the rust-test hook runs what it
-      # builds (ADR-2026-10-30-1229). A program that calls C links with
-      # glibc's libc.so (ADR-2026-11-10-1303). The runner image ships both;
-      # this step installs them on an image that does not. The cross job
-      # copies the binutils part.
+      # builds (docs/decisions/x86-64-backend.md#assembly-and-linking). A
+      # program that calls C links with glibc's libc.so
+      # (docs/decisions/x86-64-backend.md#linking-with-the-host-c-library).
+      # The runner image ships both; this step installs them on an image
+      # that does not. The cross job copies the binutils part.
       - name: Install the assembler, linker and C library
         run: |
           missing=()

@@ -1,5 +1,6 @@
-//! Running GNU `as` and `ld` (ADR-2026-10-30-1229), and the temporary directory that
-//! holds what they read and write on the way to the outputs.
+//! Running GNU `as` and `ld`
+//! (`docs/decisions/x86-64-backend.md#assembly-and-linking`), and the temporary
+//! directory that holds what they read and write on the way to the outputs.
 //!
 //! `as` and `ld` are told the target, x86-64, on their command lines, so a
 //! default from their configuration or the environment, such as
@@ -23,9 +24,10 @@ const DYNAMIC_LINKER: &str = "/lib64/ld-linux-x86-64.so.2";
 
 /// Links `objects` into the x86-64 executable `exe`, whose entry point is
 /// the runtime's `__funk_start`. Without `libc` it is static and links
-/// nothing else (ADR-2026-10-30-1229). With `libc` it is linked against the
-/// host's shared C library, `-lc`, and loaded by the dynamic loader
-/// (ADR-2026-11-10-1303).
+/// nothing else (`docs/decisions/x86-64-backend.md#assembly-and-linking`).
+/// With `libc` it is linked against the host's shared C library, `-lc`, and
+/// loaded by the dynamic loader
+/// (`docs/decisions/x86-64-backend.md#linking-with-the-host-c-library`).
 pub fn link(objects: &[&Path], exe: &Path, libc: bool) -> Result<(), String> {
     let mut cmd = Command::new("ld");
     cmd.args(["-m", "elf_x86_64"]);

@@ -127,11 +127,15 @@ No item is missing, and none is weaker than #23 states it.
 | P1, literate Lean spec | ADR-2026-11-05-2012, which holds P1 now | accepted |
 | G0, any hardware | ADR-2026-10-29-2016 | accepted; refined by ADR-2026-10-30-1146 and ADR-2026-11-03-0600 |
 
-The decisions that the epic's work list asks for are ADRs too: `freeze`
-in the oracle (ADR-2026-10-29-2017), fir's own Lean calculus after the
-spike of #24 (ADR-2026-10-29-2030), assembly through GNU `as` and `ld`
-(ADR-2026-10-30-1229) and spilling every value (ADR-2026-10-30-1230).
-None of these ADRs is superseded.
+The decisions that the epic's work list asks for were ADRs too when the
+audit was made: `freeze` in the oracle (ADR-2026-10-29-2017), fir's own
+Lean calculus after the spike of #24 (ADR-2026-10-29-2030), assembly
+through GNU `as` and `ld`
+([x86-64-backend.md](decisions/x86-64-backend.md#assembly-and-linking)) and
+spilling every value
+([x86-64-backend.md](decisions/x86-64-backend.md#frames-and-slots)). None
+was superseded. #307 later folded the last two into x86-64-backend.md, where
+they still hold.
 
 S2's ADR says that the IR and the Lean interpreter accept any `N >= 1`,
 but the human's ruling N3 (part 3 of the rulings on #8, 2026-10-30, in

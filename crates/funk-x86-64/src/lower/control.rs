@@ -2,24 +2,29 @@
 //! (`dialects/core/control.rs` in `funk-ir`).
 //!
 //! A branch copies the values its successor passes into the slots of that
-//! block's arguments, as one parallel move (ADR-2026-10-31-0335), then
+//! block's arguments, as one parallel move
+//! (`docs/decisions/x86-64-backend-lowering.md#block-arguments`), then
 //! jumps to the block's label, unless the block comes next
-//! (ADR-2026-10-31-0334). `cond_br` tests bit 0 of its condition, and
-//! nothing above it (ADR-2026-10-30-1231), before either successor's moves.
-//! Native code holds no poison (ADR-2026-10-30-2248): a branch on poison is
-//! UB in the source, and here it goes one way or the other.
+//! (`docs/decisions/x86-64-backend-lowering.md#branches`). `cond_br` tests
+//! bit 0 of its condition, and nothing above it
+//! (`docs/decisions/x86-64-backend.md#values-and-widths`), before either
+//! successor's moves. Native code holds no poison (ADR-2026-10-30-2248): a
+//! branch on poison is UB in the source, and here it goes one way or the
+//! other.
 //!
 //! `ret` puts its values where the result convention says, then returns
-//! (ADR-2026-11-03-0109): one or two eightbytes in `%rax` and `%rdx`, and
+//! (ADR-2026-10-30-1232): one or two eightbytes in `%rax` and `%rdx`, and
 //! more in the caller's result area, whose address it returns in `%rax`.
 //! An `i1` result is returned as 0 or 1 in all of its eightbyte. That is
 //! more than C gives for a `_Bool` result, which defines only bits 0 to 7,
 //! so code that calls C may rely only on `%al` (ADR-2026-10-30-1232).
 //!
 //! An `i128` passes to a block argument as two copies of the parallel move,
-//! one per half (ADR-2026-11-03-010730). It returns as two eightbytes: alone
-//! in `%rdx:%rax`, and among other results in the area
-//! (ADR-2026-11-03-0108, ADR-2026-11-03-0109).
+//! one per half
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). It returns
+//! as two eightbytes: alone in `%rdx:%rax`, and among other results in the
+//! area (`docs/decisions/x86-64-backend-abi.md#results`,
+//! ADR-2026-10-30-1232).
 //!
 //! `unreachable` is `ud2`. A run that reaches it is UB in the source, so
 //! any code would do; `ud2` traps, so such a run stops at once instead of

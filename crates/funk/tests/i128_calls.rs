@@ -1,10 +1,11 @@
 //! `i128` across calls and branches (#21), run natively and checked against
-//! Rust's `i128` arithmetic. An `i128` argument takes two registers when
-//! two are left, and otherwise 16 bytes of the stack, aligned to 16, while a
+//! Rust's `i128` arithmetic. An `i128` argument takes two registers when two
+//! are left, and otherwise 16 bytes of the stack, aligned to 16, while a
 //! later narrower argument still takes a register that it left; an `i128`
-//! result comes back in `%rdx:%rax` (ADR-2026-11-03-0108). Block arguments
-//! move both halves of an `i128` in one parallel move
-//! (ADR-2026-11-03-010730).
+//! result comes back in `%rdx:%rax`
+//! (`docs/decisions/x86-64-backend-abi.md#arguments`). Block arguments move
+//! both halves of an `i128` in one parallel move
+//! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`).
 
 mod common;
 
