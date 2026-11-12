@@ -1,0 +1,54 @@
+{
+  "removed": [
+    {
+      "file": "2026-10-30-1032-funk-reports.md",
+      "now": "docs/decisions/rust-ir-and-tools-funk.md#report-format",
+      "commit": "5bbdeab17db7"
+    },
+    {
+      "file": "2026-10-30-1218-constants-checked-against-a-decimal-power-of-two.md",
+      "now": "docs/decisions/rust-ir-and-tools.md#constants-near-a-widths-limit",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1326-funk-build-command.md",
+      "now": "docs/decisions/rust-ir-and-tools-funk.md#funk-build",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-30-1333-explicit-stacks-in-funk-ir.md",
+      "now": "docs/decisions/rust-ir-and-tools.md#nesting",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-2253-one-constructor-records-closed-standard-descriptors.md",
+      "now": "ADR-2026-11-09-1603",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0107-funk-uses-its-standard-streams-through-duplicate-descriptors.md",
+      "now": "docs/decisions/rust-ir-and-tools-funk.md#standard-streams",
+      "commit": "f0aa94b68f98"
+    },
+    {
+      "file": "2026-11-03-0809-verus-and-vstd-are-pinned-to-one-release.md",
+      "now": "docs/decisions/rust-ir-and-tools.md#unsafe-code",
+      "commit": "3bab9b6cba4c"
+    },
+    {
+      "file": "2026-11-05-1713-funk-fmt-streams-the-canonical-text.md",
+      "now": "docs/decisions/rust-ir-and-tools-funk.md#funk-fmt",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-08-1805-funk-asm-prints-the-assembly-of-a-modules-functions.md",
+      "now": "docs/decisions/rust-ir-and-tools-funk.md#funk-asm",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-10-0042-funk-ir-s-registry-routes-words-by-their-dialect-prefix.md",
+      "now": "ADR-2026-10-30-1146",
+      "commit": "42cfa8571948"
+    }
+  ]
+}

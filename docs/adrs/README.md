@@ -64,9 +64,10 @@ the reviewer looks again at each one (`scripts/check_adr_ids.py
 
 ## Deleting one
 
-Delete the file and add a row to [`removed.json`](removed.json): the file's
-name, where its rule lives now, and the last commit on `main` that changed the
-file, `git log -1 --abbrev=12 --format=%h origin/main -- docs/adrs/FILE`. A
+Delete the file and add a row to the table of its area,
+[`removed/AREA.json`](removed/): the file's name, where its rule lives now, and
+the last commit on `main` that changed the file,
+`git log -1 --abbrev=12 --format=%h origin/main -- docs/adrs/FILE`. A
 commit of the pull request's branch would not do: the squash merge leaves it
 off `main`. Where its rule lives
 is an ADR, `ADR-…`, or a page section, `docs/decisions/PAGE.md#ANCHOR`. Rewrite
@@ -92,10 +93,10 @@ The last line of each ADR's status paragraph is `Tier: TIER; area: AREA`
 
 [`INDEX.md`](INDEX.md) lists every ADR with its tier, area and what holds now,
 then the Removed table. It is generated, so never edit it by hand. After
-changing an ADR's title, status or tier line, or `removed.json`, stage the
+changing an ADR's title, status or tier line, or a removed table, stage the
 change and run `python3 scripts/adr_index.py --write`. The `adr-index` hook
 fails when the index is stale, an ADR has no tier and area, an ADR is cited by
-no page of its area, or a row of `removed.json` names an ADR or page section
+no page of its area, or a row of a removed table names an ADR or page section
 that does not exist.
 
 ## Published with the spec

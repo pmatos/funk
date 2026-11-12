@@ -1,0 +1,114 @@
+{
+  "removed": [
+    {
+      "file": "2026-10-30-0818-poison-propagation.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "6de9e3d20dda"
+    },
+    {
+      "file": "2026-11-02-1156-call-stand-in-is-ub.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-1514-a-call-has-no-op-level-rule.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-11-02-1515-poison-obligations-cover-valid-op-instances.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1615-the-core-dialect-writes-poison-with-a-constant-op-that-propagates-poison.md",
+      "now": "ADR-2026-10-29-2006",
+      "commit": "46ee1b2caf5b3a2af4f6d9011c314250446462fc"
+    },
+    {
+      "file": "2026-11-09-2249-may-produce-poison-means-poison-from-operands-with-no-poison.md",
+      "now": "ADR-2026-11-09-1541",
+      "commit": "8fee7f1cdaf9"
+    },
+    {
+      "file": "2026-11-10-1310-an-extension-lifts-into-any-sum-that-holds-what-it-depends-on.md",
+      "now": "ADR-2026-11-09-2306",
+      "commit": "1627f2a2b440"
+    },
+    {
+      "file": "2026-11-10-2108-a-call-carries-its-callee-s-summary.md",
+      "now": "ADR-2026-11-09-1541",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-11-10-2224-a-dialect-registers-kinds-of-item-each-with-its-own-rule.md",
+      "now": "ADR-2026-11-09-1543",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-11-11-0451-memory-effects-are-proved-over-the-semantics-with-memory-at-every-naming.md",
+      "now": "docs/decisions/semantics-effects.md#soundness",
+      "commit": "7dc0f13ae143"
+    },
+    {
+      "file": "2026-11-11-0452-a-memory-has-one-name-in-a-sum.md",
+      "now": "ADR-2026-11-09-2306",
+      "commit": "aa092c8aabfe"
+    },
+    {
+      "file": "2026-11-11-0623-every-effect-obligation-is-stated-over-the-semantics-with-memory.md",
+      "now": "docs/decisions/semantics-effects.md#soundness",
+      "commit": "7eee446e4ae2"
+    },
+    {
+      "file": "2026-11-11-0950-the-core-accepts-every-float-format-of-lean-s-model.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "1dd505a5a450"
+    },
+    {
+      "file": "2026-11-11-1015-an-inline-assembly-block-is-an-event-only-when-its-effect-set-says-observable.md",
+      "now": "ADR-2026-11-09-1552",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1016-an-observer-sees-export-globals-returned-pointers-and-escaped-memory.md",
+      "now": "ADR-2026-11-09-1540",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1017-the-world-may-create-and-free-heap-allocations-when-it-answers-an-external-call.md",
+      "now": "ADR-2026-11-09-1540",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1018-set-writes-one-unit-value-sized-to-the-memory-s-unit.md",
+      "now": "ADR-2026-11-09-1551",
+      "commit": "924a13bded83"
+    },
+    {
+      "file": "2026-11-11-1139-fcmp-compares-floats-by-lean-s-model-with-fourteen-predicates.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "506720bb5741"
+    },
+    {
+      "file": "2026-11-11-1443-an-unobservable-inline-assembly-block-s-answer-depends-on-the-memory-it-reads.md",
+      "now": "ADR-2026-11-09-1552",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1444-an-address-escapes-when-an-op-hands-it-to-code-outside-the-program.md",
+      "now": "ADR-2026-11-09-1540",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1445-the-end-of-run-comparison-looks-only-at-live-memory.md",
+      "now": "ADR-2026-11-09-1540",
+      "commit": "2576910e804f"
+    },
+    {
+      "file": "2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md",
+      "now": "ADR-2026-11-09-1549",
+      "commit": "0d492b1d4d6e"
+    }
+  ]
+}

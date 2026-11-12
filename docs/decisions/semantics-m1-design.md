@@ -6,12 +6,12 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools do not implement them
 yet. `ptr` has values but no ops yet (ADR-2026-11-09-1542). M0 has no
-global data (ADR-2026-11-09-1546). A module holds functions only and declares
-no dialects (ADR-2026-11-09-1543). `funk` and `fir-ref` are fixed to the core
+global data (ADR-2026-11-09-1546). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
 today. process.md says what M1 covers. semantics-m1-trace.md says what a run
-shows and how the world answers it.
+shows and how the world answers it, and semantics-m1-dialects.md says how
+dialects, levels and the second dialect work in M1.
 
 ## Memory
 
@@ -25,18 +25,18 @@ An access is immediate UB in each of these cases (ADR-2026-11-09-1542):
 - its allocation is freed;
 - its pointer has no provenance for that allocation.
 
-The spec gives one memory of this model, for a unit of any width, in
-`lean/Fir/Memory/`, with its accesses and their laws. A run carries its
-memories, and every function runs in a frame that frees its stack
-allocations when it returns (ADR-2026-11-10-2350). No op or type uses
-memory yet (#231).
-
 `ptr.expose` turns a pointer into an integer and marks its allocation exposed.
 `ptr.from_int` turns an integer back into a pointer, with the provenance of an
 exposed allocation that contains the address. No other op converts between
 pointers and integers. Optimizations may assume that distinct allocations do
 not alias, unless a pointer was exposed and rebuilt from an integer
 (ADR-2026-11-09-1542).
+
+The human ruled this memory model on 2026-11-09, on #206. Rejected: flat,
+concrete memory, where pointers are integers. Every allocation's address would
+become a choice, which explodes exhaustive runs and blocks most alias
+reasoning. Rejected too: logical blocks with no integer casts in M1, so C and
+kernel code that casts pointers could not be lowered in M1.
 
 A pointer type names its memory. The core `ptr` is `ptr<0>`, and other memories
 are `ptr<N>`. A dialect may add memories of its own. A pointer moves between
@@ -61,7 +61,7 @@ Memory ops carry an `ordering` attribute. M1 accepts only `nonatomic`, so a
 concurrency model (S6) needs no format change. Allocations carry a kind: stack,
 global, or heap through external calls. Managed memory can be added as another
 kind later (ADR-2026-11-09-1542). The world may create and free heap
-allocations when it answers an external call (ADR-2026-11-11-1017).
+allocations when it answers an external call (ADR-2026-11-09-1540).
 
 Every theorem that relies on `ptr` having no values is restated
 (ADR-2026-11-09-1542). Stage 3a of #231 restates call congruence for a callee
@@ -74,6 +74,44 @@ the call returns. Heap allocation stays a call to an external function such as
 A `volatile` attribute on loads and stores makes the access an event of the
 trace. The access cannot be removed, duplicated or reordered with other events
 (ADR-2026-11-09-1548).
+
+## The memories of a run
+
+The spec gives one memory of this model, for a unit of any width, in
+`lean/Fir/Memory/`, with its accesses and their laws. No op or type uses
+memory yet (#231). Memory is a state layer over the way of computing
+(ADR-2026-11-10-2350):
+
+- `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
+  each memory name, with a unit width per name that the data layout will give,
+  and a stack of frames. A frame lists the stack allocations its call made.
+- `MonadMemory` gives allocating, freeing, loading and storing on a named
+  memory, and a faulting access is UB. `StateT (Memories Mem unit) m` keeps
+  `m`'s choice and UB and gives the memory effect. A stuck path keeps the
+  memories it reached, and a UB path shows none. Monad morphisms lift through
+  the layer.
+- `MonadFrame.frame`, in `lean/Fir/Execution/Frame.lean`, runs a computation as
+  one call. `Func.runOps` runs each callee in a frame, and `Func.run` runs the
+  function it starts with in one, so no op runs outside a frame. In the layer a
+  frame enters a call, runs it, then frees the frame's allocations. In the set
+  monad and the tree of choices a frame is the computation itself.
+- A dialect whose ops touch no memory runs in the layer by lifting its rules,
+  and its runs with memory are its runs (`Func.memRuns_eq`). Ops that touch
+  memory state their semantics in a monad with `MonadMemory`. Progress, fuel
+  monotonicity and refinement for them are proved over the layer, and
+  `fir-ref` walks the layer over the tree of choices (#231).
+- Runs with memory start from empty memories. Until #233 builds what a run
+  shows, an observer of a run with memory sees its returned values only.
+- A proper tail call replaces its caller's frame, so the caller's stack
+  allocations are freed before the callee runs. The tail-call ticket adds a
+  second frame operation that leaves the current frame and enters a fresh one
+  in its place.
+
+Rejected: thread memory through the interpreter, as fuel is. Every op's
+semantics, every dialect and every proof about op semantics would change, for
+ops that never touch memory. Rejected too: free a call's stack allocations by
+marking each memory's allocation count at the call. The interpreter would have
+to enumerate memory names, which may be infinite.
 
 ## Globals
 
@@ -89,14 +127,19 @@ A global is an item with (ADR-2026-11-09-1546):
 
 Each global is one allocation of kind global, live for the whole run. An op gets
 its address by symbol. A frontend writes initial data as units and relocations,
-as an assembler does (ADR-2026-11-09-1546).
+as an assembler does. A global in a GPU memory names that memory
+(ADR-2026-11-09-1546).
 
-An `export` global is visible to code that funk did not compile, and is
-reachable memory for an observer. Weak, common and visibility linkage wait for
-the C frontend, M4 (ADR-2026-11-09-1546). An `internal` global is observable
-only once its address escapes (ADR-2026-11-11-1016): an external call, an
-observable inline assembly block, a volatile store of the pointer or
-`ptr.expose` hands it out (ADR-2026-11-11-1444).
+An `export` global is visible to code that funk did not compile, and an
+observer sees it. Weak, common and visibility linkage wait for the C frontend,
+M4 (ADR-2026-11-09-1546). An `internal` global is observable only once its
+address escapes (ADR-2026-11-09-1540): an external call, an observable inline
+assembly block, a volatile store of the pointer or `ptr.expose` hands it out.
+
+The human ruled globals on 2026-11-09, on #209. Rejected: typed globals that
+hold a fir value, which would tie globals to the shape of aggregates while a C
+frontend lays out bytes anyway. Rejected too: every global exported, which is
+wrong for C's `static`.
 
 ## External declarations
 
@@ -117,8 +160,11 @@ That holds in a declaration and in a function's own signature
   bits.
 
 The verifier rejects a marker on a type that is not an integer narrower than 32
-bits. Frontends set the markers to match the C ABI. Markers are not required on
-every narrow parameter (ADR-2026-11-09-1547).
+bits. Frontends set the markers to match the C ABI (ADR-2026-11-09-1547). The
+human ruled this on 2026-11-09, on #209, and on 2026-11-11, on #251, that an
+unmarked `i1` promises nothing either
+([x86-64-backend-abi.md](x86-64-backend-abi.md#the-unmarked-i1-result)). Rejected: markers
+required on every narrow parameter, noisy for every caller that is not C.
 
 ## Calls and terminators
 
@@ -150,40 +196,23 @@ frame instead of adding one, so a chain of tail calls keeps the depth of its
 first caller. `fir-ref` and every backend keep this promise. A native run checks
 it with deep tail recursion in the corpus. A tail call's effects are those of a
 call, plus control. If the conditions or the promise meet a blocker in
-implementation, a new ADR revises them (ADR-2026-11-09-1553).
+implementation, ADR-2026-11-09-1553 and this page are edited in place.
+
+The human placed proper tail calls (#100) in M1 as an explicit marker on
+2026-11-09, on #204, accepted this design the same day, and confirmed it on
+2026-11-11, on #100. Rejected: every call in tail position is proper, as in
+Scheme. Some cannot reuse the frame under System V, so the promise would fail
+silently or force an expensive convention on every call.
 
 ## Effects
 
-Each op declares a set of effects drawn from this list (ADR-2026-11-09-1541):
-
-- reads memory `m`;
-- writes memory `m`;
-- allocates or frees in memory `m`;
-- may-UB;
-- may produce poison: a poison result on operands with no poison, beside the
-  op's poison class (ADR-2026-11-09-1541);
-- observable: it adds an event to the trace;
-- control: it is a terminator.
-
-The empty set is pure. Reads, writes, allocation and freeing name the memory
-they touch. Effects on different memories commute. An external call, an indirect
-call to an unknown function and inline assembly without a narrower declaration
-carry every effect on every memory that can have escaped to them
-(ADR-2026-11-09-1541).
-
-A dialect declares the effects of its own ops, including effects on memories it
-adds. A new Lean class, beside `DialectPoison`, gives each op's effect set, and
-`OpSpec` gives it in Rust. The Rust registry's declarations are checked against
-the Lean ones, as op signatures are. `DialectPoison` folds into the effect class
-when the class lands (ADR-2026-11-09-1541). The class has landed in Lean;
-semantics-effects.md says what holds today.
-
-For each op, the spec proves that its declaration over-approximates its
-semantics. An op that does not declare a write to `m` leaves `m` unchanged. One
-without may-UB never ends in UB. One without observable adds no event. The same
-goes for each effect. Passes may rely on a declaration because of that proof.
-Each new op costs one soundness proof per effect it leaves out
-(ADR-2026-11-09-1541).
+Each op declares a set of effects, and the spec proves the declaration sound
+(ADR-2026-11-09-1541). semantics-effects.md says what holds. Effects on
+different memories commute. An external call, an indirect call to an unknown
+function and inline assembly without a narrower declaration carry every effect
+on every memory that can have escaped to them. Passes may rely on a
+declaration because of its proof, and each new op costs one soundness proof per
+effect it leaves out (ADR-2026-11-09-1541).
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
 say. `call` carries its callee's summary (semantics-effects.md,
@@ -195,8 +224,8 @@ lands, in its own ticket, by the same rule (ADR-2026-11-09-1541):
 - Stack allocation allocates.
 - Memory intrinsics read and write.
 - Volatile accesses are also observable.
-- External calls are observable. Inline assembly is observable unless its
-  effect set says otherwise (ADR-2026-11-11-1015).
+- External calls are observable. Inline assembly is observable only when its
+  effect set says so (ADR-2026-11-09-1552).
 - `unreachable` and tail calls are control.
 
 The aegraph stays an optimizer view outside the spec. may-UB is the hook that
@@ -213,12 +242,20 @@ Three ops copy, move and set memory, over one memory and a length in its units
 - Move does the same and allows overlap.
 - Set writes one unit value into each unit. The value is sized to the memory's
   unit: an `i8` on the default memory, whose unit is an 8-bit byte unless the
-  layout says otherwise (ADR-2026-11-11-1018).
+  layout says otherwise, and an integer of the unit's width on any other.
 
 Copy and move read the source memory and write the destination. Set writes. All
-three may be UB, for out-of-bounds access. The naive backend lowers them to
-calls to the C library's `memcpy`, `memmove` and `memset`. A frontend lowers a C
-call to `memcpy` to the copy op, not to an external call (ADR-2026-11-09-1551).
+three may be UB, for out-of-bounds access. A frontend lowers a C call to
+`memcpy` to the copy op, not to an external call. The naive backend lowers them
+to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
+library's, so a program that only copies, moves or sets memory keeps the
+static link without the C library (ADR-2026-11-09-1551).
+
+The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
+on #251 that set writes one unit value, not a byte, and on #274 that funk's
+runtime carries its own routines, in place of the C library's that #220 named;
+#234 builds them. Rejected: calls to external functions with known meanings,
+which lose provenance and make every copy an event.
 
 ## Aggregates
 
@@ -242,6 +279,11 @@ Dialects may add value types such as vectors and tensors. First-class aggregate
 values in the core may be added later if a frontend needs them
 (ADR-2026-11-09-1550).
 
+The human ruled this on 2026-11-09, on #210. Rejected: first-class aggregate
+values with extract and insert ops, as in LLVM, which would bring per-field
+poison rules and register lowering of large values into M1 as a second way to
+do what memory and multiple results already do.
+
 ## Floating point
 
 Floating point is one type family, `float<e,m>`, over every IEEE-shaped format,
@@ -255,106 +297,34 @@ Inline assembly is an op tagged with its target. It holds a template,
 constraints, operands, results, clobbers and an explicit effect set, observable
 or not. A module for another target rejects it (ADR-2026-11-09-1552).
 
-The effect set decides whether a block is an event (ADR-2026-11-11-1015):
+The effect set decides whether a block is an event (ADR-2026-11-09-1552):
 
 - With observable, running the block is an event of the trace, as GCC's
   `asm volatile` is.
 - Without observable, the block adds no event. Passes may delete, merge or move
   it within its declared reads and writes, as with GCC's plain `asm`. They may
   merge or move it only when no write to the memories it reads comes between,
-  a write by the block itself included (ADR-2026-11-11-1443).
+  a write by the block itself included.
 
 The world answers a block with its results and with writes into memory that its
 declared effects allow. `fir-ref` takes the answer from the test's script, as
-for external calls (ADR-2026-11-09-1552). The answer for a block without
-observable is keyed by the block, its operands and the contents of the memories
-it declares it reads, not by its position in the trace (ADR-2026-11-11-1015,
-ADR-2026-11-11-1443).
+for external calls. The answer for a block without observable is keyed by the
+block, its operands and the contents of the memories it declares it reads, not
+by its position in the trace. A block with no narrower declaration reads every
+memory that can have escaped to it, so its key covers all of them
+(ADR-2026-11-09-1552).
 
 M1 brings the spec, the parser, printer and verifier on both sides, and
 `fir-ref`. Until M4, the naive backend rejects inline assembly with a diagnostic,
-and native runs of such code wait. The C frontend brings constraint handling
-(ADR-2026-11-09-1552).
+and native runs of such code wait. The C frontend brings constraint handling.
+It maps C's `asm` to a block without observable, and `asm volatile` to one with
+it (ADR-2026-11-09-1552).
 
-## Dialects
-
-Every dialect other than the core writes its ops, types and attributes as
-`name.word`. Core words stay bare. A module's dialects combine as a sum routed
-by the prefix, for ops, types and attributes alike. The sum moves from
-`lean/FirTest/` into the spec. Test dialects keep the `toy.` prefix
-(ADR-2026-11-09-1543). The sum is in the spec now, and semantics-dialects.md
-says what holds of it.
-
-A dialect declares the dialects it depends on, and may name their types. That is
-how an extension op takes a core value (ADR-2026-11-09-1543).
-
-A dialect registers kinds of item through the one grammar, as it registers ops.
-So a new kind needs no parser change. The core registers `func`, `global`,
-external declarations and `module`. A `module` item holds a nested symbol table,
-so nested and device modules exist, in #211 (ADR-2026-11-09-1543).
-
-Each module declares the dialects it uses. The verifier rejects any op, type,
-attribute or kind of item from a dialect outside the set. A nested module
-declares its own set, which is how a host module holds a device module. A module
-that declares none uses the core alone, so M0's texts stay valid
-(ADR-2026-11-09-1543).
-
-The format and the dialect classes admit region kinds other than the core's CFG
-region, such as unordered dataflow regions. No other kind is built in M1.
-Effects and observations come from the dialect too. The round-trip and
-validation proofs are restated over sums of dialects and over registered kinds
-of item (ADR-2026-11-09-1543).
-
-## Levels and lowering
-
-In v0 a module holds ops of one abstraction level, and lowering takes a whole
-module from one level to the next. Levels mix only through nested modules: a
-host module at one level may hold a device module at another
-(ADR-2026-11-09-1544).
-
-A lowering that funk performs, from one dialect set to another, must produce a
-module that refines its input. It is proved once in Lean, or checked per compile
-once S8 exists (ADR-2026-11-09-1544).
-
-A dialect is not required to lower to core. A terminal dialect is lowered only
-by its own backend, to its own hardware. Its programs are still checked by its
-semantics in `fir-ref`. Its backend is checked against `fir-ref` like the x86-64
-backend, by refinement of observed runs (ADR-2026-11-09-1544).
-
-## The second dialect
-
-The second dialect in tree is shaped like a GPU kernel language
-(ADR-2026-11-09-1545):
-
-- A host module holds a nested device module whose dialect set includes the GPU
-  dialect. Kernel functions live in the device module.
-- It adds ops of its own, such as work-item and work-group ids and sizes, and at
-  least one type or attribute of its own.
-- It adds a memory in a non-default address space, such as work-group shared
-  memory, with effects named by that memory.
-
-`fir-ref` runs one work-item of a kernel, with its ids given as inputs. Ops
-whose meaning needs other work-items, such as barriers, are left out or
-admitted without execution rules
-([fir-ref.md](fir-ref.md#an-op-without-rules)). A launch op in host code is out
-of M1. M1's results are not a model of a whole kernel. The semantics grows into
-a full kernel model only when S6 decides concurrency (ADR-2026-11-09-1545).
-
-The dialect is terminal. It has no lowering to core and no native backend in M1
-(ADR-2026-11-09-1544, ADR-2026-11-09-1545).
-
-The G0 checks show these things with it (ADR-2026-11-09-1545):
-
-- Generic code in `funk-ir` and `lean/Fir` loads it with no change but its
-  registration.
-- A host module with a device module round-trips byte for byte across Rust and
-  Lean, and both sides validate it the same way, must-reject cases included.
-- Its kernels run in `fir-ref` one work-item at a time, and `funk` and `fir-ref`
-  agree on its corpus.
-- The generic results (round trip, refinement, congruence) are restated for a
-  dialect set that includes it.
-
-Use-once (linear) values stay covered by the toy test of #167. A quantum-style
-dialect remains a candidate for a later G0 check. The implementation of this
-dialect, in #212, waits for memory and for nested modules
-(ADR-2026-11-09-1545).
+The human ruled inline assembly on 2026-11-09, on #220. On 2026-11-11 the human
+ruled on #251 that the effect set decides whether a block is an event, and on
+#299 that an unobservable block's answer depends on the memory it reads.
+Rejected: the backend emits it in M1, which would pull GCC constraint handling
+into the IR milestone. Rejected too: every block is an event, so passes could
+never remove a block that only computes; and keying an unobservable block by
+the block and its operands alone, which forces a block that reads changing
+memory to be marked observable.

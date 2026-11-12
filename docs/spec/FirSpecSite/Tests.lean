@@ -65,7 +65,7 @@ private def caseFailures : Except String (Array String) := do
 #guard adrIdOfFileName? "2026-10-30-10311-adr.md" == none
 #guard adrIdOfFileName? "README.md" == none
 
-/-! `removed.json` gives each deleted ADR's id, from its file name, and where its rule lives now. -/
+/-! A removed table gives each deleted ADR's id, from its file name, and where its rule lives now. -/
 
 #guard parseRemoved "{\"removed\": [{\"file\": \"2026-10-29-2016-a.md\", \"now\": \"here\", \"commit\": \"0123456789ab\"}]}" ==
   .ok #[("2026-10-29-2016", "here")]

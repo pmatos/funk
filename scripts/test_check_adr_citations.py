@@ -152,8 +152,8 @@ class Repository(unittest.TestCase):
 
     def test_a_citation_of_a_removed_adr_says_where_its_rule_lives(self):
         git(self.repo, "rm", "-q", "--cached", "docs/adrs/2026-10-30-1031-a.md")
-        write(self.repo, "docs/adrs/removed.json", REMOVED)
-        self.add("docs/adrs/removed.json")
+        write(self.repo, "docs/adrs/removed/process.json", REMOVED)
+        self.add("docs/adrs/removed/process.json")
         found, _ = self.check()
         self.assertEqual(
             found,
@@ -168,17 +168,19 @@ class Repository(unittest.TestCase):
 
     def test_an_untracked_removed_table_is_not_read(self):
         git(self.repo, "rm", "-q", "--cached", "docs/adrs/2026-10-30-1031-a.md")
-        write(self.repo, "docs/adrs/removed.json", REMOVED)
+        write(self.repo, "docs/adrs/removed/process.json", REMOVED)
         found, _ = self.check()
         self.assertEqual(len(found), 1)
         self.assertIn("ADR-2026-10-30-1031 names no ADR", found[0])
 
     def test_a_malformed_removed_table_fails(self):
-        write(self.repo, "docs/adrs/removed.json", '{"removed": [{"file": "x"}]}')
-        self.add("docs/adrs/removed.json")
+        write(
+            self.repo, "docs/adrs/removed/process.json", '{"removed": [{"file": "x"}]}'
+        )
+        self.add("docs/adrs/removed/process.json")
         found, _ = self.check()
         self.assertEqual(len(found), 1)
-        self.assertTrue(found[0].startswith("docs/adrs/removed.json: row 1"))
+        self.assertTrue(found[0].startswith("docs/adrs/removed/process.json: row 1"))
 
     def test_misnamed_adrs_name_nothing(self):
         write(self.repo, "docs/adrs/2026-02-30-1200-not-real.md", "# C\n")

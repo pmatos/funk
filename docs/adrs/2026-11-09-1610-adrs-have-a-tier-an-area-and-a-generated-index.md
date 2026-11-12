@@ -23,11 +23,12 @@ with its tool.
 `scripts/adr_index.py --write` generates `docs/adrs/INDEX.md`, with one line per
 ADR: its tier, area, title and what holds now. What holds now is the ADR and
 every ADR that its `refined by` and `extended by` links reach, so a reader need
-not follow a chain. The index ends with a Removed table, generated from
-`docs/adrs/removed.json`: each deleted ADR's id, where its rule lives now, and
-the last commit on `main` that changed its file. The `adr-index` hook fails when
-the index is stale or an ADR has no tier and area. `INDEX.md` is generated and
-over 20,000 bytes, so the file-size hook excludes it.
+not follow a chain. The index ends with a Removed table, generated from the
+tables of `docs/adrs/removed/`, one per area: each deleted ADR's id, where its
+rule lives now, and the last commit on `main` that changed its file. The
+`adr-index` hook fails when the index is stale or an ADR has no tier and area.
+`INDEX.md` is generated and over 20,000 bytes, so the file-size hook excludes
+it.
 
 `docs/decisions/` holds one page per area in plain prose, each citing the
 ADRs it rests on. A page that outgrows the file-size budget continues in a
@@ -39,8 +40,8 @@ hook also fails when no page of an ADR's own area cites it.
 
 An ADR is edited in place when its decision changes, because git keeps the
 history. There are no refining ADRs and no `superseded` status. A deleted ADR
-gets a row in `removed.json`, its id is never used again, and a citation of it
-fails with where its rule lives now.
+gets a row in the removed table of its area, its id is never used again, and a
+citation of it fails with where its rule lives now.
 
 Write an ADR only for a direction decision that binds more than one module, or
 a future dialect or target. Its form is Decision, Why and Rejected
@@ -67,7 +68,7 @@ asked for tiers and an index (#170).
 An agent starting cold can find the direction decisions in one table, and
 reads what holds on one page per area. Each new ADR costs one more line and one
 more hook run. An ADR's tier is a judgement call, recorded where it can be
-corrected. Deleting an ADR costs a row in `removed.json` and a rewrite of each
+corrected. Deleting an ADR costs a row in a removed table and a rewrite of each
 citation of it.
 
 ## Rejected alternatives

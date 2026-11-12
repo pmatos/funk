@@ -159,7 +159,11 @@ class RemovedIds(unittest.TestCase):
     def test_a_removed_id_is_never_used_again(self):
         removed = parse_removed(table(row()))
         found = problems(
-            adrs("2026-10-30-1031-new.md", "2026-10-30-1032-b.md", "removed.json"),
+            adrs(
+                "2026-10-30-1031-new.md",
+                "2026-10-30-1032-b.md",
+                "removed/semantics.json",
+            ),
             removed,
         )
         self.assertEqual(len(found), 1)
@@ -219,19 +223,34 @@ class Repository(unittest.TestCase):
     def test_a_removed_id_in_the_repository_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
-            adr_dir = repo / "docs" / "adrs"
-            adr_dir.mkdir(parents=True)
-            (adr_dir / "removed.json").write_text(table(row()) + "\n")
-            (adr_dir / "2026-10-30-1031-again.md").write_text("# ADR\n")
+            tables = repo / "docs" / "adrs" / "removed"
+            tables.mkdir(parents=True)
+            (tables / "semantics.json").write_text(table(row()) + "\n")
+            (repo / "docs" / "adrs" / "2026-10-30-1031-again.md").write_text("# ADR\n")
             git(repo, "init", "-q")
-            git(repo, "add", "docs/adrs/removed.json")
+            git(repo, "add", "docs/adrs/removed/semantics.json")
             self.assertEqual(run_script(repo).returncode, 0)
             git(repo, "add", "docs/adrs/2026-10-30-1031-again.md")
             result = run_script(repo / "docs")
             self.assertEqual(result.returncode, 1)
             self.assertIn("ADR-2026-10-30-1031 was removed", result.stderr)
-            (adr_dir / "removed.json").write_text("{}\n")
-            self.assertIn("docs/adrs/removed.json: ", run_script(repo).stderr)
+            (tables / "semantics.json").write_text("{}\n")
+            self.assertIn("docs/adrs/removed/semantics.json: ", run_script(repo).stderr)
+
+    def test_an_id_with_rows_in_two_tables_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            tables = repo / "docs" / "adrs" / "removed"
+            tables.mkdir(parents=True)
+            (tables / "process.json").write_text(table(row()) + "\n")
+            (tables / "semantics.json").write_text(table(row()) + "\n")
+            git(repo, "init", "-q")
+            git(repo, "add", "docs/adrs/removed")
+            self.assertIn(
+                "docs/adrs/removed/semantics.json: ADR-2026-10-30-1031 has a row"
+                " already, in docs/adrs/removed/process.json",
+                run_script(repo).stderr,
+            )
 
 
 class WarnAdded(unittest.TestCase):
@@ -262,7 +281,7 @@ class WarnAdded(unittest.TestCase):
         return result.stdout
 
     def test_two_new_adrs_warn_nothing(self):
-        self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "removed.json")
+        self.commit("2026-10-30-1032-a.md", "2026-10-30-1033-b.md", "INDEX.md")
         out = self.warned()
         self.assertIn("2 ADRs added to HEAD^1.", out)
         self.assertNotIn("::warning", out)

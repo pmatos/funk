@@ -1,0 +1,29 @@
+{
+  "removed": [
+    {
+      "file": "2026-10-30-1740-decidable-dialect-rules.md",
+      "now": "ADR-2026-11-09-2257",
+      "commit": "0f4590f30dbc"
+    },
+    {
+      "file": "2026-10-30-1742-validation-check-at-any-depth.md",
+      "now": "docs/decisions/validation-fir-ref.md#how-fir-ref-runs-the-check",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1715-fir-ref-decides-dominance-with-a-dominator-tree-placed-by-semidominators.md",
+      "now": "docs/decisions/validation-fir-ref.md#dominance-in-fir-ref",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-0025-decide-on-validity-runs-fir-ref-s-check-at-any-depth.md",
+      "now": "docs/decisions/validation-fir-ref.md#decide-on-validity",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-0745-fir-ref-checks-a-location-table-with-core-s-loops.md",
+      "now": "docs/decisions/validation-fir-ref.md#location-tables",
+      "commit": "c09a05f4f8fb"
+    }
+  ]
+}
