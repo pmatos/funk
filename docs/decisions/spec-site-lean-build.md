@@ -104,8 +104,11 @@ elan and the pinned toolchain, and it is the one job that saves the Verso
 build. The `cross` job builds `lean/` again. CI caches the toolchain and
 `docs/spec/.lake/packages`, keyed on the toolchain file and the document's
 manifest. The cache is saved once Verso is built, even if
-a later hook fails. A cancelled run does not save it. `docs/spec/.lake/build`
-is never cached, so the document is always rebuilt from its sources.
+a later hook fails. A cancelled run does not save it. On a pull request, CI
+also restores `lean/.lake/build` and `docs/spec/.lake/build` from `main`, and
+`main` builds them from scratch
+([process-ci.md](process-ci.md#lean-builds)). `firspec` renders the document
+from its sources on every build.
 
 The elan tarball is cached too
 ([process-ci.md](process-ci.md#installer-downloads)). `scripts/ci-install.sh
@@ -120,9 +123,10 @@ third-party action.
 
 The Lean build runs an axiom check over `lean/` (ADR-2026-10-30-1452).
 `FirTest/Axioms.lean` defines the command `#check_axioms`. The root of
-`FirTest` imports every module of `lean/` and runs
-`#check_axioms Fir FirRef FirTest` as its last command. The check names each
-declaration of those libraries, or of the root, that does one of these:
+`FirTest` imports every module of `lean/`. The library `FirCheck`, one module
+that imports it, runs `#check_axioms Fir FirRef FirTest` as its last command.
+The check names each declaration of those libraries, or of `FirCheck`, that
+does one of these:
 
 - depends on an axiom other than `propext`, `Classical.choice`, `Quot.sound` or
   an axiom of native evaluation;
@@ -166,22 +170,27 @@ recorded needs the check updated in the same PR.
 
 The check also fails in these cases (ADR-2026-10-30-1452):
 
-- A `.lean` file in `lean/` is not imported by the root.
+- A `.lean` file in `lean/` is not imported by `FirCheck`.
 - A `.lean` file's module is not under a root the check names.
 - A root has no declaration, so a renamed library is not skipped in silence.
 - Any text but white space follows the check.
 
 Lake builds only the modules that a library's root imports. A file in
 `lean/Fir/` that nothing imports is never built or checked, yet the spec could
-still render it with `{includeLiterate}`; so it fails. `lakefile.lean` and
-hidden directories such as `.lake` are exempt from the file checks.
+still render it with `{includeLiterate}`; so it fails. `lakefile.lean`,
+`FirCheck.lean` itself and hidden directories such as `.lake` are exempt from
+the file checks.
 `FirTest/Axioms.lean` imports Lean's own modules, such as
 `Lean.Util.CollectAxioms`. They are part of the toolchain, not a dependency of
 the package `fir`.
 
 So a new module of `lean/` is imported by the root of `FirTest`. A new library
-is also named in its `#check_axioms`. A stray `.lean` file fails the build,
-tracked or not. The check runs whenever Lake builds `FirTest`. That covers the
+is also named in the `#check_axioms` of `FirCheck`. A stray `.lean` file fails
+the build, tracked or not. The check runs whenever Lake builds `FirCheck`: when
+a module of `lean/` changes, and when the list of `.lean` files does, since
+`FirCheck` needs the target `sourcePaths`, which traces that list. Without it, a
+warm build, local or restored in CI, would not see a new file that nothing
+imports ([process-ci.md](process-ci.md#lean-builds)). That covers the
 `fir-spec` hook and every script that calls `scripts/build-spec.sh --lean`. A
 type that holds a list of itself writes its `Repr` instance by hand, since a
 derived one is `partial`.

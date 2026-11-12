@@ -7,8 +7,9 @@ import Lean.Util.CollectAxioms
 
 /-!
 The check that every declaration of `lean/` is trusted (ADR-2026-10-30-1452).
-`#check_axioms` names the root modules of the libraries to check. `FirTest`'s
-root module imports every module of `lean/` and runs it as its last command.
+`#check_axioms` names the root modules of the libraries to check. `FirCheck`
+imports `FirTest`'s root module, which imports every module of `lean/`, and runs
+it as its last command.
 It fails the build when a declaration of one of their modules, or of the
 module that runs it:
 
@@ -138,17 +139,17 @@ def elabCheckAxioms : CommandElab
         let some info := env.find? n | continue
         if let some why ← untrusted env natives n info then
           problems := problems.push s!"{n}, in {mod}, {why}"
-    if roots.contains main.getRoot then
-      for (n, info) in env.constants.map₂.toList do
-        checked := checked.insert main.getRoot
-        if let some why ← untrusted env natives n info then
-          problems := problems.push s!"{n}, in {main}, {why}"
+    for (n, info) in env.constants.map₂.toList do
+      checked := checked.insert main.getRoot
+      if let some why ← untrusted env natives n info then
+        problems := problems.push s!"{n}, in {main}, {why}"
     for r in roots do
       unless checked.contains r do
         problems := problems.push s!"no declaration of {r} was checked"
     let dir := sourceDir ⟨← getFileName⟩ main
     for mod in ← sourceModules dir do
-      unless mod == main || env.header.moduleNames.contains mod do
+      if mod == main then continue
+      unless env.header.moduleNames.contains mod do
         problems := problems.push s!"{mod} is not imported by {main}"
       unless roots.contains mod.getRoot do
         problems := problems.push s!"{mod} is not in a checked library"

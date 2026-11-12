@@ -33,8 +33,7 @@ four jobs are:
 Rejected: one job that runs every hook. pre-commit hides a passing hook's
 output, so a pull request showed one check and no counts. Rejected: handing the
 built `lean/` to `cross` as an artifact. `cross` would wait for `lean`, and the
-run would take longer. Rejected: caching `lean/.lake` across runs. A cache hit
-would skip the `#guard` checks.
+run would take longer.
 
 Each hook is one step, which runs
 `uvx pre-commit@4.6.2 run ID --all-files --verbose --show-diff-on-failure`.
@@ -70,7 +69,8 @@ the gate's `needs`. The lists above name some of each job's hooks. `ci.yml`
 holds every step.
 
 `lean/` is built twice per run, and toolchains are restored in more than one
-job, so a run uses more runner minutes than one job did. `--verbose` makes the
+job, so a run uses more runner minutes than one job did. On a pull request both
+builds start from `main`'s ([Lean builds](#lean-builds)). `--verbose` makes the
 logs long: they hold the output of `cargo test`, the Lean build and the harness.
 
 `fir-random-nightly` and `fir-fuzz` are hooks of the `manual` stage.
@@ -142,6 +142,53 @@ job saves the Rust toolchain, and `cross` restores it.
 
 `cross` and `pages.yml` copy the `lean` job's Lean setup steps. The copies are
 four steps, without the save. Comments say to change all the copies together.
+
+### Lean builds
+
+On a pull request, the `lean` and `cross` jobs restore `lean/.lake/build` and
+`docs/spec/.lake/build` as `main` last built them, and Lake rebuilds what
+changed (ADR-2026-11-12-1430). A push to `main` restores neither and builds
+both packages from scratch, so every merge is checked from scratch. The human
+approved this performance ticket on 2026-11-09, in #275.
+
+- One entry holds both directories. Only the `lean` job saves it, only on
+  `main` and only when every hook of the job passed. Its key is
+  `lean-build-<os>-<hash>-<commit>`, where the hash covers `lean/lean-toolchain`,
+  `lean/lake*` and `docs/spec/lake*`.
+- The restore step's key and restore key are both `lean-build-<os>-<hash>-`, so
+  a pull request gets the newest entry of `main` with the same toolchain and
+  lakefiles, and a change to either builds from scratch. On `main` the step
+  only looks the key up, with `lookup-only`, and the save step reuses its key.
+- `cross` runs the same step through a YAML anchor, `*lean-build`, so the two
+  cannot drift. It also downloads `docs/spec/`'s build, which it does not use.
+- A pull request never saves: GitHub scopes its entries to it, and they would
+  fill the cache. `pages.yml` deploys and builds from scratch.
+
+A hit trusts Lake's traces. A module whose source, imports, toolchain, options
+and declared inputs are unchanged keeps `main`'s result, so its `#guard`s and
+theorems do not run again; `--wfail` still fails on its replayed warnings. Lake
+sees no other read at elaboration, so each one is declared: the `.cases` files
+and `citation-cases.json` as `input_file`s, `lean/Fir` for `{includeLiterate}`
+as an `input_dir`, and the list of `lean/`'s `.lean` files that
+`#check_axioms` walks as the target `sourcePaths`
+([spec-site-lean-build.md](spec-site-lean-build.md#what-lean-code-in-lean-may-not-do)).
+Code that adds a read at elaboration, of a file, a directory, the environment
+or the clock, declares it in the same PR. `firspec` reads the ADRs and
+`FIRSPEC_COMMIT` when it renders, which runs on every build.
+
+Measured on 2026-11-12 on a 4-core machine, where clean builds of `lean/` and
+of `docs/spec/` with Verso took about 14 minutes each: both build
+directories restored onto a fresh checkout make each `lake build` a no-op in
+about 1 s, and rendering the document still takes 2 minutes. Editing
+`FirTest.PrintParse` rebuilds only it, and a stray `.lean` file reruns only
+`FirCheck`. An entry is about 1.5 GB on disk and 210 MB compressed. GitHub
+evicts the least recently used entries past 10 GB, and every run restores the
+toolchain and Verso entry, so older `lean-build-` entries go first.
+
+Rejected: no cache, which rebuilt both packages on every run, also when a pull
+request touched neither. Rejected: one entry per package, which doubles the
+entries and the steps. Rejected: tracing the file list for all of `FirTest`,
+which would rebuild every test module when a file is added.
 
 ### Installer downloads
 
