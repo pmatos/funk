@@ -8,7 +8,7 @@
 mod common;
 
 use common::{diagnostics, one_func, parse_err, parse_ok};
-use funk_ir::{ByteOrder, MemLayout, Module, Registry, print, verify};
+use funk_ir::{ByteOrder, MemLayout, Registry, print, verify};
 
 fn with_layout(l: &str, f: &str) -> String {
     format!("layout {l}\n\n{}", one_func(f))
@@ -151,10 +151,7 @@ fn a_builder_declares_memories_without_text() {
     };
     let m = parse_ok(&one_func("func @f(%p: ptr(3)) {\n^e:\n  ret @0\n}\n"));
     assert!(!verify(&m, &Registry::core()).is_empty());
-    let m = Module {
-        layout: vec![entry],
-        ..m
-    };
+    let m = m.memory(entry);
     assert!(verify(&m, &Registry::core()).is_empty());
     assert!(print(&m).starts_with("layout memory(3, unit(8), pointer(64), little)\n\nfunc"));
 }

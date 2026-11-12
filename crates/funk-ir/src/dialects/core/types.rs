@@ -210,6 +210,9 @@ impl TypeSpec for CoreTypes {
     }
 
     fn memory(&self, ty: &Type) -> Option<u32> {
+        if ty.name != PTR {
+            return None;
+        }
         match decode(ty)? {
             Ok(CoreType::Ptr(n)) => Some(n),
             _ => None,

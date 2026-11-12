@@ -81,17 +81,25 @@ impl MemLayout {
     };
 
     /// The units that a pointer of the memory takes: its width over the
-    /// unit's, rounded up.
+    /// unit's, rounded up, and 0 for a unit of 0 bits, as in Lean.
     pub fn pointer_units(&self) -> u32 {
-        self.pointer.div_ceil(self.unit.max(1))
+        if self.unit == 0 {
+            0
+        } else {
+            self.pointer.div_ceil(self.unit)
+        }
     }
 
     /// The alignment of the memory's pointers, in units: the entry's own,
     /// or the natural one, the least power of two that is at least the
-    /// units a pointer takes.
-    pub fn alignment(&self) -> u32 {
-        self.align
-            .unwrap_or_else(|| self.pointer_units().next_power_of_two())
+    /// units a pointer takes. It is a `u64` so that the natural alignment
+    /// of an entry that validation rejects, with up to `u32::MAX` units,
+    /// cannot overflow.
+    pub fn alignment(&self) -> u64 {
+        self.align.map_or_else(
+            || u64::from(self.pointer_units()).next_power_of_two(),
+            u64::from,
+        )
     }
 
     /// How the entry is written, as a type of the grammar.
@@ -239,5 +247,16 @@ mod tests {
         assert_eq!(MemLayout::DEFAULT.pointer_units(), 8);
         assert_eq!(MemLayout::DEFAULT.alignment(), 8);
         assert_eq!(entry(None, false).alignment(), 2);
+        let wide = MemLayout {
+            unit: 1,
+            pointer: u32::MAX,
+            ..MemLayout::DEFAULT
+        };
+        assert_eq!(wide.alignment(), 1 << 32);
+        let no_unit = MemLayout {
+            unit: 0,
+            ..MemLayout::DEFAULT
+        };
+        assert_eq!((no_unit.pointer_units(), no_unit.alignment()), (0, 1));
     }
 }

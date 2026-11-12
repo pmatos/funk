@@ -110,6 +110,41 @@ fn messages(name: &str) -> Vec<String> {
     verify(&m, &reg).into_iter().map(|d| d.message).collect()
 }
 
+/// A `toy.cell` whose parameter is a pointer of memory 1, after the layout
+/// line `layout`, which may be empty; `lean/FirTest/ItemKinds.lean` checks
+/// the same text.
+fn ptr_cell(layout: &str) -> String {
+    format!("dialects toy\n\n{layout}toy.cell @c(%x: ptr(1)) -> toy.flag 1 {{\n}}\n\nlocs {{\n}}\n")
+}
+
+#[test]
+fn the_layout_declares_the_memories_of_an_items_types() {
+    let reg = registry();
+    let problems = |text: &str| -> Vec<(String, Option<String>)> {
+        let m = parse(text, &reg).unwrap();
+        verify(&m, &reg)
+            .into_iter()
+            .map(|d| (d.message, d.func))
+            .collect()
+    };
+    let rule = (
+        "the item breaks the rule of its kind \"toy.cell\": a cell holds a toy.flag, 0 or 1"
+            .to_string(),
+        Some("c".to_string()),
+    );
+    let undeclared = (
+        "a type names memory 1, which the data layout does not declare".to_string(),
+        Some("c".to_string()),
+    );
+    assert_eq!(problems(&ptr_cell("")), [rule.clone(), undeclared]);
+    assert_eq!(
+        problems(&ptr_cell(
+            "layout memory(1, unit(8), pointer(32), little)\n\n"
+        )),
+        [rule]
+    );
+}
+
 #[test]
 fn the_shared_cases_are_all_read() {
     let cases = cases();
