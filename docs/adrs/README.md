@@ -59,9 +59,10 @@ the reviewer looks again at each one (`scripts/check_adr_ids.py
 - **Edited in place.** When a decision changes, edit its ADR and its area page
   in the same PR; git keeps the history. There are no refining ADRs and no
   `superseded` status, and `adr_index.py` rejects a status that does not start
-  with `accepted`. The status is `accepted` alone: #307 folded every chain of
-  `refined by` and `extended by` links into one ADR, and an ADR that builds
-  on another cites it in its text.
+  with `accepted`. The status is `accepted` alone: #307 folded each chain of
+  `refined by` and `extended by` links into one ADR or, where the linked ADRs
+  were separate decisions, removed the link, and an ADR that builds on
+  another cites it in its text.
 
 ## Deleting one
 

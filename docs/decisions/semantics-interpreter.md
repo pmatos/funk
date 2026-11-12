@@ -4,7 +4,8 @@ This page continues semantics.md. It says what holds today about the Lean
 interpreter that defines fir's meaning: its calculus, calls and fuel, and the
 proofs that no run gets stuck. It is the record: when this page and an ADR
 disagree, the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
-ADR-2026-10-29-2009 and ADR-2026-11-02-2248 hold the direction decisions.
+ADR-2026-10-29-2009 and ADR-2026-11-02-2248 hold the direction decisions, and
+ADR-2026-11-09-1541 the totality obligation with memory.
 
 ## A monadic interpreter with fuel
 
@@ -12,7 +13,8 @@ fir's semantics is a monadic definitional interpreter, written in Lean. It is
 not built on interaction trees. Fuel bounds every run, so the interpreter always
 terminates. A run that uses all its fuel ends with fuel exhausted. Fuel
 exhaustion is an outcome of its own, beside a value, poison and UB. It stands
-for non-termination (ADR-2026-10-29-2009). This is S7. Rejected: interaction
+for non-termination (ADR-2026-10-29-2009). This is S7, agreed with the human
+on 2026-10-29 (#5). Rejected: interaction
 trees, as in Vellvm, since a fuelled interpreter is a total function that Lean
 runs directly and that proofs unfold case by case.
 
@@ -91,7 +93,8 @@ runs within it with memory, at the run's naming (`Func.InModuleAt`, which
 states the rules for terminators over their exits from any memories; under
 `LiftsSetM`, `Func.InModule` gives it). Each
 run has an outcome at every budget when the dialect is also lawful in its
-totality (`LawfulDialectTotal`, in `lean/Fir/Execution/MemoryTotal.lean`):
+totality (`LawfulDialectTotal`, in `lean/Fir/Execution/MemoryTotal.lean`;
+ADR-2026-11-09-1541):
 each valid op that is a terminator or has no callee has an outcome from any
 memories, at every naming (`MemTotal`). That class asks for no semantics in the
 set monad, and is not a field of `LawfulDialectEffects`, since totality is not

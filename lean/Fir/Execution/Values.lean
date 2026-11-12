@@ -22,7 +22,7 @@ namespace Fir
 /--
 A value that may be poison. The integer values of the core dialect are
 `PoisonOr (BitVec N)`. The constructor names match LeanMLIR's
-(ADR-2026-10-29-2009).
+(`docs/decisions/semantics-interpreter.md#its-own-calculus`).
 -/
 inductive PoisonOr (α : Type) where
   | poison
@@ -35,7 +35,8 @@ inductive PoisonOr (α : Type) where
 Refinement is fir's correctness relation (ADR-2026-10-29-2008), defined
 below for values and lists of values, and in the section on refinement for
 whole functions. Each level is defined from the one below it, in the same
-shape as LeanMLIR's refinement (ADR-2026-10-29-2009).
+shape as LeanMLIR's refinement
+(`docs/decisions/semantics-interpreter.md#its-own-calculus`).
 -/
 
 /-- Heterogeneous refinement: `a ⊑ b` says that `b` refines `a`. -/

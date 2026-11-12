@@ -253,9 +253,9 @@ or on the area page instead:
 An ADR is edited in place when its decision changes, since git keeps the
 history. There are no refining ADRs and no `superseded` status. Rejected: a new
 ADR for each change, which made same-day write-then-supersede pairs. #307
-folded every chain of `refined by` and `extended by` links into one ADR, so a
-status is `accepted` alone, and an ADR that builds on another cites it in its
-text.
+folded each chain of `refined by` and `extended by` links into one ADR or,
+where the linked ADRs were separate decisions, removed the link. So a status
+is `accepted` alone, and an ADR that builds on another cites it in its text.
 
 CI warns, and never fails, when a pull request adds more than two ADRs. The
 step `Warn when a pull request adds more than two ADRs` of the `static` job
@@ -282,8 +282,8 @@ human ruled on 2026-11-09, in #170, for tiers, a generated index, a rule for
 when not to write an ADR, and one page per area.
 
 `scripts/adr_index.py --write` generates `docs/adrs/INDEX.md`. It has one line
-per ADR: tier, area, title and what holds now, which is the ADR and every ADR
-that its `refined by` and `extended by` links reach. It links each ADR to its
+per ADR: tier, area, title and what holds now, which is the ADR itself, since
+ADRs are edited in place and no status names another. It links each ADR to its
 page. A status that does not start with `accepted` fails.
 
 A deleted ADR gets a row in the table of its area,

@@ -134,7 +134,7 @@ end SetM
 Execution gives valid modules their meaning, but `fir-ref run` also runs
 modules that have not been validated. So a path of a run can also end
 _stuck_, defined below. A valid module never gets stuck
-(ADR-2026-10-29-2009): no path of its runs is stuck, and they have an
+(ADR-2026-11-02-2248): no path of its runs is stuck, and they have an
 outcome at every budget. These are the no-stuck and progress obligations of
 the next section.
 -/

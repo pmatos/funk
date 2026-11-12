@@ -4,7 +4,8 @@ This page continues semantics.md. It says what holds today about what
 correctness means and the theorems that compose it. It is the record: when this
 page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). ADR-2026-10-29-2008 and ADR-2026-11-09-1322 hold the
-direction decisions. semantics-m1-trace.md says what an M1 run shows.
+direction decisions, and ADR-2026-11-09-1541 the monotonicity obligation with
+memory. semantics-m1-trace.md says what an M1 run shows.
 
 ## Refinement
 
@@ -13,7 +14,7 @@ source. Source UB allows any target that first shows the source's events before
 the UB (ADR-2026-11-09-1540). A poison result is refined by any value.
 Refinement is defined over a domain of observations that the semantics
 supplies. Each dialect supplies its observations (ADR-2026-10-29-2008). This
-is S4. Rejected: asking the target to behave as the source does, which leaves
+is S4, agreed with the human on 2026-10-29 (#5). Rejected: asking the target to behave as the source does, which leaves
 it no freedom where the source has UB or poison.
 
 Core functions, `ret` and `call` have any number of results, none included. No
@@ -90,8 +91,9 @@ in `lean/Fir/Execution/Lawful.lean`. So a lawful dialect gets both
 function-level refinement theorems for valid modules from the class alone, as
 the test dialect `CoreProbe` does in `lean/FirTest/LawfulRefine.lean`.
 `Core.args_isRefinedBy` and `Core.replaceBody_isRefinedBy` keep their
-statements through `Core.opsMonotone_all`, and hold for every core module,
-valid or not. The human ruled on 2026-11-05 (#99) to do this before M1 adds
+statements through `Core.opsMonotone_all`: every core function's ops are
+monotone, valid or not. So `Core.args_isRefinedBy` holds for every function of
+every core module, valid or not. The human ruled on 2026-11-05 (#99) to do this before M1 adds
 memory. Rejected: asking monotonicity at valid op instances in the engine, with
 a valid module, since `Core.args_isRefinedBy` could not then keep its
 statement; and threading `Func.InModule`, which progress needs but refinement
@@ -105,8 +107,8 @@ keeps its symbol, its parameters and its result types, so the runs of the old
 and the new function have one type and need no cast. Congruence assumes that
 the new `@g`, run in the new module, refines the old `@g`, run in the old. It
 concludes the same relation for every function of the module
-(`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, which asks only
-that the module be valid). It needs nothing of the new body, because a call of
+(`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, which ask that the
+module be valid and that `@g` have no pointer parameter). It needs nothing of the new body, because a call of
 `@g` is a black box whose behaviour the hypothesis gives. When the new body
 calls back into the module, proving the hypothesis may need its own
 induction. A body that gets
@@ -147,7 +149,8 @@ a pointer's provenance that the source keeps.
 
 A dialect lawful in its monotonicity (`LawfulDialectMonotone`) has each valid
 terminator and each valid op with no callee monotone over its semantics with
-memory, at every naming and from memories that refine others (`MemMonotone`).
+memory, at every naming and from memories that refine others (`MemMonotone`;
+ADR-2026-11-09-1541).
 It is a class of its own, as `LawfulDialectTotal` is (semantics-interpreter.md).
 A dialect that lifts the set monad and is lawful meets it, and so do sums and
 lifts whose sides do. An op that touches memory proves `MemMonotone` with the

@@ -14,14 +14,12 @@ Tier: direction; area: semantics
   the interpreter and its own `.fir` parser and printer; Rust holds the
   whole toolchain. A Rust evaluator may come later only as a copy tested
   against Lean, never as the definition.
-- **Its own calculus, in LeanMLIR's shape.** No dependency on LeanMLIR. A
-  dialect is a structure with `Op` and `Ty`, `TyDenote` and
-  `DialectSignature` type it, and each op's semantics has the shape of
-  `DialectDenote.denote`. It differs on purpose: terms are extrinsically
+- **Its own calculus, in LeanMLIR's shape.** No dependency on LeanMLIR, but
+  its typeclass shape (`TyDenote`, `DialectSignature`,
+  `DialectDenote.denote`) wherever that is cheap. Terms are extrinsically
   typed, with names, locations and a CFG of blocks; terminators return an
-  `Exit` through `DialectDenote.exit`; a dialect states the effects it needs
-  as class constraints on the monad; and the parser and printer are fir's
-  own.
+  `Exit`; a dialect states the effects it needs as class constraints on the
+  monad.
 - **Calls share the fuel.** A dialect names an op's callee through
   `DialectCall`, and the interpreter runs the callee in the run's module. The
   call effect is the run's, not a class on the monad. Fuel is the
@@ -42,15 +40,13 @@ what holds.
 fir needs one definition that runs, as a test oracle, and that is a
 mathematical object, so rewrite rules and the parser can be proved against
 it. Lean is both. A Lean function must terminate, and fir programs may loop.
-LeanMLIR has no CFG, op locations or value names, and its parser and printer
-cannot serve fir.
 
 ## Rejected alternatives
 
 - **Interaction trees,** as in Vellvm. A fuelled interpreter is a total
   function that Lean runs directly and that proofs unfold case by case.
-- **Depend on or fork LeanMLIR.** It is frozen on a Lean nightly, and a CFG,
-  names and locations would change the term its framework is built on.
+- **Depend on or fork LeanMLIR.** It has no CFG, op locations or value
+  names, its parser cannot serve fir, and it is frozen on a Lean nightly.
 - **VeIR.** Its coinductive choice trees conflict with this decision, and it
   stubs out locations and has no value names.
 - **Fuel in a state monad, or a call effect on the monad.** Fuel

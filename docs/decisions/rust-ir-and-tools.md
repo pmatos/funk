@@ -256,11 +256,10 @@ The rule stays: any unsafe Rust needs a Verus proof with a listed trusted base
 unsafe rust code at all we need to use verus to prove it's fine". The same day
 the human ruled the honest-mistake guard: the checks catch careless or
 well-meaning changes, and review of the diff is the defence against a
-deliberately disguised one. Lowering `forbid` needs a human ruling, and its PR
-edits ADR-2026-11-03-0808 in place. A new verified module, or a change to a trusted base or to the
-specification it is proved against, needs a human ruling, and its PR edits
-ADR-2026-11-03-0808 in place with every new digest, so the reviewer sees each
-one change. Rejected: `deny` in place of `forbid`, since any module could then
+deliberately disguised one. Lowering `forbid`, a new verified module, or a
+change to a trusted base or to the specification it is proved against needs a
+human ruling, and its PR edits ADR-2026-11-03-0808 in place, with every new
+digest, so the reviewer sees each one change. Rejected: `deny` in place of `forbid`, since any module could then
 allow unsafe code in one line and only review would catch it.
 
 The tooling that enforced the rule is gone from the tree: the human ruled on
