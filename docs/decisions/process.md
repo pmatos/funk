@@ -84,8 +84,7 @@ throws cannot be lowered until M4 or later. The human ruled this split on
 2026-11-09, in #201.
 
 Rejected: keeping M1's old goal, an IR that "real programs and the frontends"
-can lower to. M1's scope did not deliver it, and several features the
-frontends need had no milestone.
+can lower to. #201 found that M1's scope did not deliver it.
 
 Vectors and structured control flow (H6) stay with the milestones that need them.
 S8 stays with M2's optimizer track (ADR-2026-11-05-2255).

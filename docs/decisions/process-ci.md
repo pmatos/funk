@@ -24,8 +24,8 @@ four jobs are:
   and the pinned Lean toolchain. It restores the Verso build and is the one job
   that saves it.
 - `cross`, "Cross-language suite". It holds `fir-round-trip`, `fir-harness`,
-  `fir-harness-test` and `coverage-matrix`. It installs both toolchains and
-  binutils, and builds `lean/` again, beside the `lean` job.
+  `fir-random`, `fir-harness-test` and `coverage-matrix`. It installs both
+  toolchains and binutils, and builds `lean/` again, beside the `lean` job.
 
 `conventional-pre-commit`, a `commit-msg` hook, runs in `pr-title.yml` instead
 ([process.md](process.md#how-a-change-reaches-main)).
@@ -33,10 +33,11 @@ four jobs are:
 Rejected: one job that runs every hook. pre-commit hides a passing hook's
 output, so a pull request showed one check and no counts. Rejected: handing the
 built `lean/` to `cross` as an artifact. `cross` would wait for `lean`, and the
-run would take longer. Caching `lean/.lake` across runs would let a cache hit
-skip the `#guard` checks.
+run would take longer. Rejected: caching `lean/.lake` across runs. A cache hit
+would skip the `#guard` checks.
 
-Each hook is one step, run with `--all-files --verbose --show-diff-on-failure`.
+Each hook is one step,
+`uvx pre-commit@4.6.2 run ID --all-files --verbose --show-diff-on-failure`.
 Each step runs even when one before it failed. `--verbose` prints a hook's
 output and time when it passes. No job sets `SKIP`.
 

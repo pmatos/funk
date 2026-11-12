@@ -8,19 +8,19 @@ Tier: direction; area: process
 - Every check is a hook of `.pre-commit-config.yaml`. CI runs each suite of
   hooks as its own job of `.github/workflows/ci.yml`, each its own check:
   `static`, `rust`, `lean` and `cross`. The suites run in parallel.
-- One step per hook, in one form: `pre-commit run ID --all-files --verbose
-  --show-diff-on-failure`. Each step runs even when one before it failed. No
-  job sets `SKIP`.
+- One step per hook, in one form:
+  `uvx pre-commit@4.6.2 run ID --all-files --verbose --show-diff-on-failure`.
+  Each step runs even when one before it failed. No job sets `SKIP`.
 - A gate job, `pre-commit`, needs every suite job, always runs, and passes
   only when each of them succeeded. It keeps the name of the check that the
   ruleset requires (ADR-2026-10-28-0725).
 - The `ci-hooks` hook (`scripts/check_ci_hooks.py`) fails when a hook runs in
   no step or in more than one, when a hook of the `pre-commit` stage runs
-  outside `ci.yml`, when a step runs no hook id, when a hook runs without
-  `--all-files` or without its `--hook-stage`, when anything sets `SKIP`, and
-  when the gate does not need every other job or does not always run. So a
-  new hook needs a step in one job, and a new job a place in the gate's
-  `needs`.
+  outside `ci.yml`, when a step runs an id that is not a hook or no id, when
+  a hook runs without `--all-files` (a hook of another stage: without its
+  `--hook-stage`), when anything sets `SKIP`, and when the gate does not need
+  every other job or does not always run. So a new hook needs a step in one
+  job, and a new job a place in the gate's `needs`.
 - In CI, each test suite writes its counts to the job summary and to the log.
 
 The human asked on 2026-11-05, in #148, for one CI job per suite, each its own

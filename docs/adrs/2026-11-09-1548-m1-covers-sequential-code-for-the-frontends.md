@@ -37,7 +37,9 @@ through hooks M1 leaves in the format.
   successors, such as a call with an unwind successor, so no format change is
   needed.
 
-**Out of M1:** contract ops. They come as Vow's own dialect in M3.
+**Out of M1:** contract ops. They come as Vow's own dialect in M3. So C code
+that defines variadic functions, uses atomics or throws cannot be lowered until
+M4 or later.
 
 Each item in M1 goes through every layer, and the roadmap's M1 section and #177
 list them. The human ruled this split on 2026-11-09, in #201.
@@ -47,12 +49,9 @@ list them. The human ruled this split on 2026-11-09, in #201.
 M1's goal (ADR-2026-11-05-2255) said fir becomes an IR that real programs and
 the Vow, C and C++ and Linux frontends can lower to. Its scope left out
 features those frontends need, and named neither inclusion nor exclusion for
-several of them. C code that defines variadic functions, uses atomics or
-throws cannot be lowered until M4 or later.
+several of them (#201).
 
 ## Rejected alternatives
 
-- **Keep the old goal sentence.** M1's scope did not deliver it, so the goal
-  and the scope disagreed.
-- **Leave these features unnamed.** Each would have had no place in any
-  milestone until an agent chose one, which is a direction call.
+- **Keep the old goal sentence.** #201 found that M1's scope did not deliver
+  it, so the goal and the scope disagreed.
