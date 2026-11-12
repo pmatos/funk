@@ -1,0 +1,19 @@
+{
+  "removed": [
+    {
+      "file": "2026-11-03-1612-pull-requests-merge-only-when-up-to-date.md",
+      "now": "ADR-2026-10-28-0725",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-1633-python-test-hooks-run-through-one-runner.md",
+      "now": "docs/decisions/process-ci.md#the-python-test-runner",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-1954-ci-caches-each-installer-download-and-checks-it-on-every-run.md",
+      "now": "docs/decisions/process-ci.md#installer-downloads",
+      "commit": "7cd97a62e05b"
+    }
+  ]
+}

@@ -80,10 +80,10 @@ more than two ADRs. Naming, rules and template:
 
 An ADR is edited in place when its decision changes; git keeps the history.
 There are no refining ADRs and no `superseded` status. A deleted ADR gets a row
-in [`docs/adrs/removed.json`](docs/adrs/removed.json), and every citation of it
-is rewritten in the same PR. Each ADR carries a tier and an area, and
-[`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with what holds now and
-the removed ones (ADR-2026-11-09-1610).
+in the table of its area, [`docs/adrs/removed/AREA.json`](docs/adrs/removed/),
+and every citation of it is rewritten in the same PR. Each ADR carries a tier
+and an area, and [`docs/adrs/INDEX.md`](docs/adrs/INDEX.md) lists them with
+what holds now and the removed ones (ADR-2026-11-09-1610).
 
 The area pages in [`docs/decisions/`](docs/decisions/) are the record. An agent
 starting cold reads them first: each says what holds today. When a page and an

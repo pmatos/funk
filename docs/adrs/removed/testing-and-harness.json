@@ -1,0 +1,94 @@
+{
+  "removed": [
+    {
+      "file": "2026-10-30-1250-lean-tests-and-fir-ref-build.md",
+      "now": "docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-10-30-2040-test-dialect-sum-routes-op-names.md",
+      "now": "ADR-2026-11-09-2306",
+      "commit": "9c25a4693689"
+    },
+    {
+      "file": "2026-10-30-2049-differential-harness-in-python.md",
+      "now": "docs/decisions/testing-and-harness.md#the-harness-program",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md",
+      "now": "ADR-2026-10-30-2135",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-10-31-0208-frozen-divisor-test-in-a-fixture-corpus.md",
+      "now": "docs/decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-10-31-0524-select-to-cond-br-rewrite-is-tested-by-19.md",
+      "now": "docs/decisions/testing-and-harness-corpus.md#the-tests-of-the-select-rewrites",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-02-2250-harness-runs-native-code-under-a-data-limit.md",
+      "now": "docs/decisions/testing-and-harness.md#native-code-runs-under-a-data-limit",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-0644-llvm-cases-are-chosen-for-m0-s-ops-and-rewritten-by-fixed-rules.md",
+      "now": "docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1614-a-ported-llvm-name-that-fails-the-spelling-check-is-corrected.md",
+      "now": "docs/decisions/testing-and-harness-corpus.md#names-the-spelling-check-rejects",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1618-poison-s-differential-cells-are-filled-by-native-runs-and-its-interpreter-only-cells-by-observing-it.md",
+      "now": "ADR-2026-11-03-0557",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-03-1619-ported-llvm-cases-write-llvm-s-poison-constant-with-fir-s-poison-op.md",
+      "now": "docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-05-1718-fuzz-the-round-trip-over-well-formed-modules-with-core-texts-across-languages.md",
+      "now": "docs/decisions/testing-and-harness-generated.md#fuzzing-the-round-trip",
+      "commit": "5bbdeab17db7"
+    },
+    {
+      "file": "2026-11-06-1218-one-module-owns-differential-test-judgement.md",
+      "now": "docs/decisions/testing-and-harness.md#where-the-judgement-lives",
+      "commit": "6b6577ca195e"
+    },
+    {
+      "file": "2026-11-08-1806-the-fir-explorer-is-a-local-python-server-over-the-tools.md",
+      "now": "docs/decisions/testing-and-harness.md#the-fir-explorer",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-08-2117-fuzz-the-rust-parser-and-verifier-without-a-sanitizer.md",
+      "now": "docs/decisions/testing-and-harness-generated.md#fuzzing",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-09-1602-a-native-run-that-outgrows-its-stack-makes-its-test-invalid.md",
+      "now": "docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack",
+      "commit": "c09a05f4f8fb"
+    },
+    {
+      "file": "2026-11-11-1141-the-coverage-matrix-counts-float-ops-at-each-float-format.md",
+      "now": "ADR-2026-11-03-0557",
+      "commit": "f0aa94b68f98"
+    },
+    {
+      "file": "2026-11-11-1803-the-float-arithmetic-corpus-is-generated-from-the-exact-rational-reference.md",
+      "now": "docs/decisions/testing-and-harness-floats.md#the-arithmetic-corpus",
+      "commit": "0d492b1d4d6e"
+    }
+  ]
+}

@@ -6,9 +6,10 @@ its minute is already taken, and its id is the whole timestamp
 (docs/adrs/README.md). The check reads the ADRs that git tracks, so it sees
 every ADR, not only the ones a commit changes, and ignores untracked files.
 
-A deleted ADR has a row in docs/adrs/removed.json, and its id is never used
-again. `adr_index.py` renders the rows as the Removed table of INDEX.md, and
-`check_adr_citations.py` points a citation of a removed id at the row.
+A deleted ADR has a row in the table of its area, docs/adrs/removed/AREA.json,
+and its id is never used again. `adr_index.py` renders the rows as the
+Removed table of INDEX.md, and `check_adr_citations.py` points a citation of a
+removed id at the row.
 
 With `--warn-added`, it checks nothing and instead prints a GitHub
 `::warning::` when HEAD adds more than two ADRs to its first parent. In CI,
@@ -22,13 +23,13 @@ import re
 import subprocess
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 
 ADR_DIR = "docs/adrs/"
-REMOVED = "removed.json"
-NOT_ADRS = ("README.md", "INDEX.md", REMOVED)
+REMOVED = "removed"
+NOT_ADRS = ("README.md", "INDEX.md")
 MOST_ADDED = 2
 NAME = re.compile(
     r"(?P<id>[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}(?P<seconds>[0-9]{2})?)"
@@ -52,21 +53,23 @@ def adr_id(name: str) -> str | None:
 
 
 class RemovedError(ValueError):
-    """A removed.json that cannot be read."""
+    """A removed table that cannot be read."""
 
 
 @dataclass(frozen=True)
 class Removed:
-    """One row of removed.json: a deleted ADR and where its rule lives now."""
+    """One row of a removed table: a deleted ADR and where its rule lives now.
+    `table` is the path of the table that holds the row."""
 
     id: str
     file: str
     now: str
     commit: str
+    table: str = ""
 
 
 def parse_row(where: str, row) -> Removed:
-    """Return the row of removed.json `row`, called `where` in messages."""
+    """Return the row of a removed table `row`, called `where` in messages."""
     if not isinstance(row, dict) or set(row) != ROW_KEYS:
         raise RemovedError(f"{where}: needs exactly the keys {sorted(ROW_KEYS)}")
     if not all(isinstance(row[key], str) for key in ROW_KEYS):
@@ -85,7 +88,7 @@ def parse_row(where: str, row) -> Removed:
 
 
 def parse_removed(text: str) -> list[Removed]:
-    """Return the rows of removed.json, whose contents are `text`, in order.
+    """Return the rows of a removed table, whose contents are `text`, in order.
     Raises RemovedError naming the first thing that is wrong."""
     try:
         table = json.loads(text)
@@ -104,15 +107,30 @@ def parse_removed(text: str) -> list[Removed]:
 
 
 def removed_adrs(root: Path) -> list[Removed]:
-    """Return the rows of removed.json at `root`, or none when git does not
-    track it: like every ADR hook, this reads what a commit holds."""
-    path = f"{ADR_DIR}{REMOVED}"
-    if not git("ls-files", "--", path, cwd=root).strip():
-        return []
-    try:
-        return parse_removed((root / path).read_text(encoding="utf-8"))
-    except RemovedError as e:
-        raise RemovedError(f"{path}: {e}") from e
+    """Return the rows of the removed tables at `root`,
+    docs/adrs/removed/AREA.json, in the order of their paths. Only tables that
+    git tracks count: like every ADR hook, this reads what a commit holds. Any
+    other file under removed/ fails, so that no table's rows go unread."""
+    directory = f"{ADR_DIR}{REMOVED}/"
+    out = git("ls-files", "-z", "--", directory, cwd=root)
+    found: list[Removed] = []
+    tables: dict[str, str] = {}
+    for path in sorted(p for p in out.split("\0") if p):
+        name = path.removeprefix(directory)
+        if "/" in name or not name.endswith(".json"):
+            raise RemovedError(f"{path}: not a removed table, {directory}AREA.json")
+        try:
+            rows = parse_removed((root / path).read_text(encoding="utf-8"))
+        except RemovedError as e:
+            raise RemovedError(f"{path}: {e}") from e
+        for row in rows:
+            if row.id in tables:
+                raise RemovedError(
+                    f"{path}: ADR-{row.id} has a row already, in {tables[row.id]}"
+                )
+            tables[row.id] = path
+            found.append(replace(row, table=path))
+    return found
 
 
 def problems(paths: list[str], removed: Sequence[Removed] = ()) -> list[str]:
@@ -123,7 +141,7 @@ def problems(paths: list[str], removed: Sequence[Removed] = ()) -> list[str]:
     gone = {row.id for row in removed}
     for path in sorted(paths):
         name = path.removeprefix(ADR_DIR)
-        if name in NOT_ADRS:
+        if name in NOT_ADRS or name.startswith(f"{REMOVED}/"):
             continue
         ident = adr_id(name)
         if ident is None:
@@ -136,7 +154,7 @@ def problems(paths: list[str], removed: Sequence[Removed] = ()) -> list[str]:
         by_id.setdefault(ident, []).append(path)
         if ident in gone:
             found.append(
-                f"{path}: ADR-{ident} was removed ({ADR_DIR}{REMOVED}), and a"
+                f"{path}: ADR-{ident} was removed ({ADR_DIR}{REMOVED}/), and a"
                 " removed id is never used again. Name the ADR with the UTC"
                 " time it is written"
             )

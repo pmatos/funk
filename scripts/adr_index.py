@@ -6,9 +6,10 @@ Each ADR ends its status paragraph with a line `Tier: TIER; area: AREA`
 (ADR-2026-11-09-1610). The check reads the ADRs that git tracks, as the other
 ADR hooks do, so stage a new ADR before running `--write`.
 
-The index ends with the Removed table, one row per deleted ADR, from
-docs/adrs/removed.json. A row says where the rule lives now: an ADR, or a
-page of docs/decisions/ and, after `#`, the anchor of one of its headings.
+The index ends with the Removed table, one row per deleted ADR, from the
+tables of docs/adrs/removed/, one per area. A row says where the rule lives
+now: an ADR, or a page of docs/decisions/ and, after `#`, the anchor of one of
+its headings.
 """
 
 import argparse
@@ -67,7 +68,7 @@ def parse_status(file: str, status: str) -> list[str]:
         raise AdrError(
             f"{file}: Status must start with accepted. An ADR is edited in place"
             " when its decision changes, and a replaced one is deleted with a"
-            f" row in {ADR_DIR}/{REMOVED} (docs/adrs/README.md)"
+            f" row in {ADR_DIR}/{REMOVED}/AREA.json (docs/adrs/README.md)"
         )
     followed: list[str] = []
     for clause in clauses:
@@ -149,7 +150,8 @@ def removed_row(row: Removed, files: dict[str, str]) -> str:
 
 
 def render(adrs: list[Adr], removed: Sequence[Removed] = ()) -> str:
-    """Return the text of INDEX.md for `adrs` and the rows of removed.json."""
+    """Return the text of INDEX.md for `adrs` and the rows of the removed
+    tables."""
     held = holds(adrs)
     lines = [
         "# Index of ADRs",
@@ -180,7 +182,7 @@ def render(adrs: list[Adr], removed: Sequence[Removed] = ()) -> str:
         "",
         "## Removed",
         "",
-        f"Each deleted ADR, from `{REMOVED}`. Its id is never used again. The",
+        f"Each deleted ADR, from `{REMOVED}/`. Its id is never used again. The",
         "rule it held lives in the second column now, and the last column",
         "links the last commit on main that changed the file, which still holds it.",
         "",
@@ -200,7 +202,11 @@ def tracked(root: Path, directory: str) -> list[str]:
         capture_output=True,
         text=True,
     ).stdout
-    return [Path(path).name for path in out.split("\0") if path]
+    return [
+        Path(path).name
+        for path in out.split("\0")
+        if path and Path(path).parent == Path(directory)
+    ]
 
 
 def tracked_adrs(root: Path) -> list[str]:
@@ -243,14 +249,14 @@ def slugs(text: str) -> set[str]:
 def removed_problems(
     root: Path, removed: Sequence[Removed], adrs: list[Adr]
 ) -> list[str]:
-    """Return one message per row of removed.json whose rule lives nowhere:
+    """Return one message per row of a removed table whose rule lives nowhere:
     in an ADR that does not exist, or a page or heading that does not."""
     found = []
     ids = {adr.id for adr in adrs}
     pages = set(tracked(root, DECISIONS_DIR))
     anchors: dict[str, set[str]] = {}
     for row in removed:
-        where = f"{ADR_DIR}/{REMOVED}: ADR-{row.id} lives in {row.now}"
+        where = f"{row.table}: ADR-{row.id} lives in {row.now}"
         match = PAGE_SECTION.fullmatch(row.now)
         if row.now.startswith("ADR-"):
             if row.now[4:] not in ids:

@@ -14,7 +14,7 @@ docs/spec/FirSpecSite/citation-cases.json, so the two cannot drift
 
 The check reads every text file that git tracks, not only the ones a commit
 changes, since renaming or deleting an ADR breaks citations elsewhere. A
-citation of a deleted ADR, one with a row in docs/adrs/removed.json, fails
+citation of a deleted ADR, one with a row in docs/adrs/removed/, fails
 with where its rule lives now. The
 files of FIXTURES hold bad citations on purpose, as test data, and are not
 checked; each must still hold one, or the list has gone stale.

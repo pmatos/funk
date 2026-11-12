@@ -3,63 +3,40 @@
 Status: accepted
 Tier: direction; area: semantics
 
-## Context
-
-ADR-2026-11-09-1542 makes memory logical blocks in typed memories, and
-ADR-2026-11-09-1548 frees a stack allocation when the call that made it
-returns. The spec's interpreter is written once for any monad, and each
-dialect states the effects its ops need as classes on that monad
-(ADR-2026-10-29-2030). M0's runs, `fir-ref`'s modes and every proof about
-runs use the set monad or the tree of choices, which have no memory. Memory
-had to become part of a run without a second interpreter, and the
-interpreter had to free a call's stack allocations without knowing what
-memory is (G0, ADR-2026-10-29-2016).
-
 ## Decision
 
-- **The memories of a run are one state.** `Memories Mem unit` in
-  `lean/Fir/Memory/Frames.lean` holds one memory of the model for each
-  memory name, with a unit width per name that the data layout will give,
-  and a stack of frames. A frame lists the stack allocations its call made.
-- **Memory is an effect.** `MonadMemory` gives allocating, freeing, loading
-  and storing, each on a named memory; a faulting access is UB.
-- **The interpreter runs every function in a frame.** `MonadFrame.frame`
-  (`lean/Fir/Execution/Frame.lean`) runs a computation as one call.
-  `Func.runOps` runs each callee in a frame, and `Func.run` runs the
-  function it starts with in one, so no op runs outside a frame. The frame
-  is the monad's: the interpreter says only where a call starts and returns,
-  and imports nothing of the memory model.
-- **A monad without memory has frames that change nothing.** In the set
-  monad and the tree of choices a frame is the computation itself, so M0's
-  runs, `fir-ref` and their proofs are unchanged.
-- **The state layer adds memory.** `StateT (Memories Mem unit) m` keeps
-  `m`'s choice and UB, gives the memory effect, and makes a frame enter a
-  call, run, then free the frame's allocations. A stuck path keeps the
-  memories it reached; a UB path shows none. Monad morphisms lift through
-  the layer.
-- **Runs with memory start empty and show what they return.** Until
-  observations at the end of a run are designed (#233), an observer of a
-  run with memory sees its returned values only.
+- **The memories of a run are one state:** one memory of the model for each
+  memory name, with its unit width, and a stack of frames, each listing the
+  stack allocations its call made.
+- **Memory is an effect.** A class on the monad, `MonadMemory`, gives
+  allocating, freeing, loading and storing on a named memory, and a faulting
+  access is UB. A dialect whose ops touch memory states their semantics in a
+  monad with that class, as it states choice and UB (ADR-2026-10-29-2030).
+- **Every function runs in a frame.** The interpreter says only where a call
+  starts and returns, through the frame effect `MonadFrame`, and imports
+  nothing of the memory model (G0, ADR-2026-10-29-2016).
+- **A monad without memory is unchanged.** In the set monad and the tree of
+  choices a frame is the computation itself, so M0's runs, `fir-ref` and their
+  proofs stay as they are.
+- **The state layer adds memory.** `StateT` over the memories keeps the inner
+  monad's choice and UB, gives the memory effect, and makes a frame enter a
+  call, run it, then free the frame's stack allocations.
 
-## Alternatives
+[semantics-m1-design.md](../decisions/semantics-m1-design.md) says how the
+spec builds it, and semantics.md what holds today.
 
-- **Thread memory through the interpreter, as fuel is.** Every op's
-  semantics would take and give memories, so every dialect and every proof
-  about op semantics would change, for ops that never touch memory.
-- **Free a call's stack allocations by marking each memory's allocation
-  count at the call.** The interpreter would need to enumerate memory
-  names, which may be infinite, such as `ptr<N>`'s.
+## Why
 
-## Consequences
+Memory had to become part of a run without a second interpreter, and the
+interpreter had to free a call's stack allocations (ADR-2026-11-09-1548)
+without knowing what memory is. A layer leaves every op that touches no memory,
+and every proof about it, as it was.
 
-- A dialect whose ops touch no memory runs in the layer by lifting its
-  rules, and its runs with memory are its runs (`Func.memRuns_eq`).
-- A proper tail call (ADR-2026-11-09-1553) replaces its caller's frame, so
-  the caller's stack allocations are freed before the callee runs. A frame
-  that only brackets a computation cannot do that, so the tail-call ticket
-  adds a second frame operation that leaves the current frame and enters a
-  fresh one in its place, and runs the callee there.
-- Ops that touch memory state their semantics in a monad with
-  `MonadMemory`; progress, fuel monotonicity and refinement for them are
-  proved over the layer, and `fir-ref` walks the layer over the tree of
-  choices (#231).
+## Rejected alternatives
+
+- **Thread memory through the interpreter, as fuel is.** Every op's semantics
+  would take and give memories, so every dialect and every proof about op
+  semantics would change, for ops that never touch memory.
+- **Free a call's stack allocations by marking each memory's allocation count
+  at the call.** The interpreter would need to enumerate memory names, which
+  may be infinite, such as those of `ptr<N>`.

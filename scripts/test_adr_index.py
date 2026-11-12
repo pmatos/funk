@@ -199,7 +199,7 @@ class Rendering(unittest.TestCase):
         self.assertIn("a \\| b", text)
 
 
-REMOVED = "removed.json"
+REMOVED = "removed/process.json"
 
 
 def git(repo: Path, *args: str) -> None:
@@ -227,6 +227,7 @@ class Running(unittest.TestCase):
         git(self.repo, "init", "-q")
 
     def add(self, name: str, text: str) -> None:
+        (self.adrs / name).parent.mkdir(parents=True, exist_ok=True)
         (self.adrs / name).write_text(text, encoding="utf-8")
         git(self.repo, "add", f"docs/adrs/{name}")
 
@@ -313,9 +314,16 @@ class Running(unittest.TestCase):
             self.assertEqual(status, 1)
             self.assertIn(problem, message)
 
+    def test_a_file_in_a_subdirectory_is_not_an_adr(self):
+        self.add("2030-01-01-0001-a.md", adr_text())
+        self.add_pages("2030-01-01-0001")
+        self.add("old/2030-01-01-0002-b.md", adr_text())
+        self.assertEqual(self.run_it(write=True), (0, ""))
+
     def test_an_untracked_removed_table_is_ignored(self):
         self.add("2030-01-01-0001-a.md", adr_text())
         self.add_pages("2030-01-01-0001")
+        (self.adrs / REMOVED).parent.mkdir(parents=True, exist_ok=True)
         (self.adrs / REMOVED).write_text('{"removed": 1}', encoding="utf-8")
         self.assertEqual(self.run_it(write=True), (0, ""))
 
@@ -325,7 +333,7 @@ class Running(unittest.TestCase):
         self.add(REMOVED, '{"removed": 1}')
         status, message = self.run_it(write=True)
         self.assertEqual(status, 1)
-        self.assertIn("removed.json", message)
+        self.assertIn("docs/adrs/removed/process.json", message)
 
     def test_a_citation_in_code_does_not_count(self):
         self.add("2030-01-01-0001-a.md", adr_text())
