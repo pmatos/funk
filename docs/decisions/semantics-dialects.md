@@ -196,10 +196,10 @@ to register their kinds through this hook.
   them with loops, `writableLoop` and `dialectsLoop`, by the depth rule
   (ADR-2026-10-30-1450).
 
-These rest on ADR-2026-11-09-1543. Rejected: a typed item instance per dialect,
-`d.Item` with a decoder and round-trip laws, as for ops. It changes the
-`Dialect` structure that every dialect builds, and nothing in M1 needs it: a
-global's data are attributes and an external declaration is a signature.
+Rejected: a typed item instance per dialect, `d.Item` with a decoder and
+round-trip laws, as for ops. It changes the `Dialect` structure that every
+dialect builds, and nothing in M1 needs it: a global's data are attributes and
+an external declaration is a signature.
 Rejected: reject an unregistered kind when decoding, which needs a parser that
 knows the dialects; validation rejects it, as it rejects an unregistered region
 kind. An item with a body waits for a kind that needs one, with scoping rules
