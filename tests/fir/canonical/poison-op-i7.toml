@@ -2,7 +2,7 @@
 # ADR-2026-11-03-1615). Its result is poison on every run, and each
 # function passes it to one kind of op. The backend does not lower i7,
 # so every test is interpreter-only. Most observe the poison
-# (ADR-2026-11-03-1618): fir-ref returns it alone, through add,
+# (ADR-2026-11-03-0557): fir-ref returns it alone, through add,
 # through select on the arm that chooses it, and beside a value; icmp
 # eq %p, %p is poison, not true; freeze chooses a value for it; and a
 # branch on it or a division by it is UB. @poison_unused,

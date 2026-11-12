@@ -8,7 +8,8 @@ valid module is a failure (NeverStuck). An interpreter-only test passes
 when fir-ref gives the result it expects; an expected UB matches any reason.
 `sets.py` judges a run that makes choices by its set of outcomes. A native
 run that outgrows its stack proves nothing either, so it makes its test
-invalid, as a run out of fuel does on the other side (ADR-2026-11-09-1602).
+invalid, as a run out of fuel does on the other side
+(docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack).
 """
 
 import re

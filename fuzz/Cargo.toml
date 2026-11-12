@@ -1,6 +1,7 @@
-# The fuzz targets (#165, ADR-2026-11-08-2117). A crate of its own, outside
-# the workspace: cargo-fuzz needs a nightly compiler, and the workspace pins
-# a stable one. Only the nightly workflow builds it.
+# The fuzz targets (#165,
+# docs/decisions/testing-and-harness-generated.md#fuzzing). A crate of its
+# own, outside the workspace: cargo-fuzz needs a nightly compiler, and the
+# workspace pins a stable one. Only the nightly workflow builds it.
 [package]
 name = "funk-fuzz"
 version = "0.0.0"

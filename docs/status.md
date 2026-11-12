@@ -119,7 +119,7 @@ of funk are on `main`:
   ([ADR-2026-11-08-2115](adrs/2026-11-08-2115-generated-programs-run-on-fir-ref-and-native-code.md)).
   A nightly workflow runs fresh seeds and fuzzes the Rust parser and verifier
   ([ADR-2026-11-08-2116](adrs/2026-11-08-2116-fresh-seeds-run-only-in-a-manual-stage-nightly-hook.md),
-  [ADR-2026-11-08-2117](adrs/2026-11-08-2117-fuzz-the-rust-parser-and-verifier-without-a-sanitizer.md)).
+  [testing-and-harness-generated.md](decisions/testing-and-harness-generated.md#fuzzing)).
 - The differential harness ([#13](https://github.com/pmatos/funk/issues/13)).
   `./scripts/check-harness.sh` checks that `funk verify` and `fir-ref validate`
   give the same verdict on every text of [`tests/fir/`](../tests/fir/) and on
@@ -128,13 +128,12 @@ of funk are on `main`:
   native result refines one of `fir-ref`'s outcomes. A test whose run chooses
   more than the choice budget declares its results, each with a witness that
   the harness checks, and seeded runs sample the rest
-  ([ADR-2026-10-30-2049](adrs/2026-10-30-2049-differential-harness-in-python.md),
-  [ADR-2026-10-30-2135](adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md),
-  [ADR-2026-10-31-0003](adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md)).
+  ([testing-and-harness.md](decisions/testing-and-harness.md#the-harness-program),
+  [ADR-2026-10-30-2135](adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)).
   A test may pass `poison` as an argument, which `fir-ref run` takes as it is,
   and native code then runs on stand-ins in its place, the boundary bit
   patterns of its type ([#123](https://github.com/pmatos/funk/issues/123),
-  [fir-ref.md](decisions/fir-ref.md#poison-arguments)).
+  [testing-and-harness.md](decisions/testing-and-harness.md#poison-arguments)).
 - The execution rules of `const`, `add`, `sub`, `mul`, their flags, the bitwise
   ops and shifts, the width changes `zext`, `sext` and `trunc`, `freeze` and
   `ret` in Lean ([#10](https://github.com/pmatos/funk/issues/10),

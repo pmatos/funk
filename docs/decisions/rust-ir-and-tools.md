@@ -38,7 +38,7 @@ supply-chain risk and lockfile churn.
 
 The fuzz targets are the exception, and they are outside the workspace. `fuzz/`
 is a crate of its own that runs on a pinned nightly, because `cargo-fuzz` needs
-one (ADR-2026-11-08-2117).
+one ([testing-and-harness-generated.md](testing-and-harness-generated.md#fuzzing)).
 
 Three hooks check the Rust code: `rust-fmt` (`cargo fmt --all --check`),
 `rust-clippy` (`cargo clippy --workspace --all-targets --locked -- -D
@@ -283,5 +283,5 @@ for 246 lines that serve a case the harness never runs.
 
 ## Other tools
 
-testing-and-harness.md describes the fir explorer. Its native runs keep the
-harness's data limit (ADR-2026-11-08-1806).
+[testing-and-harness.md](testing-and-harness.md#the-fir-explorer) describes
+the fir explorer. Its native runs keep the harness's data limit.

@@ -98,7 +98,8 @@ A float of `float<e,m>` is spelled as its constants are, as `1.0` or
 (`FirRef.readArg`). It is no argument of `ptr`: a run starts with no
 allocation. It is not a choice either, since `freeze` chooses a value. The
 human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123); the
-harness's use of it is in [fir-ref.md](fir-ref.md#poison-arguments).
+harness's use of it is in
+[testing-and-harness.md](testing-and-harness.md#poison-arguments).
 
 `--fuel N` gives N steps, one for each op run, terminators included. N is
 ASCII decimal digits, and anything else is a usage error. The default is

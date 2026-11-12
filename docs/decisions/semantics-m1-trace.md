@@ -100,4 +100,5 @@ For a native run, the harness generates a stub library from the same script. It
 is linked in place of the external functions. It records each call (symbol,
 arguments, reachable bytes) and replays the scripted results. A wrapper that the
 harness generates dumps the observed memory at return. The one judgement module
-compares the two sides (ADR-2026-11-06-1218, ADR-2026-11-09-1540).
+compares the two sides (ADR-2026-11-09-1540,
+[testing-and-harness.md](testing-and-harness.md#where-the-judgement-lives)).

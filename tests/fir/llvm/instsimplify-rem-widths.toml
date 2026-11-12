@@ -1,7 +1,8 @@
 # Derived from LLVM: llvm/test/Transforms/InstSimplify/rem.ll, ported to
 # fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
 # LICENSE.TXT beside this file, and README.md says how the cases were
-# chosen and rewritten (ADR-2026-11-03-0644).
+# chosen and rewritten
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 #
 # @srem_mul_sdiv works at i4, a width that the backend does not lower, so
 # its tests are interpreter-only. (%x sdiv %y) * %y is a multiple of %y,

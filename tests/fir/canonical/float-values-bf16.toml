@@ -2,7 +2,7 @@
 # arguments by br and cond_br, returned one and several at a time, and
 # given by calls with one result and with several, each coming back as
 # its bits: a NaN with its sign set and a payload, -0, 1 and the smallest
-# subnormal, and poison (ADR-2026-11-11-1438, ADR-2026-11-11-1141).
+# subnormal, and poison (ADR-2026-11-11-1438, ADR-2026-11-03-0557).
 # Each test is interpreter-only, as the backend does not lower bf16.
 tests = [
   { func = "@choose", args = ["true", "0xffc1", "-0.0"], expect = ["0xffc1"] },

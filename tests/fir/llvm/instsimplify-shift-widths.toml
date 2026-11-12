@@ -1,7 +1,8 @@
 # Derived from LLVM: llvm/test/Transforms/InstSimplify/shift.ll, ported to
 # fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
 # LICENSE.TXT beside this file, and README.md says how the cases were
-# chosen and rewritten (ADR-2026-11-03-0644).
+# chosen and rewritten
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 #
 # The functions of shift.ll at widths that the backend does not lower:
 # i39, i41, i47 and i55. So every test is interpreter-only, and each

@@ -7,7 +7,7 @@ executable and the Lean tests. It has no dependencies (ADR-2026-10-29-2135).
 Module and declaration docs are written in Verso markup, so that the spec
 document in `docs/spec/` renders them. TOML cannot set both options below,
 because one name extends the other. How the package is built and tested is
-ADR-2026-10-30-1250.
+docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref.
 -/
 package fir where
   leanOptions := #[

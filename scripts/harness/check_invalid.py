@@ -1,5 +1,6 @@
 """Checks the harness's invalid verdicts on the real tools (#18, #172,
-ADR-2026-10-31-0208, ADR-2026-11-09-1602).
+docs/decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested,
+docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack).
 
 Usage: check_invalid.py --funk FUNK --fir-ref FIR_REF
 

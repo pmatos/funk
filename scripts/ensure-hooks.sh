@@ -46,9 +46,10 @@ fi
 hooks_installed || fail "pre-commit and commit-msg must both be executable pre-commit hooks."
 
 # The fir-spec, fir-ref-test and fir-round-trip hooks build the Lean code
-# (ADR-2026-10-29-2135, ADR-2026-10-30-1250). A warning, not a failure: a
-# commit that runs none of them can go on. It goes to stdout too, because a
-# SessionStart hook that exits 0 shows only stdout.
+# (ADR-2026-10-29-2135,
+# docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
+# A warning, not a failure: a commit that runs none of them can go on. It goes
+# to stdout too, because a SessionStart hook that exits 0 shows only stdout.
 if ! command -v elan >/dev/null && [[ ! -x "$HOME/.elan/bin/elan" ]]; then
     warning="Warning: elan, the Lean toolchain manager, is not installed.
 The fir-spec, fir-ref-test and fir-round-trip hooks need it. A commit that
@@ -59,7 +60,8 @@ Install it as https://github.com/leanprover/elan#installation says."
     echo "$warning" >&2
 fi
 # The rust-* hooks build and test the Cargo workspace (ADR-2026-10-30-1030),
-# and fir-round-trip runs it (ADR-2026-10-30-1250).
+# and fir-round-trip runs it
+# (docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
 if ! command -v cargo >/dev/null && [[ ! -x "$HOME/.cargo/bin/cargo" ]]; then
     warning="Warning: cargo, from the Rust toolchain manager rustup, is not installed.
 The rust-fmt, rust-clippy, rust-test and fir-round-trip hooks need it. A

@@ -1,7 +1,8 @@
 # Derived from LLVM: llvm/test/Transforms/InstSimplify/rem.ll, ported to
 # fir by hand. LLVM's licence, Apache-2.0 WITH LLVM-exception, is in
 # LICENSE.TXT beside this file, and README.md says how the cases were
-# chosen and rewritten (ADR-2026-11-03-0644).
+# chosen and rewritten
+# (docs/decisions/testing-and-harness-corpus.md#how-cases-are-chosen-and-rewritten).
 #
 # Each test runs one function at the arguments given, and its from names
 # the LLVM function, or its CHECK lines, that the function is. A remainder
@@ -36,8 +37,9 @@
 #
 # The three functions of lines 516 to 545 keep LLVM's names with simplify
 # spelled correctly. LLVM's names misspell it, dropping its second i, and
-# the repository's spelling check rejects them (ADR-2026-11-03-1614), so
-# each of their tests' from names the function by its file and lines.
+# the repository's spelling check rejects them
+# (docs/decisions/testing-and-harness-corpus.md#names-the-spelling-check-rejects),
+# so each of their tests' from names the function by its file and lines.
 # @simplify_urem_of_mul, a urem by 10 of a mul nuw by 30, gives 0 on 0, 3
 # and 8, and poison on 9 and -1, where the mul's flag breaks, which LLVM's
 # 0 refines. Its negative tests show what the fold needs: with nsw for

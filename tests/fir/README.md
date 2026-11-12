@@ -5,11 +5,9 @@ parser through `fir-ref` (#10), and the tests that the differential harness
 runs on them (#13). The format is decided in
 [ADR-2026-10-30-2050](../../docs/adrs/2026-10-30-2050-fir-test-corpus-format.md),
 the harness in
-[ADR-2026-10-30-2049](../../docs/adrs/2026-10-30-2049-differential-harness-in-python.md),
-and how it judges a test in
-[ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md)
-and, for a run that makes choices,
-[ADR-2026-10-31-0003](../../docs/adrs/2026-10-31-0003-harness-judges-differential-tests-by-outcome-sets.md).
+[testing-and-harness.md](../../docs/decisions/testing-and-harness.md#the-harness-program),
+and how it judges a test, a run that makes choices included, in
+[ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md).
 The [coverage matrix](../../docs/coverage/README.md) counts the tests
 that exercise each op instance at each width, on each side
 ([ADR-2026-11-03-0557](../../docs/adrs/2026-11-03-0557-a-generated-matrix-counts-the-tests-of-each-cell.md)).
@@ -68,10 +66,11 @@ tests = [
   makes the test invalid, which counts as a failure: raise the fuel budget, or
   make the test interpreter-only. A native run that outgrows its stack makes
   the test invalid too: recurse less deep, or raise `ulimit -s`
-  (ADR-2026-11-09-1602). Native code takes no `poison`: it runs on each
+  ([testing-and-harness.md](../../docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)).
+  Native code takes no `poison`: it runs on each
   combination of stand-ins in its place, the boundary bit patterns of its type,
   and each result must refine one of `fir-ref`'s outcomes on the poison
-  ([fir-ref.md](../../docs/decisions/fir-ref.md#poison-arguments)).
+  ([testing-and-harness.md](../../docs/decisions/testing-and-harness.md#poison-arguments)).
 - `results` declares a differential test's results, each a list of
   `values` and a `witness`: the choices on which `fir-ref run --choices`
   gives them. A test whose run chooses more than 16 bits on one path must
@@ -141,7 +140,8 @@ locs {
   `fir-harness` hook, runs everything above, and checks that both tools
   accept every module of the Rust generator.
 - `scripts/harness/fuzz_to_corpus.py` adds an input that crashed a fuzzer,
-  once the bug is fixed (ADR-2026-11-08-2117).
+  once the bug is fixed
+  ([testing-and-harness-generated.md](../../docs/decisions/testing-and-harness-generated.md#fuzzing)).
 - `scripts/harness/coverage.py`, the `coverage-matrix` hook, writes the
   coverage matrix from the tests and fails when the committed one is
   stale or a cell has no test. Run it with `--write` after changing a
@@ -157,7 +157,8 @@ locs {
   ([fir-ref-command-line.md](../../docs/decisions/fir-ref-command-line.md#fir-ref-run)).
   Editing one of those files means updating that table.
   `scripts/check-fir-ref.sh round-trip` has Lean reprint what Rust prints from
-  them, byte for byte (ADR-2026-10-30-1250).
+  them, byte for byte
+  ([testing-and-harness.md](../../docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)).
 
 ## The texts
 

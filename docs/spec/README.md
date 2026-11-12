@@ -78,7 +78,7 @@ scripts/build-spec.sh --lean     # only lean/: the spec's definitions, fir-ref a
 
 The last builds `lean/.lake/build/bin/fir-ref`, the reference interpreter's
 executable, and runs the Lean tests in `lean/FirTest/`
-(ADR-2026-10-30-1250).
+([testing-and-harness.md](../decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref)).
 
 The toolchain, the dependencies and the build are recorded in
 ADR-2026-10-29-2135. The rendered document is a build output and is not

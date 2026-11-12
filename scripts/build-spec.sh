@@ -9,7 +9,7 @@
 # a toolchain bump. Never run a bare `lake update` there.
 # --lean builds only the Lean package in lean/: the spec's definitions, the
 # fir-ref executable and the Lean tests, without the document
-# (ADR-2026-10-30-1250).
+# (docs/decisions/testing-and-harness.md#lean-tests-and-the-checks-of-fir-ref).
 set -euo pipefail
 
 update=false
