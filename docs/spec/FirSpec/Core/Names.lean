@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The core's words are bare: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13044301016779446508")
+:::moduleDocs (fingerprint := "4792578434946019575")
 :::
 
 :::readable Fir.wordDialect_eq_none (fingerprint := "13075370100625360433")
@@ -22,11 +22,13 @@ changes under it.
 then $`\mathrm{dialect}(w) = \bot`.
 :::
 
-:::readable Fir.Core.instDialectSet Fir.Core.name_new Fir.Core.opName_bare Fir.Core.opAttrs_bare Fir.Core.tyAttr_bare Fir.Core.lawfulDialectSet Fir.Core.instLawfulDialectSet (fingerprint := "13595859503828867090")
+:::readable Fir.Core.instDialectSet Fir.Core.name_new Fir.Core.opName_bare Fir.Core.Attr.dialectsAll_append Fir.Core.opAttrs_bare Fir.Core.tyAttr_bare Fir.Core.lawfulDialectSet Fir.Core.instLawfulDialectSet (fingerprint := "6112130009467063977")
 *Theorems: the core's words are bare.* The core dialect's set is empty:
 $`\mathrm{names}(\mathrm{core}) = \epsilon`. No name of a core op holds a
-$`.`, no word of a core op's attributes does (the flags, the predicates and
-the constants $`\texttt{true}` and $`\texttt{false}`), and no core type
+$`.`, no word of a core op's attributes does (the flags, the fast-math
+flags, the predicates and the constants $`\texttt{true}` and
+$`\texttt{false}`; the dialects that attributes name, of two lists one
+after the other, are those of the first and then the second), and no core type
 does: $`\texttt{ptr}`, $`\texttt{ptr}(N)`, whose argument is an integer,
 $`\texttt{i}N`, whose width is written in
 decimal digits, the aliases $`\texttt{f16}`, $`\texttt{bf16}`,

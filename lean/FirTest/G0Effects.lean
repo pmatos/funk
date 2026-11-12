@@ -219,11 +219,12 @@ is observable, since the core dialect has neither memory nor a trace yet
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
   ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp",
-   "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg", "fabs", "sqrt", "fma"]
+   "fcmp", "fadd", "fdiv", "fneg", "fabs"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
   ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable"]
 #guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==
-  ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison"]
+  ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison", "fcmp", "fsub", "fmul", "sqrt",
+   "fma"]
 #guard ((Core.samples.filter (·.effects.control)).map Core.Op.name).eraseDups ==
   ["br", "cond_br", "ret", "unreachable"]
 -- The sets that depend on an attribute, at each value of it.
@@ -232,6 +233,14 @@ is observable, since the core dialect has neither memory nor a trace yet
   [Core.Op.add 8 f, .sub 8 f, .mul 8 f].all (·.effects == { mayPoison := true })
 #guard [Core.Op.sdiv 8 false, .udiv 8 false, .srem 8, .urem 8].all (·.effects == { mayUB := true })
 #guard [Core.Op.sdiv 8 true, .udiv 8 true].all (·.effects == { mayUB := true, mayPoison := true })
+-- A float op may produce poison with `nnan` or `ninf`; `nsz` and the
+-- reserved words alone keep it pure.
+#guard [({} : Core.FastMath), { nsz := true }, { contract := true, reassoc := true }].all fun fl =>
+  [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23, .fma fl 8 23].all
+    (·.effects == {})
+#guard [({ nnan := true } : Core.FastMath), { ninf := true }, { nnan := true, nsz := true }].all
+  fun fl => [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23,
+    .fma fl 8 23].all (·.effects == { mayPoison := true })
 #guard Core.samples.all fun o => o.effects.reads == .these [] && o.effects.writes == .these [] &&
   o.effects.allocates == .these [] && !o.effects.observable
 

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6506965541655200635")
+:::moduleDocs (fingerprint := "16662031761246918872")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -79,7 +79,7 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "8843025048437953350")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq Fir.Core.decodeFcmpWith_eq Fir.Core.decodeFcmp_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (pin := Fir.Core.decodeFcmp) (fingerprint := "5654821901026584635")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
 If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` or
 $`\mathsf{fdiv}` decodes from the attributes $`a^*` and the types $`t^*`
@@ -87,11 +87,14 @@ and $`r^*`, as the section on
 {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
 reads it, the op it gives has its name, the attributes $`a^*` and the
 operand and result types $`t^*` and $`r^*`; and the same holds of
-$`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}` and $`\mathsf{fma}`.
-The proof of the next theorem uses them for these ops.
+$`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}`, $`\mathsf{fma}`
+and $`\mathsf{fcmp}`. Each op's attributes are the words of its
+fast-math flags and then its own, and the words that reading takes back
+put the attributes back together. The proof of the next theorem uses them
+for these ops.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "8337622065047126390")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2899934550548463278")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -111,11 +114,13 @@ float constant and float op of arithmetic, and list of types. A float constant r
 signed reading names its bits exactly.
 :::
 
-:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "3131061245511129042")
+:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Attr.allWritable_append Fir.Core.FastMath.attrs_writable Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "4794657475226313482")
 *Theorems: core ops are written as tokens.* For every core op instance
 $`o`, $`\mathrm{opname}(o)` is a word and every attribute of
 $`\mathrm{opattrs}(o)` can be written; and the name of every predicate,
-an integer one or a float one, is a word. With the
+an integer one or a float one, is a word. The words of the fast-math
+flags can be written, and so can two lists of attributes that can, one
+after the other. With the
 {ref "The-fir-specification--Text-format--The-core-types-in-text-are-lawful"}[previous section],
 which proves that every valid core type is written as a type, these are
 the last three laws: what the core dialect writes fits the grammar.

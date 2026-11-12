@@ -19,6 +19,7 @@ import FirTest.Compare
 import FirTest.FloatCompare
 import FirTest.FloatArith
 import FirTest.FloatText
+import FirTest.FloatFlags
 import FirTest.Branch
 import FirTest.Unreachable
 import FirTest.Loops

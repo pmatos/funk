@@ -68,10 +68,10 @@ theorem Op.total : (op : Op) → op.isCall = false → OpTotal (d := CoreDialect
   | .lshr w, _ => lshr_total w
   | .ashr w, _ => ashr_total w
   | .icmp p w, _ => icmp_total p w
-  | .fcmp p e m, _ => fcmp_total p e m
-  | .fbin o e m, _ => fbin_total o e m
-  | .funary o e m, _ => funary_total o e m
-  | .fma e m, _ => fma_total e m
+  | .fcmp p fl e m, _ => fcmp_total p fl e m
+  | .fbin o fl e m, _ => fbin_total o fl e m
+  | .funary o fl e m, _ => funary_total o fl e m
+  | .fma fl e m, _ => fma_total fl e m
   | .select w, _ => select_total w
   | .zext m n, _ => zext_total m n
   | .sext m n, _ => sext_total m n

@@ -8,14 +8,17 @@
 //! `fneg` and `fabs`, has one attribute, `round(rne)`, round to nearest
 //! even, the one mode M1 has; `fneg` and `fabs` have none
 //! (ADR-2026-11-11-1801). So `fadd %a, %b`, `fadd round(rtz) %a, %b` and
-//! `fneg round(rne) %a` do not decode. Validation has no rule for these ops
-//! beyond their signature. Each is pure: it is never UB, a NaN result is a
-//! defined value, and it gives poison only for a poison operand.
+//! `fneg round(rne) %a` do not decode. Each may carry the fast-math flags
+//! before its rounding mode (the `fast_math` module): validation rejects
+//! the reserved words `contract` and `reassoc`. Without `nnan` and `ninf`
+//! each is pure: it is never UB, a NaN result is a defined value, and it
+//! gives poison only for a poison operand.
 
+use super::fast_math::{self, Flags};
 use super::type_list;
 use super::types::float_format;
 use crate::effects::Effects;
-use crate::registry::{OpShape, OpSpec, OpTypes};
+use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Type};
 
 /// The float ops of arithmetic: each name, its number of operands, and
@@ -100,7 +103,8 @@ impl OpSpec for FloatArith {
     }
 
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
-        decode_rounding(self.name, self.rounds, op.attrs)?;
+        let flags = Flags::decode(self.name, op.attrs)?;
+        decode_rounding(self.name, self.rounds, flags.rest)?;
         if op_format(self.operands, op.operands, op.results).is_some() {
             return Ok(OpShape::default());
         }
@@ -117,10 +121,15 @@ impl OpSpec for FloatArith {
         ))
     }
 
-    /// Pure: never UB, and a poison result only for a poison operand
-    /// (`Core.Op.effects`).
-    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects::PURE
+    /// No reserved word among the flags (`Op.Valid`).
+    fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
+        Flags::decode(self.name, op.attrs).map_or(Ok(()), |f| f.check(self.name))
+    }
+
+    /// Never UB, and a poison result only for a poison operand, or with
+    /// `nnan` or `ninf` (`Core.Op.effects`).
+    fn effects(&self, op: &OpTypes<'_>) -> Effects {
+        fast_math::effects_of(op.attrs)
     }
 }
 

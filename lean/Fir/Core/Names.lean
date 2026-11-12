@@ -30,7 +30,14 @@ theorem opName_bare (o : Op) : wordDialect (opName (d := CoreDialect) o) = none 
   apply wordDialect_eq_none
   cases o <;> first
     | (simp only [opName, Op.name]; decide)
-    | (rename_i o _ _; cases o <;> simp only [opName, Op.name, FBin.name, FUnary.name] <;> decide)
+    | (rename_i o _ _ _; cases o <;> simp only [opName, Op.name, FBin.name, FUnary.name] <;> decide)
+
+/-- The dialects that attributes name, of two lists one after the other. -/
+theorem Attr.dialectsAll_append (as bs : List Attr) :
+    Attr.dialectsAll (as ++ bs) = Attr.dialectsAll as ++ Attr.dialectsAll bs := by
+  induction as with
+  | nil => rfl
+  | cons a as ih => simp [Fir.Attr.dialectsAll, ih]
 
 /-- No word of a core op's attributes names a dialect. -/
 theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) = [] := by
@@ -40,6 +47,9 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
   have hw (f : WrapFlags) : Attr.dialectsAll f.attrs = [] := by
     rcases f with ⟨_ | _, _ | _⟩ <;>
       simp [WrapFlags.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]
+  have hf (fl : FastMath) : Attr.dialectsAll fl.attrs = [] := by
+    rcases fl with ⟨_ | _, _ | _, _ | _, _ | _, _ | _⟩ <;>
+      simp [FastMath.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]
   cases o with
   | const w v =>
     simp only [opAttrs, Op.attrs, Attr.dialectsAll, List.append_nil]
@@ -49,15 +59,17 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
     · simp [Attr.dialects]
   | icmp p w => simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hp]
   | fconst => simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects]
-  | fcmp p =>
+  | fcmp p fl =>
     have hq : wordDialect p.name = none := by
       apply wordDialect_eq_none
       cases p <;> decide
-    simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, hq]
-  | fbin | fma => simp [opAttrs, Op.attrs, roundAttr, Attr.dialectsAll, Attr.dialects, wordDialect]
-  | funary o =>
-    cases o <;> simp [opAttrs, Op.attrs, FUnary.attrs, roundAttr, Attr.dialectsAll, Attr.dialects,
-      wordDialect]
+    simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, Attr.dialectsAll, Attr.dialects, hq]
+  | fbin _ fl | fma fl =>
+    simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, roundAttr, Attr.dialectsAll,
+      Attr.dialects, wordDialect]
+  | funary o fl =>
+    cases o <;> simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, FUnary.attrs, roundAttr,
+      Attr.dialectsAll, Attr.dialects, wordDialect]
   | add _ f | sub _ f | mul _ f => exact hw f
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]

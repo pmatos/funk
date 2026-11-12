@@ -92,21 +92,21 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [i w])))
         (freezeValue_toSet (ε := Op) (w := w) a)
-    | .fbin o e m, .cons a (.cons b .nil) => by
-      show (ChoiceTree.bind (fbinValues o a b) _).toSet = _
+    | .fbin o fl e m, .cons a (.cons b .nil) => by
+      show (ChoiceTree.bind (fbinValues o fl a b) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
-        (fbinValues_toSet (ε := Op) o a b)
-    | .funary o e m, .cons a .nil => by
-      show (ChoiceTree.bind (funaryValue o a) _).toSet = _
+        (fbinValues_toSet (ε := Op) o fl a b)
+    | .funary o fl e m, .cons a .nil => by
+      show (ChoiceTree.bind (funaryValue o fl a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
-        (funaryValue_toSet (ε := Op) o a)
-    | .fma e m, .cons a (.cons b (.cons c .nil)) => by
-      show (ChoiceTree.bind (fmaValues a b c) _).toSet = _
+        (funaryValue_toSet (ε := Op) o fl a)
+    | .fma fl e m, .cons a (.cons b (.cons c .nil)) => by
+      show (ChoiceTree.bind (fmaValues fl a b c) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
-        (fmaValues_toSet (ε := Op) a b c)
+        (fmaValues_toSet (ε := Op) fl a b c)
     | .sdiv _ x, args => ruleOfEv_toSet (sdivWith x) args
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args

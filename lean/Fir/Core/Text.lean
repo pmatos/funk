@@ -29,12 +29,15 @@ results, which are written where those values are defined.
 * `icmp` has one attribute, its predicate, from `eq` to `uge`, as LLVM
   writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
   `.`, which is kept for the names of dialects.
-* `fcmp` has one attribute, its predicate, from `oeq` to `uno`, as LLVM
+* `fcmp` has its predicate, from `oeq` to `uno`, as LLVM
   writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
-  has one attribute, `round(rne)`, and `fneg` and `fabs` have none:
-  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). The
-  section on how the float arithmetic is written says more.
+  has `round(rne)`, and `fneg` and `fabs` have no rounding mode:
+  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801).
+* Each float op, `fcmp` included, has its fast-math flags first, in the
+  fixed order `nnan`, `ninf`, `nsz`, `contract`, `reassoc`, each at most
+  once: `%s: f32 = fadd nnan nsz round(rne) %a, %b @1`. The section on how
+  the float arithmetic is written says more.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -125,9 +128,9 @@ def Op.attrs : Op → List Attr
   | .const w v => [constAttr w v]
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
-  | .fcmp p _ _ => [.word p.name]
-  | .fbin .. | .fma .. => [roundAttr]
-  | .funary o .. => o.attrs
+  | .fcmp p fl _ _ => fl.attrs ++ [.word p.name]
+  | .fbin _ fl _ _ | .fma fl _ _ => fl.attrs ++ [roundAttr]
+  | .funary o fl _ _ => fl.attrs ++ o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -165,6 +168,19 @@ def plainBinOps : List (String × (Nat → Op)) :=
   [("srem", .srem), ("urem", .urem), ("and", .and), ("or", .or), ("xor", .xor),
    ("shl", .shl), ("lshr", .lshr), ("ashr", .ashr)]
 
+/-- Reads `fcmp` under the flags `fl`: its predicate after the flags, two
+operands of one float type and an `i1`. -/
+def decodeFcmpWith (fl : FastMath) : List Attr → List Ty → List Ty → Option Op
+  | [.word p], [.float e m, .float e' m'], [.int 1] => do
+    let pr ← FPred.all.find? (·.name == p)
+    if e = e' ∧ m = m' then some (.fcmp pr fl e m) else none
+  | _, _, _ => none
+
+/-- Reads `fcmp`: its flags, its predicate, two operands of one float type
+and an `i1`. -/
+def decodeFcmp (as : List Attr) (ts rs : List Ty) : Option Op :=
+  decodeFcmpWith (splitFlags as).1 (splitFlags as).2 ts rs
+
 /-- The core op instance with this name and these attributes, at these
 operand and result types. -/
 def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
@@ -181,11 +197,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
       let pr ← Pred.all.find? (·.name == p)
       if a = b then some (.icmp pr a) else none
     | _, _, _ => none
-  | "fcmp" => match as, ts, rs with
-    | [.word p], [.float e m, .float e' m'], [.int 1] => do
-      let pr ← FPred.all.find? (·.name == p)
-      if e = e' ∧ m = m' then some (.fcmp pr e m) else none
-    | _, _, _ => none
+  | "fcmp" => decodeFcmp as ts rs
   | "fadd" => decodeFBin .fadd as ts rs
   | "fsub" => decodeFBin .fsub as ts rs
   | "fmul" => decodeFBin .fmul as ts rs
@@ -298,9 +310,12 @@ def samples : List Op :=
    .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .unreachable,
    .call "f" [.int 8] [.int 1], .fconst 8 23 0x3f800000, .fconst 11 52 (-1), .fconst 2 1 0,
    .fconst 5 10 0x7e01] ++
-  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112] ++
-  [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
-   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52]
+  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · {} 8 23) ++
+  [.fcmp .uno { nnan := true, ninf := true, nsz := true } 15 112] ++
+  [.fbin .fadd {} 8 23, .fbin .fsub { nnan := true } 11 52, .fbin .fmul { ninf := true } 5 10,
+   .fbin .fdiv { nsz := true, contract := true, reassoc := true } 2 1, .funary .fneg {} 8 7,
+   .funary .fabs { nsz := true } 15 112, .funary .sqrt { nnan := true, ninf := true } 8 23,
+   .fma { nnan := true, ninf := true, nsz := true, contract := true, reassoc := true } 11 52]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
@@ -349,19 +364,19 @@ def samples : List Op :=
 #guard Op.decode "const" [.float (.hex "3f800000".toList)] [] [.float 8 23] == none
 #guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
 #guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt 11 52)
+#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt {} 11 52)
 #guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 8 23] [.int 1] == none
 #guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
 #guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
 #guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
 -- A float op that rounds needs `round(rne)`; `fneg` and `fabs` take none.
-#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd 8 23)
+#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd {} 8 23)
 #guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
-  some (.fma 8 23)
+  some (.fma {} 8 23)
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
 

@@ -25,7 +25,7 @@ that ADR records them:
   the execution chapter lists each op's poison class.
 * `poison` gives poison on every run: it is how a program writes a poison
   value.
-* A broken flag (`nuw`, `nsw`, `exact`) gives poison.
+* A broken flag (`nuw`, `nsw`, `exact`, `nnan`, `ninf`) gives poison.
 * A shift amount `≥ N` gives poison, and so does a poison shift amount.
 * A zero divisor is immediate UB, and so is a poison divisor, because it
   might be zero. `sdiv` or `srem` by `-1` is immediate UB when the dividend
@@ -80,6 +80,32 @@ inductive FPred where
   | oeq | one | olt | ole | ogt | oge | ord
   | ueq | une | ult | ule | ugt | uge | uno
   deriving Repr, DecidableEq, Inhabited
+
+/--
+The fast-math flags of a float op (ADR-2026-11-09-1549). Each of the first
+three is a promise about the op's operands or result:
+
+* `nnan` (no NaNs): no operand and no result is a NaN. A NaN operand or
+  result makes the result poison.
+* `ninf` (no infinities): no operand and no result is an infinity. An
+  infinite operand or result makes the result poison.
+* `nsz` (no signed zeros): the sign of a zero result does not matter. A
+  zero result is `+0` or `-0`, a free choice.
+
+`contract` and `reassoc` are reserved words. They are permissions for
+passes, not meanings of an op, and M2's optimizer decides them, so
+validation rejects an op that carries either, and the rules ignore them.
+-/
+structure FastMath where
+  nnan : Bool := false
+  ninf : Bool := false
+  nsz : Bool := false
+  contract : Bool := false
+  reassoc : Bool := false
+  deriving Repr, DecidableEq, Inhabited
+
+/-- Whether the flags hold a reserved word, `contract` or `reassoc`. -/
+def FastMath.Reserved (fl : FastMath) : Bool := fl.contract || fl.reassoc
 
 /--
 A float op of two operands, each rounded to nearest even
@@ -145,19 +171,22 @@ Comparison and selection:
   first value when the condition is `true`, the second when it is `false`.
   A poison condition gives poison. The value not chosen does not matter,
   even when it is poison; the one chosen is given as it is, poison or not.
-* `fcmp p e m`: compares two values of `float<e,m>` with predicate `p`,
+* `fcmp p fl e m`: compares two values of `float<e,m>` with predicate `p`,
   giving an `i1`, by the numbers they encode in Lean's float model. It is
-  never UB, and a poison operand gives poison (ADR-2026-11-09-1549).
+  never UB, and a poison operand gives poison (ADR-2026-11-09-1549). With
+  the flag `nnan` a NaN operand, and with `ninf` an infinite one, gives
+  poison; `nsz` has nothing to act on, since the result is not a float.
 
 Float arithmetic, by Lean's float model, with a NaN result that is any NaN
 of the format (ADR-2026-11-09-1549). Each is never UB, and a poison operand
-gives poison:
+gives poison. Each carries the fast-math flags `fl`: a broken `nnan` or
+`ninf` gives poison, and with `nsz` a zero result has either sign:
 
-* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two
+* `fbin o fl e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two
   values of `float<e,m>`, rounded to nearest even.
-* `funary o e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
+* `funary o fl e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
   `float<e,m>`; `sqrt` rounds to nearest even.
-* `fma e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
+* `fma fl e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
   to nearest even.
 
 Width changes:
@@ -213,10 +242,10 @@ inductive Op where
   | lshr (w : Nat)
   | ashr (w : Nat)
   | icmp (p : Pred) (w : Nat)
-  | fcmp (p : FPred) (e m : Nat)
-  | fbin (o : FBin) (e m : Nat)
-  | funary (o : FUnary) (e m : Nat)
-  | fma (e m : Nat)
+  | fcmp (p : FPred) (fl : FastMath) (e m : Nat)
+  | fbin (o : FBin) (fl : FastMath) (e m : Nat)
+  | funary (o : FUnary) (fl : FastMath) (e m : Nat)
+  | fma (fl : FastMath) (e m : Nat)
   | select (w : Nat)
   | zext (m n : Nat)
   | sext (m n : Nat)

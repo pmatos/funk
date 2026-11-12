@@ -13,7 +13,8 @@
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
 //! `ret`. #229 adds float constants to `const`, the float comparison
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
-//! `fabs`, `sqrt` and `fma`. A later family adds a file and a line here.
+//! `fabs`, `sqrt` and `fma`, and #242 their fast-math flags. A later family
+//! adds a file and a line here.
 
 mod arith;
 mod bitwise;
@@ -22,6 +23,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod fast_math;
 mod float_arith;
 mod float_text;
 mod freeze;
@@ -32,6 +34,7 @@ pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
+pub use fast_math::FAST_MATH_FLAGS;
 pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use types::{

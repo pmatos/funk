@@ -248,6 +248,15 @@ overflow included. NaN and infinite operands, and zeros, take SSE's
 `crates/funk/tests/float_arith.rs` checks every op against the host's IEEE 754
 arithmetic.
 
+## Fast-math flags
+
+The backend ignores `nnan`, `ninf` and `nsz`: it lowers a flagged op as the op
+without flags, and `fcmp` reads its predicate as its last attribute. That
+refines the flagged op, since an op without a flag refines the op with it
+(`lean/Fir/Core/FloatFlagLaws.lean`, ADR-2026-11-09-1549).
+`crates/funk/tests/float_flags.rs` checks each flagged op at `f32` and `f64`.
+Rejected: lowering a flag to faster code, which is M2's optimizer's work.
+
 Rejected: FMA3's `vfmadd`, since a program that uses it fails on an x86-64
 without FMA3, and the default stays baseline x86-64 (the human ruled on
 2026-11-12 that CPU extensions come in through a `--cpu` flag in M2; see

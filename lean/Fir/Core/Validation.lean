@@ -4,9 +4,10 @@ import Fir.Validation.Scope
 /-!
 The core dialect's part of validation: which core types are valid, which
 symbols core ops refer to, the rules of `ret` and `call`, which read the
-op's context, and the width rules of `zext`, `sext` and `trunc`
-(ADR-2026-10-29-2006). The general rules of the previous sections already
-check every op's operand and result types against its signature, so these
+op's context, the width rules of `zext`, `sext` and `trunc`
+(ADR-2026-10-29-2006), and the rule that no float op carries a reserved
+word, `contract` or `reassoc` (ADR-2026-11-09-1549). The general rules of
+the previous sections already check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
 -/
 
@@ -41,6 +42,9 @@ The core rules of an op beyond its signature.
 * `zext` and `sext` strictly widen, from `iM` to `iN` with `M < N`, and
   `trunc` strictly narrows, with `N < M`. A width change to the same width
   is not an op: the value itself is.
+* A float op carries neither `contract` nor `reassoc`. They are reserved
+  words, permissions for passes that M2's optimizer decides, not meanings
+  of an op (ADR-2026-11-09-1549).
 
 Every other op has no rule beyond its signature.
 -/
@@ -49,6 +53,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .call f ts rs => ctx.symbols f = some ⟨ts, rs⟩
   | .zext m n | .sext m n => m < n
   | .trunc m n => n < m
+  | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
   | _ => True
 
 end Fir.Core

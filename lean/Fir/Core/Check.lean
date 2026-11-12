@@ -8,7 +8,8 @@ compared, and its rules are decided below, case by case. With them, the
 check covers every one of the 31 core ops: the general rules check each
 op's operand and result types, its place in its block, its successors and
 its uses against its signature, and the core rules add the rules of `ret`,
-`call`, `zext`, `sext` and `trunc`.
+`call`, `zext`, `sext` and `trunc`, and that of the float ops' reserved
+words.
 -/
 
 namespace Fir.Core

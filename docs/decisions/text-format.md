@@ -245,6 +245,14 @@ that no valid program sets; no attribute, which drops the hook that keeps
 today's texts' meaning when another mode comes; and the bare word `rne`,
 which says nothing about what it sets.
 
+A float op, `fcmp` included, writes its fast-math flags first, as LLVM does,
+each at most once, in the fixed order `nnan`, `ninf`, `nsz`, `contract`,
+`reassoc`: `%s: f32 = fadd nnan nsz round(rne) %a, %b`. A flag out of order,
+twice, or after the op's own attributes is a parse error, so each op has one
+spelling. `contract` and `reassoc` decode, and validation rejects them
+(ADR-2026-11-09-1549, #242). Rejected: flags in any order, which gives an op
+several spellings.
+
 Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
 whether a wrong rounding mode stays a parse error, as built, or is read and
 then rejected by the verifier, as #229's text says. Until the human rules,

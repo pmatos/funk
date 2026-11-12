@@ -14,28 +14,14 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6652858730231381620")
+:::moduleDocs (fingerprint := "3340853658294908848")
 :::
 
-:::readable Fir.Core.anyNaN_iff Fir.Core.Ends Fir.Core.floatResult_defined Fir.Core.floatResult_ends Fir.Core.pure_ends (pin := Fir.Core.anyNaN) (pin := Fir.Core.floatResult) (fingerprint := "12294876258884390272")
-*Theorem: any NaN is the NaNs of the choices.* In the set monad,
-$`\mathrm{anynan}_{e,m}` ends with a value $`v` exactly when
-$`v = \mathrm{nan}_{e,m}(c)` for some $`c \in \mathbb{B}^{m+1}`.
-
-*Definition: a computation that ends.* A computation of the set monad
-_ends_ when it has at least one way to end, and each way it ends is a
-value, never UB.
-
-*Theorem: a float result is defined and ends.* For every format and every
-operation of the model, $`\mathrm{result}_{e,m}` ends, and each way it
-ends is a defined value, the model's bits or a NaN: never poison. A
-$`\mathsf{pure}` computation ends too.
-:::
-
-:::readable Fir.Core.fbinValues_ends Fir.Core.funaryValue_ends Fir.Core.fmaValues_ends (pin := Fir.Core.fbinValues) (pin := Fir.Core.funaryValue) (pin := Fir.Core.fmaValues) (fingerprint := "12552970094460314351")
-*Theorem: the rules of the float arithmetic end.* On every operands, the
-rule of each float op of arithmetic ends: on defined operands it is a
-float result, and on a poison operand it is $`\mathsf{pure}~\mathsf{poison}`.
+:::readable Fir.Core.fbinValues_ends Fir.Core.funaryValue_ends Fir.Core.fmaValues_ends (pin := Fir.Core.fbinValues) (pin := Fir.Core.funaryValue) (pin := Fir.Core.fmaValues) (fingerprint := "2194462485675605231")
+*Theorem: the rules of the float arithmetic end.* On every operands and
+under all flags, the rule of each float op of arithmetic ends: on defined
+operands it is a float result, and on a poison operand it is
+$`\mathsf{pure}~\mathsf{poison}`.
 :::
 
 :::readable Fir.Core.oneFloat Fir.Core.oneFloat_ok Fir.Core.oneFloat_of Fir.Core.oneFloat_not_ub Fir.Core.oneFloat_poison_isRefinedBy Fir.Core.oneFloat_defined (pin := Fir.Core.Ends) (fingerprint := "1952775520341092492")
@@ -51,7 +37,7 @@ runs $`s` and gives its value as the one result of an op. When $`s` ends:
 A result vector of one defined float holds no poison.
 :::
 
-:::readable Fir.Core.fbin_propagatesPoison Fir.Core.fbin_returnsOnDefined Fir.Core.fbin_total Fir.Core.fbin_monotone Fir.Core.fbin_neverUB Fir.Core.fbin_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "13451032759855202382")
+:::readable Fir.Core.fbin_propagatesPoison Fir.Core.fbin_returnsOnDefined Fir.Core.fbin_total Fir.Core.fbin_monotone Fir.Core.fbin_neverUB Fir.Core.fbin_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "15250295935770345067")
 *Theorem: $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` and
 $`\mathsf{fdiv}` are lawful, at every format.* Under fir's execution
 rules, each meets every obligation of an op that
@@ -66,33 +52,37 @@ and the obligations of a pure op:
 * _Totality_: it has a way to end on every two operands.
 * _Monotonicity_: a poison operand gives poison, which every result
   refines, and defined operands are refined only by themselves.
-* _No UB and no poison_: it is never UB, and on defined operands every
-  result is defined, a NaN's bits included.
+* _No UB, and no poison without $`\mathsf{nnan}` and $`\mathsf{ninf}`_:
+  it is never UB, and on defined operands, under flags that may not make
+  poison, every result is defined, a NaN's bits and a zero of either sign
+  included. With $`\mathsf{nnan}` or $`\mathsf{ninf}` the op declares
+  that it may produce poison, so there is nothing to show.
 :::
 
-:::readable Fir.Core.funary_propagatesPoison Fir.Core.funary_returnsOnDefined Fir.Core.funary_total Fir.Core.funary_monotone Fir.Core.funary_neverUB Fir.Core.funary_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "1383759272754417188")
+:::readable Fir.Core.funary_propagatesPoison Fir.Core.funary_returnsOnDefined Fir.Core.funary_total Fir.Core.funary_monotone Fir.Core.funary_neverUB Fir.Core.funary_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "16131216264622624205")
 *Theorem: $`\mathsf{fneg}`, $`\mathsf{fabs}` and $`\mathsf{sqrt}` are
 lawful, at every format.* They meet the same obligations as the ops of two
 operands, by the same reasons, on one operand: a poison operand gives
 poison, $`+0` gives a result, every operand has a way to end, refined
-operands give refined results, and none is ever UB or gives poison on a
-defined operand.
+operands give refined results, and none is ever UB or, without
+$`\mathsf{nnan}` and $`\mathsf{ninf}`, gives poison on a defined operand.
 :::
 
-:::readable Fir.Core.fma_propagatesPoison Fir.Core.fma_returnsOnDefined Fir.Core.fma_total Fir.Core.fma_monotone Fir.Core.fma_neverUB Fir.Core.fma_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "13513946674688566527")
+:::readable Fir.Core.fma_propagatesPoison Fir.Core.fma_returnsOnDefined Fir.Core.fma_total Fir.Core.fma_monotone Fir.Core.fma_neverUB Fir.Core.fma_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "13352190550858574830")
 *Theorem: $`\mathsf{fma}` is lawful, at every format.* It meets the same
 obligations on three operands: any poison operand gives poison, three
 $`+0` give a result, every operand vector has a way to end, refined
-operands give refined results, and it is never UB or gives poison on
-defined operands.
+operands give refined results, and it is never UB or, without
+$`\mathsf{nnan}` and $`\mathsf{ninf}`, gives poison on defined operands.
 :::
 
-:::readable Fir.Core.floatResult_toSet Fir.Core.fbinValues_toSet Fir.Core.funaryValue_toSet Fir.Core.fmaValues_toSet (pin := Fir.ChoiceTree.toSet) (fingerprint := "3793062179076232944")
+:::readable Fir.Core.fbinValues_toSet Fir.Core.funaryValue_toSet Fir.Core.fmaValues_toSet (pin := Fir.ChoiceTree.toSet) (fingerprint := "1205190481222606760")
 *Theorem: the rules in the tree of choices.* Each rule of the float
 arithmetic, and the float result it is built from, run in `fir-ref`'s
 {ref "The-fir-specification--Execution--Choice-trees"}[tree of choices],
 has as its set what it is in the set monad: the choice of a NaN result is
 a choice of $`m + 1` bits in the tree, and every NaN of the format is one
-path. So `fir-ref run`'s modes give the spec's outcomes on the float
+path, and the sign of a zero under $`\mathsf{nsz}` is a choice of one
+bit. So `fir-ref run`'s modes give the spec's outcomes on the float
 arithmetic.
 :::

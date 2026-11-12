@@ -1,0 +1,187 @@
+# Must-reject texts of #242's fast-math flags (ADR-2026-11-09-1549). A
+# float op, fcmp included, may carry nnan, ninf and nsz before its other
+# attributes, each at most once and in that order. contract and reassoc
+# are reserved words: they decode after the flags, in that order, and
+# validation rejects them, since M2's optimizer decides them. A flag out
+# of order, written twice, after the op's own attributes, or on an op
+# that has none does not decode.
+
+[[reject]]
+verdict = "validation-error"
+rule = "contract is a reserved word that validation rejects: M2's optimizer decides it"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd contract round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "reassoc is a reserved word that validation rejects, after flags an op may carry"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fmul nnan nsz reassoc round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fcmp may not carry the reserved words either"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp contract reassoc olt %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fneg, which does not round, may not carry a reserved word"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fneg contract %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the flags come in the order nnan, ninf, nsz: nsz before nnan does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd nsz nnan round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a flag is written at most once"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fsub ninf ninf round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the flags come before round(rne), not after it"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fdiv round(rne) nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the flags come before fcmp's predicate, not after it"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> i1 {
+^e:
+  %r: i1 = fcmp olt nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the reserved words come after the flags, contract before reassoc"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fma reassoc contract round(rne) %a, %b, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a flag is a bare word: nnan(true) does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = sqrt nnan(true) round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "integer ops do not take the fast-math flags"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> i32 {
+^e:
+  %r: i32 = add nnan %i, %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fast-math flags are LLVM's three that fir has: afn does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd afn round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

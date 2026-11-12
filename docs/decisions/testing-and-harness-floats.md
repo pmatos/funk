@@ -15,6 +15,13 @@ Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
 (ADR-2026-11-03-0557).
 
+A fast-math flag set is part of an op instance, so by ADR-2026-11-03-0557 a
+flagged float op would be a cell of its own. Read literally, each float op has
+eight flag sets, and `fcmp` eight for each predicate: about 1,200 cells more,
+and a matrix past the file-size budget. How the flags enter the matrix waits for
+the human (#242), so no canonical text runs a flagged op yet, and
+`cells.py` reports one as not a cell.
+
 ## The exact-rational reference
 
 `scripts/harness/float_ref.py` computes IEEE 754 results at any format

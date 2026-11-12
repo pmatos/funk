@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9463245177501121217")
+:::moduleDocs (fingerprint := "16801819314342200728")
 :::
 
 :::readable Fir.Core.nanBits (fingerprint := "1042529435153672994")
@@ -33,21 +33,25 @@ bit alone $`\mathtt{0xffc00000}`, $`c = 1` the signalling NaN
 $`\mathtt{0x7f800001}`, and all ones $`\mathtt{0xffffffff}`.
 :::
 
-:::readable Fir.Core.anyNaN Fir.Core.floatResult (fingerprint := "7172722748715513918")
+:::readable Fir.Core.anyNaN Fir.Core.floatResult (pin := Fir.Core.flagResult) (pin := Fir.Core.operandsBreak) (fingerprint := "2301328144975383141")
 *Definition: the result of a float op.* $`\mathrm{anynan}_{e,m}` chooses
 $`m + 1` bits $`c` and gives the value $`\mathrm{nan}_{e,m}(c)`: every NaN
 of the format is one way it ends.
 
 A float op computes in Lean's model, whose format $`F` has $`e`
-exponent bits and $`m` mantissa bits. Given the model's result $`u`,
-computed from the operands read with $`\mathrm{unpack}_F`,
+exponent bits and $`m` mantissa bits. Given its operands $`\vec a`, its
+flags $`\phi`, and the model's result $`u`, computed from the operands
+read with $`\mathrm{unpack}_F`,
 
-$$`\mathrm{result}_{e,m}(u) = \begin{cases} \mathrm{pack}_F(u) & \text{if } u \text{ is not a NaN} \\ \mathrm{anynan}_{e,m} & \text{if } u \text{ is a NaN} \end{cases}`
+$$`\mathrm{result}^\phi_{e,m}(\vec a, u) = \begin{cases} \mathsf{poison} & \text{if } \vec a \text{ breaks } \phi \\ \mathsf{poison} & \text{else if } u \text{ is a NaN and } \phi \text{ sets } \mathsf{nnan} \\ \mathrm{anynan}_{e,m} & \text{else if } u \text{ is a NaN} \\ \mathrm{flag}_\phi(\mathrm{pack}_F(u)) & \text{otherwise} \end{cases}`
 
-So the op makes a choice only when its result is a NaN, and every other
-result is one bit pattern. A format that the model does not have, with
-$`e < 2` or $`m = 0`, which validation rejects, gives
-$`\mathrm{anynan}_{e,m}` on every operand, so that the rule is total.
+with $`\mathrm{flag}_\phi` from the
+{ref "The-fir-specification--Execution--Fast-math-flag-rules"}[fast-math flag rules].
+So without flags the op makes a choice only when its result is a NaN,
+every other result is one bit pattern, and it is never poison. A format
+that the model does not have, with $`e < 2` or $`m = 0`, which validation
+rejects, gives $`\mathrm{anynan}_{e,m}` on every operand and under every
+flag, so that the rule is total.
 :::
 
 :::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (fingerprint := "8073479960880132785")
@@ -63,17 +67,18 @@ the sign of a number, an infinity or a zero, and give the model's one NaN
 on a NaN.
 :::
 
-:::readable Fir.Core.fbinValues Fir.Core.funaryValue Fir.Core.fmaValues (fingerprint := "2976483791253547667")
+:::readable Fir.Core.fbinValues Fir.Core.funaryValue Fir.Core.fmaValues (fingerprint := "15894590815141335479")
 *Definition: the rules of the float arithmetic.* For every format
-$`\mathsf{float}\langle e,m \rangle` and values $`a`, $`b`, $`c` of it:
+$`\mathsf{float}\langle e,m \rangle`, flags $`\phi` and values $`a`,
+$`b`, $`c` of it:
 
-$$`\mathsf{fadd}_{e,m}(a, b) = \begin{cases} \mathrm{result}_{e,m}(\mathrm{add}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b))) & \text{if } a, b \in \mathbb{B}^{1+e+m} \\ \mathsf{poison} & \text{if } a \text{ or } b \text{ is poison} \end{cases}`
+$$`\mathsf{fadd}^\phi_{e,m}(a, b) = \begin{cases} \mathrm{result}^\phi_{e,m}([a, b], \mathrm{add}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b))) & \text{if } a, b \in \mathbb{B}^{1+e+m} \\ \mathsf{poison} & \text{if } a \text{ or } b \text{ is poison} \end{cases}`
 
 and $`\mathsf{fsub}`, $`\mathsf{fmul}` and $`\mathsf{fdiv}` likewise, with
 their operations. $`\mathsf{fneg}`, $`\mathsf{fabs}` and $`\mathsf{sqrt}`
 apply theirs to $`\mathrm{unpack}_F(a)`, and
 
-$$`\mathsf{fma}_{e,m}(a, b, c) = \mathrm{result}_{e,m}(\mathrm{fma}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b), \mathrm{unpack}_F(c)))`
+$$`\mathsf{fma}^\phi_{e,m}(a, b, c) = \mathrm{result}^\phi_{e,m}([a, b, c], \mathrm{fma}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b), \mathrm{unpack}_F(c)))`
 
 on defined operands, $`a \times b + c` rounded once, and
 $`\mathsf{poison}` when any operand is poison. None of them is ever UB.

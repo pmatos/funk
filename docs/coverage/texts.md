@@ -278,3 +278,8 @@ a choice that names the NaN, until #219. `reject/float-arith.toml` holds
 the texts of these ops that do not decode, such as `fadd` without
 `round(rne)` or with `round(rtz)`, and one at a format that validation
 rejects.
+
+`reject/float-flags.toml` holds the texts of #242's fast-math flags that
+do not decode, a flag out of order, written twice, after `round(rne)` or
+`fcmp`'s predicate, or on an integer op, and those that validation
+rejects, a float op with `contract` or `reassoc`.

@@ -36,6 +36,30 @@ The fast-math flags are (ADR-2026-11-09-1549):
   are permissions for passes, not meanings of an op, and M2's optimizer decides
   them.
 
+How they hold today (#242):
+
+- `fcmp` and every op of the arithmetic carry the flags, `fl` of `Op` in
+  `lean/Fir/Core/Ops.lean`. An operand that the model reads as a NaN under
+  `nnan`, or as an infinity under `ninf`, makes the result poison, and the op
+  computes nothing. A result that the model computes as a NaN is poison under
+  `nnan`, and the op then chooses no NaN. A result is an infinity, under
+  `ninf`, after rounding, so a finite result that overflows is poison too. A
+  zero result under `nsz` is either zero: the op chooses one bit and flips the
+  sign by it (`lean/Fir/Core/FloatFlags.lean`). Operands keep their sign under
+  `nsz`. Rejected: also choose the sign of a zero operand, as LLVM's text
+  allows and Alive2 models; #242 and ADR-2026-11-09-1549 name the result only.
+- `fcmp`'s result is not a float, so `nsz` on it changes nothing; it decodes,
+  as in LLVM. Rejected: `nsz` a parse error on `fcmp`, which LLVM accepts.
+- `nnan` or `ninf` declares that the op may produce poison. `nsz` alone keeps
+  it pure: a zero of either sign is a defined value, a choice as `freeze`'s.
+- The rules read `contract` and `reassoc`, and validation rejects a float op
+  that carries either (`Op.Valid`). `funk verify` says that M2 decides them;
+  `fir-ref` gives validation's generic reason for an op's own rule.
+- The spec proves that dropping flags refines: each float op with fewer flags
+  refines the op with more, at every format, on every operands
+  (`lean/Fir/Core/FloatFlagLaws.lean`). The backend ignores the flags, so its
+  code refines the flagged op whenever it refines the op without flags.
+
 Rejected: only `f32` and `f64`, with all five flags. Other formats would need a
 format change later, and two flags would ship without a sound meaning. Rejected
 too: strict `f32` and `f64` with no flags and no rounding attribute, which drops
@@ -133,8 +157,9 @@ the spec they are three op instances: `fbin o e m`, `funary o e m` and
   model's rule, and the backend uses them.
 - A poison operand gives a poison result. No op is ever UB: division by zero
   gives an infinity or a NaN, and M1 has no floating-point exceptions.
-- Each op is pure. A NaN is a defined value, so on defined operands the result
-  is defined. May produce poison comes with the fast-math flags (#242).
+- Each op without `nnan` and `ninf` is pure. A NaN is a defined value, so on
+  defined operands the result is defined. With either flag the op may produce
+  poison (#242).
 - A format that validation rejects gives a chosen NaN, as above, so that the
   rules are total.
 
@@ -176,6 +201,12 @@ the arithmetic on the hard inputs of every op, at every aliased format, with
 each result that is not a NaN differential at `f32` and `f64`, and each NaN
 result on `fir-ref` with a choice
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
+
+The fast-math flags hold in the spec, `fir-ref`, the Rust IR, parser, printer,
+verifier and backend, and `reject/float-flags.toml` holds their must-reject
+texts. The canonical corpus does not run a flagged op yet: the coverage matrix
+counts an op instance with its flag set as a cell (ADR-2026-11-03-0557), and how
+the flags enter it waits for the human (#242).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's

@@ -40,6 +40,7 @@ import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
+import Fir.Core.FloatFlags
 import Fir.Core.FloatArith
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -53,7 +54,9 @@ import Fir.Core.WidthLaws
 import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.FloatCompareLaws
+import Fir.Core.FloatResultLaws
 import Fir.Core.FloatArithLaws
+import Fir.Core.FloatFlagLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism

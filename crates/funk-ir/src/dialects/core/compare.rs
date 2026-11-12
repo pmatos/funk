@@ -8,14 +8,18 @@
 //! `i1` condition and two `iN` and defines one `iN`, with no attributes.
 //! `fcmp` has one attribute, one of [`FLOAT_PREDICATES`], and takes two
 //! values of one float type and defines one `i1`: `%lt: i1 = fcmp olt %a,
-//! %b` (ADR-2026-11-09-1549). Validation has no rule for any of them beyond
-//! its signature (`Op.Valid` in `lean/Fir/Core/Validation.lean`).
+//! %b` (ADR-2026-11-09-1549); before it, `fcmp` may carry the fast-math
+//! flags (the `fast_math` module), `%lt: i1 = fcmp nnan olt %a, %b`.
+//! Validation rejects the reserved words among them, and has no other rule
+//! for any of these ops beyond its signature (`Op.Valid` in
+//! `lean/Fir/Core/Validation.lean`).
 
+use super::fast_math::{self, Flags};
 use super::type_list;
 use super::types::{float_format, int_width};
 use crate::Attr;
 use crate::effects::Effects;
-use crate::registry::{OpShape, OpSpec, OpTypes};
+use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 
 /// The predicates of `icmp`, in the spec's order (`Pred.all`).
 pub const PREDICATES: [&str; 10] = [
@@ -102,7 +106,8 @@ impl OpSpec for Fcmp {
     }
 
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
-        decode_predicate_of("fcmp", &FLOAT_PREDICATES, op.attrs)?;
+        let flags = Flags::decode("fcmp", op.attrs)?;
+        decode_predicate_of("fcmp", &FLOAT_PREDICATES, flags.rest)?;
         let well_typed = match (op.operands, op.results) {
             ([a, b], [r]) => {
                 int_width(r) == Some(1)
@@ -120,10 +125,15 @@ impl OpSpec for Fcmp {
         ))
     }
 
-    /// Pure: it is never UB, and gives poison only for a poison operand
-    /// (`Core.Op.effects`).
-    fn effects(&self, _op: &OpTypes<'_>) -> Effects {
-        Effects::PURE
+    /// No reserved word among the flags (`Op.Valid`).
+    fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
+        Flags::decode("fcmp", op.attrs).map_or(Ok(()), |f| f.check("fcmp"))
+    }
+
+    /// It is never UB, and gives poison only for a poison operand, or with
+    /// `nnan` or `ninf` (`Core.Op.effects`).
+    fn effects(&self, op: &OpTypes<'_>) -> Effects {
+        fast_math::effects_of(op.attrs)
     }
 }
 

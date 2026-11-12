@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2810980850477788012")
 :::
 
-:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "3895775439246032982")
+:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "14391413597152911027")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with
 $`C`, the check of the function `@f` of the section on
