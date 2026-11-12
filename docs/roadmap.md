@@ -279,16 +279,16 @@ decided before the first pass that depends on it.
 - Vectors and SIMD are not part of M2.
 - Nothing is called proven unless it is. A Lean proof of a pass covers the
   transformation, not the hand-written Rust that performs it. That Rust is
-  checked by tests and by S8's per-compile check
+  checked by tests, and later by S8's per-compile check
   ([#341](https://github.com/pmatos/funk/issues/341)).
+- S8 is a milestone of its own, not part of M2. Where it goes, and whether
+  M2's optimizer passes wait for it, are open questions on #341.
 
 **Done when** the register-allocating backend has replaced spill-everything
-for every op of M1, S8 is decided and its first stage checks every change the
-optimizer makes, every sub-issue of the epic is closed, and native
-results refine `fir-ref`'s on the whole corpus and on random programs, with CI
-running all of it. The bar is correctness
-only: M2 sets no target for the speed or size of the generated code, and
-optimization comes later.
+for every op of M1, every sub-issue of the epic is closed, and native results
+refine `fir-ref`'s on the whole corpus and on random programs, with CI running
+all of it. The bar is correctness only: M2 sets no target for the speed or
+size of the generated code, and optimization comes later.
 
 ### M3: Vow frontend
 
