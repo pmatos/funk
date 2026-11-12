@@ -91,10 +91,9 @@ fn unsupported_widths_are_reported_at_their_ir_locations() {
     )));
 }
 
-/// Division at `i128` calls the runtime helper, which the object file
-/// holds
-/// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`),
-/// and the executable runs it.
+/// Division at `i128` calls the runtime helper, which the object file holds
+/// (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`), and the
+/// executable runs it.
 #[test]
 fn division_at_i128_builds_with_the_helper_in_the_object_file() {
     let (out, exe, _) = try_build("wide-div", WIDE_DIV, &[]);
