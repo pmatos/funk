@@ -180,55 +180,170 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
+class Row(NamedTuple):
+    """A labelled row; `None` entries are not cells, even at a zero count."""
+
+    op: str
+    key: str
+    entries: tuple[Cell | None, ...]
+
+
+class Table(NamedTuple):
+    """An ordered matrix section, with one entry per column in every row.
+
+    `kind` distinguishes display sections, including the four conversion
+    sections whose cells all have table `conversions`. Columns are type
+    names; the empty name is the scalar or no-value column.
+    """
+
+    kind: str
+    columns: tuple[str, ...]
+    rows: tuple[Row, ...]
+
+
+def catalog(
+    widths: tuple[int, ...],
+    formats: tuple[str, ...] = (),
+    offsets: tuple[int, ...] = (),
+) -> tuple[Table, ...]:
+    """One side's taxonomy, expanded once for enumeration and display.
+
+    Rows retain their labels even with no applicable cells. Traversing
+    tables, rows and non-None entries preserves the cell order used in gap
+    diagnostics. Presentation consumes these keys, never reconstructs them.
+    """
+    integers = tuple(map(ty, widths))
+    tables = []
+    for kind, ops, columns in (
+        ("ops", AT_WIDTH, integers),
+        ("floats", AT_FORMAT, formats),
+    ):
+        tables.append(
+            Table(
+                kind,
+                columns,
+                tuple(
+                    Row(op, a, tuple(Cell(kind, op, a, t) for t in columns))
+                    for op, attrs in ops.items()
+                    for a in attrs
+                ),
+            )
+        )
+    tables.extend(
+        [
+            Table(
+                "casts",
+                integers,
+                tuple(
+                    Row(
+                        op,
+                        ty(m),
+                        tuple(
+                            Cell("casts", op, ty(m), ty(n))
+                            if allowed(op, m, n)
+                            else None
+                            for n in widths
+                        ),
+                    )
+                    for op in CASTS
+                    for m in widths
+                ),
+            ),
+            Table(
+                "bitcasts",
+                ("",),
+                tuple(
+                    Row("bitcast", a, (Cell("conversions", "bitcast", a, b),))
+                    for f in formats
+                    for a, b in ((f, bits_type(f)), (bits_type(f), f))
+                ),
+            ),
+            Table(
+                "int_to_float",
+                formats,
+                tuple(
+                    Row(op, a, tuple(Cell("conversions", op, a, b) for b in formats))
+                    for op in INT_TO_FLOAT
+                    for a in integers
+                ),
+            ),
+            Table(
+                "float_conversions",
+                formats,
+                tuple(
+                    Row(
+                        "",
+                        a,
+                        tuple(
+                            Cell("conversions", conversion(a, b), a, b)
+                            if a != b
+                            else None
+                            for b in formats
+                        ),
+                    )
+                    for a in formats
+                ),
+            ),
+            Table(
+                "float_to_int",
+                integers,
+                tuple(
+                    Row(op, a, tuple(Cell("conversions", op, a, b) for b in integers))
+                    for op in FLOAT_TO_INT
+                    for a in formats
+                ),
+            ),
+        ]
+    )
+    if offsets:
+        columns = tuple(map(ty, offsets))
+        tables.append(
+            Table(
+                "pointers",
+                columns,
+                tuple(
+                    Row(op, "", tuple(Cell("pointers", op, "", t) for t in columns))
+                    for op in POINTER_OPS
+                ),
+            )
+        )
+    columns = ("", *integers, *formats)
+    tables.append(
+        Table(
+            "values",
+            columns,
+            tuple(
+                Row(
+                    op,
+                    k,
+                    tuple(
+                        Cell("values", op, k, t)
+                        if (k == NOTHING) == (t == "")
+                        else None
+                        for t in columns
+                    ),
+                )
+                for op, kinds in VALUES
+                for k in kinds
+            ),
+        )
+    )
+    return tuple(tables)
+
+
 def cells(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
 ) -> list[Cell]:
-    """Every cell of one side of the matrix, at these widths, float
-    formats and widths of a pointer offset's integer."""
-    out = []
-    for op, attrs in AT_WIDTH.items():
-        out += [Cell("ops", op, a, ty(w)) for a in attrs for w in widths]
-    for op, attrs in AT_FORMAT.items():
-        out += [Cell("floats", op, a, f) for a in attrs for f in formats]
-    for op in CASTS:
-        for m in widths:
-            out += [
-                Cell("casts", op, ty(m), ty(n)) for n in widths if allowed(op, m, n)
-            ]
-    out += [
-        Cell("conversions", "bitcast", a, b)
-        for f in formats
-        for a, b in ((f, bits_type(f)), (bits_type(f), f))
+    """Every actual cell of one side, in catalog order."""
+    return [
+        cell
+        for table in catalog(widths, formats, offsets)
+        for row in table.rows
+        for cell in row.entries
+        if cell is not None
     ]
-    out += [
-        Cell("conversions", op, ty(w), f)
-        for op in INT_TO_FLOAT
-        for w in widths
-        for f in formats
-    ]
-    out += [
-        Cell("conversions", conversion(a, b), a, b)
-        for a in formats
-        for b in formats
-        if a != b
-    ]
-    out += [
-        Cell("conversions", op, f, ty(w))
-        for op in FLOAT_TO_INT
-        for f in formats
-        for w in widths
-    ]
-    out += [Cell("pointers", op, "", ty(w)) for op in POINTER_OPS for w in offsets]
-    for op, rows in VALUES:
-        for row in rows:
-            if row == NOTHING:
-                out.append(Cell("values", op, row, ""))
-            else:
-                types = (*map(ty, widths), *formats)
-                out += [Cell("values", op, row, t) for t in types]
-    return out
 
 
 def is_float(t: str) -> bool:
