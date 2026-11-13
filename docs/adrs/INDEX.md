@@ -90,6 +90,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-12-1821](2026-11-12-1821-a-module-declares-its-memories-in-a-data-layout-line.md) | [text-format](../decisions/text-format.md) | A module declares its memories in a data layout line after its dialect set | this ADR |
 | [ADR-2026-11-12-2125](2026-11-12-2125-a-value-takes-whole-units-in-its-memory-s-byte-order.md) | [semantics](../decisions/semantics.md) | A value takes whole units of its memory, placed in the memory's byte order | this ADR |
 | [ADR-2026-11-13-0251](2026-11-13-0251-a-pointer-moves-by-ptradd-in-units-of-its-memory.md) | [semantics](../decisions/semantics.md) | A pointer moves by ptradd, by a signed integer of any width, in units of its memory | this ADR |
+| [ADR-2026-11-13-0906](2026-11-13-0906-an-op-reads-the-layout-entry-of-the-memory-it-accesses.md) | [semantics](../decisions/semantics.md) | An op reads the layout entry of the memory it accesses | this ADR |
 
 ## Implementation
 
