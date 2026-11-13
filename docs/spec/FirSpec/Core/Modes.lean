@@ -75,7 +75,8 @@ since the core's semantics in the tree denotes its semantics with memory.
 
 :::readable Fir.Core.scripted_memOutcomes Fir.Core.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12524770038561540077")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
-core run with memory.* For every $`\mathrm{read}`, module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and choice
+core run with memory.* For every $`\mathrm{read}`, module $`M`, function
+$`f`, arguments $`\vec{v}`, fuel $`k` and choice
 sequence $`\mathit{cs}`, if
 $`\mathrm{scripted}(M, f, \vec{v}, k, \mathit{cs})` reaches the leaf
 $`\ell`, with no misfit, and
@@ -104,7 +105,8 @@ reports.
 
 :::readable Fir.Core.sampled_memOutcomes Fir.Core.sampled_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12480977525883664790")
 *Theorem: sampled mode gives an outcome of a core run with memory,
-whatever the generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and generator
+whatever the generator.* For every $`\mathrm{draw}`, module $`M`, function
+$`f`, arguments $`\vec{v}`, fuel $`k` and generator
 $`g`, if the leaf $`\ell` that $`\mathrm{sampled}(M, f, \vec{v}, k, g)`
 gives has $`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
 $`o \in \mathrm{out}(R^M_k)`.
@@ -117,7 +119,8 @@ since the values sampled mode chose fit the run.
 
 :::readable Fir.Core.memTree_eq (pin := Fir.MonadMorphism.liftState) (fingerprint := "18409355083722426590")
 *Theorem: the tree of a core run with memory is the tree of its run.* For
-every module $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`, $`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` is the
+every module $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`,
+$`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` is the
 tree of the run of $`f` on $`\vec{v}` with $`k` steps, with no memory:
 the same paths, the same choices and the same leaves, in the same order.
 Each core op keeps the memories, so the run in the layer is the run in the
@@ -147,7 +150,8 @@ on the tree of the run, by the theorem above.
 
 :::readable Fir.Core.scripted_outcomes Fir.Core.scripted_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "7068125630922665754")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
-core run.* For every $`\mathrm{read}`, module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and choice sequence
+core run.* For every $`\mathrm{read}`, module $`M`, function $`f`,
+arguments $`\vec{v}`, fuel $`k` and choice sequence
 $`\mathit{cs}`, if $`\mathrm{scripted}(M, f, \vec{v}, k, \mathit{cs})`
 reaches the leaf $`\ell`, with no misfit, and
 $`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
@@ -160,7 +164,8 @@ then $`R_k` is stuck.
 
 :::readable Fir.Core.sampled_outcomes Fir.Core.sampled_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "8462286147197757807")
 *Theorem: sampled mode gives an outcome of a core run, whatever the
-generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and generator $`g`, if the leaf
+generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`,
+arguments $`\vec{v}`, fuel $`k` and generator $`g`, if the leaf
 $`\ell` that $`\mathrm{sampled}(M, f, \vec{v}, k, g)` gives has
 $`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
 $`o \in \mathrm{out}(R_k)`.

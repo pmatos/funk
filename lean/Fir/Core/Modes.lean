@@ -95,8 +95,8 @@ theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) :
-    Run.IsStuck (f.memRuns M.layout.entry id M args fuel) ↔ ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck
-        st :=
+    Run.IsStuck (f.memRuns M.layout.entry id M args fuel) ↔
+      ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st :=
   letI := memTreeDenote M.layout.entry id
   Func.memExplore_stuck M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel budget hx
 

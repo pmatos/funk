@@ -76,7 +76,8 @@ $`\ell(\rho(x))`, the run with memory of the function $`f` of the module
 $`M` on $`\vec{v}` with $`k` steps is its run in the state layer over the
 set monad, by the dialect's semantics with memory at $`\ell` and $`\rho`,
 from the empty memories. A run of a module gives each memory its entry in
-the module's data layout, as `fir-ref`'s modes do. An observer sees what it returns, not the memories it ends with,
+the module's data layout, as `fir-ref`'s modes do. An observer sees what
+it returns, not the memories it ends with,
 until observations at the end of a run are designed (#233). So the runs
 with memory of a function are runs in the sense of the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcomes],
