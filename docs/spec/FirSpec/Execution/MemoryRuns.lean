@@ -68,7 +68,7 @@ The proof is the
 for the lift, which keeps each op's semantics and keeps frames.
 :::
 
-:::readable Fir.Func.memRuns (pin := Fir.Memory.Memories.empty) (fingerprint := "3705880979250576930")
+:::readable Fir.Func.memRuns (pin := Fir.Memory.Memories.empty) (fingerprint := "15427610990261849035")
 *Definition: the runs with memory of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose units are $`u(\rho(x))` bits
 wide, the run with memory of the function $`f` of the module $`M` on

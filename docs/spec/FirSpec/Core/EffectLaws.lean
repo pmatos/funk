@@ -78,7 +78,7 @@ declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.instDialectMemDenote Fir.Core.liftsSetM Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "13464239640783598498")
+:::readable Fir.Core.instDialectMemDenote Fir.Core.liftsSetM Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "18044563165928081954")
 *Definition: the core's semantics with memory.* No core op touches memory:
 at every naming of the core's memories, each op runs by its rule in the
 set monad and keeps the memories
