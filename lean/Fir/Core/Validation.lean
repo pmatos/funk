@@ -4,8 +4,9 @@ import Fir.Validation.Scope
 /-!
 The core dialect's part of validation: which core types are valid, which
 symbols core ops refer to, the rules of `ret` and `call`, which read the
-op's context, and the width rules of `zext`, `sext` and `trunc`
-(ADR-2026-10-29-2006). The general rules of the previous sections already
+op's context, the width rules of `zext`, `sext` and `trunc`
+(ADR-2026-10-29-2006), and the format rules of `fpext` and `fptrunc` (the
+human's ruling of 2026-11-12 on #354). The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
 -/
@@ -49,6 +50,14 @@ The core rules of an op beyond its signature.
 * `zext` and `sext` strictly widen, from `iM` to `iN` with `M < N`, and
   `trunc` strictly narrows, with `N < M`. A width change to the same width
   is not an op: the value itself is.
+* `fpext` converts from `float<e,m>` to a format that holds every value of
+  it, `float<e',m'>` with `e ≤ e'` and `m ≤ m'`, other than itself, so it
+  never rounds. `fptrunc` converts to a format that cannot hold every
+  value of the source, with `e' < e` or `m' < m`, and rounds. So every
+  ordered pair of two formats takes exactly one of the two: `f32` to `f64`
+  takes `fpext`, `f64` to `f32` takes `fptrunc`, and so do `bf16` to `f16`
+  and `f16` to `bf16`, since `f16` has fewer exponent bits than `bf16` and
+  more mantissa bits. A conversion to the same format is not an op.
 
 Every other op has no rule beyond its signature.
 -/
@@ -57,6 +66,8 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .call f ts rs => ctx.symbols f = some ⟨ts, rs⟩
   | .zext m n | .sext m n => m < n
   | .trunc m n => n < m
+  | .fpext e m e' m' => e ≤ e' ∧ m ≤ m' ∧ ¬(e = e' ∧ m = m')
+  | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
   | _ => True
 
 end Fir.Core

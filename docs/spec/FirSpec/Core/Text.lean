@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "652549191495046022")
+:::moduleDocs (fingerprint := "2748477721330390347")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -36,11 +36,11 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "8628396168390326069")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "15299393493608985522")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-36 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+38 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
 written with the name it has in the op set, except six. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
@@ -52,11 +52,11 @@ the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
 the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "13702188706204671690")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "17831928546489756475")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -84,7 +84,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "3078018434038920855")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "18279617268474493364")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -146,6 +146,9 @@ $`\mathsf{i}W` are integer types.
   width, in either order.
 * `sitofp` and `uitofp`: as the same section reads them, from
   $`\mathtt{round(rne)}`, one integer type and one float type.
+* `fpext` and `fptrunc`: as the same section reads them, from no
+  attributes for `fpext` and $`\mathtt{round(rne)}` for `fptrunc`, and one
+  float type to another.
 * `ptradd`: without attributes, from the operand types
   $`\mathsf{ptr}\langle N \rangle` and $`\mathsf{i}W`, in that order, and
   the one result type $`\mathsf{ptr}\langle N' \rangle` with $`N = N'`, it

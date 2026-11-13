@@ -9,6 +9,7 @@ import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
 import Fir.Core.FloatBitcast
 import Fir.Core.FloatOfInt
+import Fir.Core.FloatConvert
 import Fir.Core.Pointer
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -22,9 +23,10 @@ This section gives every core op its meaning in the set of the ways a run
 may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
-terminators. `freeze`, the float arithmetic, whose NaN results are
-chosen, and the conversions from integers, which choose a NaN only at a
-format that validation rejects, ask for the choice effect, and the divisions,
+terminators. `freeze`, the float arithmetic and the conversions between
+formats, whose NaN results are chosen, and the conversions from integers,
+which choose a NaN only at a format that validation rejects, ask for the
+choice effect, and the divisions,
 `cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
 `fir-ref run` computes in share them.
 
@@ -155,6 +157,10 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => do
       let v ← intToFloat e m false a
       pure (.cons v .nil)
+  | .fpext e m e' m' | .fptrunc e m e' m' => some fun
+    | .cons a .nil => do
+      let v ← convertFloat e m e' m' a
+      pure (.cons v .nil)
   | .ptradd _ _ => some fun
     | .cons p (.cons k .nil) => pure (.cons (ptraddValue p k) .nil)
   | _ => none
@@ -190,6 +196,7 @@ def Op.hasRules (op : Op) : Bool :=
 #guard (Op.fma 11 52).hasRules
 #guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
 #guard (Op.sitofp 32 8 23).hasRules && (Op.uitofp 128 5 10).hasRules && (Op.sitofp 1 1 0).hasRules
+#guard (Op.fpext 8 23 11 52).hasRules && (Op.fptrunc 11 52 8 23).hasRules && (Op.fpext 1 0 1 0).hasRules
 #guard (Op.ptradd 0 64).hasRules && (Op.ptradd 1 1).hasRules && (Op.ptradd 0 0).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&

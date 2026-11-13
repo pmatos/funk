@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17335924384433551241")
+:::moduleDocs (fingerprint := "2846484068026358611")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "2052658102503826680")
@@ -23,11 +23,11 @@ yet, so no memory has a name: the set of its memory names is empty. It
 gains memories with the memory model (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "1405518595110556130")
+:::readable Fir.Core.Op.effects (fingerprint := "7977178472251343384")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{ptradd} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd} \end{aligned}`
 
 $$`\mathsf{add}_f,\ \mathsf{sub}_f,\ \mathsf{mul}_f:\ \{\mathsf{mayPoison}\} \text{ if } f \text{ has a flag, else } \emptyset`
 
@@ -42,8 +42,9 @@ $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ 
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float arithmetic is pure: a NaN result is a defined
 value, and M1 has no floating-point exceptions (ADR-2026-11-09-1549). So
-are the two bit casts, which keep their operand's bits, and the two
-conversions from integers, whose result is never a NaN.
+are the two bit casts, which keep their operand's bits, the two
+conversions from integers, whose result is never a NaN, and the two
+conversions between formats, whose NaN result is a defined value too.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

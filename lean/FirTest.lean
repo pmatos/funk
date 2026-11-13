@@ -20,8 +20,10 @@ import FirTest.FloatCompare
 import FirTest.FloatArith
 import FirTest.FloatBitcast
 import FirTest.FloatOfInt
+import FirTest.FloatConvert
 import FirTest.PointerOffset
 import FirTest.FloatText
+import FirTest.CoreText
 import FirTest.Branch
 import FirTest.Unreachable
 import FirTest.Loops

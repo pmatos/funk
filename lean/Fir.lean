@@ -48,6 +48,7 @@ import Fir.Core.FloatArith
 import Fir.Core.FloatRem
 import Fir.Core.FloatBitcast
 import Fir.Core.FloatOfInt
+import Fir.Core.FloatConvert
 import Fir.Core.Pointer
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -64,6 +65,7 @@ import Fir.Core.FloatCompareLaws
 import Fir.Core.FloatArithLaws
 import Fir.Core.FloatBitcastLaws
 import Fir.Core.FloatOfIntLaws
+import Fir.Core.FloatConvertLaws
 import Fir.Core.PointerLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws

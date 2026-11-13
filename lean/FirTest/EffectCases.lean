@@ -8,7 +8,7 @@ reads too, so the Rust registry's sets are `Core.Op.effects`
 
 Each case names the set of the first op of the entry block of `@f`. A set
 is written `pure`, or as its effects joined by `,`, in the order of the
-fields of `Effects`. The cases pin all 38 core op names, every flag set of `add`,
+fields of `Effects`. The cases pin all 40 core op names, every flag set of `add`,
 `sub` and `mul`, and `exact` on `sdiv` and `udiv`; the Rust test checks that
 they cover each attribute that changes a set.
 -/
@@ -68,10 +68,10 @@ def Case.holds (c : Case) : Bool :=
   | some o => render Empty.elim (effects (d := CoreDialect) o) == c.set
   | none => false
 
-#guard cases.length == 55
+#guard cases.length == 57
 #guard (cases.filter (!·.holds)).map (·.name) == []
 -- The cases pin every core op.
-#guard ((cases.filterMap Case.op).map Core.Op.name).eraseDups.length == 41
+#guard ((cases.filterMap Case.op).map Core.Op.name).eraseDups.length == 43
 #guard (Core.samples.map Core.Op.name).all fun n =>
   (cases.filterMap Case.op).any (·.name == n)
 

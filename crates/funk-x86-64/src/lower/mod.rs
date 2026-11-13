@@ -39,7 +39,8 @@
 //! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
 //! bit cast copies a slot (`bitcast.rs`). A conversion from an integer
 //! converts with SSE2, in a few steps for an unsigned `i64` or an `i128`
-//! (`int_to_float.rs`).
+//! (`int_to_float.rs`). A conversion between `f32` and `f64` is one SSE2
+//! instruction (`float_convert.rs`).
 
 mod arith;
 mod bitcast;
@@ -52,6 +53,7 @@ mod control;
 mod div;
 mod farith;
 mod fcompare;
+mod float_convert;
 mod freeze;
 mod frem;
 mod int_to_float;
@@ -287,6 +289,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| call::lowering(name))
         .or_else(|| bitcast::lowering(name))
         .or_else(|| int_to_float::lowering(name))
+        .or_else(|| float_convert::lowering(name))
 }
 
 /// A module's functions, lowered.

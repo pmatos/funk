@@ -71,6 +71,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.FloatOfInt "Conversion rules" FirSpec.Core.FloatOfInt (level := 1)}
 
+{includeReadable "." Fir.Core.FloatConvert "Format conversion rules" FirSpec.Core.FloatConvert (level := 1)}
+
 {includeReadable "." Fir.Core.Pointer "Pointer offset rules" FirSpec.Core.Pointer (level := 1)}
 
 {includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 1)}
@@ -102,6 +104,8 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Core.FloatBitcastLaws "Bit cast obligations" FirSpec.Core.FloatBitcastLaws (level := 1)}
 
 {includeReadable "." Fir.Core.FloatOfIntLaws "Conversion obligations" FirSpec.Core.FloatOfIntLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatConvertLaws "Format conversion obligations" FirSpec.Core.FloatConvertLaws (level := 1)}
 
 {includeReadable "." Fir.Core.PointerLaws "Pointer offset obligations" FirSpec.Core.PointerLaws (level := 1)}
 

@@ -44,6 +44,10 @@ results, which are written where those values are defined.
 * `sitofp` and `uitofp` have one attribute, `round(rne)`, and take an
   integer of any width to a float of any format:
   `%f: f64 = sitofp round(rne) %i @1`.
+* `fpext` has no attributes and `fptrunc` has one, `round(rne)`, and each
+  takes a float of one format to a float of another:
+  `%d: f64 = fpext %f @1` and `%f: f32 = fptrunc round(rne) %d @1`. Any
+  two formats decode; validation says which pairs each takes.
 * `ptradd` has no attributes. It takes a pointer and an integer of any
   width, and gives a pointer of the same memory:
   `%q: ptr = ptradd %p, %k @1` (#231).
@@ -88,7 +92,7 @@ type.
 This section gives, in order: the names of the predicates and the ops, the
 attributes of an op, how an op and a type are read back, the core
 dialect's text as a whole. The section after it gives the samples that
-check it.
+check it, and the tests of misspellings are in `FirTest.CoreText`.
 -/
 
 namespace Fir.Core
@@ -121,6 +125,7 @@ def Op.name : Op → String
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
+  | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
   | .ptradd .. => "ptradd"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
@@ -141,7 +146,7 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p _ _ => [.word p.name]
-  | .fma .. | .sitofp .. | .uitofp .. => [roundAttr]
+  | .fma .. | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
   | .fbin o .. | .funary o .. => o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
@@ -244,6 +249,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
     | _, _ => none
   | "sitofp" => decodeIntToFloat true as ts rs
   | "uitofp" => decodeIntToFloat false as ts rs
+  | "fpext" => decodeFpext as ts rs
+  | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 

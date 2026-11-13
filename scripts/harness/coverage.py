@@ -198,6 +198,21 @@ def int_to_float_table(
     return table(["op", "from", *(f"to `{f}`" for f in formats)], rows)
 
 
+def float_conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
+    rows = []
+    for a in formats:
+        row = [f"`{a}`"]
+        for b in formats:
+            if a == b:
+                row.append("")
+                continue
+            op = cells.conversion(a, b)
+            n = number(counts[Cell("conversions", op, a, b)])
+            row.append(f"`{op}` {n}")
+        rows.append(row)
+    return table(["from", *(f"to `{f}`" for f in formats)], rows)
+
+
 def pointers_table(counts: Counter, offsets: tuple[int, ...]) -> list[str]:
     rows = [
         [f"`{op}`"]
@@ -267,7 +282,8 @@ def render(counts: dict[str, Counter]) -> str:
         "ops of the function a test runs and of every function it calls,",
         "and, in the `func` rows, the results of the function it runs. An",
         "empty entry is not a cell: a width change that the spec does not",
-        "allow, or a width for a row that passes no value.",
+        "allow, a conversion from a format to itself, or a width for a row",
+        "that passes no value.",
         "",
         f"{total} cells, {total - len(gaps)} with a test.",
     ]
@@ -284,6 +300,8 @@ def render(counts: dict[str, Counter]) -> str:
         lines += conversions_table(c, side.formats)
         lines += ["", f"### Conversions from integers ({title})", ""]
         lines += int_to_float_table(c, side.widths, side.formats)
+        lines += ["", f"### Conversions between formats ({title})", ""]
+        lines += float_conversions_table(c, side.formats)
         if side.offsets:
             lines += ["", f"### Pointer offsets ({title})", ""]
             lines += pointers_table(c, side.offsets)

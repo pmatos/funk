@@ -11,7 +11,8 @@ import unittest
 from fractions import Fraction
 
 import float_bitcast_cases as cases
-from float_bitcast_cases import CANONICAL, FORMATS
+from float_arith_cases import CANONICAL
+from float_bitcast_cases import FORMATS
 from float_text import decode
 
 # The host's own reading of a float's bits, by `struct`.

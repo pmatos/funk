@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12841271436409594865")
+:::moduleDocs (fingerprint := "759224633949746244")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "1726475771177505429")
+:::readable Fir.Core.Op.denote? (fingerprint := "13069684993767964168")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -57,6 +57,9 @@ result:
   {ref "The-fir-specification--Execution--Bit-cast-rules"}[bit cast rule];
 * $`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`: the
   {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules];
+* $`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`: the
+  {ref "The-fir-specification--Execution--Format-conversion-rules"}[format conversion rules],
+  which choose the bits of a NaN result;
 * $`\mathsf{ptradd}_{N,W}`: the
   {ref "The-fir-specification--Execution--Pointer-offset-rules"}[pointer offset rule].
 
@@ -79,15 +82,15 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "13794457419146825617")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "280229885511747336")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
 set of flags, $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
 predicates, at a valid format and at one that validation rejects, each
-float op of arithmetic, both bit casts and both conversions from
-integers, among them, and
+float op of arithmetic, both bit casts, both conversions from integers
+and both conversions between formats, among them, and
 $`\mathsf{call}` counts through its callee.
 
 *Definition: the core dialect's semantics.* In the

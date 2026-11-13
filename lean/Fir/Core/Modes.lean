@@ -119,6 +119,11 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
         (intToFloat_toSet (ε := Op) e m false a)
+    | .fpext e m e' m', .cons a .nil | .fptrunc e m e' m', .cons a .nil => by
+      show (ChoiceTree.bind (convertFloat e m e' m' a) _).toSet = _
+      rw [ChoiceTree.toSet_bind]
+      exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e' m'])))
+        (convertFloat_toSet (ε := Op) e m e' m' a)
     | .sdiv _ x, args => ruleOfEv_toSet (sdivWith x) args
     | .udiv _ x, args => ruleOfEv_toSet (udivWith x) args
     | .srem _, args => ruleOfEv_toSet sremValues args
@@ -133,7 +138,8 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .ashr _, _ | .icmp .., _ | .select _, _ | .zext .., _ | .sext .., _ | .trunc .., _
     | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ | .fconst .., _
     | .fcmp .., _ | .fbin .., _ | .funary .., _ | .fma .., _ | .toBits .., _ | .ofBits .., _
-    | .sitofp .., _ | .uitofp .., _ | .ptradd .., _ => rfl
+    | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
+    | .ptradd .., _ => rfl
 
 /-- The core dialect's rules in the state layer over the tree of choices:
 each op runs by its rule in the tree and keeps the memories, as it runs with

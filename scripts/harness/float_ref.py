@@ -286,6 +286,20 @@ def roundtrip(f: Format, a: int) -> int:
     return f.nan() if f.decode(a)[0] == "nan" else a
 
 
+def convert(f: Format, g: Format, a: int) -> int:
+    """`a` of the format `f` as a value of the format `g`: a number rounded
+    to nearest even, an infinity or a zero with its sign, and a NaN as the
+    canonical NaN of `g`."""
+    d = f.decode(a)
+    if d[0] == "nan":
+        return g.nan()
+    if d[0] == "inf":
+        return g.inf(d[1])
+    if d[0] == "zero":
+        return g.zero(d[1])
+    return g.round(d[1])
+
+
 def compare(f: Format, a: int, b: int):
     """`'lt'`, `'eq'` or `'gt'`, or `None` when `a` and `b` are
     unordered."""

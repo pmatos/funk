@@ -22,7 +22,13 @@ ADR-2026-11-11-1801). So
   way. It has no attribute: it does not round;
 * `%f: f32 = sitofp round(rne) %i @1` takes a value of an integer type, of
   any width, and gives the integer it holds, read as signed, as a value of
-  a float type, rounded; `uitofp` reads it as unsigned.
+  a float type, rounded; `uitofp` reads it as unsigned;
+* `%d: f64 = fpext %f @1` takes a value of a float type and gives it as a
+  value of a format that holds every value of it. It has no attribute: it
+  does not round;
+* `%f: f32 = fptrunc round(rne) %d @1` takes a value of a float type and
+  gives it, rounded, as a value of a format that cannot hold every value
+  of it.
 
 `round(rne)` is written in the applied form of the grammar, as
 `float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
@@ -32,7 +38,10 @@ than `rne` is text that does not decode, as a flag the op does not have
 is, so `funk verify` and `fir-ref` reject it. The operands and the result of an op of arithmetic
 have one float type, a bit cast's integer has its float's width, a
 conversion from an integer takes an integer type and gives a float type,
-and an op whose types are otherwise does not decode.
+a conversion between formats takes a float type and gives a float type,
+and an op whose types are otherwise does not decode. Which pairs of
+formats `fpext` and `fptrunc` take is a rule of validation, as the widths
+of `zext` and `trunc` are, so both decode at any two formats.
 
 This section gives the names of the ops, their attributes, and how an op
 is read back, with the facts that the proof of the round trip uses.
@@ -118,6 +127,18 @@ def decodeIntToFloat (signed : Bool) (as : List Attr) : List Ty → List Ty → 
     if isRoundAttrs as then some (if signed then .sitofp n e m else .uitofp n e m) else none
   | _, _ => none
 
+/-- Reads `fpext`: no attributes, one operand and one result of a float
+type each, of any two formats. -/
+def decodeFpext (as : List Attr) : List Ty → List Ty → Option Op
+  | [.float e m], [.float e' m'] => if as.isEmpty then some (.fpext e m e' m') else none
+  | _, _ => none
+
+/-- Reads `fptrunc`: `round(rne)`, one operand and one result of a float
+type each, of any two formats. -/
+def decodeFptrunc (as : List Attr) : List Ty → List Ty → Option Op
+  | [.float e m], [.float e' m'] => if isRoundAttrs as then some (.fptrunc e m e' m') else none
+  | _, _ => none
+
 /-! # Facts for the round trip -/
 
 /-- Attributes that read as `round(rne)` are exactly `round(rne)`. -/
@@ -186,5 +207,16 @@ theorem floatOpFormat_replicate (k e m : Nat) :
 #guard decodeIntToFloat false [roundAttr] [.float 8 23] [.int 32] == none &&
   decodeIntToFloat false [roundAttr] [.int 32] [.int 32] == none &&
   decodeIntToFloat true [roundAttr] [.int 32, .int 32] [.float 8 23] == none
+
+-- A conversion between formats takes a float to a float, of any two
+-- formats; `fpext` has no attribute and `fptrunc` needs `round(rne)`.
+#guard decodeFpext [] [.float 8 23] [.float 11 52] == some (.fpext 8 23 11 52)
+#guard decodeFptrunc [roundAttr] [.float 11 52] [.float 8 23] == some (.fptrunc 11 52 8 23)
+#guard decodeFpext [] [.float 11 52] [.float 8 23] == some (.fpext 11 52 8 23)
+#guard decodeFpext [roundAttr] [.float 8 23] [.float 11 52] == none &&
+  decodeFptrunc [] [.float 11 52] [.float 8 23] == none
+#guard decodeFpext [] [.int 32] [.float 11 52] == none &&
+  decodeFptrunc [roundAttr] [.float 11 52] [.int 32] == none &&
+  decodeFpext [] [.float 8 23, .float 8 23] [.float 11 52] == none
 
 end Fir.Core

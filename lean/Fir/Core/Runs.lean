@@ -65,7 +65,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
     | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
     | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
-    | .ptradd .. =>
+    | .fpext .. | .fptrunc .. | .ptradd .. =>
       intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho
@@ -97,7 +97,7 @@ theorem total_of_tracer {f : Func CoreDialect} (ht : InTracer f) :
   | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
   | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
   | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
-  | .ptradd .. => intro h; exact False.elim h
+  | .fpext .. | .fptrunc .. | .ptradd .. => intro h; exact False.elim h
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 

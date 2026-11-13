@@ -1,0 +1,49 @@
+# Tests of float-fpext-f32-f64.fir: fpext from f32 to f64
+# (ADR-2026-11-09-1549) on the edges of the source and of the target:
+# zeros, subnormals, the largest finite values, the values halfway
+# between two values of the target and next to them, overflow to
+# infinity, underflow to zero, infinities and NaNs. Written by
+# scripts/harness/float_convert_cases.py, which computes each expected
+# result with scripts/harness/float_ref.py, apart from Lean.
+# A test without expect is differential: fir-ref and native code
+# run it, and the native result must equal fir-ref's. Each
+# result that is not a NaN is also checked by an interpreter-only
+# test with expect.
+# A NaN operand gives any NaN of the target: its test is
+# interpreter-only and names the NaN by a choice of the sign and the
+# mantissa. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@f32_f64", args = ["0.0"] },
+  { func = "@f32_f64", args = ["0.0"], expect = ["0.0"] },
+  { func = "@f32_f64", args = ["1.0e-45"] },
+  { func = "@f32_f64", args = ["1.0e-45"], expect = ["1.401298464324817e-45"] },
+  { func = "@f32_f64", args = ["1.1754942e-38"] },
+  { func = "@f32_f64", args = ["1.1754942e-38"], expect = ["1.1754942106924411e-38"] },
+  { func = "@f32_f64", args = ["1.1754944e-38"] },
+  { func = "@f32_f64", args = ["1.1754944e-38"], expect = ["1.1754943508222875e-38"] },
+  { func = "@f32_f64", args = ["1.0"] },
+  { func = "@f32_f64", args = ["1.0"], expect = ["1.0"] },
+  { func = "@f32_f64", args = ["3.4028235e38"] },
+  { func = "@f32_f64", args = ["3.4028235e38"], expect = ["3.4028234663852886e38"] },
+  { func = "@f32_f64", args = ["0x7f800000"] },
+  { func = "@f32_f64", args = ["0x7f800000"], expect = ["0x7ff0000000000000"] },
+  { func = "@f32_f64", args = ["-0.0"] },
+  { func = "@f32_f64", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@f32_f64", args = ["-1.0e-45"] },
+  { func = "@f32_f64", args = ["-1.0e-45"], expect = ["-1.401298464324817e-45"] },
+  { func = "@f32_f64", args = ["-1.1754942e-38"] },
+  { func = "@f32_f64", args = ["-1.1754942e-38"], expect = ["-1.1754942106924411e-38"] },
+  { func = "@f32_f64", args = ["-1.1754944e-38"] },
+  { func = "@f32_f64", args = ["-1.1754944e-38"], expect = ["-1.1754943508222875e-38"] },
+  { func = "@f32_f64", args = ["-1.0"] },
+  { func = "@f32_f64", args = ["-1.0"], expect = ["-1.0"] },
+  { func = "@f32_f64", args = ["-3.4028235e38"] },
+  { func = "@f32_f64", args = ["-3.4028235e38"], expect = ["-3.4028234663852886e38"] },
+  { func = "@f32_f64", args = ["0xff800000"] },
+  { func = "@f32_f64", args = ["0xff800000"], expect = ["0xfff0000000000000"] },
+  { func = "@f32_f64", args = ["0x7fc00000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
+  { func = "@f32_f64", args = ["0x7f800001"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@f32_f64", args = ["0xffffffff"], choices = ["1"], expect = ["0x7ff0000000000001"] },
+  { func = "@f32_f64", args = ["poison"] },
+  { func = "@f32_f64", args = ["poison"], expect = ["poison"] },
+]

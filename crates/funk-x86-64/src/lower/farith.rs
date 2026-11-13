@@ -74,7 +74,7 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
 /// The width of the float `name`, 32 or 64, the instruction that loads it
 /// into an SSE register, and the suffix of its SSE instructions: `movss`
 /// and `ss`, or `movsd` and `sd`.
-fn format(
+pub(super) fn format(
     cx: &Cx<'_>,
     op: &Op,
     name: &str,

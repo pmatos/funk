@@ -51,8 +51,10 @@ The human ruled on 2026-10-30 to adopt LLVM's rules, with two improvements
   because it might be the signed minimum.
 - Every other poison dividend gives poison.
 - A poison shift amount gives poison.
-- `zext` and `sext` strictly widen, and `trunc` strictly narrows. These are
-  validation rules.
+- `zext` and `sext` strictly widen, and `trunc` strictly narrows. `fpext`
+  goes to a float format that holds every value of the source, and `fptrunc`
+  to one that cannot ([semantics-floats.md](semantics-floats.md#the-conversions)).
+  These are validation rules.
 
 Both division rules come from one principle of LLVM's reference. A poison
 operand is immediate UB wherever some value it could take would be UB (LangRef,
@@ -76,12 +78,13 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 29 ops propagate and seven are exceptions. The 29 are
+In the core dialect, 31 ops propagate and seven are exceptions. The 31 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
-two conversions from integers, `sitofp` and `uitofp` (ADR-2026-11-09-1549),
-and the pointer offset `ptradd` (ADR-2026-11-13-0251). `select`, `freeze` and `cond_br` are
+two conversions from integers, `sitofp` and `uitofp`, the two conversions
+between formats, `fpext` and `fptrunc` (ADR-2026-11-09-1549), and the
+pointer offset `ptradd` (ADR-2026-11-13-0251). `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below

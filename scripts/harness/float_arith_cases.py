@@ -244,16 +244,22 @@ def files() -> dict[str, str]:
     return out
 
 
-def main(argv: list[str]) -> int:
+def write_corpus(argv: list[str], usage: str, written: dict[str, str]) -> int:
+    """Prints the files `written`, by their paths below `CANONICAL`, or with
+    `--write` writes them there; any other `argv` prints `usage`."""
     if argv not in ([], ["--write"]):
-        print(__doc__.split("\n\n")[1], file=sys.stderr)
+        print(usage, file=sys.stderr)
         return 2
-    for path, text in files().items():
+    for path, text in written.items():
         if argv:
             (CANONICAL / path).write_text(text, encoding="utf-8")
         else:
             sys.stdout.write(f"==> {path}\n{text}")
     return 0
+
+
+def main(argv: list[str]) -> int:
+    return write_corpus(argv, __doc__.split("\n\n")[1], files())
 
 
 if __name__ == "__main__":
