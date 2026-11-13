@@ -199,7 +199,7 @@ Pointer offsets (#231):
   an `iW`, `W = w`, holds, read as signed, in units of the memory `N`. It
   keeps the pointer's provenance, and its offset may leave the bounds of
   the allocation: only an access through it must be in bounds
-  (ADR-2026-11-09-1542). It is never UB, and a poison operand gives
+  (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
 Poison control:

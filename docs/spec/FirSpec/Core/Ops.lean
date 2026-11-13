@@ -268,7 +268,7 @@ ptradd \mathsf{ptradd}_{N,W}
   $`\mathsf{i}W` holds, read as signed, in units of the memory $`N`. The
   result keeps the pointer's provenance. Its offset may leave the bounds
   of the allocation: only an access through it must be in bounds
-  (ADR-2026-11-09-1542). It is never UB, and a poison operand gives
+  (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
 *Poison control* writes poison and stops it.

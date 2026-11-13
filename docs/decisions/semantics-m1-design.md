@@ -4,9 +4,9 @@ This page continues semantics.md. It says what the ADRs decide about the meaning
 of fir in M1. It is the record: when this page and an ADR disagree, the page
 wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
-These are decided designs, and the spec and the tools do not implement them
-yet. `ptr` has values, and its one op so far is `ptradd`, below
-(ADR-2026-11-09-1542). M0 has no
+These are decided designs, and the spec and the tools implement only some of
+them yet: `ptr` has values (ADR-2026-11-09-1542), and its one op so far is
+`ptradd`, below (ADR-2026-11-13-0251). M0 has no
 global data (ADR-2026-11-09-1546). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
@@ -54,9 +54,12 @@ offset never wraps and may leave the allocation; only an access through it
 must be in bounds. A poison operand gives poison, it is never UB, and its
 effect set is empty. It has no attributes, and any other shape does not
 decode (ADR-2026-11-13-0251; `lean/Fir/Core/Pointer.lean`). The backend
-lowers it in stage 5 of #231. Rejected: UB or poison for a result out of
-its allocation, as LLVM's `inbounds`, which would forbid the one-past-the-end
-pointer that C allows.
+lowers it in stage 5 of #231. A native address wraps at the pointer's width
+where the offset does not; the two agree on every access the spec allows,
+and `ptr.expose` (#232) settles which address an offset outside the
+pointer's width exposes. Rejected: UB or poison for a result out of its
+allocation, as LLVM's `inbounds` gives beyond one past the end, since code
+that moves a pointer out of its allocation and back is common.
 
 The module's data layout gives each memory its unit of addressing and its
 pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes

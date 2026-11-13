@@ -28,17 +28,19 @@ passes may move or remove it freely. A signed integer of any width lets a
 frontend pass its index as it has it. A native backend adds the integer,
 sign-extended or cut to the pointer's width; the address it computes wraps
 where the spec's offset does not, but the two agree on every access the
-spec allows, since such an access lands in bounds.
+spec allows, since such an access lands in bounds. `ptr.expose` (#232)
+turns a pointer into an integer address, so that op settles which address
+an offset outside the pointer's width exposes.
 
 ## Rejected alternatives
 
 - **An offset of the pointer's width only.** Validation would need the
   module's data layout at every op, and frontends would widen or cut every
   index first.
-- **UB when the result leaves its allocation, or poison as with LLVM's
-  `inbounds`.** C allows a pointer one past the end, and code that moves a
-  pointer out and back is common; a flag that promises in-bounds results can
-  be added when an optimization needs it.
+- **UB when the result leaves its allocation, or poison as LLVM's
+  `inbounds` gives beyond one past the end.** Code that moves a pointer out
+  of its allocation and back is common; a flag that promises in-bounds
+  results can be added when an optimization needs it.
 - **A typed element size, as LLVM's `getelementptr` has.** The aggregate
   layouts of ADR-2026-11-09-1550 compute field addresses; `ptradd` counts
   units, as LLVM's own `ptradd` does.

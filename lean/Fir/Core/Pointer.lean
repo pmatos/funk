@@ -18,8 +18,9 @@ The offset is a mathematical integer: it does not wrap, at any width of
 the integer, and it may leave the bounds of the allocation, or go below
 its start. Only an access through the result must be in bounds, so
 moving a pointer out of its allocation and back is not UB, and neither
-is a pointer that is never used. The rule needs no data layout: it counts
-units of the pointer's memory, whatever their width.
+is a pointer that is never used (ADR-2026-11-13-0251). The rule needs no
+data layout: it counts units of the pointer's memory, whatever their
+width.
 
 `ptradd` is never UB, and gives poison only for a poison operand: a
 poison pointer, or a poison integer, gives a poison pointer

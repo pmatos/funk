@@ -77,6 +77,7 @@ mod tests {
             (vec![p1.clone(), i64.clone()], vec![p.clone()]),
             (vec![p.clone(), i64.clone()], vec![i64.clone()]),
             (vec![i64.clone(), p.clone()], vec![p.clone()]),
+            (vec![i64.clone(), i64.clone()], vec![p.clone()]),
             (vec![p.clone(), p.clone()], vec![p.clone()]),
             (vec![p.clone(), f32.clone()], vec![p.clone()]),
             (vec![p.clone()], vec![p.clone()]),

@@ -211,6 +211,11 @@ def is_float(t: str) -> bool:
     return b is not None and not b[1]
 
 
+def is_pointer(t: str) -> bool:
+    """Whether `t` is a pointer type: `ptr` or `ptr(N)`."""
+    return t == "ptr" or (t.startswith("ptr(") and t.endswith(")"))
+
+
 def bits_type(f: str) -> str:
     """The integer type of the width of the float type `f`."""
     return ty(bits_of(f)[0])
@@ -249,10 +254,11 @@ def int_to_float(op: Op) -> Cell:
 def pointer_offset(op: Op) -> Cell:
     """The cell of a `ptradd`: at the width of its integer. Any other text
     of it does not decode, so it is not a cell."""
-    if not op.attrs and len(op.operands) == 2 and len(op.results) == 1:
-        offset = bits_of(op.operands[1])
-        if offset is not None and offset[1]:
-            return Cell("pointers", op.name, "", op.operands[1])
+    if not op.attrs and len(op.operands) == 2 and op.results == op.operands[:1]:
+        pointer, offset = op.operands
+        bits = bits_of(offset)
+        if is_pointer(pointer) and bits is not None and bits[1]:
+            return Cell("pointers", op.name, "", offset)
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
 
 

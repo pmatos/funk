@@ -269,6 +269,9 @@ class Tests(unittest.TestCase):
             Op("ptradd", (), ("ptr", "ptr"), ("ptr",), ()),
             Op("ptradd", (), ("ptr",), ("ptr",), ()),
             Op("ptradd", (), ("ptr", "i64"), (), ()),
+            Op("ptradd", (), ("i64", "i64"), ("ptr",), ()),
+            Op("ptradd", (), ("ptr", "i64"), ("ptr(1)",), ()),
+            Op("ptradd", (), ("ptr", "i64"), ("i64",), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)
