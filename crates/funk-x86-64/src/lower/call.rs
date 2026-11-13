@@ -72,7 +72,10 @@ fn call(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         );
         layout.pass(&mut cx.asm, area);
     }
-    abi::call(&mut cx.asm, callee, &args)?;
+    let outgoing = abi::call(&mut cx.asm, callee, &args)?;
     layout.receive(&mut cx.asm, area, &into)?;
+    if let Some(&callee) = cx.callees.get(callee) {
+        cx.stack.calls.push((callee, outgoing));
+    }
     Ok(())
 }

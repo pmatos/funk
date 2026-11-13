@@ -72,7 +72,7 @@ pub struct Program {
 /// backend cannot lower.
 pub fn compile(m: &Module) -> Result<Program, Vec<Diagnostic>> {
     let lowered = lower::module(m)?;
-    let entry = entry::generate(m, &lowered.frames)?;
+    let entry = entry::generate(m, &lowered.needs)?;
     Ok(Program {
         module: lowered.text,
         entry,
