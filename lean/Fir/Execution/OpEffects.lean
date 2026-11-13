@@ -23,8 +23,9 @@ An effect set is drawn from these effects:
 
 The empty set is _pure_. The memories are the dialect's own: each dialect
 says what names its memories have. The memory-named effects are fixed here
-in shape, and no op uses them yet: the core dialect has no memory, and
-gains one with the memory model (ADR-2026-11-09-1542).
+in shape, and no op uses them yet: the core dialect names the memories of
+a module by their numbers, and no core op touches one
+(ADR-2026-11-09-1542).
 
 The effect class holds each op's poison class too, which says how the op
 treats poison operands (the section on poison classes): the op's poison

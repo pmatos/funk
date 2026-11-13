@@ -51,6 +51,9 @@ results, which are written where those values are defined.
 * `ptradd` has no attributes. It takes a pointer and an integer of any
   width, and gives a pointer of the same memory:
   `%q: ptr = ptradd %p, %k @1` (#231).
+* `fptosi` and `fptoui` have no attributes, since they truncate and do not
+  round, and take a float of any format to an integer of any width:
+  `%i: i32 = fptosi %f @1`.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -126,7 +129,7 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd"
+  | .ptradd .. => "ptradd" | .fptosi .. => "fptosi" | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -252,6 +255,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fpext" => decodeFpext as ts rs
   | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
+  | "fptosi" => decodeFloatToInt true as ts rs
+  | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- The alias of the float format `float<e,m>`, if it has one. -/

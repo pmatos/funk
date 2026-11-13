@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6434325855953841403")
+:::moduleDocs (fingerprint := "11658598620303865863")
 :::
 
 :::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "906894083440061025")
@@ -85,6 +85,17 @@ without it, or either from or to an integer does not decode. Which pairs
 of formats each takes is a
 {ref "The-fir-specification--Validation--Core-rules"}[core rule] of
 validation.
+:::
+
+:::readable Fir.Core.decodeFloatToInt (fingerprint := "6732754814002919827")
+*Definition: reading a conversion to an integer back.*
+$`\mathtt{fptosi}` and $`\mathtt{fptoui}` decode from no attributes, one
+operand type $`\mathsf{float}\langle e,m \rangle` and one result type
+$`\mathsf{i}N`, for any $`e`, $`m` and $`N`, as
+$`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`. So a
+conversion with $`\mathtt{round(rne)}`, $`\mathtt{round(rtz)}` or any
+other attribute, from an integer or to a float, does not decode: it
+truncates, and has no rounding mode.
 :::
 
 :::readable Fir.Core.eq_of_isRoundAttrs Fir.Core.FBin.attrs_of_attrsOk Fir.Core.FUnary.attrs_of_attrsOk Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "11995233360236892250")

@@ -34,13 +34,14 @@
 //! does, but for `fneg` and `fabs`, which change the sign bit in `%rax`,
 //! and `fma`, `frem` and `fmod`, which call routines of runtime helpers of
 //! their own (`farith.rs`, `frem.rs`,
-//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
+//! `docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic`). Floats
 //! pass and return in SSE registers
 //! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
 //! bit cast copies a slot (`bitcast.rs`). A conversion from an integer
 //! converts with SSE2, in a few steps for an unsigned `i64` or an `i128`
 //! (`int_to_float.rs`). A conversion between `f32` and `f64` is one SSE2
-//! instruction (`float_convert.rs`).
+//! instruction (`float_convert.rs`), and so is a conversion to an integer,
+//! but for an unsigned `i64` or an `i128` (`float_to_int.rs`).
 
 mod arith;
 mod bitcast;
@@ -54,6 +55,7 @@ mod div;
 mod farith;
 mod fcompare;
 mod float_convert;
+mod float_to_int;
 mod freeze;
 mod frem;
 mod int_to_float;
@@ -219,6 +221,13 @@ impl<'f> Cx<'f> {
         Ok(())
     }
 
+    /// Negates the `i128` in `%rdx:%rax`.
+    pub fn neg_pair(&mut self) {
+        self.asm.ins("negq", format_args!("%rax"));
+        self.asm.ins("adcq", format_args!("$0, %rdx"));
+        self.asm.ins("negq", format_args!("%rdx"));
+    }
+
     /// The arguments of the block labelled `label`.
     pub fn block_params(&self, label: &str) -> Result<&'f [Def], Unlowered> {
         self.params
@@ -291,6 +300,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| bitcast::lowering(name))
         .or_else(|| int_to_float::lowering(name))
         .or_else(|| float_convert::lowering(name))
+        .or_else(|| float_to_int::lowering(name))
 }
 
 /// A module's functions, lowered.

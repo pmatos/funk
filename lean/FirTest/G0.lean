@@ -3,6 +3,7 @@ import FirRef
 import FirTest.G0.Validation
 import FirTest.G0.Regions
 import FirTest.G0.MemoryRefine
+import FirTest.G0.MemoryPoison
 
 /-!
 G0's check on the Lean side (ADR-2026-11-03-0600). fir's spec is written

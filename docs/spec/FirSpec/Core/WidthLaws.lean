@@ -43,7 +43,7 @@ the widths validation accepts, they put zeros above its bits, put copies of its 
 its low $`N` bits.
 :::
 
-:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "15461055371340690581")
+:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "6993329610414986047")
 *Theorem: $`\mathsf{zext}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{zext}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, meets every obligation of an op that
@@ -60,14 +60,14 @@ The theorems hold at every pair of widths, even where $`n \le m`, which
 validation rejects for $`\mathsf{zext}`: they need nothing of the widths.
 :::
 
-:::readable Fir.Core.sext_propagatesPoison Fir.Core.sext_returnsOnDefined Fir.Core.sext_total Fir.Core.sext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sextValue) (fingerprint := "1585855594852049578")
+:::readable Fir.Core.sext_propagatesPoison Fir.Core.sext_returnsOnDefined Fir.Core.sext_total Fir.Core.sext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sextValue) (fingerprint := "7405648902153756552")
 *Theorem: $`\mathsf{sext}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{sext}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, propagates poison, returns a result on defined operands,
 and is total and monotone, for the reasons that $`\mathsf{zext}` is.
 :::
 
-:::readable Fir.Core.trunc_propagatesPoison Fir.Core.trunc_returnsOnDefined Fir.Core.trunc_total Fir.Core.trunc_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.truncValue) (fingerprint := "11101301724147577520")
+:::readable Fir.Core.trunc_propagatesPoison Fir.Core.trunc_returnsOnDefined Fir.Core.trunc_total Fir.Core.trunc_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.truncValue) (fingerprint := "13073379605883902482")
 *Theorem: $`\mathsf{trunc}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{trunc}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, propagates poison, returns a result on defined operands,

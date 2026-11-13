@@ -4,10 +4,11 @@ import Fir.Core.Validation
 import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
 import Fir.Core.FloatTextLaws
+import Fir.Core.FloatOpTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 38 of its ops and every type. The laws are proved for every
+text, for all 40 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -141,103 +142,6 @@ theorem plainBinOps_lookup {n : String} {mk : Nat → Op} (h : plainBinOps.looku
   repeat (split at h; (cases h; rename_i hn; cases beq_iff_eq.mp hn; exact ⟨rfl, rfl, rfl, rfl⟩))
   cases h
 
-/-- `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` decode only from
-their own name, attributes, operand types and result type. -/
-theorem decodeFBin_eq {o : FBin} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFBin o as ts rs = some op) :
-    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFBin at h
-  split at h
-  · rename_i hok
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, FBin.attrs_of_attrsOk hok, rfl, rfl⟩
-  · cases h
-
-/-- `fneg`, `fabs` and `sqrt` decode only from their own name, attributes,
-operand type and result type. -/
-theorem decodeFUnary_eq {o : FUnary} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFUnary o as ts rs = some op) :
-    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFUnary at h
-  split at h
-  · rename_i hok
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, FUnary.attrs_of_attrsOk hok, rfl, rfl⟩
-  · cases h
-
-/-- `fma` decodes only from its own name, attributes, operand types and
-result type. -/
-theorem decodeFma_eq {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFma as ts rs = some op) :
-    op.name = "fma" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFma at h
-  split at h
-  · rename_i hr
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
-  · cases h
-
-/-- `bitcast` decodes only from its own name, attributes, operand type and
-result type, in either direction. -/
-theorem decodeBitcast_eq {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeBitcast as ts rs = some op) :
-    op.name = "bitcast" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeBitcast at h
-  split at h <;> (try cases h)
-  all_goals
-    split at h
-    · rename_i hw
-      obtain ⟨ha, rfl⟩ := hw
-      cases h
-      exact ⟨rfl, (List.isEmpty_iff.mp ha).symm, rfl, rfl⟩
-    · cases h
-
-/-- `sitofp` and `uitofp` decode only from their own name, attributes,
-operand type and result type. -/
-theorem decodeIntToFloat_eq {signed : Bool} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeIntToFloat signed as ts rs = some op) :
-    op.name = (if signed then "sitofp" else "uitofp") ∧ op.attrs = as ∧ op.sig = ts ∧
-      op.returnTypes = rs := by
-  unfold decodeIntToFloat at h
-  split at h
-  · split at h
-    · rename_i hr
-      cases h
-      cases signed <;> exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
-    · cases h
-  · cases h
-
-/-- `fpext` decodes only from its own name, attributes, operand type and
-result type. -/
-theorem decodeFpext_eq {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFpext as ts rs = some op) :
-    op.name = "fpext" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFpext at h
-  split at h
-  · split at h
-    · rename_i ha
-      cases h
-      exact ⟨rfl, (List.isEmpty_iff.mp ha).symm, rfl, rfl⟩
-    · cases h
-  · cases h
-
-/-- `fptrunc` decodes only from its own name, attributes, operand type and
-result type. -/
-theorem decodeFptrunc_eq {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFptrunc as ts rs = some op) :
-    op.name = "fptrunc" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFptrunc at h
-  split at h
-  · split at h
-    · rename_i hr
-      cases h
-      exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
-    · cases h
-  · cases h
-
 /-- `ptradd` decodes only from its own name, no attributes, a pointer and
 an integer, and a pointer of the same memory. -/
 theorem decodePtrAdd_eq {as : List Attr} {ts rs : List Ty} {op : Op}
@@ -285,6 +189,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFptrunc, roundAttr,
       isRoundAttrs]
   | ptradd n w => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodePtrAdd, bare, i]
+  | fptosi e m n | fptoui e m n =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeWrap_attrs, bare,
       decodeCast, plainBinOps, find_pred_name, i, List.lookup]
@@ -428,6 +334,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeFpext_eq h -- fpext
   · exact decodeFptrunc_eq h -- fptrunc
   · exact decodePtrAdd_eq h -- ptradd
+  · exact decodeFloatToInt_eq (signed := true) h -- fptosi
+  · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
     split at h
     · rename_i mk hmk
@@ -486,7 +394,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 38 core ops and
+/-- The core dialect's text meets the seven laws, for all 40 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

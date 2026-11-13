@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8277099554144718072")
+:::moduleDocs (fingerprint := "17565256396279805304")
 :::
 
 :::readable Fir.NeverUBSetM Fir.MakesNoPoisonSetM (pin := Fir.HVector.Any) (fingerprint := "12651468849163982976")
@@ -48,7 +48,7 @@ $`\mathsf{ok}~(\vec{w}, S') \in \mathrm{denote}^\rho_o(\vec{v})(S)` has no
 poison element. A terminator gives no results, so it makes none.
 :::
 
-:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "6496766837932302871")
+:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "3603765143616116375")
 *Definition: a dialect lawful in its effects.* A dialect is _lawful in its
 effects_ when its effect declarations are sound: an effect that an op
 leaves out, it does not have. For every

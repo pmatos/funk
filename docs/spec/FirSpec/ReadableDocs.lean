@@ -76,6 +76,7 @@ import FirSpec.Core.FloatBitcast
 import FirSpec.Core.FloatOfInt
 import FirSpec.Core.FloatConvert
 import FirSpec.Core.Pointer
+import FirSpec.Core.FloatToInt
 import FirSpec.Core.Control
 import FirSpec.Core.Branch
 import FirSpec.Core.Call
@@ -93,6 +94,7 @@ import FirSpec.Core.FloatBitcastLaws
 import FirSpec.Core.FloatOfIntLaws
 import FirSpec.Core.FloatConvertLaws
 import FirSpec.Core.PointerLaws
+import FirSpec.Core.FloatToIntLaws
 import FirSpec.Core.ControlLaws
 import FirSpec.Core.BranchLaws
 import FirSpec.Execution.Morphism
@@ -117,6 +119,7 @@ import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
 import FirSpec.Core.TypeTextLaws
+import FirSpec.Core.FloatOpTextLaws
 import FirSpec.Core.TextLaws
 import FirSpec.Core.FloatText
 import FirSpec.Core.FloatOpText
@@ -164,6 +167,7 @@ import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
 import FirSpec.Memory.Refine
 import FirSpec.Execution.MemoryOpRefine
+import FirSpec.Execution.MemoryPoison
 import FirSpec.Execution.MemoryStepPaths
 import FirSpec.Execution.MemoryCalls
 import FirSpec.Execution.MemoryBlackBox
@@ -187,6 +191,7 @@ import FirSpec.Sum.LiftPoisonLaws
 import FirSpec.Sum.LiftEffectLaws
 import FirSpec.Sum.TotalLaws
 import FirSpec.Sum.MonotoneLaws
+import FirSpec.Sum.MemPoisonLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

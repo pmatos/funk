@@ -9,10 +9,15 @@ the ADR is fixed or deleted (ADR-2026-11-09-1610).
 `Core.scripted`, `Core.exhaustive` and `Core.sampled` walk `Func.memTree`: the
 run in the state layer over the tree of choices, from the empty memories,
 with the memories dropped at the end of each path. Each mode takes the unit
-width of each memory first. `fir-ref` names the core's memories by themselves,
-and `FirRef.coreUnit` gives their widths; no core op names a memory yet, so
-it is the empty function until stage 4 of #231 gives the core's memories
-the widths of the module's data layout (ADR-2026-11-12-1821). The core's semantics in the
+width of each memory first. `fir-ref` names the core's memories by
+themselves, by their numbers, and `FirRef.coreUnit` gives each the unit of
+its entry in the module's data layout (ADR-2026-11-12-1821). A memory that
+the layout does not declare gets the unit of `MemLayout.default`, 8 bits.
+Validation rejects every pointer type that names such a memory, but
+`fir-ref run` runs a module without validating it, so an invalid module may
+reach one. No core op names a memory yet, so the widths change no run;
+stage 4e of #231, which brings loads and stores, says what `fir-ref run`
+does with an access to an undeclared memory. The core's semantics in the
 layer over the tree lifts its rules in the tree, as its semantics with memory
 lifts its rules in the set monad (`DialectMemDenote.ofSetM`), and
 `Core.memMapsDenote` ties the two at every naming.
@@ -46,7 +51,28 @@ recursion costs two lists on the heap, still no stack.
 
 The machine still takes no stack per step, per level of calls or per
 choice. A run of a million steps takes about a third more time than without
-memory; a run of the corpus takes the same. `Memories.mem` grows by one
-closure per store, allocation or free, so stage 4 must give the memories a
-representation whose lookups take no stack per update before `fir-ref` runs
-memory ops.
+memory; a run of the corpus takes the same.
+
+## The memories are a table
+
+`Memories` keeps its memories in a table: a list of memories, each with its
+name (`lean/Fir/Memory/Frames.lean`). `Memories.mem x` is the first memory
+named `x` in the table, or the empty memory when the table has none, and
+`Memories.set` puts the new memory first and drops every older entry of its
+name. So the table holds each name at most once, however many stores,
+allocations and frees a run makes, and it grows only when a memory that the
+run has not touched before changes. A lookup is a tail-recursive walk of at
+most as many entries as the run has memories, and `set` filters the table
+with `List.filter`, which runs as `List.filterTR`; the C that Lean emits
+for `Memories.lookup` is a loop. So a lookup takes no stack per update, and
+`fir-ref` may run memory ops (stage 4c of #231). This is the spec's own
+definition, not a fast path: `fir-ref` runs it as written, and the
+`@[csimp]` theorems of the machine, which hold for any state, are unchanged.
+`set_mem_self` and `set_mem_ne` give the memories after a replacement, with
+no axiom, and the laws of the memories reach the table only through them, so
+each law holds as before.
+
+Rejected: keep `mem` a function of the names and replace it with a closure
+per update. Each lookup then walks every update made since the run began,
+one call per closure, so it takes stack and time in proportion to the
+stores, allocations and frees before it.

@@ -107,7 +107,7 @@
     },
     {
       "file": "2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md",
-      "now": "docs/decisions/x86-64-backend-lowering.md#float-arithmetic",
+      "now": "docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic",
       "commit": "0d492b1d4d6e"
     }
   ]

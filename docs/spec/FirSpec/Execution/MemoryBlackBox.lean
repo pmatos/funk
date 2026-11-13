@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2783609327080785706")
+:::moduleDocs (fingerprint := "2503602670318752849")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "16450805183566433580")
@@ -31,7 +31,7 @@ way the whole ends at $`N_0 + N + 1`, with $`k` more steps left on a
 return.
 :::
 
-:::readable Fir.Func.memCall_allowed (pin := Fir.Func.memCall) (fingerprint := "7030202911306346812")
+:::readable Fir.Func.memCall_allowed (pin := Fir.Func.memCall) (fingerprint := "10241409072351689052")
 *Theorem: leaving a frame keeps what is allowed.* When each path of the
 target callee's ops, from $`\mathrm{enter}(S')`, is allowed by the source's
 from $`\mathrm{enter}(S)`, each path of the target callee in its frame from
@@ -49,7 +49,7 @@ at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined (pin := Fir.Func.memRunsFrom) (fingerprint := "11146693213621817567")
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined (pin := Fir.Func.memRunsFrom) (fingerprint := "467027468921220010")
 *Definitions: bounded runs, black boxes with memory, and modules whose
 calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
 input, they diverge, or none of them with $`B` steps or more runs out of
@@ -70,7 +70,7 @@ callee runs from the memories its caller reached, so a black box speaks of
 runs from every memories, not only from the empty ones.
 :::
 
-:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "13962237273322069261")
+:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "4690611568274080391")
 *Theorems: a black-box call, allowed.* A call that enters a black box's
 target passes arguments of the parameter types of its source. So a path of
 the target in its frame that is not stuck is a path of its run from given
