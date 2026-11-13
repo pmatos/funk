@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Monotonicity with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11283205507387141825")
+:::moduleDocs (fingerprint := "7901211564306828985")
 :::
 
 :::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "12617051221931686737")
@@ -40,7 +40,7 @@ results of two computations by a map $`f` that takes results related by
 $`r` to results related by $`r'` keeps refinement.
 :::
 
-:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "10175253963851643943")
+:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "6924644383010275487")
 *Definitions: monotone with memory, and a dialect lawful in its
 monotonicity.* In a semantics of a dialect in the state layer, the op $`o`
 is monotone when, on operand vectors $`\vec{v} \sqsubseteq \vec{v}'`

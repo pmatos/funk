@@ -28,13 +28,40 @@ variable {Mem : Type} {unit : Mem → Nat}
 # Replacing one memory
 -/
 
+variable [DecidableEq Mem]
+
 /-- Entering a call changes no memory. -/
 theorem enter_mem (S : Memories Mem unit) : S.enter.mem = S.mem := rfl
 
-variable [DecidableEq Mem]
-
 /-- Entering a call and leaving it at once changes nothing. -/
 theorem exit_enter (S : Memories Mem unit) : S.enter.exit = S := rfl
+
+/-- Every memory of the empty memories is empty. -/
+@[simp] theorem empty_mem (x : Mem) : (empty : Memories Mem unit).mem x = .empty := rfl
+
+/-- Dropping the entries of the name `x` from a table leaves the memory of
+every other name as it was. -/
+theorem lookup_filter {x y : Mem} (h : x ≠ y) :
+    ∀ t : List (Σ z : Mem, Memory (unit z)),
+      lookup y (t.filter fun e => !decide (e.1 = x)) = lookup y t
+  | [] => rfl
+  | ⟨z, m⟩ :: t => by
+    cases hd : decide (z = x) with
+    | true =>
+      have hz : z ≠ y := fun e => h ((of_decide_eq_true hd).symm.trans e)
+      show lookup y (match !decide (z = x) with
+          | true => ⟨z, m⟩ :: t.filter _ | false => t.filter _) = _
+      rw [hd]
+      show _ = if hz : z = y then hz ▸ m else lookup y t
+      rw [dite_eq_right hz]
+      exact lookup_filter h t
+    | false =>
+      show lookup y (match !decide (z = x) with
+          | true => ⟨z, m⟩ :: t.filter _ | false => t.filter _) = _
+      rw [hd]
+      show (if hz : z = y then hz ▸ m else lookup y (t.filter _)) =
+        (if hz : z = y then hz ▸ m else lookup y t)
+      rw [lookup_filter h t]
 
 /-- The memory that is replaced is the new one. This and the next are proved
 without axioms, as the memory obligations of the test dialects need. -/
@@ -45,7 +72,7 @@ without axioms, as the memory obligations of the test dialects need. -/
 /-- Every other memory stays as it was. -/
 theorem set_mem_ne (S : Memories Mem unit) {x y : Mem} (m : Memory (unit x)) (h : x ≠ y) :
     (S.set x m).mem y = S.mem y :=
-  dite_eq_right h
+  (dite_eq_right h).trans (lookup_filter h S.table)
 
 /-- Replacing a memory keeps the frames. -/
 @[simp] theorem set_frames (S : Memories Mem unit) (x : Mem) (m : Memory (unit x)) :
@@ -136,7 +163,6 @@ theorem exit_length (S : Memories Mem unit) (x : Mem) :
 # Allocating
 -/
 
-omit [DecidableEq Mem] in
 /-- Recording an allocation changes no memory. -/
 theorem record_mem (S : Memories Mem unit) (x : Mem) (a : AllocId) :
     (S.record x a).mem = S.mem := by

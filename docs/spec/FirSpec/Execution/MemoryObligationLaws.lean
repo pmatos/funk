@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13848549422878406383")
+:::moduleDocs (fingerprint := "5506508417601442060")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -32,7 +32,7 @@ $`\mathsf{ok}~(f(a), S')` for each $`\mathsf{ok}~(a, S') \in c(S)`, and in
 UB as $`c` does.
 :::
 
-:::readable Fir.writesNot_lift Fir.allocatesNot_lift Fir.readsNot_lift (fingerprint := "16615654636980269060")
+:::readable Fir.writesNot_lift Fir.allocatesNot_lift Fir.readsNot_lift (fingerprint := "13836026313982123487")
 *Theorem: a computation with no memory meets every memory obligation.* A
 computation of the set monad, run in the state layer, ends with the
 memories it started with. So it writes no unit of any memory, neither
@@ -41,14 +41,14 @@ $`S[x := m]` it ends as it ends from $`S`, with $`S[x := m]`, which agrees
 with $`S` off $`x` and whose units of $`x` are those of $`m`.
 :::
 
-:::readable Fir.WritesNot.map Fir.AllocatesNot.map Fir.ReadsNot.map (fingerprint := "11300524075204757905")
+:::readable Fir.WritesNot.map Fir.AllocatesNot.map Fir.ReadsNot.map (fingerprint := "16699392017965335039")
 *Theorem: mapping the results keeps the obligations.* If $`c` writes no
 unit of $`x`, neither allocates nor frees in $`x`, or does not read $`x`,
 then so does $`f \mathbin{<\$>} c`, for every $`f`: mapping changes the
 results and not the memories.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "11032396194936030764")
+:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "6205957172566904502")
 *Definition: the semantics with memory of a dialect whose ops touch no
 memory.* At every naming $`\rho`, each op runs by its rule in the set
 monad, lifted into the state layer, and keeps the memories.

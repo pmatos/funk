@@ -80,7 +80,6 @@ theorem SetM.stateMap_apply (f : α → β) (c : StateT σ SetM α) (S : σ) (e 
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] (x : Mem)
 
-omit [DecidableEq Mem] in
 /-- A computation with no memory writes no memory. -/
 theorem writesNot_lift (c : SetM α) :
     WritesNot (unit := unit) x (StateT.lift c) := by
@@ -110,7 +109,6 @@ theorem readsNot_lift (c : SetM α) :
 
 variable {x} {c : StateT (Memories Mem unit) SetM α} (f : α → β)
 
-omit [DecidableEq Mem] in
 /-- Mapping the results keeps a computation that writes no memory `x`. -/
 theorem WritesNot.map (h : WritesNot x c) : WritesNot x (f <$> c) := by
   intro S b S' hc

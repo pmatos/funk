@@ -172,7 +172,7 @@ theorem Memory.IsRefinedBy.store {M M' : Memory u} (h : M ⊑ M') (p : Pointer)
 
 /-! # The memories of a run -/
 
-variable {Mem : Type} {unit : Mem → Nat}
+variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-- The memories of a run are refined by memories with the same frames, in
 which each memory refines the memory of the same name. -/
@@ -196,16 +196,14 @@ theorem isRefinedBy_trans {S₁ S₂ S₃ : Memories Mem unit} (h₁ : S₁ ⊑ 
 theorem IsRefinedBy.enter {S S' : Memories Mem unit} (h : S ⊑ S') : S.enter ⊑ S'.enter :=
   ⟨congrArg ([] :: ·) h.1, h.2⟩
 
-variable [DecidableEq Mem]
-
 /-- Replacing a memory by one that refines another's keeps refinement. -/
 theorem IsRefinedBy.set {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem)
     {m m' : Memory (unit x)} (hm : m ⊑ m') : S.set x m ⊑ S'.set x m' := by
   refine ⟨h.1, fun y => ?_⟩
   by_cases hxy : x = y
   · subst hxy
-    simpa [Memories.set] using hm
-  · simpa [Memories.set, hxy] using h.2 y
+    simpa only [Memories.set_mem_self] using hm
+  · simpa only [Memories.set_mem_ne _ _ hxy] using h.2 y
 
 /-- Freeing an allocation keeps refinement. -/
 theorem IsRefinedBy.free {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (a : AllocId) :
@@ -230,7 +228,6 @@ theorem IsRefinedBy.exit {S S' : Memories Mem unit} (h : S ⊑ S') : S.exit ⊑ 
     exact IsRefinedBy.freeAll (S := { S with frames := frs }) (S' := { S' with frames := frs })
       ⟨rfl, hm⟩ fr
 
-omit [DecidableEq Mem] in
 /-- Recording a stack allocation in the innermost frame keeps refinement. -/
 theorem IsRefinedBy.record {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (a : AllocId) :
     S.record x a ⊑ S'.record x a := by
@@ -254,7 +251,6 @@ theorem IsRefinedBy.alloc {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (k
   · exact hs.record x _
   · exact hs
 
-omit [DecidableEq Mem] in
 /-- A load through the same pointer from memories that refine each other
 faults for the same reason in both, or loads units of which the second's
 refine the first's. -/
