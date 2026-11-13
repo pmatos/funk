@@ -42,7 +42,14 @@ truncated toward zero by Python's `int`, apart from Lean.
 import sys
 from fractions import Fraction
 
-from float_arith_cases import DIFFERENTIAL, FORMATS, write_corpus
+from float_arith_cases import (
+    DIFFERENTIAL,
+    FORMATS,
+    corpus_files,
+    test_lines,
+    tests_file,
+    write_corpus,
+)
 from float_itofp_cases import ODD_WIDTHS, WIDTHS, int_text, span
 from float_ref import Format
 from float_text import spell
@@ -92,7 +99,7 @@ def floats(f: Format, w: int, signed: bool) -> list[int]:
     if signed:
         neg.append(from_on(f, Fraction(-lo)))
     out = pos + [b | f.sign_bit for b in pos + neg]
-    out += [f.nan(), f.nan() | 1 | f.sign_bit]
+    out += [f.nan() | p | s for p in (0, 1) for s in (0, f.sign_bit)]
     return sorted(set(out))
 
 
@@ -156,23 +163,13 @@ def tests_text(module: str) -> str:
         cases = [
             (spell(e, m, b), expected(f, w, signed, b)) for b in floats(f, w, signed)
         ]
-        cases.append(("poison", "poison"))
-        for arg, want in cases:
-            if native:
-                lines.append(f'  {{ func = "@{name}", args = ["{arg}"] }},')
-            lines.append(
-                f'  {{ func = "@{name}", args = ["{arg}"], expect = ["{want}"] }},'
-            )
-    return "\n".join(head) + "\ntests = [\n" + "\n".join(lines) + "\n]\n"
+        lines += test_lines(name, [*cases, ("poison", "poison")], native)
+    return tests_file(head, lines)
 
 
 def files() -> dict[str, str]:
     """Every file this writes, by its path below `tests/fir/canonical/`."""
-    out = {}
-    for module in FILES:
-        out[f"{module}.fir"] = module_text(module)
-        out[f"{module}.toml"] = tests_text(module)
-    return out
+    return corpus_files(FILES, module_text, tests_text)
 
 
 def main(argv: list[str]) -> int:

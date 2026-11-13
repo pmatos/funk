@@ -20,7 +20,7 @@
 
 mod common;
 
-use common::{Bits, build, func, module, run, spell, text, wrap};
+use common::{Bits, build, json_values, module, returning, run_func, spell, wrap};
 
 /// The widths the backend lowers.
 const WIDTHS: [u32; 6] = [1, 8, 16, 32, 64, 128];
@@ -162,34 +162,20 @@ fn check(f: Format, op: &str) {
     for w in WIDTHS {
         for (n, batch) in cs.chunks(64).enumerate() {
             let mut body = Vec::new();
-            let mut results = Vec::new();
             for (i, &b) in batch.iter().enumerate() {
                 body.push(format!("%b{i}: {} = const {}", f.bits_type, f.constant(b)));
                 body.push(format!("%c{i}: {} = bitcast %b{i}", f.name));
                 body.push(format!("%r{i}: i{w} = {op} %c{i}"));
-                results.push(format!("%r{i}"));
             }
-            body.push(format!("ret {}", results.join(", ")));
-            let body: Vec<&str> = body.iter().map(String::as_str).collect();
-            let types = vec![format!("i{w}"); batch.len()].join(", ");
             let name = format!("i{w}_{n}");
-            funcs.push(func(&name, "", &types, &body));
+            funcs.push(returning(&name, body, &format!("i{w}"), batch.len()));
             batches.push((name, w, batch.to_vec()));
         }
     }
     let exe = build(&format!("{op}-{}", f.name), &module(&funcs));
     for (name, w, batch) in batches {
-        let out = run(&exe, &[&format!("@{name}")]);
-        let stdout = text(&out.stdout);
-        assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
-        let got: Vec<&str> = stdout
-            .trim_end()
-            .strip_prefix("{\"values\":[")
-            .and_then(|s| s.strip_suffix("]}"))
-            .expect("a JSON line of values")
-            .split(',')
-            .map(|v| v.trim_matches('"'))
-            .collect();
+        let stdout = run_func(&exe, &name);
+        let got = json_values(&stdout);
         assert_eq!(got.len(), batch.len(), "{stdout}");
         for (&b, &g) in batch.iter().zip(&got) {
             match source(f.value(b), w, signed) {

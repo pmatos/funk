@@ -20,8 +20,8 @@
 //!
 //! `fptoui` to `i64` holds values from `2^63` up to below `2^64` too. One at
 //! or above `2^63`, by `ucomiss` or `ucomisd`, has `2^63` subtracted first,
-//! which is exact, since the float is a multiple of `2^40` or more there,
-//! and gets the top bit back after the conversion.
+//! which is exact by Sterbenz's lemma, since the float is from `2^63` up to
+//! below twice that, and gets the top bit back after the conversion.
 //!
 //! An `i128` has no instruction. An `f32` operand goes to `f64` first, with
 //! `cvtss2sd`, which is exact. The code reads the `f64`'s bits: its
@@ -117,7 +117,7 @@ fn unsigned64(cx: &mut Cx<'_>, suffix: &str, cvt: &str) {
 /// Converts the `f64` in `%xmm0` to an `i128` in `%rdx:%rax`, signed when
 /// `signed`. It clobbers `%rcx` and `%r8`.
 fn pair(cx: &mut Cx<'_>, signed: bool) {
-    let (left, zero, end) = (cx.local_label(), cx.local_label(), cx.local_label());
+    let (left, end) = (cx.local_label(), cx.local_label());
     cx.asm.ins("movq", format_args!("%xmm0, %rax"));
     cx.asm.ins("movq", format_args!("%rax, %r8"));
     // %ecx: the exponent, biased, less the bias and the 52 bits of the
@@ -134,31 +134,27 @@ fn pair(cx: &mut Cx<'_>, signed: bool) {
     cx.asm.ins("xorl", format_args!("%edx, %edx"));
     cx.asm.ins("testl", format_args!("%ecx, %ecx"));
     cx.asm.ins("jns", format_args!("{left}"));
-    // A shift right by more than 63 leaves nothing.
+    // A shift right by more than 63 leaves nothing: %rdx is zero.
     cx.asm.ins("negl", format_args!("%ecx"));
-    cx.asm.ins("cmpl", format_args!("$63, %ecx"));
-    cx.asm.ins("ja", format_args!("{zero}"));
     cx.asm.ins("shrq", format_args!("%cl, %rax"));
+    cx.asm.ins("cmpl", format_args!("$63, %ecx"));
+    cx.asm.ins("cmovaq", format_args!("%rdx, %rax"));
     cx.asm.ins("jmp", format_args!("{end}"));
-    cx.asm.label(&zero);
-    cx.asm.ins("xorl", format_args!("%eax, %eax"));
-    cx.asm.ins("jmp", format_args!("{end}"));
-    // A shift left of 64 to 127 moves the low half into the high one.
+    // A shift left of 64 to 127 moves the low half into the high one, as
+    // `shift_pair` in `bitwise.rs` does; `movl` keeps the flags.
     cx.asm.label(&left);
     cx.asm.ins("shldq", format_args!("%cl, %rax, %rdx"));
     cx.asm.ins("shlq", format_args!("%cl, %rax"));
     cx.asm.ins("testb", format_args!("$64, %cl"));
-    cx.asm.ins("je", format_args!("{end}"));
-    cx.asm.ins("movq", format_args!("%rax, %rdx"));
-    cx.asm.ins("xorl", format_args!("%eax, %eax"));
+    cx.asm.ins("movl", format_args!("$0, %ecx"));
+    cx.asm.ins("cmovneq", format_args!("%rax, %rdx"));
+    cx.asm.ins("cmovneq", format_args!("%rcx, %rax"));
     cx.asm.label(&end);
     if signed {
         let done = cx.local_label();
         cx.asm.ins("testq", format_args!("%r8, %r8"));
         cx.asm.ins("jns", format_args!("{done}"));
-        cx.asm.ins("negq", format_args!("%rax"));
-        cx.asm.ins("adcq", format_args!("$0, %rdx"));
-        cx.asm.ins("negq", format_args!("%rdx"));
+        cx.neg_pair();
         cx.asm.label(&done);
     }
 }

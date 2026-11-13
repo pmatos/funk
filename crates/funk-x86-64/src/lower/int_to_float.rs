@@ -151,9 +151,7 @@ fn pair(cx: &mut Cx<'_>, f: &Format, signed: bool) {
         cx.asm.ins("movq", format_args!("%rdx, %r8"));
         cx.asm.ins("testq", format_args!("%rdx, %rdx"));
         cx.asm.ins("jns", format_args!("{positive}"));
-        cx.asm.ins("negq", format_args!("%rax"));
-        cx.asm.ins("adcq", format_args!("$0, %rdx"));
-        cx.asm.ins("negq", format_args!("%rdx"));
+        cx.neg_pair();
         cx.asm.label(&positive);
     }
     cx.asm.ins("testq", format_args!("%rdx, %rdx"));

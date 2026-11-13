@@ -140,8 +140,8 @@ underflow and ties. `crates/funk/tests/float_convert.rs` checks the backend's
 `fptoui`, at each width the backend lowers, `i1` to `i128`, and
 `float-fptosi-odd` and `float-fptoui-odd`, with the same conversions from every format to `i7` and
 `i33` (#241). The cases are both zeros, the smallest subnormal, `0.5`, `1`,
-`1.5`, `2.7` and `3`, the largest finite value and the infinities, each of
-either sign, two NaNs, and at each end of the width's range the floats on
+`1.5`, `2.7` and `3`, the largest finite value, the infinities, and a NaN
+with and without a payload, each of either sign, and at each end of the width's range the floats on
 either side of where the truncated integer leaves it: the largest float below
 `hi + 1`, which truncates into the range, and the smallest from it on, which
 does not, and likewise at `lo - 1`, with `lo` itself for `fptosi`. Each

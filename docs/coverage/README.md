@@ -152,10 +152,10 @@ that passes no value.
 
 | op | from | to `i1` | to `i8` | to `i16` | to `i32` | to `i64` | to `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fptosi` | `f32` | 25 | 27 | 27 | 26 | 26 | 26 |
-| `fptosi` | `f64` | 25 | 27 | 27 | 27 | 26 | 26 |
-| `fptoui` | `f32` | 26 | 26 | 26 | 26 | 26 | 22 |
-| `fptoui` | `f64` | 26 | 26 | 26 | 26 | 26 | 26 |
+| `fptosi` | `f32` | 27 | 29 | 29 | 28 | 28 | 28 |
+| `fptosi` | `f64` | 27 | 29 | 29 | 29 | 28 | 28 |
+| `fptoui` | `f32` | 28 | 28 | 28 | 28 | 28 | 24 |
+| `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 |
 
 ### Passed and returned values (differential tests)
 
@@ -166,14 +166,14 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 855 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2925 | 1580 | 1262 | 1679 | 1444 | 2477 | 419 | 345 |
+| `ret` | returns one value |  | 2933 | 1588 | 1270 | 1687 | 1452 | 2485 | 419 | 345 |
 | `ret` | returns several values |  | 282 | 431 | 265 | 246 | 399 | 539 | 9 | 9 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2925 | 1580 | 1262 | 1679 | 1444 | 2477 | 417 | 343 |
+| `func` | returns one value |  | 2933 | 1588 | 1270 | 1687 | 1452 | 2485 | 417 | 343 |
 | `func` | returns several values |  | 282 | 431 | 265 | 237 | 399 | 503 | 9 | 9 |
 
 ## Interpreter-only tests
@@ -330,16 +330,16 @@ that passes no value.
 
 | op | from | to `i1` | to `i7` | to `i8` | to `i16` | to `i32` | to `i33` | to `i64` | to `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fptosi` | `f16` | 25 | 27 | 27 | 26 | 21 | 21 | 21 | 21 |
-| `fptosi` | `bf16` | 25 | 27 | 26 | 26 | 26 | 26 | 26 | 26 |
-| `fptosi` | `f32` | 25 | 27 | 27 | 27 | 26 | 26 | 26 | 26 |
-| `fptosi` | `f64` | 25 | 27 | 27 | 27 | 27 | 27 | 26 | 26 |
-| `fptosi` | `f128` | 25 | 27 | 27 | 27 | 27 | 27 | 27 | 26 |
-| `fptoui` | `f16` | 26 | 26 | 26 | 22 | 22 | 22 | 22 | 22 |
-| `fptoui` | `bf16` | 26 | 26 | 26 | 26 | 26 | 26 | 26 | 22 |
-| `fptoui` | `f32` | 26 | 26 | 26 | 26 | 26 | 26 | 26 | 22 |
-| `fptoui` | `f64` | 26 | 26 | 26 | 26 | 26 | 26 | 26 | 26 |
-| `fptoui` | `f128` | 26 | 26 | 26 | 26 | 26 | 26 | 26 | 26 |
+| `fptosi` | `f16` | 27 | 29 | 29 | 28 | 23 | 23 | 23 | 23 |
+| `fptosi` | `bf16` | 27 | 29 | 28 | 28 | 28 | 28 | 28 | 28 |
+| `fptosi` | `f32` | 27 | 29 | 29 | 29 | 28 | 28 | 28 | 28 |
+| `fptosi` | `f64` | 27 | 29 | 29 | 29 | 29 | 29 | 28 | 28 |
+| `fptosi` | `f128` | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 28 |
+| `fptoui` | `f16` | 28 | 28 | 28 | 24 | 24 | 24 | 24 | 24 |
+| `fptoui` | `bf16` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 24 |
+| `fptoui` | `f32` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 24 |
+| `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
+| `fptoui` | `f128` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 
 ### Pointer offsets (interpreter-only tests)
 
@@ -356,12 +356,12 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2518 | 1563 | 794 | 797 | 886 | 1589 | 796 | 1061 | 738 | 690 | 602 | 501 | 443 |
+| `ret` | returns one value |  | 2538 | 1583 | 814 | 817 | 906 | 1609 | 816 | 1081 | 738 | 690 | 602 | 501 | 443 |
 | `ret` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2518 | 1563 | 795 | 797 | 886 | 1589 | 796 | 1061 | 736 | 688 | 600 | 499 | 441 |
+| `func` | returns one value |  | 2538 | 1583 | 815 | 817 | 906 | 1609 | 816 | 1081 | 736 | 688 | 600 | 499 | 441 |
 | `func` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |

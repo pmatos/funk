@@ -220,6 +220,13 @@ impl<'f> Cx<'f> {
         Ok(())
     }
 
+    /// Negates the `i128` in `%rdx:%rax`.
+    pub fn neg_pair(&mut self) {
+        self.asm.ins("negq", format_args!("%rax"));
+        self.asm.ins("adcq", format_args!("$0, %rdx"));
+        self.asm.ins("negq", format_args!("%rdx"));
+    }
+
     /// The arguments of the block labelled `label`.
     pub fn block_params(&self, label: &str) -> Result<&'f [Def], Unlowered> {
         self.params

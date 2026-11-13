@@ -11,7 +11,7 @@ import unittest
 from fractions import Fraction
 
 import float_fptoi_cases as cases
-from float_arith_cases import CANONICAL, FORMATS
+from float_arith_cases import CANONICAL, FORMATS, stale_files, wrong_corpus
 from float_itofp_cases import ODD_WIDTHS, WIDTHS, int_text, span
 from float_ref import Format
 from float_text import decode
@@ -54,16 +54,10 @@ def host(t: str, w: int, signed: bool, b: int) -> str:
 
 class Tests(unittest.TestCase):
     def test_the_committed_corpus_is_what_the_generator_writes(self):
-        for path, text in cases.files().items():
-            with self.subTest(path=path):
-                committed = (CANONICAL / path).read_text(encoding="utf-8")
-                self.assertEqual(committed, text)
+        self.assertEqual(stale_files(cases.files()), [])
 
     def test_each_expected_result_is_the_reference_s(self):
-        for module in cases.FILES:
-            with self.subTest(module=module):
-                text = (CANONICAL / f"{module}.toml").read_text(encoding="utf-8")
-                self.assertEqual(wrong_expectations(module, text), [])
+        self.assertEqual(wrong_corpus(cases.FILES, wrong_expectations), {})
 
     def test_a_wrong_expected_result_is_found(self):
         text = (CANONICAL / "float-fptosi-f32.toml").read_text(encoding="utf-8")
