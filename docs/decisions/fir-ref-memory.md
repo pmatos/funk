@@ -63,11 +63,11 @@ for `Memories.lookup` is a loop. So a lookup takes no stack per update, and
 `fir-ref` may run memory ops (stage 4c of #231). This is the spec's own
 definition, not a fast path: `fir-ref` runs it as written, and the
 `@[csimp]` theorems of the machine, which hold for any state, are unchanged.
-`set_mem_self` and `set_mem_ne` give the memories after a replacement, and
-proofs reach the table only through them, so every law of the memories
-holds as before, with no axiom.
+`set_mem_self` and `set_mem_ne` give the memories after a replacement, with
+no axiom, and the laws of the memories reach the table only through them, so
+each law holds as before.
 
 Rejected: keep `mem` a function of the names and replace it with a closure
 per update. Each lookup then walks every update made since the run began,
-one call per closure, so a run of a million stores would take stack and
-time in proportion.
+one call per closure, so it takes stack and time in proportion to the
+stores, allocations and frees before it.
