@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15853948219595643618")
+:::moduleDocs (fingerprint := "15327201918044900355")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -71,14 +71,15 @@ ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
 ```
 :::
 
-:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "15404010338068231471")
-*Float operations.* The float arithmetic has four ops of two operands and
+:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "4350115894855268594")
+*Float operations.* The float arithmetic has six ops of two operands and
 three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
 ties to even.
 
 ```grammar Fir.Core.FBin
 \mathit{fbin}
 fadd,fsub,fmul,fdiv   \mathsf{fadd} \mid \mathsf{fsub} \mid \mathsf{fmul} \mid \mathsf{fdiv}
+frem,fmod             \mathsf{frem} \mid \mathsf{fmod}
 ```
 
 ```grammar Fir.Core.FUnary
@@ -89,16 +90,22 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
 * $`\mathsf{fadd}` adds, $`\mathsf{fsub}` subtracts the second operand
   from the first, $`\mathsf{fmul}` multiplies and $`\mathsf{fdiv}` divides
   the first by the second.
+* $`\mathsf{frem}` and $`\mathsf{fmod}` give the remainder of the first
+  by the second, $`x - n \times y`, which is exact, so neither rounds. For
+  $`\mathsf{frem}`, IEEE 754's remainder, $`n` is the quotient rounded to
+  nearest, ties to even; for $`\mathsf{fmod}`, C's `fmod`, it is the
+  quotient truncated. LLVM's `frem` is $`\mathsf{fmod}`, not
+  $`\mathsf{frem}` (#310).
 * $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "3288734493566011892")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "12838571556658361392")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in ten families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in eleven families.
 
 *Constants* put a fixed value in the program.
 
@@ -231,6 +238,22 @@ toBits,ofBits \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} \mid \mathsf{bitcast}_{e,m
   whose bits are those of an $`\mathsf{i}N`. No bit changes, a NaN's sign
   and payload included. Neither is ever UB, and a poison operand gives
   poison.
+
+*Conversions from integers* give the float nearest an integer
+(ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
+```
+
+* $`\mathsf{sitofp}_{N,e,m}` reads an $`\mathsf{i}N` as a signed integer,
+  and $`\mathsf{uitofp}_{N,e,m}` as an unsigned one, and each gives that
+  integer as a value of $`\mathsf{float}\langle e,m \rangle`, rounded to
+  nearest, ties to even, in Lean's float model. An integer too large for
+  the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
+  is ever UB or gives a NaN, and a poison operand gives poison.
 
 *Poison control* writes poison and stops it.
 

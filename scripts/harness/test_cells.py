@@ -39,10 +39,10 @@ def round_attrs(floats: str) -> tuple[str, ...]:
     return tuple(f"{head}({mode})" for head, mode in found)
 
 
-def unary_attrs(floats: str) -> dict[str, tuple[str, ...]]:
-    """The attributes that each float op of one operand reads, by
-    `FUnary.attrsOk`: `round(rne)`, or none."""
-    body = definition(floats, "FUnary.attrsOk")
+def op_attrs(floats: str, kind: str) -> dict[str, tuple[str, ...]]:
+    """The attributes that each float op of `kind`, `FBin` or `FUnary`,
+    reads by its `attrsOk`: `round(rne)`, or none."""
+    body = definition(floats, f"{kind}.attrsOk")
     found = {}
     for ctors, result in re.findall(r"\n  \| ([^=]*)=> (.*)", body):
         attrs = round_attrs(floats) if "isRoundAttrs" in result else ("",)
@@ -55,8 +55,9 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     """The attributes that are cells of each op, as `Op.decode` reads
     them: the arm of an op that reads its attributes with `decodeWrap`,
     `decodeExact` or `Pred.all` takes theirs, a float op of arithmetic
-    takes `round(rne)` or none, as `decodeFBin`, `decodeFma` and
-    `FUnary.attrsOk` read them, and an op of `plainBinOps`, or whose arm
+    takes `round(rne)` or none, as `decodeFma`, `FBin.attrsOk` and
+    `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
+    as `decodeIntToFloat` reads it, and an op of `plainBinOps`, or whose arm
     takes them through `bare`, takes none. A constant's value and a callee
     are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
@@ -70,18 +71,21 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "FPred.all": cells.FPREDS,
         "bare": ("",),
         "decodeCast": ("",),
-        "decodeFBin": round_attrs(floats),
         "decodeFma": round_attrs(floats),
         "decodeBitcast": ("",),
+        "decodeIntToFloat": round_attrs(floats),
     }
-    unary = unary_attrs(floats)
+    by_ctor = {
+        "decodeFBin": op_attrs(floats, "FBin"),
+        "decodeFUnary": op_attrs(floats, "FUnary"),
+    }
     found = {}
     for name, arm in arms.items():
         if name in ("const", "call"):
             found[name] = ("",)
             continue
-        if ctor := re.search(r"decodeFUnary \.(\w+)", arm):
-            found[name] = unary.get(ctor.group(1), ("unknown",))
+        if ctor := re.search(r"(decodeFBin|decodeFUnary) \.(\w+)", arm):
+            found[name] = by_ctor[ctor.group(1)].get(ctor.group(2), ("unknown",))
             continue
         read = [
             attrs
@@ -121,7 +125,9 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             decoded_attrs(text, floats),
             {
-                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                op: cells.ROUND
+                if op in cells.INT_TO_FLOAT
+                else cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 for op in cells.OPS
             },
         )
@@ -140,8 +146,8 @@ class Tests(unittest.TestCase):
                 "[]",
             },
         )
-        self.assertEqual(flagged["[roundAttr]"], {"fbin", "fma"})
-        self.assertEqual(flagged["o.attrs"], {"funary"})
+        self.assertEqual(flagged["[roundAttr]"], {"fma", "sitofp", "uitofp"})
+        self.assertEqual(flagged["o.attrs"], {"fbin", "funary"})
         self.assertEqual(round_attrs(floats), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
         self.assertEqual(flagged["[.float (floatLit e m v)]"], {"fconst"})
@@ -194,7 +200,7 @@ class Tests(unittest.TestCase):
     def test_a_bitcast_is_a_cell_for_each_pair_of_types(self):
         found = cells.cells((8,), ("f32", "f128"))
         self.assertEqual(
-            {c for c in found if c.table == "conversions"},
+            {c for c in found if c.op == "bitcast"},
             {
                 Cell("conversions", "bitcast", "f32", "i32"),
                 Cell("conversions", "bitcast", "i32", "f32"),
@@ -219,6 +225,30 @@ class Tests(unittest.TestCase):
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)
 
+    def test_a_conversion_from_an_integer_is_a_cell_for_each_width_and_format(self):
+        found = cells.cells((8, 128), ("f32",))
+        self.assertEqual(
+            {c for c in found if c.op in cells.INT_TO_FLOAT},
+            {
+                Cell("conversions", op, w, "f32")
+                for op in ("sitofp", "uitofp")
+                for w in ("i8", "i128")
+            },
+        )
+        si = Op("sitofp", ("round(rne)",), ("i33",), ("bf16",), ())
+        self.assertEqual(of_op(si), {Cell("conversions", "sitofp", "i33", "bf16")})
+        ui = Op("uitofp", ("round(rne)",), ("i1",), ("f64",), ())
+        self.assertEqual(of_op(ui), {Cell("conversions", "uitofp", "i1", "f64")})
+        for bad in [
+            Op("sitofp", (), ("i32",), ("f32",), ()),
+            Op("sitofp", ("round(rtz)",), ("i32",), ("f32",), ()),
+            Op("uitofp", ("round(rne)",), ("f32",), ("f32",), ()),
+            Op("uitofp", ("round(rne)",), ("i32",), ("i64",), ()),
+            Op("sitofp", ("round(rne)",), ("i32", "i32"), ("f32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
     def test_float_ops_are_cells_at_their_format(self):
         cmp = Op("fcmp", ("olt",), ("f64", "f64"), ("i1",), ())
         self.assertEqual(of_op(cmp), {Cell("floats", "fcmp", "olt", "f64")})
@@ -232,7 +262,7 @@ class Tests(unittest.TestCase):
             of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
-        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8))
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 10))
         add = Op("fadd", ("round(rne)",), ("f32", "f32"), ("f32",), ())
         self.assertEqual(of_op(add), {Cell("floats", "fadd", "round(rne)", "f32")})
         fma = Op("fma", ("round(rne)",), ("bf16",) * 3, ("bf16",), ())

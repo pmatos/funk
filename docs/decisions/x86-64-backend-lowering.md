@@ -221,8 +221,8 @@ compares them with `ucomiss` or `ucomisd`, and reads the flags with one
 
 ## Float arithmetic
 
-The backend lowers the float arithmetic at `f32` and `f64` with SSE2 only, which
-every x86-64 has. `fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` are one instruction
+The backend lowers the float arithmetic at `f32` and `f64` with SSE2, which every
+x86-64 has, and the remainders with the x87 unit, which every x86-64 has too. `fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` are one instruction
 each, `addss`, `subss`, `mulss`, `divss`, `sqrtss` or their `sd` forms, on
 `%xmm0` and the second operand's slot. MXCSR keeps its default mode, round to
 nearest even. Nothing sets its flush-to-zero or denormals-are-zero bits, so
@@ -255,6 +255,32 @@ without FMA3, and the default stays baseline x86-64 (the human ruled on
 `fma` from the C library, since most modules link none; and double-double
 arithmetic at `f64`, which loses exactness near overflow and among subnormals.
 
+### The remainders
+
+SSE has no remainder. So `frem` and `fmod` load their operands into `%xmm0` and
+`%xmm1` and call `__funk_rt_fremf`, `__funk_rt_frem`, `__funk_rt_fmodf` or
+`__funk_rt_fmod`, hand-written in `crates/funk-x86-64/src/lower/frem.s`, which
+`lower::module` appends once as it appends `fma.s` (#310). Each routine moves
+its operands through one pushed word onto the x87 stack and runs `fprem1`, IEEE
+754's remainder with the quotient rounded to nearest even, for `frem`, or
+`fprem`, C's `fmod` with the quotient truncated, for `fmod`. Each reduces the
+exponent by 32 to 63 bits at a time, as the processor chooses, and sets C2
+while it is partial, so the routine loops until C2 is clear: 34 to 66 times for
+the largest `f64` by the smallest subnormal. Both are exact whatever the x87
+precision control says, and the result is exact in the format, so the store to
+`f32` or `f64` is exact.
+They give a NaN on `y = 0` or an infinite `x`, `x` itself on an infinite `y`,
+and a zero with `x`'s sign, as the spec does. A routine uses `%rax`, `%xmm0`,
+`%xmm1` and the x87 stack, which it leaves empty, and 16 bytes of stack.
+`crates/funk/tests/float_arith.rs` checks both against the host's arithmetic on
+the hard values and on random operands, operands far apart and quotient ties
+among them.
+
+Rejected: `fmod` and `remainder` from the C library, since most modules link
+none; and a routine on the integer unit that shifts and subtracts the
+mantissas, which is longer, slower on far-apart operands, and needs its own
+proof of the rounding of the quotient, where `fprem1` is IEEE 754's own.
+
 ## Bit casts
 
 `bitcast` between `f32` and `i32`, or `f64` and `i64`, copies its operand's
@@ -268,3 +294,33 @@ that both directions keep every bit of the hard values of `floats.rs`, NaNs
 included. Rejected:
 `movd` or `movq` between a general register and an SSE register, which moves
 the same bits through one more register.
+
+## Conversions from integers
+
+`sitofp` and `uitofp` from `i1` to `i128` to `f32` or `f64` convert with
+SSE2's `cvtsi2ssq` or `cvtsi2sdq`, which convert a signed 64-bit integer,
+rounded as MXCSR says; its default mode is round to nearest even, as
+`round(rne)` asks (#241). An operand of at most 64 bits is extended to 64, by
+sign for `sitofp` and by zero for `uitofp`, since the bits above its width are
+unspecified ([x86-64-backend.md](x86-64-backend.md#values-and-widths)), and
+converted with one instruction.
+
+An unsigned `i64` of `2^63` or more is halved, with the bit it drops ORed into
+its lowest bit, converted and added to itself. The halved value has 63 bits,
+more than the 24 or 53 of the result and the round bit below them, so its
+lowest bit records only whether anything below was set, and the conversion
+rounds once; doubling is exact. An `i128` takes the magnitude of a negative
+`sitofp` operand, converts it as unsigned, and flips the result's sign bit. An
+unsigned value below `2^64` converts as above. Any other is shifted left until
+the high half's top bit is set; the high half, with its lowest bit ORed with
+whether the low half has a bit set, is halved and converted as above, and the
+result is multiplied by the power of two the shifts took off. That product is
+exact unless it overflows `f32`, which only an unsigned `i128` near `2^128`
+does, and then it is the infinity that rounding to nearest gives. The code is
+inline, at local labels, and calls no routine.
+`crates/funk/tests/float_int_to_float.rs` checks each path against the host's
+conversion on boundary values, ties and random values, with operands narrower
+than 64 bits truncated from `i64` values whose high bits are random. Rejected:
+a routine of a runtime helper for `i128`, as for `fma`, which the lowering
+cannot choose from the op alone, since an op names its operand but not its
+type.

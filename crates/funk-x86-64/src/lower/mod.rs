@@ -32,12 +32,14 @@
 //! as an integer immediate, as any constant does, and `fcmp` loads its
 //! operands into SSE registers (`fcompare.rs`), as the float arithmetic
 //! does, but for `fneg` and `fabs`, which change the sign bit in `%rax`,
-//! and `fma`, which calls a routine of a runtime helper of its own
-//! (`farith.rs`,
+//! and `fma`, `frem` and `fmod`, which call routines of runtime helpers of
+//! their own (`farith.rs`, `frem.rs`,
 //! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
 //! pass and return in SSE registers
 //! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
-//! bit cast copies a slot (`bitcast.rs`).
+//! bit cast copies a slot (`bitcast.rs`). A conversion from an integer
+//! converts with SSE2, in a few steps for an unsigned `i64` or an `i128`
+//! (`int_to_float.rs`).
 
 mod arith;
 mod bitcast;
@@ -51,6 +53,8 @@ mod div;
 mod farith;
 mod fcompare;
 mod freeze;
+mod frem;
+mod int_to_float;
 mod moves;
 
 use std::collections::HashMap;
@@ -70,11 +74,13 @@ use crate::width;
 /// the caller's `%rsp`.
 type Helper = (fn(&Op) -> Option<&'static str>, &'static str, u64);
 
-/// Every runtime helper: the one that divides at `i128`, and the one that
-/// does `fma` at `f32` and `f64`.
-const HELPERS: [Helper; 2] = [
+/// Every runtime helper: the one that divides at `i128`, the one that
+/// does `fma` at `f32` and `f64`, and the one that does `frem` and `fmod`
+/// there.
+const HELPERS: [Helper; 3] = [
     (div::helper, div::HELPER, div::HELPER_STACK),
     (farith::helper, farith::HELPER, farith::HELPER_STACK),
+    (frem::helper, frem::HELPER, frem::HELPER_STACK),
 ];
 
 /// The most stack that a call of a routine of any runtime helper uses
@@ -91,7 +97,7 @@ pub const HELPER_STACK: u64 = {
 };
 
 /// The routine of a runtime helper that `op` calls, if any: a division at
-/// `i128`, or `fma` at `f32` or `f64`. Each routine needs at most
+/// `i128`, or `fma`, `frem` or `fmod` at `f32` or `f64`. Each routine needs at most
 /// [`HELPER_STACK`] bytes of stack below its caller's `%rsp`.
 pub fn helper(op: &Op) -> Option<&'static str> {
     HELPERS.iter().find_map(|(routine, _, _)| routine(op))
@@ -276,9 +282,11 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| compare::lowering(name))
         .or_else(|| fcompare::lowering(name))
         .or_else(|| farith::lowering(name))
+        .or_else(|| frem::lowering(name))
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
         .or_else(|| bitcast::lowering(name))
+        .or_else(|| int_to_float::lowering(name))
 }
 
 /// A module's functions, lowered.

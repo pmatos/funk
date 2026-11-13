@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2563025555057331264")
+:::moduleDocs (fingerprint := "14263961111404496987")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -79,10 +79,10 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "8843025048437953350")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "3122977627371042591")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
-If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` or
-$`\mathsf{fdiv}` decodes from the attributes $`a^*` and the types $`t^*`
+If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
+$`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
 and $`r^*`, as the section on
 {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
 reads it, the op it gives has its name, the attributes $`a^*` and the
@@ -99,7 +99,16 @@ $`\mathtt{bitcast}`, has no attributes, so $`a^*` is empty, and has the
 operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "7570649848127733244")
+:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "18079157018789560655")
+*Theorem: a conversion from an integer decodes only from its own
+spelling.* If $`\mathtt{sitofp}` or $`\mathtt{uitofp}` decodes from the
+attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
+written with that name, has the attributes $`a^*`, which are
+$`[\mathtt{round(rne)}]`, and has the operand and result types $`t^*` and
+$`r^*`.
+:::
+
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "10691494525099457758")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -115,7 +124,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
-float constant, float op of arithmetic and bit cast, and list of types. A float constant reads back because its
+float constant, float op of arithmetic, bit cast and conversion from an
+integer, and list of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
@@ -133,7 +143,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 33 ops and every type, and
+core dialect, so its text is lawful, for all 35 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

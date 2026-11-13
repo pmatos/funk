@@ -4,8 +4,8 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls, and the float constants, comparisons, arithmetic and
-bit casts.
+branches and calls, and the float constants, comparisons, arithmetic, bit
+casts and conversions from integers.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -83,13 +83,16 @@ inductive FPred where
   deriving Repr, DecidableEq, Inhabited
 
 /--
-A float op of two operands, each rounded to nearest even
-(ADR-2026-11-09-1549): `fadd` adds, `fsub` subtracts the second operand
-from the first, `fmul` multiplies and `fdiv` divides the first by the
-second.
+A float op of two operands (ADR-2026-11-09-1549): `fadd` adds, `fsub`
+subtracts the second operand from the first, `fmul` multiplies and `fdiv`
+divides the first by the second, each rounded to nearest even. `frem` and
+`fmod` give the remainder of the first by the second, `x - n * y`, which
+is exact, so they do not round: `frem`'s `n` is the quotient rounded to
+nearest, ties to even, IEEE 754's remainder, and `fmod`'s is the quotient
+truncated, C's `fmod` and LLVM's `frem` (#310).
 -/
 inductive FBin where
-  | fadd | fsub | fmul | fdiv
+  | fadd | fsub | fmul | fdiv | frem | fmod
   deriving Repr, DecidableEq, Inhabited
 
 /--
@@ -154,8 +157,9 @@ Float arithmetic, by Lean's float model, with a NaN result that is any NaN
 of the format (ADR-2026-11-09-1549). Each is never UB, and a poison operand
 gives poison:
 
-* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul` or `fdiv`, of two
-  values of `float<e,m>`, rounded to nearest even.
+* `fbin o e m`: the op `o`, `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or
+  `fmod`, of two values of `float<e,m>`; all but `frem` and `fmod`, whose
+  result is exact, round to nearest even.
 * `funary o e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
   `float<e,m>`; `sqrt` rounds to nearest even.
 * `fma e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
@@ -176,6 +180,18 @@ Bit casts, which read the same bits as another type
   `float<e,m>`.
 
 Each is never UB, and a poison operand gives poison.
+
+Conversions from an integer to a float, by Lean's float model
+(ADR-2026-11-09-1549):
+
+* `sitofp n e m`: the integer that an `iN` holds, read as signed, as a
+  value of `float<e,m>`, rounded to nearest even.
+* `uitofp n e m`: the integer that an `iN` holds, read as unsigned, as a
+  value of `float<e,m>`, rounded to nearest even.
+
+A result too large for the format is an infinity of its sign, and zero
+gives `+0`. Neither is ever UB or gives a NaN, and a poison operand gives
+poison.
 
 Poison control:
 
@@ -234,6 +250,8 @@ inductive Op where
   | trunc (m n : Nat)
   | toBits (e m : Nat)
   | ofBits (e m : Nat)
+  | sitofp (n e m : Nat)
+  | uitofp (n e m : Nat)
   | freeze (w : Nat)
   | poison (w : Nat)
   | br

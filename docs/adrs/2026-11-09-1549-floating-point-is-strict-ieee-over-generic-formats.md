@@ -16,6 +16,9 @@ Tier: direction; area: semantics
   pattern of the format: payload and sign are nondeterministic.
 - **Rounding.** Every rounding op carries `round = rne`, the only value M1
   accepts.
+- **Remainders.** `frem` is IEEE 754's remainder, with the quotient
+  rounded to nearest even, and `fmod` is C's `fmod`, with it truncated,
+  as LLVM's `frem` is. Neither rounds, since the result is exact.
 - **Fast-math flags.** `nnan` and `ninf` make the result poison, and `nsz`
   makes a zero's sign a free choice. `contract` and `reassoc` are reserved
   words that the verifier rejects, left to M2's optimizer.

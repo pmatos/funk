@@ -8,11 +8,11 @@ Tier: direction; area: text-format
 - `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma` round, and each has
   exactly one attribute, `round(rne)`, in the applied form:
   `%s: f32 = fadd round(rne) %a, %b @1`.
-- `fneg` and `fabs` do not round, and have no attribute:
-  `%n: f32 = fneg %a @1`.
+- `frem`, `fmod`, `fneg` and `fabs` do not round, since their result is
+  exact, and have no attribute: `%n: f32 = fneg %a @1`.
 - Any other attribute does not decode: no attribute on an op that rounds,
   `round(rtz)` or any other mode, the bare word `rne`, two attributes, or
-  `round(rne)` on `fneg` or `fabs`. Text that does not decode is a parse
+  `round(rne)` on `frem`, `fmod`, `fneg` or `fabs`. Text that does not decode is a parse
   error (ADR-2026-10-29-2014), so `funk verify` and `fir-ref` reject it, as
   they reject a flag that an op does not have.
 - The op carries no mode: M1 has one, so the spec's op instances have no

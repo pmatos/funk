@@ -9,11 +9,11 @@ is proved for every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 26 ops that propagate poison does, at every
+* _Propagation._ Each of the 28 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
-  shifts, `icmp`, `fcmp`, the width changes, the float arithmetic and the
-  bit casts.
+  shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
+  bit casts and the conversions from integers.
 * _A result on defined operands._ Each of them returns a result on some
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
@@ -66,6 +66,8 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .trunc m n, _ => trunc_propagatesPoison m n
   | .toBits e m, _ => toBits_propagatesPoison e m
   | .ofBits e m, _ => ofBits_propagatesPoison e m
+  | .sitofp n e m, _ => intToFloat_propagatesPoison n e m true
+  | .uitofp n e m, _ => intToFloat_propagatesPoison n e m false
   | .poison w, _ => poison_propagatesPoison w
   | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .unreachable, h
   | .call .., h => nomatch h
@@ -106,6 +108,8 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .trunc m n, _, _ => trunc_returnsOnDefined m n
   | .toBits e m, _, _ => toBits_returnsOnDefined e m
   | .ofBits e m, _, _ => ofBits_returnsOnDefined e m
+  | .sitofp n e m, _, _ => intToFloat_returnsOnDefined n e m true
+  | .uitofp n e m, _, _ => intToFloat_returnsOnDefined n e m false
   | .poison w, _, _ => poison_returnsOnDefined w
   | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h | .unreachable, _, h
   | .call .., _, h => nomatch h

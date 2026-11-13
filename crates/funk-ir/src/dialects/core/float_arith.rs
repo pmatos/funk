@@ -1,14 +1,14 @@
-//! Float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`,
-//! `sqrt` and `fma` (`decodeFBin`, `decodeFUnary` and `decodeFma` in
-//! `lean/Fir/Core/FloatOpText.lean`; ADR-2026-11-09-1549).
+//! Float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`,
+//! `fneg`, `fabs`, `sqrt` and `fma` (`decodeFBin`, `decodeFUnary` and
+//! `decodeFma` in `lean/Fir/Core/FloatOpText.lean`; ADR-2026-11-09-1549).
 //!
 //! Each op takes values of one float type and defines one value of it:
-//! two operands for `fadd`, `fsub`, `fmul` and `fdiv`, one for `fneg`,
-//! `fabs` and `sqrt`, and three for `fma`. Each op that rounds, all but
-//! `fneg` and `fabs`, has one attribute, `round(rne)`, round to nearest
-//! even, the one mode M1 has; `fneg` and `fabs` have none
-//! (ADR-2026-11-11-1801). So `fadd %a, %b`, `fadd round(rtz) %a, %b` and
-//! `fneg round(rne) %a` do not decode. Validation has no rule for these ops
+//! two operands for `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod`, one
+//! for `fneg`, `fabs` and `sqrt`, and three for `fma`. Each op that rounds
+//! has one attribute, `round(rne)`, round to nearest even, the one mode M1
+//! has. `frem`, `fmod`, `fneg` and `fabs` do not round, since their result
+//! is exact, and have none (ADR-2026-11-11-1801). So `fadd %a, %b`,
+//! `fadd round(rtz) %a, %b` and `frem round(rne) %a, %b` do not decode. Validation has no rule for these ops
 //! beyond their signature. Each is pure: it is never UB, a NaN result is a
 //! defined value, and it gives poison only for a poison operand.
 
@@ -20,11 +20,13 @@ use crate::{Attr, Type};
 
 /// The float ops of arithmetic: each name, its number of operands, and
 /// whether it rounds, so that it carries `round(rne)`.
-pub const FLOAT_ARITH_OPS: [(&str, usize, bool); 8] = [
+pub const FLOAT_ARITH_OPS: [(&str, usize, bool); 10] = [
     ("fadd", 2, true),
     ("fsub", 2, true),
     ("fmul", 2, true),
     ("fdiv", 2, true),
+    ("frem", 2, false),
+    ("fmod", 2, false),
     ("fneg", 1, false),
     ("fabs", 1, false),
     ("sqrt", 1, true),
@@ -43,7 +45,7 @@ fn is_round_rne(a: &Attr) -> bool {
 
 /// Checks that the attributes of the float op `op` are `round(rne)` when
 /// it rounds and none when it does not, or says why they are not.
-fn decode_rounding(op: &str, rounds: bool, attrs: &[Attr]) -> Result<(), String> {
+pub(super) fn decode_rounding(op: &str, rounds: bool, attrs: &[Attr]) -> Result<(), String> {
     match (rounds, attrs) {
         (true, [a]) if is_round_rne(a) => Ok(()),
         (true, [Attr::App(head, _)]) if head == "round" => Err(format!(

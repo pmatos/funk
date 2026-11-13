@@ -8,6 +8,7 @@ import Fir.Core.Compare
 import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
 import Fir.Core.FloatBitcast
+import Fir.Core.FloatOfInt
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -20,8 +21,9 @@ This section gives every core op its meaning in the set of the ways a run
 may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
-terminators. `freeze` and the float arithmetic, whose NaN results are
-chosen, ask for the choice effect, and the divisions,
+terminators. `freeze`, the float arithmetic, whose NaN results are
+chosen, and the conversions from integers, which choose a NaN only at a
+format that validation rejects, ask for the choice effect, and the divisions,
 `cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
 `fir-ref run` computes in share them.
 
@@ -144,6 +146,14 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (bitcastValue a) .nil)
   | .ofBits _ _ => some fun
     | .cons a .nil => pure (.cons (bitcastValue a) .nil)
+  | .sitofp _ e m => some fun
+    | .cons a .nil => do
+      let v ← intToFloat e m true a
+      pure (.cons v .nil)
+  | .uitofp _ e m => some fun
+    | .cons a .nil => do
+      let v ← intToFloat e m false a
+      pure (.cons v .nil)
   | _ => none
 
 /-- The rule of each core terminator, in any monad with the UB effect;
@@ -172,10 +182,11 @@ def Op.hasRules (op : Op) : Bool :=
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
-#guard [FBin.fadd, .fsub, .fmul, .fdiv].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
+#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
 #guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o 5 10).hasRules
 #guard (Op.fma 11 52).hasRules
 #guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
+#guard (Op.sitofp 32 8 23).hasRules && (Op.uitofp 128 5 10).hasRules && (Op.sitofp 1 1 0).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr 0]).hasRules

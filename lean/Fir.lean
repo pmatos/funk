@@ -45,7 +45,9 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
+import Fir.Core.FloatRem
 import Fir.Core.FloatBitcast
+import Fir.Core.FloatOfInt
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -60,6 +62,7 @@ import Fir.Core.CompareLaws
 import Fir.Core.FloatCompareLaws
 import Fir.Core.FloatArithLaws
 import Fir.Core.FloatBitcastLaws
+import Fir.Core.FloatOfIntLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
