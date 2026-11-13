@@ -105,15 +105,20 @@ arguments, 16 KiB for the runtime, and the function's need. A function's need
 is 16 bytes for its own return address and saved `%rbp`, and its frame. To that
 it adds the largest, over its calls, of what the call pushes plus the callee's
 need. The callee is the first function of its symbol.
-`crates/funk-x86-64/src/entry/stack.rs` computes it.
+`crates/funk-x86-64/src/lower/stack.rs` computes it from emitted call facts.
 
-The figure follows the lowering. `lower/call.rs` gives a call's callee, and the
-words a call pushes come from the layout that `abi::call` reads
-([x86-64-backend-abi.md](x86-64-backend-abi.md#arguments)), by the eightbytes
-of the call's operands, the result area's address included. A division at
-`i128` or an `fma` at `f32` or `f64` counts as a call that pushes no argument
-and needs `HELPER_STACK`, 24 bytes, the most that a routine of a runtime helper
-uses ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)).
+The figure follows the lowering. `lower/call.rs` records each callee and the
+peak outgoing argument bytes returned by `abi::call`, including padding and
+the result area's address. Lowering also records runtime-helper use while it
+emits ops and includes each required helper's assembly once. Any helper counts
+as a call that pushes no argument and needs `HELPER_STACK`, 24 bytes, the most
+that a routine of a runtime helper uses
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)).
+Lowering returns complete stack needs in function order; entry generation
+owns the wrapper, runtime allowance and rounding, without reconstructing call
+placement or helper use from fir. The graph calculation stays iterative and
+uses saturating arithmetic.
+
 The figure counts nothing for a C function's own frames, only the runtime's
 16 KiB; #239, which adds calls to C, decides what a C callee's stack counts.
 

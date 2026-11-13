@@ -24,8 +24,8 @@
 //! and every argument after it moves along: an `i128` that would have had
 //! `%r8` and `%r9` goes on the stack.
 //!
-//! The caller ([`super::call`]), the callee's prologue (`lower::func`), and
-//! the entry's stack figure (`abi::pushed_words`) all read this one layout.
+//! The caller ([`super::call`]) and the callee's prologue (`lower::func`)
+//! read this one layout. Stack accounting uses the caller's emitted byte count.
 
 use super::ARG_REGS;
 use crate::asm::Reg;
