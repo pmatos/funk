@@ -5,7 +5,8 @@ import Fir.Syntax.Dialect
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, and the float constants, comparisons, arithmetic, bit
-casts, conversions from integers and conversions between formats.
+casts, conversions from integers, conversions between formats and
+conversions to integers.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -208,6 +209,17 @@ to itself takes neither. Zeros and infinities keep their sign, and a NaN
 gives any NaN of the target. Neither is ever UB, and a poison operand gives
 poison.
 
+Conversions from a float to an integer, by Lean's float model
+(ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
+
+* `fptosi e m n`: a value of `float<e,m>` truncated toward zero, as a
+  signed integer of `iN`.
+* `fptoui e m n`: a value of `float<e,m>` truncated toward zero, as an
+  unsigned integer of `iN`.
+
+An integer that `iN` does not hold, an infinity and a NaN give poison.
+Neither is ever UB, and a poison operand gives poison.
+
 Poison control:
 
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
@@ -269,6 +281,8 @@ inductive Op where
   | uitofp (n e m : Nat)
   | fpext (e m e' m' : Nat)
   | fptrunc (e m e' m' : Nat)
+  | fptosi (e m n : Nat)
+  | fptoui (e m n : Nat)
   | freeze (w : Nat)
   | poison (w : Nat)
   | br

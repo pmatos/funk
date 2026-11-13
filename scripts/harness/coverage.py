@@ -192,6 +192,19 @@ def float_conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[s
     return table(["from", *(f"to `{f}`" for f in formats)], rows)
 
 
+def float_to_int_table(
+    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
+) -> list[str]:
+    rows = []
+    for op in cells.FLOAT_TO_INT:
+        for f in formats:
+            row = [f"`{op}`", f"`{f}`"]
+            for w in widths:
+                row.append(number(counts[Cell("conversions", op, f, cells.ty(w))]))
+            rows.append(row)
+    return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
+
+
 WHAT = {
     "br": {cells.NOTHING: "passes nothing", cells.PASSED: "passes values"},
     "cond_br": {
@@ -271,6 +284,8 @@ def render(counts: dict[str, Counter]) -> str:
         lines += int_to_float_table(counts[side], widths, formats)
         lines += ["", f"### Conversions between formats ({title.lower()})", ""]
         lines += float_conversions_table(counts[side], formats)
+        lines += ["", f"### Conversions to integers ({title.lower()})", ""]
+        lines += float_to_int_table(counts[side], widths, formats)
         lines += ["", f"### Passed and returned values ({title.lower()})", ""]
         lines += values_table(counts[side], widths, formats)
     return "\n".join(lines) + "\n"

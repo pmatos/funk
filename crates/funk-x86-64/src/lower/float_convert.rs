@@ -1,7 +1,7 @@
 //! Conversions between float formats: `fpext` from `f32` to `f64` and
 //! `fptrunc` from `f64` to `f32` (`dialects/core/float_convert.rs` in
 //! `funk-ir`;
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-between-formats`).
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-between-formats`).
 //!
 //! Each is one SSE2 instruction on the operand's slot: `cvtss2sd`, which is
 //! exact, and `cvtsd2ss`, which rounds as MXCSR says, and its default mode

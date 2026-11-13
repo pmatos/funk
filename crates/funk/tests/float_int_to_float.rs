@@ -1,6 +1,6 @@
 //! `sitofp` and `uitofp` run natively from `i1`, `i8`, `i16`, `i32`, `i64`
 //! and `i128` to `f32` and `f64` (#241,
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-from-integers`).
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-from-integers`).
 //! Each result is checked against the host's own conversion, Rust's `as`,
 //! which rounds to nearest, ties to even, and gives an infinity past the
 //! largest finite value, as `round(rne)` asks.

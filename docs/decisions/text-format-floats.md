@@ -94,13 +94,21 @@ any pair of widths decoding with validation rejecting the wrong ones, as for
 `round(rne)`: `%d: f64 = fpext %f` and `%f: f32 = fptrunc round(rne) %d`. Each
 takes one float type to another, and any two formats decode; which pair takes
 which op is a rule of validation, as the widths of `zext` and `trunc` are
-([semantics-floats.md](semantics-floats.md#the-conversions)), so `fpext` from
+([semantics-floats-conversions.md](semantics-floats-conversions.md#the-conversions)), so `fpext` from
 `f64` to `f32`, or from `bf16` to `f16`, parses and does not validate (#241).
 Rejected: decoding only the pairs each op takes, as `bitcast` decodes only its
 widths. `bitcast`'s op instance fixes its integer's width from its format, but
 `fpext` and `fptrunc` carry both formats, so the spec has an instance for every
 pair, and one that did not decode would break the law that every op instance
 reads back from its spelling.
+
+`fptosi` and `fptoui` have no attribute: they truncate toward zero, which is
+what they mean, and do not round (the human's ruling of 2026-11-12 on #354).
+`%i: i32 = fptosi %f` takes a float of any format to an integer of any width,
+and no other pair of types decodes. `fptosi round(rne)`, `fptoui round(rtz)` and
+any other attribute are parse errors, as an attribute that an op does not have
+is (#241). Rejected: `round(rtz)` on both, which would spell their one meaning
+as a mode and decode a field that no other value can take.
 
 Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
 whether a wrong rounding mode stays a parse error, as built, or is read and

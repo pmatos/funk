@@ -21,6 +21,7 @@ import FirTest.FloatArith
 import FirTest.FloatBitcast
 import FirTest.FloatOfInt
 import FirTest.FloatConvert
+import FirTest.FloatToInt
 import FirTest.FloatText
 import FirTest.CoreText
 import FirTest.Branch

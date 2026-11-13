@@ -7,7 +7,7 @@ import Fir.Core.FloatTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 37 of its ops and every type. The laws are proved for every
+text, for all 39 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -238,6 +238,21 @@ theorem decodeFptrunc_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     · cases h
   · cases h
 
+/-- `fptosi` and `fptoui` decode only from their own name, attributes,
+operand type and result type. -/
+theorem decodeFloatToInt_eq {signed : Bool} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFloatToInt signed as ts rs = some op) :
+    op.name = (if signed then "fptosi" else "fptoui") ∧ op.attrs = as ∧ op.sig = ts ∧
+      op.returnTypes = rs := by
+  unfold decodeFloatToInt at h
+  split at h
+  · split at h
+    · rename_i ha
+      cases h
+      cases signed <;> exact ⟨rfl, (List.isEmpty_iff.mp ha).symm, rfl, rfl⟩
+    · cases h
+  · cases h
+
 /-- Every core op decodes from its name and attributes, at its operand and
 result types. -/
 theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes = some o := by
@@ -268,6 +283,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
   | fptrunc e m e' m' =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFptrunc, roundAttr,
       isRoundAttrs]
+  | fptosi e m n | fptoui e m n =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeWrap_attrs, bare,
       decodeCast, plainBinOps, find_pred_name, i, List.lookup]
@@ -410,6 +427,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeIntToFloat_eq (signed := false) h -- uitofp
   · exact decodeFpext_eq h -- fpext
   · exact decodeFptrunc_eq h -- fptrunc
+  · exact decodeFloatToInt_eq (signed := true) h -- fptosi
+  · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
     split at h
     · rename_i mk hmk
@@ -468,7 +487,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 37 core ops and
+/-- The core dialect's text meets the seven laws, for all 39 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

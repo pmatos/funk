@@ -1,5 +1,5 @@
 //! `bitcast` runs natively between `f32` and `i32` and between `f64` and
-//! `i64` (#241, `docs/decisions/x86-64-backend-lowering.md#bit-casts`).
+//! `i64` (#241, `docs/decisions/x86-64-backend-lowering-floats.md#bit-casts`).
 //! A bit cast keeps every bit, so each result is its operand's bits, a
 //! NaN's too, on the hard values that `floats.rs` uses: zeros of both
 //! signs, subnormals, ones, the largest finite values, infinities and NaNs,

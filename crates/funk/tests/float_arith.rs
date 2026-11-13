@@ -1,5 +1,5 @@
 //! The float arithmetic runs natively at `f32` and `f64` (#229, #310,
-//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`): `fadd`,
+//! `docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic`): `fadd`,
 //! `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `sqrt`, `fneg`, `fabs` and
 //! `fma`. Each result is checked against the host's own IEEE 754
 //! arithmetic, on the hard values (zeros of both signs, subnormals, ones,

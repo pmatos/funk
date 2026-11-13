@@ -75,6 +75,7 @@ import FirSpec.Core.FloatRem
 import FirSpec.Core.FloatBitcast
 import FirSpec.Core.FloatOfInt
 import FirSpec.Core.FloatConvert
+import FirSpec.Core.FloatToInt
 import FirSpec.Core.Control
 import FirSpec.Core.Branch
 import FirSpec.Core.Call
@@ -91,6 +92,7 @@ import FirSpec.Core.FloatArithLaws
 import FirSpec.Core.FloatBitcastLaws
 import FirSpec.Core.FloatOfIntLaws
 import FirSpec.Core.FloatConvertLaws
+import FirSpec.Core.FloatToIntLaws
 import FirSpec.Core.ControlLaws
 import FirSpec.Core.BranchLaws
 import FirSpec.Execution.Morphism

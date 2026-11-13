@@ -48,6 +48,9 @@ results, which are written where those values are defined.
   takes a float of one format to a float of another:
   `%d: f64 = fpext %f @1` and `%f: f32 = fptrunc round(rne) %d @1`. Any
   two formats decode; validation says which pairs each takes.
+* `fptosi` and `fptoui` have no attributes, since they truncate and do not
+  round, and take a float of any format to an integer of any width:
+  `%i: i32 = fptosi %f @1`.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -122,7 +125,8 @@ def Op.name : Op → String
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
-  | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
+  | .fpext .. => "fpext" | .fptrunc .. => "fptrunc" | .fptosi .. => "fptosi"
+  | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -241,6 +245,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "uitofp" => decodeIntToFloat false as ts rs
   | "fpext" => decodeFpext as ts rs
   | "fptrunc" => decodeFptrunc as ts rs
+  | "fptosi" => decodeFloatToInt true as ts rs
+  | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- The alias of the float format `float<e,m>`, if it has one. -/
@@ -326,7 +332,8 @@ def samples : List Op :=
    .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52, .fbin .frem 8 23, .fbin .fmod 2 1] ++
   [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
   [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1] ++
-  [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7]
+  [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7] ++
+  [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o

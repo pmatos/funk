@@ -29,14 +29,14 @@ each rule has as its set what it is in the set monad, so `fir-ref run`'s
 modes give the spec's outcomes on the conversions.
 :::
 
-:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "9507877934224288524")
+:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "16936808449174280642")
 *Definition: the conversion of a kind.* $`\mathrm{conv}_{e,m,e',m'}(\mathit{true})`
 is $`\mathsf{fpext}_{e,m,e',m'}`, and $`\mathrm{conv}_{e,m,e',m'}(\mathit{false})`
 is $`\mathsf{fptrunc}_{e,m,e',m'}`, so that the theorems below are stated
 once for both.
 :::
 
-:::readable Fir.Core.convertFloat_propagatesPoison Fir.Core.convertFloat_returnsOnDefined Fir.Core.convertFloat_total Fir.Core.convertFloat_monotone Fir.Core.convertFloat_neverUB Fir.Core.convertFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "2645109002540050919")
+:::readable Fir.Core.convertFloat_propagatesPoison Fir.Core.convertFloat_returnsOnDefined Fir.Core.convertFloat_total Fir.Core.convertFloat_monotone Fir.Core.convertFloat_neverUB Fir.Core.convertFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "6106072002471516011")
 *Theorem: $`\mathsf{fpext}` and $`\mathsf{fptrunc}` are lawful, between
 every two formats.* Under fir's execution rules, each meets every
 obligation of an op that

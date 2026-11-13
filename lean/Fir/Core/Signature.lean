@@ -35,7 +35,7 @@ def Op.sig : Op → List Ty
   | .toBits e m => [.float e m]
   | .ofBits e m => [i (floatWidth e m)]
   | .sitofp n .. | .uitofp n .. => [i n]
-  | .fpext e m .. | .fptrunc e m .. => [.float e m]
+  | .fpext e m .. | .fptrunc e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -53,6 +53,7 @@ def Op.returnTypes : Op → List Ty
   | .ofBits e m => [.float e m]
   | .sitofp _ e m | .uitofp _ e m => [.float e m]
   | .fpext _ _ e' m' | .fptrunc _ _ e' m' => [.float e' m']
+  | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs
 

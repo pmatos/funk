@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18147254552819232930")
+:::moduleDocs (fingerprint := "17454804206695138812")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -100,12 +100,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "10261410378180477479")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "9716240157550554993")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in twelve families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in thirteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -277,6 +277,23 @@ fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
   an infinity of its sign, one too small a zero of its sign, and a NaN any
   NaN of the target. Neither is ever UB, and a poison operand gives
   poison.
+
+*Conversions to integers* give a float's number truncated toward zero as
+an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+fptosi,fptoui \mathsf{fptosi}_{e,m,N} \mid \mathsf{fptoui}_{e,m,N}
+```
+
+* $`\mathsf{fptosi}_{e,m,N}` cuts the fraction of a value of
+  $`\mathsf{float}\langle e,m \rangle` off, toward zero, so $`2.7` gives
+  $`2` and $`-2.7` gives $`-2`, and gives the integer as a signed value of
+  $`\mathsf{i}N`; $`\mathsf{fptoui}_{e,m,N}` gives it as an unsigned one.
+  An integer that $`\mathsf{i}N` does not hold, an infinity and a NaN give
+  poison. Neither rounds, so neither has a rounding attribute, and neither
+  is ever UB. A poison operand gives poison.
 
 *Poison control* writes poison and stops it.
 

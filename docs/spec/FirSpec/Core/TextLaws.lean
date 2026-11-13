@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13908160822124492131")
+:::moduleDocs (fingerprint := "5719949978568039877")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -117,7 +117,15 @@ $`\mathtt{fpext}` and $`[\mathtt{round(rne)}]` for $`\mathtt{fptrunc}`,
 and has the operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2664410325515118172")
+:::readable Fir.Core.decodeFloatToInt_eq (pin := Fir.Core.decodeFloatToInt) (fingerprint := "10685283668543585865")
+*Theorem: a conversion to an integer decodes only from its own spelling.*
+If $`\mathtt{fptosi}` or $`\mathtt{fptoui}` decodes from the attributes
+$`a^*` and the types $`t^*` and $`r^*`, the op it gives is written with
+that name, has the attributes $`a^*`, which are none, and has the operand
+and result types $`t^*` and $`r^*`.
+:::
+
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "7166116563951345582")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -133,8 +141,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
-float constant, float op of arithmetic, bit cast and conversion from an
-integer, and list of types. A float constant reads back because its
+float constant, float op of arithmetic, bit cast, conversion from or to
+an integer and between formats, and list of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
@@ -152,7 +160,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 37 ops and every type, and
+core dialect, so its text is lawful, for all 39 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

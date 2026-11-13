@@ -1,6 +1,6 @@
 //! Conversions from integers to floats: `sitofp` and `uitofp`
 //! (`dialects/core/int_to_float.rs` in `funk-ir`;
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-from-integers`),
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-from-integers`),
 //! from `i1` to `i128` to `f32` and `f64`.
 //!
 //! SSE2's `cvtsi2ssq` and `cvtsi2sdq` convert a signed 64-bit integer,

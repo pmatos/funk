@@ -81,5 +81,11 @@ namespace Fir.Core
 #guard Op.decode "fpext" [roundAttr] [.float 8 23] [.float 11 52] == none
 #guard Op.decode "fptrunc" [] [.float 11 52] [.float 8 23] == none
 #guard Op.decode "fpext" [] [.int 32] [.float 11 52] == none
+-- `fptosi` and `fptoui` take a float of any format to an integer of any
+-- width, with no attribute.
+#guard Op.decode "fptosi" [] [.float 5 10] [.int 33] == some (.fptosi 5 10 33)
+#guard Op.decode "fptoui" [] [.float 11 52] [.int 1] == some (.fptoui 11 52 1)
+#guard Op.decode "fptosi" [roundAttr] [.float 8 23] [.int 32] == none
+#guard Op.decode "fptoui" [] [.int 32] [.int 32] == none
 
 end Fir.Core

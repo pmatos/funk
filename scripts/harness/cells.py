@@ -29,7 +29,8 @@ has neither operands nor attributes, is a cell at each width of its result
   `round(rne)`, from each float format of the side to each other that it
   takes: `fpext` to a format with at least as many exponent bits and as
   many mantissa bits, and `fptrunc` to every other (#241, the human's
-  ruling of 2026-11-12 on #354).
+  ruling of 2026-11-12 on #354); `fptosi` and `fptoui`, with no attribute,
+  from each float format of the side to each of its widths (#241).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -119,6 +120,9 @@ INT_TO_FLOAT = ("sitofp", "uitofp")
 # and `fptrunc`, which carries `round(rne)`. A cell for each ordered pair of
 # two float formats of the side that the op takes.
 FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
+# The conversions from a float to an integer, which have no attributes: a
+# cell for each float format and width of the side.
+FLOAT_TO_INT = ("fptosi", "fptoui")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -137,6 +141,7 @@ OPS = (
     *CONVERSIONS,
     *INT_TO_FLOAT,
     *FLOAT_CONVERSIONS,
+    *FLOAT_TO_INT,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -191,6 +196,12 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
         for a in formats
         for b in formats
         if a != b
+    ]
+    out += [
+        Cell("conversions", op, f, ty(w))
+        for op in FLOAT_TO_INT
+        for f in formats
+        for w in widths
     ]
     for op, rows in VALUES:
         for row in rows:
@@ -265,6 +276,20 @@ def float_conversion(op: Op) -> Cell:
     )
 
 
+def float_to_int(op: Op) -> Cell:
+    """The cell of an `fptosi` or `fptoui`: from a float to an integer, with
+    no attribute. Any other text of it does not decode, so it is not a
+    cell."""
+    if not op.attrs and len(op.operands) == len(op.results) == 1:
+        [a], [b] = op.operands, op.results
+        result = bits_of(b)
+        if is_float(a) and result is not None and result[1]:
+            return Cell("conversions", op.name, a, b)
+    raise CellError(
+        f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"
+    )
+
+
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
     """The cells of values that `op` passes, returns or gives."""
     if not types:
@@ -286,6 +311,8 @@ def of_op(op: Op) -> set[Cell]:
         return {int_to_float(op)}
     if op.name in FLOAT_CONVERSIONS:
         return {float_conversion(op)}
+    if op.name in FLOAT_TO_INT:
+        return {float_to_int(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

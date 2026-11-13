@@ -1,0 +1,126 @@
+# Must-reject texts of #241's conversions from floats to integers: fptosi
+# and fptoui truncate toward zero, so they take no attribute, and take one
+# value of a float type to an integer type, of any format and width
+# (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354). Any
+# rounding mode or other pair of types does not decode, and validation
+# rejects a width or format that it rejects everywhere.
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptosi truncates, so it takes no attribute: with round(rne) it does not decode"
+text = '''
+func @f(%x: f32) -> i32 {
+^e:
+  %r: i32 = fptosi round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptoui takes no rounding mode: with round(rtz) it does not decode"
+text = '''
+func @f(%x: f64) -> i64 {
+^e:
+  %r: i64 = fptoui round(rtz) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptosi takes a float: from an integer it does not decode"
+text = '''
+func @f(%i: i32) -> i32 {
+^e:
+  %r: i32 = fptosi %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptoui gives an integer: to a float it does not decode"
+text = '''
+func @f(%x: f32) -> f64 {
+^e:
+  %r: f64 = fptoui %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptosi takes one operand"
+text = '''
+func @f(%x: f32) -> i32 {
+^e:
+  %r: i32 = fptosi %x, %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptoui has no attribute and no flag"
+text = '''
+func @f(%x: f32) -> i32 {
+^e:
+  %r: i32 = fptoui nsw %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fptosi decodes to i0, and validation rejects the width"
+text = '''
+func @f(%x: f32) -> i0 {
+^e:
+  %r: i0 = fptosi %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fptoui decodes from float(1, 1), and validation rejects the format, which has 1 exponent bit"
+text = '''
+func @f(%x: float(1, 1)) -> i8 {
+^e:
+  %r: i8 = fptoui %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
