@@ -199,30 +199,31 @@ def catalog_table(counts: Counter, spec: cells.Table) -> list[str]:
             for t in spec.columns
         ),
     ]
-    rows = []
-    for row in spec.rows:
-        if spec.kind == "float_conversions":
-            shown = [code(row.key)]
-        elif spec.kind == "pointers":
-            shown = [code(row.op)]
-        elif spec.kind == "values":
-            shown = [code(row.op), WHAT[row.op][row.key]]
-        else:
-            shown = [code(row.op), code(row.key)]
-        if spec.kind == "bitcasts":
-            cell = row.entries[0]
-            assert cell is not None
-            shown.append(code(cell.width))
-        for cell in row.entries:
-            if cell is None:
-                shown.append("")
-            else:
-                n = number(counts[cell])
-                shown.append(
-                    f"{code(cell.op)} {n}" if spec.kind == "float_conversions" else n
-                )
-        rows.append(shown)
+    rows = [catalog_row(counts, spec.kind, row) for row in spec.rows]
     return table(head, rows)
+
+
+def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
+    """Format a row's labels and cell counts, retaining applicability blanks."""
+    if kind == "float_conversions":
+        shown = [code(row.key)]
+    elif kind == "pointers":
+        shown = [code(row.op)]
+    elif kind == "values":
+        shown = [code(row.op), WHAT[row.op][row.key]]
+    else:
+        shown = [code(row.op), code(row.key)]
+    if kind == "bitcasts":
+        cell = row.entries[0]
+        assert cell is not None
+        shown.append(code(cell.width))
+    for cell in row.entries:
+        if cell is None:
+            shown.append("")
+        else:
+            n = number(counts[cell])
+            shown.append(f"{code(cell.op)} {n}" if kind == "float_conversions" else n)
+    return shown
 
 
 def render(counts: dict[str, Counter]) -> str:
