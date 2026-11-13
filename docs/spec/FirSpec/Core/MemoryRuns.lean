@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2760609427400413600")
+:::moduleDocs (fingerprint := "12949175721885462401")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -48,7 +48,27 @@ naming, the core's semantics with memory is its semantics in the set monad,
 lifted into the state layer: every core op is tied. This is proved from
 each op's tie, not given by definition. No theorem of this section uses it:
 each asks only that each core terminator be tied, or that each core op be
-monotone with memory.
+monotone with memory. No test of a dialect over the core and no equivalence
+test uses it either. It stays until the human rules on congruence in the
+callee (#373), whose form over finitely many argument vectors is stated over
+the runs in the set monad.
+:::
+
+:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "15348739681123349600")
+*Definition: the runs of a function of a core module.* For a core module
+$`M` and a core function $`f`, the runs of $`f` are its
+{ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
+at the module's layout, where the core's memory $`x` is the module's memory
+$`x`: on each vector $`v^*` of values of its parameter types, poison
+included, and at each budget $`n`, the run of the interpreter in the state
+layer over the set monad, from the empty memories, with $`n` steps of fuel,
+by the core's semantics with memory, with each memory's entry in the
+module's data layout. An observer sees what it returns. They are the
+{ref "The-fir-specification--Execution--Core-values"}[runs of a core function]
+whose observations are the lists of values returned, and the runs that the
+modes report. The equivalence experiment of #282 is about them.
+Congruence in the callee over finitely many argument vectors is stated over
+the runs in the set monad until the human rules on #373.
 :::
 
 :::readable Fir.Core.Op.liftsSetM_of_terminator Fir.Core.Op.memMonotone_all (pin := Fir.Core.Op.liftsSetM) (pin := Fir.Core.Op.monotone_all) (fingerprint := "13096568096900556014")
@@ -87,7 +107,7 @@ are.
 *Theorem: every function of a valid core module runs well with memory.*
 If moreover $`M` is valid and $`f` is a function of $`M`, those runs have
 no stuck path and have an outcome at every budget, so they
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[run well],
+{ref "The-fir-specification--Execution--The-tracer-subset"}[run well],
 calls and recursion included. Every function of $`M` runs within $`M`
 with memory, and the core dialect is lawful in its totality.
 :::
@@ -119,7 +139,7 @@ apply. Only $`f` need be valid, not its module.
 *Theorem: every function of the tracer subset in a valid core module runs
 well with memory.* For every valid core module $`M`, every function $`f`
 of $`M` in the
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[tracer subset],
+{ref "The-fir-specification--Execution--The-tracer-subset"}[tracer subset],
 every vector $`v^*` of values of its parameter types and every layout and
 naming of the core's memories, the runs with memory of $`f` on $`v^*` run
 well, and so each of the three holds on its own. $`f` runs straight, so it

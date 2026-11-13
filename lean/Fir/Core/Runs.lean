@@ -7,11 +7,6 @@ import Fir.Execution.Progress
 /-!
 # The tracer subset
 
-The runs of a function of a core module, in the set monad, are its runs on
-each argument vector of its parameter types, poison included, at each
-budget. The refinement of core functions in the set monad is about them,
-and the equivalence experiment of #282 compares them.
-
 The tracer subset is the ops of the roadmap's tracer bullet, the one tiny
 program that went first through every layer: `const`, `add` without flags
 and `ret`. A valid function of the tracer subset runs straight: no op of
@@ -29,11 +24,6 @@ valid core module, calls and recursion included.
 -/
 
 namespace Fir.Core
-
-/-- The runs of the function `f` of the core module `M`: its run on each
-argument vector of its parameter types, poison included, at each budget. -/
-def funcRuns (M : Module CoreDialect) (f : Func CoreDialect) : FuncRuns (f.params.map (·.2)) :=
-  f.runs M
 
 /-- An op of the tracer subset of #10: `const`, `add` without flags, or
 `ret`. -/

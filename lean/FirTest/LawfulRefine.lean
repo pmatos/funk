@@ -19,9 +19,12 @@ The refinement engine once asked monotonicity at every op instance,
 valid or not, which `CoreProbe` does not meet (`coreProbe_not_monotone`).
 It now asks it only of the ops that a run can reach. So `CoreProbe` gets
 both function-level refinement theorems, for every function of every
-valid module, by the lawful class alone: on refined arguments
-(`coreProbe_args`) and on replacing a callee's body
-(`coreProbe_replaceBody`).
+valid module, by the lawful classes alone: on refined arguments, over its
+runs with memory (`coreProbe_args`), and on replacing a callee's body, with
+memory under a bound on the new callee's runs (`coreProbe_memReplaceBody`)
+and over the runs in the set monad for a callee with finitely many argument
+vectors (`coreProbe_replaceBody`), the form that the core's congruence keeps
+until the human rules on #373.
 -/
 
 namespace FirTest.Probe
@@ -203,13 +206,15 @@ theorem coreProbe_not_monotone :
     ¬ ∀ op : CoreProbe.Op, isTerminator op = true ∨ callee? op = none → OpMonotone op :=
   fun h => probe0_not_monotone (h (.inr (.id 0)) (.inr rfl))
 
-/-- Refined arguments, for every function of a module of `CoreProbe` whose
-functions are all valid, by the lawful class alone. -/
+/-- Refined arguments, with memory, for every function of a module of
+`CoreProbe` whose functions are all valid, wherever a run names the sum's
+memories, by the class of monotonicity with memory alone. -/
 theorem coreProbe_args {ctx : ModuleContext CoreProbe} {M : Module CoreProbe}
-    (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func CoreProbe} (hf : f ∈ M.funcs)
+    (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func CoreProbe} (hf : f ∈ M.funcs) {N : Type}
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreProbe → N)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.runs M a) ⊑ observable (f.runs M a') :=
-  Func.runs_args_isRefinedBy_of_lawful hv hf ha
+    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
+  Func.memRuns_args_isRefinedBy_of_lawful lay ρ hv hf ha
 
 /-- A type of the sum, a core type, with finitely many values. -/
 def Finite : CoreProbe.Ty → Prop
@@ -233,9 +238,11 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
       List.mem_map_of_mem (mem_argVectors _ a)⟩
   | .inr t :: _, _, _ => t.elim
 
-/-- Congruence in the callee, for every valid module of `CoreProbe` and a
-callee with no pointer parameter, by the lawful class alone, whatever the
-new body. -/
+/-- Congruence in the callee, over the runs in the set monad, for every
+valid module of `CoreProbe` and a callee with no pointer parameter, by the
+lawful class alone, whatever the new body. The core's congruence over
+finitely many argument vectors keeps this form until the human rules on
+#373, and so does this test of it. -/
 theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func CoreProbe}
     (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t) (b : Region CoreProbe)
     (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
@@ -247,6 +254,29 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
     (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
       fun {t} => Empty.elim t)
     hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
+
+/-- Congruence in the callee, with memory, for every valid module of
+`CoreProbe`, wherever a run names the sum's memories, by the class of
+monotonicity with memory alone, when the new callee's runs from given
+memories refine the old one's and are bounded. -/
+theorem coreProbe_memReplaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
+    {g : Func CoreProbe} (hg : g ∈ M.funcs) (b : Region CoreProbe)
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+        (M.replaceBody g.name b)).BoundedBy B)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          (M.replaceBody g.name b))
+    {f : Func CoreProbe} (hf : f ∈ M.funcs) :
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ
+    (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
+      fun {t} => Empty.elim t)
+    (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
+      fun {t} => Empty.elim t)
+    hM hg b hbound h hf).2
 
 /-! # Axioms -/
 
@@ -268,6 +298,9 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
 /-- info: 'Fir.Func.runs_args_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runs_args_isRefinedBy_of_lawful
 
+/-- info: 'Fir.Func.memRuns_args_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRuns_args_isRefinedBy_of_lawful
+
 /-- info: 'Fir.Func.runs_replaceBody_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runs_replaceBody_isRefinedBy_of_lawful
 
@@ -285,5 +318,8 @@ theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func Co
 
 /-- info: 'FirTest.coreProbe_replaceBody' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.coreProbe_replaceBody
+
+/-- info: 'FirTest.coreProbe_memReplaceBody' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.coreProbe_memReplaceBody
 
 end FirTest

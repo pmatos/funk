@@ -139,7 +139,7 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 1)}
 
-{includeReadable "." Fir.Core.Runs "The runs of core functions" FirSpec.Core.Runs (level := 1)}
+{includeReadable "." Fir.Core.Runs "The tracer subset" FirSpec.Core.Runs (level := 1)}
 
 {includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 1)}
 
@@ -172,5 +172,7 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Execution.SummaryLaws "Joins and the walk" FirSpec.Execution.SummaryLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.SummaryFixpoint "The summary is the least fixpoint" FirSpec.Execution.SummaryFixpoint (level := 1)}
+
+{includeReadable "." Fir.Execution.SummaryClean "Values with no poison" FirSpec.Execution.SummaryClean (level := 1)}
 
 {includeReadable "." Fir.Execution.SummarySound "Function summaries are sound" FirSpec.Execution.SummarySound (level := 1)}

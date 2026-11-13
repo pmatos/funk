@@ -224,6 +224,6 @@ neither $`M` nor the context it is valid in plays a part. Every valid
 function whose ops are those of the tracer bullet, $`\mathsf{const}`,
 $`\mathsf{add}` without flags and $`\mathsf{ret}`, meets the hypotheses,
 as the section on
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[the runs of core functions]
-shows.
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]
+shows for their runs with memory.
 :::

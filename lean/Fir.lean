@@ -124,6 +124,7 @@ import Fir.Core.Modes
 import Fir.Execution.Summary
 import Fir.Execution.SummaryLaws
 import Fir.Execution.SummaryFixpoint
+import Fir.Execution.SummaryClean
 import Fir.Execution.SummarySound
 import Fir.Memory.Model
 import Fir.Memory.Laws

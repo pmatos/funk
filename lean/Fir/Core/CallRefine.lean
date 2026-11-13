@@ -22,8 +22,9 @@ and recursion included:
   than `@g`, a caller of it or not, is refined by itself in the new
   module.
 
-Congruence in the callee is stated here over the runs in the set monad. It
-follows from the general theorem of the section on replacing a callee,
+Congruence in the callee is stated here over the runs in the set monad,
+`f.runs M`, not over the runs of core functions, which are their runs with
+memory (the section on core functions with memory). It follows from the general theorem of the section on replacing a callee,
 whose hypotheses the core dialect meets:
 
 * every core terminator and every core op with no callee is monotone,
@@ -43,9 +44,11 @@ whose hypotheses the core dialect meets:
 A run with memory starts a call from its caller's memories, of which there
 are infinitely many, so finitely many argument vectors do not bound the
 fuel that the new callee's runs with memory need. Congruence with memory
-asks for that bound (the section on core functions with memory); whether
+asks for that bound (the section on core functions with memory). Whether
 the core's congruence keeps the form over finitely many argument vectors
-waits for the human's ruling on #231.
+waits for the human's ruling on
+[#373](https://github.com/pmatos/funk/issues/373); until then it stays here,
+over the runs in the set monad.
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
@@ -169,9 +172,9 @@ run in the new module, refines `@g` in the old, refines every function of
 the module, calls and recursion included. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
+    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) :
-    funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) (f.replaceBody g.name b) :=
+    f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
   Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
     Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
 
@@ -180,11 +183,11 @@ is refined by itself in the module with `@g`'s new body, when `@g` has no
 pointer parameter. -/
 theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
+    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) f := by
+    f.runs M ⊑ f.runs (M.replaceBody g.name b) := by
   have := replaceBody_isRefinedBy hM hg hfin b h hf
-  change funcRuns M f ⊑ funcRuns _ { f with body := if f.name = g.name then b else f.body } at this
+  change f.runs M ⊑ Func.runs _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
 
 end Fir.Core
