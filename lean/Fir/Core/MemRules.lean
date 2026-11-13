@@ -28,10 +28,10 @@ Lifting a computation of the set monad into the state layer keeps choice
 and UB, so it maps each core op's rule in the set monad to its rule with
 memory. So each core op is tied: it runs with memory by its rule in the set
 monad and keeps the memories. Each obligation with memory of an op follows
-from that op's own tie and its obligation in the set monad, and the core
-dialect lifts the set monad, as a theorem (`Core.liftsSetM`, in the section
-on core functions with memory). An op that touches memory will have no tie,
-and will meet each obligation with memory by its own proof.
+from that op's own tie and its obligation in the set monad. No theorem asks
+that the whole core dialect lift the set monad: an op that touches memory
+will have no tie, and will meet each obligation with memory by its own
+proof.
 -/
 
 namespace Fir.Core

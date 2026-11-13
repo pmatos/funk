@@ -89,8 +89,8 @@ first two take it for the function that runs. `Func.Valid.opsMonotone` gives it
 for a valid function from monotonicity at valid op instances alone, in
 `lean/Fir/Execution/Lawful.lean`. So a lawful dialect gets both function-level
 refinement theorems for valid modules from the class alone, as the test dialect
-`CoreProbe` does in `lean/FirTest/LawfulRefine.lean`. `Core.args_isRefinedBy`,
-now over runs with memory, and `Core.replaceBody_isRefinedBy` keep their
+`CoreProbe` does in `lean/FirTest/LawfulRefine.lean`. `Core.args_isRefinedBy`
+and `Core.replaceBody_isRefinedBy`, now over runs with memory, keep their
 hypotheses through `Core.opsMonotone_all`: every core function's ops are
 monotone, valid or not. So `Core.args_isRefinedBy` holds for every function of
 every core module, valid or not. The human ruled on 2026-11-05 (#99) to do this before M1 adds memory.
@@ -107,8 +107,9 @@ keeps its symbol, its parameters and its result types, so the runs of the old
 and the new function have one type and need no cast. Congruence assumes that the
 new `@g`, run in the new module, refines the old `@g`, run in the old. It
 concludes the same relation for every function of the module
-(`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, which ask that the
-module be valid and that `@g` have no pointer parameter). It needs nothing of
+(`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, over runs with
+memory, which ask that the module be valid, that `@g` have no pointer
+parameter, and that it touch no memory; see refinement with memory below). It needs nothing of
 the new body, because a call of `@g` is a black box whose behaviour the
 hypothesis gives. When the new body calls back into the module, proving the
 hypothesis may need its own induction. A body that gets stuck at once meets the
@@ -124,7 +125,8 @@ finitely many argument vectors. Then one budget bounds every run of the new
 own budget, and without a bound on how many there are, a caller whose
 arguments grow without limit could make the new `@g` run ever longer.
 `Core.argVectors` lists the core's vectors. A dialect with a type of infinitely
-many values cannot use the general theorem as it is. Refined arguments need no
+many values cannot use the general theorem as it is. With memory, finitely many
+argument vectors bound only a callee that touches no memory (below). Refined arguments need no
 finiteness, since they replace no callee. `ptr` has values now, infinitely
 many, so the core's congruence is restated for a callee with no pointer
 parameter, and #214 proves it for the rest (ADR-2026-11-09-1542). Rejected:
@@ -163,12 +165,36 @@ arguments and memories need nothing more
 `Func.memRunsFrom_replaceBody_isRefinedBy`. The runs with memory refine when
 these runs from the empty memories do. Congruence assumes that the new callee
 refines the old from every memories, and one fuel bound for it in place of
-finitely many argument vectors, until #214. For a dialect that lifts the set
-monad, the finiteness form stays. The core's congruence with memory is
-`Core.memReplaceBody_isRefinedBy`, with the bound; its finiteness form,
-`Core.replaceBody_isRefinedBy`, stays over the runs in the set monad,
-`Func.runs`, not `Core.funcRuns`, which are the runs with memory, until the
-human rules on #373 whether it may go before #214. These proofs stand beside those in the set
+finitely many argument vectors. For a dialect that lifts the set monad, the
+finiteness form holds through its runs in the set monad
+(`Func.memRuns_replaceBody_isRefinedBy_of_lawful`).
+
+A callee whose effects include no memory read, write or allocation needs no
+bound: its runs do not depend on the memories, so finitely many argument vectors
+give it, as for runs in the set monad. Its effects are its summary in the new
+module (`Effects.TouchesNoMemory`), and the dialect's ops that declare no memory
+effect must ignore the memories (`OpsIgnoreMemory`): from any memories they end
+the same way and keep them, which the effect obligations alone do not give. Then
+every run of a function whose summary touches no memory ignores the memories,
+calls and recursion included (`Module.memOps_ignoresMemory`), and its runs from
+given memories are bounded (`Func.memRunsFrom_boundedBy_of_finite`), in
+`lean/Fir/Execution/MemoryFreeRuns.lean`. Congruence is then
+`Func.memRuns_replaceBody_isRefinedBy_of_finite`, and, when the old callee's
+summary touches no memory too, `Func.memRuns_replaceBody_isRefinedBy_of_memRuns`,
+whose hypothesis is refinement with memory, as it was over the runs in the set
+monad. The core's congruence takes these forms: `Core.replaceBody_isRefinedBy`
+and `Core.caller_isRefinedBy` with memory, and
+`Core.replaceBody_isRefinedBy_of_from` from given memories, in
+`lean/Fir/Core/MemoryCallRefine.lean`. A callee that touches memory uses the form
+with the bound, `Core.memReplaceBody_isRefinedBy`, until #214 removes the bound
+for good. The forms over the runs in the set monad and `Core.liftsSetM` went, so
+a memory op can join the core. The human ruled this on 2026-11-13 (#373, option
+C). Rejected: (A) the bound form for every callee until #214, which would have
+made each optimizer pass prove a bound for the callee it replaces, a weaker
+theorem than the one that held for callees with no pointer parameter; (B) #214
+before stage 4d, which would have held every memory op back for it.
+
+These proofs stand beside those in the set
 monad, step by step, and each change to `Func.runOps` is proved again in the
 memory refinement files until the refactor that semantics-interpreter.md names.
 Rejected: refining runs with memory only from the empty memories, since a black

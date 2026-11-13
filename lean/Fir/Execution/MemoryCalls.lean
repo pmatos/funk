@@ -255,6 +255,92 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
   [DialectEffects d] [DialectMemDenote d] [TyRefinement d.Ty] {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
 
+omit [TyRefinement d.Ty] in
+/-- A run with memory is the run from the empty memories, with the memories
+it ends with dropped. -/
+theorem Func.memRuns_eq_fromState (M : Module d) (f : Func d)
+    (a : HVector toType (f.params.map (·.2))) (n : Nat) :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.memRuns lay ρ M a n = (Prod.fst <$> fromState
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n) Memories.empty).run :=
+  fromState_fst _ _
+
+variable {M : Module d} {f : Func d} {a : HVector toType (f.params.map (·.2))} {n : Nat}
+
+omit [TyRefinement d.Ty] in
+/-- A run with memory returns what the run from the empty memories returns,
+with whatever memories that run ends with. -/
+theorem Func.memRuns_ret_iff {vs : List (DVal d)} :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (f.memRuns lay ρ M a n).outcomes (.ret vs) ↔
+      ∃ T, (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes
+        (.ret (vs, T)) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
+  constructor
+  · intro h
+    rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
+    · cases he
+      exact ⟨T, (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)⟩
+    · cases he
+    · cases he
+  · rintro ⟨T, h⟩
+    rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T'⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
+    · cases r with
+      | ret _ => cases he; exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
+      | fuelExhausted => cases he
+    · cases he
+    · cases he
+
+omit [TyRefinement d.Ty] in
+/-- A run with memory hits UB exactly when the run from the empty memories
+does. -/
+theorem Func.memRuns_ub_iff {r : String} :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (f.memRuns lay ρ M a n).outcomes (.ub r) ↔
+      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
+  constructor
+  · intro h
+    rcases (SetM.run_map _ _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨_, hr, he⟩
+    · cases he
+    · cases he
+    · cases he
+      exact (SetM.run_map _ _ _).2 (.inr (.inr ⟨_, hr, rfl⟩))
+  · intro h
+    rcases (SetM.run_map _ _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨_, hr, he⟩
+    · cases he
+    · cases he
+    · cases he
+      exact (SetM.run_map _ _ _).2 (.inr (.inr ⟨_, hr, rfl⟩))
+
+omit [TyRefinement d.Ty] in
+/-- A run with memory runs out of fuel exactly when the run from the empty
+memories does. -/
+theorem Func.memRuns_exhausted_iff :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (f.memRuns lay ρ M a n).outcomes .fuelExhausted ↔
+      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))
+        n).outcomes .fuelExhausted := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
+  constructor
+  · intro h
+    rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
+    · cases r with
+      | ret _ => cases he
+      | fuelExhausted => exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
+    · cases he
+    · cases he
+  · intro h
+    rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
+    · cases r with
+      | ret _ => cases he
+      | fuelExhausted => exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
+    · cases he
+    · cases he
+
 /-- The runs with memory of a function refine those of another when their
 runs from the empty memories do: they are those runs, with the memories they
 end with dropped. -/
@@ -265,69 +351,12 @@ theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
         observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
     observable (f.memRuns lay ρ M a) ⊑ observable (f'.memRuns lay ρ M' a') := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ
-  have hX : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat},
-      g.memRuns lay ρ L b n = (Prod.fst <$> fromState
-        (g.run L (m := StateT (Memories N (unitsOf lay)) SetM) b n) Memories.empty).run :=
-    fromState_fst _ _
-  have kret : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-      {vs : List (DVal d)}, (g.memRuns lay ρ L b n).outcomes (.ret vs) ↔
-        ∃ T, (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ret
-            (vs, T)) := by
-    intro g L b n vs
-    simp only [Run.outcomes, Func.memRunsFrom, hX]
-    constructor
-    · intro h
-      rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
-      · cases he
-        exact ⟨T, (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)⟩
-      · cases he
-      · cases he
-    · rintro ⟨T, h⟩
-      rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T'⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
-      · cases r with
-        | ret _ => cases he; exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
-        | fuelExhausted => cases he
-      · cases he
-      · cases he
-  have kub : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-      {r : String}, (g.memRuns lay ρ L b n).outcomes (.ub r) ↔
-        (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
-    intro g L b n r
-    simp only [Run.outcomes, Func.memRunsFrom, hX]
-    constructor
-    · intro h
-      rcases (SetM.run_map _ _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨_, hr, he⟩
-      · cases he
-      · cases he
-      · cases he
-        exact (SetM.run_map _ _ _).2 (.inr (.inr ⟨_, hr, rfl⟩))
-    · intro h
-      rcases (SetM.run_map _ _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨_, hr, he⟩
-      · cases he
-      · cases he
-      · cases he
-        exact (SetM.run_map _ _ _).2 (.inr (.inr ⟨_, hr, rfl⟩))
-  have kexh : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat},
-      (g.memRuns lay ρ L b n).outcomes .fuelExhausted ↔
-        (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay)))
-            n).outcomes .fuelExhausted := by
-    intro g L b n
-    simp only [Run.outcomes, Func.memRunsFrom, hX]
-    constructor
-    · intro h
-      rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
-      · cases r with
-        | ret _ => cases he
-        | fuelExhausted => exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
-      · cases he
-      · cases he
-    · intro h
-      rcases (SetM.run_map _ _ _).1 h with ⟨⟨r, T⟩, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
-      · cases r with
-        | ret _ => cases he
-        | fuelExhausted => exact (SetM.run_map _ _ _).2 (.inl ⟨_, hr, rfl⟩)
-      · cases he
-      · cases he
+  have kret := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
+    {vs : List (DVal d)} => Func.memRuns_ret_iff lay ρ (M := L) (f := g) (a := b) (n := n) (vs := vs)
+  have kub := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
+    {r : String} => Func.memRuns_ub_iff lay ρ (M := L) (f := g) (a := b) (n := n) (r := r)
+  have kexh := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
+    => Func.memRuns_exhausted_iff lay ρ (M := L) (f := g) (a := b) (n := n)
   intro t ht
   match t, ht with
   | .ret vs', ⟨n, hn⟩ =>

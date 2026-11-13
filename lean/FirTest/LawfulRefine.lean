@@ -1,4 +1,5 @@
 import Fir.Core.Lawful
+import Fir.Execution.MemoryFreeReplace
 import FirTest.OverCore
 
 /-!
@@ -21,10 +22,12 @@ It now asks it only of the ops that a run can reach. So `CoreProbe` gets
 both function-level refinement theorems, for every function of every
 valid module, by the lawful classes alone: on refined arguments, over its
 runs with memory (`coreProbe_args`), and on replacing a callee's body, with
-memory under a bound on the new callee's runs (`coreProbe_memReplaceBody`)
-and over the runs in the set monad for a callee with finitely many argument
-vectors (`coreProbe_replaceBody`), the form that the core's congruence keeps
-until the human rules on #373.
+memory: under a bound on the new callee's runs (`coreProbe_memReplaceBody`),
+and with no bound for a callee with finitely many argument vectors that
+touches no memory (`coreProbe_replaceBody`), the form that the human's
+ruling on #373 keeps for the core. Each op of the sum ignores the memories,
+since each side's op runs by its rule in the set monad
+(`coreProbe_opsIgnoreMemory`).
 -/
 
 namespace FirTest.Probe
@@ -238,22 +241,39 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
       List.mem_map_of_mem (mem_argVectors _ a)⟩
   | .inr t :: _, _, _ => t.elim
 
-/-- Congruence in the callee, over the runs in the set monad, for every
-valid module of `CoreProbe` and a callee with no pointer parameter, by the
-lawful class alone, whatever the new body. The core's congruence over
-finitely many argument vectors keeps this form until the human rules on
-#373, and so does this test of it. -/
-theorem coreProbe_replaceBody {M : Module CoreProbe} (hM : M.Valid) {g : Func CoreProbe}
-    (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t) (b : Region CoreProbe)
-    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
+/-- Each op of `CoreProbe` ignores the memories, at every layout and
+naming: a core op and a probe op each run by their rule in the set monad and
+keep the memories. -/
+theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem CoreProbe → N) :
+    letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ
+    OpsIgnoreMemory CoreProbe N (unitsOf lay)
+  | .inl o, _, _ => Dialect.sum.ownRuleHas_inl lay ρ (fun f _ h => IgnoresMemory.map f h)
+      (OwnRuleHas.ofLifts (Core.Op.liftsSetM o) lay _ IgnoresMemory.lift)
+  | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
+      (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ IgnoresMemory.lift)
+
+/-- Congruence in the callee, with memory, for every valid module of
+`CoreProbe` and a callee with no pointer parameter whose summary touches no
+memory before or after, wherever a run names the sum's memories, by the
+lawful class alone, with no bound, whatever the new body. The core's
+congruence keeps this form, by the human's ruling on #373, and so does this
+test of it. -/
+theorem coreProbe_replaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
+    {g : Func CoreProbe} (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t)
+    (b : Region CoreProbe) (hold : (M.table.summary g.name).TouchesNoMemory)
+    (hmem : ((M.replaceBody g.name b).table.summary g.name).TouchesNoMemory)
+    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
-    f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
-  Func.runs_replaceBody_isRefinedBy_of_lawful
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  Func.memRuns_replaceBody_isRefinedBy_of_memRuns lay ρ
     (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
       fun {t} => Empty.elim t)
     (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
       fun {t} => Empty.elim t)
-    hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
+    (coreProbe_opsIgnoreMemory lay ρ) hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ hold hmem
+    h hf
 
 /-- Congruence in the callee, with memory, for every valid module of
 `CoreProbe`, wherever a run names the sum's memories, by the class of
@@ -315,6 +335,9 @@ theorem coreProbe_memReplaceBody {N : Type} [DecidableEq N] (lay : N → MemLayo
 
 /-- info: 'FirTest.coreProbe_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.coreProbe_args
+
+/-- info: 'FirTest.coreProbe_opsIgnoreMemory' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.coreProbe_opsIgnoreMemory
 
 /-- info: 'FirTest.coreProbe_replaceBody' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.coreProbe_replaceBody

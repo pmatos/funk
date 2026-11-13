@@ -14,18 +14,18 @@ and recursion included:
   replaced by any value of its type, a function's observable behaviour
   refines its behaviour on those others. So a call on arguments that
   refine others refines the call on those others: its callee runs on
-  them. It is stated over the runs with memory (the section on core
-  functions with memory), from the monotonicity of each core op below.
+  them.
 * _Congruence in the callee._ In a valid module, replacing the body of a
   function `@g` with one under which `@g`, run in the new module, refines
   `@g` in the old, refines every function of the module. A function other
   than `@g`, a caller of it or not, is refined by itself in the new
   module.
 
-Congruence in the callee is stated here over the runs in the set monad,
-`f.runs M`, not over the runs of core functions, which are their runs with
-memory (the section on core functions with memory). It follows from the general theorem of the section on replacing a callee,
-whose hypotheses the core dialect meets:
+Both are stated over the runs of core functions, which are their runs with
+memory (the sections on core functions with memory and on congruence in a
+core callee that touches no memory). They follow from the general theorems,
+whose hypotheses the core dialect meets, and this section gives what they
+ask that needs no memory:
 
 * every core terminator and every core op with no callee is monotone,
   each by the obligation that its family proves, at every width: every
@@ -34,21 +34,11 @@ whose hypotheses the core dialect meets:
   float type has finitely many values: poison and the 2^N bit vectors of
   `iN`, poison and the bit vectors of `1 + e + m` bits of `float<e,m>`.
   A pointer type has infinitely many: poison and a pointer for every
-  allocation and every offset. So congruence holds here for a callee with
-  no pointer parameter, whose parameter types have finitely many argument
-  vectors. A callee with a pointer parameter waits for congruence over
-  types with infinitely many values (#214);
-* the refinement of core values is reflexive and transitive;
-* the symbols of a valid module are unique.
-
-A run with memory starts a call from its caller's memories, of which there
-are infinitely many, so finitely many argument vectors do not bound the
-fuel that the new callee's runs with memory need. Congruence with memory
-asks for that bound (the section on core functions with memory). Whether
-the core's congruence keeps the form over finitely many argument vectors
-waits for the human's ruling on
-[#373](https://github.com/pmatos/funk/issues/373); until then it stays here,
-over the runs in the set monad.
+  allocation and every offset. So congruence with no budget holds for a
+  callee with no pointer parameter, whose parameter types have finitely
+  many argument vectors, and that touches no memory. A callee with a
+  pointer parameter waits for congruence over types with infinitely many
+  values (#214).
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
@@ -60,14 +50,6 @@ only the instances that validation accepts (ADR-2026-10-29-2006), so it
 gives it only for the functions of valid modules (the section on what the
 lawful class gives); these theorems ask for no valid module, so they use
 the ops' own obligations.
-
-Congruence in the callee compares real behaviours when the new function
-is valid in the old module's context: then the new module is valid, and
-neither module's runs have a stuck path, since every function of a valid
-core module runs within it (the section on core functions with calls) and
-the theorems on progress with calls apply. A body that gets stuck at once,
-such as one whose entry block declares arguments, meets the hypothesis
-with an empty behaviour, which refines every source.
 -/
 
 namespace Fir.Core
@@ -163,31 +145,5 @@ theorem mem_argVectors : ∀ {ts : List Ty} (h : ∀ t ∈ ts, t.Finite)
   | [], _, .nil => List.mem_singleton_self _
   | _ :: _, _, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values _ v,
       List.mem_map_of_mem (mem_argVectors _ a)⟩
-
-variable {M : Module CoreDialect}
-
-/-- Congruence in the callee: replacing the body of a function `@g` with
-no pointer parameter, of a valid core module, with one under which `@g`,
-run in the new module, refines `@g` in the old, refines every function of
-the module, calls and recursion included. -/
-theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
-    {f : Func CoreDialect} (hf : f ∈ M.funcs) :
-    f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
-  Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
-
-/-- Every function of the module other than `@g`, a caller of it or not,
-is refined by itself in the module with `@g`'s new body, when `@g` has no
-pointer parameter. -/
-theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
-    {f : Func CoreDialect} (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    f.runs M ⊑ f.runs (M.replaceBody g.name b) := by
-  have := replaceBody_isRefinedBy hM hg hfin b h hf
-  change f.runs M ⊑ Func.runs _ { f with body := if f.name = g.name then b else f.body } at this
-  rwa [ite_eq_right hfg] at this
 
 end Fir.Core

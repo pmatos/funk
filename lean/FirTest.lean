@@ -55,6 +55,7 @@ import FirTest.RunsLoops
 import FirTest.Calls
 import FirTest.RunsCalls
 import FirTest.RefineCalls
+import FirTest.RefineCallsFrom
 import FirTest.Lawful
 import FirTest.LawfulRefine
 import FirTest.Effects

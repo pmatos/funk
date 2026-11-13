@@ -171,20 +171,26 @@ semantics in one monad to its semantics in another, op by op
 (`Core.denoteIn_mapsDenote`); lifting keeps choice and UB, so every core op is
 tied (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
 totality, monotonicity and poison, follows from that op's own tie.
-`Core.liftsSetM` is a theorem from the ties, not a definition. The core's
-theorems on runs, fuel monotonicity, progress, no stuck path and refined
-arguments, are stated over its runs with memory and do not use it: a valid core
-function runs within its module with memory because each of its terminators is
-tied (`Core.inModuleAt_of_valid`, from `Func.InModule.inModuleAt_of_tied`), and
-refined arguments ask each op to be monotone with memory (stage 4b-3a of #231).
-The runs of a core function, `Core.funcRuns M f`, are its runs with memory at
-its module's layout, the runs that the modes report; the equivalence tests,
-the tests of the dialects over the core and the core's effect tests are stated
-over runs with memory and do not use it either (stage 4b-3b). `Core.liftsSetM`
-stays, with the core's form of congruence over finitely many argument vectors
-over the runs in the set monad, until the human rules on #373. It remains an
-instance, so the sums over the core get `LiftsSetM` from it; on #374, a build
-with it removed broke only the test of the tie itself. A memory op joins with its own rule in
+No theorem asks that the whole core dialect lift the set monad: `Core.liftsSetM`
+went in stage 4b-3 of #231, with its last users. The core's theorems on runs,
+fuel monotonicity, progress, no stuck path and refined arguments, are stated
+over its runs with memory: a valid core function runs within its module with
+memory because each of its terminators is tied (`Core.inModuleAt_of_valid`,
+from `Func.InModule.inModuleAt_of_tied`), and refined arguments ask each op to
+be monotone with memory. The runs of a core function, `Core.funcRuns M f`, are
+its runs with memory at its module's layout, the runs that the modes report;
+the equivalence tests, the tests of the dialects over the core and the core's
+effect tests are stated over runs with memory. Congruence in the callee is too:
+for a callee that touches no memory it asks that each op that declares no
+memory effect ignore the memories (`OpsIgnoreMemory`, in
+`lean/Fir/Execution/MemoryFree.lean`), which each core op meets by its own tie
+(`Core.opsIgnoreMemory`; semantics-refinement.md#refinement-with-memory). The
+test of the tie, that the core's runs with memory are its runs in the set
+monad, went with it; `lean/FirTest/MemoryRuns.lean` now shows that a core
+function that touches no memory returns from given memories what it returns
+with memory, with those memories. The sums over the core no longer get
+`LiftsSetM` from the core; a sum still lifts the set monad when both of its
+sides do (`Dialect.sum.liftsSetM`). A memory op joins with its own rule in
 `Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
 memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
