@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14213481456536443189")
+:::moduleDocs (fingerprint := "2314004164630052110")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "2052658102503826680")
@@ -23,11 +23,11 @@ yet, so no memory has a name: the set of its memory names is empty. It
 gains memories with the memory model (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "4928603987806486582")
+:::readable Fir.Core.Op.effects (fingerprint := "10359521502899547229")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp},\ \mathsf{fcmp}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd} \end{aligned}`
 
 $$`\mathsf{add}_f,\ \mathsf{sub}_f,\ \mathsf{mul}_f:\ \{\mathsf{mayPoison}\} \text{ if } f \text{ has a flag, else } \emptyset`
 

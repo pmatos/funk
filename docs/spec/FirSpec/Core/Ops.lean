@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17454804206695138812")
+:::moduleDocs (fingerprint := "17614064800585495877")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -100,12 +100,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "9716240157550554993")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "17251928516930161620")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in thirteen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in fourteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -276,6 +276,22 @@ fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
   ruling of 2026-11-12 on #354). A number too large for the target gives
   an infinity of its sign, one too small a zero of its sign, and a NaN any
   NaN of the target. Neither is ever UB, and a poison operand gives
+  poison.
+
+*Pointer offsets* move a pointer within its memory (#231).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-      \dots
+ptradd \mathsf{ptradd}_{N,W}
+```
+
+* $`\mathsf{ptradd}_{N,W}` moves a pointer of
+  $`\mathsf{ptr}\langle N \rangle` by the integer that an
+  $`\mathsf{i}W` holds, read as signed, in units of the memory $`N`. The
+  result keeps the pointer's provenance. Its offset may leave the bounds
+  of the allocation: only an access through it must be in bounds
+  (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
 *Conversions to integers* give a float's number truncated toward zero as

@@ -81,6 +81,16 @@ namespace Fir.Core
 #guard Op.decode "fpext" [roundAttr] [.float 8 23] [.float 11 52] == none
 #guard Op.decode "fptrunc" [] [.float 11 52] [.float 8 23] == none
 #guard Op.decode "fpext" [] [.int 32] [.float 11 52] == none
+-- `ptradd` takes a pointer and an integer of any width, and gives a pointer
+-- of the same memory, with no attributes.
+#guard Op.decode "ptradd" [] [.ptr 0, .int 64] [.ptr 0] == some (.ptradd 0 64)
+#guard Op.decode "ptradd" [] [.ptr 3, .int 1] [.ptr 3] == some (.ptradd 3 1)
+#guard Op.decode "ptradd" [] [.ptr 0, .int 64] [.ptr 1] == none
+#guard Op.decode "ptradd" [] [.int 64, .ptr 0] [.ptr 0] == none
+#guard Op.decode "ptradd" [] [.ptr 0, .ptr 0] [.ptr 0] == none
+#guard Op.decode "ptradd" [] [.ptr 0, .float 8 23] [.ptr 0] == none
+#guard Op.decode "ptradd" [] [.ptr 0, .int 64] [.int 64] == none
+#guard Op.decode "ptradd" [.word "nuw"] [.ptr 0, .int 64] [.ptr 0] == none
 -- `fptosi` and `fptoui` take a float of any format to an integer of any
 -- width, with no attribute.
 #guard Op.decode "fptosi" [] [.float 5 10] [.int 33] == some (.fptosi 5 10 33)

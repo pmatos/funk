@@ -1,0 +1,19 @@
+# Tests of pointer-offset.fir: ptradd moves a pointer by an integer of any
+# width, read as signed, in units of its memory (#231). A run starts with no
+# allocation, so the only pointer argument is poison, and ptradd of poison is
+# poison whatever the integer; the rule on pointers that allocations give is
+# checked in Lean (lean/Fir/Core/Pointer.lean). The backend does not lower
+# pointers until stage 5 of #231, so each test is interpreter-only.
+tests = [
+  { func = "@by_i1", args = ["poison", "true"], expect = ["poison"] },
+  { func = "@by_i7", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i8", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i16", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i32", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i33", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i64", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i128", args = ["poison", "-1"], expect = ["poison"] },
+  { func = "@by_i64", args = ["poison", "poison"], expect = ["poison"] },
+  { func = "@there_and_back", args = ["poison", "9223372036854775807"], expect = ["poison"] },
+  { func = "@through_call", args = ["poison", "5"], expect = ["poison", "5"] },
+]

@@ -260,6 +260,17 @@ and pointers passed where a pointer of another memory or an integer is
 expected. The texts that relied on `ptr` being invalid name `ptr(1)` or
 another memory now.
 
+The texts of #231's pointer offset use `ptradd`. `pointer-offset` moves a
+`ptr` by an integer of each width of the interpreter-only side, moves it
+there and back, and through a call; `pointer-offset-memories` moves
+pointers of two memories that its data layout declares, of 16-bit and
+32-bit units, and of the default memory in one function. A run's only
+pointer is a poison argument until stack allocation lands, so each test
+checks that poison goes through `ptradd`, and is interpreter-only, since
+the backend does not lower pointers yet. `reject/pointer-offset.toml`
+holds the shapes that do not decode, such as a result of another memory,
+swapped operands or an attribute, and those that do not validate.
+
 The texts of the float arithmetic, the remainders and the conversions,
 from #229's fourth stage on, are listed in
 [texts-floats.md](texts-floats.md).

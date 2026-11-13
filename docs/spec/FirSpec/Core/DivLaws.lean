@@ -141,7 +141,7 @@ position by position. It is the theorem on refined operands above, carried
 to the op rule.
 :::
 
-:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "15162468149148969262")
+:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "16615042116950977680")
 *Theorem: $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}` and
 $`\mathsf{urem}` are lawful at every width above zero.* For every width
 $`w`, under fir's execution rules, each of $`\mathsf{sdiv}_w` and

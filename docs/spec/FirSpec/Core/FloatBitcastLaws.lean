@@ -25,7 +25,7 @@ $`\mathsf{bitcast}` gives poison on poison, so it
 as the width changes do.
 :::
 
-:::readable Fir.Core.toBits_propagatesPoison Fir.Core.toBits_returnsOnDefined Fir.Core.toBits_total Fir.Core.toBits_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.bitcastValue) (fingerprint := "10970517820172734220")
+:::readable Fir.Core.toBits_propagatesPoison Fir.Core.toBits_returnsOnDefined Fir.Core.toBits_total Fir.Core.toBits_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.bitcastValue) (fingerprint := "17593624614929701954")
 *Theorem: a bit cast from a float to its bits is lawful.* For every
 format $`\mathsf{float}\langle e,m \rangle`, under fir's execution rules,
 the bit cast to $`\mathsf{i}N` with $`N = 1+e+m` meets every obligation of
@@ -43,7 +43,7 @@ The theorems hold at every format, even one that validation rejects: they
 need nothing of $`e` and $`m`.
 :::
 
-:::readable Fir.Core.ofBits_propagatesPoison Fir.Core.ofBits_returnsOnDefined Fir.Core.ofBits_total Fir.Core.ofBits_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.bitcastValue) (fingerprint := "5346030211152700288")
+:::readable Fir.Core.ofBits_propagatesPoison Fir.Core.ofBits_returnsOnDefined Fir.Core.ofBits_total Fir.Core.ofBits_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.bitcastValue) (fingerprint := "14973835743099009102")
 *Theorem: a bit cast from bits to a float is lawful.* For every format
 $`\mathsf{float}\langle e,m \rangle`, the bit cast from $`\mathsf{i}N` with
 $`N = 1+e+m` to the float meets the same obligations, by the same

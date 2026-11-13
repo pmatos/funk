@@ -17,8 +17,8 @@
 //! #241 adds the bit cast `bitcast` between a float and an integer of its
 //! width, the conversions from integers to floats `sitofp` and `uitofp`,
 //! the conversions between float formats `fpext` and `fptrunc`, and the
-//! conversions from floats to integers `fptosi` and `fptoui`. A later family
-//! adds a file and a line here.
+//! conversions from floats to integers `fptosi` and `fptoui`. #231 adds the
+//! pointer offset `ptradd`. A later family adds a file and a line here.
 
 mod arith;
 mod bitcast;
@@ -34,6 +34,7 @@ mod float_text;
 mod float_to_int;
 mod freeze;
 mod int_to_float;
+mod pointer;
 mod types;
 mod width;
 
@@ -93,6 +94,7 @@ pub fn dialect() -> Dialect {
         .op(int_to_float::IntToFloat("uitofp"))
         .op(float_convert::Convert("fpext"))
         .op(float_convert::Convert("fptrunc"))
+        .op(pointer::PtrAdd)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

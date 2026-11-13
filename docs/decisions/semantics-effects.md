@@ -56,9 +56,10 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 - Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
   `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
   flags, the float arithmetic, whose NaN results are defined values, the
-  bit casts, the conversions from integers, `sitofp` and `uitofp`, and the
+  bit casts, the conversions from integers, `sitofp` and `uitofp`, the
   conversions between formats, `fpext` and `fptrunc`, whose NaN results are
-  defined values too (ADR-2026-11-09-1549). `call`'s own set is empty: its callee's summary
+  defined values too (ADR-2026-11-09-1549), and the pointer offset `ptradd`
+  (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
   carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,

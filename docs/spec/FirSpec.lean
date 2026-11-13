@@ -227,6 +227,8 @@ byte order.
 
 {includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 
+{includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
+
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}
@@ -236,6 +238,8 @@ byte order.
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
 {includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
+
+{includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
 

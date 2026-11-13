@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5719949978568039877")
+:::moduleDocs (fingerprint := "4619976593787225318")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -79,53 +79,16 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "3122977627371042591")
-*Theorems: a float op of arithmetic decodes only from its own spelling.*
-If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
-$`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
-and $`r^*`, as the section on
-{ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
-reads it, the op it gives has its name, the attributes $`a^*` and the
-operand and result types $`t^*` and $`r^*`; and the same holds of
-$`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}` and $`\mathsf{fma}`.
-The proof of the next theorem uses them for these ops.
+:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "13106390997175491723")
+*Theorem: a pointer offset decodes only from its own spelling.* If
+$`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
+$`t^*` and $`r^*`, the op it gives is written $`\mathtt{ptradd}`, has no
+attributes, so $`a^*` is empty, and has the operand and result types
+$`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
+memory.
 :::
 
-:::readable Fir.Core.decodeBitcast_eq (pin := Fir.Core.decodeBitcast) (fingerprint := "3952252289645912107")
-*Theorem: a bit cast decodes only from its own spelling.* If
-$`\mathtt{bitcast}` decodes from the attributes $`a^*` and the types
-$`t^*` and $`r^*`, the op it gives, in either direction, is written
-$`\mathtt{bitcast}`, has no attributes, so $`a^*` is empty, and has the
-operand and result types $`t^*` and $`r^*`.
-:::
-
-:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "18079157018789560655")
-*Theorem: a conversion from an integer decodes only from its own
-spelling.* If $`\mathtt{sitofp}` or $`\mathtt{uitofp}` decodes from the
-attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
-written with that name, has the attributes $`a^*`, which are
-$`[\mathtt{round(rne)}]`, and has the operand and result types $`t^*` and
-$`r^*`.
-:::
-
-:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "18338062105868789928")
-*Theorems: a conversion between formats decodes only from its own
-spelling.* If $`\mathtt{fpext}` or $`\mathtt{fptrunc}` decodes from the
-attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
-written with that name, has the attributes $`a^*`, which are none for
-$`\mathtt{fpext}` and $`[\mathtt{round(rne)}]` for $`\mathtt{fptrunc}`,
-and has the operand and result types $`t^*` and $`r^*`.
-:::
-
-:::readable Fir.Core.decodeFloatToInt_eq (pin := Fir.Core.decodeFloatToInt) (fingerprint := "10685283668543585865")
-*Theorem: a conversion to an integer decodes only from its own spelling.*
-If $`\mathtt{fptosi}` or $`\mathtt{fptoui}` decodes from the attributes
-$`a^*` and the types $`t^*` and $`r^*`, the op it gives is written with
-that name, has the attributes $`a^*`, which are none, and has the operand
-and result types $`t^*` and $`r^*`.
-:::
-
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "7166116563951345582")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "4287625555110365676")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -142,7 +105,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
 float constant, float op of arithmetic, bit cast, conversion from or to
-an integer and between formats, and list of types. A float constant reads back because its
+an integer and between formats, pointer offset at every memory, and list
+of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
@@ -160,7 +124,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 39 ops and every type, and
+core dialect, so its text is lawful, for all 40 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

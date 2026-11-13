@@ -31,6 +31,10 @@ has neither operands nor attributes, is a cell at each width of its result
   many mantissa bits, and `fptrunc` to every other (#241, the human's
   ruling of 2026-11-12 on #354); `fptosi` and `fptoui`, with no attribute,
   from each float format of the side to each of its widths (#241).
+- The pointer offset `ptradd` is a cell for each width of its integer, at
+  the side's pointer offset widths: every width for interpreter-only
+  tests, and none yet for differential tests, since the backend does not
+  lower pointers until stage 5 of #231.
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -48,6 +52,9 @@ DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
 FLOAT_DIFFERENTIAL = ("f32", "f64")
 FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
+# The widths of `ptradd`'s integer on each side (#231).
+POINTER_DIFFERENTIAL: tuple[int, ...] = ()
+POINTER_INTERPRETER = INTERPRETER
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")
 EXACT = ("", "exact")
@@ -123,6 +130,9 @@ FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
 # The conversions from a float to an integer, which have no attributes: a
 # cell for each float format and width of the side.
 FLOAT_TO_INT = ("fptosi", "fptoui")
+# The pointer offsets, which have no attributes: a cell for each width of
+# the integer, at the side's pointer offset widths.
+POINTER_OPS = ("ptradd",)
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -142,15 +152,18 @@ OPS = (
     *INT_TO_FLOAT,
     *FLOAT_CONVERSIONS,
     *FLOAT_TO_INT,
+    *POINTER_OPS,
     *(op for op, _ in VALUES if op != "func"),
 )
 
 
 class Cell(NamedTuple):
-    """`table` is `ops`, `floats`, `casts`, `conversions` or `values`.
+    """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers` or
+    `values`.
     `row` is a flag set or predicate, the source type of a width change or a
-    conversion, or what a value row passes; `width` is a width, a float
-    format or the result type of a width change or a conversion, or empty
+    conversion, or what a value row passes, and empty for a pointer offset;
+    `width` is a width, a float format, the result type of a width change
+    or a conversion, or the width of a pointer offset's integer, or empty
     where nothing is passed."""
 
     table: str
@@ -167,9 +180,13 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
-def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
-    """Every cell of one side of the matrix, at these widths and float
-    formats."""
+def cells(
+    widths: tuple[int, ...],
+    formats: tuple[str, ...] = (),
+    offsets: tuple[int, ...] = (),
+) -> list[Cell]:
+    """Every cell of one side of the matrix, at these widths, float
+    formats and widths of a pointer offset's integer."""
     out = []
     for op, attrs in AT_WIDTH.items():
         out += [Cell("ops", op, a, ty(w)) for a in attrs for w in widths]
@@ -203,6 +220,7 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
         for f in formats
         for w in widths
     ]
+    out += [Cell("pointers", op, "", ty(w)) for op in POINTER_OPS for w in offsets]
     for op, rows in VALUES:
         for row in rows:
             if row == NOTHING:
@@ -217,6 +235,11 @@ def is_float(t: str) -> bool:
     """Whether `t` is a float type: an alias or `float(e, m)`."""
     b = bits_of(t)
     return b is not None and not b[1]
+
+
+def is_pointer(t: str) -> bool:
+    """Whether `t` is a pointer type: `ptr` or `ptr(N)`."""
+    return t == "ptr" or (t.startswith("ptr(") and t.endswith(")"))
 
 
 def bits_type(f: str) -> str:
@@ -290,6 +313,17 @@ def float_to_int(op: Op) -> Cell:
     )
 
 
+def pointer_offset(op: Op) -> Cell:
+    """The cell of a `ptradd`: at the width of its integer. Any other text
+    of it does not decode, so it is not a cell."""
+    if not op.attrs and len(op.operands) == 2 and op.results == op.operands[:1]:
+        pointer, offset = op.operands
+        bits = bits_of(offset)
+        if is_pointer(pointer) and bits is not None and bits[1]:
+            return Cell("pointers", op.name, "", offset)
+    raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
+
+
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
     """The cells of values that `op` passes, returns or gives."""
     if not types:
@@ -313,6 +347,8 @@ def of_op(op: Op) -> set[Cell]:
         return {float_conversion(op)}
     if op.name in FLOAT_TO_INT:
         return {float_to_int(op)}
+    if op.name in POINTER_OPS:
+        return {pointer_offset(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

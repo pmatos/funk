@@ -18,6 +18,7 @@ import argparse
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import NamedTuple
 
 import cells
 import corpus
@@ -27,18 +28,36 @@ from cells import Cell
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "tests" / "fir"
 MATRIX = ROOT / "docs" / "coverage" / "README.md"
+
+
+class Side(NamedTuple):
+    """One side of the matrix: its key, its title, and the widths, float
+    formats and widths of a pointer offset's integer that it has cells at."""
+
+    name: str
+    title: str
+    widths: tuple[int, ...]
+    formats: tuple[str, ...]
+    offsets: tuple[int, ...]
+
+    def cells(self) -> list[Cell]:
+        return cells.cells(self.widths, self.formats, self.offsets)
+
+
 SIDES = (
-    (
+    Side(
         "differential",
         "Differential tests",
         cells.DIFFERENTIAL,
         cells.FLOAT_DIFFERENTIAL,
+        cells.POINTER_DIFFERENTIAL,
     ),
-    (
+    Side(
         "interpreter",
         "Interpreter-only tests",
         cells.INTERPRETER,
         cells.FLOAT_INTERPRETER,
+        cells.POINTER_INTERPRETER,
     ),
 )
 
@@ -95,16 +114,18 @@ def count(root: Path) -> dict[str, Counter]:
 def empty(counts: dict[str, Counter]) -> list[str]:
     """The cells that no test exercises, named as the matrix shows them."""
     return [
-        f"{side}: {show(cell)}"
-        for side, _, widths, formats in SIDES
-        for cell in cells.cells(widths, formats)
-        if not counts[side][cell]
+        f"{side.name}: {show(cell)}"
+        for side in SIDES
+        for cell in side.cells()
+        if not counts[side.name][cell]
     ]
 
 
 def show(cell: Cell) -> str:
     if cell.table in ("casts", "conversions"):
         return f"{cell.op} from {cell.row} to {cell.width}"
+    if cell.table == "pointers":
+        return f"{cell.op} by {cell.width}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
         words.append("at")
@@ -205,6 +226,15 @@ def float_to_int_table(
     return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
 
 
+def pointers_table(counts: Counter, offsets: tuple[int, ...]) -> list[str]:
+    rows = [
+        [f"`{op}`"]
+        + [number(counts[Cell("pointers", op, "", cells.ty(w))]) for w in offsets]
+        for op in cells.POINTER_OPS
+    ]
+    return table(["op", *(f"by `i{w}`" for w in offsets)], rows)
+
+
 WHAT = {
     "br": {cells.NOTHING: "passes nothing", cells.PASSED: "passes values"},
     "cond_br": {
@@ -248,7 +278,7 @@ def values_table(
 
 def render(counts: dict[str, Counter]) -> str:
     """The matrix as Markdown."""
-    total = sum(len(cells.cells(w, f)) for _, _, w, f in SIDES)
+    total = sum(len(side.cells()) for side in SIDES)
     gaps = empty(counts)
     lines = [
         "# Coverage matrix of the fir corpus",
@@ -270,24 +300,28 @@ def render(counts: dict[str, Counter]) -> str:
         "",
         f"{total} cells, {total - len(gaps)} with a test.",
     ]
-    for side, title, widths, formats in SIDES:
-        lines += ["", f"## {title}", ""]
-        lines += [f"### Ops at a width ({title.lower()})", ""]
-        lines += ops_table(counts[side], widths)
-        lines += ["", f"### Float ops at a format ({title.lower()})", ""]
-        lines += floats_table(counts[side], formats)
-        lines += ["", f"### Width changes ({title.lower()})", ""]
-        lines += casts_table(counts[side], widths)
-        lines += ["", f"### Conversions ({title.lower()})", ""]
-        lines += conversions_table(counts[side], formats)
-        lines += ["", f"### Conversions from integers ({title.lower()})", ""]
-        lines += int_to_float_table(counts[side], widths, formats)
-        lines += ["", f"### Conversions between formats ({title.lower()})", ""]
-        lines += float_conversions_table(counts[side], formats)
-        lines += ["", f"### Conversions to integers ({title.lower()})", ""]
-        lines += float_to_int_table(counts[side], widths, formats)
-        lines += ["", f"### Passed and returned values ({title.lower()})", ""]
-        lines += values_table(counts[side], widths, formats)
+    for side in SIDES:
+        c, title = counts[side.name], side.title.lower()
+        lines += ["", f"## {side.title}", ""]
+        lines += [f"### Ops at a width ({title})", ""]
+        lines += ops_table(c, side.widths)
+        lines += ["", f"### Float ops at a format ({title})", ""]
+        lines += floats_table(c, side.formats)
+        lines += ["", f"### Width changes ({title})", ""]
+        lines += casts_table(c, side.widths)
+        lines += ["", f"### Conversions ({title})", ""]
+        lines += conversions_table(c, side.formats)
+        lines += ["", f"### Conversions from integers ({title})", ""]
+        lines += int_to_float_table(c, side.widths, side.formats)
+        lines += ["", f"### Conversions between formats ({title})", ""]
+        lines += float_conversions_table(c, side.formats)
+        lines += ["", f"### Conversions to integers ({title})", ""]
+        lines += float_to_int_table(c, side.widths, side.formats)
+        if side.offsets:
+            lines += ["", f"### Pointer offsets ({title})", ""]
+            lines += pointers_table(c, side.offsets)
+        lines += ["", f"### Passed and returned values ({title})", ""]
+        lines += values_table(c, side.widths, side.formats)
     return "\n".join(lines) + "\n"
 
 
