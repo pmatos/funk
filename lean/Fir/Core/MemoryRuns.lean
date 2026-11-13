@@ -2,6 +2,7 @@ import Fir.Core.EffectLaws
 import Fir.Core.CallRefine
 import Fir.Execution.MemoryProgress
 import Fir.Execution.MemoryReplace
+import Fir.Execution.MemoryPoison
 
 /-!
 # Every valid core function, with memory
@@ -22,12 +23,14 @@ So no path of a run with memory of a function of a valid core module is
 stuck, and it has an outcome at every budget, calls and recursion included,
 wherever a run names the core's memories.
 
-The core dialect is also lawful in its monotonicity, since it is lawful and
-lifts the set monad. Each core op that runs by its own rule is monotone in
-the set monad at every width, valid or not, so it is monotone with memory
-at every naming: on arguments that refine others, the runs with memory of
-every function of every core module refine its runs with memory on those
-others, calls and recursion included.
+The core dialect is also lawful in its poison with memory and in its
+monotonicity, since it is lawful and lifts the set monad: each valid core
+op that propagates poison propagates it with memory, from any memories,
+and returns a result on some defined operands. Each core op that runs by
+its own rule is monotone in the set monad at every width, valid or not, so
+it is monotone with memory at every naming: on arguments that refine
+others, the runs with memory of every function of every core module refine
+its runs with memory on those others, calls and recursion included.
 -/
 
 namespace Fir
@@ -40,6 +43,12 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect := LawfulDiale
 by its own rule is monotone with memory, at every naming. -/
 instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
   LawfulDialectMonotone.ofLawful
+
+/-- The core dialect is lawful in its poison with memory: each valid core op
+instance that propagates poison propagates it with memory, and returns a
+result on some defined operands, at every naming. -/
+instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect :=
+  LawfulDialectMemPoison.ofLawful
 
 namespace Core
 

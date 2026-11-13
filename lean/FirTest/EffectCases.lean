@@ -65,7 +65,7 @@ def Case.op (c : Case) : Option Core.Op :=
 that the case names. -/
 def Case.holds (c : Case) : Bool :=
   match c.op with
-  | some o => render Empty.elim (effects (d := CoreDialect) o) == c.set
+  | some o => render (fun n : Core.Mem => toString n) (effects (d := CoreDialect) o) == c.set
   | none => false
 
 #guard cases.length == 59

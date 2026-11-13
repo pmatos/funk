@@ -51,6 +51,14 @@ reorder the core's store with an extension's load of the same memory. Rejected
 too: one global type of memory names, such as `ptr<N>`'s `N`. Each dialect
 names its own memories, and two dialects could then claim one name.
 
+The core's own memory names are the numbers of `ptr<N>` (`Core.Mem` is
+`Nat`): the memories that a module's data layout declares, memory 0 among
+them, are the core's, since a core pointer type names each of them. An
+extension over the core names them through `ofBase`, and its `Own` names
+are memories outside those numbers. A dialect that wants a memory of its
+own with a layout entry, such as a GPU's shared memory, raises how its name
+and its number meet when it lands; no dialect of M1 has one yet.
+
 A word belongs to the dialect named before its first `.`. A bare word
 belongs to the core (`wordDialect`). Reading an op or a type sends a word of
 `e`'s name to `e`, and every other word to the base. A type goes by its head

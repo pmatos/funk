@@ -125,6 +125,37 @@ op is always UB. The obligations do not fix what an op computes: each family's
 semantics does. `LawfulDialectPoison CoreDialect` holds with no `sorry` and only
 the standard axioms (`Core.lawfulDialectPoison`).
 
+### The obligations with memory
+
+An op that touches memory has no semantics in the set monad, so the poison
+obligations have a form over the semantics with memory too
+(`lean/Fir/Execution/MemoryPoison.lean`), beside totality with memory and
+monotonicity with memory (semantics-interpreter.md, semantics-refinement.md):
+
+- `MemPropagatesPoison`: wherever a run names the dialect's memories, from any
+  memories, a poison operand gives only poison results, and UB on a poison
+  operand only where some operands that fill each poison with a defined value
+  are UB from the same memories. A load through a poison pointer may be UB
+  because some pointer in its place faults on those memories.
+- `MemReturnsOnDefined`: wherever a run names the dialect's memories, a
+  propagating op returns a result from some memories on some operands with no
+  poison. A load returns one from memories that hold its allocation.
+
+`LawfulDialectMemPoison` holds them, with `poison_isRefinedBy`, for valid
+instances, and asks for no semantics in the set monad. With
+`LawfulDialectTotal` and `LawfulDialectMonotone` it holds every poison
+obligation with memory. In a dialect that lifts the set monad the three hold
+exactly when `LawfulDialectPoison` does (`LawfulDialectPoison.iff_mem`), so
+the core, the test dialects and their sums and lifts meet them, and the four
+rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
+`lean/FirTest/MemoryPoison.lean` gives a test op that loads through a
+pointer, with no semantics in the set monad, that meets the class, and
+shows the class rejecting one that is UB on a poison pointer and never on a
+defined one. Stage 4 of #231 proves the core's memory ops against it.
+Rejected: one class that holds all five obligations with memory, totality
+and monotonicity included, since progress and refinement with memory already
+ask for those two alone, and would then ask for the poison clauses too.
+
 ### Ops with a callee
 
 Total and monotone cover only the ops that the interpreter runs by their own

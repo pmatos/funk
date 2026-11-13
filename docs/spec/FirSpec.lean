@@ -197,6 +197,8 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryOpRefine "Monotonicity with memory" FirSpec.Execution.MemoryOpRefine (level := 2)}
 
+{includeReadable "." Fir.Execution.MemoryPoison "Poison obligations with memory" FirSpec.Execution.MemoryPoison (level := 2)}
+
 {includeReadable "." Fir.Execution.MemoryStepPaths "The ways a step with memory goes on" FirSpec.Execution.MemoryStepPaths (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryCalls "Runs from given memories" FirSpec.Execution.MemoryCalls (level := 2)}
@@ -352,6 +354,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.TotalLaws "Totality of a sum and a lift" FirSpec.Sum.TotalLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.MonotoneLaws "Monotonicity of a sum and a lift" FirSpec.Sum.MonotoneLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.MemPoisonLaws "Poison of a sum and a lift, with memory" FirSpec.Sum.MemPoisonLaws (level := 2)}
 
 # Architecture decision records
 %%%

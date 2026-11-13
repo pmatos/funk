@@ -105,6 +105,7 @@ import Fir.Execution.MemoryTotal
 import Fir.Execution.MemoryCallSteps
 import Fir.Execution.MemoryProgress
 import Fir.Execution.MemoryOpRefine
+import Fir.Execution.MemoryPoison
 import Fir.Execution.MemoryStepPaths
 import Fir.Execution.MemoryCalls
 import Fir.Execution.MemoryBlackBox
@@ -186,5 +187,6 @@ import Fir.Sum.LiftPoisonLaws
 import Fir.Sum.LiftEffectLaws
 import Fir.Sum.TotalLaws
 import Fir.Sum.MonotoneLaws
+import Fir.Sum.MemPoisonLaws
 import Fir.Core.Names
 import Fir.Validation.DialectSet

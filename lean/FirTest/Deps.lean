@@ -86,6 +86,11 @@ since both are. -/
 instance coreToy_lawfulMonotone : LawfulDialectMonotone CoreToy :=
   Dialect.sum.lawfulMonotone fun _ h => h
 
+/-- The sum of the core and the toy dialect is lawful in its poison with
+memory, since both are. -/
+instance coreToy_lawfulMemPoison : LawfulDialectMemPoison CoreToy :=
+  Dialect.sum.lawfulMemPoison fun _ h => h
+
 /-- The sum of three dialects is lawful: the inclusion of the core's types
 is lawful, and the bit dialect accepts each core type that the core
 accepts. -/
@@ -107,6 +112,11 @@ of the core's types is lawful, and the bit dialect accepts each core type
 that the core accepts. -/
 instance coreToyBit_lawfulMonotone : LawfulDialectMonotone CoreToyBit :=
   Dialect.lift.sum_lawfulMonotone TyIncl.lawful_inl fun _ h => h
+
+/-- The sum of three dialects is lawful in its poison with memory, under the
+conditions of its lawfulness in the set monad. -/
+instance coreToyBit_lawfulMemPoison : LawfulDialectMemPoison CoreToyBit :=
+  Dialect.lift.sum_lawfulMemPoison TyIncl.lawful_inl fun _ h => h
 
 /-- The effects of an op of the sum of three dialects, on the memories of
 its three dialects. -/
