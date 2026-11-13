@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3263741096906587329")
+:::moduleDocs (fingerprint := "17715756551949538059")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -77,6 +77,17 @@ naming: the two are
 op of such a dialect that never ends in UB in the set monad never ends in
 UB with memory, at every naming and from every memories, and one that
 makes no poison in the set monad makes none with memory.
+:::
+
+:::readable Fir.OwnRuleHas.ofLifts Fir.NeverUB.ofLifts Fir.MakesNoPoison.ofLifts (pin := Fir.OpLiftsSetM) (fingerprint := "8931742395573466083")
+*Theorems: the obligations of an op that touches no memory.* What an op
+that is
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied] runs by its
+own rule has every property that each computation of the set monad, lifted
+into the layer, has: so it writes, reads and allocates in no memory, at
+every layout and naming. If it never ends in UB in the set monad, it never
+does with memory, and if it makes no poison in the set monad, it makes none
+with memory. The core dialect meets its effect obligations so, op by op.
 :::
 
 :::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11426148675706650251")

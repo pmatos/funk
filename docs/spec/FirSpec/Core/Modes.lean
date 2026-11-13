@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10472412609436825124")
+:::moduleDocs (fingerprint := "18368273472795846832")
 :::
 
-:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "17771265868778229766")
+:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "10641358420631129298")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`, let
@@ -117,14 +117,16 @@ then $`R^M_k` is stuck. Both follow from scripted mode's theorems,
 since the values sampled mode chose fit the run.
 :::
 
-:::readable Fir.Core.memTree_eq (pin := Fir.MonadMorphism.liftState) (fingerprint := "18409355083722426590")
+:::readable Fir.Core.memTree_eq (pin := Fir.MonadMorphism.liftState) (pin := Fir.Core.memTree_liftState) (fingerprint := "16842763435174226617")
 *Theorem: the tree of a core run with memory is the tree of its run.* For
 every module $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`,
 $`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` is the
 tree of the run of $`f` on $`\vec{v}` with $`k` steps, with no memory:
 the same paths, the same choices and the same leaves, in the same order.
-Each core op keeps the memories, so the run in the layer is the run in the
-tree, lifted, by the
+Each core op keeps the memories: lifting maps each op's rule in the tree to
+its
+{ref "The-fir-specification--Memory--The-core-dialect-in-the-tree-of-choices"}[rule with memory in the layer over the tree],
+so the run in the layer is the run in the tree, lifted, by the
 {ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
 and dropping the memories at each leaf gives the run in the tree back. So
 every mode reports, path for path, what it reported before runs had

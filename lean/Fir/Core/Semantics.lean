@@ -209,20 +209,35 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.call "f" [] [.ptr 0]).hasRules
 #guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
 
+/-- The core dialect's semantics in a monad `m` from two tables of rules,
+`den` for the ops that are not terminators and `ex` for the terminators:
+each op's rule, and `z p` for an op `p` that a table gives none. -/
+@[instance_reducible] def denoteWith
+    (den : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
+      m (HVector toType (Fir.returnTypes (d := CoreDialect) op))))
+    (ex : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) → m Exit))
+    (z : {α : Type} → Op → m α) : DialectDenote CoreDialect m where
+  denote op args := match den op with
+    | some rule => rule args
+    | none => z op
+  exit op args := match ex op with
+    | some rule => rule args
+    | none => z op
+
+/-- The core dialect's semantics in a monad `m` with choice and UB: each
+op's rule in `Op.denote?` or `Op.exit?`, and `z p` for an op `p` that has
+none, as `call`, whose `denote` no run reaches. -/
+@[reducible] def denoteIn [MonadChoice m] [MonadUB m] (z : {α : Type} → Op → m α) :
+    DialectDenote CoreDialect m :=
+  denoteWith (fun op => op.denote?) (fun op => op.exit?) z
+
 end Fir.Core
 
 namespace Fir
 
 /-- The core dialect's semantics in the set monad: each op's rule, and no
-outcome where `Op.denote?` or `Op.exit?` gives none, as for `call`, whose
-`denote` no run reaches. -/
-instance : DialectDenote CoreDialect SetM where
-  denote op args := match op.denote? (m := SetM) with
-    | some rule => rule args
-    | none => fun _ => False
-  exit op args := match op.exit? (m := SetM) with
-    | some rule => rule args
-    | none => fun _ => False
+outcome where `Op.denote?` or `Op.exit?` gives none. -/
+instance : DialectDenote CoreDialect SetM := Core.denoteIn fun _ _ => False
 
 /-- The core ops that call a function: `call @g` calls `@g`. -/
 instance : DialectCall CoreDialect := ⟨Core.Op.callTarget?⟩

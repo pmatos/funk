@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6652858730231381620")
+:::moduleDocs (fingerprint := "11286671970252655220")
 :::
 
 :::readable Fir.Core.anyNaN_iff Fir.Core.Ends Fir.Core.floatResult_defined Fir.Core.floatResult_ends Fir.Core.pure_ends (pin := Fir.Core.anyNaN) (pin := Fir.Core.floatResult) (fingerprint := "12294876258884390272")
@@ -88,12 +88,16 @@ operands give refined results, and it is never UB or gives poison on
 defined operands.
 :::
 
-:::readable Fir.Core.floatResult_toSet Fir.Core.fbinValues_toSet Fir.Core.funaryValue_toSet Fir.Core.fmaValues_toSet (pin := Fir.ChoiceTree.toSet) (fingerprint := "3793062179076232944")
-*Theorem: the rules in the tree of choices.* Each rule of the float
-arithmetic, and the float result it is built from, run in `fir-ref`'s
-{ref "The-fir-specification--Execution--Choice-trees"}[tree of choices],
-has as its set what it is in the set monad: the choice of a NaN result is
-a choice of $`m + 1` bits in the tree, and every NaN of the format is one
-path. So `fir-ref run`'s modes give the spec's outcomes on the float
-arithmetic.
+:::readable Fir.Core.anyNaN_map Fir.Core.floatResult_map Fir.Core.fbinValues_map Fir.Core.funaryValue_map Fir.Core.fmaValues_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "511567619443443708")
+*Theorem: the rules in another monad.* For every monad morphism
+$`\varphi` that
+{ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],
+$`\varphi` maps each rule of the float arithmetic in one monad, any NaN
+and the float result it is built from included, to the same rule in the
+other: the choice of a NaN result is a choice of $`m + 1` bits in both, and
+a result that is not a NaN is the same result. So in `fir-ref`'s
+{ref "The-fir-specification--Execution--Choice-trees"}[tree of choices]
+each rule has as its set what it is in the set monad, and `fir-ref run`'s
+modes give the spec's outcomes on the float arithmetic; and in the state
+layer each rule is its rule in the set monad, keeping the memories.
 :::

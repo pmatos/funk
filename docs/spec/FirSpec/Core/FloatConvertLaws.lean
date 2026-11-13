@@ -14,19 +14,22 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Format conversion obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9602539157188210557")
+:::moduleDocs (fingerprint := "13944966831994002610")
 :::
 
-:::readable Fir.Core.convertFloat_ends Fir.Core.convertFloat_toSet (pin := Fir.Core.convertFloat) (pin := Fir.Core.Ends) (pin := Fir.ChoiceTree.toSet) (fingerprint := "5805004634178140458")
-*Theorems: the rules of the conversions between formats end, and run in
-the tree of choices.* On every operand, the rule of $`\mathsf{fpext}` and
+:::readable Fir.Core.convertFloat_ends Fir.Core.convertFloat_map (pin := Fir.Core.convertFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "1164916688012191793")
+*Theorems: the rules of the conversions between formats end, and mean the same in
+another monad.* On every operand, the rule of $`\mathsf{fpext}` and
 of $`\mathsf{fptrunc}`
 {ref "The-fir-specification--Execution--Float-arithmetic-obligations"}[ends]:
 on a value it is a float result, and on poison it is
-$`\mathsf{pure}~\mathsf{poison}`. Run in `fir-ref`'s
-{ref "The-fir-specification--Execution--Choice-trees"}[tree of choices],
-each rule has as its set what it is in the set monad, so `fir-ref run`'s
-modes give the spec's outcomes on the conversions.
+$`\mathsf{pure}~\mathsf{poison}`. A monad morphism that
+{ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB]
+maps each rule in one monad to the same rule in the other. So in
+`fir-ref`'s
+{ref "The-fir-specification--Execution--Choice-trees"}[tree of choices]
+each rule has as its set what it is in the set monad, and `fir-ref run`'s
+modes give the spec's outcomes on the conversions between formats.
 :::
 
 :::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "2049076331015685099")

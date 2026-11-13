@@ -1,7 +1,7 @@
 import Fir.Core.Semantics
 import Fir.Core.Poison
 import Fir.Execution.EffectLaws
-import Fir.Execution.ChoiceTree
+import Fir.Execution.Morphism
 
 /-!
 # Float arithmetic is lawful
@@ -22,9 +22,12 @@ defined operands are refined only by themselves, so each rule is
 monotone. None of this looks at what the model computes: the proofs hold
 for any operation of the model, and for every NaN that the choice gives.
 
-Each rule, run in `fir-ref`'s tree of choices, has the set monad's rule as
-its set, as `freeze`'s does: the last section proves it, for the modes of
-`fir-ref run`.
+Each rule is written once for any monad with choice, and a monad morphism
+that keeps choice and UB maps the rule in one monad to the rule in the
+other, as it maps `freeze`'s: the last section proves it. So the rule in
+`fir-ref`'s tree of choices has the set monad's as its set, for the modes
+of `fir-ref run`, and the rule in the state layer is the set monad's rule,
+keeping the memories.
 -/
 
 namespace Fir.Core
@@ -396,41 +399,50 @@ theorem fma_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.fma e m) :=
 
 end
 
-/-! # The rules in the tree of choices -/
+/-! # The rules in another monad -/
 
 section
-variable {ε : Type} {e m : Nat}
+variable {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadChoice ν] [MonadUB μ]
+  [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) {e m : Nat}
+include hk
 
-/-- A float result in the tree of choices has the set monad's as its
-set. -/
-theorem floatResult_toSet (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
-    (floatResult (μ := ChoiceTree ε) e m r).toSet = floatResult e m r := by
+/-- A morphism that keeps choice and UB maps any NaN in `μ` to any NaN in
+`ν`. -/
+theorem anyNaN_map : φ.map (anyNaN (μ := μ) e m) = anyNaN e m := by
+  unfold anyNaN
+  rw [φ.map_bind, hk.choose]
+  simp only [φ.map_pure]
+
+/-- A morphism that keeps choice and UB maps a float result in `μ` to the
+float result in `ν`. -/
+theorem floatResult_map (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
+    φ.map (floatResult (μ := μ) e m r) = floatResult e m r := by
   unfold floatResult
   split
   · dsimp only
     split
-    · exact ChoiceTree.toSet_bind _ _
-    · rfl
-  · exact ChoiceTree.toSet_bind _ _
+    · exact anyNaN_map φ hk
+    · exact φ.map_pure _
+  · exact anyNaN_map φ hk
 
-/-- The rules of `fadd`, `fsub`, `fmul` and `fdiv` in the tree of choices
-have the set monad's as their set. -/
-theorem fbinValues_toSet (o : FBin) (a b : PoisonOr (BitVec (floatWidth e m))) :
-    (fbinValues (μ := ChoiceTree ε) o a b).toSet = fbinValues o a b := by
-  cases a <;> cases b <;> first | rfl | (dsimp only [fbinValues]; exact floatResult_toSet _)
+/-- Such a morphism maps the rules of `fadd`, `fsub`, `fmul` and `fdiv` in
+`μ` to their rules in `ν`. -/
+theorem fbinValues_map (o : FBin) (a b : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fbinValues (μ := μ) o a b) = fbinValues o a b := by
+  cases a <;> cases b <;>
+    first | exact φ.map_pure _ | (dsimp only [fbinValues]; exact floatResult_map φ hk _)
 
-/-- The rules of `fneg`, `fabs` and `sqrt` in the tree of choices have the
-set monad's as their set. -/
-theorem funaryValue_toSet (o : FUnary) (a : PoisonOr (BitVec (floatWidth e m))) :
-    (funaryValue (μ := ChoiceTree ε) o a).toSet = funaryValue o a := by
-  cases a <;> first | rfl | (dsimp only [funaryValue]; exact floatResult_toSet _)
+/-- Such a morphism maps the rules of `fneg`, `fabs` and `sqrt` in `μ` to
+their rules in `ν`. -/
+theorem funaryValue_map (o : FUnary) (a : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (funaryValue (μ := μ) o a) = funaryValue o a := by
+  cases a <;> first | exact φ.map_pure _ | (dsimp only [funaryValue]; exact floatResult_map φ hk _)
 
-/-- The rule of `fma` in the tree of choices has the set monad's as its
-set. -/
-theorem fmaValues_toSet (a b c : PoisonOr (BitVec (floatWidth e m))) :
-    (fmaValues (μ := ChoiceTree ε) a b c).toSet = fmaValues a b c := by
+/-- Such a morphism maps the rule of `fma` in `μ` to its rule in `ν`. -/
+theorem fmaValues_map (a b c : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fmaValues (μ := μ) a b c) = fmaValues a b c := by
   cases a <;> cases b <;> cases c <;>
-    first | rfl | (dsimp only [fmaValues]; exact floatResult_toSet _)
+    first | exact φ.map_pure _ | (dsimp only [fmaValues]; exact floatResult_map φ hk _)
 
 end
 

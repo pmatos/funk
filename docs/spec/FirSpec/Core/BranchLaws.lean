@@ -25,7 +25,7 @@ each way $`e` to end, a place to go or UB, into a terminator's rule. In
 the set monad, that rule ends with $`e'` exactly when $`e' = e`.
 :::
 
-:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "17815657339174882063")
+:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "12193982817263337387")
 *Theorem: where $`\mathsf{br}` and $`\mathsf{cond\_br}` go.* In the set
 monad, $`\mathsf{br}` goes to its one successor and nowhere else, on every
 operand vector $`\vec{v}`; $`\mathsf{cond\_br}` (`condBr` in the Lean) on a

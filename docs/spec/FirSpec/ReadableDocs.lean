@@ -100,6 +100,7 @@ import FirSpec.Core.BranchLaws
 import FirSpec.Execution.Morphism
 import FirSpec.Execution.ChoiceTree
 import FirSpec.Execution.Modes
+import FirSpec.Core.MemRules
 import FirSpec.Core.TreeRules
 import FirSpec.Core.Modes
 import FirSpec.Execution.RunPaths

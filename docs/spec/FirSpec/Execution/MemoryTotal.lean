@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Totality with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14109494400669195134")
+:::moduleDocs (fingerprint := "1072439918142219991")
 :::
 
 :::readable Fir.HasOutcome Fir.HasOutcome.map Fir.hasOutcome_lift Fir.HasOutcome.of_lift Fir.OpHasOutcome (fingerprint := "7856571833701684355")
@@ -53,12 +53,14 @@ as {ref "The-fir-specification--Execution--Poison-classes"}[totality] in
 the set monad is what progress asks of runs in the set monad.
 :::
 
-:::readable Fir.MemTotal.ofLifts Fir.MemTotal.setM Fir.LawfulDialectTotal.ofLawful (pin := Fir.OpTotal) (fingerprint := "13895771337337551721")
-*Theorems: totality with memory, for a dialect that lifts the set monad.*
-In a dialect that
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifts the set monad],
-as every dialect whose ops touch no memory does, an op is total with memory
-exactly when it is total in the set monad: on every operand vector, it may
-end in some way. So a lawful dialect that lifts the set monad is lawful in
-its totality. The core dialect and the dialects of the tests are.
+:::readable Fir.MemTotal.ofLifts Fir.MemTotal.setM Fir.LawfulDialectTotal.ofLawful (pin := Fir.OpTotal) (pin := Fir.OpLiftsSetM) (fingerprint := "9589096651207859662")
+*Theorems: totality with memory, for an op that touches no memory.* An op
+that is
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and total
+in the set monad is total with memory: its rule keeps the memories, and so
+has a way to end from every memories. In a dialect that lifts the set
+monad, every op is tied, and an op total with memory is total in the set
+monad too. So a lawful dialect that lifts the set monad is lawful in its
+totality. The dialects of the tests are; the core dialect is lawful in its
+totality op by op, from each op's own tie.
 :::

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2864066674795550494")
+:::moduleDocs (fingerprint := "8344446909554780136")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "414657085860886370")
@@ -84,7 +84,19 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "5542951734644198842")
+:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "3568116688035604745")
+*Definition: the core dialect's semantics in a monad.* Given two tables
+of rules in a monad $`m`, one for the ops that are not terminators and one
+for the terminators, and a computation $`z(p)` for each op $`p`, the core's
+semantics in $`m` gives each op its rule from the tables, and $`z(p)` to an
+op that a table gives none. In a monad with choice and UB, the core's
+semantics with $`z` takes the two blocks of rules above as its tables. The
+set monad's semantics below is the one with no outcome as $`z`, and the
+tree of choices and the state layer use the same tables, or tables with
+memory, with their own $`z`.
+:::
+
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "12180025419505110286")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op

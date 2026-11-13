@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6983827326669927177")
+:::moduleDocs (fingerprint := "6496917131333773362")
 :::
 
 :::readable Fir.ChoiceTree (fingerprint := "6945210103657211533")
@@ -120,6 +120,12 @@ of UB with $`r` is the set monad's UB with $`r`, $`\{\mathsf{ub}~r\}`.
 Op rules that are written once for any monad with these effects, such as
 those of the core dialect, therefore have the same meaning in trees as in
 the set monad.
+:::
+
+:::readable Fir.ChoiceTree.toSet_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "3468794217983405298")
+*Theorem: the set of a tree keeps choice and UB.* By the two theorems
+above, $`\mathrm{set}`
+{ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB].
 :::
 
 :::readable Fir.ChoiceTree.toSet_mapsFrame (pin := Fir.ChoiceTree.instMonadFrame) (fingerprint := "16826740269587007722")

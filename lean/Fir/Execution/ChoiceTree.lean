@@ -15,8 +15,9 @@ bits, with one subtree for each value the bits may take.
 
 Trees are a lawful monad: running a tree then `pure` gives the tree, and
 sequences of trees associate. The tree's meaning is a set: each tree maps
-to the set of the ways its paths end. That map is a monad morphism, so a run of the interpreter in
-the tree maps to its run in the set monad, by the previous section.
+to the set of the ways its paths end. That map is a monad morphism that keeps
+choice and UB, so a run of the interpreter in the tree maps to its run in
+the set monad, by the previous section.
 `fir-ref`'s three modes walk the tree: exhaustive mode visits every path,
 scripted mode follows the one path that a choice sequence names, and
 sampled mode draws one.
@@ -148,6 +149,10 @@ theorem toSet_mapsFrame : (toSetMorphism (ε := ε)).MapsFrame := fun _ => rfl
 /-- UB is the set monad's UB. -/
 theorem toSet_ub (r : String) :
     (MonadUB.ub r : ChoiceTree ε α).toSet = (MonadUB.ub r : SetM α) := rfl
+
+/-- `toSet` keeps choice and UB. -/
+theorem toSet_keeps : (toSetMorphism (ε := ε)).KeepsChoiceUB :=
+  ⟨toSet_choose (ε := ε), fun r => toSet_ub (ε := ε) r⟩
 
 end ChoiceTree
 

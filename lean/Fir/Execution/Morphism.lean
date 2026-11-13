@@ -19,6 +19,11 @@ theorem below.
 `fir-ref`'s exhaustive, scripted and sampled modes rely on it: they run
 the interpreter in the tree of choices of the next section, and the morphism
 from that tree to the set monad carries their results to the spec's run.
+
+A morphism that also keeps choice and UB maps each op rule written once for
+any monad with those effects to the same rule in the other monad, so a
+dialect whose rules are written that way meets the theorem's condition op
+by op.
 -/
 
 namespace Fir
@@ -62,6 +67,24 @@ lifted. -/
 theorem MonadMorphism.except_lift {ε α : Type} (x : m α) :
     (φ.except ε).map (ExceptT.lift x) = ExceptT.lift (φ.map x) := by
   simp only [MonadMorphism.except, ExceptT.lift, ExceptT.run, ExceptT.mk, φ.map_map]
+
+/-- The morphism maps a computation that ends with a function of the result
+of another as it maps the other. -/
+theorem MonadMorphism.map_bind_pure {α β : Type} {x : m α} {y : n α} (h : φ.map x = y)
+    (g : α → β) : φ.map (x >>= fun a => pure (g a)) = y >>= fun a => pure (g a) := by
+  rw [φ.map_bind, h]
+  simp only [φ.map_pure]
+
+/-- The morphism keeps choice and UB: it maps a choice of `w` bits to a
+choice of `w` bits, and UB to UB for the same reason. A rule written once
+for any monad with these two effects then means in `n` what its image of
+the rule in `m` means. -/
+structure MonadMorphism.KeepsChoiceUB [MonadChoice m] [MonadChoice n] [MonadUB m] [MonadUB n] :
+    Prop where
+  /-- A choice of bits maps to a choice of bits. -/
+  choose : ∀ w, φ.map (MonadChoice.choose w) = MonadChoice.choose w
+  /-- UB maps to UB, for the same reason. -/
+  ub : ∀ {α : Type} (r : String), φ.map (MonadUB.ub r : m α) = MonadUB.ub r
 
 variable [MonadFrame m] [MonadFrame n]
 

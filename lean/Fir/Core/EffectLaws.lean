@@ -1,4 +1,4 @@
-import Fir.Core.Lawful
+import Fir.Core.MemRules
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -20,13 +20,13 @@ effects. Each effect that a core op leaves out, it does not have:
   integers, the conversions between formats and the pointer offset.
 * _No control._ Every core op that does not declare control is not a
   terminator.
-* _No write, read or allocation._ No core op touches memory: it runs by its
-  rule in the set monad and keeps the memories, at every naming of them
-  (the section on meeting the memory obligations).
+* _No write, read or allocation._ No core op touches memory: it runs with
+  memory by its rule in the set monad and keeps the memories, at every
+  layout and naming of them (the section on the core's rules with memory).
 
-So the core's semantics with memory lifts its semantics in the set monad,
-and the first two obligations, stated over the semantics with memory,
-follow from what each rule does in the set monad.
+So each op is tied, and the first two obligations, stated over the
+semantics with memory, follow from what each op's rule does in the set
+monad.
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
@@ -230,23 +230,21 @@ end Fir.Core
 
 namespace Fir
 
-/-- No core op touches memory: at every naming of the core's memories, each
-op runs by its rule in the set monad and keeps the memories. -/
-instance Core.instDialectMemDenote : DialectMemDenote CoreDialect := DialectMemDenote.ofSetM
-
-/-- The core dialect's semantics with memory lifts its semantics in the set
-monad. -/
-instance Core.liftsSetM : LiftsSetM CoreDialect := DialectMemDenote.ofSetM_liftsSetM
-
 /-- The core dialect is lawful in its effects: every effect that a core op
-leaves out, it does not have. -/
+leaves out, it does not have. Each op runs with memory by its rule in the
+set monad (`Core.Op.liftsSetM`), so each obligation of an op follows from
+that op's own rule. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
-  neverUB op _ _ h := NeverUB.ofSetM (Core.Op.neverUB_all op h)
-  makesNoPoison op _ _ h := MakesNoPoison.ofSetM (Core.Op.makesNoPoison_all op h)
+  neverUB op _ _ h := NeverUB.ofLifts (Core.Op.liftsSetM op) (Core.Op.neverUB_all op h)
+  makesNoPoison op _ _ h :=
+    MakesNoPoison.ofLifts (Core.Op.liftsSetM op) (Core.Op.makesNoPoison_all op h)
   notControl := Core.Op.notControl_all
-  writesNot := DialectMemDenote.ofSetM_writesNot
-  readsNot := DialectMemDenote.ofSetM_readsNot
-  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
+  writesNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => writesNot_lift x c
+  readsNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => readsNot_lift x c
+  allocatesNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => allocatesNot_lift x c
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 
@@ -262,17 +260,21 @@ namespace Core.Unlawful
     | .sdiv _ x => { mayPoison := x }
     | op => Core.Op.effects op
 
-/-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
-left without may-UB must never end in UB. -/
+/-- `sdiv` by zero is UB, so the obligations reject the declaration, over
+the core's own semantics with memory: an op left without may-UB must never
+end in UB. -/
 theorem sdivNoUB_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _
-      (@DialectMemDenote.ofSetM CoreDialect _ _ sdivNoUB _) := by
+      (@DialectMemDenote.mk CoreDialect _ _ sdivNoUB fun lay ρ => Core.memDenoteAt lay ρ) := by
   intro h
   have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
-  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
-    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl) Memory.Memories.empty _
-    ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
+  have hl := (Core.Op.liftsSetM (.sdiv 8 false) (fun _ : Unit => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1
+  have hub := (hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
+  rw [hl] at hub
+  exact NoUB.of_lift hub Memory.Memories.empty _ ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 
 end Core.Unlawful
 

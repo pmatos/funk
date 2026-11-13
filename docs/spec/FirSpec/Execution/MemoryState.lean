@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13298479173858320640")
+:::moduleDocs (fingerprint := "4546578974901252582")
 :::
 
 :::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "2883893951779013492")
@@ -46,6 +46,12 @@ It keeps a choice of $`w` bits when $`\varphi` keeps it, and UB when
 $`\varphi` keeps UB.
 :::
 
+:::readable Fir.MonadMorphism.state_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "10206560632729164557")
+*Theorem: a translation that keeps choice and UB keeps them through the
+layer.* When $`\varphi` keeps choice and UB, so does its translation
+through the layer, by the two theorems above.
+:::
+
 :::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store (fingerprint := "5667444096861358501")
 *Theorem: a translation through the layer keeps the memory effect.* It
 keeps allocating and freeing, which end at once with a value. It keeps
@@ -64,4 +70,10 @@ and UB of a tree. So, by the
 the run of a function in the layer over the tree has, at each state, the
 run in the layer over the set monad as its set, when each op's semantics
 in the one has its semantics in the other as its set.
+:::
+
+:::readable Fir.ChoiceTree.toSetState_keeps (fingerprint := "11139396066526368901")
+*Theorem: the set of a tree keeps choice and UB through the layer.* The
+set of a tree, translated through the layer, keeps choice and UB, since
+$`\mathrm{set}` keeps them.
 :::

@@ -4,8 +4,9 @@ import Fir.Core.TreeRules
 # The core dialect's exhaustive, scripted and sampled runs
 
 The modes run the core dialect with memory (the section on modes with
-memory): its rules in the state layer over the tree of choices (the section
-on the core dialect in the tree of choices), from the empty memories. A
+memory): its rules with memory in the state layer over the tree of choices
+(the section on the core dialect in the tree of choices), from the empty
+memories. A
 mode runs a module with its own layout: each memory of the run has its
 entry in the module's data layout, which gives its unit, its byte order and
 the width of its pointers, and the run names the core's memories by
@@ -166,8 +167,7 @@ theorem memTree_eq (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     modeTree M f args fuel = (f.run M (m := ChoiceTree Op) args fuel).run := by
   letI := memTreeDenote M.layout.entry id
-  have h := Func.run_map (DialectDenote.liftState_mapsDenote (m := ChoiceTree Op)
-    (d := CoreDialect) (Memories Nat (unitsOf M.layout.entry)))
+  have h := Func.run_map (memTree_liftState M.layout.entry id)
     (MonadMorphism.liftState_mapsFrame (Mem := Nat) (unit := unitsOf M.layout.entry)
       (fun _ => rfl)) M f args fuel
   unfold modeTree Func.memTree

@@ -132,9 +132,20 @@ terminators or have no callee, as the poison obligations do
 A dialect whose ops touch no memory ties its two semantics: `LiftsSetM`, in
 `lean/Fir/Execution/MemoryRuns.lean`, says that its semantics with memory is its
 semantics in the set monad, lifted, at every naming. `DialectMemDenote.ofSetM`
-meets it, and so do sums and lifts whose sides do. Under the tie an op meets no
-may-UB and no may produce poison in the set monad exactly when it meets them
-with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
+meets it, and so do sums and lifts whose sides do. The tie also holds of one op:
+`OpLiftsSetM op` says that the op runs with memory by its rule in the set monad
+and keeps the memories, and a dialect lifts the set monad exactly when every op
+is tied (`LiftsSetM.opLifts`, `LiftsSetM.ofOpLifts`). Each transfer of an
+obligation from the set monad to the semantics with memory (`MemTotal.ofLifts`,
+`MemMonotone.ofLifts`, `MemPropagatesPoison.ofLifts`,
+`MemReturnsOnDefined.ofLifts`, `NeverUB.ofLifts`, `MakesNoPoison.ofLifts`,
+`OwnRuleHas.ofLifts`) takes one op's tie, so a dialect can meet its obligations
+op by op, and an op that touches memory can sit beside tied ones with a proof of
+its own. Rejected: transfers that ask the whole dialect to lift the set monad,
+which no dialect with one memory op could use for its other ops.
+
+Under the tie an op meets no may-UB and no may produce poison in the set monad
+exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
 theorems over runs in the set monad that use these two obligations assume the
 tie. Theorems that do not use them, such as fuel monotonicity, progress and
 refinement of runs in the set monad, take no tie. A dialect with a memory op has
@@ -148,9 +159,23 @@ tie would make it UB or give it no outcome there, and the runs in the set monad
 would mean nothing for programs that touch memory.
 
 Observable has no obligation yet: M0's runs have no trace. The core dialect is
-lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no memory, so
-`DialectMemDenote.ofSetM` gives its semantics with memory and meets every memory
-obligation, whatever it declares. `lean/FirTest/G0Effects.lean` restates the
+lawful in its effects (`Core.lawfulDialectEffects`). Its rules are written for a
+monad with choice, UB and the memory effect, at the layout and naming of a run
+(`Core.Op.memDenote?`, `Core.Op.memExit?`, in `lean/Fir/Core/MemRules.lean`),
+and its semantics with memory runs them op by op in the state layer
+(`Core.memDenoteAt`), not by lifting its semantics in the set monad. No core op
+touches memory yet, so each op's rule with memory is its rule. A monad morphism
+that keeps choice and UB (`MonadMorphism.KeepsChoiceUB`) maps the core's
+semantics in one monad to its semantics in another, op by op
+(`Core.denoteIn_mapsDenote`); lifting keeps choice and UB, so every core op is
+tied (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
+totality, monotonicity and poison, follows from that op's own tie.
+`Core.liftsSetM` is a theorem from the ties, not a definition, and the
+theorems over the core's runs in the set monad use it until stage 4b-3 of #231
+states them over its runs with memory. A memory op joins with its own rule in
+`Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
+memory as the lift of its semantics in the set monad, which gives a load no
+place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
 class and its obligations for every dialect. The obligations reject a wrong
 declaration: with `sdiv` declared without may-UB, the core dialect is not lawful
 in its effects (`Core.Unlawful.sdivNoUB_unlawful`). And
