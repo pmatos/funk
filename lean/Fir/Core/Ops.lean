@@ -4,8 +4,8 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls, and the float constants, comparisons, arithmetic and
-bit casts.
+branches and calls, and the float constants, comparisons, arithmetic, bit
+casts and conversions from integers.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -181,6 +181,18 @@ Bit casts, which read the same bits as another type
 
 Each is never UB, and a poison operand gives poison.
 
+Conversions from an integer to a float, by Lean's float model
+(ADR-2026-11-09-1549):
+
+* `sitofp n e m`: the integer that an `iN` holds, read as signed, as a
+  value of `float<e,m>`, rounded to nearest even.
+* `uitofp n e m`: the integer that an `iN` holds, read as unsigned, as a
+  value of `float<e,m>`, rounded to nearest even.
+
+A result too large for the format is an infinity of its sign, and zero
+gives `+0`. Neither is ever UB or gives a NaN, and a poison operand gives
+poison.
+
 Poison control:
 
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
@@ -238,6 +250,8 @@ inductive Op where
   | trunc (m n : Nat)
   | toBits (e m : Nat)
   | ofBits (e m : Nat)
+  | sitofp (n e m : Nat)
+  | uitofp (n e m : Nat)
   | freeze (w : Nat)
   | poison (w : Nat)
   | br

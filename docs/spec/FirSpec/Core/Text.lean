@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7882788274938989949")
+:::moduleDocs (fingerprint := "177051942795577566")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -36,11 +36,11 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "8132292057041729284")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "16116086442042045207")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-33 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+35 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
 written with the name it has in the op set, except six. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
@@ -52,11 +52,11 @@ the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
 the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "784785279742590319")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "442232313540447983")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o) &= \mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -84,7 +84,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "8918946333370576094")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "1645440977341616965")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -144,6 +144,8 @@ $`\mathsf{i}W` are integer types.
   {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
   reads it, from no attributes, one float type and one integer type of its
   width, in either order.
+* `sitofp` and `uitofp`: as the same section reads them, from
+  $`\mathtt{round(rne)}`, one integer type and one float type.
 * `freeze`: without attributes, from one operand type $`\mathsf{i}A` and
   one result type $`\mathsf{i}B` with $`A = B`, it is
   $`\mathsf{freeze}_A`.
@@ -211,7 +213,7 @@ calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
 validation rejects them.
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "14220601083256941809")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "1624387118991640566")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the blocks
 above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
@@ -219,7 +221,7 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 33 core ops at least once, both bit casts among them, with each of the ten
+holds each of the 35 core ops at least once, both bit casts and both conversions from integers among them, with each of the ten
 predicates and each of the fourteen float predicates, at widths from 1 to
 128, float constants at `f32`, `f64`, `f16` and
 $`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, and

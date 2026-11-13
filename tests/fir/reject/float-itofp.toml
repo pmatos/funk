@@ -1,0 +1,125 @@
+# Must-reject texts of #241's conversions from integers to floats: sitofp
+# and uitofp carry round(rne) and take one value of an integer type to a
+# float type, of any width and format (ADR-2026-11-09-1549). Any other
+# attribute or pair of types does not decode, and validation rejects a
+# width or format that it rejects everywhere.
+
+[[reject]]
+verdict = "parse-error"
+rule = "sitofp rounds, so it carries round(rne): without it, it does not decode"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = sitofp %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "round(rne) is the one rounding mode: uitofp round(rtz) does not decode"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = uitofp round(rtz) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sitofp takes an integer: from a float it does not decode"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = sitofp round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "uitofp gives a float: to an integer it does not decode"
+text = '''
+func @f(%i: i32) -> i64 {
+^e:
+  %r: i64 = uitofp round(rne) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "sitofp takes one operand"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = sitofp round(rne) %i, %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "uitofp has one attribute, round(rne), and no flag"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = uitofp nsw round(rne) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "sitofp decodes from i0, and validation rejects the width"
+text = '''
+func @f(%i: i0) -> f32 {
+^e:
+  %r: f32 = sitofp round(rne) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "uitofp decodes to float(1, 1), and validation rejects the format, which has 1 exponent bit"
+text = '''
+func @f(%i: i8) -> float(1, 1) {
+^e:
+  %r: float(1, 1) = uitofp round(rne) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

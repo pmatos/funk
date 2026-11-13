@@ -241,7 +241,9 @@ and hexadecimal for every value, which the human did not rule
 
 Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
 has one attribute, `round(rne)`, in the applied form:
-`%s: f32 = fadd round(rne) %a, %b`. `frem`, `fmod`, `fneg` and `fabs` do not
+`%s: f32 = fadd round(rne) %a, %b`. `sitofp` and `uitofp` round too, from an
+integer of any width to a float of any format, and no other pair of types
+decodes (#241). `frem`, `fmod`, `fneg` and `fabs` do not
 round, since their result is exact, and have none: `%q: f64 = frem %a, %b`.
 Any other attribute does not decode, so a missing mode, `round(rtz)`, the bare
 word `rne`, two attributes, `fneg round(rne)` and `frem round(rne)` are parse

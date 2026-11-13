@@ -15,7 +15,8 @@
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
 //! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`.
 //! #241 adds the bit cast `bitcast` between a float and an integer of its
-//! width. A later family adds a file and a line here.
+//! width, and the conversions from integers to floats `sitofp` and
+//! `uitofp`. A later family adds a file and a line here.
 
 mod arith;
 mod bitcast;
@@ -28,6 +29,7 @@ mod div;
 mod float_arith;
 mod float_text;
 mod freeze;
+mod int_to_float;
 mod types;
 mod width;
 
@@ -37,6 +39,7 @@ pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
 pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
+pub use int_to_float::INT_TO_FLOAT_OPS;
 pub use types::{
     CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
     int_width, ptr_type,
@@ -79,7 +82,9 @@ pub fn dialect() -> Dialect {
         .op(control::Ret)
         .op(control::Unreachable)
         .op(call::Call)
-        .op(bitcast::Bitcast);
+        .op(bitcast::Bitcast)
+        .op(int_to_float::IntToFloat("sitofp"))
+        .op(int_to_float::IntToFloat("uitofp"));
     float_arith::FloatArith::all().fold(core, Dialect::op)
 }
 

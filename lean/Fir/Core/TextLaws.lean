@@ -7,7 +7,7 @@ import Fir.Core.FloatTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 33 of its ops and every type. The laws are proved for every
+text, for all 35 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -195,6 +195,21 @@ theorem decodeBitcast_eq {as : List Attr} {ts rs : List Ty} {op : Op}
       exact ⟨rfl, (List.isEmpty_iff.mp ha).symm, rfl, rfl⟩
     · cases h
 
+/-- `sitofp` and `uitofp` decode only from their own name, attributes,
+operand type and result type. -/
+theorem decodeIntToFloat_eq {signed : Bool} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeIntToFloat signed as ts rs = some op) :
+    op.name = (if signed then "sitofp" else "uitofp") ∧ op.attrs = as ∧ op.sig = ts ∧
+      op.returnTypes = rs := by
+  unfold decodeIntToFloat at h
+  split at h
+  · split at h
+    · rename_i hr
+      cases h
+      cases signed <;> exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
+    · cases h
+  · cases h
+
 /-- Every core op decodes from its name and attributes, at its operand and
 result types. -/
 theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes = some o := by
@@ -218,6 +233,9 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
   | toBits e m | ofBits e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeBitcast, i]
+  | sitofp n e m | uitofp n e m =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeIntToFloat, roundAttr,
+      isRoundAttrs, i]
   | _ =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeWrap_attrs, bare,
       decodeCast, plainBinOps, find_pred_name, i, List.lookup]
@@ -356,6 +374,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
     obtain ⟨rfl, h⟩ := bare_eq h
     cases h
     exact ⟨rfl, rfl, rfl, rfl⟩
+  · exact decodeIntToFloat_eq (signed := true) h -- sitofp
+  · exact decodeIntToFloat_eq (signed := false) h -- uitofp
   · -- srem, urem, and, or, xor, shl, lshr and ashr
     split at h
     · rename_i mk hmk
@@ -396,7 +416,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | fcmp p => exact ⟨p.name_isWord, trivial⟩
   | fbin o =>
     cases o <;> simp [Op.attrs, FBin.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
-  | fma => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+  | fma | sitofp | uitofp => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
   | funary o =>
     cases o <;> simp [Op.attrs, FUnary.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
   | add _ f | sub _ f | mul _ f =>
@@ -414,7 +434,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 33 core ops and
+/-- The core dialect's text meets the seven laws, for all 35 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode
