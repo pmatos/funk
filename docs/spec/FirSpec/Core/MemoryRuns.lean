@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4658458562917084169")
+:::moduleDocs (fingerprint := "16999126935403129443")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -51,15 +51,28 @@ each asks only that each core terminator be tied, or that each core op be
 monotone with memory.
 :::
 
-:::readable Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "11964788090227325489")
-*Theorem: every core function valid in a module's context runs within it
-with memory.* For every core module $`M`, every core function $`f`
-{ref "The-fir-specification--Validation--The-general-rules"}[valid] in
-the context of $`M`, and every layout and naming of the core's memories,
-$`f` runs within $`M` with memory: it
+:::readable Fir.Core.Op.liftsSetM_of_terminator Fir.Core.Op.memMonotone_all (pin := Fir.Core.Op.liftsSetM) (pin := Fir.Core.Op.monotone_all) (fingerprint := "13096568096900556014")
+*Theorems: every core terminator is tied, and every core op that runs by
+its own rule is monotone with memory.* Each core terminator touches no
+memory, so it is
+{ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied].
+Each core terminator and each core op with no callee, at every width, valid
+or not, is
+{ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
+at every layout and naming: it is monotone in the set monad and tied. These
+are what the theorems below ask of the core's ops, so an op that touches
+memory, which is not a terminator, joins them with its own case of the
+second.
+:::
+
+:::readable Fir.Core.inModuleAt_of_inModule Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "10953520611792496938")
+*Theorems: a core function that runs within a module runs within it with
+memory.* For every core module $`M`, every core function $`f` that
 {ref "The-fir-specification--Execution--Core-functions-with-calls"}[runs within M],
-and each of its terminators is tied, so each goes where it goes in the set
-monad and keeps the memories.
+and every layout and naming of the core's memories, $`f` runs within $`M`
+with memory, since each of its terminators is tied. So does every core
+function {ref "The-fir-specification--Validation--The-general-rules"}[valid]
+in the context of $`M`.
 :::
 
 :::readable Fir.Core.fuelMonotone Fir.Core.neverStuck Fir.Core.progress Fir.Core.runsWell (pin := Fir.Core.RunsWell) (fingerprint := "8733541239344487932")
@@ -119,7 +132,7 @@ applies from the empty memories. So a call on arguments that refine others
 refines the call on those others.
 :::
 
-:::readable Fir.Core.memReplaceBody_isRefinedBy (pin := Fir.FuncRuns.BoundedBy) (fingerprint := "2541353064495683975")
+:::readable Fir.Core.memReplaceBody_isRefinedBy Fir.Core.memCaller_isRefinedBy (pin := Fir.FuncRuns.BoundedBy) (fingerprint := "18431638885631279976")
 *Theorem: congruence in the callee, with memory, for every valid core
 module.* Let $`M` be a valid core module, $`g` a function of $`M`, $`b` a
 new body for $`g`, and $`M'` the module with $`g`'s body replaced by
@@ -130,7 +143,8 @@ some budget, then every function $`f` of $`M` is refined with memory by
 its counterpart in $`M'`, calls and recursion included. It is the
 {ref "The-fir-specification--Memory--Replacing-a-callee___-with-memory"}[theorem on replacing a callee with memory],
 for the core dialect, which is lawful in its monotonicity and whose values'
-refinement is reflexive and transitive. The bound replaces the finitely
+refinement is reflexive and transitive. A function of $`M` other than $`g`,
+a caller of it or not, is so refined by itself in $`M'`. The bound replaces the finitely
 many argument vectors of
 {ref "The-fir-specification--Execution--Refinement-through-core-calls"}[congruence over the runs in the set monad]:
 a call starts from its caller's memories, of which there are infinitely

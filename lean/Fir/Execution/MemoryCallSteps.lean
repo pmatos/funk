@@ -222,26 +222,7 @@ end
 section
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectCall d] {N : Type}
-  [DecidableEq N] (unit : N → Nat) {M : Module d}
-
-omit [DecidableEq N] in
-/-- A function that runs within its module runs within it with memory, by
-its dialect's semantics in the set monad lifted into the state layer: each
-terminator goes where it goes in the set monad, from any memories. -/
-theorem Func.InModule.memInModule_liftState [DialectDenote d SetM] {f : Func d}
-    (h : f.InModule M) :
-    letI := DialectDenote.liftState (m := SetM) (d := d) (Memories N unit)
-    f.MemInModule unit M := by
-  letI := DialectDenote.liftState (m := SetM) (d := d) (Memories N unit)
-  have ex : ∀ {op : d.Op} {args : HVector toType (sig op)} {S : Memories N unit} {x : Exit}
-      {S' : Memories N unit}, DialectDenote.exit (m := StateT (Memories N unit) SetM) op args S
-        (.ok (x, S')) → DialectDenote.exit (m := SetM) op args (.ok x) := fun hx => by
-    rcases (SetM.lift_apply _ _ _).1 hx with ⟨_, hc, he⟩ | ⟨_, _, he⟩
-    · cases he
-      exact hc
-    · cases he
-  exact ⟨h.calls, fun b hb o ho hT args _ i _ hx => h.jumps b hb o ho hT args i (ex hx),
-    fun b hb o ho hT args _ _ hx => h.returns b hb o ho hT args (ex hx)⟩
+  [DecidableEq N] {M : Module d}
 
 variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
   (ρ : DialectEffects.Mem d → N)

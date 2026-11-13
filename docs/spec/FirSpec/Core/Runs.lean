@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The runs of core functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9748980109212644300")
+:::moduleDocs (fingerprint := "11426702896052310162")
 :::
 
 :::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "16611792390663989322")
@@ -61,16 +61,6 @@ terminators, and $`\mathsf{ret}` neither calls a function nor jumps. The
 only terminator, $`\mathsf{ret}~t^*`, takes operands of the types $`t^*`,
 and the {ref "The-fir-specification--Validation--Core-rules"}[core rule]
 of $`\mathsf{ret}` asks $`t^*` to be the result types of the function.
-:::
-
-:::readable Fir.Core.total_of_tracer (pin := Fir.OpTotal) (fingerprint := "11746737999403355723")
-*Theorem: every op of a function of the tracer subset is total.* If the
-core function $`f` is in the tracer subset, every op of every block of
-$`f` is
-{ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
-operand vector, its semantics, or its exit for a terminator, has some
-outcome. Each of $`\mathsf{const}`, $`\mathsf{add}` with any flags and
-$`\mathsf{ret}` is proved total by the obligations of its op family.
 :::
 
 :::readable Fir.Core.RunsWell (pin := Fir.FuelMonotone) (pin := Fir.Progress) (pin := Fir.NeverStuck) (fingerprint := "12053394366022874285")

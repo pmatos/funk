@@ -17,14 +17,15 @@ program that went first through every layer: `const`, `add` without flags
 and `ret`. A valid function of the tracer subset runs straight: no op of
 the subset calls a function, `const` and `add` are not terminators, and
 `ret` returns its operands, which its validation rule makes values of the
-function's result types. Each of the three ops is total.
+function's result types.
 
 A function's runs on one argument vector _run well_ when they meet the
 three obligations of the section on fuel and progress. The section on core
 functions with memory proves that the runs with memory of every valid
-function of the tracer subset run well, from the two facts of this section;
-so do those of every valid core function without a `call` op, and of every
-function of every valid core module, calls and recursion included.
+function of the tracer subset run well: it runs straight, so it runs within
+itself, and the core dialect is lawful in its totality. So do those of every
+valid core function without a `call` op, and of every function of every
+valid core module, calls and recursion included.
 -/
 
 namespace Fir.Core
@@ -75,23 +76,6 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     match b.body[i].op, hop with
     | .const _ _, _ | .add _ _, _ => intro hT; cases hT
     | .ret _, _ => intro _ hvalid; exact hvalid
-
-/-- Every op of the tracer subset is total. -/
-theorem total_of_tracer {f : Func CoreDialect} (ht : InTracer f) :
-    ∀ b ∈ f.blocks, ∀ o ∈ b.body, OpTotal o.op := by
-  intro b hb o ho
-  have hop := ht b hb o ho
-  revert hop
-  match o.op with
-  | .const w v => intro _; exact const_total w v
-  | .add w f => intro _; exact add_total w f
-  | .ret ts => intro _; exact ret_total ts
-  | .sub .. | .mul .. | .sdiv .. | .udiv .. | .srem _ | .urem _ | .and _ | .or _ | .xor _
-  | .shl _ | .lshr _ | .ashr _ | .icmp .. | .select _ | .zext .. | .sext .. | .trunc ..
-  | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
-  | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
-  | .fpext .. | .fptrunc .. | .ptradd .. | .fptosi .. | .fptoui .. =>
-    intro h; exact False.elim h
 
 /-- The three obligations of the section on fuel and progress, for the
 runs of one function on one argument vector. -/

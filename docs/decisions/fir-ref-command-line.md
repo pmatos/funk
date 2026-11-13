@@ -183,7 +183,7 @@ takes ⌈w/64⌉ more draws and keeps their low `w` bits. A seed draws the same
 values on every machine; `lean/FirTest/Sample.lean` pins a few draws.
 
 `Core.sampled_fits` proves that the values drawn are a sequence that fits the
-run, so `Core.sampled_outcomes` follows from `Core.scripted_outcomes`: a
+run, so `Core.sampled_memOutcomes` follows from `Core.scripted_memOutcomes`: a
 sampled outcome is a member of the run's set, whatever the generator. That the
 printed spelling reads back is tested, not proved.
 

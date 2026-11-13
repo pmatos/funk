@@ -28,9 +28,11 @@ theorem here, not its definition.
 
 _Every core function valid in the context of a module runs within that
 module with memory_, wherever a run names the core's memories: it runs
-within the module, and each of its terminators is tied. No theorem below
-asks that the core lift the set monad, or that an op other than a
-terminator be tied, so an op that touches memory can join.
+within the module, and each core terminator is tied. Every core op that runs
+by its own rule is monotone with memory at every width, valid or not. No
+theorem below asks that the core lift the set monad: an op that touches
+memory, which is not a terminator, joins them with its own case of
+monotonicity with memory and its own totality.
 
 The three obligations of the section on fuel and progress hold of the runs
 with memory of core functions, on every argument vector of their parameter
@@ -82,9 +84,9 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
       (LawfulDialectPoison.returnsOnDefined op hv hc)
 
 /-- The core dialect's semantics with memory lifts its semantics in the set
-monad: every core op is tied. It is proved from each op's tie, and the
-theorems over the core's runs in the set monad use it until they are stated
-over its runs with memory. -/
+monad: every core op is tied. It is proved from each op's tie. No theorem on
+the core's runs uses it; the tests of the dialects over the core and the
+equivalence tests do, until they are stated over runs with memory. -/
 instance Core.liftsSetM : LiftsSetM CoreDialect := LiftsSetM.ofOpLifts Core.Op.liftsSetM
 
 namespace Core
@@ -92,11 +94,28 @@ namespace Core
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
 
+/-- Every core terminator is tied: it touches no memory. -/
+theorem Op.liftsSetM_of_terminator {op : Op} (_ : Fir.isTerminator (d := CoreDialect) op = true) :
+    OpLiftsSetM (d := CoreDialect) op :=
+  Op.liftsSetM op
+
+/-- Every core terminator and every core op with no callee is monotone with
+memory, at every width, layout and naming: every core op but `call`. Each op
+that touches no memory is monotone in the set monad and tied. -/
+theorem Op.memMonotone_all (op : Op)
+    (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) :
+    MemMonotone (d := CoreDialect) op :=
+  MemMonotone.ofLifts (Op.liftsSetM op) (Op.monotone_all op h)
+
+/-- A core function that runs within a module runs within it with memory,
+wherever a run names the core's memories: each of its terminators is tied. -/
+theorem inModuleAt_of_inModule (h : f.InModule M) : f.InModuleAt lay ρ M :=
+  h.inModuleAt_of_tied lay ρ fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT
+
 /-- A core function valid in the context of a module runs within that
-module with memory, wherever a run names the core's memories: it runs within
-the module, and each of its terminators is tied. -/
+module with memory, wherever a run names the core's memories. -/
 theorem inModuleAt_of_valid (hv : f.Valid M.context) : f.InModuleAt lay ρ M :=
-  (inModule_of_valid hv).inModuleAt_of_tied lay ρ fun _ _ o _ _ => Op.liftsSetM o.op
+  inModuleAt_of_inModule lay ρ (inModule_of_valid hv)
 
 /-! # Fuel and progress -/
 
@@ -136,8 +155,7 @@ names the core's memories. -/
 theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
     (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
   have hn := (local_of_valid hv hc).noCall
-  have hm := ((local_of_valid hv hc).inModule M).inModuleAt_of_tied lay ρ
-    fun _ _ o _ _ => Op.liftsSetM o.op
+  have hm := inModuleAt_of_inModule lay ρ ((local_of_valid hv hc).inModule M)
   ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hn hm args,
     Func.memNeverStuck_of_local lay ρ hv hn hm args⟩
 
@@ -166,7 +184,7 @@ theorem tracer_runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
     (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
   have hv := hM.funcs f hf
   have hl := (straight_of_tracer hv ht).local
-  have hm := (hl.inModule M).inModuleAt_of_tied lay ρ fun _ _ o _ _ => Op.liftsSetM o.op
+  have hm := inModuleAt_of_inModule lay ρ (hl.inModule M)
   ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hl.noCall hm args,
     Func.memNeverStuck_of_local lay ρ hv hl.noCall hm args⟩
 
@@ -199,8 +217,7 @@ theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
   letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
   have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun g b hb o ho hc =>
-      MemMonotone.ofLifts (Core.Op.liftsSetM o.op) (opsMonotone_all g b hb o ho hc) lay ρ
+    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ
   Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
@@ -222,6 +239,25 @@ theorem memReplaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
   (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ Ty.isRefinedBy_refl Ty.isRefinedBy_trans
     hM hg b hbound h hf).2
+
+/-- Every function of the module other than `@g`, a caller of it or not,
+is refined with memory by itself in the module with `@g`'s new body, under
+the hypotheses of congruence in the callee with memory. -/
+theorem memCaller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
+    (b : Region CoreDialect)
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+        (M.replaceBody g.name b)).BoundedBy B)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          (M.replaceBody g.name b))
+    (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
+    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
+  have := memReplaceBody_isRefinedBy lay ρ hM hg b hbound h hf
+  change f.memRuns lay ρ M ⊑
+    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+  rwa [ite_eq_right hfg] at this
 
 end Core
 

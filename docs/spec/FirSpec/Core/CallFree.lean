@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "723181119351096814")
+:::moduleDocs (fingerprint := "13824615543655031591")
 :::
 
 :::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "7508203294497242104")
@@ -76,10 +76,4 @@ module context and without calls. Then $`f`
   the types $`t^*`, which the
   {ref "The-fir-specification--Validation--Core-rules"}[core rule] of
   $`\mathsf{ret}` asks to be the result types of $`f`.
-:::
-
-:::readable Fir.Core.total_of_callFree (fingerprint := "9488280576929762062")
-*Theorem: every op of a core function without calls is total.* If the
-core function $`f` is without calls, every op of every block of $`f` is
-total, since none of them is a call.
 :::

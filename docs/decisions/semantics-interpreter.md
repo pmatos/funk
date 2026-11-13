@@ -182,7 +182,9 @@ through `Func.Local`, and `Func.neverStuck_of_inModule` and
 terminator that may jump and has results cannot meet them, so the theorems say
 nothing of it. So "a validated module never gets stuck" holds only for a dialect
 whose terminators meet it. The core dialect meets it (`Core.Op.exit_goto`). No
-path of a run of a function of a valid core module is stuck (`Core.neverStuck`).
+path of a run of a function of a valid core module is stuck: in the set monad
+by `Func.neverStuck_of_inModule` with `Core.inModule_of_valid`, and with memory
+by `Core.neverStuck`.
 `Exit` does not grow in M0. M4's design of exceptions and unwinding chooses
 between a validation rule and values on `Exit`, and edits ADR-2026-11-02-2248
 in place (ADR-2026-11-02-2248). The human ruled this on 2026-11-02 (#89,

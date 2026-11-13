@@ -4,19 +4,19 @@ import Fir.Execution.MemoryModes
 /-!
 # The core dialect in the tree of choices
 
-`fir-ref run` runs the core dialect's rules in the tree of choices. Each op
-runs its rule, the same rule that the set monad's semantics runs; an op without
-rules ends its path with no outcome, for that op, as the set monad gives it
-none (`docs/decisions/fir-ref.md#an-op-without-rules`). `fir-ref` reports such
-a path as an error.
+The core dialect's rules run in the tree of choices. Each op runs its rule,
+the same rule that the set monad's semantics runs; an op without rules ends
+its path with no outcome, for that op, as the set monad gives it none
+(`docs/decisions/fir-ref.md#an-op-without-rules`). `fir-ref` reports such a
+path as an error.
 
-With memory, the core runs in the state layer over the tree of choices,
-where the run's memories have their layout entries and the run names the
-core's memories. Each op runs by its rule with memory in that layer, as it
-does in the core's semantics with memory in the layer over the set monad,
-and `toSet` through the layer keeps choice and UB, so it maps the one to the
-other at every layout and naming of the core's memories. The modes of the
-next section walk the run in that layer.
+`fir-ref run` runs the core with memory, in the state layer over the tree of
+choices, where the run's memories have their layout entries and the run
+names the core's memories. Each op runs by its rule with memory in that
+layer, as it does in the core's semantics with memory in the layer over the
+set monad, and `toSet` through the layer keeps choice and UB, so it maps the
+one to the other at every layout and naming of the core's memories. The
+modes of the next section walk the run in that layer.
 -/
 
 namespace Fir.Core

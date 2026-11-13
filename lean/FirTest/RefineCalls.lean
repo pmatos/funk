@@ -17,6 +17,8 @@ be met, and the axioms of their proofs.
   by its counterpart: `@count` hits UB in the old module and runs out of
   fuel in the new. A second instance gives `@odd` its own body, in the
   mutual recursion of `@even` and `@odd`.
+* Congruence in the callee, with memory: `@g` given a body with no blocks
+  meets its hypotheses, so `@count` is refined with memory by itself.
 -/
 
 namespace FirTest
@@ -253,6 +255,53 @@ theorem even_replace_isRefinedBy :
     (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body odd_self_isRefinedBy
     (by simp [recModule, Module.funcs]) (by decide)
 
+/-! # Congruence in the callee, with memory
+
+With memory, congruence asks that the new `@g` refine the old from every
+memories, and that its runs be bounded. A body with no blocks meets both:
+`@g` with it never starts, so it has no behaviour, and no run of it runs out
+of fuel. So `@count` is refined with memory by itself in the module with
+that body. -/
+
+/-- A body with no blocks: a function with it never starts. -/
+def noBlocks : Region CoreDialect := { blocks := [] }
+
+/-- The memories of a run of `ubModule`, at its layout. -/
+abbrev UbMems := Memory.Memories Nat (unitsOf ubModule.layout.entry)
+
+/-- `@g` with no blocks, in its module so changed, has no outcome from any
+memories: each path is stuck. -/
+theorem noBlocks_outcomes (a : HVector toType (gFn.params.map (·.2))) (S : UbMems) (m : Nat)
+    (o : Outcome (List (DVal CoreDialect) × UbMems)) :
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
+    ¬ ((gFn.replaceBody gFn.name noBlocks).memRunsFrom (ubModule.replaceBody gFn.name noBlocks)
+      (a, S) m).outcomes o := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
+  have key : ∀ x, Ev.NotStuck x → ¬ ((gFn.replaceBody gFn.name noBlocks).memRunsFrom
+      (ubModule.replaceBody gFn.name noBlocks) (a, S) m) x := by
+    intro x hx h
+    obtain ⟨p, hp, -⟩ := (Func.memRunsFrom_run hx).1 h
+    simp [Func.enter, Func.blocks, noBlocks, stuck] at hp
+  cases o with
+  | ret _ => exact key _ fun _ h => nomatch h
+  | ub _ => exact key _ fun _ h => nomatch h
+  | fuelExhausted => exact key _ fun _ h => nomatch h
+
+/-- `@count` is refined with memory by itself in the module where `@g` has
+no blocks. -/
+theorem count_memIsRefinedBy :
+    countFn.memRuns ubModule.layout.entry id ubModule ⊑
+      countFn.memRuns ubModule.layout.entry id (ubModule.replaceBody gFn.name noBlocks) := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
+  refine Core.memCaller_isRefinedBy _ _ ubModule_valid (by simp [ubModule, Module.funcs])
+    noBlocks ⟨0, fun ⟨a, S⟩ => .inr fun m _ => noBlocks_outcomes a S m .fuelExhausted⟩ ?_
+    (by simp [ubModule, Module.funcs]) (by decide)
+  intro ⟨a, S⟩ t ht
+  cases t with
+  | ret o => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ret o) hn).elim
+  | ub r => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ub r) hn).elim
+  | fuelExhausted => exact (noBlocks_outcomes a S 0 .fuelExhausted (ht 0)).elim
+
 /-! # Axioms
 
 The steps of a run, the engine and its two inductions, the general
@@ -320,6 +369,9 @@ theorems, their core instances and the tests above. -/
 
 /-- info: 'Fir.Core.memReplaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.memReplaceBody_isRefinedBy
+
+/-- info: 'FirTest.count_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.count_memIsRefinedBy
 
 /-- info: 'FirTest.fact_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.fact_args

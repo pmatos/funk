@@ -147,9 +147,4 @@ theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
     rw [hts] at hvalid ⊢
     exact hvalid
 
-/-- Every op of a function without calls is total. -/
-theorem total_of_callFree {f : Func CoreDialect} (hc : CallFree f) :
-    ∀ b ∈ f.blocks, ∀ o ∈ b.body, OpTotal o.op :=
-  fun b hb o ho => o.op.total (hc b hb o ho)
-
 end Fir.Core

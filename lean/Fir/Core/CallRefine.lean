@@ -60,7 +60,9 @@ the ops' own obligations.
 
 Congruence in the callee compares real behaviours when the new function
 is valid in the old module's context: then the new module is valid, and
-neither module's runs have a stuck path. A body that gets stuck at once,
+neither module's runs have a stuck path, since every function of a valid
+core module runs within it (the section on core functions with calls) and
+the theorems on progress with calls apply. A body that gets stuck at once,
 such as one whose entry block declares arguments, meets the hypothesis
 with an empty behaviour, which refines every source.
 -/

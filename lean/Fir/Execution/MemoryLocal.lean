@@ -188,7 +188,8 @@ theorem Func.memProgress_of_local [LawfulDialectTotal d] (hv : f.Valid ctx)
   | .ok (.ok (.ret vs)), hev => exact ⟨.ret vs, hev⟩
   | .ok (.ok .fuelExhausted), hev => exact ⟨.fuelExhausted, hev⟩
   | .ub r, hev => exact ⟨.ub r, hev⟩
-  | .ok (.error st), hev => exact absurd ⟨st, hev⟩ (Func.memNeverStuck_of_local lay ρ hv hn hm args n)
+  | .ok (.error st), hev =>
+    exact absurd ⟨st, hev⟩ (Func.memNeverStuck_of_local lay ρ hv hn hm args n)
 
 end
 
