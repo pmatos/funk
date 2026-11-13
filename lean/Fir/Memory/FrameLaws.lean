@@ -46,22 +46,18 @@ theorem lookup_filter {x y : Mem} (h : x ≠ y) :
       lookup y (t.filter fun e => !decide (e.1 = x)) = lookup y t
   | [] => rfl
   | ⟨z, m⟩ :: t => by
+    show lookup y (match !decide (z = x) with
+        | true => ⟨z, m⟩ :: t.filter _ | false => t.filter _) = _
     cases hd : decide (z = x) with
     | true =>
       have hz : z ≠ y := fun e => h ((of_decide_eq_true hd).symm.trans e)
-      show lookup y (match !decide (z = x) with
-          | true => ⟨z, m⟩ :: t.filter _ | false => t.filter _) = _
-      rw [hd]
       show _ = if hz : z = y then hz ▸ m else lookup y t
       rw [dite_eq_right hz]
       exact lookup_filter h t
     | false =>
-      show lookup y (match !decide (z = x) with
-          | true => ⟨z, m⟩ :: t.filter _ | false => t.filter _) = _
-      rw [hd]
-      show (if hz : z = y then hz ▸ m else lookup y (t.filter _)) =
-        (if hz : z = y then hz ▸ m else lookup y t)
+      show (if hz : z = y then hz ▸ m else lookup y (t.filter _)) = _
       rw [lookup_filter h t]
+      rfl
 
 /-- The memory that is replaced is the new one. This and the next are proved
 without axioms, as the memory obligations of the test dialects need. -/
