@@ -122,6 +122,9 @@ import Fir.Memory.Laws
 import Fir.Memory.Frames
 import Fir.Memory.FrameLaws
 import Fir.Memory.Refine
+import Fir.Memory.Encode
+import Fir.Memory.EncodeLaws
+import Fir.Core.Encode
 import Fir.Text.Lexical
 import Fir.Text.Grammar
 import Fir.Text.LayoutLaws
