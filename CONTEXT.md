@@ -340,6 +340,12 @@ an interpreter-only test passes when its outcome matches what it expects.
 An invalid test proves nothing and never counts as a pass.
 _Avoid_: verdict (a verdict says whether a text parses and validates)
 
+**coverage cell**:
+One op instance at a width or float format on one side of the corpus's
+coverage matrix: differential or interpreter-only. Conversions use a pair of
+types, and passed or returned values distinguish none, one and several.
+An inapplicable pair is blank, not a cell with zero tests.
+
 **poison stand-in**: A defined value of `iN` that native code runs a
 differential test on in place of a poison argument: one of the type's boundary
 bit patterns, 0, 1, all ones, the signed minimum or the signed maximum
