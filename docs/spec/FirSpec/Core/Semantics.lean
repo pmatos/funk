@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8821268572234148896")
+:::moduleDocs (fingerprint := "12841271436409594865")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "8014119923833995084")
+:::readable Fir.Core.Op.denote? (fingerprint := "1726475771177505429")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -56,7 +56,9 @@ result:
   $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`: the
   {ref "The-fir-specification--Execution--Bit-cast-rules"}[bit cast rule];
 * $`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`: the
-  {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules].
+  {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules];
+* $`\mathsf{ptradd}_{N,W}`: the
+  {ref "The-fir-specification--Execution--Pointer-offset-rules"}[pointer offset rule].
 
 $`\mathsf{call}` and the terminators have none here: a call's meaning is
 the run of its callee, and a terminator's rule says where control goes.
@@ -77,7 +79,7 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "15429690056791243868")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "13794457419146825617")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op

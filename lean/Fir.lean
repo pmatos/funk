@@ -48,6 +48,7 @@ import Fir.Core.FloatArith
 import Fir.Core.FloatRem
 import Fir.Core.FloatBitcast
 import Fir.Core.FloatOfInt
+import Fir.Core.Pointer
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
@@ -63,6 +64,7 @@ import Fir.Core.FloatCompareLaws
 import Fir.Core.FloatArithLaws
 import Fir.Core.FloatBitcastLaws
 import Fir.Core.FloatOfIntLaws
+import Fir.Core.PointerLaws
 import Fir.Core.ControlLaws
 import Fir.Core.BranchLaws
 import Fir.Execution.Morphism
@@ -134,6 +136,7 @@ import Fir.Text.ReadLocs
 import Fir.Text.Decode
 import Fir.Core.FloatOpText
 import Fir.Core.Text
+import Fir.Core.TextSamples
 import Fir.Core.TypeTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example

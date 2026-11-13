@@ -14,7 +14,7 @@ and, in the `func` rows, the results of the function it runs. An
 empty entry is not a cell: a width change that the spec does not
 allow, or a width for a row that passes no value.
 
-1134 cells, 1134 with a test.
+1142 cells, 1142 with a test.
 
 ## Differential tests
 
@@ -165,12 +165,12 @@ allow, or a width for a row that passes no value.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 287 | 475 | 338 | 215 | 284 | 465 | 208 | 134 |
+| `const` |  | 287 | 475 | 338 | 215 | 284 | 465 | 209 | 134 |
 | `add` |  | 12 | 228 | 31 | 28 | 30 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
 | `add` | `nuw nsw` | 4 | 29 | 8 | 6 | 6 | 29 | 6 | 5 |
-| `sub` |  | 17 | 209 | 131 | 41 | 46 | 207 | 41 | 23 |
+| `sub` |  | 17 | 209 | 131 | 41 | 46 | 207 | 42 | 23 |
 | `sub` | `nuw` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 5 |
 | `sub` | `nsw` | 6 | 29 | 8 | 6 | 17 | 29 | 6 | 5 |
 | `sub` | `nuw nsw` | 6 | 29 | 6 | 6 | 11 | 29 | 6 | 5 |
@@ -299,6 +299,12 @@ allow, or a width for a row that passes no value.
 | `uitofp` | `i64` | 18 | 15 | 15 | 15 | 6 |
 | `uitofp` | `i128` | 18 | 18 | 18 | 15 | 15 |
 
+### Pointer offsets (interpreter-only tests)
+
+| op | by `i1` | by `i7` | by `i8` | by `i16` | by `i32` | by `i33` | by `i64` | by `i128` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `ptradd` | 1 | 1 | 2 | 2 | 2 | 1 | 4 | 1 |
+
 ### Passed and returned values (interpreter-only tests)
 
 | op | what | no value | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `f16` | `bf16` | `f32` | `f64` | `f128` |
@@ -309,11 +315,11 @@ allow, or a width for a row that passes no value.
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `ret` | returns one value |  | 2263 | 1298 | 530 | 538 | 633 | 1336 | 544 | 818 | 518 | 482 | 446 | 387 | 371 |
-| `ret` | returns several values |  | 54 | 186 | 38 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
+| `ret` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `func` | returns one value |  | 2263 | 1298 | 531 | 538 | 633 | 1336 | 544 | 818 | 516 | 480 | 444 | 385 | 369 |
-| `func` | returns several values |  | 54 | 186 | 38 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |
+| `func` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |

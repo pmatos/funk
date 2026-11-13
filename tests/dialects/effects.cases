@@ -597,3 +597,27 @@ func @g(%x: i8) -> i8 {
 locs {
   @0 = unknown
 }
+
+=== ptradd pure
+func @f(%a: ptr, %b: i64, %c: i1) -> ptr {
+^entry:
+  %r: ptr = ptradd %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== ptradd-memory-1 pure
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%a: ptr(1), %b: i8, %c: i1) -> ptr(1) {
+^entry:
+  %r: ptr(1) = ptradd %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}

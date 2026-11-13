@@ -96,6 +96,7 @@ theorem Op.monotone_all : (op : Op) →
   | .ofBits e m, _ => ofBits_monotone e m
   | .sitofp n e m, _ => intToFloat_monotone n e m true
   | .uitofp n e m, _ => intToFloat_monotone n e m false
+  | .ptradd n w, _ => ptradd_monotone n w
   | .freeze w, _ => freeze_monotone w
   | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone

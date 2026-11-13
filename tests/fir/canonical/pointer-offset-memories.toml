@@ -1,0 +1,10 @@
+# Tests of pointer-offset-memories.fir: ptradd in memories other than the
+# default one, which the data layout declares (#231). The result is a
+# pointer of its operand's memory, whatever the memory's unit. As in
+# pointer-offset.toml, the only pointer argument is poison, and each test
+# is interpreter-only.
+tests = [
+  { func = "@in_one", args = ["poison", "-3"], expect = ["poison"] },
+  { func = "@in_two", args = ["poison", "4"], expect = ["poison"] },
+  { func = "@in_each", args = ["poison", "poison", "poison", "1"], expect = ["poison", "poison", "poison"] },
+]

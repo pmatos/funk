@@ -58,7 +58,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     takes `round(rne)` or none, as `decodeFma`, `FBin.attrsOk` and
     `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
     as `decodeIntToFloat` reads it, and an op of `plainBinOps`, or whose arm
-    takes them through `bare`, takes none. A constant's value and a callee
+    takes them through `bare`, as `decodePtrAdd` does, takes none. A constant's value and a callee
     are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
@@ -74,6 +74,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFma": round_attrs(floats),
         "decodeBitcast": ("",),
         "decodeIntToFloat": round_attrs(floats),
+        "decodePtrAdd": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -121,6 +122,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
+        self.assertIn("bare as", definition(text, "decodePtrAdd"))
         self.assertEqual(definition(floats, "decodeBitcast").count("as.isEmpty"), 2)
         self.assertEqual(
             decoded_attrs(text, floats),
@@ -245,6 +247,28 @@ class Tests(unittest.TestCase):
             Op("uitofp", ("round(rne)",), ("f32",), ("f32",), ()),
             Op("uitofp", ("round(rne)",), ("i32",), ("i64",), ()),
             Op("sitofp", ("round(rne)",), ("i32", "i32"), ("f32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
+    def test_a_pointer_offset_is_a_cell_for_each_width_of_its_integer(self):
+        found = cells.cells((8, 128), ("f32",), (1, 64))
+        self.assertEqual(
+            {c for c in found if c.table == "pointers"},
+            {Cell("pointers", "ptradd", "", w) for w in ("i1", "i64")},
+        )
+        self.assertFalse(any(c.table == "pointers" for c in cells.cells((8,))))
+        self.assertEqual(cells.POINTER_DIFFERENTIAL, ())
+        self.assertEqual(cells.POINTER_INTERPRETER, cells.INTERPRETER)
+        for ptr in ("ptr", "ptr(1)"):
+            op = Op("ptradd", (), (ptr, "i33"), (ptr,), ())
+            self.assertEqual(of_op(op), {Cell("pointers", "ptradd", "", "i33")})
+        for bad in [
+            Op("ptradd", ("inbounds",), ("ptr", "i64"), ("ptr",), ()),
+            Op("ptradd", (), ("ptr", "f32"), ("ptr",), ()),
+            Op("ptradd", (), ("ptr", "ptr"), ("ptr",), ()),
+            Op("ptradd", (), ("ptr",), ("ptr",), ()),
+            Op("ptradd", (), ("ptr", "i64"), (), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)

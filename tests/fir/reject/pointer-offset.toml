@@ -1,0 +1,157 @@
+# Must-reject texts of the pointer offset ptradd (#231). It takes a
+# pointer and an integer of any width, in that order, and gives a pointer
+# of the same memory, with no attributes; any other shape does not decode.
+# A pointer of a memory that the module does not declare is rejected by
+# validation, as for every pointer type (reject/pointer-types.toml).
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd gives a pointer of its operand's memory: a ptr(1) from a ptr does not decode"
+text = '''
+layout memory(1, unit(8), pointer(32), little)
+
+func @f(%p: ptr, %k: i64) -> ptr(1) {
+^e:
+  %q: ptr(1) = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd gives a pointer: an i64 result does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i64 {
+^e:
+  %q: i64 = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd takes the pointer first and the integer second: swapped operands do not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> ptr {
+^e:
+  %q: ptr = ptradd %k, %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd moves a pointer by an integer: a pointer as the offset does not decode"
+text = '''
+func @f(%p: ptr, %k: ptr) -> ptr {
+^e:
+  %q: ptr = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd moves a pointer by an integer: a float as the offset does not decode"
+text = '''
+func @f(%p: ptr, %k: f32) -> ptr {
+^e:
+  %q: ptr = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd moves a pointer, not an integer: an integer in place of the pointer does not decode"
+text = '''
+func @f(%p: i64, %k: i64) -> ptr {
+^e:
+  %q: ptr = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd takes no attributes: ptradd inbounds does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> ptr {
+^e:
+  %q: ptr = ptradd inbounds %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptradd takes two operands: a third does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> ptr {
+^e:
+  %q: ptr = ptradd %p, %k, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a pointer type names a memory that the module has: ptradd in memory 1 of a module with no layout"
+text = '''
+func @f(%p: ptr(1), %k: i64) -> ptr(1) {
+^e:
+  %q: ptr(1) = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a function returns its result types: the ptr that ptradd gives where an i64 is returned"
+text = '''
+func @f(%p: ptr, %k: i64) -> i64 {
+^e:
+  %q: ptr = ptradd %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

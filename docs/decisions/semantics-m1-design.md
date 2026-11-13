@@ -5,7 +5,8 @@ of fir in M1. It is the record: when this page and an ADR disagree, the page
 wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools do not implement them
-yet. `ptr` has values but no ops yet (ADR-2026-11-09-1542). M0 has no
+yet. `ptr` has values, and its one op so far is `ptradd`, below
+(ADR-2026-11-09-1542). M0 has no
 global data (ADR-2026-11-09-1546). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
@@ -45,6 +46,17 @@ spec and the tools have the pointer types: a value of `ptr<N>` is poison or a
 pointer, refined only by itself. Every module has memory 0, so `ptr` is valid
 in every module, and `ptr<N>` for `N ≥ 1` is valid when the module's data
 layout declares memory `N` (ADR-2026-11-12-1821).
+
+A pointer moves by `ptradd`: `%q: ptr = ptradd %p, %k` takes a `ptr<N>` and
+an `iW` of any width, and gives a `ptr<N>` with the same provenance, whose
+offset is `%p`'s plus `%k` read as signed, in units of the memory `N`. The
+offset never wraps and may leave the allocation; only an access through it
+must be in bounds. A poison operand gives poison, it is never UB, and its
+effect set is empty. It has no attributes, and any other shape does not
+decode (ADR-2026-11-13-0251; `lean/Fir/Core/Pointer.lean`). The backend
+lowers it in stage 5 of #231. Rejected: UB or poison for a result out of
+its allocation, as LLVM's `inbounds`, which would forbid the one-past-the-end
+pointer that C allows.
 
 The module's data layout gives each memory its unit of addressing and its
 pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes

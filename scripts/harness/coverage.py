@@ -33,12 +33,14 @@ SIDES = (
         "Differential tests",
         cells.DIFFERENTIAL,
         cells.FLOAT_DIFFERENTIAL,
+        cells.POINTER_DIFFERENTIAL,
     ),
     (
         "interpreter",
         "Interpreter-only tests",
         cells.INTERPRETER,
         cells.FLOAT_INTERPRETER,
+        cells.POINTER_INTERPRETER,
     ),
 )
 
@@ -96,8 +98,8 @@ def empty(counts: dict[str, Counter]) -> list[str]:
     """The cells that no test exercises, named as the matrix shows them."""
     return [
         f"{side}: {show(cell)}"
-        for side, _, widths, formats in SIDES
-        for cell in cells.cells(widths, formats)
+        for side, _, widths, formats, offsets in SIDES
+        for cell in cells.cells(widths, formats, offsets)
         if not counts[side][cell]
     ]
 
@@ -105,6 +107,8 @@ def empty(counts: dict[str, Counter]) -> list[str]:
 def show(cell: Cell) -> str:
     if cell.table in ("casts", "conversions"):
         return f"{cell.op} from {cell.row} to {cell.width}"
+    if cell.table == "pointers":
+        return f"{cell.op} by {cell.width}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
         words.append("at")
@@ -177,6 +181,15 @@ def int_to_float_table(
     return table(["op", "from", *(f"to `{f}`" for f in formats)], rows)
 
 
+def pointers_table(counts: Counter, offsets: tuple[int, ...]) -> list[str]:
+    rows = [
+        [f"`{op}`"]
+        + [number(counts[Cell("pointers", op, "", cells.ty(w))]) for w in offsets]
+        for op in cells.POINTER_OPS
+    ]
+    return table(["op", *(f"by `i{w}`" for w in offsets)], rows)
+
+
 WHAT = {
     "br": {cells.NOTHING: "passes nothing", cells.PASSED: "passes values"},
     "cond_br": {
@@ -220,7 +233,7 @@ def values_table(
 
 def render(counts: dict[str, Counter]) -> str:
     """The matrix as Markdown."""
-    total = sum(len(cells.cells(w, f)) for _, _, w, f in SIDES)
+    total = sum(len(cells.cells(w, f, o)) for _, _, w, f, o in SIDES)
     gaps = empty(counts)
     lines = [
         "# Coverage matrix of the fir corpus",
@@ -241,7 +254,7 @@ def render(counts: dict[str, Counter]) -> str:
         "",
         f"{total} cells, {total - len(gaps)} with a test.",
     ]
-    for side, title, widths, formats in SIDES:
+    for side, title, widths, formats, offsets in SIDES:
         lines += ["", f"## {title}", ""]
         lines += [f"### Ops at a width ({title.lower()})", ""]
         lines += ops_table(counts[side], widths)
@@ -253,6 +266,9 @@ def render(counts: dict[str, Counter]) -> str:
         lines += conversions_table(counts[side], formats)
         lines += ["", f"### Conversions from integers ({title.lower()})", ""]
         lines += int_to_float_table(counts[side], widths, formats)
+        if offsets:
+            lines += ["", f"### Pointer offsets ({title.lower()})", ""]
+            lines += pointers_table(counts[side], offsets)
         lines += ["", f"### Passed and returned values ({title.lower()})", ""]
         lines += values_table(counts[side], widths, formats)
     return "\n".join(lines) + "\n"

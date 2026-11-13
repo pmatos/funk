@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15327201918044900355")
+:::moduleDocs (fingerprint := "15639956587938827878")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -100,7 +100,7 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "12838571556658361392")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "11831937844538327009")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -254,6 +254,22 @@ sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
   nearest, ties to even, in Lean's float model. An integer too large for
   the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
   is ever UB or gives a NaN, and a poison operand gives poison.
+
+*Pointer offsets* move a pointer within its memory (#231).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-      \dots
+ptradd \mathsf{ptradd}_{N,W}
+```
+
+* $`\mathsf{ptradd}_{N,W}` moves a pointer of
+  $`\mathsf{ptr}\langle N \rangle` by the integer that an
+  $`\mathsf{i}W` holds, read as signed, in units of the memory $`N`. The
+  result keeps the pointer's provenance. Its offset may leave the bounds
+  of the allocation: only an access through it must be in bounds
+  (ADR-2026-11-09-1542). It is never UB, and a poison operand gives
+  poison.
 
 *Poison control* writes poison and stops it.
 

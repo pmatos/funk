@@ -37,7 +37,7 @@ the {ref "The-fir-specification--Execution--Arithmetic-obligations"}[strict rule
 of binary ops, which keep the width, do not apply as they are stated.
 :::
 
-:::readable Fir.Core.icmp_propagatesPoison Fir.Core.icmp_returnsOnDefined Fir.Core.icmp_total Fir.Core.icmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.icmpValues) (fingerprint := "3708173201498697725")
+:::readable Fir.Core.icmp_propagatesPoison Fir.Core.icmp_returnsOnDefined Fir.Core.icmp_total Fir.Core.icmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.icmpValues) (fingerprint := "8464248277516502912")
 *Theorem: $`\mathsf{icmp}` is lawful, with every predicate.* For every
 predicate $`p` and width $`w`, under fir's execution rules,
 $`\mathsf{icmp}_w~p` meets every obligation of an op that
@@ -70,7 +70,7 @@ chosen operand on the right refines the one on the left. The operand not
 chosen plays no part, so it may be poison.
 :::
 
-:::readable Fir.Core.select_total Fir.Core.select_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.selectValues) (fingerprint := "9795250644074384445")
+:::readable Fir.Core.select_total Fir.Core.select_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.selectValues) (fingerprint := "7220896454294986128")
 *Theorem: $`\mathsf{select}` is total and monotone.* For every width
 $`w`, under fir's execution rules, $`\mathsf{select}_w` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total] and
