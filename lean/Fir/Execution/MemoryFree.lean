@@ -73,17 +73,11 @@ variable {t : SymbolTable d} {s : Name} {f : Func d} {o : Operation d}
 /-- A function whose summary touches no memory reaches no memory. -/
 theorem SymbolTable.ReachesNoMemory.of_summary (h : (t.summary s).TouchesNoMemory) :
     t.ReachesNoMemory s := fun g hg f hf o ho => by
-  have hown : (effects o.op).callerView ≤ t.opOwn o := by
-    unfold SymbolTable.opOwn
-    split
-    · split
-      · exact Effects.le_refl _
-      · exact Effects.callerView_mono (Effects.le_join_left _ _)
-    · exact Effects.le_refl _
   have hfs : t.funcOwn f ≤ t.summary s :=
     Effects.le_joinAll (List.mem_filterMap.2 ⟨g, hg, by simp [hf]⟩)
-  exact Effects.TouchesNoMemory.of_le (a := (effects o.op).callerView) (Effects.le_trans hown
-    (Effects.le_trans (Effects.le_joinAll (List.mem_map.2 ⟨o, ho, rfl⟩)) hfs)) h
+  exact Effects.TouchesNoMemory.of_le (a := (effects o.op).callerView)
+    (Effects.le_trans (t.effects_le_opOwn o)
+      (Effects.le_trans (Effects.le_joinAll (List.mem_map.2 ⟨o, ho, rfl⟩)) hfs)) h
 
 /-- Each op of a function that reaches no memory declares no memory
 effect. -/
@@ -95,18 +89,8 @@ theorem SymbolTable.ReachesNoMemory.own (h : t.ReachesNoMemory s) (hf : t.func? 
 memory: it reaches nothing that its caller does not. -/
 theorem SymbolTable.ReachesNoMemory.callee (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
     (ho : o ∈ f.allOps) {c : Name} (hc : o.call? = some c) (hcs : (t.func? c).isSome) :
-    t.ReachesNoMemory c := by
-  have hclosed := SymbolTable.reach_closed (t := t) (work := [s]) (seen := [])
-    (fun _ h => nomatch h)
-  have hs : s ∈ t.reach [s] [] :=
-    SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)
-  have hcc : c ∈ t.callees f := SymbolTable.mem_callees.2 ⟨hcs, o, ho, hc⟩
-  have hsub : ∀ g ∈ t.reach [c] [], g ∈ t.reach [s] [] :=
-    SymbolTable.reach_sub (C := (· ∈ t.reach [s] [])) (fun g f hg hf c hc => hclosed g hg f hf c hc)
-      (fun _ h => nomatch h) fun g hg => by
-        rcases List.mem_singleton.1 hg with rfl
-        exact hclosed s hs f hf g hcc
-  exact fun g hg => h g (hsub g hg)
+    t.ReachesNoMemory c := fun g hg =>
+  h g (t.reach_of_callee hf (SymbolTable.mem_callees.2 ⟨hcs, o, ho, hc⟩) g hg)
 
 /-! # Computations that ignore the memories -/
 
