@@ -23,8 +23,10 @@ trace: M0's runs have no trace.
   chooses, and `freeze` gives defined bits. A float op's NaN is a defined
   value, and M1 has no floating-point exceptions (ADR-2026-11-09-1549).
 * May produce poison: `poison`; `add`, `sub` and `mul` with a flag, which
-  give poison when the flag is broken; and the shifts, which give poison
-  for an amount of `N` or more.
+  give poison when the flag is broken; the shifts, which give poison
+  for an amount of `N` or more; and the conversions to integers, `fptosi`
+  and `fptoui`, which give poison for an integer that `iN` does not hold,
+  an infinity or a NaN.
 * May-UB: the four divisions, on a zero or poison divisor, and `sdiv` and
   `srem` on the signed minimum or a poison dividend by `-1`. `sdiv` and
   `udiv` with `exact` may produce poison too.
@@ -58,7 +60,7 @@ def Op.effects : Op → Effects Mem
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
   | .srem _ | .urem _ => { mayUB := true }
-  | .shl _ | .lshr _ | .ashr _ | .poison _ => { mayPoison := true }
+  | .shl _ | .lshr _ | .ashr _ | .poison _ | .fptosi .. | .fptoui .. => { mayPoison := true }
   | .br | .ret _ => { control := true }
   | .condBr | .unreachable => { mayUB := true, control := true }
 

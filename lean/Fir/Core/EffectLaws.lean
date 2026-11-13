@@ -55,7 +55,7 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
     | .cons _ (.cons _ (.cons _ .nil)), _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .zext .., _ | .sext .., _ | .trunc .., _ => fun
     | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
-  | .toBits .., _ | .ofBits .., _ => fun
+  | .toBits .., _ | .ofBits .., _ | .fptosi .., _ | .fptoui .., _ => fun
     | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .freeze w, _ => fun
     | .cons a .nil, _ => ⟨fun _ h => (by
@@ -217,7 +217,7 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
   | .fptrunc e m e' m', _ => convertFloat_makesNoPoison e m e' m' false
   | .ptradd n w, _ => ptradd_makesNoPoison n w
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
-  | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h => nomatch h
+  | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h | .fptosi .., h | .fptoui .., h => nomatch h
 
 /-! # No control -/
 

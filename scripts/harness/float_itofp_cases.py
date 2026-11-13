@@ -41,7 +41,14 @@ integer rounded to nearest even otherwise.
 import sys
 from fractions import Fraction
 
-from float_arith_cases import DIFFERENTIAL, FORMATS, write_corpus
+from float_arith_cases import (
+    DIFFERENTIAL,
+    FORMATS,
+    corpus_files,
+    test_lines,
+    tests_file,
+    write_corpus,
+)
 from float_ref import Format
 from float_text import spell
 
@@ -158,23 +165,13 @@ def tests_text(module: str) -> str:
     for name, _, w, t, signed in functions(module):
         f = Format(*FORMATS[t])
         cases = [(int_text(w, x), expected(f, x)) for x in integers(w, signed, f)]
-        cases.append(("poison", "poison"))
-        for arg, want in cases:
-            if native:
-                lines.append(f'  {{ func = "@{name}", args = ["{arg}"] }},')
-            lines.append(
-                f'  {{ func = "@{name}", args = ["{arg}"], expect = ["{want}"] }},'
-            )
-    return "\n".join(head) + "\ntests = [\n" + "\n".join(lines) + "\n]\n"
+        lines += test_lines(name, [*cases, ("poison", "poison")], native)
+    return tests_file(head, lines)
 
 
 def files() -> dict[str, str]:
     """Every file this writes, by its path below `tests/fir/canonical/`."""
-    out = {}
-    for module in FILES:
-        out[f"{module}.fir"] = module_text(module)
-        out[f"{module}.toml"] = tests_text(module)
-    return out
+    return corpus_files(FILES, module_text, tests_text)
 
 
 def main(argv: list[str]) -> int:

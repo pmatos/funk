@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6643374963358279061")
+:::moduleDocs (fingerprint := "17963346009909779280")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -28,7 +28,7 @@ module has. The module's data layout declares the others by number
 No core op names a memory in its effects yet.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "7977178472251343384")
+:::readable Fir.Core.Op.effects (fingerprint := "10359521502899547229")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -40,7 +40,7 @@ $$`\mathsf{sdiv}_x,\ \mathsf{udiv}_x:\ \{\mathsf{mayUB}\} \cup \{\mathsf{mayPois
 
 $$`\mathsf{srem},\ \mathsf{urem}:\ \{\mathsf{mayUB}\}`
 
-$$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison}:\ \{\mathsf{mayPoison}\}`
+$$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison},\ \mathsf{fptosi},\ \mathsf{fptoui}:\ \{\mathsf{mayPoison}\}`
 
 $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
@@ -50,6 +50,8 @@ value, and M1 has no floating-point exceptions (ADR-2026-11-09-1549). So
 are the two bit casts, which keep their operand's bits, the two
 conversions from integers, whose result is never a NaN, and the two
 conversions between formats, whose NaN result is a defined value too.
+The two conversions to integers may produce poison: an integer that the
+width does not hold, an infinity or a NaN gives poison.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

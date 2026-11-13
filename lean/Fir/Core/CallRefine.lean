@@ -99,6 +99,8 @@ theorem Op.monotone_all : (op : Op) →
   | .fpext e m e' m', _ => convertFloat_monotone e m e' m' true
   | .fptrunc e m e' m', _ => convertFloat_monotone e m e' m' false
   | .ptradd n w, _ => ptradd_monotone n w
+  | .fptosi e m n, _ => floatToInt_monotone e m n true
+  | .fptoui e m n, _ => floatToInt_monotone e m n false
   | .freeze w, _ => freeze_monotone w
   | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone

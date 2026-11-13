@@ -1,6 +1,6 @@
 //! `fpext` from `f32` to `f64` and `fptrunc` from `f64` to `f32` run
 //! natively (#241,
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-between-formats`).
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-between-formats`).
 //! Each result is checked against the host's own conversion, Rust's `as`,
 //! which is exact from `f32` to `f64` and rounds to nearest, ties to even,
 //! from `f64` to `f32`, with an infinity past the largest finite value and a

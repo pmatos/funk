@@ -6,7 +6,9 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 [x86-64-backend-abi.md](x86-64-backend-abi.md) (how a function looks from
 outside), [x86-64-backend-executable.md](x86-64-backend-executable.md) (the
 built executable and its stack) and
-[x86-64-backend-lowering.md](x86-64-backend-lowering.md) (how ops lower).
+[x86-64-backend-lowering.md](x86-64-backend-lowering.md) (how ops lower, and
+[x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md) for
+the floats).
 
 ## The crate
 
