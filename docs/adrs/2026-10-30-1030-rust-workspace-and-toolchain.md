@@ -15,10 +15,11 @@ Tier: direction; area: rust-ir-and-tools
   and the generator's random numbers are small modules of funk's own.
   Dependabot watches the `cargo` ecosystem for the first one.
 - **One pin.** `rust-toolchain.toml` pins an exact stable release, with the
-  `minimal` profile and the `rustfmt` and `clippy` components.
-  `rust-version` in the workspace is the pin's minor release. No nightly
-  and no floating `stable`. A bump is one PR that changes the pin, fixes
-  what the new lints find, and passes every check.
+  `minimal` profile and the `rustfmt`, `clippy` and `rust-analyzer`
+  components, so that every clone's editor gets a language server that
+  matches the pin. `rust-version` in the workspace is the pin's minor
+  release. No nightly and no floating `stable`. A bump is one PR that
+  changes the pin, fixes what the new lints find, and passes every check.
 - **Three hooks run the checks**, in `.pre-commit-config.yaml`:
   `rust-fmt`, `rust-clippy` with `-D warnings`, and `rust-test`. Each calls
   `scripts/check-rust.sh`, which fails when the cargo or rustc on `PATH` is
