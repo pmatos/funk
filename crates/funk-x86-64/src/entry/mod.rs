@@ -16,8 +16,6 @@
 //! limit (`ulimit -s`), and calls the wrapper on it
 //! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 
-mod stack;
-
 use funk_ir::text::print_symbol;
 use funk_ir::{Diagnostic, Func, Module, Type};
 
@@ -27,7 +25,7 @@ use crate::abi::{
 };
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, PAGE, displacement, size_for};
-use crate::lower::at;
+use crate::lower::{Need, at};
 use crate::width::{self, Class, Ext, PAIR};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
@@ -52,18 +50,17 @@ const RUNTIME_STACK: u64 = 16 * 1024;
 /// runtime adds a guard page to it without overflow.
 const MOST_STACK: u64 = 1 << 62;
 
-/// The entry point's assembly for `m`, which the backend has lowered into
-/// functions with frames of `frames` bytes. A function whose results the
-/// wrappers cannot print is reported.
-pub fn generate(m: &Module, frames: &[i32]) -> Result<String, Vec<Diagnostic>> {
+/// The entry point's assembly for `m`, with the complete stack needs that
+/// lowering computed for its functions, in the same order. A function whose
+/// results the wrappers cannot print is reported.
+pub fn generate(m: &Module, needs: &[Need]) -> Result<String, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     asm.raw(RUNTIME);
     asm.directive(format_args!(".text"));
     let mut out = Vec::new();
     let mut stacks = Vec::new();
     let funcs: Vec<&Func> = m.funcs().collect();
-    let needs = stack::needs(m, frames);
-    for (i, (f, need)) in funcs.iter().zip(&needs).enumerate() {
+    for (i, (f, need)) in funcs.iter().zip(needs).enumerate() {
         match wrapper(&mut asm, i, f, need.bytes) {
             Ok(stack) => stacks.push((stack, u8::from(need.recursive))),
             Err(d) => out.push(d),
