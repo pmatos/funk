@@ -16,10 +16,8 @@ result as one JSON object on one line
 choices, from the empty memories, with the core dialect's rules, and walks
 the tree in one of three modes, the
 spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`, which Lean
-proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
-`Core.sampled_outcomes`, and for the runs with memory
-`Core.scripted_memOutcomes`, `Core.exhaustive_memOutcomes` and
-`Core.sampled_memOutcomes`):
+proves sound for the runs with memory (`Core.scripted_memOutcomes`,
+`Core.exhaustive_memOutcomes` and `Core.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no
@@ -241,44 +239,43 @@ per level of calls or per choice. They name the core dialect, so they live in
 `fir-ref`'s command line, not in `FirRef.RunModes` (G0, ADR-2026-11-03-0600).
 -/
 
-/-- `Core.scripted`, by the machine. -/
-def runScripted {N : Type} [DecidableEq N] (unit : N → Nat) {σ : Type}
-    (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
-    Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
-  Machine.scripted (unit := unit) M read f args fuel cs
+/-- `Core.scripted`, by the machine, with the core's semantics in the layer
+over the tree that the modes run: each memory with its entry in `M`'s data
+layout, named by its number. -/
+def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
+    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
 
 @[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
-  funext N _ unit σ read M f args fuel cs
+  funext σ read M f args fuel cs
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.scripted_eq M read f args fuel cs).symm
 
 /-- `Core.exhaustive`, by the machine. -/
-def runExhaustive {N : Type} [DecidableEq N] (unit : N → Nat) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (RunLeaf × Nat)) :=
-  Machine.exhaustive (unit := unit) M f args fuel budget
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
 
 @[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
-  funext N _ unit M f args fuel budget
+  funext M f args fuel budget
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.exhaustive_eq M f args fuel budget).symm
 
 /-- `Core.sampled`, by the machine. -/
-def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
-    (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     RunLeaf × List ChoiceTree.Chosen :=
-  Machine.sampled (unit := unit) M draw f args fuel g
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
 
 @[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
-  funext N _ unit γ draw M f args fuel g
+  funext γ draw M f args fuel g
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.sampled_eq M draw f args fuel g).symm
-
-/-- The width of the units of each memory of a run of `fir-ref`, which
-names the core's memories by themselves
-(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`). The core has no
-memory yet, so there is no width to give; the module's data layout will give
-them (#231). -/
-def coreUnit : Core.Mem → Nat := fun x => nomatch x
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
@@ -309,10 +306,10 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
         | .ok vs, .scripted cs =>
-          scriptedReport name (Core.scripted coreUnit constOf m f vs fuel cs)
+          scriptedReport name (Core.scripted constOf m f vs fuel cs)
         | .ok vs, .exhaustive b =>
-          exhaustiveReport name b (Core.exhaustive coreUnit m f vs fuel b)
+          exhaustiveReport name b (Core.exhaustive m f vs fuel b)
         | .ok vs, .sampled s =>
-          sampledReport name (Core.sampled coreUnit draw m f vs fuel ⟨s.toUInt64⟩)
+          sampledReport name (Core.sampled draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef

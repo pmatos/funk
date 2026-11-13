@@ -246,6 +246,31 @@ def sqrt(f: Format, a: int) -> int:
     return f.finish(n * q, False)
 
 
+def remainder(f: Format, a: int, b: int, nearest: bool = True) -> int:
+    """`a - n * b`: with `nearest`, IEEE 754's remainder, where `n` is
+    `a / b` rounded to the nearest integer, a tie to the even one;
+    without, C's `fmod`, where `n` is `a / b` truncated. The result is
+    exact, and a zero result has `a`'s sign. `b = 0`, an infinite `a` and
+    a NaN operand give the canonical NaN, and a finite `a` with an
+    infinite `b` gives `a`."""
+    da, db = f.decode(a), f.decode(b)
+    if "nan" in (da[0], db[0]) or da[0] == "inf" or db[0] == "zero":
+        return f.nan()
+    if db[0] == "inf" or da[0] == "zero":
+        return a
+    x, y = abs(da[1]), abs(db[1])
+    t = x / y
+    n = nearest_even(t) if nearest else t.numerator // t.denominator
+    r = x - n * y
+    neg = da[1] < 0
+    return f.encode(-r, not neg) if r < 0 else f.encode(r, neg)
+
+
+def fmod(f: Format, a: int, b: int) -> int:
+    """C's `fmod`: `remainder` with the quotient truncated."""
+    return remainder(f, a, b, nearest=False)
+
+
 def negate(f: Format, a: int) -> int:
     """`-a`; a NaN gives the canonical NaN, as in Lean's model."""
     return f.nan() if f.decode(a)[0] == "nan" else a ^ f.sign_bit
@@ -259,6 +284,20 @@ def fabs(f: Format, a: int) -> int:
 def roundtrip(f: Format, a: int) -> int:
     """`a` unpacked and packed again: its bits, unless it is a NaN."""
     return f.nan() if f.decode(a)[0] == "nan" else a
+
+
+def convert(f: Format, g: Format, a: int) -> int:
+    """`a` of the format `f` as a value of the format `g`: a number rounded
+    to nearest even, an infinity or a zero with its sign, and a NaN as the
+    canonical NaN of `g`."""
+    d = f.decode(a)
+    if d[0] == "nan":
+        return g.nan()
+    if d[0] == "inf":
+        return g.inf(d[1])
+    if d[0] == "zero":
+        return g.zero(d[1])
+    return g.round(d[1])
 
 
 def compare(f: Format, a: int, b: int):

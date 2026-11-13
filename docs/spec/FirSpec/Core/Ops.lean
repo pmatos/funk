@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16749119918071260467")
+:::moduleDocs (fingerprint := "17459434125897226089")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -96,14 +96,15 @@ op. Validation rejects an op that carries either, and the rules ignore
 them. A flag is off unless the op sets it.
 :::
 
-:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "15404010338068231471")
-*Float operations.* The float arithmetic has four ops of two operands and
+:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "4350115894855268594")
+*Float operations.* The float arithmetic has six ops of two operands and
 three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
 ties to even.
 
 ```grammar Fir.Core.FBin
 \mathit{fbin}
 fadd,fsub,fmul,fdiv   \mathsf{fadd} \mid \mathsf{fsub} \mid \mathsf{fmul} \mid \mathsf{fdiv}
+frem,fmod             \mathsf{frem} \mid \mathsf{fmod}
 ```
 
 ```grammar Fir.Core.FUnary
@@ -114,16 +115,22 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
 * $`\mathsf{fadd}` adds, $`\mathsf{fsub}` subtracts the second operand
   from the first, $`\mathsf{fmul}` multiplies and $`\mathsf{fdiv}` divides
   the first by the second.
+* $`\mathsf{frem}` and $`\mathsf{fmod}` give the remainder of the first
+  by the second, $`x - n \times y`, which is exact, so neither rounds. For
+  $`\mathsf{frem}`, IEEE 754's remainder, $`n` is the quotient rounded to
+  nearest, ties to even; for $`\mathsf{fmod}`, C's `fmod`, it is the
+  quotient truncated. LLVM's `frem` is $`\mathsf{fmod}`, not
+  $`\mathsf{frem}` (#310).
 * $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "15123356320696702751")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "8519819667960364920")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in nine families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in fourteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -244,6 +251,94 @@ trunc     \mathsf{trunc}_{M \to N}
 * $`\mathsf{zext}` fills the new high bits of an $`\mathsf{i}M` with
   zeros, and $`\mathsf{sext}` with its sign bit, giving an $`\mathsf{i}N`.
 * $`\mathsf{trunc}` keeps the low $`N` bits of an $`\mathsf{i}M`.
+
+*Bit casts* read the same bits as another type (ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+toBits,ofBits \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} \mid \mathsf{bitcast}_{e,m}^{\mathsf{i} \to}
+```
+
+* $`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}` (`toBits` in the Lean)
+  gives the bits of a value of $`\mathsf{float}\langle e,m \rangle` as an
+  $`\mathsf{i}N` with $`N = 1+e+m`, and
+  $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}` (`ofBits`) gives the float
+  whose bits are those of an $`\mathsf{i}N`. No bit changes, a NaN's sign
+  and payload included. Neither is ever UB, and a poison operand gives
+  poison.
+
+*Conversions from integers* give the float nearest an integer
+(ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
+```
+
+* $`\mathsf{sitofp}_{N,e,m}` reads an $`\mathsf{i}N` as a signed integer,
+  and $`\mathsf{uitofp}_{N,e,m}` as an unsigned one, and each gives that
+  integer as a value of $`\mathsf{float}\langle e,m \rangle`, rounded to
+  nearest, ties to even, in Lean's float model. An integer too large for
+  the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
+  is ever UB or gives a NaN, and a poison operand gives poison.
+
+*Conversions between formats* give a float's number in another format
+(ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
+```
+
+* $`\mathsf{fpext}_{e,m,e',m'}` gives a value of
+  $`\mathsf{float}\langle e,m \rangle` as a value of
+  $`\mathsf{float}\langle e',m' \rangle`, a format that holds every value
+  of it, with $`e \le e'` and $`m \le m'`, so it never rounds; and
+  $`\mathsf{fptrunc}_{e,m,e',m'}` rounds it, to nearest, ties to even,
+  into a format that cannot hold every value of it, with $`e' < e` or
+  $`m' < m`. The
+  {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
+  every ordered pair of two formats to exactly one of the two (the human's
+  ruling of 2026-11-12 on #354). A number too large for the target gives
+  an infinity of its sign, one too small a zero of its sign, and a NaN any
+  NaN of the target. Neither is ever UB, and a poison operand gives
+  poison.
+
+*Pointer offsets* move a pointer within its memory (#231).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-      \dots
+ptradd \mathsf{ptradd}_{N,W}
+```
+
+* $`\mathsf{ptradd}_{N,W}` moves a pointer of
+  $`\mathsf{ptr}\langle N \rangle` by the integer that an
+  $`\mathsf{i}W` holds, read as signed, in units of the memory $`N`. The
+  result keeps the pointer's provenance. Its offset may leave the bounds
+  of the allocation: only an access through it must be in bounds
+  (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
+  poison.
+
+*Conversions to integers* give a float's number truncated toward zero as
+an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+fptosi,fptoui \mathsf{fptosi}_{e,m,N} \mid \mathsf{fptoui}_{e,m,N}
+```
+
+* $`\mathsf{fptosi}_{e,m,N}` cuts the fraction of a value of
+  $`\mathsf{float}\langle e,m \rangle` off, toward zero, so $`2.7` gives
+  $`2` and $`-2.7` gives $`-2`, and gives the integer as a signed value of
+  $`\mathsf{i}N`; $`\mathsf{fptoui}_{e,m,N}` gives it as an unsigned one.
+  An integer that $`\mathsf{i}N` does not hold, an infinity and a NaN give
+  poison. Neither rounds, so neither has a rounding attribute, and neither
+  is ever UB. A poison operand gives poison.
 
 *Poison control* writes poison and stops it.
 

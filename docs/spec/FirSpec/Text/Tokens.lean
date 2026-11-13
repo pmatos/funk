@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12236167940940888401")
+:::moduleDocs (fingerprint := "15140204543063817337")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "941515271070062022")
@@ -176,7 +176,7 @@ where the tokens of a dialect set are those of a module's set, below, and
 the tokens of a list of items are the tokens of each item, in order.
 :::
 
-:::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.Module.tokens (fingerprint := "10327504033382181455")
+:::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.layoutTokens Fir.Module.tokens (fingerprint := "9825380507763820307")
 *Definition: the tokens of the location table and of a module.* The
 location table with entries $`r_1 = \mathit{loc}_1, \dots, r_n = \mathit{loc}_n`
 has the tokens:
@@ -185,8 +185,12 @@ $$`\begin{aligned} & \mathsf{word}~\mathtt{locs}~\texttt{\{} \\ & \quad \mathsf{
 
 A dialect set $`x_1, \dots, x_n` has no tokens when $`n = 0`, and
 otherwise the tokens $`\mathsf{word}~\mathtt{dialects}~\mathsf{word}~x_1~\texttt{,}~\dots~\texttt{,}~\mathsf{word}~x_n`.
+A data layout $`e_1, \dots, e_n` has no tokens when $`n = 0`, and otherwise
+the tokens $`\mathsf{word}~\mathtt{layout}`, then those of
+$`\mathrm{attr}(e_1)`, then a comma and those of each other entry's
+attribute.
 For every dialect with a text format, a module has the tokens of its
-dialect set, then those of each of its items, in order, then the tokens of
-its location table. This is the
+dialect set, then those of its data layout, then those of each of its
+items, in order, then the tokens of its location table. This is the
 list that the lexer must read back from the printed module.
 :::

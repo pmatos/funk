@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float result obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7410801066859386431")
+:::moduleDocs (fingerprint := "12171358981833708055")
 :::
 
 :::readable Fir.Core.anyNaN_iff Fir.Core.anySign_iff Fir.Core.flipSign_zero (pin := Fir.Core.anyNaN) (pin := Fir.Core.anySign) (fingerprint := "8297353477926480975")
@@ -45,6 +45,12 @@ $`\phi` may not make poison it is defined bits: the model's, a NaN, or a
 zero of either sign.
 :::
 
+:::readable Fir.Core.floatResult_defined (fingerprint := "6538437391169733287")
+*Theorem: a float result without flags is defined.* With no flags,
+$`\mathrm{result}^{\emptyset}_{e,m}` ends only with defined bits, since
+no flag may make poison. The conversions build their results this way.
+:::
+
 :::readable Fir.Core.flagResult_drop Fir.Core.floatResult_drop (pin := Fir.Core.FastMath.Le) (fingerprint := "1035138939333451007")
 *Theorem: a flag only adds results.* Let $`\phi' \le \phi`. Every value
 $`v` that $`\mathrm{result}^{\phi'}_{e,m}` may give on operands,
@@ -61,8 +67,14 @@ well, and a value that $`\phi'` keeps is the choice $`c = 0` of
 $`\mathrm{anysign}` when $`\phi` sets $`\mathsf{nsz}`.
 :::
 
-:::readable Fir.Core.floatResult_toSet (pin := Fir.ChoiceTree.toSet) (fingerprint := "473688221536059951")
-*Theorem: a float result in the tree of choices.* Run in the tree of
-choices that `fir-ref run` computes in, $`\mathrm{result}^\phi_{e,m}` has
-the set monad's result as its set.
+:::readable Fir.Core.anyNaN_map Fir.Core.anySign_map Fir.Core.flagResult_map Fir.Core.floatResult_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "16245639884445466971")
+*Theorem: a float result in another monad.* For every monad morphism
+$`\varphi` that
+{ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],
+$`\varphi` maps any NaN, a value of either sign, $`\mathrm{flag}_\phi` and
+$`\mathrm{result}^\phi_{e,m}` in one monad to the same in the other: the
+choice of a NaN is a choice of $`m + 1` bits in both, and the choice of a
+zero's sign one bit. So run in the tree of choices that `fir-ref run`
+computes in, $`\mathrm{result}^\phi_{e,m}` has the set monad's result as
+its set.
 :::

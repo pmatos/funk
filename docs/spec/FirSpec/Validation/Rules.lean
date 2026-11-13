@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14819655843938608632")
+:::moduleDocs (fingerprint := "15414055197510808373")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "12420361802815271715")
@@ -47,7 +47,7 @@ target (ADR-2026-10-29-2010). No branch may go to the entry block: it has
 no predecessors, and its arguments are the function's parameters.
 :::
 
-:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "6570281988972527310")
+:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "7103011392951782082")
 *Definition: the valid regions of an op.* Let $`o` be an op of the
 function $`f`, checked in the module context $`C`, let $`p` be its op
 instance, and let $`d` be the dialect. The regions of $`o` are valid when:
@@ -184,36 +184,6 @@ A function's symbol may be any string: the text quotes it when it is not a
 word.
 :::
 
-:::readable Fir.Location.WellFormed Fir.LocTable.Valid (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (fingerprint := "11508244414306764901")
-*Definition: a well-formed location and a valid location table.* A
-{ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
-_well formed_ when:
-
-* it is a source range $`\text{file}:l_1:c_1~\mathsf{to}~l_2:c_2` with
-  $`1 \le l_1`, and either $`l_1 < l_2`, or $`l_1 = l_2` and
-  $`c_1 = 0 \vee c_2 = 0 \vee c_1 \le c_2`;
-* it is $`\mathsf{fused}(r^*)` with at least two references in $`r^*`;
-* or it is of any other kind.
-
-A column of 0 is unknown, so it places no condition, and an end equal to
-the start is an empty range.
-
-A location table $`(r_1 = \mathit{loc}_1) \dots (r_n = \mathit{loc}_n)` is
-_valid_ when:
-
-* its references increase, $`r_1 < r_2 < \dots < r_n`, so each is unique and
-  one table has one spelling;
-* the reference of every entry, every reference that its location is built
-  from, and every line and column of a range are below $`2^{32}`, so every
-  implementation can hold them in 32 bits;
-* every entry is well formed;
-* every reference $`r` that the location $`\mathit{loc}_k` is built from,
-  by $`\mathsf{callsite}`, $`\mathsf{fused}` or $`\mathsf{derived}`, is
-  below $`r_k` and is the reference of an entry of the table. Since the
-  references increase, that entry comes before it, so no location refers
-  to itself, directly or not.
-:::
-
 :::readable Fir.DialectItem.Valid (pin := Fir.isDialectWord) (pin := Fir.DialectItem.types) (fingerprint := "16285291260031980")
 *Definition: a valid item of a dialect's kind.* The
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[item]
@@ -232,7 +202,7 @@ reads its kinds by name, so a sum of dialects sends the item to the
 dialect that registers its kind.
 :::
 
-:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "17696861027737048487")
+:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "10439911594444600147")
 *Definition: a valid symbol table and a valid module.* The context of the
 module $`M`, $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M`
 and the references of its location table. A module holds a
@@ -245,17 +215,20 @@ $`T` is valid in $`K` when:
 
 $$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ (\mathrm{symtab}_T) \vdash i~\text{valid} \\ \text{for each } i \in \mathrm{ditems}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
 
-and $`M` is valid when its location table is, and each of its tables is:
+and $`M` is valid when its location table is, each of its tables is, its
+{ref "The-fir-specification--Validation--The-data-layout___s-rules"}[data layout]
+is, and the layout declares each memory that a type of $`M` names:
 
-$$`\dfrac{\begin{array}{c} \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{keys}(M) \vdash T~\text{valid} \\ \text{for each } T \in \mathrm{tables}(M) \end{array}}{\vdash M~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{keys}(M) \vdash T~\text{valid} \\ \text{for each } T \in \mathrm{tables}(M) \\ \mathrm{layout}(M) \text{ is a valid layout} \\ \mathrm{layout}(M) \text{ declares the memories of } M \end{array}}{\vdash M~\text{valid}}`
 
 Here $`\mathrm{items}(T)` is the items of $`T`, functions, nested modules
 and items of a dialect's kind, $`\mathrm{funcs}(T)` its functions,
 $`\mathrm{ditems}(T)` its items of a dialect's kind, each checked in the
 function context of the symbols of $`T`, and $`\mathrm{dialects}(T)` its
 dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
-$`M`, $`\mathrm{keys}(M)` its references, and $`\mathrm{tables}(M)` the
-tables of $`M`, its own first. One location table serves every table.
+$`M`, $`\mathrm{keys}(M)` its references, $`\mathrm{tables}(M)` the
+tables of $`M`, its own first, and $`\mathrm{layout}(M)` its data layout.
+One location table and one layout serve every table.
 
 A symbol names one item of its table, of whatever kind, so a function, a
 module and an item of a dialect's kind never share a symbol of one table; a nested module
@@ -279,12 +252,16 @@ chapters on the text and on execution read a valid module through these,
 and look only at its own functions.
 :::
 
-:::readable Fir.Module.valid_of_flat (fingerprint := "12487538470488893174")
+:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "3887816458739278018")
 *Theorem: a module with no nested module.* A module $`M` whose items are
 all functions has one table, its own. So $`M` is valid when the symbols of
 its items are distinct, its location table is valid, each of its functions
-is valid in $`\mathrm{ctx}(M)`, and the names of $`\mathrm{dialects}(M)`
-are distinct words. The tests prove their modules valid this way.
+is valid in $`\mathrm{ctx}(M)`, the names of $`\mathrm{dialects}(M)`
+are distinct words, its layout is valid, and the layout declares the
+memory of each type that its functions state. Such a module has no item of
+a dialect's kind. The last two conditions are checked by computation when
+they are not given, so the tests prove their modules valid this way with
+the first five.
 :::
 
 :::readable Fir.TypesValid (fingerprint := "4327058517537719696")

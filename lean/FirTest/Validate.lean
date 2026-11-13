@@ -26,7 +26,7 @@ open Fir Fir.Core
 /-- A module of the functions `fs` with the location table `locs`. -/
 def moduleOf (fs : List (Func CoreDialect)) (locs : LocTable := [(0, .unknown)]) :
     Module CoreDialect :=
-  ⟨[], fs.map .func, locs⟩
+  ⟨[], [], fs.map .func, locs⟩
 
 /-- A function `@name` whose one block returns nothing. -/
 def empty (name : Name) : Func CoreDialect := ⟨name, [], [], ⟨none, [⟨"e", [], [op [] (.ret []) []]⟩]⟩⟩

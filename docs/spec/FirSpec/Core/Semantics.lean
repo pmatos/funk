@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15762963527243564175")
+:::moduleDocs (fingerprint := "13960864870049628761")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "5060804437091641835")
+:::readable Fir.Core.Op.denote? (fingerprint := "8766929691435898115")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -52,7 +52,19 @@ result:
   $`\mathsf{nsz}`;
 * $`\mathsf{zext}_{M \to N}`, $`\mathsf{sext}_{M \to N}` and
   $`\mathsf{trunc}_{M \to N}`: the
-  {ref "The-fir-specification--Execution--Width-change-rules"}[width change rules].
+  {ref "The-fir-specification--Execution--Width-change-rules"}[width change rules];
+* $`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}` and
+  $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`: the
+  {ref "The-fir-specification--Execution--Bit-cast-rules"}[bit cast rule];
+* $`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`: the
+  {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules];
+* $`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`: the
+  {ref "The-fir-specification--Execution--Format-conversion-rules"}[format conversion rules],
+  which choose the bits of a NaN result;
+* $`\mathsf{ptradd}_{N,W}`: the
+  {ref "The-fir-specification--Execution--Pointer-offset-rules"}[pointer offset rule];
+* $`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`: the
+  {ref "The-fir-specification--Execution--Integer-conversion-rules"}[integer conversion rules].
 
 $`\mathsf{call}` and the terminators have none here: a call's meaning is
 the run of its callee, and a terminator's rule says where control goes.
@@ -73,14 +85,28 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "2751057764449520623")
+:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "3568116688035604745")
+*Definition: the core dialect's semantics in a monad.* Given two tables
+of rules in a monad $`m`, one for the ops that are not terminators and one
+for the terminators, and a computation $`z(p)` for each op $`p`, the core's
+semantics in $`m` gives each op its rule from the tables, and $`z(p)` to an
+op that a table gives none. In a monad with choice and UB, the core's
+semantics with $`z` takes the two blocks of rules above as its tables. The
+set monad's semantics below is the one with no outcome as $`z`, and the
+tree of choices and the state layer use the same tables, or tables with
+memory, with their own $`z`.
+:::
+
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "9365112240789576787")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
 set of flags, $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
-predicates, at a valid format and at one that validation rejects, and each
-float op of arithmetic, among them, and
+predicates, at a valid format and at one that validation rejects, each
+float op of arithmetic, both bit casts, both conversions from integers,
+both conversions between formats and both conversions to integers, among
+them, and
 $`\mathsf{call}` counts through its callee.
 
 *Definition: the core dialect's semantics.* In the

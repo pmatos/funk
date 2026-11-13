@@ -26,12 +26,13 @@ It looks only at what runs by the op's own rule, and speaks only of valid
 op instances, as monotonicity in the set monad does.
 
 A computation of the set monad, run in the state layer, keeps the memories
-it starts from, so it keeps their refinement. So in a dialect that lifts
-the set monad, as every dialect whose ops touch no memory does, an op is
-monotone with memory exactly when it is monotone in the set monad, and a
-lawful dialect is lawful in its monotonicity. A sum and a lift run an op of
-a side by that side's rule with its results mapped (the section on the
-monotonicity of a sum and a lift).
+it starts from, so it keeps their refinement. So an op that is tied, as
+every op that touches no memory is, is monotone with memory when it is
+monotone in the set monad. In a dialect that lifts the set monad, every op
+is tied, an op is monotone with memory exactly when it is monotone in the
+set monad, and a lawful dialect is lawful in its monotonicity. A sum and a
+lift run an op of a side by that side's rule with its results mapped (the
+section on the monotonicity of a sum and a lift).
 
 A dialect meets the obligation by being _lawful in its monotonicity_, the
 class below. The class asks for no semantics in the set monad, so a dialect
@@ -125,9 +126,9 @@ variable [DialectEffects d] [DialectMemDenote d]
 /-- Monotone with memory: wherever a run names the dialect's memories, the
 op is monotone in its semantics with memory at that naming. -/
 def MemMonotone (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
-    OpMemMonotone (σ := Memories N unit) op
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    OpMemMonotone (σ := Memories N (unitsOf lay)) op
 
 /-- A dialect lawful in its monotonicity: every valid instance that runs by
 its own rule, a terminator or an op with no callee, is monotone with
@@ -139,28 +140,31 @@ class LawfulDialectMonotone (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [
 
 end
 
-/-! # Dialects whose ops touch no memory -/
+/-! # Ops that touch no memory -/
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [TyRefinement d.Ty] [DialectEffects d]
-  [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d]
+  [DialectDenote d SetM] [DialectMemDenote d]
 
-/-- In a dialect that lifts the set monad, an op monotone in the set monad
-is monotone with memory. -/
-theorem MemMonotone.ofLifts {op : d.Op} (h : OpMonotone op) : MemMonotone op := by
-  intro N _ unit ρ
-  unfold OpMemMonotone
-  rw [LiftsSetM.lifts unit ρ]
-  exact fun args args' hr => ⟨fun ht => StateRefinedBy.lift ((h args args' hr).1 ht),
-    fun ht => StateRefinedBy.lift ((h args args' hr).2 ht)⟩
+/-- An op that touches no memory and is monotone in the set monad is
+monotone with memory. -/
+theorem MemMonotone.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpMonotone op) :
+    MemMonotone op :=
+  fun lay ρ args args' hr => by
+    rw [(hl lay ρ args).1, (hl lay ρ args).2, (hl lay ρ args').1, (hl lay ρ args').2]
+    exact ⟨fun ht => StateRefinedBy.lift ((h args args' hr).1 ht),
+      fun ht => StateRefinedBy.lift ((h args args' hr).2 ht)⟩
+
+variable [LiftsSetM d]
 
 /-- In a dialect that lifts the set monad, an op monotone with memory is
 monotone in the set monad. -/
 theorem MemMonotone.setM {op : d.Op} (h : MemMonotone op) : OpMonotone op := by
   intro args args' hr
-  have hu := h (N := Unit) (fun _ => 0) (fun _ => ())
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
   unfold OpMemMonotone at hu
   rw [LiftsSetM.lifts] at hu
-  have hS := Memories.isRefinedBy_refl (Memories.empty : Memories Unit fun _ => 0)
+  have hS := Memories.isRefinedBy_refl
+    (Memories.empty : Memories Unit (unitsOf fun _ => MemLayout.default))
   exact ⟨fun ht => ((hu args args' hr).1 ht).of_lift hS,
     fun ht => ((hu args args' hr).2 ht).of_lift hS⟩
 
@@ -168,6 +172,7 @@ theorem MemMonotone.setM {op : d.Op} (h : MemMonotone op) : OpMonotone op := by
 monotonicity: its monotonicity in the set monad holds with memory. -/
 theorem LawfulDialectMonotone.ofLawful [DialectCall d] [DialectValidation d] [TyPoison d.Ty]
     [LawfulDialectPoison d] : LawfulDialectMonotone d where
-  monotone op hv hc := MemMonotone.ofLifts (LawfulDialectPoison.monotone op hv hc)
+  monotone op hv hc :=
+    MemMonotone.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.monotone op hv hc)
 
 end Fir

@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10416971674967343514")
+:::moduleDocs (fingerprint := "7991574293541682519")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -36,25 +36,27 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "16094276548186314327")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "69673544032050732")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-31 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
-written with the name it has in the op set, except four. The conditional
+40 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+written with the name it has in the op set, except six. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
 `const`, as an integer constant is: the type of its result tells them
 apart. $`\mathit{fbin}~o` and $`\mathit{funary}~o` are written with the
 {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[name]
-of their operation $`o`, such as `fadd` or `sqrt`.
+of their operation $`o`, such as `fadd` or `sqrt`. Both bit casts, which
+the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
+the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "3772246009591333632")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "10792485943790889439")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~\phi) = \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi) &= \mathrm{fmf}(\phi)~\mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi) &= \mathrm{fmf}(\phi)~\mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -85,7 +87,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "12592107889213650453")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "1381702041029705106")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -124,8 +126,8 @@ $`\mathsf{i}W` are integer types.
   with $`e = e'` and $`m = m'`, and the result type $`\mathsf{i1}`, it is
   $`\mathsf{fcmp}_{e,m}~\phi~p`. The Lean names this case `decodeFcmp`,
   which reads the flags, and `decodeFcmpWith`, which reads the rest.
-* `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`: as
-  the section on
+* `fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `fneg`, `fabs`,
+  `sqrt` and `fma`: as the section on
   {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
   reads them, from their attributes and their float types.
 * `add`, `sub` and `mul`: when $`\mathrm{width}(t^*, r^*) = A` and
@@ -143,6 +145,21 @@ $`\mathsf{i}W` are integer types.
 * `zext`, `sext` and `trunc`: without attributes, from one operand type
   $`\mathsf{i}M` and one result type $`\mathsf{i}N`, it is the width change
   from $`M` to $`N`.
+* `bitcast`: as the section on
+  {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
+  reads it, from no attributes, one float type and one integer type of its
+  width, in either order.
+* `sitofp` and `uitofp`: as the same section reads them, from
+  $`\mathtt{round(rne)}`, one integer type and one float type.
+* `fpext` and `fptrunc`: as the same section reads them, from no
+  attributes for `fpext` and $`\mathtt{round(rne)}` for `fptrunc`, and one
+  float type to another.
+* `ptradd`: without attributes, from the operand types
+  $`\mathsf{ptr}\langle N \rangle` and $`\mathsf{i}W`, in that order, and
+  the one result type $`\mathsf{ptr}\langle N' \rangle` with $`N = N'`, it
+  is $`\mathsf{ptradd}_{N,W}`; the Lean calls that reading `decodePtrAdd`.
+* `fptosi` and `fptoui`: as the same section reads them, from no
+  attributes, one float type and one integer type.
 * `freeze`: without attributes, from one operand type $`\mathsf{i}A` and
   one result type $`\mathsf{i}B` with $`A = B`, it is
   $`\mathsf{freeze}_A`.
@@ -208,24 +225,4 @@ calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
 `float(-1, 3)` do not decode, and neither do `ptr(0)`, which is written
 `ptr`, and `ptr(-1)`. `i0`, `float(1, 1)` and `ptr(1)` decode, and
 validation rejects them.
-:::
-
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "14334452080183603923")
-*Definition: the core dialect's text, and one instance of every core op.*
-The functions of the blocks
-above, $`\mathrm{opname}`, $`\mathrm{opattrs}`, $`\mathrm{decodeop}`,
-$`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
-{ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
-and the printer of every dialect read and write core modules. The samples
-are a list of op instances that
-holds each of the 28 core ops at least once, with each of the ten
-predicates and each of the fourteen float predicates, at widths from 1 to
-128, float constants at `f32`, `f64`, `f16` and
-$`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, the
-fast-math flags and the reserved words among them, and
-$`\mathsf{ret}` with and without operands. On every build, checks test
-that each of them reads back from its own name, attributes and types, and
-that misspellings such as `i032`, `float(8, 23)`, flags in the wrong order,
-`const 1` at `i1` and `const 2147483648` at `f32` do not. The proof for every op instance, of every width, is in the
-section {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[The core dialect's text is lawful].
 :::

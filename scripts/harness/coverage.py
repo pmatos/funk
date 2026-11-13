@@ -18,6 +18,7 @@ import argparse
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import NamedTuple
 
 import cells
 import corpus
@@ -27,18 +28,36 @@ from cells import Cell
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "tests" / "fir"
 MATRIX = ROOT / "docs" / "coverage" / "README.md"
+
+
+class Side(NamedTuple):
+    """One side of the matrix: its key, its title, and the widths, float
+    formats and widths of a pointer offset's integer that it has cells at."""
+
+    name: str
+    title: str
+    widths: tuple[int, ...]
+    formats: tuple[str, ...]
+    offsets: tuple[int, ...]
+
+    def cells(self) -> list[Cell]:
+        return cells.cells(self.widths, self.formats, self.offsets)
+
+
 SIDES = (
-    (
+    Side(
         "differential",
         "Differential tests",
         cells.DIFFERENTIAL,
         cells.FLOAT_DIFFERENTIAL,
+        cells.POINTER_DIFFERENTIAL,
     ),
-    (
+    Side(
         "interpreter",
         "Interpreter-only tests",
         cells.INTERPRETER,
         cells.FLOAT_INTERPRETER,
+        cells.POINTER_INTERPRETER,
     ),
 )
 
@@ -95,16 +114,18 @@ def count(root: Path) -> dict[str, Counter]:
 def empty(counts: dict[str, Counter]) -> list[str]:
     """The cells that no test exercises, named as the matrix shows them."""
     return [
-        f"{side}: {show(cell)}"
-        for side, _, widths, formats in SIDES
-        for cell in cells.cells(widths, formats)
-        if not counts[side][cell]
+        f"{side.name}: {show(cell)}"
+        for side in SIDES
+        for cell in side.cells()
+        if not counts[side.name][cell]
     ]
 
 
 def show(cell: Cell) -> str:
-    if cell.table == "casts":
+    if cell.table in ("casts", "conversions"):
         return f"{cell.op} from {cell.row} to {cell.width}"
+    if cell.table == "pointers":
+        return f"{cell.op} by {cell.width}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
         words.append("at")
@@ -120,38 +141,19 @@ def table(head: list[str], rows: list[list[str]]) -> list[str]:
     return out + ["| " + " | ".join(r) + " |" for r in rows]
 
 
-def ops_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
-    rows = []
-    for op, attrs in cells.AT_WIDTH.items():
-        for a in attrs:
-            row = [f"`{op}`", f"`{a}`" if a else ""]
-            rows.append(
-                row + [number(counts[Cell("ops", op, a, cells.ty(w))]) for w in widths]
-            )
-    return table(["op", "flags or predicate", *(f"`i{w}`" for w in widths)], rows)
-
-
-def floats_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
-    rows = []
-    for op, attrs in cells.AT_FORMAT.items():
-        for a in attrs:
-            row = [f"`{op}`", f"`{a}`" if a else ""]
-            rows.append(
-                row + [number(counts[Cell("floats", op, a, f)]) for f in formats]
-            )
-    return table(["op", "predicate", *(f"`{f}`" for f in formats)], rows)
-
-
-def casts_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
-    rows = []
-    for op in cells.CASTS:
-        for m in widths:
-            row = [f"`{op}`", f"`i{m}`"]
-            for n in widths:
-                cell = Cell("casts", op, cells.ty(m), cells.ty(n))
-                row.append(number(counts[cell]) if cells.allowed(op, m, n) else "")
-            rows.append(row)
-    return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
+# Presentation metadata only: taxonomy membership, row order and blanks
+# come from cells.catalog, shared with the gap enumeration.
+SECTIONS = {
+    "ops": ("Ops at a width", ("op", "flags or predicate"), ""),
+    "floats": ("Float ops at a format", ("op", "predicate, attribute or flag"), ""),
+    "casts": ("Width changes", ("op", "from"), "to "),
+    "bitcasts": ("Conversions", ("op", "from", "to"), ""),
+    "int_to_float": ("Conversions from integers", ("op", "from"), "to "),
+    "float_conversions": ("Conversions between formats", ("from",), "to "),
+    "float_to_int": ("Conversions to integers", ("op", "from"), "to "),
+    "pointers": ("Pointer offsets", ("op",), "by "),
+    "values": ("Passed and returned values", ("op", "what"), ""),
+}
 
 
 WHAT = {
@@ -179,25 +181,54 @@ WHAT = {
 }
 
 
-def values_table(
-    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
-) -> list[str]:
-    types = (*map(cells.ty, widths), *formats)
-    rows = []
-    for op, kinds in cells.VALUES:
-        for k in kinds:
-            row = [f"`{op}`", WHAT[op][k]]
-            if k == cells.NOTHING:
-                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(types)
-            else:
-                row += [""] + [number(counts[Cell("values", op, k, t)]) for t in types]
-            rows.append(row)
-    return table(["op", "what", "no value", *(f"`{t}`" for t in types)], rows)
+def code(text: str) -> str:
+    return f"`{text}`" if text else ""
+
+
+def catalog_table(counts: Counter, spec: cells.Table) -> list[str]:
+    """Render already-expanded cells, without knowing which pairs exist."""
+    _, labels, prefix = SECTIONS[spec.kind]
+    head = [
+        *labels,
+        *(
+            f"{prefix}{code(t)}"
+            if t
+            else "tests"
+            if spec.kind == "bitcasts"
+            else "no value"
+            for t in spec.columns
+        ),
+    ]
+    rows = [catalog_row(counts, spec.kind, row) for row in spec.rows]
+    return table(head, rows)
+
+
+def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
+    """Format a row's labels and cell counts, retaining applicability blanks."""
+    if kind == "float_conversions":
+        shown = [code(row.key)]
+    elif kind == "pointers":
+        shown = [code(row.op)]
+    elif kind == "values":
+        shown = [code(row.op), WHAT[row.op][row.key]]
+    else:
+        shown = [code(row.op), code(row.key)]
+    if kind == "bitcasts":
+        cell = row.entries[0]
+        assert cell is not None
+        shown.append(code(cell.width))
+    for cell in row.entries:
+        if cell is None:
+            shown.append("")
+        else:
+            n = number(counts[cell])
+            shown.append(f"{code(cell.op)} {n}" if kind == "float_conversions" else n)
+    return shown
 
 
 def render(counts: dict[str, Counter]) -> str:
     """The matrix as Markdown."""
-    total = sum(len(cells.cells(w, f)) for _, _, w, f in SIDES)
+    total = sum(len(side.cells()) for side in SIDES)
     gaps = empty(counts)
     lines = [
         "# Coverage matrix of the fir corpus",
@@ -214,20 +245,18 @@ def render(counts: dict[str, Counter]) -> str:
         "ops of the function a test runs and of every function it calls,",
         "and, in the `func` rows, the results of the function it runs. An",
         "empty entry is not a cell: a width change that the spec does not",
-        "allow, or a width for a row that passes no value.",
+        "allow, a conversion from a format to itself, or a width for a row",
+        "that passes no value.",
         "",
         f"{total} cells, {total - len(gaps)} with a test.",
     ]
-    for side, title, widths, formats in SIDES:
-        lines += ["", f"## {title}", ""]
-        lines += [f"### Ops at a width ({title.lower()})", ""]
-        lines += ops_table(counts[side], widths)
-        lines += ["", f"### Float ops at a format ({title.lower()})", ""]
-        lines += floats_table(counts[side], formats)
-        lines += ["", f"### Width changes ({title.lower()})", ""]
-        lines += casts_table(counts[side], widths)
-        lines += ["", f"### Passed and returned values ({title.lower()})", ""]
-        lines += values_table(counts[side], widths, formats)
+    for side in SIDES:
+        c, title = counts[side.name], side.title.lower()
+        lines += ["", f"## {side.title}"]
+        for spec in cells.catalog(side.widths, side.formats, side.offsets):
+            heading = SECTIONS[spec.kind][0]
+            lines += ["", f"### {heading} ({title})", ""]
+            lines += catalog_table(c, spec)
     return "\n".join(lines) + "\n"
 
 

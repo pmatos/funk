@@ -25,10 +25,11 @@ It holds as the obligation on may-UB does:
   layer, has one from any memories, and keeps them;
 * mapping the results of a computation keeps an outcome.
 
-So in a dialect that lifts the set monad, as every dialect whose ops touch
-no memory does, an op is total with memory exactly when it is total in the
-set monad, and a lawful dialect is lawful in its totality. A sum and a
-lift run an op of a side by that side's rule with its results mapped, so
+So an op that is tied, as every op that touches no memory is, is total with
+memory when it is total in the set monad. In a dialect that lifts the set
+monad, every op is tied, an op is total with memory exactly when it is total
+in the set monad, and a lawful dialect is lawful in its totality. A sum and
+a lift run an op of a side by that side's rule with its results mapped, so
 they are lawful in their totality when their sides are (the section on the
 totality of a sum and a lift).
 
@@ -99,8 +100,8 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 every operand vector, an op that is not a terminator has an outcome from
 any memories, and so does the exit of a terminator. -/
 def MemTotal (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    OwnRuleHas unit ρ HasOutcome op
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    OwnRuleHas lay ρ HasOutcome op
 
 /-- A dialect lawful in its totality: every valid instance that runs by its
 own rule, a terminator or an op with no callee, is total with memory. -/
@@ -110,25 +111,25 @@ class LawfulDialectTotal (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [Dia
 
 end
 
-/-! # Dialects whose ops touch no memory -/
+/-! # Ops that touch no memory -/
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
-  [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d]
+  [DialectDenote d SetM] [DialectMemDenote d]
 
-/-- In a dialect that lifts the set monad, an op total in the set monad is
-total with memory. -/
-theorem MemTotal.ofLifts {op : d.Op} (h : OpTotal op) : MemTotal op := by
-  intro N _ unit ρ
-  unfold OwnRuleHas
-  rw [LiftsSetM.lifts unit ρ]
-  exact fun args => ⟨fun ht => hasOutcome_lift ((h args).1 ht),
-    fun ht => hasOutcome_lift ((h args).2 ht)⟩
+/-- An op that touches no memory and is total in the set monad is total
+with memory. -/
+theorem MemTotal.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpTotal op) : MemTotal op :=
+  fun lay ρ args => by
+    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+    exact ⟨fun ht => hasOutcome_lift ((h args).1 ht), fun ht => hasOutcome_lift ((h args).2 ht)⟩
+
+variable [LiftsSetM d]
 
 /-- In a dialect that lifts the set monad, an op total with memory is total
 in the set monad. -/
 theorem MemTotal.setM {op : d.Op} (h : MemTotal op) : OpTotal op := by
   intro args
-  have hu := h (N := Unit) (fun _ => 0) (fun _ => ()) args
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args
   rw [LiftsSetM.lifts] at hu
   exact ⟨fun ht => (hu.1 ht).of_lift Memories.empty, fun ht => (hu.2 ht).of_lift Memories.empty⟩
 
@@ -136,6 +137,6 @@ theorem MemTotal.setM {op : d.Op} (h : MemTotal op) : OpTotal op := by
 totality in the set monad holds with memory. -/
 theorem LawfulDialectTotal.ofLawful [DialectCall d] [DialectValidation d] [TyPoison d.Ty]
     [TyRefinement d.Ty] [LawfulDialectPoison d] : LawfulDialectTotal d where
-  total op hv hc := MemTotal.ofLifts (LawfulDialectPoison.total op hv hc)
+  total op hv hc := MemTotal.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.total op hv hc)
 
 end Fir

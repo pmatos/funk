@@ -18,7 +18,13 @@ import FirTest.Div
 import FirTest.Compare
 import FirTest.FloatCompare
 import FirTest.FloatArith
+import FirTest.FloatBitcast
+import FirTest.FloatOfInt
+import FirTest.FloatConvert
+import FirTest.PointerOffset
+import FirTest.FloatToInt
 import FirTest.FloatText
+import FirTest.CoreText
 import FirTest.FloatFlags
 import FirTest.Branch
 import FirTest.Unreachable
@@ -30,6 +36,7 @@ import FirTest.ReadDeep
 import FirTest.ValidateOps
 import FirTest.Validate
 import FirTest.ValidateNested
+import FirTest.Layout
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore
@@ -56,9 +63,11 @@ import FirTest.EffectCases
 import FirTest.SummaryCases
 import FirTest.Memory
 import FirTest.MemoryRuns
+import FirTest.MemoryPoison
 import FirTest.MemoryObligations
 import FirTest.MemoryStoreReads
 import FirTest.MemoryRefine
+import FirTest.MemoryEncode
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0
@@ -68,6 +77,7 @@ import FirTest.FloatModelFma
 import FirTest.FloatModelF16
 import FirTest.FloatModelBf16
 import FirTest.FloatModelF128
+import FirTest.FloatRem
 import FirTest.EquivSteps
 import FirTest.EquivFuncs
 import FirTest.Equiv

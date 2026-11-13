@@ -1,5 +1,5 @@
 import Fir.Core.Semantics
-import Fir.Execution.ChoiceTree
+import Fir.Execution.Morphism
 
 /-!
 # What a float result may be
@@ -16,8 +16,8 @@ every value refines. The section on the float arithmetic obligations
 builds the obligations of each op on these facts, and the section on
 dropping fast-math flags the refinement between flagged ops.
 
-Last, each result, run in `fir-ref`'s tree of choices, has the set monad's
-result as its set.
+Last, a morphism of monads that keeps choice and UB maps each result in one
+monad to the result in the other.
 -/
 
 namespace Fir.Core
@@ -131,7 +131,7 @@ theorem floatResult_ok {fl : FastMath} {e m : Nat} {as : List (BitVec (floatWidt
     exact ⟨_, rfl, fun _ => ⟨_, rfl⟩⟩
 
 /-- A float result has a way to end, and is never UB. -/
-theorem floatResult_ends (fl : FastMath) (e m : Nat) (as : List (BitVec (floatWidth e m)))
+theorem floatResult_ends {fl : FastMath} (e m : Nat) {as : List (BitVec (floatWidth e m))}
     (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
     Ends (floatResult (μ := SetM) fl e m as r) where
   ok ev h := (floatResult_ok h).imp fun _ h => h.1
@@ -147,6 +147,16 @@ theorem floatResult_ends (fl : FastMath) (e m : Nat) (as : List (BitVec (floatWi
           · exact ⟨_, anyNaN_iff.2 ⟨0, rfl⟩⟩
         · exact flagResult_some _ _ _ _ _
     · exact ⟨_, anyNaN_iff.2 ⟨0, rfl⟩⟩
+
+/-- In the set monad, a float result without flags, such as a conversion's,
+is a defined value. -/
+theorem floatResult_defined (e m : Nat)
+    (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat)
+    (ev : Ev (PoisonOr (BitVec (floatWidth e m)))) (h : floatResult (μ := SetM) {} e m [] r ev) :
+    ∃ b, ev = .ok (.value b) := by
+  obtain ⟨_, rfl, hv⟩ := floatResult_ok h
+  obtain ⟨b, rfl⟩ := hv rfl
+  exact ⟨b, rfl⟩
 
 /-! # A flag only adds results -/
 
@@ -214,29 +224,55 @@ theorem floatResult_drop {fl fl' : FastMath} (hle : fl'.Le fl) {e m : Nat}
     · contradiction
     · exact .inr h
 
-/-! # Results in the tree of choices -/
+/-! # Results in another monad -/
 
-/-- A float result in the tree of choices has the set monad's as its
-set. -/
-theorem floatResult_toSet {ε : Type} (fl : FastMath) (e m : Nat)
-    (as : List (BitVec (floatWidth e m)))
+section
+variable {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadChoice ν] [MonadUB μ]
+  [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) {e m : Nat}
+include hk
+
+/-- A morphism that keeps choice and UB maps any NaN in `μ` to any NaN in
+`ν`. -/
+theorem anyNaN_map : φ.map (anyNaN (μ := μ) e m) = anyNaN e m := by
+  unfold anyNaN
+  rw [φ.map_bind, hk.choose]
+  simp only [φ.map_pure]
+
+/-- Such a morphism maps `b` with either sign in `μ` to the same in `ν`. -/
+theorem anySign_map (b : BitVec (floatWidth e m)) :
+    φ.map (anySign (μ := μ) e m b) = anySign e m b := by
+  unfold anySign
+  rw [φ.map_bind, hk.choose]
+  simp only [φ.map_pure]
+
+/-- Such a morphism maps a result that is not a NaN, under the flags, in
+`μ` to the same in `ν`. -/
+theorem flagResult_map (fl : FastMath) (b : BitVec (floatWidth e m)) (u : UnpackedFloat) :
+    φ.map (flagResult (μ := μ) fl e m b u) = flagResult fl e m b u := by
+  unfold flagResult
+  split
+  · exact φ.map_pure _
+  · split
+    · exact anySign_map φ hk b
+    · exact φ.map_pure _
+
+/-- Such a morphism maps a float result in `μ` to the float result in
+`ν`. -/
+theorem floatResult_map {fl : FastMath} {as : List (BitVec (floatWidth e m))}
     (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
-    (floatResult (μ := ChoiceTree ε) fl e m as r).toSet = floatResult fl e m as r := by
+    φ.map (floatResult (μ := μ) fl e m as r) = floatResult fl e m as r := by
   unfold floatResult
   split
   · dsimp only
     split
-    · rfl
+    · exact φ.map_pure _
     · split
       · split
-        · rfl
-        · exact ChoiceTree.toSet_bind _ _
-      · unfold flagResult
-        split
-        · rfl
-        · split
-          · exact ChoiceTree.toSet_bind _ _
-          · rfl
-  · exact ChoiceTree.toSet_bind _ _
+        · exact φ.map_pure _
+        · exact anyNaN_map φ hk
+      · exact flagResult_map φ hk _ _ _
+  · exact anyNaN_map φ hk
+
+end
 
 end Fir.Core

@@ -38,8 +38,10 @@ The fast-math flags are (ADR-2026-11-09-1549):
 
 How they hold today (#242):
 
-- `fcmp` and every op of the arithmetic carry the flags, `fl` of `Op` in
-  `lean/Fir/Core/Ops.lean`. An operand that the model reads as a NaN under
+- `fcmp` and every op of the arithmetic, the remainders among them, carry the
+  flags, `fl` of `Op` in `lean/Fir/Core/Ops.lean`. The bit casts and the
+  conversions carry none: #242 names no conversion, and their rules build the
+  float result with no flags. An operand that the model reads as a NaN under
   `nnan`, or as an infinity under `ninf`, makes the result poison, and the op
   computes nothing. A result that the model computes as a NaN is poison under
   `nnan`, and the op then chooses no NaN. A result is an infinity, under
@@ -166,18 +168,57 @@ the spec they are three op instances: `fbin o e m`, `funary o e m` and
 Each op that rounds is written with `round(rne)`, and `fneg` and `fabs` with no
 attribute (ADR-2026-11-11-1801).
 
-`frem` is not built: the model has no remainder. The human ruled on 2026-11-12,
-on #310, that `frem` is the IEEE 754 remainder, with the quotient rounded to
-nearest, ties to even, and that C's `fmod`, with the quotient truncated, is
-built alongside it. #310 builds both.
+## The remainders
+
+`%q: f64 = frem %a, %b` and `%q: f64 = fmod %a, %b` take two values of one
+float type and give one of it: `x - n * y`, with an integer `n` near the
+quotient `x / y`. The human ruled on 2026-11-12, on #310, that fir follows IEEE
+754 here, and builds C's `fmod` beside it:
+
+- `frem` is IEEE 754's remainder (§5.3.1): `n` is `x / y` rounded to nearest,
+  ties to even. `5.5 frem 2.0` is `-0.5`, and `3.0 frem 2.0` is `-1.0`.
+- `fmod` is C's `fmod`: `n` is `x / y` truncated toward zero, so the result has
+  the sign of `x`. `5.5 fmod 2.0` is `1.5`. LLVM's `frem` is this op, so fir's
+  `frem` is not LLVM's `frem`.
+
+Rejected: `frem` as LLVM's, the truncated remainder, which is not the remainder
+IEEE 754 defines; and `frem` alone, which leaves the C operation that LLVM
+programs use unwritable.
+
+- Neither rounds. The remainder of two finite floats is a multiple of the
+  smaller of their quanta and no larger than `|y|`, so the format holds it
+  exactly. Neither carries `round(rne)`, as `fneg` and `fabs` do not
+  (ADR-2026-11-11-1801).
+- The special cases follow IEEE 754 for `frem` and C's Annex F for `fmod`,
+  which agree: `y = 0`, an infinite `x` or a NaN operand gives a NaN, which
+  is any NaN as above; a finite `x` with an infinite `y` gives `x`; and a zero
+  result, a zero `x` included, has the sign of `x`.
+- Lean's model has no remainder, so the spec defines it on the model's
+  numbers, `remainder` in `lean/Fir/Core/FloatRem.lean`: it writes both
+  operands at the smaller exponent as whole numbers, takes their quotient and
+  remainder, and moves the remainder by `|y|` for `frem` past half of `|y|`, or
+  at half with an odd quotient. The model's `normalize` writes the result,
+  which it never rounds. Everything else, the NaN, poison and the rejected
+  formats, is the rule of the arithmetic above: in the spec, `frem` and `fmod`
+  are two ops of `fbin o e m`. Each is pure and never UB.
+
+## The conversions
+
+The conversions of #241, `bitcast`, `sitofp`, `uitofp`, `fpext`, `fptrunc`,
+`fptosi` and `fptoui`, are on
+[semantics-floats-conversions.md](semantics-floats-conversions.md).
 
 ## What holds today
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
-arithmetic above, and float constants. A float constant is `const` at a float
-type, written as its shortest decimal that reads back, such as `1.0` or `0.1`,
+arithmetic above, the remainders of #310, float constants, `bitcast` between a
+float and the integer of its width, `sitofp` and `uitofp` from every
+integer type to every float type, `fpext` and `fptrunc` between every two
+float formats, and `fptosi` and `fptoui` from every float type to every
+integer type. A float constant is `const` at a
+float type, written as its shortest decimal that reads back, such as `1.0` or `0.1`,
 or else as `0x` and its bits, such as `0x7fc00000`. Every bit pattern, each NaN
 payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
 
@@ -191,22 +232,47 @@ never a NaN, so it is differential already. The naive backend lowers `f32` and
 `f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and
 lowers the constants, `fcmp` and the arithmetic, with SSE2 and, for `fma`, a
-routine of a runtime helper
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md)). It reports every
+routine of a runtime helper, the remainders with routines of another that
+run the x87 unit's `fprem1` and `fprem`, `bitcast` as a copy of a slot, and
+`sitofp` and `uitofp` with `cvtsi2ssq` and `cvtsi2sdq`, in a few steps for an
+unsigned `i64` or an `i128`, `fpext` and `fptrunc` between `f32` and `f64`
+with `cvtss2sd` and `cvtsd2ss`, and `fptosi` and `fptoui` with `cvttss2siq`
+and `cvttsd2siq`, in a few steps for an unsigned `i64` or an `i128`
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md)). It reports every
 other format as a diagnostic where its value is defined. The corpus runs every
 predicate and the constants differentially at `f32` and `f64`, and on `fir-ref`
 against `scripts/harness/float_ref.py` at `f16`, `bf16` and `f128`, on zeros of
 both signs, subnormals, the largest finite values, infinities and NaNs. It runs
-the arithmetic on the hard inputs of every op, at every aliased format, with
+the arithmetic and the remainders on the hard inputs of every op, at every
+aliased format, with
 each result that is not a NaN differential at `f32` and `f64`, and each NaN
 result on `fir-ref` with a choice
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
+It runs `bitcast` both ways at every aliased format, on the same edges, each
+case differential at `f32` and `f64`, NaNs included
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-bit-cast-corpus)).
+It runs `sitofp` and `uitofp` from every width of each side to every aliased
+format, on boundary integers, ties and the edges of overflow, each case of a
+width the backend lowers differential at `f32` and `f64`
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-integer-to-float-corpus)).
+It runs `fpext` and `fptrunc` between every two aliased formats, on the edges
+of both formats, ties, overflow and underflow, differential from `f32` to `f64`
+and back
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-format-conversion-corpus)).
+It runs `fptosi` and `fptoui` from every aliased format to every width of each
+side, on the zeros, small fractions, the largest finite values, infinities,
+NaNs and the floats on either side of each end of each width's range, each
+case of a width the backend lowers differential at `f32` and `f64`, where
+native code refines poison with any value
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-float-to-integer-corpus)).
 
 The fast-math flags hold in the spec, `fir-ref`, the Rust IR, parser, printer,
 verifier and backend, and `reject/float-flags.toml` holds their must-reject
-texts. The canonical corpus does not run a flagged op yet: the coverage matrix
-counts an op instance with its flag set as a cell (ADR-2026-11-03-0557), and how
-the flags enter it waits for the human (#242).
+texts. The corpus runs each float op with each flag at every aliased format, on
+cases that the flag decides, each differential at `f32` and `f64`, where native
+code refines poison and either zero; each flag of each float op is a cell of
+the coverage matrix, by the human's ruling of 2026-11-13 on #355
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-fast-math-flag-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's

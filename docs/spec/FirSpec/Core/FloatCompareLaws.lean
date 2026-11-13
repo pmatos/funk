@@ -31,7 +31,7 @@ A defined float is refined only by itself, so the two sides compare the
 same bits under the same flags, or the left side is poison.
 :::
 
-:::readable Fir.Core.fcmp_propagatesPoison Fir.Core.fcmp_returnsOnDefined Fir.Core.fcmp_total Fir.Core.fcmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.fcmpValues) (fingerprint := "10449641329668636775")
+:::readable Fir.Core.fcmp_propagatesPoison Fir.Core.fcmp_returnsOnDefined Fir.Core.fcmp_total Fir.Core.fcmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.fcmpValues) (fingerprint := "4867094978942496543")
 *Theorem: $`\mathsf{fcmp}` is lawful, with every predicate and flag and at
 every format.* Under fir's execution rules, $`\mathsf{fcmp}_{e,m}~\phi~p` meets every
 obligation of an op that

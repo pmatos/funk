@@ -1,5 +1,5 @@
 //! The fast-math flags build and run natively at `f32` and `f64` (#242,
-//! `docs/decisions/x86-64-backend-lowering.md#fast-math-flags`). The
+//! `docs/decisions/x86-64-backend-lowering-floats.md#fast-math-flags`). The
 //! backend ignores `nnan`, `ninf` and `nsz`: an op without a flag refines
 //! the op with it (`Fir.Core.FloatFlagLaws`), so each flagged op gives what
 //! the op without flags gives, which this test checks on operands that
@@ -10,7 +10,8 @@ mod common;
 use common::{build, expect, func, module, run};
 
 /// `@f(%a: T, %b: T)`, which applies each float op with `flags` to `%a`
-/// and `%b` and returns every result, `fcmp olt` last.
+/// and `%b`, the remainders among them, and returns every result, `fcmp
+/// olt` last.
 fn ops(t: &str, flags: &str) -> String {
     let f = if flags.is_empty() {
         String::new()
@@ -26,11 +27,13 @@ fn ops(t: &str, flags: &str) -> String {
         format!("%v: {t} = fabs{f} %n"),
         format!("%r: {t} = sqrt{f} round(rne) %b"),
         format!("%x: {t} = fma{f} round(rne) %a, %b, %a"),
+        format!("%e: {t} = frem{f} %a, %b"),
+        format!("%o: {t} = fmod{f} %a, %b"),
         format!("%c: i1 = fcmp{f} olt %a, %b"),
-        "ret %s, %d, %m, %q, %n, %v, %r, %x, %c".to_string(),
+        "ret %s, %d, %m, %q, %n, %v, %r, %x, %e, %o, %c".to_string(),
     ];
     let body: Vec<&str> = body.iter().map(String::as_str).collect();
-    let results = format!("{t}, {t}, {t}, {t}, {t}, {t}, {t}, {t}, i1");
+    let results = format!("{t}, {t}, {t}, {t}, {t}, {t}, {t}, {t}, {t}, {t}, i1");
     module(&[func("f", &format!("%a: {t}, %b: {t}"), &results, &body)])
 }
 
@@ -52,10 +55,23 @@ fn want(t: &str, a: f64, b: f64) -> Vec<String> {
     } else {
         a.mul_add(b, a)
     };
-    let mut v: Vec<String> = [a + b, a - b, a * b, a / b, -a, a.abs(), b.sqrt(), fma]
-        .into_iter()
-        .map(r)
-        .collect();
+    // IEEE 754's remainder and C's `fmod`, exact on these operands.
+    let frem = a - (a / b).round_ties_even() * b;
+    let mut v: Vec<String> = [
+        a + b,
+        a - b,
+        a * b,
+        a / b,
+        -a,
+        a.abs(),
+        b.sqrt(),
+        fma,
+        frem,
+        a % b,
+    ]
+    .into_iter()
+    .map(r)
+    .collect();
     v.push((a < b).to_string());
     v
 }

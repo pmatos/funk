@@ -14,26 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5839031385033120517")
+:::moduleDocs (fingerprint := "6009493120673342771")
 :::
 
-:::readable Fir.MonadMorphism.state_lift Fir.MonadMorphism.state_mapsDenote_liftState (fingerprint := "11229248626212830646")
-*Theorem: a morphism through the layer keeps lifted computations.* For a
-{ref "The-fir-specification--Execution--Monad-morphisms"}[monad morphism]
-$`\varphi` from $`m` to $`n` and a computation $`x` of $`m` with no
-memory, the morphism through the
-{ref "The-fir-specification--Memory--The-state-layer"}[state layer] maps
-$`x` lifted into the layer to its image lifted:
-$`\varphi^{\mathrm{state}}(\mathrm{lift}(x)) = \mathrm{lift}(\varphi(x))`.
-
-*Theorem: it keeps lifted semantics.* So when $`\varphi` maps a dialect's
-semantics in $`m` to its semantics in $`n`, it maps its
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifted semantics]
-in the layer over $`m` to its lifted semantics in the layer over $`n`, op
-by op and terminator by terminator.
-:::
-
-:::readable Fir.Func.memTree (pin := Fir.Memory.Memories.empty) (fingerprint := "2604371483722788827")
+:::readable Fir.Func.memTree (pin := Fir.Memory.Memories.empty) (fingerprint := "10312767825876634802")
 *Definition: the tree of a run with memory.* Where the units of the memory
 $`x` are $`u(x)` bits wide, the tree of a run with memory of the function
 $`f` of the module $`M` on $`\vec{v}` with $`k` steps is its run in the
@@ -50,9 +34,10 @@ that the {ref "The-fir-specification--Execution--Exhaustive___-scripted-and-samp
 walk.
 :::
 
-:::readable Fir.MemMapsDenote Fir.Func.memTree_toSet (pin := Fir.Func.memRuns) (fingerprint := "1030219016229167072")
+:::readable Fir.MemMapsDenote Fir.Func.memTree_toSet (pin := Fir.Func.memRuns) (fingerprint := "14129839034433515657")
 *Definition: the semantics in the tree denotes the semantics with memory.*
-At a naming $`\rho` of the dialect's memories, its semantics in the layer
+At a naming $`\rho` of the dialect's memories, with layout entries
+$`\ell`, its semantics in the layer
 over the tree of choices _denotes_ its
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
 when the set of a tree, translated through the layer, maps each op's
@@ -69,7 +54,7 @@ through the layer, at the empty memories, and the set of a tree keeps
 mapping a function over its results.
 :::
 
-:::readable Fir.Func.memExplore_outcomes Fir.Func.memExplore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "15645183375014906706")
+:::readable Fir.Func.memExplore_outcomes Fir.Func.memExplore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "13184506138306841384")
 *Theorem: exhaustive mode gives exactly the outcomes of a run with
 memory.* When the semantics in the tree denotes the semantics with memory
 at $`\rho`, for every module $`M`, function $`f`, arguments $`\vec{v}`,
@@ -86,7 +71,7 @@ path end $`\mathsf{stuck}~s`, for some $`s`. Both follow from the theorem
 above and exhaustive mode's theorem on any tree.
 :::
 
-:::readable Fir.Func.memScript_outcomes Fir.Func.memScript_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12084616605611518175")
+:::readable Fir.Func.memScript_outcomes Fir.Func.memScript_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "10940631355007043643")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a run
 with memory.* With the same hypotheses, for every $`\mathrm{read}` and
 choice sequence $`\mathit{cs}`, if scripted mode on

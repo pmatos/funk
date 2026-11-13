@@ -7,10 +7,15 @@ import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
 import Fir.Core.FloatArith
+import Fir.Core.FloatBitcast
+import Fir.Core.FloatOfInt
+import Fir.Core.FloatConvert
+import Fir.Core.Pointer
+import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
 import Fir.Core.Call
-import Fir.Core.Text
+import Fir.Core.TextSamples
 
 /-!
 # The core dialect's semantics
@@ -19,8 +24,11 @@ This section gives every core op its meaning in the set of the ways a run
 may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
-terminators. `freeze` and the float arithmetic, whose NaN results are
-chosen, ask for the choice effect, and the divisions,
+terminators. `freeze`, the float arithmetic and the conversions between
+formats, whose NaN results are chosen, as is a zero's sign under `nsz`,
+and the conversions from integers,
+which choose a NaN only at a format that validation rejects, ask for the
+choice effect, and the divisions,
 `cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
 `fir-ref run` computes in share them.
 
@@ -139,6 +147,28 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (sextValue n a) .nil)
   | .trunc _ n => some fun
     | .cons a .nil => pure (.cons (truncValue n a) .nil)
+  | .toBits _ _ => some fun
+    | .cons a .nil => pure (.cons (bitcastValue a) .nil)
+  | .ofBits _ _ => some fun
+    | .cons a .nil => pure (.cons (bitcastValue a) .nil)
+  | .sitofp _ e m => some fun
+    | .cons a .nil => do
+      let v ← intToFloat e m true a
+      pure (.cons v .nil)
+  | .uitofp _ e m => some fun
+    | .cons a .nil => do
+      let v ← intToFloat e m false a
+      pure (.cons v .nil)
+  | .fpext e m e' m' | .fptrunc e m e' m' => some fun
+    | .cons a .nil => do
+      let v ← convertFloat e m e' m' a
+      pure (.cons v .nil)
+  | .ptradd _ _ => some fun
+    | .cons p (.cons k .nil) => pure (.cons (ptraddValue p k) .nil)
+  | .fptosi e m _ => some fun
+    | .cons a .nil => pure (.cons (floatToInt e m true a) .nil)
+  | .fptoui e m _ => some fun
+    | .cons a .nil => pure (.cons (floatToInt e m false a) .nil)
   | _ => none
 
 /-- The rule of each core terminator, in any monad with the UB effect;
@@ -167,29 +197,49 @@ def Op.hasRules (op : Op) : Bool :=
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard FPred.all.all fun p => (Op.fcmp p {} 8 23).hasRules && (Op.fcmp p {} 1 0).hasRules
-#guard [FBin.fadd, .fsub, .fmul, .fdiv].all fun o =>
+#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o =>
   (Op.fbin o {} 8 23).hasRules && (Op.fbin o { nnan := true } 1 0).hasRules
 #guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o { nsz := true } 5 10).hasRules
 #guard (Op.fma { ninf := true } 11 52).hasRules
+#guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
+#guard (Op.sitofp 32 8 23).hasRules && (Op.uitofp 128 5 10).hasRules && (Op.sitofp 1 1 0).hasRules
+#guard (Op.fpext 8 23 11 52).hasRules && (Op.fptrunc 11 52 8 23).hasRules && (Op.fpext 1 0 1 0).hasRules
+#guard (Op.ptradd 0 64).hasRules && (Op.ptradd 1 1).hasRules && (Op.ptradd 0 0).hasRules
+#guard (Op.fptosi 8 23 32).hasRules && (Op.fptoui 5 10 128).hasRules && (Op.fptosi 1 0 1).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&
   (Op.call "f" [.int 8] [.int 8]).hasRules &&
   (Op.call "f" [] [.ptr 0]).hasRules
 #guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
+
+/-- The core dialect's semantics in a monad `m` from two tables of rules,
+`den` for the ops that are not terminators and `ex` for the terminators:
+each op's rule, and `z p` for an op `p` that a table gives none. -/
+@[instance_reducible] def denoteWith
+    (den : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
+      m (HVector toType (Fir.returnTypes (d := CoreDialect) op))))
+    (ex : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) → m Exit))
+    (z : {α : Type} → Op → m α) : DialectDenote CoreDialect m where
+  denote op args := match den op with
+    | some rule => rule args
+    | none => z op
+  exit op args := match ex op with
+    | some rule => rule args
+    | none => z op
+
+/-- The core dialect's semantics in a monad `m` with choice and UB: each
+op's rule in `Op.denote?` or `Op.exit?`, and `z p` for an op `p` that has
+none, as `call`, whose `denote` no run reaches. -/
+@[reducible] def denoteIn [MonadChoice m] [MonadUB m] (z : {α : Type} → Op → m α) :
+    DialectDenote CoreDialect m :=
+  denoteWith (fun op => op.denote?) (fun op => op.exit?) z
 
 end Fir.Core
 
 namespace Fir
 
 /-- The core dialect's semantics in the set monad: each op's rule, and no
-outcome where `Op.denote?` or `Op.exit?` gives none, as for `call`, whose
-`denote` no run reaches. -/
-instance : DialectDenote CoreDialect SetM where
-  denote op args := match op.denote? (m := SetM) with
-    | some rule => rule args
-    | none => fun _ => False
-  exit op args := match op.exit? (m := SetM) with
-    | some rule => rule args
-    | none => fun _ => False
+outcome where `Op.denote?` or `Op.exit?` gives none. -/
+instance : DialectDenote CoreDialect SetM := Core.denoteIn fun _ _ => False
 
 /-- The core ops that call a function: `call @g` calls `@g`. -/
 instance : DialectCall CoreDialect := ⟨Core.Op.callTarget?⟩

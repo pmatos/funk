@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1443402334360872009")
+:::moduleDocs (fingerprint := "15112092378636218417")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
@@ -159,13 +159,15 @@ $`T` and every list of references $`K`, the check of $`T` with a hash set
 of $`K` gives no problem exactly when $`T` is valid in $`K`.
 :::
 
-:::readable Fir.Module.problems (fingerprint := "14799544796645307810")
+:::readable Fir.Module.problems (fingerprint := "12202654396669724762")
 *Definition: the check of a module.* The check of the module $`M`,
 $`\mathrm{problems}(M)`, builds a hash set of the references of its
 location table once, and gives, in this order, the problems of the location
 table, then the problems of each of its
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol tables],
-its own first, each checked with that hash set.
+its own first, each checked with that hash set, then the problems of its
+{ref "The-fir-specification--Validation--Checking-the-data-layout"}[data layout],
+then those of the memories that the types of each of its tables name.
 :::
 
 :::readable Fir.Module.problems_eq_nil_iff (fingerprint := "9852547177654724991")

@@ -21,10 +21,11 @@ how a run with memory ends):
   progress with calls, but each terminator keeps to its rules from any
   memories. A terminator whose exit goes to a successor names one that it
   has and gives no results, and one whose exit returns returns values of
-  the function's result types. For a dialect that lifts the set monad, a
-  function that runs within its module runs within it with memory, at
-  every naming: its terminators go where they go in the set monad, and
-  keep the memories.
+  the function's result types. A function that runs within its module,
+  each of whose terminators is tied, runs within it with memory, at every
+  naming: its terminators go where they go in the set monad, and keep the
+  memories, whatever its other ops do to them. In a dialect that lifts the
+  set monad, every op is tied.
 -/
 
 namespace Fir
@@ -221,35 +222,17 @@ end
 section
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectCall d] {N : Type}
-  [DecidableEq N] (unit : N → Nat) {M : Module d}
+  [DecidableEq N] {M : Module d}
 
-omit [DecidableEq N] in
-/-- A function that runs within its module runs within it with memory, by
-its dialect's semantics in the set monad lifted into the state layer: each
-terminator goes where it goes in the set monad, from any memories. -/
-theorem Func.InModule.memInModule_liftState [DialectDenote d SetM] {f : Func d}
-    (h : f.InModule M) :
-    letI := DialectDenote.liftState (m := SetM) (d := d) (Memories N unit)
-    f.MemInModule unit M := by
-  letI := DialectDenote.liftState (m := SetM) (d := d) (Memories N unit)
-  have ex : ∀ {op : d.Op} {args : HVector toType (sig op)} {S : Memories N unit} {x : Exit}
-      {S' : Memories N unit}, DialectDenote.exit (m := StateT (Memories N unit) SetM) op args S
-        (.ok (x, S')) → DialectDenote.exit (m := SetM) op args (.ok x) := fun hx => by
-    rcases (SetM.lift_apply _ _ _).1 hx with ⟨_, hc, he⟩ | ⟨_, _, he⟩
-    · cases he
-      exact hc
-    · cases he
-  exact ⟨h.calls, fun b hb o ho hT args _ i _ hx => h.jumps b hb o ho hT args i (ex hx),
-    fun b hb o ho hT args _ _ hx => h.returns b hb o ho hT args (ex hx)⟩
-
-variable [DialectEffects d] [DialectMemDenote d] (ρ : DialectEffects.Mem d → N)
+variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
+  (ρ : DialectEffects.Mem d → N)
 
 /-- The ops of `f` run within the module `M` with memory, where a run names
-the dialect's memory `x` as `ρ x`, whose units are `unit (ρ x)` bits wide:
+the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`:
 they run within it by the dialect's semantics with memory at that naming. -/
 def Func.InModuleAt (M : Module d) (f : Func d) : Prop :=
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
-  f.MemInModule unit M
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  f.MemInModule (unitsOf lay) M
 
 /-- A run with memory of a function that starts, at a budget, at a naming:
 its entry block's ops, run from the empty memories with a frame entered,
@@ -257,21 +240,42 @@ finished. -/
 theorem Func.memRuns_enter [DecidableEq d.Ty] (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (n : Nat) {body : List (Operation d)}
     {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
-    f.memRuns unit ρ M args n = (Result.finish Prod.fst
-      (runFrom (Func.runOps (m := StateT (Memories N unit) SetM) M n f env body)
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.memRuns lay ρ M args n = (Result.finish Prod.fst
+      (runFrom (Func.runOps (m := StateT (Memories N (unitsOf lay)) SetM) M n f env body)
         Memories.empty.enter)).run := by
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
   rw [← Func.run_fromState M f args n _ hen]
   exact fromState_fst _ _
 
 /-- A function that runs within its module runs within it with memory,
+wherever a run names the dialect's memories, when each of its terminators is
+tied: each goes where it goes in the set monad, and keeps the memories. Its
+other ops may touch memory. -/
+theorem Func.InModule.inModuleAt_of_tied [DialectDenote d SetM] {f : Func d}
+    (h : f.InModule M)
+    (ht : ∀ b ∈ f.blocks, ∀ o ∈ b.body, isTerminator o.op = true → OpLiftsSetM o.op) :
+    f.InModuleAt lay ρ M := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  have ex : ∀ {op : d.Op} (hlo : OpLiftsSetM op) {args : HVector toType (sig op)}
+      {S : Memories N (unitsOf lay)} {x : Exit} {S' : Memories N (unitsOf lay)},
+      DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args S
+        (.ok (x, S')) → DialectDenote.exit (m := SetM) op args (.ok x) := by
+    intro op hlo args S x S' hx
+    rw [(hlo lay ρ args).2] at hx
+    rcases (SetM.lift_apply _ _ _).1 hx with ⟨_, hc, he⟩ | ⟨_, _, he⟩
+    · cases he
+      exact hc
+    · cases he
+  exact ⟨h.calls,
+    fun b hb o ho hT args _ i _ hx => h.jumps b hb o ho hT args i (ex (ht b hb o ho hT) hx),
+    fun b hb o ho hT args _ _ hx => h.returns b hb o ho hT args (ex (ht b hb o ho hT) hx)⟩
+
+/-- A function that runs within its module runs within it with memory,
 wherever a run names the memories of a dialect that lifts the set monad. -/
 theorem Func.InModule.inModuleAt [DialectDenote d SetM] [LiftsSetM d] {f : Func d}
-    (h : f.InModule M) : f.InModuleAt unit ρ M := by
-  unfold Func.InModuleAt
-  rw [LiftsSetM.lifts unit ρ]
-  exact h.memInModule_liftState unit
+    (h : f.InModule M) : f.InModuleAt lay ρ M :=
+  h.inModuleAt_of_tied lay ρ fun _ _ o _ _ => LiftsSetM.opLifts o.op
 
 end
 

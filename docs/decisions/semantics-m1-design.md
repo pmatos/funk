@@ -4,8 +4,9 @@ This page continues semantics.md. It says what the ADRs decide about the meaning
 of fir in M1. It is the record: when this page and an ADR disagree, the page
 wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
-These are decided designs, and the spec and the tools do not implement them
-yet. `ptr` has values but no ops yet (ADR-2026-11-09-1542). M0 has no
+These are decided designs, and the spec and the tools implement only some of
+them yet: `ptr` has values (ADR-2026-11-09-1542), and its one op so far is
+`ptradd`, below (ADR-2026-11-13-0251). M0 has no
 global data (ADR-2026-11-09-1546). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
@@ -42,13 +43,49 @@ A pointer type names its memory. The core `ptr` is `ptr<0>`, and other memories
 are `ptr<N>`. A dialect may add memories of its own. A pointer moves between
 memories only through an op that a dialect provides (ADR-2026-11-09-1542). The
 spec and the tools have the pointer types: a value of `ptr<N>` is poison or a
-pointer, refined only by itself. Every module has memory 0, so `ptr` is valid,
-and `ptr<N>` for `N ≥ 1` waits for the data layout to declare memory `N`
-(#231).
+pointer, refined only by itself. Every module has memory 0, so `ptr` is valid
+in every module, and `ptr<N>` for `N ≥ 1` is valid when the module's data
+layout declares memory `N` (ADR-2026-11-12-1821).
+
+A pointer moves by `ptradd`: `%q: ptr = ptradd %p, %k` takes a `ptr<N>` and
+an `iW` of any width, and gives a `ptr<N>` with the same provenance, whose
+offset is `%p`'s plus `%k` read as signed, in units of the memory `N`. The
+offset never wraps and may leave the allocation; only an access through it
+must be in bounds. A poison operand gives poison, it is never UB, and its
+effect set is empty. It has no attributes, and any other shape does not
+decode (ADR-2026-11-13-0251; `lean/Fir/Core/Pointer.lean`). The backend
+lowers it in stage 5 of #231. A native address wraps at the pointer's width
+where the offset does not; the two agree on every access the spec allows,
+and `ptr.expose` (#232) settles which address an offset outside the
+pointer's width exposes. Rejected: UB or poison for a result out of its
+allocation, as LLVM's `inbounds` gives beyond one past the end, since code
+that moves a pointer out of its allocation and back is common.
 
 The module's data layout gives each memory its unit of addressing and its
 pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes
-and offsets in a memory count its units (ADR-2026-11-09-1542).
+and offsets in a memory count its units (ADR-2026-11-09-1542). It also gives
+each memory its byte order, `little` alone in M1, its pointers' alignment and
+whether it is non-integral; [text-format-layout.md](text-format-layout.md)
+says what holds for it (ADR-2026-11-12-1821). A run gives each memory its entry,
+and an op takes the unit width, byte order and pointer width of the memory it
+accesses from that memory's entry, never from the dialect or the op
+(ADR-2026-11-13-0906; [semantics-effects.md](semantics-effects.md#soundness)).
+
+A value takes whole units of the memory it is stored in, placed in the
+memory's byte order (ADR-2026-11-12-2125). An `iN` takes `ceil(N / U)` units
+of `U` bits: a store sets the bits past `N` to zero, and a load ignores them,
+so an `i1` loaded from `0xFF` is 1. A `ptr<N>` takes `ceil(P / U)` units,
+each a fragment of the pointer with the memory number `N`, where `P` is
+memory `N`'s pointer width. Poison takes as many poison units. A load gives
+poison from a poison unit, an integer load from a pointer's fragments, and
+a `ptr<N>` load from anything but one pointer's fragments of memory `N` in
+order, so an integer copy of memory carries no pointer. The encoding laws
+take the byte order as a parameter and hold at every order
+(`lean/Fir/Memory/EncodeLaws.lean`). The human ruled odd widths, punned
+loads and the byte-order parameter on 2026-11-11, on #231. Rejected: reject
+widths that are not a multiple of the unit, so `i1` and `i20` could never be
+stored; and immediate UB for a punned load, which makes copying memory as
+integers UB.
 
 Only exposed allocations have integer addresses. `fir-ref` assigns them from one
 canonical layout: in allocation order, aligned and deterministic. That is one of
@@ -83,8 +120,10 @@ memory yet (#231). Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
 - `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
-  each memory name, with a unit width per name that the data layout will give,
-  and a stack of frames. A frame lists the stack allocations its call made.
+  each memory name, with a unit width per name, and a stack of frames. The
+  semantics with memory takes each memory's layout entry and gives the
+  memories the units of their entries (`unitsOf lay`). A frame lists the
+  stack allocations its call made.
 - `MonadMemory` gives allocating, freeing, loading and storing on a named
   memory, and a faulting access is UB. `StateT (Memories Mem unit) m` keeps
   `m`'s choice and UB and gives the memory effect. A stuck path keeps the

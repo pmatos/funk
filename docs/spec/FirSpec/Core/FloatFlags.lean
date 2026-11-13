@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Fast-math flag rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9244316475448842440")
+:::moduleDocs (fingerprint := "3854419426322820930")
 :::
 
 :::readable Fir.Core.FastMath.Le Fir.Core.FastMath.mayPoison (fingerprint := "173714507355988952")
@@ -53,4 +53,11 @@ $$`\mathrm{flag}_\phi(b) = \begin{cases} \mathsf{poison} & \text{if } \phi \text
 
 The infinity is judged after rounding, so a result that overflows to an
 infinity breaks $`\mathsf{ninf}` too.
+:::
+
+:::readable Fir.Core.operandsBreak_nil (fingerprint := "16923337574922155933")
+*Theorem: no operands.* No operands break the flags when there are none
+to read. The conversions between formats and from integers build their result this
+way: as a float result with no flags and no operands to judge, so they
+carry no fast-math flags.
 :::

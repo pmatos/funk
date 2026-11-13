@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13848549422878406383")
+:::moduleDocs (fingerprint := "17715756551949538059")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -32,7 +32,7 @@ $`\mathsf{ok}~(f(a), S')` for each $`\mathsf{ok}~(a, S') \in c(S)`, and in
 UB as $`c` does.
 :::
 
-:::readable Fir.writesNot_lift Fir.allocatesNot_lift Fir.readsNot_lift (fingerprint := "16615654636980269060")
+:::readable Fir.writesNot_lift Fir.allocatesNot_lift Fir.readsNot_lift (fingerprint := "13836026313982123487")
 *Theorem: a computation with no memory meets every memory obligation.* A
 computation of the set monad, run in the state layer, ends with the
 memories it started with. So it writes no unit of any memory, neither
@@ -41,14 +41,14 @@ $`S[x := m]` it ends as it ends from $`S`, with $`S[x := m]`, which agrees
 with $`S` off $`x` and whose units of $`x` are those of $`m`.
 :::
 
-:::readable Fir.WritesNot.map Fir.AllocatesNot.map Fir.ReadsNot.map (fingerprint := "11300524075204757905")
+:::readable Fir.WritesNot.map Fir.AllocatesNot.map Fir.ReadsNot.map (fingerprint := "16699392017965335039")
 *Theorem: mapping the results keeps the obligations.* If $`c` writes no
 unit of $`x`, neither allocates nor frees in $`x`, or does not read $`x`,
 then so does $`f \mathbin{<\$>} c`, for every $`f`: mapping changes the
 results and not the memories.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "11032396194936030764")
+:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "7522058415703922555")
 *Definition: the semantics with memory of a dialect whose ops touch no
 memory.* At every naming $`\rho`, each op runs by its rule in the set
 monad, lifted into the state layer, and keeps the memories.
@@ -67,7 +67,7 @@ ends in UB in the state layer; and if, lifted into the layer, it never ends
 in UB from some memories, then $`\mathsf{ub}~r \notin x` for every $`r`.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM_liftsSetM Fir.NeverUB.ofSetM Fir.MakesNoPoison.ofSetM (pin := Fir.LiftsSetM) (fingerprint := "10987074844963660206")
+:::readable Fir.DialectMemDenote.ofSetM_liftsSetM Fir.NeverUB.ofSetM Fir.MakesNoPoison.ofSetM (pin := Fir.LiftsSetM) (fingerprint := "14711993354742054684")
 *Theorem: a dialect whose ops touch no memory lifts the set monad.* Its
 semantics with memory is its semantics in the set monad, lifted, at every
 naming: the two are
@@ -79,7 +79,18 @@ UB with memory, at every naming and from every memories, and one that
 makes no poison in the set monad makes none with memory.
 :::
 
-:::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11785032560525899817")
+:::readable Fir.OwnRuleHas.ofLifts Fir.NeverUB.ofLifts Fir.MakesNoPoison.ofLifts (pin := Fir.OpLiftsSetM) (fingerprint := "8931742395573466083")
+*Theorems: the obligations of an op that touches no memory.* What an op
+that is
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied] runs by its
+own rule has every property that each computation of the set monad, lifted
+into the layer, has: so it writes, reads and allocates in no memory, at
+every layout and naming. If it never ends in UB in the set monad, it never
+does with memory, and if it makes no poison in the set monad, it makes none
+with memory. The core dialect meets its effect obligations so, op by op.
+:::
+
+:::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11426148675706650251")
 *Theorem: back to the set monad.* In a dialect whose semantics with memory
 lifts its semantics in the set monad, an op that never ends in UB with
 memory never ends in UB in the set monad, and one that makes no poison

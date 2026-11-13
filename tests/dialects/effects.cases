@@ -5,10 +5,8 @@ effects of the op it pins: the first op of the entry block of `@f`. The
 effects are `pure`, or a comma-separated list in this order: `reads(M)`,
 `writes(M)`, `allocates(M)`, `may-ub`, `may-poison`, `observable` and
 `control`, where `M` is `*` for every memory, or the memories joined by `+`.
-The cases cover every core op, each flag set of `add`, `sub` and `mul`,
-`exact` on `sdiv` and `udiv`, and `nnan` and `ninf` on each float op: the
-attributes that change an op's set. `nsz`, which does not, is pinned on
-two float ops.
+The cases cover every core op, each flag set of `add`, `sub` and `mul`, and
+`exact` on `sdiv` and `udiv`: the attributes that change an op's set.
 
 === const pure
 func @f(%a: i8, %b: i8, %c: i1) -> i8 {
@@ -417,6 +415,28 @@ locs {
   @0 = unknown
 }
 
+=== frem pure
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod pure
+func @f(%a: f64, %b: f64, %c: i1) -> f64 {
+^entry:
+  %r: f64 = fmod %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === fneg pure
 func @f(%a: f128, %b: f128, %c: i1) -> f128 {
 ^entry:
@@ -454,6 +474,94 @@ locs {
 func @f(%a: f32, %b: f32, %c: i1) -> f32 {
 ^entry:
   %r: f32 = fma round(rne) %a, %b, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== bitcast-to-bits pure
+func @f(%a: f32, %b: f32, %c: i1) -> i32 {
+^entry:
+  %r: i32 = bitcast %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== bitcast-of-bits pure
+func @f(%a: i64, %b: i64, %c: i1) -> f64 {
+^entry:
+  %r: f64 = bitcast %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== sitofp pure
+func @f(%a: i32, %b: i32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = sitofp round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== uitofp pure
+func @f(%a: i128, %b: i128, %c: i1) -> f64 {
+^entry:
+  %r: f64 = uitofp round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fpext pure
+func @f(%a: f32, %b: f32, %c: i1) -> f64 {
+^entry:
+  %r: f64 = fpext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fptrunc pure
+func @f(%a: f64, %b: f64, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fptrunc round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fptosi may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> i32 {
+^entry:
+  %r: i32 = fptosi %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fptoui may-poison
+func @f(%a: f64, %b: f64, %c: i1) -> i128 {
+^entry:
+  %r: i128 = fptoui %a @0
   ret %r @0
 }
 
@@ -528,6 +636,30 @@ func @f(%a: i8) -> i8 {
 func @g(%x: i8) -> i8 {
 ^entry:
   ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== ptradd pure
+func @f(%a: ptr, %b: i64, %c: i1) -> ptr {
+^entry:
+  %r: ptr = ptradd %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== ptradd-memory-1 pure
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%a: ptr(1), %b: i8, %c: i1) -> ptr(1) {
+^entry:
+  %r: ptr(1) = ptradd %a, %b @0
+  ret %r @0
 }
 
 locs {
@@ -747,6 +879,50 @@ locs {
 func @f(%a: f32, %b: f32, %c: i1) -> f32 {
 ^entry:
   %r: f32 = fneg nsz %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== frem-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmod nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== frem-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem ninf %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmod ninf %a, %b @0
   ret %r @0
 }
 

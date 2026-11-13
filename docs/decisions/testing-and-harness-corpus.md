@@ -54,12 +54,19 @@ A generated matrix counts the corpus's tests of each cell (ADR-2026-11-03-0557).
 A hook fails when the matrix is stale or a cell has no test.
 
 A cell is an op instance of the core dialect at a width, on one side. An op
-instance is the op with its flag set, `exact` choice or `icmp` predicate. A flag
-that the spec does not give an op is not a cell, and a constant's value is not
+instance is the op with its flag set, `exact` choice or `icmp` predicate; a float
+op's fast-math flags are cells one by one, by the human's ruling of 2026-11-13
+on #355
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)).
+A flag that the spec does not give an op is not a cell, and a constant's value is not
 part of its cell. Width changes are cells for each pair of widths, `zext` and
 `sext` to a wider one and `trunc` to a narrower one. Passed and returned values
 are cells for none, one or several values.
 `scripts/harness/cells.py` holds the exact set.
+Its `catalog` expands ordered tables and rows with the actual cells and
+explicit blanks for inapplicable pairs. Both cell enumeration and matrix
+rendering consume that expansion; `coverage.py` owns presentation and counts,
+not a second expansion of the taxonomy.
 
 The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and `i128`. The
 interpreter-only side adds `i7` and `i33`. Ops at other widths count towards no
@@ -68,6 +75,14 @@ cell.
 The float ops have a table of their own, at each float format of a side;
 [testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)
 says which (ADR-2026-11-03-0557).
+
+The pointer offset `ptradd` has a table of its own, a cell at each width of
+its integer (`cells.POINTER_OPS`, the catalog's `pointers` table). Only the
+interpreter-only side has its cells: the backend lowers pointers in stage 5 of
+#231, which gives the differential side its widths. Until stack allocation
+lands, a run's only pointer is a poison argument, so the tests that fill these
+cells check how poison goes through `ptradd`; its rule on pointers is checked
+in Lean, in `lean/Fir/Core/Pointer.lean` (#231).
 
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. It also exercises the `func` cell of its results. The

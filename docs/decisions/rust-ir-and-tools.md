@@ -27,10 +27,11 @@ small modules of funk's own (ADR-2026-10-30-1030). Dependabot already watches
 the `cargo` ecosystem, so the first dependency gets its updates.
 
 `rust-toolchain.toml` is the one pin. It names an exact stable release, with
-the `minimal` profile and the `rustfmt` and `clippy` components. `rust-version`
-in the workspace is the pin's minor release. The workspace uses no nightly and
-no floating `stable`. A bump is one PR. It changes the pin, fixes what the new
-lints find and passes every check.
+the `minimal` profile and the `rustfmt`, `clippy` and `rust-analyzer`
+components. The last one gives every clone's editor a language server that
+matches the pin. `rust-version` in the workspace is the pin's minor release.
+The workspace uses no nightly and no floating `stable`. A bump is one PR. It
+changes the pin, fixes what the new lints find and passes every check.
 
 Rejected: a floating `stable` channel, since a new release's lints could turn
 CI red with no change in the repository; and `proptest`, `serde_json` and

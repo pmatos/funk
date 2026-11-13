@@ -1,12 +1,13 @@
 import Fir.Core.FloatResultLaws
 import Fir.Core.Poison
 import Fir.Execution.EffectLaws
+import Fir.Execution.Morphism
 
 /-!
 # Float arithmetic is lawful
 
-`fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`, at every
-format and with every fast-math flag, meet the obligations of the poison
+`fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `fneg`, `fabs`, `sqrt` and
+`fma`, at every format and with every fast-math flag, meet the obligations of the poison
 classes section. Each propagates poison (ADR-2026-10-29-2006), so it meets
 both poison clauses, returns a result on some operands with no poison, and
 is total and monotone. Each also meets the effect obligations of its
@@ -21,32 +22,35 @@ refined only by themselves, so each rule is monotone. None of this looks
 at what the model computes: the proofs hold for any operation of the
 model, and for every NaN and sign that a choice gives.
 
-Each rule, run in `fir-ref`'s tree of choices, has the set monad's rule as
-its set, as `freeze`'s does: the last section proves it, for the modes of
-`fir-ref run`.
+Each rule is written once for any monad with choice, and a monad morphism
+that keeps choice and UB maps the rule in one monad to the rule in the
+other, as it maps `freeze`'s: the last section proves it. So the rule in
+`fir-ref`'s tree of choices has the set monad's as its set, for the modes
+of `fir-ref run`, and the rule in the state layer is the set monad's rule,
+keeping the memories.
 -/
 
 namespace Fir.Core
 
 open Float.Model
 
-/-- The rules of `fadd`, `fsub`, `fmul` and `fdiv` have a way to end, and
-are never UB. -/
+/-- The rules of `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` have a
+way to end, and are never UB. -/
 theorem fbinValues_ends (o : FBin) (fl : FastMath) (a b : PoisonOr (BitVec (floatWidth e m))) :
     Ends (fbinValues (μ := SetM) o fl a b) := by
-  cases a <;> cases b <;> first | exact pure_ends _ | (dsimp only [fbinValues]; exact floatResult_ends fl e m _ _)
+  cases a <;> cases b <;> first | exact pure_ends _ | (dsimp only [fbinValues]; exact floatResult_ends e m _)
 
 /-- The rules of `fneg`, `fabs` and `sqrt` have a way to end, and are
 never UB. -/
 theorem funaryValue_ends (o : FUnary) (fl : FastMath) (a : PoisonOr (BitVec (floatWidth e m))) :
     Ends (funaryValue (μ := SetM) o fl a) := by
-  cases a <;> first | exact pure_ends _ | (dsimp only [funaryValue]; exact floatResult_ends fl e m _ _)
+  cases a <;> first | exact pure_ends _ | (dsimp only [funaryValue]; exact floatResult_ends e m _)
 
 /-- The rule of `fma` has a way to end, and is never UB. -/
 theorem fmaValues_ends (fl : FastMath) (a b c : PoisonOr (BitVec (floatWidth e m))) :
     Ends (fmaValues (μ := SetM) fl a b c) := by
   cases a <;> cases b <;> cases c <;>
-    first | exact pure_ends _ | (dsimp only [fmaValues]; exact floatResult_ends fl e m _ _)
+    first | exact pure_ends _ | (dsimp only [fmaValues]; exact floatResult_ends e m _)
 
 /-! # Rules that give one float -/
 
@@ -348,29 +352,31 @@ theorem fma_makesNoPoison (hm : fl.mayPoison = false) :
 
 end
 
-/-! # The rules in the tree of choices -/
+/-! # The rules in another monad -/
 
 section
-variable {ε : Type} {e m : Nat}
+variable {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadChoice ν] [MonadUB μ]
+  [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) {e m : Nat}
+include hk
 
-/-- The rules of `fadd`, `fsub`, `fmul` and `fdiv` in the tree of choices
-have the set monad's as their set. -/
-theorem fbinValues_toSet (o : FBin) (fl : FastMath) (a b : PoisonOr (BitVec (floatWidth e m))) :
-    (fbinValues (μ := ChoiceTree ε) o fl a b).toSet = fbinValues o fl a b := by
-  cases a <;> cases b <;> first | rfl | (dsimp only [fbinValues]; exact floatResult_toSet _ _ _ _ _)
+/-- Such a morphism maps the rules of `fadd`, `fsub`, `fmul`, `fdiv`,
+`frem` and `fmod` in `μ` to their rules in `ν`. -/
+theorem fbinValues_map (o : FBin) (fl : FastMath) (a b : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fbinValues (μ := μ) o fl a b) = fbinValues o fl a b := by
+  cases a <;> cases b <;>
+    first | exact φ.map_pure _ | (dsimp only [fbinValues]; exact floatResult_map φ hk _)
 
-/-- The rules of `fneg`, `fabs` and `sqrt` in the tree of choices have the
-set monad's as their set. -/
-theorem funaryValue_toSet (o : FUnary) (fl : FastMath) (a : PoisonOr (BitVec (floatWidth e m))) :
-    (funaryValue (μ := ChoiceTree ε) o fl a).toSet = funaryValue o fl a := by
-  cases a <;> first | rfl | (dsimp only [funaryValue]; exact floatResult_toSet _ _ _ _ _)
+/-- Such a morphism maps the rules of `fneg`, `fabs` and `sqrt` in `μ` to
+their rules in `ν`. -/
+theorem funaryValue_map (o : FUnary) (fl : FastMath) (a : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (funaryValue (μ := μ) o fl a) = funaryValue o fl a := by
+  cases a <;> first | exact φ.map_pure _ | (dsimp only [funaryValue]; exact floatResult_map φ hk _)
 
-/-- The rule of `fma` in the tree of choices has the set monad's as its
-set. -/
-theorem fmaValues_toSet (fl : FastMath) (a b c : PoisonOr (BitVec (floatWidth e m))) :
-    (fmaValues (μ := ChoiceTree ε) fl a b c).toSet = fmaValues fl a b c := by
+/-- Such a morphism maps the rule of `fma` in `μ` to its rule in `ν`. -/
+theorem fmaValues_map (fl : FastMath) (a b c : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fmaValues (μ := μ) fl a b c) = fmaValues fl a b c := by
   cases a <;> cases b <;> cases c <;>
-    first | rfl | (dsimp only [fmaValues]; exact floatResult_toSet _ _ _ _ _)
+    first | exact φ.map_pure _ | (dsimp only [fmaValues]; exact floatResult_map φ hk _)
 
 end
 

@@ -25,7 +25,7 @@ example (b c : BitVec 8) (h : b ≠ c) : ¬ ((MemUnit.bits b : MemUnit 8) ⊑ Me
 
 /-- A fragment of a pointer is refined only by itself, so a pointer copied
 unit by unit keeps its provenance. -/
-example (p : Pointer) (i : Nat) : ¬ ((MemUnit.frag p i : MemUnit 8) ⊑ (MemUnit.poison : MemUnit 8)) :=
+example (m : Nat) (p : Pointer) (i : Nat) : ¬ ((MemUnit.frag m p i : MemUnit 8) ⊑ (MemUnit.poison : MemUnit 8)) :=
   fun h => nomatch h
 
 /-- A fresh allocation holds poison, so a store into it gives memories that
@@ -87,16 +87,16 @@ instance : LawfulDialectMonotone AllocDialect := ⟨fun op _ _ => alloc_memMonot
 allocates, refine themselves on arguments that refine others. -/
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns (fun _ : Unit => 8) id allocModule a) ⊑
-      observable (f.memRuns (fun _ : Unit => 8) id allocModule a') :=
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
+      observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a') :=
   Func.memRuns_args_isRefinedBy_of_lawful _ _ allocModule_valid.funcs hf ha
 
 /-- From memories that refine others, a run of a function of the module,
 the memories it ends with included, refines its run from those others. -/
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
-    {S S' : Memories Unit fun _ => 8} (hS : S ⊑ S') :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    {S S' : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)} (hS : S ⊑ S') :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
     observable (f.memRunsFrom allocModule (a, S)) ⊑ observable (f.memRunsFrom allocModule (a', S')) :=
   Func.memRunsFrom_args_isRefinedBy_of_lawful _ _ allocModule_valid.funcs hf ha hS
 
@@ -108,12 +108,13 @@ def noBlocks : Region AllocDialect := { blocks := [] }
 /-- `allocMain` with no blocks, in its module so changed, has no path that
 returns, hits UB or runs out of fuel, from any memories: each is stuck. -/
 theorem noBlocks_outcomes (a : HVector toType (allocMain.params.map (·.2)))
-    (S : Memories Unit fun _ => 8) (m : Nat)
-    (o : Outcome (List (DVal AllocDialect) × Memories Unit fun _ => 8)) :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    (S : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)) (m : Nat)
+    (o : Outcome (List (DVal AllocDialect) × Memories Unit (unitsOf fun _ : Unit =>
+        MemLayout.default))) :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
     ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
       (allocModule.replaceBody allocMain.name noBlocks) (a, S) m).outcomes o := by
-  letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+  letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
   have key : ∀ x, Ev.NotStuck x → ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
       (allocModule.replaceBody allocMain.name noBlocks) (a, S) m) x := by
     intro x hx h
@@ -127,18 +128,21 @@ theorem noBlocks_outcomes (a : HVector toType (allocMain.params.map (·.2)))
 
 /-- No budget lets the new `allocMain` run out of fuel. -/
 theorem noBlocks_bounded :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
     ∃ B, ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
-      (unit := fun _ : Unit => 8) (allocModule.replaceBody allocMain.name noBlocks)).BoundedBy B :=
+      (unit := unitsOf fun _ : Unit => MemLayout.default) (allocModule.replaceBody allocMain.name
+          noBlocks)).BoundedBy B :=
   ⟨0, fun ⟨a, S⟩ => .inr fun m _ => noBlocks_outcomes a S m .fuelExhausted⟩
 
 /-- The new `allocMain` refines the old from every memories: it has no
 observable behaviour. -/
 theorem noBlocks_refines :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => 8) id
-    allocMain.memRunsFrom (Mem := Unit) (unit := fun _ : Unit => 8) allocModule ⊑
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+    allocMain.memRunsFrom (Mem := Unit) (unit := unitsOf fun _ : Unit => MemLayout.default)
+        allocModule ⊑
       (allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
-        (unit := fun _ : Unit => 8) (allocModule.replaceBody allocMain.name noBlocks) := by
+        (unit := unitsOf fun _ : Unit => MemLayout.default) (allocModule.replaceBody
+            allocMain.name noBlocks) := by
   intro ⟨a, S⟩ t ht
   cases t with
   | ret o => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ret o) hn).elim
@@ -151,10 +155,11 @@ the new body. -/
 
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (a : HVector toType (f.params.map (·.2))) :
-    observable (f.memRuns (fun _ : Unit => 8) id allocModule a) ⊑
-      observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit => 8) id
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
+      observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit =>
+          MemLayout.default) id
         (allocModule.replaceBody allocMain.name noBlocks) a) := by
-  have h := Func.memRuns_replaceBody_isRefinedBy_of_bound (fun _ : Unit => 8) id
+  have h := Func.memRuns_replaceBody_isRefinedBy_of_bound (fun _ : Unit => MemLayout.default) id
     Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans allocModule_valid (g := allocMain)
     (by simp [allocModule, Module.funcs]) noBlocks ?hb ?hr hf
   case hb => exact noBlocks_bounded

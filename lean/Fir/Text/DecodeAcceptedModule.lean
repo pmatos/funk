@@ -15,7 +15,8 @@ blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
 holds nothing, or as an item of a dialect's kind, whose kind is a word of a
 dialect and whose body is empty, with its attributes as read. Decoding a
-module keeps the location table as it was read. So a module decoded from a
+module decodes each entry of its data layout, which is within the limit
+when it decodes, and keeps the location table as it was read. So a module decoded from a
 tree that can be written is well formed: the decoding step.
 -/
 
@@ -195,15 +196,38 @@ theorem decodeItems_wellFormed : ∀ {sis : List SItem} {is : List (Item d)},
     exact ⟨decodeItem_wellFormed h₁ hw.1, decodeItems_wellFormed h₂ hw.2⟩
 end
 
+omit [DialectSignature d] [DialectValidation d] [DialectText d] [LawfulDialectText d] in
+/-- Entries of a data layout that decode have their numbers within the
+limit. -/
+theorem decodeLayout_inLimits : ∀ {ss : List (Attr × TextPos)} {es : List MemLayout},
+    ss.mapM decodeMemLayout = .ok es → ∀ e ∈ es, e.InLimits
+  | [], es, h, e, he => by cases h; simp at he
+  | (a, p) :: ss, es, h, e, he => by
+    rw [List.mapM_cons] at h
+    bind_step h with ⟨x, h₁, h⟩
+    bind_step h with ⟨xs, h₂, h⟩
+    cases h
+    rcases List.mem_cons.mp he with rfl | he
+    · dsimp only [decodeMemLayout] at h₁
+      cases hd : MemLayout.decode a with
+      | some y =>
+        rw [hd] at h₁
+        simp only [pure, Except.pure, Except.ok.injEq] at h₁
+        subst h₁
+        exact MemLayout.inLimits_of_decode hd
+      | none => rw [hd] at h₁; simp [errorAt] at h₁
+    · exact decodeLayout_inLimits h₂ e he
+
 /-- The decoding step: a module decoded from a tree that can be written is
 well formed. -/
 theorem decodeModule_wellFormed {s : SModule} {m : Module d} (h : decodeModule s = .ok m)
     (hw : s.Writable) : m.WellFormed := by
   unfold decodeModule at h
+  bind_step h with ⟨layout, eL, h⟩
   bind_step h with ⟨items, e, h⟩
   cases h
   rw [← decodeItems_eq_mapM] at e
-  exact ⟨hw.1, (Item.wellFormedList_iff _).mp
+  exact ⟨hw.1, decodeLayout_inLimits eL, (Item.wellFormedList_iff _).mp
     (decodeItems_wellFormed e ((SItem.writableList_iff _).mpr hw.2.1)), hw.2.2⟩
 
 end Fir

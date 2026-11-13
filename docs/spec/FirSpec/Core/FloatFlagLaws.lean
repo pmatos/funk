@@ -40,7 +40,7 @@ $`\mathsf{i1}` of $`\mathsf{fcmp}` under $`\phi` is refined by its
 $`\mathsf{i1}` under $`\phi'`: it is poison, or the same.
 :::
 
-:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "1283836172776889261")
+:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "16824028553297313093")
 *Theorem: dropping a flag refines the flagged op.* For all flags
 $`\phi' \le \phi`, every format and every operands $`\vec a`,
 

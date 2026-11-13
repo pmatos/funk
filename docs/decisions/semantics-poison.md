@@ -51,8 +51,10 @@ The human ruled on 2026-10-30 to adopt LLVM's rules, with two improvements
   because it might be the signed minimum.
 - Every other poison dividend gives poison.
 - A poison shift amount gives poison.
-- `zext` and `sext` strictly widen, and `trunc` strictly narrows. These are
-  validation rules.
+- `zext` and `sext` strictly widen, and `trunc` strictly narrows. `fpext`
+  goes to a float format that holds every value of the source, and `fptrunc`
+  to one that cannot ([semantics-floats-conversions.md](semantics-floats-conversions.md#the-conversions)).
+  These are validation rules.
 
 Both division rules come from one principle of LLVM's reference. A poison
 operand is immediate UB wherever some value it could take would be UB (LangRef,
@@ -76,11 +78,14 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 24 ops propagate and seven are exceptions. The 24 are
+In the core dialect, 33 ops propagate and seven are exceptions. The 33 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
-changes, `fcmp` and the three ops of float arithmetic
-(ADR-2026-11-09-1549). `select`, `freeze` and `cond_br` are
+changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
+two conversions from integers, `sitofp` and `uitofp`, the two conversions
+between formats, `fpext` and `fptrunc` (ADR-2026-11-09-1549), the pointer
+offset `ptradd` (ADR-2026-11-13-0251), and the two conversions to integers,
+`fptosi` and `fptoui`. `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below
@@ -119,6 +124,37 @@ UB on a poison operand, the rejected `sdiv` rule, and a semantics in which every
 op is always UB. The obligations do not fix what an op computes: each family's
 semantics does. `LawfulDialectPoison CoreDialect` holds with no `sorry` and only
 the standard axioms (`Core.lawfulDialectPoison`).
+
+### The obligations with memory
+
+An op that touches memory has no semantics in the set monad, so the poison
+obligations have a form over the semantics with memory too
+(`lean/Fir/Execution/MemoryPoison.lean`), beside totality with memory and
+monotonicity with memory (semantics-interpreter.md, semantics-refinement.md):
+
+- `MemPropagatesPoison`: wherever a run names the dialect's memories, from any
+  memories, a poison operand gives only poison results, and UB on a poison
+  operand only where some operands that fill each poison with a defined value
+  are UB from the same memories. A load through a poison pointer may be UB
+  because some pointer in its place faults on those memories.
+- `MemReturnsOnDefined`: wherever a run names the dialect's memories, a
+  propagating op returns a result from some memories on some operands with no
+  poison. A load returns one from memories that hold its allocation.
+
+`LawfulDialectMemPoison` holds them, with `poison_isRefinedBy`, for valid
+instances, and asks for no semantics in the set monad. With
+`LawfulDialectTotal` and `LawfulDialectMonotone` it holds every poison
+obligation with memory. In a dialect that lifts the set monad the three hold
+exactly when `LawfulDialectPoison` does (`LawfulDialectPoison.iff_mem`), so
+the core, the test dialects and their sums and lifts meet them, and the four
+rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
+`lean/FirTest/MemoryPoison.lean` gives a test op that loads through a
+pointer, with no semantics in the set monad, that meets the class, and
+shows the class rejecting one that is UB on a poison pointer and never on a
+defined one. Stage 4 of #231 proves the core's memory ops against it.
+Rejected: one class that holds all five obligations with memory, totality
+and monotonicity included, since progress and refinement with memory already
+ask for those two alone, and would then ask for the poison clauses too.
 
 ### Ops with a callee
 

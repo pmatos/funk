@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16801819314342200728")
+:::moduleDocs (fingerprint := "9496280504861189579")
 :::
 
 :::readable Fir.Core.nanBits (fingerprint := "1042529435153672994")
@@ -54,15 +54,19 @@ rejects, gives $`\mathrm{anynan}_{e,m}` on every operand and under every
 flag, so that the rule is total.
 :::
 
-:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (fingerprint := "8073479960880132785")
+:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (pin := Fir.Core.remainder) (fingerprint := "11734426222456348426")
 *Definition: what each float op computes in the model.* Each op is an
-operation of Lean's float model on the format $`F`:
+operation of Lean's float model on the format $`F`, or, for
+$`\mathsf{frem}` and $`\mathsf{fmod}`, fir's
+{ref "The-fir-specification--Execution--Float-remainder-rules"}[remainder] on the
+model's numbers:
 
-$$`\begin{array}{ll} \mathsf{fadd}: \mathrm{add}_F & \mathsf{fneg}: \mathrm{neg} \\ \mathsf{fsub}: \mathrm{sub}_F & \mathsf{fabs}: \mathrm{abs} \\ \mathsf{fmul}: \mathrm{mul}_F & \mathsf{sqrt}: \mathrm{sqrt}_F \\ \mathsf{fdiv}: \mathrm{div}_F & \end{array}`
+$$`\begin{array}{ll} \mathsf{fadd}: \mathrm{add}_F & \mathsf{fneg}: \mathrm{neg} \\ \mathsf{fsub}: \mathrm{sub}_F & \mathsf{fabs}: \mathrm{abs} \\ \mathsf{fmul}: \mathrm{mul}_F & \mathsf{sqrt}: \mathrm{sqrt}_F \\ \mathsf{fdiv}: \mathrm{div}_F & \mathsf{frem}: \mathrm{rem}^{\mathrm{near}}_F \\ \mathsf{fmod}: \mathrm{rem}^{\mathrm{trunc}}_F & \end{array}`
 
-Each operation of two operands, and $`\mathrm{sqrt}_F`, rounds its exact
-result to nearest, ties to even, at the format, and an exact result too
-large for it is an infinity. $`\mathrm{neg}` and $`\mathrm{abs}` change
+Each operation of two operands but the remainders, and
+$`\mathrm{sqrt}_F`, rounds its exact result to nearest, ties to even, at
+the format, and an exact result too large for it is an infinity. A
+remainder is exact. $`\mathrm{neg}` and $`\mathrm{abs}` change
 the sign of a number, an infinity or a zero, and give the model's one NaN
 on a NaN.
 :::
@@ -74,8 +78,8 @@ $`b`, $`c` of it:
 
 $$`\mathsf{fadd}^\phi_{e,m}(a, b) = \begin{cases} \mathrm{result}^\phi_{e,m}([a, b], \mathrm{add}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b))) & \text{if } a, b \in \mathbb{B}^{1+e+m} \\ \mathsf{poison} & \text{if } a \text{ or } b \text{ is poison} \end{cases}`
 
-and $`\mathsf{fsub}`, $`\mathsf{fmul}` and $`\mathsf{fdiv}` likewise, with
-their operations. $`\mathsf{fneg}`, $`\mathsf{fabs}` and $`\mathsf{sqrt}`
+and $`\mathsf{fsub}`, $`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{frem}`
+and $`\mathsf{fmod}` likewise, with their operations. $`\mathsf{fneg}`, $`\mathsf{fabs}` and $`\mathsf{sqrt}`
 apply theirs to $`\mathrm{unpack}_F(a)`, and
 
 $$`\mathsf{fma}^\phi_{e,m}(a, b, c) = \mathrm{result}^\phi_{e,m}([a, b, c], \mathrm{fma}_F(\mathrm{unpack}_F(a), \mathrm{unpack}_F(b), \mathrm{unpack}_F(c)))`

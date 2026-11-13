@@ -16,7 +16,9 @@ is:
   indentation, followed by the next region or the location reference;
 * each op on its own line, ending with a space and its location reference;
 * the dialect set first, when the module names a dialect, on a line of its
-  own followed by an empty line;
+  own followed by an empty line, then the data layout, when it declares a
+  memory, on a line of its own followed by an empty line
+  (ADR-2026-11-12-1821);
 * a nested module's body, its dialect set and its items, two spaces deeper
   than its `module` line, and its closing `}` at that line's indentation
   (ADR-2026-11-10-1510). An empty line has no spaces;
@@ -31,7 +33,8 @@ is:
 
 This section gives the printer from the inside out: attributes, locations,
 definitions and successors, ops with their blocks and regions, functions,
-the dialect set and items, and last the location table and the module.
+the dialect set, the data layout and items, and last the location table
+and the module.
 -/
 
 namespace Fir
@@ -128,6 +131,11 @@ or nothing when it names no dialect. -/
 def printDialects (n : Nat) (ns : List Name) : String :=
   if ns.isEmpty then "" else indent n ++ "dialects " ++ ", ".intercalate ns ++ "\n\n"
 
+/-- A data layout, `layout` and its entries separated by commas, then an
+empty line, or nothing when the layout is empty. -/
+def printLayout (l : DataLayout) : String :=
+  if l.isEmpty then "" else "layout " ++ ", ".intercalate (l.map (·.attr.print)) ++ "\n\n"
+
 /-- An item of a dialect's kind at indentation `n`, with its line feed: its
 kind, symbol, parameters and results as a function's header writes them,
 each of its attributes after a space, then its empty body, whose `}` is on
@@ -160,9 +168,9 @@ def LocTable.print (t : LocTable) : String :=
   "locs {\n" ++ String.join (t.map fun (r, l) => "  " ++ printLocRef r ++ " = " ++ l.print ++ "\n") ++
     "}\n"
 
-/-- A module: its dialect set, its items, each followed by an empty line,
-then its table. -/
+/-- A module: its dialect set, its data layout, its items, each followed by
+an empty line, then its table. -/
 def Module.print (m : Module d) : String :=
-  printDialects 0 m.dialects ++ Item.printList 0 m.items ++ m.locs.print
+  printDialects 0 m.dialects ++ printLayout m.layout ++ Item.printList 0 m.items ++ m.locs.print
 
 end Fir

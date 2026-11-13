@@ -9,10 +9,12 @@ is proved for every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 24 ops that propagate poison does, at every
+* _Propagation._ Each of the 33 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
-  shifts, `icmp`, `fcmp`, the width changes and the float arithmetic.
+  shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
+  bit casts, the conversions from integers, the conversions between
+  formats, the pointer offset and the conversions to integers.
 * _A result on defined operands._ Each of them returns a result on some
   operand vector with no poison. `poison` does on the empty vector, where
   its result is poison: the obligation asks for a result, not for a
@@ -63,6 +65,15 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .zext m n, _ => zext_propagatesPoison m n
   | .sext m n, _ => sext_propagatesPoison m n
   | .trunc m n, _ => trunc_propagatesPoison m n
+  | .toBits e m, _ => toBits_propagatesPoison e m
+  | .ofBits e m, _ => ofBits_propagatesPoison e m
+  | .sitofp n e m, _ => intToFloat_propagatesPoison n e m true
+  | .uitofp n e m, _ => intToFloat_propagatesPoison n e m false
+  | .fpext e m e' m', _ => convertFloat_propagatesPoison e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_propagatesPoison e m e' m' false
+  | .ptradd n w, _ => ptradd_propagatesPoison n w
+  | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
+  | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
   | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .unreachable, h
   | .call .., h => nomatch h
@@ -101,6 +112,15 @@ theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) 
   | .zext m n, _, _ => zext_returnsOnDefined m n
   | .sext m n, _, _ => sext_returnsOnDefined m n
   | .trunc m n, _, _ => trunc_returnsOnDefined m n
+  | .toBits e m, _, _ => toBits_returnsOnDefined e m
+  | .ofBits e m, _, _ => ofBits_returnsOnDefined e m
+  | .sitofp n e m, _, _ => intToFloat_returnsOnDefined n e m true
+  | .uitofp n e m, _, _ => intToFloat_returnsOnDefined n e m false
+  | .fpext e m e' m', _, _ => convertFloat_returnsOnDefined e m e' m' true
+  | .fptrunc e m e' m', _, _ => convertFloat_returnsOnDefined e m e' m' false
+  | .ptradd n w, _, _ => ptradd_returnsOnDefined n w
+  | .fptosi e m n, _, _ => floatToInt_returnsOnDefined e m n true
+  | .fptoui e m n, _, _ => floatToInt_returnsOnDefined e m n false
   | .poison w, _, _ => poison_returnsOnDefined w
   | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h | .unreachable, _, h
   | .call .., _, h => nomatch h

@@ -1,6 +1,7 @@
-# Must-reject texts of #229's float arithmetic: fadd, fsub, fmul, fdiv,
-# sqrt and fma carry round(rne), the one rounding mode, and fneg and fabs
-# carry no attribute (ADR-2026-11-11-1801). Every other attribute does not
+# Must-reject texts of the float arithmetic of #229 and #310: fadd, fsub,
+# fmul, fdiv, sqrt and fma carry round(rne), the one rounding mode, and
+# frem, fmod, fneg and fabs, which do not round, carry no attribute
+# (ADR-2026-11-11-1801). Every other attribute does not
 # decode, as a flag an op does not have does not. Each op takes values of
 # one float type, as many as it has operands, and gives one value of it
 # (ADR-2026-11-09-1549).
@@ -192,6 +193,36 @@ text = '''
 func @f(%x: float(1, 1)) -> float(1, 1) {
 ^e:
   %r: float(1, 1) = fadd round(rne) %x, %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "frem does not round, since its result is exact: round(rne) does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = frem round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fmod takes two operands of one float type, not f32 and f64"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fmod %a, %d @0
   ret %r @0
 }
 

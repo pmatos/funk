@@ -14,16 +14,18 @@ and recursion included:
   replaced by any value of its type, a function's observable behaviour
   refines its behaviour on those others. So a call on arguments that
   refine others refines the call on those others: its callee runs on
-  them.
+  them. It is stated over the runs with memory (the section on core
+  functions with memory), from the monotonicity of each core op below.
 * _Congruence in the callee._ In a valid module, replacing the body of a
   function `@g` with one under which `@g`, run in the new module, refines
   `@g` in the old, refines every function of the module. A function other
   than `@g`, a caller of it or not, is refined by itself in the new
   module.
 
-They follow from the general theorems of the sections on refined
-arguments and on replacing a callee, whose hypotheses the core dialect
-meets:
+Congruence in the callee is stated here over the runs in the set monad,
+`f.runs M`, not over the runs of core functions, which are their runs with
+memory (the section on core functions with memory). It follows from the general theorem of the section on replacing a callee,
+whose hypotheses the core dialect meets:
 
 * every core terminator and every core op with no callee is monotone,
   each by the obligation that its family proves, at every width: every
@@ -39,6 +41,15 @@ meets:
 * the refinement of core values is reflexive and transitive;
 * the symbols of a valid module are unique.
 
+A run with memory starts a call from its caller's memories, of which there
+are infinitely many, so finitely many argument vectors do not bound the
+fuel that the new callee's runs with memory need. Congruence with memory
+asks for that bound (the section on core functions with memory). Whether
+the core's congruence keeps the form over finitely many argument vectors
+waits for the human's ruling on
+[#373](https://github.com/pmatos/funk/issues/373); until then it stays here,
+over the runs in the set monad.
+
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
 function that runs
@@ -50,13 +61,11 @@ gives it only for the functions of valid modules (the section on what the
 lawful class gives); these theorems ask for no valid module, so they use
 the ops' own obligations.
 
-Refined arguments need no validity: the theorem holds for every function
-of every core module. For a function of a valid module, no path of either
-run is stuck and both have an outcome at every budget (the section on
-core functions with calls), so the theorem compares real behaviours.
 Congruence in the callee compares real behaviours when the new function
 is valid in the old module's context: then the new module is valid, and
-neither module's runs have a stuck path. A body that gets stuck at once,
+neither module's runs have a stuck path, since every function of a valid
+core module runs within it (the section on core functions with calls) and
+the theorems on progress with calls apply. A body that gets stuck at once,
 such as one whose entry block declares arguments, meets the hypothesis
 with an empty behaviour, which refines every source.
 -/
@@ -92,6 +101,15 @@ theorem Op.monotone_all : (op : Op) →
   | .zext m n, _ => zext_monotone m n
   | .sext m n, _ => sext_monotone m n
   | .trunc m n, _ => trunc_monotone m n
+  | .toBits e m, _ => toBits_monotone e m
+  | .ofBits e m, _ => ofBits_monotone e m
+  | .sitofp n e m, _ => intToFloat_monotone n e m true
+  | .uitofp n e m, _ => intToFloat_monotone n e m false
+  | .fpext e m e' m', _ => convertFloat_monotone e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_monotone e m e' m' false
+  | .ptradd n w, _ => ptradd_monotone n w
+  | .fptosi e m n, _ => floatToInt_monotone e m n true
+  | .fptoui e m n, _ => floatToInt_monotone e m n false
   | .freeze w, _ => freeze_monotone w
   | .poison w, _ => poison_monotone w
   | .br, _ => br_monotone
@@ -146,14 +164,6 @@ theorem mem_argVectors : ∀ {ts : List Ty} (h : ∀ t ∈ ts, t.Finite)
   | _ :: _, _, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values _ v,
       List.mem_map_of_mem (mem_argVectors _ a)⟩
 
-/-- Refined arguments: on arguments that refine others, a poison by any
-value, the observable behaviour of every function of every core module
-refines its behaviour on those others, calls and recursion included. -/
-theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
-    {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (funcRuns M f a) ⊑ observable (funcRuns M f a') :=
-  Func.runs_args_isRefinedBy M (fun g _ => opsMonotone_all g) f (opsMonotone_all f) h
-
 variable {M : Module CoreDialect}
 
 /-- Congruence in the callee: replacing the body of a function `@g` with
@@ -162,9 +172,9 @@ run in the new module, refines `@g` in the old, refines every function of
 the module, calls and recursion included. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
+    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) :
-    funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) (f.replaceBody g.name b) :=
+    f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
   Func.runs_replaceBody_isRefinedBy (fun g _ => opsMonotone_all g) Ty.isRefinedBy_refl
     Ty.isRefinedBy_trans hM.symbolsUnique hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ h hf
 
@@ -173,11 +183,11 @@ is refined by itself in the module with `@g`'s new body, when `@g` has no
 pointer parameter. -/
 theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (h : funcRuns M g ⊑ funcRuns (M.replaceBody g.name b) (g.replaceBody g.name b))
+    (h : g.runs M ⊑ (g.replaceBody g.name b).runs (M.replaceBody g.name b))
     {f : Func CoreDialect} (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    funcRuns M f ⊑ funcRuns (M.replaceBody g.name b) f := by
+    f.runs M ⊑ f.runs (M.replaceBody g.name b) := by
   have := replaceBody_isRefinedBy hM hg hfin b h hf
-  change funcRuns M f ⊑ funcRuns _ { f with body := if f.name = g.name then b else f.body } at this
+  change f.runs M ⊑ Func.runs _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
 
 end Fir.Core

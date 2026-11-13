@@ -24,11 +24,12 @@ open Fir Core Example
 theorem sum10_mem : sum10 ∈ sumModule.funcs := by
   simp [sumModule, Module.funcs]
 
-/-- Every run of `@sum10`, which calls `@sum`, has an outcome, no path of
-it is stuck, and more fuel never changes how it returns or hits UB. -/
+/-- Every run with memory of `@sum10`, which calls `@sum`, has an outcome,
+no path of it is stuck, and more fuel never changes how it returns or hits
+UB. -/
 theorem sum10_runsWell (args : HVector toType (sum10.params.map (·.2))) :
-    RunsWell (funcRuns sumModule sum10 args) :=
-  Core.runsWell sumModule_valid sum10_mem args
+    RunsWell (sum10.memRuns sumModule.layout.entry id sumModule args) :=
+  Core.runsWell _ _ sumModule_valid sum10_mem args
 
 /-! # Recursion and mutual recursion -/
 
@@ -79,7 +80,7 @@ def evenFn : Func CoreDialect := parityFn "even" "odd" 1
 def oddFn : Func CoreDialect := parityFn "odd" "even" 0
 
 /-- The module of `@fact`, `@even` and `@odd`. -/
-def recModule : Module CoreDialect := ⟨[], [.func factFn, .func evenFn, .func oddFn], [(0, .unknown)]⟩
+def recModule : Module CoreDialect := ⟨[], [], [.func factFn, .func evenFn, .func oddFn], [(0, .unknown)]⟩
 
 -- It is the module of the texts that `FirTest.Calls` runs, and the
 -- validation check accepts it.
@@ -176,34 +177,35 @@ theorem recModule_valid : recModule.Valid := Module.valid_of_flat
   (by simp [recModule])
   (by simp [recModule])
 
-/-- Every run of `@fact`, which calls itself, has an outcome, no path of
-it is stuck, and more fuel never changes how it returns or hits UB. -/
+/-- Every run with memory of `@fact`, which calls itself, has an outcome, no
+path of it is stuck, and more fuel never changes how it returns or hits UB. -/
 theorem fact_runsWell (args : HVector toType (factFn.params.map (·.2))) :
-    RunsWell (funcRuns recModule factFn args) :=
-  Core.runsWell recModule_valid (by simp [recModule, Module.funcs]) args
+    RunsWell (factFn.memRuns recModule.layout.entry id recModule args) :=
+  Core.runsWell _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
-/-- A run of `@even`, which calls `@odd`, which calls it back, has an
-outcome at every budget. -/
+/-- A run with memory of `@even`, which calls `@odd`, which calls it back,
+has an outcome at every budget. -/
 theorem even_progress (args : HVector toType (evenFn.params.map (·.2))) :
-    Progress (funcRuns recModule evenFn args) :=
-  Core.progress recModule_valid (by simp [recModule, Module.funcs]) args
+    Progress (evenFn.memRuns recModule.layout.entry id recModule args) :=
+  Core.progress _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
-/-- No path of a run of `@odd`, which calls `@even`, which calls it back,
-is stuck. -/
+/-- No path of a run with memory of `@odd`, which calls `@even`, which calls
+it back, is stuck. -/
 theorem odd_neverStuck (args : HVector toType (oddFn.params.map (·.2))) :
-    NeverStuck (funcRuns recModule oddFn args) :=
-  Core.neverStuck recModule_valid (by simp [recModule, Module.funcs]) args
+    NeverStuck (oddFn.memRuns recModule.layout.entry id recModule args) :=
+  Core.neverStuck _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
-/-- More fuel never changes how a run of `@odd` returns or hits UB. -/
+/-- More fuel never changes how a run with memory of `@odd` returns or hits
+UB. -/
 theorem odd_fuelMonotone (args : HVector toType (oddFn.params.map (·.2))) :
-    FuelMonotone (funcRuns recModule oddFn args) :=
-  Core.fuelMonotone recModule_valid (by simp [recModule, Module.funcs]) args
+    FuelMonotone (oddFn.memRuns recModule.layout.entry id recModule args) :=
+  Core.fuelMonotone _ _ recModule oddFn args
 
 /-! # Axioms
 
 The general theorems hold for every function of a module whose functions
-are valid and run within it, and the core theorems for every function of
-every valid core module. -/
+are valid and run within it, and the core theorems, over runs with memory,
+for every function of every valid core module. -/
 
 /-- info: 'Fir.Func.runOps_returns' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runOps_returns
@@ -225,6 +227,12 @@ every valid core module. -/
 
 /-- info: 'Fir.Core.inModule_of_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.inModule_of_valid
+
+/-- info: 'Fir.Func.InModule.inModuleAt_of_tied' depends on axioms: [propext] -/
+#guard_msgs in #print axioms Fir.Func.InModule.inModuleAt_of_tied
+
+/-- info: 'Fir.Core.inModuleAt_of_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.inModuleAt_of_valid
 
 /-- info: 'Fir.Core.runsWell' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.runsWell

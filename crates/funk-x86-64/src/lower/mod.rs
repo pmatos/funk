@@ -32,13 +32,19 @@
 //! as an integer immediate, as any constant does, and `fcmp` loads its
 //! operands into SSE registers (`fcompare.rs`), as the float arithmetic
 //! does, but for `fneg` and `fabs`, which change the sign bit in `%rax`,
-//! and `fma`, which calls a routine of a runtime helper of its own
-//! (`farith.rs`,
-//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`). Floats
+//! and `fma`, `frem` and `fmod`, which call routines of runtime helpers of
+//! their own (`farith.rs`, `frem.rs`,
+//! `docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic`). Floats
 //! pass and return in SSE registers
-//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
+//! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`). A
+//! bit cast copies a slot (`bitcast.rs`). A conversion from an integer
+//! converts with SSE2, in a few steps for an unsigned `i64` or an `i128`
+//! (`int_to_float.rs`). A conversion between `f32` and `f64` is one SSE2
+//! instruction (`float_convert.rs`), and so is a conversion to an integer,
+//! but for an unsigned `i64` or an `i128` (`float_to_int.rs`).
 
 mod arith;
+mod bitcast;
 mod bitwise;
 mod call;
 mod cast;
@@ -48,8 +54,13 @@ mod control;
 mod div;
 mod farith;
 mod fcompare;
+mod float_convert;
+mod float_to_int;
 mod freeze;
+mod frem;
+mod int_to_float;
 mod moves;
+mod stack;
 
 use std::collections::HashMap;
 
@@ -57,6 +68,7 @@ use funk_ir::text::{print_op, print_symbol};
 use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
 
 pub use call::callee;
+pub use stack::Need;
 
 use crate::abi::{self, Arg, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
@@ -68,16 +80,18 @@ use crate::width;
 /// the caller's `%rsp`.
 type Helper = (fn(&Op) -> Option<&'static str>, &'static str, u64);
 
-/// Every runtime helper: the one that divides at `i128`, and the one that
-/// does `fma` at `f32` and `f64`.
-const HELPERS: [Helper; 2] = [
+/// Every runtime helper: the one that divides at `i128`, the one that
+/// does `fma` at `f32` and `f64`, and the one that does `frem` and `fmod`
+/// there.
+const HELPERS: [Helper; 3] = [
     (div::helper, div::HELPER, div::HELPER_STACK),
     (farith::helper, farith::HELPER, farith::HELPER_STACK),
+    (frem::helper, frem::HELPER, frem::HELPER_STACK),
 ];
 
 /// The most stack that a call of a routine of any runtime helper uses
 /// below the caller's `%rsp`.
-pub const HELPER_STACK: u64 = {
+const HELPER_STACK: u64 = {
     let (mut i, mut most) = (0, 0);
     while i < HELPERS.len() {
         if HELPERS[i].2 > most {
@@ -87,13 +101,6 @@ pub const HELPER_STACK: u64 = {
     }
     most
 };
-
-/// The routine of a runtime helper that `op` calls, if any: a division at
-/// `i128`, or `fma` at `f32` or `f64`. Each routine needs at most
-/// [`HELPER_STACK`] bytes of stack below its caller's `%rsp`.
-pub fn helper(op: &Op) -> Option<&'static str> {
-    HELPERS.iter().find_map(|(routine, _, _)| routine(op))
-}
 
 /// Why an op was not lowered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -136,6 +143,12 @@ pub struct Cx<'f> {
     next: Option<&'f str>,
     /// How many local labels the function has made so far.
     locals: usize,
+    /// First-definition symbol resolution, shared by all function lowerings.
+    callees: &'f HashMap<&'f str, usize>,
+    /// Stack facts collected from emitted calls.
+    stack: stack::Function,
+    /// Helper families used by this function, in `HELPERS` order.
+    helpers: [bool; HELPERS.len()],
 }
 
 impl<'f> Cx<'f> {
@@ -208,6 +221,13 @@ impl<'f> Cx<'f> {
         Ok(())
     }
 
+    /// Negates the `i128` in `%rdx:%rax`.
+    pub fn neg_pair(&mut self) {
+        self.asm.ins("negq", format_args!("%rax"));
+        self.asm.ins("adcq", format_args!("$0, %rdx"));
+        self.asm.ins("negq", format_args!("%rdx"));
+    }
+
     /// The arguments of the block labelled `label`.
     pub fn block_params(&self, label: &str) -> Result<&'f [Def], Unlowered> {
         self.params
@@ -274,16 +294,21 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| compare::lowering(name))
         .or_else(|| fcompare::lowering(name))
         .or_else(|| farith::lowering(name))
+        .or_else(|| frem::lowering(name))
         .or_else(|| control::lowering(name))
         .or_else(|| call::lowering(name))
+        .or_else(|| bitcast::lowering(name))
+        .or_else(|| int_to_float::lowering(name))
+        .or_else(|| float_convert::lowering(name))
+        .or_else(|| float_to_int::lowering(name))
 }
 
 /// A module's functions, lowered.
 pub struct Lowered {
     /// The assembly of every function.
     pub text: String,
-    /// The size of each function's frame below `%rbp`, in order.
-    pub frames: Vec<i32>,
+    /// Complete stack needs, including calls, in function order.
+    pub needs: Vec<Need>,
 }
 
 /// The assembly of every function of `m`, followed by each runtime helper
@@ -292,17 +317,24 @@ pub struct Lowered {
 pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     let mut out = Vec::new();
-    let mut frames = Vec::new();
+    let mut functions = Vec::new();
+    let mut helpers = [false; HELPERS.len()];
+    let mut callees = HashMap::new();
+    for (i, f) in m.funcs().enumerate() {
+        callees.entry(f.name.as_str()).or_insert(i);
+    }
     asm.directive(format_args!(".text"));
     for (i, f) in m.funcs().enumerate() {
-        if let Some((code, size)) = func(i, f, &mut out) {
+        if let Some((code, facts, used)) = func(i, f, &callees, &mut out) {
             asm.raw(&code);
-            frames.push(size);
+            functions.push(facts);
+            for (all, used) in helpers.iter_mut().zip(used) {
+                *all |= used;
+            }
         }
     }
-    let ops = || m.funcs().flat_map(|f| &f.body.blocks).flat_map(|b| &b.ops);
-    for (routine, code, _) in HELPERS {
-        if ops().any(|op| routine(op).is_some()) {
+    for ((_, code, _), used) in HELPERS.into_iter().zip(helpers) {
+        if used {
             asm.raw(code);
         }
     }
@@ -310,7 +342,7 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     if out.is_empty() {
         Ok(Lowered {
             text: asm.finish(),
-            frames,
+            needs: stack::needs(&functions),
         })
     } else {
         Err(out)
@@ -334,12 +366,21 @@ pub fn block_label(i: usize, label: &str) -> String {
 /// The code of the `i`-th function, `f`, and the size of its frame, or
 /// `None` when it has a part that the backend cannot lower, which goes to
 /// `out`.
-fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> {
+fn func<'f>(
+    i: usize,
+    f: &'f Func,
+    callees: &'f HashMap<&'f str, usize>,
+    out: &mut Vec<Diagnostic>,
+) -> Option<(String, stack::Function, [bool; HELPERS.len()])> {
     let entry = f.body.blocks.first();
     let before = out.len();
     let frame = Frame::new(f)
         .map_err(|why| out.push(at(f, entry, None, why)))
         .ok()?;
+    let stack = stack::Function {
+        frame: frame.size(),
+        ..stack::Function::default()
+    };
     let mut cx = Cx {
         asm: Asm::new(),
         frame,
@@ -349,6 +390,9 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
         params: HashMap::new(),
         next: None,
         locals: 0,
+        callees,
+        stack,
+        helpers: [false; HELPERS.len()],
     };
     for b in &f.body.blocks {
         cx.params.entry(b.label.as_str()).or_insert(&b.params);
@@ -407,8 +451,7 @@ fn func(i: usize, f: &Func, out: &mut Vec<Diagnostic>) -> Option<(String, i32)> 
         block(i, f, &mut cx, b, out);
     }
     cx.asm.directive(format_args!(".size\t{sym}, .-{sym}"));
-    let size = cx.frame.size();
-    (out.len() == before).then(|| (cx.asm.finish(), size))
+    (out.len() == before).then(|| (cx.asm.finish(), cx.stack, cx.helpers))
 }
 
 fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnostic>) {
@@ -422,8 +465,17 @@ fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnosti
         let text = print_op(op, 0);
         let line = text.lines().next().unwrap_or_default().trim();
         cx.asm.comment(format_args!("{line}"));
-        if let Err(Unlowered::Why(why)) = lower(cx, op) {
-            out.push(at(f, Some(b), Some(n), why));
+        match lower(cx, op) {
+            Err(Unlowered::Why(why)) => out.push(at(f, Some(b), Some(n), why)),
+            Err(Unlowered::Reported) => {}
+            Ok(()) => {
+                for (i, (routine, _, _)) in HELPERS.iter().enumerate() {
+                    if routine(op).is_some() {
+                        cx.helpers[i] = true;
+                        cx.stack.helper_stack = HELPER_STACK;
+                    }
+                }
+            }
         }
     }
 }

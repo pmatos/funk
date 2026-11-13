@@ -17,7 +17,8 @@ Tier: direction; area: semantics
   a dialect whose terminators meet the condition. A dialect author who adds a
   terminator proves it, to have the theorems.
 - The core dialect meets it (`Core.Op.exit_goto`), so no path of a run of a
-  function of a valid core module is stuck (`Core.neverStuck`).
+  function of a valid core module is stuck (`Core.neverStuck`, over its runs
+  with memory).
 - `Exit` does not grow in M0. M4's design of exceptions and unwinding, the
   first place where a terminator with results makes sense, chooses between a
   validation rule and values on `Exit`, and edits this ADR in place.

@@ -99,6 +99,14 @@ The `locs { ... }` table that ends a module's text and gives the location that
 each `@N` reference on an op stands for.
 _Avoid_: debug table
 
+**data layout**:
+The line after a module's dialect set, `layout memory(N, unit(U),
+pointer(P), little)`, that declares the module's memories: each one's unit
+width, pointer width, byte order, pointer alignment and whether it is
+non-integral. A module without one has memory 0 alone, with 8-bit units and
+64-bit pointers. A nested module shares its parent's.
+_Avoid_: target triple, datalayout string
+
 **verdict**:
 What a tool says about a text: accepted, rejected by the parser (a parse
 error, with a text position), or rejected by validation (a validation
@@ -331,6 +339,12 @@ A differential test passes when native results refine the reference outcomes;
 an interpreter-only test passes when its outcome matches what it expects.
 An invalid test proves nothing and never counts as a pass.
 _Avoid_: verdict (a verdict says whether a text parses and validates)
+
+**coverage cell**:
+One op instance at a width or float format on one side of the corpus's
+coverage matrix: differential or interpreter-only. Conversions use a pair of
+types, and passed or returned values distinguish none, one and several.
+An inapplicable pair is blank, not a cell with zero tests.
 
 **poison stand-in**: A defined value of `iN` that native code runs a
 differential test on in place of a poison argument: one of the type's boundary

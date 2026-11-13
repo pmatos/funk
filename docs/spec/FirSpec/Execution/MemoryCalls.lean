@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3237605153120205651")
+:::moduleDocs (fingerprint := "14153943548324591789")
 :::
 
 :::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "9590645358696005234")
@@ -57,7 +57,7 @@ are ({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[run
 and one that runs out of fuel runs out of fuel with fewer steps.
 :::
 
-:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "13660275553821939867")
+:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "9889055531088484673")
 *Theorem: runs with memory refine when runs from the empty memories do.*
 The {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 of a function are its runs from the empty memories, with the memories they

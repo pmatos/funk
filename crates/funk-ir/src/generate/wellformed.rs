@@ -48,6 +48,7 @@ use crate::ir::{
 };
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 
+mod layout;
 mod locs;
 
 /// How many modules, from seed 0, the round trips over well-formed modules
@@ -120,6 +121,7 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         locs::break_table(rng, &mut m.locs);
     }
     add_dialects(rng, &mut m.dialects);
+    layout::add(rng, &mut m.layout);
     if rng.one_in(3) {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, dialect_item(rng));

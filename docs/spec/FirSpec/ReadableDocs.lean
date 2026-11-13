@@ -1,6 +1,7 @@
 import FirSpec.Syntax.Dialect
 import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module
+import FirSpec.Syntax.Layout
 import FirSpec.Core.Types
 import FirSpec.Core.Ops
 import FirSpec.Core.Signature
@@ -19,6 +20,7 @@ import FirSpec.Execution.EffectLaws
 import FirSpec.Execution.Summary
 import FirSpec.Execution.SummaryLaws
 import FirSpec.Execution.SummaryFixpoint
+import FirSpec.Execution.SummaryClean
 import FirSpec.Execution.SummarySound
 import FirSpec.Execution.Refinement
 import FirSpec.Execution.Values
@@ -31,6 +33,8 @@ import FirSpec.Execution.Jumps
 import FirSpec.Execution.Calls
 import FirSpec.Validation.Scope
 import FirSpec.Validation.Dominance
+import FirSpec.Validation.Layout
+import FirSpec.Validation.LocTable
 import FirSpec.Validation.Rules
 import FirSpec.Core.Validation
 import FirSpec.Core.Rejects
@@ -40,6 +44,7 @@ import FirSpec.Validation.Search
 import FirSpec.Validation.Graph
 import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
+import FirSpec.Validation.CheckLayout
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
 import FirSpec.Core.Runs
@@ -68,6 +73,12 @@ import FirSpec.Core.Compare
 import FirSpec.Core.FloatFlags
 import FirSpec.Core.FloatCompare
 import FirSpec.Core.FloatArith
+import FirSpec.Core.FloatRem
+import FirSpec.Core.FloatBitcast
+import FirSpec.Core.FloatOfInt
+import FirSpec.Core.FloatConvert
+import FirSpec.Core.Pointer
+import FirSpec.Core.FloatToInt
 import FirSpec.Core.Control
 import FirSpec.Core.Branch
 import FirSpec.Core.Call
@@ -83,11 +94,18 @@ import FirSpec.Core.FloatCompareLaws
 import FirSpec.Core.FloatResultLaws
 import FirSpec.Core.FloatArithLaws
 import FirSpec.Core.FloatFlagLaws
+import FirSpec.Core.FloatBitcastLaws
+import FirSpec.Core.FloatOfIntLaws
+import FirSpec.Core.FloatConvertLaws
+import FirSpec.Core.PointerLaws
+import FirSpec.Core.FloatToIntLaws
 import FirSpec.Core.ControlLaws
 import FirSpec.Core.BranchLaws
 import FirSpec.Execution.Morphism
 import FirSpec.Execution.ChoiceTree
 import FirSpec.Execution.Modes
+import FirSpec.Core.MemRules
+import FirSpec.Core.TreeRules
 import FirSpec.Core.Modes
 import FirSpec.Execution.RunPaths
 import FirSpec.Execution.EnvRefine
@@ -101,10 +119,13 @@ import FirSpec.Execution.Lawful
 import FirSpec.Core.Lawful
 import FirSpec.Text.Lexical
 import FirSpec.Text.Grammar
+import FirSpec.Text.LayoutLaws
 import FirSpec.Core.Text
+import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
 import FirSpec.Core.TypeTextLaws
+import FirSpec.Core.FloatOpTextLaws
 import FirSpec.Core.TextLaws
 import FirSpec.Core.FloatText
 import FirSpec.Core.FloatOpText
@@ -136,6 +157,9 @@ import FirSpec.Memory.Model
 import FirSpec.Memory.Laws
 import FirSpec.Memory.Frames
 import FirSpec.Memory.FrameLaws
+import FirSpec.Memory.Encode
+import FirSpec.Memory.EncodeLaws
+import FirSpec.Core.Encode
 import FirSpec.Execution.Frame
 import FirSpec.Execution.MemoryEffect
 import FirSpec.Execution.MemoryState
@@ -147,8 +171,10 @@ import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
+import FirSpec.Execution.MemoryLocal
 import FirSpec.Memory.Refine
 import FirSpec.Execution.MemoryOpRefine
+import FirSpec.Execution.MemoryPoison
 import FirSpec.Execution.MemoryStepPaths
 import FirSpec.Execution.MemoryCalls
 import FirSpec.Execution.MemoryBlackBox
@@ -172,6 +198,7 @@ import FirSpec.Sum.LiftPoisonLaws
 import FirSpec.Sum.LiftEffectLaws
 import FirSpec.Sum.TotalLaws
 import FirSpec.Sum.MonotoneLaws
+import FirSpec.Sum.MemPoisonLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

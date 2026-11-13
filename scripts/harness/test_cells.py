@@ -12,6 +12,7 @@ from firtext import Op
 CORE = Path(__file__).resolve().parents[2] / "lean" / "Fir" / "Core"
 TEXT = CORE / "Text.lean"
 FLOAT_OP_TEXT = CORE / "FloatOpText.lean"
+OPS = CORE / "Ops.lean"
 
 
 def definition(text: str, name: str) -> str:
@@ -39,10 +40,10 @@ def round_attrs(floats: str) -> tuple[str, ...]:
     return tuple(f"{head}({mode})" for head, mode in found)
 
 
-def unary_attrs(floats: str) -> dict[str, tuple[str, ...]]:
-    """The attributes that each float op of one operand reads, by
-    `FUnary.attrsOk`: `round(rne)`, or none."""
-    body = definition(floats, "FUnary.attrsOk")
+def op_attrs(floats: str, kind: str) -> dict[str, tuple[str, ...]]:
+    """The attributes that each float op of `kind`, `FBin` or `FUnary`,
+    reads by its `attrsOk`: `round(rne)`, or none."""
+    body = definition(floats, f"{kind}.attrsOk")
     found = {}
     for ctors, result in re.findall(r"\n  \| ([^=]*)=> (.*)", body):
         attrs = round_attrs(floats) if "isRoundAttrs" in result else ("",)
@@ -54,10 +55,15 @@ def unary_attrs(floats: str) -> dict[str, tuple[str, ...]]:
 def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     """The attributes that are cells of each op, as `Op.decode` reads
     them: the arm of an op that reads its attributes with `decodeWrap`,
-    `decodeExact` or `Pred.all` takes theirs, a float op of arithmetic
-    takes `round(rne)` or none, as `decodeFBin`, `decodeFma` and
-    `FUnary.attrsOk` read them, and an op of `plainBinOps`, or whose arm
-    takes them through `bare`, takes none. A constant's value and a callee
+    `decodeExact` or `Pred.all` takes theirs, `fcmp` the predicates of
+    `FPred.all` through `decodeFcmp`, a float op of arithmetic
+    takes `round(rne)` or none, as `decodeFma`, `FBin.attrsOk` and
+    `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
+    as `decodeIntToFloat` reads it, `fptrunc` `round(rne)` and `fpext`
+    none, as `decodeFptrunc` and `decodeFpext` read them, a conversion to
+    an integer none, as `decodeFloatToInt` reads it, and an op of
+    `plainBinOps`, or whose arm takes them through `bare`, as
+    `decodePtrAdd` does, takes none. A constant's value and a callee
     are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
@@ -68,19 +74,28 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeExact": cells.EXACT,
         "Pred.all": cells.PREDS,
         "FPred.all": cells.FPREDS,
+        "decodeFcmp": cells.FPREDS,
         "bare": ("",),
         "decodeCast": ("",),
-        "decodeFBin": round_attrs(floats),
         "decodeFma": round_attrs(floats),
+        "decodeBitcast": ("",),
+        "decodeIntToFloat": round_attrs(floats),
+        "decodeFpext": ("",),
+        "decodeFptrunc": round_attrs(floats),
+        "decodeFloatToInt": ("",),
+        "decodePtrAdd": ("",),
     }
-    unary = unary_attrs(floats)
+    by_ctor = {
+        "decodeFBin": op_attrs(floats, "FBin"),
+        "decodeFUnary": op_attrs(floats, "FUnary"),
+    }
     found = {}
     for name, arm in arms.items():
         if name in ("const", "call"):
             found[name] = ("",)
             continue
-        if ctor := re.search(r"decodeFUnary \.(\w+)", arm):
-            found[name] = unary.get(ctor.group(1), ("unknown",))
+        if ctor := re.search(r"(decodeFBin|decodeFUnary) \.(\w+)", arm):
+            found[name] = by_ctor[ctor.group(1)].get(ctor.group(2), ("unknown",))
             continue
         read = [
             attrs
@@ -89,6 +104,15 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         ]
         found[name] = read[0] if len(read) == 1 else ("unknown",)
     return found
+
+
+def fast_math(floats: str, ops: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The words of the fast-math flags in the order `FastMath.attrs` writes
+    them, and those that `FastMath.Reserved` names, which validation
+    rejects."""
+    words = re.findall(r'\.word "(\w+)"', definition(floats, "FastMath.attrs"))
+    reserved = re.findall(r"fl\.(\w+)", definition(ops, "FastMath.Reserved"))
+    return tuple(words), tuple(reserved)
 
 
 def flagged_ops(text: str) -> dict[str, set[str]]:
@@ -116,10 +140,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeWrap")), set(cells.WRAP))
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
+        self.assertIn("bare as", definition(text, "decodePtrAdd"))
+        self.assertEqual(definition(floats, "decodeBitcast").count("as.isEmpty"), 2)
+        self.assertIn("as.isEmpty", definition(floats, "decodeFpext"))
+        self.assertIn("as.isEmpty", definition(floats, "decodeFloatToInt"))
         self.assertEqual(
             decoded_attrs(text, floats),
             {
-                op: cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                op: cells.ROUND
+                if op in cells.INT_TO_FLOAT
+                else cells.FLOAT_CONVERSIONS.get(
+                    op, cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                )
                 for op in cells.OPS
             },
         )
@@ -133,17 +165,24 @@ class Tests(unittest.TestCase):
                 "f.attrs",
                 'if e then [.word "exact"] else []',
                 "[.sym f]",
+                "fl.attrs ++ [.word p.name]",
+                "fl.attrs ++ [roundAttr]",
                 "[roundAttr]",
-                "o.attrs",
+                "fl.attrs ++ o.attrs",
                 "[]",
             },
         )
-        self.assertEqual(flagged["[roundAttr]"], {"fbin", "fma"})
-        self.assertEqual(flagged["o.attrs"], {"funary"})
+        self.assertEqual(flagged["[roundAttr]"], {"sitofp", "uitofp", "fptrunc"})
+        self.assertEqual(flagged["fl.attrs ++ [roundAttr]"], {"fma"})
+        self.assertEqual(flagged["fl.attrs ++ o.attrs"], {"fbin", "funary"})
+        self.assertEqual(flagged["fl.attrs ++ [.word p.name]"], {"fcmp"})
+        words, reserved = fast_math(floats, OPS.read_text(encoding="utf-8"))
+        self.assertEqual(words, (*cells.FAST_MATH, *cells.RESERVED))
+        self.assertEqual(reserved, cells.RESERVED)
         self.assertEqual(round_attrs(floats), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
         self.assertEqual(flagged["[.float (floatLit e m v)]"], {"fconst"})
-        self.assertEqual(flagged["[.word p.name]"], {"icmp", "fcmp"})
+        self.assertEqual(flagged["[.word p.name]"], {"icmp"})
         self.assertEqual(flagged["f.attrs"], {"add", "sub", "mul"})
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
         self.assertEqual(flagged["[.sym f]"], {"call"})
@@ -202,7 +241,8 @@ class Tests(unittest.TestCase):
             of_op(Op("fcmp", ("slt",), ("f32", "f32"), ("i1",), ()))
         found = cells.cells((8,), ("f32", "f64"))
         floats = [c for c in found if c.table == "floats"]
-        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 8))
+        flags = len(cells.FAST_MATH) * len(cells.FLAGGED)
+        self.assertEqual(len(floats), 2 * (1 + len(cells.FPREDS) + 10 + flags))
         add = Op("fadd", ("round(rne)",), ("f32", "f32"), ("f32",), ())
         self.assertEqual(of_op(add), {Cell("floats", "fadd", "round(rne)", "f32")})
         fma = Op("fma", ("round(rne)",), ("bf16",) * 3, ("bf16",), ())
@@ -219,6 +259,35 @@ class Tests(unittest.TestCase):
         self.assertIn(Cell("values", "call", "one", "f32"), found)
         values = [c for c in found if c.table == "values" and c.width]
         self.assertEqual(len(values), 8 * 3)
+
+    def test_a_float_op_counts_per_flag(self):
+        add = Op("fadd", ("nnan", "nsz", "round(rne)"), ("f32", "f32"), ("f32",), ())
+        self.assertEqual(
+            of_op(add),
+            {
+                Cell("floats", "fadd", "nnan", "f32"),
+                Cell("floats", "fadd", "nsz", "f32"),
+            },
+        )
+        cmp = Op("fcmp", ("ninf", "olt"), ("f64", "f64"), ("i1",), ())
+        self.assertEqual(of_op(cmp), {Cell("floats", "fcmp", "ninf", "f64")})
+        rem = Op("frem", ("nsz",), ("f16", "f16"), ("f16",), ())
+        self.assertEqual(of_op(rem), {Cell("floats", "frem", "nsz", "f16")})
+        found = cells.cells((8,), ("f32",))
+        for op in cells.FLAGGED:
+            for flag in cells.FAST_MATH:
+                self.assertIn(Cell("floats", op, flag, "f32"), found)
+        self.assertNotIn(Cell("floats", "const", "nnan", "f32"), found)
+        for bad in [
+            Op("fadd", ("contract", "round(rne)"), ("f32", "f32"), ("f32",), ()),
+            Op("fma", ("nnan", "reassoc", "round(rne)"), ("f32",) * 3, ("f32",), ()),
+            Op("fadd", ("nsz", "nnan", "round(rne)"), ("f32", "f32"), ("f32",), ()),
+            Op("fneg", ("ninf", "ninf"), ("f32",), ("f32",), ()),
+            Op("fadd", ("nnan",), ("f32", "f32"), ("f32",), ()),
+            Op("fcmp", ("olt", "nnan"), ("f32", "f32"), ("i1",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
 
     def test_the_cell_set(self):
         widths = (1, 8, 128)

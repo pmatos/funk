@@ -14,24 +14,24 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5601592689356887409")
+:::moduleDocs (fingerprint := "17472343979287675236")
 :::
 
-:::readable Fir.Core.Ty.Valid (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "5367422729387808105")
+:::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
 *Definition: valid core types.* A
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[core type] is
 valid when it is an integer type $`\mathsf{i}N` whose width $`N` is at
 least 1 and at most $`2^{24} - 1 = 16{,}777{,}215`, MLIR's limit, or a
 float type $`\mathsf{float}\langle e,m \rangle` with at least 2 exponent
 bits, at least 1 mantissa bit, and at most $`2^{24} - 1` bits in all, or
-a pointer type $`\mathsf{ptr}\langle N \rangle` of a memory $`N` that the
-module has.
+a pointer type $`\mathsf{ptr}\langle N \rangle` whose memory $`N` is at
+most $`2^{24} - 1`.
 
 $$`\frac{1 \le N \le 2^{24} - 1}{\vdash \mathsf{i}N~\text{valid}}`
 
 $$`\frac{e \ge 2 \qquad m \ge 1 \qquad 1 + e + m \le 2^{24} - 1}{\vdash \mathsf{float}\langle e,m \rangle~\text{valid}}`
 
-$$`\frac{}{\vdash \mathsf{ptr}\langle 0 \rangle~\text{valid}}`
+$$`\frac{N \le 2^{24} - 1}{\vdash \mathsf{ptr}\langle N \rangle~\text{valid}}`
 
 The general rules write $`\vdash_d` for the rules of the dialect $`d`; for
 the core dialect this section drops the subscript. $`\mathsf{i0}` is never
@@ -40,11 +40,14 @@ and 1 mantissa bit to hold zeros, subnormal and normal numbers,
 infinities and NaNs: these are the smallest widths of Lean's float model,
 on which the float ops are defined, and the core accepts every format of
 that model (ADR-2026-11-09-1549). $`\mathsf{float}\langle 2,1 \rangle`
-is the smallest valid format. Every module has the default memory, so
-$`\mathsf{ptr}`, which is $`\mathsf{ptr}\langle 0 \rangle`, is valid. No
-module has another memory until the data layout declares memories (#231),
-so no rule concludes $`\vdash \mathsf{ptr}\langle N \rangle~\text{valid}`
-for $`N \ge 1`.
+is the smallest valid format. Whether the module has the memory $`N` of a
+pointer type is the rule of the module's
+{ref "The-fir-specification--Validation--The-data-layout___s-rules"}[data layout],
+which reads the memory that the type names: $`\mathrm{memory}(\mathsf{ptr}\langle N \rangle) = N`,
+and an integer or a float type names none. Every module has the default
+memory, so $`\mathsf{ptr}`, which is $`\mathsf{ptr}\langle 0 \rangle`, is
+in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
+a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
 :::readable Fir.Core.Op.symbolRefs (fingerprint := "14722312557016654371")
@@ -59,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid (fingerprint := "16822705579531850298")
+:::readable Fir.Core.Op.Valid (fingerprint := "9671964393155909194")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -74,6 +77,9 @@ $$`\frac{M < N}{C \vdash \mathsf{sext}_{M \to N}~\text{valid}}`
 
 $$`\frac{N < M}{C \vdash \mathsf{trunc}_{M \to N}~\text{valid}}`
 
+$$`\frac{e \le e' \qquad m \le m' \qquad (e, m) \ne (e', m')}{C \vdash \mathsf{fpext}_{e,m,e',m'}~\text{valid}}`
+
+$$`\frac{e' < e \ \text{ or } \ m' < m}{C \vdash \mathsf{fptrunc}_{e,m,e',m'}~\text{valid}}`
 $$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc}}{C \vdash \mathit{op}_{e,m}~\phi~\text{valid}} \quad \text{for } \mathit{op} \in \{\mathsf{fcmp}, \mathit{fbin}, \mathit{funary}, \mathsf{fma}\}`
 
 The reserved words $`\mathsf{contract}` and $`\mathsf{reassoc}` are
@@ -93,6 +99,17 @@ the op, and $`\mathrm{symtab}_C` the module's
 * $`\mathsf{zext}` and $`\mathsf{sext}` strictly widen and
   $`\mathsf{trunc}` strictly narrows. A width change to the same width is
   not an op: the value itself is.
+* $`\mathsf{fpext}` converts to a format that holds every value of the
+  source, with at least as many exponent bits and as many mantissa bits,
+  so it never rounds; $`\mathsf{fptrunc}` rounds into a format that cannot
+  hold every value of the source, with fewer exponent bits or fewer
+  mantissa bits. So every ordered pair of two formats takes exactly one of
+  the two, as the human ruled on 2026-11-12 (#354): $`\mathsf{f32}` to
+  $`\mathsf{f64}` takes $`\mathsf{fpext}`, and $`\mathsf{f64}` to
+  $`\mathsf{f32}` takes $`\mathsf{fptrunc}`, and so do $`\mathsf{bf16}` to
+  $`\mathsf{f16}` and $`\mathsf{f16}` to $`\mathsf{bf16}`, since
+  $`\mathsf{f16}` has fewer exponent bits than $`\mathsf{bf16}` and more
+  mantissa bits. A conversion to the same format is not an op.
 
 Every other op has no rule beyond its signature. These three definitions
 are what the core dialect

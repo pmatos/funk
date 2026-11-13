@@ -40,7 +40,9 @@ without rules (ADR-2026-10-29-2006).
 
 ### The tree of choices
 
-The spec's meaning of a run is `Func.run` in the set monad `SetM`. A program
+The spec's meaning of a run of a core function is its run with memory,
+`Core.funcRuns`: `Func.run` in the state layer over the set monad `SetM`, at
+the module's layout (semantics-effects.md). A program
 cannot list a predicate's members, so the spec also has `ChoiceTree`, a monad
 whose computations are trees (`lean/Fir/Execution/ChoiceTree.lean`). A leaf
 ends a path with a result, with UB, or with no outcome for a reason.
@@ -51,17 +53,19 @@ without rules ends its path with no outcome and names itself.
 `ChoiceTree.toSet` maps a tree to the set of ways its paths end. It is a
 monad morphism, and a path with no outcome adds nothing. `Func.run_map`
 proves that such a morphism carries a run in one monad to the run in the
-other. `Core.mapsDenote` proves that the core rules in the tree map to those
-in `SetM`. `ChoiceTree.explore` and `ChoiceTree.script` are the two walks,
+other. `Core.memMapsDenote` proves that the core rules with memory in the
+layer over the tree map to those in the layer over `SetM`. `ChoiceTree.explore` and `ChoiceTree.script` are the two walks,
 proved sound once for any tree (`explore_toSet`, `script_toSet`), and lifted
-to a run of any dialect by `Func.explore_outcomes` and `Func.script_outcomes`.
-`Core.exhaustive_outcomes` and `Core.scripted_outcomes` state the results for
-the core dialect, about the functions `fir-ref` calls, `Core.exhaustive` and
-`Core.scripted`. A node holds a function of the bits, so exhaustive mode runs
-the rest of the function once for each value it tries.
+to a run of any dialect by `Func.explore_outcomes` and `Func.script_outcomes`,
+and to a run with memory by `Func.memExplore_outcomes` and
+`Func.memScript_outcomes`. `Core.exhaustive_memOutcomes` and
+`Core.scripted_memOutcomes` state the results for the core dialect, about the
+functions `fir-ref` calls, `Core.exhaustive` and `Core.scripted`, against the
+runs with memory at the module's layout. A node holds a function of the bits,
+so exhaustive mode runs the rest of the function once for each value it tries.
 
 A new op family adds its rule to `Core.Op.denote?` or `Core.Op.exit?`, and
-`Core.mapsDenote` covers it, usually by `rfl`. A new effect needs its node in
+`Core.memMapsDenote` covers it, usually by `rfl`. A new effect needs its node in
 the tree, its image in the set monad, and its case in the morphism's proofs.
 Calls need none of these, since the interpreter's call path uses only `pure`,
 `bind` and `liftExcept` (ADR-2026-10-29-2009). A change to the interpreter

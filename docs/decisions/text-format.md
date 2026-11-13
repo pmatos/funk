@@ -3,7 +3,8 @@
 This page says what holds today for fir's text format and its parsers. It is the
 record: when this page and an ADR disagree, the page wins, and the ADR is fixed
 or deleted (ADR-2026-11-09-1610). How the proofs about the text are built is on
-[text-format-proofs.md](text-format-proofs.md).
+[text-format-proofs.md](text-format-proofs.md), and how float constants and
+float ops are written is on [text-format-floats.md](text-format-floats.md).
 
 ## One canonical text
 
@@ -74,6 +75,11 @@ attribute, since it would change every M0 text; the set in parentheses,
 `dialects(toy, gpu)`, which reads as an applied attribute; and rejecting an
 unknown word at parse time, since a builder or a pass can make a module that
 no text wrote (ADR-2026-11-10-1306).
+
+The data layout follows the dialect set, on a line of its own that starts
+with the word `layout`, and a module with the empty layout writes none:
+[text-format-layout.md](text-format-layout.md) gives its spelling and rules
+(ADR-2026-11-12-1821).
 
 ## Nested modules
 
@@ -166,97 +172,13 @@ are unchanged. `ptr<N>` of another memory is written `ptr(N)`, the grammar's
 applied form, such as `ptr(1)`. `ptr(0)` does not decode, so each pointer type
 has one spelling, and neither does a negative memory, one above 16,777,215
 (LLVM's bound on address spaces), `ptr()` or another argument list. Whether
-the module has memory `N` is validation's rule. A dialect that adds memories
+the module has memory `N` is validation's rule: its data layout must declare
+`N` ([text-format-layout.md](text-format-layout.md#valid-layouts)). A dialect that adds memories
 names their pointers in its own types; `ptr(N)` is the core's
 (ADR-2026-11-11-1709). Rejected: `ptr<N>` in text, for the reason
 `float<e,m>` was; `ptr(0)` as a second spelling of `ptr`; and rejecting an
 undeclared memory at parse time, since a builder or a pass can change the
 data layout without text.
-
-## Float constants
-
-A float constant is `const` with one float literal, as LLVM writes it
-(ADR-2026-11-11-1438). The human ruled on 2026-11-11: "Decimal float, hex
-fallback"; the orchestrator recorded it on #229. The agent that built it chose
-the details below.
-
-A zero, or a finite value of a format no wider than `f128` in either field
-(`2 <= e <= 15`, `1 <= m <= 112`), is the shortest decimal that reads back to
-its bits: `%one: f32 = const 1.0`, `0.1`, `-0.0`, `1.5e-7`. Of two shortest,
-the nearer wins, then the one with an even last digit. With `d.ddd · 10^E`
-its value, digits are laid out plainly when `-4 <= E < 16`, as `1234.5` or
-`0.0001`, and otherwise as one digit, `.`, the rest, `e` and `E`, as
-`1.5e-7` or `1.0e16`. There is always a digit after `.`, and no other
-trailing zero. Every other value, NaNs and infinities among them, and every
-value of a format without decimals, is `0x` and its bits in exactly
-`ceil((1 + e + m) / 4)` lowercase hexadecimal digits, leading zeros included,
-as `0x7fc00000` or `0x6` for the positive infinity of `float<2,1>`
-(ADR-2026-11-11-1438).
-
-The lexer reads a float literal as one token, kept as written. A decimal is
-an optional `-`, a whole part with no leading zeros, `.`, one or more digits,
-and an optional `e` and integer exponent with no leading zeros and never
-`-0`. A whole number followed by `.` and a digit, or `0` followed by `x`,
-starts a float literal. The generic attribute `Attr.float` holds one, so any
-dialect may use float literals (ADR-2026-11-11-1438).
-
-A decimal reads as its exact value rounded to the format, to nearest with
-ties to even, by Lean's float model: its `round` when the value is an
-integer, its `div` of the digits by a power of ten otherwise, then `pack`. A
-negative decimal that rounds to zero reads as `-0`. The reader first rejects
-a decimal whose whole part or fraction has more than 64 digits, or whose
-exponent is more than 9999 in magnitude, so it never computes a huge power of
-ten. Lean's `ofScientific` is not used: it reads every value below a bound as
-zero, and at a format such as `float<2,30>` that bound lies above the
-smallest subnormal (ADR-2026-11-11-1438).
-
-A literal decodes only when it is the spelling of the bits it reads as, so
-`1.00`, `1.0e0`, `0x3f800000` and `1065353216` at `f32` do not decode, nor
-does `1.0e39`, which reads as an infinity, nor `0x7fc0000`, which has seven
-digits. Each bit pattern has one spelling, and `print(parse(t)) == t` holds by
-construction. `fir-ref run` and the corpus spell float arguments and results
-the same way; a built executable keeps its bits read as a signed integer,
-which the harness converts exactly (`scripts/harness/native_floats.py`).
-`scripts/harness/float_text.py` is the reference that the shared cases of
-`tests/dialects/float-text.cases` come from (ADR-2026-11-11-1438).
-
-Rejected: the bits read as a signed integer, `const 1065353216`, the first
-spelling, which the human's ruling replaced; the shortest decimal of at most
-six digits, as LLVM writes `double`, which sends most `f32` and `f128` values
-to hexadecimal; decimals at every format, which can need millions of digits;
-and hexadecimal for every value, which the human did not rule
-(ADR-2026-11-11-1438).
-
-## Float ops
-
-`fcmp` writes its predicate as LLVM does, one of `oeq`, `one`, `olt`, `ole`,
-`ogt`, `oge`, `ord`, `ueq`, `une`, `ult`, `ule`, `ugt`, `uge` and `uno`:
-`%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-09-1549).
-
-Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
-has one attribute, `round(rne)`, in the applied form:
-`%s: f32 = fadd round(rne) %a, %b`. `fneg` and `fabs` do not round and have
-none. Any other attribute does not decode, so a missing mode, `round(rtz)`, the
-bare word `rne`, two attributes and `fneg round(rne)` are parse errors. The op
-carries no mode, since M1 has one; a later mode adds a decoding and a field
-(ADR-2026-11-09-1549, ADR-2026-11-11-1801). Rejected: decoding every IEEE
-mode and letting validation reject all but `rne`, which gives each op a field
-that no valid program sets; no attribute, which drops the hook that keeps
-today's texts' meaning when another mode comes; and the bare word `rne`,
-which says nothing about what it sets.
-
-A float op, `fcmp` included, writes its fast-math flags first, as LLVM does,
-each at most once, in the fixed order `nnan`, `ninf`, `nsz`, `contract`,
-`reassoc`: `%s: f32 = fadd nnan nsz round(rne) %a, %b`. A flag out of order,
-twice, or after the op's own attributes is a parse error, so each op has one
-spelling. `contract` and `reassoc` decode, and validation rejects them
-(ADR-2026-11-09-1549, #242). Rejected: flags in any order, which gives an op
-several spellings.
-
-Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
-whether a wrong rounding mode stays a parse error, as built, or is read and
-then rejected by the verifier, as #229's text says. Until the human rules,
-what is built holds.
 
 ## The round trip
 

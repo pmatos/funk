@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A lift's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14690532284854476308")
+:::moduleDocs (fingerprint := "11116242936318578497")
 :::
 
-:::readable Fir.Dialect.lift.instDialectMemDenote Fir.Dialect.lift.ownRuleHas_lift (fingerprint := "7157026062623711188")
+:::readable Fir.Dialect.lift.instDialectMemDenote Fir.Dialect.lift.ownRuleHas_lift (fingerprint := "3321254181745198701")
 *Definition: the lift's semantics with memory.* Where a run names the
 lift's memories by $`\rho`, an op of the lift runs by $`e`'s
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]

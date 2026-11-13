@@ -260,26 +260,17 @@ and pointers passed where a pointer of another memory or an integer is
 expected. The texts that relied on `ptr` being invalid name `ptr(1)` or
 another memory now.
 
-The texts of #229's fourth stage also use the float arithmetic `fadd`,
-`fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`
-([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md),
-[ADR-2026-11-11-1801](../adrs/2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md)).
-`float-binary-T` runs `fadd`, `fsub`, `fmul` and `fdiv`, and
-`float-unary-fma-T` runs `fneg`, `fabs`, `sqrt` and `fma`, at `T`, one of
-`f16`, `bf16`, `f32`, `f64` and `f128`, on the hard inputs: results
-halfway between two floats, subnormals, `-0`, overflow to infinity and
-NaN operands, `fsub` and `fdiv` in both operand orders, and a poison
-operand. `scripts/harness/float_arith_cases.py` writes them, with each
-expected result that `scripts/harness/float_ref.py` computes
-([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-arithmetic-corpus)).
-A result that is not a NaN is differential at `f32` and `f64` and
-interpreter-only at every format; a NaN result is interpreter-only, with
-a choice that names the NaN, until #219. `reject/float-arith.toml` holds
-the texts of these ops that do not decode, such as `fadd` without
-`round(rne)` or with `round(rtz)`, and one at a format that validation
-rejects.
+The texts of #231's pointer offset use `ptradd`. `pointer-offset` moves a
+`ptr` by an integer of each width of the interpreter-only side, moves it
+there and back, and through a call; `pointer-offset-memories` moves
+pointers of two memories that its data layout declares, of 16-bit and
+32-bit units, and of the default memory in one function. A run's only
+pointer is a poison argument until stack allocation lands, so each test
+checks that poison goes through `ptradd`, and is interpreter-only, since
+the backend does not lower pointers yet. `reject/pointer-offset.toml`
+holds the shapes that do not decode, such as a result of another memory,
+swapped operands or an attribute, and those that do not validate.
 
-`reject/float-flags.toml` holds the texts of #242's fast-math flags that
-do not decode, a flag out of order, written twice, after `round(rne)` or
-`fcmp`'s predicate, or on an integer op, and those that validation
-rejects, a float op with `contract` or `reassoc`.
+The texts of the float arithmetic, the remainders and the conversions,
+from #229's fourth stage on, are listed in
+[texts-floats.md](texts-floats.md).

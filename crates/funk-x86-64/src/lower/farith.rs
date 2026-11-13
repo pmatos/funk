@@ -1,7 +1,7 @@
 //! Float arithmetic: `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fneg`,
 //! `fabs` and `fma` (`dialects/core/float_arith.rs` in `funk-ir`), at
 //! `f32` and `f64`
-//! (`docs/decisions/x86-64-backend-lowering.md#float-arithmetic`).
+//! (`docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic`).
 //!
 //! Each op that rounds, but `fma`, is one SSE instruction, which rounds to
 //! nearest even, as MXCSR's default mode does and as `round(rne)` asks:
@@ -74,7 +74,7 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
 /// The width of the float `name`, 32 or 64, the instruction that loads it
 /// into an SSE register, and the suffix of its SSE instructions: `movss`
 /// and `ss`, or `movsd` and `sd`.
-fn format(
+pub(super) fn format(
     cx: &Cx<'_>,
     op: &Op,
     name: &str,
@@ -151,14 +151,27 @@ fn fma(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([a, b, c], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err("fma takes three operands and defines one value".into());
     };
-    let (_, mov, _) = format(cx, op, a)?;
     let routine = helper(op).ok_or("fma at f32 or f64 calls the runtime helper")?;
-    for (n, x) in [a, b, c].into_iter().enumerate() {
+    call_routine(cx, op, routine, &[a.as_str(), b, c], &r.name)
+}
+
+/// A call of the runtime routine `routine` of floats: each of `operands`
+/// in `%xmm0` onwards, then the result from `%xmm0` to `result`'s slot.
+pub(super) fn call_routine(
+    cx: &mut Cx<'_>,
+    op: &Op,
+    routine: &str,
+    operands: &[&str],
+    result: &str,
+) -> Result<(), Unlowered> {
+    let first = operands.first().ok_or("a routine takes an operand")?;
+    let (_, mov, _) = format(cx, op, first)?;
+    for (n, x) in operands.iter().enumerate() {
         let slot = cx.slot(x)?;
         cx.asm.ins(mov, format_args!("{slot}, %xmm{n}"));
     }
     cx.asm.ins("call", format_args!("{routine}"));
-    let sr = cx.slot(&r.name)?;
+    let sr = cx.slot(result)?;
     cx.asm.ins("movq", format_args!("%xmm0, {sr}"));
     Ok(())
 }

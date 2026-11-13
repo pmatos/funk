@@ -1,21 +1,25 @@
-//! The float arithmetic runs natively at `f32` and `f64` (#229,
-//! `docs/decisions/x86-64-backend-lowering.md#float-arithmetic`): `fadd`,
-//! `fsub`, `fmul`, `fdiv`, `sqrt`, `fneg`, `fabs` and `fma`. Each result is
-//! checked against the host's own IEEE 754 arithmetic, on the hard values
-//! (zeros of both signs, subnormals, ones, the largest finite values,
-//! infinities and NaNs) and, for `fma`, whose lowering calls a routine of
-//! its own, on many random operands as well: products that cancel against
-//! the addend, results far below the smallest normal number, and results
-//! that overflow. A NaN result may be any NaN (ADR-2026-11-09-1549), so
-//! where the host gives a NaN the test asks only for a NaN.
+//! The float arithmetic runs natively at `f32` and `f64` (#229, #310,
+//! `docs/decisions/x86-64-backend-lowering-floats.md#float-arithmetic`): `fadd`,
+//! `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `sqrt`, `fneg`, `fabs` and
+//! `fma`. Each result is checked against the host's own IEEE 754
+//! arithmetic, on the hard values (zeros of both signs, subnormals, ones,
+//! the largest finite values, infinities and NaNs) and, for `fma`, `frem`
+//! and `fmod`, whose lowerings call routines of their own, on many random
+//! operands as well: for `fma`, products that cancel against the addend,
+//! results far below the smallest normal number, and results that
+//! overflow; for `frem` and `fmod`, operands far apart and quotients
+//! halfway between two integers. The host's `%` is C's `fmod`, and
+//! [`remainder`] builds IEEE 754's remainder from it exactly. A NaN result
+//! may be any NaN (ADR-2026-11-09-1549), so where the host gives a NaN the
+//! test asks only for a NaN.
 //!
 //! Each batch is one function that applies its op to constants and returns
 //! every result, so one build and one run check many cases.
 
 mod common;
 
-use common::{build, func, module, run, text};
-use funk_ir::dialects::core::spell_float;
+use common::{build, float_bits, func, module, run, text};
+use funk_ir::dialects::core::{FLOAT_ARITH_OPS, spell_float};
 
 /// A float format the backend lowers, with the host's arithmetic on it.
 #[derive(Clone, Copy)]
@@ -61,6 +65,8 @@ impl Format {
                 "fsub" => f[0] - f[1],
                 "fmul" => f[0] * f[1],
                 "fdiv" => f[0] / f[1],
+                "frem" => remainder(f64::from(f[0]), f64::from(f[1])) as f32,
+                "fmod" => f[0] % f[1],
                 "sqrt" => f[0].sqrt(),
                 "fneg" => -f[0],
                 "fabs" => f[0].abs(),
@@ -74,6 +80,8 @@ impl Format {
                 "fsub" => f[0] - f[1],
                 "fmul" => f[0] * f[1],
                 "fdiv" => f[0] / f[1],
+                "frem" => remainder(f[0], f[1]),
+                "fmod" => f[0] % f[1],
                 "sqrt" => f[0].sqrt(),
                 "fneg" => -f[0],
                 "fabs" => f[0].abs(),
@@ -82,6 +90,36 @@ impl Format {
             r.to_bits()
         }
     }
+}
+
+/// IEEE 754's remainder of `x` and `y`: `x - n * y`, with `n` the quotient
+/// `x / y` rounded to nearest, ties to even, built exactly from C's `fmod`,
+/// which is Rust's `%`. `r = x % y` has `x`'s sign and `|r| < |y|`; the
+/// remainder is `r`, or `r` moved by `|y|` toward zero's other side when
+/// `|r|` passes `|y| / 2`, or reaches it with an odd truncated quotient.
+/// That quotient is odd when `|x| % 2|y|` reaches `|y|`, or, when `2|y|`
+/// overflows and the quotient is below 2, when `|x|` reaches `|y|`. `2|r|`
+/// is exact, or infinite and so past `|y|`, and `|r| - |y|` is exact, since
+/// `|r|` lies between `|y| / 2` and `|y|` there (Sterbenz). An `f32`'s
+/// remainder computed at `f64` is exact, and `f32` holds it.
+fn remainder(x: f64, y: f64) -> f64 {
+    let r = x % y;
+    if !r.is_finite() || y.is_infinite() || r == 0.0 {
+        return r;
+    }
+    let (ar, ay) = (r.abs(), y.abs());
+    let twice = 2.0 * ay;
+    let odd = if twice.is_finite() {
+        x.abs() % twice >= ay
+    } else {
+        x.abs() >= ay
+    };
+    let v = if 2.0 * ar > ay || (2.0 * ar == ay && odd) {
+        ar - ay
+    } else {
+        ar
+    };
+    if x.is_sign_negative() { -v } else { v }
 }
 
 /// The hard bit patterns of `f`.
@@ -129,9 +167,11 @@ fn hard(f: Format) -> Vec<u64> {
 
 /// The text of op `op`, with its attribute when it rounds.
 fn op_text(op: &str) -> String {
-    match op {
-        "fneg" | "fabs" => op.to_string(),
-        _ => format!("{op} round(rne)"),
+    let rounds = FLOAT_ARITH_OPS.iter().any(|&(name, _, r)| name == op && r);
+    if rounds {
+        format!("{op} round(rne)")
+    } else {
+        op.to_string()
     }
 }
 
@@ -162,15 +202,7 @@ fn native(name: &str, f: Format, op: &str, cases: &[Vec<u64>]) -> Vec<u64> {
     let out = run(&exe, &["@batch"]);
     let stdout = text(&out.stdout);
     assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
-    let values = stdout
-        .trim_end()
-        .strip_prefix("{\"values\":[")
-        .and_then(|s| s.strip_suffix("]}"))
-        .expect("a JSON line of values");
-    values
-        .split(',')
-        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & f.mask())
-        .collect()
+    float_bits(&stdout, f.mask())
 }
 
 /// Checks `op` on every case at `f`, in batches of 64, against the host.
@@ -211,7 +243,7 @@ fn hard_cases(f: Format, n: usize) -> Vec<Vec<u64>> {
 #[test]
 fn each_op_of_two_operands_runs_on_the_hard_values() {
     for f in [F32, F64] {
-        for op in ["fadd", "fsub", "fmul", "fdiv"] {
+        for op in ["fadd", "fsub", "fmul", "fdiv", "frem", "fmod"] {
             check(&format!("{op}-{}", f.name), f, op, &hard_cases(f, 2));
         }
     }
@@ -347,5 +379,61 @@ fn fma_rounds_once_on_random_operands() {
     for f in [F32, F64] {
         let cases = random_fma(f, &mut rng);
         check(&format!("fma-random-{}", f.name), f, "fma", &cases);
+    }
+}
+
+/// The examples of #310: `5.5 frem 2 = -0.5` and `5.5 fmod 2 = 1.5`, and
+/// quotients halfway between two integers, which go to the even one.
+#[test]
+fn the_remainder_s_examples_and_ties() {
+    let b = |x: f64| x.to_bits();
+    assert_eq!(remainder(5.5, 2.0), -0.5);
+    assert_eq!((remainder(3.0, 2.0), remainder(5.0, 2.0)), (-1.0, 1.0));
+    assert_eq!(remainder(-4.0, 2.0).to_bits(), (-0.0f64).to_bits());
+    let cases = [[5.5, 2.0], [3.0, 2.0], [5.0, 2.0], [-5.5, 2.0], [-4.0, 2.0]];
+    let cases: Vec<Vec<u64>> = cases.iter().map(|c| vec![b(c[0]), b(c[1])]).collect();
+    for op in ["frem", "fmod"] {
+        let got = native(&format!("{op}-examples"), F64, op, &cases);
+        let want: Vec<u64> = cases.iter().map(|c| F64.host(op, c)).collect();
+        assert_eq!(got, want, "{op}");
+    }
+}
+
+/// Random operands of `frem` and `fmod` at `f`: any bits; operands whose
+/// exponents lie far apart, which the routine reduces in many steps; and
+/// `x = (2k + 1) * y / 2`, whose quotient is halfway between two integers.
+fn random_rem(f: Format, rng: &mut Rng) -> Vec<Vec<u64>> {
+    let top = (1u64 << f.e) - 1;
+    let mut cases = Vec::new();
+    for _ in 0..128 {
+        cases.push((0..2).map(|_| rng.next() & f.mask()).collect());
+    }
+    for _ in 0..256 {
+        let x = rng.float(f, top - top / 4, top);
+        let y = rng.float(f, 0, top / 4);
+        cases.push(vec![x, y]);
+    }
+    for _ in 0..128 {
+        let y = rng.float(f, top / 4, top / 2) & !0xff;
+        let k = rng.next() % 64;
+        let x = if f.width() == 32 {
+            let y = f32::from_bits(y as u32);
+            u64::from(((2 * k + 1) as f32 * y * 0.5).to_bits())
+        } else {
+            ((2 * k + 1) as f64 * f64::from_bits(y) * 0.5).to_bits()
+        };
+        cases.push(vec![x, y]);
+    }
+    cases
+}
+
+#[test]
+fn frem_and_fmod_are_exact_on_random_operands() {
+    let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+    for f in [F32, F64] {
+        let cases = random_rem(f, &mut rng);
+        for op in ["frem", "fmod"] {
+            check(&format!("{op}-random-{}", f.name), f, op, &cases);
+        }
     }
 }

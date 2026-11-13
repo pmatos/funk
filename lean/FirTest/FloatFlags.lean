@@ -16,7 +16,7 @@ open Fir FirRef
 /-- What scripted mode reports on `op` with the flags `fl`, a word list
 with a space before each, at `ty` on `args`, with `cs`. -/
 def flagged (op fl ty : String) (args : List String) (cs : List String := []) : RunReport :=
-  let attr := if op == "fneg" || op == "fabs" then fl else fl ++ " round(rne)"
+  let attr := if ["fneg", "fabs", "frem", "fmod"].contains op then fl else fl ++ " round(rne)"
   runText (floatOp op attr ty args.length) "@f" args (mode := .scripted cs)
 
 /-- `@f` that compares two `ty` with `fcmp`, its flags `fl` and the
@@ -37,6 +37,11 @@ def fcmpOp (fl p ty : String) : String :=
 #guard flagged "fadd" " nnan" "f32" ["1.0", "2.0"] == returns ["3.0"]
 #guard flagged "fdiv" " nnan" "bf16" ["1.0", "0.0"] == returns ["0x7f80"]
 
+-- The remainders carry the flags too: a zero divisor gives a NaN, so
+-- poison under `nnan`.
+#guard flagged "frem" " nnan" "f32" ["1.0", "0.0"] == returns ["poison"]
+#guard flagged "fmod" " nnan" "f64" ["3.0", "2.0"] == returns ["1.0"]
+
 /-! # `ninf` -/
 
 -- An infinite operand gives poison, even when the result is finite.
@@ -48,6 +53,11 @@ def fcmpOp (fl p ty : String) : String :=
 -- A NaN result without `nnan` is still any NaN.
 #guard flagged "fdiv" " ninf" "f32" ["0.0", "0.0"] ["0"] == returns ["0x7fc00000"] 1
 #guard flagged "fma" " ninf" "f32" ["1.0", "1.0", "1.0"] == returns ["2.0"]
+
+-- An infinite divisor gives poison, where the remainder is the dividend
+-- without the flag.
+#guard flagged "frem" " ninf" "f32" ["1.0", "0x7f800000"] == returns ["poison"]
+#guard flagged "fmod" "" "f32" ["1.0", "0x7f800000"] == returns ["1.0"]
 
 /-! # `nsz` -/
 

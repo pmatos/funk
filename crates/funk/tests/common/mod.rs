@@ -129,6 +129,65 @@ pub fn run(exe: &Path, args: &[&str]) -> Output {
     Command::new(exe).args(args).output().unwrap()
 }
 
+/// Runs `@name` of a built executable, checks that it exits with 0, and
+/// gives what it wrote.
+pub fn run_func(exe: &Path, name: &str) -> String {
+    let out = run(exe, &[&format!("@{name}")]);
+    let stdout = text(&out.stdout);
+    assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
+    stdout
+}
+
+/// A function `@name` of no parameters that runs `body` and returns `%r0`,
+/// `%r1` and so on: `n` values of type `ty`.
+pub fn returning(name: &str, mut body: Vec<String>, ty: &str, n: usize) -> String {
+    let results: Vec<String> = (0..n).map(|i| format!("%r{i}")).collect();
+    body.push(format!("ret {}", results.join(", ")));
+    let body: Vec<&str> = body.iter().map(String::as_str).collect();
+    func(name, "", &vec![ty; n].join(", "), &body)
+}
+
+/// Each value of the JSON line of values that a built executable printed
+/// in `stdout`, without its quotes.
+pub fn json_values(stdout: &str) -> Vec<&str> {
+    stdout
+        .trim_end()
+        .strip_prefix("{\"values\":[")
+        .and_then(|s| s.strip_suffix("]}"))
+        .expect("a JSON line of values")
+        .split(',')
+        .map(|v| v.trim_matches('"'))
+        .collect()
+}
+
+/// The bits of each float value that a built executable printed in
+/// `stdout`, one JSON line of values, each a float's bits read as a signed
+/// integer, masked to `mask`.
+pub fn float_bits(stdout: &str, mask: u64) -> Vec<u64> {
+    json_values(stdout)
+        .into_iter()
+        .map(|v| v.parse::<i64>().expect("a float's bits") as u64 & mask)
+        .collect()
+}
+
+/// A small generator of random bits, so that every run checks the same
+/// values.
+pub struct Bits(pub u64);
+
+impl Bits {
+    pub fn next(&mut self) -> u64 {
+        self.0 = self
+            .0
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        self.0
+    }
+
+    pub fn wide(&mut self) -> u128 {
+        (u128::from(self.next()) << 64) | u128::from(self.next())
+    }
+}
+
 /// The JSON line a built executable prints for `values`.
 pub fn values(values: &[&str]) -> String {
     let quoted: Vec<String> = values.iter().map(|v| format!("\"{v}\"")).collect();
@@ -247,3 +306,37 @@ pub fn check_unwritable_stderr(name: &str, run: impl Fn(&[&str]) -> Output) {
         assert_eq!(ran.status.code(), Some(status), "{args:?}");
     }
 }
+
+/// The hard bit patterns of `f32`, which the native float tests share.
+pub const F32: [u32; 14] = [
+    0x0000_0000, // +0
+    0x8000_0000, // -0
+    0x0000_0001, // the smallest subnormal
+    0x8000_0001,
+    0x007f_ffff, // the largest subnormal
+    0x3f80_0000, // 1.0
+    0xbf80_0000, // -1.0
+    0x7f7f_ffff, // the largest finite value
+    0x7f80_0000, // +inf
+    0xff80_0000, // -inf
+    0x7fc0_0000, // the quiet NaN
+    0xffc0_0001, // a quiet NaN with its sign set and a payload
+    0x7f80_0001, // a signalling NaN
+    0xffff_ffff,
+];
+
+/// The hard bit patterns of `f64`.
+pub const F64: [u64; 12] = [
+    0,
+    0x8000_0000_0000_0000,
+    1,
+    0x000f_ffff_ffff_ffff,
+    0x3ff0_0000_0000_0000,
+    0xbff0_0000_0000_0000,
+    0x7fef_ffff_ffff_ffff,
+    0x7ff0_0000_0000_0000,
+    0xfff0_0000_0000_0000,
+    0x7ff8_0000_0000_0000,
+    0xfff0_0000_0000_0001,
+    0x7ff4_0000_0000_0000,
+];

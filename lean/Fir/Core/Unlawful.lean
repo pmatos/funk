@@ -1,6 +1,7 @@
 import Fir.Core.Poison
 import Fir.Core.Semantics
 import Fir.Core.Check
+import Fir.Execution.MemoryPoison
 
 /-!
 # Semantics that the obligations reject
@@ -20,6 +21,11 @@ obligations reject it.
 
 Each rejection is shown at a valid op instance, as the first theorem below
 says.
+
+The obligations with memory reject each of them too, run with memory by
+lifting it into the state layer: a dialect that lifts the set monad is
+lawful with memory exactly when the poison obligations hold (the section
+on poison obligations with memory).
 -/
 
 namespace Fir.Core.Unlawful
@@ -162,5 +168,37 @@ theorem alwaysUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ always
   intro h
   obtain ⟨_, _, _, _, he⟩ := h.returnsOnDefined (.add 1 {}) add_typesValid rfl
   cases he
+
+/-!
+# The obligations with memory reject them too
+-/
+
+/-- Each semantics in the set monad that the poison obligations reject,
+lifted into the state layer as the semantics with memory of a dialect whose
+ops touch no memory, is rejected by the obligations with memory: it is not
+lawful with memory. -/
+theorem memUnlawful {s : DialectDenote CoreDialect SetM}
+    (h : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ s _ _) :
+    letI := s
+    letI := DialectMemDenote.ofSetM (d := CoreDialect)
+    ¬ LawfulDialectMem CoreDialect :=
+  letI := s
+  letI := DialectMemDenote.ofSetM (d := CoreDialect)
+  haveI : LiftsSetM CoreDialect := DialectMemDenote.ofSetM_liftsSetM
+  fun hm => h ((LawfulDialectPoison.iff_mem (d := CoreDialect)).2 hm)
+
+/-- The obligations with memory reject the four semantics: with no outcome,
+with poison as UB, with the rejected rule for `sdiv`, and always UB. -/
+theorem all_memUnlawful :
+    (letI := noOutcome; letI := DialectMemDenote.ofSetM (d := CoreDialect)
+      ¬ LawfulDialectMem CoreDialect) ∧
+    (letI := poisonIsUB; letI := DialectMemDenote.ofSetM (d := CoreDialect)
+      ¬ LawfulDialectMem CoreDialect) ∧
+    (letI := oldSDiv; letI := DialectMemDenote.ofSetM (d := CoreDialect)
+      ¬ LawfulDialectMem CoreDialect) ∧
+    (letI := alwaysUB; letI := DialectMemDenote.ofSetM (d := CoreDialect)
+      ¬ LawfulDialectMem CoreDialect) :=
+  ⟨memUnlawful noOutcome_unlawful, memUnlawful poisonIsUB_unlawful,
+    memUnlawful oldSDiv_unlawful, memUnlawful alwaysUB_unlawful⟩
 
 end Fir.Core.Unlawful

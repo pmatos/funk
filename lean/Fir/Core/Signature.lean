@@ -32,6 +32,11 @@ def Op.sig : Op → List Ty
   | .fma _ e m => [.float e m, .float e m, .float e m]
   | .select w => [i 1, i w, i w]
   | .zext m _ | .sext m _ | .trunc m _ => [i m]
+  | .toBits e m => [.float e m]
+  | .ofBits e m => [i (floatWidth e m)]
+  | .sitofp n .. | .uitofp n .. => [i n]
+  | .fpext e m .. | .fptrunc e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
+  | .ptradd n w => [.ptr n, i w]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -45,6 +50,12 @@ def Op.returnTypes : Op → List Ty
   | .fconst e m _ | .fbin _ _ e m | .funary _ _ e m | .fma _ e m => [.float e m]
   | .icmp _ _ | .fcmp .. => [i 1]
   | .zext _ n | .sext _ n | .trunc _ n => [i n]
+  | .toBits e m => [i (floatWidth e m)]
+  | .ofBits e m => [.float e m]
+  | .sitofp _ e m | .uitofp _ e m => [.float e m]
+  | .fpext _ _ e' m' | .fptrunc _ _ e' m' => [.float e' m']
+  | .ptradd n _ => [.ptr n]
+  | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs
 

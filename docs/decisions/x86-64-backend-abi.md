@@ -106,9 +106,9 @@ Three eightbytes or more all go in memory. The caller passes the address of a
 result area as the first argument, in `%rdi`, as C passes the address of a
 structure that it returns in memory. The call's own arguments follow it, so its
 fifth goes in `%r9`, and an `i128` argument looks for its pair from `%rsi` on.
-The layout reads the address first everywhere: the prologue and the stack
-figure build their list with `abi::passed`, and `lower/call.rs` and the entry
-wrapper pass it as their first `Arg`.
+The layout reads the address first everywhere: the prologue builds its list
+with `abi::passed`, and `lower/call.rs` and the entry wrapper pass it as their
+first `Arg`. The stack figure uses the outgoing bytes returned by the emitter.
 
 Each result is at the next offset that is a multiple of its alignment, and the
 area's size is rounded up to 16 bytes. The callee keeps the address in a slot
@@ -172,9 +172,9 @@ wrapper both use it, and both restore outgoing space right after the call.
 Cleanup leaves the result in `%rax` and restores alignment.
 
 The emitter returns its peak outgoing argument bytes, padding included and the
-return address excluded. The entry's stack figure reads them, and owns frame
-sizes, return addresses, runtime space and rounding. The emitter checks that
-cleanup fits a signed 32-bit immediate before it writes assembly. Its callers
+return address excluded. Lowering records them for its stack calculation;
+entry generation owns wrapper sizes, runtime space and rounding. The emitter
+checks that cleanup fits a signed 32-bit immediate before it writes assembly. Its callers
 keep width checks, located diagnostics and result storage or printing. Fir call
 lowering collects argument slots before it emits, so a failed lookup cannot
 leave a call half written. The emitter is internal to the x86-64 crate.

@@ -116,6 +116,11 @@ theorem MonadMorphism.state_ub [MonadUB m] [MonadUB n]
   funext s
   exact h r
 
+/-- A morphism that keeps choice and UB keeps both through the layer. -/
+theorem MonadMorphism.state_keeps [MonadChoice m] [MonadChoice n] [MonadUB m] [MonadUB n]
+    (h : φ.KeepsChoiceUB) : (φ.state σ).KeepsChoiceUB :=
+  ⟨φ.state_choose h.choose, fun r => φ.state_ub h.ub r⟩
+
 variable [MonadUB m] [MonadUB n]
 
 /-- A morphism through the layer keeps allocation. -/
@@ -172,15 +177,9 @@ state layer: `toSet`, at each state. -/
 def ChoiceTree.toSetState (ε σ : Type) : MonadMorphism (StateT σ (ChoiceTree ε)) (StateT σ SetM) :=
   (ChoiceTree.toSetMorphism (ε := ε)).state σ
 
-/-- `toSet` through the layer keeps a choice of bits. -/
-theorem ChoiceTree.toSetState_choose (ε σ : Type) (w : Nat) :
-    (ChoiceTree.toSetState ε σ).map (MonadChoice.choose w) = MonadChoice.choose w :=
-  (ChoiceTree.toSetMorphism (ε := ε)).state_choose ChoiceTree.toSet_choose w
-
-/-- `toSet` through the layer keeps UB. -/
-theorem ChoiceTree.toSetState_ub (ε σ : Type) {α : Type} (r : String) :
-    (ChoiceTree.toSetState ε σ).map (MonadUB.ub r : StateT σ (ChoiceTree ε) α) = MonadUB.ub r :=
-  (ChoiceTree.toSetMorphism (ε := ε)).state_ub (ChoiceTree.toSet_ub (ε := ε)) r
+/-- `toSet` through the layer keeps choice and UB. -/
+theorem ChoiceTree.toSetState_keeps (ε σ : Type) : (ChoiceTree.toSetState ε σ).KeepsChoiceUB :=
+  ChoiceTree.toSetMorphism.state_keeps ChoiceTree.toSet_keeps
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   {ε : Type} [DialectDenote d (StateT (Memories Mem unit) (ChoiceTree ε))]

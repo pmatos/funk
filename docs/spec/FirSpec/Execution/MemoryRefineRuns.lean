@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments and memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4503861447511279358")
+:::moduleDocs (fingerprint := "14766331398559593469")
 :::
 
-:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "16962497001198207916")
+:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "9327385600446474420")
 *Theorem: every path of the target with memory that runs out of fuel or
 returns, allowed below a budget.* Let the target module $`M'` run each
 call with memory as the source $`M` does, and every op of $`M`'s functions,
@@ -31,7 +31,7 @@ strong induction on $`n`, from every memories, as for runs in the set
 monad.
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "15942071315214829712")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "7021408922736855074")
 *Theorem: two modules with memory, compared call by call.* Let the target
 module $`M'` run each call with memory as the source $`M` does, and every
 op of $`M`'s functions and of $`f` that runs by its own rule be monotone
@@ -49,7 +49,7 @@ allows below that ratio at $`N`: the source runs out of fuel there, so it
 diverges.
 :::
 
-:::readable Fir.Func.memRunsFrom_args_isRefinedBy (fingerprint := "3054742698898346120")
+:::readable Fir.Func.memRunsFrom_args_isRefinedBy (fingerprint := "3135102364523871184")
 *Theorem: refined arguments and memories.* In every module, when every op
 of its functions and of $`f` that runs by its own rule is monotone with
 memory, let $`\vec{v} \sqsubseteq \vec{v}'` and $`S \sqsubseteq S'`: a

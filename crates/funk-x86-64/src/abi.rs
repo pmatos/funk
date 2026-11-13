@@ -138,22 +138,12 @@ pub(crate) fn call(asm: &mut Asm, callee: &str, args: &[Arg]) -> Result<u64, Str
 /// address of the result area when the results go in memory
 /// ([`results::Layout::hidden_arguments`], ADR-2026-10-30-1232), then each
 /// of `args`. The address takes `%rdi`, so an `i128` argument looks for its
-/// pair of registers from `%rsi` on. The callee's prologue and the entry's
-/// stack figure read a call by this; [`call`] gets the address as its first
-/// [`Arg`].
+/// pair of registers from `%rsi` on. The callee's prologue reads its
+/// incoming arguments by this; [`call`] gets the address as its first [`Arg`].
 pub(crate) fn passed(hidden: usize, args: impl IntoIterator<Item = Class>) -> Vec<Class> {
     std::iter::repeat_n(Class::Int, hidden)
         .chain(args)
         .collect()
-}
-
-/// The 8-byte words that [`call`] pushes, before the return address, for
-/// arguments of the classes `classes`: those that [`layout`] puts on the
-/// stack, and the padding between and after them. The entry's stack figure
-/// reads a call by it too
-/// (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
-pub(crate) fn pushed_words(classes: &[Class]) -> usize {
-    layout(classes).stack / 8
 }
 
 /// The padded outgoing area of `bytes` must fit the signed immediate of

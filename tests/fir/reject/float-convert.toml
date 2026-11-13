@@ -1,0 +1,188 @@
+# Must-reject texts of #241's conversions between float formats: fpext
+# has no attribute and fptrunc carries round(rne), and each takes one value
+# of a float type to another float type (ADR-2026-11-09-1549). Any other
+# attribute or pair of types does not decode. Validation takes fpext only
+# to a format that holds every value of the source, and fptrunc only to
+# one that cannot, so every pair of two formats takes exactly one of them
+# and a format to itself takes neither (the human's ruling of 2026-11-12
+# on #354), and it rejects a format that it rejects everywhere.
+
+[[reject]]
+verdict = "parse-error"
+rule = "fpext does not round, so it has no attribute: with round(rne) it does not decode"
+text = '''
+func @f(%x: f32) -> f64 {
+^e:
+  %r: f64 = fpext round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptrunc rounds, so it carries round(rne): without it, it does not decode"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = fptrunc %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "round(rne) is the one rounding mode: fptrunc round(rtz) does not decode"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = fptrunc round(rtz) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fpext takes a float: from an integer it does not decode"
+text = '''
+func @f(%x: i32) -> f64 {
+^e:
+  %r: f64 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptrunc gives a float: to an integer it does not decode"
+text = '''
+func @f(%x: f64) -> i32 {
+^e:
+  %r: i32 = fptrunc round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fpext takes a format that holds every value of the source: f64 to f32 takes fptrunc"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fptrunc takes a format that cannot hold every value of the source: f32 to f64 takes fpext"
+text = '''
+func @f(%x: f32) -> f64 {
+^e:
+  %r: f64 = fptrunc round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "f16 has fewer exponent bits than bf16, so bf16 to f16 takes fptrunc, not fpext"
+text = '''
+func @f(%x: bf16) -> f16 {
+^e:
+  %r: f16 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "bf16 has fewer mantissa bits than f16, so f16 to bf16 takes fptrunc, not fpext"
+text = '''
+func @f(%x: f16) -> bf16 {
+^e:
+  %r: bf16 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a conversion to the same format is not an op: fpext from f32 to f32"
+text = '''
+func @f(%x: f32) -> f32 {
+^e:
+  %r: f32 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a conversion to the same format is not an op: fptrunc from f64 to f64"
+text = '''
+func @f(%x: f64) -> f64 {
+^e:
+  %r: f64 = fptrunc round(rne) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fpext decodes to float(1, 1), and validation rejects the format, which has 1 exponent bit"
+text = '''
+func @f(%x: float(1, 1)) -> f32 {
+^e:
+  %r: f32 = fpext %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

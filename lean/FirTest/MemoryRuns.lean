@@ -163,18 +163,18 @@ instance : DialectMemDenote AllocDialect where
 
 /-- A run with memory of the alloc dialect runs its semantics with memory at
 the naming it is given. -/
-example {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N) (M : Module AllocDialect)
+example {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) (M : Module AllocDialect)
     (f : Func AllocDialect) (args : HVector toType (f.params.map (·.2))) (n : Nat) :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) unit ρ
-    f.memRuns unit ρ M args n = Functor.map (f := SetM) Prod.fst
-      ((f.run M (m := StateT (Memories N unit) SetM) args n).run Memories.empty) :=
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
+    f.memRuns lay ρ M args n = Functor.map (f := SetM) Prod.fst
+      ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n).run Memories.empty) :=
   rfl
 
 /-- The runs with memory of the alloc dialect, whose op allocates, are
 fuel-monotone. -/
 example (M : Module AllocDialect) (f : Func AllocDialect)
     (args : HVector toType (f.params.map (·.2))) :
-    FuelMonotone (f.memRuns (fun _ : Unit => 8) id M args) :=
+    FuelMonotone (f.memRuns (fun _ : Unit => MemLayout.default) id M args) :=
   Func.memRuns_fuelMonotone _ _ M f args
 
 /-- info: 'Fir.Func.memRuns_fuelMonotone' depends on axioms: [propext, Quot.sound] -/
@@ -208,11 +208,11 @@ instance : LawfulDialectTotal AllocDialect := ⟨fun op _ _ => alloc_memTotal op
 /-- Every valid function of the alloc dialect runs within its module with
 memory, at every naming: no op calls a function, `alloc` never exits, and
 `ret` returns from a function with no results, by its validation rule. -/
-theorem alloc_inModuleAt {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : Unit → N)
+theorem alloc_inModuleAt {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N)
     {ctx : ModuleContext AllocDialect} (M : Module AllocDialect) {f : Func AllocDialect}
-    (hv : f.Valid ctx) : f.InModuleAt unit ρ M := by
-  letI := DialectMemDenote.denoteAt (d := AllocDialect) unit ρ
-  show f.MemInModule unit M
+    (hv : f.Valid ctx) : f.InModuleAt lay ρ M := by
+  letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
+  show f.MemInModule (unitsOf lay) M
   refine ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ o _ _ _ _ _ _ h => ?_,
     fun b hb o ho _ _ _ _ h => ?_⟩
   · cases o with | mk _ op _ _ _ _ => cases op <;> cases h
@@ -289,10 +289,11 @@ theorem allocModule_valid : allocModule.Valid := Module.valid_of_flat
 allocates, is never stuck and has an outcome at every budget. -/
 theorem allocModule_runsWell {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (args : HVector toType (f.params.map (·.2))) :
-    NeverStuck (f.memRuns (fun _ : Unit => 8) id allocModule args) ∧
-      Progress (f.memRuns (fun _ : Unit => 8) id allocModule args) :=
+    NeverStuck (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule args) ∧
+      Progress (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule args) :=
   have hv := allocModule_valid.funcs
-  have hm := fun g hg => alloc_inModuleAt (fun _ : Unit => 8) id allocModule (hv g hg)
+  have hm := fun g hg => alloc_inModuleAt (fun _ : Unit => MemLayout.default) id allocModule (hv g
+      hg)
   ⟨Func.memNeverStuck _ _ hv hm hf args, Func.memProgress _ _ hv hm hf args⟩
 
 /-- `allocMain` is a function of the module, so the theorem holds of it. -/
@@ -307,11 +308,12 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 /-! # A run with no allocation
 
 The core dialect's own rules touch no memory: its runs with memory keep the
-empty memories, and are its runs. -/
+empty memories, and are its runs, by the tie `Core.liftsSetM`, which stays
+until the human rules on #373. -/
 
 example (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) :
-    f.memRuns (fun _ : Unit => 8) (fun _ => ()) M args = f.runs M args := by
+    f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args = f.runs M args := by
   rw [Func.memRuns_eq]
 
 end FirTest.MemoryRuns

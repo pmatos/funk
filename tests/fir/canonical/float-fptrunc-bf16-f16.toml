@@ -1,0 +1,55 @@
+# Tests of float-fptrunc-bf16-f16.fir: fptrunc from bf16 to f16
+# (ADR-2026-11-09-1549) on the edges of the source and of the target:
+# zeros, subnormals, the largest finite values, the values halfway
+# between two values of the target and next to them, overflow to
+# infinity, underflow to zero, infinities and NaNs. Written by
+# scripts/harness/float_convert_cases.py, which computes each expected
+# result with scripts/harness/float_ref.py, apart from Lean.
+# Each test is interpreter-only: the backend does not lower
+# bf16 and f16 both, so fir-ref alone runs it and must give what it
+# expects.
+# A NaN operand gives any NaN of the target: its test is
+# interpreter-only and names the NaN by a choice of the sign and the
+# mantissa. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@bf16_f16", args = ["0.0"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["9.0e-41"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["1.17e-38"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["1.18e-38"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["2.97e-8"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["2.98e-8"], expect = ["0.0"] },
+  { func = "@bf16_f16", args = ["3.0e-8"], expect = ["6.0e-8"] },
+  { func = "@bf16_f16", args = ["5.96e-8"], expect = ["6.0e-8"] },
+  { func = "@bf16_f16", args = ["8.9e-8"], expect = ["6.0e-8"] },
+  { func = "@bf16_f16", args = ["8.94e-8"], expect = ["1.0e-7"] },
+  { func = "@bf16_f16", args = ["9.0e-8"], expect = ["1.0e-7"] },
+  { func = "@bf16_f16", args = ["1.48e-7"], expect = ["1.0e-7"] },
+  { func = "@bf16_f16", args = ["1.49e-7"], expect = ["1.0e-7"] },
+  { func = "@bf16_f16", args = ["1.5e-7"], expect = ["2.0e-7"] },
+  { func = "@bf16_f16", args = ["6.1e-5"], expect = ["6.104e-5"] },
+  { func = "@bf16_f16", args = ["1.0"], expect = ["1.0"] },
+  { func = "@bf16_f16", args = ["3.39e38"], expect = ["0x7c00"] },
+  { func = "@bf16_f16", args = ["0x7f80"], expect = ["0x7c00"] },
+  { func = "@bf16_f16", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-9.0e-41"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-1.17e-38"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-1.18e-38"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-2.97e-8"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-2.98e-8"], expect = ["-0.0"] },
+  { func = "@bf16_f16", args = ["-3.0e-8"], expect = ["-6.0e-8"] },
+  { func = "@bf16_f16", args = ["-5.96e-8"], expect = ["-6.0e-8"] },
+  { func = "@bf16_f16", args = ["-8.9e-8"], expect = ["-6.0e-8"] },
+  { func = "@bf16_f16", args = ["-8.94e-8"], expect = ["-1.0e-7"] },
+  { func = "@bf16_f16", args = ["-9.0e-8"], expect = ["-1.0e-7"] },
+  { func = "@bf16_f16", args = ["-1.48e-7"], expect = ["-1.0e-7"] },
+  { func = "@bf16_f16", args = ["-1.49e-7"], expect = ["-1.0e-7"] },
+  { func = "@bf16_f16", args = ["-1.5e-7"], expect = ["-2.0e-7"] },
+  { func = "@bf16_f16", args = ["-6.1e-5"], expect = ["-6.104e-5"] },
+  { func = "@bf16_f16", args = ["-1.0"], expect = ["-1.0"] },
+  { func = "@bf16_f16", args = ["-3.39e38"], expect = ["0xfc00"] },
+  { func = "@bf16_f16", args = ["0xff80"], expect = ["0xfc00"] },
+  { func = "@bf16_f16", args = ["0x7fc0"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@bf16_f16", args = ["0x7f81"], choices = ["-1"], expect = ["0xffff"] },
+  { func = "@bf16_f16", args = ["0xffff"], choices = ["1"], expect = ["0x7c01"] },
+  { func = "@bf16_f16", args = ["poison"], expect = ["poison"] },
+]

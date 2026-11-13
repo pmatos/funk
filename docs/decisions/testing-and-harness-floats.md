@@ -9,18 +9,40 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 The float ops have a table of their own: a float constant, `fcmp` with each
 predicate, and each op of float arithmetic with its attribute, at each float
-format of a side. The differential side has `f32` and `f64`, which the backend
+format of a side. The conversions have another, with a cell for each pair of
+types that a conversion goes between: `bitcast` from each float format of the
+side to the integer of its width, and back. A later conversion adds its pairs
+to `cells.py`'s catalog. `sitofp` and
+`uitofp`, with `round(rne)`, have a third, with a cell from each width of the
+side to each of its float formats (`cells.INT_TO_FLOAT`).
+`fpext` and `fptrunc` have a fourth, with a cell for each ordered pair of two
+float formats of the side, under the op that the pair takes
+(`cells.FLOAT_CONVERSIONS`, `cells.conversion`). The catalog supplies the
+same cells and inapplicable-pair blanks to enumeration and rendering;
+`coverage.catalog_table` formats them without reconstructing pairs.
+The differential side has `f32` and `f64`, which the backend
 lowers, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
 Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
 (ADR-2026-11-03-0557).
 
-A fast-math flag set is part of an op instance, so by ADR-2026-11-03-0557 a
-flagged float op would be a cell of its own. Read literally, each float op has
-eight flag sets, and `fcmp` eight for each predicate: about 1,200 cells more,
-and a matrix past the file-size budget. How the flags enter the matrix waits for
-the human (#242), so no canonical text runs a flagged op yet, and
-`cells.py` reports one as not a cell.
+The fast-math flags count one by one. Each float op but the constant has a cell
+for each of `nnan`, `ninf` and `nsz` at each format of a side, beside its cells
+without flags (`cells.FAST_MATH`, `cells.FLAGGED`). A test exercises the cell of
+each flag it sets, and not the op's cell without flags. `contract` and `reassoc`
+are not cells, since validation rejects them, and `cells.py` reports one as an
+error. Integer ops keep one cell per flag set: none, `nuw`, `nsw` and
+`nuw nsw`. The human ruled this on 2026-11-13, on #355 (ADR-2026-11-03-0557).
+Float flags are independent, and the spec proves that dropping any one refines
+the op, so a test with two flags checks nothing that two one-flag tests miss;
+the integer ops have at most four flag sets, which are cells already. A test
+that fills a flag's cell is one whose outcome depends on the flag: a NaN operand
+or result for `nnan`, an infinity for `ninf`, a zero result for `nsz`. `fcmp
+nsz` is the exception: its result is not a float, so the flag has no effect,
+and its test pins that. Rejected: a cell for every flag set, about 1,200 more
+cells, with the float tables on a page of their own past the file-size budget;
+and no cells for flags, with a flagged test counting towards the op without
+flags, which leaves no check that each flag's rule is tested.
 
 ## The exact-rational reference
 
@@ -36,13 +58,20 @@ lives under `scripts/harness/`, with its tests under the existing
 ## The arithmetic corpus
 
 `scripts/harness/float_arith_cases.py` writes the modules and tests
-`float-binary-FORMAT` (`fadd`, `fsub`, `fmul`, `fdiv`) and
-`float-unary-fma-FORMAT` (`fneg`, `fabs`, `sqrt`, `fma`) of
-`tests/fir/canonical/`, at every aliased format. Its cases are the hard inputs
-of `float_cases.hard_cases`: results halfway between two floats, subnormals,
-`-0`, overflow to infinity and NaN operands, with `fsub` and `fdiv` in both
-operand orders, and a poison operand per op. Each expected result is
-`float_ref.py`'s.
+`float-binary-FORMAT` (`fadd`, `fsub`, `fmul`, `fdiv`),
+`float-unary-fma-FORMAT` (`fneg`, `fabs`, `sqrt`, `fma`) and
+`float-rem-FORMAT` (`frem`, `fmod`) of `tests/fir/canonical/`, at every
+aliased format. Its cases are the hard inputs of `float_cases.hard_cases`:
+results halfway between two floats, subnormals, `-0`, overflow to infinity and
+NaN operands, with `fsub` and `fdiv` in both operand orders, and a poison
+operand per op. The remainders take theirs from `float_rem_cases.hard_cases`:
+quotients halfway between two integers, operands far apart, subnormal
+results, zeros of both signs, infinities and NaN operands, each in both
+operand orders. Each expected result is `float_ref.py`'s, whose `remainder`
+and `fmod` its tests check against the host's `math.remainder` and
+`math.fmod`. `float_rem_cases.py` also writes `lean/FirTest/FloatRem.lean`,
+the known answers of the spec's remainder at `f16`, `bf16`, `f64` and
+`f128`, and on every input at `float<2,1>`.
 
 A result that is not a NaN is a differential test at `f32` and `f64`, and an
 interpreter-only test at every format. A NaN result is any NaN
@@ -55,5 +84,115 @@ result against `float_ref.py` again. A new hard input reaches every format,
 both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
-arithmetic, and `fma`'s runtime routines also on random operands
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).
+arithmetic, and the runtime routines of `fma`, `frem` and `fmod` also on random
+operands ([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#float-arithmetic)).
+The host's `%` is C's `fmod`, and the test builds IEEE 754's remainder from it
+exactly.
+
+## The bit-cast corpus
+
+`scripts/harness/float_bitcast_cases.py` writes `float-bitcast-FORMAT` of
+`tests/fir/canonical/` at every aliased format: `@to_bits` casts a float to
+the integer of its width and `@of_bits` casts back, on zeros of both signs,
+the smallest and largest subnormals, the smallest normal, one, the largest
+finite values, infinities, and NaNs, quiet and signalling, with payloads and
+either sign, and on poison (#241). A bit cast chooses nothing, so each case,
+a NaN's included, is differential at `f32` and `f64`, and interpreter-only at
+every format with its operand's bits as the expected result; so is each
+poison case, with poison expected.
+`test_float_bitcast_cases.py` checks that the committed files are what the
+generator writes, reads each expected result back with `float_text.py`, and
+checks the edges against the host's `struct` at `f16`, `f32` and `f64`.
+
+## The integer-to-float corpus
+
+`scripts/harness/float_itofp_cases.py` writes `float-sitofp-FORMAT` and
+`float-uitofp-FORMAT` of `tests/fir/canonical/` at every aliased format, with
+`@si_iW` and `@ui_iW`, which convert an `iW` with `sitofp` and `uitofp`, at
+each width the backend lowers, `i1` to `i128`, and `float-itofp-odd`, with the same conversions from
+`i7` and `i33` to every format (#241). The cases are the boundary integers of
+each width, read as signed or unsigned; the integers next to `2^p`, for the
+format's precision `p`, below which every integer is exact; the integers
+halfway between two floats there and at the top of the width's range, and the
+ones next to them; and the integers on either side of the format's overflow,
+where one rounds to the largest finite value and the next to infinity. Each
+expected result is `float_ref.py`'s. A conversion never gives a NaN, so every
+case of a width the backend lowers is differential at `f32` and `f64`, and every
+case is interpreter-only with its expected result, poison included.
+`test_float_itofp_cases.py` checks that the committed files are what the
+generator writes, checks each expected result against the reference, and checks
+the reference against the host's `struct` at `f16`, `f32` and `f64` on the
+cases that binary64 holds exactly.
+`crates/funk/tests/float_int_to_float.rs` checks every path of the backend's
+lowering natively against the host's own conversion
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-from-integers)).
+
+## The format-conversion corpus
+
+`scripts/harness/float_convert_cases.py` writes one module of
+`tests/fir/canonical/` for each ordered pair of two aliased formats,
+`float-OP-S-T`, whose function `@S_T` converts an `S` to a `T` with the op
+the pair takes: nine with `fpext` and eleven with `fptrunc`, `bf16` to `f16`
+and back among them (#241). The cases are the source's zeros, infinities,
+`1`, smallest and largest subnormals, smallest normal and largest finite
+value, and, where the source holds them, the target's edges: its largest
+finite value and the value halfway past it, which goes to infinity; its
+smallest subnormal and half of it, which goes to zero; the subnormals halfway
+between two; and the values halfway between `1` and its neighbours, with the
+source's values on either side of each halfway value. Each finite case comes
+with its negation, and three NaNs and poison close each module. Each expected
+result is `float_ref.convert`'s. A NaN operand gives any NaN, so its case is
+interpreter-only with a choice, as in the arithmetic corpus; every other case
+is interpreter-only with its expected result, and differential too from `f32`
+to `f64` and from `f64` to `f32`. `test_float_convert_cases.py` checks that the
+committed files are what the generator writes, checks each expected result
+against the reference, checks the reference against the host's `struct`
+between `f16`, `f32` and `f64`, and checks that the cases reach overflow,
+underflow and ties. `crates/funk/tests/float_convert.rs` checks the backend's
+`cvtss2sd` and `cvtsd2ss` natively against the host's `as`
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-between-formats)).
+
+## The float-to-integer corpus
+
+`scripts/harness/float_fptoi_cases.py` writes `float-fptosi-FORMAT` and
+`float-fptoui-FORMAT` of `tests/fir/canonical/` at every aliased format, with
+`@s_iW` and `@u_iW`, which convert the format to an `iW` with `fptosi` and
+`fptoui`, at each width the backend lowers, `i1` to `i128`, and
+`float-fptosi-odd` and `float-fptoui-odd`, with the same conversions from every format to `i7` and
+`i33` (#241). The cases are both zeros, the smallest subnormal, `0.5`, `1`,
+`1.5`, `2.7` and `3`, the largest finite value, the infinities, and a NaN
+with and without a payload, each of either sign, and at each end of the width's range the floats on
+either side of where the truncated integer leaves it: the largest float below
+`hi + 1`, which truncates into the range, and the smallest from it on, which
+does not, and likewise at `lo - 1`, with `lo` itself for `fptosi`. Each
+expected result is what `float_ref.py` decodes, truncated toward zero by
+Python's `int`, or poison. A conversion chooses nothing, so every case of a
+width the backend lowers is differential at `f32` and `f64`, where native code
+refines poison with any value of the type (ADR-2026-10-30-2248), and every case
+is interpreter-only with its expected result, poison included.
+`test_float_fptoi_cases.py` checks that the committed files are what the
+generator writes, checks each expected result against the reference, checks the
+reference against the host's `struct` and `math.trunc` at `f16`, `f32` and
+`f64`, and checks that the cases reach both ends of each range.
+`crates/funk/tests/float_to_int.rs` checks every path of the backend's lowering
+natively against the host's `trunc`, where the source gives an integer
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-to-integers)).
+
+## The fast-math flag corpus
+
+`scripts/harness/float_flag_cases.py` writes the modules and tests
+`float-flags-FORMAT` of `tests/fir/canonical/`, at every aliased format: a
+function for each float op and each flag, such as `@fadd_nnan`, which fills that
+flag's cell (#242). Each function's cases decide the flag, beside one that does
+not: under `nnan` a NaN operand and operands whose result is a NaN, such as
+`inf - inf`, `0 / 0` or `sqrt(-1)`, give poison; under `ninf` an infinite
+operand and a result that rounds to an infinity, such as `M + M` or `1 / 0`, give
+poison; under `nsz` a zero result is either zero, with one interpreter-only test
+for each choice of the sign bit. `fcmp` takes `uno` under `nnan`, `olt` under
+`ninf` and `oeq` under `nsz`, whose cases show the flag has no effect there. Each
+expected result is `float_ref.py`'s with the flag's rule applied, and
+`test_float_flag_cases.py` checks the committed files, each expected result,
+and that each flag decides a case of each op. At `f32` and `f64` each case is a
+differential test too: native code ignores the flags, and its result refines
+poison and either zero. `reject/float-flags.toml` holds the texts of the flags
+that do not decode and those that validation rejects.

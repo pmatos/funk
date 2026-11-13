@@ -32,12 +32,32 @@ results, which are written where those values are defined.
 * `fcmp` has its predicate, from `oeq` to `uno`, as LLVM
   writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
-  has `round(rne)`, and `fneg` and `fabs` have no rounding mode:
+  has one attribute, `round(rne)`, and `frem`, `fmod`, `fneg` and `fabs`
+  have none:
   `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801).
-* Each float op, `fcmp` included, has its fast-math flags first, in the
-  fixed order `nnan`, `ninf`, `nsz`, `contract`, `reassoc`, each at most
-  once: `%s: f32 = fadd nnan nsz round(rne) %a, %b @1`. The section on how
-  the float arithmetic is written says more.
+* Each float op, `fcmp` and the remainders included, has its fast-math
+  flags first, in the fixed order `nnan`, `ninf`, `nsz`, `contract`,
+  `reassoc`, each at most once: `%s: f32 = fadd nnan nsz round(rne) %a,
+  %b @1`. The conversions take no flags. The section on how the float
+  arithmetic is written says more.
+* `bitcast` has no attributes, and its types say which way it reads the
+  bits: `%b: i32 = bitcast %f @1` gives the bits of an `f32`, and
+  `%f: f32 = bitcast %b @1` the `f32` of an `i32`'s bits. Its integer has
+  the float's width, `1 + e + m`; an op whose widths differ does not
+  decode.
+* `sitofp` and `uitofp` have one attribute, `round(rne)`, and take an
+  integer of any width to a float of any format:
+  `%f: f64 = sitofp round(rne) %i @1`.
+* `fpext` has no attributes and `fptrunc` has one, `round(rne)`, and each
+  takes a float of one format to a float of another:
+  `%d: f64 = fpext %f @1` and `%f: f32 = fptrunc round(rne) %d @1`. Any
+  two formats decode; validation says which pairs each takes.
+* `ptradd` has no attributes. It takes a pointer and an integer of any
+  width, and gives a pointer of the same memory:
+  `%q: ptr = ptradd %p, %k @1` (#231).
+* `fptosi` and `fptoui` have no attributes, since they truncate and do not
+  round, and take a float of any format to an integer of any width:
+  `%i: i32 = fptosi %f @1`.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -78,7 +98,8 @@ type.
 
 This section gives, in order: the names of the predicates and the ops, the
 attributes of an op, how an op and a type are read back, the core
-dialect's text as a whole, and the samples that check it.
+dialect's text as a whole. The section after it gives the samples that
+check it, and the tests of misspellings are in `FirTest.CoreText`.
 -/
 
 namespace Fir.Core
@@ -110,6 +131,9 @@ def Op.name : Op → String
   | .icmp .. => "icmp" | .fcmp .. => "fcmp" | .select _ => "select"
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
+  | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
+  | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
+  | .ptradd .. => "ptradd" | .fptosi .. => "fptosi" | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -129,8 +153,9 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p fl _ _ => fl.attrs ++ [.word p.name]
-  | .fbin _ fl _ _ | .fma fl _ _ => fl.attrs ++ [roundAttr]
-  | .funary o fl _ _ => fl.attrs ++ o.attrs
+  | .fma fl _ _ => fl.attrs ++ [roundAttr]
+  | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
+  | .fbin o fl _ _ | .funary o fl _ _ => fl.attrs ++ o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -161,6 +186,12 @@ def bare (as : List Attr) (op : Option Op) : Option Op := if as.isEmpty then op 
 /-- Reads a width change from `iM` to `iN`. -/
 def decodeCast (mk : Nat → Nat → Op) (as : List Attr) : List Ty → List Ty → Option Op
   | [.int m], [.int n] => bare as (some (mk m n))
+  | _, _ => none
+
+/-- Reads `ptradd`: a pointer and an integer of any width, giving a
+pointer of the same memory, without attributes. -/
+def decodePtrAdd (as : List Attr) : List Ty → List Ty → Option Op
+  | [.ptr n, .int w], [.ptr n'] => if n = n' then bare as (some (.ptradd n w)) else none
   | _, _ => none
 
 /-- The ops that take two `iN`, give one `iN` and have no attributes. -/
@@ -202,6 +233,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fsub" => decodeFBin .fsub as ts rs
   | "fmul" => decodeFBin .fmul as ts rs
   | "fdiv" => decodeFBin .fdiv as ts rs
+  | "frem" => decodeFBin .frem as ts rs
+  | "fmod" => decodeFBin .fmod as ts rs
   | "fneg" => decodeFUnary .fneg as ts rs
   | "fabs" => decodeFUnary .fabs as ts rs
   | "sqrt" => decodeFUnary .sqrt as ts rs
@@ -217,6 +250,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "zext" => decodeCast .zext as ts rs
   | "sext" => decodeCast .sext as ts rs
   | "trunc" => decodeCast .trunc as ts rs
+  | "bitcast" => decodeBitcast as ts rs
   | "freeze" => match ts, rs with
     | [.int a], [.int b] => if a = b then bare as (some (.freeze a)) else none
     | _, _ => none
@@ -230,6 +264,13 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "poison" => match ts, rs with
     | [], [.int w] => bare as (some (.poison w))
     | _, _ => none
+  | "sitofp" => decodeIntToFloat true as ts rs
+  | "uitofp" => decodeIntToFloat false as ts rs
+  | "fpext" => decodeFpext as ts rs
+  | "fptrunc" => decodeFptrunc as ts rs
+  | "ptradd" => decodePtrAdd as ts rs
+  | "fptosi" => decodeFloatToInt true as ts rs
+  | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- The alias of the float format `float<e,m>`, if it has one. -/
@@ -298,86 +339,3 @@ instance : DialectText CoreDialect where
   decodeTy := Core.Ty.decode
 
 end Fir
-
-namespace Fir.Core
-
-/-- One instance of every core op, used to check the encoding below. -/
-def samples : List Op :=
-  [.const 8 (-128), .const 1 1, .const 1 0, .const 7 5, .add 32 {}, .add 32 { nuw := true },
-   .sub 16 { nsw := true }, .mul 64 { nuw := true, nsw := true },
-   .sdiv 32 true, .udiv 32 false, .srem 8, .urem 8, .and 1, .or 33, .xor 128,
-   .shl 32, .lshr 32, .ashr 32, .select 8, .zext 8 32, .sext 1 64, .trunc 64 7,
-   .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .unreachable,
-   .call "f" [.int 8] [.int 1], .fconst 8 23 0x3f800000, .fconst 11 52 (-1), .fconst 2 1 0,
-   .fconst 5 10 0x7e01] ++
-  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · {} 8 23) ++
-  [.fcmp .uno { nnan := true, ninf := true, nsz := true } 15 112] ++
-  [.fbin .fadd {} 8 23, .fbin .fsub { nnan := true } 11 52, .fbin .fmul { ninf := true } 5 10,
-   .fbin .fdiv { nsz := true, contract := true, reassoc := true } 2 1, .funary .fneg {} 8 7,
-   .funary .fabs { nsz := true } 15 112, .funary .sqrt { nnan := true, ninf := true } 8 23,
-   .fma { nnan := true, ninf := true, nsz := true, contract := true, reassoc := true } 11 52]
-
--- Decoding an op's encoding, at its own types, gives the op back.
-#guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
-
-#guard [Ty.int 1, .int 32, .int 128, .ptr 0, .ptr 1, .ptr maxMemory].all fun t =>
-  Ty.decode t.attr == some t
-#guard Ty.decode (.app "ptr" [.int 0]) == none && Ty.decode (.app "ptr" [.int (-1)]) == none
-#guard Ty.decode (.app "ptr" [.int (maxMemory + 1)]) == none && Ty.decode (.app "ptr" []) == none
-#guard Ty.decode (.app "ptr" [.int 1, .int 2]) == none && Ty.decode (.app "ptr" [.word "x"]) == none
-#guard [Ty.float 5 10, .float 8 7, .float 8 23, .float 11 52, .float 15 112, .float 2 1,
-  .float 5 2, .float 2 (maxWidth - 3)].all fun t => Ty.decode t.attr == some t
-#guard Ty.decode (.word "f32") == some (.float 8 23) && Ty.decode (.word "bf16") == some (.float 8 7)
-#guard Ty.decode (.app "float" [.int 5, .int 2]) == some (.float 5 2)
-#guard Ty.decode (.app "float" [.int 8, .int 23]) == none
-#guard Ty.decode (.app "float" [.int (-1), .int 3]) == none
-#guard Ty.decode (.app "float" [.int 2, .int (maxWidth - 2)]) == none
-#guard Ty.decode (.app "float" [.int 5]) == none && Ty.decode (.app "f16" []) == none
-#guard Ty.decode (.word "float") == none && Ty.decode (.word "f8") == none
-#guard Ty.decode (.app "float" [.int 1, .int 1]) == some (.float 1 1)
-#guard Ty.decode (.word "i032") == none && Ty.decode (.word "u8") == none
-#guard Op.decode "const" [.int 128] [] [.int 8] == none
-#guard Op.decode "add" [.word "nsw", .word "nuw"] [.int 8, .int 8] [.int 8] == none
-#guard Op.decode "add" [] [.int 8, .int 16] [.int 8] == none
-#guard Op.decode "const" [.word "true"] [] [.int 1] == some (.const 1 1)
-#guard Op.decode "const" [.int 1] [] [.int 1] == none && Op.decode "const" [.int (-1)] [] [.int 1] == none
-#guard Op.decode "const" [.word "true"] [] [.int 8] == none
-#guard Op.decode "icmp" [.word "slt"] [.int 8, .int 8] [.int 1] == some (.icmp .slt 8)
-#guard Op.decode "icmp.slt" [] [.int 8, .int 8] [.int 1] == none
-#guard Op.decode "poison" [] [] [.int 1] == some (.poison 1)
-#guard Op.decode "poison" [.int 0] [] [.int 8] == none && Op.decode "poison" [] [.int 8] [.int 8] == none
-#guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
-#guard Op.decode "poison" [] [] [.ptr 0] == none
-#guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
--- A float constant is a float literal: `1.0`, `-0.0` and the quiet NaN of
--- `f32` with its sign set.
-#guard Op.decode "const" [.float (.dec false 1 ['0'] none)] [] [.float 8 23] ==
-  some (.fconst 8 23 0x3f800000)
-#guard Op.decode "const" [.float (.dec true 0 ['0'] none)] [] [.float 8 23] ==
-  some (.fconst 8 23 0x80000000)
-#guard Op.decode "const" [.float (.hex "ffc00000".toList)] [] [.float 8 23] ==
-  some (.fconst 8 23 0xffc00000)
-#guard (Op.fconst 8 23 0xffc00000).attrs.map Attr.print == ["0xffc00000"]
--- Each bit pattern has one spelling: the bits read as an integer, the
--- bits of a number in hexadecimal and `true` do not decode.
-#guard Op.decode "const" [.int 1065353216] [] [.float 8 23] == none
-#guard Op.decode "const" [.float (.hex "3f800000".toList)] [] [.float 8 23] == none
-#guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
-#guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt {} 11 52)
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 8 23] [.int 1] == none
-#guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
-#guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
-#guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
--- A float op that rounds needs `round(rne)`; `fneg` and `fabs` take none.
-#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd {} 8 23)
-#guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
-  some (.fma {} 8 23)
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
-
-end Fir.Core

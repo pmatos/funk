@@ -23,9 +23,10 @@ Rejected too: effect sets that do not name a memory, since accesses to different
 memories could then never be reordered.
 
 The empty set is pure. The memory-named effects name the dialect's memories,
-or every memory, as an external call needs. No op uses them yet: the core
-dialect has no memory, so its memories have no names (ADR-2026-11-09-1541,
-ADR-2026-11-09-1542).
+or every memory, as an external call needs. The core dialect names each
+memory of a module by its number, as `ptr<N>` names memory `N`
+(`Core.Mem` is `Nat`). No op uses them yet: no core op touches memory
+(ADR-2026-11-09-1541, ADR-2026-11-09-1542).
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says
@@ -55,11 +56,16 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 
 - Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
   `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
-  flags, and the float arithmetic, whose NaN results are defined values
-  (ADR-2026-11-09-1549). `call`'s own set is empty: its callee's summary
+  flags, the float arithmetic, whose NaN results are defined values, the
+  bit casts, the conversions from integers, `sitofp` and `uitofp`, the
+  conversions between formats, `fpext` and `fptrunc`, whose NaN results are
+  defined values too (ADR-2026-11-09-1549), and the pointer offset `ptradd`
+  (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
   carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
-  flag, and `sdiv` and `udiv` with `exact`.
+  flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
+  `fptosi` and `fptoui`, which give poison for an integer out of range, an
+  infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 
@@ -87,9 +93,14 @@ memory, in `lean/Fir/Execution/MemoryObligations.lean`:
 
 - A dialect gives its ops a semantics in the state layer over the set monad
   wherever a run names its memories (`DialectMemDenote`): for any memory names
-  of a run, any unit widths, and any map `ρ` of the dialect's memory names to
-  the run's. The module's data layout, not the dialect, gives the widths
-  (ADR-2026-11-10-2350).
+  `N` of a run, the layout entry `lay : N → MemLayout` of each, and any map `ρ`
+  of the dialect's memory names to the run's (ADR-2026-11-10-2350). The
+  module's data layout, not the dialect, gives the entries: a memory's units
+  are as wide as its entry says (`unitsOf lay`), and an op that names the
+  dialect's memory `x` takes the unit width, byte order and pointer width of
+  the memory it accesses from `lay (ρ x)` (ADR-2026-11-13-0906). Rejected: a
+  unit width per memory with the byte order as a second map, which could
+  disagree with the layout.
 - For each memory `x` of the run that the op's declaration, renamed by `ρ`,
   leaves out: without a write, every allocation of `x` that was there keeps
   its units, and new allocations may follow (`WritesNot`); without
@@ -121,24 +132,62 @@ terminators or have no callee, as the poison obligations do
 A dialect whose ops touch no memory ties its two semantics: `LiftsSetM`, in
 `lean/Fir/Execution/MemoryRuns.lean`, says that its semantics with memory is its
 semantics in the set monad, lifted, at every naming. `DialectMemDenote.ofSetM`
-meets it, and so do sums and lifts whose sides do. Under the tie an op meets no
-may-UB and no may produce poison in the set monad exactly when it meets them
-with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
-theorems over runs in the set monad that use these two obligations assume the
-tie. Theorems that do not use them, such as fuel monotonicity, progress and
-refinement of runs in the set monad, take no tie. A dialect with a memory op has
+meets it, and so do sums and lifts whose sides do. The tie also holds of one op:
+`OpLiftsSetM op` says that the op runs with memory by its rule in the set monad
+and keeps the memories, and a dialect lifts the set monad exactly when every op
+is tied (`LiftsSetM.opLifts`, `LiftsSetM.ofOpLifts`). Each transfer of an
+obligation from the set monad to the semantics with memory (`MemTotal.ofLifts`,
+`MemMonotone.ofLifts`, `MemPropagatesPoison.ofLifts`,
+`MemReturnsOnDefined.ofLifts`, `NeverUB.ofLifts`, `MakesNoPoison.ofLifts`,
+`OwnRuleHas.ofLifts`) takes one op's tie, so a dialect can meet its obligations
+op by op, and an op that touches memory can sit beside tied ones with a proof of
+its own. Rejected: transfers that ask the whole dialect to lift the set monad,
+which no dialect with one memory op could use for its other ops.
+
+Under the tie an op meets no may-UB and no may produce poison in the set monad
+exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back).
+No theorem of the spec uses these two obligations over runs in the set monad:
+the soundness of function summaries is stated over runs with memory and takes
+no tie. Theorems over runs in the set monad, such as fuel monotonicity,
+progress and refinement, take no tie. A dialect with a memory op has
 no tie: its theorems speak of its runs with memory. Runs with memory,
-`Func.memRuns unit ρ M f`, run `DialectMemDenote.denoteAt unit ρ` from the empty
-memories, and under the tie they are the runs in the set monad
-(`Func.memRuns_eq`). Rejected: a tie for every dialect, memory ops included. A
-load has no meaning in the set monad, so the tie would make it UB or give it no
-outcome there, and the runs in the set monad would mean nothing for programs
-that touch memory.
+`Func.memRuns lay ρ M f`, run `DialectMemDenote.denoteAt lay ρ` from the empty
+memories, at every layout and naming; a run of a module gives each memory its
+entry in the module's data layout (`DataLayout.entry`). Under the tie they are
+the runs in the set monad (`Func.memRuns_eq`). Rejected: a tie for every
+dialect, memory ops included. A load has no meaning in the set monad, so the
+tie would make it UB or give it no outcome there, and the runs in the set monad
+would mean nothing for programs that touch memory.
 
 Observable has no obligation yet: M0's runs have no trace. The core dialect is
-lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no memory, so
-`DialectMemDenote.ofSetM` gives its semantics with memory and meets every memory
-obligation, whatever it declares. `lean/FirTest/G0Effects.lean` restates the
+lawful in its effects (`Core.lawfulDialectEffects`). Its rules are written for a
+monad with choice, UB and the memory effect, at the layout and naming of a run
+(`Core.Op.memDenote?`, `Core.Op.memExit?`, in `lean/Fir/Core/MemRules.lean`),
+and its semantics with memory runs them op by op in the state layer
+(`Core.memDenoteAt`), not by lifting its semantics in the set monad. No core op
+touches memory yet, so each op's rule with memory is its rule. A monad morphism
+that keeps choice and UB (`MonadMorphism.KeepsChoiceUB`) maps the core's
+semantics in one monad to its semantics in another, op by op
+(`Core.denoteIn_mapsDenote`); lifting keeps choice and UB, so every core op is
+tied (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
+totality, monotonicity and poison, follows from that op's own tie.
+`Core.liftsSetM` is a theorem from the ties, not a definition. The core's
+theorems on runs, fuel monotonicity, progress, no stuck path and refined
+arguments, are stated over its runs with memory and do not use it: a valid core
+function runs within its module with memory because each of its terminators is
+tied (`Core.inModuleAt_of_valid`, from `Func.InModule.inModuleAt_of_tied`), and
+refined arguments ask each op to be monotone with memory (stage 4b-3a of #231).
+The runs of a core function, `Core.funcRuns M f`, are its runs with memory at
+its module's layout, the runs that the modes report; the equivalence tests,
+the tests of the dialects over the core and the core's effect tests are stated
+over runs with memory and do not use it either (stage 4b-3b). `Core.liftsSetM`
+stays, with the core's form of congruence over finitely many argument vectors
+over the runs in the set monad, until the human rules on #373. It remains an
+instance, so the sums over the core get `LiftsSetM` from it; on #374, a build
+with it removed broke only the test of the tie itself. A memory op joins with its own rule in
+`Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
+memory as the lift of its semantics in the set monad, which gives a load no
+place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
 class and its obligations for every dialect. The obligations reject a wrong
 declaration: with `sdiv` declared without may-UB, the core dialect is not lawful
 in its effects (`Core.Unlawful.sdivNoUB_unlawful`). And
@@ -183,13 +232,16 @@ A call carries its callee's effects through a summary (ADR-2026-11-09-1541):
   nested module is not a call that the module can make.
 - The summary is the least fixpoint of the calls, recursion included
   (`SymbolTable.summary_closed`, `SymbolTable.summary_le`). In a dialect
-  lawful in its effects that lifts the set monad, and a module of valid
-  functions, a function whose summary leaves out may-UB never ends in UB, and
-  one whose summary leaves out may produce poison returns no poison on
-  arguments with none (`Module.summary_neverUB`, `Module.summary_noPoison`).
-  `lean/FirTest/G0Effects.lean` restates them for every dialect. When the core
-  dialect gains a memory op (stage 4 of #231), it no longer lifts the set
-  monad, and these two theorems need statements over runs with memory first.
+  lawful in its effects and a module of valid functions, a function whose
+  summary leaves out may-UB never ends in UB in its runs with memory, and one
+  whose summary leaves out may produce poison returns no poison on arguments
+  with none, at every layout and naming (`Module.summary_neverUB`,
+  `Module.summary_noPoison`). They ask for no semantics in the set monad and
+  no tie, so they hold when the core dialect gains a memory op (stage 4b-3b
+  of #231). The proofs follow a run with memory from any memories
+  (`Module.memOps_notUB`, `Module.memOps_clean`). `lean/FirTest/G0Effects.lean`
+  restates them for every dialect. Rejected: keeping them over runs in the set
+  monad under the tie, which no dialect with a memory op meets.
 - The spec's walk and Rust's pass keep their work on the heap, so a long
   chain of calls takes no stack per call. The spec finds the functions a call
   reaches by a walk that keeps its work in lists, and Rust takes one pass over

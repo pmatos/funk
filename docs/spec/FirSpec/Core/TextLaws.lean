@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16662031761246918872")
+:::moduleDocs (fingerprint := "88123864055373757")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -79,22 +79,26 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq Fir.Core.decodeFcmpWith_eq Fir.Core.decodeFcmp_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (pin := Fir.Core.decodeFcmp) (fingerprint := "5654821901026584635")
-*Theorems: a float op of arithmetic decodes only from its own spelling.*
-If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}` or
-$`\mathsf{fdiv}` decodes from the attributes $`a^*` and the types $`t^*`
-and $`r^*`, as the section on
-{ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[float arithmetic in text]
-reads it, the op it gives has its name, the attributes $`a^*` and the
-operand and result types $`t^*` and $`r^*`; and the same holds of
-$`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}`, $`\mathsf{fma}`
-and $`\mathsf{fcmp}`. Each op's attributes are the words of its
-fast-math flags and then its own, and the words that reading takes back
-put the attributes back together. The proof of the next theorem uses them
-for these ops.
+:::readable Fir.Core.decodeFcmpWith_eq Fir.Core.decodeFcmp_eq (pin := Fir.Core.decodeFcmp) (fingerprint := "5539919355558371046")
+*Theorems: a comparison of floats decodes only from its own spelling.*
+If $`\mathsf{fcmp}` decodes from the attributes $`a^*` and the types
+$`t^*` and $`r^*`, the op it gives has its name, the attributes $`a^*`
+and the operand and result types $`t^*` and $`r^*`. Its attributes are
+the words of its fast-math flags and then its predicate, and the words
+that reading takes back put the attributes back together. The proof of
+the next theorem uses them for this op.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2899934550548463278")
+:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "13106390997175491723")
+*Theorem: a pointer offset decodes only from its own spelling.* If
+$`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
+$`t^*` and $`r^*`, the op it gives is written $`\mathtt{ptradd}`, has no
+attributes, so $`a^*` is empty, and has the operand and result types
+$`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
+memory.
+:::
+
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "1954732463615315087")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -110,7 +114,9 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
-float constant and float op of arithmetic, and list of types. A float constant reads back because its
+float constant, float op of arithmetic, bit cast, conversion from or to
+an integer and between formats, pointer offset at every memory, and list
+of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
@@ -130,7 +136,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 31 ops and every type, and
+core dialect, so its text is lawful, for all 40 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

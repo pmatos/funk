@@ -2,7 +2,8 @@
 writes (#229): the committed modules of `lean/FirTest/` hold exactly what
 `float_cases.py` prints, and the reference agrees with the host's binary16,
 binary32 and binary64 arithmetic on special values and seeded random
-inputs."""
+inputs. The host's `math.remainder` and `math.fmod` compute in binary64,
+which is exact for the remainders of binary16 and binary32 operands too."""
 
 import math
 import os
@@ -41,7 +42,8 @@ def from_host(code: str, x: float) -> int:
     """The bits of `x` rounded to the format `code`, with any NaN read as
     the canonical NaN. Rounding a binary64 result once more is exact for
     `+`, `-`, `*`, `/` and the square root at binary32 and binary16, since
-    binary64 has more than twice their precision plus two bits."""
+    binary64 has more than twice their precision plus two bits, and exact
+    for a remainder, which each format holds."""
     f = HOST[code]
     if math.isnan(x):
         return f.nan()
@@ -64,6 +66,8 @@ def host_op(code: str, op: str, *bits: int):
             "div": lambda: xs[0] / xs[1],
             "sqrt": lambda: math.sqrt(xs[0]),
             "fma": lambda: math.fma(*xs),
+            "remainder": lambda: math.remainder(xs[0], xs[1]),
+            "fmod": lambda: math.fmod(xs[0], xs[1]),
         }[op]()
     except (ZeroDivisionError, ValueError, OverflowError):
         return None
@@ -166,6 +170,8 @@ class AgainstTheHost(unittest.TestCase):
                 self.compare(code, "sub", ref.sub(f, a, b), a, b)
                 self.compare(code, "mul", ref.mul(f, a, b), a, b)
                 self.compare(code, "div", ref.div(f, a, b), a, b)
+                self.compare(code, "remainder", ref.remainder(f, a, b), a, b)
+                self.compare(code, "fmod", ref.fmod(f, a, b), a, b)
 
     def compare(self, code: str, op: str, got: int, *bits: int):
         want = host_op(code, op, *bits)

@@ -4,31 +4,28 @@ import Fir.Execution.Calls
 /-!
 # Every valid core function
 
-The three obligations of the section on fuel and progress hold for every
-function of every valid core module, on every argument vector of its
-parameter types, poison included, calls and recursion included. A
-function may call itself, or another function that calls it back, and
-branches and loops are included. They follow from the general theorems of
-the previous sections:
+Two facts about the ops of a valid core module give the three obligations
+of the section on fuel and progress for the runs with memory of every
+function of the module, on every argument vector of its parameter types,
+poison included, calls and recursion included (the section on core
+functions with memory). A function may call itself, or another function
+that calls it back, and branches and loops are included.
 
-* fuel monotonicity holds for every function of every module;
-* _every core terminator and every core op with no callee is total_:
+* _Every core terminator and every core op with no callee is total_:
   these are every core op but `call`, each total by the obligations of its
   family. `call` needs no rule of its own: its way to go on is its
   callee's run, which the induction on the budget in the section on
-  progress with calls covers;
-* _every core function valid in the context of a module runs within that
+  progress with calls covers.
+* _Every core function valid in the context of a module runs within that
   module_. Validation's rule for `call @g` asks that the module's symbol
   table give `@g` the type of the call, its operand types and its result
   types, which is what a call needs; `br`, `cond_br`, `ret` and
   `unreachable` keep to the rules of their terminators, as for a function
-  without calls. So no path of its run is stuck, and, with the ops of the
-  previous point total, its run has an outcome at every budget.
+  without calls.
 
-The theorems for core functions without calls keep their statements. A
-function without calls runs within itself, so they need only its own
-validity, in any context, where these need the validity of its whole
-module, whose functions it may call.
+The facts for core functions without calls need only the function's own
+validity, in any context. These need the validity of its whole module,
+whose functions it may call.
 -/
 
 namespace Fir.Core
@@ -69,34 +66,5 @@ theorem inModule_of_valid {M : Module CoreDialect} {f : Func CoreDialect}
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hts] at hvalid ⊢
     exact hvalid
-
-variable {M : Module CoreDialect} {f : Func CoreDialect}
-
-/-- Every function of a valid core module runs well on every argument
-vector, calls and recursion included. -/
-theorem runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
-    RunsWell (funcRuns M f args) :=
-  have hm := fun g hg => inModule_of_valid (hM.funcs g hg)
-  ⟨Func.fuelMonotone M f args,
-    Func.progress_of_inModule hM.funcs hm (fun _ _ _ _ o _ hc => o.op.total_all hc) hf args,
-    Func.neverStuck_of_inModule hM.funcs hm hf args⟩
-
-/-- More fuel never changes how a run of a function of a valid core module
-returns or hits UB. -/
-theorem fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (funcRuns M f args) :=
-  (runsWell hM hf args).fuelMonotone
-
-/-- A run of a function of a valid core module has an outcome at every
-budget, calls and recursion included. -/
-theorem progress (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : Progress (funcRuns M f args) :=
-  (runsWell hM hf args).progress
-
-/-- No path of a run of a function of a valid core module is stuck, calls
-and recursion included. -/
-theorem neverStuck (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (funcRuns M f args) :=
-  (runsWell hM hf args).neverStuck
 
 end Fir.Core

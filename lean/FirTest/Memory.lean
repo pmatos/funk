@@ -3,7 +3,9 @@ import Fir
 /-!
 Tests of the memory model on a memory of 8-bit units: a store and the load
 after it, fresh memory, other allocations, and each fault of an access, in
-order: no provenance, a freed allocation, and an access out of bounds.
+order: no provenance, a freed allocation, and an access out of bounds. Then
+the table of the memories of a run: it holds each memory once, however many
+times the run replaces it.
 -/
 
 namespace FirTest.Memory
@@ -37,8 +39,8 @@ def b2 : MemUnit 8 := .bits 0x07
 
 -- A pointer stored unit by unit keeps its fragments.
 #guard (do
-    let M ← m2.2.store ⟨some 1, 0⟩ [.frag m1.1 0, .frag m1.1 1]
-    M.load m2.1 2) == .ok [.frag m1.1 0, .frag m1.1 1]
+    let M ← m2.2.store ⟨some 1, 0⟩ [.frag 0 m1.1 0, .frag 0 m1.1 1]
+    M.load m2.1 2) == .ok [.frag 0 m1.1 0, .frag 0 m1.1 1]
 
 -- Each fault of an access.
 #guard m2.2.load ⟨none, 0⟩ 1 == .error .noProvenance
@@ -70,5 +72,24 @@ stored. -/
 example : ∀ M, m2.2.store ⟨some 0, 1⟩ [b1, b2] = .ok M →
     M.load ⟨some 0, 1⟩ 2 = .ok [b1, b2] :=
   fun _ h => Memory.load_store_same h
+
+/-! # The table of the memories of a run -/
+
+/-- Memories named by `Bool`, of 8-bit units. -/
+abbrev Two := Memories Bool (fun _ => 8)
+
+/-- `n` allocations of one unit, alternating between the two memories, then
+a free of each allocation of the memory `true`. -/
+def churn (n : Nat) : Two :=
+  let S := (List.range n).foldl (fun S i => (S.alloc (i % 2 == 0) .heap 1).2) Memories.empty
+  (List.range n).foldl (fun S a => S.free true a) S
+
+-- Each memory is in the table once, after thousands of replacements, and
+-- each holds its own allocations: the frees of `true` reach only `true`.
+#guard (churn 4000).table.length == 2
+#guard ((churn 4000).mem true).blocks.length == 2000
+#guard ((churn 4000).mem true).blocks.all (!·.live)
+#guard ((churn 4000).mem false).blocks.all (·.live)
+#guard (Memories.empty : Two).table.isEmpty && ((Memories.empty : Two).mem false).blocks.isEmpty
 
 end FirTest.Memory

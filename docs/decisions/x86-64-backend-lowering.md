@@ -2,7 +2,8 @@
 
 This page continues [x86-64-backend.md](x86-64-backend.md). It says what holds
 today for how the naive backend lowers `select`, branches, block arguments,
-`i128` values, the divisions and the floats. It is the record: when this page
+`i128` values and the divisions; how it lowers the floats is on
+[x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md). It is the record: when this page
 and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). Each lowering here builds on spill-everything: an op
 reads its operands from their slots and writes its results to theirs, and
@@ -211,55 +212,3 @@ every module, or inline at each division; Hacker's Delight's estimate for a
 large `b`, which is faster but easy to get subtly wrong in hand-written
 assembly; and a convention of its own, where System V is the one the backend's
 other calls follow.
-
-## Float comparison
-
-`fcmp` loads its operands with `movss` or `movsd` into `%xmm0` and `%xmm1`,
-compares them with `ucomiss` or `ucomisd`, and reads the flags with one
-`setCC`, or two for `oeq` and `une`. `oeq` also needs the parity flag clear, and
-`une` accepts it set, since an unordered pair sets it.
-
-## Float arithmetic
-
-The backend lowers the float arithmetic at `f32` and `f64` with SSE2 only, which
-every x86-64 has. `fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` are one instruction
-each, `addss`, `subss`, `mulss`, `divss`, `sqrtss` or their `sd` forms, on
-`%xmm0` and the second operand's slot. MXCSR keeps its default mode, round to
-nearest even. Nothing sets its flush-to-zero or denormals-are-zero bits, so
-subnormals are honoured. `fneg` and `fabs` flip or clear the sign bit in `%rax`
-with `btcq` or `btrq`, which is IEEE 754's negate and abs, also on a NaN, and
-refines fir's any NaN (ADR-2026-11-09-1549). A NaN result is whatever the
-instruction or routine gives.
-
-SSE2 has no fused multiply-add, and FMA3 is not in every x86-64. So `fma` loads
-its operands into `%xmm0` to `%xmm2` and calls `__funk_rt_fmaf` or
-`__funk_rt_fma`, hand-written in `crates/funk-x86-64/src/lower/fma.s`, which
-`lower::module` appends once as it appends `div128.s`. Each is a System V
-function of three floats that uses only caller-saved registers and 16 bytes of
-stack, within the 24 bytes that the stack figure counts for a helper.
-
-At `f32` the product is exact in `f64`. The routine rounds the sum to odd in
-`f64`, toward zero with the last bit set when it was inexact, and then to
-nearest even in `f32`. Rounding to odd with two more bits rounds once (Boldo
-and Melquiond, 2008). MXCSR is restored after. At `f64` it computes
-`a * b + c` exactly in 128-bit integers and rounds once, subnormals and
-overflow included. NaN and infinite operands, and zeros, take SSE's
-`a * b + c` or `a * b`, which is exact or correctly signed there.
-`crates/funk/tests/float_arith.rs` checks every op against the host's IEEE 754
-arithmetic.
-
-## Fast-math flags
-
-The backend ignores `nnan`, `ninf` and `nsz`: it lowers a flagged op as the op
-without flags, and `fcmp` reads its predicate as its last attribute. That
-refines the flagged op, since an op without a flag refines the op with it
-(`lean/Fir/Core/FloatFlagLaws.lean`, ADR-2026-11-09-1549).
-`crates/funk/tests/float_flags.rs` checks each flagged op at `f32` and `f64`.
-Rejected: lowering a flag to faster code, which is M2's optimizer's work.
-
-Rejected: FMA3's `vfmadd`, since a program that uses it fails on an x86-64
-without FMA3, and the default stays baseline x86-64 (the human ruled on
-2026-11-12 that CPU extensions come in through a `--cpu` flag in M2; see
-[the roadmap](../roadmap.md));
-`fma` from the C library, since most modules link none; and double-double
-arithmetic at `f64`, which loses exactness near overflow and among subnormals.

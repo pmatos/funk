@@ -67,6 +67,18 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.FloatArith "Float arithmetic rules" FirSpec.Core.FloatArith (level := 1)}
 
+{includeReadable "." Fir.Core.FloatRem "Float remainder rules" FirSpec.Core.FloatRem (level := 1)}
+
+{includeReadable "." Fir.Core.FloatBitcast "Bit cast rules" FirSpec.Core.FloatBitcast (level := 1)}
+
+{includeReadable "." Fir.Core.FloatOfInt "Conversion rules" FirSpec.Core.FloatOfInt (level := 1)}
+
+{includeReadable "." Fir.Core.FloatConvert "Format conversion rules" FirSpec.Core.FloatConvert (level := 1)}
+
+{includeReadable "." Fir.Core.Pointer "Pointer offset rules" FirSpec.Core.Pointer (level := 1)}
+
+{includeReadable "." Fir.Core.FloatToInt "Integer conversion rules" FirSpec.Core.FloatToInt (level := 1)}
+
 {includeReadable "." Fir.Core.Control "Control-flow rules" FirSpec.Core.Control (level := 1)}
 
 {includeReadable "." Fir.Core.Branch "Branch rules" FirSpec.Core.Branch (level := 1)}
@@ -97,6 +109,16 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.FloatFlagLaws "Dropping fast-math flags" FirSpec.Core.FloatFlagLaws (level := 1)}
 
+{includeReadable "." Fir.Core.FloatBitcastLaws "Bit cast obligations" FirSpec.Core.FloatBitcastLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatOfIntLaws "Conversion obligations" FirSpec.Core.FloatOfIntLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatConvertLaws "Format conversion obligations" FirSpec.Core.FloatConvertLaws (level := 1)}
+
+{includeReadable "." Fir.Core.PointerLaws "Pointer offset obligations" FirSpec.Core.PointerLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FloatToIntLaws "Integer conversion obligations" FirSpec.Core.FloatToIntLaws (level := 1)}
+
 {includeReadable "." Fir.Core.ControlLaws "Control-flow obligations" FirSpec.Core.ControlLaws (level := 1)}
 
 {includeReadable "." Fir.Core.BranchLaws "Branch obligations" FirSpec.Core.BranchLaws (level := 1)}
@@ -123,7 +145,7 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 1)}
 
-{includeReadable "." Fir.Core.Runs "The runs of core functions" FirSpec.Core.Runs (level := 1)}
+{includeReadable "." Fir.Core.Runs "The tracer subset" FirSpec.Core.Runs (level := 1)}
 
 {includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 1)}
 
@@ -156,5 +178,7 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Execution.SummaryLaws "Joins and the walk" FirSpec.Execution.SummaryLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.SummaryFixpoint "The summary is the least fixpoint" FirSpec.Execution.SummaryFixpoint (level := 1)}
+
+{includeReadable "." Fir.Execution.SummaryClean "Values with no poison" FirSpec.Execution.SummaryClean (level := 1)}
 
 {includeReadable "." Fir.Execution.SummarySound "Function summaries are sound" FirSpec.Execution.SummarySound (level := 1)}

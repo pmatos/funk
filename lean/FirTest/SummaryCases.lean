@@ -71,10 +71,10 @@ def sortMems : MemSet String → MemSet String
   | .these ms => .these (ms.eraseDups.mergeSort (· ≤ ·))
   | .every => .every
 
-/-- A summary as the shared file writes it. The core has no memory, so its
-memories are named by no string. -/
+/-- A summary as the shared file writes it. The core names each memory by
+its number, written in decimal. -/
 def renderSum (e : Effects (DialectEffects.Mem CoreDialect)) : String :=
-  let named := e.map Empty.elim
+  let named := e.map fun n : Core.Mem => toString n
   let sorted : Effects String :=
     { named with
       reads := sortMems named.reads
@@ -133,12 +133,26 @@ def selfText (n : Nat) : String :=
 /-! # The theorems apply to the core -/
 
 /-- In a module of valid core functions, a function whose summary leaves out
-may-UB never ends in UB. -/
+may-UB never ends in UB, in its runs with memory at the module's layout. -/
 example {ctx : ModuleContext CoreDialect} {M : Module CoreDialect}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func CoreDialect}
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (r : String) :
-    ¬ (f.run (m := SetM) M args fuel).run (.ub r) :=
-  Module.summary_neverUB hv hf hs args fuel r
+    ¬ f.memRuns M.layout.entry id M args fuel (.ub r) :=
+  Module.summary_neverUB _ _ hv hf hs args fuel r
+
+/-! # The theorems' axioms -/
+
+/-- info: 'Fir.Module.summary_neverUB' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_neverUB
+
+/-- info: 'Fir.Module.summary_noPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_noPoison
+
+/-- info: 'Fir.Module.summary_neverUB_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_neverUB_from
+
+/-- info: 'Fir.Module.summary_noPoison_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_noPoison_from
 
 end FirTest.SummaryCases

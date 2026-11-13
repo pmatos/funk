@@ -5,11 +5,11 @@ import Fir.Validation.CheckModule
 The validation check needs a dialect's types to be comparable for equality,
 and its two rules to be decidable. The core dialect's types can be
 compared, and its rules are decided below, case by case. With them, the
-check covers every one of the 31 core ops: the general rules check each
+check covers every one of the 40 core ops: the general rules check each
 op's operand and result types, its place in its block, its successors and
 its uses against its signature, and the core rules add the rules of `ret`,
-`call`, `zext`, `sext` and `trunc`, and that of the float ops' reserved
-words.
+`call`, `zext`, `sext`, `trunc`, `fpext` and `fptrunc`, and that of the
+float ops' reserved words.
 -/
 
 namespace Fir.Core
@@ -48,7 +48,7 @@ theorem deadBlock_problems {lk : Lookup CoreDialect} {ctx : ModuleContext CoreDi
   fun e => deadBlock_rejected ctx ((Func.problems_eq_nil h).mp e)
 
 /-- `deadBlock` alone in a module whose location table has `@0`. -/
-def deadModule : Module CoreDialect := ⟨[], [.func deadBlock], [(0, .unknown)]⟩
+def deadModule : Module CoreDialect := ⟨[], [], [.func deadBlock], [(0, .unknown)]⟩
 
 #guard deadModule.problems ==
   [{ message := "block ^dead is not reachable from the entry", func := some "f",

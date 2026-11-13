@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4640263418112242478")
+:::moduleDocs (fingerprint := "4358358668246434247")
 :::
 
 :::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "2049900563290384102")
@@ -27,7 +27,18 @@ reads none, since what follows is not `dialects`; a set of names is
 reader of a list reads until no comma follows.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "3320088879839101187")
+:::readable Fir.readLayout_reads (pin := Fir.Text.readLayout) (pin := Fir.layoutTokens) (fingerprint := "9404360063893304884")
+*Theorem: a data layout reads back.* The reader of a data layout reads the
+tokens of a layout as what its entries write, each at a position that
+erases to zero, before any token but a comma, `(` and the word `layout`:
+an empty layout has no tokens, and the reader reads none, since what
+follows is not `layout`; any other is `layout`, its first entry's type, and
+each other entry's type after a comma, which the reader of a list reads
+until no comma follows. An entry writes a type, so the reader of types
+reads it back.
+:::
+
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "13581829757735816490")
 *Definitions: an item's kind, and the types it writes.* The kind of an
 item is `func` for a function, `module` for a nested module, and its own
 kind for an item of a dialect's kind, and the tokens of an item start with
@@ -40,8 +51,8 @@ that the text of $`f` states; for a nested module, when each of its items
 does, at any depth; and, for an item $`i` of a dialect's kind, when its
 kind is a word of a dialect and $`\mathrm{tyattr}(t)` is written as a type
 for each $`t` of $`\mathrm{types}(i)`. A word of a dialect holds a `.`, so
-it is neither `dialects` nor `locs`, and an item of a dialect's kind is
-never read as a dialect set or as the location table. A list of items ends at the word `locs` at the top of a
+it is neither `dialects`, `locs` nor `layout`, and an item of a dialect's
+kind is never read as a dialect set, a data layout or the location table. A list of items ends at the word `locs` at the top of a
 module, and at `}` in the body of an item.
 :::
 
@@ -68,7 +79,7 @@ a word, read by the reader of a dialect set and the reader of items; then
 induction on the items.
 :::
 
-:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "1579415746721921971")
+:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "11404360772751771078")
 *Theorem: the grammar step reads a module's tokens as its tree.* For every
 dialect with a text format and every
 module $`m` such that:
@@ -87,14 +98,15 @@ to the tree of $`m`:
 $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof} \implies \\ & \exists\, s.\ \mathrm{readmodule}(\mathit{ts}) = \mathsf{ok}(s) \\ & \quad \wedge\ \mathrm{erase}(s) = \mathrm{tree}(m) \end{aligned}`
 
 Here $`\mathrm{readmodule}` is the reader of a module. This is the second
-step of the round trip. The reader reads the dialect set first, which an
-item's `func` or `module` or the table's `locs` ends. Of all the readers,
+step of the round trip. The reader reads the dialect set first, which the
+word `layout`, an item's `func` or `module` or the table's `locs` ends,
+then the data layout, which an item's kind or `locs` ends. Of all the readers,
 only the readers of types and of lines and columns reject a token of the
 right kind, and the two conditions cover them. Being within limits also
 bounds the location references, which no reader checks.
 :::
 
-:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "15152913429717558126")
+:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "2850330903788545369")
 *Theorem: the grammar step for a well-formed module.* For every dialect
 with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -106,7 +118,7 @@ table of a well-formed module is
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits].
 :::
 
-:::readable Fir.Module.WellFormed.read_print (pin := Fir.Text.lex) (pin := Fir.Module.print) (fingerprint := "14501421206763944168")
+:::readable Fir.Module.WellFormed.read_print (pin := Fir.Text.lex) (pin := Fir.Module.print) (fingerprint := "4859028113491691856")
 *Theorem: the first two steps read a well-formed module's text as its
 tree.* For every dialect with signatures and a text format and every
 well-formed module $`m`, the
@@ -122,7 +134,7 @@ gives the tokens of $`m`, then $`\mathsf{eof}`, and the theorem above
 reads them.
 :::
 
-:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "8385933528482538159")
+:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "17627420019290519979")
 *Theorem: the first two steps read a valid module's text as its tree.* For
 every dialect with signatures, validation rules and a text format whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful], and

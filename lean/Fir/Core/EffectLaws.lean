@@ -1,4 +1,4 @@
-import Fir.Core.Lawful
+import Fir.Core.MemRules
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -15,17 +15,19 @@ effects. Each effect that a core op leaves out, it does not have:
   not declare it gives a defined result: `add`, `sub` and `mul` without
   flags, the divisions without `exact` when they give a result, the bitwise
   ops, `icmp`, `select`, the width changes, `const` at an integer
-  and at a float type, `freeze`, and `fcmp` and the float arithmetic
-  without `nnan` and `ninf`, whose NaN results are defined bits.
+  and at a float type, `freeze`, `fcmp` and the float arithmetic without
+  `nnan` and `ninf`, whose NaN results are defined bits, the bit casts,
+  the conversions from integers, the conversions between formats and the
+  pointer offset.
 * _No control._ Every core op that does not declare control is not a
   terminator.
-* _No write, read or allocation._ No core op touches memory: it runs by its
-  rule in the set monad and keeps the memories, at every naming of them
-  (the section on meeting the memory obligations).
+* _No write, read or allocation._ No core op touches memory: it runs with
+  memory by its rule in the set monad and keeps the memories, at every
+  layout and naming of them (the section on the core's rules with memory).
 
-So the core's semantics with memory lifts its semantics in the set monad,
-and the first two obligations, stated over the semantics with memory,
-follow from what each rule does in the set monad.
+So each op is tied, and the first two obligations, stated over the
+semantics with memory, follow from what each op's rule does in the set
+monad.
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
@@ -54,6 +56,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
     | .cons _ (.cons _ (.cons _ .nil)), _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .zext .., _ | .sext .., _ | .trunc .., _ => fun
     | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
+  | .toBits .., _ | .ofBits .., _ | .fptosi .., _ | .fptoui .., _ => fun
+    | .cons _ .nil, _ => ⟨fun _ h => (by cases h), fun h => nomatch h⟩
   | .freeze w, _ => fun
     | .cons a .nil, _ => ⟨fun _ h => (by
         obtain ⟨_, h, _⟩ := (freeze_denote w a _).1 h
@@ -63,6 +67,11 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .fbin o fl e m, _ => fbin_neverUB o fl e m
   | .funary o fl e m, _ => funary_neverUB o fl e m
   | .fma fl e m, _ => fma_neverUB fl e m
+  | .sitofp n e m, _ => intToFloat_neverUB n e m true
+  | .uitofp n e m, _ => intToFloat_neverUB n e m false
+  | .fpext e m e' m', _ => convertFloat_neverUB e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_neverUB e m e' m' false
+  | .ptradd n w, _ => ptradd_neverUB n w
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
   | .unreachable, h => nomatch h
 
@@ -184,6 +193,18 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       obtain ⟨x, rfl⟩ := defined₁ hd
       cases hr
       exact not_any_of_ne fun h => nomatch h
+  | .toBits .., _ => fun _ args hd _ hr => match args, hd, hr with
+    | .cons a .nil, hd, hr => by
+      cases a with
+      | poison => exact absurd (.inl rfl) hd
+      | value x =>
+        cases hr
+        exact not_any_of_ne fun h => nomatch h
+  | .ofBits .., _ => fun _ args hd _ hr => match args, hd, hr with
+    | .cons _ .nil, hd, hr => by
+      obtain ⟨x, rfl⟩ := defined₁ hd
+      cases hr
+      exact not_any_of_ne_float fun h => nomatch h
   | .freeze w, _ => fun _ args _ _ hr => match args, hr with
     | .cons a .nil, hr => by
       obtain ⟨b, he, _⟩ := (freeze_denote w a _).1 hr
@@ -193,8 +214,13 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
   | .fbin o fl e m, h => fbin_makesNoPoison o fl e m h
   | .funary o fl e m, h => funary_makesNoPoison o fl e m h
   | .fma fl e m, h => fma_makesNoPoison fl e m h
+  | .sitofp n e m, _ => intToFloat_makesNoPoison n e m true
+  | .uitofp n e m, _ => intToFloat_makesNoPoison n e m false
+  | .fpext e m e' m', _ => convertFloat_makesNoPoison e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_makesNoPoison e m e' m' false
+  | .ptradd n w, _ => ptradd_makesNoPoison n w
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
-  | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h => nomatch h
+  | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h | .fptosi .., h | .fptoui .., h => nomatch h
 
 /-! # No control -/
 
@@ -207,23 +233,21 @@ end Fir.Core
 
 namespace Fir
 
-/-- No core op touches memory: at every naming of the core's memories, each
-op runs by its rule in the set monad and keeps the memories. -/
-instance Core.instDialectMemDenote : DialectMemDenote CoreDialect := DialectMemDenote.ofSetM
-
-/-- The core dialect's semantics with memory lifts its semantics in the set
-monad. -/
-instance Core.liftsSetM : LiftsSetM CoreDialect := DialectMemDenote.ofSetM_liftsSetM
-
 /-- The core dialect is lawful in its effects: every effect that a core op
-leaves out, it does not have. -/
+leaves out, it does not have. Each op runs with memory by its rule in the
+set monad (`Core.Op.liftsSetM`), so each obligation of an op follows from
+that op's own rule. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
-  neverUB op _ _ h := NeverUB.ofSetM (Core.Op.neverUB_all op h)
-  makesNoPoison op _ _ h := MakesNoPoison.ofSetM (Core.Op.makesNoPoison_all op h)
+  neverUB op _ _ h := NeverUB.ofLifts (Core.Op.liftsSetM op) (Core.Op.neverUB_all op h)
+  makesNoPoison op _ _ h :=
+    MakesNoPoison.ofLifts (Core.Op.liftsSetM op) (Core.Op.makesNoPoison_all op h)
   notControl := Core.Op.notControl_all
-  writesNot := DialectMemDenote.ofSetM_writesNot
-  readsNot := DialectMemDenote.ofSetM_readsNot
-  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
+  writesNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => writesNot_lift x c
+  readsNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => readsNot_lift x c
+  allocatesNot op _ _ _ _ lay ρ x _ :=
+    OwnRuleHas.ofLifts (Core.Op.liftsSetM op) lay ρ fun c => allocatesNot_lift x c
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 
@@ -239,17 +263,21 @@ namespace Core.Unlawful
     | .sdiv _ x => { mayPoison := x }
     | op => Core.Op.effects op
 
-/-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
-left without may-UB must never end in UB. -/
+/-- `sdiv` by zero is UB, so the obligations reject the declaration, over
+the core's own semantics with memory: an op left without may-UB must never
+end in UB. -/
 theorem sdivNoUB_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _
-      (@DialectMemDenote.ofSetM CoreDialect _ _ sdivNoUB _) := by
+      (@DialectMemDenote.mk CoreDialect _ _ sdivNoUB fun lay ρ => Core.memDenoteAt lay ρ) := by
   intro h
   have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
-  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => 0) (fun _ => ())
-    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl) Memory.Memories.empty _
-    ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
+  have hl := (Core.Op.liftsSetM (.sdiv 8 false) (fun _ : Unit => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1
+  have hub := (hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
+  rw [hl] at hub
+  exact NoUB.of_lift hub Memory.Memories.empty _ ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 
 end Core.Unlawful
 

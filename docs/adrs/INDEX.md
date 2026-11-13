@@ -87,6 +87,10 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-11-1709](2026-11-11-1709-a-pointer-type-is-written-ptr-or-ptr-n.md) | [text-format](../decisions/text-format.md) | A pointer type is written ptr for the default memory, or ptr(N) for memory N | this ADR |
 | [ADR-2026-11-11-1801](2026-11-11-1801-a-rounding-op-is-written-with-round-rne.md) | [text-format](../decisions/text-format.md) | A float op that rounds is written with round(rne), and no other mode decodes | this ADR |
 | [ADR-2026-11-12-1430](2026-11-12-1430-pull-requests-reuse-main-s-lean-builds.md) | [process](../decisions/process.md) | Pull requests reuse main's Lean builds, and main builds them from scratch | this ADR |
+| [ADR-2026-11-12-1821](2026-11-12-1821-a-module-declares-its-memories-in-a-data-layout-line.md) | [text-format](../decisions/text-format.md) | A module declares its memories in a data layout line after its dialect set | this ADR |
+| [ADR-2026-11-12-2125](2026-11-12-2125-a-value-takes-whole-units-in-its-memory-s-byte-order.md) | [semantics](../decisions/semantics.md) | A value takes whole units of its memory, placed in the memory's byte order | this ADR |
+| [ADR-2026-11-13-0251](2026-11-13-0251-a-pointer-moves-by-ptradd-in-units-of-its-memory.md) | [semantics](../decisions/semantics.md) | A pointer moves by ptradd, by a signed integer of any width, in units of its memory | this ADR |
+| [ADR-2026-11-13-0906](2026-11-13-0906-an-op-reads-the-layout-entry-of-the-memory-it-accesses.md) | [semantics](../decisions/semantics.md) | An op reads the layout entry of the memory it accesses | this ADR |
 
 ## Implementation
 
@@ -219,5 +223,5 @@ links the last commit on main that changed the file, which still holds it.
 | `ADR-2026-11-11-1444` | [ADR-2026-11-09-1540](2026-11-09-1540-a-run-shows-a-trace-of-events-judged-for-each-world.md) | [`2576910e804f`](https://github.com/pmatos/funk/blob/2576910e804f/docs/adrs/2026-11-11-1444-an-address-escapes-when-an-op-hands-it-to-code-outside-the-program.md) |
 | `ADR-2026-11-11-1445` | [ADR-2026-11-09-1540](2026-11-09-1540-a-run-shows-a-trace-of-events-judged-for-each-world.md) | [`2576910e804f`](https://github.com/pmatos/funk/blob/2576910e804f/docs/adrs/2026-11-11-1445-the-end-of-run-comparison-looks-only-at-live-memory.md) |
 | `ADR-2026-11-11-1800` | [ADR-2026-11-09-1549](2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md) | [`0d492b1d4d6e`](https://github.com/pmatos/funk/blob/0d492b1d4d6e/docs/adrs/2026-11-11-1800-float-arithmetic-runs-lean-s-model-and-a-nan-result-is-any-nan.md) |
-| `ADR-2026-11-11-1802` | [x86-64-backend-lowering.md#float-arithmetic](../decisions/x86-64-backend-lowering.md#float-arithmetic) | [`0d492b1d4d6e`](https://github.com/pmatos/funk/blob/0d492b1d4d6e/docs/adrs/2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md) |
+| `ADR-2026-11-11-1802` | [x86-64-backend-lowering-floats.md#float-arithmetic](../decisions/x86-64-backend-lowering-floats.md#float-arithmetic) | [`0d492b1d4d6e`](https://github.com/pmatos/funk/blob/0d492b1d4d6e/docs/adrs/2026-11-11-1802-the-backend-lowers-float-arithmetic-with-sse-and-fma-with-a-helper.md) |
 | `ADR-2026-11-11-1803` | [testing-and-harness-floats.md#the-arithmetic-corpus](../decisions/testing-and-harness-floats.md#the-arithmetic-corpus) | [`0d492b1d4d6e`](https://github.com/pmatos/funk/blob/0d492b1d4d6e/docs/adrs/2026-11-11-1803-the-float-arithmetic-corpus-is-generated-from-the-exact-rational-reference.md) |

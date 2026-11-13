@@ -33,18 +33,17 @@ $`\texttt{float}(e, m)` reads back as
 $`\mathsf{float}\langle e,m \rangle`.
 :::
 
-:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "4911415057033537285")
+:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "10540823068798290750")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
 $`\mathsf{i}N` with $`1 \le N \le 16{,}777{,}215`, or
 $`\mathsf{float}\langle e,m \rangle` with $`e \ge 2`, $`m \ge 1` and
-$`1 + e + m \le 16{,}777{,}215`, or $`\mathsf{ptr}\langle 0 \rangle`, the
-pointer of the default memory. For every valid core type $`t`,
-$`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`. So does
+$`1 + e + m \le 16{,}777{,}215`, or $`\mathsf{ptr}\langle N \rangle` with
+$`N \le 16{,}777{,}215`. For every valid core type $`t`,
+$`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`: in particular
 $`\mathsf{ptr}\langle N \rangle` for every memory
-$`1 \le N \le 16{,}777{,}215`, written $`\texttt{ptr}(N)`, ready for the
-memories that a data layout declares. And for every attribute $`a` and type
+$`1 \le N \le 16{,}777{,}215`, written $`\texttt{ptr}(N)`. And for every attribute $`a` and type
 $`t`, if $`\mathrm{decodety}(a) = t` then $`\mathrm{tyattr}(t) = a`: in
 particular, a format that $`\texttt{float}(e, m)` reads back as is
 written $`\texttt{float}(e, m)`, since one with an alias does not decode

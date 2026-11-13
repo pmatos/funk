@@ -44,11 +44,11 @@ a run names its memories. -/
 theorem memRuns_args_isRefinedBy (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
     {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func d} (hf : f ∈ M.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns unit ρ M a) ⊑ observable (f.memRuns unit ρ M a') :=
-  Func.memRuns_args_isRefinedBy_of_lawful unit ρ hv hf ha
+    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
+  Func.memRuns_args_isRefinedBy_of_lawful lay ρ hv hf ha
 
 /-- Congruence in the callee, with memory, for every function of a valid
 module of every dialect lawful in its monotonicity, wherever a run names
@@ -58,20 +58,21 @@ diverges. -/
 theorem memRuns_replaceBody_isRefinedBy (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
-    (hbound : letI := DialectMemDenote.denoteAt (d := d) unit ρ
-      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit)
+    (hbound : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
         (M.replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := d) unit ρ;
-      g.memRunsFrom (Mem := N) (unit := unit) M ⊑
-        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unit) (M.replaceBody g.name b))
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
+            g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns unit ρ M ⊑ (f.replaceBody g.name b).memRuns unit ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_bound unit ρ hrefl htrans hM hg b hbound h hf).2
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ hrefl htrans hM hg b hbound h hf).2
 
 /-! # The obligation -/
 

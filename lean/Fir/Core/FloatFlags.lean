@@ -86,6 +86,11 @@ def flagResult {μ : Type → Type} [Monad μ] [MonadChoice μ] (fl : FastMath) 
   else if fl.nsz && isZeroFloat u then anySign e m b
   else pure (.value b)
 
+/-- No operand breaks the flags when there is none. -/
+@[simp] theorem operandsBreak_nil (fl : FastMath) (e m : Nat) : operandsBreak fl e m [] = false := by
+  unfold operandsBreak
+  split <;> rfl
+
 /-! # Tests -/
 
 -- Flipping by `0` keeps the bits; by `1` it flips the sign of `+0` at

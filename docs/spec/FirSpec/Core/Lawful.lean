@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "10829226034814001931")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "8846115929385027616")
+:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "16623925751607787224")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,22 +28,26 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 24 ops: $`\mathsf{const}` at an integer type and at a float
+These are 33 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
 $`\mathsf{shl}`, $`\mathsf{lshr}` and $`\mathsf{ashr}`, $`\mathsf{icmp}`,
 $`\mathsf{fcmp}`, the width changes $`\mathsf{zext}`, $`\mathsf{sext}` and
-$`\mathsf{trunc}`, and the float arithmetic $`\mathit{fbin}`,
-$`\mathit{funary}` and $`\mathsf{fma}`. Each proves it in the section of its family. The other
+$`\mathsf{trunc}`, the float arithmetic $`\mathit{fbin}`,
+$`\mathit{funary}` and $`\mathsf{fma}`, the two bit casts, the two
+conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, the
+two conversions between formats $`\mathsf{fpext}` and
+$`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, and the two
+conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 
-:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "4414952846808296949")
+:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "3927830666421649206")
 *Theorems: a valid core op instance with an operand of type
 $`\mathsf{i}N` has $`N > 0`, and each valid core op that propagates poison returns a
 result on defined operands.*
@@ -65,7 +69,7 @@ gives that width. This is the one obligation that needs the op instance
 to be valid (ADR-2026-10-29-2006).
 :::
 
-:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "11432556231224688115")
+:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "4359772419578251092")
 *Theorem: the core dialect is lawful.* Every core op instance whose types
 validation accepts meets the
 {ref "The-fir-specification--Execution--Poison-classes"}[poison obligations]:

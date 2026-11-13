@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8277099554144718072")
+:::moduleDocs (fingerprint := "1777661638297863115")
 :::
 
 :::readable Fir.NeverUBSetM Fir.MakesNoPoisonSetM (pin := Fir.HVector.Any) (fingerprint := "12651468849163982976")
@@ -29,7 +29,7 @@ $`\mathsf{ok}~\vec{w} \in \mathrm{denote}_o(\vec{v})` has no poison
 element.
 :::
 
-:::readable Fir.NeverUB (pin := Fir.NoUB) (fingerprint := "3085899934357629232")
+:::readable Fir.NeverUB (pin := Fir.NoUB) (fingerprint := "7709818465263165031")
 *Definition: never UB.* An op $`o` _never ends in UB_ when, wherever a run
 names the dialect's memories by $`\rho`, on every operand vector
 $`\vec{v}`, from every memories $`S` and for every reason $`r`: if $`o` is
@@ -39,7 +39,7 @@ by the dialect's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory].
 :::
 
-:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "9911636833030463910")
+:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "9959424603407385592")
 *Definition: makes no poison.* An op $`o` that is not a terminator _makes
 no poison_ when, wherever a run names the dialect's memories by $`\rho`, on
 every operand vector $`\vec{v}` with no poison element and from every
@@ -48,7 +48,7 @@ $`\mathsf{ok}~(\vec{w}, S') \in \mathrm{denote}^\rho_o(\vec{v})(S)` has no
 poison element. A terminator gives no results, so it makes none.
 :::
 
-:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "6496766837932302871")
+:::readable Fir.LawfulDialectEffects (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.TypesValid) (pin := Fir.OwnRuleHas) (fingerprint := "15860852437617802462")
 *Definition: a dialect lawful in its effects.* A dialect is _lawful in its
 effects_ when its effect declarations are sound: an effect that an op
 leaves out, it does not have. For every

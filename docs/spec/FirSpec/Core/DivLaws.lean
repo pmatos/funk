@@ -141,7 +141,7 @@ position by position. It is the theorem on refined operands above, carried
 to the op rule.
 :::
 
-:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "933423071818169537")
+:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "578585252773800649")
 *Theorem: $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}` and
 $`\mathsf{urem}` are lawful at every width above zero.* For every width
 $`w`, under fir's execution rules, each of $`\mathsf{sdiv}_w` and
@@ -159,7 +159,7 @@ $`\mathsf{exact}` changes only that result, poison in place of a quotient,
 so the theorems hold with it and without it.
 :::
 
-:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "18111245168969966839")
+:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "1311354314624612956")
 *Theorem: at width zero, no division returns a result on defined
 operands.* With or without $`\mathsf{exact}`, none of
 $`\mathsf{sdiv}_0`, $`\mathsf{udiv}_0`, $`\mathsf{srem}_0` and

@@ -253,25 +253,26 @@ section
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectEffects d] [DialectMemDenote d] [TyRefinement d.Ty] {N : Type} [DecidableEq N]
-  (unit : N → Nat) (ρ : DialectEffects.Mem d → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
 
 /-- The runs with memory of a function refine those of another when their
 runs from the empty memories do: they are those runs, with the memories they
 end with dropped. -/
 theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
     {a : HVector toType (f.params.map (·.2))} {a' : HVector toType (f'.params.map (·.2))}
-    (h : letI := DialectMemDenote.denoteAt (d := d) unit ρ
-      observable (f.memRunsFrom M (a, (Memories.empty : Memories N unit))) ⊑
-        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N unit)))) :
-    observable (f.memRuns unit ρ M a) ⊑ observable (f'.memRuns unit ρ M' a') := by
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
+        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
+    observable (f.memRuns lay ρ M a) ⊑ observable (f'.memRuns lay ρ M' a') := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
   have hX : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat},
-      g.memRuns unit ρ L b n = (Prod.fst <$> fromState
-        (g.run L (m := StateT (Memories N unit) SetM) b n) Memories.empty).run :=
+      g.memRuns lay ρ L b n = (Prod.fst <$> fromState
+        (g.run L (m := StateT (Memories N (unitsOf lay)) SetM) b n) Memories.empty).run :=
     fromState_fst _ _
   have kret : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-      {vs : List (DVal d)}, (g.memRuns unit ρ L b n).outcomes (.ret vs) ↔
-        ∃ T, (g.memRunsFrom L (b, (Memories.empty : Memories N unit)) n).outcomes (.ret (vs, T)) := by
+      {vs : List (DVal d)}, (g.memRuns lay ρ L b n).outcomes (.ret vs) ↔
+        ∃ T, (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ret
+            (vs, T)) := by
     intro g L b n vs
     simp only [Run.outcomes, Func.memRunsFrom, hX]
     constructor
@@ -289,8 +290,8 @@ theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
       · cases he
       · cases he
   have kub : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-      {r : String}, (g.memRuns unit ρ L b n).outcomes (.ub r) ↔
-        (g.memRunsFrom L (b, (Memories.empty : Memories N unit)) n).outcomes (.ub r) := by
+      {r : String}, (g.memRuns lay ρ L b n).outcomes (.ub r) ↔
+        (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
     intro g L b n r
     simp only [Run.outcomes, Func.memRunsFrom, hX]
     constructor
@@ -307,8 +308,9 @@ theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
       · cases he
         exact (SetM.run_map _ _ _).2 (.inr (.inr ⟨_, hr, rfl⟩))
   have kexh : ∀ {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat},
-      (g.memRuns unit ρ L b n).outcomes .fuelExhausted ↔
-        (g.memRunsFrom L (b, (Memories.empty : Memories N unit)) n).outcomes .fuelExhausted := by
+      (g.memRuns lay ρ L b n).outcomes .fuelExhausted ↔
+        (g.memRunsFrom L (b, (Memories.empty : Memories N (unitsOf lay)))
+            n).outcomes .fuelExhausted := by
     intro g L b n
     simp only [Run.outcomes, Func.memRunsFrom, hX]
     constructor
