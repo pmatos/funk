@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12584347614995680684")
+:::moduleDocs (fingerprint := "759224633949746244")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "9139590358862237536")
+:::readable Fir.Core.Op.denote? (fingerprint := "13069684993767964168")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -59,7 +59,9 @@ result:
   {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules];
 * $`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`: the
   {ref "The-fir-specification--Execution--Format-conversion-rules"}[format conversion rules],
-  which choose the bits of a NaN result.
+  which choose the bits of a NaN result;
+* $`\mathsf{ptradd}_{N,W}`: the
+  {ref "The-fir-specification--Execution--Pointer-offset-rules"}[pointer offset rule].
 
 $`\mathsf{call}` and the terminators have none here: a call's meaning is
 the run of its callee, and a terminator's rule says where control goes.
@@ -80,7 +82,7 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "9150251468284172352")
+:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "280229885511747336")
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
 terminator, or when it calls a function, whose run is its meaning. Every core op

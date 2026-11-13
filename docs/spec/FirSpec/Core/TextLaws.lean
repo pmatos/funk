@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13908160822124492131")
+:::moduleDocs (fingerprint := "4468630291655019558")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -117,7 +117,16 @@ $`\mathtt{fpext}` and $`[\mathtt{round(rne)}]` for $`\mathtt{fptrunc}`,
 and has the operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2664410325515118172")
+:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "13106390997175491723")
+*Theorem: a pointer offset decodes only from its own spelling.* If
+$`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
+$`t^*` and $`r^*`, the op it gives is written $`\mathtt{ptradd}`, has no
+attributes, so $`a^*` is empty, and has the operand and result types
+$`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
+memory.
+:::
+
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "8037811543973510624")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -133,8 +142,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
-float constant, float op of arithmetic, bit cast and conversion from an
-integer, and list of types. A float constant reads back because its
+float constant, float op of arithmetic, bit cast, conversion from an
+integer, pointer offset at every memory, and list of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
@@ -152,7 +161,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 37 ops and every type, and
+core dialect, so its text is lawful, for all 38 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

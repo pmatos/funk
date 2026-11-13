@@ -227,6 +227,8 @@ byte order.
 
 {includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
 
+{includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
+
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}

@@ -69,6 +69,14 @@ The float ops have a table of their own, at each float format of a side;
 [testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)
 says which (ADR-2026-11-03-0557).
 
+The pointer offset `ptradd` has a table of its own, a cell at each width of
+its integer (`cells.POINTER_OPS`, `coverage.pointers_table`). Only the
+interpreter-only side has its cells: the backend lowers pointers in stage 5 of
+#231, which gives the differential side its widths. Until stack allocation
+lands, a run's only pointer is a poison argument, so the tests that fill these
+cells check how poison goes through `ptradd`; its rule on pointers is checked
+in Lean, in `lean/Fir/Core/Pointer.lean` (#231).
+
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. It also exercises the `func` cell of its results. The
 count is static, so a block that the arguments skip still

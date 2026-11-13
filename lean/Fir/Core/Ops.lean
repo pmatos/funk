@@ -4,8 +4,9 @@ import Fir.Syntax.Dialect
 /-!
 The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
-branches and calls, and the float constants, comparisons, arithmetic, bit
-casts, conversions from integers and conversions between formats.
+branches and calls, the float constants, comparisons, arithmetic, bit
+casts, conversions from integers and conversions between formats, and
+pointer offsets.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -208,6 +209,15 @@ to itself takes neither. Zeros and infinities keep their sign, and a NaN
 gives any NaN of the target. Neither is ever UB, and a poison operand gives
 poison.
 
+Pointer offsets (#231):
+
+* `ptradd n w`: moves a pointer of `ptr<N>`, `N = n`, by the integer that
+  an `iW`, `W = w`, holds, read as signed, in units of the memory `N`. It
+  keeps the pointer's provenance, and its offset may leave the bounds of
+  the allocation: only an access through it must be in bounds
+  (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
+  poison.
+
 Poison control:
 
 * `freeze w`: gives its operand unchanged when it is not poison. When it is
@@ -269,6 +279,7 @@ inductive Op where
   | uitofp (n e m : Nat)
   | fpext (e m e' m' : Nat)
   | fptrunc (e m e' m' : Nat)
+  | ptradd (n w : Nat)
   | freeze (w : Nat)
   | poison (w : Nat)
   | br

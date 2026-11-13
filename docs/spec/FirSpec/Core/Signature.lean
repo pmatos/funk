@@ -15,7 +15,7 @@ changes under it.
 
 #doc (Manual) "Core signatures: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2283003875181967732")
+:::moduleDocs (fingerprint := "1086335751623613016")
 :::
 
 :::readable Fir.CoreDialect Fir.Core.i (fingerprint := "6975174900697461964")
@@ -30,7 +30,7 @@ specification is written in. The Lean writes $`\mathsf{i}N` as `i N`, a
 shorthand for the type `int N`.
 :::
 
-:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "17703801982713102690")
+:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "6383126488241160110")
 *Definition: the types of each core op's operands and results.* Each core op
 takes operands and gives results of fixed types, which follow from the op
 instance. As in the WebAssembly specification, $`[t_1^*] \to [t_2^*]`
@@ -44,7 +44,7 @@ $`\mathsf{shl}_N`, $`\mathsf{lshr}_N` and $`\mathsf{ashr}_N`, and
 $`\mathit{cvtop}_{M \to N}` for any of $`\mathsf{zext}_{M \to N}`,
 $`\mathsf{sext}_{M \to N}` and $`\mathsf{trunc}_{M \to N}`:
 
-$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{const}_{e,m}~v & [\,] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{fcmp}_{e,m}~\mathit{fpred} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{i1}] \\ \mathit{fbin}_{e,m} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathit{funary}_{e,m} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{fma}_{e,m} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{i}(1+e+m)] \\ \mathsf{bitcast}_{e,m}^{\mathsf{i} \to} & [\mathsf{i}(1+e+m)] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{sitofp}_{N,e,m},\ \mathsf{uitofp}_{N,e,m} & [\mathsf{i}N] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{fpext}_{e,m,e',m'},\ \mathsf{fptrunc}_{e,m,e',m'} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e',m' \rangle] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{unreachable} & [\,] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
+$$`\begin{array}{ll} \mathsf{const}_N~c & [\,] \to [\mathsf{i}N] \\ \mathsf{const}_{e,m}~v & [\,] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{poison}_N & [\,] \to [\mathsf{i}N] \\ \mathit{binop}_N & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{icmp}_N~\mathit{pred} & [\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i1}] \\ \mathsf{fcmp}_{e,m}~\mathit{fpred} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{i1}] \\ \mathit{fbin}_{e,m} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathit{funary}_{e,m} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{fma}_{e,m} & [\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle~\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{select}_N & [\mathsf{i1}~\mathsf{i}N~\mathsf{i}N] \to [\mathsf{i}N] \\ \mathit{cvtop}_{M \to N} & [\mathsf{i}M] \to [\mathsf{i}N] \\ \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{i}(1+e+m)] \\ \mathsf{bitcast}_{e,m}^{\mathsf{i} \to} & [\mathsf{i}(1+e+m)] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{sitofp}_{N,e,m},\ \mathsf{uitofp}_{N,e,m} & [\mathsf{i}N] \to [\mathsf{float}\langle e,m \rangle] \\ \mathsf{fpext}_{e,m,e',m'},\ \mathsf{fptrunc}_{e,m,e',m'} & [\mathsf{float}\langle e,m \rangle] \to [\mathsf{float}\langle e',m' \rangle] \\ \mathsf{ptradd}_{N,W} & [\mathsf{ptr}\langle N \rangle~\mathsf{i}W] \to [\mathsf{ptr}\langle N \rangle] \\ \mathsf{freeze}_N & [\mathsf{i}N] \to [\mathsf{i}N] \\ \mathsf{br} & [\,] \to [\,] \\ \mathsf{cond\_br} & [\mathsf{i1}] \to [\,] \\ \mathsf{ret}~t^* & [t^*] \to [\,] \\ \mathsf{unreachable} & [\,] \to [\,] \\ \mathsf{call}~f : t^* \to r^* & [t^*] \to [r^*] \end{array}`
 
 So $`\mathsf{select}_N` takes its $`\mathsf{i1}` condition first, a
 $`\mathsf{ret}` takes the values it returns as its operands, and a
