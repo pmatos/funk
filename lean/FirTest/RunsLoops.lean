@@ -25,20 +25,21 @@ open Fir Core Example
 theorem sum_mem : sum ∈ sumModule.funcs := by
   simp [sumModule, Module.funcs]
 
-/-- More fuel never changes how a run of `@sum` returns or hits UB. -/
+/-- More fuel never changes how a run with memory of `@sum` returns or hits
+UB. -/
 theorem sum_fuelMonotone (args : HVector toType (sum.params.map (·.2))) :
-    FuelMonotone (funcRuns sumModule sum args) :=
-  callFree_fuelMonotone sumModule_valid sum_mem (by decide) args
+    FuelMonotone (sum.memRuns sumModule.layout.entry id sumModule args) :=
+  callFree_fuelMonotone _ _ sumModule_valid sum_mem (by decide) args
 
-/-- A run of `@sum` has an outcome at every budget. -/
+/-- A run with memory of `@sum` has an outcome at every budget. -/
 theorem sum_progress (args : HVector toType (sum.params.map (·.2))) :
-    Progress (funcRuns sumModule sum args) :=
-  callFree_progress sumModule_valid sum_mem (by decide) args
+    Progress (sum.memRuns sumModule.layout.entry id sumModule args) :=
+  callFree_progress _ _ sumModule_valid sum_mem (by decide) args
 
-/-- No path of a run of `@sum` is stuck. -/
+/-- No path of a run with memory of `@sum` is stuck. -/
 theorem sum_neverStuck (args : HVector toType (sum.params.map (·.2))) :
-    NeverStuck (funcRuns sumModule sum args) :=
-  callFree_neverStuck sumModule_valid sum_mem (by decide) args
+    NeverStuck (sum.memRuns sumModule.layout.entry id sumModule args) :=
+  callFree_neverStuck _ _ sumModule_valid sum_mem (by decide) args
 
 /-! # A loop that never ends -/
 
@@ -122,24 +123,32 @@ theorem foreverModule_valid : foreverModule.Valid := Module.valid_of_flat
 theorem forever_mem : forever ∈ foreverModule.funcs := by
   simp [foreverModule, Module.funcs]
 
-/-- Every run of `@forever` has an outcome, no path of it is stuck, and more
-fuel never changes how it returns or hits UB, which it never does. -/
+/-- Every run with memory of `@forever` has an outcome, no path of it is
+stuck, and more fuel never changes how it returns or hits UB, which it never
+does. -/
 theorem forever_runsWell (args : HVector toType (forever.params.map (·.2))) :
-    RunsWell (funcRuns foreverModule forever args) :=
-  ⟨callFree_fuelMonotone foreverModule_valid forever_mem (by decide) args,
-    callFree_progress foreverModule_valid forever_mem (by decide) args,
-    callFree_neverStuck foreverModule_valid forever_mem (by decide) args⟩
+    RunsWell (forever.memRuns foreverModule.layout.entry id foreverModule args) :=
+  ⟨callFree_fuelMonotone _ _ foreverModule_valid forever_mem (by decide) args,
+    callFree_progress _ _ foreverModule_valid forever_mem (by decide) args,
+    callFree_neverStuck _ _ foreverModule_valid forever_mem (by decide) args⟩
 
 /-! # Axioms
 
-The general theorems hold for every valid local function, and the core
-theorems for every valid core function without calls. -/
+The general theorems hold for every valid local function, with memory for
+every valid function without calls, and the core theorems for every valid
+core function without calls. -/
 
 /-- info: 'Fir.Func.neverStuck_of_local' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.neverStuck_of_local
 
 /-- info: 'Fir.Func.progress_of_local' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.progress_of_local
+
+/-- info: 'Fir.Func.memNeverStuck_of_local' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memNeverStuck_of_local
+
+/-- info: 'Fir.Func.memProgress_of_local' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memProgress_of_local
 
 /-- info: 'Fir.Core.local_of_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.local_of_valid

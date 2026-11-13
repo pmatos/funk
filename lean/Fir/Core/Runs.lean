@@ -5,33 +5,26 @@ import Fir.Core.Validation
 import Fir.Execution.Progress
 
 /-!
-# The tracer subset's three obligations
+# The tracer subset
 
-The runs of a function of a core module are its runs in the set monad on
+The runs of a function of a core module, in the set monad, are its runs on
 each argument vector of its parameter types, poison included, at each
-budget. They are the runs of a core function in the sense of refinement,
-so the refinement of core functions is about them.
+budget. The refinement of core functions in the set monad is about them,
+and the equivalence experiment of #282 compares them.
 
-The three obligations of the section on fuel and progress hold for every
-valid function whose ops are in the tracer subset, on every argument
-vector. The tracer subset is the ops of the roadmap's tracer bullet, the
-one tiny program that went first through every layer: `const`, `add`
-without flags and `ret`.
+The tracer subset is the ops of the roadmap's tracer bullet, the one tiny
+program that went first through every layer: `const`, `add` without flags
+and `ret`. A valid function of the tracer subset runs straight: no op of
+the subset calls a function, `const` and `add` are not terminators, and
+`ret` returns its operands, which its validation rule makes values of the
+function's result types. Each of the three ops is total.
 
-The proofs are the general theorems of the previous sections, applied to
-the core dialect. Fuel monotonicity holds for every function of every
-module. Progress and no stuck path hold for every valid function whose
-ops run straight to a return and are total. A valid function of the
-tracer subset runs straight: no op of the subset calls a function,
-`const` and `add` are not terminators, and `ret` returns its operands,
-which its validation rule makes values of the function's result types.
-Each of the three ops is total.
-
-Every valid core function without a `call` op meets the three obligations
-too, branches and loops included, as the section on core functions
-without calls proves, and so does every function of every valid core
-module, calls and recursion included, as the section on core functions
-with calls proves.
+A function's runs on one argument vector _run well_ when they meet the
+three obligations of the section on fuel and progress. The section on core
+functions with memory proves that the runs with memory of every valid
+function of the tracer subset run well, from the two facts of this section;
+so do those of every valid core function without a `call` op, and of every
+function of every valid core module, calls and recursion included.
 -/
 
 namespace Fir.Core
@@ -100,38 +93,11 @@ theorem total_of_tracer {f : Func CoreDialect} (ht : InTracer f) :
   | .fpext .. | .fptrunc .. | .ptradd .. | .fptosi .. | .fptoui .. =>
     intro h; exact False.elim h
 
-variable {M : Module CoreDialect} {f : Func CoreDialect}
-
 /-- The three obligations of the section on fuel and progress, for the
 runs of one function on one argument vector. -/
 structure RunsWell (run : Nat → Run Obs) : Prop where
   fuelMonotone : FuelMonotone run
   progress : Progress run
   neverStuck : NeverStuck run
-
-/-- Every valid function of the tracer subset runs well on every argument
-vector. -/
-theorem tracer_runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : RunsWell (funcRuns M f args) :=
-  have hv := hM.funcs f hf
-  ⟨Func.fuelMonotone M f args, Func.progress hv (straight_of_tracer hv ht) (total_of_tracer ht) M args,
-    Func.neverStuck hv (straight_of_tracer hv ht) M args⟩
-
-/-- More fuel never changes how a run of a valid function of the tracer
-subset returns or hits UB. -/
-theorem tracer_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (funcRuns M f args) :=
-  (tracer_runsWell hM hf ht args).fuelMonotone
-
-/-- A run of a valid function of the tracer subset has an outcome at every
-budget. -/
-theorem tracer_progress (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : Progress (funcRuns M f args) :=
-  (tracer_runsWell hM hf ht args).progress
-
-/-- No path of a run of a valid function of the tracer subset is stuck. -/
-theorem tracer_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (funcRuns M f args) :=
-  (tracer_runsWell hM hf ht args).neverStuck
 
 end Fir.Core

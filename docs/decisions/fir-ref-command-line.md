@@ -159,8 +159,8 @@ which a tool tells apart from an error by its `kind`. The budget is checked
 first, even when a path reaches an op without rules.
 
 Within its budget, exhaustive mode lists exactly the run's outcomes, and on a
-sequence that fits, scripted mode gives one of them (`Core.exhaustive_outcomes`,
-`Core.scripted_outcomes`). Exhaustive mode is within its budget exactly when no
+sequence that fits, scripted mode gives one of them (`Core.exhaustive_memOutcomes`,
+`Core.scripted_memOutcomes`, over the runs with memory at the module's layout). Exhaustive mode is within its budget exactly when no
 path chooses more than B bits (`ChoiceTree.explore_isSome_iff`).
 
 Rejected: exhaustive mode by default. It would have changed every existing

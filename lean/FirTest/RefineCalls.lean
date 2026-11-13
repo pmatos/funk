@@ -6,9 +6,10 @@ Tests of #20's two function-level refinement theorems, applied to valid
 modules with calls and recursion, which shows that their hypotheses can
 be met, and the axioms of their proofs.
 
-* Refined arguments: `@fact`, which calls itself, on a poison argument is
-  refined by `@fact` on `5`; and `@even`, which calls `@odd`, which calls
-  it back, on any arguments is refined by itself on refined ones.
+* Refined arguments, with memory: `@fact`, which calls itself, on a poison
+  argument is refined by `@fact` on `5`; and `@even`, which calls `@odd`,
+  which calls it back, on any arguments is refined by itself on refined
+  ones.
 * Congruence in the callee: `@g` divides by zero before it calls itself,
   so it hits UB on every argument, and every body refines it. `@count`
   calls `@g` and itself. With a new body for `@g`, which calls `@count`
@@ -24,17 +25,18 @@ open Fir Core Example
 
 /-! # Refined arguments -/
 
-/-- `@fact` on a poison argument is refined by `@fact` on `5`. -/
+/-- `@fact` on a poison argument is refined by `@fact` on `5`, with memory. -/
 theorem fact_args :
-    observable (funcRuns recModule factFn (.cons .poison .nil)) ⊑
-      observable (funcRuns recModule factFn (.cons (.value 5) .nil)) :=
-  Core.args_isRefinedBy recModule factFn ⟨trivial, trivial⟩
+    observable (factFn.memRuns recModule.layout.entry id recModule (.cons .poison .nil)) ⊑
+      observable (factFn.memRuns recModule.layout.entry id recModule (.cons (.value 5) .nil)) :=
+  Core.args_isRefinedBy _ _ recModule factFn ⟨trivial, trivial⟩
 
-/-- `@even` on any argument refines itself on a refined one. -/
+/-- `@even` on any argument refines itself on a refined one, with memory. -/
 theorem even_args {a a' : HVector toType (evenFn.params.map (·.2))}
     (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (funcRuns recModule evenFn a) ⊑ observable (funcRuns recModule evenFn a') :=
-  Core.args_isRefinedBy recModule evenFn h
+    observable (evenFn.memRuns recModule.layout.entry id recModule a) ⊑
+      observable (evenFn.memRuns recModule.layout.entry id recModule a') :=
+  Core.args_isRefinedBy _ _ recModule evenFn h
 
 /-! # A callee that always hits UB -/
 
@@ -315,6 +317,9 @@ theorems, their core instances and the tests above. -/
 
 /-- info: 'Fir.Core.caller_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.caller_isRefinedBy
+
+/-- info: 'Fir.Core.memReplaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.memReplaceBody_isRefinedBy
 
 /-- info: 'FirTest.fact_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.fact_args

@@ -14,23 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "22280151879172962")
-:::
-
-:::readable Fir.MonadMorphism.state_lift Fir.MonadMorphism.state_mapsDenote_liftState (fingerprint := "11229248626212830646")
-*Theorem: a morphism through the layer keeps lifted computations.* For a
-{ref "The-fir-specification--Execution--Monad-morphisms"}[monad morphism]
-$`\varphi` from $`m` to $`n` and a computation $`x` of $`m` with no
-memory, the morphism through the
-{ref "The-fir-specification--Memory--The-state-layer"}[state layer] maps
-$`x` lifted into the layer to its image lifted:
-$`\varphi^{\mathrm{state}}(\mathrm{lift}(x)) = \mathrm{lift}(\varphi(x))`.
-
-*Theorem: it keeps lifted semantics.* So when $`\varphi` maps a dialect's
-semantics in $`m` to its semantics in $`n`, it maps its
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifted semantics]
-in the layer over $`m` to its lifted semantics in the layer over $`n`, op
-by op and terminator by terminator.
+:::moduleDocs (fingerprint := "6009493120673342771")
 :::
 
 :::readable Fir.Func.memTree (pin := Fir.Memory.Memories.empty) (fingerprint := "10312767825876634802")

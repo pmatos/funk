@@ -212,18 +212,6 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
 
 /-! # The theorems' axioms -/
 
-/-- info: 'Fir.Core.exhaustive_outcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.exhaustive_outcomes
-
-/-- info: 'Fir.Core.exhaustive_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.exhaustive_stuck
-
-/-- info: 'Fir.Core.scripted_outcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.scripted_outcomes
-
-/-- info: 'Fir.Core.scripted_stuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.scripted_stuck
-
 /-- info: 'Fir.Core.exhaustive_memOutcomes' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.exhaustive_memOutcomes
 
@@ -235,9 +223,6 @@ def exploreIn (s : DialectDenote CoreDialect Tree) (t : String) (args : List Str
 
 /-- info: 'Fir.Core.scripted_memStuck' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.scripted_memStuck
-
-/-- info: 'Fir.Core.memTree_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.memTree_eq
 
 /-- info: 'Fir.ChoiceTree.explore_isSome_iff' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.ChoiceTree.explore_isSome_iff

@@ -26,8 +26,8 @@ layer over the tree, `Core.memTreeDenote lay ρ`, runs each op by its rule
 with memory in that layer, as its semantics with memory, `Core.memDenoteAt
 lay ρ`, runs it in the layer over the set monad (stage 4b-2b of #231, #367).
 Neither is defined as the lift of the rules of a monad with no memory; that
-they equal such a lift while no core op touches memory is a theorem
-(`Core.memTree_liftState`, `Core.Op.liftsSetM`). `Core.memMapsDenote` ties
+the second equals such a lift while no core op touches memory is a theorem
+(`Core.Op.liftsSetM`). `Core.memMapsDenote` ties
 the two at every layout and naming, op by op: `toSet` through the layer
 keeps choice and UB (`Core.memDenoteIn_mapsDenote`). `fir-ref`'s `@[csimp]`
 theorems hand the machine that same semantics at the module's layout, so
@@ -38,18 +38,14 @@ they hold as before, and every `fir-ref` call of the corpus, the harness and
 `Core.exhaustive_memOutcomes`, `Core.scripted_memOutcomes` and
 `Core.sampled_memOutcomes`, with their `memStuck` siblings, prove the modes
 against `Func.memRuns M.layout.entry id`: the runs with memory of the module
-at its own layout.
-`Core.memTree_eq` proves that the tree of a core run with memory is the tree of
-its run with no memory, so the modes report what they did before, path for
-path, and `Core.exhaustive_outcomes` and its siblings keep their proofs. It
-uses `Core.memTree_liftState`: lifting into the layer maps each core op's
-rule in the tree to its rule with memory there. That holds only while no
-core op touches memory. Reports, leaves and JSON are
-those of runs without memory: a path shows how it ends and not its memories,
-until observations at the end of a run are designed (#233). Stage 4b-2b of
-#231 gives the core's semantics op by op and proves `Core.memMapsDenote` for
-it; stage 4b-3 drops `Core.memTree_eq` and the theorems against the run in
-the set monad.
+at its own layout. They are the modes' only theorems: stage 4b-3a of #231
+dropped `Core.memTree_eq`, which said that the tree of a core run with memory
+is the tree of its run with no memory, and the theorems against the run in
+the set monad that it gave, since that holds only while no core op touches
+memory. Rejected: keeping them until the first memory op, which would make
+that op's PR remove them. Reports, leaves and JSON are those of runs without
+memory: a path shows how it ends and not its memories, until observations at
+the end of a run are designed (#233).
 
 ## The machine carries the memories
 

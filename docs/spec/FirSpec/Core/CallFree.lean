@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2122820304907451124")
+:::moduleDocs (fingerprint := "723181119351096814")
 :::
 
 :::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "7508203294497242104")
@@ -82,36 +82,4 @@ module context and without calls. Then $`f`
 *Theorem: every op of a core function without calls is total.* If the
 core function $`f` is without calls, every op of every block of $`f` is
 total, since none of them is a call.
-:::
-
-:::readable Fir.Core.callFree_runsWell Fir.Core.callFree_fuelMonotone Fir.Core.callFree_progress Fir.Core.callFree_neverStuck (pin := Fir.Core.funcRuns) (pin := Fir.Core.RunsWell) (fingerprint := "799352563421054385")
-*Theorem: a valid core function without calls runs well on every argument
-vector, jumps and loops included.* Let $`M` be a core module and $`f` a
-core function without calls, and let $`v^*` be a vector of values of the
-parameter types of $`f`, poison included.
-
-* If $`f` is valid in the
-  {ref "The-fir-specification--Validation--The-general-rules"}[context]
-  $`\mathrm{ctx}(M)` of $`M`, the runs
-  $`\mathrm{runs}_M(f)(v^*)` run well: they are fuel-monotone, have
-  progress and have no stuck path.
-* If $`M` is
-  {ref "The-fir-specification--Validation--The-general-rules"}[valid] and
-  $`f` is one of its functions, the runs $`\mathrm{runs}_M(f)(v^*)` are
-  fuel-monotone; they have progress; and they have no stuck path. These
-  are the three obligations, one theorem each.
-
-Here $`\mathrm{runs}_M(f)(v^*)` is the
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[runs of f]
-on $`v^*`, at each budget, and to
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[run well]
-is to meet the three
-{ref "The-fir-specification--Execution--Fuel-and-progress"}[obligations].
-The first needs only the validity of $`f` itself: $`f` calls no
-function, so the other functions of $`M` play no part, and $`f` need not
-even be one of them. They follow from the theorems on functions that run
-within themselves. Branches and loops are included; a function with a
-$`\mathsf{call}` op runs other functions of its module, and the
-{ref "The-fir-specification--Execution--Core-functions-with-calls"}[next section]
-covers it.
 :::

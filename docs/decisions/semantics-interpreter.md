@@ -90,8 +90,9 @@ lifts the set monad they are its runs (semantics-effects.md).
 Runs with memory have progress for every dialect, whatever its ops do to the
 memories. No path is stuck when every function of the module is valid and
 runs within it with memory, at the run's naming (`Func.InModuleAt`, which
-states the rules for terminators over their exits from any memories; under
-`LiftsSetM`, `Func.InModule` gives it). Each
+states the rules for terminators over their exits from any memories;
+`Func.InModule` gives it when each terminator is tied, and so under
+`LiftsSetM`). Each
 run has an outcome at every budget when the dialect is also lawful in its
 totality (`LawfulDialectTotal`, in `lean/Fir/Execution/MemoryTotal.lean`;
 ADR-2026-11-09-1541):
@@ -102,7 +103,11 @@ an effect. `OpTotal` stays for runs in the set monad. A dialect that lifts the
 set monad and is lawful meets it, and so do sums and lifts whose sides do,
 with no tie, so a side whose ops touch memory may take part. A dialect with a
 memory op proves it directly. A valid core module meets both
-(`Core.memNeverStuck`, `Core.memProgress`). Rejected: moving `total` out of
+(`Core.neverStuck`, `Core.progress`, over runs with memory). A valid function
+none of whose ops calls a function needs only its own validity
+(`Func.memNeverStuck_of_local`, `Func.memProgress_of_local`, in
+`lean/Fir/Execution/MemoryLocal.lean`), and so does a valid core function
+without calls (`Core.callFree_runsWell`). Rejected: moving `total` out of
 `LawfulDialectPoison` to the semantics with memory, since the set-monad
 theorems would then need the tie to use it.
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18368273472795846832")
+:::moduleDocs (fingerprint := "6302047697601312163")
 :::
 
 :::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "10641358420631129298")
@@ -115,65 +115,4 @@ $`o \in \mathrm{out}(R^M_k)`.
 same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`,
 then $`R^M_k` is stuck. Both follow from scripted mode's theorems,
 since the values sampled mode chose fit the run.
-:::
-
-:::readable Fir.Core.memTree_eq (pin := Fir.MonadMorphism.liftState) (pin := Fir.Core.memTree_liftState) (fingerprint := "16842763435174226617")
-*Theorem: the tree of a core run with memory is the tree of its run.* For
-every module $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`,
-$`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` is the
-tree of the run of $`f` on $`\vec{v}` with $`k` steps, with no memory:
-the same paths, the same choices and the same leaves, in the same order.
-Each core op keeps the memories: lifting maps each op's rule in the tree to
-its
-{ref "The-fir-specification--Memory--The-core-dialect-in-the-tree-of-choices"}[rule with memory in the layer over the tree],
-so the run in the layer is the run in the tree, lifted, by the
-{ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
-and dropping the memories at each leaf gives the run in the tree back. So
-every mode reports, path for path, what it reported before runs had
-memory.
-:::
-
-:::readable Fir.Core.exhaustive_outcomes Fir.Core.exhaustive_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "17566031880716702473")
-*Theorem: exhaustive mode gives exactly the outcomes of a core run.* For
-every module $`M`, function $`f`, arguments $`\vec{v}`, fuel $`k` and
-choice budget $`B`, let $`R_k` be the run of $`f` on $`\vec{v}` in
-the set monad, at fuel $`k`. If
-$`\mathrm{exhaustive}(M, f, \vec{v}, k, B)` gives the list $`L`, then
-for every outcome $`o`,
-
-$$`\begin{aligned} & o \in \mathrm{out}(R_k) \iff \\ & \quad \exists (\ell, c) \in L.\ \mathrm{path\_end}(\ell) = \mathsf{outcome}~o \end{aligned}`
-
-*Theorem: it lists a stuck path exactly when the run has one.* With the
-same hypotheses, $`R_k` is stuck exactly when some leaf of $`L` has the
-path end $`\mathsf{stuck}~s`, for some $`s`. Both are the
-{ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[theorems of the modes]
-on the tree of the run, by the theorem above.
-:::
-
-:::readable Fir.Core.scripted_outcomes Fir.Core.scripted_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "7068125630922665754")
-*Theorem: on a sequence that fits, scripted mode gives an outcome of a
-core run.* For every $`\mathrm{read}`, module $`M`, function $`f`,
-arguments $`\vec{v}`, fuel $`k` and choice sequence
-$`\mathit{cs}`, if $`\mathrm{scripted}(M, f, \vec{v}, k, \mathit{cs})`
-reaches the leaf $`\ell`, with no misfit, and
-$`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
-$`o \in \mathrm{out}(R_k)`.
-
-*Theorem: it reports a stuck path only when the run has one.* With the
-same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`,
-then $`R_k` is stuck.
-:::
-
-:::readable Fir.Core.sampled_outcomes Fir.Core.sampled_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "8462286147197757807")
-*Theorem: sampled mode gives an outcome of a core run, whatever the
-generator.* For every $`\mathrm{draw}`, module $`M`, function $`f`,
-arguments $`\vec{v}`, fuel $`k` and generator $`g`, if the leaf
-$`\ell` that $`\mathrm{sampled}(M, f, \vec{v}, k, g)` gives has
-$`\mathrm{path\_end}(\ell) = \mathsf{outcome}~o`, then
-$`o \in \mathrm{out}(R_k)`.
-
-*Theorem: it reports a stuck path only when the run has one.* With the
-same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`,
-then $`R_k` is stuck. Both follow from scripted mode's theorems, since the
-values sampled mode chose fit the run.
 :::

@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "636248246661803640")
+:::moduleDocs (fingerprint := "8180236272491859182")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -73,7 +73,7 @@ op $`o` of every block of $`f`:
 Here $`\mathrm{exit}_o` is the exit of $`o` in the state layer.
 :::
 
-:::readable Fir.Func.InModule.memInModule_liftState Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt (pin := Fir.DialectDenote.liftState) (fingerprint := "9787088167474692482")
+:::readable Fir.Func.InModule.memInModule_liftState Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt_of_tied Fir.Func.InModule.inModuleAt (pin := Fir.DialectDenote.liftState) (pin := Fir.OpLiftsSetM) (fingerprint := "6954952407247581042")
 *Definition and theorems: running within a module, at a naming.* The ops of
 $`f` run within $`M` with memory _at the naming_ $`\rho`, with layout
 entries $`\ell`, when they run within it by the dialect's semantics with
@@ -81,10 +81,12 @@ memory where a run names the dialect's memory $`x` as $`\rho(x)`, whose
 entry is $`\ell(\rho(x))`. A function that runs within its module runs
 within it with memory by its dialect's semantics in the set monad, lifted
 into the state layer: each terminator goes where it goes in the set monad,
-and keeps the memories. So, in a dialect that
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifts the set monad],
-a function that runs within its module runs within it with memory, at every
-naming.
+and keeps the memories. So a function that runs within its module, each of
+whose terminators is
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied], runs within
+it with memory at every naming, whatever its other ops do to the memories;
+and so, in a dialect that lifts the set monad, where every op is tied, does
+every function that runs within its module.
 :::
 
 :::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "13549213396792715278")
