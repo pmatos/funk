@@ -14,7 +14,13 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9844489512117009611")
+:::moduleDocs (fingerprint := "8781497813757664818")
+:::
+
+:::readable Fir.Effects.Le.mayUB_false Fir.Effects.Le.mayPoison_false (pin := Fir.Effects.Le) (fingerprint := "3284232413199481622")
+*Theorems: a smaller set leaves out what a larger one leaves out.* If
+$`a \le b` and $`b` leaves out may-UB, so does $`a`; and likewise for may
+produce poison.
 :::
 
 :::readable Fir.Func.mem_allOps Fir.Func.enter_ops Fir.Operation.call?_of (fingerprint := "11322144752609607633")

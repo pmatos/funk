@@ -65,6 +65,21 @@ theorem Func.enter_ops [TyDenote d.Ty] [DecidableEq d.Ty] {g : Func d} {dvs : Li
   cases hp
   exact ⟨fun o ho => ⟨e, List.mem_of_mem_head? he, ho⟩, rfl⟩
 
+/-- An effect set below one that leaves out may-UB leaves it out. -/
+theorem Effects.Le.mayUB_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
+    (hb : b.mayUB = false) : a.mayUB = false := by
+  cases ha : a.mayUB
+  · rfl
+  · exact absurd (h.mayUB ha) (by simp [hb])
+
+/-- An effect set below one that leaves out may produce poison leaves it
+out. -/
+theorem Effects.Le.mayPoison_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
+    (hb : b.mayPoison = false) : a.mayPoison = false := by
+  cases ha : a.mayPoison
+  · rfl
+  · exact absurd (h.mayPoison ha) (by simp [hb])
+
 variable [DialectSignature d] [DialectCall d]
 
 /-- An op that is not a terminator calls its callee. -/
@@ -143,10 +158,8 @@ theorem Module.memOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx)
   | cons o os =>
   obtain ⟨b, hb, ho⟩ := hos o List.mem_cons_self
   have htv := (hv f hfm).typesValid hb ho
-  have hown : (effects o.op).mayUB = false := by
-    cases he : (effects o.op).mayUB
-    · rfl
-    · exact absurd ((M.table.effects_le_summary hf (Func.mem_allOps hb ho)).mayUB he) (by simp [hs])
+  have hown : (effects o.op).mayUB = false :=
+    (M.table.effects_le_summary hf (Func.mem_allOps hb ho)).mayUB_false hs
   have htail : ∀ o' ∈ os, ∃ b ∈ f.blocks, o' ∈ b.body :=
     fun o' h' => hos o' (List.mem_cons_of_mem _ h')
   cases (Func.memStepPath_iff (hne r)).1 h with
@@ -159,11 +172,9 @@ theorem Module.memOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx)
   | denote _ _ _ _ _ _ hrun => exact ih n (Nat.lt_succ_self n) s f _ os _ r hf hs htail hrun
   | @callUB _ c g _ _ _ _ _ hT hc hg hen hx =>
     have hg' : M.table.func? c = some g := hg
-    have hcs : (M.table.summary c).mayUB = false := by
-      cases he : (M.table.summary c).mayUB
-      · rfl
-      · exact absurd ((M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
-          (Operation.call?_of hT hc) (by simp [hg'])).mayUB he) (by simp [hs])
+    have hcs : (M.table.summary c).mayUB = false :=
+      (M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
+        (Operation.call?_of hT hc) (by simp [hg'])).mayUB_false hs
     exact ih n (Nat.lt_succ_self n) c g _ _ _ _ hg hcs (Func.enter_ops hen).1 (Func.memCall_ub hx)
   | callRet _ _ _ _ _ _ _ _ _ hrun =>
     exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ r hf hs htail hrun
@@ -201,11 +212,8 @@ theorem Module.memOps_clean (hv : ∀ g ∈ M.funcs, g.Valid ctx)
   | cons o os =>
   obtain ⟨b, hb, ho⟩ := hos o List.mem_cons_self
   have htv := (hv f hfm).typesValid hb ho
-  have hown : (effects o.op).mayPoison = false := by
-    cases he : (effects o.op).mayPoison
-    · rfl
-    · exact absurd ((M.table.effects_le_summary hf (Func.mem_allOps hb ho)).mayPoison he)
-        (by simp [hs])
+  have hown : (effects o.op).mayPoison = false :=
+    (M.table.effects_le_summary hf (Func.mem_allOps hb ho)).mayPoison_false hs
   have htail : ∀ o' ∈ os, ∃ b ∈ f.blocks, o' ∈ b.body :=
     fun o' h' => hos o' (List.mem_cons_of_mem _ h')
   cases (Func.memStepPath_iff (hne vs S' k)).1 h with
@@ -220,11 +228,9 @@ theorem Module.memOps_clean (hv : ∀ g ∈ M.funcs, g.Valid ctx)
       (henv.bind _ ((HVector.clean_toDVals rs).2 hrs)) htail hrun
   | @callRet args c g _ _ vs' _ k' _ _ hargs hT hc hg hen hcallee _ _ hrun =>
     have hg' : M.table.func? c = some g := hg
-    have hcs : (M.table.summary c).mayPoison = false := by
-      cases he : (M.table.summary c).mayPoison
-      · rfl
-      · exact absurd ((M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
-          (Operation.call?_of hT hc) (by simp [hg'])).mayPoison he) (by simp [hs])
+    have hcs : (M.table.summary c).mayPoison = false :=
+      (M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
+        (Operation.call?_of hT hc) (by simp [hg'])).mayPoison_false hs
     obtain ⟨hops, rfl⟩ := Func.enter_ops hen
     obtain ⟨T, hT'⟩ := Func.memCall_ret hcallee
     have hvs' : DVals.Clean vs' := ih n (Nat.lt_succ_self n) c g _ _ _ _ T _ hg hcs
