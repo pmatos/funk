@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14104930736448635013")
+:::moduleDocs (fingerprint := "11902575432533740743")
 :::
 
 :::readable Fir.DVals.Clean Fir.Env.Clean (fingerprint := "8528918267713506938")
@@ -38,34 +38,47 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (pin := Fir.LiftsSetM) (fingerprint := "11866253861296355573")
-*Theorems: the ops of a function leave out what its summary leaves out.*
-Let the dialect be lawful in its effects, its semantics with memory lift
-its semantics in the set monad, and every function of $`M` valid. Let $`s` name the function $`f` of $`M`. From any ops of the blocks
-of $`f`, at any budget:
+:::readable Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "16437460514696067429")
+*Theorems: the ops of a function leave out what its summary leaves out,
+with memory.* Let every function of $`M` be valid, and let $`s` name the
+function $`f` of $`M`. Run its ops with memory, in the state layer over the
+set monad, from any of its ops on, from any memories, at any budget:
 
-* if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, no run ends in UB;
-* if $`\mathsf{mayPoison} \notin \mathrm{sum}_M(s)` and the environment is
-  clean, every list of values that the run returns is clean.
+* if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, and each valid op that
+  runs by its own rule and leaves out may-UB never ends in UB from any
+  memories, no run ends in UB;
+* if $`\mathsf{mayPoison} \notin \mathrm{sum}_M(s)`, the environment is
+  clean, and each valid op with no callee that leaves out may produce
+  poison gives no poison on operands with none, from any memories, every
+  list of values that the run returns is clean.
 
-The proof is by induction on the budget. An op that runs by its own rule
-leaves out each effect that the summary leaves out, so the obligations of
-a lawful dialect cover it, carried back to the set monad through the tie. A call runs its callee, whose summary is below
-its caller's, with less fuel, so the induction covers the callee's run,
-recursion included. For poison, the run keeps its environment clean.
+The proof is by induction on the budget, for every function of $`M` at
+once, from any memories, one
+{ref "The-fir-specification--Memory--The-ways-a-step-with-memory-goes-on"}[step with memory]
+at a time. An op that runs by its own rule leaves out each effect that the
+summary leaves out, so the hypothesis covers it. A call runs its callee,
+whose summary is below its caller's, with less fuel, from the memories its
+caller reached with a new frame entered, so the induction covers the
+callee's run, recursion included. For poison, the run keeps its
+environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (fingerprint := "7889383545116582667")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "5030757686762725077")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
-its effects, its semantics with memory lift its semantics in the set
-monad, every function of the module $`M` valid, and $`s` name the
-function $`f` of $`M`. For every budget of fuel:
+its effects, every function of the module $`M` valid, and $`s` name the
+function $`f` of $`M`. Wherever a run names the dialect's memories, with
+any layout entries, for every budget of fuel, of the
+{ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
+of $`f`:
 
 * if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, no run of $`f` ends in
   UB;
 * if $`\mathsf{mayPoison} \notin \mathrm{sum}_M(s)`, a run of $`f` on
   arguments with no poison returns no poison.
 
-A pass may rely on a summary as it relies on an op's effects
-(ADR-2026-11-09-1541).
+The obligations of a dialect lawful in its effects speak of each op's
+semantics with memory, so they give the hypotheses of the previous
+theorems, and no semantics in the set monad is asked for: an op that
+touches memory is covered too. A pass may rely on a summary as it relies
+on an op's effects (ADR-2026-11-09-1541).
 :::

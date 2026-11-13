@@ -24,7 +24,8 @@ obligations speak of its semantics with memory. For a dialect whose
 semantics with memory lifts its semantics in the set monad, as for every
 dialect whose ops touch no memory, the first two hold in the set monad
 exactly when they hold with memory (the section on meeting the memory
-obligations), and the theorems over runs in the set monad use them so.
+obligations). The soundness of function summaries uses them over runs with
+memory, so it asks for no such tie.
 
 As the poison obligations do, the first two look only at what runs by the
 op's own rule: the meaning of an op that is not a terminator, and the exit

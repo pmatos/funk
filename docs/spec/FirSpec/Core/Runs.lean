@@ -14,23 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The runs of core functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11426702896052310162")
-:::
-
-:::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "16611792390663989322")
-*Definition: the runs of a function of a core module.* For a core module
-$`M` and a core function $`f`, the runs of $`f` are
-$`\mathrm{runs}_M(f)`: on each vector $`v^*` of values of its parameter
-types, poison included, and at each budget $`n`, the run
-$`\mathrm{runs}_M(f)(v^*)_n` of the
-{ref "The-fir-specification--Execution--The-interpreter"}[interpreter], in
-the set monad, with $`n` steps of fuel. They are the
-{ref "The-fir-specification--Execution--Core-values"}[runs of a core function]
-whose observations are the lists of values returned. Congruence in the
-callee over finitely many argument vectors, and the equivalence experiment
-of #282, are about them; the other theorems on the runs of core functions are
-stated over their
-{ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory].
+:::moduleDocs (fingerprint := "9786552517512518637")
 :::
 
 :::readable Fir.Core.Op.InTracer Fir.Core.InTracer (fingerprint := "9983642069029973491")

@@ -176,28 +176,30 @@ theorem summary_least (d : Dialect) [DialectSignature d] [DialectCall d] [h : Di
   ⟨SymbolTable.summary_closed, fun _ hT s => SymbolTable.summary_le hT s⟩
 
 /-- In every dialect lawful in its effects, a function of a module of valid
-functions whose summary leaves out may-UB never ends in UB. -/
+functions whose summary leaves out may-UB never ends in UB, in its runs with
+memory, wherever a run names the dialect's memories. -/
 theorem summary_neverUB (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
-    [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
-    [DialectValidation d] [DialectMemDenote d] [LiftsSetM d] [LawfulDialectEffects d]
-    {ctx : ModuleContext d} {M : Module d}
+    [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
+    [DialectMemDenote d] [LawfulDialectEffects d] {N : Type} [DecidableEq N]
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayUB = false) (args : HVector toType (f.params.map (·.2)))
-    (fuel : Nat) (r : String) : ¬ (f.run (m := SetM) M args fuel).run (.ub r) :=
-  Module.summary_neverUB hv hf hs args fuel r
+    (fuel : Nat) (r : String) : ¬ f.memRuns lay ρ M args fuel (.ub r) :=
+  Module.summary_neverUB lay ρ hv hf hs args fuel r
 
 /-- In every dialect lawful in its effects, a function of a module of valid
 functions whose summary leaves out may produce poison returns no poison on
-arguments with none. -/
+arguments with none, in its runs with memory, wherever a run names the
+dialect's memories. -/
 theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
-    [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
-    [DialectValidation d] [DialectMemDenote d] [LiftsSetM d] [LawfulDialectEffects d]
-    {ctx : ModuleContext d} {M : Module d}
+    [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
+    [DialectMemDenote d] [LawfulDialectEffects d] {N : Type} [DecidableEq N]
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayPoison = false) (args : HVector toType (f.params.map (·.2)))
     (hargs : ¬ args.Any TyPoison.IsPoison) (fuel : Nat) (vs : List (DVal d)) :
-    (f.run (m := SetM) M args fuel).run (.ok (.ok (.ret vs))) → DVals.Clean vs :=
-  Module.summary_noPoison hv hf hs args hargs fuel vs
+    f.memRuns lay ρ M args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs :=
+  Module.summary_noPoison lay ρ hv hf hs args hargs fuel vs
 
 /-!
 The core dialect declares a class and a set of effects for each of its ops,

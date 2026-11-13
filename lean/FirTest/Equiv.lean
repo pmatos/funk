@@ -88,9 +88,9 @@ At every width; some statements need a width condition:
   `add nsw` to `mul nsw` holds (`addNsw_mulNsw_1`), the other way fails
   (`mulNsw_addNsw_fails_1`).
 
-The runs with memory of #231 add nothing here: a core function's runs with
-memory are its runs (`Func.memRuns_eq`), so each result holds of them too
-(`add_shl_32_mem` and its siblings).
+The runs compared are the runs with memory of #231, at the module's layout
+(`Core.funcRuns`). Each result holds at every layout and naming of the
+core's memories too (`add_shl_32_mem` and its siblings).
 
 What the proofs trust: Lean's standard axioms, and for pair 4 at `i32`
 alone one axiom of native evaluation, where `bv_decide` ran its SAT
@@ -112,7 +112,7 @@ attribute [local simp] addWith mulWith wrapValues addValues mulValues shlValues 
 
 /-- At `i32`, `shl %x, 1` refines `add %x, %x`. -/
 theorem add_shl_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (shlOne 32) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -121,7 +121,7 @@ theorem add_shl_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (s
 
 /-- At `i32`, `add %x, %x` refines `shl %x, 1`. -/
 theorem shl_add_32 : funcRuns (pairs 32) (shlOne 32) ⊑ funcRuns (pairs 32) (addSelf 32) := by
-  refine (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -136,7 +136,7 @@ theorem add_self_eq_shl {w : Nat} (x : BitVec w) : x + x = x <<< 1 := by
 /-- At every width of two bits or more, `shl %x, 1` refines `add %x, %x`. -/
 theorem add_shl (w : Nat) (hw : 2 ≤ w) :
     funcRuns (pairs w) (addSelf w) ⊑ funcRuns (pairs w) (shlOne w) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -146,7 +146,7 @@ theorem add_shl (w : Nat) (hw : 2 ≤ w) :
 /-- At every width, `add %x, %x` refines `shl %x, 1`: at `i1` the shift is
 by the width, so `shl` gives poison, which every value refines. -/
 theorem shl_add (w : Nat) : funcRuns (pairs w) (shlOne w) ⊑ funcRuns (pairs w) (addSelf w) := by
-  refine (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -162,7 +162,7 @@ theorem shl_add (w : Nat) : funcRuns (pairs w) (shlOne w) ⊑ funcRuns (pairs w)
 gives `false` and `shl` gives poison, since it shifts by the width. -/
 theorem add_shl_fails_1 : ¬ funcRuns (pairs 1) (addSelf 1) ⊑ funcRuns (pairs 1) (shlOne 1) := by
   intro h
-  exact (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).1 h (.value 0)
+  exact (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 h (.value 0)
 
 -- `fir-ref` runs the module's text and agrees: at `i1`, on `false`.
 #guard runValid (pairsText 1) "@add_self" ["false"] == returns ["false"]
@@ -172,7 +172,7 @@ theorem add_shl_fails_1 : ¬ funcRuns (pairs 1) (addSelf 1) ⊑ funcRuns (pairs 
 
 /-- At `i32`, `add %x, %x` refines `mul %x, 2`. -/
 theorem mul_add_32 : funcRuns (pairs 32) (mulTwo 32) ⊑ funcRuns (pairs 32) (addSelf 32) := by
-  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -181,7 +181,7 @@ theorem mul_add_32 : funcRuns (pairs 32) (mulTwo 32) ⊑ funcRuns (pairs 32) (ad
 
 /-- At `i32`, `mul %x, 2` refines `add %x, %x`. -/
 theorem add_mul_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (mulTwo 32) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -190,39 +190,46 @@ theorem add_mul_32 : funcRuns (pairs 32) (addSelf 32) ⊑ funcRuns (pairs 32) (m
 
 /-- At every width, `add %x, %x` refines `mul %x, 2`. -/
 theorem mul_add (w : Nat) : funcRuns (pairs w) (mulTwo w) ⊑ funcRuns (pairs w) (addSelf w) := by
-  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x => exact BitVec.mul_two (x := x)
 
 /-- At every width, `mul %x, 2` refines `add %x, %x`. -/
 theorem add_mul (w : Nat) : funcRuns (pairs w) (addSelf w) ⊑ funcRuns (pairs w) (mulTwo w) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x => exact (BitVec.mul_two (x := x)).symm
 
-/-! # With memory
+/-! # At every layout and naming
 
-The runs with memory of a core function are its runs, at every naming of
-the core's memories (`Func.memRuns_eq`), so each result above holds of them
-too. Pairs 1 and 2 at `i32`, both ways; `FirTest.EquivNsw` does pairs 3
-and 4. -/
+The runs above are the runs with memory at the module's layout. Each
+function returns the same value at every layout and naming of the core's
+memories, so each result above holds there too: the value-level fact that a
+result proves carries it to any other layout and naming. Pairs 1 and 2 at
+`i32`, both ways; `FirTest.EquivNsw` does pairs 3 and 4. -/
 
-/-- Pair 1 at `i32`, both ways, for the runs with memory. -/
+/-- Pair 1 at `i32`, both ways, for the runs with memory at every layout
+and naming. -/
 theorem add_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) ∧
-      (shlOne 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) := by
-  rw [Func.memRuns_eq, Func.memRuns_eq]
-  exact ⟨add_shl_32, shl_add_32⟩
+      (shlOne 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) :=
+  ⟨(unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2
+      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 add_shl_32),
+    (unary_isRefinedBy_iff lay ρ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).2
+      ((unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 shl_add_32)⟩
 
-/-- Pair 2 at `i32`, both ways, for the runs with memory. -/
+/-- Pair 2 at `i32`, both ways, for the runs with memory at every layout
+and naming. -/
 theorem mul_add_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (mulTwo 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) ∧
-      (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulTwo 32).memRuns lay ρ (pairs 32) := by
-  rw [Func.memRuns_eq, Func.memRuns_eq]
-  exact ⟨mul_add_32, add_mul_32⟩
+      (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulTwo 32).memRuns lay ρ (pairs 32) :=
+  ⟨(unary_isRefinedBy_iff lay ρ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2
+      ((unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 mul_add_32),
+    (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2
+      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).1 add_mul_32)⟩
 
 end FirTest.Equiv

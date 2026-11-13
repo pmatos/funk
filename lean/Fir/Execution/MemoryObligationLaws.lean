@@ -27,8 +27,8 @@ and its ops meet the obligations on may-UB and poison with memory when they
 meet them in the set monad. Each of these holds of one op that is tied, too,
 so a dialect can meet the obligations op by op: the core dialect does. The
 last section goes back: in a dialect that lifts the set monad, an op that
-meets them with memory meets them in the set monad, which is how the
-theorems over runs in the set monad use them.
+meets them with memory meets them in the set monad. No theorem over runs
+uses that: the soundness of function summaries speaks of runs with memory.
 -/
 
 namespace Fir

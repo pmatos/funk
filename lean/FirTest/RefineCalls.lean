@@ -10,7 +10,8 @@ be met, and the axioms of their proofs.
   argument is refined by `@fact` on `5`; and `@even`, which calls `@odd`,
   which calls it back, on any arguments is refined by itself on refined
   ones.
-* Congruence in the callee: `@g` divides by zero before it calls itself,
+* Congruence in the callee, over the runs in the set monad, the form kept
+  until the human rules on #373: `@g` divides by zero before it calls itself,
   so it hits UB on every argument, and every body refines it. `@count`
   calls `@g` and itself. With a new body for `@g`, which calls `@count`
   back, the module is still valid, and each of its functions is refined
@@ -78,7 +79,7 @@ def ubModule : Module CoreDialect := ⟨[], [], [.func countFn, .func gFn], [(0,
 
 /-- `@g` hits UB on every argument, at two steps. -/
 theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
-    ∃ r, (funcRuns ubModule gFn a 2).outcomes (.ub r) := by
+    ∃ r, (gFn.runs ubModule a 2).outcomes (.ub r) := by
   match a with
   | .cons v .nil =>
   have hne : ∀ r : String,
@@ -212,13 +213,13 @@ theorem ubModule'_valid : ubModule'.Valid :=
 
 /-- `@g` with its new body refines `@g`: `@g` hits UB on every argument. -/
 theorem g_isRefinedBy :
-    funcRuns ubModule gFn ⊑ funcRuns ubModule' (gFn.replaceBody gFn.name gBody) := fun a =>
+    gFn.runs ubModule ⊑ (gFn.replaceBody gFn.name gBody).runs ubModule' := fun a =>
   let ⟨_, h⟩ := g_ub a
   Behaviour.ub_isRefinedBy ⟨2, h⟩ _
 
 /-- So `@count`, which calls `@g` and itself, is refined by itself in the
 module with `@g`'s new body, which calls `@count` back. -/
-theorem count_isRefinedBy : funcRuns ubModule countFn ⊑ funcRuns ubModule' countFn :=
+theorem count_isRefinedBy : countFn.runs ubModule ⊑ countFn.runs ubModule' :=
   Core.caller_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
     (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy (by simp [ubModule, Module.funcs])
     (by decide)
@@ -226,7 +227,7 @@ theorem count_isRefinedBy : funcRuns ubModule countFn ⊑ funcRuns ubModule' cou
 /-- Every function of the module is refined by its counterpart with
 `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
-    funcRuns ubModule f ⊑ funcRuns ubModule' (f.replaceBody gFn.name gBody) :=
+    f.runs ubModule ⊑ (f.replaceBody gFn.name gBody).runs ubModule' :=
   Core.replaceBody_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
     (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy hf
 
@@ -234,15 +235,15 @@ theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) 
 
 /-- `@odd` with its own body refines `@odd`. -/
 theorem odd_self_isRefinedBy :
-    funcRuns recModule oddFn ⊑
-      funcRuns (recModule.replaceBody oddFn.name oddFn.body)
-        (oddFn.replaceBody oddFn.name oddFn.body) := by
+    oddFn.runs recModule ⊑
+      (oddFn.replaceBody oddFn.name oddFn.body).runs
+        (recModule.replaceBody oddFn.name oddFn.body) := by
   have hM : recModule.replaceBody oddFn.name oddFn.body = recModule := by
     simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
       parityFn]
   rw [hM]
-  show funcRuns recModule oddFn ⊑
-    funcRuns recModule
+  show oddFn.runs recModule ⊑
+    Func.runs recModule
       { oddFn with body := if oddFn.name = oddFn.name then oddFn.body else oddFn.body }
   rw [ite_self]
   exact Core.funcRuns_isRefinedBy_refl _
@@ -250,7 +251,7 @@ theorem odd_self_isRefinedBy :
 /-- So `@even`, which calls `@odd`, which calls it back, is refined by
 itself. -/
 theorem even_replace_isRefinedBy :
-    funcRuns recModule evenFn ⊑ funcRuns (recModule.replaceBody oddFn.name oddFn.body) evenFn :=
+    evenFn.runs recModule ⊑ evenFn.runs (recModule.replaceBody oddFn.name oddFn.body) :=
   Core.caller_isRefinedBy recModule_valid (by simp [recModule, Module.funcs])
     (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body odd_self_isRefinedBy
     (by simp [recModule, Module.funcs]) (by decide)

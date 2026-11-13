@@ -59,14 +59,17 @@ def coreToyEffects (o : CoreToy.Op) : Effects (Core.Mem ⊕ Empty) := effects o
 
 /-! # Running a mixed module
 
-The spec's semantics of the sum is the set monad's: each side's instance,
-lifted. The tests run the same rules in `Mix`, a tree of choices whose
-paths with no outcome name the op without a rule, as `fir-ref run` runs
-the core dialect's, and walk it in scripted mode with no choices. -/
+The spec's runs of the sum are its runs with memory: each side's semantics
+with memory, the core's rules with memory and the toy op's rule lifted into
+the state layer, at every layout and naming of the sum's memories. The tests
+run the same rules in `Mix`, a tree of choices whose paths with no outcome
+name the op without a rule, as `fir-ref run` runs the core dialect's, and
+walk it in scripted mode with no choices. -/
 
 example (M : Module CoreToy) (f : Func CoreToy) (args : HVector toType (f.params.map (·.2)))
-    (fuel : Nat) : Run (List (DVal CoreToy)) :=
-  f.run M (m := SetM) args fuel
+    (fuel : Nat) {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem CoreToy → N) : Run (List (DVal CoreToy)) :=
+  f.memRuns lay ρ M args fuel
 
 /-- The tree of choices that the tests run a mixed module in. A path with
 no outcome names the op that has no rule for what the interpreter asks of

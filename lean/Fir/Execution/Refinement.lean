@@ -95,10 +95,11 @@ a callee).
 -/
 
 /-- The runs of a function: for each argument vector, its run at each fuel
-budget. `Func.runs` gives them for each function of a module, with `A` the
-argument vectors of its parameter types, `HVector toType ts`. For the core
-dialect, `Core.FuncRuns ts` fixes `A` so, and `Core.funcRuns` gives
-them. -/
+budget. `Func.runs` gives them for each function of a module, and
+`Func.memRuns` its runs with memory, with `A` the argument vectors of its
+parameter types, `HVector toType ts`. For the core dialect,
+`Core.FuncRuns ts` fixes `A` so, and `Core.funcRuns` gives its runs with
+memory at the module's layout. -/
 def FuncRuns (A O : Type) : Type := A → Nat → Run O
 
 /-- The target function refines the source function: on every argument

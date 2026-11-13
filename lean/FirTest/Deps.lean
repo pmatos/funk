@@ -185,18 +185,26 @@ def threeText : String :=
 
 /-! # Running a lifted op
 
-The bit dialect's op runs in the sum by its own rule, on values that cross
-the inclusion of the core's types. -/
+The bit dialect's op runs in the sum by its own rule, with memory, on values
+that cross the inclusion of the core's types, and keeps the memories. -/
 
-/-- `bit.low` at `i8` takes the low bit of 5 in the sum of three. -/
-example : DialectDenote.denote (m := SetM) (d := CoreToyBit) (.inr (.low 8)) (.cons (.value 5) .nil)
-    (.ok (.cons (.value true) .nil)) :=
-  .inl ⟨_, rfl, rfl⟩
+/-- The layout entries of a run with one memory, in the tests below. -/
+abbrev oneLayout : Unit → MemLayout := fun _ => MemLayout.default
 
-/-- `bit.int` gives a poison bit back as poison. -/
-example : DialectDenote.denote (m := SetM) (d := CoreToyBit) (.inr .int) (.cons .poison .nil)
-    (.ok (.cons .poison .nil)) :=
-  .inl ⟨_, rfl, rfl⟩
+/-- `bit.low` at `i8` takes the low bit of 5 in the sum of three, with
+memory. -/
+example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ())
+    DialectDenote.denote (m := StateT (Memory.Memories Unit (unitsOf oneLayout)) SetM)
+      (d := CoreToyBit) (.inr (.low 8)) (.cons (.value 5) .nil) Memory.Memories.empty
+      (.ok (.cons (.value true) .nil, Memory.Memories.empty)) :=
+  .inl ⟨_, .inl ⟨_, rfl, rfl⟩, rfl⟩
+
+/-- `bit.int` gives a poison bit back as poison, with memory. -/
+example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ())
+    DialectDenote.denote (m := StateT (Memory.Memories Unit (unitsOf oneLayout)) SetM)
+      (d := CoreToyBit) (.inr .int) (.cons .poison .nil) Memory.Memories.empty
+      (.ok (.cons .poison .nil, Memory.Memories.empty)) :=
+  .inl ⟨_, .inl ⟨_, rfl, rfl⟩, rfl⟩
 
 /-! # Other inclusions
 

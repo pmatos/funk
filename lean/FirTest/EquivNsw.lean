@@ -29,7 +29,7 @@ fir's `shl` has no flags, so the flagged pair keeps `shl` as it is. -/
 overflows it gives poison, which every value refines. -/
 theorem addNsw_shl_32 :
     funcRuns (pairs 32) (addNswSelf 32) ⊑ funcRuns (pairs 32) (shlOne 32) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -42,7 +42,7 @@ gives `-2^31` and `add nsw` overflows, so gives poison. -/
 theorem shl_addNsw_fails_32 :
     ¬ funcRuns (pairs 32) (shlOne 32) ⊑ funcRuns (pairs 32) (addNswSelf 32) := by
   intro h
-  exact (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).1 h (.value 1073741824)
+  exact (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 h (.value 1073741824)
 
 -- `fir-ref` agrees, on `2^30`.
 #guard runValid (pairsText 32) "@shl_one" ["1073741824"] == returns ["-2147483648"]
@@ -52,7 +52,7 @@ theorem shl_addNsw_fails_32 :
 `add nsw %x, %x`. -/
 theorem addNsw_shl (w : Nat) (hw : 2 ≤ w) :
     funcRuns (pairs w) (addNswSelf w) ⊑ funcRuns (pairs w) (shlOne w) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -65,14 +65,14 @@ theorem addNsw_shl (w : Nat) (hw : 2 ≤ w) :
 theorem addNsw_shl_fails_1 :
     ¬ funcRuns (pairs 1) (addNswSelf 1) ⊑ funcRuns (pairs 1) (shlOne 1) := by
   intro h
-  exact (unary_isRefinedBy_iff (addSelfWith_runs _) shlOne_runs).1 h (.value 0)
+  exact (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 h (.value 0)
 
 #guard runValid (pairsText 1) "@add_nsw_self" ["false"] == returns ["false"]
 
 /-- At `i1`, `add nsw %x, %x` refines `shl %x, 1`: `shl` shifts by the
 width there, so gives poison, which every value refines. -/
 theorem shl_addNsw_1 : funcRuns (pairs 1) (shlOne 1) ⊑ funcRuns (pairs 1) (addNswSelf 1) := by
-  refine (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x <;> trivial
 
 /-! # Pair 4: `mul nsw %x, 2` and `add nsw %x, %x` -/
@@ -80,7 +80,7 @@ theorem shl_addNsw_1 : funcRuns (pairs 1) (shlOne 1) ⊑ funcRuns (pairs 1) (add
 /-- At `i32`, `add nsw %x, %x` refines `mul nsw %x, 2`. -/
 theorem mulNsw_addNsw_32 :
     funcRuns (pairs 32) (mulNswTwo 32) ⊑ funcRuns (pairs 32) (addNswSelf 32) := by
-  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -91,7 +91,7 @@ theorem mulNsw_addNsw_32 :
 /-- At `i32`, `mul nsw %x, 2` refines `add nsw %x, %x`. -/
 theorem addNsw_mulNsw_32 :
     funcRuns (pairs 32) (addNswSelf 32) ⊑ funcRuns (pairs 32) (mulNswTwo 32) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -123,7 +123,7 @@ theorem pow_saddOverflow (k : Nat) :
 theorem shl_addNsw_fails (k : Nat) :
     ¬ funcRuns (pairs (k + 2)) (shlOne (k + 2)) ⊑ funcRuns (pairs (k + 2)) (addNswSelf (k + 2)) := by
   intro h
-  have h1 := (unary_isRefinedBy_iff shlOne_runs (addSelfWith_runs _)).1 h
+  have h1 := (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 h
     (.value (BitVec.ofNat (k + 2) (2 ^ k)))
   simp [pow_saddOverflow, Nat.one_mod_two_pow (n := k + 2) (by omega)] at h1
 
@@ -148,7 +148,7 @@ theorem saddOverflow_eq_smulOverflow {w : Nat} (hw : 3 ≤ w) (x : BitVec w) :
 `mul nsw %x, 2`. -/
 theorem mulNsw_addNsw (w : Nat) (hw : 3 ≤ w) :
     funcRuns (pairs w) (mulNswTwo w) ⊑ funcRuns (pairs w) (addNswSelf w) := by
-  refine (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -160,7 +160,7 @@ theorem mulNsw_addNsw (w : Nat) (hw : 3 ≤ w) :
 `add nsw %x, %x`. -/
 theorem addNsw_mulNsw (w : Nat) (hw : 3 ≤ w) :
     funcRuns (pairs w) (addNswSelf w) ⊑ funcRuns (pairs w) (mulNswTwo w) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -173,14 +173,14 @@ there, so on `1`, `mul nsw` gives `-2` and `add nsw` overflows. -/
 theorem mulNsw_addNsw_fails_2 :
     ¬ funcRuns (pairs 2) (mulNswTwo 2) ⊑ funcRuns (pairs 2) (addNswSelf 2) := by
   intro h
-  exact (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).1 h (.value 1)
+  exact (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 h (.value 1)
 
 /-- At `i2`, `mul nsw %x, 2` does not refine `add nsw %x, %x`: on `-1`,
 `add nsw` gives `-2` and `mul nsw` overflows, since `-1 * -2` is `2`. -/
 theorem addNsw_mulNsw_fails_2 :
     ¬ funcRuns (pairs 2) (addNswSelf 2) ⊑ funcRuns (pairs 2) (mulNswTwo 2) := by
   intro h
-  exact (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).1 h (.value 3)
+  exact (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).1 h (.value 3)
 
 #guard runValid (pairsText 2) "@mul_nsw_two" ["1"] == returns ["-2"]
 #guard runValid (pairsText 2) "@add_nsw_self" ["1"] == returns ["poison"]
@@ -192,13 +192,13 @@ there, so on `true`, `mul nsw` gives `false` and `add nsw` overflows. -/
 theorem mulNsw_addNsw_fails_1 :
     ¬ funcRuns (pairs 1) (mulNswTwo 1) ⊑ funcRuns (pairs 1) (addNswSelf 1) := by
   intro h
-  exact (unary_isRefinedBy_iff (mulTwoWith_runs _) (addSelfWith_runs _)).1 h (.value 1)
+  exact (unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 h (.value 1)
 
 /-- At `i1`, `mul nsw %x, 2` refines `add nsw %x, %x`: on `true`, `add nsw`
 gives poison. -/
 theorem addNsw_mulNsw_1 :
     funcRuns (pairs 1) (addNswSelf 1) ⊑ funcRuns (pairs 1) (mulNswTwo 1) := by
-  refine (unary_isRefinedBy_iff (addSelfWith_runs _) (mulTwoWith_runs _)).2 fun x => ?_
+  refine (unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2 fun x => ?_
   cases x with
   | poison => trivial
   | value x =>
@@ -209,24 +209,28 @@ theorem addNsw_mulNsw_1 :
 #guard runValid (pairsText 1) "@mul_nsw_two" ["true"] == returns ["false"]
 #guard runValid (pairsText 1) "@add_nsw_self" ["true"] == returns ["poison"]
 
-/-! # With memory
+/-! # At every layout and naming
 
-As in `FirTest.Equiv`, each result holds of the runs with memory, at every
-naming of the core's memories. -/
+As in `FirTest.Equiv`, each result holds of the runs with memory at every
+layout and naming of the core's memories. -/
 
-/-- Pair 3 at `i32`, the direction that holds, for the runs with memory. -/
+/-- Pair 3 at `i32`, the direction that holds, for the runs with memory at every
+layout and naming. -/
 theorem addNsw_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
-    (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) := by
-  rw [Func.memRuns_eq, Func.memRuns_eq]
-  exact addNsw_shl_32
+    (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) :=
+  (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2
+      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 addNsw_shl_32)
 
-/-- Pair 4 at `i32`, both ways, for the runs with memory. -/
+/-- Pair 4 at `i32`, both ways, for the runs with memory at every
+layout and naming. -/
 theorem mulNsw_addNsw_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (mulNswTwo 32).memRuns lay ρ (pairs 32) ⊑ (addNswSelf 32).memRuns lay ρ (pairs 32) ∧
-      (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulNswTwo 32).memRuns lay ρ (pairs 32) := by
-  rw [Func.memRuns_eq, Func.memRuns_eq]
-  exact ⟨mulNsw_addNsw_32, addNsw_mulNsw_32⟩
+      (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulNswTwo 32).memRuns lay ρ (pairs 32) :=
+  ⟨(unary_isRefinedBy_iff lay ρ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2
+      ((unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 mulNsw_addNsw_32),
+    (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2
+      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).1 addNsw_mulNsw_32)⟩
 
 end FirTest.Equiv

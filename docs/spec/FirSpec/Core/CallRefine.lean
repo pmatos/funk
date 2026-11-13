@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8889361380658203698")
+:::moduleDocs (fingerprint := "8510722386506462294")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -64,11 +64,11 @@ no pointer parameter have finitely many argument vectors, which
 asks.
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "8597197980571865364")
+:::readable Fir.Core.replaceBody_isRefinedBy (pin := Fir.Func.runs) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "9393836866542943365")
 *Theorem: congruence in the callee, for core functions.* Let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]
 core module, $`g` a function of $`M` with the symbol $`s` and no pointer
-parameter, and $`b` a region. Let the runs of $`g[s \leftarrow b]` in
+parameter, and $`b` a region. Let the runs in the set monad of $`g[s \leftarrow b]` in
 $`M[s \leftarrow b]` refine the runs of $`g` in $`M`: on every argument
 vector, its observable behaviour in the new module refines that of $`g`
 in the old. Then for every function $`f` of $`M`, the runs of
@@ -86,6 +86,12 @@ values, and the symbols of a valid module are unique. A callee with a
 pointer parameter has infinitely many argument vectors, and congruence for
 it waits for the general theorem over such types (#214).
 
+The theorem is stated over the runs in the set monad, not over the runs of
+core functions, which are their runs with memory. Congruence with memory,
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[with a bound on the new callee's runs],
+stands beside it; whether this form goes waits for the human's ruling on
+#373.
+
 The comparison is between real behaviours when the new function is valid
 in the old module's context: then the new module is valid, and neither
 module's runs have a stuck path. A body that is stuck at once, such as
@@ -93,7 +99,7 @@ one whose entry block declares arguments, meets the hypothesis with an
 empty behaviour, which refines every source.
 :::
 
-:::readable Fir.Core.caller_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "16463603510413641815")
+:::readable Fir.Core.caller_isRefinedBy (pin := Fir.Func.runs) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "8806947217049377994")
 *Theorem: every other function, a caller or not, is refined by itself.*
 Under the hypotheses of the previous theorem, for every function $`f` of
 $`M` whose symbol is not $`s`, the runs of $`f` itself in

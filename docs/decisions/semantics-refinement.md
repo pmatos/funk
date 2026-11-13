@@ -166,8 +166,9 @@ refines the old from every memories, and one fuel bound for it in place of
 finitely many argument vectors, until #214. For a dialect that lifts the set
 monad, the finiteness form stays. The core's congruence with memory is
 `Core.memReplaceBody_isRefinedBy`, with the bound; its finiteness form,
-`Core.replaceBody_isRefinedBy`, stays over the runs in the set monad until the
-human rules whether it may go before #214 (the 4b-3 split on #231). These proofs stand beside those in the set
+`Core.replaceBody_isRefinedBy`, stays over the runs in the set monad,
+`Func.runs`, not `Core.funcRuns`, which are the runs with memory, until the
+human rules on #373 whether it may go before #214. These proofs stand beside those in the set
 monad, step by step, and each change to `Func.runOps` is proved again in the
 memory refinement files until the refactor that semantics-interpreter.md names.
 Rejected: refining runs with memory only from the empty memories, since a black

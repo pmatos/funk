@@ -34,6 +34,11 @@ theorem below asks that the core lift the set monad: an op that touches
 memory, which is not a terminator, joins them with its own case of
 monotonicity with memory and its own totality.
 
+The runs of a core function are its runs with memory at its module's
+layout, where each memory of the core is the module's memory of the same
+number: the runs that the modes report. The refinement of core functions and
+the equivalence experiment of #282 are about them.
+
 The three obligations of the section on fuel and progress hold of the runs
 with memory of core functions, on every argument vector of their parameter
 types, poison included, wherever a run names the core's memories:
@@ -85,14 +90,23 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
 
 /-- The core dialect's semantics with memory lifts its semantics in the set
 monad: every core op is tied. It is proved from each op's tie. No theorem on
-the core's runs uses it; the tests of the dialects over the core and the
-equivalence tests do, until they are stated over runs with memory. -/
+the core's runs, no test of a dialect over the core and no equivalence test
+uses it. It stays until the human rules on congruence in the callee
+([#373](https://github.com/pmatos/funk/issues/373)), whose form over finitely
+many argument vectors is stated over the runs in the set monad. -/
 instance Core.liftsSetM : LiftsSetM CoreDialect := LiftsSetM.ofOpLifts Core.Op.liftsSetM
 
 namespace Core
 
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
+
+/-- The runs of the function `f` of the core module `M`: its runs with memory
+at the module's layout, where the core's memory `x` is the module's memory
+`x`, on each argument vector of its parameter types, poison included, at
+each budget. They are the runs that the modes report. -/
+def funcRuns (M : Module CoreDialect) (f : Func CoreDialect) : FuncRuns (f.params.map (·.2)) :=
+  f.memRuns M.layout.entry id M
 
 /-- Every core terminator is tied: it touches no memory. -/
 theorem Op.liftsSetM_of_terminator {op : Op} (_ : Fir.isTerminator (d := CoreDialect) op = true) :

@@ -145,10 +145,11 @@ its own. Rejected: transfers that ask the whole dialect to lift the set monad,
 which no dialect with one memory op could use for its other ops.
 
 Under the tie an op meets no may-UB and no may produce poison in the set monad
-exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
-theorems over runs in the set monad that use these two obligations assume the
-tie. Theorems that do not use them, such as fuel monotonicity, progress and
-refinement of runs in the set monad, take no tie. A dialect with a memory op has
+exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back).
+No theorem of the spec uses these two obligations over runs in the set monad:
+the soundness of function summaries is stated over runs with memory and takes
+no tie. Theorems over runs in the set monad, such as fuel monotonicity,
+progress and refinement, take no tie. A dialect with a memory op has
 no tie: its theorems speak of its runs with memory. Runs with memory,
 `Func.memRuns lay ρ M f`, run `DialectMemDenote.denoteAt lay ρ` from the empty
 memories, at every layout and naming; a run of a module gives each memory its
@@ -176,8 +177,13 @@ arguments, are stated over its runs with memory and do not use it: a valid core
 function runs within its module with memory because each of its terminators is
 tied (`Core.inModuleAt_of_valid`, from `Func.InModule.inModuleAt_of_tied`), and
 refined arguments ask each op to be monotone with memory (stage 4b-3a of #231).
-The test dialects over the core and the equivalence tests use it until stage
-4b-3b states them over runs with memory. A memory op joins with its own rule in
+The runs of a core function, `Core.funcRuns M f`, are its runs with memory at
+its module's layout, the runs that the modes report; the equivalence tests,
+the tests of the dialects over the core and the core's effect tests are stated
+over runs with memory and do not use it either (stage 4b-3b). `Core.liftsSetM`
+stays, with the core's form of congruence over finitely many argument vectors
+over the runs in the set monad, until the human rules on #373; only the test
+of the tie itself uses it. A memory op joins with its own rule in
 `Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
 memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
@@ -225,13 +231,16 @@ A call carries its callee's effects through a summary (ADR-2026-11-09-1541):
   nested module is not a call that the module can make.
 - The summary is the least fixpoint of the calls, recursion included
   (`SymbolTable.summary_closed`, `SymbolTable.summary_le`). In a dialect
-  lawful in its effects that lifts the set monad, and a module of valid
-  functions, a function whose summary leaves out may-UB never ends in UB, and
-  one whose summary leaves out may produce poison returns no poison on
-  arguments with none (`Module.summary_neverUB`, `Module.summary_noPoison`).
-  `lean/FirTest/G0Effects.lean` restates them for every dialect. When the core
-  dialect gains a memory op (stage 4 of #231), it no longer lifts the set
-  monad, and these two theorems need statements over runs with memory first.
+  lawful in its effects and a module of valid functions, a function whose
+  summary leaves out may-UB never ends in UB in its runs with memory, and one
+  whose summary leaves out may produce poison returns no poison on arguments
+  with none, at every layout and naming (`Module.summary_neverUB`,
+  `Module.summary_noPoison`). They ask for no semantics in the set monad and
+  no tie, so they hold when the core dialect gains a memory op (stage 4b-3b
+  of #231). The proofs follow a run with memory from any memories
+  (`Module.memOps_notUB`, `Module.memOps_clean`). `lean/FirTest/G0Effects.lean`
+  restates them for every dialect. Rejected: keeping them over runs in the set
+  monad under the tie, which no dialect with a memory op meets.
 - The spec's walk and Rust's pass keep their work on the heap, so a long
   chain of calls takes no stack per call. The spec finds the functions a call
   reaches by a walk that keeps its work in lists, and Rust takes one pass over
