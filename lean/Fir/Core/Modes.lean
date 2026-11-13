@@ -86,6 +86,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .shl _, .cons _ (.cons _ .nil) | .lshr _, .cons _ (.cons _ .nil)
     | .ashr _, .cons _ (.cons _ .nil) | .zext .., .cons _ .nil | .sext .., .cons _ .nil
     | .trunc .., .cons _ .nil | .toBits .., .cons _ .nil | .ofBits .., .cons _ .nil
+    | .fptosi .., .cons _ .nil | .fptoui .., .cons _ .nil
     | .icmp .., .cons _ (.cons _ .nil)
     | .fcmp .., .cons _ (.cons _ .nil) | .select _, .cons _ (.cons _ (.cons _ .nil))
     | .ptradd .., .cons _ (.cons _ .nil) => rfl
@@ -139,7 +140,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
     | .freeze _, _ | .poison _, _ | .br, _ | .ret _, _ | .call .., _ | .fconst .., _
     | .fcmp .., _ | .fbin .., _ | .funary .., _ | .fma .., _ | .toBits .., _ | .ofBits .., _
     | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
-    | .ptradd .., _ => rfl
+    | .ptradd .., _ | .fptosi .., _ | .fptoui .., _ => rfl
 
 /-- The core dialect's rules in the state layer over the tree of choices:
 each op runs by its rule in the tree and keeps the memories, as it runs with

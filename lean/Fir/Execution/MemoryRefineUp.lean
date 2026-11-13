@@ -57,7 +57,6 @@ memory. -/
 def Func.MemOpsMonotone (f : Func d) : Prop :=
   ∀ b ∈ f.blocks, MemMonotoneOps Mem unit b.body
 
-omit [DecidableEq Mem] in
 /-- A run of `f` starts at the ops of one of its blocks. -/
 theorem Func.MemOpsMonotone.enter {f : Func d} (hf : f.MemOpsMonotone Mem unit)
     {dvs : List (DVal d)} {p : List (Operation d) × Env d} (hen : f.enter dvs = .ok p) :
@@ -65,7 +64,6 @@ theorem Func.MemOpsMonotone.enter {f : Func d} (hf : f.MemOpsMonotone Mem unit)
   obtain ⟨e, he, -, -, rfl⟩ := Func.enter_eq_ok hen
   exact hf e (List.mem_of_mem_head? he)
 
-omit [DecidableEq Mem] in
 /-- A jump of `f` goes to the ops of one of its blocks. -/
 theorem Func.MemOpsMonotone.jump {f : Func d} (hf : f.MemOpsMonotone Mem unit) {env : Env d}
     {succs : List Succ} {i : Nat} {b : Block d} {env₁ : Env d}

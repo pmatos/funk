@@ -23,9 +23,10 @@ Rejected too: effect sets that do not name a memory, since accesses to different
 memories could then never be reordered.
 
 The empty set is pure. The memory-named effects name the dialect's memories,
-or every memory, as an external call needs. No op uses them yet: the core
-dialect has no memory, so its memories have no names (ADR-2026-11-09-1541,
-ADR-2026-11-09-1542).
+or every memory, as an external call needs. The core dialect names each
+memory of a module by its number, as `ptr<N>` names memory `N`
+(`Core.Mem` is `Nat`). No op uses them yet: no core op touches memory
+(ADR-2026-11-09-1541, ADR-2026-11-09-1542).
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says
@@ -62,7 +63,9 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
   carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
-  flag, and `sdiv` and `udiv` with `exact`.
+  flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
+  `fptosi` and `fptoui`, which give poison for an integer out of range, an
+  infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 

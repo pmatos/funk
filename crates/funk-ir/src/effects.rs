@@ -6,8 +6,9 @@
 //! as each op of a Lean dialect does through `DialectEffects`, and
 //! `tests/dialects/effects.cases` checks that the core's sets here are the
 //! ones of `Core.Op.effects`. The memory-named effects name the dialect's own
-//! memories, or every memory. No op uses them yet: the core dialect has no
-//! memory (ADR-2026-11-09-1542).
+//! memories, or every memory. No op uses them yet: the core dialect names
+//! each memory of a module by its number, and no core op touches one
+//! (ADR-2026-11-09-1542).
 //!
 //! The spec proves each Lean declaration sound: an effect that an op leaves
 //! out, it does not have. A pass may rely on a set here because it equals

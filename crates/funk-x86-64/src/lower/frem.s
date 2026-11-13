@@ -3,7 +3,7 @@
 # appends this file, once, to the assembly of a module in which a function
 # does frem or fmod at f32 or f64, so the module's object file carries it,
 # as it does the helpers of fma and of division at i128
-# (docs/decisions/x86-64-backend-lowering.md#the-remainders).
+# (docs/decisions/x86-64-backend-lowering-floats.md#the-remainders).
 #
 # Each routine is a System V function of two floats that returns one: x in
 # %xmm0, y in %xmm1, and the remainder in %xmm0. Every symbol is local to

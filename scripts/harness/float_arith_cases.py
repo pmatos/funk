@@ -34,6 +34,7 @@ computes, apart from Lean, rounding to nearest even.
 """
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import float_cases
@@ -241,6 +242,62 @@ def files() -> dict[str, str]:
         for t in FORMATS:
             out[f"{name}-{t}.fir"] = module_text(t, ops)
             out[f"{name}-{t}.toml"] = tests_text(name, t)
+    return out
+
+
+def test_lines(name: str, cases: list[tuple[str, str]], native: bool) -> list[str]:
+    """The tests of `@name` on `cases`, each an argument and what it gives:
+    a differential test first when `native`, and an interpreter-only test
+    with `expect`."""
+    lines = []
+    for arg, want in cases:
+        if native:
+            lines.append(f'  {{ func = "@{name}", args = ["{arg}"] }},')
+        lines.append(
+            f'  {{ func = "@{name}", args = ["{arg}"], expect = ["{want}"] }},'
+        )
+    return lines
+
+
+def tests_file(head: list[str], lines: list[str]) -> str:
+    """A test file of the comment lines `head` and the tests `lines`."""
+    return "\n".join(head) + "\ntests = [\n" + "\n".join(lines) + "\n]\n"
+
+
+def corpus_files(
+    modules: list[str],
+    module_text: Callable[[str], str],
+    tests_text: Callable[[str], str],
+) -> dict[str, str]:
+    """The files of `modules`, by their paths below `CANONICAL`: each
+    module's text and its tests."""
+    out = {}
+    for module in modules:
+        out[f"{module}.fir"] = module_text(module)
+        out[f"{module}.toml"] = tests_text(module)
+    return out
+
+
+def stale_files(written: dict[str, str]) -> list[str]:
+    """The paths of `written` whose committed file below `CANONICAL` holds
+    other text."""
+    return [
+        path
+        for path, text in written.items()
+        if (CANONICAL / path).read_text(encoding="utf-8") != text
+    ]
+
+
+def wrong_corpus(
+    modules: list[str], wrong: Callable[[str, str], list[str]]
+) -> dict[str, list[str]]:
+    """The tests that `wrong` finds wrong in each committed module's test
+    file, for each module that has any."""
+    out = {}
+    for module in modules:
+        text = (CANONICAL / f"{module}.toml").read_text(encoding="utf-8")
+        if found := wrong(module, text):
+            out[module] = found
     return out
 
 

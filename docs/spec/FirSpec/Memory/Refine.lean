@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2351082189335893430")
+:::moduleDocs (fingerprint := "10349659386704060188")
 :::
 
 :::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "5035405831092213634")
@@ -65,7 +65,7 @@ only on the allocations, which are the same. So:
   memories $`N \sqsubseteq N'`.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "1770885520396180827")
+:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "16786046636736567672")
 *Definition: refining the memories of a run.* The memories $`S'` of a
 run refine $`S` when they have the same frames, and the memory of each
 name in $`S'` refines the memory of that name in $`S`:
@@ -75,7 +75,7 @@ $$`S \sqsubseteq S' \iff \mathit{frames}(S) = \mathit{frames}(S') \land \forall 
 It is reflexive and transitive.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "18126530047808467220")
+:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "6860965911325026168")
 *Theorems: frames keep refinement.* Let $`S \sqsubseteq S'`. Entering a
 call keeps refinement. Replacing the memory $`x` by $`m` in $`S` and by
 $`m'` in $`S'`, with $`m \sqsubseteq m'`, keeps it, and so does freeing an
@@ -85,7 +85,7 @@ have the same frames, so both free the allocations of the same innermost
 frame.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "14868621672713175721")
+:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "13065134593748014542")
 *Theorems: the memory model's operations keep refinement.* Let
 $`S \sqsubseteq S'`. Allocating in the memory $`x` of both gives the same
 pointer and memories that refine each other; a stack allocation is recorded

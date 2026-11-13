@@ -1,6 +1,6 @@
 //! Conversions from integers to floats: `sitofp` and `uitofp`
 //! (`dialects/core/int_to_float.rs` in `funk-ir`;
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-from-integers`),
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-from-integers`),
 //! from `i1` to `i128` to `f32` and `f64`.
 //!
 //! SSE2's `cvtsi2ssq` and `cvtsi2sdq` convert a signed 64-bit integer,
@@ -151,9 +151,7 @@ fn pair(cx: &mut Cx<'_>, f: &Format, signed: bool) {
         cx.asm.ins("movq", format_args!("%rdx, %r8"));
         cx.asm.ins("testq", format_args!("%rdx, %rdx"));
         cx.asm.ins("jns", format_args!("{positive}"));
-        cx.asm.ins("negq", format_args!("%rax"));
-        cx.asm.ins("adcq", format_args!("$0, %rdx"));
-        cx.asm.ins("negq", format_args!("%rdx"));
+        cx.neg_pair();
         cx.asm.label(&positive);
     }
     cx.asm.ins("testq", format_args!("%rdx, %rdx"));

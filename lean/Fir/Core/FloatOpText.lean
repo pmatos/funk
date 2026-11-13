@@ -28,7 +28,10 @@ ADR-2026-11-11-1801). So
   does not round;
 * `%f: f32 = fptrunc round(rne) %d @1` takes a value of a float type and
   gives it, rounded, as a value of a format that cannot hold every value
-  of it.
+  of it;
+* `%i: i32 = fptosi %f @1` takes a value of a float type and gives it,
+  truncated toward zero, as a signed integer of any width; `fptoui` as an
+  unsigned one. It has no attribute: it truncates, and does not round.
 
 `round(rne)` is written in the applied form of the grammar, as
 `float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
@@ -39,6 +42,7 @@ is, so `funk verify` and `fir-ref` reject it. The operands and the result of an 
 have one float type, a bit cast's integer has its float's width, a
 conversion from an integer takes an integer type and gives a float type,
 a conversion between formats takes a float type and gives a float type,
+a conversion to an integer takes a float type and gives an integer type,
 and an op whose types are otherwise does not decode. Which pairs of
 formats `fpext` and `fptrunc` take is a rule of validation, as the widths
 of `zext` and `trunc` are, so both decode at any two formats.
@@ -139,6 +143,13 @@ def decodeFptrunc (as : List Attr) : List Ty → List Ty → Option Op
   | [.float e m], [.float e' m'] => if isRoundAttrs as then some (.fptrunc e m e' m') else none
   | _, _ => none
 
+/-- Reads `fptosi`, with `signed`, or `fptoui`: no attributes, one operand
+of a float type and one result of an integer type. -/
+def decodeFloatToInt (signed : Bool) (as : List Attr) : List Ty → List Ty → Option Op
+  | [.float e m], [.int n] =>
+    if as.isEmpty then some (if signed then .fptosi e m n else .fptoui e m n) else none
+  | _, _ => none
+
 /-! # Facts for the round trip -/
 
 /-- Attributes that read as `round(rne)` are exactly `round(rne)`. -/
@@ -218,5 +229,15 @@ theorem floatOpFormat_replicate (k e m : Nat) :
 #guard decodeFpext [] [.int 32] [.float 11 52] == none &&
   decodeFptrunc [roundAttr] [.float 11 52] [.int 32] == none &&
   decodeFpext [] [.float 8 23, .float 8 23] [.float 11 52] == none
+
+-- A conversion to an integer takes a float to an integer, of any format and
+-- width, with no attribute: `round(rne)` and `round(rtz)` do not decode.
+#guard decodeFloatToInt true [] [.float 8 23] [.int 32] == some (.fptosi 8 23 32)
+#guard decodeFloatToInt false [] [.float 15 112] [.int 1] == some (.fptoui 15 112 1)
+#guard decodeFloatToInt true [roundAttr] [.float 8 23] [.int 32] == none &&
+  decodeFloatToInt false [.app "round" [.word "rtz"]] [.float 8 23] [.int 32] == none
+#guard decodeFloatToInt true [] [.int 32] [.float 8 23] == none &&
+  decodeFloatToInt false [] [.float 8 23] [.float 8 23] == none &&
+  decodeFloatToInt true [] [.float 8 23, .float 8 23] [.int 32] == none
 
 end Fir.Core

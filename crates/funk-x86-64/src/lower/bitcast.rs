@@ -1,6 +1,6 @@
 //! Bit casts: `bitcast` between `f32` and `i32`, and between `f64` and
 //! `i64` (`dialects/core/bitcast.rs` in `funk-ir`;
-//! `docs/decisions/x86-64-backend-lowering.md#bit-casts`).
+//! `docs/decisions/x86-64-backend-lowering-floats.md#bit-casts`).
 //!
 //! A float is its bits in one slot, as an integer is, and the bits of either
 //! above its width are unspecified

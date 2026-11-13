@@ -71,10 +71,10 @@ def sortMems : MemSet String → MemSet String
   | .these ms => .these (ms.eraseDups.mergeSort (· ≤ ·))
   | .every => .every
 
-/-- A summary as the shared file writes it. The core has no memory, so its
-memories are named by no string. -/
+/-- A summary as the shared file writes it. The core names each memory by
+its number, written in decimal. -/
 def renderSum (e : Effects (DialectEffects.Mem CoreDialect)) : String :=
-  let named := e.map Empty.elim
+  let named := e.map fun n : Core.Mem => toString n
   let sorted : Effects String :=
     { named with
       reads := sortMems named.reads

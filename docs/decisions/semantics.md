@@ -12,6 +12,7 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-dialects.md: how dialects extend fir, and sums;
 - semantics-effects.md: op effects;
 - semantics-floats.md: floating point;
+- semantics-floats-conversions.md: the conversions of floats;
 - semantics-m1-design.md: the M1 design, most of it not built yet;
 - semantics-m1-dialects.md: dialects, levels and the second dialect in M1;
 - semantics-m1-trace.md: what an M1 run shows.

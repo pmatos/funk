@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17263823827012330628")
+:::moduleDocs (fingerprint := "7749102457304684616")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -31,6 +31,15 @@ terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory]:
 the core dialect is lawful, and its semantics with memory lifts its
 semantics in the set monad.
+:::
+
+:::readable Fir.Core.lawfulDialectMemPoison (fingerprint := "10064458873019723603")
+*Theorem: the core dialect is lawful in its poison with memory.* Each valid
+core op instance that propagates poison
+{ref "The-fir-specification--Memory--Poison-obligations-with-memory"}[propagates it with memory]
+and returns a result on some defined operands with memory, at every naming
+of the core's memories: the core dialect is lawful, and its semantics with
+memory lifts its semantics in the set monad.
 :::
 
 :::readable Fir.Core.memRuns_args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "14354991659016519450")

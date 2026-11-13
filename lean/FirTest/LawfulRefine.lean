@@ -154,6 +154,10 @@ lifts the set monad, so `id` is monotone with memory at each valid
 instance. -/
 instance lawfulMonotone : LawfulDialectMonotone ProbeDialect := LawfulDialectMonotone.ofLawful
 
+/-- The probe dialect is lawful in its poison with memory: it is lawful, and
+it lifts the set monad. -/
+instance lawfulMemPoison : LawfulDialectMemPoison ProbeDialect := LawfulDialectMemPoison.ofLawful
+
 end Probe
 
 /-- The sum of the core dialect and the probe dialect. -/
@@ -173,6 +177,10 @@ instance coreProbe_lawfulTotal : LawfulDialectTotal CoreProbe :=
 /-- The sum is lawful in its monotonicity, since both sides are. -/
 instance coreProbe_lawfulMonotone : LawfulDialectMonotone CoreProbe :=
   Dialect.sum.lawfulMonotone fun _ h => h
+
+/-- The sum is lawful in its poison with memory, since both sides are. -/
+instance coreProbe_lawfulMemPoison : LawfulDialectMemPoison CoreProbe :=
+  Dialect.sum.lawfulMemPoison fun _ h => h
 
 /-- `id` at `i0` is not a valid op instance. -/
 theorem probe0_not_typesValid : ¬ TypesValid (d := CoreProbe) (.inr (.id 0)) :=

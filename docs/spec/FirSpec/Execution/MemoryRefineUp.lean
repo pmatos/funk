@@ -14,10 +14,10 @@ the build fails when the Lean changes under it.
 
 #doc (Manual) "Returns and UB with memory, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18103531890131404555")
+:::moduleDocs (fingerprint := "13552876999419019873")
 :::
 
-:::readable Fir.MemMonotoneOps Fir.Func.MemOpsMonotone Fir.Func.MemOpsMonotone.enter Fir.Func.MemOpsMonotone.jump (pin := Fir.OpMemMonotone) (fingerprint := "14895313907681295778")
+:::readable Fir.MemMonotoneOps Fir.Func.MemOpsMonotone Fir.Func.MemOpsMonotone.enter Fir.Func.MemOpsMonotone.jump (pin := Fir.OpMemMonotone) (fingerprint := "17780227716261539167")
 *Definitions and theorems: ops monotone with memory.* A list of ops is
 monotone with memory when each of its ops that is a terminator or calls no
 function is
@@ -28,7 +28,7 @@ blocks, and a jump goes to the ops of one of its blocks, so they are
 monotone with memory too.
 :::
 
-:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "5934917460555977330")
+:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "15154199920803553737")
 *Theorem: a callee's return or UB, allowed.* In modules whose calls
 refine, a return or UB of a call's callee in the target, in its frame,
 entered on arguments and from memories that refine the source's, is
@@ -37,7 +37,7 @@ induction, which covers its ops from $`\mathrm{enter}(S) \sqsubseteq \mathrm{ent
 or a black box.
 :::
 
-:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "10445242051074840397")
+:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "10411561881179287026")
 *Theorem: every return and UB of the target with memory, allowed.* Let
 the target module $`M'` run each call with memory as the source $`M`
 does, and every op of $`M`'s functions, of $`f` and of $`o^*` that runs by
