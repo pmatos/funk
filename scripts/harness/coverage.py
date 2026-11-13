@@ -141,98 +141,19 @@ def table(head: list[str], rows: list[list[str]]) -> list[str]:
     return out + ["| " + " | ".join(r) + " |" for r in rows]
 
 
-def ops_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
-    rows = []
-    for op, attrs in cells.AT_WIDTH.items():
-        for a in attrs:
-            row = [f"`{op}`", f"`{a}`" if a else ""]
-            rows.append(
-                row + [number(counts[Cell("ops", op, a, cells.ty(w))]) for w in widths]
-            )
-    return table(["op", "flags or predicate", *(f"`i{w}`" for w in widths)], rows)
-
-
-def floats_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
-    rows = []
-    for op, attrs in cells.AT_FORMAT.items():
-        for a in attrs:
-            row = [f"`{op}`", f"`{a}`" if a else ""]
-            rows.append(
-                row + [number(counts[Cell("floats", op, a, f)]) for f in formats]
-            )
-    return table(["op", "predicate", *(f"`{f}`" for f in formats)], rows)
-
-
-def casts_table(counts: Counter, widths: tuple[int, ...]) -> list[str]:
-    rows = []
-    for op in cells.CASTS:
-        for m in widths:
-            row = [f"`{op}`", f"`i{m}`"]
-            for n in widths:
-                cell = Cell("casts", op, cells.ty(m), cells.ty(n))
-                row.append(number(counts[cell]) if cells.allowed(op, m, n) else "")
-            rows.append(row)
-    return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
-
-
-def conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
-    rows = []
-    for f in formats:
-        i = cells.bits_type(f)
-        for a, b in ((f, i), (i, f)):
-            cell = Cell("conversions", "bitcast", a, b)
-            rows.append(["`bitcast`", f"`{a}`", f"`{b}`", number(counts[cell])])
-    return table(["op", "from", "to", "tests"], rows)
-
-
-def int_to_float_table(
-    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
-) -> list[str]:
-    rows = []
-    for op in cells.INT_TO_FLOAT:
-        for w in widths:
-            row = [f"`{op}`", f"`i{w}`"]
-            for f in formats:
-                row.append(number(counts[Cell("conversions", op, cells.ty(w), f)]))
-            rows.append(row)
-    return table(["op", "from", *(f"to `{f}`" for f in formats)], rows)
-
-
-def float_conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[str]:
-    rows = []
-    for a in formats:
-        row = [f"`{a}`"]
-        for b in formats:
-            if a == b:
-                row.append("")
-                continue
-            op = cells.conversion(a, b)
-            n = number(counts[Cell("conversions", op, a, b)])
-            row.append(f"`{op}` {n}")
-        rows.append(row)
-    return table(["from", *(f"to `{f}`" for f in formats)], rows)
-
-
-def float_to_int_table(
-    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
-) -> list[str]:
-    rows = []
-    for op in cells.FLOAT_TO_INT:
-        for f in formats:
-            row = [f"`{op}`", f"`{f}`"]
-            for w in widths:
-                row.append(number(counts[Cell("conversions", op, f, cells.ty(w))]))
-            rows.append(row)
-    return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
-
-
-def pointers_table(counts: Counter, offsets: tuple[int, ...]) -> list[str]:
-    rows = [
-        [f"`{op}`"]
-        + [number(counts[Cell("pointers", op, "", cells.ty(w))]) for w in offsets]
-        for op in cells.POINTER_OPS
-    ]
-    return table(["op", *(f"by `i{w}`" for w in offsets)], rows)
+# Presentation metadata only: taxonomy membership, row order and blanks
+# come from cells.catalog, shared with the gap enumeration.
+SECTIONS = {
+    "ops": ("Ops at a width", ("op", "flags or predicate"), ""),
+    "floats": ("Float ops at a format", ("op", "predicate"), ""),
+    "casts": ("Width changes", ("op", "from"), "to "),
+    "bitcasts": ("Conversions", ("op", "from", "to"), ""),
+    "int_to_float": ("Conversions from integers", ("op", "from"), "to "),
+    "float_conversions": ("Conversions between formats", ("from",), "to "),
+    "float_to_int": ("Conversions to integers", ("op", "from"), "to "),
+    "pointers": ("Pointer offsets", ("op",), "by "),
+    "values": ("Passed and returned values", ("op", "what"), ""),
+}
 
 
 WHAT = {
@@ -260,20 +181,48 @@ WHAT = {
 }
 
 
-def values_table(
-    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
-) -> list[str]:
-    types = (*map(cells.ty, widths), *formats)
+def code(text: str) -> str:
+    return f"`{text}`" if text else ""
+
+
+def catalog_table(counts: Counter, spec: cells.Table) -> list[str]:
+    """Render already-expanded cells, without knowing which pairs exist."""
+    _, labels, prefix = SECTIONS[spec.kind]
+    head = [
+        *labels,
+        *(
+            f"{prefix}{code(t)}"
+            if t
+            else "tests"
+            if spec.kind == "bitcasts"
+            else "no value"
+            for t in spec.columns
+        ),
+    ]
     rows = []
-    for op, kinds in cells.VALUES:
-        for k in kinds:
-            row = [f"`{op}`", WHAT[op][k]]
-            if k == cells.NOTHING:
-                row += [number(counts[Cell("values", op, k, "")])] + [""] * len(types)
+    for row in spec.rows:
+        if spec.kind == "float_conversions":
+            shown = [code(row.key)]
+        elif spec.kind == "pointers":
+            shown = [code(row.op)]
+        elif spec.kind == "values":
+            shown = [code(row.op), WHAT[row.op][row.key]]
+        else:
+            shown = [code(row.op), code(row.key)]
+        if spec.kind == "bitcasts":
+            cell = row.entries[0]
+            assert cell is not None
+            shown.append(code(cell.width))
+        for cell in row.entries:
+            if cell is None:
+                shown.append("")
             else:
-                row += [""] + [number(counts[Cell("values", op, k, t)]) for t in types]
-            rows.append(row)
-    return table(["op", "what", "no value", *(f"`{t}`" for t in types)], rows)
+                n = number(counts[cell])
+                shown.append(
+                    f"{code(cell.op)} {n}" if spec.kind == "float_conversions" else n
+                )
+        rows.append(shown)
+    return table(head, rows)
 
 
 def render(counts: dict[str, Counter]) -> str:
@@ -302,26 +251,11 @@ def render(counts: dict[str, Counter]) -> str:
     ]
     for side in SIDES:
         c, title = counts[side.name], side.title.lower()
-        lines += ["", f"## {side.title}", ""]
-        lines += [f"### Ops at a width ({title})", ""]
-        lines += ops_table(c, side.widths)
-        lines += ["", f"### Float ops at a format ({title})", ""]
-        lines += floats_table(c, side.formats)
-        lines += ["", f"### Width changes ({title})", ""]
-        lines += casts_table(c, side.widths)
-        lines += ["", f"### Conversions ({title})", ""]
-        lines += conversions_table(c, side.formats)
-        lines += ["", f"### Conversions from integers ({title})", ""]
-        lines += int_to_float_table(c, side.widths, side.formats)
-        lines += ["", f"### Conversions between formats ({title})", ""]
-        lines += float_conversions_table(c, side.formats)
-        lines += ["", f"### Conversions to integers ({title})", ""]
-        lines += float_to_int_table(c, side.widths, side.formats)
-        if side.offsets:
-            lines += ["", f"### Pointer offsets ({title})", ""]
-            lines += pointers_table(c, side.offsets)
-        lines += ["", f"### Passed and returned values ({title})", ""]
-        lines += values_table(c, side.widths, side.formats)
+        lines += ["", f"## {side.title}"]
+        for spec in cells.catalog(side.widths, side.formats, side.offsets):
+            heading = SECTIONS[spec.kind][0]
+            lines += ["", f"### {heading} ({title})", ""]
+            lines += catalog_table(c, spec)
     return "\n".join(lines) + "\n"
 
 

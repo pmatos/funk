@@ -12,13 +12,15 @@ predicate, and each op of float arithmetic with its attribute, at each float
 format of a side. The conversions have another, with a cell for each pair of
 types that a conversion goes between: `bitcast` from each float format of the
 side to the integer of its width, and back. A later conversion adds its pairs
-to `cells.CONVERSIONS` and to `coverage.conversions_table`. `sitofp` and
+to `cells.py`'s catalog. `sitofp` and
 `uitofp`, with `round(rne)`, have a third, with a cell from each width of the
-side to each of its float formats (`cells.INT_TO_FLOAT`,
-`coverage.int_to_float_table`). `fpext` and `fptrunc` have a fourth, with a
-cell for each ordered pair of two float formats of the side, under the op
-that the pair takes (`cells.FLOAT_CONVERSIONS`, `cells.conversion`,
-`coverage.float_conversions_table`). The differential side has `f32` and `f64`, which the backend
+side to each of its float formats (`cells.INT_TO_FLOAT`).
+`fpext` and `fptrunc` have a fourth, with a cell for each ordered pair of two
+float formats of the side, under the op that the pair takes
+(`cells.FLOAT_CONVERSIONS`, `cells.conversion`). The catalog supplies the
+same cells and inapplicable-pair blanks to enumeration and rendering;
+`coverage.catalog_table` formats them without reconstructing pairs.
+The differential side has `f32` and `f64`, which the backend
 lowers, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
 Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
