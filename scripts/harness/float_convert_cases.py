@@ -84,8 +84,9 @@ def exact_bits(f: Format, x: Fraction) -> int | None:
 
 def edges(f: Format, g: Format) -> list[int]:
     """The bits of `f` whose conversion to `g` is an edge, positive."""
-    out = [f.zero(), f.inf(), f.exact(Fraction(1)), 1, 2**f.m - 1, 2**f.m]
-    out.append(f.round(largest(f)))
+    # Zero, infinity, 1, the smallest and largest subnormals, the smallest
+    # normal and the largest finite value, which is infinity's bits less one.
+    out = [f.zero(), f.inf(), f.exact(Fraction(1)), 1, 2**f.m - 1, 2**f.m, f.inf() - 1]
     big, tiny = largest(g), tiniest(g)
     ulp = TWO**-g.m
     halfway = [

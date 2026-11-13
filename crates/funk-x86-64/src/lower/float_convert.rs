@@ -19,8 +19,8 @@
 
 use funk_ir::Op;
 
+use super::farith::format;
 use super::{Cx, Lower, Unlowered};
-use crate::width::Class;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     matches!(name, "fpext" | "fptrunc").then_some(convert)
@@ -32,19 +32,12 @@ fn convert(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([x], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err(format!("{} takes one operand and defines one value", op.name).into());
     };
-    if cx.class(x)? != Class::Sse || cx.class(&r.name)? != Class::Sse {
-        return Err(format!("{} converts a float to a float", op.name).into());
-    }
-    let ins = match (cx.width(x)?, cx.width(&r.name)?) {
-        (32, 64) => "cvtss2sd",
-        (64, 32) => "cvtsd2ss",
-        (from, to) => {
-            return Err(format!(
-                "{} converts between f32 and f64, not from {from} bits to {to}",
-                op.name
-            )
-            .into());
-        }
+    let (_, _, from) = format(cx, op, x)?;
+    let (_, _, to) = format(cx, op, &r.name)?;
+    let ins = match (from, to) {
+        ("ss", "sd") => "cvtss2sd",
+        ("sd", "ss") => "cvtsd2ss",
+        _ => return Err(format!("{} converts between f32 and f64", op.name).into()),
     };
     let (sx, sr) = (cx.slot(x)?, cx.slot(&r.name)?);
     cx.asm.ins(ins, format_args!("{sx}, %xmm0"));
