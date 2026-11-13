@@ -63,10 +63,11 @@ poison from a poison unit, an integer load from a pointer's fragments, and
 a `ptr<N>` load from anything but one pointer's fragments of memory `N` in
 order, so an integer copy of memory carries no pointer. The encoding laws
 take the byte order as a parameter and hold at every order
-(`lean/Fir/Memory/EncodeLaws.lean`). The human ruled odd widths, punned loads and the byte-order parameter on
-2026-11-11, on #231. Rejected: reject widths that are not a multiple of the
-unit, so `i1` and `i20` could never be stored; and immediate UB for a
-punned load, which makes copying memory as integers UB.
+(`lean/Fir/Memory/EncodeLaws.lean`). The human ruled odd widths, punned
+loads and the byte-order parameter on 2026-11-11, on #231. Rejected: reject
+widths that are not a multiple of the unit, so `i1` and `i20` could never be
+stored; and immediate UB for a punned load, which makes copying memory as
+integers UB.
 
 Only exposed allocations have integer addresses. `fir-ref` assigns them from one
 canonical layout: in allocation order, aligned and deterministic. That is one of

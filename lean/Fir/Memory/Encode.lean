@@ -30,10 +30,10 @@ Decoding is defined for any units, so a load always has a value. Units that
 are not the encoding of a value of the type decode to poison: an integer
 from a unit that is poison or a pointer's fragment, and a pointer of `m`
 from anything but the fragments of one pointer of `m`, in order. So a
-punned load gives poison,
-as the human ruled on 2026-11-11, on #231, and a pointer that is partly
-overwritten is no longer a pointer. Units of the wrong number decode to
-poison too, though a load reads exactly the units of its type.
+punned load gives poison, as the human ruled on 2026-11-11, on #231, and a
+pointer that is partly overwritten is no longer a pointer. Units of the
+wrong number decode to poison too, though a load reads exactly the units of
+its type.
 
 The section after this one proves the laws.
 -/
