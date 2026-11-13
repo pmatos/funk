@@ -295,6 +295,9 @@ theorem coreProbe_memReplaceBody {N : Type} [DecidableEq N] (lay : N → MemLayo
 /-- info: 'Fir.Func.Valid.opsMonotone' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.Valid.opsMonotone
 
+/-- info: 'Fir.Func.runs_args_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.runs_args_isRefinedBy_of_lawful
+
 /-- info: 'Fir.Func.memRuns_args_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_args_isRefinedBy_of_lawful
 
