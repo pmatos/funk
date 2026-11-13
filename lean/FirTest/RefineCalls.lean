@@ -16,8 +16,8 @@ be met, and the axioms of their proofs.
   refines it. `@count` calls `@g` and itself. With a new body for `@g`,
   which calls `@count` back, the module is still valid, and each of its
   functions is refined by its counterpart: `@count` hits UB in the old
-  module and runs out of fuel in the new. Every call of either module names
-  one of its functions, so no summary touches memory. A second instance
+  module and runs out of fuel in the new. No core function reaches memory.
+  A second instance
   gives `@odd` its own body, in the mutual recursion of `@even` and `@odd`.
 * Congruence in the callee from given memories is tested in
   `FirTest.RefineCallsFrom`.
@@ -241,16 +241,6 @@ theorem ubModule'_valid : ubModule'.Valid :=
 #guard runValid ubModule.print "@count" ["3"] == ubFor "udiv by zero"
 #guard runValid ubModule'.print "@count" ["3"] (fuel := 1000) == exhausted
 
-/-- Every call of `ubModule` names one of its functions, so no summary of
-it touches memory. -/
-theorem ubModule_noMemory (s : Name) : (ubModule.table.summary s).TouchesNoMemory :=
-  Core.summary_touchesNoMemory (by decide +kernel) s
-
-/-- Every call of the module with `@g`'s new body names one of its functions
-too. -/
-theorem ubModule'_noMemory (s : Name) : (ubModule'.table.summary s).TouchesNoMemory :=
-  Core.summary_touchesNoMemory (by decide +kernel) s
-
 /-- `@g` with its new body refines `@g` with memory: `@g` hits UB on every
 argument. -/
 theorem g_isRefinedBy :
@@ -263,7 +253,7 @@ theorem g_isRefinedBy :
 itself in the module with `@g`'s new body, which calls `@count` back. -/
 theorem count_isRefinedBy : countFn.memRuns lay ρ ubModule ⊑ countFn.memRuns lay ρ ubModule' :=
   Core.caller_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody (ubModule_noMemory _) (ubModule'_noMemory _)
+    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
     (g_isRefinedBy lay ρ) (by simp [ubModule, Module.funcs]) (by decide)
 
 /-- Every function of the module is refined with memory by its counterpart
@@ -271,7 +261,7 @@ with `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
     f.memRuns lay ρ ubModule ⊑ (f.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
   Core.replaceBody_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody (ubModule_noMemory _) (ubModule'_noMemory _)
+    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
     (g_isRefinedBy lay ρ) hf
 
 /-! # A callee replaced by itself, in mutual recursion -/
@@ -280,11 +270,6 @@ theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) 
 theorem recModule_replace_odd : recModule.replaceBody oddFn.name oddFn.body = recModule := by
   simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
     parityFn]
-
-/-- Every call of `recModule` names one of its functions, so no summary of
-it touches memory. -/
-theorem recModule_noMemory (s : Name) : (recModule.table.summary s).TouchesNoMemory :=
-  Core.summary_touchesNoMemory (by decide +kernel) s
 
 /-- `@odd` with its own body refines `@odd` with memory. -/
 theorem odd_self_isRefinedBy :
@@ -304,8 +289,8 @@ theorem even_replace_isRefinedBy :
     evenFn.memRuns lay ρ recModule ⊑
       evenFn.memRuns lay ρ (recModule.replaceBody oddFn.name oddFn.body) :=
   Core.caller_isRefinedBy lay ρ recModule_valid (by simp [recModule, Module.funcs])
-    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body (recModule_noMemory _)
-    (by rw [recModule_replace_odd]; exact recModule_noMemory _) (odd_self_isRefinedBy lay ρ)
+    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body (reachesNoMemory _ _)
+    (reachesNoMemory _ _) (odd_self_isRefinedBy lay ρ)
     (by simp [recModule, Module.funcs]) (by decide)
 
 /-! # Axioms

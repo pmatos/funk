@@ -95,9 +95,7 @@ theorem Func.memRunsFrom_replaceBody_isRefinedBy {M : Module d}
     intro x
     by_cases hx : x = g.name
     · subst hx
-      refine .inr ⟨g, _, Module.func?_of_mem hnd hg, ?_, bb⟩
-      rw [Module.func?_replaceBody, Module.func?_of_mem hnd hg]
-      rfl
+      exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
     · refine .inl ?_
       rw [Module.func?_replaceBody]
       cases hk : M.func? x with

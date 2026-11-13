@@ -17,8 +17,7 @@ open Fir Core Example
 From given memories, congruence asks that the new `@g` refine the old from
 every memories, and, for a callee that touches memory, that its runs be
 bounded. A body with no blocks meets both: `@g` with it never starts, so it
-has no behaviour, no run of it runs out of fuel, and it has no op, so its
-summary touches no memory. So `@count` is refined with memory by itself in
+has no behaviour, no run of it runs out of fuel, and it reaches no memory. So `@count` is refined with memory by itself in
 the module with that body, by each form. -/
 
 /-- A body with no blocks: a function with it never starts. -/
@@ -66,7 +65,7 @@ theorem count_fromIsRefinedBy :
       (countFn.replaceBody gFn.name noBlocks).memRuns ubModule.layout.entry id
         (ubModule.replaceBody gFn.name noBlocks) :=
   Core.replaceBody_isRefinedBy_of_from _ _ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) noBlocks (Core.summary_touchesNoMemory (by decide +kernel) _)
+    (by simp [gFn, Core.Ty.Finite]) noBlocks (reachesNoMemory _ _)
     noBlocks_isRefinedBy (by simp [ubModule, Module.funcs])
 
 /-- `@count` is refined with memory by itself in the module where `@g` has

@@ -29,11 +29,11 @@ has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops],
 which is what the general refinement theorems ask.
 
-The width $`0` is included, which validation rejects. So the theorems
-below, and refined arguments with memory, hold for every core module, valid
-or not, where the
+The width $`0` is included, which validation rejects. So refined arguments
+with memory hold for every core module, valid or not, where the
 {ref "The-fir-specification--Execution--What-the-lawful-class-gives"}[lawful class]
-would give them only for valid modules.
+would give them only for valid modules. Congruence in the callee with memory
+goes through the lawful class, so it asks for a valid module.
 :::
 
 :::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "1998525394283694137")

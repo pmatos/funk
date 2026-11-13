@@ -10,10 +10,12 @@ same from any memories (the section on runs that touch no memory). Touching
 no memory is a property of two things:
 
 * of a set of effects: it reads, writes and allocates in no memory. A
-  function's effects are its summary, which holds the effects of every
-  function it reaches. A function of a table whose ops all declare no
-  memory effect, and whose calls each name a function of the table, has a
-  summary that touches no memory;
+  function _reaches no memory_ when every function that its run may reach,
+  itself included, declares no memory effect for any of its ops. A function
+  whose summary touches no memory reaches none, since its summary holds the
+  effects of every function it reaches. A call that names no function of
+  the table adds every effect to a summary, but nothing to what a function
+  reaches, since a run is stuck there;
 * of a computation in the state layer: it _ignores the memories_. From any
   memories it ends in UB for the reasons it does from any others, and each
   way it ends with results, it ends with the memories it started with, and
@@ -59,29 +61,52 @@ end
 
 variable {d : Dialect} [DialectSignature d] [DialectCall d] [DialectEffects d]
 
-/-- The summary of every function of a table touches no memory when each op
-of each of its functions declares no memory effect and each of their calls
-names a function of the table. -/
-theorem SymbolTable.summary_touchesNoMemory {t : SymbolTable d}
-    (hops : ∀ s f, t.func? s = some f → ∀ o ∈ f.allOps, (effects o.op).TouchesNoMemory)
-    (hcalls : ∀ s f, t.func? s = some f → ∀ o ∈ f.allOps, ∀ c, o.call? = some c →
-      (t.func? c).isSome)
-    (s : Name) : (t.summary s).TouchesNoMemory := by
-  let E : Effects (DialectEffects.Mem d) := { mayUB := true, mayPoison := true, observable := true }
-  have hle : ∀ {e : Effects (DialectEffects.Mem d)}, e.TouchesNoMemory → e.callerView ≤ E :=
-    fun h => ⟨fun x hx => ((h x).1 hx).elim, fun x hx => ((h x).2.1 hx).elim,
-      fun x hx => ((h x).2.2 hx).elim, fun _ => rfl, fun _ => rfl, fun _ => rfl,
-      fun hc => nomatch hc⟩
-  have hE : E.TouchesNoMemory := fun _ => ⟨nofun, nofun, nofun⟩
-  refine Effects.TouchesNoMemory.of_le (t.summary_le (T := fun _ => E) ⟨?_, ?_⟩ s) hE
-  · intro s f hf o ho
+/-- The function of the table `t` that the symbol `s` names reaches no
+memory: each function that its run may reach, itself included, declares no
+memory effect for any of its ops. A call that names no function of `t` adds
+nothing: its run is stuck there. -/
+def SymbolTable.ReachesNoMemory (t : SymbolTable d) (s : Name) : Prop :=
+  ∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps, (effects o.op).TouchesNoMemory
+
+variable {t : SymbolTable d} {s : Name} {f : Func d} {o : Operation d}
+
+/-- A function whose summary touches no memory reaches no memory. -/
+theorem SymbolTable.ReachesNoMemory.of_summary (h : (t.summary s).TouchesNoMemory) :
+    t.ReachesNoMemory s := fun g hg f hf o ho => by
+  have hown : (effects o.op).callerView ≤ t.opOwn o := by
     unfold SymbolTable.opOwn
     split
-    · rename_i c hc
-      rw [ite_eq_left (hcalls s f hf o ho c hc)]
-      exact hle (hops s f hf o ho)
-    · exact hle (hops s f hf o ho)
-  · exact fun _ _ _ _ _ _ _ _ => Effects.le_refl _
+    · split
+      · exact Effects.le_refl _
+      · exact Effects.callerView_mono (Effects.le_join_left _ _)
+    · exact Effects.le_refl _
+  have hfs : t.funcOwn f ≤ t.summary s :=
+    Effects.le_joinAll (List.mem_filterMap.2 ⟨g, hg, by simp [hf]⟩)
+  exact Effects.TouchesNoMemory.of_le (a := (effects o.op).callerView) (Effects.le_trans hown
+    (Effects.le_trans (Effects.le_joinAll (List.mem_map.2 ⟨o, ho, rfl⟩)) hfs)) h
+
+/-- Each op of a function that reaches no memory declares no memory
+effect. -/
+theorem SymbolTable.ReachesNoMemory.own (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
+    (ho : o ∈ f.allOps) : (effects o.op).TouchesNoMemory :=
+  h s (SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)) f hf o ho
+
+/-- Each function that a function that reaches no memory calls reaches no
+memory: it reaches nothing that its caller does not. -/
+theorem SymbolTable.ReachesNoMemory.callee (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
+    (ho : o ∈ f.allOps) {c : Name} (hc : o.call? = some c) (hcs : (t.func? c).isSome) :
+    t.ReachesNoMemory c := by
+  have hclosed := SymbolTable.reach_closed (t := t) (work := [s]) (seen := [])
+    (fun _ h => nomatch h)
+  have hs : s ∈ t.reach [s] [] :=
+    SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)
+  have hcc : c ∈ t.callees f := SymbolTable.mem_callees.2 ⟨hcs, o, ho, hc⟩
+  have hsub : ∀ g ∈ t.reach [c] [], g ∈ t.reach [s] [] :=
+    SymbolTable.reach_sub (C := (· ∈ t.reach [s] [])) (fun g f hg hf c hc => hclosed g hg f hf c hc)
+      (fun _ h => nomatch h) fun g hg => by
+        rcases List.mem_singleton.1 hg with rfl
+        exact hclosed s hs f hf g hcc
+  exact fun g hg => h g (hsub g hg)
 
 /-! # Computations that ignore the memories -/
 

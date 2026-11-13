@@ -89,11 +89,13 @@ first two take it for the function that runs. `Func.Valid.opsMonotone` gives it
 for a valid function from monotonicity at valid op instances alone, in
 `lean/Fir/Execution/Lawful.lean`. So a lawful dialect gets both function-level
 refinement theorems for valid modules from the class alone, as the test dialect
-`CoreProbe` does in `lean/FirTest/LawfulRefine.lean`. `Core.args_isRefinedBy`
-and `Core.replaceBody_isRefinedBy`, now over runs with memory, keep their
-hypotheses through `Core.opsMonotone_all`: every core function's ops are
-monotone, valid or not. So `Core.args_isRefinedBy` holds for every function of
-every core module, valid or not. The human ruled on 2026-11-05 (#99) to do this before M1 adds memory.
+`CoreProbe` does in `lean/FirTest/LawfulRefine.lean`. `Core.args_isRefinedBy`,
+now over runs with memory, keeps its hypotheses through each core op's own
+monotonicity (`Core.Op.monotone_all`, tied into `Core.Op.memMonotone_all`):
+every core function's ops are monotone, valid or not. So `Core.args_isRefinedBy`
+holds for every function of every core module, valid or not. Congruence in the
+callee with memory goes through the lawful class (`LawfulDialectMonotone`), so
+the core's congruence asks for a valid module, as it did before. The human ruled on 2026-11-05 (#99) to do this before M1 adds memory.
 Rejected: asking monotonicity at valid op instances in the engine, with a valid
 module, since `Core.args_isRefinedBy` could not then keep its statement; and
 threading `Func.InModule`, which progress needs but refinement does not, since
@@ -109,7 +111,7 @@ new `@g`, run in the new module, refines the old `@g`, run in the old. It
 concludes the same relation for every function of the module
 (`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, over runs with
 memory, which ask that the module be valid, that `@g` have no pointer
-parameter, and that it touch no memory; see refinement with memory below). It needs nothing of
+parameter, and that it reach no memory; see refinement with memory below). It needs nothing of
 the new body, because a call of `@g` is a black box whose behaviour the
 hypothesis gives. When the new body calls back into the module, proving the
 hypothesis may need its own induction. A body that gets stuck at once meets the
@@ -171,21 +173,30 @@ finiteness form holds through its runs in the set monad
 
 A callee whose effects include no memory read, write or allocation needs no
 bound: its runs do not depend on the memories, so finitely many argument vectors
-give it, as for runs in the set monad. Its effects are its summary in the new
-module (`Effects.TouchesNoMemory`), and the dialect's ops that declare no memory
-effect must ignore the memories (`OpsIgnoreMemory`): from any memories they end
-the same way and keep them, which the effect obligations alone do not give. Then
-every run of a function whose summary touches no memory ignores the memories,
+give it, as for runs in the set monad. Such a callee reaches no memory in the
+new module (`SymbolTable.ReachesNoMemory`): no function that its run may reach
+declares a memory effect. That follows from its summary touching none
+(`Effects.TouchesNoMemory`, `SymbolTable.ReachesNoMemory.of_summary`), but a
+call to a symbol the module does not define, which adds every effect to a
+summary, adds nothing here, since a run is stuck there; so a new body with
+such a call, which the form over the runs in the set monad covered, is still
+covered. The dialect's ops that declare no memory effect must ignore the
+memories (`OpsIgnoreMemory`): from any memories they end the same way and keep
+them, which the effect obligations alone do not give. Then every run of a
+function that reaches no memory ignores the memories,
 calls and recursion included (`Module.memOps_ignoresMemory`), and its runs from
 given memories are bounded (`Func.memRunsFrom_boundedBy_of_finite`), in
 `lean/Fir/Execution/MemoryFreeRuns.lean`. Congruence is then
-`Func.memRuns_replaceBody_isRefinedBy_of_finite`, and, when the old callee's
-summary touches no memory too, `Func.memRuns_replaceBody_isRefinedBy_of_memRuns`,
+`Func.memRuns_replaceBody_isRefinedBy_of_finite`, and, when the old callee
+reaches no memory too, `Func.memRuns_replaceBody_isRefinedBy_of_memRuns`,
 whose hypothesis is refinement with memory, as it was over the runs in the set
 monad. The core's congruence takes these forms: `Core.replaceBody_isRefinedBy`
 and `Core.caller_isRefinedBy` with memory, and
 `Core.replaceBody_isRefinedBy_of_from` from given memories, in
-`lean/Fir/Core/MemoryCallRefine.lean`. A callee that touches memory uses the form
+`lean/Fir/Core/MemoryCallRefine.lean`. No core op declares a memory effect, so
+every core function reaches no memory (`Core.reachesNoMemory`), and these forms
+hold of every core callee with no pointer parameter, as the forms over the runs
+in the set monad did. A callee that touches memory uses the form
 with the bound, `Core.memReplaceBody_isRefinedBy`, until #214 removes the bound
 for good. The forms over the runs in the set monad and `Core.liftsSetM` went, so
 a memory op can join the core. The human ruled this on 2026-11-13 (#373, option

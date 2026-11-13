@@ -36,7 +36,7 @@ ask that needs no memory:
   A pointer type has infinitely many: poison and a pointer for every
   allocation and every offset. So congruence with no budget holds for a
   callee with no pointer parameter, whose parameter types have finitely
-  many argument vectors, and that touches no memory. A callee with a
+  many argument vectors, and that reaches no memory. A callee with a
   pointer parameter waits for congruence over types with infinitely many
   values (#214).
 
@@ -45,11 +45,12 @@ with no callee among the ops of the modules' functions and of the
 function that runs
 (`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`). The core dialect meets it with
 its ops' own obligations, which hold at every width, `i0` included, so
-for every function of every module, valid or not. The lawful class covers
-only the instances that validation accepts (ADR-2026-10-29-2006), so it
-gives it only for the functions of valid modules (the section on what the
-lawful class gives); these theorems ask for no valid module, so they use
-the ops' own obligations.
+for every function of every module, valid or not, and refined arguments
+use them, so they ask for no valid module. The lawful class covers only the
+instances that validation accepts (ADR-2026-10-29-2006), so it gives
+monotonicity only for the functions of valid modules (the section on what
+the lawful class gives); congruence with memory goes through it, so it asks
+for a valid module.
 -/
 
 namespace Fir.Core

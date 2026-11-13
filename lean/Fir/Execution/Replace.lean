@@ -138,6 +138,14 @@ theorem Module.func?_of_mem {M : Module d} (hnd : (M.funcs.map (·.name)).Nodup)
     have hn : k.name = g.name := by simpa using List.find?_some h
     rw [eq_of_nodup_map hnd hk hg hn]
 
+/-- The function `@g` of a module whose symbols are unique is, with its new
+body, the function of the module with that body that `@g`'s symbol names. -/
+theorem Module.func?_replaceBody_self {M : Module d} (hnd : (M.funcs.map (·.name)).Nodup)
+    {g : Func d} (hg : g ∈ M.funcs) (b : Region d) :
+    (M.replaceBody g.name b).func? g.name = some (g.replaceBody g.name b) := by
+  rw [Module.func?_replaceBody, Module.func?_of_mem hnd hg]
+  rfl
+
 /-- Replacing a body keeps the symbol table: every function keeps its
 symbol and its type. -/
 theorem Module.symbols_replaceBody (M : Module d) (s : Name) (b : Region d) :
@@ -309,9 +317,7 @@ theorem Func.runs_replaceBody_isRefinedBy {M : Module d}
     intro x
     by_cases hx : x = g.name
     · subst hx
-      refine .inr ⟨g, _, Module.func?_of_mem hnd hg, ?_, bb⟩
-      rw [Module.func?_replaceBody, Module.func?_of_mem hnd hg]
-      rfl
+      exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
     · refine .inl ?_
       rw [Module.func?_replaceBody]
       cases hk : M.func? x with

@@ -308,14 +308,12 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 
 /-! # A run that touches no memory
 
-The core dialect's own rules touch no memory: a core function whose calls
-each name a function of its module, so that its summary touches no memory,
-returns from given memories what it returns with memory, with the memories
-it started from (the section on runs that touch no memory). -/
+The core dialect's own rules touch no memory: every core function reaches
+no memory, so it returns from given memories what it returns with memory,
+with the memories it started from (the section on runs that touch no
+memory). -/
 
-example (M : Module CoreDialect)
-    (hcalls : ∀ f ∈ M.table.funcs, ∀ o ∈ f.allOps, o.call?.all fun c => (M.table.func? c).isSome)
-    {s : Name} {f : Func CoreDialect} (hf : M.func? s = some f)
+example (M : Module CoreDialect) {s : Name} {f : Func CoreDialect} (hf : M.func? s = some f)
     (args : HVector toType (f.params.map (·.2)))
     (S S' : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)) (n : Nat)
     (vs : List (DVal CoreDialect)) :
@@ -324,7 +322,7 @@ example (M : Module CoreDialect)
     (f.memRunsFrom M (args, S) n).outcomes (.ret (vs, S')) ↔
       S' = S ∧ (f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args n).outcomes
         (.ret vs) :=
-  Func.memRunsFrom_ret_iff _ _ (Core.opsIgnoreMemory _ _) hf (Core.summary_touchesNoMemory hcalls s)
+  Func.memRunsFrom_ret_iff _ _ (Core.opsIgnoreMemory _ _) hf (Core.reachesNoMemory _ s)
     args S n
 
 end FirTest.MemoryRuns

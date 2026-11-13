@@ -351,31 +351,27 @@ theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
         observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
     observable (f.memRuns lay ρ M a) ⊑ observable (f'.memRuns lay ρ M' a') := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ
-  have kret := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-    {vs : List (DVal d)} => Func.memRuns_ret_iff lay ρ (M := L) (f := g) (a := b) (n := n) (vs := vs)
-  have kub := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-    {r : String} => Func.memRuns_ub_iff lay ρ (M := L) (f := g) (a := b) (n := n) (r := r)
-  have kexh := fun {g : Func d} {L : Module d} {b : HVector toType (g.params.map (·.2))} {n : Nat}
-    => Func.memRuns_exhausted_iff lay ρ (M := L) (f := g) (a := b) (n := n)
   intro t ht
   match t, ht with
   | .ret vs', ⟨n, hn⟩ =>
-    obtain ⟨T', h₀⟩ := kret.1 hn
+    obtain ⟨T', h₀⟩ := (Func.memRuns_ret_iff lay ρ).1 hn
     obtain ⟨s, hs, hle⟩ := h (.ret (vs', T')) ⟨n, h₀⟩
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, kub.2 hN⟩, trivial⟩
-    | .ret (vs, T), ⟨N, hN⟩, hle => exact ⟨.ret vs, ⟨N, kret.2 ⟨T, hN⟩⟩, hle.1⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
+    | .ret (vs, T), ⟨N, hN⟩, hle =>
+      exact ⟨.ret vs, ⟨N, (Func.memRuns_ret_iff lay ρ).2 ⟨T, hN⟩⟩, hle.1⟩
     | .fuelExhausted, _, hle => exact hle.elim
   | .ub r', ⟨n, hn⟩ =>
-    obtain ⟨s, hs, hle⟩ := h (.ub r') ⟨n, kub.1 hn⟩
+    obtain ⟨s, hs, hle⟩ := h (.ub r') ⟨n, (Func.memRuns_ub_iff lay ρ).1 hn⟩
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, kub.2 hN⟩, trivial⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
     | .ret _, _, hle | .fuelExhausted, _, hle => exact hle.elim
   | .fuelExhausted, ht =>
-    obtain ⟨s, hs, hle⟩ := h .fuelExhausted fun n => kexh.1 (ht n)
+    obtain ⟨s, hs, hle⟩ := h .fuelExhausted fun n => (Func.memRuns_exhausted_iff lay ρ).1 (ht n)
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, kub.2 hN⟩, trivial⟩
-    | .fuelExhausted, hs, _ => exact ⟨.fuelExhausted, fun N => kexh.2 (hs N), trivial⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
+    | .fuelExhausted, hs, _ =>
+      exact ⟨.fuelExhausted, fun N => (Func.memRuns_exhausted_iff lay ρ).2 (hs N), trivial⟩
     | .ret _, _, hle => exact hle.elim
 
 end

@@ -254,16 +254,16 @@ theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLay
       (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ IgnoresMemory.lift)
 
 /-- Congruence in the callee, with memory, for every valid module of
-`CoreProbe` and a callee with no pointer parameter whose summary touches no
-memory before or after, wherever a run names the sum's memories, by the
+`CoreProbe` and a callee with no pointer parameter that reaches no memory
+before or after, wherever a run names the sum's memories, by the
 lawful class alone, with no bound, whatever the new body. The core's
 congruence keeps this form, by the human's ruling on #373, and so does this
 test of it. -/
 theorem coreProbe_replaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
     {g : Func CoreProbe} (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t)
-    (b : Region CoreProbe) (hold : (M.table.summary g.name).TouchesNoMemory)
-    (hmem : ((M.replaceBody g.name b).table.summary g.name).TouchesNoMemory)
+    (b : Region CoreProbe) (hold : M.table.ReachesNoMemory g.name)
+    (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=

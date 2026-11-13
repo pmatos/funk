@@ -16,19 +16,18 @@ only of a callee that touches memory, until
 Wherever a run names the dialect's memories, when its ops ignore the
 memories where they touch none:
 
-* a function whose summary touches no memory returns from given memories
+* a function that reaches no memory returns from given memories
   what it returns with memory, with those memories, and hits UB or runs out
   of fuel from them exactly when it does with memory;
-* so when the summaries of an old and a new callee both touch no memory,
+* so when an old and a new callee both reach no memory,
   refinement of their runs with memory is refinement of their runs from
   given memories, the memories they end with included: both end with the
   memories they start with.
 
 For a dialect lawful in its monotonicity, in a valid module, congruence in
 the callee then holds with no budget for a callee with finitely many
-argument vectors whose new body, in the new module, has a summary that
-touches no memory: when the new callee refines the old from given memories,
-or, when the old callee's summary touches no memory too, with memory. It
+argument vectors whose new body, in the new module, reaches no memory: when the new callee refines the old from given memories,
+or, when the old callee reaches no memory too, with memory. It
 asks nothing of the new body but that.
 -/
 
@@ -37,15 +36,6 @@ namespace Fir
 open SetM Memory
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-
-omit [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] in
-/-- The function `@g` of a module whose symbols are unique is, with its new
-body, the function of the module with that body that `@g`'s symbol names. -/
-theorem Module.func?_replaceBody_self {M : Module d} (hnd : (M.funcs.map (·.name)).Nodup)
-    {g : Func d} (hg : g ∈ M.funcs) (b : Region d) :
-    (M.replaceBody g.name b).func? g.name = some (g.replaceBody g.name b) := by
-  rw [Module.func?_replaceBody, Module.func?_of_mem hnd hg]
-  rfl
 
 variable [DialectEffects d] [DialectMemDenote d] {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
@@ -57,11 +47,11 @@ section
 variable {M : Module d} {s : Name} {f : Func d}
   (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
     OpsIgnoreMemory d N (unitsOf lay))
-  (hf : M.func? s = some f) (hs : (M.table.summary s).TouchesNoMemory)
+  (hf : M.func? s = some f) (hs : M.table.ReachesNoMemory s)
   (a : HVector toType (f.params.map (·.2))) (S : Memories N (unitsOf lay)) (n : Nat)
 include hfree hf hs
 
-/-- A function whose summary touches no memory returns from given memories
+/-- A function that reaches no memory returns from given memories
 what it returns with memory, with those memories. -/
 theorem Func.memRunsFrom_ret_iff {vs : List (DVal d)} {S' : Memories N (unitsOf lay)} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ
@@ -80,7 +70,7 @@ theorem Func.memRunsFrom_ret_iff {vs : List (DVal d)} {S' : Memories N (unitsOf 
     exact (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S' n (Ev.notStuck_ok _)
       hT).2
 
-/-- A function whose summary touches no memory hits UB from given memories
+/-- A function that reaches no memory hits UB from given memories
 exactly when it does with memory. -/
 theorem Func.memRunsFrom_ub_iff {r : String} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ
@@ -91,7 +81,7 @@ theorem Func.memRunsFrom_ub_iff {r : String} :
     fun h => (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S n (Ev.notStuck_ub _)
       ((Func.memRuns_ub_iff lay ρ).1 h)).2⟩
 
-/-- A function whose summary touches no memory runs out of fuel from given
+/-- A function that reaches no memory runs out of fuel from given
 memories exactly when it does with memory. -/
 theorem Func.memRunsFrom_exhausted_iff_memRuns :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ
@@ -105,15 +95,15 @@ end
 
 variable [TyRefinement d.Ty]
 
-/-- When the summaries of a function and of the function with a new body
-both touch no memory, the second refines the first from given memories, the
+/-- When a function and the function with a new body both reach no
+memory, the second refines the first from given memories, the
 memories they end with included, when it refines it with memory. -/
 theorem Func.memRunsFrom_isRefinedBy_of_memRuns
     (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
       OpsIgnoreMemory d N (unitsOf lay))
     {M M' : Module d} {s s' : Name} {f : Func d} {t : Name} {b : Region d}
-    (hf : M.func? s = some f) (hs : (M.table.summary s).TouchesNoMemory)
-    (hf' : M'.func? s' = some (f.replaceBody t b)) (hs' : (M'.table.summary s').TouchesNoMemory)
+    (hf : M.func? s = some f) (hs : M.table.ReachesNoMemory s)
+    (hf' : M'.func? s' = some (f.replaceBody t b)) (hs' : M'.table.ReachesNoMemory s')
     (h : f.memRuns lay ρ M ⊑ (f.replaceBody t b).memRuns lay ρ M') :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ
     f.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
@@ -157,8 +147,8 @@ variable [DialectValidation d] [LawfulDialectMonotone d] {M : Module d}
 memory, by the class alone: in a valid module, replacing the body of its
 function `@g`, whose parameter types have finitely many argument vectors,
 with one under which `@g`, run in the new module from given memories,
-refines `@g` in the old, and under which its summary in the new module
-touches no memory, refines every function of the module, from given
+refines `@g` in the old, and under which it reaches no memory in the new
+module, refines every function of the module, from given
 memories and so with memory, wherever a run names the dialect's memories
 and its ops ignore the memories where they touch none, calls and recursion
 included. -/
@@ -170,7 +160,7 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_finite
       OpsIgnoreMemory d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
-    (hmem : ((M.replaceBody g.name b).table.summary g.name).TouchesNoMemory)
+    (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
@@ -187,8 +177,8 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_finite
       (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem hfin) h hf
 
 /-- Congruence in the callee, with memory, for a callee that touches no
-memory before or after, by the class alone: as above, when the summary of
-`@g` in the old module touches no memory too, it is enough that `@g`, run
+memory before or after, by the class alone: as above, when `@g` reaches no
+memory in the old module too, it is enough that `@g`, run
 with memory in the new module, refine `@g` in the old. -/
 theorem Func.memRuns_replaceBody_isRefinedBy_of_memRuns
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
@@ -198,8 +188,8 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_memRuns
       OpsIgnoreMemory d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
-    (hold : (M.table.summary g.name).TouchesNoMemory)
-    (hmem : ((M.replaceBody g.name b).table.summary g.name).TouchesNoMemory)
+    (hold : M.table.ReachesNoMemory g.name)
+    (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=

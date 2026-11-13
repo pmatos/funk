@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Touching no memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8551422406482697222")
+:::moduleDocs (fingerprint := "12564574086854445638")
 :::
 
 :::readable Fir.Effects.TouchesNoMemory Fir.Effects.TouchesNoMemory.of_le (pin := Fir.Effects) (pin := Fir.Effects.Le) (fingerprint := "10653422458642567564")
@@ -24,14 +24,22 @@ no memory when, for every memory $`x`, $`E` reads, writes and allocates in
 no $`x`. A set of effects below one that touches no memory touches none.
 :::
 
-:::readable Fir.SymbolTable.summary_touchesNoMemory (pin := Fir.SymbolTable.summary) (fingerprint := "18058661720948286152")
-*Theorem: a summary that touches no memory.* When each op of each function
-of a symbol table declares no memory effect, and each of their calls names
-a function of the table, the summary of every symbol of the table touches
-no memory. The summary is below every closed assignment, and the one that
-gives every symbol every effect but the memory-named ones and control is
-closed: what a caller sees of each op is below it. A call that names no
-function of the table would add every effect, memories included.
+:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "14307947686334129542")
+*Definition and theorems: a function that reaches no memory.* The function
+of a symbol table named by $`s` reaches no memory when every function that
+the walk from $`s` reaches, $`s`'s own included, declares no memory effect
+for any of its ops. The walk follows only calls that name functions of the
+table: a call to any other symbol is stuck, so it reaches nothing.
+
+* A function whose
+  {ref "The-fir-specification--Execution--Function-summaries"}[summary]
+  touches no memory reaches no memory: the summary holds what a caller sees
+  of every op of every function it reaches. The converse fails for a call
+  that names no function of the table, which adds every effect to the
+  summary.
+* Each op of a function that reaches no memory declares no memory effect,
+  and each function that it calls reaches no memory, since that function
+  reaches nothing that its caller does not.
 :::
 
 :::readable Fir.IgnoresMemory Fir.IgnoresMemory.lift Fir.IgnoresMemory.map (fingerprint := "15015104479317298164")
