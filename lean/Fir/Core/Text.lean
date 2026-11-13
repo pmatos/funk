@@ -29,13 +29,17 @@ results, which are written where those values are defined.
 * `icmp` has one attribute, its predicate, from `eq` to `uge`, as LLVM
   writes it: `%lt: i1 = icmp slt %a, %b @1`. No name of a core op contains
   `.`, which is kept for the names of dialects.
-* `fcmp` has one attribute, its predicate, from `oeq` to `uno`, as LLVM
+* `fcmp` has its predicate, from `oeq` to `uno`, as LLVM
   writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
   has one attribute, `round(rne)`, and `frem`, `fmod`, `fneg` and `fabs`
   have none:
-  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). The
-  section on how the float arithmetic is written says more.
+  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801).
+* Each float op, `fcmp` and the remainders included, has its fast-math
+  flags first, in the fixed order `nnan`, `ninf`, `nsz`, `contract`,
+  `reassoc`, each at most once: `%s: f32 = fadd nnan nsz round(rne) %a,
+  %b @1`. The conversions take no flags. The section on how the float
+  arithmetic is written says more.
 * `bitcast` has no attributes, and its types say which way it reads the
   bits: `%b: i32 = bitcast %f @1` gives the bits of an `f32`, and
   `%f: f32 = bitcast %b @1` the `f32` of an `i32`'s bits. Its integer has
@@ -148,9 +152,10 @@ def Op.attrs : Op → List Attr
   | .const w v => [constAttr w v]
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
-  | .fcmp p _ _ => [.word p.name]
-  | .fma .. | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
-  | .fbin o .. | .funary o .. => o.attrs
+  | .fcmp p fl _ _ => fl.attrs ++ [.word p.name]
+  | .fma fl _ _ => fl.attrs ++ [roundAttr]
+  | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
+  | .fbin o fl _ _ | .funary o fl _ _ => fl.attrs ++ o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
@@ -194,6 +199,19 @@ def plainBinOps : List (String × (Nat → Op)) :=
   [("srem", .srem), ("urem", .urem), ("and", .and), ("or", .or), ("xor", .xor),
    ("shl", .shl), ("lshr", .lshr), ("ashr", .ashr)]
 
+/-- Reads `fcmp` under the flags `fl`: its predicate after the flags, two
+operands of one float type and an `i1`. -/
+def decodeFcmpWith (fl : FastMath) : List Attr → List Ty → List Ty → Option Op
+  | [.word p], [.float e m, .float e' m'], [.int 1] => do
+    let pr ← FPred.all.find? (·.name == p)
+    if e = e' ∧ m = m' then some (.fcmp pr fl e m) else none
+  | _, _, _ => none
+
+/-- Reads `fcmp`: its flags, its predicate, two operands of one float type
+and an `i1`. -/
+def decodeFcmp (as : List Attr) (ts rs : List Ty) : Option Op :=
+  decodeFcmpWith (splitFlags as).1 (splitFlags as).2 ts rs
+
 /-- The core op instance with this name and these attributes, at these
 operand and result types. -/
 def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
@@ -210,11 +228,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
       let pr ← Pred.all.find? (·.name == p)
       if a = b then some (.icmp pr a) else none
     | _, _, _ => none
-  | "fcmp" => match as, ts, rs with
-    | [.word p], [.float e m, .float e' m'], [.int 1] => do
-      let pr ← FPred.all.find? (·.name == p)
-      if e = e' ∧ m = m' then some (.fcmp pr e m) else none
-    | _, _, _ => none
+  | "fcmp" => decodeFcmp as ts rs
   | "fadd" => decodeFBin .fadd as ts rs
   | "fsub" => decodeFBin .fsub as ts rs
   | "fmul" => decodeFBin .fmul as ts rs

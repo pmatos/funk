@@ -105,3 +105,22 @@ interpreter-only with its expected result.
 `reject/float-fptoi.toml` holds the conversions that do not decode, such as
 `fptosi round(rne)`, `fptoui round(rtz)`, a flag, from an integer or to a
 float, and two at a width or format that validation rejects.
+
+The texts of #242 use the fast-math flags `nnan`, `ninf` and `nsz` on every
+float op ([semantics-floats.md](../decisions/semantics-floats.md#the-design)).
+`float-flags-T` holds a function for each float op and each flag at `T`, one of
+`f16`, `bf16`, `f32`, `f64` and `f128`, such as `@fadd_nnan`, and fills that
+flag's cell of the coverage matrix. Its cases decide the flag: a NaN operand or
+a NaN result, such as `inf - inf`, gives poison under `nnan`; an infinite
+operand or a result that rounds to an infinity gives poison under `ninf`; and a
+zero result is either zero under `nsz`, with an interpreter-only test for each
+choice of the sign. `fcmp nsz` pins that the flag has no effect on a
+comparison. One case of each function the flag does not decide. Each case is
+differential at `f32` and `f64` too, since native code ignores the flags and
+refines both poison and either zero. `scripts/harness/float_flag_cases.py`
+writes them
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-fast-math-flag-corpus)).
+`reject/float-flags.toml` holds the texts of the flags that do not decode, a
+flag out of order, written twice, after `round(rne)` or `fcmp`'s predicate, or
+on an integer op, a bit cast or a conversion, and those that validation
+rejects, a float op with `contract` or `reassoc`.

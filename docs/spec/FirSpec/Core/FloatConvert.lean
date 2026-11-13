@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Format conversion rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3618366865958236156")
+:::moduleDocs (fingerprint := "5208776516006223411")
 :::
 
 :::readable Fir.Core.convertModel (fingerprint := "8486092060311938938")
@@ -34,17 +34,18 @@ $`\mathrm{convert}_{F,G}(a) = \mathrm{pack}_G(\mathrm{conv}_G(\mathrm{unpack}_F(
 the number that $`a` encodes in $`F`, in $`G`, written as bits of $`G`.
 :::
 
-:::readable Fir.Core.convertFloat (pin := Fir.Core.floatResult) (pin := Fir.Core.convertModel) (fingerprint := "5497173106548282139")
+:::readable Fir.Core.convertFloat (pin := Fir.Core.floatResult) (pin := Fir.Core.convertModel) (fingerprint := "9396562543172022913")
 *Definition: the rule of $`\mathsf{fpext}` and $`\mathsf{fptrunc}`.* For
 every two formats $`\mathsf{float}\langle e,m \rangle` and
 $`\mathsf{float}\langle e',m' \rangle`, whose formats in Lean's model are
 $`F` and $`G`, and $`a \in \mathbb{B}^{1+e+m}`:
 
-$$`\mathsf{fpext}_{e,m,e',m'}(a) = \mathsf{fptrunc}_{e,m,e',m'}(a) = \mathrm{result}_{e',m'}(\mathrm{conv}_G(\mathrm{unpack}_F(a)))`
+$$`\mathsf{fpext}_{e,m,e',m'}(a) = \mathsf{fptrunc}_{e,m,e',m'}(a) = \mathrm{result}^{\emptyset}_{e',m'}([\,], \mathrm{conv}_G(\mathrm{unpack}_F(a)))`
 
 and both give $`\mathsf{poison}` on $`\mathsf{poison}`. The
-{ref "The-fir-specification--Execution--Float-arithmetic-rules"}[float result]
-packs a number as bits of $`G`, and gives any NaN of
+{ref "The-fir-specification--Execution--Float-arithmetic-rules"}[float result],
+with no fast-math flags, which the conversions do not carry, packs a
+number as bits of $`G`, and gives any NaN of
 $`\mathsf{float}\langle e',m' \rangle` for a NaN, which a NaN operand
 gives. When the source format is not one of the model's, the number is
 the NaN, so that the rule is total. Neither rule is ever UB. The two ops
@@ -55,7 +56,7 @@ source, so that $`\mathrm{conv}_G` never rounds, and $`\mathsf{fptrunc}`
 every other.
 :::
 
-:::readable Fir.Core.round_isNaN Fir.Core.convertModel_isNaN Fir.Core.convertFloat_valid (pin := Fir.Core.convertFloat) (pin := Fir.Core.convertBits) (fingerprint := "16444716026019445485")
+:::readable Fir.Core.round_isNaN Fir.Core.convertModel_isNaN Fir.Core.convertFloat_valid (pin := Fir.Core.convertFloat) (pin := Fir.Core.convertBits) (fingerprint := "6625690192451878486")
 *Theorems: a conversion of a number chooses nothing.* The model's rounding
 of a finite number is never a NaN, so $`\mathrm{conv}_G(u)` is a NaN
 exactly when $`u` is. So at every two formats that the model has, which

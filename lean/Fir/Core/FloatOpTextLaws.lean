@@ -4,7 +4,8 @@ import Fir.Core.Text
 # The float ops read back from their spelling
 
 Each float op of arithmetic, each bit cast and each conversion decodes
-only from its own name, its attributes and its operand and result types:
+only from its own name, its attributes, its fast-math flags among them,
+and its operand and result types:
 `fadd` and the other ops of two operands, `fneg`, `fabs` and `sqrt`,
 `fma`, `bitcast` in either direction, `sitofp` and `uitofp`, `fpext`,
 `fptrunc`, `fptosi` and `fptoui`. The proof that the core dialect's text
@@ -21,11 +22,15 @@ theorem decodeFBin_eq {o : FBin} {as : List Attr} {ts rs : List Ty} {op : Op}
     (h : decodeFBin o as ts rs = some op) :
     op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFBin at h
+  dsimp only at h
   split at h
   · rename_i hok
     obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
     obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, FBin.attrs_of_attrsOk hok, rfl, rfl⟩
+    refine ⟨rfl, ?_, rfl, rfl⟩
+    show (splitFlags as).1.attrs ++ o.attrs = as
+    rw [FBin.attrs_of_attrsOk hok]
+    exact splitFlags_spec as
   · cases h
 
 /-- `fneg`, `fabs` and `sqrt` decode only from their own name, attributes,
@@ -34,11 +39,15 @@ theorem decodeFUnary_eq {o : FUnary} {as : List Attr} {ts rs : List Ty} {op : Op
     (h : decodeFUnary o as ts rs = some op) :
     op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFUnary at h
+  dsimp only at h
   split at h
   · rename_i hok
     obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
     obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, FUnary.attrs_of_attrsOk hok, rfl, rfl⟩
+    refine ⟨rfl, ?_, rfl, rfl⟩
+    show (splitFlags as).1.attrs ++ o.attrs = as
+    rw [FUnary.attrs_of_attrsOk hok]
+    exact splitFlags_spec as
   · cases h
 
 /-- `fma` decodes only from its own name, attributes, operand types and
@@ -47,11 +56,15 @@ theorem decodeFma_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     (h : decodeFma as ts rs = some op) :
     op.name = "fma" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFma at h
+  dsimp only at h
   split at h
   · rename_i hr
     obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
     obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
+    refine ⟨rfl, ?_, rfl, rfl⟩
+    show (splitFlags as).1.attrs ++ [roundAttr] = as
+    rw [← eq_of_isRoundAttrs hr]
+    exact splitFlags_spec as
   · cases h
 
 /-- `bitcast` decodes only from its own name, attributes, operand type and

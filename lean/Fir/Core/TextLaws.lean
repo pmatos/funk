@@ -158,6 +158,33 @@ theorem decodePtrAdd_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     · cases h
   · cases h
 
+/-- `fcmp` decodes under flags only from its own name, the flags' words
+before its other attributes, its operand types and its result type. -/
+theorem decodeFcmpWith_eq {fl : FastMath} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFcmpWith fl as ts rs = some op) :
+    op.name = "fcmp" ∧ op.attrs = fl.attrs ++ as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  unfold decodeFcmpWith at h
+  split at h <;> (try cases h)
+  rename_i p _ _ _ _
+  cases hp : FPred.all.find? (·.name == p) with
+  | none => simp [hp] at h
+  | some pr =>
+    simp only [hp] at h
+    split at h
+    · cases h
+      rename_i hab
+      obtain ⟨rfl, rfl⟩ := hab
+      exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
+    · cases h
+
+/-- `fcmp` decodes only from its own name, attributes, operand types and
+result type. -/
+theorem decodeFcmp_eq {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFcmp as ts rs = some op) :
+    op.name = "fcmp" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  obtain ⟨h1, h2, h3, h4⟩ := decodeFcmpWith_eq h
+  exact ⟨h1, h2.trans (splitFlags_spec as), h3, h4⟩
+
 /-- Every core op decodes from its name and attributes, at its operand and
 result types. -/
 theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes = some o := by
@@ -168,16 +195,22 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
       rcases bitVec_one_cases v with rfl | rfl <;> rfl
     · simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, constAttr_of_ne_one v h, h]
   | fconst e m v => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatLit_floatLit]
-  | fcmp p e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, find_fpred_name]
-  | fbin o e m =>
-    cases o <;> simp [Op.name, FBin.name, Op.attrs, FBin.attrs, Op.sig, Op.returnTypes, Op.decode,
-      decodeFBin, FBin.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
-  | funary o e m =>
-    cases o <;> simp [Op.name, FUnary.name, Op.attrs, FUnary.attrs, Op.sig, Op.returnTypes,
-      Op.decode, decodeFUnary, FUnary.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
-  | fma e m =>
-    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFma, roundAttr,
-      isRoundAttrs, floatOpFormat]
+  | fcmp p fl e m =>
+    have hs := splitFlags_attrs fl (as := [.word p.name]) (by cases p <;> rfl)
+    simp only [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFcmp, hs]
+    simp [decodeFcmpWith, find_fpred_name]
+  | fbin o fl e m =>
+    have hs := splitFlags_attrs fl (as := o.attrs) (by cases o <;> rfl)
+    cases o <;> simp only [Op.name, FBin.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode,
+      decodeFBin, hs] <;> simp [FBin.attrs, FBin.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
+  | funary o fl e m =>
+    have hs := splitFlags_attrs fl (as := o.attrs) (by cases o <;> rfl)
+    cases o <;> simp only [Op.name, FUnary.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode,
+      decodeFUnary, hs] <;> simp [FUnary.attrs, FUnary.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
+  | fma fl e m =>
+    have hs := splitFlags_attrs fl (as := [roundAttr]) rfl
+    simp only [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFma, hs]
+    simp [roundAttr, isRoundAttrs, floatOpFormat]
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
   | toBits e m | ofBits e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeBitcast, i]
@@ -226,19 +259,7 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
         subst hab
         exact ⟨rfl, by simp [Op.attrs, name_of_find_pred hp], rfl, rfl⟩
       · cases h
-  · -- fcmp
-    split at h <;> (try cases h)
-    rename_i p _ _ _ _
-    cases hp : FPred.all.find? (·.name == p) with
-    | none => simp [hp] at h
-    | some pr =>
-      simp only [hp] at h
-      split at h
-      · cases h
-        rename_i hab
-        obtain ⟨rfl, rfl⟩ := hab
-        exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
-      · cases h
+  · exact decodeFcmp_eq h -- fcmp
   · exact decodeFBin_eq h -- fadd
   · exact decodeFBin_eq h -- fsub
   · exact decodeFBin_eq h -- fmul
@@ -351,7 +372,7 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
 theorem Op.name_isWord (o : Op) : isWord o.name := by
   cases o <;> first
     | (simp only [Op.name]; decide)
-    | (rename_i o _ _; cases o <;> simp only [Op.name, FBin.name, FUnary.name] <;> decide)
+    | (rename_i o _ _ _; cases o <;> simp only [Op.name, FBin.name, FUnary.name] <;> decide)
 
 /-- Every predicate's name is a word. -/
 theorem Pred.name_isWord (p : Pred) : isWord p.name := by
@@ -360,6 +381,19 @@ theorem Pred.name_isWord (p : Pred) : isWord p.name := by
 /-- Every float predicate's name is a word. -/
 theorem FPred.name_isWord (p : FPred) : isWord p.name := by
   cases p <;> decide
+
+/-- Attributes one after the other can be written when each list can. -/
+theorem Attr.allWritable_append {as bs : List Attr} (ha : Attr.AllWritable as)
+    (hb : Attr.AllWritable bs) : Attr.AllWritable (as ++ bs) := by
+  induction as with
+  | nil => exact hb
+  | cons a as ih => exact ⟨ha.1, ih ha.2⟩
+
+/-- The words of fast-math flags can be written. -/
+theorem FastMath.attrs_writable (fl : FastMath) : Attr.AllWritable fl.attrs := by
+  obtain ⟨a, b, c, d, e⟩ := fl
+  cases a <;> cases b <;> cases c <;> cases d <;> cases e <;>
+    simp [FastMath.attrs, Attr.AllWritable, Attr.Writable] <;> decide
 
 /-- Every core op's attributes can be written. -/
 theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
@@ -373,12 +407,18 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
     · simp [Op.attrs, constAttr_of_ne_one v h, Attr.AllWritable, Attr.Writable]
   | icmp p _ => exact ⟨p.name_isWord, trivial⟩
   | fconst e m v => simp [Op.attrs, Attr.AllWritable, Attr.Writable, floatLit_valid]
-  | fcmp p => exact ⟨p.name_isWord, trivial⟩
-  | fbin o =>
-    cases o <;> simp [Op.attrs, FBin.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
-  | fma | sitofp | uitofp | fptrunc => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
-  | funary o =>
-    cases o <;> simp [Op.attrs, FUnary.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+  | fcmp p fl =>
+    exact Attr.allWritable_append fl.attrs_writable ⟨p.name_isWord, trivial⟩
+  | fbin o fl =>
+    refine Attr.allWritable_append fl.attrs_writable ?_
+    cases o <;> simp [FBin.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+  | fma fl =>
+    exact Attr.allWritable_append fl.attrs_writable
+      (by simp [roundAttr, Attr.AllWritable, Attr.Writable]; decide)
+  | sitofp | uitofp | fptrunc => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+  | funary o fl =>
+    refine Attr.allWritable_append fl.attrs_writable ?_
+    cases o <;> simp [FUnary.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
   | add _ f | sub _ f | mul _ f =>
     obtain ⟨nuw, nsw⟩ := f
     cases nuw <;> cases nsw <;>

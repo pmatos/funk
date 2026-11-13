@@ -665,3 +665,267 @@ func @f(%a: ptr(1), %b: i8, %c: i1) -> ptr(1) {
 locs {
   @0 = unknown
 }
+
+=== fcmp-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> i1 {
+^entry:
+  %r: i1 = fcmp nnan olt %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fcmp-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> i1 {
+^entry:
+  %r: i1 = fcmp ninf olt %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fadd-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fadd nnan round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fadd-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fadd ninf round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fsub-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fsub nnan round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fsub-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fsub ninf round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmul-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmul nnan round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmul-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmul ninf round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fdiv-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fdiv nnan round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fdiv-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fdiv ninf round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fneg-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fneg nnan %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fneg-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fneg ninf %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fabs-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fabs nnan %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fabs-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fabs ninf %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== sqrt-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = sqrt nnan round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== sqrt-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = sqrt ninf round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fma-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fma nnan round(rne) %a, %b, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fma-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fma ninf round(rne) %a, %b, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fadd-nsz pure
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fadd nsz round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fneg-nsz pure
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fneg nsz %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== frem-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod-nnan may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmod nnan %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== frem-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = frem ninf %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fmod-ninf may-poison
+func @f(%a: f32, %b: f32, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fmod ninf %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}

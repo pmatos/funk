@@ -65,9 +65,11 @@ fn fcmp(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([a, b], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err("fcmp takes two operands and defines one value".into());
     };
-    let p = match op.attrs.as_slice() {
-        [Attr::Word(p)] => p.as_str(),
-        _ => return Err("fcmp has one attribute, its predicate".into()),
+    // The predicate is the last attribute, after any fast-math flags, which
+    // the lowering ignores: native code refines the flagged op.
+    let p = match op.attrs.last() {
+        Some(Attr::Word(p)) => p.as_str(),
+        _ => return Err("fcmp has its predicate as its last attribute".into()),
     };
     let Some((swap, sets, join)) = predicate(p) else {
         return Err(format!("fcmp has no predicate {p}").into());

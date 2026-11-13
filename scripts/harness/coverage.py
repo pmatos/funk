@@ -145,7 +145,7 @@ def table(head: list[str], rows: list[list[str]]) -> list[str]:
 # come from cells.catalog, shared with the gap enumeration.
 SECTIONS = {
     "ops": ("Ops at a width", ("op", "flags or predicate"), ""),
-    "floats": ("Float ops at a format", ("op", "predicate"), ""),
+    "floats": ("Float ops at a format", ("op", "predicate, attribute or flag"), ""),
     "casts": ("Width changes", ("op", "from"), "to "),
     "bitcasts": ("Conversions", ("op", "from", "to"), ""),
     "int_to_float": ("Conversions from integers", ("op", "from"), "to "),

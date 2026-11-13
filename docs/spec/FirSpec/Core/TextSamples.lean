@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text, checked: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7746908259810397984")
+:::moduleDocs (fingerprint := "11182523454328524149")
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "7011804853505896077")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "14600760513435700540")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section],
@@ -29,7 +29,9 @@ are a list of op instances that
 holds each of the 40 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers and the pointer offset in three memories among them, with each of the ten
 predicates and each of the fourteen float predicates, at widths from 1 to
 128, float constants at `f32`, `f64`, `f16` and
-$`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, and
+$`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, the
+fast-math flags and the reserved words among them, the remainders with
+flags too, and
 $`\mathsf{ret}` with and without operands. On every build, checks test
 that each of them reads back from its own name, attributes and types, and
 that misspellings such as `i032`, `float(8, 23)`, flags in the wrong order,

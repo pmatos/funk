@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16276014801133652959")
+:::moduleDocs (fingerprint := "17472343979287675236")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid (fingerprint := "5700179324054335365")
+:::readable Fir.Core.Op.Valid (fingerprint := "9671964393155909194")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -80,6 +80,11 @@ $$`\frac{N < M}{C \vdash \mathsf{trunc}_{M \to N}~\text{valid}}`
 $$`\frac{e \le e' \qquad m \le m' \qquad (e, m) \ne (e', m')}{C \vdash \mathsf{fpext}_{e,m,e',m'}~\text{valid}}`
 
 $$`\frac{e' < e \ \text{ or } \ m' < m}{C \vdash \mathsf{fptrunc}_{e,m,e',m'}~\text{valid}}`
+$$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc}}{C \vdash \mathit{op}_{e,m}~\phi~\text{valid}} \quad \text{for } \mathit{op} \in \{\mathsf{fcmp}, \mathit{fbin}, \mathit{funary}, \mathsf{fma}\}`
+
+The reserved words $`\mathsf{contract}` and $`\mathsf{reassoc}` are
+permissions for passes that M2's optimizer decides, not meanings of an
+op, so a float op that carries either is not valid (ADR-2026-11-09-1549).
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 

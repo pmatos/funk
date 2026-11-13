@@ -54,8 +54,11 @@ A generated matrix counts the corpus's tests of each cell (ADR-2026-11-03-0557).
 A hook fails when the matrix is stale or a cell has no test.
 
 A cell is an op instance of the core dialect at a width, on one side. An op
-instance is the op with its flag set, `exact` choice or `icmp` predicate. A flag
-that the spec does not give an op is not a cell, and a constant's value is not
+instance is the op with its flag set, `exact` choice or `icmp` predicate; a float
+op's fast-math flags are cells one by one, by the human's ruling of 2026-11-13
+on #355
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)).
+A flag that the spec does not give an op is not a cell, and a constant's value is not
 part of its cell. Width changes are cells for each pair of widths, `zext` and
 `sext` to a wider one and `trunc` to a narrower one. Passed and returned values
 are cells for none, one or several values.

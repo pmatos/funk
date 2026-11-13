@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17614064800585495877")
+:::moduleDocs (fingerprint := "17459434125897226089")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -71,6 +71,31 @@ ugt,uge,uno       \mathsf{ugt} \mid \mathsf{uge} \mid \mathsf{uno}
 ```
 :::
 
+:::readable Fir.Core.FastMath Fir.Core.FastMath.Reserved (fingerprint := "1415803108012639584")
+*Fast-math flags.* A float op carries the fast-math flags
+(ADR-2026-11-09-1549). Each of the first three is a promise about the
+op's operands or result:
+
+```grammar Fir.Core.FastMath
+\mathit{fmf}
+nnan,ninf,nsz      \mathsf{nnan}^?~\mathsf{ninf}^?~\mathsf{nsz}^?
+contract,reassoc   \mathsf{contract}^?~\mathsf{reassoc}^?
+```
+
+* $`\mathsf{nnan}`, no NaNs: no operand and no result is a NaN. A NaN
+  operand or result gives
+  {ref "The-fir-specification--Execution--Poison-and-immediate-UB"}[poison].
+* $`\mathsf{ninf}`, no infinities: no operand and no result is an
+  infinity. An infinite operand or result gives poison.
+* $`\mathsf{nsz}`, no signed zeros: the sign of a zero result does not
+  matter, so a zero result is $`+0` or $`-0`, a choice.
+
+$`\mathsf{contract}` and $`\mathsf{reassoc}` are _reserved_: they are
+permissions for passes, which M2's optimizer decides, not meanings of an
+op. Validation rejects an op that carries either, and the rules ignore
+them. A flag is off unless the op sets it.
+:::
+
 :::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "4350115894855268594")
 *Float operations.* The float arithmetic has six ops of two operands and
 three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
@@ -100,7 +125,7 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "17251928516930161620")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "8519819667960364920")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -173,16 +198,17 @@ a bit, and a bit into a choice.
 \mathit{op}
 -      \dots
 icmp   \mathsf{icmp}_N~\mathit{pred}
-fcmp   \mathsf{fcmp}_{e,m}~\mathit{fpred}
+fcmp   \mathsf{fcmp}_{e,m}~\mathit{fmf}~\mathit{fpred}
 select \mathsf{select}_N
 ```
 
 * $`\mathsf{icmp}_N~\mathit{pred}` compares two $`\mathsf{i}N` values and
   gives an $`\mathsf{i1}`: 1 when the predicate holds, 0 when it does not.
-* $`\mathsf{fcmp}_{e,m}~\mathit{fpred}` compares two values of
+* $`\mathsf{fcmp}_{e,m}~\mathit{fmf}~\mathit{fpred}` compares two values of
   $`\mathsf{float}\langle e,m \rangle` by the numbers they encode in Lean's
   float model, and gives an $`\mathsf{i1}` in the same way. It is never
-  UB, and a poison operand gives poison.
+  UB, and a poison operand gives poison, as does an operand that breaks
+  $`\mathsf{nnan}` or $`\mathsf{ninf}`.
 * $`\mathsf{select}_N` takes an $`\mathsf{i1}` condition and two
   $`\mathsf{i}N` values, and gives one of them. The value not chosen does
   not matter, even when it is poison; the one chosen is given as it is.
@@ -196,9 +222,9 @@ $`\mathsf{float}\langle e,m \rangle`, by Lean's float model
 ```grammar Fir.Core.Op
 \mathit{op}
 -       \dots
-fbin    \mathit{fbin}_{e,m}
-funary  \mathit{funary}_{e,m}
-fma     \mathsf{fma}_{e,m}
+fbin    \mathit{fbin}_{e,m}~\mathit{fmf}
+funary  \mathit{funary}_{e,m}~\mathit{fmf}
+fma     \mathsf{fma}_{e,m}~\mathit{fmf}
 ```
 
 * $`\mathit{fbin}_{e,m}` (`fbin` in the Lean) takes two values and
@@ -209,6 +235,9 @@ fma     \mathsf{fma}_{e,m}
 * When the model's result is a NaN, the op gives any NaN of the format:
   its sign and payload are a choice. None is ever UB, and a poison operand
   gives poison.
+* Each carries its fast-math flags $`\mathit{fmf}`: an operand or result
+  that breaks $`\mathsf{nnan}` or $`\mathsf{ninf}` gives poison, and with
+  $`\mathsf{nsz}` a zero result has either sign.
 
 *Width changes* move an integer to another width.
 

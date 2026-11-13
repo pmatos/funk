@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float comparison rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16495699513502257785")
+:::moduleDocs (fingerprint := "9065455117763472156")
 :::
 
 :::readable Fir.Core.floatCompare (fingerprint := "16383978172134608434")
@@ -49,19 +49,26 @@ $`\mathsf{uge}` of $`\mathsf{olt}`, and so on, and $`\mathsf{uno}` of
 $`\mathsf{ord}`.
 :::
 
-:::readable Fir.Core.fcmpValues (fingerprint := "16983146264370512739")
+:::readable Fir.Core.fcmpValues (fingerprint := "10639262800556838397")
 *Definition: the rule of $`\mathsf{fcmp}`.* For every format
-$`\mathsf{float}\langle e,m \rangle` and float predicate $`p`,
-$`\mathsf{fcmp}_{e,m}~p` of two values gives an $`\mathsf{i1}`:
+$`\mathsf{float}\langle e,m \rangle`, float predicate $`p` and flags
+$`\phi`, $`\mathsf{fcmp}_{e,m}~\phi~p` of two values gives an
+$`\mathsf{i1}`:
 
-$$`\mathsf{fcmp}_{e,m}~p\,(a, b) = \begin{cases} 1 & \text{if } a, b \in \mathbb{B}^{1+e+m} \text{ and } p \text{ holds of } \mathrm{fcompare}_{e,m}(a, b) \\ 0 & \text{if } a, b \in \mathbb{B}^{1+e+m} \text{ and it does not} \\ \mathsf{poison} & \text{if } a \text{ or } b \text{ is poison} \end{cases}`
+$$`\mathsf{fcmp}_{e,m}~\phi~p\,(a, b) = \begin{cases} \mathsf{poison} & \text{if } a \text{ or } b \text{ is poison, or } [a, b] \text{ breaks } \phi \\ 1 & \text{else if } p \text{ holds of } \mathrm{fcompare}_{e,m}(a, b) \\ 0 & \text{otherwise} \end{cases}`
+
+The operands break $`\phi` as the
+{ref "The-fir-specification--Execution--Fast-math-flag-rules"}[fast-math flag rules]
+say: a NaN under $`\mathsf{nnan}`, or an infinity under
+$`\mathsf{ninf}`. $`\mathsf{nsz}` changes nothing, since the result is not
+a float.
 
 It is never UB and never gives a NaN: its result is a bit. So
 $`\mathsf{fcmp}~\mathsf{oeq}` of a NaN with itself gives 0, and
 $`\mathsf{fcmp}~\mathsf{une}` gives 1.
 :::
 
-:::readable Fir.Core.cmp32 Fir.Core.fpredResults Fir.Core.fcmpsAs (fingerprint := "16967172494959069142")
+:::readable Fir.Core.cmp32 Fir.Core.fpredResults Fir.Core.fcmpsAs (fingerprint := "6261801356151191241")
 *Tests.* $`\mathrm{cmp32}` is $`\mathrm{fcompare}_{8,23}`, the order of
 $`\mathsf{f32}`. $`\mathrm{fpredResults}(c)` lists what the fourteen
 predicates give, in the order of the grammar, on a pair that compares as

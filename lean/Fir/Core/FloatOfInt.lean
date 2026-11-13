@@ -36,7 +36,8 @@ The rule is fir's own in two places, as the float arithmetic's is: a
 poison operand gives a poison result (ADR-2026-10-29-2006), and at a
 format that the model does not have, which validation rejects, the result
 is a NaN chosen as `anyNaN` chooses it, so that the rule is total. Neither
-op is ever UB.
+op is ever UB, and neither carries fast-math flags: the rule is the float
+result with no flags.
 -/
 
 namespace Fir.Core
@@ -53,7 +54,7 @@ def intOfBits (signed : Bool) (a : BitVec n) : Int :=
 by the model, and poison when the operand is poison. -/
 def intToFloat {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m : Nat) (signed : Bool) :
     PoisonOr (BitVec n) → μ (PoisonOr (BitVec (floatWidth e m)))
-  | .value a => floatResult e m fun f _ => UnpackedFloat.ofInt f (intOfBits signed a)
+  | .value a => floatResult {} e m [] fun f _ => UnpackedFloat.ofInt f (intOfBits signed a)
   | .poison => pure .poison
 
 /-- The model's rounding of a finite number never gives a NaN. -/
@@ -80,7 +81,8 @@ theorem intToFloat_valid {μ : Type → Type} [Monad μ] [MonadChoice μ] {e m :
         (UnpackedFloat.ofInt
           { exponentBits := e, mantissaBitsWithoutImplicit := m, he := h.1, hm := h.2 }
           (intOfBits signed a)))) := by
-  simp only [intToFloat, floatResult, h, and_self, ↓reduceDIte, ofInt_isNaN]
+  simp only [intToFloat, floatResult, h, and_self, ↓reduceDIte, ofInt_isNaN, operandsBreak_nil,
+    Bool.false_eq_true, ↓reduceIte]
   rfl
 
 /-! # Tests

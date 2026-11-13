@@ -26,6 +26,24 @@ Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
 (ADR-2026-11-03-0557).
 
+The fast-math flags count one by one. Each float op but the constant has a cell
+for each of `nnan`, `ninf` and `nsz` at each format of a side, beside its cells
+without flags (`cells.FAST_MATH`, `cells.FLAGGED`). A test exercises the cell of
+each flag it sets, and not the op's cell without flags. `contract` and `reassoc`
+are not cells, since validation rejects them, and `cells.py` reports one as an
+error. Integer ops keep one cell per flag set: none, `nuw`, `nsw` and
+`nuw nsw`. The human ruled this on 2026-11-13, on #355 (ADR-2026-11-03-0557).
+Float flags are independent, and the spec proves that dropping any one refines
+the op, so a test with two flags checks nothing that two one-flag tests miss;
+the integer ops have at most four flag sets, which are cells already. A test
+that fills a flag's cell is one whose outcome depends on the flag: a NaN operand
+or result for `nnan`, an infinity for `ninf`, a zero result for `nsz`. `fcmp
+nsz` is the exception: its result is not a float, so the flag has no effect,
+and its test pins that. Rejected: a cell for every flag set, about 1,200 more
+cells, with the float tables on a page of their own past the file-size budget;
+and no cells for flags, with a flagged test counting towards the op without
+flags, which leaves no check that each flag's rule is tested.
+
 ## The exact-rational reference
 
 `scripts/harness/float_ref.py` computes IEEE 754 results at any format
@@ -159,3 +177,22 @@ reference against the host's `struct` and `math.trunc` at `f16`, `f32` and
 `crates/funk/tests/float_to_int.rs` checks every path of the backend's lowering
 natively against the host's `trunc`, where the source gives an integer
 ([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-to-integers)).
+
+## The fast-math flag corpus
+
+`scripts/harness/float_flag_cases.py` writes the modules and tests
+`float-flags-FORMAT` of `tests/fir/canonical/`, at every aliased format: a
+function for each float op and each flag, such as `@fadd_nnan`, which fills that
+flag's cell (#242). Each function's cases decide the flag, beside one that does
+not: under `nnan` a NaN operand and operands whose result is a NaN, such as
+`inf - inf`, `0 / 0` or `sqrt(-1)`, give poison; under `ninf` an infinite
+operand and a result that rounds to an infinity, such as `M + M` or `1 / 0`, give
+poison; under `nsz` a zero result is either zero, with one interpreter-only test
+for each choice of the sign bit. `fcmp` takes `uno` under `nnan`, `olt` under
+`ninf` and `oeq` under `nsz`, whose cases show the flag has no effect there. Each
+expected result is `float_ref.py`'s with the flag's rule applied, and
+`test_float_flag_cases.py` checks the committed files, each expected result,
+and that each flag decides a case of each op. At `f32` and `f64` each case is a
+differential test too: native code ignores the flags, and its result refines
+poison and either zero. `reject/float-flags.toml` holds the texts of the flags
+that do not decode and those that validation rejects.

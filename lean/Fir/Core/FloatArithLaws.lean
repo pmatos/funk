@@ -1,4 +1,4 @@
-import Fir.Core.Semantics
+import Fir.Core.FloatResultLaws
 import Fir.Core.Poison
 import Fir.Execution.EffectLaws
 import Fir.Execution.Morphism
@@ -6,21 +6,21 @@ import Fir.Execution.Morphism
 /-!
 # Float arithmetic is lawful
 
-`fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt` and `fma`, at every
-format, meet the obligations of the poison classes section. Each
-propagates poison (ADR-2026-10-29-2006), so it meets both poison clauses,
-returns a result on some operands with no poison, and is total and
-monotone. Each also meets the effect obligations of a pure op
-(ADR-2026-11-09-1549): it is never UB, and on operands with no poison it
-gives a defined result.
+`fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `fneg`, `fabs`, `sqrt` and
+`fma`, at every format and with every fast-math flag, meet the obligations of the poison
+classes section. Each propagates poison (ADR-2026-10-29-2006), so it meets
+both poison clauses, returns a result on some operands with no poison, and
+is total and monotone. Each also meets the effect obligations of its
+declaration: it is never UB, and without `nnan` and `ninf` it gives a
+defined result on operands with no poison (ADR-2026-11-09-1549).
 
-On defined operands each rule gives the model's result, or any NaN when
-that result is a NaN. Both are defined bits, so the set of the ways the
-rule may end is never empty, and holds no UB and no poison. A poison
-operand gives exactly a poison result, which every result refines, and
-defined operands are refined only by themselves, so each rule is
-monotone. None of this looks at what the model computes: the proofs hold
-for any operation of the model, and for every NaN that the choice gives.
+On defined operands each rule gives a float result (the section on what a
+float result may be): it has a way to end, each way is a value, and it is
+poison only when `nnan` or `ninf` is set. A poison operand gives exactly a
+poison result, which every result refines, and defined operands are
+refined only by themselves, so each rule is monotone. None of this looks
+at what the model computes: the proofs hold for any operation of the
+model, and for every NaN and sign that a choice gives.
 
 Each rule is written once for any monad with choice, and a monad morphism
 that keeps choice and UB maps the rule in one monad to the rule in the
@@ -34,75 +34,21 @@ namespace Fir.Core
 
 open Float.Model
 
-/-- In the set monad, any NaN gives exactly the NaNs that a choice of
-`m + 1` bits gives. -/
-theorem anyNaN_iff {e m : Nat} {ev : Ev (PoisonOr (BitVec (floatWidth e m)))} :
-    anyNaN (μ := SetM) e m ev ↔ ∃ c, ev = .ok (.value (nanBits e m c)) := by
-  constructor
-  · rintro (⟨c, -, h⟩ | ⟨_, ⟨_, h⟩, _⟩)
-    · exact ⟨c, h⟩
-    · cases h
-  · rintro ⟨c, rfl⟩
-    exact .inl ⟨c, ⟨c, rfl⟩, rfl⟩
-
-/-- A computation of one float value that has a way to end, and every way
-it ends is a value: it is never UB. -/
-structure Ends {α : Type} (s : SetM α) : Prop where
-  ok : ∀ ev, s ev → ∃ v, ev = .ok v
-  some : ∃ v, s (.ok v)
-
-/-- In the set monad, a float result has a way to end, and each is a
-defined value. -/
-theorem floatResult_defined (e m : Nat)
-    (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat)
-    (ev : Ev (PoisonOr (BitVec (floatWidth e m)))) (h : floatResult (μ := SetM) e m r ev) :
-    ∃ b, ev = .ok (.value b) := by
-  unfold floatResult at h
-  split at h
-  · dsimp only at h
-    split at h
-    · obtain ⟨c, rfl⟩ := anyNaN_iff.1 h
-      exact ⟨_, rfl⟩
-    · exact ⟨_, h⟩
-  · obtain ⟨c, rfl⟩ := anyNaN_iff.1 h
-    exact ⟨_, rfl⟩
-
-/-- A float result has a way to end, and is never UB. -/
-theorem floatResult_ends (e m : Nat)
-    (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
-    Ends (floatResult (μ := SetM) e m r) where
-  ok ev h := by
-    obtain ⟨_, rfl⟩ := floatResult_defined e m r ev h
-    exact ⟨_, rfl⟩
-  some := by
-    unfold floatResult
-    split
-    · dsimp only
-      split
-      · exact ⟨_, anyNaN_iff.2 ⟨0, rfl⟩⟩
-      · exact ⟨_, rfl⟩
-    · exact ⟨_, anyNaN_iff.2 ⟨0, rfl⟩⟩
-
-/-- `pure` has a way to end, and is never UB. -/
-theorem pure_ends {α : Type} (a : α) : Ends (pure a : SetM α) where
-  ok _ h := ⟨_, h⟩
-  some := ⟨a, rfl⟩
-
-/-- The rules of `fadd`, `fsub`, `fmul` and `fdiv` have a way to end, and
-are never UB. -/
-theorem fbinValues_ends (o : FBin) (a b : PoisonOr (BitVec (floatWidth e m))) :
-    Ends (fbinValues (μ := SetM) o a b) := by
+/-- The rules of `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` have a
+way to end, and are never UB. -/
+theorem fbinValues_ends (o : FBin) (fl : FastMath) (a b : PoisonOr (BitVec (floatWidth e m))) :
+    Ends (fbinValues (μ := SetM) o fl a b) := by
   cases a <;> cases b <;> first | exact pure_ends _ | (dsimp only [fbinValues]; exact floatResult_ends e m _)
 
 /-- The rules of `fneg`, `fabs` and `sqrt` have a way to end, and are
 never UB. -/
-theorem funaryValue_ends (o : FUnary) (a : PoisonOr (BitVec (floatWidth e m))) :
-    Ends (funaryValue (μ := SetM) o a) := by
+theorem funaryValue_ends (o : FUnary) (fl : FastMath) (a : PoisonOr (BitVec (floatWidth e m))) :
+    Ends (funaryValue (μ := SetM) o fl a) := by
   cases a <;> first | exact pure_ends _ | (dsimp only [funaryValue]; exact floatResult_ends e m _)
 
 /-- The rule of `fma` has a way to end, and is never UB. -/
-theorem fmaValues_ends (a b c : PoisonOr (BitVec (floatWidth e m))) :
-    Ends (fmaValues (μ := SetM) a b c) := by
+theorem fmaValues_ends (fl : FastMath) (a b c : PoisonOr (BitVec (floatWidth e m))) :
+    Ends (fmaValues (μ := SetM) fl a b c) := by
   cases a <;> cases b <;> cases c <;>
     first | exact pure_ends _ | (dsimp only [fmaValues]; exact floatResult_ends e m _)
 
@@ -158,52 +104,52 @@ end
 /-! # The float ops of two operands -/
 
 section
-variable (o : FBin) (e m : Nat)
+variable (o : FBin) (fl : FastMath) (e m : Nat)
 
 /-- `fadd`, `fsub`, `fmul` and `fdiv` propagate poison: a poison operand
 gives only a poison result, and they are never UB. -/
-theorem fbin_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fbin o e m) where
+theorem fbin_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fbin o fl e m) where
   poisonOut
     | .cons a (.cons b .nil), h, _, hrs => by
       have hp : a = .poison ∨ b = .poison := h.imp_right fun h => h.elim id False.elim
-      have hs : fbinValues (μ := SetM) o a b = pure .poison := by
+      have hs : fbinValues (μ := SetM) o fl a b = pure .poison := by
         rcases hp with rfl | rfl
         · rfl
         · cases a <;> rfl
-      obtain ⟨v, hv, h⟩ := oneFloat_ok (fbinValues_ends o a b) hrs
+      obtain ⟨v, hv, h⟩ := oneFloat_ok (fbinValues_ends o fl a b) hrs
       rw [hs] at hv
       cases hv
       cases h
       exact ⟨rfl, trivial⟩
   ubByOwnRules
-    | .cons a (.cons b .nil), r, _, hub => absurd hub (oneFloat_not_ub (fbinValues_ends o a b) r)
+    | .cons a (.cons b .nil), r, _, hub => absurd hub (oneFloat_not_ub (fbinValues_ends o fl a b) r)
 
 /-- `fadd`, `fsub`, `fmul` and `fdiv` return a result on two defined
 operands. -/
-theorem fbin_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fbin o e m) := by
-  obtain ⟨v, hv⟩ := (fbinValues_ends (e := e) (m := m) o (.value 0) (.value 0)).some
+theorem fbin_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fbin o fl e m) := by
+  obtain ⟨v, hv⟩ := (fbinValues_ends (e := e) (m := m) o fl (.value 0) (.value 0)).some
   refine ⟨.cons (.value 0) (.cons (.value 0) .nil), ?_, _, oneFloat_of hv⟩
   rintro (h | h | h) <;> cases h
 
 /-- `fadd`, `fsub`, `fmul` and `fdiv` have an outcome on every operand
 vector. -/
-theorem fbin_total : OpTotal (d := CoreDialect) (.fbin o e m) := fun
+theorem fbin_total : OpTotal (d := CoreDialect) (.fbin o fl e m) := fun
   | .cons a (.cons b .nil) =>
     ⟨fun _ => by
-      obtain ⟨_, hv⟩ := (fbinValues_ends o a b).some
+      obtain ⟨_, hv⟩ := (fbinValues_ends o fl a b).some
       exact ⟨_, oneFloat_of hv⟩, fun h => nomatch h⟩
 
 /-- `fadd`, `fsub`, `fmul` and `fdiv` are monotone. -/
-theorem fbin_monotone : OpMonotone (d := CoreDialect) (.fbin o e m) := by
+theorem fbin_monotone : OpMonotone (d := CoreDialect) (.fbin o fl e m) := by
   intro args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons a (.cons b .nil), .cons a' (.cons b' .nil), ⟨ha, hb, _⟩ =>
     cases a with
-    | poison => exact oneFloat_poison_isRefinedBy (fbinValues_ends o a' b')
+    | poison => exact oneFloat_poison_isRefinedBy (fbinValues_ends o fl a' b')
     | value x =>
       cases b with
-      | poison => exact oneFloat_poison_isRefinedBy (fbinValues_ends o a' b')
+      | poison => exact oneFloat_poison_isRefinedBy (fbinValues_ends o fl a' b')
       | value y =>
         cases a' with
         | poison => exact ha.elim
@@ -217,12 +163,13 @@ theorem fbin_monotone : OpMonotone (d := CoreDialect) (.fbin o e m) := by
             exact SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _
 
 /-- `fadd`, `fsub`, `fmul` and `fdiv` are never UB. -/
-theorem fbin_neverUB : NeverUBSetM (d := CoreDialect) (.fbin o e m) := fun
-  | .cons a (.cons b .nil), r => ⟨fun _ => oneFloat_not_ub (fbinValues_ends o a b) r, fun h => nomatch h⟩
+theorem fbin_neverUB : NeverUBSetM (d := CoreDialect) (.fbin o fl e m) := fun
+  | .cons a (.cons b .nil), r => ⟨fun _ => oneFloat_not_ub (fbinValues_ends o fl a b) r, fun h => nomatch h⟩
 
 /-- On defined operands, `fadd`, `fsub`, `fmul` and `fdiv` give a defined
-result. -/
-theorem fbin_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.fbin o e m) := fun _ args hd rs hr =>
+result when no flag may make poison. -/
+theorem fbin_makesNoPoison (hm : fl.mayPoison = false) :
+    MakesNoPoisonSetM (d := CoreDialect) (.fbin o fl e m) := fun _ args hd rs hr =>
   match args, hd, hr with
   | .cons a (.cons b .nil), hd, hr => by
     cases a with
@@ -231,9 +178,10 @@ theorem fbin_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.fbin o e m) 
       cases b with
       | poison => exact absurd (.inr (.inl rfl)) hd
       | value y =>
-        obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (fbinValues_ends o _ _) hr
-        obtain ⟨_, h⟩ := floatResult_defined e m _ _ (by dsimp only [fbinValues] at hv; exact hv)
+        obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (fbinValues_ends o fl _ _) hr
+        obtain ⟨_, h, hd⟩ := floatResult_ok (by dsimp only [fbinValues] at hv; exact hv)
         cases h
+        obtain ⟨_, rfl⟩ := hd hm
         exact oneFloat_defined
 
 end
@@ -241,43 +189,43 @@ end
 /-! # The float ops of one operand -/
 
 section
-variable (o : FUnary) (e m : Nat)
+variable (o : FUnary) (fl : FastMath) (e m : Nat)
 
 /-- `fneg`, `fabs` and `sqrt` propagate poison: a poison operand gives
 only a poison result, and they are never UB. -/
-theorem funary_propagatesPoison : PropagatesPoison (d := CoreDialect) (.funary o e m) where
+theorem funary_propagatesPoison : PropagatesPoison (d := CoreDialect) (.funary o fl e m) where
   poisonOut
     | .cons a .nil, h, _, hrs => by
       have hp : a = .poison := h.elim id False.elim
       subst hp
-      obtain ⟨v, hv, h⟩ := oneFloat_ok (funaryValue_ends o _) hrs
+      obtain ⟨v, hv, h⟩ := oneFloat_ok (funaryValue_ends o fl _) hrs
       cases hv
       cases h
       exact ⟨rfl, trivial⟩
   ubByOwnRules
-    | .cons a .nil, r, _, hub => absurd hub (oneFloat_not_ub (funaryValue_ends o a) r)
+    | .cons a .nil, r, _, hub => absurd hub (oneFloat_not_ub (funaryValue_ends o fl a) r)
 
 /-- `fneg`, `fabs` and `sqrt` return a result on a defined operand. -/
-theorem funary_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.funary o e m) := by
-  obtain ⟨v, hv⟩ := (funaryValue_ends (e := e) (m := m) o (.value 0)).some
+theorem funary_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.funary o fl e m) := by
+  obtain ⟨v, hv⟩ := (funaryValue_ends (e := e) (m := m) o fl (.value 0)).some
   refine ⟨.cons (.value 0) .nil, ?_, _, oneFloat_of hv⟩
   rintro (h | h) <;> cases h
 
 /-- `fneg`, `fabs` and `sqrt` have an outcome on every operand. -/
-theorem funary_total : OpTotal (d := CoreDialect) (.funary o e m) := fun
+theorem funary_total : OpTotal (d := CoreDialect) (.funary o fl e m) := fun
   | .cons a .nil =>
     ⟨fun _ => by
-      obtain ⟨_, hv⟩ := (funaryValue_ends o a).some
+      obtain ⟨_, hv⟩ := (funaryValue_ends o fl a).some
       exact ⟨_, oneFloat_of hv⟩, fun h => nomatch h⟩
 
 /-- `fneg`, `fabs` and `sqrt` are monotone. -/
-theorem funary_monotone : OpMonotone (d := CoreDialect) (.funary o e m) := by
+theorem funary_monotone : OpMonotone (d := CoreDialect) (.funary o fl e m) := by
   intro args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons a .nil, .cons a' .nil, ⟨ha, _⟩ =>
     cases a with
-    | poison => exact oneFloat_poison_isRefinedBy (funaryValue_ends o a')
+    | poison => exact oneFloat_poison_isRefinedBy (funaryValue_ends o fl a')
     | value x =>
       cases a' with
       | poison => exact ha.elim
@@ -287,20 +235,22 @@ theorem funary_monotone : OpMonotone (d := CoreDialect) (.funary o e m) := by
         exact SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _
 
 /-- `fneg`, `fabs` and `sqrt` are never UB. -/
-theorem funary_neverUB : NeverUBSetM (d := CoreDialect) (.funary o e m) := fun
-  | .cons a .nil, r => ⟨fun _ => oneFloat_not_ub (funaryValue_ends o a) r, fun h => nomatch h⟩
+theorem funary_neverUB : NeverUBSetM (d := CoreDialect) (.funary o fl e m) := fun
+  | .cons a .nil, r => ⟨fun _ => oneFloat_not_ub (funaryValue_ends o fl a) r, fun h => nomatch h⟩
 
 /-- On a defined operand, `fneg`, `fabs` and `sqrt` give a defined
-result. -/
-theorem funary_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.funary o e m) :=
+result when no flag may make poison. -/
+theorem funary_makesNoPoison (hm : fl.mayPoison = false) :
+    MakesNoPoisonSetM (d := CoreDialect) (.funary o fl e m) :=
   fun _ args hd rs hr => match args, hd, hr with
   | .cons a .nil, hd, hr => by
     cases a with
     | poison => exact absurd (.inl rfl) hd
     | value x =>
-      obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (funaryValue_ends o _) hr
-      obtain ⟨_, h⟩ := floatResult_defined e m _ _ (by dsimp only [funaryValue] at hv; exact hv)
+      obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (funaryValue_ends o fl _) hr
+      obtain ⟨_, h, hd⟩ := floatResult_ok (by dsimp only [funaryValue] at hv; exact hv)
       cases h
+      obtain ⟨_, rfl⟩ := hd hm
       exact oneFloat_defined
 
 end
@@ -308,48 +258,48 @@ end
 /-! # Fused multiply-add -/
 
 section
-variable (e m : Nat)
+variable (fl : FastMath) (e m : Nat)
 
 /-- `fma` propagates poison: a poison operand gives only a poison result,
 and it is never UB. -/
-theorem fma_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fma e m) where
+theorem fma_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fma fl e m) where
   poisonOut
     | .cons a (.cons b (.cons c .nil)), h, _, hrs => by
-      have hs : fmaValues (μ := SetM) a b c = pure .poison := by
+      have hs : fmaValues (μ := SetM) fl a b c = pure .poison := by
         rcases h with h | h | h | h
         · cases (show a = .poison from h); rfl
         · cases (show b = .poison from h); cases a <;> rfl
         · cases (show c = .poison from h); cases a <;> cases b <;> rfl
         · exact h.elim
-      obtain ⟨v, hv, h⟩ := oneFloat_ok (fmaValues_ends a b c) hrs
+      obtain ⟨v, hv, h⟩ := oneFloat_ok (fmaValues_ends fl a b c) hrs
       rw [hs] at hv
       cases hv
       cases h
       exact ⟨rfl, trivial⟩
   ubByOwnRules
     | .cons a (.cons b (.cons c .nil)), r, _, hub =>
-      absurd hub (oneFloat_not_ub (fmaValues_ends a b c) r)
+      absurd hub (oneFloat_not_ub (fmaValues_ends fl a b c) r)
 
 /-- `fma` returns a result on three defined operands. -/
-theorem fma_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fma e m) := by
-  obtain ⟨v, hv⟩ := (fmaValues_ends (e := e) (m := m) (.value 0) (.value 0) (.value 0)).some
+theorem fma_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fma fl e m) := by
+  obtain ⟨v, hv⟩ := (fmaValues_ends (e := e) (m := m) fl (.value 0) (.value 0) (.value 0)).some
   refine ⟨.cons (.value 0) (.cons (.value 0) (.cons (.value 0) .nil)), ?_, _, oneFloat_of hv⟩
   rintro (h | h | h | h) <;> cases h
 
 /-- `fma` has an outcome on every operand vector. -/
-theorem fma_total : OpTotal (d := CoreDialect) (.fma e m) := fun
+theorem fma_total : OpTotal (d := CoreDialect) (.fma fl e m) := fun
   | .cons a (.cons b (.cons c .nil)) =>
     ⟨fun _ => by
-      obtain ⟨_, hv⟩ := (fmaValues_ends a b c).some
+      obtain ⟨_, hv⟩ := (fmaValues_ends fl a b c).some
       exact ⟨_, oneFloat_of hv⟩, fun h => nomatch h⟩
 
 /-- `fma` is monotone. -/
-theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma e m) := by
+theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma fl e m) := by
   intro args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons a (.cons b (.cons c .nil)), .cons a' (.cons b' (.cons c' .nil)), ⟨ha, hb, hc, _⟩ =>
-    have hp := oneFloat_poison_isRefinedBy (fmaValues_ends a' b' c')
+    have hp := oneFloat_poison_isRefinedBy (fmaValues_ends fl a' b' c')
     cases a with
     | poison => exact hp
     | value x =>
@@ -375,12 +325,14 @@ theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma e m) := by
                 exact SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _
 
 /-- `fma` is never UB. -/
-theorem fma_neverUB : NeverUBSetM (d := CoreDialect) (.fma e m) := fun
+theorem fma_neverUB : NeverUBSetM (d := CoreDialect) (.fma fl e m) := fun
   | .cons a (.cons b (.cons c .nil)), r =>
-    ⟨fun _ => oneFloat_not_ub (fmaValues_ends a b c) r, fun h => nomatch h⟩
+    ⟨fun _ => oneFloat_not_ub (fmaValues_ends fl a b c) r, fun h => nomatch h⟩
 
-/-- On defined operands, `fma` gives a defined result. -/
-theorem fma_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.fma e m) :=
+/-- On defined operands, `fma` gives a defined result when no flag may
+make poison. -/
+theorem fma_makesNoPoison (hm : fl.mayPoison = false) :
+    MakesNoPoisonSetM (d := CoreDialect) (.fma fl e m) :=
   fun _ args hd rs hr => match args, hd, hr with
   | .cons a (.cons b (.cons c .nil)), hd, hr => by
     cases a with
@@ -392,9 +344,10 @@ theorem fma_makesNoPoison : MakesNoPoisonSetM (d := CoreDialect) (.fma e m) :=
         cases c with
         | poison => exact absurd (.inr (.inr (.inl rfl))) hd
         | value z =>
-          obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (fmaValues_ends _ _ _) hr
-          obtain ⟨_, h⟩ := floatResult_defined e m _ _ (by dsimp only [fmaValues] at hv; exact hv)
+          obtain ⟨v, hv, ⟨⟩⟩ := oneFloat_ok (fmaValues_ends fl _ _ _) hr
+          obtain ⟨_, h, hd⟩ := floatResult_ok (by dsimp only [fmaValues] at hv; exact hv)
           cases h
+          obtain ⟨_, rfl⟩ := hd hm
           exact oneFloat_defined
 
 end
@@ -406,41 +359,22 @@ variable {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadCh
   [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) {e m : Nat}
 include hk
 
-/-- A morphism that keeps choice and UB maps any NaN in `μ` to any NaN in
-`ν`. -/
-theorem anyNaN_map : φ.map (anyNaN (μ := μ) e m) = anyNaN e m := by
-  unfold anyNaN
-  rw [φ.map_bind, hk.choose]
-  simp only [φ.map_pure]
-
-/-- A morphism that keeps choice and UB maps a float result in `μ` to the
-float result in `ν`. -/
-theorem floatResult_map (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
-    φ.map (floatResult (μ := μ) e m r) = floatResult e m r := by
-  unfold floatResult
-  split
-  · dsimp only
-    split
-    · exact anyNaN_map φ hk
-    · exact φ.map_pure _
-  · exact anyNaN_map φ hk
-
-/-- Such a morphism maps the rules of `fadd`, `fsub`, `fmul` and `fdiv` in
-`μ` to their rules in `ν`. -/
-theorem fbinValues_map (o : FBin) (a b : PoisonOr (BitVec (floatWidth e m))) :
-    φ.map (fbinValues (μ := μ) o a b) = fbinValues o a b := by
+/-- Such a morphism maps the rules of `fadd`, `fsub`, `fmul`, `fdiv`,
+`frem` and `fmod` in `μ` to their rules in `ν`. -/
+theorem fbinValues_map (o : FBin) (fl : FastMath) (a b : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fbinValues (μ := μ) o fl a b) = fbinValues o fl a b := by
   cases a <;> cases b <;>
     first | exact φ.map_pure _ | (dsimp only [fbinValues]; exact floatResult_map φ hk _)
 
 /-- Such a morphism maps the rules of `fneg`, `fabs` and `sqrt` in `μ` to
 their rules in `ν`. -/
-theorem funaryValue_map (o : FUnary) (a : PoisonOr (BitVec (floatWidth e m))) :
-    φ.map (funaryValue (μ := μ) o a) = funaryValue o a := by
+theorem funaryValue_map (o : FUnary) (fl : FastMath) (a : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (funaryValue (μ := μ) o fl a) = funaryValue o fl a := by
   cases a <;> first | exact φ.map_pure _ | (dsimp only [funaryValue]; exact floatResult_map φ hk _)
 
 /-- Such a morphism maps the rule of `fma` in `μ` to its rule in `ν`. -/
-theorem fmaValues_map (a b c : PoisonOr (BitVec (floatWidth e m))) :
-    φ.map (fmaValues (μ := μ) a b c) = fmaValues a b c := by
+theorem fmaValues_map (fl : FastMath) (a b c : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (fmaValues (μ := μ) fl a b c) = fmaValues fl a b c := by
   cases a <;> cases b <;> cases c <;>
     first | exact φ.map_pure _ | (dsimp only [fmaValues]; exact floatResult_map φ hk _)
 

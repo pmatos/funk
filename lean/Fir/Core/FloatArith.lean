@@ -1,5 +1,4 @@
-import Fir.Core.Values
-import Fir.Core.Ops
+import Fir.Core.FloatFlags
 import Fir.Core.FloatRem
 
 /-!
@@ -41,8 +40,8 @@ fir's own are:
   infinity, so it stands for the quiet NaN, whose mantissa has only its
   top bit set. So every NaN of the format, quiet or signalling, with any
   payload and either sign, may be the result, and nothing else may
-  (ADR-2026-11-09-1549). The rule chooses only when the result is a NaN,
-  so every other result is one bit pattern.
+  (ADR-2026-11-09-1549). Without `nsz`, the rule chooses only when the
+  result is a NaN, so every other result is one bit pattern.
 * _`fneg` and `fabs` of a NaN._ They go through the model too, so the
   negation or the absolute value of a NaN is any NaN, not only the
   operand with its sign bit flipped or cleared.
@@ -61,12 +60,17 @@ fir's own are:
   (ADR-2026-11-09-1549), so no valid program computes in one. So that the
   rules are still total, every result in such a format is a NaN chosen as
   above.
+* _The fast-math flags._ `nnan` and `ninf` make the result poison on a
+  NaN or an infinite operand or result, and `nsz` makes the sign of a zero
+  result a choice (the section on the fast-math flags). A NaN result under
+  `nnan` is poison, so the op chooses no NaN.
 * _No exceptions, no flush to zero._ M1 has no floating-point exceptions
   and no flags to read them, and subnormal operands and results are
   honoured: flush to zero is a target attribute, which M1 does not have.
 
 The conversions between formats, `fpext` and `fptrunc`, use the same float
-result with the model's rounding (`Fir.Core.FloatConvert`).
+result with the model's rounding and no flags (`Fir.Core.FloatConvert`):
+the conversions carry no fast-math flags.
 -/
 
 namespace Fir.Core
@@ -88,18 +92,25 @@ def anyNaN {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m : Nat) :
   let c ← MonadChoice.choose (m + 1)
   pure (.value (nanBits e m c))
 
-/-- The result of a float op in `float<e,m>`, whose result in Lean's model
-is `r f (unpack f)`, for the model's format `f` and its reading of bits:
-the bits of that result, or any NaN when it is a NaN. In a format the
-model does not have, any NaN. -/
-def floatResult {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m : Nat)
+/-- The result of a float op in `float<e,m>` under the flags `fl`, whose
+operands are the bits `as` and whose result in Lean's model is
+`r f (unpack f)`, for the model's format `f` and its reading of bits:
+poison when an operand breaks a flag; when the result is a NaN, poison
+under `nnan` and any NaN otherwise; and otherwise the bits of the result,
+under the flags. In a format the model does not have, any NaN. -/
+def floatResult {μ : Type → Type} [Monad μ] [MonadChoice μ] (fl : FastMath) (e m : Nat)
+    (as : List (BitVec (floatWidth e m)))
     (r : Format → (BitVec (floatWidth e m) → UnpackedFloat) → UnpackedFloat) :
     μ (PoisonOr (BitVec (floatWidth e m))) :=
   if h : 2 ≤ e ∧ 0 < m then
     let f : Format :=
       { exponentBits := e, mantissaBitsWithoutImplicit := m, he := h.1, hm := h.2 }
+    if operandsBreak fl e m as then pure .poison else
     let u := r f (UnpackedFloat.unpack f)
-    if u.isNaN then anyNaN e m else pure (.value (UnpackedFloat.pack f u))
+    if u.isNaN then (if fl.nnan then pure .poison else anyNaN e m)
+    else
+      let b := UnpackedFloat.pack f u
+      flagResult fl e m b (UnpackedFloat.unpack f b)
   else anyNaN e m
 
 /-- What each float op of two operands computes in Lean's model: the
@@ -120,29 +131,30 @@ def FUnary.model : FUnary → (f : Format) → UnpackedFloat → UnpackedFloat
   | .sqrt => UnpackedFloat.sqrt
 
 /-- The rule of `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` in
-`float<e,m>`: the model's result, or any NaN when it is a NaN, and poison
-when either operand is poison. -/
-def fbinValues {μ : Type → Type} [Monad μ] [MonadChoice μ] (o : FBin) :
+`float<e,m>` under the flags `fl`: the model's result, or any NaN when it
+is a NaN, under the flags, and poison when either operand is poison. -/
+def fbinValues {μ : Type → Type} [Monad μ] [MonadChoice μ] (o : FBin) (fl : FastMath) :
     PoisonOr (BitVec (floatWidth e m)) → PoisonOr (BitVec (floatWidth e m)) →
       μ (PoisonOr (BitVec (floatWidth e m)))
-  | .value a, .value b => floatResult e m fun f un => o.model f (un a) (un b)
+  | .value a, .value b => floatResult fl e m [a, b] fun f un => o.model f (un a) (un b)
   | _, _ => pure .poison
 
-/-- The rule of `fneg`, `fabs` and `sqrt` in `float<e,m>`: the model's
-result, or any NaN when it is a NaN, and poison when the operand is
-poison. -/
-def funaryValue {μ : Type → Type} [Monad μ] [MonadChoice μ] (o : FUnary) :
+/-- The rule of `fneg`, `fabs` and `sqrt` in `float<e,m>` under the flags
+`fl`: the model's result, or any NaN when it is a NaN, under the flags,
+and poison when the operand is poison. -/
+def funaryValue {μ : Type → Type} [Monad μ] [MonadChoice μ] (o : FUnary) (fl : FastMath) :
     PoisonOr (BitVec (floatWidth e m)) → μ (PoisonOr (BitVec (floatWidth e m)))
-  | .value a => floatResult e m fun f un => o.model f (un a)
+  | .value a => floatResult fl e m [a] fun f un => o.model f (un a)
   | .poison => pure .poison
 
-/-- The rule of `fma` in `float<e,m>`: `a * b + c` with one rounding, in
-the model, or any NaN when that is a NaN, and poison when any operand is
-poison. -/
-def fmaValues {μ : Type → Type} [Monad μ] [MonadChoice μ] :
+/-- The rule of `fma` in `float<e,m>` under the flags `fl`: `a * b + c`
+with one rounding, in the model, or any NaN when that is a NaN, under the
+flags, and poison when any operand is poison. -/
+def fmaValues {μ : Type → Type} [Monad μ] [MonadChoice μ] (fl : FastMath) :
     PoisonOr (BitVec (floatWidth e m)) → PoisonOr (BitVec (floatWidth e m)) →
       PoisonOr (BitVec (floatWidth e m)) → μ (PoisonOr (BitVec (floatWidth e m)))
-  | .value a, .value b, .value c => floatResult e m fun f un => UnpackedFloat.fma f (un a) (un b) (un c)
+  | .value a, .value b, .value c =>
+    floatResult fl e m [a, b, c] fun f un => UnpackedFloat.fma f (un a) (un b) (un c)
   | _, _, _ => pure .poison
 
 /-! # Tests

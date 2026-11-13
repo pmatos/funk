@@ -1,4 +1,4 @@
-import Fir.Core.Values
+import Fir.Core.FloatFlags
 import Fir.Core.Text
 
 /-!
@@ -26,7 +26,10 @@ the pair is ordered, and `uno` when it is not. So `fcmp oeq %x, %x` is
 false and `fcmp une %x, %x` true exactly when `%x` is a NaN.
 
 `fcmp` propagates poison (ADR-2026-10-29-2006): a poison operand gives a
-poison `i1`.
+poison `i1`. Its fast-math flags act on its operands: under `nnan` a NaN
+operand, and under `ninf` an infinite one, gives a poison `i1`. `nsz`
+acts on a zero result, and `fcmp`'s result is not a float, so it changes
+nothing here.
 
 Lean's model needs at least 2 exponent bits and 1 mantissa bit. Validation
 rejects every other format (ADR-2026-11-09-1549), so no valid program
@@ -66,11 +69,13 @@ def FPred.holds : FPred → Option Ordering → Bool
   | .uge, c => c != some .lt
   | .uno, c => c.isNone
 
-/-- `fcmp p`: `true` when the predicate `p` holds of two floats, `false`
-when it does not, and poison when either operand is poison. -/
-def fcmpValues (p : FPred) :
+/-- `fcmp p` under the flags `fl`: `true` when the predicate `p` holds of
+two floats, `false` when it does not, and poison when either operand is
+poison or breaks a flag. -/
+def fcmpValues (p : FPred) (fl : FastMath) :
     PoisonOr (BitVec (floatWidth e m)) → PoisonOr (BitVec (floatWidth e m)) → PoisonOr (BitVec 1)
-  | .value a, .value b => .value (.ofBool (p.holds (floatCompare e m a b)))
+  | .value a, .value b =>
+    if operandsBreak fl e m [a, b] then .poison else .value (.ofBool (p.holds (floatCompare e m a b)))
   | _, _ => .poison
 
 /-!
@@ -112,7 +117,7 @@ def fpredResults : Option Ordering → List Bool
 /-- `fcmp` gives, with each predicate, what `fpredResults` says of how `a`
 and `b` compare. -/
 def fcmpsAs (e m : Nat) (a b : BitVec (floatWidth e m)) (c : Option Ordering) : Bool :=
-  FPred.all.map (fcmpValues · (.value a) (.value b)) == (fpredResults c).map fun r => .value (.ofBool r)
+  FPred.all.map (fcmpValues · {} (.value a) (.value b)) == (fpredResults c).map fun r => .value (.ofBool r)
 
 -- At `f32`: `1.0 < 2.0`, `-0 = +0`, and a NaN against `1.0`.
 #guard fcmpsAs 8 23 0x3f800000 0x40000000 (some .lt)
@@ -137,8 +142,18 @@ def fcmpsAs (e m : Nat) (a b : BitVec (floatWidth e m)) (c : Option Ordering) : 
 
 -- A poison operand gives poison, with every predicate, in either place.
 #guard FPred.all.all fun p =>
-  fcmpValues (e := 8) (m := 23) p .poison (.value 0) == .poison &&
-    fcmpValues (e := 8) (m := 23) p (.value 0x7fc00000) .poison == .poison &&
-    fcmpValues (e := 11) (m := 52) p .poison .poison == .poison
+  fcmpValues (e := 8) (m := 23) p {} .poison (.value 0) == .poison &&
+    fcmpValues (e := 8) (m := 23) p {} (.value 0x7fc00000) .poison == .poison &&
+    fcmpValues (e := 11) (m := 52) p {} .poison .poison == .poison
+
+-- Under `nnan`, a NaN operand gives poison with every predicate, `uno`
+-- included; under `ninf`, an infinite one does. `nsz` changes nothing.
+#guard FPred.all.all fun p =>
+  fcmpValues (e := 8) (m := 23) p { nnan := true } (.value 0x7fc00000) (.value 0) == .poison &&
+    fcmpValues (e := 8) (m := 23) p { ninf := true } (.value 0) (.value 0xff800000) == .poison &&
+    fcmpValues (e := 8) (m := 23) p { nnan := true } (.value 0) (.value 0xff800000) ==
+      fcmpValues (e := 8) (m := 23) p {} (.value 0) (.value 0xff800000) &&
+    fcmpValues (e := 8) (m := 23) p { nsz := true } (.value 0x80000000) (.value 0) ==
+      fcmpValues (e := 8) (m := 23) p {} (.value 0x80000000) (.value 0)
 
 end Fir.Core

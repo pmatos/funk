@@ -81,6 +81,15 @@ that no valid program sets; no attribute, which drops the hook that keeps
 today's texts' meaning when another mode comes; and the bare word `rne`,
 which says nothing about what it sets.
 
+A float op, `fcmp` and the remainders included, writes its fast-math flags
+first, as LLVM does, each at most once, in the fixed order `nnan`, `ninf`,
+`nsz`, `contract`, `reassoc`: `%s: f32 = fadd nnan nsz round(rne) %a, %b`. A
+flag out of order, twice, or after the op's own attributes is a parse error, so
+each op has one spelling. `contract` and `reassoc` decode, and validation
+rejects them (ADR-2026-11-09-1549, #242). The bit casts and the conversions
+take no flags. Rejected: flags in any order, which gives an op several
+spellings.
+
 `bitcast` has no attribute, and its types say which way it goes:
 `%b: i32 = bitcast %f` gives the bits of an `f32`, and `%f: f32 = bitcast %b`
 the `f32` of an `i32`'s bits. Its integer has the float's width, `1 + e + m`,

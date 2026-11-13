@@ -14,26 +14,26 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float comparison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5282493582780028223")
+:::moduleDocs (fingerprint := "16333021387507876316")
 :::
 
-:::readable Fir.Core.fcmpValues_poison Fir.Core.fcmpValues_isRefinedBy (pin := Fir.Core.fcmpValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "8631348803649095628")
+:::readable Fir.Core.fcmpValues_poison Fir.Core.fcmpValues_isRefinedBy (pin := Fir.Core.fcmpValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "5197640117760213564")
 *Theorem: a poison operand of a float comparison gives poison.* For every
-float predicate $`p`, format $`\mathsf{float}\langle e,m \rangle` and
+float predicate $`p`, flags $`\phi`, format $`\mathsf{float}\langle e,m \rangle` and
 $`a, b \in \llbracket \mathsf{float}\langle e,m \rangle \rrbracket`, if
-$`a` or $`b` is poison, $`\mathsf{fcmp}_{e,m}~p\,(a, b)` is the poison of
+$`a` or $`b` is poison, $`\mathsf{fcmp}_{e,m}~\phi~p\,(a, b)` is the poison of
 $`\mathsf{i1}`.
 
 *Theorem: comparing refined operands refines the comparison.* If
 $`a \sqsubseteq a'` and $`b \sqsubseteq b'`, then
-$`\mathsf{fcmp}_{e,m}~p\,(a, b) \sqsubseteq \mathsf{fcmp}_{e,m}~p\,(a', b')`.
+$`\mathsf{fcmp}_{e,m}~\phi~p\,(a, b) \sqsubseteq \mathsf{fcmp}_{e,m}~\phi~p\,(a', b')`.
 A defined float is refined only by itself, so the two sides compare the
-same bits, or the left side is poison.
+same bits under the same flags, or the left side is poison.
 :::
 
-:::readable Fir.Core.fcmp_propagatesPoison Fir.Core.fcmp_returnsOnDefined Fir.Core.fcmp_total Fir.Core.fcmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.fcmpValues) (fingerprint := "2924034979011370517")
-*Theorem: $`\mathsf{fcmp}` is lawful, with every predicate and at every
-format.* Under fir's execution rules, $`\mathsf{fcmp}_{e,m}~p` meets every
+:::readable Fir.Core.fcmp_propagatesPoison Fir.Core.fcmp_returnsOnDefined Fir.Core.fcmp_total Fir.Core.fcmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.fcmpValues) (fingerprint := "4867094978942496543")
+*Theorem: $`\mathsf{fcmp}` is lawful, with every predicate and flag and at
+every format.* Under fir's execution rules, $`\mathsf{fcmp}_{e,m}~\phi~p` meets every
 obligation of an op that
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison]:
 
@@ -41,7 +41,8 @@ obligation of an op that
   poison of $`\mathsf{i1}`.
 * _UB only by the op's own rules_: it is never UB, so the clause holds
   with nothing to check.
-* _A result on defined operands_: on $`+0` and $`+0` it gives a result.
+* _A result on defined operands_: on $`+0` and $`+0` it gives a result,
+  poison or a bit.
 * _Totality and monotonicity_: it gives exactly one result on every two
   operands, and that result keeps refinement, by the theorems above.
 

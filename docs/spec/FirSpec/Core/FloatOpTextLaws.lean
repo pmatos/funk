@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "5740043468119939785")
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "3122977627371042591")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "11228936610485231133")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
 If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
 $`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
@@ -26,7 +26,9 @@ and $`r^*`, as the section on
 reads it, the op it gives has its name, the attributes $`a^*` and the
 operand and result types $`t^*` and $`r^*`; and the same holds of
 $`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}` and $`\mathsf{fma}`.
-The proof that every core op reads back, in the next section, uses them
+Each op's attributes are the words of its fast-math flags and then its
+own, and the words that reading takes back put the attributes back
+together. The proof that every core op reads back, in the next section, uses them
 for these ops.
 :::
 

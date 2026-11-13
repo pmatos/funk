@@ -44,7 +44,8 @@ poison operand gives a poison result (ADR-2026-10-29-2006), a NaN gives any
 NaN of the target format, as `anyNaN` chooses it (ADR-2026-11-09-1549), and
 when either format is one that the model does not have, which validation
 rejects, the result is such a NaN too, so that the rule is total. Neither
-op is ever UB.
+op is ever UB, and neither carries fast-math flags: the rule is the float
+result with no flags.
 -/
 
 namespace Fir.Core
@@ -68,7 +69,7 @@ the operand's number in the model, rounded into the target format, or any
 NaN when it is a NaN, and poison when the operand is poison. -/
 def convertFloat {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m e' m' : Nat) :
     PoisonOr (BitVec (floatWidth e m)) → μ (PoisonOr (BitVec (floatWidth e' m')))
-  | .value a => floatResult e' m' fun g _ =>
+  | .value a => floatResult {} e' m' [] fun g _ =>
     if h : 2 ≤ e ∧ 0 < m then
       convertModel g
         (UnpackedFloat.unpack
@@ -100,7 +101,8 @@ theorem convertFloat_valid {μ : Type → Type} [Monad μ] [MonadChoice μ] {e m
       pure (.value (convertBits
         { exponentBits := e, mantissaBitsWithoutImplicit := m, he := h.1, hm := h.2 }
         { exponentBits := e', mantissaBitsWithoutImplicit := m', he := h'.1, hm := h'.2 } a)) := by
-  simp only [convertFloat, floatResult, h, h', and_self, ↓reduceDIte, convertModel_isNaN, hn]
+  simp only [convertFloat, floatResult, h, h', and_self, ↓reduceDIte, convertModel_isNaN, hn,
+    operandsBreak_nil, Bool.false_eq_true, ↓reduceIte]
   rfl
 
 /-! # Tests
