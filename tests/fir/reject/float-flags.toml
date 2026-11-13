@@ -4,7 +4,8 @@
 # are reserved words: they decode after the flags, in that order, and
 # validation rejects them, since M2's optimizer decides them. A flag out
 # of order, written twice, after the op's own attributes, or on an op
-# that has none does not decode.
+# that has none, an integer op, a bit cast or a conversion, does not
+# decode.
 
 [[reject]]
 verdict = "validation-error"
@@ -178,6 +179,81 @@ text = '''
 func @f(%a: f32, %b: f32, %i: i32) -> f32 {
 ^e:
   %r: f32 = fadd afn round(rne) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the bit casts carry no fast-math flags: bitcast nnan does not decode"
+text = '''
+func @f(%a: f32) -> i32 {
+^e:
+  %r: i32 = bitcast nnan %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the conversions from integers carry no fast-math flags: sitofp ninf does not decode"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = sitofp ninf round(rne) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the conversions between formats carry no fast-math flags: fpext nsz does not decode"
+text = '''
+func @f(%a: f32) -> f64 {
+^e:
+  %r: f64 = fpext nsz %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the conversions between formats carry no fast-math flags: fptrunc nnan does not decode"
+text = '''
+func @f(%a: f64) -> f32 {
+^e:
+  %r: f32 = fptrunc nnan round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the conversions to integers carry no fast-math flags: fptosi ninf does not decode"
+text = '''
+func @f(%a: f32) -> i32 {
+^e:
+  %r: i32 = fptosi ninf %a @0
   ret %r @0
 }
 

@@ -6,6 +6,7 @@ flag's cell has a case that the flag decides."""
 import tomllib
 import unittest
 
+import cells
 import float_flag_cases as cases
 from float_arith_cases import CANONICAL, FORMATS
 from float_ref import Format
@@ -95,6 +96,9 @@ class Tests(unittest.TestCase):
                         else:
                             self.assertTrue(decided)
                             self.assertLess(len(decided), len(cases.CASES[flag][op]))
+
+    def test_the_ops_are_those_whose_flags_are_cells(self):
+        self.assertEqual(tuple(op for op, _ in cases.OPS), cells.FLAGGED)
 
     def test_every_op_with_every_flag_is_a_function(self):
         text = (CANONICAL / "float-flags-f64.fir").read_text(encoding="utf-8")

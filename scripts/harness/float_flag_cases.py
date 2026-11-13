@@ -30,6 +30,7 @@ flags, which refines poison and either zero.
 import sys
 from fractions import Fraction
 
+import cells
 import float_arith_cases as arith
 import float_ref as ref
 from float_ref import Format
@@ -37,8 +38,9 @@ from float_text import spell
 
 FORMATS = arith.FORMATS
 DIFFERENTIAL = arith.DIFFERENTIAL
-FLAGS = ("nnan", "ninf", "nsz")
-# The float ops, each with its number of operands, in the order of `Op`.
+FLAGS = cells.FAST_MATH
+# The float ops that carry flags, `cells.FLAGGED`, each with its number of
+# operands, in the order of `Op`.
 OPS = (
     ("fcmp", 2),
     ("fadd", 2),

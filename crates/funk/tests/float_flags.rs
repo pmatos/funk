@@ -7,7 +7,7 @@
 
 mod common;
 
-use common::{build, expect, func, module, run};
+use common::{build, expect, func, json_values, module, run, text};
 
 /// `@f(%a: T, %b: T)`, which applies each float op with `flags` to `%a`
 /// and `%b`, the remainders among them, and returns every result, `fcmp
@@ -80,7 +80,8 @@ fn want(t: &str, a: f64, b: f64) -> Vec<String> {
 fn flagged_ops_give_the_results_of_ops_without_flags() {
     for t in ["f32", "f64"] {
         for flags in ["", "nnan", "ninf", "nsz", "nnan ninf nsz"] {
-            let exe = build(&format!("flags-{t}-{}", flags.len()), &ops(t, flags));
+            let name = format!("flags-{t}-{}", flags.replace(' ', "-"));
+            let exe = build(&name, &ops(t, flags));
             for (a, b) in [(1.5, 2.0), (-3.25, 0.5), (6.0, 4.0)] {
                 let want = want(t, a, b);
                 let want: Vec<&str> = want.iter().map(String::as_str).collect();
@@ -91,7 +92,8 @@ fn flagged_ops_give_the_results_of_ops_without_flags() {
 }
 
 /// Where a flag makes the result poison, native code gives some value,
-/// which refines it: the run ends normally.
+/// which refines it: the run ends normally, with a value for each result
+/// and nothing on stderr.
 #[test]
 fn flagged_ops_run_where_their_result_is_poison() {
     for t in ["f32", "f64"] {
@@ -99,6 +101,8 @@ fn flagged_ops_run_where_their_result_is_poison() {
         for (a, b) in [(f64::NAN, 1.0), (f64::INFINITY, 2.0), (0.0, 0.0)] {
             let out = run(&exe, &["@f", &bits(t, a), &bits(t, b)]);
             assert!(out.status.success(), "{t} {a} {b}: {out:?}");
+            assert!(out.stderr.is_empty(), "{t} {a} {b}: {out:?}");
+            assert_eq!(json_values(&text(&out.stdout)).len(), 11, "{t} {a} {b}");
         }
     }
 }

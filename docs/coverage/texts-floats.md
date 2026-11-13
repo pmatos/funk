@@ -122,5 +122,5 @@ writes them
 ([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-fast-math-flag-corpus)).
 `reject/float-flags.toml` holds the texts of the flags that do not decode, a
 flag out of order, written twice, after `round(rne)` or `fcmp`'s predicate, or
-on an integer op, and those that validation rejects, a float op with
-`contract` or `reassoc`.
+on an integer op, a bit cast or a conversion, and those that validation
+rejects, a float op with `contract` or `reassoc`.

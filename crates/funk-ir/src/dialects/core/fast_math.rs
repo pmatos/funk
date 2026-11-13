@@ -65,12 +65,30 @@ impl<'a> Flags<'a> {
         Ok(Flags { set, rest })
     }
 
+    /// Whether the op carries `flag`, one of [`FAST_MATH_FLAGS`].
+    fn has(&self, flag: &str) -> bool {
+        FAST_MATH_FLAGS
+            .iter()
+            .zip(self.set)
+            .any(|(f, on)| on && *f == flag)
+    }
+
     /// The effects of a float op with these flags: it may produce poison
     /// with `nnan` or `ninf`, and is pure otherwise (`Core.Op.effects`).
     pub fn effects(&self) -> Effects {
         Effects {
-            may_poison: self.set[0] || self.set[1],
+            may_poison: self.has("nnan") || self.has("ninf"),
             ..Effects::PURE
+        }
+    }
+
+    /// The reason `why` that the op's other attributes do not decode, which
+    /// says that they are those after its flags when it carries any.
+    pub fn after(&self, why: String) -> String {
+        if self.set.contains(&true) {
+            format!("{why} (after its fast-math flags)")
+        } else {
+            why
         }
     }
 
@@ -170,5 +188,13 @@ mod tests {
             .check("fcmp")
             .unwrap_err();
         assert!(e.starts_with("fcmp carries contract and reassoc:"), "{e}");
+    }
+
+    #[test]
+    fn a_reason_after_the_flags_says_so() {
+        let nnan = words(&["nnan"]);
+        let f = Flags::decode("fcmp", &nnan).unwrap();
+        assert_eq!(f.after("x".into()), "x (after its fast-math flags)");
+        assert_eq!(Flags::decode("fcmp", &[]).unwrap().after("x".into()), "x");
     }
 }

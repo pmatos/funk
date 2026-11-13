@@ -107,7 +107,7 @@ impl OpSpec for FloatArith {
 
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
         let flags = Flags::decode(self.name, op.attrs)?;
-        decode_rounding(self.name, self.rounds, flags.rest)?;
+        decode_rounding(self.name, self.rounds, flags.rest).map_err(|e| flags.after(e))?;
         if op_format(self.operands, op.operands, op.results).is_some() {
             return Ok(OpShape::default());
         }

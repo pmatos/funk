@@ -107,7 +107,7 @@ impl OpSpec for Fcmp {
 
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
         let flags = Flags::decode("fcmp", op.attrs)?;
-        decode_predicate_of("fcmp", &FLOAT_PREDICATES, flags.rest)?;
+        decode_predicate_of("fcmp", &FLOAT_PREDICATES, flags.rest).map_err(|e| flags.after(e))?;
         let well_typed = match (op.operands, op.results) {
             ([a, b], [r]) => {
                 int_width(r) == Some(1)

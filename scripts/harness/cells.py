@@ -163,7 +163,7 @@ VALUES = (
 )
 OPS = (
     *AT_WIDTH,
-    *(op for op in AT_FORMAT if op != "const"),
+    *FLAGGED,
     *CASTS,
     *CONVERSIONS,
     *INT_TO_FLOAT,
