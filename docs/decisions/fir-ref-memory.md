@@ -51,7 +51,28 @@ recursion costs two lists on the heap, still no stack.
 
 The machine still takes no stack per step, per level of calls or per
 choice. A run of a million steps takes about a third more time than without
-memory; a run of the corpus takes the same. `Memories.mem` grows by one
-closure per store, allocation or free, so stage 4 must give the memories a
-representation whose lookups take no stack per update before `fir-ref` runs
-memory ops.
+memory; a run of the corpus takes the same.
+
+## The memories are a table
+
+`Memories` keeps its memories in a table: a list of memories, each with its
+name (`lean/Fir/Memory/Frames.lean`). `Memories.mem x` is the first memory
+named `x` in the table, or the empty memory when the table has none, and
+`Memories.set` puts the new memory first and drops every older entry of its
+name. So the table holds each name at most once, however many stores,
+allocations and frees a run makes, and it grows only when a memory that the
+run has not touched before changes. A lookup is a tail-recursive walk of at
+most as many entries as the run has memories, and `set` filters the table
+with `List.filter`, which runs as `List.filterTR`; the C that Lean emits
+for `Memories.lookup` is a loop. So a lookup takes no stack per update, and
+`fir-ref` may run memory ops (stage 4c of #231). This is the spec's own
+definition, not a fast path: `fir-ref` runs it as written, and the
+`@[csimp]` theorems of the machine, which hold for any state, are unchanged.
+`set_mem_self` and `set_mem_ne` give the memories after a replacement, with
+no axiom, and the laws of the memories reach the table only through them, so
+each law holds as before.
+
+Rejected: keep `mem` a function of the names and replace it with a closure
+per update. Each lookup then walks every update made since the run began,
+one call per closure, so it takes stack and time in proportion to the
+stores, allocations and frees before it.

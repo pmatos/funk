@@ -110,7 +110,7 @@ theorem Func.memRunsFrom_replaceBody_isRefinedBy {M : Module d}
 
 variable [DialectValidation d]
 
-omit [DecidableEq Mem] [DecidableEq d.Ty] in
+omit [DecidableEq d.Ty] in
 /-- Every terminator and every op with no callee of a valid function is
 monotone with memory, when every such op is at every valid op instance. -/
 theorem Func.Valid.memOpsMonotone
