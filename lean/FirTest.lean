@@ -25,6 +25,7 @@ import FirTest.PointerOffset
 import FirTest.FloatToInt
 import FirTest.FloatText
 import FirTest.CoreText
+import FirTest.FloatFlags
 import FirTest.Branch
 import FirTest.Unreachable
 import FirTest.Loops

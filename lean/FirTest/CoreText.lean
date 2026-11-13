@@ -53,20 +53,20 @@ namespace Fir.Core
 #guard Op.decode "const" [.float (.hex "3f800000".toList)] [] [.float 8 23] == none
 #guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
 #guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt 11 52)
+#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt {} 11 52)
 #guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 8 23] [.int 1] == none
 #guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
 #guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
 #guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
 -- A float op that rounds needs `round(rne)`; `fneg` and `fabs` take none.
-#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd 8 23)
+#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd {} 8 23)
 #guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "frem" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
-  some (.fma 8 23)
+  some (.fma {} 8 23)
 #guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
 -- `sitofp` and `uitofp` take an integer of any width to a float of any

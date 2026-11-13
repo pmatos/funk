@@ -25,7 +25,8 @@ may end, by sending each op to the rule of its family. The rules are
 written once, for every way of computing that has the effects they ask
 for: one table for the ops that are not terminators, and one for the
 terminators. `freeze`, the float arithmetic and the conversions between
-formats, whose NaN results are chosen, and the conversions from integers,
+formats, whose NaN results are chosen, as is a zero's sign under `nsz`,
+and the conversions from integers,
 which choose a NaN only at a format that validation rejects, ask for the
 choice effect, and the divisions,
 `cond_br` and `unreachable` for the UB effect, so the spec and the tree of choices that
@@ -124,19 +125,19 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a (.cons b .nil) => pure (.cons (ashrValues a b) .nil)
   | .icmp p _ => some fun
     | .cons a (.cons b .nil) => pure (.cons (icmpValues p a b) .nil)
-  | .fcmp p _ _ => some fun
-    | .cons a (.cons b .nil) => pure (.cons (fcmpValues p a b) .nil)
-  | .fbin o _ _ => some fun
+  | .fcmp p fl _ _ => some fun
+    | .cons a (.cons b .nil) => pure (.cons (fcmpValues p fl a b) .nil)
+  | .fbin o fl _ _ => some fun
     | .cons a (.cons b .nil) => do
-      let v ← fbinValues o a b
+      let v ← fbinValues o fl a b
       pure (.cons v .nil)
-  | .funary o _ _ => some fun
+  | .funary o fl _ _ => some fun
     | .cons a .nil => do
-      let v ← funaryValue o a
+      let v ← funaryValue o fl a
       pure (.cons v .nil)
-  | .fma _ _ => some fun
+  | .fma fl _ _ => some fun
     | .cons a (.cons b (.cons c .nil)) => do
-      let v ← fmaValues a b c
+      let v ← fmaValues fl a b c
       pure (.cons v .nil)
   | .select _ => some fun
     | .cons c (.cons a (.cons b .nil)) => pure (.cons (selectValues c a b) .nil)
@@ -195,10 +196,11 @@ def Op.hasRules (op : Op) : Bool :=
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
-#guard FPred.all.all fun p => (Op.fcmp p 8 23).hasRules && (Op.fcmp p 1 0).hasRules
-#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o => (Op.fbin o 8 23).hasRules && (Op.fbin o 1 0).hasRules
-#guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o 5 10).hasRules
-#guard (Op.fma 11 52).hasRules
+#guard FPred.all.all fun p => (Op.fcmp p {} 8 23).hasRules && (Op.fcmp p {} 1 0).hasRules
+#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o =>
+  (Op.fbin o {} 8 23).hasRules && (Op.fbin o { nnan := true } 1 0).hasRules
+#guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o { nsz := true } 5 10).hasRules
+#guard (Op.fma { ninf := true } 11 52).hasRules
 #guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
 #guard (Op.sitofp 32 8 23).hasRules && (Op.uitofp 128 5 10).hasRules && (Op.sitofp 1 1 0).hasRules
 #guard (Op.fpext 8 23 11 52).hasRules && (Op.fptrunc 11 52 8 23).hasRules && (Op.fpext 1 0 1 0).hasRules

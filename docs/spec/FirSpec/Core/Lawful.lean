@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "10829226034814001931")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "2115030556210933787")
+:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "16623925751607787224")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose

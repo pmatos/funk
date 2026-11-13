@@ -17,13 +17,13 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "3715093879706990322")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "14916235269159905493")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "17600675189142390106")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
 $`\mathsf{urem}`, $`\mathsf{cond\_br}` and $`\mathsf{unreachable}` never
-ends in UB, at every width. Each rule gives its result at once, $`\mathsf{freeze}` after
-choosing bits, and $`\mathsf{br}` and $`\mathsf{ret}` go to their
+ends in UB, at every width. Each rule gives its result at once, $`\mathsf{freeze}`
+and the float arithmetic after choosing bits, and $`\mathsf{br}` and $`\mathsf{ret}` go to their
 successor or return. $`\mathsf{call}` has no rule of its own, so it has no
 outcome by one.
 :::
@@ -58,19 +58,22 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "11338289224326827803")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "1011339882238393476")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
 $`\mathsf{udiv}` without $`\mathsf{exact}`, $`\mathsf{srem}`,
-$`\mathsf{urem}`, the bitwise ops, $`\mathsf{icmp}`, $`\mathsf{fcmp}`,
+$`\mathsf{urem}`, the bitwise ops, $`\mathsf{icmp}`,
 $`\mathsf{select}`, the width changes, $`\mathsf{freeze}`, the float
-$`\mathsf{const}`, the float arithmetic, the bit casts, the conversions from integers, the conversions between formats and $`\mathsf{ptradd}` give defined results, at every width and format. $`\mathsf{select}` chooses one of its defined operands,
-$`\mathsf{freeze}` gives bits, and a float op's NaN is defined bits too. $`\mathsf{call}` gives no result by a rule
+$`\mathsf{const}`, $`\mathsf{fcmp}` and the float arithmetic without
+$`\mathsf{nnan}` and $`\mathsf{ninf}`, the bit casts, the conversions from integers, the conversions between formats and $`\mathsf{ptradd}` give defined results, at every width and format. $`\mathsf{select}` chooses one of its defined operands,
+$`\mathsf{freeze}` gives bits, and a float op's NaN, and a zero of either
+sign under $`\mathsf{nsz}`, are defined bits too: without those two
+flags no operand breaks a flag. $`\mathsf{call}` gives no result by a rule
 of its own, and the terminators give none.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "7586217731865364077")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "16986763349935434670")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
@@ -89,7 +92,7 @@ obligations, which every computation with no memory meets. So a pass may
 rely on the core ops' effect sets (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "14564724320755433639")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "7868748797585451492")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. Over the

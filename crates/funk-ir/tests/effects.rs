@@ -7,7 +7,7 @@
 
 use std::collections::BTreeSet;
 
-use funk_ir::dialects::core::{self, DIVISION_OPS, WRAP_FLAG_SETS};
+use funk_ir::dialects::core::{self, DIVISION_OPS, FLOAT_ARITH_OPS, WRAP_FLAG_SETS};
 use funk_ir::{Attr, Effects, Module, Op, OpTypes, Registry, Type, parse, verify};
 
 const CASES: &str = include_str!("../../../tests/dialects/effects.cases");
@@ -72,7 +72,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_core_op_has_the_effects_of_its_lean_declaration() {
     let reg = Registry::core();
     let cs = cases();
-    assert_eq!(cs.len(), 59);
+    assert_eq!(cs.len(), 83);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -89,7 +89,9 @@ fn words(attrs: &[Attr]) -> Vec<String> {
 }
 
 /// The cases pin every core op, and every attribute that changes a set: each
-/// flag set of `add`, `sub` and `mul`, and `exact` on `sdiv` and `udiv`.
+/// flag set of `add`, `sub` and `mul`, `exact` on `sdiv` and `udiv`, and
+/// `nnan` and `ninf` on each float op, with `nsz`, which keeps it pure, on
+/// two of them.
 #[test]
 fn the_cases_pin_every_core_op_and_every_flag() {
     let reg = Registry::core();
@@ -97,11 +99,10 @@ fn the_cases_pin_every_core_op_and_every_flag() {
         .iter()
         .map(|c| {
             let (op, _) = pinned(&parse(c.text, &reg).expect("the case parses"));
-            let flags = if op.name == "icmp" || op.name == "fcmp" {
-                vec![]
-            } else {
-                words(&op.attrs)
-            };
+            let mut flags = words(&op.attrs);
+            if op.name == "icmp" || op.name == "fcmp" {
+                flags.pop();
+            }
             (op.name, flags)
         })
         .collect();
@@ -118,6 +119,15 @@ fn the_cases_pin_every_core_op_and_every_flag() {
         if exact {
             want.insert((name.into(), vec!["exact".into()]));
         }
+    }
+    let float_ops = FLOAT_ARITH_OPS.iter().map(|(name, _, _)| *name);
+    for name in float_ops.chain(["fcmp"]) {
+        for flag in ["nnan", "ninf"] {
+            want.insert((name.into(), vec![flag.into()]));
+        }
+    }
+    for name in ["fadd", "fneg"] {
+        want.insert((name.into(), vec!["nsz".into()]));
     }
     assert_eq!(pinned, want);
 }

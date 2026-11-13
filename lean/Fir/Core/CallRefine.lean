@@ -76,10 +76,10 @@ theorem Op.monotone_all : (op : Op) →
   | .lshr w, _ => lshr_monotone w
   | .ashr w, _ => ashr_monotone w
   | .icmp p w, _ => icmp_monotone p w
-  | .fcmp p e m, _ => fcmp_monotone p e m
-  | .fbin o e m, _ => fbin_monotone o e m
-  | .funary o e m, _ => funary_monotone o e m
-  | .fma e m, _ => fma_monotone e m
+  | .fcmp p fl e m, _ => fcmp_monotone p fl e m
+  | .fbin o fl e m, _ => fbin_monotone o fl e m
+  | .funary o fl e m, _ => funary_monotone o fl e m
+  | .fma fl e m, _ => fma_monotone fl e m
   | .select w, _ => select_monotone w
   | .zext m n, _ => zext_monotone m n
   | .sext m n, _ => sext_monotone m n

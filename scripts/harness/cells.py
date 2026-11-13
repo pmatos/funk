@@ -21,6 +21,13 @@ has neither operands nor attributes, is a cell at each width of its result
   and `f64` for differential tests, which the backend lowers, and `f16`,
   `bf16`, `f32`, `f64` and `f128` for interpreter-only tests (#229, #310,
   ADR-2026-11-03-0557).
+- Each of those ops but the constant has a cell for each fast-math flag,
+  `nnan`, `ninf` and `nsz`, at each float format of the side: an op that
+  carries flags exercises the cell of each flag it carries, and not the
+  cell of the op without flags. A float op counts per flag, where an
+  integer op counts per flag set, by the human's ruling of 2026-11-13 on
+  #355 (#242, ADR-2026-11-03-0557). `contract` and `reassoc` are not cells,
+  since validation rejects them.
 - A conversion is a cell for each pair of types it converts between at
   the side's float formats: `bitcast` from each format to the integer of
   its width, and from that integer to the format (#241); `sitofp` and
@@ -116,6 +123,16 @@ AT_FORMAT = {
     "sqrt": ROUND,
     "fma": ROUND,
 }
+# The fast-math flags, in the order the text writes them (`FastMath.attrs`):
+# each of the first three is a cell of every float op but the constant, and
+# validation rejects the reserved words (#242).
+FAST_MATH = ("nnan", "ninf", "nsz")
+RESERVED = ("contract", "reassoc")
+FLAGGED = tuple(op for op in AT_FORMAT if op != "const")
+# The rows of the float ops: each op's attributes, then a row for each flag.
+FLOAT_ROWS = {
+    op: attrs + (FAST_MATH if op in FLAGGED else ()) for op, attrs in AT_FORMAT.items()
+}
 CASTS = ("zext", "sext", "trunc")
 # The conversions between a float and another type, which have no
 # attributes: a cell for each pair of types, at the side's float formats.
@@ -146,7 +163,7 @@ VALUES = (
 )
 OPS = (
     *AT_WIDTH,
-    *(op for op in AT_FORMAT if op != "const"),
+    *FLAGGED,
     *CASTS,
     *CONVERSIONS,
     *INT_TO_FLOAT,
@@ -216,7 +233,7 @@ def catalog(
     tables = []
     for kind, ops, columns in (
         ("ops", AT_WIDTH, integers),
-        ("floats", AT_FORMAT, formats),
+        ("floats", FLOAT_ROWS, formats),
     ):
         tables.append(
             Table(
@@ -346,6 +363,21 @@ def cells(
     ]
 
 
+def float_flags(op: Op) -> tuple[tuple[str, ...], str]:
+    """The fast-math flags at the front of a float op's attributes, in the
+    order `splitFlags` reads them, and its other attributes. A reserved word,
+    or a flag out of order or twice, is not a cell."""
+    flags, rest = [], list(op.attrs)
+    order = (*FAST_MATH, *RESERVED)
+    while rest and rest[0] in order:
+        if flags and order.index(rest[0]) <= order.index(flags[-1]):
+            raise CellError(f"{op.name} {' '.join(op.attrs)} is not a cell")
+        flags.append(rest.pop(0))
+    if any(f in RESERVED for f in flags):
+        raise CellError(f"{op.name} {' '.join(flags)} is not valid, so not a cell")
+    return tuple(flags), " ".join(rest)
+
+
 def is_float(t: str) -> bool:
     """Whether `t` is a float type: an alias or `float(e, m)`."""
     b = bits_of(t)
@@ -465,11 +497,11 @@ def of_op(op: Op) -> set[Cell]:
     if op.name in POINTER_OPS:
         return {pointer_offset(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
-        attr = "" if op.name == "const" else " ".join(op.attrs)
+        flags, attr = float_flags(op) if op.name in FLAGGED else ((), "")
         if attr not in AT_FORMAT[op.name]:
             raise CellError(f"{op.name} {attr} is not a cell")
         typed = op.operands if op.name == "fcmp" else op.results
-        return {Cell("floats", op.name, attr, typed[0])}
+        return {Cell("floats", op.name, a, typed[0]) for a in flags or (attr,)}
     if op.name in AT_WIDTH:
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_WIDTH[op.name]:

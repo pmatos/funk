@@ -13,12 +13,13 @@
 //! `poison` beside `const`, and #228 the terminator `unreachable` beside
 //! `ret`. #229 adds float constants to `const`, the float comparison
 //! `fcmp`, and the float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `fneg`,
-//! `fabs`, `sqrt` and `fma`, and #310 the remainders `frem` and `fmod`.
-//! #241 adds the bit cast `bitcast` between a float and an integer of its
-//! width, the conversions from integers to floats `sitofp` and `uitofp`,
-//! the conversions between float formats `fpext` and `fptrunc`, and the
-//! conversions from floats to integers `fptosi` and `fptoui`. #231 adds the
-//! pointer offset `ptradd`. A later family adds a file and a line here.
+//! `fabs`, `sqrt` and `fma`, #310 the remainders `frem` and `fmod`, and
+//! #242 their fast-math flags. #241 adds the bit cast `bitcast` between a
+//! float and an integer of its width, the conversions from integers to
+//! floats `sitofp` and `uitofp`, the conversions between float formats
+//! `fpext` and `fptrunc`, and the conversions from floats to integers
+//! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`. A later
+//! family adds a file and a line here.
 
 mod arith;
 mod bitcast;
@@ -28,6 +29,7 @@ mod compare;
 mod constant;
 mod control;
 mod div;
+mod fast_math;
 mod float_arith;
 mod float_convert;
 mod float_text;
@@ -42,6 +44,7 @@ pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
+pub use fast_math::FAST_MATH_FLAGS;
 pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_convert::FLOAT_CONVERSIONS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};

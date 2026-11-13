@@ -70,6 +70,7 @@ import FirSpec.Core.Bitwise
 import FirSpec.Core.Width
 import FirSpec.Core.Div
 import FirSpec.Core.Compare
+import FirSpec.Core.FloatFlags
 import FirSpec.Core.FloatCompare
 import FirSpec.Core.FloatArith
 import FirSpec.Core.FloatRem
@@ -90,7 +91,9 @@ import FirSpec.Core.WidthLaws
 import FirSpec.Core.DivLaws
 import FirSpec.Core.CompareLaws
 import FirSpec.Core.FloatCompareLaws
+import FirSpec.Core.FloatResultLaws
 import FirSpec.Core.FloatArithLaws
+import FirSpec.Core.FloatFlagLaws
 import FirSpec.Core.FloatBitcastLaws
 import FirSpec.Core.FloatOfIntLaws
 import FirSpec.Core.FloatConvertLaws

@@ -11,6 +11,11 @@ Tier: direction; area: testing-and-harness
   widths, `zext` and `sext` to a wider one and `trunc` to a narrower one, and
   passed and returned values (`br`, `cond_br`, `ret`, `call`, `func`) for none,
   one or several values.
+- **Float flags count one by one.** A float op's fast-math flags are not part
+  of its instance. Each float op but the constant has a cell for each of
+  `nnan`, `ninf` and `nsz`, and a test fills the cell of each flag it sets; an
+  integer op keeps one cell per flag set. `fcmp nsz` has no effect, since its
+  result is not a float, so its cell holds a test that pins that.
 - **Widths.** The differential side has `i1`, `i8`, `i16`, `i32`, `i64` and
   `i128`; the interpreter-only side adds `i7` and `i33`. The float ops, and
   values, are cells at each float format of a side: `f32` and `f64`
@@ -35,6 +40,13 @@ kinds of test, with every gap filled, and generated so that it stays current.
 `fir-ref` reports a run's outcome, not the ops it ran, and a second interpreter
 in Python would break S7, so the count reads the canonical text statically.
 
+The human ruled on 2026-11-13 (#355) that float flags count per flag. They are
+independent, and the spec proves that dropping any one refines the op, so a test
+with two flags checks nothing that two one-flag tests miss. Per flag set, each
+float op would have eight cells, and `fcmp` eight per predicate: about 1,200
+more, past the file-size budget. Integer ops have four flag sets at most, so
+their sets stay cells.
+
 ## Rejected alternatives
 
 - **Cells by file name.** A name says what a module is for, not what its tests
@@ -43,3 +55,7 @@ in Python would break S7, so the count reads the canonical text statically.
   `fir-ref`'s command line of its own.
 - **Width changes by source and target width apart.** It would hide a missing
   pair, such as `i7` to `i128`.
+- **Every float flag set a cell**, about 1,200 more cells, with the float tables
+  on a page of their own.
+- **Float flags not cells**, a flagged test counting towards the op without
+  flags: nothing would check that each flag's rule is tested.

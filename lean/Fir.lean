@@ -44,6 +44,7 @@ import Fir.Core.Width
 import Fir.Core.Div
 import Fir.Core.Compare
 import Fir.Core.FloatCompare
+import Fir.Core.FloatFlags
 import Fir.Core.FloatArith
 import Fir.Core.FloatRem
 import Fir.Core.FloatBitcast
@@ -63,7 +64,9 @@ import Fir.Core.WidthLaws
 import Fir.Core.DivLaws
 import Fir.Core.CompareLaws
 import Fir.Core.FloatCompareLaws
+import Fir.Core.FloatResultLaws
 import Fir.Core.FloatArithLaws
+import Fir.Core.FloatFlagLaws
 import Fir.Core.FloatBitcastLaws
 import Fir.Core.FloatOfIntLaws
 import Fir.Core.FloatConvertLaws

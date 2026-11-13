@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "12947573626106326802")
 :::
 
-:::readable Fir.Core.intToFloat_ends Fir.Core.intToFloat_map (pin := Fir.Core.intToFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "11982821687420680619")
+:::readable Fir.Core.intToFloat_ends Fir.Core.intToFloat_map (pin := Fir.Core.intToFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "1397656925286651098")
 *Theorems: the rules of the conversions end, and mean the same in
 another monad.* On every operand, the rule of $`\mathsf{sitofp}` and of
 $`\mathsf{uitofp}`
@@ -32,14 +32,14 @@ each rule has as its set what it is in the set monad, and `fir-ref run`'s
 modes give the spec's outcomes on the conversions.
 :::
 
-:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "10079117489182349623")
+:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "15035836613155861848")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}_{N,e,m}(\mathit{true})`
 is $`\mathsf{sitofp}_{N,e,m}`, and $`\mathrm{conv}_{N,e,m}(\mathit{false})`
 is $`\mathsf{uitofp}_{N,e,m}`, so that the theorems below are stated once
 for both.
 :::
 
-:::readable Fir.Core.intToFloat_propagatesPoison Fir.Core.intToFloat_returnsOnDefined Fir.Core.intToFloat_total Fir.Core.intToFloat_monotone Fir.Core.intToFloat_neverUB Fir.Core.intToFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "1790622333052445624")
+:::readable Fir.Core.intToFloat_propagatesPoison Fir.Core.intToFloat_returnsOnDefined Fir.Core.intToFloat_total Fir.Core.intToFloat_monotone Fir.Core.intToFloat_neverUB Fir.Core.intToFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "12774677476342323033")
 *Theorem: $`\mathsf{sitofp}` and $`\mathsf{uitofp}` are lawful, from every
 width to every format.* Under fir's execution rules, each meets every
 obligation of an op that

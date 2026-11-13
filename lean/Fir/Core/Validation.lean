@@ -5,8 +5,10 @@ import Fir.Validation.Scope
 The core dialect's part of validation: which core types are valid, which
 symbols core ops refer to, the rules of `ret` and `call`, which read the
 op's context, the width rules of `zext`, `sext` and `trunc`
-(ADR-2026-10-29-2006), and the format rules of `fpext` and `fptrunc` (the
-human's ruling of 2026-11-12 on #354). The general rules of the previous sections already
+(ADR-2026-10-29-2006), the format rules of `fpext` and `fptrunc` (the
+human's ruling of 2026-11-12 on #354), and the rule that no float op
+carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549).
+The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
 -/
@@ -58,6 +60,9 @@ The core rules of an op beyond its signature.
   takes `fpext`, `f64` to `f32` takes `fptrunc`, and so do `bf16` to `f16`
   and `f16` to `bf16`, since `f16` has fewer exponent bits than `bf16` and
   more mantissa bits. A conversion to the same format is not an op.
+* A float op carries neither `contract` nor `reassoc`. They are reserved
+  words, permissions for passes that M2's optimizer decides, not meanings
+  of an op (ADR-2026-11-09-1549).
 
 Every other op has no rule beyond its signature.
 -/
@@ -68,6 +73,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .trunc m n => n < m
   | .fpext e m e' m' => e ≤ e' ∧ m ≤ m' ∧ ¬(e = e' ∧ m = m')
   | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
+  | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
   | _ => True
 
 end Fir.Core

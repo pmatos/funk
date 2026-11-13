@@ -94,9 +94,10 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .ptradd .., .cons _ (.cons _ .nil) | .const .., _ | .fconst .., _ | .poison _, _ =>
         φ.map_pure _
       | .freeze _, .cons a .nil => φ.map_bind_pure (freezeValue_map φ hk a) _
-      | .fbin o _ _, .cons a (.cons b .nil) => φ.map_bind_pure (fbinValues_map φ hk o a b) _
-      | .funary o _ _, .cons a .nil => φ.map_bind_pure (funaryValue_map φ hk o a) _
-      | .fma _ _, .cons a (.cons b (.cons c .nil)) => φ.map_bind_pure (fmaValues_map φ hk a b c) _
+      | .fbin o fl _ _, .cons a (.cons b .nil) => φ.map_bind_pure (fbinValues_map φ hk o fl a b) _
+      | .funary o fl _ _, .cons a .nil => φ.map_bind_pure (funaryValue_map φ hk o fl a) _
+      | .fma fl _ _, .cons a (.cons b (.cons c .nil)) =>
+        φ.map_bind_pure (fmaValues_map φ hk fl a b c) _
       | .sitofp _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m true a) _
       | .uitofp _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m false a) _
       | .fpext e m e' m', .cons a .nil | .fptrunc e m e' m', .cons a .nil =>

@@ -23,9 +23,13 @@ def samples : List Op :=
    .freeze 2, .poison 8, .br, .condBr, .ret [.int 32], .ret [], .unreachable,
    .call "f" [.int 8] [.int 1], .fconst 8 23 0x3f800000, .fconst 11 52 (-1), .fconst 2 1 0,
    .fconst 5 10 0x7e01] ++
-  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · 8 23) ++ [.fcmp .uno 15 112] ++
-  [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
-   .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52, .fbin .frem 8 23, .fbin .fmod 2 1] ++
+  Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · {} 8 23) ++
+  [.fcmp .uno { nnan := true, ninf := true, nsz := true } 15 112] ++
+  [.fbin .fadd {} 8 23, .fbin .fsub { nnan := true } 11 52, .fbin .fmul { ninf := true } 5 10,
+   .fbin .fdiv { nsz := true, contract := true, reassoc := true } 2 1, .funary .fneg {} 8 7,
+   .funary .fabs { nsz := true } 15 112, .funary .sqrt { nnan := true, ninf := true } 8 23,
+   .fma { nnan := true, ninf := true, nsz := true, contract := true, reassoc := true } 11 52,
+   .fbin .frem { nnan := true } 8 23, .fbin .fmod { ninf := true, nsz := true } 2 1] ++
   [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
   [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1] ++
   [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7] ++

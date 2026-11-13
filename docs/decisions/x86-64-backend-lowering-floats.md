@@ -78,6 +78,15 @@ none; and a routine on the integer unit that shifts and subtracts the
 mantissas, which is longer, slower on far-apart operands, and needs its own
 proof of the rounding of the quotient, where `fprem1` is IEEE 754's own.
 
+## Fast-math flags
+
+The backend ignores `nnan`, `ninf` and `nsz`: it lowers a flagged op as the op
+without flags, and `fcmp` reads its predicate as its last attribute. That
+refines the flagged op, since an op without a flag refines the op with it
+(`lean/Fir/Core/FloatFlagLaws.lean`, ADR-2026-11-09-1549).
+`crates/funk/tests/float_flags.rs` checks each flagged op at `f32` and `f64`.
+Rejected: lowering a flag to faster code, which is M2's optimizer's work.
+
 ## Bit casts
 
 `bitcast` between `f32` and `i32`, or `f64` and `i64`, copies its operand's
