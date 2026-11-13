@@ -44,27 +44,15 @@ computes, apart from Lean.
 import sys
 from fractions import Fraction
 
+import cells
 import float_ref as ref
-from float_arith_cases import CANONICAL, DIFFERENTIAL, FORMATS, NAN_CHOICES, nan_bits
+from float_arith_cases import DIFFERENTIAL, FORMATS, NAN_CHOICES, nan_bits, write_corpus
 from float_ref import TWO, Format
 from float_text import spell
 
-
-def holds_every_value(s: str, t: str) -> bool:
-    """Whether the format `t` holds every value of `s`: it has at least as
-    many exponent bits and as many mantissa bits."""
-    (e, m), (e2, m2) = FORMATS[s], FORMATS[t]
-    return e <= e2 and m <= m2
-
-
-def op_of(s: str, t: str) -> str:
-    """The op that converts from `s` to `t`."""
-    return "fpext" if holds_every_value(s, t) else "fptrunc"
-
-
 # Every ordered pair of two aliased formats, and the module of each.
 PAIRS = [(s, t) for s in FORMATS for t in FORMATS if s != t]
-FILES = [f"float-{op_of(s, t)}-{s}-{t}" for s, t in PAIRS]
+FILES = [f"float-{cells.conversion(s, t)}-{s}-{t}" for s, t in PAIRS]
 
 
 def pair(module: str) -> tuple[str, str]:
@@ -129,7 +117,7 @@ def values(f: Format, g: Format) -> list[int]:
 
 
 def func_text(s: str, t: str) -> str:
-    op = op_of(s, t)
+    op = cells.conversion(s, t)
     attr = " round(rne)" if op == "fptrunc" else ""
     return (
         f"func @{s}_{t}(%a: {s}) -> {t} {{\n^entry:\n"
@@ -145,7 +133,7 @@ def tests_text(module: str) -> str:
     native = is_native(module)
     s, t = pair(module)
     head = [
-        f"# Tests of {module}.fir: {op_of(s, t)} from {s} to {t}",
+        f"# Tests of {module}.fir: {cells.conversion(s, t)} from {s} to {t}",
         "# (ADR-2026-11-09-1549) on the edges of the source and of the target:",
         "# zeros, subnormals, the largest finite values, the values halfway",
         "# between two values of the target and next to them, overflow to",
@@ -209,15 +197,7 @@ def files() -> dict[str, str]:
 
 
 def main(argv: list[str]) -> int:
-    if argv not in ([], ["--write"]):
-        print(__doc__.split("\n\n")[1], file=sys.stderr)
-        return 2
-    for path, text in files().items():
-        if argv:
-            (CANONICAL / path).write_text(text, encoding="utf-8")
-        else:
-            sys.stdout.write(f"==> {path}\n{text}")
-    return 0
+    return write_corpus(argv, __doc__.split("\n\n")[1], files())
 
 
 if __name__ == "__main__":

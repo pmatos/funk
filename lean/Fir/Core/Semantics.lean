@@ -156,11 +156,7 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => do
       let v ← intToFloat e m false a
       pure (.cons v .nil)
-  | .fpext e m e' m' => some fun
-    | .cons a .nil => do
-      let v ← convertFloat e m e' m' a
-      pure (.cons v .nil)
-  | .fptrunc e m e' m' => some fun
+  | .fpext e m e' m' | .fptrunc e m e' m' => some fun
     | .cons a .nil => do
       let v ← convertFloat e m e' m' a
       pure (.cons v .nil)

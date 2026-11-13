@@ -253,9 +253,10 @@ one value of `float<e,m>` and gives one of `float<e',m'>`; in the spec they are
   even, and `pack` writes it, an infinity of its sign past the largest finite
   value. A number below half the target's smallest subnormal is a zero of its
   sign, and a tie goes to the even neighbour, so `1 + 2^-24` from `f64` to
-  `f32` is `1`. This is IEEE 754's `convertFormat` and LLVM's `fpext` and
-  `fptrunc`. That `fpext` is exact at every pair it takes is tested, on the
-  corpus and on `#guard`s, not proved.
+  `f32` is `1`. This is IEEE 754's `convertFormat`, and LLVM's `fpext` and
+  `fptrunc` where LLVM has them: it has neither between `bf16` and `f16`,
+  which have the same width. That `fpext` is exact at every pair it takes is
+  tested, on the corpus and on `#guard`s, not proved.
 - A zero and an infinity keep their sign. A NaN gives any NaN of the target
   (ADR-2026-11-09-1549), so its payload need not survive, as SSE's quieting
   and LLVM's rules allow. So the rule chooses only on a NaN, or at a format

@@ -3,9 +3,9 @@ import FirTest.Modes
 /-!
 Tests of #241's conversions between float formats, `fpext` and `fptrunc`,
 on `FirRef.runBytes`, which computes what `fir-ref run` writes
-(ADR-2026-11-09-1549). The corpus, `float-fpext-f32-f64`,
-`float-fptrunc-f64-f32`, `float-fpext-odd` and `float-fptrunc-odd`,
-converts the boundary values of each pair of aliased formats against
+(ADR-2026-11-09-1549). The corpus, one module `float-OP-S-T` for each
+ordered pair of aliased formats, such as `float-fpext-f32-f64` and
+`float-fptrunc-bf16-f16`, converts the boundary values of each pair against
 `scripts/harness/float_ref.py`; these check what it does not: that a
 conversion of a number takes no choice, in scripted and in exhaustive
 mode, that a NaN is the NaN its choice names, that a conversion composes

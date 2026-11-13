@@ -18,21 +18,7 @@
 
 mod common;
 
-use common::{build, func, module, run, text};
-
-/// A small generator of random bits, so that every run checks the same
-/// values.
-struct Bits(u64);
-
-impl Bits {
-    fn next(&mut self) -> u64 {
-        self.0 = self
-            .0
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(1_442_695_040_888_963_407);
-        self.0
-    }
-}
+use common::{Bits, build, float_bits, func, module, run, text};
 
 /// The cases of `f32`, as bits.
 fn f32_cases(bits: &mut Bits) -> Vec<u64> {
@@ -166,14 +152,7 @@ fn check(op: &str, from: &str, to: &str, cases: &[u64]) {
         let out = run(&exe, &[&format!("@{name}")]);
         let stdout = text(&out.stdout);
         assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
-        let got: Vec<u64> = stdout
-            .trim_end()
-            .strip_prefix("{\"values\":[")
-            .and_then(|s| s.strip_suffix("]}"))
-            .expect("a JSON line of values")
-            .split(',')
-            .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & mask)
-            .collect();
+        let got = float_bits(&stdout, mask);
         assert_eq!(got.len(), batch.len(), "{stdout}");
         for (&b, &g) in batch.iter().zip(&got) {
             if is_nan(from, b) {

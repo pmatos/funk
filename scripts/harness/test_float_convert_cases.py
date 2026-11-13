@@ -10,8 +10,8 @@ import unittest
 
 import float_convert_cases as cases
 import float_ref as ref
-from float_arith_cases import nan_bits
-from float_convert_cases import CANONICAL, FORMATS
+from float_arith_cases import CANONICAL, nan_bits
+from float_convert_cases import FORMATS
 from float_ref import Format
 from float_text import decode
 
@@ -58,17 +58,20 @@ def wrong_expectations(module: str, text: str) -> list[str]:
 
 
 class Tests(unittest.TestCase):
-    def test_the_committed_corpus_is_what_the_generator_writes(self):
-        for path, text in cases.files().items():
-            with self.subTest(path=path):
-                committed = (CANONICAL / path).read_text(encoding="utf-8")
-                self.assertEqual(committed, text)
-
-    def test_each_expected_result_is_the_reference_s(self):
+    def test_each_module_is_what_the_generator_writes_and_expects(self):
+        """The committed module and tests of each pair are what the
+        generator writes, and each expected result is the reference's."""
+        written = cases.files()
+        self.assertEqual(len(written), 2 * len(cases.FILES))
         for module in cases.FILES:
             with self.subTest(module=module):
-                text = (CANONICAL / f"{module}.toml").read_text(encoding="utf-8")
-                self.assertEqual(wrong_expectations(module, text), [])
+                for ext in (".fir", ".toml"):
+                    path = CANONICAL / f"{module}{ext}"
+                    self.assertEqual(
+                        path.read_text(encoding="utf-8"), written[path.name]
+                    )
+                tests = written[f"{module}.toml"]
+                self.assertEqual(wrong_expectations(module, tests), [])
 
     def test_a_wrong_expected_result_is_found(self):
         module = "float-fptrunc-f64-f32"
@@ -126,8 +129,11 @@ class Tests(unittest.TestCase):
         self.assertIn(f16.inf(), down)
         self.assertIn(1, down)
         up = [ref.convert(f16, bf16, b) for b in cases.values(f16, bf16)]
-        # `1 + 2^-8` is a tie at `bf16` and goes to 1.
-        self.assertIn(f16.exact(1 + ref.TWO**-8), cases.values(f16, bf16))
+        # `1 + 2^-8` is a tie at `bf16` and goes to 1; `1 + 3 * 2^-8` goes
+        # up, to `1 + 2^-6`.
+        tie = f16.exact(1 + ref.TWO**-8)
+        self.assertIn(tie, cases.values(f16, bf16))
+        self.assertEqual(ref.convert(f16, bf16, tie), bf16.exact(ref.TWO**0))
         self.assertIn(bf16.exact(1 + ref.TWO**-6), up)
 
     def test_every_case_is_tested_once_with_poison(self):

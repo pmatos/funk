@@ -129,6 +129,38 @@ pub fn run(exe: &Path, args: &[&str]) -> Output {
     Command::new(exe).args(args).output().unwrap()
 }
 
+/// The bits of each float value that a built executable printed in
+/// `stdout`, one JSON line of values, each a float's bits read as a signed
+/// integer, masked to `mask`.
+pub fn float_bits(stdout: &str, mask: u64) -> Vec<u64> {
+    stdout
+        .trim_end()
+        .strip_prefix("{\"values\":[")
+        .and_then(|s| s.strip_suffix("]}"))
+        .expect("a JSON line of values")
+        .split(',')
+        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & mask)
+        .collect()
+}
+
+/// A small generator of random bits, so that every run checks the same
+/// values.
+pub struct Bits(pub u64);
+
+impl Bits {
+    pub fn next(&mut self) -> u64 {
+        self.0 = self
+            .0
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        self.0
+    }
+
+    pub fn wide(&mut self) -> u128 {
+        (u128::from(self.next()) << 64) | u128::from(self.next())
+    }
+}
+
 /// The JSON line a built executable prints for `values`.
 pub fn values(values: &[&str]) -> String {
     let quoted: Vec<String> = values.iter().map(|v| format!("\"{v}\"")).collect();

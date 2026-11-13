@@ -16,7 +16,7 @@
 
 mod common;
 
-use common::{build, func, module, run, text};
+use common::{Bits, build, float_bits, func, module, run, text};
 
 /// The widths the backend lowers.
 const WIDTHS: [u32; 6] = [1, 8, 16, 32, 64, 128];
@@ -53,24 +53,6 @@ fn host(f: Format, w: u32, v: u128, signed: bool) -> u64 {
         (32, false) => u64::from((u as f32).to_bits()),
         (_, true) => (x as f64).to_bits(),
         (_, false) => (u as f64).to_bits(),
-    }
-}
-
-/// A small generator of random bits, so that every run checks the same
-/// values.
-struct Bits(u64);
-
-impl Bits {
-    fn next(&mut self) -> u64 {
-        self.0 = self
-            .0
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(1_442_695_040_888_963_407);
-        self.0
-    }
-
-    fn wide(&mut self) -> u128 {
-        (u128::from(self.next()) << 64) | u128::from(self.next())
     }
 }
 
@@ -154,19 +136,11 @@ fn check(f: Format, op: &str) {
         let out = run(&exe, &[&format!("@{name}")]);
         let stdout = text(&out.stdout);
         assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
-        let got: Vec<u64> = stdout
-            .trim_end()
-            .strip_prefix("{\"values\":[")
-            .and_then(|s| s.strip_suffix("]}"))
-            .expect("a JSON line of values")
-            .split(',')
-            .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64)
-            .collect();
+        let got = float_bits(&stdout, u64::MAX >> (64 - f.bits));
         assert_eq!(got.len(), batch.len(), "{stdout}");
-        let mask = u64::MAX >> (64 - f.bits);
         for (&v, &g) in batch.iter().zip(&got) {
             let want = host(f, w, v, signed);
-            assert_eq!(g & mask, want, "{op} of i{w} {v:#x} to {}", f.name);
+            assert_eq!(g, want, "{op} of i{w} {v:#x} to {}", f.name);
         }
     }
 }

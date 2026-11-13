@@ -118,12 +118,7 @@ theorem mapsDenote : (ChoiceTree.toSetMorphism (ε := Op)).MapsDenote (d := Core
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e m])))
         (intToFloat_toSet (ε := Op) e m false a)
-    | .fpext e m e' m', .cons a .nil => by
-      show (ChoiceTree.bind (convertFloat e m e' m' a) _).toSet = _
-      rw [ChoiceTree.toSet_bind]
-      exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e' m'])))
-        (convertFloat_toSet (ε := Op) e m e' m' a)
-    | .fptrunc e m e' m', .cons a .nil => by
+    | .fpext e m e' m', .cons a .nil | .fptrunc e m e' m', .cons a .nil => by
       show (ChoiceTree.bind (convertFloat e m e' m' a) _).toSet = _
       rw [ChoiceTree.toSet_bind]
       exact congrArg (fun s => s >>= fun v => (pure (.cons v .nil) : SetM (HVector toType [Ty.float e' m'])))
