@@ -23,9 +23,8 @@ Each rejection is shown at a valid op instance, as the first theorem below
 says.
 
 The obligations with memory reject each of them too, run with memory by
-lifting it into the state layer: in a dialect that lifts the set monad, the
-poison obligations with memory, totality with memory and monotonicity with
-memory hold together exactly when the poison obligations do (the section
+lifting it into the state layer: a dialect that lifts the set monad is
+lawful with memory exactly when the poison obligations hold (the section
 on poison obligations with memory).
 -/
 
