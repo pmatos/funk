@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14263961111404496987")
+:::moduleDocs (fingerprint := "13908160822124492131")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
@@ -108,7 +108,16 @@ $`[\mathtt{round(rne)}]`, and has the operand and result types $`t^*` and
 $`r^*`.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "10691494525099457758")
+:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "18338062105868789928")
+*Theorems: a conversion between formats decodes only from its own
+spelling.* If $`\mathtt{fpext}` or $`\mathtt{fptrunc}` decodes from the
+attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
+written with that name, has the attributes $`a^*`, which are none for
+$`\mathtt{fpext}` and $`[\mathtt{round(rne)}]` for $`\mathtt{fptrunc}`,
+and has the operand and result types $`t^*` and $`r^*`.
+:::
+
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2664410325515118172")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -143,7 +152,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 35 ops and every type, and
+core dialect, so its text is lawful, for all 37 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

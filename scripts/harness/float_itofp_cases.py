@@ -41,7 +41,7 @@ integer rounded to nearest even otherwise.
 import sys
 from fractions import Fraction
 
-from float_arith_cases import CANONICAL, DIFFERENTIAL, FORMATS
+from float_arith_cases import DIFFERENTIAL, FORMATS, write_corpus
 from float_ref import Format
 from float_text import spell
 
@@ -178,15 +178,7 @@ def files() -> dict[str, str]:
 
 
 def main(argv: list[str]) -> int:
-    if argv not in ([], ["--write"]):
-        print(__doc__.split("\n\n")[1], file=sys.stderr)
-        return 2
-    for path, text in files().items():
-        if argv:
-            (CANONICAL / path).write_text(text, encoding="utf-8")
-        else:
-            sys.stdout.write(f"==> {path}\n{text}")
-    return 0
+    return write_corpus(argv, __doc__.split("\n\n")[1], files())
 
 
 if __name__ == "__main__":

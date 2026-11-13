@@ -16,8 +16,8 @@ effects. Each effect that a core op leaves out, it does not have:
   flags, the divisions without `exact` when they give a result, the bitwise
   ops, `icmp`, `fcmp`, `select`, the width changes, `const` at an integer
   and at a float type, `freeze`, the float arithmetic, whose NaN
-  results are defined bits, the bit casts and the conversions from
-  integers.
+  results are defined bits, the bit casts, the conversions from
+  integers and the conversions between formats.
 * _No control._ Every core op that does not declare control is not a
   terminator.
 * _No write, read or allocation._ No core op touches memory: it runs by its
@@ -68,6 +68,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .fma e m, _ => fma_neverUB e m
   | .sitofp n e m, _ => intToFloat_neverUB n e m true
   | .uitofp n e m, _ => intToFloat_neverUB n e m false
+  | .fpext e m e' m', _ => convertFloat_neverUB e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_neverUB e m e' m' false
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
   | .unreachable, h => nomatch h
 
@@ -210,6 +212,8 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
   | .fma e m, _ => fma_makesNoPoison e m
   | .sitofp n e m, _ => intToFloat_makesNoPoison n e m true
   | .uitofp n e m, _ => intToFloat_makesNoPoison n e m false
+  | .fpext e m e' m', _ => convertFloat_makesNoPoison e m e' m' true
+  | .fptrunc e m e' m', _ => convertFloat_makesNoPoison e m e' m' false
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
   | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h => nomatch h
 

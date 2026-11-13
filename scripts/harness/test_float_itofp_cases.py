@@ -10,7 +10,8 @@ import unittest
 from fractions import Fraction
 
 import float_itofp_cases as cases
-from float_itofp_cases import CANONICAL, FORMATS
+from float_arith_cases import CANONICAL
+from float_itofp_cases import FORMATS
 from float_ref import Format
 from float_text import decode
 

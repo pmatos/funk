@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "11414522726157933595")
 :::
 
-:::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "4065107880631157083")
+:::readable Fir.Core.freezeValue_toSet (pin := Fir.Core.instDialectDenoteCoreDialectChoiceTreeOp) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.freezeValue) (fingerprint := "12941558460847735503")
 *Definition: the core ops in the tree of choices.* `fir-ref run` runs the
 core dialect in the
 {ref "The-fir-specification--Execution--Choice-trees"}[tree of choices].

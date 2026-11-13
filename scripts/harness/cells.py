@@ -25,7 +25,11 @@ has neither operands nor attributes, is a cell at each width of its result
   the side's float formats: `bitcast` from each format to the integer of
   its width, and from that integer to the format (#241); `sitofp` and
   `uitofp`, with `round(rne)`, from each width of the side to each of its
-  float formats (#241).
+  float formats (#241); `fpext`, with no attribute, and `fptrunc`, with
+  `round(rne)`, from each float format of the side to each other that it
+  takes: `fpext` to a format with at least as many exponent bits and as
+  many mantissa bits, and `fptrunc` to every other (#241, the human's
+  ruling of 2026-11-12 on #354).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -37,7 +41,7 @@ has neither operands nor attributes, is a cell at each width of its result
 from typing import NamedTuple
 
 from firtext import Op
-from refine import bits_of
+from refine import bits_of, float_format
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
@@ -111,6 +115,10 @@ CONVERSIONS = ("bitcast",)
 # The conversions from an integer to a float, which carry `round(rne)`: a
 # cell for each width and float format of the side.
 INT_TO_FLOAT = ("sitofp", "uitofp")
+# The conversions between float formats: `fpext`, which has no attribute,
+# and `fptrunc`, which carries `round(rne)`. A cell for each ordered pair of
+# two float formats of the side that the op takes.
+FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -128,6 +136,7 @@ OPS = (
     *CASTS,
     *CONVERSIONS,
     *INT_TO_FLOAT,
+    *FLOAT_CONVERSIONS,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -177,6 +186,12 @@ def cells(widths: tuple[int, ...], formats: tuple[str, ...] = ()) -> list[Cell]:
         for w in widths
         for f in formats
     ]
+    out += [
+        Cell("conversions", conversion(a, b), a, b)
+        for a in formats
+        for b in formats
+        if a != b
+    ]
     for op, rows in VALUES:
         for row in rows:
             if row == NOTHING:
@@ -201,6 +216,14 @@ def bits_type(f: str) -> str:
 def allowed(op: str, m: int, n: int) -> bool:
     """Whether the spec has the width change `op` from `iM` to `iN`."""
     return n < m if op == "trunc" else m < n
+
+
+def conversion(a: str, b: str) -> str:
+    """The op that converts from the float format `a` to another, `b`:
+    `fpext` when `b` holds every value of `a`, with at least as many
+    exponent bits and as many mantissa bits, and `fptrunc` otherwise."""
+    (e, m), (e2, m2) = float_format(a), float_format(b)
+    return "fpext" if e <= e2 and m <= m2 else "fptrunc"
 
 
 def bitcast(op: Op) -> Cell:
@@ -228,6 +251,20 @@ def int_to_float(op: Op) -> Cell:
     )
 
 
+def float_conversion(op: Op) -> Cell:
+    """The cell of an `fpext` or `fptrunc`: from a float format to another
+    that the op takes, with its attribute. Any other text of it does not
+    decode or validate, so it is not a cell."""
+    attr = " ".join(op.attrs)
+    if attr in FLOAT_CONVERSIONS[op.name] and len(op.operands) == len(op.results) == 1:
+        [a], [b] = op.operands, op.results
+        if is_float(a) and is_float(b) and a != b and conversion(a, b) == op.name:
+            return Cell("conversions", op.name, a, b)
+    raise CellError(
+        f"{op.name} {attr} from {op.operands} to {op.results} is not a cell"
+    )
+
+
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
     """The cells of values that `op` passes, returns or gives."""
     if not types:
@@ -247,6 +284,8 @@ def of_op(op: Op) -> set[Cell]:
         return {bitcast(op)}
     if op.name in INT_TO_FLOAT:
         return {int_to_float(op)}
+    if op.name in FLOAT_CONVERSIONS:
+        return {float_conversion(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         attr = "" if op.name == "const" else " ".join(op.attrs)
         if attr not in AT_FORMAT[op.name]:

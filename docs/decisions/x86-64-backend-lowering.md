@@ -324,3 +324,14 @@ than 64 bits truncated from `i64` values whose high bits are random. Rejected:
 a routine of a runtime helper for `i128`, as for `fma`, which the lowering
 cannot choose from the op alone, since an op names its operand but not its
 type.
+
+## Conversions between formats
+
+`fpext` from `f32` to `f64` is SSE2's `cvtss2sd`, which is exact, and `fptrunc`
+from `f64` to `f32` is `cvtsd2ss`, which rounds as MXCSR's default mode does,
+to nearest even, as `round(rne)` asks (#241). Each reads its operand's slot,
+keeps the sign of a zero and an infinity, honours subnormals, and gives an
+infinity or a zero of its sign past either end of `f32`; a NaN gives a quiet
+NaN, which fir's rule allows. Every other pair has an `f16`, `bf16` or `f128`
+side, reported where it is defined. `crates/funk/tests/float_convert.rs`
+checks both against the host's `as` on the edges and on random bits.

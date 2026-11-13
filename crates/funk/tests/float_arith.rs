@@ -18,7 +18,7 @@
 
 mod common;
 
-use common::{build, func, module, run, text};
+use common::{build, float_bits, func, module, run, text};
 use funk_ir::dialects::core::{FLOAT_ARITH_OPS, spell_float};
 
 /// A float format the backend lowers, with the host's arithmetic on it.
@@ -202,15 +202,7 @@ fn native(name: &str, f: Format, op: &str, cases: &[Vec<u64>]) -> Vec<u64> {
     let out = run(&exe, &["@batch"]);
     let stdout = text(&out.stdout);
     assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
-    let values = stdout
-        .trim_end()
-        .strip_prefix("{\"values\":[")
-        .and_then(|s| s.strip_suffix("]}"))
-        .expect("a JSON line of values");
-    values
-        .split(',')
-        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & f.mask())
-        .collect()
+    float_bits(&stdout, f.mask())
 }
 
 /// Checks `op` on every case at `f`, in batches of 64, against the host.

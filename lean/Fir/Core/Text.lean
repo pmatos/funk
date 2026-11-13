@@ -44,6 +44,10 @@ results, which are written where those values are defined.
 * `sitofp` and `uitofp` have one attribute, `round(rne)`, and take an
   integer of any width to a float of any format:
   `%f: f64 = sitofp round(rne) %i @1`.
+* `fpext` has no attributes and `fptrunc` has one, `round(rne)`, and each
+  takes a float of one format to a float of another:
+  `%d: f64 = fpext %f @1` and `%f: f32 = fptrunc round(rne) %d @1`. Any
+  two formats decode; validation says which pairs each takes.
 * `call` has one attribute, its callee's symbol: `%r: i32 = call @sum %n @1`.
 * The conditional branch is written `cond_br`:
   `cond_br %c, ^then, ^else(%x) @1`.
@@ -84,7 +88,8 @@ type.
 
 This section gives, in order: the names of the predicates and the ops, the
 attributes of an op, how an op and a type are read back, the core
-dialect's text as a whole, and the samples that check it.
+dialect's text as a whole, and the samples that check it. The tests of
+misspellings are in `FirTest.CoreText`.
 -/
 
 namespace Fir.Core
@@ -117,6 +122,7 @@ def Op.name : Op → String
   | .fbin o .. => o.name | .funary o .. => o.name | .fma .. => "fma"
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
+  | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -136,7 +142,7 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p _ _ => [.word p.name]
-  | .fma .. | .sitofp .. | .uitofp .. => [roundAttr]
+  | .fma .. | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
   | .fbin o .. | .funary o .. => o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
@@ -233,6 +239,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
     | _, _ => none
   | "sitofp" => decodeIntToFloat true as ts rs
   | "uitofp" => decodeIntToFloat false as ts rs
+  | "fpext" => decodeFpext as ts rs
+  | "fptrunc" => decodeFptrunc as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
 
 /-- The alias of the float format `float<e,m>`, if it has one. -/
@@ -317,76 +325,13 @@ def samples : List Op :=
   [.fbin .fadd 8 23, .fbin .fsub 11 52, .fbin .fmul 5 10, .fbin .fdiv 2 1, .funary .fneg 8 7,
    .funary .fabs 15 112, .funary .sqrt 8 23, .fma 11 52, .fbin .frem 8 23, .fbin .fmod 2 1] ++
   [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
-  [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1]
+  [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1] ++
+  [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o
 
-#guard [Ty.int 1, .int 32, .int 128, .ptr 0, .ptr 1, .ptr maxMemory].all fun t =>
-  Ty.decode t.attr == some t
-#guard Ty.decode (.app "ptr" [.int 0]) == none && Ty.decode (.app "ptr" [.int (-1)]) == none
-#guard Ty.decode (.app "ptr" [.int (maxMemory + 1)]) == none && Ty.decode (.app "ptr" []) == none
-#guard Ty.decode (.app "ptr" [.int 1, .int 2]) == none && Ty.decode (.app "ptr" [.word "x"]) == none
-#guard [Ty.float 5 10, .float 8 7, .float 8 23, .float 11 52, .float 15 112, .float 2 1,
-  .float 5 2, .float 2 (maxWidth - 3)].all fun t => Ty.decode t.attr == some t
-#guard Ty.decode (.word "f32") == some (.float 8 23) && Ty.decode (.word "bf16") == some (.float 8 7)
-#guard Ty.decode (.app "float" [.int 5, .int 2]) == some (.float 5 2)
-#guard Ty.decode (.app "float" [.int 8, .int 23]) == none
-#guard Ty.decode (.app "float" [.int (-1), .int 3]) == none
-#guard Ty.decode (.app "float" [.int 2, .int (maxWidth - 2)]) == none
-#guard Ty.decode (.app "float" [.int 5]) == none && Ty.decode (.app "f16" []) == none
-#guard Ty.decode (.word "float") == none && Ty.decode (.word "f8") == none
-#guard Ty.decode (.app "float" [.int 1, .int 1]) == some (.float 1 1)
-#guard Ty.decode (.word "i032") == none && Ty.decode (.word "u8") == none
-#guard Op.decode "const" [.int 128] [] [.int 8] == none
-#guard Op.decode "add" [.word "nsw", .word "nuw"] [.int 8, .int 8] [.int 8] == none
-#guard Op.decode "add" [] [.int 8, .int 16] [.int 8] == none
-#guard Op.decode "const" [.word "true"] [] [.int 1] == some (.const 1 1)
-#guard Op.decode "const" [.int 1] [] [.int 1] == none && Op.decode "const" [.int (-1)] [] [.int 1] == none
-#guard Op.decode "const" [.word "true"] [] [.int 8] == none
-#guard Op.decode "icmp" [.word "slt"] [.int 8, .int 8] [.int 1] == some (.icmp .slt 8)
-#guard Op.decode "icmp.slt" [] [.int 8, .int 8] [.int 1] == none
-#guard Op.decode "poison" [] [] [.int 1] == some (.poison 1)
-#guard Op.decode "poison" [.int 0] [] [.int 8] == none && Op.decode "poison" [] [.int 8] [.int 8] == none
-#guard Op.decode "poison" [] [] [] == none && Op.decode "poison" [] [] [.int 8, .int 8] == none
-#guard Op.decode "poison" [] [] [.ptr 0] == none
-#guard Ty.decode (.word "i16777215") == some (.int maxWidth) && Ty.decode (.word "i16777216") == none
--- A float constant is a float literal: `1.0`, `-0.0` and the quiet NaN of
--- `f32` with its sign set.
-#guard Op.decode "const" [.float (.dec false 1 ['0'] none)] [] [.float 8 23] ==
-  some (.fconst 8 23 0x3f800000)
-#guard Op.decode "const" [.float (.dec true 0 ['0'] none)] [] [.float 8 23] ==
-  some (.fconst 8 23 0x80000000)
-#guard Op.decode "const" [.float (.hex "ffc00000".toList)] [] [.float 8 23] ==
-  some (.fconst 8 23 0xffc00000)
-#guard (Op.fconst 8 23 0xffc00000).attrs.map Attr.print == ["0xffc00000"]
--- Each bit pattern has one spelling: the bits read as an integer, the
--- bits of a number in hexadecimal and `true` do not decode.
-#guard Op.decode "const" [.int 1065353216] [] [.float 8 23] == none
-#guard Op.decode "const" [.float (.hex "3f800000".toList)] [] [.float 8 23] == none
-#guard Op.decode "const" [.word "true"] [] [.float 8 23] == none
-#guard Op.decode "const" [.int 0] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 11 52] [.int 1] == some (.fcmp .olt 11 52)
-#guard Op.decode "fcmp" [.word "olt"] [.float 11 52, .float 8 23] [.int 1] == none
-#guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
-#guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
-#guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
--- A float op that rounds needs `round(rne)`; `fneg` and `fabs` take none.
-#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd 8 23)
-#guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "frem" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
-  some (.fma 8 23)
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
--- `sitofp` and `uitofp` take an integer of any width to a float of any
--- format, with `round(rne)`.
-#guard Op.decode "sitofp" [roundAttr] [.int 33] [.float 5 10] == some (.sitofp 33 5 10)
-#guard Op.decode "uitofp" [roundAttr] [.int 8] [.float 11 52] == some (.uitofp 8 11 52)
-#guard Op.decode "sitofp" [] [.int 32] [.float 8 23] == none
-#guard Op.decode "uitofp" [roundAttr] [.float 8 23] [.float 8 23] == none
+-- `FirTest.CoreText` checks that each type reads back from its spelling, and
+-- that misspelled ops and types do not decode.
 
 end Fir.Core

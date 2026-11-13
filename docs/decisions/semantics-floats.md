@@ -181,14 +181,9 @@ programs use unwritable.
 plan says: bit casts, then `fpext` and `fptrunc`, then integer to float, then
 float to integer.
 
-Open questions to the human, raised on 2026-11-12 on #241 and not yet ruled.
-How float to integer rounds: #241 gives `round = rne` to integer to float and
-to `fptrunc`, and nothing to `fptosi` and `fptoui`, which in C, LLVM and SSE's
-`cvttss2si` truncate toward zero, so `2.7` gives `2` and `-2.7` gives `-2`;
-stage 4 waits on it. Which op converts between two formats where neither holds
-the other, such as `bf16` and `f16`: the stage plan proposes `fpext` only where
-the target holds every value of the source, and `fptrunc`, rounding to nearest
-even, for every other pair; stage 2 waits on that pair.
+The human ruled both questions of #354 on 2026-11-12. Float to integer
+truncates toward zero, with no rounding attribute; stage 4 records it. Which
+op converts between two formats is recorded below.
 
 `bitcast` reads the same bits as another type of the same width. From
 `float<e,m>` it gives an `iN` with `N = 1 + e + m`, and from that `iN` it
@@ -237,14 +232,50 @@ integer's bits as powers of two, which rounds more than once; and a rule of
 fir's own that rounds the integer itself, a second definition of rounding
 beside the model's.
 
+`fpext` and `fptrunc` convert a float to another format (stage 2). Each takes
+one value of `float<e,m>` and gives one of `float<e',m'>`; in the spec they are
+`fpext e m e' m'` and `fptrunc e m e' m'`, with one rule, `convertFloat`
+(`lean/Fir/Core/FloatConvert.lean`).
+
+- The human ruled on 2026-11-12 (#354): `fpext` applies only when the target
+  has at least as many exponent bits and at least as many mantissa bits as the
+  source, so it holds every value of the source and `fpext` never rounds.
+  `fptrunc`, with `round(rne)`, rounds into a format that cannot hold every
+  value of the source, and covers every other pair of two formats, `bf16` to
+  `f16` and `f16` to `bf16` included. Every ordered pair of two formats takes
+  exactly one of the two, a format to itself takes neither, and validation
+  checks it, as it checks `zext` and `trunc`. Rejected: `fpext` wherever the
+  target is wider, which would round from `f16` to `bf16`, and an op of its
+  own for the pairs where neither format holds the other.
+- Lean's model has no conversion, so the rule is built from its steps:
+  `UnpackedFloat.unpack` reads the operand in the source format,
+  `UnpackedFloat.round` rounds a finite number into the target, to nearest
+  even, and `pack` writes it, an infinity of its sign past the largest finite
+  value. A number below half the target's smallest subnormal is a zero of its
+  sign, and a tie goes to the even neighbour, so `1 + 2^-24` from `f64` to
+  `f32` is `1`. This is IEEE 754's `convertFormat`, and LLVM's `fpext` and
+  `fptrunc` where LLVM has them: it has neither between `bf16` and `f16`,
+  which have the same width. That `fpext` is exact at every pair it takes is
+  tested, on the corpus and on `#guard`s, not proved.
+- A zero and an infinity keep their sign. A NaN gives any NaN of the target
+  (ADR-2026-11-09-1549), so its payload need not survive, as SSE's quieting
+  and LLVM's rules allow. So the rule chooses only on a NaN, or at a format
+  that validation rejects (`convertFloat_valid`). A poison operand gives
+  poison. It is never UB, and it is pure.
+
+Rejected: a rule of fir's own that rounds by shifting the mantissa, a second
+definition of rounding beside the model's; and keeping a NaN's payload, which
+the target may not hold and which no other float op keeps.
+
 ## What holds today
 
 #229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
 arithmetic above, the remainders of #310, float constants, `bitcast` between a
-float and the integer of its width, and `sitofp` and `uitofp` from every
-integer type to every float type. A float constant is `const` at a
+float and the integer of its width, `sitofp` and `uitofp` from every
+integer type to every float type, and `fpext` and `fptrunc` between every two
+float formats. A float constant is `const` at a
 float type, written as its shortest decimal that reads back, such as `1.0` or `0.1`,
 or else as `0x` and its bits, such as `0x7fc00000`. Every bit pattern, each NaN
 payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
@@ -262,7 +293,8 @@ lowers the constants, `fcmp` and the arithmetic, with SSE2 and, for `fma`, a
 routine of a runtime helper, the remainders with routines of another that
 run the x87 unit's `fprem1` and `fprem`, `bitcast` as a copy of a slot, and
 `sitofp` and `uitofp` with `cvtsi2ssq` and `cvtsi2sdq`, in a few steps for an
-unsigned `i64` or an `i128`
+unsigned `i64` or an `i128`, and `fpext` and `fptrunc` between `f32` and `f64`
+with `cvtss2sd` and `cvtsd2ss`
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md)). It reports every
 other format as a diagnostic where its value is defined. The corpus runs every
 predicate and the constants differentially at `f32` and `f64`, and on `fir-ref`
@@ -280,6 +312,10 @@ It runs `sitofp` and `uitofp` from every width of each side to every aliased
 format, on boundary integers, ties and the edges of overflow, each case of a
 width the backend lowers differential at `f32` and `f64`
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-integer-to-float-corpus)).
+It runs `fpext` and `fptrunc` between every two aliased formats, on the edges
+of both formats, ties, overflow and underflow, differential from `f32` to `f64`
+and back
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-format-conversion-corpus)).
 
 `poison`, `select` and `freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's

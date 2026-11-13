@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9068656306987502741")
+:::moduleDocs (fingerprint := "16276014801133652959")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid (fingerprint := "11703554325319780839")
+:::readable Fir.Core.Op.Valid (fingerprint := "5700179324054335365")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -77,6 +77,10 @@ $$`\frac{M < N}{C \vdash \mathsf{sext}_{M \to N}~\text{valid}}`
 
 $$`\frac{N < M}{C \vdash \mathsf{trunc}_{M \to N}~\text{valid}}`
 
+$$`\frac{e \le e' \qquad m \le m' \qquad (e, m) \ne (e', m')}{C \vdash \mathsf{fpext}_{e,m,e',m'}~\text{valid}}`
+
+$$`\frac{e' < e \ \text{ or } \ m' < m}{C \vdash \mathsf{fptrunc}_{e,m,e',m'}~\text{valid}}`
+
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
 Here $`\mathrm{results}_C` is the result types of the function that holds
@@ -90,6 +94,17 @@ the op, and $`\mathrm{symtab}_C` the module's
 * $`\mathsf{zext}` and $`\mathsf{sext}` strictly widen and
   $`\mathsf{trunc}` strictly narrows. A width change to the same width is
   not an op: the value itself is.
+* $`\mathsf{fpext}` converts to a format that holds every value of the
+  source, with at least as many exponent bits and as many mantissa bits,
+  so it never rounds; $`\mathsf{fptrunc}` rounds into a format that cannot
+  hold every value of the source, with fewer exponent bits or fewer
+  mantissa bits. So every ordered pair of two formats takes exactly one of
+  the two, as the human ruled on 2026-11-12 (#354): $`\mathsf{f32}` to
+  $`\mathsf{f64}` takes $`\mathsf{fpext}`, and $`\mathsf{f64}` to
+  $`\mathsf{f32}` takes $`\mathsf{fptrunc}`, and so do $`\mathsf{bf16}` to
+  $`\mathsf{f16}` and $`\mathsf{f16}` to $`\mathsf{bf16}`, since
+  $`\mathsf{f16}` has fewer exponent bits than $`\mathsf{bf16}` and more
+  mantissa bits. A conversion to the same format is not an op.
 
 Every other op has no rule beyond its signature. These three definitions
 are what the core dialect
