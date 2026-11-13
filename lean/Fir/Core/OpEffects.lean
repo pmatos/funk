@@ -5,10 +5,11 @@ import Fir.Execution.OpEffects
 # The effects of the core ops
 
 Every core op of M0 is pure, may produce poison, may hit UB, or is a
-terminator, as its rules say (ADR-2026-11-09-1541). No core op reads,
-writes, allocates or frees memory, or adds an event to the trace: the core
-dialect has no memory yet, so its memories have no names, and M0's runs
-have no trace.
+terminator, as its rules say (ADR-2026-11-09-1541). The core dialect names
+the memories of a module by their numbers, as a pointer type `ptr<N>` names
+memory `N`, and the module's data layout says which of them it has. No core
+op reads, writes, allocates or frees memory yet, or adds an event to the
+trace: M0's runs have no trace.
 
 * Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
   `select`, `zext`, `sext`, `trunc`, `freeze`, `add`, `sub` and `mul`
@@ -42,8 +43,9 @@ dialect's effect obligations, after the rules.
 
 namespace Fir.Core
 
-/-- The core dialect has no memory yet, so no memory has a name. -/
-abbrev Mem : Type := Empty
+/-- The core dialect names each memory of a module by its number: memory
+`N` is the memory of `ptr<N>`, and memory 0 is the default memory. -/
+abbrev Mem : Type := Nat
 
 /-- The effects of each core op instance. Each op is listed, with no case
 for the rest, so a new core op does not build until it declares its

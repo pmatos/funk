@@ -273,12 +273,14 @@ def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
   funext N _ unit γ draw M f args fuel g
   exact (Machine.sampled_eq M draw f args fuel g).symm
 
-/-- The width of the units of each memory of a run of `fir-ref`, which
-names the core's memories by themselves
-(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`). The core has no
-memory yet, so there is no width to give; the module's data layout will give
-them (#231). -/
-def coreUnit : Core.Mem → Nat := fun x => nomatch x
+/-- The width of the units of each memory of a run of `fir-ref` on a module
+whose data layout is `l`, which names the core's memories by themselves
+(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`): the unit of
+the memory's entry in `l`. Memory 0 has an entry in every layout. A memory
+that `l` does not declare gets the default memory's unit; no op of a valid
+module reaches it, since validation rejects every pointer type that names
+it. -/
+def coreUnit (l : DataLayout) : Core.Mem → Nat := fun n => ((l.memory? n).getD .default).unit
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
@@ -309,10 +311,10 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
         | .ok vs, .scripted cs =>
-          scriptedReport name (Core.scripted coreUnit constOf m f vs fuel cs)
+          scriptedReport name (Core.scripted (coreUnit m.layout) constOf m f vs fuel cs)
         | .ok vs, .exhaustive b =>
-          exhaustiveReport name b (Core.exhaustive coreUnit m f vs fuel b)
+          exhaustiveReport name b (Core.exhaustive (coreUnit m.layout) m f vs fuel b)
         | .ok vs, .sampled s =>
-          sampledReport name (Core.sampled coreUnit draw m f vs fuel ⟨s.toUInt64⟩)
+          sampledReport name (Core.sampled (coreUnit m.layout) draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef
