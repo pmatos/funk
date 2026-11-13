@@ -57,11 +57,12 @@ fn uitofp(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
 }
 
 /// The result's format: its width, the suffix of its SSE instructions,
-/// `ss` or `sd`, and the bits of its mantissa and its exponent bias, from
-/// which a power of two is built.
+/// `ss` or `sd`, the conversion from a 64-bit integer, and the bits of its
+/// mantissa and its exponent bias, from which a power of two is built.
 struct Format {
     bits: u32,
     suffix: &'static str,
+    cvt: &'static str,
     mantissa: u32,
     bias: u32,
 }
@@ -79,12 +80,14 @@ fn convert(cx: &mut Cx<'_>, op: &Op, signed: bool) -> Result<(), Unlowered> {
         32 => Format {
             bits: 32,
             suffix: "ss",
+            cvt: "cvtsi2ssq",
             mantissa: 23,
             bias: 127,
         },
         64 => Format {
             bits: 64,
             suffix: "sd",
+            cvt: "cvtsi2sdq",
             mantissa: 52,
             bias: 1023,
         },
@@ -99,8 +102,7 @@ fn convert(cx: &mut Cx<'_>, op: &Op, signed: bool) -> Result<(), Unlowered> {
         let ext = if signed { Ext::Sign } else { Ext::Zero };
         width::extend(&mut cx.asm, ext, n, Reg::Rax);
         if signed || n < 64 {
-            cx.asm
-                .ins(&format!("cvtsi2{}q", f.suffix), format_args!("%rax, %xmm0"));
+            cx.asm.ins(f.cvt, format_args!("%rax, %xmm0"));
         } else {
             let done = cx.local_label();
             unsigned64(cx, &f, &done);
@@ -116,11 +118,10 @@ fn convert(cx: &mut Cx<'_>, op: &Op, signed: bool) -> Result<(), Unlowered> {
 /// at `done`, which follows its code unless the caller jumps there. It
 /// clobbers `%rax` and `%rcx`.
 fn unsigned64(cx: &mut Cx<'_>, f: &Format, done: &str) {
-    let cvt = format!("cvtsi2{}q", f.suffix);
     let half = cx.local_label();
     cx.asm.ins("testq", format_args!("%rax, %rax"));
     cx.asm.ins("js", format_args!("{half}"));
-    cx.asm.ins(&cvt, format_args!("%rax, %xmm0"));
+    cx.asm.ins(f.cvt, format_args!("%rax, %xmm0"));
     cx.asm.ins("jmp", format_args!("{done}"));
     cx.asm.label(&half);
     halve_and_convert(cx, f, Reg::Rax, Reg::Rcx);
@@ -137,8 +138,7 @@ fn halve_and_convert(cx: &mut Cx<'_>, f: &Format, top: Reg, scratch: Reg) {
     cx.asm.ins("shrq", format_args!("$1, {s}"));
     cx.asm.ins("andl", format_args!("$1, {}", top.at(32)));
     cx.asm.ins("orq", format_args!("{t}, {s}"));
-    cx.asm
-        .ins(&format!("cvtsi2{}q", f.suffix), format_args!("{s}, %xmm0"));
+    cx.asm.ins(f.cvt, format_args!("{s}, %xmm0"));
 }
 
 /// Converts the `i128` in `%rdx:%rax`, signed when `signed`, into `%xmm0`.

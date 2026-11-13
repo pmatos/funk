@@ -45,12 +45,9 @@ const F64: Format = Format {
 /// The host's conversion of the bits `v` of `iW` to `f`, read as signed
 /// when `signed`.
 fn host(f: Format, w: u32, v: u128, signed: bool) -> u64 {
-    let x: i128 = if signed {
-        ((v << (128 - w)) as i128) >> (128 - w)
-    } else {
-        0
-    };
-    let u: u128 = (v << (128 - w)) >> (128 - w);
+    let s = 128 - w;
+    let x = ((v << s) as i128) >> s;
+    let u = (v << s) >> s;
     match (f.bits, signed) {
         (32, true) => u64::from((x as f32).to_bits()),
         (32, false) => u64::from((u as f32).to_bits()),
