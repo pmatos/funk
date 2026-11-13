@@ -148,7 +148,6 @@ def peekLax : PoisonOr Pointer → StateT (Memories N unit) SetM (HVector toType
     | .ok us => pure (.cons (decodeInt (unit x) 8 .little us) .nil, S)
     | .error _ => pure (.cons .poison .nil, S)
 
-omit [DecidableEq N] in
 /-- `peekLax` through a defined pointer is never UB. -/
 theorem peekLax_value_noUB (p : Pointer) (S : Memories N unit) (r : String) :
     ¬ peekLax unit x (.value p) S (.ub r) := by

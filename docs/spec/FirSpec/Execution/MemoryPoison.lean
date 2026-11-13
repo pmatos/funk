@@ -43,7 +43,7 @@ poison pointer may be UB because some pointer in its place faults on those
 memories. An op _propagates poison with memory_ when both clauses hold.
 :::
 
-:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "3948744821314937905")
+:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "13999479133628405871")
 *Definitions: a result on defined operands with memory, and a dialect lawful
 in its poison with memory.* An op _returns a result on defined operands
 with memory_ when, wherever a run names the dialect's memories, it returns
