@@ -91,5 +91,11 @@ namespace Fir.Core
 #guard Op.decode "ptradd" [] [.ptr 0, .float 8 23] [.ptr 0] == none
 #guard Op.decode "ptradd" [] [.ptr 0, .int 64] [.int 64] == none
 #guard Op.decode "ptradd" [.word "nuw"] [.ptr 0, .int 64] [.ptr 0] == none
+-- `fptosi` and `fptoui` take a float of any format to an integer of any
+-- width, with no attribute.
+#guard Op.decode "fptosi" [] [.float 5 10] [.int 33] == some (.fptosi 5 10 33)
+#guard Op.decode "fptoui" [] [.float 11 52] [.int 1] == some (.fptoui 11 52 1)
+#guard Op.decode "fptosi" [roundAttr] [.float 8 23] [.int 32] == none
+#guard Op.decode "fptoui" [] [.int 32] [.int 32] == none
 
 end Fir.Core

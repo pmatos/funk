@@ -1,6 +1,6 @@
 //! `sitofp` and `uitofp` run natively from `i1`, `i8`, `i16`, `i32`, `i64`
 //! and `i128` to `f32` and `f64` (#241,
-//! `docs/decisions/x86-64-backend-lowering.md#conversions-from-integers`).
+//! `docs/decisions/x86-64-backend-lowering-floats.md#conversions-from-integers`).
 //! Each result is checked against the host's own conversion, Rust's `as`,
 //! which rounds to nearest, ties to even, and gives an infinity past the
 //! largest finite value, as `round(rne)` asks.
@@ -16,7 +16,7 @@
 
 mod common;
 
-use common::{Bits, build, float_bits, func, module, run, text};
+use common::{Bits, build, float_bits, module, returning, run_func};
 
 /// The widths the backend lowers.
 const WIDTHS: [u32; 6] = [1, 8, 16, 32, 64, 128];
@@ -117,25 +117,18 @@ fn check(f: Format, op: &str) {
     for w in WIDTHS {
         for (n, batch) in cases(w, &mut bits).chunks(64).enumerate() {
             let mut body = Vec::new();
-            let mut results = Vec::new();
             for (i, &v) in batch.iter().enumerate() {
                 operand(&format!("c{i}"), w, v, bits.next(), &mut body);
                 body.push(format!("%r{i}: {} = {op} round(rne) %c{i}", f.name));
-                results.push(format!("%r{i}"));
             }
-            body.push(format!("ret {}", results.join(", ")));
-            let body: Vec<&str> = body.iter().map(String::as_str).collect();
-            let types = vec![f.name; batch.len()].join(", ");
             let name = format!("i{w}_{n}");
-            funcs.push(func(&name, "", &types, &body));
+            funcs.push(returning(&name, body, f.name, batch.len()));
             batches.push((name, w, batch.to_vec()));
         }
     }
     let exe = build(&format!("{op}-{}", f.name), &module(&funcs));
     for (name, w, batch) in batches {
-        let out = run(&exe, &[&format!("@{name}")]);
-        let stdout = text(&out.stdout);
-        assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
+        let stdout = run_func(&exe, &name);
         let got = float_bits(&stdout, u64::MAX >> (64 - f.bits));
         assert_eq!(got.len(), batch.len(), "{stdout}");
         for (&v, &g) in batch.iter().zip(&got) {

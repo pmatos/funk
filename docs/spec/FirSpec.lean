@@ -239,6 +239,8 @@ byte order.
 
 {includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
 
+{includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
+
 {includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.FloatTextLaws "Float constants read back" FirSpec.Core.FloatTextLaws (level := 2)}

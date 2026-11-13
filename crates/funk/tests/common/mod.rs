@@ -129,17 +129,44 @@ pub fn run(exe: &Path, args: &[&str]) -> Output {
     Command::new(exe).args(args).output().unwrap()
 }
 
-/// The bits of each float value that a built executable printed in
-/// `stdout`, one JSON line of values, each a float's bits read as a signed
-/// integer, masked to `mask`.
-pub fn float_bits(stdout: &str, mask: u64) -> Vec<u64> {
+/// Runs `@name` of a built executable, checks that it exits with 0, and
+/// gives what it wrote.
+pub fn run_func(exe: &Path, name: &str) -> String {
+    let out = run(exe, &[&format!("@{name}")]);
+    let stdout = text(&out.stdout);
+    assert_eq!(out.status.code(), Some(0), "{stdout}{}", text(&out.stderr));
+    stdout
+}
+
+/// A function `@name` of no parameters that runs `body` and returns `%r0`,
+/// `%r1` and so on: `n` values of type `ty`.
+pub fn returning(name: &str, mut body: Vec<String>, ty: &str, n: usize) -> String {
+    let results: Vec<String> = (0..n).map(|i| format!("%r{i}")).collect();
+    body.push(format!("ret {}", results.join(", ")));
+    let body: Vec<&str> = body.iter().map(String::as_str).collect();
+    func(name, "", &vec![ty; n].join(", "), &body)
+}
+
+/// Each value of the JSON line of values that a built executable printed
+/// in `stdout`, without its quotes.
+pub fn json_values(stdout: &str) -> Vec<&str> {
     stdout
         .trim_end()
         .strip_prefix("{\"values\":[")
         .and_then(|s| s.strip_suffix("]}"))
         .expect("a JSON line of values")
         .split(',')
-        .map(|v| v.trim_matches('"').parse::<i64>().expect("a float's bits") as u64 & mask)
+        .map(|v| v.trim_matches('"'))
+        .collect()
+}
+
+/// The bits of each float value that a built executable printed in
+/// `stdout`, one JSON line of values, each a float's bits read as a signed
+/// integer, masked to `mask`.
+pub fn float_bits(stdout: &str, mask: u64) -> Vec<u64> {
+    json_values(stdout)
+        .into_iter()
+        .map(|v| v.parse::<i64>().expect("a float's bits") as u64 & mask)
         .collect()
 }
 

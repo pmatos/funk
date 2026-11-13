@@ -1,6 +1,6 @@
 //! The remainders `frem` and `fmod` (`dialects/core/float_arith.rs` in
 //! `funk-ir`), at `f32` and `f64`
-//! (`docs/decisions/x86-64-backend-lowering.md#the-remainders`).
+//! (`docs/decisions/x86-64-backend-lowering-floats.md#the-remainders`).
 //!
 //! SSE has no remainder, so each op loads its operands into `%xmm0` and
 //! `%xmm1` and calls a routine of the runtime helper `frem.s`, which the

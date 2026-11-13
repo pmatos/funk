@@ -213,6 +213,19 @@ def float_conversions_table(counts: Counter, formats: tuple[str, ...]) -> list[s
     return table(["from", *(f"to `{f}`" for f in formats)], rows)
 
 
+def float_to_int_table(
+    counts: Counter, widths: tuple[int, ...], formats: tuple[str, ...]
+) -> list[str]:
+    rows = []
+    for op in cells.FLOAT_TO_INT:
+        for f in formats:
+            row = [f"`{op}`", f"`{f}`"]
+            for w in widths:
+                row.append(number(counts[Cell("conversions", op, f, cells.ty(w))]))
+            rows.append(row)
+    return table(["op", "from", *(f"to `i{w}`" for w in widths)], rows)
+
+
 def pointers_table(counts: Counter, offsets: tuple[int, ...]) -> list[str]:
     rows = [
         [f"`{op}`"]
@@ -302,6 +315,8 @@ def render(counts: dict[str, Counter]) -> str:
         lines += int_to_float_table(c, side.widths, side.formats)
         lines += ["", f"### Conversions between formats ({title})", ""]
         lines += float_conversions_table(c, side.formats)
+        lines += ["", f"### Conversions to integers ({title})", ""]
+        lines += float_to_int_table(c, side.widths, side.formats)
         if side.offsets:
             lines += ["", f"### Pointer offsets ({title})", ""]
             lines += pointers_table(c, side.offsets)

@@ -29,7 +29,8 @@ has neither operands nor attributes, is a cell at each width of its result
   `round(rne)`, from each float format of the side to each other that it
   takes: `fpext` to a format with at least as many exponent bits and as
   many mantissa bits, and `fptrunc` to every other (#241, the human's
-  ruling of 2026-11-12 on #354).
+  ruling of 2026-11-12 on #354); `fptosi` and `fptoui`, with no attribute,
+  from each float format of the side to each of its widths (#241).
 - The pointer offset `ptradd` is a cell for each width of its integer, at
   the side's pointer offset widths: every width for interpreter-only
   tests, and none yet for differential tests, since the backend does not
@@ -126,6 +127,9 @@ INT_TO_FLOAT = ("sitofp", "uitofp")
 # and `fptrunc`, which carries `round(rne)`. A cell for each ordered pair of
 # two float formats of the side that the op takes.
 FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
+# The conversions from a float to an integer, which have no attributes: a
+# cell for each float format and width of the side.
+FLOAT_TO_INT = ("fptosi", "fptoui")
 # The pointer offsets, which have no attributes: a cell for each width of
 # the integer, at the side's pointer offset widths.
 POINTER_OPS = ("ptradd",)
@@ -147,6 +151,7 @@ OPS = (
     *CONVERSIONS,
     *INT_TO_FLOAT,
     *FLOAT_CONVERSIONS,
+    *FLOAT_TO_INT,
     *POINTER_OPS,
     *(op for op, _ in VALUES if op != "func"),
 )
@@ -208,6 +213,12 @@ def cells(
         for a in formats
         for b in formats
         if a != b
+    ]
+    out += [
+        Cell("conversions", op, f, ty(w))
+        for op in FLOAT_TO_INT
+        for f in formats
+        for w in widths
     ]
     out += [Cell("pointers", op, "", ty(w)) for op in POINTER_OPS for w in offsets]
     for op, rows in VALUES:
@@ -288,6 +299,20 @@ def float_conversion(op: Op) -> Cell:
     )
 
 
+def float_to_int(op: Op) -> Cell:
+    """The cell of an `fptosi` or `fptoui`: from a float to an integer, with
+    no attribute. Any other text of it does not decode, so it is not a
+    cell."""
+    if not op.attrs and len(op.operands) == len(op.results) == 1:
+        [a], [b] = op.operands, op.results
+        result = bits_of(b)
+        if is_float(a) and result is not None and result[1]:
+            return Cell("conversions", op.name, a, b)
+    raise CellError(
+        f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"
+    )
+
+
 def pointer_offset(op: Op) -> Cell:
     """The cell of a `ptradd`: at the width of its integer. Any other text
     of it does not decode, so it is not a cell."""
@@ -320,6 +345,8 @@ def of_op(op: Op) -> set[Cell]:
         return {int_to_float(op)}
     if op.name in FLOAT_CONVERSIONS:
         return {float_conversion(op)}
+    if op.name in FLOAT_TO_INT:
+        return {float_to_int(op)}
     if op.name in POINTER_OPS:
         return {pointer_offset(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):

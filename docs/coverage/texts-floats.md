@@ -68,7 +68,7 @@ integer, and two at a width or format that validation rejects.
 
 The texts of #241's second stage use the conversions between float formats,
 `fpext`, with no attribute, and `fptrunc`, with `round(rne)`
-([semantics-floats.md](../decisions/semantics-floats.md#the-conversions)).
+([semantics-floats-conversions.md](../decisions/semantics-floats-conversions.md#the-conversions)).
 `float-OP-S-T` converts from `S` to `T` with the op that the pair takes, for
 each ordered pair of two of `f16`, `bf16`, `f32`, `f64` and `f128`: `fpext`
 where `T` has at least as many exponent bits and mantissa bits as `S`, and
@@ -86,3 +86,22 @@ expected result, and differential too in `float-fpext-f32-f64` and
 integer, and those that validation rejects: a pair that takes the other op,
 `bf16` to `f16` and `f16` to `bf16` as `fpext` among them, a format to
 itself, and a format that validation rejects everywhere.
+
+The texts of #241's fourth stage use the conversions from floats to integers,
+`fptosi` and `fptoui`, with no attribute: both truncate toward zero
+([semantics-floats-conversions.md](../decisions/semantics-floats-conversions.md#the-conversions)).
+`float-fptosi-T` and `float-fptoui-T` convert `T`, one of `f16`, `bf16`,
+`f32`, `f64` and `f128`, to an integer of each width that the backend lowers,
+`i1` to `i128`, and `float-fptosi-odd` and `float-fptoui-odd` convert each of them to `i7` and
+`i33`. The cases are the zeros, the smallest subnormal, small fractions such
+as `2.7`, the largest finite values, infinities and NaNs, each of either sign,
+the floats on either side of each end of the width's range, and poison. An
+integer out of range, an infinity or a NaN gives poison. A conversion
+chooses nothing, so every case of a lowered width is differential at `f32` and
+`f64`, where native code may give any value for poison, and every case is
+interpreter-only with its expected result.
+`scripts/harness/float_fptoi_cases.py` writes them
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-float-to-integer-corpus)).
+`reject/float-fptoi.toml` holds the conversions that do not decode, such as
+`fptosi round(rne)`, `fptoui round(rtz)`, a flag, from an integer or to a
+float, and two at a width or format that validation rejects.

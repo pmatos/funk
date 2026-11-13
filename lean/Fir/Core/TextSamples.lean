@@ -29,7 +29,8 @@ def samples : List Op :=
   [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
   [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1] ++
   [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7] ++
-  [.ptradd 0 64, .ptradd 1 8, .ptradd maxMemory 1]
+  [.ptradd 0 64, .ptradd 1 8, .ptradd maxMemory 1] ++
+  [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o

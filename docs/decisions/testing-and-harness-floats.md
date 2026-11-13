@@ -65,7 +65,7 @@ both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
 arithmetic, and the runtime routines of `fma`, `frem` and `fmod` also on random
-operands ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#float-arithmetic)).
+operands ([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#float-arithmetic)).
 The host's `%` is C's `fmod`, and the test builds IEEE 754's remainder from it
 exactly.
 
@@ -105,7 +105,7 @@ the reference against the host's `struct` at `f16`, `f32` and `f64` on the
 cases that binary64 holds exactly.
 `crates/funk/tests/float_int_to_float.rs` checks every path of the backend's
 lowering natively against the host's own conversion
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md#conversions-from-integers)).
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-from-integers)).
 
 ## The format-conversion corpus
 
@@ -130,4 +130,30 @@ against the reference, checks the reference against the host's `struct`
 between `f16`, `f32` and `f64`, and checks that the cases reach overflow,
 underflow and ties. `crates/funk/tests/float_convert.rs` checks the backend's
 `cvtss2sd` and `cvtsd2ss` natively against the host's `as`
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md#conversions-between-formats)).
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-between-formats)).
+
+## The float-to-integer corpus
+
+`scripts/harness/float_fptoi_cases.py` writes `float-fptosi-FORMAT` and
+`float-fptoui-FORMAT` of `tests/fir/canonical/` at every aliased format, with
+`@s_iW` and `@u_iW`, which convert the format to an `iW` with `fptosi` and
+`fptoui`, at each width the backend lowers, `i1` to `i128`, and
+`float-fptosi-odd` and `float-fptoui-odd`, with the same conversions from every format to `i7` and
+`i33` (#241). The cases are both zeros, the smallest subnormal, `0.5`, `1`,
+`1.5`, `2.7` and `3`, the largest finite value, the infinities, and a NaN
+with and without a payload, each of either sign, and at each end of the width's range the floats on
+either side of where the truncated integer leaves it: the largest float below
+`hi + 1`, which truncates into the range, and the smallest from it on, which
+does not, and likewise at `lo - 1`, with `lo` itself for `fptosi`. Each
+expected result is what `float_ref.py` decodes, truncated toward zero by
+Python's `int`, or poison. A conversion chooses nothing, so every case of a
+width the backend lowers is differential at `f32` and `f64`, where native code
+refines poison with any value of the type (ADR-2026-10-30-2248), and every case
+is interpreter-only with its expected result, poison included.
+`test_float_fptoi_cases.py` checks that the committed files are what the
+generator writes, checks each expected result against the reference, checks the
+reference against the host's `struct` and `math.trunc` at `f16`, `f32` and
+`f64`, and checks that the cases reach both ends of each range.
+`crates/funk/tests/float_to_int.rs` checks every path of the backend's lowering
+natively against the host's `trunc`, where the source gives an integer
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md#conversions-to-integers)).

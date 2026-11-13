@@ -62,7 +62,9 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
   carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
-  flag, and `sdiv` and `udiv` with `exact`.
+  flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
+  `fptosi` and `fptoui`, which give poison for an integer out of range, an
+  infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 
