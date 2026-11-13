@@ -216,10 +216,12 @@ theorem add_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) ∧
       (shlOne 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) :=
-  ⟨(unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2
-      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 add_shl_32),
-    (unary_isRefinedBy_iff lay ρ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).2
-      ((unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 shl_add_32)⟩
+  ⟨unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => addSelfWith_runs lay ρ _)
+      (fun lay ρ => shlOne_runs lay ρ) add_shl_32,
+    unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => shlOne_runs lay ρ)
+      (fun lay ρ => addSelfWith_runs lay ρ _) shl_add_32⟩
 
 /-- Pair 2 at `i32`, both ways, for the runs with memory at every layout
 and naming. -/
@@ -227,9 +229,11 @@ theorem mul_add_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (mulTwo 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) ∧
       (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulTwo 32).memRuns lay ρ (pairs 32) :=
-  ⟨(unary_isRefinedBy_iff lay ρ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2
-      ((unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 mul_add_32),
-    (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2
-      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).1 add_mul_32)⟩
+  ⟨unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => mulTwoWith_runs lay ρ _)
+      (fun lay ρ => addSelfWith_runs lay ρ _) mul_add_32,
+    unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => addSelfWith_runs lay ρ _)
+      (fun lay ρ => mulTwoWith_runs lay ρ _) add_mul_32⟩
 
 end FirTest.Equiv

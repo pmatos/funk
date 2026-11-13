@@ -308,13 +308,12 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 /-! # A run with no allocation
 
 The core dialect's own rules touch no memory: its runs with memory keep the
-empty memories, and are its runs, by the tie `Core.liftsSetM`. No theorem on
-the core's runs uses that tie; it stays until the human rules on #373. -/
+empty memories, and are its runs, by the tie `Core.liftsSetM`, which stays
+until the human rules on #373. -/
 
 example (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) :
     f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args = f.runs M args := by
-  haveI : LiftsSetM CoreDialect := Core.liftsSetM
   rw [Func.memRuns_eq]
 
 end FirTest.MemoryRuns

@@ -107,7 +107,7 @@ are.
 *Theorem: every function of a valid core module runs well with memory.*
 If moreover $`M` is valid and $`f` is a function of $`M`, those runs have
 no stuck path and have an outcome at every budget, so they
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[run well],
+{ref "The-fir-specification--Execution--The-tracer-subset"}[run well],
 calls and recursion included. Every function of $`M` runs within $`M`
 with memory, and the core dialect is lawful in its totality.
 :::
@@ -139,7 +139,7 @@ apply. Only $`f` need be valid, not its module.
 *Theorem: every function of the tracer subset in a valid core module runs
 well with memory.* For every valid core module $`M`, every function $`f`
 of $`M` in the
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[tracer subset],
+{ref "The-fir-specification--Execution--The-tracer-subset"}[tracer subset],
 every vector $`v^*` of values of its parameter types and every layout and
 naming of the core's memories, the runs with memory of $`f` on $`v^*` run
 well, and so each of the three holds on its own. $`f` runs straight, so it

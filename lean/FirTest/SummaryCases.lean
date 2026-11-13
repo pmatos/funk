@@ -149,4 +149,10 @@ example {ctx : ModuleContext CoreDialect} {M : Module CoreDialect}
 /-- info: 'Fir.Module.summary_noPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Module.summary_noPoison
 
+/-- info: 'Fir.Module.summary_neverUB_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_neverUB_from
+
+/-- info: 'Fir.Module.summary_noPoison_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Module.summary_noPoison_from
+
 end FirTest.SummaryCases

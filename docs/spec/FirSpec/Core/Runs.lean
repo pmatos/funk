@@ -6,13 +6,13 @@ open Verso.Genre Manual
 open FirSpecSite
 
 /-!
-The readable blocks of the section on the runs of core functions, which
+The readable blocks of the section on the tracer subset, which
 renders `Fir.Core.Runs` (ADR-2026-11-05-2012). Each block explains
 declarations of that module and pins their fingerprint; the build fails
 when the Lean changes under it.
 -/
 
-#doc (Manual) "The runs of core functions: readable blocks" =>
+#doc (Manual) "The tracer subset: readable blocks" =>
 
 :::moduleDocs (fingerprint := "9786552517512518637")
 :::

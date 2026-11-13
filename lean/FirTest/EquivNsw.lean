@@ -42,7 +42,8 @@ gives `-2^31` and `add nsw` overflows, so gives poison. -/
 theorem shl_addNsw_fails_32 :
     ¬ funcRuns (pairs 32) (shlOne 32) ⊑ funcRuns (pairs 32) (addNswSelf 32) := by
   intro h
-  exact (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 h (.value 1073741824)
+  exact (unary_isRefinedBy_iff _ _ (shlOne_runs _ _) (addSelfWith_runs _ _ _)).1 h
+    (.value 1073741824)
 
 -- `fir-ref` agrees, on `2^30`.
 #guard runValid (pairsText 32) "@shl_one" ["1073741824"] == returns ["-2147483648"]
@@ -219,8 +220,9 @@ layout and naming. -/
 theorem addNsw_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) :=
-  (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).2
-      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (shlOne_runs _ _)).1 addNsw_shl_32)
+  unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => addSelfWith_runs lay ρ _)
+      (fun lay ρ => shlOne_runs lay ρ) addNsw_shl_32
 
 /-- Pair 4 at `i32`, both ways, for the runs with memory at every
 layout and naming. -/
@@ -228,9 +230,11 @@ theorem mulNsw_addNsw_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
     (mulNswTwo 32).memRuns lay ρ (pairs 32) ⊑ (addNswSelf 32).memRuns lay ρ (pairs 32) ∧
       (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulNswTwo 32).memRuns lay ρ (pairs 32) :=
-  ⟨(unary_isRefinedBy_iff lay ρ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).2
-      ((unary_isRefinedBy_iff _ _ (mulTwoWith_runs _ _ _) (addSelfWith_runs _ _ _)).1 mulNsw_addNsw_32),
-    (unary_isRefinedBy_iff lay ρ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).2
-      ((unary_isRefinedBy_iff _ _ (addSelfWith_runs _ _ _) (mulTwoWith_runs _ _ _)).1 addNsw_mulNsw_32)⟩
+  ⟨unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => mulTwoWith_runs lay ρ _)
+      (fun lay ρ => addSelfWith_runs lay ρ _) mulNsw_addNsw_32,
+    unary_isRefinedBy_transfer lay ρ
+      (fun lay ρ => addSelfWith_runs lay ρ _)
+      (fun lay ρ => mulTwoWith_runs lay ρ _) addNsw_mulNsw_32⟩
 
 end FirTest.Equiv

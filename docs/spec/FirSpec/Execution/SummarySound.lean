@@ -14,21 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11902575432533740743")
-:::
-
-:::readable Fir.DVals.Clean Fir.Env.Clean (fingerprint := "8528918267713506938")
-*Definition: values with no poison.* A list of values is _clean_ when no
-value of it is poison, and an environment is clean when no value it binds
-is.
-:::
-
-:::readable Fir.HVector.clean_toDVals Fir.mem_of_lookup Fir.Env.Clean.value Fir.Env.Clean.bind Fir.Env.Clean.mapM_value Fir.Env.Clean.operands (pin := Fir.HVector.Any) (fingerprint := "3442109685904206130")
-*Theorems: a clean environment gives clean values.* The values of an
-operand vector are clean exactly when no element of it is poison. A name
-that a list looks up is bound in it, so a value that a clean environment
-binds is not poison, and neither are the values or the operands found in
-it. Binding clean values in a clean environment leaves it clean.
+:::moduleDocs (fingerprint := "9844489512117009611")
 :::
 
 :::readable Fir.Func.mem_allOps Fir.Func.enter_ops Fir.Operation.call?_of (fingerprint := "11322144752609607633")
@@ -38,9 +24,11 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "16437460514696067429")
+:::readable Fir.Func.memCall_ub Fir.Func.memCall_ret Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "11432641747953504554")
 *Theorems: the ops of a function leave out what its summary leaves out,
-with memory.* Let every function of $`M` be valid, and let $`s` name the
+with memory.* A run in a call's frame hits UB only where its ops, run from
+the memories with a frame entered, hit UB, and returns what they return,
+with the frame left. Let every function of $`M` be valid, and let $`s` name the
 function $`f` of $`M`. Run its ops with memory, in the state layer over the
 set monad, from any of its ops on, from any memories, at any budget:
 
@@ -81,4 +69,15 @@ semantics with memory, so they give the hypotheses of the previous
 theorems, and no semantics in the set monad is asked for: an op that
 touches memory is covered too. A pass may rely on a summary as it relies
 on an op's effects (ADR-2026-11-09-1541).
+:::
+
+:::readable Fir.Module.summary_neverUB_from Fir.Module.summary_noPoison_from (pin := Fir.Func.memRunsFrom) (fingerprint := "5508738324192612352")
+*Theorems: function summaries are sound from given memories.* Under the
+hypotheses of the previous theorems, the same holds of the
+{ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs of $`f` from given memories],
+from any memories $`S`: if $`\mathsf{mayUB} \notin \mathrm{sum}_M(s)`, no
+run ends in UB, and if $`\mathsf{mayPoison} \notin \mathrm{sum}_M(s)`, a
+run on arguments with no poison returns no poison. A call runs its callee
+so, from the memories its caller reached, so a pass may rely on a callee's
+summary at each call.
 :::

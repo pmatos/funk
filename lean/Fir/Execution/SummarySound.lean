@@ -1,4 +1,5 @@
 import Fir.Execution.SummaryFixpoint
+import Fir.Execution.SummaryClean
 import Fir.Execution.MemoryCalls
 import Fir.Execution.MemoryCallSteps
 import Fir.Execution.EffectLaws
@@ -19,6 +20,9 @@ names the dialect's memories, whatever its ops do to the memories:
   a run of the function on arguments with no poison returns no poison
   (ADR-2026-11-09-1541).
 
+Both hold of its runs from given memories too, which is how a call runs
+its callee: from the memories its caller reached.
+
 The proofs follow a run with memory op by op, by induction on its fuel,
 from any memories, as the proofs of progress with memory do. Each op that
 runs by its own rule leaves out each effect that its function's summary
@@ -33,7 +37,8 @@ induction covers its run, recursion included.
   set monad is asked for, so an op that touches memory is covered too.
 * A call runs its callee, whose summary is below its caller's, so it leaves
   out the effects that its caller's leaves out.
-* For poison, the run keeps an environment with no poison: the arguments
+* For poison, the run keeps an environment with no poison (the section on
+  values with no poison): the arguments
   have none, the operands that it finds there have none, so neither do the
   results that an op gives, the values that a jump passes, the arguments
   of a callee, or the values that a callee returns.
@@ -42,91 +47,6 @@ induction covers its run, recursion included.
 namespace Fir
 
 open SetM Memory
-
-/-! # Values with no poison -/
-
-section Clean
-
-variable {d : Dialect} [TyDenote d.Ty] [TyPoison d.Ty]
-
-/-- No value of a list is poison. -/
-def DVals.Clean (vs : List (DVal d)) : Prop := ∀ v ∈ vs, ¬ TyPoison.IsPoison v.2
-
-/-- No value that an environment binds is poison. -/
-def Env.Clean (env : Env d) : Prop := ∀ p ∈ env, ¬ TyPoison.IsPoison p.2.2
-
-/-- The values of a vector have no poison when no element of it is poison. -/
-theorem HVector.clean_toDVals : ∀ {ts : List d.Ty} (xs : HVector toType ts),
-    DVals.Clean xs.toDVals ↔ ¬ xs.Any TyPoison.IsPoison
-  | [], .nil => ⟨fun _ h => h, fun _ _ h => nomatch h⟩
-  | _ :: _, .cons x xs => by
-    simp only [DVals.Clean, HVector.toDVals, List.mem_cons, forall_eq_or_imp, HVector.Any,
-      not_or]
-    exact and_congr Iff.rfl (HVector.clean_toDVals xs)
-
-/-- A name that a list looks up is bound in it. -/
-theorem mem_of_lookup {β : Type} {x : Name} {v : β} :
-    ∀ {l : List (Name × β)}, l.lookup x = some v → (x, v) ∈ l
-  | (y, u) :: l, h => by
-    simp only [List.lookup] at h
-    split at h
-    · rename_i hxy
-      cases h
-      rw [beq_iff_eq.1 hxy]
-      exact List.mem_cons_self
-    · exact List.mem_cons_of_mem _ (mem_of_lookup h)
-
-/-- A value that an environment with no poison binds is not poison. -/
-theorem Env.Clean.value {env : Env d} (h : env.Clean) {x : Name} {v : DVal d}
-    (hv : env.value x = .ok v) : ¬ TyPoison.IsPoison v.2 := by
-  simp only [Env.value] at hv
-  split at hv
-  · rename_i v' hl
-    cases hv
-    exact h _ (mem_of_lookup hl)
-  · cases hv
-
-/-- Binding values with no poison in an environment with none leaves none. -/
-theorem Env.Clean.bind {env : Env d} (h : env.Clean) (names : List Name) {vs : List (DVal d)}
-    (hvs : DVals.Clean vs) : Env.Clean (names.zip vs ++ env) := fun p hp => by
-  rcases List.mem_append.1 hp with hp | hp
-  · exact hvs _ (List.of_mem_zip hp).2
-  · exact h p hp
-
-/-- The values found in an environment with no poison have none. -/
-theorem Env.Clean.mapM_value {env : Env d} (h : env.Clean) :
-    ∀ {xs : List Name} {vs : List (DVal d)}, xs.mapM env.value = .ok vs → DVals.Clean vs
-  | [], _, hm => by cases hm; exact fun _ h => nomatch h
-  | x :: xs, vs, hm => by
-    simp only [List.mapM_cons] at hm
-    cases hx : env.value x with
-    | error e => rw [hx] at hm; cases hm
-    | ok v =>
-      cases hxs : xs.mapM env.value with
-      | error e => rw [hx, hxs] at hm; cases hm
-      | ok vs' =>
-        rw [hx, hxs] at hm
-        cases hm
-        intro w hw
-        rcases List.mem_cons.1 hw with rfl | hw
-        · exact h.value hx
-        · exact h.mapM_value hxs w hw
-
-variable [DecidableEq d.Ty]
-
-/-- The operands found in an environment with no poison have none. -/
-theorem Env.Clean.operands {env : Env d} (h : env.Clean) :
-    ∀ {ts : List d.Ty} {xs : List Name} {args : HVector toType ts},
-      env.operands ts xs = .ok args → ¬ args.Any TyPoison.IsPoison
-  | [], [], .nil, _ => fun h => h
-  | t :: ts, x :: xs, _, hm => by
-    obtain ⟨v, as, hx, hxs, rfl⟩ := Env.operands_cons_ok.1 hm
-    rintro (hp | hp)
-    · exact h.value hx hp
-    · exact h.operands hxs hp
-  | [], _ :: _, _, hm | _ :: _, [], _, hm => by cases hm
-
-end Clean
 
 /-! # Runs -/
 
@@ -159,6 +79,38 @@ section
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] [TyDenote d.Ty] [DecidableEq d.Ty]
   [TyPoison d.Ty] [DialectEffects d] [DialectValidation d]
   [DialectDenote d (StateT (Memories Mem unit) SetM)] {ctx : ModuleContext d} {M : Module d}
+
+omit [TyPoison d.Ty] [DialectEffects d] [DialectValidation d] in
+/-- A run in a call's frame hits UB only where its ops hit UB, from the
+memories with a frame entered. -/
+theorem Func.memCall_ub {M : Module d} {n : Nat} {g : Func d} {genv : Env d}
+    {body : List (Operation d)} {S : Memories Mem unit} {r : String}
+    (h : (Func.memCall M n g genv body S).run (.ub r)) :
+    (Func.memOps M n g genv body S.enter).run (.ub r) := by
+  rw [Func.memCall_eq] at h
+  rcases (SetM.run_map _ _ _).1 h with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨_, hu, he⟩
+  · cases he
+  · cases he
+  · cases he
+    exact hu
+
+omit [TyPoison d.Ty] [DialectEffects d] [DialectValidation d] in
+/-- A run in a call's frame returns what its ops return, from the memories
+with a frame entered, with the frame left. -/
+theorem Func.memCall_ret {M : Module d} {n : Nat} {g : Func d} {genv : Env d}
+    {body : List (Operation d)} {S : Memories Mem unit} {vs : List (DVal d)}
+    {S' : Memories Mem unit} {k : Nat}
+    (h : (Func.memCall M n g genv body S).run (.ok (.ok (.ret ((vs, S'), k))))) :
+    ∃ T, (Func.memOps M n g genv body S.enter).run (.ok (.ok (.ret ((vs, T), k)))) := by
+  rw [Func.memCall_eq] at h
+  rcases (SetM.run_map _ _ _).1 h with ⟨a, ha, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
+  · match a, ha, he with
+    | .ret ((_, T), _), ha, he =>
+      cases he
+      exact ⟨T, ha⟩
+    | .fuelExhausted, _, he => cases he
+  · cases he
+  · cases he
 
 omit [TyPoison d.Ty] in
 /-- No run with memory of ops of a function of `M` ends in UB when the
@@ -212,12 +164,7 @@ theorem Module.memOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx)
       · rfl
       · exact absurd ((M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
           (Operation.call?_of hT hc) (by simp [hg'])).mayUB he) (by simp [hs])
-    rw [Func.memCall_eq] at hx
-    rcases (SetM.run_map _ _ _).1 hx with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨u, hu, he⟩
-    · cases he
-    · cases he
-    · cases he
-      exact ih n (Nat.lt_succ_self n) c g _ _ _ _ hg hcs (Func.enter_ops hen).1 hu
+    exact ih n (Nat.lt_succ_self n) c g _ _ _ _ hg hcs (Func.enter_ops hen).1 (Func.memCall_ub hx)
   | callRet _ _ _ _ _ _ _ _ _ hrun =>
     exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ r hf hs htail hrun
 
@@ -279,19 +226,9 @@ theorem Module.memOps_clean (hv : ∀ g ∈ M.funcs, g.Valid ctx)
       · exact absurd ((M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
           (Operation.call?_of hT hc) (by simp [hg'])).mayPoison he) (by simp [hs])
     obtain ⟨hops, rfl⟩ := Func.enter_ops hen
-    have hgenv : Env.Clean ((g.params.map (·.1)).zip args.toDVals) := by
-      simpa using (show Env.Clean ([] : Env d) from fun _ h => nomatch h).bind
-        (g.params.map (·.1)) ((HVector.clean_toDVals args).2 (henv.operands hargs))
-    have hvs' : DVals.Clean vs' := by
-      rw [Func.memCall_eq] at hcallee
-      rcases (SetM.run_map _ _ _).1 hcallee with ⟨a, ha, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
-      · match a, ha, he with
-        | .ret ((vs₀, T), k₀), ha, he =>
-          cases he
-          exact ih n (Nat.lt_succ_self n) c g _ _ _ _ _ _ hg hcs hgenv hops ha
-        | .fuelExhausted, _, he => cases he
-      · cases he
-      · cases he
+    obtain ⟨T, hT'⟩ := Func.memCall_ret hcallee
+    have hvs' : DVals.Clean vs' := ih n (Nat.lt_succ_self n) c g _ _ _ _ T _ hg hcs
+      (Env.Clean.params _ args (henv.operands hargs)) hops hT'
     exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ vs S' k hf hs
       (henv.bind _ hvs') htail hrun
 
@@ -321,7 +258,8 @@ theorem Module.summary_neverUB (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} 
   · rcases x with ⟨_, _⟩ | _ <;> cases (run_pure _ _).1 h
   · cases he
   · cases he
-    exact Module.memOps_notUB hv (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ)
+    exact Module.memOps_notUB hv
+      (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ)
       fuel s f _ _ _ _ hf hs (Func.enter_ops hen).1 hr
 
 /-- A run with memory of a function of `M` on arguments with no poison
@@ -340,9 +278,7 @@ theorem Module.summary_noPoison (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name}
   rw [Func.memRuns_enter lay ρ M f args fuel hen] at h
   unfold Result.finish at h
   obtain ⟨hops, -⟩ := Func.enter_ops hen
-  have henv : Env.Clean ((f.params.map (·.1)).zip args.toDVals) := by
-    simpa using (show Env.Clean ([] : Env d) from fun _ h => nomatch h).bind
-      (f.params.map (·.1)) ((HVector.clean_toDVals args).2 hargs)
+  have henv := Env.Clean.params (f.params.map (·.1)) args hargs
   rcases (run_bind _ _ _).1 h with ⟨x, hx, h⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
   · rcases x with ⟨⟨vs', S'⟩, k⟩ | _ <;> cases (run_pure _ _).1 h
     exact Module.memOps_clean hv
@@ -350,5 +286,54 @@ theorem Module.summary_noPoison (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name}
       fuel s f _ e.body _ vs' S' k hf hs henv hops hx
   · cases he
   · cases he
+
+/-- No run with memory of a function of `M` from given memories ends in UB
+when its summary leaves out may-UB, at any budget of fuel, wherever a run
+names the dialect's memories: a call runs its callee so, from its caller's
+memories. -/
+theorem Module.summary_neverUB_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d}
+    (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
+    (args : HVector toType (f.params.map (·.2))) (S : Memories N (unitsOf lay)) (fuel : Nat)
+    (r : String) :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    ¬ f.memRunsFrom M (args, S) fuel (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  intro h
+  obtain ⟨⟨body, env⟩, hen, e, he, hx⟩ :=
+    (Func.memRunsFrom_run (x := .ub r) (fun _ h => nomatch h)).1 h
+  have hub : e = .ub r := by
+    match e, hx with
+    | .ub _, hx => cases hx; rfl
+    | .ok (.ok (.ret _)), hx | .ok (.ok .fuelExhausted), hx | .ok (.error _), hx => cases hx
+  subst hub
+  exact Module.memOps_notUB hv
+    (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ)
+    fuel s f _ _ _ _ hf hs (Func.enter_ops hen).1 (Func.memCall_ub he)
+
+/-- A run with memory of a function of `M` from given memories, on arguments
+with no poison, returns no poison when its summary leaves out may produce
+poison, at any budget of fuel, wherever a run names the dialect's memories:
+a call runs its callee so, from its caller's memories. -/
+theorem Module.summary_noPoison_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name}
+    {f : Func d} (hf : M.func? s = some f) (hs : (M.table.summary s).mayPoison = false)
+    (args : HVector toType (f.params.map (·.2))) (hargs : ¬ args.Any TyPoison.IsPoison)
+    (S : Memories N (unitsOf lay)) (fuel : Nat) (vs : List (DVal d))
+    (S' : Memories N (unitsOf lay)) :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.memRunsFrom M (args, S) fuel (.ok (.ok (.ret (vs, S')))) → DVals.Clean vs := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  intro h
+  obtain ⟨⟨body, env⟩, hen, e, he, hx⟩ :=
+    (Func.memRunsFrom_run (x := .ok (.ok (.ret (vs, S')))) (fun _ h => nomatch h)).1 h
+  have hret : ∃ k, e = .ok (.ok (.ret ((vs, S'), k))) := by
+    match e, hx with
+    | .ok (.ok (.ret (_, k))), hx => cases hx; exact ⟨k, rfl⟩
+    | .ub _, hx | .ok (.ok .fuelExhausted), hx | .ok (.error _), hx => cases hx
+  obtain ⟨k, rfl⟩ := hret
+  obtain ⟨hops, rfl⟩ := Func.enter_ops hen
+  obtain ⟨T, hT⟩ := Func.memCall_ret he
+  exact Module.memOps_clean hv
+    (fun op hv' hT hc hown => LawfulDialectEffects.makesNoPoison op hv' (.inr hc) hown hT lay ρ)
+    fuel s f _ _ _ _ T _ hf hs (Env.Clean.params _ args hargs) hops hT
 
 end Fir

@@ -182,8 +182,9 @@ its module's layout, the runs that the modes report; the equivalence tests,
 the tests of the dialects over the core and the core's effect tests are stated
 over runs with memory and do not use it either (stage 4b-3b). `Core.liftsSetM`
 stays, with the core's form of congruence over finitely many argument vectors
-over the runs in the set monad, until the human rules on #373; only the test
-of the tie itself uses it. A memory op joins with its own rule in
+over the runs in the set monad, until the human rules on #373. It remains an
+instance, so the sums over the core get `LiftsSetM` from it; on #374, a build
+with it removed broke only the test of the tie itself. A memory op joins with its own rule in
 `Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
 memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the

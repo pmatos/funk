@@ -62,9 +62,11 @@ def coreToyEffects (o : CoreToy.Op) : Effects (Core.Mem ⊕ Empty) := effects o
 The spec's runs of the sum are its runs with memory: each side's semantics
 with memory, the core's rules with memory and the toy op's rule lifted into
 the state layer, at every layout and naming of the sum's memories. The tests
-run the same rules in `Mix`, a tree of choices whose paths with no outcome
-name the op without a rule, as `fir-ref run` runs the core dialect's, and
-walk it in scripted mode with no choices. -/
+run the rules without memory in `Mix`, a tree of choices whose paths with no
+outcome name the op without a rule, and walk it in scripted mode with no
+choices. No op of the sum touches memory yet, so each runs there as it runs
+with memory; `fir-ref run` runs the core dialect alone with memory, in the
+state layer over the tree. -/
 
 example (M : Module CoreToy) (f : Func CoreToy) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) {N : Type} [DecidableEq N] (lay : N → MemLayout)

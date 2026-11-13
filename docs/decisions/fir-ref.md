@@ -40,7 +40,9 @@ without rules (ADR-2026-10-29-2006).
 
 ### The tree of choices
 
-The spec's meaning of a run is `Func.run` in the set monad `SetM`. A program
+The spec's meaning of a run of a core function is its run with memory,
+`Core.funcRuns`: `Func.run` in the state layer over the set monad `SetM`, at
+the module's layout (semantics-effects.md). A program
 cannot list a predicate's members, so the spec also has `ChoiceTree`, a monad
 whose computations are trees (`lean/Fir/Execution/ChoiceTree.lean`). A leaf
 ends a path with a result, with UB, or with no outcome for a reason.
