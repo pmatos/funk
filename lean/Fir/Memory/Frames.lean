@@ -27,28 +27,52 @@ The interpreter enters a frame when it starts to run a function and leaves it
 when the function returns (the section on the memory effect), so each call's
 stack allocations are freed when it returns, and no other allocation is.
 Freeing never faults, so leaving a frame never does either.
+
+The memories are kept as a _table_: a list of memories, each with its name.
+The memory of a name is the first one of that name in the table, and a name
+that the table does not hold names the empty memory, which every memory is
+before the run allocates in it. Replacing a memory puts the new one first and
+drops the old one, so the table holds each name at most once, and grows only
+when a memory that the run has not touched before changes. Finding a memory
+then looks at no more entries than the run has memories, however many
+stores, allocations and frees came before, and takes no stack for them
+(`docs/decisions/fir-ref-memory.md`).
 -/
 
 namespace Fir.Memory
 
 /-- The memories of a run, for memories named by `Mem` whose units are
-`unit x` bits wide for the memory `x`: each memory, and the frames of the
-calls that have not returned, the innermost first. A frame lists the stack
-allocations its call made, each by its memory and its id. -/
+`unit x` bits wide for the memory `x`: the table of the memories, each with
+its name, and the frames of the calls that have not returned, the innermost
+first. A frame lists the stack allocations its call made, each by its memory
+and its id. -/
 structure Memories (Mem : Type) (unit : Mem → Nat) where
-  mem : (x : Mem) → Memory (unit x)
+  table : List (Σ x : Mem, Memory (unit x))
   frames : List (List (Mem × AllocId))
 
 namespace Memories
 
 variable {Mem : Type} {unit : Mem → Nat}
 
-/-- The memories of a run before anything is allocated, outside every call. -/
-def empty : Memories Mem unit := ⟨fun _ => .empty, []⟩
+/-- The memories of a run before anything is allocated, outside every call:
+no memory in the table, so each is empty. -/
+def empty : Memories Mem unit := ⟨[], []⟩
 
 /-- Enters a call: pushes an empty frame. -/
 def enter (S : Memories Mem unit) : Memories Mem unit :=
   { S with frames := [] :: S.frames }
+
+variable [DecidableEq Mem]
+
+/-- The memory `x` of a table: the first one of its name, or the empty
+memory when the table has none. -/
+def lookup (x : Mem) : List (Σ y : Mem, Memory (unit y)) → Memory (unit x)
+  | [] => .empty
+  | ⟨y, m⟩ :: t => if h : y = x then h ▸ m else lookup x t
+
+/-- The memory `x` of the memories of a run. -/
+def mem (S : Memories Mem unit) (x : Mem) : Memory (unit x) :=
+  lookup x S.table
 
 /-- Loads `n` units of the memory `x` through `p`, or gives the fault that
 makes the load UB. -/
@@ -56,11 +80,9 @@ def load (S : Memories Mem unit) (x : Mem) (p : Pointer) (n : Nat) :
     Except Fault (List (MemUnit (unit x))) :=
   (S.mem x).load p n
 
-variable [DecidableEq Mem]
-
 /-- The memories with the memory `x` replaced by `m`. -/
 def set (S : Memories Mem unit) (x : Mem) (m : Memory (unit x)) : Memories Mem unit :=
-  { S with mem := fun y => if h : x = y then h ▸ m else S.mem y }
+  { S with table := ⟨x, m⟩ :: S.table.filter fun e => !decide (e.1 = x) }
 
 /-- Records the stack allocation `a` of the memory `x` in the innermost
 frame. Outside every call there is no frame, and nothing is recorded, so
