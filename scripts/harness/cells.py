@@ -229,73 +229,71 @@ def catalog(
                 ),
             )
         )
-    tables.append(
-        Table(
-            "casts",
-            integers,
-            tuple(
-                Row(
-                    op,
-                    ty(m),
-                    tuple(
-                        Cell("casts", op, ty(m), ty(n)) if allowed(op, m, n) else None
-                        for n in widths
-                    ),
-                )
-                for op in CASTS
-                for m in widths
+    tables.extend(
+        [
+            Table(
+                "casts",
+                integers,
+                tuple(
+                    Row(
+                        op,
+                        ty(m),
+                        tuple(
+                            Cell("casts", op, ty(m), ty(n))
+                            if allowed(op, m, n)
+                            else None
+                            for n in widths
+                        ),
+                    )
+                    for op in CASTS
+                    for m in widths
+                ),
             ),
-        )
-    )
-    tables.append(
-        Table(
-            "bitcasts",
-            ("",),
-            tuple(
-                Row("bitcast", a, (Cell("conversions", "bitcast", a, b),))
-                for f in formats
-                for a, b in ((f, bits_type(f)), (bits_type(f), f))
+            Table(
+                "bitcasts",
+                ("",),
+                tuple(
+                    Row("bitcast", a, (Cell("conversions", "bitcast", a, b),))
+                    for f in formats
+                    for a, b in ((f, bits_type(f)), (bits_type(f), f))
+                ),
             ),
-        )
-    )
-    tables.append(
-        Table(
-            "int_to_float",
-            formats,
-            tuple(
-                Row(op, a, tuple(Cell("conversions", op, a, b) for b in formats))
-                for op in INT_TO_FLOAT
-                for a in integers
+            Table(
+                "int_to_float",
+                formats,
+                tuple(
+                    Row(op, a, tuple(Cell("conversions", op, a, b) for b in formats))
+                    for op in INT_TO_FLOAT
+                    for a in integers
+                ),
             ),
-        )
-    )
-    tables.append(
-        Table(
-            "float_conversions",
-            formats,
-            tuple(
-                Row(
-                    "",
-                    a,
-                    tuple(
-                        Cell("conversions", conversion(a, b), a, b) if a != b else None
-                        for b in formats
-                    ),
-                )
-                for a in formats
+            Table(
+                "float_conversions",
+                formats,
+                tuple(
+                    Row(
+                        "",
+                        a,
+                        tuple(
+                            Cell("conversions", conversion(a, b), a, b)
+                            if a != b
+                            else None
+                            for b in formats
+                        ),
+                    )
+                    for a in formats
+                ),
             ),
-        )
-    )
-    tables.append(
-        Table(
-            "float_to_int",
-            integers,
-            tuple(
-                Row(op, a, tuple(Cell("conversions", op, a, b) for b in integers))
-                for op in FLOAT_TO_INT
-                for a in formats
+            Table(
+                "float_to_int",
+                integers,
+                tuple(
+                    Row(op, a, tuple(Cell("conversions", op, a, b) for b in integers))
+                    for op in FLOAT_TO_INT
+                    for a in formats
+                ),
             ),
-        )
+        ]
     )
     if offsets:
         columns = tuple(map(ty, offsets))
