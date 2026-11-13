@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9018222025171826093")
 :::
 
-:::readable Fir.Core.ret_total Fir.Core.ret_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "8190954320909487801")
+:::readable Fir.Core.ret_total Fir.Core.ret_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "1471280454224055981")
 *Theorem: $`\mathsf{ret}` is total and monotone.* For every list of
 result types $`t^*`, under fir's execution rules, $`\mathsf{ret}~t^*` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total] and
@@ -38,7 +38,7 @@ $`\mathsf{ret}` is an exception to poison propagation, so these are the
 only obligations it has.
 :::
 
-:::readable Fir.Core.unreachable_exit Fir.Core.unreachable_total Fir.Core.unreachable_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.unreachableExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "4151426202355705361")
+:::readable Fir.Core.unreachable_exit Fir.Core.unreachable_total Fir.Core.unreachable_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.unreachableExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "13979654105211892917")
 *Theorem: $`\mathsf{unreachable}` is total and monotone.* Under fir's
 execution rules, $`\mathsf{unreachable}` ends in UB and in nothing else,
 and so it is

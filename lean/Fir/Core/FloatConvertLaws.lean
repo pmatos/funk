@@ -26,11 +26,13 @@ theorem convertFloat_ends (e m e' m' : Nat) (a : PoisonOr (BitVec (floatWidth e 
     Ends (convertFloat (μ := SetM) e m e' m' a) := by
   cases a <;> first | exact pure_ends _ | (dsimp only [convertFloat]; exact floatResult_ends e' m' _)
 
-/-- The rule of `fpext` and `fptrunc` in the tree of choices has the set
-monad's as its set. -/
-theorem convertFloat_toSet {ε : Type} (e m e' m' : Nat) (a : PoisonOr (BitVec (floatWidth e m))) :
-    (convertFloat (μ := ChoiceTree ε) e m e' m' a).toSet = convertFloat e m e' m' a := by
-  cases a <;> first | rfl | (dsimp only [convertFloat]; exact floatResult_toSet _)
+/-- A morphism that keeps choice and UB maps the rule of `fpext` and
+`fptrunc` in one monad to their rule in the other. -/
+theorem convertFloat_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadChoice ν]
+    [MonadUB μ] [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) (e m e' m' : Nat)
+    (a : PoisonOr (BitVec (floatWidth e m))) :
+    φ.map (convertFloat (μ := μ) e m e' m' a) = convertFloat e m e' m' a := by
+  cases a <;> first | exact φ.map_pure _ | (dsimp only [convertFloat]; exact floatResult_map φ hk _)
 
 section
 variable (e m e' m' : Nat)

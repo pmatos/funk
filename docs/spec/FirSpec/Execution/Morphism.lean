@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15626283038852106973")
+:::moduleDocs (fingerprint := "3700110691101043547")
 :::
 
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
@@ -60,6 +60,18 @@ below. A step that ends at once, with an error or with a value, is
 unchanged by the translation that keeps errors. And a computation $`x` of
 $`m`, lifted to one whose paths may also end with an error, translates to
 $`\varphi(x)`, lifted the same way.
+:::
+
+:::readable Fir.MonadMorphism.KeepsChoiceUB (fingerprint := "9918212152727544985")
+*Definition: a translation that keeps choice and UB.* For monads $`m` and
+$`n` with the
+{ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
+a monad morphism $`\varphi` from $`m` to $`n` _keeps choice and UB_ when,
+for every width $`w` and reason $`r`,
+$`\varphi(\mathrm{choose}^m~w) = \mathrm{choose}^n~w` and
+$`\varphi(\mathsf{ub}^m~r) = \mathsf{ub}^n~r`. An op rule written once for
+any monad with these effects then means in $`n` what $`\varphi` makes of
+it in $`m`.
 :::
 
 :::readable Fir.MonadMorphism.MapsFrame Fir.MonadMorphism.except_inFrame (pin := Fir.MonadFrame) (pin := Fir.inFrame) (fingerprint := "15244815885718087586")

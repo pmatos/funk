@@ -25,7 +25,9 @@ No UB fares the same way: mapping keeps it, and a computation of the set
 monad with no UB, run in the state layer, has none from any memories. So
 such a dialect's semantics with memory lifts its semantics in the set
 monad, and its ops meet the obligations on may-UB and poison with memory
-when they meet them in the set monad. The last section goes back: in a
+when they meet them in the set monad. Each of these holds of one op that
+is tied, too, so a dialect can meet the obligations op by op: the core
+dialect does. The last section goes back: in a
 dialect that lifts the set monad, an op that meets them with memory meets
 them in the set monad, which is how the theorems over runs in the set
 monad use them.
@@ -236,6 +238,42 @@ theorem MakesNoPoison.ofSetM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoisonSetM 
   · cases he
     exact h ht args hnp _ ha
   · cases he
+
+/-! # Ops that touch no memory -/
+
+section
+
+variable [DialectMemDenote d] {op : d.Op} (hl : OpLiftsSetM op)
+include hl
+
+/-- What an op that touches no memory runs by its own rule has every
+property that each computation of the set monad, run in the state layer,
+has: no write, no read and no allocation in any memory among them. -/
+theorem OwnRuleHas.ofLifts {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem d → N) {P : {α : Type} → StateT (Memories N (unitsOf lay)) SetM α → Prop}
+    (hP : ∀ {α : Type} (c : SetM α), P (StateT.lift c)) : OwnRuleHas lay ρ P op :=
+  fun args => by
+    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+    exact ⟨fun _ => hP _, fun _ => hP _⟩
+
+/-- An op that touches no memory and never ends in UB in the set monad never
+does with memory, at every naming. -/
+theorem NeverUB.ofLifts (h : NeverUBSetM op) : NeverUB op :=
+  fun lay ρ args => by
+    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+    exact ⟨fun ht => noUB_lift fun r => (h args r).1 ht, fun ht => noUB_lift fun r => (h args r).2 ht⟩
+
+/-- An op that touches no memory and makes no poison in the set monad makes
+none with memory, at every naming. -/
+theorem MakesNoPoison.ofLifts [TyPoison d.Ty] (h : MakesNoPoisonSetM op) : MakesNoPoison op := by
+  intro ht N _ lay ρ args hnp S rs S' hden
+  rw [(hl lay ρ args).1] at hden
+  rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
+  · cases he
+    exact h ht args hnp _ ha
+  · cases he
+
+end
 
 /-! # Back to the set monad -/
 

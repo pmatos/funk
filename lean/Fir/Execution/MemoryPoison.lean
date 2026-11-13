@@ -35,10 +35,11 @@ terminator's exit passes values on and is an exception, and an op with a
 callee runs its callee. They speak only of valid op instances.
 
 A computation of the set monad, run in the state layer, keeps the memories
-and ends as it ends in the set monad. So in a dialect that lifts the set
-monad, as every dialect whose ops touch no memory does, an op meets each
-obligation with memory exactly when it meets it in the set monad, and a
-lawful dialect is lawful in its poison with memory. A sum and a lift run an
+and ends as it ends in the set monad. So an op that is tied, as every op
+that touches no memory is, meets each obligation with memory when it meets
+it in the set monad. In a dialect that lifts the set monad, every op is
+tied, an op meets each obligation with memory exactly when it meets it in
+the set monad, and a lawful dialect is lawful in its poison with memory. A sum and a lift run an
 op of a side by that side's rule with its results mapped (the section on
 the poison of a sum and a lift, with memory).
 
@@ -123,28 +124,42 @@ abbrev LawfulDialectMem (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinem
 
 end
 
-/-! # Dialects whose ops touch no memory -/
+/-! # Ops that touch no memory -/
 
 variable {d : Dialect} [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d] [DialectEffects d]
-  [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d]
+  [DialectDenote d SetM] [DialectMemDenote d]
 
-/-- In a dialect that lifts the set monad, an op that propagates poison in
-the set monad propagates it with memory. -/
-theorem MemPropagatesPoison.ofLifts {op : d.Op} (h : PropagatesPoison op) :
+/-- An op that touches no memory and propagates poison in the set monad
+propagates it with memory. -/
+theorem MemPropagatesPoison.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : PropagatesPoison op) :
     MemPropagatesPoison op where
   poisonOut lay ρ args hany S rs S' hden := by
-    rw [LiftsSetM.lifts lay ρ] at hden
+    rw [(hl lay ρ args).1] at hden
     rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
     · cases he
       exact h.poisonOut args hany rs ha
     · cases he
   ubByOwnRules lay ρ args S r hany hden := by
-    rw [LiftsSetM.lifts lay ρ] at hden ⊢
+    rw [(hl lay ρ args).1] at hden
     rcases (SetM.lift_apply _ S _).1 hden with ⟨_, -, he⟩ | ⟨r₀, hr, he⟩
     · cases he
     · cases he
       obtain ⟨args', hfill, r', hub⟩ := h.ubByOwnRules args r hany hr
-      exact ⟨args', hfill, r', (SetM.lift_apply _ S _).2 (.inr ⟨r', hub, rfl⟩)⟩
+      refine ⟨args', hfill, r', ?_⟩
+      rw [(hl lay ρ args').1]
+      exact (SetM.lift_apply _ S _).2 (.inr ⟨r', hub, rfl⟩)
+
+/-- An op that touches no memory and returns a result on defined operands in
+the set monad returns one with memory, from any memories. -/
+theorem MemReturnsOnDefined.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : ReturnsOnDefined op) :
+    MemReturnsOnDefined op := by
+  intro _ _ lay ρ
+  obtain ⟨args, hnp, rs, hrs⟩ := h
+  refine ⟨args, hnp, Memories.empty.enter, rs, Memories.empty.enter, List.cons_ne_nil _ _, ?_⟩
+  rw [(hl lay ρ args).1]
+  exact (SetM.lift_apply _ _ _).2 (.inl ⟨rs, hrs, rfl⟩)
+
+variable [LiftsSetM d]
 
 /-- In a dialect that lifts the set monad, an op that propagates poison with
 memory propagates it in the set monad. -/
@@ -167,17 +182,6 @@ theorem MemPropagatesPoison.setM {op : d.Op} (h : MemPropagatesPoison op) :
       exact ⟨args', hfill, r', hr⟩
 
 /-- In a dialect that lifts the set monad, an op that returns a result on
-defined operands in the set monad returns one with memory, from any
-memories. -/
-theorem MemReturnsOnDefined.ofLifts {op : d.Op} (h : ReturnsOnDefined op) :
-    MemReturnsOnDefined op := by
-  intro _ _ lay ρ
-  rw [LiftsSetM.lifts lay ρ]
-  obtain ⟨args, hnp, rs, hrs⟩ := h
-  exact ⟨args, hnp, Memories.empty.enter, rs, Memories.empty.enter, List.cons_ne_nil _ _,
-    (SetM.lift_apply _ _ _).2 (.inl ⟨rs, hrs, rfl⟩)⟩
-
-/-- In a dialect that lifts the set monad, an op that returns a result on
 defined operands with memory returns one in the set monad. -/
 theorem MemReturnsOnDefined.setM {op : d.Op} (h : MemReturnsOnDefined op) :
     ReturnsOnDefined op := by
@@ -195,9 +199,11 @@ variable [TyRefinement d.Ty] [DialectCall d] [DialectValidation d]
 memory: its poison obligations in the set monad hold with memory. -/
 theorem LawfulDialectMemPoison.ofLawful [LawfulDialectPoison d] : LawfulDialectMemPoison d where
   poison_isRefinedBy := LawfulDialectPoison.poison_isRefinedBy
-  propagates op hv hc := MemPropagatesPoison.ofLifts (LawfulDialectPoison.propagates op hv hc)
+  propagates op hv hc :=
+    MemPropagatesPoison.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.propagates op hv hc)
   returnsOnDefined op hv hc :=
-    MemReturnsOnDefined.ofLifts (LawfulDialectPoison.returnsOnDefined op hv hc)
+    MemReturnsOnDefined.ofLifts (LiftsSetM.opLifts op)
+      (LawfulDialectPoison.returnsOnDefined op hv hc)
 
 /-- A dialect that lifts the set monad and is lawful in its poison, its
 totality and its monotonicity with memory is lawful: each obligation with

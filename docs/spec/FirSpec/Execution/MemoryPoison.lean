@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Poison obligations with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5466025618371562006")
+:::moduleDocs (fingerprint := "7803779081920680412")
 :::
 
 :::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "14323327561986073065")
@@ -67,16 +67,16 @@ it then holds every poison obligation over the semantics with memory, as
 holds them in the set monad.
 :::
 
-:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (fingerprint := "13077384238043551035")
-*Theorems: the poison obligations with memory, for a dialect that lifts the
-set monad.* In a dialect that
-{ref "The-fir-specification--Memory--Runs-with-memory"}[lifts the set monad],
-as every dialect whose ops touch no memory does, an op propagates poison
-with memory exactly when it propagates poison in the set monad, and returns
-a result on defined operands with memory exactly when it does in the set
-monad. Its semantics with memory runs its rule in the set monad and keeps
+:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpLiftsSetM) (fingerprint := "11433492997181876195")
+*Theorems: the poison obligations with memory, for an op that touches no
+memory.* An op that is
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and
+propagates poison in the set monad propagates it with memory, and one that
+returns a result on defined operands in the set monad returns one with
+memory. Its semantics with memory runs its rule in the set monad and keeps
 the memories, so a result, UB and the operands that fill a poison are the
-same from every memories.
+same from every memories. In a dialect that lifts the set monad, every op
+is tied, and the converses hold too.
 :::
 
 :::readable Fir.LawfulDialectMemPoison.ofLawful Fir.LawfulDialectPoison.ofMem Fir.LawfulDialectPoison.iff_mem (pin := Fir.LawfulDialectPoison) (fingerprint := "11942904318688002526")

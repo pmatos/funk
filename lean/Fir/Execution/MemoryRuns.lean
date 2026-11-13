@@ -27,6 +27,14 @@ memory of a function of such a dialect is then its run in the set monad,
 with the memories it started from; its runs with memory are its runs, and
 every theorem about its runs holds of them. The core dialect is such a
 dialect, and so are the dialects of the tests and their sums.
+
+The tie also holds of one op: an op is _tied_ when it runs with memory by
+its rule in the set monad and keeps the memories. A dialect lifts the set
+monad exactly when every op is tied, so a dialect can tie each op on its
+own, and an op that touches memory can sit beside tied ones. Lifting keeps
+choice, and UB, which ends a path in the set monad whatever follows it, so
+it maps a rule written once for any monad with those effects to the same
+rule in the layer: the core dialect ties its ops so.
 -/
 
 namespace Fir
@@ -52,6 +60,32 @@ def MonadMorphism.liftState (σ : Type) :
   map_map g x := by
     funext s
     simp [StateT.lift, Functor.map, StateT.map]
+
+/-- Lifting into the layer keeps choice, and keeps UB when UB in the monad
+below ends a path whatever follows it. -/
+theorem MonadMorphism.liftState_keeps [MonadChoice m] [MonadUB m] (σ : Type)
+    (hub : ∀ {α β : Type} (r : String) (f : α → m β), MonadUB.ub r >>= f = MonadUB.ub r) :
+    (MonadMorphism.liftState m σ).KeepsChoiceUB where
+  choose w := by
+    funext s
+    show MonadChoice.choose w >>= (fun b => pure (b, s)) =
+      (fun b => (b, s)) <$> MonadChoice.choose w
+    rw [map_eq_pure_bind]
+  ub r := by
+    funext s
+    exact hub r _
+
+/-- UB in the set monad ends a path whatever follows it. -/
+theorem SetM.ub_bind {α β : Type} (r : String) (f : α → SetM β) :
+    (MonadUB.ub r : SetM α) >>= f = MonadUB.ub r := by
+  funext e
+  apply propext
+  show ((∃ a, Ev.ok a = .ub r ∧ f a e) ∨ ∃ r', Ev.ub r' = .ub r ∧ e = .ub r') ↔ e = .ub r
+  constructor
+  · rintro (⟨_, h, _⟩ | ⟨_, h, rfl⟩) <;> cases h
+    rfl
+  · rintro rfl
+    exact .inr ⟨r, rfl, rfl⟩
 
 section
 
@@ -111,6 +145,37 @@ class LiftsSetM (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffec
   lifts : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
     DialectMemDenote.denoteAt lay ρ =
       DialectDenote.liftState (m := SetM) (Memories N (unitsOf lay))
+
+section
+
+variable [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM]
+
+/-- The op touches no memory: wherever a run names the dialect's memories,
+whatever their entries, it runs with memory by its rule in the set monad
+and keeps the memories, both as an op that is not a terminator and as a
+terminator. The tie of one op, so that each op of a dialect can be tied on
+its own, and an op that touches memory can sit beside tied ones. -/
+def OpLiftsSetM (op : d.Op) : Prop :=
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    ∀ args : HVector toType (sig op),
+      DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args =
+          StateT.lift (DialectDenote.denote (m := SetM) op args) ∧
+        DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args =
+          StateT.lift (DialectDenote.exit (m := SetM) op args)
+
+/-- In a dialect that lifts the set monad, every op is tied. -/
+theorem LiftsSetM.opLifts [LiftsSetM d] (op : d.Op) : OpLiftsSetM op := by
+  intro N _ lay ρ args
+  rw [LiftsSetM.lifts lay ρ]
+  exact ⟨rfl, rfl⟩
+
+/-- A dialect whose every op is tied lifts the set monad. -/
+theorem LiftsSetM.ofOpLifts (h : ∀ op : d.Op, OpLiftsSetM op) : LiftsSetM d :=
+  ⟨fun lay ρ => DialectDenote.ext (fun op args => (h op lay ρ args).1)
+    (fun op args => (h op lay ρ args).2)⟩
+
+end
 
 /-! # The runs with memory of a function -/
 

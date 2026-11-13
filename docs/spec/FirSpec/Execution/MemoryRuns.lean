@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7466621547453454705")
+:::moduleDocs (fingerprint := "2221092474660519569")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -28,6 +28,17 @@ This is a monad morphism from $`m` to the layer over it.
 itself, as in the set monad, lifting keeps frames: entering a call and
 leaving it at once gives back the memories,
 $`\mathrm{exit}(\mathrm{enter}(S)) = S`.
+:::
+
+:::readable Fir.MonadMorphism.liftState_keeps Fir.SetM.ub_bind (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "750416787570381964")
+*Theorem: lifting keeps choice and UB.* Lifting into the layer keeps a
+choice of $`w` bits: choosing and then keeping the state is choosing in
+the layer. It keeps UB when, in $`m`, UB ends a path whatever follows it:
+$`\mathsf{ub}~r \mathbin{>\!\!>\!\!=} f = \mathsf{ub}~r` for every $`f`.
+
+*Theorem: UB in the set monad ends a path.* In the set monad,
+$`\mathsf{ub}~r \mathbin{>\!\!>\!\!=} f = \{\mathsf{ub}~r\}`: UB has no
+result for $`f` to go on from.
 :::
 
 :::readable Fir.DialectDenote.liftState Fir.DialectDenote.liftState_mapsDenote (fingerprint := "1253374098376535126")
@@ -54,6 +65,22 @@ for $`\mathrm{exit}_o`. This ties the two semantics of a dialect whose ops
 touch no memory, such as the core dialect, the dialects of the tests and
 their sums and lifts. A dialect with an op that touches memory has no such
 tie, since the op has no semantics in the set monad.
+:::
+
+:::readable Fir.OpLiftsSetM Fir.LiftsSetM.opLifts Fir.LiftsSetM.ofOpLifts (fingerprint := "981677484677804318")
+*Definition: an op that touches no memory.* An op $`o` of a dialect is
+_tied_ when, at every naming $`\rho` of the dialect's memories and all
+layout entries $`\ell` of the run's memories, on every operand vector
+$`\vec{v}`,
+$`\mathrm{denote}^{\ell,\rho}_o(\vec{v}) = \mathrm{lift}(\mathrm{denote}_o(\vec{v}))`,
+and the same for $`\mathrm{exit}_o`: it runs with memory by its rule in
+the set monad and keeps the memories. This is the tie of one op, so a
+dialect can tie each op on its own, and an op that touches memory can sit
+beside tied ones with a proof of its own.
+
+*Theorem: a dialect lifts the set monad exactly when every op is tied.* In
+a dialect that lifts the set monad every op is tied, and a dialect whose
+every op is tied lifts the set monad, since semantics are equal op by op.
 :::
 
 :::readable Fir.Func.memRun_eq (fingerprint := "543011805792552046")

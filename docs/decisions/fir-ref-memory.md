@@ -22,11 +22,14 @@ Validation rejects every pointer type that names such a memory, but
 reach one. No core op names a memory yet, so the entries change no run;
 stage 4e of #231, which brings loads and stores, says what `fir-ref run`
 does with an access to an undeclared memory. The core's semantics in the
-layer over the tree, `Core.memTreeDenote lay ρ`, lifts its rules in the
-tree, as its semantics with memory lifts its rules in the set monad
-(`DialectMemDenote.ofSetM`), and `Core.memMapsDenote` ties the two at every
-layout and naming. `fir-ref`'s `@[csimp]` theorems hand the machine that
-same semantics at the module's layout, so they hold as before.
+layer over the tree, `Core.memTreeDenote lay ρ`, runs each op by its rule
+with memory in that layer, as its semantics with memory, `Core.memDenoteAt
+lay ρ`, runs it in the layer over the set monad; neither lifts the rules of
+a monad with no memory. `Core.memMapsDenote` ties the two at every layout and
+naming, op by op: `toSet` through the layer keeps choice and UB
+(`Core.denoteIn_mapsDenote`). `fir-ref`'s `@[csimp]` theorems hand the
+machine that same semantics at the module's layout, so they hold as before,
+and the corpus outputs are byte-identical to those before the change.
 
 `Core.exhaustive_memOutcomes`, `Core.scripted_memOutcomes` and
 `Core.sampled_memOutcomes`, with their `memStuck` siblings, prove the modes
@@ -34,13 +37,15 @@ against `Func.memRuns M.layout.entry id`: the runs with memory of the module
 at its own layout.
 `Core.memTree_eq` proves that the tree of a core run with memory is the tree of
 its run with no memory, so the modes report what they did before, path for
-path, and `Core.exhaustive_outcomes` and its siblings keep their proofs. That
-holds only while no core op touches memory. Reports, leaves and JSON are
+path, and `Core.exhaustive_outcomes` and its siblings keep their proofs. It
+uses `Core.memTree_liftState`: lifting into the layer maps each core op's
+rule in the tree to its rule with memory there. That holds only while no
+core op touches memory. Reports, leaves and JSON are
 those of runs without memory: a path shows how it ends and not its memories,
 until observations at the end of a run are designed (#233). Stage 4b-2b of
 #231 gives the core's semantics op by op and proves `Core.memMapsDenote` for
-it, and stage 4b-3 drops `Core.memTree_eq` and the theorems against the run
-in the set monad.
+it; stage 4b-3 drops `Core.memTree_eq` and the theorems against the run in
+the set monad.
 
 ## The machine carries the memories
 

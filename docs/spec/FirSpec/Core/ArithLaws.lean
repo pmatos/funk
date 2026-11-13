@@ -25,7 +25,7 @@ bits $`v` on its one operand vector, the empty one, as the integer
 $`\mathsf{const}` below does, so it meets both obligations.
 :::
 
-:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "14048818822919966579")
+:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "18415869342756109351")
 *Theorem: $`\mathsf{const}` returns a result on defined operands, and is
 total.* For every width $`w` and every vector $`c` of $`w` bits, under
 fir's execution rules, $`\mathsf{const}_w~c`
@@ -48,7 +48,7 @@ proves the other two obligations of $`\mathsf{const}` for any semantics;
 these two depend on its rule, so they are proved here.
 :::
 
-:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "18301250954205537947")
+:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "5163583193849008127")
 *Theorem: $`\mathsf{poison}` returns a result on defined operands, and is
 total.* For every width $`w`, under fir's execution rules,
 $`\mathsf{poison}_w` returns a result on defined operands and is total

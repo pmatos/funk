@@ -25,11 +25,13 @@ theorem intToFloat_ends (e m : Nat) (signed : Bool) (a : PoisonOr (BitVec n)) :
     Ends (intToFloat (μ := SetM) e m signed a) := by
   cases a <;> first | exact pure_ends _ | (dsimp only [intToFloat]; exact floatResult_ends e m _)
 
-/-- The rule of `sitofp` and `uitofp` in the tree of choices has the set
-monad's as its set. -/
-theorem intToFloat_toSet {ε : Type} (e m : Nat) (signed : Bool) (a : PoisonOr (BitVec n)) :
-    (intToFloat (μ := ChoiceTree ε) e m signed a).toSet = intToFloat e m signed a := by
-  cases a <;> first | rfl | (dsimp only [intToFloat]; exact floatResult_toSet _)
+/-- A morphism that keeps choice and UB maps the rule of `sitofp` and
+`uitofp` in one monad to their rule in the other. -/
+theorem intToFloat_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ] [MonadChoice ν]
+    [MonadUB μ] [MonadUB ν] (φ : MonadMorphism μ ν) (hk : φ.KeepsChoiceUB) (e m : Nat)
+    (signed : Bool) (a : PoisonOr (BitVec n)) :
+    φ.map (intToFloat (μ := μ) e m signed a) = intToFloat e m signed a := by
+  cases a <;> first | exact φ.map_pure _ | (dsimp only [intToFloat]; exact floatResult_map φ hk _)
 
 section
 variable (n e m : Nat)
