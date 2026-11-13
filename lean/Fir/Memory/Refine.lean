@@ -48,7 +48,7 @@ variable {u : Nat}
 def MemUnit.IsRefinedBy : MemUnit u → MemUnit u → Prop
   | .poison, _ => True
   | .bits b, v => v = .bits b
-  | .frag p i, v => v = .frag p i
+  | .frag m p i, v => v = .frag m p i
 
 instance : HRefinement (MemUnit u) (MemUnit u) := ⟨MemUnit.IsRefinedBy⟩
 
@@ -71,12 +71,12 @@ instance : HRefinement (Memory u) (Memory u) := ⟨Memory.IsRefinedBy⟩
 /-- Refinement of units is reflexive. -/
 theorem MemUnit.isRefinedBy_refl : ∀ a : MemUnit u, a ⊑ a
   | .poison => trivial
-  | .bits _ | .frag _ _ => rfl
+  | .bits _ | .frag _ _ _ => rfl
 
 /-- Refinement of units is transitive. -/
 theorem MemUnit.isRefinedBy_trans : ∀ {a b c : MemUnit u}, a ⊑ b → b ⊑ c → a ⊑ c
   | .poison, _, _, _, _ => trivial
-  | .bits _, _, _, rfl, h | .frag _ _, _, _, rfl, h => h
+  | .bits _, _, _, rfl, h | .frag _ _ _, _, _, rfl, h => h
 
 /-- Refinement of blocks is reflexive. -/
 theorem Block.isRefinedBy_refl (b : Block u) : b ⊑ b :=

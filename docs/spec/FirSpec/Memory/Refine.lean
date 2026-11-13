@@ -14,14 +14,14 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3923420702968234993")
+:::moduleDocs (fingerprint := "2351082189335893430")
 :::
 
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "8580819944203145393")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "5035405831092213634")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
-$$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = \mathsf{bits}(b) \qquad \mathsf{frag}(p, i) \sqsubseteq v \iff v = \mathsf{frag}(p, i)`
+$$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = \mathsf{bits}(b) \qquad \mathsf{frag}(m, p, i) \sqsubseteq v \iff v = \mathsf{frag}(m, p, i)`
 
 So a fragment of a pointer keeps its pointer, and its provenance, in every
 memory that refines it, and units of bits keep their bits. A block $`b'`

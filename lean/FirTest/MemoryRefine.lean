@@ -25,7 +25,7 @@ example (b c : BitVec 8) (h : b ≠ c) : ¬ ((MemUnit.bits b : MemUnit 8) ⊑ Me
 
 /-- A fragment of a pointer is refined only by itself, so a pointer copied
 unit by unit keeps its provenance. -/
-example (p : Pointer) (i : Nat) : ¬ ((MemUnit.frag p i : MemUnit 8) ⊑ (MemUnit.poison : MemUnit 8)) :=
+example (m : Nat) (p : Pointer) (i : Nat) : ¬ ((MemUnit.frag m p i : MemUnit 8) ⊑ (MemUnit.poison : MemUnit 8)) :=
   fun h => nomatch h
 
 /-- A fresh allocation holds poison, so a store into it gives memories that

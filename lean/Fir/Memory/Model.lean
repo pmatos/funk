@@ -19,8 +19,9 @@ A unit holds one of three things:
 * poison: fresh memory holds poison, and so does memory that a poison value
   was stored to;
 * a fragment of a pointer. A pointer stored to memory takes several units,
-  and each holds its piece of the pointer, so that a pointer copied unit by
-  unit keeps its provenance.
+  and each holds its piece of the pointer and the number of the memory the
+  pointer belongs to, so that a pointer copied unit by unit keeps its
+  provenance, and is never read back as a pointer of another memory.
 
 The model gives four primitive operations: allocating a block of a given
 size and kind, freeing a block, and loading and storing a run of units. Loads
@@ -35,7 +36,8 @@ reaches these operations, are left to the ops that use them.
 
 A pointer of this model belongs to one memory, and its allocation id names an
 allocation of that memory alone. Which memory a pointer belongs to is its
-type's business, `ptr<N>`, not the model's.
+type's business, `ptr<N>`, not the pointer's: only a fragment of a pointer
+stored to memory records it, since a unit has no type.
 
 Provenance comes only from an allocation: a pointer has provenance for an
 allocation because the allocation gave it, or because it was computed from
@@ -64,11 +66,11 @@ structure Pointer where
   deriving Repr, DecidableEq
 
 /-- A unit of memory whose units are `u` bits wide: concrete bits, poison,
-or the fragment `i` of the pointer `p`. -/
+or the fragment `i` of the pointer `p` of the memory `m`. -/
 inductive MemUnit (u : Nat) where
   | bits (b : BitVec u)
   | poison
-  | frag (p : Pointer) (i : Nat)
+  | frag (m : Nat) (p : Pointer) (i : Nat)
   deriving Repr, DecidableEq
 
 /-- The kind of an allocation (ADR-2026-11-09-1542): a stack allocation

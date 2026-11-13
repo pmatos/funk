@@ -155,6 +155,9 @@ the obligations that an op's declaration of its effects on memory puts on
 its semantics, progress with memory, which asks each op to be total from
 any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
+Between the model and the effect, it says how a value of an integer or a
+pointer type becomes units of a memory, and units a value again, at every
+byte order.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 2)}
 
@@ -165,6 +168,12 @@ unit and asks each op to be monotone from memories that refine others.
 {includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 2)}
 
 {includeReadable "." Fir.Memory.Refine "Refining memories" FirSpec.Memory.Refine (level := 2)}
+
+{includeReadable "." Fir.Memory.Encode "Values in units" FirSpec.Memory.Encode (level := 2)}
+
+{includeReadable "." Fir.Memory.EncodeLaws "Laws of values in units" FirSpec.Memory.EncodeLaws (level := 2)}
+
+{includeReadable "." Fir.Core.Encode "The core's values in memory" FirSpec.Core.Encode (level := 2)}
 
 {includeReadable "." Fir.Execution.MemoryEffect "The memory effect" FirSpec.Execution.MemoryEffect (level := 2)}
 
