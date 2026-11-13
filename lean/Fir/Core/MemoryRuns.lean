@@ -149,15 +149,21 @@ theorem runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (args : HVector toType (f.p
     RunsWell (f.memRuns lay ρ M args) :=
   ⟨fuelMonotone lay ρ M f args, progress lay ρ hM hf args, neverStuck lay ρ hM hf args⟩
 
+/-- A core function that runs within itself and is valid in its module runs
+well with memory on every argument vector, jumps and loops included,
+wherever a run names the core's memories. -/
+theorem runsWell_of_local (hv : f.Valid M.context) (hl : f.Local)
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
+  have hm := inModuleAt_of_inModule lay ρ (hl.inModule M)
+  ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hl.noCall hm args,
+    Func.memNeverStuck_of_local lay ρ hv hl.noCall hm args⟩
+
 /-- A function without calls that is valid in its module runs well with
 memory on every argument vector, jumps and loops included, wherever a run
 names the core's memories. -/
 theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
     (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
-  have hn := (local_of_valid hv hc).noCall
-  have hm := inModuleAt_of_inModule lay ρ ((local_of_valid hv hc).inModule M)
-  ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hn hm args,
-    Func.memNeverStuck_of_local lay ρ hv hn hm args⟩
+  runsWell_of_local lay ρ hv (local_of_valid hv hc) args
 
 /-- More fuel never changes how a run with memory of a valid core function
 without calls returns or hits UB. -/
@@ -182,11 +188,7 @@ with memory on every argument vector, wherever a run names the core's
 memories. -/
 theorem tracer_runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
     (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
-  have hv := hM.funcs f hf
-  have hl := (straight_of_tracer hv ht).local
-  have hm := inModuleAt_of_inModule lay ρ (hl.inModule M)
-  ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hl.noCall hm args,
-    Func.memNeverStuck_of_local lay ρ hv hl.noCall hm args⟩
+  runsWell_of_local lay ρ (hM.funcs f hf) (straight_of_tracer (hM.funcs f hf) ht).local args
 
 /-- More fuel never changes how a run with memory of a valid function of
 the tracer subset returns or hits UB. -/

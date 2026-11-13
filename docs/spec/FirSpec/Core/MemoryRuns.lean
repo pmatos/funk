@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16999126935403129443")
+:::moduleDocs (fingerprint := "2760609427400413600")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -92,7 +92,15 @@ calls and recursion included. Every function of $`M` runs within $`M`
 with memory, and the core dialect is lawful in its totality.
 :::
 
-:::readable Fir.Core.callFree_runsWell Fir.Core.callFree_fuelMonotone Fir.Core.callFree_progress Fir.Core.callFree_neverStuck (pin := Fir.Core.CallFree) (fingerprint := "18291340021866523012")
+:::readable Fir.Core.runsWell_of_local Fir.Core.callFree_runsWell Fir.Core.callFree_fuelMonotone Fir.Core.callFree_progress Fir.Core.callFree_neverStuck (pin := Fir.Core.CallFree) (fingerprint := "5063858304775921035")
+*Theorem: every valid core function that runs within itself runs well with
+memory.* For every core module $`M`, every core function $`f` valid in the
+context of $`M` that
+{ref "The-fir-specification--Execution--Progress-with-jumps-and-loops"}[runs within itself],
+every vector $`v^*` of values of its parameter types and every layout and
+naming of the core's memories, the runs with memory of $`f` on $`v^*` run
+well, jumps and loops included.
+
 *Theorem: every valid core function without calls runs well with memory.*
 For every core module $`M`, every core function $`f` without a
 $`\mathsf{call}` op valid in the context of $`M`, every vector $`v^*` of
