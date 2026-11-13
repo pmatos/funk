@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10658605869045138447")
+:::moduleDocs (fingerprint := "3715093879706990322")
 :::
 
 :::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "14916235269159905493")
@@ -89,13 +89,13 @@ obligations, which every computation with no memory meets. So a pass may
 rely on the core ops' effect sets (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "17482424728712250987")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "14564724320755433639")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
-$`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. A dialect
-lawful in its effects under $`\mathrm{eff}'` would make $`\mathsf{sdiv}_8`
-never end in UB, with memory and so from the empty memories, but
-$`\mathsf{sdiv}_8(1, 0)` is UB, so no such dialect
-exists: the obligations reject the declaration. The soundness proofs have
-teeth.
+$`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. Over the
+core's own semantics with memory, a dialect lawful in its effects under
+$`\mathrm{eff}'` would make $`\mathsf{sdiv}_8` never end in UB, with
+memory and so from the empty memories, but $`\mathsf{sdiv}_8(1, 0)` is UB,
+so no such dialect exists: the obligations reject the declaration. The
+soundness proofs have teeth.
 :::

@@ -260,17 +260,21 @@ namespace Core.Unlawful
     | .sdiv _ x => { mayPoison := x }
     | op => Core.Op.effects op
 
-/-- `sdiv` by zero is UB, so the obligations reject the declaration: an op
-left without may-UB must never end in UB. -/
+/-- `sdiv` by zero is UB, so the obligations reject the declaration, over
+the core's own semantics with memory: an op left without may-UB must never
+end in UB. -/
 theorem sdivNoUB_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _
-      (@DialectMemDenote.ofSetM CoreDialect _ _ sdivNoUB _) := by
+      (@DialectMemDenote.mk CoreDialect _ _ sdivNoUB fun lay ρ => Core.memDenoteAt lay ρ) := by
   intro h
   have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
-  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
-    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl) Memory.Memories.empty _
-    ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
+  have hl := (Core.Op.liftsSetM (.sdiv 8 false) (fun _ : Unit => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1
+  have hub := (hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
+    (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
+  rw [hl] at hub
+  exact NoUB.of_lift hub Memory.Memories.empty _ ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 
 end Core.Unlawful
 

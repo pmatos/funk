@@ -57,7 +57,7 @@ their entries: `toSet` through the layer keeps choice and UB, op by op. -/
 theorem memMapsDenote (ρ : DialectEffects.Mem CoreDialect → N) :
     letI := memTreeDenote lay ρ
     MemMapsDenote (d := CoreDialect) lay (ε := Op) ρ :=
-  denoteIn_mapsDenote (ChoiceTree.toSetState Op _) (ChoiceTree.toSetState_keeps Op _)
+  memDenoteIn_mapsDenote lay ρ (ChoiceTree.toSetState Op _) (ChoiceTree.toSetState_keeps Op _)
     (fun op _ => ChoiceTree.noOutcome op) (fun _ _ _ => False) fun _ => rfl
 
 /-- No core op touches memory, so lifting into the layer over the tree maps

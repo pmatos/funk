@@ -39,9 +39,9 @@ and ends as it ends in the set monad. So an op that is tied, as every op
 that touches no memory is, meets each obligation with memory when it meets
 it in the set monad. In a dialect that lifts the set monad, every op is
 tied, an op meets each obligation with memory exactly when it meets it in
-the set monad, and a lawful dialect is lawful in its poison with memory. A sum and a lift run an
-op of a side by that side's rule with its results mapped (the section on
-the poison of a sum and a lift, with memory).
+the set monad, and a lawful dialect is lawful in its poison with memory. A
+sum and a lift run an op of a side by that side's rule with its results
+mapped (the section on the poison of a sum and a lift, with memory).
 
 A dialect meets them by being _lawful in its poison with memory_, the class
 below, with the poison of every valid type refined by every value, as

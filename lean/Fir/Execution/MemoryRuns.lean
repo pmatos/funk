@@ -25,8 +25,9 @@ with memory is that lift, at every naming, _lifts the set monad_: this ties
 its semantics in the set monad to its semantics with memory. The run with
 memory of a function of such a dialect is then its run in the set monad,
 with the memories it started from; its runs with memory are its runs, and
-every theorem about its runs holds of them. The core dialect is such a
-dialect, and so are the dialects of the tests and their sums.
+every theorem about its runs holds of them. The dialects of the tests and
+their sums lift the set monad by their definition; the core dialect runs its
+own rules with memory, and lifts the set monad by a theorem.
 
 The tie also holds of one op: an op is _tied_ when it runs with memory by
 its rule in the set monad and keeps the memories. A dialect lifts the set

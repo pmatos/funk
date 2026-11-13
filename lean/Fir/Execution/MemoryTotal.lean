@@ -25,11 +25,11 @@ It holds as the obligation on may-UB does:
   layer, has one from any memories, and keeps them;
 * mapping the results of a computation keeps an outcome.
 
-So an op that is tied, as every op that touches no memory is, is total
-with memory when it is total in the set monad. In a dialect that lifts the
-set monad, every op is tied, an op is total with memory exactly when it is
-total in the set monad, and a lawful dialect is lawful in its totality. A sum and a
-lift run an op of a side by that side's rule with its results mapped, so
+So an op that is tied, as every op that touches no memory is, is total with
+memory when it is total in the set monad. In a dialect that lifts the set
+monad, every op is tied, an op is total with memory exactly when it is total
+in the set monad, and a lawful dialect is lawful in its totality. A sum and
+a lift run an op of a side by that side's rule with its results mapped, so
 they are lawful in their totality when their sides are (the section on the
 totality of a sum and a lift).
 

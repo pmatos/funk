@@ -142,9 +142,10 @@ obligation from the set monad to the semantics with memory (`MemTotal.ofLifts`,
 `OwnRuleHas.ofLifts`) takes one op's tie, so a dialect can meet its obligations
 op by op, and an op that touches memory can sit beside tied ones with a proof of
 its own. Rejected: transfers that ask the whole dialect to lift the set monad,
-which no dialect with one memory op could use for its other ops. Under the tie an op meets no
-may-UB and no may produce poison in the set monad exactly when it meets them
-with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
+which no dialect with one memory op could use for its other ops.
+
+Under the tie an op meets no may-UB and no may produce poison in the set monad
+exactly when it meets them with memory (`NeverUB.setM`, `MakesNoPoison.setM`, and `.ofSetM` back), and
 theorems over runs in the set monad that use these two obligations assume the
 tie. Theorems that do not use them, such as fuel monotonicity, progress and
 refinement of runs in the set monad, take no tie. A dialect with a memory op has

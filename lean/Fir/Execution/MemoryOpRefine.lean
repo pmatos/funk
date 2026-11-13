@@ -30,9 +30,9 @@ it starts from, so it keeps their refinement. So an op that is tied, as
 every op that touches no memory is, is monotone with memory when it is
 monotone in the set monad. In a dialect that lifts the set monad, every op
 is tied, an op is monotone with memory exactly when it is monotone in the
-set monad, and a lawful dialect is lawful in its monotonicity. A sum and a lift run an op of
-a side by that side's rule with its results mapped (the section on the
-monotonicity of a sum and a lift).
+set monad, and a lawful dialect is lawful in its monotonicity. A sum and a
+lift run an op of a side by that side's rule with its results mapped (the
+section on the monotonicity of a sum and a lift).
 
 A dialect meets the obligation by being _lawful in its monotonicity_, the
 class below. The class asks for no semantics in the set monad, so a dialect

@@ -14,18 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17387620820265943887")
+:::moduleDocs (fingerprint := "5428642933703636569")
 :::
 
-:::readable Fir.Core.map_bind_pure (fingerprint := "8648946854406109182")
-*Theorem: a morphism maps a result computed from another.* For every monad
-morphism $`\varphi` from $`m` to $`n`, if $`\varphi(x) = y`, then for
-every function $`g`, $`\varphi` maps the computation that runs $`x` and
-ends with $`g` of its result to the computation that runs $`y` and ends
-with $`g` of its result.
-:::
-
-:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "6314287836052690773")
+:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "17668704330183444261")
 *Theorem: the rules of `freeze`, the divisions and the terminators mean the
 same in both monads.* For every monad morphism $`\varphi` that
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],
@@ -40,7 +32,7 @@ $`\mathsf{unreachable}`'s, to the same rule in $`n`: a result maps to the
 same result, and UB to UB for the same reason.
 :::
 
-:::readable Fir.Core.denoteIn_mapsDenote (pin := Fir.Core.denoteIn) (pin := Fir.MonadMorphism.MapsDenote) (fingerprint := "596898362013368436")
+:::readable Fir.Core.denoteIn_mapsDenote (pin := Fir.Core.denoteIn) (pin := Fir.MonadMorphism.MapsDenote) (fingerprint := "2231277382733149318")
 *Theorem: every core op means the same in both monads.* Let $`\varphi` be
 a monad morphism from $`m` to $`n` that keeps choice and UB, and let
 $`z_m` and $`z_n` say what an op with no rule does in $`m` and in $`n`, with
@@ -66,15 +58,30 @@ choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
 the memories of a run, where each memory $`y` of the run has the layout
 entry $`\ell(y)` and the run names the core's memory $`x` as $`\rho(x)`.
-The rule with memory of a core op in $`m` is the rule that an op that
-touches memory would read its memory's entry $`\ell(\rho(x))` from
-(ADR-2026-11-13-0906). No core op touches memory yet, so each op's rule
-with memory, as an op that is not a terminator and as a terminator, is its
+The core's rules with memory are its rules in $`m`, at $`\ell` and
+$`\rho`: an op that accesses the core's memory $`x` accesses the run's
+memory $`\rho(x)` and reads its unit, byte order and pointer width from the
+entry $`\ell(\rho(x))` (ADR-2026-11-13-0906). No core op touches memory
+yet, so each op's rule with memory, as an op that is not a terminator and
+as a terminator, is its
 {ref "The-fir-specification--Execution--Core-op-semantics"}[rule].
 
 The core's semantics in $`m` at $`\ell` and $`\rho`, with $`z` for an op
 with no rule, gives each op its rule with memory, and $`z(p)` to an op
 $`p` that has none.
+:::
+
+:::readable Fir.Core.memDenoteIn_mapsDenote (fingerprint := "16845805222932578554")
+*Theorem: the core's rules with memory mean the same in both monads.* For
+monads $`m` and $`n` with choice, UB and the memory effect, a morphism
+$`\varphi` from $`m` to $`n` that keeps choice and UB maps the core's
+semantics with memory in $`m` at $`\ell` and $`\rho` to its semantics with
+memory in $`n`, op by op, when it maps what an op with no rule does. No
+core op touches memory yet, so this is the theorem above; an op that
+touches memory adds its case, from a morphism that also keeps the memory
+effect, as the
+{ref "The-fir-specification--Memory--The-state-layer"}[translation through the layer]
+does.
 :::
 
 :::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "718340430128983195")

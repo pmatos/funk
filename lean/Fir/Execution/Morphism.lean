@@ -68,6 +68,13 @@ theorem MonadMorphism.except_lift {ε α : Type} (x : m α) :
     (φ.except ε).map (ExceptT.lift x) = ExceptT.lift (φ.map x) := by
   simp only [MonadMorphism.except, ExceptT.lift, ExceptT.run, ExceptT.mk, φ.map_map]
 
+/-- The morphism maps a computation that ends with a function of the result
+of another as it maps the other. -/
+theorem MonadMorphism.map_bind_pure {α β : Type} {x : m α} {y : n α} (h : φ.map x = y)
+    (g : α → β) : φ.map (x >>= fun a => pure (g a)) = y >>= fun a => pure (g a) := by
+  rw [φ.map_bind, h]
+  simp only [φ.map_pure]
+
 /-- The morphism keeps choice and UB: it maps a choice of `w` bits to a
 choice of `w` bits, and UB to UB for the same reason. A rule written once
 for any monad with these two effects then means in `n` what its image of

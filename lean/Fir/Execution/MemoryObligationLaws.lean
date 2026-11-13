@@ -12,25 +12,23 @@ and they survive a change of the results that keeps the memories:
 * mapping the results of a computation changes no memory, so it keeps each
   obligation the computation meets.
 
-So a dialect whose ops touch no memory meets every memory obligation when
-it runs each op by its rule in the set monad and keeps the memories
+So a dialect whose ops touch no memory meets every memory obligation when it
+runs each op by its rule in the set monad and keeps the memories
 (`DialectMemDenote.ofSetM`), at every naming of its memories, whatever its
-ops declare. The core dialect is such a dialect, and so are the dialects of
-the tests. A sum and a lift run an op of a side by that side's rule with
-its results mapped, so they meet the obligations when their sides do
-(the sections on the sum and the lift of dialects lawful in their
-effects).
+ops declare. The dialects of the tests are such dialects. A sum and a lift
+run an op of a side by that side's rule with its results mapped, so they
+meet the obligations when their sides do (the sections on the sum and the
+lift of dialects lawful in their effects).
 
 No UB fares the same way: mapping keeps it, and a computation of the set
 monad with no UB, run in the state layer, has none from any memories. So
-such a dialect's semantics with memory lifts its semantics in the set
-monad, and its ops meet the obligations on may-UB and poison with memory
-when they meet them in the set monad. Each of these holds of one op that
-is tied, too, so a dialect can meet the obligations op by op: the core
-dialect does. The last section goes back: in a
-dialect that lifts the set monad, an op that meets them with memory meets
-them in the set monad, which is how the theorems over runs in the set
-monad use them.
+such a dialect's semantics with memory lifts its semantics in the set monad,
+and its ops meet the obligations on may-UB and poison with memory when they
+meet them in the set monad. Each of these holds of one op that is tied, too,
+so a dialect can meet the obligations op by op: the core dialect does. The
+last section goes back: in a dialect that lifts the set monad, an op that
+meets them with memory meets them in the set monad, which is how the
+theorems over runs in the set monad use them.
 -/
 
 namespace Fir
