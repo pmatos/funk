@@ -51,7 +51,7 @@ from float_arith_cases import (
     write_corpus,
 )
 from float_itofp_cases import ODD_WIDTHS, WIDTHS, int_text, span
-from float_ref import Format
+from float_ref import Format, value_of
 from float_text import spell
 
 OPS = (("s", "fptosi", True), ("u", "fptoui", False))
@@ -62,9 +62,7 @@ def value(f: Format, b: int) -> Fraction | None:
     """The number that the bits `b` of `f` encode, or None for an infinity
     or a NaN."""
     d = f.decode(b)
-    if d[0] == "zero":
-        return Fraction(0)
-    return d[1] if d[0] == "fin" else None
+    return value_of(d) if d[0] in ("zero", "fin") else None
 
 
 def largest(f: Format) -> int:
