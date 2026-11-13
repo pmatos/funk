@@ -9,8 +9,8 @@ add poison, which every value refines, and `nsz` adds the zero of the
 other sign. So the op with fewer flags refines the op with more, on the
 same operands (ADR-2026-11-09-1549): every way the op with fewer flags may
 end is allowed by a way the op with more flags may end. This holds for
-`fadd`, `fsub`, `fmul`, `fdiv`, `fneg`, `fabs`, `sqrt`, `fma` and `fcmp`,
-at every format, for any set of flags dropped.
+`fadd`, `fsub`, `fmul`, `fdiv`, `frem`, `fmod`, `fneg`, `fabs`, `sqrt`,
+`fma` and `fcmp`, at every format, for any set of flags dropped.
 
 Two uses follow. A pass may drop a flag. And native code, which ignores
 the flags, refines the flagged op whenever it refines the op without
@@ -88,7 +88,8 @@ section
 variable {fl fl' : FastMath} (hle : fl'.Le fl) (e m : Nat)
 include hle
 
-/-- `fadd`, `fsub`, `fmul` and `fdiv` with fewer flags refine the op with
+/-- `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` with fewer flags
+refine the op with
 more, on every operands. -/
 theorem fbin_drop (o : FBin) (args : HVector toType (Fir.sig (d := CoreDialect) (.fbin o fl e m))) :
     SetM.IsRefinedBy (HVector.Forall₂ TyRefinement.IsRefinedBy)

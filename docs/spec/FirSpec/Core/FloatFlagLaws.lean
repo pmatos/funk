@@ -47,7 +47,8 @@ $`\phi' \le \phi`, every format and every operands $`\vec a`,
 $$`\mathit{op}_{e,m}~\phi'~(\vec a) \sqsupseteq \mathit{op}_{e,m}~\phi~(\vec a)`
 
 for $`\mathit{op}` each of $`\mathsf{fadd}`, $`\mathsf{fsub}`,
-$`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{fneg}`, $`\mathsf{fabs}`,
+$`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{frem}`, $`\mathsf{fmod}`,
+$`\mathsf{fneg}`, $`\mathsf{fabs}`,
 $`\mathsf{sqrt}`, $`\mathsf{fma}`, and $`\mathsf{fcmp}` with every
 predicate: every way the op with the flags $`\phi'` may end is allowed by
 a way the op with $`\phi` may end, as the section on refinement defines
