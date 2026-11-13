@@ -20,10 +20,11 @@ when the Lean changes under it.
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
 *Definition: the core dialect's memories.* The core dialect names each
 memory of a module by its number, a natural number: memory $`N` is the
-memory of the pointer type $`\mathsf{ptr}\langle N \rangle`, and memory
-$`0` is the default memory, which every module has
-(ADR-2026-11-09-1542). The module's data layout says which other memories
-it has ({ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
+memory of the pointer type $`\mathsf{ptr}\langle N \rangle`
+(ADR-2026-11-09-1542), and memory $`0` is the default memory, which every
+module has. The module's data layout declares the others by number
+(ADR-2026-11-12-1821;
+{ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
 No core op names a memory in its effects yet.
 :::
 

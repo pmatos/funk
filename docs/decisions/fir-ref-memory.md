@@ -12,9 +12,12 @@ with the memories dropped at the end of each path. Each mode takes the unit
 width of each memory first. `fir-ref` names the core's memories by
 themselves, by their numbers, and `FirRef.coreUnit` gives each the unit of
 its entry in the module's data layout (ADR-2026-11-12-1821). A memory that
-the layout does not declare gets the default memory's unit; no op of a valid
-module reaches it, since validation rejects every pointer type that names
-it. No core op names a memory yet, so the widths change no run. The core's semantics in the
+the layout does not declare gets the unit of `MemLayout.default`, 8 bits.
+Validation rejects every pointer type that names such a memory, but
+`fir-ref run` runs a module without validating it, so an invalid module may
+reach one. No core op names a memory yet, so the widths change no run;
+stage 4e of #231, which brings loads and stores, says what `fir-ref run`
+does with an access to an undeclared memory. The core's semantics in the
 layer over the tree lifts its rules in the tree, as its semantics with memory
 lifts its rules in the set monad (`DialectMemDenote.ofSetM`), and
 `Core.memMapsDenote` ties the two at every naming.

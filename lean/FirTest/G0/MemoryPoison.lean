@@ -30,12 +30,11 @@ theorem lawfulMemPoison_ofLawful (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [
   LawfulDialectMemPoison.ofLawful
 
 /-- A dialect that lifts the set monad is lawful exactly when it is lawful
-in its poison, its totality and its monotonicity with memory. -/
+with memory. -/
 theorem lawfulPoison_iff_mem (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectDenote d SetM] [DialectMemDenote d] [LiftsSetM d] :
-    LawfulDialectPoison d ↔
-      LawfulDialectMemPoison d ∧ LawfulDialectTotal d ∧ LawfulDialectMonotone d :=
+    LawfulDialectPoison d ↔ LawfulDialectMem d :=
   LawfulDialectPoison.iff_mem
 
 /-- Every sum of two dialects lawful in their poison with memory is lawful

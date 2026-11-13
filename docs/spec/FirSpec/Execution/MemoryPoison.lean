@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Poison obligations with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13699287464127823476")
+:::moduleDocs (fingerprint := "5606158314346818949")
 :::
 
 :::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "10289990865918709151")
@@ -43,21 +43,26 @@ poison pointer may be UB because some pointer in its place faults on those
 memories. An op _propagates poison with memory_ when both clauses hold.
 :::
 
-:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison (pin := Fir.TypesValid) (fingerprint := "1798965830160164048")
+:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "3948744821314937905")
 *Definitions: a result on defined operands with memory, and a dialect lawful
 in its poison with memory.* An op _returns a result on defined operands
 with memory_ when, wherever a run names the dialect's memories, it returns
-a result from some memories on some operand vector with no poison. A load
-does so from memories that hold its allocation.
+a result on some operand vector with no poison, from some memories inside a
+call: memories with a frame, as a run's are wherever an op runs. A load
+does so from memories that hold its allocation. Memories outside every call
+would not do: an op that returns only there is UB wherever a run reaches
+it, as an op that is always UB is.
 
 A dialect is _lawful in its poison with memory_ when a poison value of a
 valid type is refined by every value of its type, and every valid op
 instance whose poison class is _propagates_ propagates poison with memory
 and returns a result on defined operands with memory. The class asks for no
 semantics in the set monad, so a dialect whose ops touch memory can meet
-it. With {ref "The-fir-specification--Memory--Totality-with-memory"}[lawful in its totality]
-and {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[lawful in its monotonicity],
-it holds every poison obligation over the semantics with memory, as
+it. A dialect is _lawful with memory_ when it is lawful in its poison with
+memory,
+{ref "The-fir-specification--Memory--Totality-with-memory"}[lawful in its totality]
+and {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[lawful in its monotonicity]:
+it then holds every poison obligation over the semantics with memory, as
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful]
 holds them in the set monad.
 :::
@@ -74,13 +79,13 @@ the memories, so a result, UB and the operands that fill a poison are the
 same from every memories.
 :::
 
-:::readable Fir.LawfulDialectMemPoison.ofLawful Fir.LawfulDialectPoison.ofMem Fir.LawfulDialectPoison.iff_mem (pin := Fir.LawfulDialectPoison) (fingerprint := "4956667189517467524")
+:::readable Fir.LawfulDialectMemPoison.ofLawful Fir.LawfulDialectPoison.ofMem Fir.LawfulDialectPoison.iff_mem (pin := Fir.LawfulDialectPoison) (fingerprint := "11942904318688002526")
 *Theorems: lawful with memory, for a dialect that lifts the set monad.* A
 lawful dialect that lifts the set monad is lawful in its poison with
 memory. The other way, a dialect that lifts the set monad and is lawful in
 its poison, its totality and its monotonicity with memory is lawful. So, for
-such a dialect, the poison obligations hold exactly when the three classes
-with memory hold, and the obligations with memory reject every semantics
+such a dialect, the poison obligations hold exactly when it is lawful with
+memory, and the obligations with memory reject every semantics
 that the poison obligations reject. The core dialect and the dialects of
 the tests meet them.
 :::

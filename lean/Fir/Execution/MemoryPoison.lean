@@ -22,9 +22,12 @@ obligations do (`docs/decisions/semantics-poison.md#the-obligations-with-memory`
   a load through a poison pointer may be UB because some pointer in its
   place faults on those memories.
 * _A result on defined operands, with memory_: wherever a run names the
-  dialect's memories, the op returns a result from some memories on some
-  operand vector with no poison. A load returns one from memories that
-  hold its allocation.
+  dialect's memories, the op returns a result on some operand vector with
+  no poison, from some memories inside a call: memories with a frame, as a
+  run's are wherever an op runs, since the interpreter runs every function
+  in a frame. A load returns one from memories that hold its allocation.
+  Memories outside every call would not do: an op that returns only there
+  is UB wherever a run reaches it, as an op that is always UB is.
 
 They look only at what an op that is not a terminator runs by its own rule,
 as the obligations in the set monad do: only such an op returns results, a
@@ -44,7 +47,8 @@ below, with the poison of every valid type refined by every value, as
 `LawfulDialectPoison` asks. The class asks for no semantics in the set
 monad, so a dialect whose ops touch memory can meet it. With
 `LawfulDialectTotal` and `LawfulDialectMonotone` it holds every poison
-obligation with memory.
+obligation with memory: a dialect that meets the three is _lawful with
+memory_.
 -/
 
 namespace Fir
@@ -88,13 +92,14 @@ structure MemPropagatesPoison (op : d.Op) : Prop where
   ubByOwnRules : MemUBByOwnRules op
 
 /-- A result on defined operands, with memory: wherever a run names the
-dialect's memories, the op returns a result from some memories on some
-operand vector with no poison. -/
+dialect's memories, the op returns a result on some operand vector with no
+poison, from some memories inside a call, which have a frame. -/
 def MemReturnsOnDefined (op : d.Op) : Prop :=
   ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
     letI := DialectMemDenote.denoteAt (d := d) unit ρ
     ∃ args : HVector toType (sig op), ¬ args.Any TyPoison.IsPoison ∧
-      ∃ S rs S', DialectDenote.denote (m := StateT (Memories N unit) SetM) op args S (.ok (rs, S'))
+      ∃ S rs S', S.frames ≠ [] ∧
+        DialectDenote.denote (m := StateT (Memories N unit) SetM) op args S (.ok (rs, S'))
 
 /-- A dialect lawful in its poison with memory: a poison value of a valid
 type is refined by every value of its type, and every valid instance that
@@ -107,6 +112,14 @@ class LawfulDialectMemPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRe
   propagates : ∀ op : d.Op, TypesValid op → poisonClass op = .propagates → MemPropagatesPoison op
   returnsOnDefined : ∀ op : d.Op, TypesValid op → poisonClass op = .propagates →
     MemReturnsOnDefined op
+
+/-- A dialect lawful with memory: lawful in its poison, its totality and its
+monotonicity with memory, so it meets every poison obligation over its
+semantics with memory. -/
+abbrev LawfulDialectMem (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
+    [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
+    [DialectMemDenote d] : Prop :=
+  LawfulDialectMemPoison d ∧ LawfulDialectTotal d ∧ LawfulDialectMonotone d
 
 end
 
@@ -159,7 +172,7 @@ theorem MemReturnsOnDefined.ofLifts {op : d.Op} (h : ReturnsOnDefined op) :
   intro _ _ unit ρ
   rw [LiftsSetM.lifts unit ρ]
   obtain ⟨args, hnp, rs, hrs⟩ := h
-  exact ⟨args, hnp, Memories.empty, rs, Memories.empty,
+  exact ⟨args, hnp, Memories.empty.enter, rs, Memories.empty.enter, List.cons_ne_nil _ _,
     (SetM.lift_apply _ _ _).2 (.inl ⟨rs, hrs, rfl⟩)⟩
 
 /-- In a dialect that lifts the set monad, an op that returns a result on
@@ -168,7 +181,7 @@ theorem MemReturnsOnDefined.setM {op : d.Op} (h : MemReturnsOnDefined op) :
     ReturnsOnDefined op := by
   have hu := h (N := Unit) (fun _ => 0) (fun _ => ())
   rw [LiftsSetM.lifts] at hu
-  obtain ⟨args, hnp, S, rs, S', hden⟩ := hu
+  obtain ⟨args, hnp, S, rs, S', -, hden⟩ := hu
   rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
   · cases he
     exact ⟨args, hnp, rs, ha⟩
@@ -196,12 +209,10 @@ theorem LawfulDialectPoison.ofMem [LawfulDialectMemPoison d] [LawfulDialectTotal
   monotone op hv hc := MemMonotone.setM (LawfulDialectMonotone.monotone op hv hc)
 
 /-- In a dialect that lifts the set monad, the poison obligations hold
-exactly when the obligations with memory do: lawful in its poison, its
-totality and its monotonicity with memory. So the obligations with memory
+exactly when the obligations with memory do: it is lawful exactly when it is
+lawful with memory. So the obligations with memory
 reject every semantics that the poison obligations reject. -/
-theorem LawfulDialectPoison.iff_mem :
-    LawfulDialectPoison d ↔
-      LawfulDialectMemPoison d ∧ LawfulDialectTotal d ∧ LawfulDialectMonotone d :=
+theorem LawfulDialectPoison.iff_mem : LawfulDialectPoison d ↔ LawfulDialectMem d :=
   ⟨fun _ => ⟨.ofLawful, .ofLawful, .ofLawful⟩, fun ⟨_, _, _⟩ => .ofMem⟩
 
 end Fir

@@ -176,14 +176,13 @@ theorem alwaysUB_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ always
 
 /-- Each semantics in the set monad that the poison obligations reject,
 lifted into the state layer as the semantics with memory of a dialect whose
-ops touch no memory, is rejected by the obligations with memory: lawful in
-its poison, its totality and its monotonicity with memory. -/
+ops touch no memory, is rejected by the obligations with memory: it is not
+lawful with memory. -/
 theorem memUnlawful {s : DialectDenote CoreDialect SetM}
     (h : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ s _ _) :
     letI := s
     letI := DialectMemDenote.ofSetM (d := CoreDialect)
-    ¬ (LawfulDialectMemPoison CoreDialect ∧ LawfulDialectTotal CoreDialect ∧
-      LawfulDialectMonotone CoreDialect) :=
+    ¬ LawfulDialectMem CoreDialect :=
   letI := s
   letI := DialectMemDenote.ofSetM (d := CoreDialect)
   haveI : LiftsSetM CoreDialect := DialectMemDenote.ofSetM_liftsSetM
@@ -193,17 +192,13 @@ theorem memUnlawful {s : DialectDenote CoreDialect SetM}
 with poison as UB, with the rejected rule for `sdiv`, and always UB. -/
 theorem all_memUnlawful :
     (letI := noOutcome; letI := DialectMemDenote.ofSetM (d := CoreDialect)
-      ¬ (LawfulDialectMemPoison CoreDialect ∧ LawfulDialectTotal CoreDialect ∧
-        LawfulDialectMonotone CoreDialect)) ∧
+      ¬ LawfulDialectMem CoreDialect) ∧
     (letI := poisonIsUB; letI := DialectMemDenote.ofSetM (d := CoreDialect)
-      ¬ (LawfulDialectMemPoison CoreDialect ∧ LawfulDialectTotal CoreDialect ∧
-        LawfulDialectMonotone CoreDialect)) ∧
+      ¬ LawfulDialectMem CoreDialect) ∧
     (letI := oldSDiv; letI := DialectMemDenote.ofSetM (d := CoreDialect)
-      ¬ (LawfulDialectMemPoison CoreDialect ∧ LawfulDialectTotal CoreDialect ∧
-        LawfulDialectMonotone CoreDialect)) ∧
+      ¬ LawfulDialectMem CoreDialect) ∧
     (letI := alwaysUB; letI := DialectMemDenote.ofSetM (d := CoreDialect)
-      ¬ (LawfulDialectMemPoison CoreDialect ∧ LawfulDialectTotal CoreDialect ∧
-        LawfulDialectMonotone CoreDialect)) :=
+      ¬ LawfulDialectMem CoreDialect) :=
   ⟨memUnlawful noOutcome_unlawful, memUnlawful poisonIsUB_unlawful,
     memUnlawful oldSDiv_unlawful, memUnlawful alwaysUB_unlawful⟩
 

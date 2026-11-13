@@ -277,9 +277,11 @@ def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
 whose data layout is `l`, which names the core's memories by themselves
 (`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`): the unit of
 the memory's entry in `l`. Memory 0 has an entry in every layout. A memory
-that `l` does not declare gets the default memory's unit; no op of a valid
-module reaches it, since validation rejects every pointer type that names
-it. -/
+that `l` does not declare gets the unit of `MemLayout.default`, 8 bits,
+whatever unit `l` gives memory 0. Validation rejects every pointer type that
+names such a memory, but `fir-ref run` does not validate the module it runs,
+so an invalid one may reach it; no core op touches memory yet, so the width
+changes no run. -/
 def coreUnit (l : DataLayout) : Core.Mem → Nat := fun n => ((l.memory? n).getD .default).unit
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,

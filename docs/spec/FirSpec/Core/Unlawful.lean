@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Semantics the obligations reject: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3012819014707275009")
+:::moduleDocs (fingerprint := "4845064695708264964")
 :::
 
 :::readable Fir.Core.Unlawful.add_typesValid Fir.Core.Unlawful.sdiv_typesValid (pin := Fir.TypesValid) (fingerprint := "5393438447920550166")
@@ -108,15 +108,15 @@ every op UB would pass. Exceptions are exempt from it, so an exception
 that is always UB, such as $`\mathsf{unreachable}`, stays allowed.
 :::
 
-:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMemPoison) (pin := Fir.LawfulDialectTotal) (pin := Fir.LawfulDialectMonotone) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "4506819687192789471")
+:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMem) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "481286922527719484")
 *Theorems: the obligations with memory reject the same semantics.* Each of
 the four semantics above is a semantics in the set monad. Lifted into the
 state layer, as the semantics with memory of a dialect whose ops touch no
 memory, it runs each op by its rule and keeps the memories. In such a
-dialect the
-{ref "The-fir-specification--Memory--Poison-obligations-with-memory"}[poison obligations with memory],
-totality with memory and monotonicity with memory hold together exactly
-when the poison obligations do. So the obligations with memory reject each
+dialect it is
+{ref "The-fir-specification--Memory--Poison-obligations-with-memory"}[lawful with memory],
+in its poison, its totality and its monotonicity, exactly when the poison
+obligations hold. So the obligations with memory reject each
 semantics that the poison obligations reject: no outcome, poison as UB, the
 rejected rule for $`\mathsf{sdiv}`, and always UB.
 :::

@@ -55,8 +55,8 @@ base returns one in the sum. -/
 theorem memReturnsOnDefined_inl {o : base.Op} (h : MemReturnsOnDefined o) :
     MemReturnsOnDefined (d := base ⊞ e) (.inl o) := by
   intro _ _ unit ρ
-  obtain ⟨args, hnp, S, rs, S', hrs⟩ := h unit (ρ ∘ DialectMemOver.ofBase)
-  refine ⟨HVector.toSum args, ?_, S, HVector.toSum rs, S',
+  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h unit (ρ ∘ DialectMemOver.ofBase)
+  refine ⟨HVector.toSum args, ?_, S, HVector.toSum rs, S', hS,
     (SetM.stateMap_apply _ _ S _).2 (.inl ⟨rs, S', ?_, rfl⟩)⟩
   · rw [← HVector.any_ofSum, HVector.ofSum_toSum]
     exact hnp
@@ -124,8 +124,8 @@ theorem memReturnsOnDefined_lift (hι : ι.Lawful) {o : e.Op}
     (h : MemReturnsOnDefined (d := dep.over e) o) :
     MemReturnsOnDefined (d := big.over (e.lift dep ι μ)) o := by
   intro _ _ unit ρ
-  obtain ⟨args, hnp, S, rs, S', hrs⟩ := h unit (ρ ∘ liftMem μ)
-  refine ⟨HVector.up (incl e ι μ) args, ?_, S, HVector.up (incl e ι μ) rs, S',
+  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h unit (ρ ∘ liftMem μ)
+  refine ⟨HVector.up (incl e ι μ) args, ?_, S, HVector.up (incl e ι μ) rs, S', hS,
     (SetM.stateMap_apply _ _ S _).2 (.inl ⟨rs, S', ?_, rfl⟩)⟩
   · rw [← HVector.any_down (incl_lawful e μ hι), HVector.down_up]
     exact hnp

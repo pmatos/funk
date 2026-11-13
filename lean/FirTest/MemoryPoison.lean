@@ -83,13 +83,21 @@ theorem peekAt_none (S : Memories N unit) :
     peekAt unit x (.value ⟨none, 0⟩) S (.ub Fault.noProvenance.reason) :=
   (SetM.stateMap_apply _ _ S _).2 (.inr ⟨_, rfl, rfl⟩)
 
+/-- The memories inside a call, with one unit allocated on its stack. -/
+def oneUnit : Pointer × Memories N unit := (Memories.empty : Memories N unit).enter.alloc x .stack 1
+
+/-- Those memories have a frame. -/
+theorem oneUnit_frames : (oneUnit unit x).2.frames ≠ [] := by
+  simp [oneUnit, Memories.alloc, Memories.record, Memories.enter, Memories.set]
+
 /-- A load from a new allocation of one unit returns a result. -/
 theorem peekAt_alloc :
-    let r := (Memories.empty : Memories N unit).alloc x .stack 1
+    let r := oneUnit unit x
     peekAt unit x (.value r.1) r.2 (.ok (.cons (decodeInt (unit x) 8 .little [.poison]) .nil, r.2)) := by
   intro r
   have hl : r.2.load x r.1 1 = .ok [.poison] := by
-    show (r.2.mem x).load _ 1 = _
+    show ((Memories.empty.enter.alloc x .stack 1).2.mem x).load
+      (Memories.empty.enter.alloc x .stack 1).1 1 = _
     rw [Memories.alloc_mem_self, Memories.alloc_fst]
     exact Memory.load_alloc _ _ (Int.le_refl 0) (by simp)
   refine (SetM.stateMap_apply _ _ _ _).2 (.inl ⟨[.poison], r.2, ?_, rfl⟩)
@@ -126,8 +134,8 @@ instance : LawfulDialectMemPoison PeekDialect where
   returnsOnDefined
     | .peek, _, _ => by
       intro unit ρ
-      refine ⟨.cons (.value ((Memories.empty : Memories _ unit).alloc (ρ ()) .stack 1).1) .nil,
-        ?_, _, _, _, peekAt_alloc unit (ρ ())⟩
+      refine ⟨.cons (.value (oneUnit unit (ρ ())).1) .nil, ?_, _, _, _, oneUnit_frames unit (ρ ()),
+        peekAt_alloc unit (ρ ())⟩
       rintro (h | h) <;> cases h
 
 /-! # A peek that the obligations reject -/
@@ -180,5 +188,6 @@ def layout : DataLayout :=
 #guard FirRef.coreUnit layout 0 == 16
 #guard FirRef.coreUnit layout 1 == 12
 #guard FirRef.coreUnit [] 1 == 8
+#guard FirRef.coreUnit layout 2 == 8
 
 end FirTest.MemoryPoison
