@@ -17,28 +17,27 @@ import Fir.Execution.Jumps
 /-!
 # Every core function without calls
 
-The three obligations of the section on fuel and progress hold for every
-valid function of the core dialect that has no `call` op, on every
-argument vector of its parameter types, poison included. Branches and
-loops are included. They follow from the general theorems of the previous
-sections:
+A valid core function that has no `call` op runs only its own ops, so its
+runs need nothing of the other functions of its module. Two facts about
+its ops give the three obligations of the section on fuel and progress for
+its runs with memory, branches and loops included, on every argument
+vector of its parameter types, poison included (the section on core
+functions with memory):
 
-* fuel monotonicity holds for every function of every module;
 * _every core op but `call` is total_, by the obligations that each family
   proves of its ops;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
   returns, returns values of the function's result types, by its
-  validation rule. So no path of its run is stuck, and, its ops being
-  total, its run has an outcome at every budget.
+  validation rule.
 
-A function with a `call` op is left out here: its run runs other functions of
-its module, so these theorems, which ask only that the function itself be
-valid, cannot cover it. They came first, while `call` had no rules
+They ask only that the function itself be valid, not its module. A
+function with a `call` op is left out here: its run runs other functions
+of its module. These facts came first, while `call` had no rules
 (`docs/decisions/fir-ref.md#an-op-without-rules`). The section on core
-functions with calls extends them to calls and recursion, for every function of
-a valid module.
+functions with calls covers calls and recursion, for every function of a
+valid module.
 -/
 
 namespace Fir.Core
@@ -147,37 +146,5 @@ theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hts] at hvalid ⊢
     exact hvalid
-
-/-- Every op of a function without calls is total. -/
-theorem total_of_callFree {f : Func CoreDialect} (hc : CallFree f) :
-    ∀ b ∈ f.blocks, ∀ o ∈ b.body, OpTotal o.op :=
-  fun b hb o ho => o.op.total (hc b hb o ho)
-
-variable {M : Module CoreDialect} {f : Func CoreDialect}
-
-/-- A function without calls that is valid in its module runs well on
-every argument vector, jumps and loops included. -/
-theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : RunsWell (funcRuns M f args) :=
-  ⟨Func.fuelMonotone M f args,
-    Func.progress_of_local hv (local_of_valid hv hc) (total_of_callFree hc) M args,
-    Func.neverStuck_of_local hv (local_of_valid hv hc) M args⟩
-
-/-- More fuel never changes how a run of a valid core function without
-calls returns or hits UB. -/
-theorem callFree_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (funcRuns M f args) :=
-  (callFree_runsWell (hM.funcs f hf) hc args).fuelMonotone
-
-/-- A run of a valid core function without calls has an outcome at every
-budget. -/
-theorem callFree_progress (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : Progress (funcRuns M f args) :=
-  (callFree_runsWell (hM.funcs f hf) hc args).progress
-
-/-- No path of a run of a valid core function without calls is stuck. -/
-theorem callFree_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (funcRuns M f args) :=
-  (callFree_runsWell (hM.funcs f hf) hc args).neverStuck
 
 end Fir.Core

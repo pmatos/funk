@@ -170,9 +170,14 @@ semantics in one monad to its semantics in another, op by op
 (`Core.denoteIn_mapsDenote`); lifting keeps choice and UB, so every core op is
 tied (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
 totality, monotonicity and poison, follows from that op's own tie.
-`Core.liftsSetM` is a theorem from the ties, not a definition, and the
-theorems over the core's runs in the set monad use it until stage 4b-3 of #231
-states them over its runs with memory. A memory op joins with its own rule in
+`Core.liftsSetM` is a theorem from the ties, not a definition. The core's
+theorems on runs, fuel monotonicity, progress, no stuck path and refined
+arguments, are stated over its runs with memory and do not use it: a valid core
+function runs within its module with memory because each of its terminators is
+tied (`Core.inModuleAt_of_valid`, from `Func.InModule.inModuleAt_of_tied`), and
+refined arguments ask each op to be monotone with memory (stage 4b-3a of #231).
+The test dialects over the core and the equivalence tests use it until stage
+4b-3b states them over runs with memory. A memory op joins with its own rule in
 `Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
 memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the

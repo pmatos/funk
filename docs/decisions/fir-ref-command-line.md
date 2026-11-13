@@ -159,8 +159,8 @@ which a tool tells apart from an error by its `kind`. The budget is checked
 first, even when a path reaches an op without rules.
 
 Within its budget, exhaustive mode lists exactly the run's outcomes, and on a
-sequence that fits, scripted mode gives one of them (`Core.exhaustive_outcomes`,
-`Core.scripted_outcomes`). Exhaustive mode is within its budget exactly when no
+sequence that fits, scripted mode gives one of them (`Core.exhaustive_memOutcomes`,
+`Core.scripted_memOutcomes`, over the runs with memory at the module's layout). Exhaustive mode is within its budget exactly when no
 path chooses more than B bits (`ChoiceTree.explore_isSome_iff`).
 
 Rejected: exhaustive mode by default. It would have changed every existing
@@ -183,7 +183,7 @@ takes ⌈w/64⌉ more draws and keeps their low `w` bits. A seed draws the same
 values on every machine; `lean/FirTest/Sample.lean` pins a few draws.
 
 `Core.sampled_fits` proves that the values drawn are a sequence that fits the
-run, so `Core.sampled_outcomes` follows from `Core.scripted_outcomes`: a
+run, so `Core.sampled_memOutcomes` follows from `Core.scripted_memOutcomes`: a
 sampled outcome is a member of the run's set, whatever the generator. That the
 printed spelling reads back is tested, not proved.
 

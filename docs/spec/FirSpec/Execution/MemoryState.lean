@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4546578974901252582")
+:::moduleDocs (fingerprint := "16295078963347635802")
 :::
 
 :::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "2883893951779013492")
@@ -59,13 +59,12 @@ loads and stores when $`\varphi` keeps UB, since an access either ends at
 once with a value or is UB.
 :::
 
-:::readable Fir.ChoiceTree.toSetState Fir.ChoiceTree.toSetState_choose Fir.ChoiceTree.toSetState_ub Fir.Func.run_toSetState (fingerprint := "10281720526205955575")
+:::readable Fir.ChoiceTree.toSetState Fir.Func.run_toSetState (fingerprint := "7548209782316162759")
 *Definition: the set of a tree, with memory.* The
 {ref "The-fir-specification--Execution--Choice-trees"}[set of a tree],
 $`\mathrm{set}`, translated through the layer, maps the state layer over
 the tree of choices to the state layer over the set monad. It keeps
-frames, a choice of bits and UB, since $`\mathrm{set}` keeps the choice
-and UB of a tree. So, by the
+frames, and, by the
 {ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
 the run of a function in the layer over the tree has, at each state, the
 run in the layer over the set monad as its set, when each op's semantics

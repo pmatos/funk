@@ -90,8 +90,9 @@ lifts the set monad they are its runs (semantics-effects.md).
 Runs with memory have progress for every dialect, whatever its ops do to the
 memories. No path is stuck when every function of the module is valid and
 runs within it with memory, at the run's naming (`Func.InModuleAt`, which
-states the rules for terminators over their exits from any memories; under
-`LiftsSetM`, `Func.InModule` gives it). Each
+states the rules for terminators over their exits from any memories;
+`Func.InModule` gives it when each terminator is tied, and so under
+`LiftsSetM`). Each
 run has an outcome at every budget when the dialect is also lawful in its
 totality (`LawfulDialectTotal`, in `lean/Fir/Execution/MemoryTotal.lean`;
 ADR-2026-11-09-1541):
@@ -102,7 +103,11 @@ an effect. `OpTotal` stays for runs in the set monad. A dialect that lifts the
 set monad and is lawful meets it, and so do sums and lifts whose sides do,
 with no tie, so a side whose ops touch memory may take part. A dialect with a
 memory op proves it directly. A valid core module meets both
-(`Core.memNeverStuck`, `Core.memProgress`). Rejected: moving `total` out of
+(`Core.neverStuck`, `Core.progress`, over runs with memory). A valid function
+none of whose ops calls a function needs only its own validity
+(`Func.memNeverStuck_of_local`, `Func.memProgress_of_local`, in
+`lean/Fir/Execution/MemoryLocal.lean`), and so does a valid core function
+without calls (`Core.callFree_runsWell`). Rejected: moving `total` out of
 `LawfulDialectPoison` to the semantics with memory, since the set-monad
 theorems would then need the tie to use it.
 
@@ -177,7 +182,9 @@ through `Func.Local`, and `Func.neverStuck_of_inModule` and
 terminator that may jump and has results cannot meet them, so the theorems say
 nothing of it. So "a validated module never gets stuck" holds only for a dialect
 whose terminators meet it. The core dialect meets it (`Core.Op.exit_goto`). No
-path of a run of a function of a valid core module is stuck (`Core.neverStuck`).
+path of a run of a function of a valid core module is stuck: in the set monad
+by `Func.neverStuck_of_inModule` with `Core.inModule_of_valid`, and with memory
+by `Core.neverStuck`.
 `Exit` does not grow in M0. M4's design of exceptions and unwinding chooses
 between a validation rule and values on `Exit`, and edits ADR-2026-11-02-2248
 in place (ADR-2026-11-02-2248). The human ruled this on 2026-11-02 (#89,

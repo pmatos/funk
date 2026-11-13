@@ -14,16 +14,17 @@ and recursion included:
   replaced by any value of its type, a function's observable behaviour
   refines its behaviour on those others. So a call on arguments that
   refine others refines the call on those others: its callee runs on
-  them.
+  them. It is stated over the runs with memory (the section on core
+  functions with memory), from the monotonicity of each core op below.
 * _Congruence in the callee._ In a valid module, replacing the body of a
   function `@g` with one under which `@g`, run in the new module, refines
   `@g` in the old, refines every function of the module. A function other
   than `@g`, a caller of it or not, is refined by itself in the new
   module.
 
-They follow from the general theorems of the sections on refined
-arguments and on replacing a callee, whose hypotheses the core dialect
-meets:
+Congruence in the callee is stated here over the runs in the set monad. It
+follows from the general theorem of the section on replacing a callee,
+whose hypotheses the core dialect meets:
 
 * every core terminator and every core op with no callee is monotone,
   each by the obligation that its family proves, at every width: every
@@ -39,6 +40,13 @@ meets:
 * the refinement of core values is reflexive and transitive;
 * the symbols of a valid module are unique.
 
+A run with memory starts a call from its caller's memories, of which there
+are infinitely many, so finitely many argument vectors do not bound the
+fuel that the new callee's runs with memory need. Congruence with memory
+asks for that bound (the section on core functions with memory); whether
+the core's congruence keeps the form over finitely many argument vectors
+waits for the human's ruling on #231.
+
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the
 function that runs
@@ -50,13 +58,11 @@ gives it only for the functions of valid modules (the section on what the
 lawful class gives); these theorems ask for no valid module, so they use
 the ops' own obligations.
 
-Refined arguments need no validity: the theorem holds for every function
-of every core module. For a function of a valid module, no path of either
-run is stuck and both have an outcome at every budget (the section on
-core functions with calls), so the theorem compares real behaviours.
 Congruence in the callee compares real behaviours when the new function
 is valid in the old module's context: then the new module is valid, and
-neither module's runs have a stuck path. A body that gets stuck at once,
+neither module's runs have a stuck path, since every function of a valid
+core module runs within it (the section on core functions with calls) and
+the theorems on progress with calls apply. A body that gets stuck at once,
 such as one whose entry block declares arguments, meets the hypothesis
 with an empty behaviour, which refines every source.
 -/
@@ -154,14 +160,6 @@ theorem mem_argVectors : ∀ {ts : List Ty} (h : ∀ t ∈ ts, t.Finite)
   | [], _, .nil => List.mem_singleton_self _
   | _ :: _, _, .cons v a => List.mem_flatMap.2 ⟨v, Ty.mem_values _ v,
       List.mem_map_of_mem (mem_argVectors _ a)⟩
-
-/-- Refined arguments: on arguments that refine others, a poison by any
-value, the observable behaviour of every function of every core module
-refines its behaviour on those others, calls and recursion included. -/
-theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
-    {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (funcRuns M f a) ⊑ observable (funcRuns M f a') :=
-  Func.runs_args_isRefinedBy M (fun g _ => opsMonotone_all g) f (opsMonotone_all f) h
 
 variable {M : Module CoreDialect}
 

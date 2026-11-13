@@ -67,6 +67,8 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryProgress "Progress and no stuck path, with memory" FirSpec.Execution.MemoryProgress (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryLocal "Progress and no stuck path with memory, without calls" FirSpec.Execution.MemoryLocal (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryOpRefine "Monotonicity with memory" FirSpec.Execution.MemoryOpRefine (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryPoison "Poison obligations with memory" FirSpec.Execution.MemoryPoison (level := 1)}

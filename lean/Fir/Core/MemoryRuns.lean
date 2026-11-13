@@ -1,6 +1,6 @@
 import Fir.Core.EffectLaws
 import Fir.Core.CallRefine
-import Fir.Execution.MemoryProgress
+import Fir.Execution.MemoryLocal
 import Fir.Execution.MemoryReplace
 import Fir.Execution.MemoryPoison
 
@@ -24,16 +24,36 @@ set monad:
   monotone with memory at every layout and naming.
 
 Since every op is tied, the core dialect lifts the set monad: that is a
-theorem here, not its definition. So _every core function valid in the
-context of a module runs within that module with memory_, wherever a run
-names the core's memories: it runs within the module, and the core lifts
-the set monad.
+theorem here, not its definition.
 
-So no path of a run with memory of a function of a valid core module is
-stuck, and it has an outcome at every budget, calls and recursion included,
-wherever a run names the core's memories. On arguments that refine others,
-the runs with memory of every function of every core module refine its runs
-with memory on those others, calls and recursion included.
+_Every core function valid in the context of a module runs within that
+module with memory_, wherever a run names the core's memories: it runs
+within the module, and each core terminator is tied. Every core op that runs
+by its own rule is monotone with memory at every width, valid or not. No
+theorem below asks that the core lift the set monad: an op that touches
+memory, which is not a terminator, joins them with its own case of
+monotonicity with memory and its own totality.
+
+The three obligations of the section on fuel and progress hold of the runs
+with memory of core functions, on every argument vector of their parameter
+types, poison included, wherever a run names the core's memories:
+
+* their runs with memory are fuel-monotone, for every function of every
+  core module;
+* every function of the tracer subset of a valid module, and every
+  function without calls valid in its module, runs well, jumps and loops
+  included. A function without calls runs only its own ops, so it needs
+  only its own validity, by the theorems on progress with memory without
+  calls;
+* every function of a valid core module runs well, calls and recursion
+  included.
+
+On arguments that refine others, the runs with memory of every function of
+every core module refine its runs with memory on those others, calls and
+recursion included. Congruence in the callee holds with memory when the new
+callee's runs from given memories refine the old one's and are bounded:
+a call starts from its caller's memories, so finitely many argument vectors
+do not bound them.
 -/
 
 namespace Fir
@@ -64,9 +84,9 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
       (LawfulDialectPoison.returnsOnDefined op hv hc)
 
 /-- The core dialect's semantics with memory lifts its semantics in the set
-monad: every core op is tied. It is proved from each op's tie, and the
-theorems over the core's runs in the set monad use it until they are stated
-over its runs with memory. -/
+monad: every core op is tied. It is proved from each op's tie. No theorem on
+the core's runs uses it; the tests of the dialects over the core and the
+equivalence tests do, until they are stated over runs with memory. -/
 instance Core.liftsSetM : LiftsSetM CoreDialect := LiftsSetM.ofOpLifts Core.Op.liftsSetM
 
 namespace Core
@@ -74,35 +94,172 @@ namespace Core
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
 
+/-- Every core terminator is tied: it touches no memory. -/
+theorem Op.liftsSetM_of_terminator {op : Op} (_ : Fir.isTerminator (d := CoreDialect) op = true) :
+    OpLiftsSetM (d := CoreDialect) op :=
+  Op.liftsSetM op
+
+/-- Every core terminator and every core op with no callee is monotone with
+memory, at every width, layout and naming: every core op but `call`. Each op
+that touches no memory is monotone in the set monad and tied. -/
+theorem Op.memMonotone_all (op : Op)
+    (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) :
+    MemMonotone (d := CoreDialect) op :=
+  MemMonotone.ofLifts (Op.liftsSetM op) (Op.monotone_all op h)
+
+/-- A core function that runs within a module runs within it with memory,
+wherever a run names the core's memories: each of its terminators is tied. -/
+theorem inModuleAt_of_inModule (h : f.InModule M) : f.InModuleAt lay ρ M :=
+  h.inModuleAt_of_tied lay ρ fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT
+
+/-- A core function valid in the context of a module runs within that
+module with memory, wherever a run names the core's memories. -/
+theorem inModuleAt_of_valid (hv : f.Valid M.context) : f.InModuleAt lay ρ M :=
+  inModuleAt_of_inModule lay ρ (inModule_of_valid hv)
+
+/-! # Fuel and progress -/
+
+/-- More fuel never changes how a run with memory of a function of a core
+module returns or hits UB, wherever a run names the core's memories, calls
+and recursion included. -/
+theorem fuelMonotone (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
+  Func.memRuns_fuelMonotone lay ρ M f args
+
 /-- No path of a run with memory of a function of a valid core module is
 stuck, calls and recursion included, wherever a run names the core's
 memories. -/
-theorem memNeverStuck (hM : M.Valid) (hf : f ∈ M.funcs)
+theorem neverStuck (hM : M.Valid) (hf : f ∈ M.funcs)
     (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
-  Func.memNeverStuck lay ρ hM.funcs
-    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt lay ρ) hf args
+  Func.memNeverStuck lay ρ hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ (hM.funcs _ hg)) hf
+    args
 
 /-- A run with memory of a function of a valid core module has an outcome
 at every budget, calls and recursion included, wherever a run names the
 core's memories. -/
-theorem memProgress (hM : M.Valid) (hf : f ∈ M.funcs)
+theorem progress (hM : M.Valid) (hf : f ∈ M.funcs)
     (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
-  Func.memProgress lay ρ hM.funcs
-    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt lay ρ) hf args
+  Func.memProgress lay ρ hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ (hM.funcs _ hg)) hf
+    args
+
+/-- Every function of a valid core module runs well with memory on every
+argument vector, calls and recursion included, wherever a run names the
+core's memories. -/
+theorem runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
+    RunsWell (f.memRuns lay ρ M args) :=
+  ⟨fuelMonotone lay ρ M f args, progress lay ρ hM hf args, neverStuck lay ρ hM hf args⟩
+
+/-- A core function that runs within itself and is valid in its module runs
+well with memory on every argument vector, jumps and loops included,
+wherever a run names the core's memories. -/
+theorem runsWell_of_local (hv : f.Valid M.context) (hl : f.Local)
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
+  have hm := inModuleAt_of_inModule lay ρ (hl.inModule M)
+  ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hl.noCall hm args,
+    Func.memNeverStuck_of_local lay ρ hv hl.noCall hm args⟩
+
+/-- A function without calls that is valid in its module runs well with
+memory on every argument vector, jumps and loops included, wherever a run
+names the core's memories. -/
+theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
+  runsWell_of_local lay ρ hv (local_of_valid hv hc) args
+
+/-- More fuel never changes how a run with memory of a valid core function
+without calls returns or hits UB. -/
+theorem callFree_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
+  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).fuelMonotone
+
+/-- A run with memory of a valid core function without calls has an outcome
+at every budget. -/
+theorem callFree_progress (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
+  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).progress
+
+/-- No path of a run with memory of a valid core function without calls is
+stuck. -/
+theorem callFree_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
+  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).neverStuck
+
+/-- Every function of the tracer subset in a valid core module runs well
+with memory on every argument vector, wherever a run names the core's
+memories. -/
+theorem tracer_runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
+  runsWell_of_local lay ρ (hM.funcs f hf) (straight_of_tracer (hM.funcs f hf) ht).local args
+
+/-- More fuel never changes how a run with memory of a valid function of
+the tracer subset returns or hits UB. -/
+theorem tracer_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
+  (tracer_runsWell lay ρ hM hf ht args).fuelMonotone
+
+/-- A run with memory of a valid function of the tracer subset has an
+outcome at every budget. -/
+theorem tracer_progress (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
+  (tracer_runsWell lay ρ hM hf ht args).progress
+
+/-- No path of a run with memory of a valid function of the tracer subset
+is stuck. -/
+theorem tracer_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
+  (tracer_runsWell lay ρ hM hf ht args).neverStuck
+
+/-! # Refinement -/
 
 /-- Refined arguments, with memory: on arguments that refine others, a
 poison by any value, the runs with memory of every function of every core
 module refine its runs with memory on those others, calls and recursion
 included, wherever a run names the core's memories. -/
-theorem memRuns_args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
+theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
   letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
   have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun g b hb o ho hc =>
-      MemMonotone.ofLifts (Core.Op.liftsSetM o.op) (opsMonotone_all g b hb o ho hc) lay ρ
+    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ
   Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
+
+/-- Congruence in the callee, with memory: replacing the body of a function
+`@g` of a valid core module with one under which `@g`, run in the new module
+from given memories, refines `@g` in the old, and whose runs from given
+memories are bounded, refines every function of the module with memory,
+calls and recursion included, wherever a run names the core's memories. -/
+theorem memReplaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
+    (b : Region CoreDialect)
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+        (M.replaceBody g.name b)).BoundedBy B)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          (M.replaceBody g.name b))
+    (hf : f ∈ M.funcs) :
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ Ty.isRefinedBy_refl Ty.isRefinedBy_trans
+    hM hg b hbound h hf).2
+
+/-- Every function of the module other than `@g`, a caller of it or not,
+is refined with memory by itself in the module with `@g`'s new body, under
+the hypotheses of congruence in the callee with memory. -/
+theorem memCaller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
+    (b : Region CoreDialect)
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+        (M.replaceBody g.name b)).BoundedBy B)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          (M.replaceBody g.name b))
+    (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
+    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
+  have := memReplaceBody_isRefinedBy lay ρ hM hg b hbound h hf
+  change f.memRuns lay ρ M ⊑
+    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+  rwa [ite_eq_right hfg] at this
 
 end Core
 

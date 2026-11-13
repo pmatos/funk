@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The runs of core functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8257165963732567689")
+:::moduleDocs (fingerprint := "11426702896052310162")
 :::
 
 :::readable Fir.Core.funcRuns (pin := Fir.Func.runs) (fingerprint := "16611792390663989322")
@@ -26,8 +26,11 @@ $`\mathrm{runs}_M(f)(v^*)_n` of the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter], in
 the set monad, with $`n` steps of fuel. They are the
 {ref "The-fir-specification--Execution--Core-values"}[runs of a core function]
-whose observations are the lists of values returned, so the refinement
-of core functions is about them.
+whose observations are the lists of values returned. Congruence in the
+callee over finitely many argument vectors, and the equivalence experiment
+of #282, are about them; the other theorems on the runs of core functions are
+stated over their
+{ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory].
 :::
 
 :::readable Fir.Core.Op.InTracer Fir.Core.InTracer (fingerprint := "9983642069029973491")
@@ -60,16 +63,6 @@ and the {ref "The-fir-specification--Validation--Core-rules"}[core rule]
 of $`\mathsf{ret}` asks $`t^*` to be the result types of the function.
 :::
 
-:::readable Fir.Core.total_of_tracer (pin := Fir.OpTotal) (fingerprint := "11746737999403355723")
-*Theorem: every op of a function of the tracer subset is total.* If the
-core function $`f` is in the tracer subset, every op of every block of
-$`f` is
-{ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
-operand vector, its semantics, or its exit for a terminator, has some
-outcome. Each of $`\mathsf{const}`, $`\mathsf{add}` with any flags and
-$`\mathsf{ret}` is proved total by the obligations of its op family.
-:::
-
 :::readable Fir.Core.RunsWell (pin := Fir.FuelMonotone) (pin := Fir.Progress) (pin := Fir.NeverStuck) (fingerprint := "12053394366022874285")
 *Definition: a run that runs well.* A run $`R`, given at every budget
 $`n` as $`R_n`, _runs well_ when it meets the three obligations of the
@@ -82,25 +75,8 @@ section on
 * it has progress: at every budget, it has some outcome;
 * it has no stuck path: at no budget is a path of it stuck.
 
-It is how this section and the next two state, at once, that a core
-function's runs on one argument vector meet all three.
-:::
-
-:::readable Fir.Core.tracer_runsWell Fir.Core.tracer_fuelMonotone Fir.Core.tracer_progress Fir.Core.tracer_neverStuck (fingerprint := "3286741478274288802")
-*Theorem: every function of the tracer subset in a valid core module runs
-well, on every argument vector.* Let $`M` be a
-{ref "The-fir-specification--Validation--The-general-rules"}[valid] core
-module, $`f` a function of $`M` in the tracer subset, and $`v^*` a vector
-of values of the parameter types of $`f`, poison included. Then the runs
-$`\mathrm{runs}_M(f)(v^*)` run well, and so each of the three holds on
-its own:
-
-* they are fuel-monotone;
-* they have progress;
-* they have no stuck path.
-
-Fuel monotonicity holds for
-{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[every function].
-The other two follow from the theorems on functions that run straight,
-with the two theorems above.
+It is how the
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[section on core functions with memory]
+states, at once, that a core function's runs with memory on one argument
+vector meet all three.
 :::

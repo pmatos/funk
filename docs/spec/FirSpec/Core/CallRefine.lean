@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4195911346069966190")
+:::moduleDocs (fingerprint := "8889361380658203698")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -30,7 +30,8 @@ has
 which is what the general refinement theorems ask.
 
 The width $`0` is included, which validation rejects. So the theorems
-below hold for every core module, valid or not, where the
+below, and refined arguments with memory, hold for every core module, valid
+or not, where the
 {ref "The-fir-specification--Execution--What-the-lawful-class-gives"}[lawful class]
 would give them only for valid modules.
 :::
@@ -61,31 +62,6 @@ argument vectors of $`t^*`. So the parameter types of a core function with
 no pointer parameter have finitely many argument vectors, which
 {ref "The-fir-specification--Execution--Replacing-a-callee"}[congruence in the callee]
 asks.
-:::
-
-:::readable Fir.Core.args_isRefinedBy (pin := Fir.Core.funcRuns) (fingerprint := "16784468175903825772")
-*Theorem: refined arguments, for core functions.* For every core module
-$`M`, every core function $`f`, of $`M` or not, valid or not, run in
-$`M`, and all argument vectors
-$`a` and $`a'` of the parameter types of $`f` with $`a_i \sqsubseteq a'_i`
-for each $`i`:
-
-$$`\mathrm{obs}(F_M(a)) \sqsubseteq \mathrm{obs}(F_M(a'))`
-
-where $`F_M(a)` is the runs of $`f` in $`M` on $`a`, poison included,
-and $`\mathrm{obs}` their observable behaviour. Calls and recursion are
-included. So a call on arguments that refine others, a poison replaced by
-any value, refines the call on those others: its callee runs on them. It
-is the general theorem of
-{ref "The-fir-specification--Execution--Refined-arguments"}[refined arguments],
-with the monotone ops of the core dialect.
-
-It needs no validity. For a function of a
-{ref "The-fir-specification--Validation--The-general-rules"}[valid module],
-no path of either run is stuck and both have an outcome at every budget,
-as the section on
-{ref "The-fir-specification--Execution--Core-functions-with-calls"}[core functions with calls]
-proves, so the theorem compares real behaviours.
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy (pin := Fir.Core.funcRuns) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "8597197980571865364")

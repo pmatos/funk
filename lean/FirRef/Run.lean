@@ -16,10 +16,8 @@ result as one JSON object on one line
 choices, from the empty memories, with the core dialect's rules, and walks
 the tree in one of three modes, the
 spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`, which Lean
-proves sound (`Core.scripted_outcomes`, `Core.exhaustive_outcomes`,
-`Core.sampled_outcomes`, and for the runs with memory
-`Core.scripted_memOutcomes`, `Core.exhaustive_memOutcomes` and
-`Core.sampled_memOutcomes`):
+proves sound for the runs with memory (`Core.scripted_memOutcomes`,
+`Core.exhaustive_memOutcomes` and `Core.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
   names, given with `--choices`, and reports its one outcome. With no

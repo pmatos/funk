@@ -104,6 +104,7 @@ import Fir.Execution.MemoryObligationLaws
 import Fir.Execution.MemoryTotal
 import Fir.Execution.MemoryCallSteps
 import Fir.Execution.MemoryProgress
+import Fir.Execution.MemoryLocal
 import Fir.Execution.MemoryOpRefine
 import Fir.Execution.MemoryPoison
 import Fir.Execution.MemoryStepPaths

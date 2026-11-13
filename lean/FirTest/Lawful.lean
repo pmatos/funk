@@ -18,9 +18,10 @@ guards of the poison obligations, and the axioms of their proofs.
   instance: the callee guard, not validity, is what lets the class leave
   it out.
 * _Generic theorems for the core dialect._ Every op of a valid module with
-  recursion and mutual recursion is a valid op instance, and `@even`, which
-  calls `@odd`, which calls it back, has an outcome at every budget by the
-  lawful class alone (`Func.progress_of_lawful`). The sum of the core
+  recursion and mutual recursion is a valid op instance, and a run with
+  memory of `@even`, which calls `@odd`, which calls it back, has an outcome
+  at every budget by the class of totality with memory alone
+  (`Func.memProgress`). The sum of the core
   dialect and a lawful extension is lawful, as `FirTest.LawfulRefine`
   shows with the spec's `Dialect.sum.lawfulPoison`.
 -/
@@ -113,12 +114,12 @@ theorem recModule_typesValid :
     ∀ g ∈ recModule.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body, TypesValid o.op :=
   fun g hg _ hb _ ho => (recModule_valid.funcs g hg).typesValid hb ho
 
-/-- A run of `@even`, which calls `@odd`, which calls it back, has an
-outcome at every budget, by the lawful class alone. -/
+/-- A run with memory of `@even`, which calls `@odd`, which calls it back,
+has an outcome at every budget, by the class of totality with memory alone. -/
 theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2))) :
-    Progress (funcRuns recModule evenFn args) :=
-  Func.progress_of_lawful recModule_valid.funcs
-    (fun g hg => inModule_of_valid (recModule_valid.funcs g hg))
+    Progress (evenFn.memRuns recModule.layout.entry id recModule args) :=
+  Func.memProgress _ _ recModule_valid.funcs
+    (fun g hg => inModuleAt_of_valid _ _ (recModule_valid.funcs g hg))
     (by simp [recModule, Module.funcs]) args
 
 /-! # Axioms -/

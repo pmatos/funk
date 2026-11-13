@@ -167,6 +167,7 @@ import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
+import FirSpec.Execution.MemoryLocal
 import FirSpec.Memory.Refine
 import FirSpec.Execution.MemoryOpRefine
 import FirSpec.Execution.MemoryPoison

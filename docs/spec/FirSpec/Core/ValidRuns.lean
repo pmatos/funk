@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7567059458989829243")
+:::moduleDocs (fingerprint := "12557443426744971531")
 :::
 
 :::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "6238840022199865495")
@@ -60,35 +60,4 @@ $`M`:
   result types of $`f`;
 * $`\mathsf{unreachable}` neither jumps nor returns: its exit is UB, which
   ends the run.
-:::
-
-:::readable Fir.Core.runsWell Fir.Core.fuelMonotone Fir.Core.progress Fir.Core.neverStuck (pin := Fir.Core.funcRuns) (pin := Fir.Core.RunsWell) (fingerprint := "268846460176556723")
-*Theorem: every function of a valid core module runs well on every
-argument vector, calls and recursion included.* Let $`M` be a
-{ref "The-fir-specification--Validation--The-general-rules"}[valid] core
-module, $`f` one of its functions, and $`v^*` a vector of values of the
-parameter types of $`f`, poison included. Then the runs
-$`\mathrm{runs}_M(f)(v^*)` run well, and so each of the three holds on
-its own:
-
-* they are fuel-monotone;
-* they have progress;
-* they have no stuck path.
-
-Here $`\mathrm{runs}_M(f)(v^*)` is the
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[runs of f]
-on $`v^*`, at each budget, and to
-{ref "The-fir-specification--Execution--The-runs-of-core-functions"}[run well]
-is to meet the three
-{ref "The-fir-specification--Execution--Fuel-and-progress"}[obligations].
-A function may call itself, or another function that calls it back, and
-branches and loops are included. Fuel monotonicity holds for every
-function; the other two follow from the theorems on functions that run
-within a module, since every function of $`M` is valid and so runs
-within $`M`, by the theorem above, and every op they ask to be total is.
-
-The theorems on core functions without calls keep their statements: such
-a function runs within itself, so they need only its own validity, where
-these need the validity of the whole module, whose functions it may
-call.
 :::

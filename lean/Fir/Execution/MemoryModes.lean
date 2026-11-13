@@ -23,48 +23,11 @@ memory as its set, and the theorems of exhaustive and scripted modes carry
 over unchanged: within its budget, exhaustive mode gives exactly the
 outcomes of the run with memory, and scripted mode, on a choice sequence
 that fits, gives one of them.
-
-A dialect whose ops touch no memory runs in the layer over the tree by
-lifting its rules in the tree, as it runs in the layer over the set monad by
-lifting its rules there. The morphism through the layer maps the one lift to
-the other when it maps the rules in the tree to the rules in the set monad.
 -/
 
 namespace Fir
 
 open Memory
-
-/-! # Lifted semantics through the layer -/
-
-section Lift
-
-variable {m n : Type → Type} [Monad m] [Monad n] (φ : MonadMorphism m n)
-
-/-- A morphism through the layer maps a computation with no memory, lifted
-into the layer, to its image, lifted. -/
-theorem MonadMorphism.state_lift {σ α : Type} (x : m α) :
-    (φ.state σ).map (StateT.lift x) = StateT.lift (φ.map x) := by
-  funext s
-  show φ.map (x >>= fun a => pure (a, s)) = φ.map x >>= fun a => pure (a, s)
-  rw [φ.map_bind]
-  simp only [φ.map_pure]
-
-variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d]
-
-/-- A morphism that maps a dialect's semantics in `m` to its semantics in
-`n` maps its lifted semantics in the layer over `m` to its lifted semantics
-in the layer over `n`. -/
-theorem MonadMorphism.state_mapsDenote_liftState (σ : Type) [DialectDenote d m]
-    [DialectDenote d n] (h : φ.MapsDenote (d := d)) :
-    letI := DialectDenote.liftState (d := d) (m := m) σ
-    letI := DialectDenote.liftState (d := d) (m := n) σ
-    (φ.state σ).MapsDenote (d := d) :=
-  letI := DialectDenote.liftState (d := d) (m := m) σ
-  letI := DialectDenote.liftState (d := d) (m := n) σ
-  ⟨fun op args => (φ.state_lift _).trans (congrArg StateT.lift (h.denote op args)),
-    fun op args => (φ.state_lift _).trans (congrArg StateT.lift (h.exit op args))⟩
-
-end Lift
 
 /-! # The tree of a run with memory -/
 
