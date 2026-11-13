@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12998060254520900076")
+:::moduleDocs (fingerprint := "10818362700393689301")
 :::
 
 :::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "17375378244954417757")
@@ -55,12 +55,12 @@ what its entry block's ops return, or runs out of fuel when they do; it has
 no stuck path when they have none, and a path when they have one.
 :::
 
-:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "14390080740948530134")
+:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "5118189292493913343")
 *Theorem: every function of a module whose functions are all valid and run
 within it with memory has no stuck path with memory, and has progress
 with memory when its dialect is lawful in its totality, calls and recursion
-included.* Take a naming $`\rho` of a dialect's memories, with unit widths
-$`u`. Let every function of the module $`M` be valid in a module context
+included.* Take a naming $`\rho` of a dialect's memories, with layout
+entries $`\ell`. Let every function of the module $`M` be valid in a module context
 $`C` and run within $`M` with memory at that naming. For every function
 $`f` of $`M` and every vector $`v^*` of values of its parameter types, let
 $`R` be the

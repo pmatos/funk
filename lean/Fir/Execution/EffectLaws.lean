@@ -80,18 +80,19 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 memories, an op that is not a terminator never ends in UB, and neither does
 the exit of a terminator. -/
 def NeverUB (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    OwnRuleHas unit ρ NoUB op
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    OwnRuleHas lay ρ NoUB op
 
 /-- Makes no poison: wherever a run names the dialect's memories, from any
 memories, on operands with no poison, no result vector that an op that is
 not a terminator returns holds a poison. -/
 def MakesNoPoison [TyPoison d.Ty] (op : d.Op) : Prop :=
-  isTerminator op = false → ∀ {N : Type} [DecidableEq N] (unit : N → Nat)
+  isTerminator op = false → ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
     ∀ args : HVector toType (sig op), ¬ args.Any TyPoison.IsPoison → ∀ S rs S',
-      DialectDenote.denote (m := StateT (Memory.Memories N unit) SetM) op args S (.ok (rs, S')) →
+      DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S (.ok
+          (rs, S')) →
         ¬ rs.Any TyPoison.IsPoison
 
 /-- A dialect whose effect declarations are sound: every valid instance that
@@ -109,13 +110,13 @@ class LawfulDialectEffects (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [Dialec
     (effects op).mayPoison = false → MakesNoPoison op
   notControl : ∀ op : d.Op, (effects op).control = false → isTerminator op = false
   writesNot : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
-    ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N),
-      ¬ ((effects op).writes.map ρ).Has x → OwnRuleHas unit ρ (WritesNot x) op
+    ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N),
+      ¬ ((effects op).writes.map ρ).Has x → OwnRuleHas lay ρ (WritesNot x) op
   readsNot : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
-    ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N),
-      ¬ ((effects op).reads.map ρ).Has x → OwnRuleHas unit ρ (ReadsNot x) op
+    ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N),
+      ¬ ((effects op).reads.map ρ).Has x → OwnRuleHas lay ρ (ReadsNot x) op
   allocatesNot : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
-    ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (x : N),
-      ¬ ((effects op).allocates.map ρ).Has x → OwnRuleHas unit ρ (AllocatesNot x) op
+    ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N),
+      ¬ ((effects op).allocates.map ρ).Has x → OwnRuleHas lay ρ (AllocatesNot x) op
 
 end Fir

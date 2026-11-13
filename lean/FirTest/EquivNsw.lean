@@ -215,17 +215,17 @@ As in `FirTest.Equiv`, each result holds of the runs with memory, at every
 naming of the core's memories. -/
 
 /-- Pair 3 at `i32`, the direction that holds, for the runs with memory. -/
-theorem addNsw_shl_32_mem {N : Type} [DecidableEq N] (unit : N → Nat)
+theorem addNsw_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
-    (addNswSelf 32).memRuns unit ρ (pairs 32) ⊑ (shlOne 32).memRuns unit ρ (pairs 32) := by
+    (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) := by
   rw [Func.memRuns_eq, Func.memRuns_eq]
   exact addNsw_shl_32
 
 /-- Pair 4 at `i32`, both ways, for the runs with memory. -/
-theorem mulNsw_addNsw_32_mem {N : Type} [DecidableEq N] (unit : N → Nat)
+theorem mulNsw_addNsw_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
-    (mulNswTwo 32).memRuns unit ρ (pairs 32) ⊑ (addNswSelf 32).memRuns unit ρ (pairs 32) ∧
-      (addNswSelf 32).memRuns unit ρ (pairs 32) ⊑ (mulNswTwo 32).memRuns unit ρ (pairs 32) := by
+    (mulNswTwo 32).memRuns lay ρ (pairs 32) ⊑ (addNswSelf 32).memRuns lay ρ (pairs 32) ∧
+      (addNswSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulNswTwo 32).memRuns lay ρ (pairs 32) := by
   rw [Func.memRuns_eq, Func.memRuns_eq]
   exact ⟨mulNsw_addNsw_32, addNsw_mulNsw_32⟩
 

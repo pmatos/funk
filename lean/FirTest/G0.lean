@@ -98,18 +98,18 @@ of every dialect, wherever a run names its memories, whatever its ops do to
 the memories. -/
 theorem memRuns_fuelMonotone (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d] {N : Type}
-    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (M : Module d) (f : Func d)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns unit ρ M args) :=
-  Func.memRuns_fuelMonotone unit ρ M f args
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
+  Func.memRuns_fuelMonotone lay ρ M f args
 
 /-- The runs with memory of every function of every dialect whose semantics
 with memory lifts its semantics in the set monad are its runs, wherever a
 run names its memories. -/
 theorem memRuns_eq (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM] [LiftsSetM d]
-    {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) (M : Module d)
-    (f : Func d) : f.memRuns unit ρ M = f.runs M :=
-  Func.memRuns_eq unit ρ M f
+    {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (M : Module d)
+    (f : Func d) : f.memRuns lay ρ M = f.runs M :=
+  Func.memRuns_eq lay ρ M f
 
 /-- No path of a run is stuck, for every function of every dialect whose
 module's functions are valid and run within the module. -/
@@ -137,11 +137,11 @@ memories, when its module's functions are valid and run within the module
 with memory at that naming. -/
 theorem memNeverStuck (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectValidation d] {N : Type}
-    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
-    {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
+    {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt lay ρ M)
     {f : Func d} (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
-    NeverStuck (f.memRuns unit ρ M args) :=
-  Func.memNeverStuck unit ρ hv hm hf args
+    NeverStuck (f.memRuns lay ρ M args) :=
+  Func.memNeverStuck lay ρ hv hm hf args
 
 /-- A run with memory has an outcome at every budget, for every function of
 every dialect lawful in its totality, wherever a run names its memories,
@@ -149,21 +149,21 @@ when its module's functions are valid and run within the module with
 memory at that naming. -/
 theorem memProgress (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectValidation d]
-    [LawfulDialectTotal d] {N : Type} [DecidableEq N] (unit : N → Nat)
+    [LawfulDialectTotal d] {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
-    (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M)
+    (hv : ∀ g ∈ M.funcs, g.Valid ctx) (hm : ∀ g ∈ M.funcs, g.InModuleAt lay ρ M)
     {f : Func d} (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
-    Progress (f.memRuns unit ρ M args) :=
-  Func.memProgress unit ρ hv hm hf args
+    Progress (f.memRuns lay ρ M args) :=
+  Func.memProgress lay ρ hv hm hf args
 
 /-- Every function of every dialect that lifts the set monad and runs within
 its module runs within it with memory, wherever a run names its
 memories. -/
 theorem inModuleAt (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
     [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM] [LiftsSetM d] {N : Type}
-    [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {M : Module d} {f : Func d}
-    (h : f.InModule M) : f.InModuleAt unit ρ M :=
-  h.inModuleAt unit ρ
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {M : Module d} {f : Func d}
+    (h : f.InModule M) : f.InModuleAt lay ρ M :=
+  h.inModuleAt lay ρ
 
 /-! # Behaviour models
 

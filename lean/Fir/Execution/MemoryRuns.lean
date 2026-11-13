@@ -7,7 +7,8 @@ import Fir.Execution.Lawful
 
 A run with memory is a run of the interpreter in the state layer over the
 set monad, by the dialect's semantics with memory at a naming of its
-memories (the section on memory obligations): it starts from the empty
+memories, each with its layout entry (the section on memory obligations):
+it starts from the empty
 memories of a run, outside every call, and each path that ends carries the
 memories as they are at its end. Until observations at the end of a run
 are designed ([#233](https://github.com/pmatos/funk/issues/233)), an
@@ -107,8 +108,9 @@ monad and keeps the memories. This ties the two semantics: its ops touch no
 memory, and its runs with memory are its runs. -/
 class LiftsSetM (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
     [DialectMemDenote d] [DialectDenote d SetM] : Prop where
-  lifts : ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    DialectMemDenote.denoteAt unit ρ = DialectDenote.liftState (m := SetM) (Memories N unit)
+  lifts : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    DialectMemDenote.denoteAt lay ρ =
+      DialectDenote.liftState (m := SetM) (Memories N (unitsOf lay))
 
 /-! # The runs with memory of a function -/
 
@@ -124,29 +126,30 @@ theorem Func.memRun_eq [DialectDenote d SetM] (M : Module d) (f : Func d)
     (MonadMorphism.liftState_mapsFrame (fun _ => rfl)) M f args fuel]
   simp [MonadMorphism.except, MonadMorphism.liftState, StateT.lift, ExceptT.run, ExceptT.mk]
 
-variable [DialectEffects d] [DialectMemDenote d] (ρ : DialectEffects.Mem d → N)
+variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
+  (ρ : DialectEffects.Mem d → N)
 
 /-- The runs with memory of the function `f` of the module `M`, where a run
-names the dialect's memory `x` as `ρ x`, whose units are `unit (ρ x)` bits
-wide: its run in the state layer over the set monad, by the dialect's
+names the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`:
+its run in the state layer over the set monad, by the dialect's
 semantics with memory at that naming, from the empty memories, at each
 budget, on each argument vector of its parameter types. An observer sees
 what it returns. -/
 def Func.memRuns (M : Module d) (f : Func d) :
     FuncRuns (HVector toType (f.params.map (·.2))) (List (DVal d)) :=
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
   fun args fuel => Functor.map (f := SetM) Prod.fst
-    ((f.run M (m := StateT (Memories N unit) SetM) args fuel).run Memories.empty)
+    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run Memories.empty)
 
 variable [DialectDenote d SetM]
 
 /-- The runs with memory of the functions of a dialect that lifts the set
 monad are their runs, at every naming of its memories. -/
 theorem Func.memRuns_eq [LiftsSetM d] (M : Module d) (f : Func d) :
-    f.memRuns unit ρ M = f.runs M := by
+    f.memRuns lay ρ M = f.runs M := by
   funext args fuel
   unfold Func.memRuns
-  rw [LiftsSetM.lifts unit ρ, Func.memRun_eq]
+  rw [LiftsSetM.lifts lay ρ, Func.memRun_eq]
   simp only [Functor.map_map, id_map']
   rfl
 
@@ -166,10 +169,10 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_lawful
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
-    (h : g.memRuns unit ρ M ⊑
-      (g.replaceBody g.name b).memRuns unit ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ M ⊑
+      (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns unit ρ M ⊑ (f.replaceBody g.name b).memRuns unit ρ (M.replaceBody g.name b) := by
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) := by
   rw [Func.memRuns_eq, Func.memRuns_eq] at h ⊢
   exact Func.runs_replaceBody_isRefinedBy_of_lawful hrefl htrans hM hg b hfin h hf
 

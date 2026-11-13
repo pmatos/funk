@@ -108,7 +108,7 @@ every op UB would pass. Exceptions are exempt from it, so an exception
 that is always UB, such as $`\mathsf{unreachable}`, stays allowed.
 :::
 
-:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMem) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "481286922527719484")
+:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMem) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "1637578780204857706")
 *Theorems: the obligations with memory reject the same semantics.* Each of
 the four semantics above is a semantics in the set monad. Lifted into the
 state layer, as the semantics with memory of a dialect whose ops touch no

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18445362432591294993")
+:::moduleDocs (fingerprint := "7466621547453454705")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -39,7 +39,7 @@ and the same for $`\mathrm{exit}_o`. Lifting keeps this semantics, by its
 definition.
 :::
 
-:::readable Fir.DialectDenote.ext Fir.LiftsSetM (pin := Fir.DialectMemDenote) (fingerprint := "3674145252200336690")
+:::readable Fir.DialectDenote.ext Fir.LiftsSetM (pin := Fir.DialectMemDenote) (fingerprint := "7736019510220318093")
 *Theorem: semantics are equal op by op.* Two semantics of a dialect in one
 monad are equal when each op means the same in both and each terminator
 goes to the same places.
@@ -47,8 +47,9 @@ goes to the same places.
 *Definition: a dialect that lifts the set monad.* A dialect's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
 _lifts_ its semantics in the set monad when, at every naming $`\rho` of its
-memories, it is that semantics lifted into the layer:
-$`\mathrm{denote}^\rho_o = \mathrm{lift} \circ \mathrm{denote}_o` and the same
+memories and all layout entries $`\ell` of the run's memories, it is that
+semantics lifted into the layer:
+$`\mathrm{denote}^{\ell,\rho}_o = \mathrm{lift} \circ \mathrm{denote}_o` and the same
 for $`\mathrm{exit}_o`. This ties the two semantics of a dialect whose ops
 touch no memory, such as the core dialect, the dialects of the tests and
 their sums and lifts. A dialect with an op that touches memory has no such
@@ -68,27 +69,28 @@ The proof is the
 for the lift, which keeps each op's semantics and keeps frames.
 :::
 
-:::readable Fir.Func.memRuns (pin := Fir.Memory.Memories.empty) (fingerprint := "15427610990261849035")
+:::readable Fir.Func.memRuns (pin := Fir.Memory.Memories.empty) (fingerprint := "4862065050169048951")
 *Definition: the runs with memory of a function.* Where a run names the
-dialect's memory $`x` as $`\rho(x)`, whose units are $`u(\rho(x))` bits
-wide, the run with memory of the function $`f` of the module $`M` on
-$`\vec{v}` with $`k` steps is its run in the state layer over the set
-monad, by the dialect's semantics with memory at $`\rho`, from the empty
-memories. An observer sees what it returns, not the memories it ends with,
+dialect's memory $`x` as $`\rho(x)`, whose layout entry is
+$`\ell(\rho(x))`, the run with memory of the function $`f` of the module
+$`M` on $`\vec{v}` with $`k` steps is its run in the state layer over the
+set monad, by the dialect's semantics with memory at $`\ell` and $`\rho`,
+from the empty memories. A run of a module gives each memory its entry in
+the module's data layout, as `fir-ref`'s modes do. An observer sees what it returns, not the memories it ends with,
 until observations at the end of a run are designed (#233). So the runs
 with memory of a function are runs in the sense of the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcomes],
 and refinement, fuel monotonicity and progress speak of them.
 :::
 
-:::readable Fir.Func.memRuns_eq (fingerprint := "12017493528314238344")
+:::readable Fir.Func.memRuns_eq (fingerprint := "15889437290703559384")
 *Theorem: the runs with memory of a dialect that lifts the set monad are
 its runs.* At every naming of its memories, a function's runs with memory
 are its runs in the set monad, by the theorem above, since its semantics
 with memory is its semantics in the set monad, lifted.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_lawful (fingerprint := "11658176726878931486")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_lawful (fingerprint := "259226704881877648")
 *Theorem: congruence in the callee, with no memory touched.* For a lawful
 dialect that lifts the set monad, in a valid module, replacing the body of
 a function with one that refines it with memory refines every function of

@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10729238802549771833")
+:::moduleDocs (fingerprint := "5745893592016834688")
 :::
 
 :::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "17867899712697039806")
@@ -70,7 +70,7 @@ ops run from $`\mathrm{enter}(S)`, finished; when it cannot start, every
 path of it is stuck there.
 :::
 
-:::readable Fir.Func.memRuns_fuelMonotone (pin := Fir.FuelMonotone) (fingerprint := "17768983793765334376")
+:::readable Fir.Func.memRuns_fuelMonotone (pin := Fir.FuelMonotone) (fingerprint := "18320379378661780785")
 *Theorem: runs with memory are fuel-monotone.* For every function of every
 module of every dialect, wherever a run names its memories, on every
 argument vector, its

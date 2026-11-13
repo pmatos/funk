@@ -64,10 +64,10 @@ variable {d : Dialect} [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d] [Dia
 from any memories, on operands of which one is poison, every result vector
 the op returns is all poison. -/
 def MemPoisonOut (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
     ∀ args : HVector toType (sig op), args.Any TyPoison.IsPoison → ∀ S rs S',
-      DialectDenote.denote (m := StateT (Memories N unit) SetM) op args S (.ok (rs, S')) →
+      DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args S (.ok (rs, S')) →
         rs.All TyPoison.IsPoison
 
 /-- UB only by the op's own rules, with memory: wherever a run names the
@@ -75,13 +75,13 @@ dialect's memories, if the op may hit UB from the memories `S` on operands
 of which one is poison, it may hit UB from `S` on some operands that fill
 each poison with a defined value. -/
 def MemUBByOwnRules (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
-    ∀ (args : HVector toType (sig op)) (S : Memories N unit) (r : String),
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    ∀ (args : HVector toType (sig op)) (S : Memories N (unitsOf lay)) (r : String),
       args.Any TyPoison.IsPoison →
-      DialectDenote.denote (m := StateT (Memories N unit) SetM) op args S (.ub r) →
+      DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args S (.ub r) →
       ∃ args', args.IsFilledBy args' ∧
-        ∃ r', DialectDenote.denote (m := StateT (Memories N unit) SetM) op args' S (.ub r')
+        ∃ r', DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args' S (.ub r')
 
 /-- The obligation, with memory, of an op that propagates poison. -/
 structure MemPropagatesPoison (op : d.Op) : Prop where
@@ -95,11 +95,11 @@ structure MemPropagatesPoison (op : d.Op) : Prop where
 dialect's memories, the op returns a result on some operand vector with no
 poison, from some memories inside a call, which have a frame. -/
 def MemReturnsOnDefined (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
     ∃ args : HVector toType (sig op), ¬ args.Any TyPoison.IsPoison ∧
       ∃ S rs S', S.frames ≠ [] ∧
-        DialectDenote.denote (m := StateT (Memories N unit) SetM) op args S (.ok (rs, S'))
+        DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args S (.ok (rs, S'))
 
 /-- A dialect lawful in its poison with memory: a poison value of a valid
 type is refined by every value of its type, and every valid instance that
@@ -132,14 +132,14 @@ variable {d : Dialect} [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d] [Dia
 the set monad propagates it with memory. -/
 theorem MemPropagatesPoison.ofLifts {op : d.Op} (h : PropagatesPoison op) :
     MemPropagatesPoison op where
-  poisonOut unit ρ args hany S rs S' hden := by
-    rw [LiftsSetM.lifts unit ρ] at hden
+  poisonOut lay ρ args hany S rs S' hden := by
+    rw [LiftsSetM.lifts lay ρ] at hden
     rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
     · cases he
       exact h.poisonOut args hany rs ha
     · cases he
-  ubByOwnRules unit ρ args S r hany hden := by
-    rw [LiftsSetM.lifts unit ρ] at hden ⊢
+  ubByOwnRules lay ρ args S r hany hden := by
+    rw [LiftsSetM.lifts lay ρ] at hden ⊢
     rcases (SetM.lift_apply _ S _).1 hden with ⟨_, -, he⟩ | ⟨r₀, hr, he⟩
     · cases he
     · cases he
@@ -151,12 +151,14 @@ memory propagates it in the set monad. -/
 theorem MemPropagatesPoison.setM {op : d.Op} (h : MemPropagatesPoison op) :
     PropagatesPoison op where
   poisonOut args hany rs hden := by
-    have hp := h.poisonOut (N := Unit) (fun _ => 0) (fun _ => ()) args hany Memories.empty rs
+    have hp := h.poisonOut (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args hany
+        Memories.empty rs
       Memories.empty
     rw [LiftsSetM.lifts] at hp
     exact hp ((SetM.lift_apply _ _ _).2 (.inl ⟨rs, hden, rfl⟩))
   ubByOwnRules args r hany hden := by
-    have hu := h.ubByOwnRules (N := Unit) (fun _ => 0) (fun _ => ()) args Memories.empty r hany
+    have hu := h.ubByOwnRules (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args
+        Memories.empty r hany
     rw [LiftsSetM.lifts] at hu
     obtain ⟨args', hfill, r', hub⟩ := hu ((SetM.lift_apply _ _ _).2 (.inr ⟨r, hden, rfl⟩))
     rcases (SetM.lift_apply _ _ _).1 hub with ⟨_, -, he⟩ | ⟨r₀, hr, he⟩
@@ -169,8 +171,8 @@ defined operands in the set monad returns one with memory, from any
 memories. -/
 theorem MemReturnsOnDefined.ofLifts {op : d.Op} (h : ReturnsOnDefined op) :
     MemReturnsOnDefined op := by
-  intro _ _ unit ρ
-  rw [LiftsSetM.lifts unit ρ]
+  intro _ _ lay ρ
+  rw [LiftsSetM.lifts lay ρ]
   obtain ⟨args, hnp, rs, hrs⟩ := h
   exact ⟨args, hnp, Memories.empty.enter, rs, Memories.empty.enter, List.cons_ne_nil _ _,
     (SetM.lift_apply _ _ _).2 (.inl ⟨rs, hrs, rfl⟩)⟩
@@ -179,7 +181,7 @@ theorem MemReturnsOnDefined.ofLifts {op : d.Op} (h : ReturnsOnDefined op) :
 defined operands with memory returns one in the set monad. -/
 theorem MemReturnsOnDefined.setM {op : d.Op} (h : MemReturnsOnDefined op) :
     ReturnsOnDefined op := by
-  have hu := h (N := Unit) (fun _ => 0) (fun _ => ())
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
   rw [LiftsSetM.lifts] at hu
   obtain ⟨args, hnp, S, rs, S', -, hden⟩ := hu
   rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩

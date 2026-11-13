@@ -35,8 +35,8 @@ variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty] [TyRefinement bas
 /-- A base op monotone with memory in the base is monotone with memory in
 the sum. -/
 theorem memMonotone_inl {o : base.Op} (h : MemMonotone o) :
-    MemMonotone (d := base ⊞ e) (.inl o) := fun unit ρ args args' hargs =>
-  have hm := h unit (ρ ∘ DialectMemOver.ofBase) (HVector.ofSum args) (HVector.ofSum args')
+    MemMonotone (d := base ⊞ e) (.inl o) := fun lay ρ args args' hargs =>
+  have hm := h lay (ρ ∘ DialectMemOver.ofBase) (HVector.ofSum args) (HVector.ofSum args')
     ((forall₂_refines_ofSum args args').2 hargs)
   ⟨fun hn => StateRefinedBy.map HVector.toSum (fun {a a'} ha => by
       rw [← forall₂_refines_ofSum, HVector.ofSum_toSum, HVector.ofSum_toSum]
@@ -68,8 +68,8 @@ variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.T
 /-- An op of `e` monotone with memory over `dep` is monotone with memory in
 the lift, when the inclusion is lawful. -/
 theorem memMonotone_lift (hι : ι.Lawful) {o : e.Op} (h : MemMonotone (d := dep.over e) o) :
-    MemMonotone (d := big.over (e.lift dep ι μ)) o := fun unit ρ args args' hargs =>
-  have hm := h unit (ρ ∘ liftMem μ) (HVector.down (incl e ι μ) args)
+    MemMonotone (d := big.over (e.lift dep ι μ)) o := fun lay ρ args args' hargs =>
+  have hm := h lay (ρ ∘ liftMem μ) (HVector.down (incl e ι μ) args)
     (HVector.down (incl e ι μ) args')
     ((HVector.forall₂_down (incl_lawful e μ hι).isRefinedBy_up args args').2 hargs)
   ⟨fun hn => StateRefinedBy.map (HVector.up (incl e ι μ))

@@ -125,9 +125,9 @@ variable [DialectEffects d] [DialectMemDenote d]
 /-- Monotone with memory: wherever a run names the dialect's memories, the
 op is monotone in its semantics with memory at that naming. -/
 def MemMonotone (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (unit : N → Nat) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) unit ρ
-    OpMemMonotone (σ := Memories N unit) op
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    OpMemMonotone (σ := Memories N (unitsOf lay)) op
 
 /-- A dialect lawful in its monotonicity: every valid instance that runs by
 its own rule, a terminator or an op with no callee, is monotone with
@@ -147,9 +147,9 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [TyRefinement d.Ty] 
 /-- In a dialect that lifts the set monad, an op monotone in the set monad
 is monotone with memory. -/
 theorem MemMonotone.ofLifts {op : d.Op} (h : OpMonotone op) : MemMonotone op := by
-  intro N _ unit ρ
+  intro N _ lay ρ
   unfold OpMemMonotone
-  rw [LiftsSetM.lifts unit ρ]
+  rw [LiftsSetM.lifts lay ρ]
   exact fun args args' hr => ⟨fun ht => StateRefinedBy.lift ((h args args' hr).1 ht),
     fun ht => StateRefinedBy.lift ((h args args' hr).2 ht)⟩
 
@@ -157,10 +157,11 @@ theorem MemMonotone.ofLifts {op : d.Op} (h : OpMonotone op) : MemMonotone op := 
 monotone in the set monad. -/
 theorem MemMonotone.setM {op : d.Op} (h : MemMonotone op) : OpMonotone op := by
   intro args args' hr
-  have hu := h (N := Unit) (fun _ => 0) (fun _ => ())
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
   unfold OpMemMonotone at hu
   rw [LiftsSetM.lifts] at hu
-  have hS := Memories.isRefinedBy_refl (Memories.empty : Memories Unit fun _ => 0)
+  have hS := Memories.isRefinedBy_refl
+    (Memories.empty : Memories Unit (unitsOf fun _ => MemLayout.default))
   exact ⟨fun ht => ((hu args args' hr).1 ht).of_lift hS,
     fun ht => ((hu args args' hr).2 ht).of_lift hS⟩
 

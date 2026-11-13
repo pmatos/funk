@@ -270,7 +270,7 @@ theorem sdivNoUB_unlawful :
   intro h
   have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
-  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => 0) (fun _ => ())
+  exact NoUB.of_lift ((hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
     (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl) Memory.Memories.empty _
     ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
 

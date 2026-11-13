@@ -349,15 +349,15 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 /-- The runs with memory of every function of every module of every
 dialect, wherever a run names its memories, are fuel-monotone, calls
 included, whatever its ops do to the memories. -/
-theorem Func.memRuns_fuelMonotone (unit : N → Nat) (ρ : DialectEffects.Mem d → N)
+theorem Func.memRuns_fuelMonotone (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
     (M : Module d) (f : Func d) (args : HVector toType (f.params.map (·.2))) :
-    FuelMonotone (f.memRuns unit ρ M args) := by
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
-  have key : ∀ n, f.memRuns unit ρ M args n = (Prod.fst <$> fromState
-      (f.run M (m := StateT (Memories N unit) SetM) args n) Memories.empty).run :=
+    FuelMonotone (f.memRuns lay ρ M args) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  have key : ∀ n, f.memRuns lay ρ M args n = (Prod.fst <$> fromState
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n) Memories.empty).run :=
     fun n => fromState_fst _ _
   have up : ∀ n j e, e ≠ .ok (.ok .fuelExhausted) → (∀ st, e ≠ .ok (.error st)) →
-      f.memRuns unit ρ M args n e → f.memRuns unit ρ M args (n + j) e := by
+      f.memRuns lay ρ M args n e → f.memRuns lay ρ M args (n + j) e := by
     intro n j e hne hst hs
     rw [key] at hs ⊢
     cases hen : f.enter args.toDVals with
@@ -368,8 +368,8 @@ theorem Func.memRuns_fuelMonotone (unit : N → Nat) (ρ : DialectEffects.Mem d 
       rw [Func.run_fromState M f args (n + j) _ hen]
       exact (Func.runOps_memAhead M n j f env body _).finish_up Prod.fst hne hst hs
   have down : ∀ n j e, e ≠ .ok (.ok .fuelExhausted) → (∀ st, e ≠ .ok (.error st)) →
-      f.memRuns unit ρ M args (n + j) e →
-      f.memRuns unit ρ M args n e ∨ f.memRuns unit ρ M args n (.ok (.ok .fuelExhausted)) := by
+      f.memRuns lay ρ M args (n + j) e →
+      f.memRuns lay ρ M args n e ∨ f.memRuns lay ρ M args n (.ok (.ok .fuelExhausted)) := by
     intro n j e hne hst ht
     rw [key] at ht ⊢
     cases hen : f.enter args.toDVals with

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7749102457304684616")
+:::moduleDocs (fingerprint := "6090123110054143021")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -42,7 +42,7 @@ of the core's memories: the core dialect is lawful, and its semantics with
 memory lifts its semantics in the set monad.
 :::
 
-:::readable Fir.Core.memRuns_args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "14354991659016519450")
+:::readable Fir.Core.memRuns_args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "3686017503688643883")
 *Theorem: refined arguments, with memory, for every core module.* For
 every core module $`M`, valid or not, every function $`f` of it, and every
 naming of the core's memories, the behaviour with memory of $`f` on
@@ -54,7 +54,7 @@ with memory, and the
 applies from the empty memories.
 :::
 
-:::readable Fir.Core.memNeverStuck Fir.Core.memProgress (pin := Fir.Core.inModule_of_valid) (fingerprint := "9635650436885863802")
+:::readable Fir.Core.memNeverStuck Fir.Core.memProgress (pin := Fir.Core.inModule_of_valid) (fingerprint := "17072357832705678770")
 *Theorem: every function of a valid core module has no stuck path and has
 progress, with memory.* For every valid core module $`M`, every function
 $`f` of $`M`, every vector $`v^*` of values of its parameter types, and

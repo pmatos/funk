@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1095334483593206350")
+:::moduleDocs (fingerprint := "7640157692671390853")
 :::
 
 :::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.FuncRuns.BoundedBy) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.MemBlackBox) (fingerprint := "17748345473618143949")
@@ -47,7 +47,7 @@ in a semantics in the state layer, so is every such op of a valid function,
 since each of its ops is a valid op instance.
 :::
 
-:::readable Fir.Func.memRunsFrom_args_isRefinedBy_of_lawful Fir.Func.memRuns_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectMonotone) (fingerprint := "15839523583549934448")
+:::readable Fir.Func.memRunsFrom_args_isRefinedBy_of_lawful Fir.Func.memRuns_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectMonotone) (fingerprint := "7952930474160627859")
 *Theorems: refined arguments, with memory, by the class alone.* For a
 dialect lawful in its monotonicity, in a module whose functions are all
 valid, at every naming of the dialect's memories: the behaviour of a
@@ -58,7 +58,7 @@ its behaviour with memory on $`\vec{v}`, calls and recursion included,
 whatever its ops do to the memories.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_bound (fingerprint := "11855695185559371570")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_bound (fingerprint := "7174405000707121818")
 *Theorem: congruence in the callee, with memory, for a lawful dialect.*
 For a dialect lawful in its monotonicity, in a valid module, at every
 naming of the dialect's memories, the class gives that every op is

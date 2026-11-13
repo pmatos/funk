@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Totality with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18284861627636461743")
+:::moduleDocs (fingerprint := "14109494400669195134")
 :::
 
 :::readable Fir.HasOutcome Fir.HasOutcome.map Fir.hasOutcome_lift Fir.HasOutcome.of_lift Fir.OpHasOutcome (fingerprint := "7856571833701684355")
@@ -36,10 +36,10 @@ what it runs by its own rule has one, on every operand vector: its meaning
 when it is not a terminator, its exit when it is.
 :::
 
-:::readable Fir.MemTotal Fir.LawfulDialectTotal (pin := Fir.OwnRuleHas) (fingerprint := "5761744309621376310")
+:::readable Fir.MemTotal Fir.LawfulDialectTotal (pin := Fir.OwnRuleHas) (fingerprint := "10655181270058211737")
 *Definitions: total with memory, and a dialect lawful in its totality.* An
 op $`o` is _total with memory_ when, wherever a run names the dialect's
-memories, by any names $`N`, unit widths and map $`\rho` from the
+memories, by any names $`N`, layout entries and map $`\rho` from the
 dialect's memories to $`N`, what $`o` runs by its own rule has an outcome
 from any memories, on every operand vector: its meaning when it is not a
 terminator, its exit when it is.

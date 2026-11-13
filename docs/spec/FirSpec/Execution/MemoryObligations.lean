@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15359545257343962910")
+:::moduleDocs (fingerprint := "10758073558888470105")
 :::
 
 :::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "2324173610234647755")
@@ -84,15 +84,20 @@ UB_ when, from every memories $`S`, $`\mathsf{ub}~r \notin c(S)` for every
 reason $`r`.
 :::
 
-:::readable Fir.DialectMemDenote Fir.OwnRuleHas (fingerprint := "379604914047239213")
+:::readable Fir.unitsOf Fir.DialectMemDenote Fir.OwnRuleHas (fingerprint := "3251495137520435974")
 *Definition: a dialect's semantics with memory.* A dialect gives each op a
 semantics in the state layer over the set monad _wherever a run names its
-memories_: for every type $`N` of a run's memory names, the unit width of
-each, and every map $`\rho` from the dialect's memory names to $`N`, a
-semantics of its ops in the state layer over the memories named by $`N`.
-The op names the dialect's memory $`x` as the run's memory $`\rho(x)`.
+memories_: for every type $`N` of a run's memory names, the layout entry
+$`\ell(y)` of each memory $`y` of the run, and every map $`\rho` from the
+dialect's memory names to $`N`, a semantics of its ops in the state layer
+over the memories named by $`N`, where the units of $`y` are
+$`\ell(y).\mathit{unit}` bits wide. The op names the dialect's memory $`x`
+as the run's memory $`\rho(x)`, whose entry $`\ell(\rho(x))` gives its unit
+width, its byte order, the width of its pointers and their alignment, so an
+op that loads or stores takes them from the memory it accesses.
 
-What an op $`o` runs by its own rule at $`\rho` _has a property_ $`P` when,
+What an op $`o` runs by its own rule at $`\ell` and $`\rho` _has a
+property_ $`P` when,
 on every operand vector $`\vec{v}`, $`P(\mathrm{denote}_o(\vec{v}))` holds
 if $`o` is not a terminator, and $`P(\mathrm{exit}_o(\vec{v}))` holds if it
 is.

@@ -53,42 +53,43 @@ variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
 where the run names each memory of the base as `ρ` names it in `e`. -/
 instance instDialectMemDenote [DialectMemDenote base] [DialectMemDenote (base.over e)] :
     DialectMemDenote (base ⊞ e) where
-  denoteAt unit ρ :=
-    letI := DialectMemDenote.denoteAt (d := base) unit (ρ ∘ DialectMemOver.ofBase)
-    letI := DialectMemDenote.denoteAt (d := base.over e) unit ρ
+  denoteAt lay ρ :=
+    letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase)
+    letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ
     instDialectDenote
 
 variable [DialectMemDenote base] [DialectMemDenote (base.over e)] {N : Type} [DecidableEq N]
-  (unit : N → Nat) (ρ : DialectEffects.Mem (base ⊞ e) → N)
-  {P : {α : Type} → StateT (Memories N unit) SetM α → Prop}
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem (base ⊞ e) → N)
+  {P : {α : Type} → StateT (Memories N (unitsOf lay)) SetM α → Prop}
 
 /-- A property that mapping the results keeps holds of what a base op runs
 by its own rule in the sum, when it holds in the base, where the run names
 each memory of the base as the sum does. -/
-theorem ownRuleHas_inl (hP : ∀ {α β : Type} (f : α → β) (c : StateT (Memories N unit) SetM α),
+theorem ownRuleHas_inl (hP : ∀ {α β : Type} (f : α → β) (c : StateT (Memories N (unitsOf lay))
+    SetM α),
       P c → P (f <$> c)) {o : base.Op}
-    (h : OwnRuleHas unit (ρ ∘ DialectMemOver.ofBase) P o) :
-    OwnRuleHas (d := base ⊞ e) unit ρ P (.inl o) := fun args =>
+    (h : OwnRuleHas lay (ρ ∘ DialectMemOver.ofBase) P o) :
+    OwnRuleHas (d := base ⊞ e) lay ρ P (.inl o) := fun args =>
   ⟨fun ht => hP _ _ ((h (HVector.ofSum args)).1 ht), fun ht => (h (HVector.ofSum args)).2 ht⟩
 
 /-- What an op of `e` runs by its own rule in the sum is what it runs in
 `e`. -/
-theorem ownRuleHas_inr {o : e.Op} (h : OwnRuleHas (d := base.over e) unit ρ P o) :
-    OwnRuleHas (d := base ⊞ e) unit ρ P (.inr o) := h
+theorem ownRuleHas_inr {o : e.Op} (h : OwnRuleHas (d := base.over e) lay ρ P o) :
+    OwnRuleHas (d := base ⊞ e) lay ρ P (.inr o) := h
 
 omit [DecidableEq N] in
 /-- A base op that never ends in UB in the base never does in the sum. -/
 theorem neverUB_inl {o : base.Op} (h : NeverUB o) : NeverUB (d := base ⊞ e) (.inl o) :=
-  fun unit ρ => ownRuleHas_inl unit ρ (fun f _ h => NoUB.map f h)
-    (h unit (ρ ∘ DialectMemOver.ofBase))
+  fun lay ρ => ownRuleHas_inl lay ρ (fun f _ h => NoUB.map f h)
+    (h lay (ρ ∘ DialectMemOver.ofBase))
 
 /-- A base op that makes no poison in the base makes none in the sum. -/
 theorem makesNoPoison_inl [TyPoison base.Ty] [TyPoison e.Ty] {o : base.Op}
     (h : MakesNoPoison o) : MakesNoPoison (d := base ⊞ e) (.inl o) := by
-  intro ht N _ unit ρ args hnp S rs S' hden
+  intro ht N _ lay ρ args hnp S rs S' hden
   rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨a, S'', ha, he⟩ | ⟨_, -, he⟩
   · cases he
-    exact fun hp => h ht unit (ρ ∘ DialectMemOver.ofBase) _
+    exact fun hp => h ht lay (ρ ∘ DialectMemOver.ofBase) _
       (fun hd => hnp ((HVector.any_ofSum args).1 hd)) S a _ ha ((HVector.any_toSum a).1 hp)
   · cases he
 
@@ -97,7 +98,7 @@ runs by its rule in the set monad, with its results mapped, and keeps the
 memories. -/
 instance liftsSetM [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
     [LiftsSetM base] [LiftsSetM (base.over e)] : LiftsSetM (base ⊞ e) where
-  lifts unit ρ := by
+  lifts lay ρ := by
     dsimp only [DialectMemDenote.denoteAt]
     rw [LiftsSetM.lifts (d := base), LiftsSetM.lifts (d := base.over e)]
     refine DialectDenote.ext (fun op args => ?_) (fun op args => ?_)
@@ -131,25 +132,25 @@ theorem lawfulEffects [h₁ : LawfulDialectEffects base] [h₂ : LawfulDialectEf
   notControl
     | .inl o, hc => h₁.notControl o hc
     | .inr o, hc => h₂.notControl o hc
-  writesNot o hv hc _ _ unit ρ x hw := by
+  writesNot o hv hc _ _ lay ρ x hw := by
     cases o with
     | inl o =>
-      exact ownRuleHas_inl unit ρ (fun f _ h => WritesNot.map f h) (h₁.writesNot o
-        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact hw))
-    | inr o => exact ownRuleHas_inr unit ρ (h₂.writesNot o (typesValid_inr hty hv) hc unit ρ x hw)
-  readsNot o hv hc _ _ unit ρ x hr := by
+      exact ownRuleHas_inl lay ρ (fun f _ h => WritesNot.map f h) (h₁.writesNot o
+        (typesValid_inl hv) hc lay _ x (by rw [← MemSet.map_map]; exact hw))
+    | inr o => exact ownRuleHas_inr lay ρ (h₂.writesNot o (typesValid_inr hty hv) hc lay ρ x hw)
+  readsNot o hv hc _ _ lay ρ x hr := by
     cases o with
     | inl o =>
-      exact ownRuleHas_inl unit ρ (fun f _ h => ReadsNot.map f h) (h₁.readsNot o
-        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact hr))
-    | inr o => exact ownRuleHas_inr unit ρ (h₂.readsNot o (typesValid_inr hty hv) hc unit ρ x hr)
-  allocatesNot o hv hc _ _ unit ρ x ha := by
+      exact ownRuleHas_inl lay ρ (fun f _ h => ReadsNot.map f h) (h₁.readsNot o
+        (typesValid_inl hv) hc lay _ x (by rw [← MemSet.map_map]; exact hr))
+    | inr o => exact ownRuleHas_inr lay ρ (h₂.readsNot o (typesValid_inr hty hv) hc lay ρ x hr)
+  allocatesNot o hv hc _ _ lay ρ x ha := by
     cases o with
     | inl o =>
-      exact ownRuleHas_inl unit ρ (fun f _ h => AllocatesNot.map f h) (h₁.allocatesNot o
-        (typesValid_inl hv) hc unit _ x (by rw [← MemSet.map_map]; exact ha))
+      exact ownRuleHas_inl lay ρ (fun f _ h => AllocatesNot.map f h) (h₁.allocatesNot o
+        (typesValid_inl hv) hc lay _ x (by rw [← MemSet.map_map]; exact ha))
     | inr o =>
-      exact ownRuleHas_inr unit ρ (h₂.allocatesNot o (typesValid_inr hty hv) hc unit ρ x ha)
+      exact ownRuleHas_inr lay ρ (h₂.allocatesNot o (typesValid_inr hty hv) hc lay ρ x ha)
 
 end Dialect.sum
 

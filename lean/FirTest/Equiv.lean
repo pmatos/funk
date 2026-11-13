@@ -210,18 +210,18 @@ too. Pairs 1 and 2 at `i32`, both ways; `FirTest.EquivNsw` does pairs 3
 and 4. -/
 
 /-- Pair 1 at `i32`, both ways, for the runs with memory. -/
-theorem add_shl_32_mem {N : Type} [DecidableEq N] (unit : N → Nat)
+theorem add_shl_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
-    (addSelf 32).memRuns unit ρ (pairs 32) ⊑ (shlOne 32).memRuns unit ρ (pairs 32) ∧
-      (shlOne 32).memRuns unit ρ (pairs 32) ⊑ (addSelf 32).memRuns unit ρ (pairs 32) := by
+    (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (shlOne 32).memRuns lay ρ (pairs 32) ∧
+      (shlOne 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) := by
   rw [Func.memRuns_eq, Func.memRuns_eq]
   exact ⟨add_shl_32, shl_add_32⟩
 
 /-- Pair 2 at `i32`, both ways, for the runs with memory. -/
-theorem mul_add_32_mem {N : Type} [DecidableEq N] (unit : N → Nat)
+theorem mul_add_32_mem {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreDialect → N) :
-    (mulTwo 32).memRuns unit ρ (pairs 32) ⊑ (addSelf 32).memRuns unit ρ (pairs 32) ∧
-      (addSelf 32).memRuns unit ρ (pairs 32) ⊑ (mulTwo 32).memRuns unit ρ (pairs 32) := by
+    (mulTwo 32).memRuns lay ρ (pairs 32) ⊑ (addSelf 32).memRuns lay ρ (pairs 32) ∧
+      (addSelf 32).memRuns lay ρ (pairs 32) ⊑ (mulTwo 32).memRuns lay ρ (pairs 32) := by
   rw [Func.memRuns_eq, Func.memRuns_eq]
   exact ⟨mul_add_32, add_mul_32⟩
 

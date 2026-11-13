@@ -32,17 +32,17 @@ variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty] [TyPoison base.Ty
 with memory in the sum. -/
 theorem memPropagates_inl {o : base.Op} (h : MemPropagatesPoison o) :
     MemPropagatesPoison (d := base ⊞ e) (.inl o) where
-  poisonOut unit ρ args hany S rs S' hden := by
+  poisonOut lay ρ args hany S rs S' hden := by
     rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨a, S'', ha, he⟩ | ⟨_, -, he⟩
     · cases he
-      exact (HVector.all_toSum a).2 (h.poisonOut unit (ρ ∘ DialectMemOver.ofBase) _
+      exact (HVector.all_toSum a).2 (h.poisonOut lay (ρ ∘ DialectMemOver.ofBase) _
         ((HVector.any_ofSum args).2 hany) S a S' ha)
     · cases he
-  ubByOwnRules unit ρ args S r hany hden := by
+  ubByOwnRules lay ρ args S r hany hden := by
     rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨_, _, -, he⟩ | ⟨r', hr, he⟩
     · cases he
     · cases he
-      obtain ⟨args', hfill, r'', hub⟩ := h.ubByOwnRules unit (ρ ∘ DialectMemOver.ofBase) _ S r
+      obtain ⟨args', hfill, r'', hub⟩ := h.ubByOwnRules lay (ρ ∘ DialectMemOver.ofBase) _ S r
         ((HVector.any_ofSum args).2 hany) hr
       refine ⟨HVector.toSum args', ?_, r'', (SetM.stateMap_apply _ _ S _).2 (.inr ⟨r'', ?_, rfl⟩)⟩
       · rw [← isFilledBy_ofSum, HVector.ofSum_toSum]
@@ -54,8 +54,8 @@ theorem memPropagates_inl {o : base.Op} (h : MemPropagatesPoison o) :
 base returns one in the sum. -/
 theorem memReturnsOnDefined_inl {o : base.Op} (h : MemReturnsOnDefined o) :
     MemReturnsOnDefined (d := base ⊞ e) (.inl o) := by
-  intro _ _ unit ρ
-  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h unit (ρ ∘ DialectMemOver.ofBase)
+  intro _ _ lay ρ
+  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h lay (ρ ∘ DialectMemOver.ofBase)
   refine ⟨HVector.toSum args, ?_, S, HVector.toSum rs, S', hS,
     (SetM.stateMap_apply _ _ S _).2 (.inl ⟨rs, S', ?_, rfl⟩)⟩
   · rw [← HVector.any_ofSum, HVector.ofSum_toSum]
@@ -99,17 +99,17 @@ variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.T
 with memory in the lift, when the inclusion is lawful. -/
 theorem memPropagates_lift (hι : ι.Lawful) {o : e.Op} (h : MemPropagatesPoison (d := dep.over e) o) :
     MemPropagatesPoison (d := big.over (e.lift dep ι μ)) o where
-  poisonOut unit ρ args hany S rs S' hden := by
+  poisonOut lay ρ args hany S rs S' hden := by
     rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨a, S'', ha, he⟩ | ⟨_, -, he⟩
     · cases he
-      exact (HVector.all_up (incl_lawful e μ hι) a).2 (h.poisonOut unit (ρ ∘ liftMem μ) _
+      exact (HVector.all_up (incl_lawful e μ hι) a).2 (h.poisonOut lay (ρ ∘ liftMem μ) _
         ((HVector.any_down (incl_lawful e μ hι) args).2 hany) S a S' ha)
     · cases he
-  ubByOwnRules unit ρ args S r hany hden := by
+  ubByOwnRules lay ρ args S r hany hden := by
     rcases (SetM.stateMap_apply _ _ S _).1 hden with ⟨_, _, -, he⟩ | ⟨r', hr, he⟩
     · cases he
     · cases he
-      obtain ⟨args', hfill, r'', hub⟩ := h.ubByOwnRules unit (ρ ∘ liftMem μ) _ S r
+      obtain ⟨args', hfill, r'', hub⟩ := h.ubByOwnRules lay (ρ ∘ liftMem μ) _ S r
         ((HVector.any_down (incl_lawful e μ hι) args).2 hany) hr
       refine ⟨HVector.up (incl e ι μ) args', ?_, r'',
         (SetM.stateMap_apply _ _ S _).2 (.inr ⟨r'', ?_, rfl⟩)⟩
@@ -123,8 +123,8 @@ theorem memPropagates_lift (hι : ι.Lawful) {o : e.Op} (h : MemPropagatesPoison
 theorem memReturnsOnDefined_lift (hι : ι.Lawful) {o : e.Op}
     (h : MemReturnsOnDefined (d := dep.over e) o) :
     MemReturnsOnDefined (d := big.over (e.lift dep ι μ)) o := by
-  intro _ _ unit ρ
-  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h unit (ρ ∘ liftMem μ)
+  intro _ _ lay ρ
+  obtain ⟨args, hnp, S, rs, S', hS, hrs⟩ := h lay (ρ ∘ liftMem μ)
   refine ⟨HVector.up (incl e ι μ) args, ?_, S, HVector.up (incl e ι μ) rs, S', hS,
     (SetM.stateMap_apply _ _ S _).2 (.inl ⟨rs, S', ?_, rfl⟩)⟩
   · rw [← HVector.any_down (incl_lawful e μ hι), HVector.down_up]
