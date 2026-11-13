@@ -65,3 +65,24 @@ and every case is interpreter-only with its expected result.
 `reject/float-itofp.toml` holds the conversions that do not decode, such as
 one without `round(rne)`, with `round(rtz)` or a flag, from a float or to an
 integer, and two at a width or format that validation rejects.
+
+The texts of #241's second stage use the conversions between float formats,
+`fpext`, with no attribute, and `fptrunc`, with `round(rne)`
+([semantics-floats.md](../decisions/semantics-floats.md#the-conversions)).
+`float-OP-S-T` converts from `S` to `T` with the op that the pair takes, for
+each ordered pair of two of `f16`, `bf16`, `f32`, `f64` and `f128`: `fpext`
+where `T` has at least as many exponent bits and mantissa bits as `S`, and
+`fptrunc` otherwise, as from `bf16` to `f16` and back. The cases are the
+source's zeros, subnormals, largest finite value and infinities, the
+target's largest finite value and smallest subnormal where the source holds
+them, the values halfway past them and between two values of the target with
+their neighbours, three NaNs and poison. A NaN gives any NaN, so its case is
+interpreter-only with a choice; every other case is interpreter-only with its
+expected result, and differential too in `float-fpext-f32-f64` and
+`float-fptrunc-f64-f32`. `scripts/harness/float_convert_cases.py` writes them
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-format-conversion-corpus)).
+`reject/float-convert.toml` holds the conversions that do not decode, such as
+`fpext round(rne)`, `fptrunc` without `round(rne)` and either from or to an
+integer, and those that validation rejects: a pair that takes the other op,
+`bf16` to `f16` and `f16` to `bf16` as `fpext` among them, a format to
+itself, and a format that validation rejects everywhere.

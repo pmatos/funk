@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15327201918044900355")
+:::moduleDocs (fingerprint := "18147254552819232930")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -100,12 +100,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "12838571556658361392")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "10261410378180477479")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in eleven families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in twelve families.
 
 *Constants* put a fixed value in the program.
 
@@ -254,6 +254,29 @@ sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
   nearest, ties to even, in Lean's float model. An integer too large for
   the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
   is ever UB or gives a NaN, and a poison operand gives poison.
+
+*Conversions between formats* give a float's number in another format
+(ADR-2026-11-09-1549).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-             \dots
+fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
+```
+
+* $`\mathsf{fpext}_{e,m,e',m'}` gives a value of
+  $`\mathsf{float}\langle e,m \rangle` as a value of
+  $`\mathsf{float}\langle e',m' \rangle`, a format that holds every value
+  of it, with $`e \le e'` and $`m \le m'`, so it never rounds; and
+  $`\mathsf{fptrunc}_{e,m,e',m'}` rounds it, to nearest, ties to even,
+  into a format that cannot hold every value of it, with $`e' < e` or
+  $`m' < m`. The
+  {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
+  every ordered pair of two formats to exactly one of the two (the human's
+  ruling of 2026-11-12 on #354). A number too large for the target gives
+  an infinity of its sign, one too small a zero of its sign, and a NaN any
+  NaN of the target. Neither is ever UB, and a poison operand gives
+  poison.
 
 *Poison control* writes poison and stops it.
 

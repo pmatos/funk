@@ -15,7 +15,10 @@ side to the integer of its width, and back. A later conversion adds its pairs
 to `cells.CONVERSIONS` and to `coverage.conversions_table`. `sitofp` and
 `uitofp`, with `round(rne)`, have a third, with a cell from each width of the
 side to each of its float formats (`cells.INT_TO_FLOAT`,
-`coverage.int_to_float_table`). The differential side has `f32` and `f64`, which the backend
+`coverage.int_to_float_table`). `fpext` and `fptrunc` have a fourth, with a
+cell for each ordered pair of two float formats of the side, under the op
+that the pair takes (`cells.FLOAT_CONVERSIONS`, `cells.conversion`,
+`coverage.float_conversions_table`). The differential side has `f32` and `f64`, which the backend
 lowers, and the interpreter-only side `f16`, `bf16`, `f32`, `f64` and `f128`.
 Passed and returned values are cells at each of these formats too. A later float
 op adds its row to `AT_FORMAT` in `scripts/harness/cells.py`
@@ -103,3 +106,28 @@ cases that binary64 holds exactly.
 `crates/funk/tests/float_int_to_float.rs` checks every path of the backend's
 lowering natively against the host's own conversion
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#conversions-from-integers)).
+
+## The format-conversion corpus
+
+`scripts/harness/float_convert_cases.py` writes one module of
+`tests/fir/canonical/` for each ordered pair of two aliased formats,
+`float-OP-S-T`, whose function `@S_T` converts an `S` to a `T` with the op
+the pair takes: nine with `fpext` and eleven with `fptrunc`, `bf16` to `f16`
+and back among them (#241). The cases are the source's zeros, infinities,
+`1`, smallest and largest subnormals, smallest normal and largest finite
+value, and, where the source holds them, the target's edges: its largest
+finite value and the value halfway past it, which goes to infinity; its
+smallest subnormal and half of it, which goes to zero; the subnormals halfway
+between two; and the values halfway between `1` and its neighbours, with the
+source's values on either side of each halfway value. Each finite case comes
+with its negation, and three NaNs and poison close each module. Each expected
+result is `float_ref.convert`'s. A NaN operand gives any NaN, so its case is
+interpreter-only with a choice, as in the arithmetic corpus; every other case
+is interpreter-only with its expected result, and differential too from `f32`
+to `f64` and from `f64` to `f32`. `test_float_convert_cases.py` checks that the
+committed files are what the generator writes, checks each expected result
+against the reference, checks the reference against the host's `struct`
+between `f16`, `f32` and `f64`, and checks that the cases reach overflow,
+underflow and ties. `crates/funk/tests/float_convert.rs` checks the backend's
+`cvtss2sd` and `cvtsd2ss` natively against the host's `as`
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md#conversions-between-formats)).

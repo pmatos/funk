@@ -525,6 +525,28 @@ locs {
   @0 = unknown
 }
 
+=== fpext pure
+func @f(%a: f32, %b: f32, %c: i1) -> f64 {
+^entry:
+  %r: f64 = fpext %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fptrunc pure
+func @f(%a: f64, %b: f64, %c: i1) -> f32 {
+^entry:
+  %r: f32 = fptrunc round(rne) %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === select pure
 func @f(%a: i8, %b: i8, %c: i1) -> i8 {
 ^entry:

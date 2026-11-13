@@ -25,7 +25,7 @@ Tier: direction; area: text-format
   same way. A built executable keeps its bits read as a signed integer, which
   the harness converts exactly.
 
-`docs/decisions/text-format.md` holds the layout of a decimal and the
+`docs/decisions/text-format-floats.md` holds the layout of a decimal and the
 reader's bounds.
 
 ## Why

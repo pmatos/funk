@@ -65,7 +65,8 @@ fir's own are:
   and no flags to read them, and subnormal operands and results are
   honoured: flush to zero is a target attribute, which M1 does not have.
 
-The conversions between formats are left to a later ticket.
+The conversions between formats, `fpext` and `fptrunc`, use the same float
+result with the model's rounding (`Fir.Core.FloatConvert`).
 -/
 
 namespace Fir.Core

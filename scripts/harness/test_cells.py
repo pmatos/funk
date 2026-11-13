@@ -57,7 +57,9 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     `decodeExact` or `Pred.all` takes theirs, a float op of arithmetic
     takes `round(rne)` or none, as `decodeFma`, `FBin.attrsOk` and
     `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
-    as `decodeIntToFloat` reads it, and an op of `plainBinOps`, or whose arm
+    as `decodeIntToFloat` reads it, `fptrunc` `round(rne)` and `fpext`
+    none, as `decodeFptrunc` and `decodeFpext` read them, and an op of
+    `plainBinOps`, or whose arm
     takes them through `bare`, takes none. A constant's value and a callee
     are not cells, and any other arm is not known."""
     body = definition(text, "Op.decode")
@@ -74,6 +76,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFma": round_attrs(floats),
         "decodeBitcast": ("",),
         "decodeIntToFloat": round_attrs(floats),
+        "decodeFpext": ("",),
+        "decodeFptrunc": round_attrs(floats),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -122,12 +126,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(attr_lists(definition(text, "decodeExact")), set(cells.EXACT))
         self.assertIn("bare as", definition(text, "decodeCast"))
         self.assertEqual(definition(floats, "decodeBitcast").count("as.isEmpty"), 2)
+        self.assertIn("as.isEmpty", definition(floats, "decodeFpext"))
         self.assertEqual(
             decoded_attrs(text, floats),
             {
                 op: cells.ROUND
                 if op in cells.INT_TO_FLOAT
-                else cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                else cells.FLOAT_CONVERSIONS.get(
+                    op, cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
+                )
                 for op in cells.OPS
             },
         )
@@ -146,7 +153,7 @@ class Tests(unittest.TestCase):
                 "[]",
             },
         )
-        self.assertEqual(flagged["[roundAttr]"], {"fma", "sitofp", "uitofp"})
+        self.assertEqual(flagged["[roundAttr]"], {"fma", "sitofp", "uitofp", "fptrunc"})
         self.assertEqual(flagged["o.attrs"], {"fbin", "funary"})
         self.assertEqual(round_attrs(floats), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
@@ -221,6 +228,39 @@ class Tests(unittest.TestCase):
             Op("bitcast", (), ("i32",), ("i32",), ()),
             Op("bitcast", (), (), ("i32",), ()),
             Op("bitcast", (), ("f32", "f32"), ("i32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
+    def test_a_conversion_between_formats_is_a_cell_for_each_pair_it_takes(self):
+        found = cells.cells((8,), ("f16", "bf16", "f32"))
+        self.assertEqual(
+            {c for c in found if c.op in cells.FLOAT_CONVERSIONS},
+            {
+                Cell("conversions", "fpext", "f16", "f32"),
+                Cell("conversions", "fpext", "bf16", "f32"),
+                Cell("conversions", "fptrunc", "f32", "f16"),
+                Cell("conversions", "fptrunc", "f32", "bf16"),
+                Cell("conversions", "fptrunc", "f16", "bf16"),
+                Cell("conversions", "fptrunc", "bf16", "f16"),
+            },
+        )
+        ext = Op("fpext", (), ("f32",), ("f64",), ())
+        self.assertEqual(of_op(ext), {Cell("conversions", "fpext", "f32", "f64")})
+        small = Op("fpext", (), ("float(2, 1)",), ("bf16",), ())
+        self.assertEqual(
+            of_op(small), {Cell("conversions", "fpext", "float(2, 1)", "bf16")}
+        )
+        trunc = Op("fptrunc", ("round(rne)",), ("f16",), ("bf16",), ())
+        self.assertEqual(of_op(trunc), {Cell("conversions", "fptrunc", "f16", "bf16")})
+        for bad in [
+            Op("fpext", ("round(rne)",), ("f32",), ("f64",), ()),
+            Op("fptrunc", (), ("f64",), ("f32",), ()),
+            Op("fpext", (), ("f64",), ("f32",), ()),
+            Op("fptrunc", ("round(rne)",), ("f32",), ("f64",), ()),
+            Op("fpext", (), ("bf16",), ("f16",), ()),
+            Op("fpext", (), ("f32",), ("f32",), ()),
+            Op("fpext", (), ("i32",), ("f64",), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)

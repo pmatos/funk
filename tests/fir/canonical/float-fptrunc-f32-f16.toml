@@ -1,0 +1,75 @@
+# Tests of float-fptrunc-f32-f16.fir: fptrunc from f32 to f16
+# (ADR-2026-11-09-1549) on the edges of the source and of the target:
+# zeros, subnormals, the largest finite values, the values halfway
+# between two values of the target and next to them, overflow to
+# infinity, underflow to zero, infinities and NaNs. Written by
+# scripts/harness/float_convert_cases.py, which computes each expected
+# result with scripts/harness/float_ref.py, apart from Lean.
+# Each test is interpreter-only: the backend does not lower
+# f32 and f16 both, so fir-ref alone runs it and must give what it
+# expects.
+# A NaN operand gives any NaN of the target: its test is
+# interpreter-only and names the NaN by a choice of the sign and the
+# mantissa. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@f32_f16", args = ["0.0"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["1.0e-45"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["1.1754942e-38"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["1.1754944e-38"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["2.980232e-8"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["2.9802322e-8"], expect = ["0.0"] },
+  { func = "@f32_f16", args = ["2.9802326e-8"], expect = ["6.0e-8"] },
+  { func = "@f32_f16", args = ["5.9604645e-8"], expect = ["6.0e-8"] },
+  { func = "@f32_f16", args = ["8.940696e-8"], expect = ["6.0e-8"] },
+  { func = "@f32_f16", args = ["8.940697e-8"], expect = ["1.0e-7"] },
+  { func = "@f32_f16", args = ["8.9406974e-8"], expect = ["1.0e-7"] },
+  { func = "@f32_f16", args = ["1.490116e-7"], expect = ["1.0e-7"] },
+  { func = "@f32_f16", args = ["1.4901161e-7"], expect = ["1.0e-7"] },
+  { func = "@f32_f16", args = ["1.4901163e-7"], expect = ["2.0e-7"] },
+  { func = "@f32_f16", args = ["6.1035156e-5"], expect = ["6.104e-5"] },
+  { func = "@f32_f16", args = ["1.0"], expect = ["1.0"] },
+  { func = "@f32_f16", args = ["1.0004882"], expect = ["1.0"] },
+  { func = "@f32_f16", args = ["1.0004883"], expect = ["1.0"] },
+  { func = "@f32_f16", args = ["1.0004884"], expect = ["1.001"] },
+  { func = "@f32_f16", args = ["1.0014647"], expect = ["1.001"] },
+  { func = "@f32_f16", args = ["1.0014648"], expect = ["1.002"] },
+  { func = "@f32_f16", args = ["1.001465"], expect = ["1.002"] },
+  { func = "@f32_f16", args = ["65504.0"], expect = ["65500.0"] },
+  { func = "@f32_f16", args = ["65519.996"], expect = ["65500.0"] },
+  { func = "@f32_f16", args = ["65520.0"], expect = ["0x7c00"] },
+  { func = "@f32_f16", args = ["65520.004"], expect = ["0x7c00"] },
+  { func = "@f32_f16", args = ["3.4028235e38"], expect = ["0x7c00"] },
+  { func = "@f32_f16", args = ["0x7f800000"], expect = ["0x7c00"] },
+  { func = "@f32_f16", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-1.0e-45"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-1.1754942e-38"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-1.1754944e-38"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-2.980232e-8"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-2.9802322e-8"], expect = ["-0.0"] },
+  { func = "@f32_f16", args = ["-2.9802326e-8"], expect = ["-6.0e-8"] },
+  { func = "@f32_f16", args = ["-5.9604645e-8"], expect = ["-6.0e-8"] },
+  { func = "@f32_f16", args = ["-8.940696e-8"], expect = ["-6.0e-8"] },
+  { func = "@f32_f16", args = ["-8.940697e-8"], expect = ["-1.0e-7"] },
+  { func = "@f32_f16", args = ["-8.9406974e-8"], expect = ["-1.0e-7"] },
+  { func = "@f32_f16", args = ["-1.490116e-7"], expect = ["-1.0e-7"] },
+  { func = "@f32_f16", args = ["-1.4901161e-7"], expect = ["-1.0e-7"] },
+  { func = "@f32_f16", args = ["-1.4901163e-7"], expect = ["-2.0e-7"] },
+  { func = "@f32_f16", args = ["-6.1035156e-5"], expect = ["-6.104e-5"] },
+  { func = "@f32_f16", args = ["-1.0"], expect = ["-1.0"] },
+  { func = "@f32_f16", args = ["-1.0004882"], expect = ["-1.0"] },
+  { func = "@f32_f16", args = ["-1.0004883"], expect = ["-1.0"] },
+  { func = "@f32_f16", args = ["-1.0004884"], expect = ["-1.001"] },
+  { func = "@f32_f16", args = ["-1.0014647"], expect = ["-1.001"] },
+  { func = "@f32_f16", args = ["-1.0014648"], expect = ["-1.002"] },
+  { func = "@f32_f16", args = ["-1.001465"], expect = ["-1.002"] },
+  { func = "@f32_f16", args = ["-65504.0"], expect = ["-65500.0"] },
+  { func = "@f32_f16", args = ["-65519.996"], expect = ["-65500.0"] },
+  { func = "@f32_f16", args = ["-65520.0"], expect = ["0xfc00"] },
+  { func = "@f32_f16", args = ["-65520.004"], expect = ["0xfc00"] },
+  { func = "@f32_f16", args = ["-3.4028235e38"], expect = ["0xfc00"] },
+  { func = "@f32_f16", args = ["0xff800000"], expect = ["0xfc00"] },
+  { func = "@f32_f16", args = ["0x7fc00000"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@f32_f16", args = ["0x7f800001"], choices = ["-1"], expect = ["0xffff"] },
+  { func = "@f32_f16", args = ["0xffffffff"], choices = ["1"], expect = ["0x7c01"] },
+  { func = "@f32_f16", args = ["poison"], expect = ["poison"] },
+]

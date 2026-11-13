@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "10829226034814001931")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "11186240787142481560")
+:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "7349778873386031151")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,7 +28,7 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 28 ops: $`\mathsf{const}` at an integer type and at a float
+These are 30 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
@@ -36,8 +36,10 @@ $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
 $`\mathsf{shl}`, $`\mathsf{lshr}` and $`\mathsf{ashr}`, $`\mathsf{icmp}`,
 $`\mathsf{fcmp}`, the width changes $`\mathsf{zext}`, $`\mathsf{sext}` and
 $`\mathsf{trunc}`, the float arithmetic $`\mathit{fbin}`,
-$`\mathit{funary}` and $`\mathsf{fma}`, the two bit casts, and the two
-conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`. Each proves it in the section of its family. The other
+$`\mathit{funary}` and $`\mathsf{fma}`, the two bit casts, the two
+conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, and
+the two conversions between formats $`\mathsf{fpext}` and
+$`\mathsf{fptrunc}`. Each proves it in the section of its family. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison

@@ -1,0 +1,75 @@
+# Tests of float-fptrunc-f64-f16.fir: fptrunc from f64 to f16
+# (ADR-2026-11-09-1549) on the edges of the source and of the target:
+# zeros, subnormals, the largest finite values, the values halfway
+# between two values of the target and next to them, overflow to
+# infinity, underflow to zero, infinities and NaNs. Written by
+# scripts/harness/float_convert_cases.py, which computes each expected
+# result with scripts/harness/float_ref.py, apart from Lean.
+# Each test is interpreter-only: the backend does not lower
+# f64 and f16 both, so fir-ref alone runs it and must give what it
+# expects.
+# A NaN operand gives any NaN of the target: its test is
+# interpreter-only and names the NaN by a choice of the sign and the
+# mantissa. Native code is not compared on a NaN result yet (#219).
+tests = [
+  { func = "@f64_f16", args = ["0.0"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["5.0e-324"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["2.225073858507201e-308"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["2.2250738585072014e-308"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["2.980232238769531e-8"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["2.9802322387695312e-8"], expect = ["0.0"] },
+  { func = "@f64_f16", args = ["2.980232238769532e-8"], expect = ["6.0e-8"] },
+  { func = "@f64_f16", args = ["5.960464477539063e-8"], expect = ["6.0e-8"] },
+  { func = "@f64_f16", args = ["8.940696716308592e-8"], expect = ["6.0e-8"] },
+  { func = "@f64_f16", args = ["8.940696716308594e-8"], expect = ["1.0e-7"] },
+  { func = "@f64_f16", args = ["8.940696716308595e-8"], expect = ["1.0e-7"] },
+  { func = "@f64_f16", args = ["1.4901161193847654e-7"], expect = ["1.0e-7"] },
+  { func = "@f64_f16", args = ["1.4901161193847656e-7"], expect = ["1.0e-7"] },
+  { func = "@f64_f16", args = ["1.490116119384766e-7"], expect = ["2.0e-7"] },
+  { func = "@f64_f16", args = ["6.103515625e-5"], expect = ["6.104e-5"] },
+  { func = "@f64_f16", args = ["1.0"], expect = ["1.0"] },
+  { func = "@f64_f16", args = ["1.0004882812499998"], expect = ["1.0"] },
+  { func = "@f64_f16", args = ["1.00048828125"], expect = ["1.0"] },
+  { func = "@f64_f16", args = ["1.0004882812500002"], expect = ["1.001"] },
+  { func = "@f64_f16", args = ["1.0014648437499998"], expect = ["1.001"] },
+  { func = "@f64_f16", args = ["1.00146484375"], expect = ["1.002"] },
+  { func = "@f64_f16", args = ["1.0014648437500002"], expect = ["1.002"] },
+  { func = "@f64_f16", args = ["65504.0"], expect = ["65500.0"] },
+  { func = "@f64_f16", args = ["65519.99999999999"], expect = ["65500.0"] },
+  { func = "@f64_f16", args = ["65520.0"], expect = ["0x7c00"] },
+  { func = "@f64_f16", args = ["65520.00000000001"], expect = ["0x7c00"] },
+  { func = "@f64_f16", args = ["1.7976931348623157e308"], expect = ["0x7c00"] },
+  { func = "@f64_f16", args = ["0x7ff0000000000000"], expect = ["0x7c00"] },
+  { func = "@f64_f16", args = ["-0.0"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-5.0e-324"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-2.225073858507201e-308"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-2.2250738585072014e-308"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-2.980232238769531e-8"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-2.9802322387695312e-8"], expect = ["-0.0"] },
+  { func = "@f64_f16", args = ["-2.980232238769532e-8"], expect = ["-6.0e-8"] },
+  { func = "@f64_f16", args = ["-5.960464477539063e-8"], expect = ["-6.0e-8"] },
+  { func = "@f64_f16", args = ["-8.940696716308592e-8"], expect = ["-6.0e-8"] },
+  { func = "@f64_f16", args = ["-8.940696716308594e-8"], expect = ["-1.0e-7"] },
+  { func = "@f64_f16", args = ["-8.940696716308595e-8"], expect = ["-1.0e-7"] },
+  { func = "@f64_f16", args = ["-1.4901161193847654e-7"], expect = ["-1.0e-7"] },
+  { func = "@f64_f16", args = ["-1.4901161193847656e-7"], expect = ["-1.0e-7"] },
+  { func = "@f64_f16", args = ["-1.490116119384766e-7"], expect = ["-2.0e-7"] },
+  { func = "@f64_f16", args = ["-6.103515625e-5"], expect = ["-6.104e-5"] },
+  { func = "@f64_f16", args = ["-1.0"], expect = ["-1.0"] },
+  { func = "@f64_f16", args = ["-1.0004882812499998"], expect = ["-1.0"] },
+  { func = "@f64_f16", args = ["-1.00048828125"], expect = ["-1.0"] },
+  { func = "@f64_f16", args = ["-1.0004882812500002"], expect = ["-1.001"] },
+  { func = "@f64_f16", args = ["-1.0014648437499998"], expect = ["-1.001"] },
+  { func = "@f64_f16", args = ["-1.00146484375"], expect = ["-1.002"] },
+  { func = "@f64_f16", args = ["-1.0014648437500002"], expect = ["-1.002"] },
+  { func = "@f64_f16", args = ["-65504.0"], expect = ["-65500.0"] },
+  { func = "@f64_f16", args = ["-65519.99999999999"], expect = ["-65500.0"] },
+  { func = "@f64_f16", args = ["-65520.0"], expect = ["0xfc00"] },
+  { func = "@f64_f16", args = ["-65520.00000000001"], expect = ["0xfc00"] },
+  { func = "@f64_f16", args = ["-1.7976931348623157e308"], expect = ["0xfc00"] },
+  { func = "@f64_f16", args = ["0xfff0000000000000"], expect = ["0xfc00"] },
+  { func = "@f64_f16", args = ["0x7ff8000000000000"], choices = ["0"], expect = ["0x7e00"] },
+  { func = "@f64_f16", args = ["0x7ff0000000000001"], choices = ["-1"], expect = ["0xffff"] },
+  { func = "@f64_f16", args = ["0xffffffffffffffff"], choices = ["1"], expect = ["0x7c01"] },
+  { func = "@f64_f16", args = ["poison"], expect = ["poison"] },
+]

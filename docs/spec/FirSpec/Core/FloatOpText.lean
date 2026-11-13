@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8520737232253924176")
+:::moduleDocs (fingerprint := "6434325855953841403")
 :::
 
 :::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "906894083440061025")
@@ -71,6 +71,20 @@ type $`\mathsf{float}\langle e,m \rangle`, for any $`N`, $`e` and $`m`, as
 $`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`. So a
 conversion with no attribute or with $`\mathtt{round(rtz)}`, from a float
 or to an integer, does not decode.
+:::
+
+:::readable Fir.Core.decodeFpext Fir.Core.decodeFptrunc (pin := Fir.Core.isRoundAttrs) (fingerprint := "3590057646203551452")
+*Definition: reading a conversion between formats back.*
+$`\mathtt{fpext}` decodes from no attributes, and $`\mathtt{fptrunc}`
+from the attributes $`[\mathtt{round(rne)}]`, each with one operand type
+$`\mathsf{float}\langle e,m \rangle` and one result type
+$`\mathsf{float}\langle e',m' \rangle`, for any two formats, as
+$`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`. So
+$`\mathtt{fpext}` with $`\mathtt{round(rne)}`, $`\mathtt{fptrunc}`
+without it, or either from or to an integer does not decode. Which pairs
+of formats each takes is a
+{ref "The-fir-specification--Validation--Core-rules"}[core rule] of
+validation.
 :::
 
 :::readable Fir.Core.eq_of_isRoundAttrs Fir.Core.FBin.attrs_of_attrsOk Fir.Core.FUnary.attrs_of_attrsOk Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "11995233360236892250")
