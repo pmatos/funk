@@ -78,7 +78,7 @@ declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.instDialectMemDenote Fir.Core.liftsSetM Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "18044563165928081954")
+:::readable Fir.Core.instDialectMemDenote Fir.Core.liftsSetM Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "9819905387137514104")
 *Definition: the core's semantics with memory.* No core op touches memory:
 at every naming of the core's memories, each op runs by its rule in the
 set monad and keeps the memories
@@ -93,7 +93,7 @@ whose ops touch no memory meets. So a pass may rely on the core ops'
 effect sets (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "1402562830191292336")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (fingerprint := "17482424728712250987")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. A dialect

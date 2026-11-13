@@ -66,7 +66,10 @@ pointer width. The unit is an 8-bit byte unless the layout says otherwise. Sizes
 and offsets in a memory count its units (ADR-2026-11-09-1542). It also gives
 each memory its byte order, `little` alone in M1, its pointers' alignment and
 whether it is non-integral; [text-format-layout.md](text-format-layout.md)
-says what holds for it (ADR-2026-11-12-1821).
+says what holds for it (ADR-2026-11-12-1821). A run gives each memory its entry,
+and an op takes the unit width, byte order and pointer width of the memory it
+accesses from that memory's entry, never from the dialect or the op
+(ADR-2026-11-13-0906; [semantics-effects.md](semantics-effects.md#soundness)).
 
 A value takes whole units of the memory it is stored in, placed in the
 memory's byte order (ADR-2026-11-12-2125). An `iN` takes `ceil(N / U)` units
@@ -117,8 +120,10 @@ memory yet (#231). Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
 - `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
-  each memory name, with a unit width per name that the data layout will give,
-  and a stack of frames. A frame lists the stack allocations its call made.
+  each memory name, with a unit width per name, and a stack of frames. The
+  semantics with memory takes each memory's layout entry and gives the
+  memories the units of their entries (`unitsOf lay`). A frame lists the
+  stack allocations its call made.
 - `MonadMemory` gives allocating, freeing, loading and storing on a named
   memory, and a faulting access is UB. `StateT (Memories Mem unit) m` keeps
   `m`'s choice and UB and gives the memory effect. A stuck path keeps the

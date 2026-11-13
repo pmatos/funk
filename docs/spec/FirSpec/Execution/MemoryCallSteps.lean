@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17976563511346448721")
+:::moduleDocs (fingerprint := "636248246661803640")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -73,12 +73,12 @@ op $`o` of every block of $`f`:
 Here $`\mathrm{exit}_o` is the exit of $`o` in the state layer.
 :::
 
-:::readable Fir.Func.InModule.memInModule_liftState Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt (pin := Fir.DialectDenote.liftState) (fingerprint := "1928419679928969135")
+:::readable Fir.Func.InModule.memInModule_liftState Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt (pin := Fir.DialectDenote.liftState) (fingerprint := "9787088167474692482")
 *Definition and theorems: running within a module, at a naming.* The ops of
-$`f` run within $`M` with memory _at the naming_ $`\rho`, with unit widths
-$`u`, when they run within it by the dialect's semantics with memory where
-a run names the dialect's memory $`x` as $`\rho(x)`, whose units are
-$`u(\rho(x))` bits wide. A function that runs within its module runs
+$`f` run within $`M` with memory _at the naming_ $`\rho`, with layout
+entries $`\ell`, when they run within it by the dialect's semantics with
+memory where a run names the dialect's memory $`x` as $`\rho(x)`, whose
+entry is $`\ell(\rho(x))`. A function that runs within its module runs
 within it with memory by its dialect's semantics in the set monad, lifted
 into the state layer: each terminator goes where it goes in the set monad,
 and keeps the memories. So, in a dialect that
@@ -87,7 +87,7 @@ a function that runs within its module runs within it with memory, at every
 naming.
 :::
 
-:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "2274960835630802990")
+:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "13549213396792715278")
 *Theorem: a run with memory that starts.* When a function $`f` starts on
 its arguments, at its entry block's ops $`o^*` with the environment $`E`,
 its runs with memory at a naming, at the budget $`n`, are

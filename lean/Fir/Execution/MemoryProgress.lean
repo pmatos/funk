@@ -233,16 +233,16 @@ section
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectEffects d] [DialectMemDenote d] [DialectValidation d] {N : Type} [DecidableEq N]
-  (unit : N → Nat) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
 
 /-- No path of a run with memory of a function of the module `M` is stuck,
 at any budget, on any argument vector, calls and recursion included,
 wherever a run names the dialect's memories, when every function of `M` is
 valid and runs within `M` with memory at that naming. -/
 theorem Func.memNeverStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
-    (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M) {f : Func d} (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns unit ρ M args) := by
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+    (hm : ∀ g ∈ M.funcs, g.InModuleAt lay ρ M) {f : Func d} (hf : f ∈ M.funcs)
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
   intro n ⟨st, h⟩
   have hvf := hv f hf
   obtain ⟨e, he, hep⟩ := hvf.entry
@@ -251,7 +251,7 @@ theorem Func.memNeverStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem)) (Env.scoped_params hvf he hep args)
     Memories.empty.enter
   rw [List.drop_zero] at hns
-  rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)] at h
+  rw [Func.memRuns_enter lay ρ M f args n (Func.enter_entry he hep args)] at h
   exact NoStuck.finish _ (NoStuck.map Result.withState hns) st h
 
 /-- A run with memory of a function of the module `M` has an outcome at
@@ -260,27 +260,27 @@ wherever a run names the dialect's memories, when the dialect is lawful in
 its totality and every function of `M` is valid and runs within `M` with
 memory at that naming. -/
 theorem Func.memProgress [LawfulDialectTotal d] (hv : ∀ g ∈ M.funcs, g.Valid ctx)
-    (hm : ∀ g ∈ M.funcs, g.InModuleAt unit ρ M) {f : Func d} (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns unit ρ M args) := by
-  letI := DialectMemDenote.denoteAt (d := d) unit ρ
+    (hm : ∀ g ∈ M.funcs, g.InModuleAt lay ρ M) {f : Func d} (hf : f ∈ M.funcs)
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ
   intro n
   have hvf := hv f hf
   obtain ⟨e, he, hep⟩ := hvf.entry
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
   have hhp := Module.calls_memHasPath hv hm
-    (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc unit ρ)
+    (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc lay ρ)
     n f hf e hmem 0 _ (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem))
     (Env.scoped_params hvf he hep args) Memories.empty.enter
   rw [List.drop_zero] at hhp
   obtain ⟨ev, hev⟩ := HasPath.finish Prod.fst (HasPath.map Result.withState hhp)
-  replace hev : f.memRuns unit ρ M args n ev := by
-    rw [Func.memRuns_enter unit ρ M f args n (Func.enter_entry he hep args)]
+  replace hev : f.memRuns lay ρ M args n ev := by
+    rw [Func.memRuns_enter lay ρ M f args n (Func.enter_entry he hep args)]
     exact hev
   match ev, hev with
   | .ok (.ok (.ret vs)), hev => exact ⟨.ret vs, hev⟩
   | .ok (.ok .fuelExhausted), hev => exact ⟨.fuelExhausted, hev⟩
   | .ub r, hev => exact ⟨.ub r, hev⟩
-  | .ok (.error st), hev => exact absurd ⟨st, hev⟩ (Func.memNeverStuck unit ρ hv hm hf args n)
+  | .ok (.error st), hev => exact absurd ⟨st, hev⟩ (Func.memNeverStuck lay ρ hv hm hf args n)
 
 end
 

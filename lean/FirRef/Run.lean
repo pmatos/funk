@@ -241,48 +241,43 @@ per level of calls or per choice. They name the core dialect, so they live in
 `fir-ref`'s command line, not in `FirRef.RunModes` (G0, ADR-2026-11-03-0600).
 -/
 
-/-- `Core.scripted`, by the machine. -/
-def runScripted {N : Type} [DecidableEq N] (unit : N → Nat) {σ : Type}
-    (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
-    Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
-  Machine.scripted (unit := unit) M read f args fuel cs
+/-- `Core.scripted`, by the machine, with the core's semantics in the layer
+over the tree that the modes run: each memory with its entry in `M`'s data
+layout, named by its number. -/
+def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
+    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
 
 @[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
-  funext N _ unit σ read M f args fuel cs
+  funext σ read M f args fuel cs
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.scripted_eq M read f args fuel cs).symm
 
 /-- `Core.exhaustive`, by the machine. -/
-def runExhaustive {N : Type} [DecidableEq N] (unit : N → Nat) (M : Module CoreDialect)
-    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (RunLeaf × Nat)) :=
-  Machine.exhaustive (unit := unit) M f args fuel budget
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
 
 @[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
-  funext N _ unit M f args fuel budget
+  funext M f args fuel budget
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.exhaustive_eq M f args fuel budget).symm
 
 /-- `Core.sampled`, by the machine. -/
-def runSampled {N : Type} [DecidableEq N] (unit : N → Nat) {γ : Type}
-    (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     RunLeaf × List ChoiceTree.Chosen :=
-  Machine.sampled (unit := unit) M draw f args fuel g
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
 
 @[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
-  funext N _ unit γ draw M f args fuel g
+  funext γ draw M f args fuel g
+  letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.sampled_eq M draw f args fuel g).symm
-
-/-- The width of the units of each memory of a run of `fir-ref` on a module
-whose data layout is `l`, which names the core's memories by themselves
-(`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`): the unit of
-the memory's entry in `l`. Memory 0 has an entry in every layout. A memory
-that `l` does not declare gets the unit of `MemLayout.default`, 8 bits,
-whatever unit `l` gives memory 0. Validation rejects every pointer type that
-names such a memory, but `fir-ref run` does not validate the module it runs,
-so an invalid one may reach it; no core op touches memory yet, so the width
-changes no run. -/
-def coreUnit (l : DataLayout) : Core.Mem → Nat := fun n => ((l.memory? n).getD .default).unit
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, or sampled mode, with the
@@ -313,10 +308,10 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
       else match readArgs ts args, mode with
         | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
         | .ok vs, .scripted cs =>
-          scriptedReport name (Core.scripted (coreUnit m.layout) constOf m f vs fuel cs)
+          scriptedReport name (Core.scripted constOf m f vs fuel cs)
         | .ok vs, .exhaustive b =>
-          exhaustiveReport name b (Core.exhaustive (coreUnit m.layout) m f vs fuel b)
+          exhaustiveReport name b (Core.exhaustive m f vs fuel b)
         | .ok vs, .sampled s =>
-          sampledReport name (Core.sampled (coreUnit m.layout) draw m f vs fuel ⟨s.toUInt64⟩)
+          sampledReport name (Core.sampled draw m f vs fuel ⟨s.toUInt64⟩)
 
 end FirRef

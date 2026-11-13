@@ -197,14 +197,14 @@ def runBy (spec : Bool) (m : Module CoreDialect) (func : String) (args : List St
     match readArgs (f.params.map (·.2)) args, mode with
     | .error why, _ => fails 2 why
     | .ok vs, .scripted cs => scriptedReport name <| if spec then
-        (f.memTree (coreUnit m.layout) (ε := Core.Op) m vs defaultFuel).script constOf cs 0
-      else Core.scripted (coreUnit m.layout) constOf m f vs defaultFuel cs
+        (Core.modeTree m f vs defaultFuel).script constOf cs 0
+      else Core.scripted constOf m f vs defaultFuel cs
     | .ok vs, .exhaustive b => exhaustiveReport name b <| if spec then
-        (f.memTree (coreUnit m.layout) (ε := Core.Op) m vs defaultFuel).explore b
-      else Core.exhaustive (coreUnit m.layout) m f vs defaultFuel b
+        (Core.modeTree m f vs defaultFuel).explore b
+      else Core.exhaustive m f vs defaultFuel b
     | .ok vs, .sampled s => sampledReport name <| if spec then
-        (f.memTree (coreUnit m.layout) (ε := Core.Op) m vs defaultFuel).sample draw ⟨s.toUInt64⟩
-      else Core.sampled (coreUnit m.layout) draw m f vs defaultFuel ⟨s.toUInt64⟩
+        (Core.modeTree m f vs defaultFuel).sample draw ⟨s.toUInt64⟩
+      else Core.sampled draw m f vs defaultFuel ⟨s.toUInt64⟩
 
 /-- The machine and the spec's tree both report `r` on the function `func`
 of the module, if there is one. -/

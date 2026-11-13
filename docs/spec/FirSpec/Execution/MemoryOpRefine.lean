@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Monotonicity with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7901211564306828985")
+:::moduleDocs (fingerprint := "2303416896488253723")
 :::
 
 :::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "12617051221931686737")
@@ -40,7 +40,7 @@ results of two computations by a map $`f` that takes results related by
 $`r` to results related by $`r'` keeps refinement.
 :::
 
-:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "6924644383010275487")
+:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "8181747639553358221")
 *Definitions: monotone with memory, and a dialect lawful in its
 monotonicity.* In a semantics of a dialect in the state layer, the op $`o`
 is monotone when, on operand vectors $`\vec{v} \sqsubseteq \vec{v}'`
@@ -52,7 +52,7 @@ memories that refine others, as the relation above says.
 
 An op is _monotone with memory_ when it is monotone in the dialect's
 semantics with memory at every naming $`\rho` of its memories, with any
-unit widths. A dialect is _lawful in its monotonicity_ when every valid op
+layout entries. A dialect is _lawful in its monotonicity_ when every valid op
 instance that is a terminator or calls no function is monotone with
 memory. The class asks for no semantics in the set monad, so a dialect
 whose ops touch memory can meet it. It is what refinement with memory asks

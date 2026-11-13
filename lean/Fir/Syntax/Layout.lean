@@ -19,9 +19,12 @@ endian, natural alignment and integral. A module whose text has no layout
 has the empty layout, so it has memory 0 alone, with the default
 (ADR-2026-11-12-1821).
 
-The text writes the layout on one line after the dialect set, the
-validation chapter says which layouts are valid, and the ops that read the
-widths, the byte order and the alignment come with loads and stores (#231).
+The text writes the layout on one line after the dialect set, and the
+validation chapter says which layouts are valid. A run of a module gives
+each of its memories its entry, and the semantics with memory gives each op
+the entry of each memory it names, so an op that loads or stores reads the
+unit, the byte order and the pointer width of the memory it accesses from
+its entry. The ops that read them come with loads and stores (#231).
 This section gives the byte orders, a memory's entry, the layout, and the
 widths and alignments that an entry gives.
 -/
@@ -105,6 +108,19 @@ the default memory alone. -/
 theorem DataLayout.declares_nil {n : Nat} : DataLayout.Declares [] n ↔ n = 0 := by
   unfold Declares memory?
   by_cases h : n = 0 <;> simp [h]
+
+/-- The entry that a run of a module with the layout `l` gives its memory
+`n`: the one that `l` declares for it, or the default memory's when `l`
+declares none. Memory 0 has an entry in every layout. Validation rejects
+every type that names a memory that `l` does not declare, so a valid module
+never reaches the default for any other memory; an invalid one may, since a
+run does not validate what it runs. -/
+def DataLayout.entry (l : DataLayout) (n : Nat) : MemLayout := (l.memory? n).getD .default
+
+/-- The entry of a memory that the layout declares is its declared one. -/
+theorem DataLayout.entry_of_memory {l : DataLayout} {n : Nat} {e : MemLayout}
+    (h : l.memory? n = some e) : l.entry n = e := by
+  simp [entry, h]
 
 /-- How many units a pointer of the memory takes: its width over the unit's,
 rounded up. -/

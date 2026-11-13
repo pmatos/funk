@@ -14,12 +14,12 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Poison obligations with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5606158314346818949")
+:::moduleDocs (fingerprint := "5466025618371562006")
 :::
 
-:::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "10289990865918709151")
+:::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "14323327561986073065")
 *Definitions: an op that propagates poison, with memory.* Wherever a run
-names the dialect's memories, by any names $`N`, unit widths and map
+names the dialect's memories, by any names $`N`, layout entries and map
 $`\rho` from the dialect's memories to $`N`, the op $`o` that is not a
 terminator has two clauses, over its
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
@@ -43,7 +43,7 @@ poison pointer may be UB because some pointer in its place faults on those
 memories. An op _propagates poison with memory_ when both clauses hold.
 :::
 
-:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "13999479133628405871")
+:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "8888602367402709010")
 *Definitions: a result on defined operands with memory, and a dialect lawful
 in its poison with memory.* An op _returns a result on defined operands
 with memory_ when, wherever a run names the dialect's memories, it returns

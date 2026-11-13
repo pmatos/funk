@@ -93,9 +93,14 @@ memory, in `lean/Fir/Execution/MemoryObligations.lean`:
 
 - A dialect gives its ops a semantics in the state layer over the set monad
   wherever a run names its memories (`DialectMemDenote`): for any memory names
-  of a run, any unit widths, and any map `ρ` of the dialect's memory names to
-  the run's. The module's data layout, not the dialect, gives the widths
-  (ADR-2026-11-10-2350).
+  `N` of a run, the layout entry `lay : N → MemLayout` of each, and any map `ρ`
+  of the dialect's memory names to the run's (ADR-2026-11-10-2350). The
+  module's data layout, not the dialect, gives the entries: a memory's units
+  are as wide as its entry says (`unitsOf lay`), and an op that names the
+  dialect's memory `x` takes the unit width, byte order and pointer width of
+  the memory it accesses from `lay (ρ x)` (ADR-2026-11-13-0906). Rejected: a
+  unit width per memory with the byte order as a second map, which could
+  disagree with the layout.
 - For each memory `x` of the run that the op's declaration, renamed by `ρ`,
   leaves out: without a write, every allocation of `x` that was there keeps
   its units, and new allocations may follow (`WritesNot`); without
@@ -134,12 +139,13 @@ theorems over runs in the set monad that use these two obligations assume the
 tie. Theorems that do not use them, such as fuel monotonicity, progress and
 refinement of runs in the set monad, take no tie. A dialect with a memory op has
 no tie: its theorems speak of its runs with memory. Runs with memory,
-`Func.memRuns unit ρ M f`, run `DialectMemDenote.denoteAt unit ρ` from the empty
-memories, and under the tie they are the runs in the set monad
-(`Func.memRuns_eq`). Rejected: a tie for every dialect, memory ops included. A
-load has no meaning in the set monad, so the tie would make it UB or give it no
-outcome there, and the runs in the set monad would mean nothing for programs
-that touch memory.
+`Func.memRuns lay ρ M f`, run `DialectMemDenote.denoteAt lay ρ` from the empty
+memories, at every layout and naming; a run of a module gives each memory its
+entry in the module's data layout (`DataLayout.entry`). Under the tie they are
+the runs in the set monad (`Func.memRuns_eq`). Rejected: a tie for every
+dialect, memory ops included. A load has no meaning in the set monad, so the
+tie would make it UB or give it no outcome there, and the runs in the set monad
+would mean nothing for programs that touch memory.
 
 Observable has no obligation yet: M0's runs have no trace. The core dialect is
 lawful in its effects (`Core.lawfulDialectEffects`). Its ops touch no memory, so

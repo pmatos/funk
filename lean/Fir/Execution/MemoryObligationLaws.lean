@@ -185,27 +185,30 @@ attribute [local instance] DialectMemDenote.ofSetM in
 naming, whatever it declares: the obligation as `LawfulDialectEffects`
 states it. -/
 theorem DialectMemDenote.ofSetM_writesNot (op : d.Op) (_ : TypesValid op)
-    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
+        MemLayout)
     (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).writes.map ρ).Has x) :
-    OwnRuleHas unit ρ (WritesNot x) op :=
+    OwnRuleHas lay ρ (WritesNot x) op :=
   fun _ => ⟨fun _ => writesNot_lift x _, fun _ => writesNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory reads no memory, at every
 naming, whatever it declares. -/
 theorem DialectMemDenote.ofSetM_readsNot (op : d.Op) (_ : TypesValid op)
-    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
+        MemLayout)
     (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).reads.map ρ).Has x) :
-    OwnRuleHas unit ρ (ReadsNot x) op :=
+    OwnRuleHas lay ρ (ReadsNot x) op :=
   fun _ => ⟨fun _ => readsNot_lift x _, fun _ => readsNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory allocates in no memory, at
 every naming, whatever it declares. -/
 theorem DialectMemDenote.ofSetM_allocatesNot (op : d.Op) (_ : TypesValid op)
-    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (unit : N → Nat)
+    (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
+        MemLayout)
     (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).allocates.map ρ).Has x) :
-    OwnRuleHas unit ρ (AllocatesNot x) op :=
+    OwnRuleHas lay ρ (AllocatesNot x) op :=
   fun _ => ⟨fun _ => allocatesNot_lift x _, fun _ => allocatesNot_lift x _⟩
 
 end
@@ -228,7 +231,7 @@ attribute [local instance] DialectMemDenote.ofSetM in
 set monad makes none with memory, at every naming. -/
 theorem MakesNoPoison.ofSetM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoisonSetM op) :
     MakesNoPoison op := by
-  intro ht N _ unit ρ args hnp S rs S' hden
+  intro ht N _ lay ρ args hnp S rs S' hden
   rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
   · cases he
     exact h ht args hnp _ ha
@@ -242,7 +245,7 @@ variable [DialectMemDenote d] [LiftsSetM d]
 memory never does in the set monad. -/
 theorem NeverUB.setM {op : d.Op} (h : NeverUB op) : NeverUBSetM op := by
   intro args r
-  have hu := h (N := Unit) (fun _ => 0) (fun _ => ()) args
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args
   rw [LiftsSetM.lifts] at hu
   exact ⟨fun ht => NoUB.of_lift (hu.1 ht) Memories.empty r,
     fun ht => NoUB.of_lift (hu.2 ht) Memories.empty r⟩
@@ -252,7 +255,7 @@ memory makes none in the set monad. -/
 theorem MakesNoPoison.setM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoison op) :
     MakesNoPoisonSetM op := by
   intro ht args hnp rs hden
-  have hp := h ht (N := Unit) (fun _ => 0) (fun _ => ()) args hnp Memories.empty rs
+  have hp := h ht (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args hnp Memories.empty rs
     Memories.empty
   rw [LiftsSetM.lifts] at hp
   exact hp ((SetM.lift_apply _ _ _).2 (.inl ⟨rs, hden, rfl⟩))

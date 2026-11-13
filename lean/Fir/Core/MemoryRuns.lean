@@ -53,23 +53,23 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect :=
 namespace Core
 
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
-  (unit : N → Nat) (ρ : DialectEffects.Mem CoreDialect → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
 
 /-- No path of a run with memory of a function of a valid core module is
 stuck, calls and recursion included, wherever a run names the core's
 memories. -/
 theorem memNeverStuck (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns unit ρ M args) :=
-  Func.memNeverStuck unit ρ hM.funcs
-    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt unit ρ) hf args
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
+  Func.memNeverStuck lay ρ hM.funcs
+    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt lay ρ) hf args
 
 /-- A run with memory of a function of a valid core module has an outcome
 at every budget, calls and recursion included, wherever a run names the
 core's memories. -/
 theorem memProgress (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns unit ρ M args) :=
-  Func.memProgress unit ρ hM.funcs
-    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt unit ρ) hf args
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
+  Func.memProgress lay ρ hM.funcs
+    (fun _ hg => (inModule_of_valid (hM.funcs _ hg)).inModuleAt lay ρ) hf args
 
 /-- Refined arguments, with memory: on arguments that refine others, a
 poison by any value, the runs with memory of every function of every core
@@ -77,11 +77,11 @@ module refine its runs with memory on those others, calls and recursion
 included, wherever a run names the core's memories. -/
 theorem memRuns_args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns unit ρ M a) ⊑ observable (f.memRuns unit ρ M a') :=
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) unit ρ
-  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N unit :=
-    fun g b hb o ho hc => MemMonotone.ofLifts (opsMonotone_all g b hb o ho hc) unit ρ
-  Func.memRuns_isRefinedBy_of_from unit ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
+    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
+    fun g b hb o ho hc => MemMonotone.ofLifts (opsMonotone_all g b hb o ho hc) lay ρ
+  Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
 end Core

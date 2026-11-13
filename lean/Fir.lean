@@ -117,6 +117,7 @@ import Fir.Execution.MemoryModes
 import Fir.Core.Lawful
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
+import Fir.Core.TreeRules
 import Fir.Core.Modes
 import Fir.Execution.Summary
 import Fir.Execution.SummaryLaws

@@ -16,7 +16,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Data layouts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15333822886483570211")
+:::moduleDocs (fingerprint := "11879504597878469070")
 :::
 
 :::readable Fir.ByteOrder (fingerprint := "2717303684540409010")
@@ -100,6 +100,20 @@ Whether a layout declares a memory can be decided.
 which a module without a layout line has, declares memory 0 and no other:
 
 $$`\epsilon~\text{declares}~n \iff n = 0`
+:::
+
+:::readable Fir.DataLayout.entry Fir.DataLayout.entry_of_memory (fingerprint := "1906880335619431194")
+*Definition: the entry a run gives a memory.* A run of a module with the
+layout $`L` gives each memory $`n` the entry $`\ell_L(n)`: $`L(n)` when
+$`L` declares $`n`, and the default entry otherwise. So
+$`\ell_L(n) = L(n)` whenever $`L(n)` exists. Validation rejects every type
+that names a memory that $`L` does not declare, so a valid module never
+reaches the default for any memory but 0; a run does not validate what it
+runs, so an invalid one may.
+
+The semantics with memory gives each op the entries of the memories it
+names, so a load or a store reads its memory's unit width, byte order and
+pointer width from $`\ell_L` (`docs/decisions/semantics-effects.md#soundness`).
 :::
 
 :::readable Fir.MemLayout.pointerUnits Fir.MemLayout.naturalAlign Fir.MemLayout.alignment (fingerprint := "509354576672953658")

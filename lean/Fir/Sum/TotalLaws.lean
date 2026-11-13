@@ -28,8 +28,8 @@ variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
 /-- A base op total with memory in the base is total with memory in the
 sum. -/
 theorem memTotal_inl {o : base.Op} (h : MemTotal o) : MemTotal (d := base ⊞ e) (.inl o) :=
-  fun unit ρ => ownRuleHas_inl unit ρ (fun f _ h => HasOutcome.map f h)
-    (h unit (ρ ∘ DialectMemOver.ofBase))
+  fun lay ρ => ownRuleHas_inl lay ρ (fun f _ h => HasOutcome.map f h)
+    (h lay (ρ ∘ DialectMemOver.ofBase))
 
 variable [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
@@ -56,7 +56,7 @@ variable {e dep big : Dialect} [TyDenote dep.Ty] [TyDenote big.Ty] [TyDenote e.T
 lift. -/
 theorem memTotal_lift {o : e.Op} (h : MemTotal (d := dep.over e) o) :
     MemTotal (d := big.over (e.lift dep ι μ)) o :=
-  fun unit ρ => ownRuleHas_lift unit ρ (fun f _ h => HasOutcome.map f h) (h unit (ρ ∘ liftMem μ))
+  fun lay ρ => ownRuleHas_lift lay ρ (fun f _ h => HasOutcome.map f h) (h lay (ρ ∘ liftMem μ))
 
 variable [DialectCall (dep.over e)] [DialectValidation big] [DialectValidation (dep.over e)]
 

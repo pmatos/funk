@@ -38,7 +38,7 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (pin := Fir.LiftsSetM) (fingerprint := "5040334682807161957")
+:::readable Fir.Module.runOps_notUB Fir.Module.runOps_clean (pin := Fir.LawfulDialectEffects) (pin := Fir.LiftsSetM) (fingerprint := "11866253861296355573")
 *Theorems: the ops of a function leave out what its summary leaves out.*
 Let the dialect be lawful in its effects, its semantics with memory lift
 its semantics in the set monad, and every function of $`M` valid. Let $`s` name the function $`f` of $`M`. From any ops of the blocks

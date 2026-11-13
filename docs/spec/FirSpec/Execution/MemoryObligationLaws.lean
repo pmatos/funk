@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5506508417601442060")
+:::moduleDocs (fingerprint := "3263741096906587329")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -48,7 +48,7 @@ then so does $`f \mathbin{<\$>} c`, for every $`f`: mapping changes the
 results and not the memories.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "6205957172566904502")
+:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "7522058415703922555")
 *Definition: the semantics with memory of a dialect whose ops touch no
 memory.* At every naming $`\rho`, each op runs by its rule in the set
 monad, lifted into the state layer, and keeps the memories.
@@ -67,7 +67,7 @@ ends in UB in the state layer; and if, lifted into the layer, it never ends
 in UB from some memories, then $`\mathsf{ub}~r \notin x` for every $`r`.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM_liftsSetM Fir.NeverUB.ofSetM Fir.MakesNoPoison.ofSetM (pin := Fir.LiftsSetM) (fingerprint := "10987074844963660206")
+:::readable Fir.DialectMemDenote.ofSetM_liftsSetM Fir.NeverUB.ofSetM Fir.MakesNoPoison.ofSetM (pin := Fir.LiftsSetM) (fingerprint := "14711993354742054684")
 *Theorem: a dialect whose ops touch no memory lifts the set monad.* Its
 semantics with memory is its semantics in the set monad, lifted, at every
 naming: the two are
@@ -79,7 +79,7 @@ UB with memory, at every naming and from every memories, and one that
 makes no poison in the set monad makes none with memory.
 :::
 
-:::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11785032560525899817")
+:::readable Fir.NeverUB.setM Fir.MakesNoPoison.setM (pin := Fir.LiftsSetM) (fingerprint := "11426148675706650251")
 *Theorem: back to the set monad.* In a dialect whose semantics with memory
 lifts its semantics in the set monad, an op that never ends in UB with
 memory never ends in UB in the set monad, and one that makes no poison
