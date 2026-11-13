@@ -226,10 +226,9 @@ def tests_text(t: str) -> str:
                 got = flagged(f, op, flag, bits)
                 if native:
                     lines.append(f'  {{ func = "{func}", args = [{args}] }},')
-                for c, r in (
-                    zip(("false", "true"), got) if len(got) > 1 else [(None, got[0])]
-                ):
-                    choice = "" if c is None else f'choices = ["{c}"], '
+                # Either zero is a choice of its sign bit; one result, none.
+                choices = ['choices = ["false"], ', 'choices = ["true"], ']
+                for choice, r in zip(choices if len(got) > 1 else [""], got):
                     lines.append(
                         f'  {{ func = "{func}", args = [{args}], {choice}'
                         f'expect = ["{spelled(f, op, r)}"] }},'
