@@ -160,6 +160,55 @@ theorem Func.memOps_allowedBelow {M M' : Module d}
         exact ⟨_, r, Func.memCall_cont hreg hargs hT hc hg hen hx₁ hty hlen
           (x := .ub r) (fun _ h => nomatch h) (fun h => nomatch h) h⟩
 
+/-- Each return and each UB of a function's behaviour from given memories in
+the target module, on arguments that refine others and from memories that
+refine others, is allowed by its behaviour from those others in the source
+module, when every call names the same function in both modules or a black
+box with memory, and every terminator and every op with no callee of the
+function and of the source module's functions is monotone with memory. No
+black box needs a budget. -/
+theorem Func.memRunsFrom_retUB_allowed {M M' : Module d}
+    (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit) (hcalls : MemCallsRefined Mem unit M M')
+    (f : Func d) (hf : f.MemOpsMonotone Mem unit)
+    {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
+    {S S' : Memories Mem unit} (hS : S ⊑ S') :
+    ∀ t, t ≠ .fuelExhausted → observable (f.memRunsFrom M' (a', S')) t →
+      ∃ s, observable (f.memRunsFrom M (a, S)) s ∧ s ⊑ t := by
+  have start : ∀ {p' : List (Operation d) × Env d}, f.enter a'.toDVals = .ok p' →
+      ∃ genv, f.enter a.toDVals = .ok (p'.1, genv) ∧ genv.IsRefinedBy p'.2 :=
+    fun hen' => Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy ha) hen'
+  have back : ∀ {p : List (Operation d) × Env d} {N : Nat}
+      {e : Ev (Except Stuck (Result ((List (DVal d) × Memories Mem unit) × Nat)))},
+      Ev.NotStuck e.dropLeft → f.enter a.toDVals = .ok p →
+      (Func.memCall M N f p.2 p.1 S).run e → (f.memRunsFrom M (a, S) N) e.dropLeft :=
+    fun hne hen h => (Func.memRunsFrom_run hne).2 ⟨_, hen, _, h, rfl⟩
+  have up : ∀ {p' : List (Operation d) × Env d}, f.enter a'.toDVals = .ok p' → ∀ {genv : Env d},
+      genv.IsRefinedBy p'.2 → ∀ n e', (Func.memCall M' n f p'.2 p'.1 S').run e' →
+        MemAllowed (fun N => Func.memCall M N f genv p'.1 S) e' :=
+    fun {_} hen' {_} henv n _ he' => Func.memCall_allowed (fun e₀ he₀ =>
+      Func.memOps_allowed hmono hcalls n f _ _ _ _ _ hf (hf.enter hen') henv hS.enter e₀ he₀) he'
+  intro t hnx ht
+  match t, ht with
+  | .ret (vs', T'), ⟨n, hn⟩ =>
+    obtain ⟨p', hen', e', he', hx⟩ :=
+      (Func.memRunsFrom_run (x := .ok (.ok (.ret (vs', T')))) (fun _ h => nomatch h)).1 hn
+    match e', he', hx with
+    | .ok (.ok (.ret (_, k'))), he', rfl =>
+      obtain ⟨genv, hen, henv⟩ := start hen'
+      rcases up hen' henv n _ he' with ⟨N, r, h⟩ | ⟨N, ⟨vs, T⟩, k, h, hle⟩
+      · exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
+      · exact ⟨.ret (vs, T), ⟨N, back (e := .ok (.ok (.ret ((vs, T), k)))) (fun _ h => nomatch h)
+          hen h⟩, hle⟩
+  | .ub r', ⟨n, hn⟩ =>
+    obtain ⟨p', hen', e', he', hx⟩ :=
+      (Func.memRunsFrom_run (x := .ub r') (fun _ h => nomatch h)).1 hn
+    match e', he', hx with
+    | .ub _, he', rfl =>
+      obtain ⟨genv, hen, henv⟩ := start hen'
+      obtain ⟨N, r, h⟩ := up hen' henv n _ he'
+      exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
+  | .fuelExhausted, _ => exact absurd rfl hnx
+
 /-- A function's behaviour from given memories in the target module, on
 arguments that refine others and from memories that refine others, refines
 its behaviour from those others in the source module, the memories they end
@@ -183,31 +232,12 @@ theorem Func.memRunsFrom_isRefinedBy_of_calls {M M' : Module d}
       Ev.NotStuck e.dropLeft → f.enter a.toDVals = .ok p →
       (Func.memCall M N f p.2 p.1 S).run e → (f.memRunsFrom M (a, S) N) e.dropLeft :=
     fun hne hen h => (Func.memRunsFrom_run hne).2 ⟨_, hen, _, h, rfl⟩
-  have up : ∀ {p' : List (Operation d) × Env d}, f.enter a'.toDVals = .ok p' → ∀ {genv : Env d},
-      genv.IsRefinedBy p'.2 → ∀ n e', (Func.memCall M' n f p'.2 p'.1 S').run e' →
-        MemAllowed (fun N => Func.memCall M N f genv p'.1 S) e' :=
-    fun {_} hen' {_} henv n _ he' => Func.memCall_allowed (fun e₀ he₀ => Func.memOps_allowed hmono hcalls n
-      f _ _ _ _ _ hf (hf.enter hen') henv hS.enter e₀ he₀) he'
   intro t ht
   match t, ht with
-  | .ret (vs', T'), ⟨n, hn⟩ =>
-    obtain ⟨p', hen', e', he', hx⟩ :=
-      (Func.memRunsFrom_run (x := .ok (.ok (.ret (vs', T')))) (fun _ h => nomatch h)).1 hn
-    match e', he', hx with
-    | .ok (.ok (.ret (_, k'))), he', rfl =>
-      obtain ⟨genv, hen, henv⟩ := start hen'
-      rcases up hen' henv n _ he' with ⟨N, r, h⟩ | ⟨N, ⟨vs, T⟩, k, h, hle⟩
-      · exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
-      · exact ⟨.ret (vs, T), ⟨N, back (e := .ok (.ok (.ret ((vs, T), k)))) (fun _ h => nomatch h)
-          hen h⟩, hle⟩
-  | .ub r', ⟨n, hn⟩ =>
-    obtain ⟨p', hen', e', he', hx⟩ :=
-      (Func.memRunsFrom_run (x := .ub r') (fun _ h => nomatch h)).1 hn
-    match e', he', hx with
-    | .ub _, he', rfl =>
-      obtain ⟨genv, hen, henv⟩ := start hen'
-      obtain ⟨N, r, h⟩ := up hen' henv n _ he'
-      exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
+  | .ret o, ht =>
+    exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
+  | .ub r, ht =>
+    exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
   | .fuelExhausted, ht =>
     classical
     by_cases hU : ∃ N r, (f.memRunsFrom M (a, S) N).outcomes (.ub r)

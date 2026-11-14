@@ -128,9 +128,23 @@ theorem pcall_replace_isRefinedBy :
   Core.replaceBody_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
     pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs])
 
+/-- And `@pcall` is refined with memory by itself in the module with
+`@pid`'s new body. -/
+theorem pcall_self_isRefinedBy :
+    pcallFn.memRuns lay ρ ptrModule ⊑
+      pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name pidFn.body) :=
+  Core.caller_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
+    pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs]) (by decide)
+
 /-! # Axioms -/
 
 /-- info: 'FirTest.pcall_replace_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.pcall_replace_isRefinedBy
+
+/-- info: 'FirTest.pcall_self_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.pcall_self_isRefinedBy
+
+/-- info: 'Fir.Core.caller_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.caller_isRefinedBy_of_from
 
 end FirTest

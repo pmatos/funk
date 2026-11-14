@@ -224,15 +224,15 @@ given memories are bounded (`Func.memRunsFrom_boundedBy_of_finite`), in
 `Func.memRuns_replaceBody_isRefinedBy_of_finite`, and, when the old callee
 reaches no memory too, `Func.memRuns_replaceBody_isRefinedBy_of_memRuns`,
 whose hypothesis is refinement with memory, as it was over the runs in the set
-monad. The core's congruence takes these forms: `Core.replaceBody_isRefinedBy`
-and `Core.caller_isRefinedBy` with memory, and
-`Core.replaceBody_isRefinedBy_of_from` from given memories, in
+monad. The core's congruence with memory takes this form:
+`Core.replaceBody_isRefinedBy` and `Core.caller_isRefinedBy`, in
 `lean/Fir/Core/MemoryCallRefine.lean`. No core op declares a memory effect, so
-every core function reaches no memory (`Core.reachesNoMemory`), and these forms
-hold of every core callee with no pointer parameter, as the forms over the runs
-in the set monad did. A callee that touches memory used the form with the
-bound, `Core.memReplaceBody_isRefinedBy`, until #214. Since #214,
-`Core.replaceBody_isRefinedBy_of_from` asks for no bound, no pointer-free
+every core function reaches no memory (`Core.reachesNoMemory`), and these
+forms hold of every core callee with no pointer parameter, as the forms over
+the runs in the set monad did. A callee that touches memory used the form
+with the bound, `Core.memReplaceBody_isRefinedBy`, until #214. Since #214,
+the form from given memories, `Core.replaceBody_isRefinedBy_of_from` and
+`Core.caller_isRefinedBy_of_from`, asks for no bound, no pointer-free
 parameters and no callee that reaches no memory (congruence in the callee,
 above), so the bound form is no longer needed. The forms over the runs in the
 set monad and `Core.liftsSetM` went, so a memory op can join the core. The

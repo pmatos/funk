@@ -17,9 +17,10 @@ for no budget for the new callee, in two forms:
   the set of its rule in the tree of choices, whose choices of _w_ bits have
   2 to the power _w_ options. So congruence with ops of finitely many
   outcomes applies (#214,
-  `docs/decisions/semantics-refinement.md#congruence-in-the-callee`). An op
-  that touches memory, such as an allocation, has finitely many outcomes
-  too, by its own proof;
+  `docs/decisions/semantics-refinement.md#congruence-in-the-callee`). No core
+  op touches memory yet; one that does, such as an allocation, has no tie,
+  and must show by its own rule that it has finitely many outcomes, which a
+  deterministic allocation has;
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
   memory effect. Its runs then do not depend on the memories, so refinement
@@ -107,6 +108,24 @@ theorem replaceBody_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
   (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ Ty.isRefinedBy_refl
     Ty.isRefinedBy_trans (opsFinite lay ρ) hM hg b h hf).2
+
+/-- Every function of the module other than `@g`, a caller of it or not,
+is refined with memory by itself in the module with `@g`'s new body, under
+the hypotheses of congruence in the callee from given memories: no budget,
+whatever the parameter types of `@g` and whatever its new body does to the
+memories. -/
+theorem caller_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
+    (hg : g ∈ M.funcs) (b : Region CoreDialect)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          (M.replaceBody g.name b))
+    (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
+    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
+  have := replaceBody_isRefinedBy_of_from lay ρ hM hg b h hf
+  change f.memRuns lay ρ M ⊑
+    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+  rwa [ite_eq_right hfg] at this
 
 /-- Congruence in the callee, with memory: replacing the body of a function
 `@g` with no pointer parameter of a valid core module, which reaches no

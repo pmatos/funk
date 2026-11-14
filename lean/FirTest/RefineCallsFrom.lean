@@ -4,8 +4,7 @@ import FirTest.RefineCalls
 Tests of congruence in the callee from given memories, applied to the module
 of `@count` and `@g` of `FirTest.RefineCalls`, and the axioms of its proofs:
 `@g` given a body with no blocks meets the hypotheses of both forms, with no
-budget for a callee that touches no memory, and with one for a callee that
-may touch memory, so `@count` is refined with memory by itself.
+budget, and with one, so `@count` is refined with memory by itself.
 -/
 
 namespace FirTest
@@ -15,10 +14,11 @@ open Fir Core Example
 /-! # A body with no blocks
 
 From given memories, congruence asks that the new `@g` refine the old from
-every memories, and, for a callee that touches memory, that its runs be
-bounded. A body with no blocks meets both: `@g` with it never starts, so it
-has no behaviour, no run of it runs out of fuel, and it reaches no memory. So `@count` is refined with memory by itself in
-the module with that body, by each form. -/
+every memories; its form with a budget also asks that the runs of the new
+`@g` be bounded. A body with no blocks meets both: `@g` with it never
+starts, so it has no behaviour and no run of it runs out of fuel. So
+`@count` is refined with memory by itself in the module with that body, by
+each form. -/
 
 /-- A body with no blocks: a function with it never starts. -/
 def noBlocks : Region CoreDialect := { blocks := [] }

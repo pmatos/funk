@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a core callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3361924177846757592")
+:::moduleDocs (fingerprint := "7942387540049172702")
 :::
 
 :::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.reachesNoMemory (pin := Fir.Core.Op.effects) (fingerprint := "5174992058486414393")
@@ -44,11 +44,11 @@ so it runs by its rule in the set monad and keeps the memories. Its rule in
 the set monad is the set of its rule in the
 {ref "The-fir-specification--Memory--The-core-dialect-in-the-tree-of-choices"}[tree of choices],
 by the morphism that keeps choice and UB, and a tree's choice of $`w` bits
-has $`2^w` options. An op that touches memory, as an allocation, has no
-tie and proves this by its own rule.
+has $`2^w` options. No core op touches memory yet; one that does, as an
+allocation, will have no tie and must show this by its own rule.
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy_of_from (fingerprint := "16203125886375900489")
+:::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "11864989512908111455")
 *Theorem: congruence in a core callee, from given memories.* Let $`M` be a
 valid core module, $`g` a function of $`M` with the symbol $`s`, $`b` a
 region, and $`M[s \leftarrow b]` the module with $`b` in place of $`g`'s
@@ -61,7 +61,8 @@ included. No budget is asked, whatever the parameter types of $`g`,
 pointers included, and whatever $`b` does to the memories: every core op
 has finitely many outcomes, so
 {ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes]
-applies (#214).
+applies (#214). So every function of $`M` whose symbol is not $`s`, a caller
+of $`g` or not, is refined with memory by itself in $`M[s \leftarrow b]`.
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy Fir.Core.caller_isRefinedBy (fingerprint := "7487476937859641303")

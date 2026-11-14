@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments and memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8844432634381073104")
+:::moduleDocs (fingerprint := "5207053525379043121")
 :::
 
 :::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "6446781191699385464")
@@ -32,6 +32,18 @@ strong induction on $`n`, from every memories, as for runs in the set
 monad.
 :::
 
+:::readable Fir.Func.memRunsFrom_retUB_allowed (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "11921490865856683547")
+*Theorem: every return and UB of the target from given memories, allowed.*
+Let the target module $`M'` run each call with memory as the source $`M`
+does, and every op of $`M`'s functions and of $`f` that runs by its own
+rule be monotone with memory. On arguments $`\vec{v} \sqsubseteq \vec{v}'`
+and from memories $`S \sqsubseteq S'`, each return and each UB in the
+behaviour of $`f` in $`M'` from $`S'` is allowed by an outcome of its
+behaviour in $`M` from $`S`: UB, or a return of values and memories that
+the target's refine. It is the theorem on returns and UB with memory, for
+the entry block's ops in a frame. No black box needs a budget.
+:::
+
 :::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "17947935108510817891")
 *Theorem: two modules with memory, compared call by call.* Let the target
 module $`M'` run each call with memory as the source $`M` does, with its
@@ -44,7 +56,7 @@ memories it ends with included, refines its behaviour in $`M` from $`S`:
 $$`\mathrm{obs}(\mathrm{runs}^S_{M,f}(\vec{v}, S)) \sqsubseteq \mathrm{obs}(\mathrm{runs}^S_{M',f}(\vec{v}', S'))`
 
 Each return or UB of the target is allowed by the source at some budget,
-by the theorem on returns and UB with memory. When the target diverges and
+by the theorem above. When the target diverges and
 the source hits no UB, for each budget $`N` of the source the target runs
 out of fuel at $`(\mathit{bound} + 1)(N + 1)`, on a path that the source
 allows below that ratio at $`N`: the source runs out of fuel there, so it

@@ -6,8 +6,8 @@ import Fir.Execution.MemoryReplace
 
 The refinement theorem for runs from given memories, with black boxes, holds
 with no budget when every op that runs by its own rule has finitely many
-outcomes. Each return and each UB of the target is allowed by the source, by
-the section on every return and UB of the target with memory. A target that
+outcomes. Each return and each UB of the target is allowed by the source,
+as in the section on refined arguments and memories. A target that
 diverges runs out of fuel at every budget. If the source hits UB at some
 budget, that allows it. If not, the source runs out of fuel at every budget:
 at a budget where it did not, some budget of the target would not either, by
@@ -53,31 +53,12 @@ theorem Func.memRunsFrom_isRefinedBy_of_opsFinite {M M' : Module d}
       Ev.NotStuck e.dropLeft → f.enter a.toDVals = .ok p →
       (Func.memCall M N f p.2 p.1 S).run e → (f.memRunsFrom M (a, S) N) e.dropLeft :=
     fun hne hen h => (Func.memRunsFrom_run hne).2 ⟨_, hen, _, h, rfl⟩
-  have up : ∀ {p' : List (Operation d) × Env d}, f.enter a'.toDVals = .ok p' → ∀ {genv : Env d},
-      genv.IsRefinedBy p'.2 → ∀ n e', (Func.memCall M' n f p'.2 p'.1 S').run e' →
-        MemAllowed (fun N => Func.memCall M N f genv p'.1 S) e' :=
-    fun {_} hen' {_} henv n _ he' => Func.memCall_allowed (fun e₀ he₀ =>
-      Func.memOps_allowed hmono hcalls n f _ _ _ _ _ hf (hf.enter hen') henv hS.enter e₀ he₀) he'
   intro t ht
   match t, ht with
-  | .ret (vs', T'), ⟨n, hn⟩ =>
-    obtain ⟨p', hen', e', he', hx⟩ :=
-      (Func.memRunsFrom_run (x := .ok (.ok (.ret (vs', T')))) (fun _ h => nomatch h)).1 hn
-    match e', he', hx with
-    | .ok (.ok (.ret (_, k'))), he', rfl =>
-      obtain ⟨genv, hen, henv⟩ := start hen'
-      rcases up hen' henv n _ he' with ⟨N, r, h⟩ | ⟨N, ⟨vs, T⟩, k, h, hle⟩
-      · exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
-      · exact ⟨.ret (vs, T), ⟨N, back (e := .ok (.ok (.ret ((vs, T), k)))) (fun _ h => nomatch h)
-          hen h⟩, hle⟩
-  | .ub r', ⟨n, hn⟩ =>
-    obtain ⟨p', hen', e', he', hx⟩ :=
-      (Func.memRunsFrom_run (x := .ub r') (fun _ h => nomatch h)).1 hn
-    match e', he', hx with
-    | .ub _, he', rfl =>
-      obtain ⟨genv, hen, henv⟩ := start hen'
-      obtain ⟨N, r, h⟩ := up hen' henv n _ he'
-      exact ⟨.ub r, ⟨N, back (e := .ub r) (fun _ h => nomatch h) hen h⟩, trivial⟩
+  | .ret o, ht =>
+    exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
+  | .ub r, ht =>
+    exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
   | .fuelExhausted, ht =>
     classical
     by_cases hU : ∃ N r, (f.memRunsFrom M (a, S) N).outcomes (.ub r)

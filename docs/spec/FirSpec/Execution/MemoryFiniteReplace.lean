@@ -28,8 +28,8 @@ memories it ends with included, refines its behaviour in $`M` from $`S`:
 
 $$`\mathrm{obs}(\mathrm{runs}^S_{M,f}(\vec{v}, S)) \sqsubseteq \mathrm{obs}(\mathrm{runs}^S_{M',f}(\vec{v}', S'))`
 
-Each return or UB of the target is allowed by the source, by
-{ref "The-fir-specification--Memory--Returns-and-UB-with-memory___-followed-back"}[returns and UB with memory, followed back].
+Each return or UB of the target is allowed by the source, as in
+{ref "The-fir-specification--Memory--Refined-arguments-and-memories"}[refined arguments and memories].
 When the target diverges and the source hits no UB, the source runs out of
 fuel at every budget $`N`: if it did not at $`N`, some budget of the target
 would not either, by
