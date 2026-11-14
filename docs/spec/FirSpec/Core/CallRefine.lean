@@ -59,7 +59,8 @@ $`t_n`, and the one empty vector when $`n = 0`.
 in the list of values of $`t`, and when each of the types $`t^*` has
 finitely many values, every vector of values of $`t^*` is in the list of
 argument vectors of $`t^*`. So the parameter types of a core function with
-no pointer parameter have finitely many argument vectors, which
-{ref "The-fir-specification--Memory--Congruence-in-a-core-callee"}[congruence in a core callee]
-asks of its form with memory.
+no pointer parameter have finitely many argument vectors, which the
+{ref "The-fir-specification--Memory--Congruence-in-a-callee-that-touches-no-memory"}[forms of congruence with finitely many argument vectors]
+ask. {ref "The-fir-specification--Memory--Congruence-in-a-core-callee"}[Congruence in a core callee]
+asks for none (#214).
 :::

@@ -5,7 +5,9 @@ Tests of congruence in the callee with memory for a callee with a pointer
 parameter, which has infinitely many argument vectors: `@pid` returns the
 pointer it is given, and `@pcall` calls it. Replacing the body of `@pid`
 with its own body refines `@pcall` with memory, with no budget, by the
-theorem from given memories (#214).
+theorem from given memories (#214). Replacing it with a body with no blocks
+does too, by the theorem whose hypothesis is refinement with memory, which
+asks nothing of the parameter types of `@pid` either.
 -/
 
 namespace FirTest
@@ -136,7 +138,34 @@ theorem pcall_self_isRefinedBy :
   Core.caller_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
     pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs]) (by decide)
 
+/-- So `@pcall` is refined with memory in the module where `@pid` has no
+blocks, by the form whose hypothesis is refinement with memory, which asks
+that `@pid` reach no memory before and after, and nothing of its parameter
+types. -/
+theorem pcall_noBlocks_memIsRefinedBy :
+    pcallFn.memRuns lay ρ ptrModule ⊑
+      (pcallFn.replaceBody pidFn.name noBlocks).memRuns lay ρ
+        (ptrModule.replaceBody pidFn.name noBlocks) :=
+  Core.replaceBody_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
+    noBlocks (reachesNoMemory _ _) (reachesNoMemory _ _) (noBlocks_memIsRefinedBy lay ρ _ _)
+    (by simp [ptrModule, Module.funcs])
+
+/-- And `@pcall` is refined with memory by itself in that module, by the
+caller form. -/
+theorem pcall_noBlocks_callerIsRefinedBy :
+    pcallFn.memRuns lay ρ ptrModule ⊑
+      pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name noBlocks) :=
+  Core.caller_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
+    noBlocks (reachesNoMemory _ _) (reachesNoMemory _ _) (noBlocks_memIsRefinedBy lay ρ _ _)
+    (by simp [ptrModule, Module.funcs]) (by decide)
+
 /-! # Axioms -/
+
+/-- info: 'FirTest.pcall_noBlocks_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.pcall_noBlocks_memIsRefinedBy
+
+/-- info: 'FirTest.pcall_noBlocks_callerIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.pcall_noBlocks_callerIsRefinedBy
 
 /-- info: 'FirTest.pcall_replace_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.pcall_replace_isRefinedBy

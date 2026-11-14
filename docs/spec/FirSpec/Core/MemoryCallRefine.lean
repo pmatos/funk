@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a core callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7942387540049172702")
+:::moduleDocs (fingerprint := "5025490800402394782")
 :::
 
 :::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.reachesNoMemory (pin := Fir.Core.Op.effects) (fingerprint := "5174992058486414393")
@@ -65,11 +65,10 @@ applies (#214). So every function of $`M` whose symbol is not $`s`, a caller
 of $`g` or not, is refined with memory by itself in $`M[s \leftarrow b]`.
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy Fir.Core.caller_isRefinedBy (fingerprint := "7487476937859641303")
+:::readable Fir.Core.replaceBody_isRefinedBy Fir.Core.caller_isRefinedBy (fingerprint := "11835033131941382943")
 *Theorems: congruence in a core callee that touches no memory, with
-memory.* With $`M`, $`g`, $`s` and $`b` as above, let $`g` have no pointer
-parameter, and let $`s` reach no memory both in $`M` and in
-$`M[s \leftarrow b]`. If the runs with
+memory.* With $`M`, $`g`, $`s` and $`b` as above, let $`s` reach no memory
+both in $`M` and in $`M[s \leftarrow b]`. If the runs with
 memory of $`g[s \leftarrow b]` in $`M[s \leftarrow b]` refine those of $`g`
 in $`M`, then for every function $`f` of $`M`, the runs with memory of
 $`f[s \leftarrow b]` in $`M[s \leftarrow b]` refine those of $`f` in $`M`,
@@ -80,12 +79,16 @@ $$`\mathrm{runs}^{\mathrm{mem}}_{M,g} \sqsubseteq \mathrm{runs}^{\mathrm{mem}}_{
 
 So every function of $`M` whose symbol is not $`s`, a caller of $`g` or
 not, is refined with memory by itself in $`M[s \leftarrow b]`: the case an
-optimizer meets when it rewrites one function. This was stated over the
-runs in the set monad until the human's ruling on #373 (2026-11-13). Every
-core function reaches no memory today, whatever its body, so the
-hypotheses on memory hold of every core callee, and the form over runs with
-memory covers each case that one did. Its hypothesis is refinement with
-memory, from the empty memories, which says nothing of a callee that
+optimizer meets when it rewrites one function. Nothing is asked of the
+parameter types of $`g`, pointers included. Since $`g` reaches no memory
+in either module, its
+{ref "The-fir-specification--Memory--Congruence-in-a-callee-that-touches-no-memory"}[runs from given memories are its runs with memory],
+so the hypothesis gives refinement from given memories and the theorem
+above applies (#214). Until #214 this form asked that $`g` have no pointer
+parameter, as the human ruled on #373 (2026-11-13). Every core function
+reaches no memory today, whatever its body, but the theorem still asks it
+of $`s`, so that it does not depend on that. Its hypothesis is refinement
+with memory, from the empty memories, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 
 Congruence goes through the lawful class, so it asks for a valid module, as

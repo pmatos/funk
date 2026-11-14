@@ -24,8 +24,9 @@ valid module, by the lawful classes alone: on refined arguments, over its
 runs with memory (`coreProbe_args`), and on replacing a callee's body, with
 memory: under a bound on the new callee's runs (`coreProbe_memReplaceBody`),
 and with no bound for a callee with finitely many argument vectors that
-touches no memory (`coreProbe_replaceBody`), the form that the human's
-ruling on #373 keeps for the core. Each op of the sum ignores the memories,
+touches no memory (`coreProbe_replaceBody`). Neither asks that the ops have
+finitely many outcomes, which `CoreProbe` does not prove; these are the
+forms that such a dialect uses. Each op of the sum ignores the memories,
 since each side's op runs by its rule in the set monad
 (`coreProbe_opsIgnoreMemory`).
 -/
@@ -257,8 +258,8 @@ theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLay
 `CoreProbe` and a callee with no pointer parameter that reaches no memory
 before or after, wherever a run names the sum's memories, by the
 lawful class alone, with no bound, whatever the new body. The core's
-congruence keeps this form, by the human's ruling on #373, and so does this
-test of it. -/
+congruence kept this form, by the human's ruling on #373, until #214 gave
+it one that asks no finitely many argument vectors. -/
 theorem coreProbe_replaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
     {g : Func CoreProbe} (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t)

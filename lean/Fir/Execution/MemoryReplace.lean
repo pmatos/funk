@@ -35,7 +35,9 @@ memories a call starts from are infinitely many, so no such argument gives a
 bound here, and the theorem asks for one budget past which no run of the new
 function from any memories runs out of fuel unless it diverges. When every
 op of the dialect has finitely many outcomes, no budget is needed (the
-section on congruence in the callee with ops of finitely many outcomes).
+section on congruence in the callee with ops of finitely many outcomes), as
+for the core. This form asks no finitely many outcomes, so it stays for a
+dialect whose ops may have infinitely many.
 
 For a dialect lawful in its monotonicity, every function of a valid module
 refines itself on refined arguments and memories by the class alone, at

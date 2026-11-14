@@ -15,7 +15,8 @@ They restate, for runs with memory, the refinement results: refined
 arguments and memories, and congruence in the callee, for every dialect
 lawful in its monotonicity with memory, whatever its ops do to the
 memories, with a budget for the new callee or, when the dialect's ops have
-finitely many outcomes, with none; and the obligation itself, which every
+finitely many outcomes, with none, from given memories or, for a callee
+that reaches no memory, with memory; and the obligation itself, which every
 lawful dialect that lifts the set monad meets, and which sums and lifts
 keep.
 -/
@@ -98,6 +99,31 @@ theorem memRuns_replaceBody_isRefinedBy_of_opsFinite (d : Dialect) [TyDenote d.T
     {f : Func d} (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
   (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ hrefl htrans hfin hM hg b h hf).2
+
+/-- Congruence in the callee, with memory, with no budget, for every
+function of a valid module of every dialect lawful in its monotonicity whose
+ops that run by their own rule have finitely many outcomes, and ignore the
+memories where they touch none, wherever a run names its memories, when the
+callee reaches no memory before or after and the new body refines the old
+one with memory, whatever the parameter types of the callee. -/
+theorem memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (d : Dialect) [TyDenote d.Ty]
+    [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
+    [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+    (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
+    (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      OpsIgnoreMemory d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
+    (hold : M.table.ReachesNoMemory g.name)
+    (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
+    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    {f : Func d} (hf : f ∈ M.funcs) :
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ hrefl htrans hfree hfin hM hg b
+    hold hmem h hf
 
 /-- Refinement from given memories with black boxes that need no budget, for
 every function of every module of every dialect whose ops that run by their

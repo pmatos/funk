@@ -253,7 +253,7 @@ theorem g_isRefinedBy :
 itself in the module with `@g`'s new body, which calls `@count` back. -/
 theorem count_isRefinedBy : countFn.memRuns lay ρ ubModule ⊑ countFn.memRuns lay ρ ubModule' :=
   Core.caller_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
+    gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
     (g_isRefinedBy lay ρ) (by simp [ubModule, Module.funcs]) (by decide)
 
 /-- Every function of the module is refined with memory by its counterpart
@@ -261,7 +261,7 @@ with `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
     f.memRuns lay ρ ubModule ⊑ (f.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
   Core.replaceBody_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
+    gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
     (g_isRefinedBy lay ρ) hf
 
 /-! # A callee replaced by itself, in mutual recursion -/
@@ -289,8 +289,7 @@ theorem even_replace_isRefinedBy :
     evenFn.memRuns lay ρ recModule ⊑
       evenFn.memRuns lay ρ (recModule.replaceBody oddFn.name oddFn.body) :=
   Core.caller_isRefinedBy lay ρ recModule_valid (by simp [recModule, Module.funcs])
-    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body (reachesNoMemory _ _)
-    (reachesNoMemory _ _) (odd_self_isRefinedBy lay ρ)
+    oddFn.body (reachesNoMemory _ _) (reachesNoMemory _ _) (odd_self_isRefinedBy lay ρ)
     (by simp [recModule, Module.funcs]) (by decide)
 
 /-! # Axioms
@@ -351,6 +350,13 @@ theorems, their core instances and the tests above. -/
 
 /-- info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns
+
+/--
+info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns
 
 /-- info: 'Fir.Core.Op.monotone_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.monotone_all
