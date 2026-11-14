@@ -197,9 +197,10 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca` included. The statements over the set monad cover the
-code that touches no memory: the ops other than `alloca`, and the
-functions that reach none. The human ruled this on 2026-11-14, on #384
+dialect, `alloca` included. The statements without memory cover only the
+code that touches none: those over the set monad cover the ops other than
+`alloca`, and those that ask a function to reach no memory cover such
+functions. The human ruled this on 2026-11-14, on #384
 (option A). Rejected: splitting out a memory-free core dialect, whose old
 statements would hold with no condition, with the memory ops beside it
 (option C), which changes the dialect's structure where the versions with
@@ -210,8 +211,9 @@ module, `alloca` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
-  (`lean/Fir/Core/MemoryRuns.lean`), and the `LawfulDialectEffects`
-  instance (`Core.lawfulDialectEffects`);
+  (`lean/Fir/Core/MemoryRuns.lean`), and the class of its effects,
+  `LawfulDialectEffects`, proved by `Core.lawfulDialectEffects`, from which
+  its instance is built;
 - progress, `Core.progress`, and no stuck path, `Core.neverStuck`;
 - refined arguments, `Core.args_isRefinedBy`, which also holds for an
   invalid module;
@@ -257,5 +259,6 @@ each is what covers the whole core:
   morphism to keep allocation, which `MonadMorphism.state_alloc` gives for
   the state layer.
 
-`Core.Op.liftsSetM_of_terminator` and `Core.tyAttr_bare` only moved, to
-`lean/Fir/Core/MemoryRuns.lean` and `lean/Fir/Core/Names.lean`.
+`Core.Op.liftsSetM_of_terminator` and `Core.tyAttr_bare` keep their
+statements: the first has a new proof, and the second moved within
+`lean/Fir/Core/Names.lean`.

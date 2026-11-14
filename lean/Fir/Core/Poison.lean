@@ -46,8 +46,8 @@ obligations to branch obligations prove that each op meets the obligations
 of its class. The section on the core dialect's poison obligations puts
 them together for the ops that touch no memory, and the section on core
 functions with memory gives the core dialect's lawful classes with memory,
-`alloca` included. Tests check the rules
-of the exceptions. `call` has no op-level obligation, as below.
+`alloca` included. Tests check the rules of the exceptions. `call` has no
+op-level obligation, as below.
 
 `call` gets its meaning from the call effect, which the interpreter runs
 with the fuel budget that the caller has left (ADR-2026-10-29-2009): the
