@@ -182,8 +182,12 @@ import FirSpec.Execution.MemoryRefineUp
 import FirSpec.Execution.MemoryRefineDown
 import FirSpec.Execution.MemoryRefineRuns
 import FirSpec.Execution.MemoryReplace
+import FirSpec.Execution.MemoryFree
+import FirSpec.Execution.MemoryFreeRuns
+import FirSpec.Execution.MemoryFreeReplace
 import FirSpec.Execution.MemoryModes
 import FirSpec.Core.MemoryRuns
+import FirSpec.Core.MemoryCallRefine
 import FirSpec.Sum.Names
 import FirSpec.Validation.DialectSet
 import FirSpec.Core.Names

@@ -122,6 +122,7 @@ import Fir.Core.Lawful
 import Fir.Core.MemRules
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
+import Fir.Core.MemoryCallRefine
 import Fir.Core.TreeRules
 import Fir.Core.Modes
 import Fir.Execution.Summary
@@ -129,6 +130,9 @@ import Fir.Execution.SummaryLaws
 import Fir.Execution.SummaryFixpoint
 import Fir.Execution.SummaryClean
 import Fir.Execution.SummarySound
+import Fir.Execution.MemoryFree
+import Fir.Execution.MemoryFreeRuns
+import Fir.Execution.MemoryFreeReplace
 import Fir.Memory.Model
 import Fir.Memory.Laws
 import Fir.Memory.Frames

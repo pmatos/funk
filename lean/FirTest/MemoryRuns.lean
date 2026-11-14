@@ -1,4 +1,5 @@
 import FirTest.Calls
+import Fir.Core.MemoryCallRefine
 
 /-!
 Tests of runs with memory: the frame hook frees a call's stack allocations
@@ -305,15 +306,23 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 /-- info: 'Fir.Func.memProgress' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memProgress
 
-/-! # A run with no allocation
+/-! # A run that touches no memory
 
-The core dialect's own rules touch no memory: its runs with memory keep the
-empty memories, and are its runs, by the tie `Core.liftsSetM`, which stays
-until the human rules on #373. -/
+The core dialect's own rules touch no memory: every core function reaches
+no memory, so it returns from given memories what it returns with memory,
+with the memories it started from (the section on runs that touch no
+memory). -/
 
-example (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) :
-    f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args = f.runs M args := by
-  rw [Func.memRuns_eq]
+example (M : Module CoreDialect) {s : Name} {f : Func CoreDialect} (hf : M.func? s = some f)
+    (args : HVector toType (f.params.map (·.2)))
+    (S S' : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)) (n : Nat)
+    (vs : List (DVal CoreDialect)) :
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) (fun _ : Unit => MemLayout.default)
+      fun _ => ()
+    (f.memRunsFrom M (args, S) n).outcomes (.ret (vs, S')) ↔
+      S' = S ∧ (f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args n).outcomes
+        (.ret vs) :=
+  Func.memRunsFrom_ret_iff _ _ (Core.opsIgnoreMemory _ _) hf (Core.reachesNoMemory _ s)
+    args S n
 
 end FirTest.MemoryRuns

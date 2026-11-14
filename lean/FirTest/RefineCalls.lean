@@ -1,4 +1,4 @@
-import Fir.Core.CallRefine
+import Fir.Core.MemoryCallRefine
 import FirTest.RunsCalls
 
 /-!
@@ -10,16 +10,17 @@ be met, and the axioms of their proofs.
   argument is refined by `@fact` on `5`; and `@even`, which calls `@odd`,
   which calls it back, on any arguments is refined by itself on refined
   ones.
-* Congruence in the callee, over the runs in the set monad, the form kept
-  until the human rules on #373: `@g` divides by zero before it calls itself,
-  so it hits UB on every argument, and every body refines it. `@count`
-  calls `@g` and itself. With a new body for `@g`, which calls `@count`
-  back, the module is still valid, and each of its functions is refined
-  by its counterpart: `@count` hits UB in the old module and runs out of
-  fuel in the new. A second instance gives `@odd` its own body, in the
-  mutual recursion of `@even` and `@odd`.
-* Congruence in the callee, with memory: `@g` given a body with no blocks
-  meets its hypotheses, so `@count` is refined with memory by itself.
+* Congruence in the callee, with memory, for a callee that touches no
+  memory, wherever a run names the core's memories: `@g` divides by zero
+  before it calls itself, so it hits UB on every argument, and every body
+  refines it. `@count` calls `@g` and itself. With a new body for `@g`,
+  which calls `@count` back, the module is still valid, and each of its
+  functions is refined by its counterpart: `@count` hits UB in the old
+  module and runs out of fuel in the new. No core function reaches memory.
+  A second instance
+  gives `@odd` its own body, in the mutual recursion of `@even` and `@odd`.
+* Congruence in the callee from given memories is tested in
+  `FirTest.RefineCallsFrom`.
 -/
 
 namespace FirTest
@@ -77,22 +78,51 @@ def gFn : Func CoreDialect where
 /-- The module of `@count` and `@g`. -/
 def ubModule : Module CoreDialect := ⟨[], [], [.func countFn, .func gFn], [(0, .unknown)]⟩
 
-/-- `@g` hits UB on every argument, at two steps. -/
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
+  (ρ : DialectEffects.Mem CoreDialect → N)
+
+/-- A core op that ends a way in the set monad ends that way with memory,
+from any memories, which it keeps. -/
+theorem memDenote_of {op : CoreDialect.Op} {args : HVector toType (sig (d := CoreDialect) op)}
+    {S : Memory.Memories N (unitsOf lay)} {a : HVector toType (returnTypes (d := CoreDialect) op)}
+    (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args (.ok a)) :
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
+      (.ok (a, S)) := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  rw [((Op.liftsSetM op) lay ρ args).1]
+  exact (SetM.lift_apply _ _ _).2 (.inl ⟨a, h, rfl⟩)
+
+/-- A core op that hits UB in the set monad hits it with memory, from any
+memories. -/
+theorem memDenote_ub {op : CoreDialect.Op} {args : HVector toType (sig (d := CoreDialect) op)}
+    {S : Memory.Memories N (unitsOf lay)} {r : String}
+    (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args (.ub r)) :
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
+      (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  rw [((Op.liftsSetM op) lay ρ args).1]
+  exact (SetM.lift_apply _ _ _).2 (.inr ⟨r, h, rfl⟩)
+
+/-- `@g` hits UB on every argument with memory, at two steps, wherever a
+run names the core's memories. -/
 theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
-    ∃ r, (gFn.runs ubModule a 2).outcomes (.ub r) := by
+    ∃ r, (gFn.memRuns lay ρ ubModule a 2).outcomes (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
   match a with
   | .cons v .nil =>
-  have hne : ∀ r : String,
-      Ev.NotStuck (.ub r : Ev (Except Stuck (Result (List (DVal CoreDialect) × Nat)))) :=
-    fun _ _ h => nomatch h
   have hdiv : ∃ r, DialectDenote.denote (m := SetM) (d := CoreDialect) (.udiv 32 false)
       (.cons v (.cons (.value 0) .nil)) (.ub r) := by
     cases v <;> exact ⟨_, rfl⟩
   obtain ⟨r, hr⟩ := hdiv
-  refine ⟨r, Func.runs_of_runOps (M := ubModule) (g := gFn) (a := .cons v .nil) (N := 2)
-    (Func.enter_ok (f := gFn) rfl rfl (HVector.toDVals_types _)) (e := .ub r) ?_⟩
-  refine (Func.stepPath_iff (hne r)).2 (.denote rfl rfl rfl rfl rfl rfl ?_)
-  exact (Func.stepPath_iff (hne r)).2 (.denoteUB rfl rfl rfl rfl hr)
+  refine ⟨r, (Func.memRuns_ub_iff lay ρ).2 ((Func.memRunsFrom_run (Ev.notStuck_ub r)).2
+    ⟨_, Func.enter_ok (f := gFn) rfl rfl (HVector.toDVals_types _), .ub r, ?_, rfl⟩)⟩
+  rw [Func.memCall_eq]
+  refine (SetM.run_map _ _ _).2 (.inr (.inr ⟨r, ?_, rfl⟩))
+  refine (Func.memStepPath_iff (Ev.notStuck_ub r)).2
+    (.denote rfl rfl rfl rfl (memDenote_of lay ρ rfl) rfl ?_)
+  exact (Func.memStepPath_iff (Ev.notStuck_ub r)).2 (.denoteUB rfl rfl rfl rfl (memDenote_ub lay ρ hr))
 
 /-- `@count` is valid in its module. -/
 theorem countFn_valid : countFn.Valid ubModule.context where
@@ -211,97 +241,57 @@ theorem ubModule'_valid : ubModule'.Valid :=
 #guard runValid ubModule.print "@count" ["3"] == ubFor "udiv by zero"
 #guard runValid ubModule'.print "@count" ["3"] (fuel := 1000) == exhausted
 
-/-- `@g` with its new body refines `@g`: `@g` hits UB on every argument. -/
+/-- `@g` with its new body refines `@g` with memory: `@g` hits UB on every
+argument. -/
 theorem g_isRefinedBy :
-    gFn.runs ubModule ⊑ (gFn.replaceBody gFn.name gBody).runs ubModule' := fun a =>
-  let ⟨_, h⟩ := g_ub a
-  Behaviour.ub_isRefinedBy ⟨2, h⟩ _
+    gFn.memRuns lay ρ ubModule ⊑ (gFn.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
+  fun a =>
+    let ⟨_, h⟩ := g_ub lay ρ a
+    Behaviour.ub_isRefinedBy ⟨2, h⟩ _
 
-/-- So `@count`, which calls `@g` and itself, is refined by itself in the
-module with `@g`'s new body, which calls `@count` back. -/
-theorem count_isRefinedBy : countFn.runs ubModule ⊑ countFn.runs ubModule' :=
-  Core.caller_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy (by simp [ubModule, Module.funcs])
-    (by decide)
+/-- So `@count`, which calls `@g` and itself, is refined with memory by
+itself in the module with `@g`'s new body, which calls `@count` back. -/
+theorem count_isRefinedBy : countFn.memRuns lay ρ ubModule ⊑ countFn.memRuns lay ρ ubModule' :=
+  Core.caller_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
+    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
+    (g_isRefinedBy lay ρ) (by simp [ubModule, Module.funcs]) (by decide)
 
-/-- Every function of the module is refined by its counterpart with
-`@g`'s new body. -/
+/-- Every function of the module is refined with memory by its counterpart
+with `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
-    f.runs ubModule ⊑ (f.replaceBody gFn.name gBody).runs ubModule' :=
-  Core.replaceBody_isRefinedBy ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) gBody g_isRefinedBy hf
+    f.memRuns lay ρ ubModule ⊑ (f.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
+  Core.replaceBody_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
+    (by simp [gFn, Core.Ty.Finite]) gBody (reachesNoMemory _ _) (reachesNoMemory _ _)
+    (g_isRefinedBy lay ρ) hf
 
 /-! # A callee replaced by itself, in mutual recursion -/
 
-/-- `@odd` with its own body refines `@odd`. -/
+/-- Replacing `@odd`'s body with itself leaves the module as it was. -/
+theorem recModule_replace_odd : recModule.replaceBody oddFn.name oddFn.body = recModule := by
+  simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
+    parityFn]
+
+/-- `@odd` with its own body refines `@odd` with memory. -/
 theorem odd_self_isRefinedBy :
-    oddFn.runs recModule ⊑
-      (oddFn.replaceBody oddFn.name oddFn.body).runs
+    oddFn.memRuns lay ρ recModule ⊑
+      (oddFn.replaceBody oddFn.name oddFn.body).memRuns lay ρ
         (recModule.replaceBody oddFn.name oddFn.body) := by
-  have hM : recModule.replaceBody oddFn.name oddFn.body = recModule := by
-    simp [Module.replaceBody, Item.replaceBody, recModule, Func.replaceBody, factFn, evenFn, oddFn,
-      parityFn]
-  rw [hM]
-  show oddFn.runs recModule ⊑
-    Func.runs recModule
+  rw [recModule_replace_odd]
+  show oddFn.memRuns lay ρ recModule ⊑
+    Func.memRuns lay ρ recModule
       { oddFn with body := if oddFn.name = oddFn.name then oddFn.body else oddFn.body }
   rw [ite_self]
   exact Core.funcRuns_isRefinedBy_refl _
 
-/-- So `@even`, which calls `@odd`, which calls it back, is refined by
-itself. -/
+/-- So `@even`, which calls `@odd`, which calls it back, is refined with
+memory by itself. -/
 theorem even_replace_isRefinedBy :
-    evenFn.runs recModule ⊑ evenFn.runs (recModule.replaceBody oddFn.name oddFn.body) :=
-  Core.caller_isRefinedBy recModule_valid (by simp [recModule, Module.funcs])
-    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body odd_self_isRefinedBy
+    evenFn.memRuns lay ρ recModule ⊑
+      evenFn.memRuns lay ρ (recModule.replaceBody oddFn.name oddFn.body) :=
+  Core.caller_isRefinedBy lay ρ recModule_valid (by simp [recModule, Module.funcs])
+    (by simp [oddFn, parityFn, Core.Ty.Finite]) oddFn.body (reachesNoMemory _ _)
+    (reachesNoMemory _ _) (odd_self_isRefinedBy lay ρ)
     (by simp [recModule, Module.funcs]) (by decide)
-
-/-! # Congruence in the callee, with memory
-
-With memory, congruence asks that the new `@g` refine the old from every
-memories, and that its runs be bounded. A body with no blocks meets both:
-`@g` with it never starts, so it has no behaviour, and no run of it runs out
-of fuel. So `@count` is refined with memory by itself in the module with
-that body. -/
-
-/-- A body with no blocks: a function with it never starts. -/
-def noBlocks : Region CoreDialect := { blocks := [] }
-
-/-- The memories of a run of `ubModule`, at its layout. -/
-abbrev UbMems := Memory.Memories Nat (unitsOf ubModule.layout.entry)
-
-/-- `@g` with no blocks, in its module so changed, has no outcome from any
-memories: each path is stuck. -/
-theorem noBlocks_outcomes (a : HVector toType (gFn.params.map (·.2))) (S : UbMems) (m : Nat)
-    (o : Outcome (List (DVal CoreDialect) × UbMems)) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
-    ¬ ((gFn.replaceBody gFn.name noBlocks).memRunsFrom (ubModule.replaceBody gFn.name noBlocks)
-      (a, S) m).outcomes o := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
-  have key : ∀ x, Ev.NotStuck x → ¬ ((gFn.replaceBody gFn.name noBlocks).memRunsFrom
-      (ubModule.replaceBody gFn.name noBlocks) (a, S) m) x := by
-    intro x hx h
-    obtain ⟨p, hp, -⟩ := (Func.memRunsFrom_run hx).1 h
-    simp [Func.enter, Func.blocks, noBlocks, stuck] at hp
-  cases o with
-  | ret _ => exact key _ fun _ h => nomatch h
-  | ub _ => exact key _ fun _ h => nomatch h
-  | fuelExhausted => exact key _ fun _ h => nomatch h
-
-/-- `@count` is refined with memory by itself in the module where `@g` has
-no blocks. -/
-theorem count_memIsRefinedBy :
-    countFn.memRuns ubModule.layout.entry id ubModule ⊑
-      countFn.memRuns ubModule.layout.entry id (ubModule.replaceBody gFn.name noBlocks) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
-  refine Core.memCaller_isRefinedBy _ _ ubModule_valid (by simp [ubModule, Module.funcs])
-    noBlocks ⟨0, fun ⟨a, S⟩ => .inr fun m _ => noBlocks_outcomes a S m .fuelExhausted⟩ ?_
-    (by simp [ubModule, Module.funcs]) (by decide)
-  intro ⟨a, S⟩ t ht
-  cases t with
-  | ret o => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ret o) hn).elim
-  | ub r => obtain ⟨n, hn⟩ := ht; exact (noBlocks_outcomes a S n (.ub r) hn).elim
-  | fuelExhausted => exact (noBlocks_outcomes a S 0 .fuelExhausted (ht 0)).elim
 
 /-! # Axioms
 
@@ -356,6 +346,12 @@ theorems, their core instances and the tests above. -/
 /-- info: 'Fir.Func.runs_replaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.runs_replaceBody_isRefinedBy
 
+/-- info: 'Fir.Func.memRunsFrom_isRefinedBy_of_memRuns' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRunsFrom_isRefinedBy_of_memRuns
+
+/-- info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns
+
 /-- info: 'Fir.Core.Op.monotone_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.monotone_all
 
@@ -367,12 +363,6 @@ theorems, their core instances and the tests above. -/
 
 /-- info: 'Fir.Core.caller_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.caller_isRefinedBy
-
-/-- info: 'Fir.Core.memReplaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.memReplaceBody_isRefinedBy
-
-/-- info: 'FirTest.count_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms FirTest.count_memIsRefinedBy
 
 /-- info: 'FirTest.fact_args' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.fact_args

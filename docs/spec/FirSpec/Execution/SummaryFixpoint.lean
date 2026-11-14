@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The summary is the least fixpoint: readable blocks" =>
 
-:::moduleDocs (fingerprint := "232759440770060555")
+:::moduleDocs (fingerprint := "6579528842134264182")
 :::
 
 :::readable Fir.SymbolTable.Closed (fingerprint := "3623272267800276189")
@@ -38,11 +38,11 @@ every function that $`s` reaches has its set below $`T(s)`, since the
 symbols whose set is below $`T(s)` are closed under calls.
 :::
 
-:::readable Fir.SymbolTable.funcOwn_le_summary Fir.SymbolTable.summary_le_of_callee Fir.SymbolTable.summary_closed (fingerprint := "675438268539080094")
+:::readable Fir.SymbolTable.funcOwn_le_summary Fir.SymbolTable.reach_of_callee Fir.SymbolTable.summary_le_of_callee Fir.SymbolTable.summary_closed (fingerprint := "12826655800110637963")
 *Theorems: the summary is closed.* What a caller sees of a function's own
-ops is below its summary, since a function reaches itself. The summary of
-a callee of $`f` is below the summary of $`f`: what the callee reaches,
-$`f` reaches. So $`\mathrm{sum}_t` is closed under the calls of $`t`, and
+ops is below its summary, since a function reaches itself. What a callee
+of $`f` reaches, $`f` reaches, so the summary of a callee of $`f` is below
+the summary of $`f`. So $`\mathrm{sum}_t` is closed under the calls of $`t`, and
 with the theorem above it is the least closed assignment: the least
 fixpoint of the calls, recursion included.
 :::
@@ -54,8 +54,9 @@ $`\mathsf{control} \notin \mathrm{sum}_t(s)`. A call is not a
 terminator, whatever its callee's ops are.
 :::
 
-:::readable Fir.SymbolTable.effects_le_summary Fir.SymbolTable.opEffects_le_summary (fingerprint := "2051318579800569848")
-*Theorems: a call carries its callee's effects.* For each op $`o` of the
+:::readable Fir.SymbolTable.effects_le_opOwn Fir.SymbolTable.effects_le_summary Fir.SymbolTable.opEffects_le_summary (fingerprint := "1055325241024267492")
+*Theorems: a call carries its callee's effects.* What a caller sees of an
+op is at least what it sees of the op's own effects. For each op $`o` of the
 function that $`s` names, at any depth,
 $`\mathrm{caller}(\mathrm{eff}(o)) \le \mathrm{sum}_t(s)` and
 $`\mathrm{caller}(\mathrm{eff}_t(o)) \le \mathrm{sum}_t(s)`: the effects

@@ -68,19 +68,25 @@ theorem SymbolTable.funcOwn_le_summary {s : Name} {f : Func d} (hf : t.func? s =
   Effects.le_joinAll (List.mem_filterMap.2 ⟨s,
     SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩), by simp [hf]⟩)
 
-/-- The summary of a function that a function calls is below the caller's:
-the callee reaches nothing that the caller does not. -/
-theorem SymbolTable.summary_le_of_callee {s c : Name} {f : Func d} (hf : t.func? s = some f)
-    (hc : c ∈ t.callees f) : t.summary c ≤ t.summary s := by
+omit [DialectEffects d] in
+/-- A function that a function calls reaches nothing that its caller does
+not. -/
+theorem SymbolTable.reach_of_callee {s c : Name} {f : Func d} (hf : t.func? s = some f)
+    (hc : c ∈ t.callees f) : ∀ g ∈ t.reach [c] [], g ∈ t.reach [s] [] := by
   have hclosed := SymbolTable.reach_closed (t := t) (work := [s]) (seen := [])
     (fun _ h => nomatch h)
   have hs : s ∈ t.reach [s] [] :=
     SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)
-  have hsub : ∀ g ∈ t.reach [c] [], g ∈ t.reach [s] [] :=
-    SymbolTable.reach_sub (C := (· ∈ t.reach [s] [])) (fun g f hg hf c hc => hclosed g hg f hf c hc)
-      (fun _ h => nomatch h) fun g hg => by
-        rcases List.mem_singleton.1 hg with rfl
-        exact hclosed s hs f hf g hc
+  exact SymbolTable.reach_sub (C := (· ∈ t.reach [s] []))
+    (fun g f hg hf c hc => hclosed g hg f hf c hc) (fun _ h => nomatch h) fun g hg => by
+      rcases List.mem_singleton.1 hg with rfl
+      exact hclosed s hs f hf g hc
+
+/-- The summary of a function that a function calls is below the caller's:
+the callee reaches nothing that the caller does not. -/
+theorem SymbolTable.summary_le_of_callee {s c : Name} {f : Func d} (hf : t.func? s = some f)
+    (hc : c ∈ t.callees f) : t.summary c ≤ t.summary s := by
+  have hsub := t.reach_of_callee hf hc
   refine Effects.joinAll_le fun e he => ?_
   obtain ⟨g, hg, he⟩ := List.mem_filterMap.1 he
   exact Effects.le_joinAll (List.mem_filterMap.2 ⟨g, hsub g hg, he⟩)
@@ -107,17 +113,21 @@ theorem SymbolTable.summary_control (s : Name) : (t.summary s).control = false :
   · rfl
   · exact absurd (hle.control h) Bool.false_ne_true
 
-/-- What a caller sees of the own effects of each op of a function is below
-the function's summary. -/
-theorem SymbolTable.effects_le_summary {s : Name} {f : Func d} (hf : t.func? s = some f)
-    {o : Operation d} (ho : o ∈ f.allOps) : (effects o.op).callerView ≤ t.summary s := by
-  refine Effects.le_trans ?_ (t.summary_closed.own s f hf o ho)
+/-- What a caller sees of the own effects of an op is below what it sees of
+the op. -/
+theorem SymbolTable.effects_le_opOwn (o : Operation d) : (effects o.op).callerView ≤ t.opOwn o := by
   unfold SymbolTable.opOwn
   split
   · split
     · exact Effects.le_refl _
     · exact Effects.callerView_mono (Effects.le_join_left _ _)
   · exact Effects.le_refl _
+
+/-- What a caller sees of the own effects of each op of a function is below
+the function's summary. -/
+theorem SymbolTable.effects_le_summary {s : Name} {f : Func d} (hf : t.func? s = some f)
+    {o : Operation d} (ho : o ∈ f.allOps) : (effects o.op).callerView ≤ t.summary s :=
+  Effects.le_trans (t.effects_le_opOwn o) (t.summary_closed.own s f hf o ho)
 
 /-- The effects of each op in place in a function, its callee's summary
 included, are below the function's summary, but for control: a call

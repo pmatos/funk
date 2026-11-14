@@ -87,6 +87,12 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryFree "Touching no memory" FirSpec.Execution.MemoryFree (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFreeRuns "Runs that touch no memory" FirSpec.Execution.MemoryFreeRuns (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFreeReplace "Congruence in a callee that touches no memory" FirSpec.Execution.MemoryFreeReplace (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 1)}
 
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
@@ -96,3 +102,5 @@ byte order.
 {includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 1)}
 
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 1)}
+
+{includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee that touches no memory" FirSpec.Core.MemoryCallRefine (level := 1)}

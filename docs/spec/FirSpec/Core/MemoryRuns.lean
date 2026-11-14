@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12949175721885462401")
+:::moduleDocs (fingerprint := "13837067142324860801")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -42,18 +42,6 @@ and naming of the core's memories: it meets both in the set monad, and it
 is tied.
 :::
 
-:::readable Fir.Core.liftsSetM (pin := Fir.LiftsSetM) (fingerprint := "17596308403953790372")
-*Theorem: the core dialect lifts the set monad.* At every layout and
-naming, the core's semantics with memory is its semantics in the set monad,
-lifted into the state layer: every core op is tied. This is proved from
-each op's tie, not given by definition. No theorem of this section uses it:
-each asks only that each core terminator be tied, or that each core op be
-monotone with memory. No test of a dialect over the core and no equivalence
-test uses it either. It stays until the human rules on congruence in the
-callee (#373), whose form over finitely many argument vectors is stated over
-the runs in the set monad.
-:::
-
 :::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "15348739681123349600")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are its
@@ -66,9 +54,8 @@ by the core's semantics with memory, with each memory's entry in the
 module's data layout. An observer sees what it returns. They are the
 {ref "The-fir-specification--Execution--Core-values"}[runs of a core function]
 whose observations are the lists of values returned, and the runs that the
-modes report. The equivalence experiment of #282 is about them.
-Congruence in the callee over finitely many argument vectors is stated over
-the runs in the set monad until the human rules on #373.
+modes report. The equivalence experiment of #282 and congruence in the
+callee are about them.
 :::
 
 :::readable Fir.Core.Op.liftsSetM_of_terminator Fir.Core.Op.memMonotone_all (pin := Fir.Core.Op.liftsSetM) (pin := Fir.Core.Op.monotone_all) (fingerprint := "13096568096900556014")
@@ -174,7 +161,8 @@ for the core dialect, which is lawful in its monotonicity and whose values'
 refinement is reflexive and transitive. A function of $`M` other than $`g`,
 a caller of it or not, is so refined by itself in $`M'`. The bound replaces the finitely
 many argument vectors of
-{ref "The-fir-specification--Execution--Refinement-through-core-calls"}[congruence over the runs in the set monad]:
+{ref "The-fir-specification--Memory--Congruence-in-a-core-callee-that-touches-no-memory"}[congruence in a core callee that touches no memory]:
 a call starts from its caller's memories, of which there are infinitely
-many.
+many, and a callee that touches memory may depend on them. This form is for
+such a callee, until #214.
 :::

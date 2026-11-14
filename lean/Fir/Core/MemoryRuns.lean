@@ -23,9 +23,6 @@ set monad:
   is monotone in the set monad at every width, valid or not, so it is
   monotone with memory at every layout and naming.
 
-Since every op is tied, the core dialect lifts the set monad: that is a
-theorem here, not its definition.
-
 _Every core function valid in the context of a module runs within that
 module with memory_, wherever a run names the core's memories: it runs
 within the module, and each core terminator is tied. Every core op that runs
@@ -58,7 +55,8 @@ every core module refine its runs with memory on those others, calls and
 recursion included. Congruence in the callee holds with memory when the new
 callee's runs from given memories refine the old one's and are bounded:
 a call starts from its caller's memories, so finitely many argument vectors
-do not bound them.
+do not bound them, unless the callee touches no memory (the section on
+congruence in a core callee that touches no memory).
 -/
 
 namespace Fir
@@ -87,14 +85,6 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
   returnsOnDefined op hv hc :=
     MemReturnsOnDefined.ofLifts (Core.Op.liftsSetM op)
       (LawfulDialectPoison.returnsOnDefined op hv hc)
-
-/-- The core dialect's semantics with memory lifts its semantics in the set
-monad: every core op is tied. It is proved from each op's tie. No theorem on
-the core's runs, no test of a dialect over the core and no equivalence test
-uses it. It stays until the human rules on congruence in the callee
-([#373](https://github.com/pmatos/funk/issues/373)), whose form over finitely
-many argument vectors is stated over the runs in the set monad. -/
-instance Core.liftsSetM : LiftsSetM CoreDialect := LiftsSetM.ofOpLifts Core.Op.liftsSetM
 
 namespace Core
 
