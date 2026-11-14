@@ -39,8 +39,8 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 and runs by its rule in the set monad and keeps the memories.
-$`\mathsf{alloca}`, which touches memory, declares it, so it is not
-asked.
+$`\mathsf{alloca}` and $`\mathsf{load}`, which touch memory, declare it,
+so they are not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "8297816828923716502")
@@ -55,7 +55,8 @@ the set monad is the set of its rule in the
 by the morphism that keeps choice and UB, and a tree's choice of $`w` bits
 has $`2^w` options. $`\mathsf{alloca}` has no tie, and has
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[one outcome]
-by its own rule.
+by its own rule; $`\mathsf{load}` has no tie either, and has
+{ref "The-fir-specification--Memory--Load-obligations"}[at most one that ends].
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "11864989512908111455")
@@ -96,8 +97,8 @@ in either module, its
 so the hypothesis gives refinement from given memories and the theorem
 above applies (#214). Until #214 this form asked that $`g` have no pointer
 parameter, as the human ruled on #373 (2026-11-13). A core function
-reaches no memory when no function in its reach has an $`\mathsf{alloca}`,
-the core op that touches memory. Its hypothesis is refinement
+reaches no memory when no function in its reach has an $`\mathsf{alloca}`
+or a $`\mathsf{load}`, the core ops that touch memory. Its hypothesis is refinement
 with memory, from the empty memories, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 

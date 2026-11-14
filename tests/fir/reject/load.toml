@@ -54,6 +54,51 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering unordered decodes and is rejected"
+text = '''
+func @f(%p: ptr) -> i32 {
+^e:
+  %v: i32 = load unordered %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering release decodes and is rejected"
+text = '''
+func @f(%p: ptr) -> i32 {
+^e:
+  %v: i32 = load release %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering acq_rel decodes and is rejected"
+text = '''
+func @f(%p: ptr) -> i32 {
+^e:
+  %v: i32 = load acq_rel %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
 rule = "load aligns to a power of two of units: align(3) is not one"
 text = '''
 func @f(%p: ptr, %k: i64) -> i32 {
@@ -234,7 +279,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "load reads a memory that the module has: a pointer of ptr(1) without memory 1 in the layout is rejected"
+rule = "no pointer of an undeclared memory reaches a load: its definition, here a parameter of ptr(1) without memory 1 in the layout, is rejected"
 text = '''
 func @f(%p: ptr(1)) -> i32 {
 ^e:
@@ -249,12 +294,13 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "load loads a valid integer type: i0 is rejected"
+rule = "load loads a valid integer type: an i0 that it defines is rejected, though the function's types are valid"
 text = '''
-func @f(%p: ptr) -> i0 {
+func @f(%p: ptr) -> i32 {
 ^e:
   %v: i0 = load nonatomic %p @0
-  ret %v @0
+  %c: i32 = const 0 @0
+  ret %c @0
 }
 
 locs {

@@ -104,12 +104,12 @@ runs each op by its rule with memory in the
 the set monad; an op with no rule has no way to end, as in the set monad.
 It is given op by op, not by lifting the core's semantics in the set
 monad, so an op that touches memory joins it with its own rule, as
-$`\mathsf{alloca}` does.
+$`\mathsf{alloca}` and $`\mathsf{load}` do.
 :::
 
 :::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "5082191809985086959")
 *Theorem: every core op that touches no memory is tied.* For every core op
-$`p` but $`\mathsf{alloca}`, at every layout
+$`p` but $`\mathsf{alloca}` and $`\mathsf{load}`, at every layout
 $`\ell` and naming $`\rho`, on every operand vector, $`p`'s meaning with
 memory is its meaning in the set monad, lifted into the state layer: it
 keeps the memories. Lifting
@@ -119,7 +119,8 @@ one with no way to end in the layer, so the theorem above maps the core's
 semantics in the set monad to its semantics with memory, op by op. The
 core's obligations with memory follow from each op's own tie
 ({ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]).
-$`\mathsf{alloca}` is not tied: it has no rule in the set monad, and
-meets each obligation with memory by
-{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[its own rule].
+$`\mathsf{alloca}` and $`\mathsf{load}` are not tied: neither has a rule
+in the set monad, and each meets each obligation with memory by its own
+rule ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
+{ref "The-fir-specification--Memory--Load-obligations"}[load obligations]).
 :::

@@ -54,8 +54,8 @@ pointer's.
   `unordered`, `monotonic`, `acquire`, `release`, `acq_rel` and `seq_cst`
   (`Memory.Ordering`). Every one decodes, and validation accepts `nonatomic`
   alone, so the others are hooks for a concurrency model
-  (ADR-2026-11-09-1542). The words are an agent's choice, asked of the human
-  on the PR that adds `load`. Rejected: an ordering that may be left out, so
+  (ADR-2026-11-09-1542). The words are an agent's proposal, put to the human
+  on #391, which adds `load`; they have not ruled yet. Rejected: an ordering that may be left out, so
   a nonatomic load would have two spellings; and C++'s words, which have no
   `unordered`.
 - `A` is valid as `alloca`'s is, a power of two no larger than

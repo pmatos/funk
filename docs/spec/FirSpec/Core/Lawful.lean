@@ -68,10 +68,12 @@ poison: the obligation asks for a result, not for a defined one
 (ADR-2026-10-29-2006). The four divisions return one only at a width
 above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
-to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}` touches memory: it
-has no rule in the set monad, so no result there. It returns one with
-memory, by its own rule (the
-{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations]),
+to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}` and
+$`\mathsf{load}` touch memory: neither has a rule in the set monad, so
+neither gives a result there. Each returns one with memory, by its own rule
+(the
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations]
+and the {ref "The-fir-specification--Memory--Load-obligations"}[load obligations]),
 so the core dialect as a whole does not meet the lawful class in the set
 monad, and meets the lawful classes with memory instead.
 :::

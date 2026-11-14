@@ -19,7 +19,7 @@
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 
-use super::alloca::check_align;
+use super::align::{check_align, decode_align};
 use super::type_list;
 use super::types::{CoreType, core_type};
 use crate::effects::{Effects, MemSet};
@@ -46,15 +46,7 @@ fn parts(attrs: &[Attr]) -> Option<(&str, Option<&Int>)> {
     if !ORDERINGS.contains(&ordering.as_str()) {
         return None;
     }
-    let align = match rest {
-        [] => None,
-        [Attr::App(h, args)] if h == "align" => match args.as_slice() {
-            [Attr::Int(a)] if !a.is_negative() => Some(a),
-            _ => return None,
-        },
-        _ => return None,
-    };
-    Some((ordering, align))
+    Some((ordering, decode_align(rest)?))
 }
 
 /// The memory of the pointer `load` loads through, when it has one pointer

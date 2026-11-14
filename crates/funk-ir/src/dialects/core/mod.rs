@@ -21,6 +21,7 @@
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
 //! stack allocation `alloca` and the load `load`. A later family adds a file and a line here.
 
+mod align;
 mod alloca;
 mod arith;
 mod bitcast;

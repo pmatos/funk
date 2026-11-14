@@ -25,8 +25,9 @@ memory of the pointer type $`\mathsf{ptr}\langle N \rangle`
 module has. The module's data layout declares the others by number
 (ADR-2026-11-12-1821;
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
-$`\mathsf{alloca}` names the memory of its result in its effects; no other
-core op names a memory.
+$`\mathsf{alloca}` names the memory of its result in its effects, and
+$`\mathsf{load}` the memory of its pointer; no other core op names a
+memory.
 :::
 
 :::readable Fir.Core.Op.effects (fingerprint := "3919274005916045648")

@@ -26,17 +26,19 @@ is decided by looking at each of its ops.
 :::
 
 :::readable Fir.Core.Op.total (pin := Fir.OpTotal) (fingerprint := "10277650597748481361")
-*Theorem: every core op but $`\mathsf{call}` and $`\mathsf{alloca}` is
-total in the set monad.* Every core op that is not a call and touches no
+*Theorem: every core op but $`\mathsf{call}`, $`\mathsf{alloca}` and
+$`\mathsf{load}` is total in the set monad.* Every core op that is not a call and touches no
 memory is
 {ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
 operand vector, its semantics, or its exit for a terminator, has some
 outcome. Each op's family proves it in its obligations, from
 $`\mathsf{const}` to $`\mathsf{ret}`. $`\mathsf{call}` is left out: a run
 never uses its semantics, and goes on by its callee's run
-(ADR-2026-10-29-2006). $`\mathsf{alloca}` is left out too: it has no rule
-in the set monad, and is total with memory by
-{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[its own rule].
+(ADR-2026-10-29-2006). $`\mathsf{alloca}` and $`\mathsf{load}` are left
+out too: they have no rule in the set monad, and are total with memory by
+their own rules
+({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
+{ref "The-fir-specification--Memory--Load-obligations"}[load obligations]).
 :::
 
 :::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "8904669549041271155")

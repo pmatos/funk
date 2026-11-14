@@ -86,7 +86,7 @@ $`\mathsf{control}`.
 :::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "1816632172257312251")
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have. Every core op but
-$`\mathsf{alloca}` touches no memory: each is
+$`\mathsf{alloca}` and $`\mathsf{load}` touches no memory: each is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 running with memory by its rule in the set monad and keeping the memories.
 So for each such op, the three theorems above carry from the set monad to
@@ -95,7 +95,11 @@ obligations, which every computation with no memory meets.
 $`\mathsf{alloca}` meets each obligation by
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[its own rule with memory]:
 it is never UB, its result is never poison, it writes and reads no memory,
-and it allocates only in the memory of its result. So a pass may rely on
+and it allocates only in the memory of its result. $`\mathsf{load}` meets
+each by
+{ref "The-fir-specification--Memory--Load-obligations"}[its own rule with memory]:
+it writes no memory, allocates in none and reads only the memory of its
+pointer, and it declares may-UB and may produce poison. So a pass may rely on
 the core ops' effect sets (ADR-2026-11-09-1541).
 :::
 

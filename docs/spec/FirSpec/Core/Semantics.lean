@@ -66,9 +66,10 @@ result:
 * $`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`: the
   {ref "The-fir-specification--Execution--Integer-conversion-rules"}[integer conversion rules].
 
-$`\mathsf{call}`, $`\mathsf{alloca}` and the terminators have none here:
-a call's meaning is the run of its callee, $`\mathsf{alloca}` allocates,
-so its rule needs the memory effect and is one of the
+$`\mathsf{call}`, $`\mathsf{alloca}`, $`\mathsf{load}` and the
+terminators have none here: a call's meaning is the run of its callee,
+$`\mathsf{alloca}` allocates and $`\mathsf{load}` reads, so each of their
+rules needs the memory effect and is one of the
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[core's rules with memory],
 and a terminator's rule says where control goes.
 The rules are written once, for every way of computing with these

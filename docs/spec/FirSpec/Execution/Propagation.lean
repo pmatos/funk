@@ -162,7 +162,8 @@ instance that validation rejects may break an obligation without harm,
 since no valid program runs it. Each core op that touches no memory meets
 the obligations, as the section on
 {ref "The-fir-specification--Execution--The-core-dialect___s-poison-obligations"}[the core dialect's poison obligations]
-proves. $`\mathsf{alloca}` has no rule in the set monad, so the core
+proves. $`\mathsf{alloca}` and $`\mathsf{load}` have no rule in the set
+monad, so the core
 dialect as a whole is not lawful here: it meets the lawful classes with
 memory, which carry its guarantees, as the section on
 {ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]

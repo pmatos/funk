@@ -19,10 +19,12 @@
 //! error at run time. The op is never UB and never gives poison: it
 //! allocates in its memory, and the frame of its call frees the allocation
 //! when the call returns.
+//!
+//! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 
+use super::align::{check_align, decode_align};
 use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, alias, core_type};
 use crate::effects::{Effects, MemSet};
-use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int};
 
@@ -99,14 +101,7 @@ fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
         [Attr::Int(_), ..] => return None,
         rest => (None, rest),
     };
-    let align = match rest {
-        [] => None,
-        [Attr::App(h, args)] if h == "align" => match args.as_slice() {
-            [Attr::Int(a)] if nonneg(a) => Some(a),
-            _ => return None,
-        },
-        _ => return None,
-    };
+    let align = decode_align(rest)?;
     Some(Parts {
         kind,
         ty,
@@ -124,23 +119,6 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
             CoreType::Int(_) | CoreType::Float { .. } => None,
         },
         _ => None,
-    }
-}
-
-/// Checks the alignment `a` that the op `op` writes, in decimal with no
-/// sign, against the data layout's rule for its own alignments
-/// (`MemLayout::valid_align`, `MemLayout.ValidAlign` in the Lean). `alloca`
-/// and `load` share it.
-pub(super) fn check_align(op: &str, a: &str) -> Result<(), String> {
-    match a.parse::<u32>() {
-        Ok(n) if MemLayout::valid_align(n) => Ok(()),
-        Ok(n) if !n.is_power_of_two() => {
-            Err(format!("{op} aligns to a power of two of units, not {a}"))
-        }
-        _ => Err(format!(
-            "{op} aligns to at most {} units, as the data layout does, not {a}",
-            MemLayout::LIMIT
-        )),
     }
 }
 
