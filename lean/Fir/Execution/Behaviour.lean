@@ -182,7 +182,10 @@ choice has finitely many options. Then, by König's lemma, a run that can
 exhaust every budget has one infinite sequence of choices along which it
 never ends. The core dialect's one choice, a choice of _w_ bits, has 2 to
 the power _w_ options. An effect that a dialect adds must keep this
-assumption, or come with its own definition of divergence.
+assumption, or come with its own definition of divergence. With memory, the
+assumption is that every op has finitely many outcomes (the section on ops
+of finitely many outcomes), and congruence in the callee uses it in place of
+a budget for the new callee.
 -/
 
 /-- A behaviour: a set of outcomes. -/

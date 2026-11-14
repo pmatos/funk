@@ -182,6 +182,9 @@ import FirSpec.Execution.MemoryRefineUp
 import FirSpec.Execution.MemoryRefineDown
 import FirSpec.Execution.MemoryRefineRuns
 import FirSpec.Execution.MemoryReplace
+import FirSpec.Execution.MemoryFinite
+import FirSpec.Execution.MemoryFiniteDown
+import FirSpec.Execution.MemoryFiniteReplace
 import FirSpec.Execution.MemoryFree
 import FirSpec.Execution.MemoryFreeRuns
 import FirSpec.Execution.MemoryFreeReplace

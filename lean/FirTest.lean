@@ -57,6 +57,7 @@ import FirTest.Calls
 import FirTest.RunsCalls
 import FirTest.RefineCalls
 import FirTest.RefineCallsFrom
+import FirTest.RefineCallsPtr
 import FirTest.Lawful
 import FirTest.LawfulRefine
 import FirTest.Effects

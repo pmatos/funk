@@ -23,14 +23,18 @@ parameter types, such that
 
 * on arguments that refine others, and from memories that refine others,
   the observable behaviour of the target's function, with the memories it
-  ends with, refines that of the source's;
-* its runs from given memories are _bounded_: on each argument vector and
-  from each memories, the target's function diverges, or never runs out of
-  fuel at any budget of at least a fixed bound.
-
+  ends with, refines that of the source's.
 The black box speaks of runs from any memories, not only of runs from the
 empty memories: a callee runs from the memories its caller reached, and its
 caller goes on from those it leaves.
+
+A path of the target that runs out of fuel asks more of a black box than
+that. Either the black box's runs from given memories are _bounded_: on each
+argument vector and from each memories, its target diverges, or never runs
+out of fuel at any budget of at least a fixed bound (the section on
+divergence of the target with memory). Or every op that runs by its own rule
+has finitely many outcomes, so that each input has a budget of its own (the
+section on divergence with ops of finitely many outcomes).
 -/
 
 namespace Fir
@@ -168,28 +172,33 @@ def FuncRuns.BoundedBy {A O : Type} (f : FuncRuns A O) (B : Nat) : Prop :=
 whose calls the target module `M'` runs as calls of `g'`. Their parameters
 have the same types; on arguments that refine others, from memories that
 refine others, the behaviour of `g'` refines that of `g`, the memories they
-end with included; and the runs of `g'` from given memories are bounded by
-`bound`. -/
-structure MemBlackBox (M M' : Module d) (bound : Nat) (g g' : Func d) : Prop where
+end with included. -/
+structure MemBlackBox (M M' : Module d) (g g' : Func d) : Prop where
   params : g'.params.map (·.2) = g.params.map (·.2)
   refines : ∀ (a a' : HVector toType (g.params.map (·.2))) (S S' : Memories Mem unit),
     a.Forall₂ TyRefinement.IsRefinedBy a' → S ⊑ S' →
       observable (g.memRunsFrom M (a, S)) ⊑ observable (g'.memRunsFrom M' (a'.cast params.symm, S'))
-  bounded : (g'.memRunsFrom (Mem := Mem) (unit := unit) M').BoundedBy bound
 
 variable (Mem unit) in
 /-- The target module `M'` runs each call with memory as the source `M`
 does: each symbol names the same function in both, or a black box with
 memory. -/
-def MemCallsRefined (M M' : Module d) (bound : Nat) : Prop :=
+def MemCallsRefined (M M' : Module d) : Prop :=
   ∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ MemBlackBox (Mem := Mem) (unit := unit)
-      M M' bound g g'
+      M M' g g'
+
+variable (Mem unit) in
+/-- The runs from given memories of each function that the target module
+`M'` names where the source `M` names another are bounded by `bound`. -/
+def MemCallsBounded (M M' : Module d) (bound : Nat) : Prop :=
+  ∀ s g', M'.func? s = some g' → M'.func? s ≠ M.func? s →
+    (g'.memRunsFrom (Mem := Mem) (unit := unit) M').BoundedBy bound
 
 /-- A call that enters a black box's target passes arguments of the
 parameter types of the black box's source. -/
-theorem MemBlackBox.sig {M M' : Module d} {bound : Nat} {g g' : Func d}
-    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' bound g g') {ts : List d.Ty}
+theorem MemBlackBox.sig {M M' : Module d} {g g' : Func d}
+    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' g g') {ts : List d.Ty}
     {args' : HVector toType ts} {p : List (Operation d) × Env d}
     (hen' : g'.enter args'.toDVals = .ok p) : ts = g.params.map (·.2) := by
   obtain ⟨_, _, _, hty', _⟩ := Func.enter_eq_ok hen'
@@ -199,8 +208,8 @@ theorem MemBlackBox.sig {M M' : Module d} {bound : Nat} {g g' : Func d}
 /-- A path of a black box's target in its frame that is not stuck is a path
 of its run from given memories, on the arguments cast to its parameter
 types. -/
-theorem MemBlackBox.target_run {M M' : Module d} {bound : Nat} {g g' : Func d}
-    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' bound g g') {ts : List d.Ty}
+theorem MemBlackBox.target_run {M M' : Module d} {g g' : Func d}
+    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' g g') {ts : List d.Ty}
     {args' : HVector toType ts} {p' : List (Operation d) × Env d}
     (hen' : g'.enter args'.toDVals = .ok p') {S' : Memories Mem unit} {m : Nat}
     {x : Ev (Except Stuck (Result ((List (DVal d) × Memories Mem unit) × Nat)))}
@@ -229,8 +238,8 @@ theorem Func.memRunsFrom_run_cast {M : Module d} {g : Func d} {ts : List d.Ty}
 /-- A return or UB of a black box's target in its frame, called on
 arguments that refine the source's from memories that refine the source's,
 is allowed by the source's callee in its frame, which starts. -/
-theorem MemBlackBox.allowed {M M' : Module d} {bound : Nat} {g g' : Func d}
-    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' bound g g') {ts : List d.Ty}
+theorem MemBlackBox.allowed {M M' : Module d} {g g' : Func d}
+    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' g g') {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {S S' : Memories Mem unit} (hS : S ⊑ S') {n : Nat} {p' : List (Operation d) × Env d}
     (hen' : g'.enter args'.toDVals = .ok p')

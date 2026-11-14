@@ -146,6 +146,17 @@ theorem Module.func?_replaceBody_self {M : Module d} (hnd : (M.funcs.map (·.nam
   rw [Module.func?_replaceBody, Module.func?_of_mem hnd hg]
   rfl
 
+/-- A symbol other than `s` names the same function in the module with a
+body replaced as in the module. -/
+theorem Module.func?_replaceBody_of_ne {M : Module d} {s x : Name} {b : Region d} (hx : x ≠ s) :
+    (M.replaceBody s b).func? x = M.func? x := by
+  rw [Module.func?_replaceBody]
+  cases hk : M.func? x with
+  | none => rfl
+  | some k =>
+    have hn : k.name = x := by simpa using List.find?_some hk
+    simp only [Option.map_some, Func.replaceBody_of_ne (hn ▸ hx : k.name ≠ s)]
+
 /-- Replacing a body keeps the symbol table: every function keeps its
 symbol and its type. -/
 theorem Module.symbols_replaceBody (M : Module d) (s : Name) (b : Region d) :
@@ -318,13 +329,7 @@ theorem Func.runs_replaceBody_isRefinedBy {M : Module d}
     by_cases hx : x = g.name
     · subst hx
       exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
-    · refine .inl ?_
-      rw [Module.func?_replaceBody]
-      cases hk : M.func? x with
-      | none => rfl
-      | some k =>
-        have hn : k.name = x := by simpa using List.find?_some hk
-        simp only [Option.map_some, Func.replaceBody_of_ne (hn ▸ hx : k.name ≠ g.name)]
+    · exact .inl (Module.func?_replaceBody_of_ne hx)
   exact fun a => Func.runs_isRefinedBy_of_calls hmono hcalls f (hmono f hf)
     (HVector.forall₂_refl (fun v => hrefl v) a)
 

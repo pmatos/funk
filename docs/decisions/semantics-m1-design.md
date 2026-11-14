@@ -101,8 +101,9 @@ kind later (ADR-2026-11-09-1542). The world may create and free heap
 allocations when it answers an external call (ADR-2026-11-09-1540).
 
 Every theorem that relies on `ptr` having no values is restated
-(ADR-2026-11-09-1542). Stage 3a of #231 restates call congruence for a callee
-with no pointer parameter, and #214 proves it for the rest.
+(ADR-2026-11-09-1542). Stage 3a of #231 restated call congruence for a callee
+with no pointer parameter, and #214 proved it for every callee
+(`semantics-refinement.md#congruence-in-the-callee`).
 
 An op allocates in a memory for the current call. The allocation is freed when
 the call returns. Heap allocation stays a call to an external function such as

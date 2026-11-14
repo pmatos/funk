@@ -13,8 +13,10 @@ no memory read, write or allocation needs none: its runs do not depend on
 the memories, so finitely many argument vectors give the budget, as they do
 for runs in the set monad. The human ruled so on #373 on 2026-11-13
 (`docs/decisions/semantics-refinement.md#refinement-with-memory`). A callee
-that touches memory asks for the budget until
-[#214](https://github.com/pmatos/funk/issues/214).
+that touches memory asked for the budget until
+[#214](https://github.com/pmatos/funk/issues/214), which needs none when
+every op has finitely many outcomes (the section on congruence in the
+callee with ops of finitely many outcomes).
 
 When the ops of a dialect ignore the memories where they touch none (the
 section on touching no memory), every run of a function that reaches no

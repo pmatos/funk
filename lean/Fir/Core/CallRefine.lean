@@ -23,7 +23,7 @@ and recursion included:
 
 Both are stated over the runs of core functions, which are their runs with
 memory (the sections on core functions with memory and on congruence in a
-core callee that touches no memory). They follow from the general theorems,
+core callee). They follow from the general theorems,
 whose hypotheses the core dialect meets, and this section gives what they
 ask that needs no memory:
 
@@ -34,11 +34,11 @@ ask that needs no memory:
   float type has finitely many values: poison and the 2^N bit vectors of
   `iN`, poison and the bit vectors of `1 + e + m` bits of `float<e,m>`.
   A pointer type has infinitely many: poison and a pointer for every
-  allocation and every offset. So congruence with no budget holds for a
-  callee with no pointer parameter, whose parameter types have finitely
-  many argument vectors, and that reaches no memory. A callee with a
-  pointer parameter waits for congruence over types with infinitely many
-  values (#214).
+  allocation and every offset. So the form of congruence whose hypothesis
+  is refinement with memory holds for a callee with no pointer parameter,
+  whose parameter types have finitely many argument vectors, and that
+  reaches no memory. The form from given memories needs no finitely many
+  argument vectors: every core op has finitely many outcomes (#214).
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the

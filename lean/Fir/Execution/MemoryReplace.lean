@@ -18,7 +18,7 @@ from other memories. The conclusion holds of every function of the module
 in the same sense, and so of its runs with memory.
 
 The proof is the one for runs in the set monad. Every call of `@g` is a
-black box with memory, whose source is `@g` in the old module and whose
+black box with memory (`Module.replaceBody_memCallsRefined`), whose source is `@g` in the old module and whose
 target is the new function in the new module, and every other symbol names
 the same function in both modules. The black box refines: from memories
 that refine others, on arguments that refine others, `@g` is refined by
@@ -26,16 +26,16 @@ that refine others, on arguments that refine others, `@g` is refined by
 and memories that refine others), which is refined by the new function, by
 the hypothesis.
 
-The black box needs its bound: on each argument vector and from each
+The theorem asks for a bound: on each argument vector and from each
 memories, the new function diverges, or from some budget on never runs out
 of fuel. For runs in the set monad, finitely many argument vectors give one
 budget for all
-(`docs/decisions/semantics-refinement.md#congruence-in-the-callee`). The memories a call starts from are
-infinitely many, so no such argument gives a bound here, and the theorem
-asks for it: one budget past which no run of the new function from any
-memories runs out of fuel unless it diverges. Removing this hypothesis is
-[#214](https://github.com/pmatos/funk/issues/214)
-(`docs/decisions/semantics-refinement.md#refinement-with-memory`).
+(`docs/decisions/semantics-refinement.md#congruence-in-the-callee`). The
+memories a call starts from are infinitely many, so no such argument gives a
+bound here, and the theorem asks for one budget past which no run of the new
+function from any memories runs out of fuel unless it diverges. When every
+op of the dialect has finitely many outcomes, no budget is needed (the
+section on congruence in the callee with ops of finitely many outcomes).
 
 For a dialect lawful in its monotonicity, every function of a valid module
 refines itself on refined arguments and memories by the class alone, at
@@ -54,6 +54,33 @@ section
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (StateT (Memories Mem unit) SetM)] [TyRefinement d.Ty]
+
+/-- In a module whose symbols are unique, the module with `@g`'s new body
+runs each call as the module does, when `@g`, run in the new module from
+given memories, refines `@g` in the old: each symbol other than `@g` names
+the same function in both, and `@g` is a black box, under the hypotheses of
+congruence in the callee but the budget and reflexivity. -/
+theorem Module.replaceBody_memCallsRefined {M : Module d}
+    (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
+    (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
+    (hnd : (M.funcs.map (·.name)).Nodup) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
+    (h : g.memRunsFrom (Mem := Mem) (unit := unit) M ⊑
+      (g.replaceBody g.name b).memRunsFrom (Mem := Mem) (unit := unit) (M.replaceBody g.name b)) :
+    MemCallsRefined Mem unit M (M.replaceBody g.name b) := by
+  have hobs : ∀ {x y z : List (DVal d) × Memories Mem unit}, x ⊑ y → y ⊑ z → x ⊑ z :=
+    fun h₁ h₂ => ⟨List.isRefinedBy_trans (DVal.isRefinedBy_trans htrans) h₁.1 h₂.1,
+      Memories.isRefinedBy_trans h₁.2 h₂.2⟩
+  have bb : MemBlackBox (Mem := Mem) (unit := unit) M (M.replaceBody g.name b) g
+      (g.replaceBody g.name b) :=
+    { params := rfl
+      refines := fun a a' S S' ha hS => Behaviour.isRefinedBy_trans hobs
+        (Func.memRunsFrom_args_isRefinedBy M hmono g (hmono g hg) ha hS) (h (a', S')) }
+  intro x
+  by_cases hx : x = g.name
+  · subst hx
+    exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
+  · exact .inl (Module.func?_replaceBody_of_ne hx)
 
 /-- Congruence in the callee, with memory: in a module whose symbols are
 unique, replacing the body of its function `@g` with one under which `@g`,
@@ -82,28 +109,16 @@ theorem Func.memRunsFrom_replaceBody_isRefinedBy {M : Module d}
   show f.memRunsFrom M ⊑ Func.memRunsFrom _ { f with body := if f.name = g.name then b else f.body }
   rw [ite_eq_right hfg]
   obtain ⟨bound, hbound⟩ := hbound
-  have hobs : ∀ {x y z : List (DVal d) × Memories Mem unit}, x ⊑ y → y ⊑ z → x ⊑ z :=
-    fun h₁ h₂ => ⟨List.isRefinedBy_trans (DVal.isRefinedBy_trans htrans) h₁.1 h₂.1,
-      Memories.isRefinedBy_trans h₁.2 h₂.2⟩
-  have bb : MemBlackBox (Mem := Mem) (unit := unit) M (M.replaceBody g.name b) bound g
-      (g.replaceBody g.name b) :=
-    { params := rfl
-      refines := fun a a' S S' ha hS => Behaviour.isRefinedBy_trans hobs
-        (Func.memRunsFrom_args_isRefinedBy M hmono g (hmono g hg) ha hS) (h (a', S'))
-      bounded := hbound }
-  have hcalls : MemCallsRefined Mem unit M (M.replaceBody g.name b) bound := by
-    intro x
-    by_cases hx : x = g.name
-    · subst hx
-      exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
-    · refine .inl ?_
-      rw [Module.func?_replaceBody]
-      cases hk : M.func? x with
-      | none => rfl
-      | some k =>
-        have hn : k.name = x := by simpa using List.find?_some hk
-        simp only [Option.map_some, Func.replaceBody_of_ne (hn ▸ hx : k.name ≠ g.name)]
-  exact fun p => Func.memRunsFrom_isRefinedBy_of_calls hmono hcalls f (hmono f hf)
+  have hcalls := Module.replaceBody_memCallsRefined (Mem := Mem) (unit := unit) hmono htrans
+    hnd hg b h
+  have hbnd : MemCallsBounded Mem unit M (M.replaceBody g.name b) bound := fun x g' hx hne => by
+    by_cases hxg : x = g.name
+    · subst hxg
+      rw [Module.func?_replaceBody_self hnd hg b] at hx
+      cases hx
+      exact hbound
+    · exact absurd (Module.func?_replaceBody_of_ne hxg) hne
+  exact fun p => Func.memRunsFrom_isRefinedBy_of_calls hmono hcalls hbnd f (hmono f hf)
     (HVector.forall₂_refl (fun v => hrefl v) p.1) (Memories.isRefinedBy_refl p.2)
 
 variable [DialectValidation d]

@@ -14,10 +14,22 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7640157692671390853")
+:::moduleDocs (fingerprint := "11552545046216543610")
 :::
 
-:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.FuncRuns.BoundedBy) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.MemBlackBox) (fingerprint := "17748345473618143949")
+:::readable Fir.Module.replaceBody_memCallsRefined (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "12256594209290723460")
+*Theorem: the module with a new body runs each call as the module does.*
+In a module $`M` whose symbols are unique, let every op of its functions
+that runs by its own rule be monotone with memory, and the refinement of
+values be transitive. Let $`g'` and $`M'` be $`g` and $`M` with the body of
+$`g` replaced. If $`g'` in $`M'` refines $`g` in $`M` from given memories,
+then $`M'` runs each call with memory as $`M` does: every symbol other than
+$`g`'s names the same function in both, and $`g` and $`g'` are a black box,
+whose refinement is refined arguments and memories for $`g` in $`M`, then
+the hypothesis.
+:::
+
+:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.FuncRuns.BoundedBy) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.MemCallsBounded) (fingerprint := "4998906330337512728")
 *Theorem: congruence in the callee, with memory.* In a module $`M` whose
 symbols are unique, let every op of its functions that runs by its own rule
 be monotone with memory, and the refinement of values be reflexive and
@@ -33,11 +45,12 @@ counterpart in $`M'`:
 
 $$`\mathrm{runs}^S_{M,g} \sqsubseteq \mathrm{runs}^S_{M',g'} \implies \forall f \in M.\ \mathrm{runs}^S_{M,f} \sqsubseteq \mathrm{runs}^S_{M',f'}`
 
-Each call of $`g` is a black box with memory, whose refinement is refined
-arguments and memories for $`g` in $`M`, then the hypothesis. Runs in the
-set monad get $`B` from finitely many argument vectors; the memories a call
-starts from are infinitely many, so here $`B` is a hypothesis, which #214
-removes (`docs/decisions/semantics-refinement.md#refinement-with-memory`).
+Each call of $`g` is a black box with memory, by the theorem above, whose
+calls are bounded by $`B`. Runs in the set monad get $`B` from finitely many
+argument vectors; the memories a call starts from are infinitely many, so
+here $`B` is a hypothesis. When every op of the dialect has finitely many
+outcomes, no budget is needed:
+{ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes].
 :::
 
 :::readable Fir.Func.Valid.memOpsMonotone (fingerprint := "7140365292879792528")

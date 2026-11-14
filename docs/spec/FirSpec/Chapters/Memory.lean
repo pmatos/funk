@@ -87,6 +87,12 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryFinite "Ops of finitely many outcomes" FirSpec.Execution.MemoryFinite (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFiniteDown "Divergence with ops of finitely many outcomes" FirSpec.Execution.MemoryFiniteDown (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFiniteReplace "Congruence in the callee with ops of finitely many outcomes" FirSpec.Execution.MemoryFiniteReplace (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryFree "Touching no memory" FirSpec.Execution.MemoryFree (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryFreeRuns "Runs that touch no memory" FirSpec.Execution.MemoryFreeRuns (level := 1)}
@@ -103,4 +109,4 @@ byte order.
 
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 1)}
 
-{includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee that touches no memory" FirSpec.Core.MemoryCallRefine (level := 1)}
+{includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee" FirSpec.Core.MemoryCallRefine (level := 1)}
