@@ -210,7 +210,9 @@ $$`\alpha \mid \alpha_b \quad\text{and}\quad \alpha \mid o`
 A block has no address. Every address it may be given is a multiple of
 its alignment $`\alpha_b`, and the access's address is that plus $`o`. So
 the access is aligned at every address its block may be given exactly
-when $`\alpha` divides both. An access through a pointer that names no
+when $`\alpha` divides both, and that is what aligned means (the human's
+ruling of 2026-11-14 on #388; rejected: aligned at some address, under
+which no pass or backend could rely on an alignment promise). An access through a pointer that names no
 block of $`M` is aligned: it faults with $`\mathsf{noProvenance}`.
 So an access aligned to 4 into a block aligned to 2 is misaligned, even
 at offset 0, and one aligned to 1 is always aligned.

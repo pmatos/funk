@@ -164,13 +164,12 @@ trace. The access cannot be removed, duplicated or reordered with other events
 
 An op's load or store carries an alignment, in units: its promise that the
 access's address is a multiple of it. A misaligned access is immediate UB (the
-human's ruling of 2026-11-11 on #231, Q4). What "misaligned" means for a
-block, which has no address, is the agent's reading below. It waits for the
-human's ruling, asked on PR #386, and stages 4e-2 and 4e-3 build on it. A
-block has only the alignment it was allocated with, which every address it may
-be given is a multiple of. So an access aligned to `A`, through a pointer at offset `o` into
-a block aligned to `B`, is aligned exactly when `A` divides `B` and `o`: then
-it is aligned at every address the block may have. An access aligned to 1 is
+human's ruling of 2026-11-11 on #231, Q4). A block has no address, only the
+alignment it was allocated with, which every address it may be given is a
+multiple of. The human ruled on 2026-11-14 (#388, option A) that an access
+aligned to `A`, through a pointer at offset `o` into a block aligned to `B`, is
+aligned exactly when `A` divides `B` and `o`, so that it is aligned at every
+address the block may have. This is LLVM's rule. An access aligned to 1 is
 always aligned. An `i32` access aligned to 4 into `alloca stack i8 16` is
 therefore UB, even at offset 0, unless the `alloca` says `align(4)`
 (`Memory.aligned`, `Memory.loadAligned` and `Memory.storeAligned` in
@@ -191,12 +190,12 @@ therefore UB, even at offset 0, unless the `alloca` says `align(4)`
   (`lean/Fir/Memory/EncodeLaws.lean`). The core's `load` and `store` (stages
   4e-2 and 4e-3 of #231) meet their obligations from these.
 
-Rejected by the agent, pending that ruling: misaligned only when no address
-of the block could make the access aligned, an angelic reading. A pass could
-not rely on the promise, and a backend could not emit an aligned instruction
-for it. Rejected too: checking
-an access against the address that `fir-ref`'s canonical layout gives, which
-the spec does not fix and which only exposed allocations have.
+Rejected by the human's ruling of 2026-11-14 on #388: aligned at some
+address, misaligned only when no address of the block could make the access
+aligned (option B). No pass or backend could then rely on an `align` promise.
+Rejected too: checking an access against the address that `fir-ref`'s
+canonical layout gives, which the spec does not fix and which only exposed
+allocations have.
 
 ## The memories of a run
 

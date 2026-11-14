@@ -40,7 +40,9 @@ a promise that its address is a multiple of it, and a misaligned access is
 immediate UB (the human's ruling of 2026-11-11 on #231). A block has no
 address, so an _aligned access_ is one that is aligned at every address its
 block may be given: its alignment divides the block's and the pointer's
-offset. An aligned load or store faults as the plain one does, and when it
+offset (the human's ruling of 2026-11-14 on #388; rejected: aligned at some
+address, under which no pass or backend could rely on the promise). An
+aligned load or store faults as the plain one does, and when it
 does not, it faults as misaligned unless it is aligned. An alignment of 1
 divides everything, so an access aligned to 1 is the plain access.
 
