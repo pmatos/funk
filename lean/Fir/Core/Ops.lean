@@ -1,5 +1,6 @@
 import Fir.Core.Types
 import Fir.Memory.Model
+import Fir.Memory.Ordering
 import Fir.Syntax.Dialect
 
 /-!
@@ -7,7 +8,7 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, pointer offsets and stack allocation.
+conversions to integers, pointer offsets, stack allocation and loads.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -261,6 +262,20 @@ Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
   is a power of two no larger than `MemLayout.limit`, and an integer type
   `t`; the count has no bound (ADR-2026-11-14-0915).
 
+Loads (#231):
+
+* `load o w a n`: loads an `iW`, `W = w`, through a pointer of `ptr<N>`,
+  `N = n`, with the ordering `o`, as an access aligned to `a` units, or to
+  the natural alignment of `iW` in the memory `N` when `a` is `none`. It
+  reads the units that `iW` takes in that memory and decodes them: units
+  that are not the encoding of an integer, as a poison unit or a pointer's
+  fragment, give poison. A poison pointer is immediate UB, since some
+  pointer in its place faults, and so is an access that faults: out of
+  bounds, to a freed allocation, through a pointer without provenance, or
+  misaligned. It reads its memory, may be UB and may give poison. M1's
+  validation accepts only the ordering `nonatomic`, and an alignment that
+  is a power of two no larger than `MemLayout.limit`.
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -335,6 +350,7 @@ inductive Op where
   | fptrunc (e m e' m' : Nat)
   | ptradd (n w : Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
+  | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

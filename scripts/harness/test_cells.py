@@ -66,7 +66,9 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     `decodePtrAdd` does, takes none. A constant's value, a callee and
     what `alloca` reads with `decodeAlloca`, its kind, type, count and
     alignment, are not cells: an allocation's cell is the width of its
-    type. Any other arm is not known."""
+    type. Nor are `load`'s ordering and alignment, which `decodeLoad`
+    reads: a load's cell is the width of its result. Any other arm is not
+    known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
     for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
@@ -87,6 +89,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFloatToInt": ("",),
         "decodePtrAdd": ("",),
         "decodeAlloca": ("",),
+        "decodeLoad": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -173,6 +176,7 @@ class Tests(unittest.TestCase):
                 "[roundAttr]",
                 "fl.attrs ++ o.attrs",
                 "allocaAttrs k t c a",
+                "loadAttrs o a",
                 "[]",
             },
         )
@@ -191,6 +195,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
         self.assertEqual(flagged["[.sym f]"], {"call"})
         self.assertEqual(flagged["allocaAttrs k t c a"], {"alloca"})
+        self.assertEqual(flagged["loadAttrs o a"], {"load"})
         self.assertEqual(flagged["[]"], set())
 
     def test_the_ops_of_the_core_dialect(self):

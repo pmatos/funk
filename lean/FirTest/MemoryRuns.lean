@@ -4,9 +4,10 @@ import Fir.Core.MemoryCallRefine
 /-!
 Tests of runs with memory: the frame hook frees a call's stack allocations
 when the call returns, and leaves every other allocation as it was
-(ADR-2026-11-09-1548). No core op loads yet, and `alloca` allocates only
-on the stack in a valid module, so a semantics written here for these
-tests, not fir's, gives `const` an allocation of any kind, or a load: it
+(ADR-2026-11-09-1548). `alloca` allocates only on the stack in a valid
+module, and `load` needs an allocation to load from, so a semantics
+written here for these tests, not fir's, gives `const` an allocation of
+any kind, or a load from a fixed allocation, in one op: it
 allocates a unit of the given kind in the run's one memory, then gives its
 constant by the core rule. The runs are those of the interpreter in the
 state layer over the tree of choices, walked by exhaustive mode, from the
@@ -309,8 +310,8 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 
 /-! # A run that touches no memory
 
-Every core op but `alloca` touches no memory: a core function that reaches
-no `alloca` reaches no memory, so it returns from given memories what it
+Every core op but `alloca` and `load` touches no memory: a core function
+that reaches neither reaches no memory, so it returns from given memories what it
 returns with memory, with the memories it started from (the section on runs
 that touch no memory). -/
 

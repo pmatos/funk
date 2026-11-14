@@ -6,9 +6,9 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 41 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 42 core ops has a class (ADR-2026-10-29-2006).
 
-Thirty-four ops propagate poison: `const`, the float constant `fconst`,
+Thirty-five ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
@@ -16,7 +16,9 @@ three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
 casts `toBits` and `ofBits`, the two conversions from integers,
 `sitofp` and `uitofp`, the two conversions between formats, `fpext`
 and `fptrunc`, the pointer offset `ptradd`, the two conversions to
-integers, `fptosi` and `fptoui`, and the stack allocation `alloca`.
+integers, `fptosi` and `fptoui`, the stack allocation `alloca` and the
+load `load`, which is immediate UB on a poison pointer, as a defined
+pointer in its place may fault.
 `const`, `fconst`, `poison` and `alloca` have no operands, so they
 propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -46,7 +48,7 @@ obligations to branch obligations prove that each op meets the obligations
 of its class. The section on the core dialect's poison obligations puts
 them together for the ops that touch no memory, and the section on core
 functions with memory gives the core dialect's lawful classes with memory,
-`alloca` included. Tests check the rules of the exceptions. `call` has no
+`alloca` and `load` included. Tests check the rules of the exceptions. `call` has no
 op-level obligation, as below.
 
 `call` gets its meaning from the call effect, which the interpreter runs
@@ -80,7 +82,7 @@ def Op.poisonClass : Op → PoisonClass
   | .urem _ | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .fcmp ..
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
-  | .fptosi .. | .fptoui .. | .alloca .. => .propagates
+  | .fptosi .. | .fptoui .. | .alloca .. | .load .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a

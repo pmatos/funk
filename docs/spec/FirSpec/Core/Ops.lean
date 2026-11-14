@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7909701173623930783")
+:::moduleDocs (fingerprint := "5628622360878826756")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -125,12 +125,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "8567428639172367240")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "6296022432098662550")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in fifteen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in sixteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -344,6 +344,25 @@ alloca \mathsf{alloca}_{N}~k~t~c~a
   accept only the kind $`\mathsf{stack}`, a count of at least 1, an
   alignment that is a power of two no larger than $`2^{24} - 1`, and an
   integer type; the count has no bound (ADR-2026-11-14-0915).
+
+*Loads* read a value from memory (#231).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-    \dots
+load \mathsf{load}_{N}~o~W~a
+```
+
+* $`\mathsf{load}_{N}~o~W~a` loads an $`\mathsf{i}W` through a pointer of
+  $`\mathsf{ptr}\langle N \rangle`, with the ordering $`o`, as an access
+  aligned to $`a` units, or to the natural alignment of $`\mathsf{i}W` in
+  memory $`N` when $`a` is none. Units that are not an integer's encoding,
+  as fresh memory's, give poison. A poison pointer, and an access out of
+  bounds, to a freed allocation, without provenance or misaligned, is
+  immediate UB. The
+  {ref "The-fir-specification--Validation--Core-rules"}[core rules]
+  accept only the ordering $`\mathsf{nonatomic}` and an alignment that is
+  a power of two no larger than $`2^{24} - 1`.
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).

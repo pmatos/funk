@@ -8,9 +8,9 @@ Every core op of M0 is pure, may produce poison, may hit UB, or is a
 terminator, as its rules say (ADR-2026-11-09-1541). The core dialect names
 the memories of a module by their numbers, as a pointer type `ptr<N>` names
 memory `N`, and the module's data layout says which of them it has. The
-stack allocation `alloca` allocates in the memory of its result. No core op
-reads, writes or frees memory yet, or adds an event to the trace: M0's runs
-have no trace.
+stack allocation `alloca` allocates in the memory of its result, and `load`
+reads the memory of its pointer. No core op writes or frees memory yet, or
+adds an event to the trace: M0's runs have no trace.
 
 * Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`,
   `select`, `zext`, `sext`, `trunc`, `freeze`, `add`, `sub` and `mul`
@@ -38,6 +38,10 @@ have no trace.
   UB and its result is a defined pointer, so allocating is its only effect.
   The frame of its call frees the allocation when the call returns, so it
   declares no other effect for that.
+* Reads memory `N`, may-UB and may produce poison: `load` through a
+  pointer of `ptr<N>`. It is UB on a poison pointer and on an access that
+  faults, misaligned included, and it gives poison for units that are not
+  an integer's encoding, such as fresh memory.
 * Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
   `cond_br` may hit UB too, on a poison condition, and `unreachable` hits
   UB whenever a run reaches it (ADR-2026-11-09-1548).
@@ -73,5 +77,6 @@ def Op.effects : Op → Effects Mem
   | .br | .ret _ => { control := true }
   | .condBr | .unreachable => { mayUB := true, control := true }
   | .alloca _ _ _ _ n => { allocates := .these [n] }
+  | .load _ _ _ n => { reads := .these [n], mayUB := true, mayPoison := true }
 
 end Fir.Core

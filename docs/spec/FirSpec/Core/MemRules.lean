@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7897766060644813517")
+:::moduleDocs (fingerprint := "8689218361005929459")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "17668704330183444261")
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "10578282990471112072")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "12269658534097957291")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -62,10 +62,13 @@ The core's rules with memory are its rules in $`m`, at $`\ell` and
 $`\rho`: an op that accesses the core's memory $`x` accesses the run's
 memory $`\rho(x)` and reads its unit, byte order and pointer width from the
 entry $`\ell(\rho(x))` (ADR-2026-11-13-0906). The rule with memory of
-$`\mathsf{alloca}`, the one core op that touches memory, is its
+$`\mathsf{alloca}` is its
 {ref "The-fir-specification--Memory--Stack-allocation-rules"}[stack allocation rule],
-which allocates in the memory $`\rho(N)` of its result $`\mathsf{ptr}\langle N \rangle`;
-it has no rule without memory. Every other op touches no memory, so its
+which allocates in the memory $`\rho(N)` of its result $`\mathsf{ptr}\langle N \rangle`,
+and that of $`\mathsf{load}` its
+{ref "The-fir-specification--Memory--Load-rules"}[load rule], which loads
+from the memory $`\rho(N)` of its pointer; these are the core ops that
+touch memory, and neither has a rule without memory. Every other op touches no memory, so its
 rule with memory, as an op that is not a terminator and as a terminator,
 is its
 {ref "The-fir-specification--Execution--Core-op-semantics"}[rule].
@@ -75,18 +78,21 @@ with no rule, gives each op its rule with memory, and $`z(p)` to an op
 $`p` that has none.
 :::
 
-:::readable Fir.Core.memDenoteIn_mapsDenote (fingerprint := "5332513432139245988")
+:::readable Fir.Core.memDenoteIn_mapsDenote (fingerprint := "15533952128643843449")
 *Theorem: the core's rules with memory mean the same in both monads.* For
 monads $`m` and $`n` with choice, UB and the memory effect, a morphism
-$`\varphi` from $`m` to $`n` that keeps choice, UB and allocation maps the
-core's semantics with memory in $`m` at $`\ell` and $`\rho` to its
-semantics with memory in $`n`, op by op, when it maps what an op with no
-rule does. Every op but $`\mathsf{alloca}` follows from the theorem
-above; $`\mathsf{alloca}` maps because $`\varphi` maps its allocation to
-the same allocation in $`n`, and mapping the pointer to the result comes
-after it in both. The
+$`\varphi` from $`m` to $`n` that keeps choice, UB, allocation and loads
+maps the core's semantics with memory in $`m` at $`\ell` and $`\rho` to
+its semantics with memory in $`n`, op by op, when it maps what an op with
+no rule does. Every op but $`\mathsf{alloca}` and $`\mathsf{load}`
+follows from the theorem above; $`\mathsf{alloca}` maps because
+$`\varphi` maps its allocation to the same allocation in $`n`, and
+mapping the pointer to the result comes after it in both.
+$`\mathsf{load}` maps because $`\varphi` maps the UB of a poison pointer
+to UB for the same reason, and a load to the same load in $`n`, and
+decoding its units comes after it in both. The
 {ref "The-fir-specification--Memory--The-state-layer"}[translation through the layer]
-keeps allocation.
+keeps allocation and loads.
 :::
 
 :::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "718340430128983195")

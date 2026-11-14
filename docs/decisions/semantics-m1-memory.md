@@ -1,8 +1,9 @@
 # Current decisions: semantics, M1 memory
 
 This page continues semantics-m1-design.md with the memory of M1: the memory
-model, its pointers, the ops that touch it, the memories of a run and the
-core's guarantees with memory. It is the record: when this page and an ADR
+model, its pointers, stack allocation, the memories of a run and the core's
+guarantees with memory. Aligned accesses and loads are on
+[semantics-m1-memory-access.md](semantics-m1-memory-access.md). It is the record: when this page and an ADR
 disagree, the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## Memory
@@ -17,7 +18,7 @@ An access is immediate UB in each of these cases (ADR-2026-11-09-1542):
 - its allocation is freed;
 - its pointer has no provenance for that allocation;
 - it is misaligned (the human's ruling of 2026-11-11 on #231, Q4; see
-  [Aligned accesses](#aligned-accesses)).
+  [aligned accesses](semantics-m1-memory-access.md#aligned-accesses)).
 
 `ptr.expose` turns a pointer into an integer and marks its allocation exposed.
 `ptr.from_int` turns an integer back into a pointer, with the provenance of an
@@ -153,55 +154,18 @@ capping the natural alignment at the pointer's.
   dialect no longer meets the lawful class there; its obligations with
   memory are proved op by op, and `alloca`'s by its own rule
   (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no
-  `alloca` reaches no memory (`Core.reachesNoMemory`). The semantics with
+  `alloca` and no `load` reaches no memory (`Core.reachesNoMemory`). The semantics with
   memory carries the core's guarantees (below).
 
 A `volatile` attribute on loads and stores makes the access an event of the
 trace. The access cannot be removed, duplicated or reordered with other events
 (ADR-2026-11-09-1548).
 
-## Aligned accesses
-
-An op's load or store carries an alignment, in units: its promise that the
-access's address is a multiple of it. A misaligned access is immediate UB (the
-human's ruling of 2026-11-11 on #231, Q4). A block has no address, only the
-alignment it was allocated with, which every address it may be given is a
-multiple of. The human ruled on 2026-11-14 (#388, option A) that an access
-aligned to `A`, through a pointer at offset `o` into a block aligned to `B`, is
-aligned exactly when `A` divides `B` and `o`, so that it is aligned at every
-address the block may have. This is LLVM's rule. An access aligned to 1 is
-always aligned. An `i32` access aligned to 4 into `alloca stack i8 16` is
-therefore UB, even at offset 0, unless the `alloca` says `align(4)`
-(`Memory.aligned`, `Memory.loadAligned` and `Memory.storeAligned` in
-`lean/Fir/Memory/Model.lean`, their laws in `AlignLaws.lean`).
-
-- An aligned access faults as the plain one does first, with no provenance,
-  freed or out of bounds, and only then as misaligned. The fault decides only
-  the reason a run gives for its UB.
-- The memory effect's `load` and `store` take the access's alignment, and the
-  state layer makes each an aligned access, so a rule can only load or store
-  with an alignment. Whether an access is aligned depends on the allocations,
-  not on any unit, so a store still does not read its memory.
-- In the state layer a load writes, allocates and frees nothing, reads only
-  its own memory, has one outcome and is monotone; a store writes only its own
-  memory, allocates nothing, reads no memory, its own included, has one
-  outcome and is monotone (`lean/Fir/Execution/MemoryLoadLaws.lean`,
-  `MemoryStoreLaws.lean`). Encoding and decoding keep refinement
-  (`lean/Fir/Memory/EncodeLaws.lean`). The core's `load` and `store` (stages
-  4e-2 and 4e-3 of #231) meet their obligations from these.
-
-Rejected by the human's ruling of 2026-11-14 on #388: aligned at some
-address, misaligned only when no address of the block could make the access
-aligned (option B). No pass or backend could then rely on an `align` promise.
-Rejected too: checking an access against the address that `fir-ref`'s
-canonical layout gives, which the spec does not fix and which only exposed
-allocations have.
-
 ## The memories of a run
 
 The spec gives one memory of this model, for a unit of any width, in
-`lean/Fir/Memory/`, with its accesses and their laws. `alloca` is the one
-op that uses memory yet (#231). Memory is a state layer over the way of computing
+`lean/Fir/Memory/`, with its accesses and their laws. `alloca` and `load`
+are the ops that use memory yet (#231). Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
 - `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
@@ -243,9 +207,9 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca` included. The statements without memory cover only the
-code that touches none: those over the set monad cover the ops other than
-`alloca`, and those that ask a function to reach no memory cover such
+dialect, `alloca` and `load` included. The statements without memory cover
+only the code that touches none: those over the set monad cover the ops other
+than `alloca` and `load`, and those that ask a function to reach no memory cover such
 functions. The human ruled this on 2026-11-14, on #384 (option A).
 Rejected: splitting out a memory-free core dialect, whose old statements
 would hold with no condition, with the memory ops beside it (option C),
@@ -253,7 +217,7 @@ which changes the dialect's structure where the versions with memory
 already cover every op.
 
 These hold for every core op, and for every function of a valid core
-module, `alloca` included:
+module, `alloca` and `load` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
@@ -268,10 +232,10 @@ module, `alloca` included:
   `Core.caller_isRefinedBy_of_from`, with no condition on the callee
   (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
 
-Each new memory op, starting with stage 4e's `load` and `store`, keeps every
-one of them holding, with its own rule with memory and its own proofs, as
-`alloca` does (`lean/Fir/Core/AllocaLaws.lean`, joined to the tied ops by
-`Core.Op.memCases`).
+Each new memory op keeps every one of them holding, with its own rule with
+memory and its own proofs, as `alloca` and `load` do
+(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, joined to the tied ops by
+`Core.Op.memCases`). Stage 4e-3's `store` is next.
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:
@@ -302,8 +266,9 @@ each is what covers the whole core:
   they served hold through `Core.Op.memCases` and
   `Core.lawfulDialectEffects`.
 - `Core.memDenoteIn_mapsDenote` still covers every op, and asks the
-  morphism to keep allocation, which `MonadMorphism.state_alloc` gives for
-  the state layer.
+  morphism to keep allocation and, since stage 4e-2, loads, which
+  `MonadMorphism.state_alloc` and `MonadMorphism.state_load` give for the
+  state layer.
 
 `Core.Op.liftsSetM_of_terminator` and `Core.tyAttr_bare` keep their
 statements: the first has a new proof, and the second moved within

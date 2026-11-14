@@ -62,7 +62,8 @@ A flag that the spec does not give an op is not a cell, and a constant's value i
 part of its cell. Width changes are cells for each pair of widths, `zext` and
 `sext` to a wider one and `trunc` to a narrower one. Passed and returned values
 are cells for none, one or several values.
-`scripts/harness/cells.py` holds the exact set.
+`scripts/harness/cells.py` holds the exact set, the pointer table in
+`pointer_cells.py`.
 Its `catalog` expands ordered tables and rows with the actual cells and
 explicit blanks for inapplicable pairs. Both cell enumeration and matrix
 rendering consume that expansion; `coverage.py` owns presentation and counts,
@@ -78,9 +79,10 @@ says which (ADR-2026-11-03-0557).
 
 The pointer ops have a table of their own (`cells.POINTER_OPS`, the
 catalog's `pointers` table): `ptradd` has a cell at each width of its integer,
-and the stack allocation `alloca` a cell at each width of the integer type it
-allocates. Only the interpreter-only side has their cells: the backend lowers
-pointers in stage 5 of #231, which gives the differential side its widths. A
+the stack allocation `alloca` a cell at each width of the integer type it
+allocates, and `load` a cell at each width of the integer it loads. Only
+the interpreter-only side has their cells: the backend lowers pointers in
+stage 5 of #231, which gives the differential side its widths. A
 run's pointers come from `alloca`, so the tests that fill the `ptradd` cells
 move real pointers, as `tests/fir/canonical/alloca.fir` does, and also pass
 poison through it; its rule on pointers is checked in Lean too, in

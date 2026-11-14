@@ -690,6 +690,30 @@ locs {
   @0 = unknown
 }
 
+=== load reads(0),may-ub,may-poison
+func @f(%p: ptr, %b: i8, %c: i1) -> i32 {
+^entry:
+  %r: i32 = load nonatomic %p @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== load-memory-1 reads(1),may-ub,may-poison
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%p: ptr(1), %b: i8, %c: i1) -> i8 {
+^entry:
+  %r: i8 = load nonatomic align(4) %p @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === fcmp-nnan may-poison
 func @f(%a: f32, %b: f32, %c: i1) -> i1 {
 ^entry:

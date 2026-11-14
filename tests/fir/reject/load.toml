@@ -1,0 +1,263 @@
+# Must-reject texts of load (#231). It takes one pointer operand
+# and defines an integer; its attributes are its ordering and align(A),
+# in that order, separated by spaces. Every ordering decodes, and
+# validation accepts only nonatomic (ADR-2026-11-09-1542); an alignment
+# decodes when it is not negative, and validation accepts a power of two no
+# larger than 16777215, the data layout's bound, as for alloca. A pointer
+# of a memory that the module does not declare is rejected by validation,
+# as for every pointer type.
+
+[[reject]]
+verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering seq_cst decodes and is rejected"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load seq_cst %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering acquire decodes and is rejected"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load acquire %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load is nonatomic in M1: the ordering monotonic decodes and is rejected"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load monotonic align(4) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load aligns to a power of two of units: align(3) is not one"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic align(3) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load aligns to a power of two of units: align(0) is not one"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic align(0) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load aligns to at most 16777215 units, as the data layout does: align(16777216), 2^24, is above it"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic align(16777216) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load aligns to at most 16777215 units: align(2^70) is above it, though a power of two"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic align(1180591620717411303424) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load writes its ordering: a load with none does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load's ordering is one of seven words: relaxed does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load relaxed %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load's alignment is not negative: align(-4) does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic align(-4) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load writes its ordering before align(A): align first does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load align(4) nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load loads an integer type: an f32 result does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: f32 = load nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load loads an integer type in M1: a pointer result does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: ptr = load nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load takes a pointer: an integer operand does not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic %k @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load takes one pointer: two operands do not decode"
+text = '''
+func @f(%p: ptr, %k: i64) -> i32 {
+^e:
+  %v: i32 = load nonatomic %p, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load reads a memory that the module has: a pointer of ptr(1) without memory 1 in the layout is rejected"
+text = '''
+func @f(%p: ptr(1)) -> i32 {
+^e:
+  %v: i32 = load nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "load loads a valid integer type: i0 is rejected"
+text = '''
+func @f(%p: ptr) -> i0 {
+^e:
+  %v: i0 = load nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

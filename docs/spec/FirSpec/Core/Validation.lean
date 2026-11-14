@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5234526557099961755")
+:::moduleDocs (fingerprint := "18202785626579793766")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "11243420160820278137")
+:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "16897339240257841884")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -87,6 +87,8 @@ permissions for passes that M2's optimizer decides, not meanings of an
 op, so a float op that carries either is not valid (ADR-2026-11-09-1549).
 
 $$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
+
+$$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{load}_{N}~o~W~a~\text{valid}}`
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -131,6 +133,17 @@ the op, and $`\mathrm{symtab}_C` the module's
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(3)`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{24})` and
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{f32}` are not.
+* $`\mathsf{load}` has the ordering $`\mathsf{nonatomic}`, the one M1
+  accepts: the atomic orderings are hooks in the format for a concurrency
+  model (ADR-2026-11-09-1542). An alignment that it gives is a valid
+  alignment, as $`\mathsf{alloca}`'s is; one that it does not give is the
+  natural alignment of $`\mathsf{i}W` in its memory. Its result type
+  $`\mathsf{i}W` and its operand type $`\mathsf{ptr}\langle N \rangle`
+  are checked as every type is: the width is valid, and the module's data
+  layout declares memory $`N`. So
+  $`\mathsf{load}~\mathsf{nonatomic}~\mathsf{align}(4)` is valid, and
+  $`\mathsf{load}~\mathsf{seq\_cst}` and
+  $`\mathsf{load}~\mathsf{nonatomic}~\mathsf{align}(3)` are not.
 
 Every other op has no rule beyond its signature. These three definitions
 are what the core dialect

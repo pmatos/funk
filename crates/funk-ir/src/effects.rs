@@ -7,8 +7,9 @@
 //! `tests/dialects/effects.cases` checks that the core's sets here are the
 //! ones of `Core.Op.effects`. The memory-named effects name the dialect's own
 //! memories, or every memory. The core dialect names each memory of a module
-//! by its number (ADR-2026-11-09-1542), and its `alloca` allocates in the
-//! memory of its result (ADR-2026-11-14-0915).
+//! by its number (ADR-2026-11-09-1542): its `alloca` allocates in the
+//! memory of its result (ADR-2026-11-14-0915), and its `load` reads the
+//! memory of its pointer.
 //!
 //! The spec proves each Lean declaration sound: an effect that an op leaves
 //! out, it does not have. A pass may rely on a set here because it equals

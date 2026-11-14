@@ -127,16 +127,18 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
     }
 }
 
-/// Checks the alignment `a`, written in decimal with no sign, against the
-/// data layout's rule for its own alignments (`MemLayout::valid_align`).
-fn check_align(a: &str) -> Result<(), String> {
+/// Checks the alignment `a` that the op `op` writes, in decimal with no
+/// sign, against the data layout's rule for its own alignments
+/// (`MemLayout::valid_align`, `MemLayout.ValidAlign` in the Lean). `alloca`
+/// and `load` share it.
+pub(super) fn check_align(op: &str, a: &str) -> Result<(), String> {
     match a.parse::<u32>() {
         Ok(n) if MemLayout::valid_align(n) => Ok(()),
         Ok(n) if !n.is_power_of_two() => {
-            Err(format!("alloca aligns to a power of two of units, not {a}"))
+            Err(format!("{op} aligns to a power of two of units, not {a}"))
         }
         _ => Err(format!(
-            "alloca aligns to at most {} units, as the data layout does, not {a}",
+            "{op} aligns to at most {} units, as the data layout does, not {a}",
             MemLayout::LIMIT
         )),
     }
@@ -182,7 +184,7 @@ impl OpSpec for Alloca {
             return Err("alloca allocates at least one value, not 0".into());
         }
         if let Some(a) = p.align {
-            check_align(a.as_str())?;
+            check_align("alloca", a.as_str())?;
         }
         let valid_width = |w: &Int| {
             w.as_str()
@@ -340,17 +342,17 @@ mod tests {
     #[test]
     fn alignments_are_powers_of_two_up_to_the_layouts_limit() {
         for a in ["1", "2", "1024", "8388608"] {
-            assert_eq!(check_align(a), Ok(()), "{a}");
+            assert_eq!(check_align("alloca", a), Ok(()), "{a}");
         }
         let not_power = |a: &str| format!("alloca aligns to a power of two of units, not {a}");
         let above = |a: &str| {
             format!("alloca aligns to at most 16777215 units, as the data layout does, not {a}")
         };
         for a in ["0", "3", "12", "16777215"] {
-            assert_eq!(check_align(a), Err(not_power(a)), "{a}");
+            assert_eq!(check_align("alloca", a), Err(not_power(a)), "{a}");
         }
         for a in ["16777216", "4294967296", "1180591620717411303424"] {
-            assert_eq!(check_align(a), Err(above(a)), "{a}");
+            assert_eq!(check_align("alloca", a), Err(above(a)), "{a}");
         }
     }
 

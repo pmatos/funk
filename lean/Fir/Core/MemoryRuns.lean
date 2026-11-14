@@ -7,16 +7,17 @@ import Fir.Execution.MemoryPoison
 /-!
 # Every valid core function, with memory
 
-Every core op but `alloca` touches no memory: each runs with memory by its
-rule in the set monad and keeps the memories, so it is tied (the section on
-the core's rules with memory). So the core's obligations with memory follow
-op by op, each from the op's own tie and what the op meets in the set
-monad, and for `alloca` from its own rule with memory (the section on the
-stack allocation obligations):
+Every core op but `alloca` and `load` touches no memory: each runs with
+memory by its rule in the set monad and keeps the memories, so it is tied
+(the section on the core's rules with memory). So the core's obligations
+with memory follow op by op, each from the op's own tie and what the op
+meets in the set monad, and for `alloca` and `load` from their own rules
+with memory (the sections on the stack allocation obligations and on the
+load obligations):
 
 * _the core dialect is lawful in its totality_: each core terminator and
   each core op with no callee is total with memory: total in the set monad
-  and tied, or `alloca`;
+  and tied, or `alloca`, or `load`;
 * it is lawful in its poison with memory: each valid core op that
   propagates poison propagates it with memory, from any memories, and
   returns a result on some defined operands;
@@ -82,7 +83,8 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
         MemTotal (d := CoreDialect) op) op
     (fun op hm hc => MemTotal.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.total_all op hc hm))
-    (fun k t c a n _ => Core.alloca_memTotal k t c a n) hc⟩
+    (fun k t c a n _ => Core.alloca_memTotal k t c a n)
+    (fun o w a n _ => Core.load_memTotal o w a n) hc⟩
 
 /-- The core dialect is lawful in its monotonicity: each core op that runs
 by its own rule is monotone with memory, at every layout and naming: each op
@@ -93,7 +95,8 @@ instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
         MemMonotone (d := CoreDialect) op) op
     (fun op hm hc => MemMonotone.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.monotone_all op hc))
-    (fun k t c a n _ => Core.alloca_memMonotone k t c a n) hc⟩
+    (fun k t c a n _ => Core.alloca_memMonotone k t c a n)
+    (fun o w a n _ => Core.load_memMonotone o w a n) hc⟩
 
 /-- The core dialect is lawful in its poison with memory: each valid core op
 instance that propagates poison propagates it with memory, and returns a
@@ -106,12 +109,14 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
       poisonClass (d := CoreDialect) op = .propagates → MemPropagatesPoison (d := CoreDialect) op) op
     (fun op hm hc => MemPropagatesPoison.ofLifts (Core.Op.liftsSetM op hm)
       (Core.Op.propagates_all op hc))
-    (fun k t c a n _ => Core.alloca_memPropagates k t c a n) hc
+    (fun k t c a n _ => Core.alloca_memPropagates k t c a n)
+    (fun o w a n _ => Core.load_memPropagates o w a n) hc
   returnsOnDefined op hv hc := Core.Op.memCases (P := fun op => TypesValid (d := CoreDialect) op →
       poisonClass (d := CoreDialect) op = .propagates → MemReturnsOnDefined (d := CoreDialect) op) op
     (fun op hm hv hc => MemReturnsOnDefined.ofLifts (Core.Op.liftsSetM op hm)
       (Core.Op.returnsOnDefined_valid op hm hv hc))
-    (fun k t c a n _ _ => Core.alloca_memReturnsOnDefined k t c a n) hv hc
+    (fun k t c a n _ _ => Core.alloca_memReturnsOnDefined k t c a n)
+    (fun o w a n _ _ => Core.load_memReturnsOnDefined o w a n) hv hc
 
 namespace Core
 
@@ -140,7 +145,8 @@ theorem Op.memMonotone_all (op : Op)
   Op.memCases (P := fun op => (Fir.isTerminator (d := CoreDialect) op = true ∨
       callee? (d := CoreDialect) op = none) → MemMonotone (d := CoreDialect) op) op
     (fun op hm h => MemMonotone.ofLifts (Op.liftsSetM op hm) (Op.monotone_all op h))
-    (fun k t c a n _ => alloca_memMonotone k t c a n) h
+    (fun k t c a n _ => alloca_memMonotone k t c a n)
+    (fun o w a n _ => load_memMonotone o w a n) h
 
 /-- A core function that runs within a module runs within it with memory,
 wherever a run names the core's memories: each of its terminators is tied. -/
