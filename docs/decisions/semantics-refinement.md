@@ -246,19 +246,25 @@ whose hypothesis is refinement with memory, as it was over the runs in the set
 monad. Since #214, the core's congruence with memory,
 `Core.replaceBody_isRefinedBy` and `Core.caller_isRefinedBy`, in
 `lean/Fir/Core/MemoryCallRefine.lean`, takes the same hypothesis with no
-pointer-parameter condition: for a callee that reaches no memory before and
-after, refinement with memory is refinement from given memories
-(`Func.memRunsFrom_isRefinedBy_of_memRuns`), and the form from given
-memories applies. No core op declares a memory effect, so every core
-function reaches no memory today (`Core.reachesNoMemory`), but the theorems
-still ask it of `@g`, so that they do not depend on that. The
-human ruled on 2026-11-13 (#373, option C) that the core keep the
-finite-argument form for a callee that touches no memory and the bound form,
-`Core.memReplaceBody_isRefinedBy`, for one that does, until #214. #214 met
-the ruling: both core bound forms went, since
+pointer-parameter condition, through
+`Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns`: for a callee
+that reaches no memory before and after, refinement with memory is
+refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
+and congruence with ops of finitely many outcomes applies. No core op
+declares a memory effect, so every core function reaches no memory today
+(`Core.reachesNoMemory`), but the theorems still ask it of `@g`, so that
+they do not depend on that. The human ruled on 2026-11-13 (#373, option C):
+keep the core's unconditional finite-argument congruence, over runs with
+memory, for a callee that touches no memory, and ask a fuel bound only of a
+callee that touches memory (`Core.memReplaceBody_isRefinedBy`), until #214
+removes it. #214 met the ruling. The bound forms of the core went, since
 `Core.replaceBody_isRefinedBy_of_from` and `Core.caller_isRefinedBy_of_from`
-give their conclusions with no bound. The forms over the runs in the set monad
-and `Core.liftsSetM` went, so a memory op can join the core. Rejected: (A) the bound form for every callee until #214, which would have
+give their conclusions with no bound. The core no longer uses the
+finite-argument form: `Core.replaceBody_isRefinedBy` and
+`Core.caller_isRefinedBy` keep their names and conclusions, and drop its
+finiteness hypothesis, so each case the ruling kept is still covered. The
+forms over the runs in the set monad and `Core.liftsSetM` went, so a memory
+op can join the core. Rejected: (A) the bound form for every callee until #214, which would have
 made each optimizer pass prove a bound for the callee it replaces, a weaker
 theorem than the one that held for callees with no pointer parameter; (B) #214
 before stage 4d, which would have held every memory op back for it.

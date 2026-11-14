@@ -1,7 +1,7 @@
 import Fir.Core.EffectLaws
 import Fir.Core.CallRefine
 import Fir.Execution.MemoryLocal
-import Fir.Execution.MemoryReplace
+import Fir.Execution.MemoryRefineRuns
 import Fir.Execution.MemoryPoison
 
 /-!

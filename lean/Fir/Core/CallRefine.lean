@@ -25,20 +25,19 @@ Both are stated over the runs of core functions, which are their runs with
 memory (the sections on core functions with memory and on congruence in a
 core callee). They follow from the general theorems,
 whose hypotheses the core dialect meets, and this section gives what they
-ask that needs no memory:
+ask that needs no memory: every core terminator and every core op with no
+callee is monotone, each by the obligation that its family proves, at every
+width. That is every core op but `call`, whose way to go on is its callee's
+run. The core's congruence asks for no finitely many argument vectors, in
+either form, since every core op has finitely many outcomes (#214).
 
-* every core terminator and every core op with no callee is monotone,
-  each by the obligation that its family proves, at every width: every
-  core op but `call`, whose way to go on is its callee's run;
-* the argument vectors of a callee whose parameter types have finitely
-  many values, which the general forms of congruence with finitely many
-  argument vectors ask for. An integer or float type has finitely many
-  values: poison and the 2^N bit vectors of `iN`, poison and the bit
-  vectors of `1 + e + m` bits of `float<e,m>`. A pointer type has
-  infinitely many: poison and a pointer for every allocation and every
-  offset. The core's congruence asks for no finitely many argument
-  vectors, in either form: every core op has finitely many outcomes
-  (#214).
+The section also lists the argument vectors of a callee whose parameter
+types have finitely many values, which the general forms of congruence with
+finitely many argument vectors ask for. An integer or float type has
+finitely many values: poison and the 2^N bit vectors of `iN`, poison and the
+bit vectors of `1 + e + m` bits of `float<e,m>`. A pointer type has
+infinitely many: poison and a pointer for every allocation and every
+offset.
 
 The general theorems ask monotonicity of every terminator and every op
 with no callee among the ops of the modules' functions and of the

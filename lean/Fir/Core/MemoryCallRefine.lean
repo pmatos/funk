@@ -135,18 +135,16 @@ theorem caller_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
 which it reaches no memory in the new module, refines every function of the
 module with memory, calls and recursion included, wherever a run names the
 core's memories. It asks nothing of the parameter types of `@g`, pointers
-included: its runs from given memories are its runs with memory, so the
-form from given memories applies. -/
+included: its runs from given memories are its runs with memory, and
+every core op has finitely many outcomes. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (b : Region CoreDialect) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  replaceBody_isRefinedBy_of_from lay ρ hM hg b
-    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ (opsIgnoreMemory lay ρ)
-      (Module.func?_of_mem hM.symbolsUnique hg) hold
-      (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf
+  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ Ty.isRefinedBy_refl
+    Ty.isRefinedBy_trans (opsIgnoreMemory lay ρ) (opsFinite lay ρ) hM hg b hold hmem h hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined with memory by itself in the module with `@g`'s new body, under

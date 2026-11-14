@@ -1,4 +1,5 @@
 import Fir.Execution.MemoryFreeRuns
+import Fir.Execution.MemoryFiniteReplace
 
 /-!
 # Congruence in a callee that touches no memory
@@ -11,12 +12,13 @@ give that budget (the section on runs that touch no memory), as they do for
 runs in the set monad. The human ruled on #373, on 2026-11-13, that the
 core's congruence keep this form for such a callee, and ask for the budget
 only of a callee that touches memory, until
-[#214](https://github.com/pmatos/funk/issues/214). Since #214, no budget is
-needed when every op of the dialect has finitely many outcomes (the section
-on congruence in the callee with ops of finitely many outcomes), and the
-core's congruence uses that in both its forms. This form asks no finitely
-many outcomes, so it stays for a dialect whose ops may have infinitely
-many.
+[#214](https://github.com/pmatos/funk/issues/214) removed the budget. Since
+#214, no budget is needed when every op of the dialect has finitely many
+outcomes (the section on congruence in the callee with ops of finitely many
+outcomes). The core's congruence uses that in both its forms, with no
+finitely many argument vectors, and no longer uses this form. This form
+asks no finitely many outcomes, so it stays for a dialect whose ops may
+have infinitely many.
 
 Wherever a run names the dialect's memories, when its ops ignore the
 memories where they touch none:
@@ -33,7 +35,10 @@ For a dialect lawful in its monotonicity, in a valid module, congruence in
 the callee then holds with no budget for a callee with finitely many
 argument vectors whose new body, in the new module, reaches no memory: when the new callee refines the old from given memories,
 or, when the old callee reaches no memory too, with memory. It
-asks nothing of the new body but that.
+asks nothing of the new body but that. When the dialect's ops have finitely
+many outcomes, the second form needs no finitely many argument vectors:
+the new callee then refines the old from given memories, and congruence
+with ops of finitely many outcomes applies. The core takes this form.
 -/
 
 namespace Fir
@@ -199,6 +204,30 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_memRuns
     {f : Func d} (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
   (Func.memRuns_replaceBody_isRefinedBy_of_finite lay ρ hrefl htrans hfree hM hg b hfin hmem
+    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ hfree
+      (Module.func?_of_mem hM.symbolsUnique hg) hold
+      (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf).2
+
+/-- Congruence in the callee, with memory, for a callee that touches no
+memory before or after, by the class alone, with ops of finitely many
+outcomes: as above, it is enough that `@g`, run with memory in the new
+module, refine `@g` in the old, and nothing is asked of the parameter types
+of `@g`, pointers included, when every op that runs by its own rule has
+finitely many outcomes at that naming. -/
+theorem Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns
+    (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
+    (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
+      TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      OpsIgnoreMemory d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
+    (hold : M.table.ReachesNoMemory g.name)
+    (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
+    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    {f : Func d} (hf : f ∈ M.funcs) :
+    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ hrefl htrans hfin hM hg b
     (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ hfree
       (Module.func?_of_mem hM.symbolsUnique hg) hold
       (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf).2

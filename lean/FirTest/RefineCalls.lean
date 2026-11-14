@@ -351,6 +351,13 @@ theorems, their core instances and the tests above. -/
 /-- info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns
 
+/--
+info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns
+
 /-- info: 'Fir.Core.Op.monotone_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.monotone_all
 
