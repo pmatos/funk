@@ -16,6 +16,12 @@ func @bytes() -> ptr {
   ret %p @0
 }
 
+func @widest_align() -> ptr {
+^entry:
+  %p: ptr = alloca stack i8 align(8388608) @0
+  ret %p @0
+}
+
 func @two() -> ptr {
 ^entry:
   %p: ptr = alloca stack i64 @0

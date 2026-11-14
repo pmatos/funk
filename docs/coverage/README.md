@@ -412,7 +412,7 @@ that passes no value.
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ptradd` | 1 | 1 | 2 | 2 | 2 | 1 | 7 | 1 |
-| `alloca` | 2 | 1 | 2 | 1 | 3 | 2 | 2 | 4 |
+| `alloca` | 2 | 1 | 3 | 1 | 3 | 2 | 2 | 4 |
 
 ### Passed and returned values (interpreter-only tests)
 

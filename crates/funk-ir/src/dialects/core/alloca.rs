@@ -13,13 +13,16 @@
 //! alignment. Any other shape does not decode.
 //!
 //! Validation accepts only the kind `stack`, a count of at least 1, an
-//! alignment that is a power of two, and a valid integer type. The op is never UB and never gives
-//! poison: it allocates in its memory, and the frame of its call frees the
-//! allocation when the call returns.
+//! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
+//! the data layout's own alignments are, and a valid integer type. The count
+//! has no bound: an allocation larger than a machine holds is a resource
+//! error at run time. The op is never UB and never gives poison: it
+//! allocates in its memory, and the frame of its call frees the allocation
+//! when the call returns.
 
 use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, alias, core_type};
 use crate::effects::{Effects, MemSet};
-use crate::ir::Nat;
+use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int};
 
@@ -124,10 +127,19 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
     }
 }
 
-/// Whether the decimal digits `s`, with no sign, spell a power of two, of
-/// any size (`isPowerOfTwo`).
-fn power_of_two(s: &str) -> bool {
-    Nat::from_decimal(s).is_power_of_two()
+/// Checks the alignment `a`, written in decimal with no sign, against the
+/// data layout's rule for its own alignments (`MemLayout::valid_align`).
+fn check_align(a: &str) -> Result<(), String> {
+    match a.parse::<u32>() {
+        Ok(n) if MemLayout::valid_align(n) => Ok(()),
+        Ok(n) if !n.is_power_of_two() => {
+            Err(format!("alloca aligns to a power of two of units, not {a}"))
+        }
+        _ => Err(format!(
+            "alloca aligns to at most {} units, as the data layout does, not {a}",
+            MemLayout::LIMIT
+        )),
+    }
 }
 
 /// `%p: ptr = alloca stack i32 4 align(4)`.
@@ -169,13 +181,8 @@ impl OpSpec for Alloca {
         if p.count.is_some_and(|c| c.as_str() == "0") {
             return Err("alloca allocates at least one value, not 0".into());
         }
-        if let Some(a) = p.align
-            && !power_of_two(a.as_str())
-        {
-            return Err(format!(
-                "alloca aligns to a power of two of units, not {}",
-                a.as_str()
-            ));
+        if let Some(a) = p.align {
+            check_align(a.as_str())?;
         }
         let valid_width = |w: &Int| {
             w.as_str()
@@ -310,6 +317,7 @@ mod tests {
             vec![word("stack"), word("i32"), align(3)],
             vec![word("stack"), word("i32"), align(0)],
             vec![word("stack"), word("i32"), align((1 << 64) + 2)],
+            vec![word("stack"), word("i32"), align(1 << 24)],
             vec![word("stack"), word("i0")],
             vec![word("stack"), word("i16777216")],
             vec![word("stack"), word("f32")],
@@ -321,7 +329,8 @@ mod tests {
         assert_eq!(f.name, "f16");
         for attrs in [
             vec![word("stack"), word("i32"), Attr::int(1 << 40)],
-            vec![word("stack"), word("i32"), align(1 << 70)],
+            vec![word("stack"), word("i32"), Attr::int(1 << 100)],
+            vec![word("stack"), word("i32"), align(1 << 23)],
             vec![word("stack"), word("i16777215"), align(1)],
         ] {
             assert_eq!(check(&attrs), Ok(()), "{attrs:?}");
@@ -329,12 +338,19 @@ mod tests {
     }
 
     #[test]
-    fn powers_of_two_of_any_size() {
-        for s in ["1", "2", "4", "1024", "1180591620717411303424"] {
-            assert!(power_of_two(s), "{s}");
+    fn alignments_are_powers_of_two_up_to_the_layouts_limit() {
+        for a in ["1", "2", "1024", "8388608"] {
+            assert_eq!(check_align(a), Ok(()), "{a}");
         }
-        for s in ["0", "3", "6", "12", "1180591620717411303423"] {
-            assert!(!power_of_two(s), "{s}");
+        let not_power = |a: &str| format!("alloca aligns to a power of two of units, not {a}");
+        let above = |a: &str| {
+            format!("alloca aligns to at most 16777215 units, as the data layout does, not {a}")
+        };
+        for a in ["0", "3", "12", "16777215"] {
+            assert_eq!(check_align(a), Err(not_power(a)), "{a}");
+        }
+        for a in ["16777216", "4294967296", "1180591620717411303424"] {
+            assert_eq!(check_align(a), Err(above(a)), "{a}");
         }
     }
 

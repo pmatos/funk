@@ -114,18 +114,32 @@ type to give a default alignment; a run-time count in M1 (#381); and
 capping the natural alignment at the pointer's.
 
 - The attributes are the kind, the type, the count when it is not 1 and
-  `align(A)` when given, separated by spaces as every op's are. The ruling
-  wrote its examples with commas; the spaces are the agents' choice, which
-  #231's PR asks the human to confirm. Rejected: commas, a second attribute
-  grammar for one op.
+  `align(A)` when given, separated by spaces as every op's are. The human
+  confirmed the spaces on 2026-11-14 (#382). Rejected: commas, as #378's
+  examples wrote them, a second attribute grammar for one op.
 - The op allocates the count times the units of the type in the memory of
   its result, with its kind and alignment. The pointer has provenance for
   the allocation at offset 0, and its units are poison. The frame of the
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
-  of two for `A` and a valid integer type. `global` and `heap` decode, as
-  hooks in the format (ADR-2026-11-09-1542). A float or pointer element
-  waits on the human (#231's stage plan).
+  of two for `A` no larger than `MemLayout.limit` and a valid integer type.
+  `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
+- The element is an integer type until float and pointer loads and stores
+  land, as the human ruled on 2026-11-14 (#382). Rejected: float and pointer
+  elements now, with no access to read or write them.
+- `A` is at most `MemLayout.limit`, 2^24 - 1, the bound of the data layout's
+  own alignments, so the largest `A` is 2^23; the count has no bound. An
+  allocation larger than a machine holds is a resource error at run time, as
+  a deep recursion is, and not a rule of the spec. The human ruled both on
+  2026-11-14 (#382). Rejected: a bound on the count, which would not keep an
+  allocation within a machine, since one `i16777215` takes 2 MiB. `fir-ref`
+  has no resource error of its own: it holds each allocation's units, so a
+  huge one exhausts its memory. `funk build` does not lower `alloca` yet.
+- The G0 check reads the words of `AllocaText.lean` and `TypeText.lean` as
+  core words, but leaves out `align` by name (`SHARED_WORDS` in
+  `scripts/check_g0.py`), since the data layout's generic grammar writes it
+  too. The human ruled this on 2026-11-14 (#382). Rejected: reading only
+  `Text.lean` and `TypeText.lean`, which checks no `alloca` word.
 - It is never UB, its result is never poison, and its effect set is
   "allocates in memory `N`". It has no rule in the set monad, so the core
   dialect no longer meets the lawful class there; its obligations with

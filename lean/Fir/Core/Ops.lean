@@ -258,8 +258,8 @@ Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
   it returns. Its units are poison until a store writes them. It is never
   UB, never gives poison, and allocates in the memory `n`. M1's validation
   accepts only the kind `stack`, a count of at least 1, an alignment that
-  is a power of two, and an integer type `t`
-  (ADR-2026-11-14-0915).
+  is a power of two no larger than `MemLayout.limit`, and an integer type
+  `t`; the count has no bound (ADR-2026-11-14-0915).
 
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):

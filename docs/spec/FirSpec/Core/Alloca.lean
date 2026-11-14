@@ -67,4 +67,8 @@ The pointer has provenance for the new allocation, at offset 0, and its
 units are poison. A stack allocation is recorded in the innermost frame,
 which frees it when its call returns
 ({ref "The-fir-specification--Memory--The-memories-of-a-run"}[the memories of a run]).
+
+The count $`c`, and so $`n`, has no bound, as the human ruled on
+2026-11-14 (#382): an allocation larger than a machine holds is a resource
+error of the run, as a deep recursion is, and not a rule of the spec.
 :::

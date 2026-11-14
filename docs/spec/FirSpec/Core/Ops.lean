@@ -125,7 +125,7 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "18128408174805461646")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "8739569306137111861")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -342,8 +342,8 @@ alloca \mathsf{alloca}_{N}~k~t~c~a
   never gives poison; it allocates in the memory $`N`. The
   {ref "The-fir-specification--Validation--Core-rules"}[core rules]
   accept only the kind $`\mathsf{stack}`, a count of at least 1, an
-  alignment that is a power of two, and an integer type
-  (ADR-2026-11-14-0915).
+  alignment that is a power of two no larger than $`2^{24} - 1`, and an
+  integer type; the count has no bound (ADR-2026-11-14-0915).
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).

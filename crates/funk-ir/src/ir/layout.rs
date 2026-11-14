@@ -70,6 +70,12 @@ impl MemLayout {
     /// alignment, `2^24 - 1`.
     pub const LIMIT: u32 = (1 << 24) - 1;
 
+    /// Whether `a` is an alignment that validation accepts: a power of two
+    /// no larger than [`MemLayout::LIMIT`], for an entry or an `alloca`.
+    pub fn valid_align(a: u32) -> bool {
+        a.is_power_of_two() && a <= Self::LIMIT
+    }
+
     /// The default memory's entry when the layout does not declare it.
     pub const DEFAULT: MemLayout = MemLayout {
         mem: 0,

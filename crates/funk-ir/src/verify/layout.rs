@@ -48,7 +48,7 @@ pub(super) fn check_entries(layout: &[MemLayout], out: &mut Vec<Diagnostic>) {
                 "{at} is big-endian: M1 admits only little-endian memories"
             )));
         }
-        if let Some(a) = e.align.filter(|&a| !a.is_power_of_two() || a > limit) {
+        if let Some(a) = e.align.filter(|&a| !MemLayout::valid_align(a)) {
             out.push(Diagnostic::module(format!(
                 "{at} aligns its pointers to {a} units: an alignment is a power of two no larger than {limit}"
             )));
