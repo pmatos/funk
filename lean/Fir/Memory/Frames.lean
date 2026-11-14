@@ -94,11 +94,12 @@ def record (S : Memories Mem unit) (x : Mem) (a : AllocId) : Memories Mem unit :
   | [] => S
   | fr :: frs => { S with frames := ((x, a) :: fr) :: frs }
 
-/-- Allocates `n` units of kind `k` in the memory `x`, and gives the pointer
-to the first one. A stack allocation is recorded in the innermost frame. -/
-def alloc (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n : Nat) :
+/-- Allocates `n` units of kind `k`, aligned to `al` units, in the memory
+`x`, and gives the pointer to the first one. A stack allocation is recorded
+in the innermost frame. -/
+def alloc (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n al : Nat) :
     Pointer × Memories Mem unit :=
-  let r := (S.mem x).alloc k n
+  let r := (S.mem x).alloc k n al
   let S' := S.set x r.2
   (r.1, if k = .stack then S'.record x (S.mem x).blocks.length else S')
 

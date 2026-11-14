@@ -27,17 +27,17 @@ abbrev M := StateT Mems SetM
 
 /-- The memories with one live heap allocation of one unit, which is
 poison. -/
-def one : Mems := (Memories.empty.alloc () .heap 1).2
+def one : Mems := (Memories.empty.alloc () .heap 1 1).2
 
 /-- A memory of the same allocations as `one`'s, whose unit holds the bits
 `1`. -/
-def oneBits : Memory 8 := ⟨[⟨.heap, [.bits 1], true⟩]⟩
+def oneBits : Memory 8 := ⟨[⟨.heap, 1, [.bits 1], true⟩]⟩
 
 /-- The pointer to the unit of `one`'s allocation. -/
 def p : Pointer := ⟨some 0, 0⟩
 
 /-- An allocation allocates in its memory. -/
-theorem alloc_allocates : ¬ AllocatesNot () (MonadMemory.alloc () .heap 1 : M Pointer) := by
+theorem alloc_allocates : ¬ AllocatesNot () (MonadMemory.alloc () .heap 1 1 : M Pointer) := by
   intro h
   exact absurd (h Memories.empty _ _ rfl).1 (by decide)
 
@@ -78,21 +78,21 @@ theorem load_allocatesNot : AllocatesNot () (MonadMemory.load (m := M) () p 1) :
 
 /-- An allocation writes no unit of the allocations that were there: the new
 one follows them. -/
-theorem alloc_writesNot (k : AllocKind) (n : Nat) :
-    WritesNot () (MonadMemory.alloc (m := M) () k n) := by
+theorem alloc_writesNot (k : AllocKind) (n al : Nat) :
+    WritesNot () (MonadMemory.alloc (m := M) () k n al) := by
   intro S a S' h
   cases h
-  show (S.mem ()).contents <+: ((S.alloc () k n).2.mem ()).contents
+  show (S.mem ()).contents <+: ((S.alloc () k n al).2.mem ()).contents
   rw [Memories.alloc_mem_self]
   exact ⟨[List.replicate n .poison], by simp [Memory.contents, Memory.alloc]⟩
 
 /-- A memory with one live heap allocation of two units, both the bits
 `0`. -/
-def zeros : Memory 8 := ⟨[⟨.heap, [.bits 0, .bits 0], true⟩]⟩
+def zeros : Memory 8 := ⟨[⟨.heap, 1, [.bits 0, .bits 0], true⟩]⟩
 
 /-- A memory of the same allocations as `zeros`, whose first unit holds the
 bits `1`. -/
-def oneZero : Memory 8 := ⟨[⟨.heap, [.bits 1, .bits 0], true⟩]⟩
+def oneZero : Memory 8 := ⟨[⟨.heap, 1, [.bits 1, .bits 0], true⟩]⟩
 
 /-- The memories whose one memory is `zeros`. -/
 def two : Mems := (Memories.empty : Mems).set () zeros

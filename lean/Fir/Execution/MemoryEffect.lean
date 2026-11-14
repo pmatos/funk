@@ -27,9 +27,9 @@ open Memory
 bits wide for the memory `x`: the four operations of the memory model. A
 load or a store that faults is immediate UB. -/
 class MonadMemory (Mem : outParam Type) (unit : outParam (Mem → Nat)) (m : Type → Type) where
-  /-- Allocates `n` units of the kind `k` in the memory `x`, and gives the
-  pointer to the first one. -/
-  alloc : (x : Mem) → (k : AllocKind) → (n : Nat) → m Pointer
+  /-- Allocates `n` units of the kind `k`, aligned to `al` units, in the
+  memory `x`, and gives the pointer to the first one. -/
+  alloc : (x : Mem) → (k : AllocKind) → (n al : Nat) → m Pointer
   /-- Frees the allocation `a` of the memory `x`. -/
   free : (x : Mem) → (a : AllocId) → m Unit
   /-- Loads `n` units of the memory `x` through `p`. -/

@@ -14,19 +14,19 @@ memory `x` of the run:
 * _No write to x_: on each path that ends, every allocation of `x` that was
   there before holds the units it held. New allocations may follow them.
 * _No allocation in x_: on each path that ends, `x` has the allocations it
-  had, each with its kind, its size and its liveness, and the frames list
-  the same stack allocations of `x`. So the op neither allocates nor frees
-  in `x`.
+  had, each with its kind, its alignment, its size and its liveness, and
+  the frames list the same stack allocations of `x`. So the op neither
+  allocates nor frees in `x`.
 * _No read of x_: the op does not depend on the units of `x`. Run it from
   the memories `S`, and from `S` with `x` replaced by any memory of the
-  same allocations, each with its kind, size and liveness. Each way the
-  first run may end, the second may end too: in UB for the same reason, or
-  with the same results and memories that differ only in `x`. There, each
-  unit is the same in both, or is in each the unit it was before. A load
-  of `x` gives units that differ between the two runs, so it reads `x`.
-  A store to `x` writes the same units in both and leaves the rest, so it
-  does not read `x`, although whether it faults depends on the allocations
-  of `x`.
+  same allocations, each with its kind, alignment, size and liveness. Each
+  way the first run may end, the second may end too: in UB for the same
+  reason, or with the same results and memories that differ only in `x`.
+  There, each unit is the same in both, or is in each the unit it was
+  before. A load of `x` gives units that differ between the two runs, so it
+  reads `x`. A store to `x` writes the same units in both and leaves the
+  rest, so it does not read `x`, although whether it faults depends on the
+  allocations of `x`.
 
 An op that neither writes nor allocates in `x` leaves `x` as it was. The
 obligation on may-UB is stated here too, over the same semantics: a
@@ -59,10 +59,10 @@ namespace Memory
 
 variable {u : Nat}
 
-/-- The allocations of a memory: the kind, the size and the liveness of
-each block, in the order they were made. -/
-def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Bool) :=
-  M.blocks.map fun b => (b.kind, b.units.length, b.live)
+/-- The allocations of a memory: the shape of each block, its kind,
+alignment, size and liveness, in the order they were made. -/
+def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Nat × Bool) :=
+  M.blocks.map Block.shape
 
 /-- The units of each block of a memory, in the order they were made. -/
 def Memory.contents (M : Memory u) : List (List (MemUnit u)) :=

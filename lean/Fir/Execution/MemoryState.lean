@@ -56,7 +56,7 @@ the memories of the run. An access that faults is UB, with the reason of
 its fault. -/
 instance instMonadMemoryStateT [Monad m] [MonadUB m] :
     MonadMemory Mem unit (StateT (Memories Mem unit) m) where
-  alloc x k n S := pure (S.alloc x k n)
+  alloc x k n al S := pure (S.alloc x k n al)
   free x a S := pure ((), S.free x a)
   load x p n S := match S.load x p n with
     | .ok us => pure (us, S)
@@ -124,9 +124,9 @@ theorem MonadMorphism.state_keeps [MonadChoice m] [MonadChoice n] [MonadUB m] [M
 variable [MonadUB m] [MonadUB n]
 
 /-- A morphism through the layer keeps allocation. -/
-theorem MonadMorphism.state_alloc (x : Mem) (k : AllocKind) (size : Nat) :
-    (φ.state (Memories Mem unit)).map (MonadMemory.alloc x k size) =
-      MonadMemory.alloc (m := StateT (Memories Mem unit) n) x k size := by
+theorem MonadMorphism.state_alloc (x : Mem) (k : AllocKind) (size al : Nat) :
+    (φ.state (Memories Mem unit)).map (MonadMemory.alloc x k size al) =
+      MonadMemory.alloc (m := StateT (Memories Mem unit) n) x k size al := by
   funext S
   exact φ.map_pure _
 

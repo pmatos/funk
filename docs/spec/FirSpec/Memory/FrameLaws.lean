@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Frame laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6836474663548022062")
+:::moduleDocs (fingerprint := "15604044487885555623")
 :::
 
 :::readable Fir.Memory.Memories.enter_mem Fir.Memory.Memories.exit_enter (fingerprint := "3818146357299077169")
@@ -68,7 +68,7 @@ other allocation, of every memory, as it was. Leaving a call never adds
 or removes an allocation.
 :::
 
-:::readable Fir.Memory.Memories.record_mem Fir.Memory.Memories.alloc_fst Fir.Memory.Memories.alloc_mem_self Fir.Memory.Memories.alloc_mem_ne (fingerprint := "17439430475552008068")
+:::readable Fir.Memory.Memories.record_mem Fir.Memory.Memories.alloc_fst Fir.Memory.Memories.alloc_mem_self Fir.Memory.Memories.alloc_mem_ne (fingerprint := "4899682044368631346")
 *Theorem: an allocation touches only its own memory.* Recording an
 allocation changes no memory. Allocating in the memory $`x` gives the
 pointer $`(|\mathit{mem}(x)|, 0)`, makes $`x` the memory model's
@@ -76,18 +76,19 @@ allocation in $`\mathit{mem}(x)`, and leaves every other memory as it
 was.
 :::
 
-:::readable Fir.Memory.Memories.alloc_stack_frames Fir.Memory.Memories.alloc_frames (fingerprint := "9122570003556426878")
+:::readable Fir.Memory.Memories.alloc_stack_frames Fir.Memory.Memories.alloc_frames (fingerprint := "5492243906111500313")
 *Theorem: only a stack allocation joins a frame.* When the frames of
 $`S` are $`\mathit{fr}~\mathit{fr}^*`, a stack allocation in $`x` makes
 them $`((x, |\mathit{mem}(x)|)~\mathit{fr})~\mathit{fr}^*`. An allocation
 of any other kind leaves the frames as they were.
 :::
 
-:::readable Fir.Memory.Memories.enter_alloc_exit Fir.Memory.Memories.enter_alloc_exit_load (fingerprint := "15321913051842395058")
+:::readable Fir.Memory.Memories.enter_alloc_exit Fir.Memory.Memories.enter_alloc_exit_load (fingerprint := "10183155592527664126")
 *Theorem: a call's stack allocation is freed when the call returns.* Enter
-a call, allocate $`n` units on the stack of the memory $`x`, and leave
-the call. Then the new allocation, $`|\mathit{mem}(x)|`, is a block of the
-stack kind, of $`n` poisons, no longer live, and every load from it, at
+a call, allocate $`n` units on the stack of the memory $`x`, aligned to
+$`\alpha` units, and leave the call. Then the new allocation,
+$`|\mathit{mem}(x)|`, is a block of the stack kind and the alignment
+$`\alpha`, of $`n` poisons, no longer live, and every load from it, at
 any offset and of any size, faults with $`\mathsf{freed}`
 (ADR-2026-11-09-1548).
 :::

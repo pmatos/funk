@@ -104,11 +104,11 @@ memory, in `lean/Fir/Execution/MemoryObligations.lean`:
 - For each memory `x` of the run that the op's declaration, renamed by `ρ`,
   leaves out: without a write, every allocation of `x` that was there keeps
   its units, and new allocations may follow (`WritesNot`); without
-  allocation, `x` keeps the kind, size and liveness of each allocation, and
-  the frames keep its stack allocations, which covers freeing
-  (`AllocatesNot`); without a read, the op does not depend on the units of
-  `x` (`ReadsNot`). A declaration of every memory covers every memory of the
-  run.
+  allocation, `x` keeps the kind, alignment, size and liveness of each
+  allocation, and the frames keep its stack allocations, which covers
+  freeing (`AllocatesNot`); without a read, the op does not depend on the
+  units of `x` (`ReadsNot`). A declaration of every memory covers every
+  memory of the run.
 - `ReadsNot` replaces `x` by any memory with the same allocations. Each way
   the op ends from the first memories has a match from the second: UB for the
   same reason, or the same results with memories that agree off `x`, where

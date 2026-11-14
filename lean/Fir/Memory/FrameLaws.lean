@@ -12,8 +12,8 @@ run, and what they leave alone:
   allocation of another kind is in no frame. An allocation in one memory
   leaves every other memory as it was.
 * Leaving a call frees exactly the allocations of its frame. Every other
-  allocation, of any memory, keeps its kind, its units and its liveness, and
-  no memory gains or loses an allocation.
+  allocation, of any memory, keeps its kind, its alignment, its units and its
+  liveness, and no memory gains or loses an allocation.
 * So a stack allocation that a call makes is freed when the call returns,
   and every access to it after that is UB (ADR-2026-11-09-1548).
 -/
@@ -166,28 +166,28 @@ theorem record_mem (S : Memories Mem unit) (x : Mem) (a : AllocId) :
   split <;> rfl
 
 /-- An allocation gives the pointer that its memory's allocation gives. -/
-theorem alloc_fst (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n : Nat) :
-    (S.alloc x k n).1 = ⟨some (S.mem x).blocks.length, 0⟩ := rfl
+theorem alloc_fst (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n al : Nat) :
+    (S.alloc x k n al).1 = ⟨some (S.mem x).blocks.length, 0⟩ := rfl
 
 /-- An allocation allocates in its own memory. -/
-theorem alloc_mem_self (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n : Nat) :
-    (S.alloc x k n).2.mem x = ((S.mem x).alloc k n).2 := by
+theorem alloc_mem_self (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n al : Nat) :
+    (S.alloc x k n al).2.mem x = ((S.mem x).alloc k n al).2 := by
   by_cases hk : k = .stack <;> simp [alloc, hk, record_mem]
 
 /-- An allocation leaves every other memory as it was. -/
-theorem alloc_mem_ne (S : Memories Mem unit) {x y : Mem} (k : AllocKind) (n : Nat) (h : x ≠ y) :
-    (S.alloc x k n).2.mem y = S.mem y := by
+theorem alloc_mem_ne (S : Memories Mem unit) {x y : Mem} (k : AllocKind) (n al : Nat)
+    (h : x ≠ y) : (S.alloc x k n al).2.mem y = S.mem y := by
   by_cases hk : k = .stack <;> simp [alloc, hk, record_mem, set_mem_ne _ _ h]
 
 /-- A stack allocation is recorded in the innermost frame. -/
 theorem alloc_stack_frames {S : Memories Mem unit} {fr : List (Mem × AllocId)}
-    {frs : List (List (Mem × AllocId))} (h : S.frames = fr :: frs) (x : Mem) (n : Nat) :
-    (S.alloc x .stack n).2.frames = ((x, (S.mem x).blocks.length) :: fr) :: frs := by
+    {frs : List (List (Mem × AllocId))} (h : S.frames = fr :: frs) (x : Mem) (n al : Nat) :
+    (S.alloc x .stack n al).2.frames = ((x, (S.mem x).blocks.length) :: fr) :: frs := by
   simp [alloc, record, h]
 
 /-- An allocation of another kind is in no frame. -/
 theorem alloc_frames {k : AllocKind} (hk : k ≠ .stack) (S : Memories Mem unit) (x : Mem)
-    (n : Nat) : (S.alloc x k n).2.frames = S.frames := by
+    (n al : Nat) : (S.alloc x k n al).2.frames = S.frames := by
   simp [alloc, hk]
 
 /-!
@@ -195,21 +195,22 @@ theorem alloc_frames {k : AllocKind} (hk : k ≠ .stack) (S : Memories Mem unit)
 -/
 
 /-- A stack allocation that a call makes is freed when the call returns. -/
-theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n : Nat) :
-    (((S.enter.alloc x .stack n).2.exit).mem x).blocks[(S.mem x).blocks.length]? =
-      some ⟨.stack, List.replicate n .poison, false⟩ := by
-  have hf : (S.enter.alloc x .stack n).2.frames = [(x, (S.mem x).blocks.length)] :: S.frames :=
-    alloc_stack_frames (S := S.enter) rfl x n
+theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n al : Nat) :
+    (((S.enter.alloc x .stack n al).2.exit).mem x).blocks[(S.mem x).blocks.length]? =
+      some ⟨.stack, al, List.replicate n .poison, false⟩ := by
+  have hf : (S.enter.alloc x .stack n al).2.frames =
+      [(x, (S.mem x).blocks.length)] :: S.frames :=
+    alloc_stack_frames (S := S.enter) rfl x n al
   rw [exit_get hf]
   simp [alloc_mem_self, enter_mem, Memory.alloc_blocks_new, Block.kill]
 
 /-- Every access to a call's stack allocation after the call returns is
 UB. -/
-theorem enter_alloc_exit_load (S : Memories Mem unit) (x : Mem) (n : Nat) (off : Int)
+theorem enter_alloc_exit_load (S : Memories Mem unit) (x : Mem) (n al : Nat) (off : Int)
     (k : Nat) :
-    ((S.enter.alloc x .stack n).2.exit).load x ⟨some (S.mem x).blocks.length, off⟩ k =
+    ((S.enter.alloc x .stack n al).2.exit).load x ⟨some (S.mem x).blocks.length, off⟩ k =
       .error .freed :=
-  Memory.load_eq_error.2 (Memory.locate_freed (enter_alloc_exit S x n) rfl off k)
+  Memory.load_eq_error.2 (Memory.locate_freed (enter_alloc_exit S x n al) rfl off k)
 
 end Memories
 

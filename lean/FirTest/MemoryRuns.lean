@@ -32,7 +32,7 @@ memories. -/
 @[instance_reducible] def constAllocates (k : AllocKind) : DialectDenote CoreDialect MemTree where
   denote
     | Core.Op.const w v, args => do
-      let _ ← MonadMemory.alloc () k 1
+      let _ ← MonadMemory.alloc () k 1 1
       StateT.lift (DialectDenote.denote (m := Tree) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := Tree) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := Tree) op args)
@@ -44,7 +44,7 @@ before each gives its constant. -/
   denote
     | Core.Op.const w v, args => do
       if v.toNat = 3 then discard <| MonadMemory.load () ⟨some 1, 0⟩ 1
-      else discard <| MonadMemory.alloc () .stack 1
+      else discard <| MonadMemory.alloc () .stack 1 1
       StateT.lift (DialectDenote.denote (m := Tree) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := Tree) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := Tree) op args)
@@ -109,7 +109,7 @@ memory, and the theorem on runs with memory covers its runs. -/
     DialectDenote CoreDialect (StateT Mems SetM) where
   denote
     | Core.Op.const w v, args => do
-      let _ ← MonadMemory.alloc () k 1
+      let _ ← MonadMemory.alloc () k 1 1
       StateT.lift (DialectDenote.denote (m := SetM) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := SetM) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := SetM) op args)
@@ -156,7 +156,7 @@ unit on its stack, and `ret` returns. -/
 instance : DialectMemDenote AllocDialect where
   denoteAt _ ρ :=
     { denote := fun
-        | .alloc, _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1
+        | .alloc, _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1 1
         | .ret, _ => MonadUB.ub "ret is a terminator"
       exit := fun
         | .alloc, _ => MonadUB.ub "alloc is not a terminator"

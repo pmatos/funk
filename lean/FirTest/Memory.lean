@@ -14,11 +14,13 @@ open Fir.Memory
 
 deriving instance BEq for Except
 
-/-- A memory with one stack allocation of four bytes, and its pointer. -/
-def m1 : Pointer × Memory 8 := Memory.empty.alloc .stack 4
+/-- A memory with one stack allocation of four bytes, aligned to two, and
+its pointer. -/
+def m1 : Pointer × Memory 8 := Memory.empty.alloc .stack 4 2
 
-/-- `m1` with a heap allocation of two bytes after it, and its pointer. -/
-def m2 : Pointer × Memory 8 := m1.2.alloc .heap 2
+/-- `m1` with a heap allocation of two bytes after it, aligned to eight, and
+its pointer. -/
+def m2 : Pointer × Memory 8 := m1.2.alloc .heap 2 8
 
 def b1 : MemUnit 8 := .bits 0x2a
 def b2 : MemUnit 8 := .bits 0x07
@@ -26,6 +28,9 @@ def b2 : MemUnit 8 := .bits 0x07
 -- Fresh memory holds poison, and each allocation gets the next id.
 #guard m1.2.load m1.1 4 == .ok (List.replicate 4 .poison)
 #guard m1.1 == ⟨some 0, 0⟩ && m2.1 == ⟨some 1, 0⟩
+
+-- Each allocation records the size and the alignment it was allocated with.
+#guard m2.2.blocks.map (fun b => (b.units.length, b.align)) == [(4, 2), (2, 8)]
 
 -- A store and the load after it, of units in the middle of the block.
 #guard (do
@@ -81,7 +86,7 @@ abbrev Two := Memories Bool (fun _ => 8)
 /-- `n` allocations of one unit, alternating between the two memories, then
 a free of each allocation of the memory `true`. -/
 def churn (n : Nat) : Two :=
-  let S := (List.range n).foldl (fun S i => (S.alloc (i % 2 == 0) .heap 1).2) Memories.empty
+  let S := (List.range n).foldl (fun S i => (S.alloc (i % 2 == 0) .heap 1 1).2) Memories.empty
   (List.range n).foldl (fun S a => S.free true a) S
 
 -- Each memory is in the table once, after thousands of replacements, and

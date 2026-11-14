@@ -105,7 +105,7 @@ theorem peekAt_load {S : Memories N (unitsOf lay)} {p : Pointer} {us : List (Mem
 /-- The memories inside a call, with an `i8`'s units allocated on its
 stack. -/
 def oneUnit : Pointer × Memories N (unitsOf lay) :=
-  (Memories.empty : Memories N (unitsOf lay)).enter.alloc x .stack (peekUnits lay x)
+  (Memories.empty : Memories N (unitsOf lay)).enter.alloc x .stack (peekUnits lay x) 1
 
 /-- Those memories have a frame. -/
 theorem oneUnit_frames : (oneUnit lay x).2.frames ≠ [] := by
@@ -118,8 +118,8 @@ theorem peekAt_alloc :
       (List.replicate (peekUnits lay x) .poison)) .nil, r.2)) := by
   intro r
   refine peekAt_load lay x ?_
-  show ((Memories.empty.enter.alloc x .stack (peekUnits lay x)).2.mem x).load
-    (Memories.empty.enter.alloc x .stack (peekUnits lay x)).1 (peekUnits lay x) = _
+  show ((Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).2.mem x).load
+    (Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).1 (peekUnits lay x) = _
   rw [Memories.alloc_mem_self, Memories.alloc_fst]
   exact Memory.load_alloc _ _ (Int.le_refl 0) (by simp)
 

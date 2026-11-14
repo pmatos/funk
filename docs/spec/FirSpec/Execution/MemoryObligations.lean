@@ -14,22 +14,23 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10758073558888470105")
+:::moduleDocs (fingerprint := "8050425547938664499")
 :::
 
-:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "2324173610234647755")
+:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "16077720331530795137")
 *Definition: what a memory holds.* For a memory $`M` with the blocks
 $`b_0 \ldots b_{k-1}`:
 
-* its _allocations_ are the kind, size and liveness of each block, in
-  order: $`\mathrm{allocs}(M) = (b_i.\mathit{kind}, |b_i.\mathit{units}|, b_i.\mathit{live})_{i < k}`;
+* its _allocations_ are the shape of each block, its kind, alignment,
+  size and liveness, in order:
+  $`\mathrm{allocs}(M) = (\mathrm{shape}(b_i))_{i < k}`;
 * its _contents_ are the units of each block, in order:
   $`\mathrm{contents}(M) = (b_i.\mathit{units})_{i < k}`;
 * $`M[a, i]` is the unit at offset $`i` of the allocation $`a`, or
   nothing when there is none.
 :::
 
-:::readable Fir.Memory.Memories.framesOf Fir.Memory.Memories.AgreeOff (fingerprint := "3203557522785813834")
+:::readable Fir.Memory.Memories.framesOf Fir.Memory.Memories.AgreeOff (fingerprint := "11880849265837889840")
 *Definition: the frames of a memory, and agreeing off a memory.* The
 frames of the memory $`x` in $`S` list, for each frame of $`S`, innermost
 first, the ids of the stack allocations of $`x` that it holds. Two
@@ -39,7 +40,7 @@ for every $`y \neq x`, and
 $`\mathrm{allocs}(S_1.\mathit{mem}(x)) = \mathrm{allocs}(S_2.\mathit{mem}(x))`.
 :::
 
-:::readable Fir.WritesNot Fir.AllocatesNot (fingerprint := "9113618149256129897")
+:::readable Fir.WritesNot Fir.AllocatesNot (fingerprint := "13670154602380140214")
 *Definition: no write, and no allocation.* A computation $`c` of the
 state layer over the set monad _writes no unit of_ $`x` when every way it
 ends, $`\mathsf{ok}~(a, S') \in c(S)`, keeps the contents of $`x` as a
@@ -57,7 +58,7 @@ it was. UB ends a path and shows no memory, so both speak only of the
 paths that end.
 :::
 
-:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "12006516108617547000")
+:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "8910926687692953877")
 *Definition: no read.* A computation $`c` _does not read_ $`x` when it does
 not depend on the units of $`x`. For all memories of a run $`S` and every
 memory $`m` with $`\mathrm{allocs}(m) = \mathrm{allocs}(S.\mathit{mem}(x))`,
