@@ -65,9 +65,9 @@ the code that touches none: the obligations of the core's ops over the set
 monad cover the ops that touch no memory, and congruence with memory for a
 callee that reaches no memory covers such callees. The theorems of the
 lawful class over the set monad do not apply to the core at all. Each new
-op that touches memory
-keeps every guarantee here holding, with its own rule with memory and its
-own proofs, as `alloca` does. The human ruled this on 2026-11-14, on #384
+op that touches memory keeps every guarantee here holding, with its own
+rule with memory and its own proofs, as `alloca` does. The human ruled
+this on 2026-11-14, on #384
 (`docs/decisions/semantics-m1-memory.md#the-cores-guarantees`).
 -/
 

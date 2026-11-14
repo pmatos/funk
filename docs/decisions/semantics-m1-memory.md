@@ -200,11 +200,11 @@ The semantics with memory carries the guarantees for the whole core
 dialect, `alloca` included. The statements without memory cover only the
 code that touches none: those over the set monad cover the ops other than
 `alloca`, and those that ask a function to reach no memory cover such
-functions. The human ruled this on 2026-11-14, on #384
-(option A). Rejected: splitting out a memory-free core dialect, whose old
-statements would hold with no condition, with the memory ops beside it
-(option C), which changes the dialect's structure where the versions with
-memory already cover every op.
+functions. The human ruled this on 2026-11-14, on #384 (option A).
+Rejected: splitting out a memory-free core dialect, whose old statements
+would hold with no condition, with the memory ops beside it (option C),
+which changes the dialect's structure where the versions with memory
+already cover every op.
 
 These hold for every core op, and for every function of a valid core
 module, `alloca` included:
