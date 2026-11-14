@@ -76,7 +76,7 @@ def peekAt : PoisonOr Pointer →
     StateT (Memories N (unitsOf lay)) SetM (HVector toType [Core.Ty.int 8])
   | .poison => MonadUB.ub "peek through a poison pointer"
   | .value p => (fun us => .cons (decodeInt (lay x).unit 8 (lay x).order us) .nil) <$>
-      MonadMemory.load (m := StateT (Memories N (unitsOf lay)) SetM) x p (peekUnits lay x)
+      MonadMemory.load (m := StateT (Memories N (unitsOf lay)) SetM) x p (peekUnits lay x) 1
 
 /-- Wherever a run names the memory `()` as `ρ ()`, `peek` loads from it,
 by its entry `lay (ρ ())`. -/
@@ -95,7 +95,7 @@ theorem peekAt_none (S : Memories N (unitsOf lay)) :
 /-- A load that gives the units `us` gives the `i8` they decode to, at the
 unit and the byte order of the memory's entry. -/
 theorem peekAt_load {S : Memories N (unitsOf lay)} {p : Pointer} {us : List (MemUnit (lay x).unit)}
-    (h : S.load x p (peekUnits lay x) = .ok us) :
+    (h : S.load x p (peekUnits lay x) 1 = .ok us) :
     peekAt lay x (.value p) S (.ok (.cons (decodeInt (lay x).unit 8 (lay x).order us) .nil, S)) :=
         by
   refine (SetM.stateMap_apply _ _ _ _).2 (.inl ⟨us, S, ?_, rfl⟩)
@@ -118,9 +118,9 @@ theorem peekAt_alloc :
       (List.replicate (peekUnits lay x) .poison)) .nil, r.2)) := by
   intro r
   refine peekAt_load lay x ?_
-  show ((Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).2.mem x).load
-    (Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).1 (peekUnits lay x) = _
-  rw [Memories.alloc_mem_self, Memories.alloc_fst]
+  show ((Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).2.mem x).loadAligned
+    (Memories.empty.enter.alloc x .stack (peekUnits lay x) 1).1 (peekUnits lay x) 1 = _
+  rw [Memory.loadAligned_one, Memories.alloc_mem_self, Memories.alloc_fst]
   exact Memory.load_alloc _ _ (Int.le_refl 0) (by simp)
 
 /-- An entry with 4-bit units, in the byte order `o`. -/
@@ -130,12 +130,12 @@ def nibbles (o : ByteOrder) : MemLayout := { mem := 0, unit := 4, pointer := 64,
 and `0x21` from a little-endian one: `peek` reads the byte order from the
 entry of the memory it loads from. -/
 example {S : Memories Unit (unitsOf fun _ => nibbles .big)} {p : Pointer}
-    (h : S.load () p 2 = .ok [.bits 1#4, .bits 2#4]) :
+    (h : S.load () p 2 1 = .ok [.bits 1#4, .bits 2#4]) :
     peekAt (fun _ => nibbles .big) () (.value p) S (.ok (.cons (.value 0x12#8) .nil, S)) :=
   peekAt_load (fun _ => nibbles .big) () h
 
 example {S : Memories Unit (unitsOf fun _ => nibbles .little)} {p : Pointer}
-    (h : S.load () p 2 = .ok [.bits 1#4, .bits 2#4]) :
+    (h : S.load () p 2 1 = .ok [.bits 1#4, .bits 2#4]) :
     peekAt (fun _ => nibbles .little) () (.value p) S (.ok (.cons (.value 0x21#8) .nil, S)) :=
   peekAt_load (fun _ => nibbles .little) () h
 
@@ -177,7 +177,7 @@ through a defined pointer faults, so it is never UB on one. -/
 def peekLax : PoisonOr Pointer →
     StateT (Memories N (unitsOf lay)) SetM (HVector toType [Core.Ty.int 8])
   | .poison => MonadUB.ub "peek through a poison pointer"
-  | .value p => fun S => match S.load x p (peekUnits lay x) with
+  | .value p => fun S => match S.load x p (peekUnits lay x) 1 with
     | .ok us => pure (.cons (decodeInt (lay x).unit 8 (lay x).order us) .nil, S)
     | .error _ => pure (.cons .poison .nil, S)
 
@@ -185,7 +185,7 @@ def peekLax : PoisonOr Pointer →
 theorem peekLax_value_noUB (p : Pointer) (S : Memories N (unitsOf lay)) (r : String) :
     ¬ peekLax lay x (.value p) S (.ub r) := by
   simp only [peekLax]
-  cases S.load x p (peekUnits lay x) <;> exact fun h => by cases h
+  cases S.load x p (peekUnits lay x) 1 <;> exact fun h => by cases h
 
 /-- The peek dialect's semantics with memory by `peekLax`. -/
 @[instance_reducible] def laxMemDenote : DialectMemDenote PeekDialect where

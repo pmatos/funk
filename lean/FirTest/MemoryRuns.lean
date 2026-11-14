@@ -43,7 +43,7 @@ before each gives its constant. -/
 @[instance_reducible] def constThreeLoads : DialectDenote CoreDialect MemTree where
   denote
     | Core.Op.const w v, args => do
-      if v.toNat = 3 then discard <| MonadMemory.load () ⟨some 1, 0⟩ 1
+      if v.toNat = 3 then discard <| MonadMemory.load () ⟨some 1, 0⟩ 1 1
       else discard <| MonadMemory.alloc () .stack 1 1
       StateT.lift (DialectDenote.denote (m := Tree) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := Tree) op args)

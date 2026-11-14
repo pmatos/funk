@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9040727174539523203")
+:::moduleDocs (fingerprint := "1668304709391469210")
 :::
 
 :::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "17844605018342700448")
@@ -69,6 +69,17 @@ only on the allocations, which are the same. So:
   memories $`N \sqsubseteq N'`.
 :::
 
+:::readable Fir.Memory.Memory.IsRefinedBy.aligned Fir.Memory.Memory.IsRefinedBy.loadAligned Fir.Memory.Memory.IsRefinedBy.storeAligned (pin := Fir.Memory.Memory.aligned) (pin := Fir.Memory.Memory.loadAligned) (pin := Fir.Memory.Memory.storeAligned) (fingerprint := "7288793297711536045")
+*Theorems: aligned accesses keep refinement.* Let $`M \sqsubseteq M'`.
+Their blocks have the same alignments, so an access is
+{ref "The-fir-specification--Memory--The-memory-model"}[aligned] in $`M`
+exactly when it is in $`M'`. An aligned load through the same pointer
+faults for the same reason in both, misaligned included, or loads units
+of which $`M'`'s refine $`M`'s. An aligned store of units that refine
+others faults for the same reason in both, or gives memories that refine
+each other.
+:::
+
 :::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "16786046636736567672")
 *Definition: refining the memories of a run.* The memories $`S'` of a
 run refine $`S` when they have the same frames, and the memory of each
@@ -89,12 +100,13 @@ have the same frames, so both free the allocations of the same innermost
 frame.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "10409863530757732972")
+:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "14548757690856396878")
 *Theorems: the memory model's operations keep refinement.* Let
 $`S \sqsubseteq S'`. Allocating in the memory $`x` of both gives the same
 pointer and memories that refine each other; a stack allocation is recorded
-in the same frame of both. A load from $`x` through a pointer faults for
-the same reason in both, or loads units of which $`S'`'s refine $`S`'s. A
-store to $`x` of units that refine others faults for the same reason in
+in the same frame of both. A load from $`x` through a pointer, aligned to
+$`\alpha` units, faults for the same reason in both, misaligned included,
+or loads units of which $`S'`'s refine $`S`'s. A store to $`x` of units
+that refine others, aligned to $`\alpha`, faults for the same reason in
 both, or gives memories that refine each other.
 :::

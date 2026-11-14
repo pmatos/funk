@@ -67,7 +67,6 @@ import FirTest.Memory
 import FirTest.MemoryRuns
 import FirTest.MemoryPoison
 import FirTest.MemoryObligations
-import FirTest.MemoryStoreReads
 import FirTest.MemoryRefine
 import FirTest.MemoryEncode
 import FirTest.Alloca

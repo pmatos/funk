@@ -30,10 +30,14 @@ memories keeps it:
 * allocating in refined memories gives the same pointer in both, and fresh
   units of poison in both, in blocks of the same alignment;
 * freeing an allocation keeps it;
-* a load through the same pointer faults for the same reason in both, or
-  loads units of which those from the second refine those from the first;
-* a store of units that refine others, through the same pointer, faults for
-  the same reason in both, or gives memories that refine each other.
+* whether an access is aligned is the same in both, since their blocks
+  have the same alignments;
+* a load through the same pointer, aligned or not, faults for the same
+  reason in both, or loads units of which those from the second refine
+  those from the first;
+* a store of units that refine others, through the same pointer, aligned or
+  not, faults for the same reason in both, or gives memories that refine
+  each other.
 -/
 
 namespace Fir
@@ -171,6 +175,51 @@ theorem Memory.IsRefinedBy.store {M M' : Memory u} (h : M ⊑ M') (p : Pointer)
     exact .inr ⟨_, _, rfl, rfl, List.IsRefinedBy.set h a
       ⟨hb.1, hb.2.1, hb.2.2.1, List.IsRefinedBy.length_eq hu', fun _ => hu'⟩⟩
 
+/-- Memories that refine each other agree on whether an access is aligned:
+their blocks have the same alignments. -/
+theorem Memory.IsRefinedBy.aligned {M M' : Memory u} (h : M ⊑ M') (p : Pointer) (al : Nat) :
+    M.aligned p al = M'.aligned p al := by
+  unfold Memory.aligned
+  cases p.prov with
+  | none => rfl
+  | some a =>
+    rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
+    · simp only [h₁, h₂]
+    · simp only [h₁, h₂, hb.2.1]
+
+/-- An aligned load through the same pointer from memories that refine each
+other faults for the same reason in both, or loads units of which the
+second's refine the first's. -/
+theorem Memory.IsRefinedBy.loadAligned {M M' : Memory u} (h : M ⊑ M') (p : Pointer) (n al : Nat) :
+    (∃ f, M.loadAligned p n al = .error f ∧ M'.loadAligned p n al = .error f) ∨
+      ∃ us us', M.loadAligned p n al = .ok us ∧ M'.loadAligned p n al = .ok us' ∧ us ⊑ us' := by
+  unfold Memory.loadAligned
+  rw [← h.aligned p al]
+  rcases h.load p n with ⟨f, h₁, h₂⟩ | ⟨us, us', h₁, h₂, hu⟩
+  · rw [h₁, h₂]
+    exact .inl ⟨f, rfl, rfl⟩
+  · rw [h₁, h₂]
+    cases M.aligned p al
+    · exact .inl ⟨_, rfl, rfl⟩
+    · exact .inr ⟨us, us', rfl, rfl, hu⟩
+
+/-- An aligned store, through the same pointer, of units that refine
+others, to memories that refine each other, faults for the same reason in
+both, or gives memories that refine each other. -/
+theorem Memory.IsRefinedBy.storeAligned {M M' : Memory u} (h : M ⊑ M') (p : Pointer)
+    {us us' : List (MemUnit u)} (hu : us ⊑ us') (al : Nat) :
+    (∃ f, M.storeAligned p us al = .error f ∧ M'.storeAligned p us' al = .error f) ∨
+      ∃ N N', M.storeAligned p us al = .ok N ∧ M'.storeAligned p us' al = .ok N' ∧ N ⊑ N' := by
+  unfold Memory.storeAligned
+  rw [← h.aligned p al]
+  rcases h.store p hu with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
+  · rw [h₁, h₂]
+    exact .inl ⟨f, rfl, rfl⟩
+  · rw [h₁, h₂]
+    cases M.aligned p al
+    · exact .inl ⟨_, rfl, rfl⟩
+    · exact .inr ⟨N, N', rfl, rfl, hN⟩
+
 /-! # The memories of a run -/
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
@@ -258,19 +307,19 @@ theorem IsRefinedBy.alloc {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (k
 faults for the same reason in both, or loads units of which the second's
 refine the first's. -/
 theorem IsRefinedBy.load {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p : Pointer)
-    (n : Nat) : (∃ f, S.load x p n = .error f ∧ S'.load x p n = .error f) ∨
-      ∃ us us', S.load x p n = .ok us ∧ S'.load x p n = .ok us' ∧ us ⊑ us' :=
-  (h.2 x).load p n
+    (n al : Nat) : (∃ f, S.load x p n al = .error f ∧ S'.load x p n al = .error f) ∨
+      ∃ us us', S.load x p n al = .ok us ∧ S'.load x p n al = .ok us' ∧ us ⊑ us' :=
+  (h.2 x).loadAligned p n al
 
 /-- A store, through the same pointer, of units that refine others, to
 memories that refine each other, faults for the same reason in both, or
 gives memories that refine each other. -/
 theorem IsRefinedBy.store {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p : Pointer)
-    {us us' : List (MemUnit (unit x))} (hu : us ⊑ us') :
-    (∃ f, S.store x p us = .error f ∧ S'.store x p us' = .error f) ∨
-      ∃ T T', S.store x p us = .ok T ∧ S'.store x p us' = .ok T' ∧ T ⊑ T' := by
+    {us us' : List (MemUnit (unit x))} (hu : us ⊑ us') (al : Nat) :
+    (∃ f, S.store x p us al = .error f ∧ S'.store x p us' al = .error f) ∨
+      ∃ T T', S.store x p us al = .ok T ∧ S'.store x p us' al = .ok T' ∧ T ⊑ T' := by
   unfold Memories.store
-  rcases (h.2 x).store p hu with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
+  rcases (h.2 x).storeAligned p hu al with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
   · rw [h₁, h₂]
     exact .inl ⟨f, rfl, rfl⟩
   · rw [h₁, h₂]

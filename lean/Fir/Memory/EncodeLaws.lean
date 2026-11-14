@@ -1,5 +1,5 @@
 import Fir.Memory.Encode
-import Fir.Memory.Laws
+import Fir.Memory.Refine
 
 /-!
 The laws of encoding values in units, which the ops that load and store
@@ -15,6 +15,11 @@ rest on:
 * A punned decoding gives poison: an integer from a pointer's encoding,
   a pointer from an integer's, and a pointer of one memory from a pointer
   of another's.
+* Encoding and decoding keep refinement (the section on refining
+  memories): the encodings of values that refine others refine the others'
+  encodings, and units that refine others decode to values that refine the
+  others' values. So a load or a store from memories that refine others
+  gives values, or memories, that refine the others'.
 -/
 
 namespace Fir
@@ -248,6 +253,98 @@ theorem load_store_encodePtr {M M' : Memory u} {p : Pointer} {m k : Nat} (hk : 0
   have hl := Memory.load_store_same h
   rw [length_encodePtr] at hl
   simp [hl, Except.map, decodePtr_encodePtr hk o]
+
+/-!
+# Refinement
+-/
+
+/-- Units of which none is poison are refined only by themselves. -/
+theorem eq_of_isRefinedBy_noPoison :
+    ∀ {us us' : List (MemUnit u)}, us ⊑ us' → (∀ x ∈ us, x ≠ .poison) → us' = us
+  | [], [], _, _ => rfl
+  | a :: as, b :: bs, h, hn => by
+    have hab : b = a := by
+      cases a with
+      | poison => exact absurd rfl (hn _ List.mem_cons_self)
+      | bits _ => exact h.1
+      | frag _ _ _ => exact h.1
+    rw [hab, eq_of_isRefinedBy_noPoison h.2 fun x hx => hn x (List.mem_cons_of_mem _ hx)]
+  | [], _ :: _, h, _ | _ :: _, [], h, _ => (h : False).elim
+
+/-- Poison units are refined by any units, as many. -/
+theorem replicate_poison_isRefinedBy :
+    ∀ l : List (MemUnit u), List.replicate l.length (MemUnit.poison : MemUnit u) ⊑ l
+  | [] => trivial
+  | _ :: l => ⟨trivial, replicate_poison_isRefinedBy l⟩
+
+/-- The encodings of integers that refine others refine the others'. -/
+theorem encodeInt_isRefinedBy (o : ByteOrder) {w : Nat} {v v' : PoisonOr (BitVec w)}
+    (h : v ⊑ v') : encodeInt u o v ⊑ encodeInt u o v' := by
+  cases v with
+  | poison =>
+    have h' := replicate_poison_isRefinedBy (encodeInt u o v')
+    rwa [length_encodeInt] at h'
+  | value b =>
+    cases v' with
+    | poison => exact (h : False).elim
+    | value b' =>
+      cases (h : b = b')
+      exact List.isRefinedBy_refl MemUnit.isRefinedBy_refl _
+
+/-- Units that refine others decode, as an integer, to a value that refines
+the others' value. -/
+theorem decodeInt_isRefinedBy (w : Nat) (o : ByteOrder) {us us' : List (MemUnit u)}
+    (h : us ⊑ us') : decodeInt u w o us ⊑ decodeInt u w o us' := by
+  cases hd : decodeInt u w o us with
+  | poison => trivial
+  | value v =>
+    have he : us' = us := eq_of_isRefinedBy_noPoison h fun x hx hp => by
+      subst hp
+      have hn := unitsValue_eq_none (ByteOrder.mem_place (o := o) |>.2 hx)
+        fun b e => by cases e
+      simp [decodeInt, hn] at hd
+    rw [he, hd]
+    exact rfl
+
+/-- The encodings of pointers that refine others refine the others'. -/
+theorem encodePtr_isRefinedBy (m k : Nat) (o : ByteOrder) {v v' : PoisonOr Pointer}
+    (h : v ⊑ v') :
+    (encodePtr m k o v : List (MemUnit u)) ⊑ (encodePtr m k o v' : List (MemUnit u)) := by
+  cases v with
+  | poison =>
+    have h' := replicate_poison_isRefinedBy (encodePtr (u := u) m k o v')
+    rwa [length_encodePtr] at h'
+  | value p =>
+    cases v' with
+    | poison => exact (h : False).elim
+    | value p' =>
+      cases (h : p = p')
+      exact List.isRefinedBy_refl MemUnit.isRefinedBy_refl _
+
+/-- Units that refine others decode, as a pointer, to a value that refines
+the others' value. -/
+theorem decodePtr_isRefinedBy (m k : Nat) (o : ByteOrder) {us us' : List (MemUnit u)}
+    (h : us ⊑ us') : decodePtr m k o us ⊑ decodePtr m k o us' := by
+  cases hd : decodePtr m k o us with
+  | poison => trivial
+  | value q =>
+    have hf : o.place us = fragments m k q := by
+      unfold decodePtr at hd
+      split at hd
+      · rename_i heq
+        split at hd
+        · cases hd
+          rename_i hx
+          rw [heq, hx]
+        · cases hd
+      · cases hd
+    have he : us' = us := eq_of_isRefinedBy_noPoison h fun x hx hp => by
+      subst hp
+      have hm := ByteOrder.mem_place (o := o) |>.2 hx
+      rw [hf] at hm
+      simp [fragments] at hm
+    rw [he, hd]
+    exact rfl
 
 end Memory
 

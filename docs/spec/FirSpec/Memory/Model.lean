@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12826542979453477885")
+:::moduleDocs (fingerprint := "16542518055602037485")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -105,15 +105,17 @@ $`M[a]`. Each memory of a module is one such list, with its own
 allocations and its own unit width $`u`.
 :::
 
-:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "418687010208517563")
+:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "18099639449033360142")
 *Definition: a fault.* An access that fails is immediate UB, for one of
-three reasons (ADR-2026-11-09-1542):
+four reasons (ADR-2026-11-09-1542; the human's ruling of 2026-11-11 on
+#231 for the last):
 
 ```grammar Fir.Memory.Fault
 \mathit{fault}
 noProvenance   \mathsf{noProvenance}
 freed          \mathsf{freed}
 outOfBounds    \mathsf{outOfBounds}
+misaligned     \mathsf{misaligned}
 ```
 
 * $`\mathsf{noProvenance}`: the pointer has no provenance for an
@@ -121,6 +123,8 @@ outOfBounds    \mathsf{outOfBounds}
 * $`\mathsf{freed}`: the pointer's allocation is freed.
 * $`\mathsf{outOfBounds}`: the access touches a unit outside its
   allocation.
+* $`\mathsf{misaligned}`: the access is not aligned at every address its
+  allocation may be given.
 
 Each has a reason in words, which a run that faults gives for its UB.
 :::
@@ -194,4 +198,30 @@ or the fault of its access.
 them into its allocation's block at its offset, $`M[a] := M[a][o := \vec{y}]`,
 or gives the fault of its access, an access of $`|\vec{y}|` units. No other
 unit and no other allocation changes.
+:::
+
+:::readable Fir.Memory.Memory.aligned (fingerprint := "7144243087667339592")
+*Definition: an aligned access.* An access through the pointer
+$`(a^?, o)` aligned to $`\alpha` units is _aligned_ in $`M` when, if
+$`M` has the block $`M[a] = (k, \alpha_b, \vec{x}, \ell)`,
+
+$$`\alpha \mid \alpha_b \quad\text{and}\quad \alpha \mid o`
+
+A block has no address. Every address it may be given is a multiple of
+its alignment $`\alpha_b`, and the access's address is that plus $`o`. So
+the access is aligned at every address its block may be given exactly
+when $`\alpha` divides both. An access through a pointer that names no
+block of $`M` is aligned: it faults with $`\mathsf{noProvenance}`.
+So an access aligned to 4 into a block aligned to 2 is misaligned, even
+at offset 0, and one aligned to 1 is always aligned.
+:::
+
+:::readable Fir.Memory.Memory.loadAligned Fir.Memory.Memory.storeAligned (fingerprint := "15001664058629701009")
+*Definition: aligned loads and stores.* An op's load or store carries
+an alignment, and a misaligned access is immediate UB (the human's ruling
+of 2026-11-11 on #231). The aligned load of $`n` units through $`p`,
+aligned to $`\alpha` units, is the plain load, which faults first; when
+the plain load succeeds, it gives its units if the access is aligned, and
+faults with $`\mathsf{misaligned}` if not. The aligned store of
+$`\vec{y}` is the plain store, in the same way.
 :::

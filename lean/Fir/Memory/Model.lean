@@ -31,11 +31,18 @@ memory, when its allocation is freed, or when the units it touches are not
 all inside the allocation (ADR-2026-11-09-1542). Allocating and freeing
 never fault: the run frees a call's stack allocations when the call returns
 (ADR-2026-11-09-1548), and a heap allocation is freed by an external call,
-which the world answers. A block records the alignment it was allocated
-with, in units, so that the ops that access memory can check an access
-against it; the accesses of this model do not. How a value of a type
-becomes units, and how an op reaches these operations, are left to the ops
-that use them.
+which the world answers. How a value of a type becomes units, and how an op
+reaches these operations, are left to the ops that use them.
+
+A block records the alignment it was allocated with, in units: every address
+it may be given is a multiple of it. An op's access carries an alignment too,
+a promise that its address is a multiple of it, and a misaligned access is
+immediate UB (the human's ruling of 2026-11-11 on #231). A block has no
+address, so an _aligned access_ is one that is aligned at every address its
+block may be given: its alignment divides the block's and the pointer's
+offset. An aligned load or store faults as the plain one does, and when it
+does not, it faults as misaligned unless it is aligned. An alignment of 1
+divides everything, so an access aligned to 1 is the plain access.
 
 A pointer of this model belongs to one memory, and its allocation id names an
 allocation of that memory alone. Which memory a pointer belongs to is its
@@ -120,6 +127,9 @@ inductive Fault where
   | freed
   /-- The access touches a unit outside its allocation. -/
   | outOfBounds
+  /-- The access is not aligned at every address its allocation may be
+  given. -/
+  | misaligned
   deriving Repr, DecidableEq
 
 /-- The reason that a run which faults gives for its UB. -/
@@ -127,6 +137,7 @@ def Fault.reason : Fault → String
   | .noProvenance => "an access through a pointer without provenance"
   | .freed => "an access to a freed allocation"
   | .outOfBounds => "an access out of bounds"
+  | .misaligned => "a misaligned access"
 
 variable {u : Nat}
 
@@ -188,6 +199,36 @@ No other unit, and no other allocation, changes. -/
 def store (M : Memory u) (p : Pointer) (us : List (MemUnit u)) : Except Fault (Memory u) := do
   let (a, b, o) ← M.locate p us.length
   pure ⟨M.blocks.set a (b.write o us)⟩
+
+/-- Whether an access through `p` aligned to `al` units is aligned at every
+address that `p`'s allocation may be given: `al` divides the block's
+alignment, and `p`'s offset. Every such address is a multiple of the
+block's alignment, plus the offset. A pointer that names no allocation of
+the memory is aligned, since an access through it faults for that. -/
+def aligned (M : Memory u) (p : Pointer) (al : Nat) : Bool :=
+  match p.prov with
+  | none => true
+  | some a =>
+    match M.blocks[a]? with
+    | none => true
+    | some b => decide (al ∣ b.align) && decide ((al : Int) ∣ p.offset)
+
+/-- Loads `n` units through `p`, an access aligned to `al` units: the plain
+load, which faults first, and a misaligned fault when the access is not
+aligned. -/
+def loadAligned (M : Memory u) (p : Pointer) (n al : Nat) : Except Fault (List (MemUnit u)) :=
+  match M.load p n with
+  | .ok us => if M.aligned p al then .ok us else .error .misaligned
+  | .error f => .error f
+
+/-- Stores the units `us` through `p`, an access aligned to `al` units: the
+plain store, which faults first, and a misaligned fault when the access is
+not aligned. -/
+def storeAligned (M : Memory u) (p : Pointer) (us : List (MemUnit u)) (al : Nat) :
+    Except Fault (Memory u) :=
+  match M.store p us with
+  | .ok M' => if M.aligned p al then .ok M' else .error .misaligned
+  | .error f => .error f
 
 end Memory
 

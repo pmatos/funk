@@ -151,6 +151,41 @@ A `volatile` attribute on loads and stores makes the access an event of the
 trace. The access cannot be removed, duplicated or reordered with other events
 (ADR-2026-11-09-1548).
 
+## Aligned accesses
+
+An op's load or store carries an alignment, in units: its promise that the
+access's address is a multiple of it. A misaligned access is immediate UB (the
+human's ruling of 2026-11-11 on #231, Q4). A block has no address, only the
+alignment it was allocated with, which every address it may be given is a
+multiple of. So an access aligned to `A`, through a pointer at offset `o` into
+a block aligned to `B`, is aligned exactly when `A` divides `B` and `o`: then
+it is aligned at every address the block may have. An access aligned to 1 is
+always aligned. An `i32` access aligned to 4 into `alloca stack i8 16` is
+therefore UB, even at offset 0, unless the `alloca` says `align(4)`
+(`Memory.aligned`, `Memory.loadAligned` and `Memory.storeAligned` in
+`lean/Fir/Memory/Model.lean`, their laws in `AlignLaws.lean`).
+
+- An aligned access faults as the plain one does first, with no provenance,
+  freed or out of bounds, and only then as misaligned. The fault decides only
+  the reason a run gives for its UB.
+- The memory effect's `load` and `store` take the access's alignment, and the
+  state layer makes each an aligned access, so a rule can only load or store
+  with an alignment. Whether an access is aligned depends on the allocations,
+  not on any unit, so a store still does not read its memory.
+- In the state layer a load writes, allocates and frees nothing, reads only
+  its own memory, has one outcome and is monotone; a store writes only its own
+  memory, allocates nothing, reads no memory, its own included, has one
+  outcome and is monotone (`lean/Fir/Execution/MemoryLoadLaws.lean`,
+  `MemoryStoreLaws.lean`). Encoding and decoding keep refinement
+  (`lean/Fir/Memory/EncodeLaws.lean`). The core's `load` and `store` (stages
+  4e-2 and 4e-3 of #231) meet their obligations from these.
+
+Rejected: misaligned only when no address of the block could make the access
+aligned, an angelic reading. A pass could not rely on the promise, and a
+backend could not emit an aligned instruction for it. Rejected too: checking
+an access against the address that `fir-ref`'s canonical layout gives, which
+the spec does not fix and which only exposed allocations have.
+
 ## The memories of a run
 
 The spec gives one memory of this model, for a unit of any width, in
@@ -164,7 +199,8 @@ op that uses memory yet (#231). Memory is a state layer over the way of computin
   memories the units of their entries (`unitsOf lay`). A frame lists the
   stack allocations its call made.
 - `MonadMemory` gives allocating, freeing, loading and storing on a named
-  memory, and a faulting access is UB. An allocation records its kind and
+  memory, each load and store with its alignment, and a faulting access,
+  misaligned included, is UB. An allocation records its kind and
   its alignment in units, which refinement and the effect obligations
   compare.
   `StateT (Memories Mem unit) m` keeps `m`'s choice and UB and gives the

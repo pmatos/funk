@@ -3,7 +3,8 @@ import Fir
 /-!
 Tests of the memory model on a memory of 8-bit units: a store and the load
 after it, fresh memory, other allocations, and each fault of an access, in
-order: no provenance, a freed allocation, and an access out of bounds. Then
+order: no provenance, a freed allocation, and an access out of bounds; and
+aligned accesses, which fault as misaligned after those faults. Then
 the table of the memories of a run: it holds each memory once, however many
 times the run replaces it.
 -/
@@ -71,6 +72,35 @@ def b2 : MemUnit 8 := .bits 0x07
 -- not have, changes nothing.
 #guard ((m2.2.free 0).free 0).blocks == (m2.2.free 0).blocks
 #guard (m2.2.free 7).blocks == m2.2.blocks
+
+/-! # Aligned accesses -/
+
+-- `m1`'s block is aligned to 2, and `m2`'s second to 8. An access is
+-- aligned when its alignment divides the block's and the offset.
+#guard m2.2.aligned m1.1 2 && m2.2.aligned ⟨some 0, 2⟩ 2 && m2.2.aligned ⟨some 1, 0⟩ 8
+-- A larger alignment than the block's is misaligned, even at offset 0:
+-- the block may be given an address that is a multiple of 2 alone.
+#guard !m2.2.aligned m1.1 4
+-- An odd offset is misaligned at 2, and so is a negative one not even.
+#guard !m2.2.aligned ⟨some 0, 1⟩ 2 && !m2.2.aligned ⟨some 0, -1⟩ 2 && m2.2.aligned ⟨some 0, -2⟩ 2
+-- Every access is aligned to 1, and so is one through a pointer that names
+-- no allocation, which faults for that.
+#guard m2.2.aligned ⟨some 0, 3⟩ 1 && m2.2.aligned ⟨none, 1⟩ 64 && m2.2.aligned ⟨some 9, 1⟩ 64
+
+-- An aligned load or store faults as the plain one does, first; when the
+-- plain one succeeds, a misaligned one faults as misaligned.
+#guard m2.2.loadAligned m1.1 4 2 == .ok (List.replicate 4 .poison)
+#guard m2.2.loadAligned ⟨some 0, 1⟩ 2 2 == .error .misaligned
+#guard m2.2.loadAligned m1.1 4 4 == .error .misaligned
+#guard m2.2.loadAligned ⟨some 0, 3⟩ 2 2 == .error .outOfBounds
+#guard (m2.2.free 0).loadAligned ⟨some 0, 1⟩ 1 2 == .error .freed
+#guard m2.2.loadAligned ⟨none, 1⟩ 1 2 == .error .noProvenance
+#guard (m2.2.storeAligned ⟨some 0, 1⟩ [b1] 2).toOption.isNone
+#guard m2.2.storeAligned ⟨some 0, 2⟩ [b1, b2] 2 == m2.2.store ⟨some 0, 2⟩ [b1, b2]
+#guard m2.2.storeAligned ⟨some 1, 0⟩ [b1, b2, b1] 8 == .error .outOfBounds
+-- The memories of a run load and store as aligned accesses.
+#guard ((Memories.empty : Memories Unit (fun _ => 8)).alloc () .heap 4 4 |> fun r =>
+  r.2.load () ⟨r.1.prov, 2⟩ 2 4) == .error .misaligned
 
 /-- The laws hold of the example: a load after a store gives what was
 stored. -/

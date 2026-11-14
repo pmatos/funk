@@ -41,7 +41,7 @@ gives the integer, as the human ruled on 2026-11-14 (#378): in memory 0,
 $`\mathsf{i32}` is aligned to 4 units.
 :::
 
-:::readable Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "2656346521588253133")
+:::readable Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "1748788352908432144")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`
