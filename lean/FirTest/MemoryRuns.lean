@@ -4,7 +4,7 @@ import Fir.Core.MemoryCallRefine
 /-!
 Tests of runs with memory: the frame hook frees a call's stack allocations
 when the call returns, and leaves every other allocation as it was
-(ADR-2026-11-09-1548). No core op touches memory yet, so a semantics
+(ADR-2026-11-09-1548). These tests predate `alloca`, so a semantics
 written here for these tests, not fir's, gives `const` an allocation: it
 allocates a unit of the given kind in the run's one memory, then gives its
 constant by the core rule. The runs are those of the interpreter in the

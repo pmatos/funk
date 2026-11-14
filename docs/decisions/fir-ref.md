@@ -87,9 +87,9 @@ path. `fir-ref run` reports it as an error, never as stuck or UB
 ([the command line](fir-ref-command-line.md#exit-status-and-errors)), and the
 harness sees a tool error, never a wrong result.
 
-Only totality, `ReturnsOnDefined`, progress and the lawful class reject a
-missing rule, so `LawfulDialectPoison CoreDialect` cannot be proved while an
-op lacks its rules. `PropagatesPoison`, `OpMonotone`, `NeverStuck` and
+Only totality, `ReturnsOnDefined`, progress and the lawful classes reject a
+missing rule, so the core's lawful classes with memory cannot be proved while
+an op lacks its rules. `PropagatesPoison`, `OpMonotone`, `NeverStuck` and
 `FuelMonotone` hold trivially there, since the empty set meets every bound. So
 none of them is stated of such an op, or of a function that reaches one.
 

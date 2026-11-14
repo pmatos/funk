@@ -33,7 +33,8 @@ constant obligations to the branch obligations:
   once but not total, since it has no rule in the set monad.
 
 So the core dialect as a whole does not meet the lawful class of the set
-monad: `alloca` has no outcome there. Its obligations are those of the
+monad: `alloca` has no outcome there. What this section proves covers the
+ops that touch no memory. The core's guarantees are those of the
 semantics with memory, which each op meets: an op that touches no memory
 from its tie and what it meets here, and `alloca` by its own rule (the
 sections on the stack allocation obligations and on every valid core
@@ -88,9 +89,10 @@ theorem pos_of_typesValid {op : Op} {w : Nat} (hv : TypesValid (d := CoreDialect
     (hw : i w ∈ Fir.sig (d := CoreDialect) op) : 0 < w :=
   (hv.1 _ hw).1
 
-/-- Each valid core op instance that propagates poison returns a result on
-some operand vector with no poison. The divisions need their width above
-zero, which validation gives. -/
+/-- Each valid core op instance that touches no memory and propagates
+poison returns a result on some operand vector with no poison. The
+divisions need their width above zero, which validation gives. `alloca`
+returns one with memory, by its own rule. -/
 theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
     TypesValid (d := CoreDialect) op → Fir.poisonClass (d := CoreDialect) op = .propagates →
     ReturnsOnDefined (d := CoreDialect) op
