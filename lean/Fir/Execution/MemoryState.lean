@@ -13,8 +13,9 @@ keeps the effects of the monad below it, and adds two:
 
 * choice and UB are those of the monad below. A choice keeps the memories,
   and UB ends the path, so a path that ends in UB shows no memory;
-* the memory effect runs the memory model's operations on the memories, and
-  an access that faults is the monad's UB, with the fault's reason
+* the memory effect runs the memory model's operations on the memories,
+  each load and store an aligned access, and an access that faults,
+  misaligned included, is the monad's UB, with the fault's reason
   (ADR-2026-11-09-1542);
 * a frame enters a call before its computation and leaves it after, so a
   call's stack allocations are freed when it returns
@@ -58,10 +59,10 @@ instance instMonadMemoryStateT [Monad m] [MonadUB m] :
     MonadMemory Mem unit (StateT (Memories Mem unit) m) where
   alloc x k n al S := pure (S.alloc x k n al)
   free x a S := pure ((), S.free x a)
-  load x p n S := match S.load x p n with
+  load x p n al S := match S.load x p n al with
     | .ok us => pure (us, S)
     | .error f => MonadUB.ub f.reason
-  store x p us S := match S.store x p us with
+  store x p us al S := match S.store x p us al with
     | .ok S' => pure ((), S')
     | .error f => MonadUB.ub f.reason
 
@@ -143,13 +144,13 @@ variable (h : ∀ {α : Type} (r : String), φ.map (MonadUB.ub r : m α) = Monad
 include h
 
 /-- A morphism that keeps UB keeps loads through the layer. -/
-theorem MonadMorphism.state_load (x : Mem) (p : Pointer) (k : Nat) :
-    (φ.state (Memories Mem unit)).map (MonadMemory.load x p k) =
-      MonadMemory.load (m := StateT (Memories Mem unit) n) x p k := by
+theorem MonadMorphism.state_load (x : Mem) (p : Pointer) (k al : Nat) :
+    (φ.state (Memories Mem unit)).map (MonadMemory.load x p k al) =
+      MonadMemory.load (m := StateT (Memories Mem unit) n) x p k al := by
   funext S
-  show φ.map (match S.load x p k with
+  show φ.map (match S.load x p k al with
     | .ok us => pure (us, S)
-    | .error f => MonadUB.ub f.reason) = match S.load x p k with
+    | .error f => MonadUB.ub f.reason) = match S.load x p k al with
     | .ok us => pure (us, S)
     | .error f => MonadUB.ub f.reason
   split
@@ -157,13 +158,14 @@ theorem MonadMorphism.state_load (x : Mem) (p : Pointer) (k : Nat) :
   · exact h _
 
 /-- A morphism that keeps UB keeps stores through the layer. -/
-theorem MonadMorphism.state_store (x : Mem) (p : Pointer) (us : List (MemUnit (unit x))) :
-    (φ.state (Memories Mem unit)).map (MonadMemory.store x p us) =
-      MonadMemory.store (m := StateT (Memories Mem unit) n) x p us := by
+theorem MonadMorphism.state_store (x : Mem) (p : Pointer) (us : List (MemUnit (unit x)))
+    (al : Nat) :
+    (φ.state (Memories Mem unit)).map (MonadMemory.store x p us al) =
+      MonadMemory.store (m := StateT (Memories Mem unit) n) x p us al := by
   funext S
-  show φ.map (match S.store x p us with
+  show φ.map (match S.store x p us al with
     | .ok S' => pure ((), S')
-    | .error f => MonadUB.ub f.reason) = match S.store x p us with
+    | .error f => MonadUB.ub f.reason) = match S.store x p us al with
     | .ok S' => pure ((), S')
     | .error f => MonadUB.ub f.reason
   split

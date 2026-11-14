@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Laws of values in units: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15694537916672545565")
+:::moduleDocs (fingerprint := "8215353161716204108")
 :::
 
 :::readable Fir.ByteOrder.place_place Fir.ByteOrder.length_place Fir.ByteOrder.mem_place Fir.ByteOrder.place_replicate (fingerprint := "17239911817336278410")
@@ -99,4 +99,28 @@ gives $`M'`, then loading from $`M'` the units of $`v`'s type through
 $`p`, and decoding them, gives $`v` back, poison included: for an integer
 of $`w > 0` bits in units of $`u > 0` bits, and for a pointer type that
 takes $`k > 0` units, whose pointer keeps its provenance.
+:::
+
+:::readable Fir.Memory.eq_of_isRefinedBy_noPoison Fir.Memory.replicate_poison_isRefinedBy (pin := Fir.Memory.MemUnit.IsRefinedBy) (fingerprint := "8360724471692702670")
+*Theorems: units that refine others.* A unit of bits or a fragment is
+{ref "The-fir-specification--Memory--Refining-memories"}[refined] only by
+itself, so units of which none is poison are refined only by themselves.
+Poison units are refined by any units, as many.
+:::
+
+:::readable Fir.Memory.encodeInt_isRefinedBy Fir.Memory.decodeInt_isRefinedBy (fingerprint := "17976075829751006200")
+*Theorems: integers in units keep refinement.* At every byte order $`o`,
+if $`v \sqsubseteq v'`, then $`\mathrm{enc}_o(v) \sqsubseteq \mathrm{enc}_o(v')`:
+poison's units, all poison, are refined by any units, and a value refines
+only itself. If $`\vec{x} \sqsubseteq \vec{x}'`, then the integers they
+decode to refine each other: units that decode to a value are all bits,
+and so are refined only by themselves.
+:::
+
+:::readable Fir.Memory.encodePtr_isRefinedBy Fir.Memory.decodePtr_isRefinedBy (fingerprint := "8151593638607059277")
+*Theorems: pointers in units keep refinement.* In the same way, the
+encodings of pointers that refine others refine the others' encodings, and
+units that refine others decode, as pointers, to values that refine the
+others': units that decode to a pointer are its fragments, refined only by
+themselves.
 :::

@@ -8,8 +8,11 @@ Tier: direction; area: semantics
 - **Logical blocks.** A pointer is an allocation id and an offset. Memory
   maps each allocation to an array of abstract units, each concrete bits,
   poison or a fragment of a pointer. Fresh memory holds poison. An access out
-  of bounds, after its allocation is freed, or through a pointer without
-  provenance for that allocation is immediate UB.
+  of bounds, after its allocation is freed, through a pointer without
+  provenance for that allocation, or misaligned is immediate UB (misaligned:
+  the human's ruling of 2026-11-11 on #231). An access is aligned when it is
+  aligned at every address its block may be given (the human's ruling of
+  2026-11-14 on #388).
 - **Explicit exposure.** `ptr.expose` turns a pointer into an integer and
   marks its allocation exposed. `ptr.from_int` turns an integer back into a
   pointer, with the provenance of an exposed allocation that contains the

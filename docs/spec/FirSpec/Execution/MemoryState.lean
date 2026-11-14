@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "427441628159677577")
+:::moduleDocs (fingerprint := "18186629767089573848")
 :::
 
-:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "8539271766858200714")
+:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "13501842578594579585")
 *Definition: the state layer.* Over a monad $`m`, a computation of the
 state layer takes the memories $`S` before it, and is a computation of
 $`m` whose results are pairs $`(a, S')` of a result and the memories
@@ -30,8 +30,9 @@ after it. Its effects are:
   $$`\mathrm{frame}(x)(S) = \mathrm{map}_{(a, S') \mapsto (a, \mathrm{exit}(S'))}(x(\mathrm{enter}(S)))`
 * the memory effect runs the
   {ref "The-fir-specification--Memory--The-memories-of-a-run"}[operations on the memories of a run];
-  allocating and freeing never fault, and a load or a store that faults
-  is $`m`'s UB with the fault's reason.
+  allocating and freeing never fault, a load or a store is the aligned
+  access of the alignment it is given, and one that faults, misaligned
+  included, is $`m`'s UB with the fault's reason.
 
 *Definition: a translation through the layer.* A monad morphism
 $`\varphi` from $`m` to $`n` gives one from the state layer over $`m` to
@@ -52,7 +53,7 @@ layer.* When $`\varphi` keeps choice and UB, so does its translation
 through the layer, by the two theorems above.
 :::
 
-:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store (fingerprint := "12127281045085488736")
+:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store (fingerprint := "14116060418761900938")
 *Theorem: a translation through the layer keeps the memory effect.* It
 keeps allocating and freeing, which end at once with a value. It keeps
 loads and stores when $`\varphi` keeps UB, since an access either ends at
