@@ -95,7 +95,8 @@ def b2 : MemUnit 8 := .bits 0x07
 #guard m2.2.loadAligned ⟨some 0, 3⟩ 2 2 == .error .outOfBounds
 #guard (m2.2.free 0).loadAligned ⟨some 0, 1⟩ 1 2 == .error .freed
 #guard m2.2.loadAligned ⟨none, 1⟩ 1 2 == .error .noProvenance
-#guard (m2.2.storeAligned ⟨some 0, 1⟩ [b1] 2).toOption.isNone
+#guard m2.2.storeAligned ⟨some 0, 1⟩ [b1] 2 == .error .misaligned
+#guard m2.2.storeAligned ⟨some 0, 3⟩ [b1, b2] 2 == .error .outOfBounds
 #guard m2.2.storeAligned ⟨some 0, 2⟩ [b1, b2] 2 == m2.2.store ⟨some 0, 2⟩ [b1, b2]
 #guard m2.2.storeAligned ⟨some 1, 0⟩ [b1, b2, b1] 8 == .error .outOfBounds
 -- The memories of a run load and store as aligned accesses.
