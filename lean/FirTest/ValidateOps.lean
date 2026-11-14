@@ -172,4 +172,19 @@ def withG (f : String) : String :=
 #guard messages (entryOnly [op [] (.ret []) []] [("a", .int (maxWidth + 1))]) ==
   ["the type of %a is not valid"]
 
+/-! # The alignment of `alloca`
+
+An alignment is a power of two no larger than `MemLayout.limit`, as in the
+data layout, so `2^23` is the largest; the count has no bound. -/
+
+/-- A function that allocates with the attributes `attrs` and returns the
+pointer. -/
+def allocaWith (attrs : String) : String :=
+  oneFunc s!"func @f() -> ptr \{\n^e:\n  %p: ptr = alloca stack {attrs} @0\n  ret %p @0\n}\n"
+
+#guard valid (allocaWith "i8 align(8388608)")
+#guard valid (allocaWith "i32 1099511627776")
+#guard ["i8 align(16777216)", "i8 align(16777215)", "i8 align(1180591620717411303424)"].all
+  fun a => checks (allocaWith a) ["the op breaks its dialect's own rule"]
+
 end FirTest

@@ -77,15 +77,17 @@ means. Generic code does not write such a word alone as a string. It names the
 concept with the spec's own definitions, such as `PoisonOr.poison` and
 `TyPoison.IsPoison`, and leaves the spelling to code that may name core ops:
 `fir-ref`'s command line spells a poison value `poison`. A string that holds
-the word among other text, such as a message, stays allowed. Neither check has
-a list of exempt words: both take `poison` from the dialect, as they take every
-op's name. `scripts/test_check_g0.py` and `g0.rs` plant `"poison"` alone in
-generic code, which fails, and a message that holds it, which passes. Generic
-code that one day needs the bare spelling takes it from the dialect through a
-class, or ADR-2026-11-03-0600 moves the line (ADR-2026-11-03-0600). Rejected: a
-list of exempt generic terms, which would let per-op code for the op `poison`
-into generic code unseen; renaming the op, which the human named `poison` on
-2026-11-03 (#122).
+the word among other text, such as a message, stays allowed. Neither check
+exempts an op's name: both take `poison` from the dialect, as they take every
+op's name. `check_g0.py` leaves out one attribute word, `align`, which the
+generic data layout line writes too, as the human ruled on 2026-11-14 (#382;
+semantics-m1-memory.md). `scripts/test_check_g0.py` and `g0.rs` plant
+`"poison"` alone in generic code, which fails, and a message that holds it,
+which passes. Generic code that one day needs the bare spelling takes it from
+the dialect through a class, or ADR-2026-11-03-0600 moves the line
+(ADR-2026-11-03-0600). Rejected: a list of exempt generic terms, which would
+let per-op code for the op `poison` into generic code unseen; renaming the op,
+which the human named `poison` on 2026-11-03 (#122).
 
 ## Program structure
 

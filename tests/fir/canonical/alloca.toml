@@ -13,6 +13,7 @@ tests = [
   { func = "@one", expect = ["ptr(0, 0)"] },
   { func = "@four", expect = ["ptr(0, 0)"] },
   { func = "@bytes", expect = ["ptr(0, 0)"] },
+  { func = "@widest_align", expect = ["ptr(0, 0)"] },
   { func = "@two", expect = ["ptr(1, 0)"] },
   { func = "@moved", args = ["5"], expect = ["ptr(0, 5)"] },
   { func = "@moved", args = ["-3"], expect = ["ptr(0, -3)"] },

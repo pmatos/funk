@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13518203657263102293")
+:::moduleDocs (fingerprint := "15500224868426135038")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (fingerprint := "18429971201441122687")
+:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (fingerprint := "2492985222773548841")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -86,7 +86,7 @@ The reserved words $`\mathsf{contract}` and $`\mathsf{reassoc}` are
 permissions for passes that M2's optimizer decides, not meanings of an
 op, so a float op that carries either is not valid (ADR-2026-11-09-1549).
 
-$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a power of two} \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
+$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a power of two at most } 2^{24} - 1 \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -117,13 +117,19 @@ the op, and $`\mathrm{symtab}_C` the module's
   later milestone may accept (ADR-2026-11-09-1542). It allocates at least
   one value, aligned, when it gives an alignment, to a
   {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[power of two]
-  of units, and its type is a valid integer type $`\mathsf{i}W`. Its
-  result's type $`\mathsf{ptr}\langle N \rangle` names its memory, which
-  the module's data layout must declare, as for every pointer type
+  of units no larger than $`2^{24} - 1`, the bound of the data layout's
+  own alignments, as the human ruled on 2026-11-14 (#382), so
+  $`2^{23}` is the largest. Its type is a valid integer type
+  $`\mathsf{i}W`. Its count has no bound: an allocation larger than a
+  machine holds is a resource error at run time, as a deep recursion is.
+  Its result's type $`\mathsf{ptr}\langle N \rangle` names its memory,
+  which the module's data layout must declare, as for every pointer type
   (ADR-2026-11-14-0915). So $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~4`
-  is valid, and $`\mathsf{alloca}~\mathsf{heap}~\mathsf{i32}`,
+  and $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{23})`
+  are valid, and $`\mathsf{alloca}~\mathsf{heap}~\mathsf{i32}`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~0`,
-  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(3)` and
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(3)`,
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{24})` and
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{f32}` are not.
 
 Every other op has no rule beyond its signature. These three definitions
