@@ -11,15 +11,13 @@ section says when the memories of one run refine those of another:
 * a unit is refined by itself, and a poison unit by any unit. A unit of bits
   or a fragment of a pointer is refined by nothing else, so that a fragment
   keeps its pointer's provenance;
-* a block is refined by a block of the same kind, liveness and size, whose
-  alignment is a multiple of its own: a pass may raise an allocation's
-  alignment, and an access aligned in the first block is aligned in the
-  other. While it is live, the other's units refine its units one by one.
-  No access reaches a freed block, so the units of a freed block are not
+* a block is refined by a block of the same kind, alignment, liveness and
+  size. While it is live, the other's units refine its units one by one. No
+  access reaches a freed block, so the units of a freed block are not
   compared, and a store to a block that is then freed may be dropped;
 * a memory is refined by a memory whose blocks refine its own, one by one,
   in the order they were made. So both have the same allocations, each with
-  its kind, size and liveness;
+  its kind, alignment, size and liveness;
 * the memories of a run are refined by memories with the same frames, in
   which each memory refines the memory of the same name.
 
@@ -54,12 +52,12 @@ def MemUnit.IsRefinedBy : MemUnit u → MemUnit u → Prop
 
 instance : HRefinement (MemUnit u) (MemUnit u) := ⟨MemUnit.IsRefinedBy⟩
 
-/-- A block is refined by a block of the same kind, liveness and size, whose
-alignment is a multiple of its own, and whose units, while it is live,
-refine its units one by one. No access reaches a freed block, so its units
-are not compared: a store to it before it is freed may be dropped. -/
+/-- A block is refined by a block of the same kind, alignment, liveness and
+size whose units, while it is live, refine its units one by one. No access
+reaches a freed block, so its units are not compared: a store to it before
+it is freed may be dropped. -/
 def Block.IsRefinedBy (b b' : Block u) : Prop :=
-  b.kind = b'.kind ∧ b.align ∣ b'.align ∧ b.live = b'.live ∧
+  b.kind = b'.kind ∧ b.align = b'.align ∧ b.live = b'.live ∧
     b.units.length = b'.units.length ∧ (b.live → b.units ⊑ b'.units)
 
 instance : HRefinement (Block u) (Block u) := ⟨Block.IsRefinedBy⟩
@@ -82,11 +80,11 @@ theorem MemUnit.isRefinedBy_trans : ∀ {a b c : MemUnit u}, a ⊑ b → b ⊑ c
 
 /-- Refinement of blocks is reflexive. -/
 theorem Block.isRefinedBy_refl (b : Block u) : b ⊑ b :=
-  ⟨rfl, Nat.dvd_refl _, rfl, rfl, fun _ => List.isRefinedBy_refl MemUnit.isRefinedBy_refl _⟩
+  ⟨rfl, rfl, rfl, rfl, fun _ => List.isRefinedBy_refl MemUnit.isRefinedBy_refl _⟩
 
 /-- Refinement of blocks is transitive. -/
 theorem Block.isRefinedBy_trans {a b c : Block u} (h₁ : a ⊑ b) (h₂ : b ⊑ c) : a ⊑ c :=
-  ⟨h₁.1.trans h₂.1, Nat.dvd_trans h₁.2.1 h₂.2.1, h₁.2.2.1.trans h₂.2.2.1,
+  ⟨h₁.1.trans h₂.1, h₁.2.1.trans h₂.2.1, h₁.2.2.1.trans h₂.2.2.1,
     h₁.2.2.2.1.trans h₂.2.2.2.1, fun hl => List.isRefinedBy_trans MemUnit.isRefinedBy_trans
       (h₁.2.2.2.2 hl) (h₂.2.2.2.2 (h₁.2.2.1 ▸ hl))⟩
 

@@ -126,8 +126,8 @@ memory yet (#231). Memory is a state layer over the way of computing
   stack allocations its call made.
 - `MonadMemory` gives allocating, freeing, loading and storing on a named
   memory, and a faulting access is UB. An allocation records its kind and
-  its alignment in units, which the effect obligations compare, and which a
-  refining run may only raise.
+  its alignment in units, which refinement and the effect obligations
+  compare.
   `StateT (Memories Mem unit) m` keeps `m`'s choice and UB and gives the
   memory effect. A stuck path keeps the memories it reached, and a UB path
   shows none. Monad morphisms lift through the layer.

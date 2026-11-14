@@ -140,11 +140,11 @@ runs at every budget that the spec does not have.
 Runs with memory refine too, whatever their ops do to the memories. A poison
 unit of memory is refined by any unit, and a unit of bits or a pointer's
 fragment only by itself. A block is refined by a block of the same kind,
-liveness and size, whose alignment is a multiple of its own and whose units
-refine its own one by one while it is live. So a pass may raise an
-allocation's alignment, and an access that stage 4e of #231 finds aligned in
-a run is aligned in a run that refines it. Rejected: the same alignment in
-both, which would forbid raising one.
+alignment, liveness and size, whose units refine its own one by one while it
+is live. So an access that stage 4e of #231 checks against an allocation's
+alignment is aligned in both runs or in neither. A pass that raises an
+alignment is not covered yet, as with the other limits of this proof device
+below.
 No access reaches a freed block, so its units are not compared, and a store to
 a block that is then freed may be dropped. Refined memories have the same
 frames and allocations, each memory refined block by block
