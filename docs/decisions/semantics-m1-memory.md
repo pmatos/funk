@@ -140,8 +140,8 @@ capping the natural alignment at the pointer's.
   without `align(A)` takes is not bounded: in a memory with 1-bit units, an
   element wider than 2^23 bits has the natural alignment 2^24, as a layout
   line's pointers of such a width do. The human ruled this on 2026-11-14
-  (#385), as the orchestrator recorded, and validation does not change.
-  Rejected: rejecting an op whose natural alignment is above the bound,
+  (#385), as the orchestrator recorded: validation bounds only a written
+  `A`. Rejected: rejecting an op whose natural alignment is above the bound,
   since the op rule would need the data layout and the proofs over op
   validity would change.
 - The G0 check reads the words of `AllocaText.lean` and `TypeText.lean` as

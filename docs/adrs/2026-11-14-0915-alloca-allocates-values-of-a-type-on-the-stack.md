@@ -18,7 +18,8 @@ Tier: direction; area: semantics
   "allocates in memory `N`".
 - **What M1 accepts.** The kind `stack` alone (`global` and `heap` decode, as
   hooks: ADR-2026-11-09-1542), a count of at least 1, a power of two `A` no
-  larger than `MemLayout.limit` (2^24 - 1), and a valid integer type. The
+  larger than `MemLayout.limit` (2^24 - 1), which bounds a written `A` only
+  (#385), and a valid integer type. The
   count has no bound: one too large for the machine is a resource error at
   run time, as a deep recursion is.
 
