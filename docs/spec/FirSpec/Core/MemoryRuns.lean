@@ -159,10 +159,10 @@ its counterpart in $`M'`, calls and recursion included. It is the
 {ref "The-fir-specification--Memory--Replacing-a-callee___-with-memory"}[theorem on replacing a callee with memory],
 for the core dialect, which is lawful in its monotonicity and whose values'
 refinement is reflexive and transitive. A function of $`M` other than $`g`,
-a caller of it or not, is so refined by itself in $`M'`. The bound replaces the finitely
-many argument vectors of
-{ref "The-fir-specification--Memory--Congruence-in-a-core-callee-that-touches-no-memory"}[congruence in a core callee that touches no memory]:
-a call starts from its caller's memories, of which there are infinitely
-many, and a callee that touches memory may depend on them. This form is for
-such a callee, until #214.
+a caller of it or not, is so refined by itself in $`M'`. The bound
+replaces the finitely many argument vectors of runs in the set monad: a
+call starts from its caller's memories, of which there are infinitely many,
+and a callee that touches memory may depend on them.
+{ref "The-fir-specification--Memory--Congruence-in-a-core-callee"}[Congruence in a core callee]
+asks for no bound, since every core op has finitely many outcomes.
 :::

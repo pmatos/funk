@@ -14,13 +14,14 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments and memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14766331398559593469")
+:::moduleDocs (fingerprint := "8844432634381073104")
 :::
 
-:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "9327385600446474420")
+:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "6446781191699385464")
 *Theorem: every path of the target with memory that runs out of fuel or
 returns, allowed below a budget.* Let the target module $`M'` run each
-call with memory as the source $`M` does, and every op of $`M`'s functions,
+call with memory as the source $`M` does, with its calls bounded by
+$`\mathit{bound}`, and every op of $`M`'s functions,
 of $`f` and of $`o^*` that runs by its own rule be monotone with memory.
 Let $`E \sqsubseteq E'`, $`S \sqsubseteq S'`, and
 $`(\mathit{bound} + 1)(N + 1) \le n`. Then each path of
@@ -31,9 +32,10 @@ strong induction on $`n`, from every memories, as for runs in the set
 monad.
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "7021408922736855074")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "17947935108510817891")
 *Theorem: two modules with memory, compared call by call.* Let the target
-module $`M'` run each call with memory as the source $`M` does, and every
+module $`M'` run each call with memory as the source $`M` does, with its
+calls bounded by $`\mathit{bound}`, and every
 op of $`M`'s functions and of $`f` that runs by its own rule be monotone
 with memory. On arguments $`\vec{v} \sqsubseteq \vec{v}'` and from memories
 $`S \sqsubseteq S'`, the behaviour of $`f` in $`M'` from $`S'`, the
@@ -57,5 +59,5 @@ poison replaced by any value, and a poison unit by any unit. Then the
 behaviour of $`f` on $`\vec{v}'` from $`S'` refines its behaviour on
 $`\vec{v}` from $`S`, values and memories, calls and recursion included.
 It is the theorem above, with the module as its own target and no black
-box.
+box, so no budget.
 :::

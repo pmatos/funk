@@ -117,6 +117,9 @@ import Fir.Execution.MemoryRefineUp
 import Fir.Execution.MemoryRefineDown
 import Fir.Execution.MemoryRefineRuns
 import Fir.Execution.MemoryReplace
+import Fir.Execution.MemoryFinite
+import Fir.Execution.MemoryFiniteDown
+import Fir.Execution.MemoryFiniteReplace
 import Fir.Execution.MemoryModes
 import Fir.Core.Lawful
 import Fir.Core.MemRules

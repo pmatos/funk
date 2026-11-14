@@ -176,6 +176,39 @@ example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
   case hr => exact noBlocks_refines
   exact h.2 a
 
+/-! # Congruence in the callee, with memory, with no budget -/
+
+/-- Each alloc op has finitely many outcomes with memory, wherever a run
+names the dialect's memory: `alloc` allocates the next unit, and `ret`
+returns. -/
+theorem alloc_opsFinite {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
+    OpsFinite AllocDialect N (unitsOf lay)
+  | .alloc, _, _ => ⟨fun _ S => ⟨[(.nil, (S.alloc (ρ ()) .stack 1 1).2)], fun x hx => by
+      rcases (SetM.stateMap_apply _ _ S _).1 hx with ⟨_, _, ha, he⟩ | ⟨_, _, he⟩
+      · cases ha
+        cases he
+        exact List.mem_singleton_self _
+      · cases he⟩, fun h => nomatch h⟩
+  | .ret, _, _ => ⟨fun h => (nomatch h), fun _ S => ⟨[(.ret, S)], fun x hx => by
+      cases hx
+      exact List.mem_singleton_self _⟩⟩
+
+/-- So congruence in the callee, with memory, applies to a callee whose op
+allocates with no budget: every op of the alloc dialect has finitely many
+outcomes. -/
+example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
+    (a : HVector toType (f.params.map (·.2))) :
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
+      observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit =>
+          MemLayout.default) id
+        (allocModule.replaceBody allocMain.name noBlocks) a) := by
+  have h := Func.memRuns_replaceBody_isRefinedBy_of_opsFinite (fun _ : Unit => MemLayout.default)
+    id Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans (alloc_opsFinite _ _) allocModule_valid
+    (g := allocMain) (by simp [allocModule, Module.funcs]) noBlocks ?hr hf
+  case hr => exact noBlocks_refines
+  exact h.2 a
+
 /-- The core dialect is lawful in its monotonicity. -/
 example : LawfulDialectMonotone CoreDialect := inferInstance
 
@@ -184,5 +217,23 @@ example : LawfulDialectMonotone CoreDialect := inferInstance
 
 /-- info: 'Fir.Func.memRunsFrom_replaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRunsFrom_replaceBody_isRefinedBy
+
+/-- info: 'Fir.Func.memOps_finitelyManyRets' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memOps_finitelyManyRets
+
+/-- info: 'Fir.Func.memOps_notExhausted_of_finite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memOps_notExhausted_of_finite
+
+/-- info: 'Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite
+
+/-- info: 'Fir.Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite
+
+/-- info: 'Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite
+
+/-- info: 'Fir.Core.opsFinite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.opsFinite
 
 end FirTest.MemoryRefine

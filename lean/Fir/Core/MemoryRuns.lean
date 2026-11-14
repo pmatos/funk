@@ -53,10 +53,9 @@ types, poison included, wherever a run names the core's memories:
 On arguments that refine others, the runs with memory of every function of
 every core module refine its runs with memory on those others, calls and
 recursion included. Congruence in the callee holds with memory when the new
-callee's runs from given memories refine the old one's and are bounded:
-a call starts from its caller's memories, so finitely many argument vectors
-do not bound them, unless the callee touches no memory (the section on
-congruence in a core callee that touches no memory).
+callee's runs from given memories refine the old one's and are bounded. The
+core needs no bound: every core op has finitely many outcomes (the section
+on congruence in a core callee).
 -/
 
 namespace Fir

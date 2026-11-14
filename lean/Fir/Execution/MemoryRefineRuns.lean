@@ -26,7 +26,9 @@ memory. Each outcome of the target is allowed by one of the source:
   not, then for each budget of the source, the target runs out of fuel at a
   large enough budget, on a path that the source allows at its budget, by
   the section on divergence of the target with memory, so the source runs
-  out of fuel there.
+  out of fuel there. That section asks that the runs of each black box's
+  target be bounded by one budget; the section on divergence with ops of
+  finitely many outcomes asks for none.
 
 The run of a function runs its entry block's ops in a frame, as a call does,
 so each outcome of its run is one of the run of those ops, allowed as a
@@ -45,12 +47,14 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 fuel or returns, at a budget of at least `(bound + 1) * (N + 1)`, is allowed
 by the source's run at `N`, from environments and memories of which the
 target's refine the source's, when every call names the same function in
-both modules or a black box, and every terminator and every op with no
-callee is monotone with memory, among the ops of the source module's
-functions, of the function `f` that runs, and of the ops `os` it runs. -/
+both modules or a black box whose target's runs are bounded by `bound`, and
+every terminator and every op with no callee is monotone with memory, among
+the ops of the source module's functions, of the function `f` that runs,
+and of the ops `os` it runs. -/
 theorem Func.memOps_allowedBelow {M M' : Module d}
     (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit) {bound : Nat}
-    (hcalls : MemCallsRefined Mem unit M M' bound) (n : Nat) :
+    (hcalls : MemCallsRefined Mem unit M M') (hbnd : MemCallsBounded Mem unit M M' bound)
+    (n : Nat) :
     ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)) (S S' : Memories Mem unit)
       (N : Nat), f.MemOpsMonotone Mem unit → MemMonotoneOps Mem unit os → env.IsRefinedBy env' →
       S ⊑ S' → (bound + 1) * (N + 1) ≤ n →
@@ -124,8 +128,8 @@ theorem Func.memOps_allowedBelow {M M' : Module d}
             (ihn _ _ _ _ _ _ _ hf hops' (henv.zip_append _ hvs) hS₁ hb' _ he)
       | callExh hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr hS (p' := (_, _))
-          hen' hb (fun hgm hbm env env' h T T' hT e' he' =>
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hbnd hmono hg' hr hS
+          (p' := (_, _)) hen' hb (fun hgm hbm env env' h T T' hT e' he' =>
             ihn _ env env' _ T T' N₀ hgm hbm h hT hb' e' he') hx
           (fun _ h => nomatch h) (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩
@@ -135,8 +139,8 @@ theorem Func.memOps_allowedBelow {M M' : Module d}
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         rename_i vs' T' k'
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr hS (p' := (_, _))
-          hen' hb (fun hgm hbm env env' h T T' hT e' he' =>
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hbnd hmono hg' hr hS
+          (p' := (_, _)) hen' hb (fun hgm hbm env env' h T T' hT e' he' =>
             ihn _ env env' _ T T' N₀ hgm hbm h hT hb' e' he') hx
           (fun _ h => nomatch h) (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩ | ⟨⟨vs, T⟩, k, hx₁, ⟨hvs, hT₁⟩, hk⟩
@@ -162,10 +166,12 @@ its behaviour from those others in the source module, the memories they end
 with included, when every call names the same function in both modules or a
 black box with memory, and every terminator and every op with no callee of
 the function and of the source module's functions is monotone with
-memory. -/
+memory, and the runs of each black box's target are bounded by one
+budget. -/
 theorem Func.memRunsFrom_isRefinedBy_of_calls {M M' : Module d}
     (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit) {bound : Nat}
-    (hcalls : MemCallsRefined Mem unit M M' bound) (f : Func d) (hf : f.MemOpsMonotone Mem unit)
+    (hcalls : MemCallsRefined Mem unit M M') (hbnd : MemCallsBounded Mem unit M M' bound)
+    (f : Func d) (hf : f.MemOpsMonotone Mem unit)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories Mem unit} (hS : S ⊑ S') :
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M' (a', S')) := by
@@ -213,7 +219,7 @@ theorem Func.memRunsFrom_isRefinedBy_of_calls {M M' : Module d}
     match e', he', hx with
     | .ok (.ok .fuelExhausted), he', _ =>
       obtain ⟨genv, hen, henv⟩ := start hen'
-      have hm := Func.memCall_allowedBelow (fun e₀ he₀ => Func.memOps_allowedBelow hmono hcalls _
+      have hm := Func.memCall_allowedBelow (fun e₀ he₀ => Func.memOps_allowedBelow hmono hcalls hbnd _
         f _ _ _ _ _ N hf (hf.enter hen') henv hS.enter (Nat.le_refl _) e₀ he₀) he'
       rcases hm with h | ⟨N', r, h⟩
       · exact back (e := .ok (.ok .fuelExhausted)) (fun _ h => nomatch h) hen h
@@ -230,7 +236,8 @@ theorem Func.memRunsFrom_args_isRefinedBy (M : Module d)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories Mem unit} (hS : S ⊑ S') :
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M (a', S')) :=
-  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl) f hf ha hS
+  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl)
+    (fun _ _ _ h => absurd rfl h) f hf ha hS
 
 
 end Fir

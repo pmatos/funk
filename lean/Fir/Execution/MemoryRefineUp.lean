@@ -76,8 +76,8 @@ allowed by the source's callee in its frame: the same function, by the
 induction `ih`, or a black box. The induction is asked only of a function
 of the source module, whose ops are monotone with memory, from the ops of
 its entry block. -/
-theorem MemCallsRefined.callee_allowed {M M' : Module d} {bound : Nat}
-    (hc : MemCallsRefined Mem unit M M' bound) (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
+theorem MemCallsRefined.callee_allowed {M M' : Module d}
+    (hc : MemCallsRefined Mem unit M M') (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
     {s : Name} {g₀ : Func d} (hg' : M'.func? s = some g₀) {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {S S' : Memories Mem unit} (hS : S ⊑ S') {p' : List (Operation d) × Env d}
@@ -109,7 +109,7 @@ both modules or a black box, and every terminator and every op with no
 callee is monotone with memory, among the ops of the source module's
 functions, of the function `f` that runs, and of the ops `os` it runs. -/
 theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
-    {bound : Nat} (hcalls : MemCallsRefined Mem unit M M' bound) (n : Nat) :
+    (hcalls : MemCallsRefined Mem unit M M') (n : Nat) :
     ∀ (f : Func d) (env env' : Env d) (os : List (Operation d)) (S S' : Memories Mem unit),
       f.MemOpsMonotone Mem unit → MemMonotoneOps Mem unit os → env.IsRefinedBy env' → S ⊑ S' →
       ∀ e', (Func.memOps M' n f env' os S').run e' →

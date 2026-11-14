@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8014104185602640233")
+:::moduleDocs (fingerprint := "16877963756770902032")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "10617108302315699159")
@@ -54,14 +54,15 @@ of $`x` runs. So a call of any other symbol runs the same function in the
 new module as in the old.
 :::
 
-:::readable Fir.Module.func?_of_mem Fir.Module.func?_replaceBody_self (pin := Fir.Module.func?) (fingerprint := "1629858931288215727")
+:::readable Fir.Module.func?_of_mem Fir.Module.func?_replaceBody_self Fir.Module.func?_replaceBody_of_ne (pin := Fir.Module.func?) (fingerprint := "16512296075026080550")
 *Theorems: in a module whose symbols are unique, a call of a function's
 symbol runs it.* If no two functions of $`M` have the same symbol, then
 for every function $`g` of $`M` with the symbol $`s`,
 $`\mathrm{lookup}_M(s) = g`. A
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module]
 has unique symbols, so its calls of $`s` are calls of $`g`. In the module
-with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`.
+with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
+every other symbol finds what it finds in $`M`.
 :::
 
 :::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "5476321169022967364")

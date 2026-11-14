@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2503602670318752849")
+:::moduleDocs (fingerprint := "3732043504536608591")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "16450805183566433580")
@@ -49,28 +49,30 @@ at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined (pin := Fir.Func.memRunsFrom) (fingerprint := "467027468921220010")
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "16686497948601024089")
 *Definitions: bounded runs, black boxes with memory, and modules whose
 calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
 input, they diverge, or none of them with $`B` steps or more runs out of
 fuel. A _black box with memory_ is a function $`g` of the source module $`M` and a
 function $`g'` of the target module $`M'` with the same parameter types,
-such that:
-
-* on arguments $`\vec{v} \sqsubseteq \vec{v}'` and from memories
-  $`S \sqsubseteq S'`, the observable behaviour of $`g'` in $`M'` from
-  $`S'` refines that of $`g` in $`M` from $`S`, the memories they end with
-  included
-  ({ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs from given memories]);
-* the runs of $`g'` from given memories are bounded by $`\mathit{bound}`.
+such that, on arguments $`\vec{v} \sqsubseteq \vec{v}'` and from memories
+$`S \sqsubseteq S'`, the observable behaviour of $`g'` in $`M'` from
+$`S'` refines that of $`g` in $`M` from $`S`, the memories they end with
+included
+({ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs from given memories]).
 
 The target module _runs each call with memory as the source does_ when each
 symbol names the same function in both, or a black box with memory. A
 callee runs from the memories its caller reached, so a black box speaks of
-runs from every memories, not only from the empty ones.
+runs from every memories, not only from the empty ones. Its _calls are
+bounded_ by $`\mathit{bound}` when the runs from given memories of each
+function that $`M'` names where $`M` names another are bounded by
+$`\mathit{bound}`; the theorems on running out of fuel with memory,
+followed back, ask for it, and those for ops of finitely many outcomes do
+not.
 :::
 
-:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "4690611568274080391")
+:::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "2890945913562123854")
 *Theorems: a black-box call, allowed.* A call that enters a black box's
 target passes arguments of the parameter types of its source. So a path of
 the target in its frame that is not stuck is a path of its run from given

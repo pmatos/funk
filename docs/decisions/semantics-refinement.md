@@ -109,9 +109,11 @@ keeps its symbol, its parameters and its result types, so the runs of the old
 and the new function have one type and need no cast. Congruence assumes that the
 new `@g`, run in the new module, refines the old `@g`, run in the old. It
 concludes the same relation for every function of the module
-(`Core.caller_isRefinedBy`, `Core.replaceBody_isRefinedBy`, over runs with
-memory, which ask that the module be valid, that `@g` have no pointer
-parameter, and that it reach no memory; see refinement with memory below). It needs nothing of
+(`Core.replaceBody_isRefinedBy_of_from`, over runs from given memories,
+which asks only that the module be valid; and `Core.caller_isRefinedBy`,
+`Core.replaceBody_isRefinedBy`, whose hypothesis is refinement with memory,
+which also ask that `@g` have no pointer parameter and reach no memory; see
+refinement with memory below). It needs nothing of
 the new body, because a call of `@g` is a black box whose behaviour the
 hypothesis gives. When the new body calls back into the module, proving the
 hypothesis may need its own induction. A body that gets stuck at once meets the
@@ -127,13 +129,39 @@ finitely many argument vectors. Then one budget bounds every run of the new
 own budget, and without a bound on how many there are, a caller whose
 arguments grow without limit could make the new `@g` run ever longer.
 `Core.argVectors` lists the core's vectors. A dialect with a type of infinitely
-many values cannot use the general theorem as it is. With memory, finitely many
-argument vectors bound only a callee that touches no memory (below). Refined arguments need no
-finiteness, since they replace no callee. `ptr` has values now, infinitely
-many, so the core's congruence is restated for a callee with no pointer
-parameter, and #214 proves it for the rest (ADR-2026-11-09-1542). Rejected:
-König's lemma over the tree of choices, which needs an infinite path through
-runs at every budget that the spec does not have.
+many values cannot use that theorem as it is, and with memory neither can any
+dialect: a call starts from its caller's memories, which are infinitely many,
+so finitely many argument vectors bound only a callee that touches no memory
+(below). `ptr` has values now, infinitely many (ADR-2026-11-09-1542).
+
+For runs with memory, König's lemma over the tree of choices removes the
+condition (#214). Reading divergence as running out of fuel at every budget
+already assumes that every choice has finitely many options
+(`lean/Fir/Execution/Behaviour.lean`). With memory that is a hypothesis of
+the theorems, `OpsFinite`: every op that runs by its own rule has finitely
+many outcomes, its results or where control goes, with the memories it ends
+with. Then a run at one budget returns finitely many things, and a source
+that never hits UB and does not run out of fuel at a budget _N_ bounds its
+target: by induction on _N_, each op and each call's returns go on in
+finitely many ways, each with its own budget, and the largest serves. A
+black box's target cannot diverge on an input where its source does not, so
+it has a budget for that input. So congruence with memory asks for no
+budget for the new callee, whatever its parameter types and whatever it does
+to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`,
+`lean/Fir/Execution/MemoryFiniteDown.lean`). The argument is by budgets and
+needs no infinite path. Every core op has finitely many outcomes
+(`Core.opsFinite`): it is the set of its rule in the tree of choices, whose
+choices of _w_ bits have 2 to the power _w_ options. So
+`Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
+pointers and memory included. An op that touches memory, such as an
+allocation, proves the hypothesis by its own rule; nothing asks that every
+core function reach no memory. The hypothesis is passed to the theorems, as
+`OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
+obligations change. Refined arguments need no finiteness, since they
+replace no callee, and keep the engine with a bound of zero. Rejected: an
+infinite path through the runs at every budget, which the spec does not
+have; and a fuel bound asked of each new callee, which made each pass that
+replaces a callee prove one.
 
 ## Refinement with memory
 
@@ -170,10 +198,12 @@ arguments and memories need nothing more
 (`Func.memRunsFrom_args_isRefinedBy`), and congruence is
 `Func.memRunsFrom_replaceBody_isRefinedBy`. The runs with memory refine when
 these runs from the empty memories do. Congruence assumes that the new callee
-refines the old from every memories, and one fuel bound for it in place of
-finitely many argument vectors. For a dialect that lifts the set monad, the
-finiteness form holds through its runs in the set monad
-(`Func.memRuns_replaceBody_isRefinedBy_of_lawful`).
+refines the old from every memories, and either one fuel bound for it in
+place of finitely many argument vectors
+(`Func.memRunsFrom_replaceBody_isRefinedBy`), or that the dialect's ops have
+finitely many outcomes, with no bound (congruence in the callee, above). For
+a dialect that lifts the set monad, the finiteness form holds through its
+runs in the set monad (`Func.memRuns_replaceBody_isRefinedBy_of_lawful`).
 
 A callee whose effects include no memory read, write or allocation needs no
 bound: its runs do not depend on the memories, so finitely many argument vectors
@@ -200,11 +230,13 @@ and `Core.caller_isRefinedBy` with memory, and
 `lean/Fir/Core/MemoryCallRefine.lean`. No core op declares a memory effect, so
 every core function reaches no memory (`Core.reachesNoMemory`), and these forms
 hold of every core callee with no pointer parameter, as the forms over the runs
-in the set monad did. A callee that touches memory uses the form
-with the bound, `Core.memReplaceBody_isRefinedBy`, until #214 removes the bound
-for good. The forms over the runs in the set monad and `Core.liftsSetM` went, so
-a memory op can join the core. The human ruled this on 2026-11-13 (#373, option
-C). Rejected: (A) the bound form for every callee until #214, which would have
+in the set monad did. A callee that touches memory used the form with the
+bound, `Core.memReplaceBody_isRefinedBy`, until #214. Since #214,
+`Core.replaceBody_isRefinedBy_of_from` asks for no bound, no pointer-free
+parameters and no callee that reaches no memory (congruence in the callee,
+above), so the bound form is no longer needed. The forms over the runs in the
+set monad and `Core.liftsSetM` went, so a memory op can join the core. The
+human ruled this on 2026-11-13 (#373, option C). Rejected: (A) the bound form for every callee until #214, which would have
 made each optimizer pass prove a bound for the callee it replaces, a weaker
 theorem than the one that held for callees with no pointer parameter; (B) #214
 before stage 4d, which would have held every memory op back for it.

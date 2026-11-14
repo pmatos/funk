@@ -59,14 +59,13 @@ theorem noBlocks_isRefinedBy :
   | fuelExhausted => exact (noBlocks_outcomes a S 0 .fuelExhausted (ht 0)).elim
 
 /-- `@count` is refined with memory by itself in the module where `@g` has
-no blocks, with no budget: `@g` with no blocks touches no memory. -/
+no blocks, with no budget: every core op has finitely many outcomes. -/
 theorem count_fromIsRefinedBy :
     countFn.memRuns ubModule.layout.entry id ubModule ⊑
       (countFn.replaceBody gFn.name noBlocks).memRuns ubModule.layout.entry id
         (ubModule.replaceBody gFn.name noBlocks) :=
   Core.replaceBody_isRefinedBy_of_from _ _ ubModule_valid (by simp [ubModule, Module.funcs])
-    (by simp [gFn, Core.Ty.Finite]) noBlocks (reachesNoMemory _ _)
-    noBlocks_isRefinedBy (by simp [ubModule, Module.funcs])
+    noBlocks noBlocks_isRefinedBy (by simp [ubModule, Module.funcs])
 
 /-- `@count` is refined with memory by itself in the module where `@g` has
 no blocks, with a budget. -/

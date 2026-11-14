@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel with memory, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14794145533555317522")
+:::moduleDocs (fingerprint := "11896695191043525896")
 :::
 
 :::readable Fir.MemAllowedBelow Fir.MemAllowedBelow.of_someUB Fir.MemAllowedBelow.of_exhausted Fir.MemAllowedBelow.of_not Fir.MemAllowedBelow.of_step (pin := Fir.SomeUB) (fingerprint := "13951263104922388177")
@@ -38,9 +38,10 @@ frame from $`S'` by the source's in its frame from $`S`: leaving a frame
 keeps refinement of memories.
 :::
 
-:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "13840576552966891016")
+:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (fingerprint := "1475509839184587029")
 *Theorems: a callee's path that runs out of fuel or returns, allowed below a
-budget.* A path of a black box's target in its frame that runs out of fuel
+budget.* A path of a black box's target in its frame, whose runs are
+bounded by $`\mathit{bound}`, that runs out of fuel
 or returns, called on arguments and from memories that refine the
 source's, at a budget of at least
 $`\mathit{bound} + (\mathit{bound} + 1)(N_0 + 1)`, is allowed below the

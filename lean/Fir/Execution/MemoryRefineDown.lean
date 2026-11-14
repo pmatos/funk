@@ -6,7 +6,8 @@ import Fir.Execution.MemoryRefineUp
 A target that diverges runs out of fuel at every budget, and the source
 must then diverge too, or hit UB at some budget. The proof is the proof for
 runs in the set monad (the section on divergence of the target, allowed),
-read from given memories. Let _B_ be the black box's bound plus one, and
+read from given memories, when the runs of each black box's target are
+bounded by one budget for every input. Let _B_ be that bound plus one, and
 let the target's budget be at least _B_ times one more than the source's.
 Then a path of the target's run of ops that runs out of fuel or returns is
 allowed by the source at its budget: the source runs out of fuel there, or
@@ -135,7 +136,8 @@ returns, called on arguments and from memories that refine the source's,
 at a budget `n` of at least `bound + (bound + 1) * (N₀ + 1)`, is allowed by
 the source's callee in its frame at `N₀`, which starts. -/
 theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
-    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' bound g g') {ts : List d.Ty}
+    (bb : MemBlackBox (Mem := Mem) (unit := unit) M M' g g')
+    (hbdd : (g'.memRunsFrom (Mem := Mem) (unit := unit) M').BoundedBy bound) {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {S S' : Memories Mem unit} (hS : S ⊑ S') {n N₀ : Nat}
     (hn : bound + (bound + 1) * (N₀ + 1) ≤ n) {p' : List (Operation d) × Env d}
@@ -163,7 +165,7 @@ theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ok (.ok .fuelExhausted)) (fun _ h => nomatch h) h
     match e, he, hx with
     | .ok (.ok .fuelExhausted), he, _ => exact ⟨p, hp, MemAllowedBelow.of_exhausted he _⟩
-  rcases bb.bounded ((args'.cast hsig).cast bb.params.symm, S') with hdiv | hbdd
+  rcases hbdd ((args'.cast hsig).cast bb.params.symm, S') with hdiv | hbdd
   · obtain ⟨s₀, hs₀, hle⟩ := href .fuelExhausted hdiv
     match s₀, hs₀, hle with
     | .ub r, ⟨N, hN⟩, _ => exact ofUB hN
@@ -205,9 +207,11 @@ theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
 
 /-- A path of a call's callee in the target, in its frame, that runs out of
 fuel or returns is allowed at `N₀` by the source's callee in its frame: the
-same function, by the induction `ih`, or a black box. -/
+same function, by the induction `ih`, or a black box whose target's runs
+are bounded by `bound`. -/
 theorem MemCallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
-    (hc : MemCallsRefined Mem unit M M' bound) (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
+    (hc : MemCallsRefined Mem unit M M') (hbnd : MemCallsBounded Mem unit M M' bound)
+    (hmono : ∀ g ∈ M.funcs, g.MemOpsMonotone Mem unit)
     {s : Name} {g₀ : Func d} (hg' : M'.func? s = some g₀) {ts : List d.Ty}
     {args args' : HVector toType ts} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
     {S S' : Memories Mem unit} (hS : S ⊑ S') {p' : List (Operation d) × Env d}
@@ -222,15 +226,18 @@ theorem MemCallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
     (hne : Ev.NotStuck e') (hub : ∀ r, e' ≠ .ub r) :
     ∃ g p, M.func? s = some g ∧ g.enter args.toDVals = .ok p ∧
       MemAllowedBelow (bound + 1) (fun N => Func.memCall M N g p.2 p.1 S) N₀ e' := by
-  rcases hc s with hsame | ⟨g, g', hg, hg'', bb⟩
+  by_cases hsame : M'.func? s = M.func? s
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
     have hg : M.func? s = some g₀ := hsame ▸ hg'
     have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
     exact ⟨g₀, (p'.1, genv), hg, hen, Func.memCall_allowedBelow
       (fun e₀ he₀ => ih hf (hf.enter hen') genv p'.2 hgenv _ _ hS.enter e₀ he₀) he'⟩
-  · rw [hg''] at hg'
-    cases hg'
-    obtain ⟨p, hen, hm⟩ := bb.allowedBelow hr hS hn hen' he' hne hub
-    exact ⟨g, p, hg, hen, hm⟩
+  rcases hc s with h | ⟨g, g', hg, hg'', bb⟩
+  · exact absurd h hsame
+  have hbdd := hbnd s g₀ hg' hsame
+  rw [hg''] at hg'
+  cases hg'
+  obtain ⟨p, hen, hm⟩ := bb.allowedBelow hbdd hr hS hn hen' he' hne hub
+  exact ⟨g, p, hg, hen, hm⟩
 
 end Fir
