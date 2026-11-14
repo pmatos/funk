@@ -77,13 +77,13 @@ The core rules of an op beyond its signature.
   `heap` are hooks in the format, which a later milestone may accept
   (ADR-2026-11-09-1542). It allocates at least one value, aligned to a
   power of two of units (the human's ruling of 2026-11-11 on #231) no
-  larger than `MemLayout.limit`, the bound of the data layout's own
-  alignments (the human's ruling of 2026-11-14 on #382), and its type is a
-  valid integer type. Its count has no bound: an allocation larger than a
-  machine holds is a resource error at run time, as a deep recursion is,
-  and not a rule of validation. Its result names its memory, so the
-  module's data layout checks that the module has that memory
-  (ADR-2026-11-14-0915).
+  larger than `MemLayout.limit`, the data layout's rule for its own
+  alignments (`MemLayout.ValidAlign`; the human's ruling of 2026-11-14 on
+  #382), and its type is a valid integer type. Its count has no bound: an
+  allocation larger than a machine holds is a resource error at run time,
+  as a deep recursion is, and not a rule of validation. Its result names
+  its memory, so the module's data layout checks that the module has that
+  memory (ADR-2026-11-14-0915).
 
 Every other op has no rule beyond its signature.
 -/
@@ -95,7 +95,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fpext e m e' m' => e ≤ e' ∧ m ≤ m' ∧ ¬(e = e' ∧ m = m')
   | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
-  | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, isPowerOfTwo x ∧ x ≤ MemLayout.limit) ∧
+  | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
       t.IsInt ∧ t.Valid
   | _ => True
 

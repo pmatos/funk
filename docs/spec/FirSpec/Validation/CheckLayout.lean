@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Checking the data layout: readable blocks" =>
 
-:::moduleDocs (fingerprint := "968208954335950470")
+:::moduleDocs (fingerprint := "15922431545967124505")
 :::
 
 :::readable Fir.need Fir.need_eq_nil (fingerprint := "7722159485140472772")
@@ -23,7 +23,7 @@ is no problem when the condition $`c` holds, and the problem $`P`
 otherwise. It gives no problem exactly when $`c` holds.
 :::
 
-:::readable Fir.MemLayout.problems Fir.MemLayout.problems_eq_nil (fingerprint := "9524884543563344005")
+:::readable Fir.MemLayout.problems Fir.MemLayout.problems_eq_nil (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7448233536726733923")
 *Definition: the check of an entry.* The check of the entry $`e` of memory
 $`n` gives, in this order, a problem for each rule of a valid entry that
 $`e` breaks: a number above the limit; a unit or pointers of no bits or of

@@ -15,8 +15,8 @@ parameters and results of an item of a dialect's kind, at any depth. A
 nested module has no layout of its own, so its types name the memories of
 the module that holds it.
 
-This section gives the rule of an entry, of a layout, and of the memories
-that a module's types name.
+This section gives the rule of an alignment, which an `alloca` shares, of
+an entry, of a layout, and of the memories that a module's types name.
 -/
 
 namespace Fir
@@ -27,6 +27,11 @@ def isPowerOfTwo (a : Nat) : Bool := a != 0 && a &&& (a - 1) == 0
 
 example : [1, 2, 4, 1024].all isPowerOfTwo ∧ ![0, 3, 6, 12].any isPowerOfTwo := by decide
 
+/-- An alignment that validation accepts, the one rule of an entry's
+alignment and of an `alloca`'s: a power of two no larger than
+`MemLayout.limit`. -/
+abbrev MemLayout.ValidAlign (a : Nat) : Prop := isPowerOfTwo a ∧ a ≤ MemLayout.limit
+
 /-- An entry of the data layout is valid: its memory is in range, its unit
 and its pointers have at least one bit and are no wider than the limit, its
 byte order is `little`, and the alignment it gives, if any, is a power of
@@ -36,7 +41,7 @@ structure MemLayout.Valid (e : MemLayout) : Prop where
   unit : 1 ≤ e.unit ∧ e.unit ≤ MemLayout.limit
   pointer : 1 ≤ e.pointer ∧ e.pointer ≤ MemLayout.limit
   little : e.order = .little
-  align : ∀ a ∈ e.align, isPowerOfTwo a ∧ a ≤ MemLayout.limit
+  align : ∀ a ∈ e.align, MemLayout.ValidAlign a
 
 /-- A data layout is valid when each entry is, and it declares each memory
 once. -/

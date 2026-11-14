@@ -122,7 +122,8 @@ capping the natural alignment at the pointer's.
   the allocation at offset 0, and its units are poison. The frame of the
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
-  of two for `A` no larger than `MemLayout.limit` and a valid integer type.
+  of two for `A` no larger than `MemLayout.limit` (`MemLayout.ValidAlign`,
+  the layout's own rule) and a valid integer type.
   `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
 - The element is an integer type until float and pointer loads and stores
   land, as the human ruled on 2026-11-14 (#382). Rejected: float and pointer
@@ -135,6 +136,11 @@ capping the natural alignment at the pointer's.
   allocation within a machine, since one `i16777215` takes 2 MiB. `fir-ref`
   has no resource error of its own: it holds each allocation's units, so a
   huge one exhausts its memory. `funk build` does not lower `alloca` yet.
+  The bound covers a written `A` only. The natural alignment that an op
+  without `align(A)` takes is not bounded: in a memory with 1-bit units, an
+  element wider than 2^23 bits has the natural alignment 2^24, as a layout
+  line's pointers of such a width do. Whether validation should bound it too
+  waits on the human (#385).
 - The G0 check reads the words of `AllocaText.lean` and `TypeText.lean` as
   core words, but leaves out `align` by name (`SHARED_WORDS` in
   `scripts/check_g0.py`), since the data layout's generic grammar writes it

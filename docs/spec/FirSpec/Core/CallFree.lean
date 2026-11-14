@@ -65,7 +65,7 @@ every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
 :::
 
-:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "17921988075136925617")
+:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "8033941667740474568")
 *Theorem: every valid core function without calls runs within itself.*
 Let $`f` be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a
