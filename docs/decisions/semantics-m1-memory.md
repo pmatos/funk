@@ -142,8 +142,10 @@ capping the natural alignment at the pointer's.
   The bound covers a written `A` only. The natural alignment that an op
   without `align(A)` takes is not bounded: in a memory with 1-bit units, an
   element wider than 2^23 bits has the natural alignment 2^24, as a layout
-  line's pointers of such a width do. Whether validation should bound it too
-  waits on the human (#385).
+  line's pointers of such a width do. The human ruled this on 2026-11-14
+  (#385), as the orchestrator recorded. Rejected: rejecting an op whose
+  natural alignment is above the bound, since the op rule would need the
+  data layout and the proofs over op validity would change.
 - The G0 check reads the words of `AllocaText.lean` and `TypeText.lean` as
   core words, but leaves out `align` by name (`SHARED_WORDS` in
   `scripts/check_g0.py`), since the data layout's generic grammar writes it
