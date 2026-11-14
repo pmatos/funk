@@ -80,6 +80,10 @@ def twice : Option (Pointer × Pointer × Mems) := do
 #guard ((alloca .stack (.int 32) 0 none 0 Memories.empty.enter).map fun (_, S) =>
     shapes S 0) == some [(.stack, 4, 0, true)]
 
+-- The largest alignment that validation accepts, `2^23`, is recorded as it is.
+#guard ((alloca .stack (.int 8) 1 (some (2 ^ 23)) 0 Memories.empty.enter).map fun (_, S) =>
+    shapes S 0) == some [(.stack, 8388608, 1, true)]
+
 -- A pointer element takes the units of its memory's pointers: 8 in memory 0.
 #guard ((alloca .stack (.ptr 0) 2 none 0 Memories.empty.enter).map fun (_, S) =>
     shapes S 0) == some [(.stack, 8, 16, true)]

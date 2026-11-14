@@ -85,9 +85,9 @@ semantics-m1-memory.md). `scripts/test_check_g0.py` and `g0.rs` plant
 `"poison"` alone in generic code, which fails, and a message that holds it,
 which passes. Generic code that one day needs the bare spelling takes it from
 the dialect through a class, or ADR-2026-11-03-0600 moves the line
-(ADR-2026-11-03-0600). Rejected: a list of exempt generic terms, which would
-let per-op code for the op `poison` into generic code unseen; renaming the op,
-which the human named `poison` on 2026-11-03 (#122).
+(ADR-2026-11-03-0600). Rejected: a list of exempt op names, such as
+`poison`, which would let per-op code for that op into generic code unseen;
+renaming the op, which the human named `poison` on 2026-11-03 (#122).
 
 ## Program structure
 

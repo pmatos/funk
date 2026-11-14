@@ -19,7 +19,7 @@ Tier: direction; area: semantics
   is freed when its call returns.
 - **What M1 accepts.** Validation accepts the kind `stack` alone, a count of
   at least 1, a power of two for `A` no larger than `MemLayout.limit`
-  (2^24 - 1, so 2^23 at most), and a valid integer type. `global` and `heap`
+  (2^24 - 1), and a valid integer type. `global` and `heap`
   decode and are rejected, as hooks in the format (ADR-2026-11-09-1542).
   The count has no bound: one too large for the machine is a resource
   error at run time, as a deep recursion is.
@@ -32,10 +32,10 @@ The human ruled on 2026-11-14 (#378) that the op takes a type and a constant
 count, that the kind is written and M1 accepts only `stack`, and that the
 natural alignment of `iN` follows the pointer rule. On 2026-11-14 (#382) the
 human confirmed the spaces, which keep one attribute grammar for every
-dialect (`add nuw nsw %a, %b`); kept integer types until float and pointer
-loads and stores land; bounded the alignment as the layout line bounds its
-own and left the count unbounded; and kept the G0 check's exemption of
-`align`, which the generic layout line writes too.
+dialect; kept integer types until float and pointer loads and stores land;
+bounded `A` as the layout line bounds its own alignments and left the count
+unbounded; and kept the G0 check's exemption of `align`
+(semantics-m1-memory.md).
 
 ## Rejected alternatives
 
@@ -45,4 +45,3 @@ own and left the count unbounded; and kept the G0 check's exemption of
 - **A run-time count.** It needs may-UB for a poison count; #381 tracks it.
 - **A bound on the count.** It would not keep an allocation within a
   machine: one `i16777215` takes 2 MiB.
-- **G0 reading only the core and type text,** which checks no `alloca` word.

@@ -174,8 +174,9 @@ def withG (f : String) : String :=
 
 /-! # The alignment of `alloca`
 
-An alignment is a power of two no larger than `MemLayout.limit`, as in the
-data layout, so `2^23` is the largest; the count has no bound. -/
+An alignment that the op gives is a power of two no larger than
+`MemLayout.limit`, as in the data layout, so `2^23` is the largest; the count
+has no bound. -/
 
 /-- A function that allocates with the attributes `attrs` and returns the
 pointer. -/

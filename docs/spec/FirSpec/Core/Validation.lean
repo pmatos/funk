@@ -119,7 +119,7 @@ the op, and $`\mathrm{symtab}_C` the module's
   {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[power of two]
   of units no larger than $`2^{24} - 1`, the bound of the data layout's
   own alignments, as the human ruled on 2026-11-14 (#382), so
-  $`2^{23}` is the largest. Its type is a valid integer type
+  $`2^{23}` is the largest alignment it gives. Its type is a valid integer type
   $`\mathsf{i}W`. Its count has no bound: an allocation larger than a
   machine holds is a resource error at run time, as a deep recursion is.
   Its result's type $`\mathsf{ptr}\langle N \rangle` names its memory,

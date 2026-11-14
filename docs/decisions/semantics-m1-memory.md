@@ -122,13 +122,13 @@ capping the natural alignment at the pointer's.
   the allocation at offset 0, and its units are poison. The frame of the
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
-  of two for `A` and a valid integer type. `global` and `heap` decode, as
-  hooks in the format (ADR-2026-11-09-1542).
+  of two for `A` no larger than `MemLayout.limit` and a valid integer type.
+  `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
 - The element is an integer type until float and pointer loads and stores
   land, as the human ruled on 2026-11-14 (#382). Rejected: float and pointer
   elements now, with no access to read or write them.
 - `A` is at most `MemLayout.limit`, 2^24 - 1, the bound of the data layout's
-  own alignments, so 2^23 is the largest; the count has no bound. An
+  own alignments, so the largest `A` is 2^23; the count has no bound. An
   allocation larger than a machine holds is a resource error at run time, as
   a deep recursion is, and not a rule of the spec. The human ruled both on
   2026-11-14 (#382). Rejected: a bound on the count, which would not keep an
