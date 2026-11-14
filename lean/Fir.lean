@@ -125,6 +125,8 @@ import Fir.Execution.MemoryModes
 import Fir.Core.Lawful
 import Fir.Core.MemRules
 import Fir.Execution.MemoryAllocLaws
+import Fir.Execution.MemoryLoadLaws
+import Fir.Execution.MemoryStoreLaws
 import Fir.Core.AllocaLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
@@ -141,6 +143,7 @@ import Fir.Execution.MemoryFreeRuns
 import Fir.Execution.MemoryFreeReplace
 import Fir.Memory.Model
 import Fir.Memory.Laws
+import Fir.Memory.AlignLaws
 import Fir.Memory.Frames
 import Fir.Memory.FrameLaws
 import Fir.Memory.Refine

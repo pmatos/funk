@@ -74,11 +74,11 @@ def lookup (x : Mem) : List (Σ y : Mem, Memory (unit y)) → Memory (unit x)
 def mem (S : Memories Mem unit) (x : Mem) : Memory (unit x) :=
   lookup x S.table
 
-/-- Loads `n` units of the memory `x` through `p`, or gives the fault that
-makes the load UB. -/
-def load (S : Memories Mem unit) (x : Mem) (p : Pointer) (n : Nat) :
+/-- Loads `n` units of the memory `x` through `p`, an access aligned to
+`al` units, or gives the fault that makes the load UB. -/
+def load (S : Memories Mem unit) (x : Mem) (p : Pointer) (n al : Nat) :
     Except Fault (List (MemUnit (unit x))) :=
-  (S.mem x).load p n
+  (S.mem x).loadAligned p n al
 
 /-- The memories with the memory `x` replaced by `m`. -/
 def set (S : Memories Mem unit) (x : Mem) (m : Memory (unit x)) : Memories Mem unit :=
@@ -107,11 +107,11 @@ def alloc (S : Memories Mem unit) (x : Mem) (k : AllocKind) (n al : Nat) :
 def free (S : Memories Mem unit) (x : Mem) (a : AllocId) : Memories Mem unit :=
   S.set x ((S.mem x).free a)
 
-/-- Stores the units `us` to the memory `x` through `p`, or gives the fault
-that makes the store UB. -/
-def store (S : Memories Mem unit) (x : Mem) (p : Pointer) (us : List (MemUnit (unit x))) :
-    Except Fault (Memories Mem unit) :=
-  ((S.mem x).store p us).map (S.set x)
+/-- Stores the units `us` to the memory `x` through `p`, an access aligned
+to `al` units, or gives the fault that makes the store UB. -/
+def store (S : Memories Mem unit) (x : Mem) (p : Pointer) (us : List (MemUnit (unit x)))
+    (al : Nat) : Except Fault (Memories Mem unit) :=
+  ((S.mem x).storeAligned p us al).map (S.set x)
 
 /-- Frees each allocation of the list, in order. -/
 def freeAll (S : Memories Mem unit) : List (Mem × AllocId) → Memories Mem unit

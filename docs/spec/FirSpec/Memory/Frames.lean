@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memories of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15509265350138046377")
+:::moduleDocs (fingerprint := "13742175630846764646")
 :::
 
 :::readable Fir.Memory.Memories (fingerprint := "11688577113277533231")
@@ -62,11 +62,13 @@ The memory $`x` of the memories $`(T, \mathit{fr}^*)` of a run,
 $`\mathit{mem}(x)`, is $`\mathrm{lookup}_x(T)`.
 :::
 
-:::readable Fir.Memory.Memories.load (fingerprint := "3342685884046637813")
+:::readable Fir.Memory.Memories.load (fingerprint := "10112896710225288711")
 *Definition: a load from one memory.* Loading $`n` units of the memory
-$`x` through the pointer $`p` is the memory model's load of $`n` units
-through $`p` in $`\mathit{mem}(x)`: the units, or the fault that makes the
-load UB.
+$`x` through the pointer $`p`, aligned to $`\alpha` units, is the memory
+model's
+{ref "The-fir-specification--Memory--The-memory-model"}[aligned load] of
+$`n` units through $`p` in $`\mathit{mem}(x)`: the units, or the fault
+that makes the load UB.
 :::
 
 :::readable Fir.Memory.Memories.set (fingerprint := "16196087832232445707")
@@ -99,11 +101,11 @@ another kind is in no frame.
 memory $`x` is the memory model's free of $`a` in $`\mathit{mem}(x)`.
 :::
 
-:::readable Fir.Memory.Memories.store (fingerprint := "6751036384068824913")
+:::readable Fir.Memory.Memories.store (fingerprint := "11826908114044317332")
 *Definition: a store to one memory.* Storing the units $`\vec{y}` to the
-memory $`x` through $`p` is the memory model's store in
-$`\mathit{mem}(x)`: the memories with that memory stored to, or the fault
-that makes the store UB.
+memory $`x` through $`p`, aligned to $`\alpha` units, is the memory
+model's aligned store in $`\mathit{mem}(x)`: the memories with that
+memory stored to, or the fault that makes the store UB.
 :::
 
 :::readable Fir.Memory.Memories.freeAll (fingerprint := "14734991384166219062")

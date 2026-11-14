@@ -190,8 +190,9 @@ Runs with memory refine too, whatever their ops do to the memories. A poison
 unit of memory is refined by any unit, and a unit of bits or a pointer's
 fragment only by itself. A block is refined by a block of the same kind,
 alignment, liveness and size, whose units refine its own one by one while it
-is live. So an access that stage 4e of #231 checks against an allocation's
-alignment is aligned in both runs or in neither. A pass that raises an
+is live. So an access checked against an allocation's alignment is aligned in
+both runs or in neither (`Memory.IsRefinedBy.aligned`), and an aligned load or
+store faults for the same reason in both. A pass that raises an
 alignment is not covered yet, as with the other limits of this proof device
 below.
 No access reaches a freed block, so its units are not compared, and a store to

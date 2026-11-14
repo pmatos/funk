@@ -35,6 +35,8 @@ byte order.
 
 {includeReadable "." Fir.Memory.Laws "Memory laws" FirSpec.Memory.Laws (level := 1)}
 
+{includeReadable "." Fir.Memory.AlignLaws "Aligned access laws" FirSpec.Memory.AlignLaws (level := 1)}
+
 {includeReadable "." Fir.Memory.Frames "The memories of a run" FirSpec.Memory.Frames (level := 1)}
 
 {includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 1)}
@@ -102,6 +104,10 @@ byte order.
 {includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryAllocLaws "Allocation in the state layer" FirSpec.Execution.MemoryAllocLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryLoadLaws "Loads in the state layer" FirSpec.Execution.MemoryLoadLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryStoreLaws "Stores in the state layer" FirSpec.Execution.MemoryStoreLaws (level := 1)}
 
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
 

@@ -1,5 +1,5 @@
 import Fir.Memory.Frames
-import Fir.Memory.Laws
+import Fir.Memory.AlignLaws
 
 /-!
 # Frame laws
@@ -207,10 +207,11 @@ theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n al : Nat) :
 /-- Every access to a call's stack allocation after the call returns is
 UB. -/
 theorem enter_alloc_exit_load (S : Memories Mem unit) (x : Mem) (n al : Nat) (off : Int)
-    (k : Nat) :
-    ((S.enter.alloc x .stack n al).2.exit).load x ⟨some (S.mem x).blocks.length, off⟩ k =
+    (k al' : Nat) :
+    ((S.enter.alloc x .stack n al).2.exit).load x ⟨some (S.mem x).blocks.length, off⟩ k al' =
       .error .freed :=
-  Memory.load_eq_error.2 (Memory.locate_freed (enter_alloc_exit S x n al) rfl off k)
+  Memory.loadAligned_of_error
+    (Memory.load_eq_error.2 (Memory.locate_freed (enter_alloc_exit S x n al) rfl off k)) al'
 
 end Memories
 

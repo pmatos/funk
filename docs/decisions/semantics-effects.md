@@ -117,7 +117,8 @@ memory, in `lean/Fir/Execution/MemoryObligations.lean`:
 - No write and no allocation speak of the paths that end in results, since UB
   shows no memory; no read matches UB with UB. A store does not read its
   memory: it writes the same units whatever was there, although whether it
-  faults depends on the allocations (`lean/FirTest/MemoryStoreReads.lean`).
+  faults, misaligned included, depends on the allocations
+  (`store_readsNot` in `lean/Fir/Execution/MemoryStoreLaws.lean`).
 
 Rejected: the obligations at the dialect's own memory names only. A base op in
 a sum runs at the sum's names, and nothing would tie the base's proof to what

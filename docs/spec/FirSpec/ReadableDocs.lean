@@ -158,6 +158,7 @@ import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
 import FirSpec.Memory.Model
 import FirSpec.Memory.Laws
+import FirSpec.Memory.AlignLaws
 import FirSpec.Memory.Frames
 import FirSpec.Memory.FrameLaws
 import FirSpec.Memory.Encode
@@ -173,6 +174,8 @@ import FirSpec.Execution.MemoryObligations
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryAllocLaws
+import FirSpec.Execution.MemoryLoadLaws
+import FirSpec.Execution.MemoryStoreLaws
 import FirSpec.Core.Alloca
 import FirSpec.Core.AllocaLaws
 import FirSpec.Execution.MemoryCallSteps

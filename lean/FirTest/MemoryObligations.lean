@@ -10,8 +10,8 @@ of its memory. An allocation writes no unit of the allocations that were
 there. A copy of a unit to another unit of the same memory reads it, though
 it gives no result: the rejected weaker form of _no read_ would accept it
 (`docs/decisions/semantics-effects.md#soundness`).
-`FirTest/MemoryStoreReads.lean` shows that a store
-does not read its memory. Which op declares what is the dialect's: these
+`Fir.store_readsNot` proves that a store does not read
+its memory. Which op declares what is the dialect's: these
 computations are the memory effect's own operations, not fir's ops.
 -/
 
@@ -42,39 +42,44 @@ theorem alloc_allocates : ¬ AllocatesNot () (MonadMemory.alloc () .heap 1 1 : M
   exact absurd (h Memories.empty _ _ rfl).1 (by decide)
 
 /-- A store writes its memory. -/
-theorem store_writes : ¬ WritesNot () (MonadMemory.store () p [.bits 1] : M Unit) := by
+theorem store_writes : ¬ WritesNot () (MonadMemory.store () p [.bits 1] 1 : M Unit) := by
   intro h
   exact absurd (h one () (one.set () oneBits) rfl) (by decide)
 
 /-- A load reads its memory: from `one` and from `one` with its memory
 replaced by `oneBits`, it gives different units. -/
-theorem load_reads : ¬ ReadsNot () (MonadMemory.load (m := M) () p 1) := by
+theorem load_reads : ¬ ReadsNot () (MonadMemory.load (m := M) () p 1 1) := by
   intro h
   obtain ⟨e', he', hm⟩ := h one oneBits (by decide) (.ok ([.poison], one)) rfl
   obtain rfl : e' = .ok ([.bits 1], one.set () oneBits) := he'
   exact absurd hm.1 (by decide)
 
 /-- A load writes no memory: a path that ends keeps the memories. -/
-theorem load_writesNot : WritesNot () (MonadMemory.load (m := M) () p 1) := by
+theorem load_writesNot : WritesNot () (MonadMemory.load (m := M) () p 1 1) := by
   intro S a S' h
   simp only [MonadMemory.load] at h
   revert h
-  cases S.load () p 1 with
+  cases S.load () p 1 1 with
   | ok us =>
     rintro ⟨⟩
     exact prefix_refl _
   | error f => rintro ⟨⟩
 
 /-- A load allocates in no memory: a path that ends keeps the memories. -/
-theorem load_allocatesNot : AllocatesNot () (MonadMemory.load (m := M) () p 1) := by
+theorem load_allocatesNot : AllocatesNot () (MonadMemory.load (m := M) () p 1 1) := by
   intro S a S' h
   simp only [MonadMemory.load] at h
   revert h
-  cases S.load () p 1 with
+  cases S.load () p 1 1 with
   | ok us =>
     rintro ⟨⟩
     exact ⟨rfl, rfl⟩
   | error f => rintro ⟨⟩
+
+/-- A store does not read its memory, whatever its alignment: the spec
+proves it of every store (`Fir.store_readsNot`). -/
+example (al : Nat) : ReadsNot () (MonadMemory.store (m := M) () p [.bits 1] al) :=
+  store_readsNot () p _ al ()
 
 /-- An allocation writes no unit of the allocations that were there: the new
 one follows them. -/
@@ -99,8 +104,8 @@ def two : Mems := (Memories.empty : Mems).set () zeros
 
 /-- Copies the first unit of the allocation `0` to its second. -/
 def copy : M Unit := do
-  let us ← MonadMemory.load (m := M) () ⟨some 0, 0⟩ 1
-  MonadMemory.store (m := M) () ⟨some 0, 1⟩ us
+  let us ← MonadMemory.load (m := M) () ⟨some 0, 0⟩ 1 1
+  MonadMemory.store (m := M) () ⟨some 0, 1⟩ us 1
 
 /-- A copy within a memory reads it: from `zeros` it leaves the second unit
 `0`, and from `oneZero` it makes it `1`, which is neither `0` nor what
