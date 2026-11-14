@@ -159,8 +159,12 @@ A lawful dialect meets five clauses:
 An op with a callee is left out of the last two: it runs its callee, never
 a rule of its own, and its counterparts hold at function level. An
 instance that validation rejects may break an obligation without harm,
-since no valid program runs it. The core dialect is lawful, as the section
-on
+since no valid program runs it. Each core op that touches no memory meets
+the obligations, as the section on
 {ref "The-fir-specification--Execution--The-core-dialect___s-poison-obligations"}[the core dialect's poison obligations]
-proves; from that, refinement through calls follows.
+proves. $`\mathsf{alloca}` has no rule in the set monad, so the core
+dialect as a whole is not lawful here: it meets the lawful classes with
+memory, which carry its guarantees, as the section on
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]
+proves.
 :::

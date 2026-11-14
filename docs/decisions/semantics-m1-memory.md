@@ -1,9 +1,9 @@
 # Current decisions: semantics, M1 memory
 
 This page continues semantics-m1-design.md with the memory of M1: the memory
-model, its pointers, the ops that touch it, and the memories of a run. It is
-the record: when this page and an ADR disagree, the page wins, and the ADR is
-fixed or deleted (ADR-2026-11-09-1610).
+model, its pointers, the ops that touch it, the memories of a run and the
+core's guarantees with memory. It is the record: when this page and an ADR
+disagree, the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## Memory
 
@@ -145,7 +145,8 @@ capping the natural alignment at the pointer's.
   dialect no longer meets the lawful class there; its obligations with
   memory are proved op by op, and `alloca`'s by its own rule
   (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no
-  `alloca` reaches no memory (`Core.reachesNoMemory`).
+  `alloca` reaches no memory (`Core.reachesNoMemory`). The semantics with
+  memory carries the core's guarantees (below).
 
 A `volatile` attribute on loads and stores makes the access an event of the
 trace. The access cannot be removed, duplicated or reordered with other events
@@ -192,3 +193,72 @@ semantics, every dialect and every proof about op semantics would change, for
 ops that never touch memory. Rejected too: free a call's stack allocations by
 marking each memory's allocation count at the call. The interpreter would have
 to enumerate memory names, which may be infinite.
+
+## The core's guarantees
+
+The semantics with memory carries the guarantees for the whole core
+dialect, `alloca` included. The statements without memory cover only the
+code that touches none: those over the set monad cover the ops other than
+`alloca`, and those that ask a function to reach no memory cover such
+functions. The human ruled this on 2026-11-14, on #384 (option A).
+Rejected: splitting out a memory-free core dialect, whose old statements
+would hold with no condition, with the memory ops beside it (option C),
+which changes the dialect's structure where the versions with memory
+already cover every op.
+
+These hold for every core op, and for every function of a valid core
+module, `alloca` included:
+
+- the lawful classes with memory: `Core.lawfulDialectTotal`,
+  `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
+  (`lean/Fir/Core/MemoryRuns.lean`), and the class of its effects,
+  `LawfulDialectEffects`, proved by `Core.lawfulDialectEffects`, from which
+  its instance is built;
+- progress, `Core.progress`, and no stuck path, `Core.neverStuck`;
+- refined arguments, `Core.args_isRefinedBy`, which also holds for an
+  invalid module;
+- congruence in the callee from given memories,
+  `Core.replaceBody_isRefinedBy_of_from` and
+  `Core.caller_isRefinedBy_of_from`, with no condition on the callee
+  (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
+
+Each new memory op, starting with stage 4e's `load` and `store`, keeps every
+one of them holding, with its own rule with memory and its own proofs, as
+`alloca` does (`lean/Fir/Core/AllocaLaws.lean`, joined to the tied ops by
+`Core.Op.memCases`).
+
+PR #382 narrowed these statements, which now cover memory-free code; beside
+each is what covers the whole core:
+
+- `Core.lawfulDialectPoison`, the lawful class in the set monad, went:
+  `alloca` has no rule there. The three classes with memory replace it; in
+  a dialect that lifts the set monad they hold exactly when it does
+  (`LawfulDialectPoison.iff_mem`). So `Func.progress_of_lawful`,
+  `Func.runs_args_isRefinedBy_of_lawful` and
+  `Func.runs_replaceBody_isRefinedBy_of_lawful` no longer apply to the
+  core: `Core.progress`, `Core.args_isRefinedBy` and
+  `Core.replaceBody_isRefinedBy_of_from` do. The tests `coreToy_lawful`,
+  `coreToyBit_lawful` and `coreProbe_lawful` went with it; their instances
+  of the classes with memory stay (`lean/FirTest/Deps.lean`,
+  `lean/FirTest/LawfulRefine.lean`).
+- `Core.Op.total` and `Core.Op.total_all` ask that the op touch no memory:
+  `Core.lawfulDialectTotal` covers every op, `alloca` by
+  `Core.alloca_memTotal`.
+- `Core.Op.returnsOnDefined_valid` asks it too:
+  `Core.lawfulDialectMemPoison` covers every valid op.
+- `Core.replaceBody_isRefinedBy` and `Core.caller_isRefinedBy` ask that
+  `@g` reach no memory (`Core.reachesNoMemory`), which held of every
+  function before #382: `Core.replaceBody_isRefinedBy_of_from` and
+  `Core.caller_isRefinedBy_of_from` ask nothing of it.
+- `Core.Op.liftsSetM`, `Core.Op.effects_touchesNoMemory` and
+  `Core.reachesNoMemory` are about touching no memory, so no version covers
+  a memory op: it has no tie and declares a memory effect. The obligations
+  they served hold through `Core.Op.memCases` and
+  `Core.lawfulDialectEffects`.
+- `Core.memDenoteIn_mapsDenote` still covers every op, and asks the
+  morphism to keep allocation, which `MonadMorphism.state_alloc` gives for
+  the state layer.
+
+`Core.Op.liftsSetM_of_terminator` and `Core.tyAttr_bare` keep their
+statements: the first has a new proof, and the second moved within
+`lean/Fir/Core/Names.lean`.

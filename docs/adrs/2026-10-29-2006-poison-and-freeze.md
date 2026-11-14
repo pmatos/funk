@@ -19,7 +19,9 @@ Tier: direction; area: semantics
   propagation, a result on some operands with no poison for a propagating op,
   totality and monotonicity. They cover only op instances whose types
   validation accepts, and totality and monotonicity only ops that run by their
-  own rule: a call has none, since its meaning is its callee's run.
+  own rule: a call has none, since its meaning is its callee's run. An op that
+  touches memory has no rule in the set monad, so it meets their forms with
+  memory, which carry the guarantees of a dialect with such an op.
 - Passes must not turn a `select` into a branch unless its condition is
   frozen, nor `select %c, %x, false` into `and %c, %x` when `%x` may be
   poison.

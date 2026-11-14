@@ -122,8 +122,10 @@ The obligations reject a wrong op, and the theorems of
 `lean/Fir/Core/Unlawful.lean` check it: an op with no outcome, an `add` that is
 UB on a poison operand, the rejected `sdiv` rule, and a semantics in which every
 op is always UB. The obligations do not fix what an op computes: each family's
-semantics does. `LawfulDialectPoison CoreDialect` holds with no `sorry` and only
-the standard axioms (`Core.lawfulDialectPoison`).
+semantics does. Each core op that touches no memory meets them with no `sorry`
+and only the standard axioms (`lean/Fir/Core/Lawful.lean`). The core dialect as
+a whole meets their forms with memory, below, which carry its guarantees
+([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).
 
 ### The obligations with memory
 
@@ -173,9 +175,11 @@ hypotheses that ask every op to be total or monotone carry the same guard: those
 of the progress proof with calls (`Module.calls_hasPath`,
 `Func.progress_of_inModule`) and those of the refinement engine
 (`Func.runOps_allowed`, `Func.runs_isRefinedBy_of_calls` and the theorems under
-them). `Core.Op.total_all` and `Core.Op.monotone_all` hold for every core op
-that meets the guard: every core op but `call`. Rejected: a stand-in rule for
-`call`, immediate UB in the set monad, so that it would meet the op-level
+them). `Core.Op.monotone_all` holds for every core op that meets the guard:
+every core op but `call`. `Core.Op.total_all` holds for those that touch no
+memory too, every one but `call` and `alloca`; with memory every core op that
+meets the guard is total (`Core.lawfulDialectTotal`). Rejected: a stand-in rule
+for `call`, immediate UB in the set monad, so that it would meet the op-level
 obligations. It claimed a meaning that a call does not have, and as a source it
 was refined by every computation, so a statement proved op by op would hold for
 every rewrite of a call. semantics-interpreter.md says how `call`'s `denote`

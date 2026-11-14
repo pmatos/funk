@@ -31,9 +31,13 @@ valid module holds no other instance:
   every function of a valid module by the class alone: on arguments that
   refine others, and on replacing a callee's body, whatever the new body.
 
-The core dialect meets the general theorems' hypothesis with its ops' own
-obligations, which hold at every width, so refinement holds for every
-core module, valid or not (the section on refinement through core calls).
+The core dialect does not meet the lawful class: `alloca` has no rule in
+the set monad. So the theorems below that take the class do not apply to
+it. Its guarantees are stated with memory, `alloca` included: progress for
+every function of a valid core module and refined arguments for every core
+module, in the section on core functions with memory, and congruence in
+the callee for a valid core module, in the section on congruence in a core
+callee (`docs/decisions/semantics-m1-memory.md#the-cores-guarantees`).
 -/
 
 namespace Fir
