@@ -26,10 +26,12 @@ $`a - 1`.
 :::readable Fir.MemLayout.ValidAlign (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (fingerprint := "14994022144014384239")
 *Definition: a valid alignment.* An alignment $`a` is valid when it is a
 power of two no larger than the limit, $`2^{24} - 1`, so the largest is
-$`2^{23}`. It is the one rule of the alignment that an entry gives its
+$`2^{23}`. It is the one rule of the alignment that an entry writes for its
 pointers and of the alignment that an $`\mathsf{alloca}` writes
 ({ref "The-fir-specification--Validation--Core-rules"}[the
-core's rules]).
+core's rules]). A natural alignment, which an entry or an
+$`\mathsf{alloca}` that writes none takes, is not bound by it: in a memory
+with 1-bit units it can be $`2^{24}`.
 :::
 
 :::readable Fir.MemLayout.Valid (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7806627350590008117")

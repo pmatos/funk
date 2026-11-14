@@ -66,8 +66,9 @@ comparable (ADR-2026-11-12-1821).
 
 A valid entry has a unit and pointers of 1 to 16,777,215 bits, an alignment,
 if any, that is a power of two no larger than that (`MemLayout.ValidAlign`,
-which `alloca`'s `align(A)` shares), and the byte order `little`. A valid layout declares each memory once. The human ruled on
-2026-11-11 on #231, as the orchestrator recorded: M1 admits only `little`,
+which `alloca`'s `align(A)` shares), and the byte order `little`. A valid
+layout declares each memory once. The human ruled on 2026-11-11 on #231, as
+the orchestrator recorded: M1 admits only `little`,
 so a `big` memory decodes and validation rejects it, and no backend or
 harness sees an untested big-endian path; a later milestone may allow `big`
 with a backend that uses it. The same ruling added the per-memory
