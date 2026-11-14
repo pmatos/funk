@@ -25,21 +25,23 @@ for no budget for the new callee, in two forms:
   runs, nor in the new one: no function that its run may reach declares a
   memory effect. Its runs then do not depend on the memories, so refinement
   with memory, from the empty memories, is refinement from given memories,
-  as it was over the runs in the set monad. This form asks that `@g` have no
-  pointer parameter, as the human's ruling on #373 of 2026-11-13 set it
+  and the form from given memories applies. Like it, this form asks nothing
+  of the parameter types of `@g`, pointers included (#214). Before #214 it
+  asked that `@g` have no pointer parameter, as the human's ruling on #373
+  of 2026-11-13 set it
   (`docs/decisions/semantics-refinement.md#refinement-with-memory`).
 
 The core dialect meets what the general theorems ask:
 
 * no core op declares a memory effect, so every function of every core
-  module reaches no memory today;
+  module reaches no memory today. The form with memory still asks it of
+  `@g`, so that it does not depend on every core function reaching none;
 * each core op ignores the memories, since none touches memory. An op that
   touches memory declares it, so only the ops that declare no memory effect
   are asked;
 * the core dialect is lawful in its monotonicity, the refinement of core
-  values is reflexive and transitive, the symbols of a valid module are
-  unique, and an integer or float type has finitely many values (the
-  section on refinement through core calls).
+  values is reflexive and transitive, and the symbols of a valid module are
+  unique.
 
 A function other than `@g`, a caller of it or not, is refined by itself in
 the new module. Congruence goes through the lawful class, which covers the
@@ -128,33 +130,35 @@ theorem caller_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
   rwa [ite_eq_right hfg] at this
 
 /-- Congruence in the callee, with memory: replacing the body of a function
-`@g` with no pointer parameter of a valid core module, which reaches no
-memory, with one under which `@g`, run with memory in the new module,
-refines `@g` in the old, and under which it reaches no memory in the new
-module, refines every function of the module with memory, calls
-and recursion included, wherever a run names the core's memories. -/
+`@g` of a valid core module, which reaches no memory, with one under which
+`@g`, run with memory in the new module, refines `@g` in the old, and under
+which it reaches no memory in the new module, refines every function of the
+module with memory, calls and recursion included, wherever a run names the
+core's memories. It asks nothing of the parameter types of `@g`, pointers
+included: its runs from given memories are its runs with memory, so the
+form from given memories applies. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (hold : M.table.ReachesNoMemory g.name)
+    (b : Region CoreDialect) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) :
     f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  Func.memRuns_replaceBody_isRefinedBy_of_memRuns lay ρ Ty.isRefinedBy_refl Ty.isRefinedBy_trans
-    (opsIgnoreMemory lay ρ) hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ hold hmem h hf
+  replaceBody_isRefinedBy_of_from lay ρ hM hg b
+    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ (opsIgnoreMemory lay ρ)
+      (Module.func?_of_mem hM.symbolsUnique hg) hold
+      (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined with memory by itself in the module with `@g`'s new body, under
 the hypotheses of congruence in the callee for a callee that touches no
 memory. -/
 theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (hfin : ∀ t ∈ g.params.map (·.2), t.Finite) (b : Region CoreDialect)
-    (hold : M.table.ReachesNoMemory g.name)
+    (b : Region CoreDialect) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
     (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
     f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
-  have := replaceBody_isRefinedBy lay ρ hM hg hfin b hold hmem h hf
+  have := replaceBody_isRefinedBy lay ρ hM hg b hold hmem h hf
   change f.memRuns lay ρ M ⊑
     Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this

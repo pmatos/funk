@@ -136,7 +136,45 @@ theorem pcall_self_isRefinedBy :
   Core.caller_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
     pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs]) (by decide)
 
+/-- `@pid` with its own body refines `@pid` with memory. -/
+theorem pid_self_memIsRefinedBy :
+    pidFn.memRuns lay ρ ptrModule ⊑
+      (pidFn.replaceBody pidFn.name pidFn.body).memRuns lay ρ
+        (ptrModule.replaceBody pidFn.name pidFn.body) := by
+  rw [ptrModule_replace_pid]
+  show pidFn.memRuns lay ρ ptrModule ⊑
+    Func.memRuns lay ρ ptrModule
+      { pidFn with body := if pidFn.name = pidFn.name then pidFn.body else pidFn.body }
+  rw [ite_self]
+  exact Core.funcRuns_isRefinedBy_refl _
+
+/-- So `@pcall` is refined with memory in the module with `@pid`'s new
+body by the form whose hypothesis is refinement with memory, which asks
+that `@pid` reach no memory before and after, and nothing of its parameter
+types. -/
+theorem pcall_replace_memIsRefinedBy :
+    pcallFn.memRuns lay ρ ptrModule ⊑
+      (pcallFn.replaceBody pidFn.name pidFn.body).memRuns lay ρ
+        (ptrModule.replaceBody pidFn.name pidFn.body) :=
+  Core.replaceBody_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
+    pidFn.body (reachesNoMemory _ _) (reachesNoMemory _ _) (pid_self_memIsRefinedBy lay ρ)
+    (by simp [ptrModule, Module.funcs])
+
+/-- And `@pcall` is refined with memory by itself by that form. -/
+theorem pcall_self_memIsRefinedBy :
+    pcallFn.memRuns lay ρ ptrModule ⊑
+      pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name pidFn.body) :=
+  Core.caller_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
+    pidFn.body (reachesNoMemory _ _) (reachesNoMemory _ _) (pid_self_memIsRefinedBy lay ρ)
+    (by simp [ptrModule, Module.funcs]) (by decide)
+
 /-! # Axioms -/
+
+/-- info: 'FirTest.pcall_replace_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.pcall_replace_memIsRefinedBy
+
+/-- info: 'FirTest.pcall_self_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.pcall_self_memIsRefinedBy
 
 /-- info: 'FirTest.pcall_replace_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.pcall_replace_isRefinedBy

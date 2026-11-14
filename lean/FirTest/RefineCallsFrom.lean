@@ -3,8 +3,9 @@ import FirTest.RefineCalls
 /-!
 Tests of congruence in the callee from given memories, applied to the module
 of `@count` and `@g` of `FirTest.RefineCalls`, and the axioms of its proofs:
-`@g` given a body with no blocks meets the hypotheses of both forms, with no
-budget, and with one, so `@count` is refined with memory by itself.
+`@g` given a body with no blocks meets the hypothesis, with no budget, so
+`@count` is refined with memory by itself, by the form for every function
+and by the caller form.
 -/
 
 namespace FirTest
@@ -14,11 +15,9 @@ open Fir Core Example
 /-! # A body with no blocks
 
 From given memories, congruence asks that the new `@g` refine the old from
-every memories; its form with a budget also asks that the runs of the new
-`@g` be bounded. A body with no blocks meets both: `@g` with it never
-starts, so it has no behaviour and no run of it runs out of fuel. So
-`@count` is refined with memory by itself in the module with that body, by
-each form. -/
+every memories, and no budget. A body with no blocks meets it: `@g` with it
+never starts, so it has no behaviour. So `@count` is refined with memory by
+itself in the module with that body. -/
 
 /-- A body with no blocks: a function with it never starts. -/
 def noBlocks : Region CoreDialect := { blocks := [] }
@@ -67,15 +66,13 @@ theorem count_fromIsRefinedBy :
   Core.replaceBody_isRefinedBy_of_from _ _ ubModule_valid (by simp [ubModule, Module.funcs])
     noBlocks noBlocks_isRefinedBy (by simp [ubModule, Module.funcs])
 
-/-- `@count` is refined with memory by itself in the module where `@g` has
-no blocks, with a budget. -/
+/-- And `@count` is refined with memory by itself in the module where `@g`
+has no blocks, by the caller form, with no budget. -/
 theorem count_memIsRefinedBy :
     countFn.memRuns ubModule.layout.entry id ubModule ⊑
-      countFn.memRuns ubModule.layout.entry id (ubModule.replaceBody gFn.name noBlocks) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) ubModule.layout.entry id
-  exact Core.memCaller_isRefinedBy _ _ ubModule_valid (by simp [ubModule, Module.funcs])
-    noBlocks ⟨0, fun ⟨a, S⟩ => .inr fun m _ => noBlocks_outcomes a S m .fuelExhausted⟩
-    noBlocks_isRefinedBy (by simp [ubModule, Module.funcs]) (by decide)
+      countFn.memRuns ubModule.layout.entry id (ubModule.replaceBody gFn.name noBlocks) :=
+  Core.caller_isRefinedBy_of_from _ _ ubModule_valid (by simp [ubModule, Module.funcs])
+    noBlocks noBlocks_isRefinedBy (by simp [ubModule, Module.funcs]) (by decide)
 
 /-! # Axioms -/
 
@@ -87,9 +84,6 @@ theorem count_memIsRefinedBy :
 
 /-- info: 'Fir.Core.replaceBody_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.replaceBody_isRefinedBy_of_from
-
-/-- info: 'Fir.Core.memReplaceBody_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.memReplaceBody_isRefinedBy
 
 /-- info: 'FirTest.count_memIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.count_memIsRefinedBy

@@ -52,10 +52,9 @@ types, poison included, wherever a run names the core's memories:
 
 On arguments that refine others, the runs with memory of every function of
 every core module refine its runs with memory on those others, calls and
-recursion included. Congruence in the callee holds with memory when the new
-callee's runs from given memories refine the old one's and are bounded. The
-core needs no bound: every core op has finitely many outcomes (the section
-on congruence in a core callee).
+recursion included. Congruence in the callee needs no bound for the new
+callee: every core op has finitely many outcomes (the section on congruence
+in a core callee).
 -/
 
 namespace Fir
@@ -225,44 +224,6 @@ theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ
   Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
-
-/-- Congruence in the callee, with memory: replacing the body of a function
-`@g` of a valid core module with one under which `@g`, run in the new module
-from given memories, refines `@g` in the old, and whose runs from given
-memories are bounded, refines every function of the module with memory,
-calls and recursion included, wherever a run names the core's memories. -/
-theorem memReplaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (b : Region CoreDialect)
-    (hbound : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
-      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
-        (M.replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
-      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
-        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
-          (M.replaceBody g.name b))
-    (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ Ty.isRefinedBy_refl Ty.isRefinedBy_trans
-    hM hg b hbound h hf).2
-
-/-- Every function of the module other than `@g`, a caller of it or not,
-is refined with memory by itself in the module with `@g`'s new body, under
-the hypotheses of congruence in the callee with memory. -/
-theorem memCaller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
-    (b : Region CoreDialect)
-    (hbound : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
-      ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
-        (M.replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
-      g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
-        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
-          (M.replaceBody g.name b))
-    (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
-  have := memReplaceBody_isRefinedBy lay ρ hM hg b hbound h hf
-  change f.memRuns lay ρ M ⊑
-    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
-  rwa [ite_eq_right hfg] at this
 
 end Core
 

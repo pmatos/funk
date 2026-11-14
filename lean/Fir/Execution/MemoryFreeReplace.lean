@@ -9,13 +9,14 @@ section on replacing a callee, with memory). For a callee whose effects
 include no memory read, write or allocation, finitely many argument vectors
 give that budget (the section on runs that touch no memory), as they do for
 runs in the set monad. The human ruled on #373, on 2026-11-13, that the
-core's congruence keeps this form for such a callee, and asks for the budget
+core's congruence keep this form for such a callee, and ask for the budget
 only of a callee that touches memory, until
 [#214](https://github.com/pmatos/funk/issues/214). Since #214, no budget is
 needed when every op of the dialect has finitely many outcomes (the section
-on congruence in the callee with ops of finitely many outcomes); this form
-keeps its use where the hypothesis is refinement with memory, from the
-empty memories, which says nothing of a callee that touches memory.
+on congruence in the callee with ops of finitely many outcomes), and the
+core's congruence uses that in both its forms. This form asks no finitely
+many outcomes, so it stays for a dialect whose ops may have infinitely
+many.
 
 Wherever a run names the dialect's memories, when its ops ignore the
 memories where they touch none:

@@ -50,7 +50,9 @@ calls are bounded by $`B`. Runs in the set monad get $`B` from finitely many
 argument vectors; the memories a call starts from are infinitely many, so
 here $`B` is a hypothesis. When every op of the dialect has finitely many
 outcomes, no budget is needed:
-{ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes].
+{ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes],
+as for the core. This theorem asks no finitely many outcomes, so it stays
+for a dialect whose ops may have infinitely many.
 :::
 
 :::readable Fir.Func.Valid.memOpsMonotone (fingerprint := "7140365292879792528")

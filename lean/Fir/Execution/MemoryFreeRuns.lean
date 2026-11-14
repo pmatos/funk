@@ -12,11 +12,12 @@ section on replacing a callee, with memory). A callee whose effects include
 no memory read, write or allocation needs none: its runs do not depend on
 the memories, so finitely many argument vectors give the budget, as they do
 for runs in the set monad. The human ruled so on #373 on 2026-11-13
-(`docs/decisions/semantics-refinement.md#refinement-with-memory`). A callee
-that touches memory asked for the budget until
-[#214](https://github.com/pmatos/funk/issues/214), which needs none when
+(`docs/decisions/semantics-refinement.md#refinement-with-memory`). Since
+[#214](https://github.com/pmatos/funk/issues/214), no budget is needed when
 every op has finitely many outcomes (the section on congruence in the
-callee with ops of finitely many outcomes).
+callee with ops of finitely many outcomes), and the core uses that. This
+form asks no finitely many outcomes, so it stays for a dialect whose ops
+may have infinitely many.
 
 When the ops of a dialect ignore the memories where they touch none (the
 section on touching no memory), every run of a function that reaches no

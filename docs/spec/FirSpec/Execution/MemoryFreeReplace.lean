@@ -54,9 +54,11 @@ memory.
 It is the
 {ref "The-fir-specification--Memory--Replacing-a-callee___-with-memory"}[theorem on replacing a callee with memory],
 whose budget comes from the finitely many argument vectors, as for runs in
-the set monad. The human ruled on #373 on 2026-11-13 that congruence takes
-this form for a callee that touches no memory, and asks for the budget only
-of a callee that touches memory, until #214. Since #214, no budget is needed
-when every op has finitely many outcomes:
-{ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes].
+the set monad. The human ruled on #373 on 2026-11-13 that the core's
+congruence take this form for a callee that touches no memory, and ask for
+the budget only of a callee that touches memory, until #214. Since #214, no
+budget is needed when every op has finitely many outcomes:
+{ref "The-fir-specification--Memory--Congruence-in-the-callee-with-ops-of-finitely-many-outcomes"}[congruence with ops of finitely many outcomes],
+which the core uses in both its forms. These theorems ask no finitely many
+outcomes, so they stay for a dialect whose ops may have infinitely many.
 :::
