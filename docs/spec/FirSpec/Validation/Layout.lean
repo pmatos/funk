@@ -31,7 +31,10 @@ pointers and of the alignment that an $`\mathsf{alloca}` writes
 ({ref "The-fir-specification--Validation--Core-rules"}[the
 core's rules]). A natural alignment, which an entry or an
 $`\mathsf{alloca}` that writes none takes, is not bound by it: in a memory
-with 1-bit units it can be $`2^{24}`.
+with 1-bit units it can be $`2^{24}`, as the human ruled on 2026-11-14
+(#385). The rejected alternative, rejecting an $`\mathsf{alloca}` whose
+natural alignment is above the limit, would make the op's rule depend on
+the data layout.
 :::
 
 :::readable Fir.MemLayout.Valid (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7806627350590008117")
