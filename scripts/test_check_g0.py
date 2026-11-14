@@ -328,8 +328,10 @@ class Repository(unittest.TestCase):
     def test_the_core_words_hold_every_core_op(self):
         self.assertLessEqual(set(CORE_OPS), core_words())
         self.assertLessEqual(
-            {"nsw", "nuw", "exact", "slt", "true", "false", "ptr"}, core_words()
+            {"nsw", "nuw", "exact", "slt", "true", "false", "ptr", "stack", "heap"},
+            core_words(),
         )
+        self.assertNotIn("align", core_words())
 
     def test_the_parser_printer_validation_and_interpreter_are_checked(self):
         files = generic_files()

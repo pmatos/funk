@@ -1,5 +1,5 @@
 //! The core types (`lean/Fir/Core/Types.lean`, `Ty.decode` in
-//! `lean/Fir/Core/Text.lean`, `Ty.Valid` in `lean/Fir/Core/Validation.lean`).
+//! `lean/Fir/Core/TypeText.lean`, `Ty.Valid` in `lean/Fir/Core/Validation.lean`).
 //!
 //! `iN` is written `i` and `N` in decimal with no leading zeros. A width above
 //! [`MAX_WIDTH`] does not decode (N3). `i0` decodes, and validation rejects

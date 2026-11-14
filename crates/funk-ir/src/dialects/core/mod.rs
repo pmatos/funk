@@ -41,7 +41,6 @@ mod pointer;
 mod types;
 mod width;
 
-pub use alloca::ALLOC_KINDS;
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};

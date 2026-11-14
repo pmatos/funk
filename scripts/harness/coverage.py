@@ -32,7 +32,7 @@ MATRIX = ROOT / "docs" / "coverage" / "README.md"
 
 class Side(NamedTuple):
     """One side of the matrix: its key, its title, and the widths, float
-    formats and widths of a pointer offset's integer that it has cells at."""
+    formats and widths of a pointer op's integer that it has cells at."""
 
     name: str
     title: str

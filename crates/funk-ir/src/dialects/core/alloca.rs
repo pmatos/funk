@@ -19,11 +19,12 @@
 
 use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type};
 use crate::effects::{Effects, MemSet};
+use crate::ir::Nat;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int};
 
 /// The kinds of an allocation, as words (`AllocKind.word`).
-pub const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
+const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
 
 /// The type `alloca` carries, read with no bound (`Ty.decodeAny`): `iN`
 /// with its digits, a float format, or a pointer of a memory.
@@ -127,25 +128,7 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
 /// Whether the decimal digits `s`, with no sign, spell a power of two, of
 /// any size (`isPowerOfTwo`).
 fn power_of_two(s: &str) -> bool {
-    let mut digits: Vec<u8> = s.bytes().map(|b| b - b'0').collect();
-    loop {
-        match digits.as_slice() {
-            [1] => return true,
-            [] | [0] => return false,
-            _ => {}
-        }
-        let mut rem = 0;
-        for d in &mut digits {
-            let cur = rem * 10 + *d;
-            *d = cur / 2;
-            rem = cur % 2;
-        }
-        if rem != 0 {
-            return false;
-        }
-        let zeros = digits.iter().take_while(|&&d| d == 0).count();
-        digits.drain(..zeros);
-    }
+    Nat::from_decimal(s).is_power_of_two()
 }
 
 /// `%p: ptr = alloca stack i32 4 align(4)`.
@@ -214,9 +197,8 @@ impl OpSpec for Alloca {
 
     /// Allocates in its memory (`Core.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        let memory = memory(op).map_or_else(Vec::new, |n| vec![n.to_string()]);
         Effects {
-            allocates: MemSet::These(memory),
+            allocates: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
             ..Effects::PURE
         }
     }

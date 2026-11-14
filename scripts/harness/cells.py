@@ -182,10 +182,10 @@ class Cell(NamedTuple):
     """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers` or
     `values`.
     `row` is a flag set or predicate, the source type of a width change or a
-    conversion, or what a value row passes, and empty for a pointer offset;
+    conversion, or what a value row passes, and empty for a pointer op;
     `width` is a width, a float format, the result type of a width change
-    or a conversion, or the width of a pointer offset's integer, or empty
-    where nothing is passed."""
+    or a conversion, the width of a pointer offset's integer or of the
+    integer an `alloca` allocates, or empty where nothing is passed."""
 
     table: str
     op: str
@@ -478,8 +478,9 @@ def pointer_offset(op: Op) -> Cell:
 def stack_allocation(op: Op) -> Cell:
     """The cell of an `alloca`: at the width of the integer type it
     allocates, its second attribute after its kind. Its count and alignment
-    are not part of its cell, as a constant's value is not. Any other text
-    of it is not a cell."""
+    are not part of its cell, as a constant's value is not. The matrix
+    reads canonical modules, which both tools decode, so the rest of its
+    attributes needs no check here."""
     if len(op.attrs) >= 2 and not op.operands and len(op.results) == 1:
         element = op.attrs[1]
         bits = bits_of(element)
