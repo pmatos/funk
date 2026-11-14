@@ -17,7 +17,7 @@
 //! poison: it allocates in its memory, and the frame of its call frees the
 //! allocation when the call returns.
 
-use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, core_type};
+use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, alias, core_type};
 use crate::effects::{Effects, MemSet};
 use crate::ir::Nat;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
@@ -57,12 +57,11 @@ fn decode_any(a: &Attr) -> Option<AnyType> {
         },
         Attr::App(h, args) if h == "float" => match args.as_slice() {
             [Attr::Int(e), Attr::Int(m)] if nonneg(e) && nonneg(m) => {
-                let is_alias = |e: &Int, m: &Int| {
-                    FLOAT_ALIASES
-                        .iter()
-                        .any(|f| e.as_str() == f.1.to_string() && m.as_str() == f.2.to_string())
-                };
-                (!is_alias(e, m)).then_some(AnyType::Float)
+                let format = e.as_str().parse().ok().zip(m.as_str().parse().ok());
+                format
+                    .and_then(|(e, m)| alias(e, m))
+                    .is_none()
+                    .then_some(AnyType::Float)
             }
             _ => None,
         },

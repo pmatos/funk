@@ -81,7 +81,7 @@ pub fn ptr_type(memory: u32) -> Type {
 }
 
 /// The alias of the format `float<e,m>`, if it has one.
-fn alias(e: u32, m: u32) -> Option<&'static str> {
+pub(super) fn alias(e: u32, m: u32) -> Option<&'static str> {
     FLOAT_ALIASES
         .iter()
         .find(|a| (a.1, a.2) == (e, m))
