@@ -59,8 +59,8 @@ namespace Memory
 
 variable {u : Nat}
 
-/-- The allocations of a memory: the kind, the alignment, the size and the
-liveness of each block, in the order they were made. -/
+/-- The allocations of a memory: the shape of each block, its kind,
+alignment, size and liveness, in the order they were made. -/
 def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Nat × Bool) :=
   M.blocks.map Block.shape
 
