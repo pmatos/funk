@@ -77,8 +77,9 @@ or `poison`. A float is written as the one float literal of its bits
 (ADR-2026-11-11-1438). A pointer is written `ptr(A, O)`, for the
 allocation `A` it has provenance for and its offset `O`, and
 `ptr(none, O)` when it has no provenance. It names no address, which a
-pointer has only once it is exposed (ADR-2026-11-09-1542), and no run
-gives one until an op makes a pointer (#231). -/
+pointer has only once it is exposed (ADR-2026-11-09-1542). So the
+pointer that the first `alloca` of a run in a memory gives is
+`ptr(0, 0)` (#231). -/
 def valueText : DVal CoreDialect → String
   | ⟨.int w, v⟩ => match (v : PoisonOr (BitVec w)) with
     | .poison => "poison"

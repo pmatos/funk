@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17459434125897226089")
+:::moduleDocs (fingerprint := "7909701173623930783")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -125,12 +125,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "8519819667960364920")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "18128408174805461646")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in fourteen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in fifteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -322,6 +322,28 @@ ptradd \mathsf{ptradd}_{N,W}
   of the allocation: only an access through it must be in bounds
   (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
+
+*Stack allocation* makes room in a memory for the current call (#231; the
+human's ruling of 2026-11-14 on #378).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-      \dots
+alloca \mathsf{alloca}_{N}~k~t~c~a
+```
+
+* $`\mathsf{alloca}_{N}~k~t~c~a` allocates room for $`c` values of the
+  type $`t` in the memory $`N`, with the kind $`k`, and gives a pointer of
+  $`\mathsf{ptr}\langle N \rangle` to the first unit of the allocation.
+  It takes $`c` times the units of $`t` in that memory, aligned to $`a`
+  units, or to the natural alignment of $`t` when $`a` is none. Its units
+  are poison until a store writes them, and a stack allocation is freed
+  when the call that made it returns. It has no operands, is never UB, and
+  never gives poison; it allocates in the memory $`N`. The
+  {ref "The-fir-specification--Validation--Core-rules"}[core rules]
+  accept only the kind $`\mathsf{stack}`, a count of at least 1, an
+  alignment that is a power of two, and an integer type
+  (ADR-2026-11-14-0915).
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).

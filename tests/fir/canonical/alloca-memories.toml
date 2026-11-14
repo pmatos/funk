@@ -1,0 +1,8 @@
+# Tests of alloca-memories.fir: alloca allocates in the memory of its
+# result, so each memory counts its own allocations (#231,
+# ADR-2026-11-14-0915). Interpreter-only until stage 5 of #231.
+tests = [
+  { func = "@in_one", expect = ["ptr(0, 0)"] },
+  { func = "@in_each", expect = ["ptr(0, 0)"] },
+  { func = "@second_in_one", expect = ["ptr(1, 0)"] },
+]

@@ -25,8 +25,9 @@ memories could then never be reordered.
 The empty set is pure. The memory-named effects name the dialect's memories,
 or every memory, as an external call needs. The core dialect names each
 memory of a module by its number, as `ptr<N>` names memory `N`
-(`Core.Mem` is `Nat`). No op uses them yet: no core op touches memory
-(ADR-2026-11-09-1541, ADR-2026-11-09-1542).
+(`Core.Mem` is `Nat`) (ADR-2026-11-09-1541, ADR-2026-11-09-1542). The
+first op that uses them is `alloca`, which allocates in the memory of its
+result (ADR-2026-11-14-0915).
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says
@@ -164,13 +165,17 @@ lawful in its effects (`Core.lawfulDialectEffects`). Its rules are written for a
 monad with choice, UB and the memory effect, at the layout and naming of a run
 (`Core.Op.memDenote?`, `Core.Op.memExit?`, in `lean/Fir/Core/MemRules.lean`),
 and its semantics with memory runs them op by op in the state layer
-(`Core.memDenoteAt`), not by lifting its semantics in the set monad. No core op
-touches memory yet, so each op's rule with memory is its rule. A monad morphism
-that keeps choice and UB (`MonadMorphism.KeepsChoiceUB`) maps the core's
-semantics in one monad to its semantics in another, op by op
-(`Core.denoteIn_mapsDenote`); lifting keeps choice and UB, so every core op is
-tied (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
-totality, monotonicity and poison, follows from that op's own tie.
+(`Core.memDenoteAt`), not by lifting its semantics in the set monad. Each op
+that touches no memory, every one but `alloca`, has its rule as its rule with
+memory. A monad morphism that keeps choice and UB
+(`MonadMorphism.KeepsChoiceUB`) maps the core's semantics in one monad to its
+semantics in another, op by op (`Core.denoteIn_mapsDenote`), and with memory
+when it also keeps allocation (`Core.memDenoteIn_mapsDenote`); lifting keeps
+choice and UB, so every core op but `alloca` is tied (`Core.Op.liftsSetM`), and
+each of its obligations with memory, effects, totality, monotonicity and
+poison, follows from that op's own tie. `alloca` meets each by its own rule
+(`lean/Fir/Core/AllocaLaws.lean`), and `Core.Op.memCases` splits an
+obligation of every core op into the two.
 No theorem asks that the whole core dialect lift the set monad: `Core.liftsSetM`
 went in stage 4b-3 of #231, with its last users. The core's theorems on runs,
 fuel monotonicity, progress, no stuck path and refined arguments, are stated
@@ -184,14 +189,15 @@ effect tests are stated over runs with memory. Congruence in the callee is too:
 for a callee that touches no memory it asks that each op that declares no
 memory effect ignore the memories (`OpsIgnoreMemory`, in
 `lean/Fir/Execution/MemoryFree.lean`), which each core op meets by its own tie
-(`Core.opsIgnoreMemory`; semantics-refinement.md#refinement-with-memory). The
+(`Core.opsIgnoreMemory`; semantics-refinement.md#refinement-with-memory);
+`alloca` declares that it allocates, so it is not asked. The
 test of the tie, that the core's runs with memory are its runs in the set
 monad, went with it; `lean/FirTest/MemoryRuns.lean` now shows that a core
 function that touches no memory returns from given memories what it returns
 with memory, with those memories. The sums over the core no longer get
 `LiftsSetM` from the core; a sum still lifts the set monad when both of its
 sides do (`Dialect.sum.liftsSetM`). A memory op joins with its own rule in
-`Core.Op.memDenote?` and its own proofs. Rejected: the core's semantics with
+`Core.Op.memDenote?` and its own proofs, as `alloca` did. Rejected: the core's semantics with
 memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
 class and its obligations for every dialect. The obligations reject a wrong

@@ -18,9 +18,10 @@
 //! float and an integer of its width, the conversions from integers to
 //! floats `sitofp` and `uitofp`, the conversions between float formats
 //! `fpext` and `fptrunc`, and the conversions from floats to integers
-//! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`. A later
-//! family adds a file and a line here.
+//! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd` and the
+//! stack allocation `alloca`. A later family adds a file and a line here.
 
+mod alloca;
 mod arith;
 mod bitcast;
 mod bitwise;
@@ -40,6 +41,7 @@ mod pointer;
 mod types;
 mod width;
 
+pub use alloca::ALLOC_KINDS;
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
@@ -98,6 +100,7 @@ pub fn dialect() -> Dialect {
         .op(float_convert::Convert("fpext"))
         .op(float_convert::Convert("fptrunc"))
         .op(pointer::PtrAdd)
+        .op(alloca::Alloca)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

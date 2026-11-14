@@ -52,6 +52,11 @@ namespace Memory
 /-- The number of `u`-bit units that `w` bits take: `w / u`, rounded up. -/
 def unitsFor (u w : Nat) : Nat := (w + u - 1) / u
 
+/-- A memory's entry counts the units of `w` bits as the encoding does, so
+an allocation of an integer type has room for exactly its encoding. -/
+theorem _root_.Fir.MemLayout.bitsUnits_eq (e : MemLayout) (w : Nat) :
+    e.bitsUnits w = unitsFor e.unit w := rfl
+
 /-- The `k` digits of `n` in base `2^u`, least significant first, each a
 unit of bits. Digits past `n`'s most significant one are zero. -/
 def digits (u : Nat) : Nat → Nat → List (MemUnit u)

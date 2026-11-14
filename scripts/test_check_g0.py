@@ -8,6 +8,7 @@ from check_g0 import (
     CORE_EFFECTS,
     CORE_POISON,
     CORE_TEXT,
+    CORE_TEXT_PARTS,
     ROOT,
     core_words,
     effects_problems,
@@ -345,6 +346,8 @@ class Repository(unittest.TestCase):
         ]:
             self.assertIn(want, files)
         self.assertTrue((ROOT / CORE_TEXT).is_file())
+        for part in CORE_TEXT_PARTS:
+            self.assertTrue((ROOT / part).is_file())
 
 
 if __name__ == "__main__":

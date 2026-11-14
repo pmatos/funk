@@ -6,19 +6,19 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 40 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 41 core ops has a class (ADR-2026-10-29-2006).
 
-Thirty-three ops propagate poison: `const`, the float constant `fconst`,
+Thirty-four ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
 `frem` and `fmod`), `funary` (`fneg`, `fabs` and `sqrt`) and `fma`, the two bit
 casts `toBits` and `ofBits`, the two conversions from integers,
 `sitofp` and `uitofp`, the two conversions between formats, `fpext`
-and `fptrunc`, the pointer offset `ptradd`, and the two conversions to
-integers, `fptosi` and `fptoui`.
-`const`, `fconst` and `poison` have no operands, so they propagate poison
-whatever their semantics. `poison` meets the
+and `fptrunc`, the pointer offset `ptradd`, the two conversions to
+integers, `fptosi` and `fptoui`, and the stack allocation `alloca`.
+`const`, `fconst`, `poison` and `alloca` have no operands, so they
+propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
 the empty one, holds no poison, and on it `poison` returns a result, the
 poison of its type. The obligation asks for a result, not for a defined
@@ -78,7 +78,7 @@ def Op.poisonClass : Op → PoisonClass
   | .urem _ | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .fcmp ..
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
-  | .fptosi .. | .fptoui .. => .propagates
+  | .fptosi .. | .fptoui .. | .alloca .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a
@@ -113,6 +113,14 @@ theorem Core.Ty.poison_isRefinedBy :
 semantics. -/
 theorem Core.const_propagatesPoison [DialectDenote CoreDialect SetM] (w : Nat) (v : BitVec w) :
     PropagatesPoison (d := CoreDialect) (.const w v) where
+  poisonOut args h := by cases args with | nil => exact h.elim
+  ubByOwnRules args _ h := by cases args with | nil => exact h.elim
+
+/-- `alloca` has no operands, so it propagates poison, whatever its
+semantics. -/
+theorem Core.alloca_propagatesPoison [DialectDenote CoreDialect SetM] (k : Memory.AllocKind)
+    (t : Core.Ty) (c : Nat) (a : Option Nat) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.alloca k t c a n) where
   poisonOut args h := by cases args with | nil => exact h.elim
   ubByOwnRules args _ h := by cases args with | nil => exact h.elim
 

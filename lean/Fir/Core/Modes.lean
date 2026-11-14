@@ -82,10 +82,13 @@ theorem exhaustive_memOutcomes (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) (o : Outcome Obs) :
-    Run.outcomes (f.memRuns M.layout.entry id M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o :=
-  letI := memTreeDenote M.layout.entry id
-  Func.memExplore_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel
-      budget hx o
+    Run.outcomes (f.memRuns M.layout.entry id M args fuel) o ↔
+      ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
+  -- Elaborated apart from the goal: checked against it, the run unfolds.
+  have h := (letI := memTreeDenote M.layout.entry id
+    Func.memExplore_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel
+      budget hx o)
+  exact h
 
 /-- Exhaustive mode, within its choice budget, lists a stuck path exactly
 when the run with memory has one. -/
@@ -94,9 +97,12 @@ theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
     {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) :
     Run.IsStuck (f.memRuns M.layout.entry id M args fuel) ↔
-      ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st :=
-  letI := memTreeDenote M.layout.entry id
-  Func.memExplore_stuck M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel budget hx
+      ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
+  -- Elaborated apart from the goal: checked against it, the run unfolds.
+  have h := (letI := memTreeDenote M.layout.entry id
+    Func.memExplore_stuck M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel budget
+      hx)
+  exact h
 
 /-- Scripted mode, on a choice sequence that fits, gives an outcome of the
 run with memory at the fuel budget it runs with. -/
@@ -104,10 +110,12 @@ theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (Bi
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
     (hs : scripted read M f args fuel cs = .ok (l, c)) {o : Outcome Obs}
-    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns M.layout.entry id M args fuel) o :=
-  letI := memTreeDenote M.layout.entry id
-  Func.memScript_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel
-      cs hs ho
+    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns M.layout.entry id M args fuel) o := by
+  -- Elaborated apart from the goal: checked against it, the run unfolds.
+  have h := (letI := memTreeDenote M.layout.entry id
+    Func.memScript_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel
+      cs hs ho)
+  exact h
 
 /-- Scripted mode, on a choice sequence that fits, reports a stuck path
 only when the run with memory has one. -/
@@ -115,10 +123,12 @@ theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVe
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
     (hs : scripted read M f args fuel cs = .ok (l, c)) {st : Stuck}
-    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns M.layout.entry id M args fuel) :=
-  letI := memTreeDenote M.layout.entry id
-  Func.memScript_stuck M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel cs
-      hs hst
+    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns M.layout.entry id M args fuel) := by
+  -- Elaborated apart from the goal: checked against it, the run unfolds.
+  have h := (letI := memTreeDenote M.layout.entry id
+    Func.memScript_stuck M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel cs
+      hs hst)
+  exact h
 
 /-- The values that sampled mode chose are a choice sequence that fits the
 run: scripted mode on them reports the same path, with as many choices. -/

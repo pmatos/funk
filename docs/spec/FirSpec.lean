@@ -154,7 +154,11 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.LayoutLaws "The data layout's text, proved" FirSpec.Text.LayoutLaws (level := 2)}
 
+{includeReadable "." Fir.Core.TypeText "The core types in text" FirSpec.Core.TypeText (level := 2)}
+
 {includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
+
+{includeReadable "." Fir.Core.AllocaText "Stack allocation in text" FirSpec.Core.AllocaText (level := 2)}
 
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
 
@@ -167,6 +171,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
 {includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
+
+{includeReadable "." Fir.Core.AllocaTextLaws "Stack allocation reads back" FirSpec.Core.AllocaTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
 

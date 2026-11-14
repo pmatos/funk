@@ -70,6 +70,7 @@ import FirTest.MemoryObligations
 import FirTest.MemoryStoreReads
 import FirTest.MemoryRefine
 import FirTest.MemoryEncode
+import FirTest.Alloca
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

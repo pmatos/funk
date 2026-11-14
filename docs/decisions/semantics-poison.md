@@ -146,8 +146,15 @@ instances, and asks for no semantics in the set monad. With
 `LawfulDialectTotal` and `LawfulDialectMonotone` it holds every poison
 obligation with memory. In a dialect that lifts the set monad the three hold
 exactly when `LawfulDialectPoison` does (`LawfulDialectPoison.iff_mem`), so
-the core, the test dialects and their sums and lifts meet them, and the four
+the test dialects and their sums and lifts meet them, and the four
 rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
+The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`): each op that
+touches no memory by its tie and its obligations in the set monad, and
+`alloca` by its own rule (`lean/Fir/Core/AllocaLaws.lean`). Since `alloca`
+has no rule in the set monad, the core no longer meets
+`LawfulDialectPoison`, and `Core.lawfulDialectPoison` went in stage 4d-2 of
+#231. Rejected: a rule for `alloca` in the set monad, which has no
+memories to allocate in.
 `lean/FirTest/MemoryPoison.lean` gives a test op that loads through a
 pointer, with no semantics in the set monad, that meets the class, and
 shows the class rejecting one that is UB on a poison pointer and never on a

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12557443426744971531")
+:::moduleDocs (fingerprint := "16257157132352493751")
 :::
 
 :::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "6238840022199865495")
@@ -26,20 +26,23 @@ $`\mathsf{call}` applies to every op of the core dialect that calls a
 function.
 :::
 
-:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "4451074230490132624")
-*Theorem: every core terminator and every core op with no callee is
-total.* For every core op $`o` that is a terminator, or for which
+:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "857378940163898036")
+*Theorem: every core terminator and every core op with no callee that
+touches no memory is total in the set monad.* For every core op $`o` that
+touches no memory and is a terminator, or for which
 $`\mathrm{callee}(o)` is none, $`o` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
 operand vector, its semantics, or its exit for a terminator, has some
-outcome. These are the core ops other than $`\mathsf{call}`, each total
-by the
+outcome. These are the core ops other than $`\mathsf{call}` and
+$`\mathsf{alloca}`, each total by the
 {ref "The-fir-specification--Execution--Core-functions-without-calls"}[previous section].
-They are the ops that the progress theorem for modules asks to be total,
+With $`\mathsf{alloca}`, which is total with memory by
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[its own rule],
+they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "8554862465862932998")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "2221359012485686113")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the

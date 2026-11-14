@@ -1,4 +1,5 @@
 import Fir.Core.Types
+import Fir.Memory.Model
 import Fir.Syntax.Dialect
 
 /-!
@@ -6,7 +7,7 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, and pointer offsets.
+conversions to integers, pointer offsets and stack allocation.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -247,6 +248,19 @@ Pointer offsets (#231):
   (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
+Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
+
+* `alloca k t c a n`: allocates room for `c` values of the type `t` in the
+  memory `n`, with the kind `k`, and gives a pointer of `ptr<N>`, `N = n`,
+  to the first unit of the allocation. It takes `c` times the units of `t`
+  in that memory, aligned to `a` units, or to the natural alignment of `t`
+  when `a` is `none`. A stack allocation is freed when the call that made
+  it returns. Its units are poison until a store writes them. It is never
+  UB, never gives poison, and allocates in the memory `n`. M1's validation
+  accepts only the kind `stack`, a count of at least 1, an alignment that
+  is a power of two, and an integer type `t`
+  (ADR-2026-11-14-0915).
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -320,6 +334,7 @@ inductive Op where
   | fpext (e m e' m' : Nat)
   | fptrunc (e m e' m' : Nat)
   | ptradd (n w : Nat)
+  | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

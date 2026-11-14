@@ -16,7 +16,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Data layouts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11879504597878469070")
+:::moduleDocs (fingerprint := "16510349463212910995")
 :::
 
 :::readable Fir.ByteOrder (fingerprint := "2717303684540409010")
@@ -123,4 +123,17 @@ the unit's, rounded up. Its natural alignment is the least power of two
 that is at least that number of units, and its alignment is the entry's
 own $`a` when the entry gives one, and the natural one otherwise. So the
 default memory's pointers take 8 units and are aligned to 8.
+:::
+
+:::readable Fir.MemLayout.bitsUnits Fir.MemLayout.intAlign Fir.MemLayout.pointerUnits_eq (pin := Fir.MemLayout.pointerUnits) (fingerprint := "7162376274730077408")
+*Definition: the units and the natural alignment of an integer.* A value
+of $`w` bits takes $`\lceil w / u \rceil` units of the memory of the entry
+$`e`, its width over the unit's, rounded up; a pointer takes the units of
+its width $`p`. The integer type $`\mathsf{i}N` takes $`N` bits, as many
+units as its encoding writes, and its natural alignment is the least power
+of two that is at least that number of units, as for pointers (the human's
+ruling of 2026-11-14 on #378). So in memory 0, whose unit is 8 bits,
+$`\mathsf{i1}` and $`\mathsf{i8}` have the natural alignment 1,
+$`\mathsf{i24}` and $`\mathsf{i32}` 4, $`\mathsf{i64}` 8 and
+$`\mathsf{i128}` 16.
 :::

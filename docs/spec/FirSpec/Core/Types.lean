@@ -19,7 +19,7 @@ changes under it.
 :::moduleDocs (fingerprint := "15458445134579424081")
 :::
 
-:::readable Fir.Core.Ty Fir.Core.maxWidth Fir.Core.maxMemory Fir.Core.floatWidth (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.decode) (fingerprint := "17770481132875150779")
+:::readable Fir.Core.Ty Fir.Core.maxWidth Fir.Core.maxMemory Fir.Core.floatWidth (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.decode) (fingerprint := "8043188165998766869")
 *Definition: the core types.* A type of the core dialect is an integer type
 $`\mathsf{i}N`, for a width $`N`, a float type
 $`\mathsf{float}\langle e,m \rangle`, for an exponent width $`e` and a

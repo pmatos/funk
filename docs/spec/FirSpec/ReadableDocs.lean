@@ -120,7 +120,10 @@ import FirSpec.Core.Lawful
 import FirSpec.Text.Lexical
 import FirSpec.Text.Grammar
 import FirSpec.Text.LayoutLaws
+import FirSpec.Core.TypeText
 import FirSpec.Core.Text
+import FirSpec.Core.AllocaText
+import FirSpec.Core.AllocaTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
@@ -169,6 +172,9 @@ import FirSpec.Execution.MemoryMonotone
 import FirSpec.Execution.MemoryObligations
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
+import FirSpec.Execution.MemoryAllocLaws
+import FirSpec.Core.Alloca
+import FirSpec.Core.AllocaLaws
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
 import FirSpec.Execution.MemoryLocal

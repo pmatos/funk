@@ -1,0 +1,23 @@
+# Tests of alloca.fir: alloca allocates room for a constant count of values
+# of an integer type on the stack of its memory, and gives a pointer with
+# provenance for the new allocation at offset 0 (#231, ADR-2026-11-14-0915).
+# fir-ref writes a pointer as ptr(A, O): its allocation's id in its memory
+# and its offset. Ids count the allocations of a memory in the order a run
+# makes them, freed ones included, so a second allocation, after a call's
+# stack allocations were freed or not, has the next id. Until loads and
+# stores (stage 4e of #231) and the run's observations (#233), a test sees
+# only the pointers that a run returns; that the frame frees each stack
+# allocation is checked in Lean (FirTest/Alloca.lean). The backend lowers
+# alloca in stage 5 of #231, so each test is interpreter-only.
+tests = [
+  { func = "@one", expect = ["ptr(0, 0)"] },
+  { func = "@four", expect = ["ptr(0, 0)"] },
+  { func = "@bytes", expect = ["ptr(0, 0)"] },
+  { func = "@two", expect = ["ptr(1, 0)"] },
+  { func = "@moved", args = ["5"], expect = ["ptr(0, 5)"] },
+  { func = "@moved", args = ["-3"], expect = ["ptr(0, -3)"] },
+  { func = "@moved", args = ["poison"], expect = ["poison"] },
+  { func = "@after_call", expect = ["ptr(1, 0)"] },
+  { func = "@loop", args = ["0"], expect = ["ptr(0, 0)"] },
+  { func = "@loop", args = ["3"], expect = ["ptr(3, 0)"] },
+]

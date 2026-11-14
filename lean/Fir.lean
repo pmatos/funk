@@ -51,6 +51,7 @@ import Fir.Core.FloatBitcast
 import Fir.Core.FloatOfInt
 import Fir.Core.FloatConvert
 import Fir.Core.Pointer
+import Fir.Core.Alloca
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -123,6 +124,8 @@ import Fir.Execution.MemoryFiniteReplace
 import Fir.Execution.MemoryModes
 import Fir.Core.Lawful
 import Fir.Core.MemRules
+import Fir.Execution.MemoryAllocLaws
+import Fir.Core.AllocaLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine
@@ -154,9 +157,12 @@ import Fir.Text.Read
 import Fir.Text.ReadLocs
 import Fir.Text.Decode
 import Fir.Core.FloatOpText
+import Fir.Core.TypeText
+import Fir.Core.AllocaText
 import Fir.Core.Text
 import Fir.Core.TextSamples
 import Fir.Core.TypeTextLaws
+import Fir.Core.AllocaTextLaws
 import Fir.Core.FloatOpTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example

@@ -43,7 +43,7 @@ the widths validation accepts, they put zeros above its bits, put copies of its 
 its low $`N` bits.
 :::
 
-:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "6385407386143144737")
+:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "6461532806751948721")
 *Theorem: $`\mathsf{zext}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{zext}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, meets every obligation of an op that

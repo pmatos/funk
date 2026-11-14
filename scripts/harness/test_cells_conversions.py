@@ -119,7 +119,11 @@ class Tests(unittest.TestCase):
         found = cells.cells((8, 128), ("f32",), (1, 64))
         self.assertEqual(
             {c for c in found if c.table == "pointers"},
-            {Cell("pointers", "ptradd", "", w) for w in ("i1", "i64")},
+            {
+                Cell("pointers", op, "", w)
+                for op in cells.POINTER_OPS
+                for w in ("i1", "i64")
+            },
         )
         self.assertFalse(any(c.table == "pointers" for c in cells.cells((8,))))
         self.assertEqual(cells.POINTER_DIFFERENTIAL, ())
@@ -136,6 +140,28 @@ class Tests(unittest.TestCase):
             Op("ptradd", (), ("i64", "i64"), ("ptr",), ()),
             Op("ptradd", (), ("ptr", "i64"), ("ptr(1)",), ()),
             Op("ptradd", (), ("ptr", "i64"), ("i64",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
+    def test_a_stack_allocation_is_a_cell_for_each_width_of_its_type(self):
+        for attrs in [
+            ("stack", "i32"),
+            ("stack", "i32", "4"),
+            ("stack", "i32", "4", "align(8)"),
+            ("heap", "i32", "align(2)"),
+        ]:
+            for ptr in ("ptr", "ptr(1)"):
+                op = Op("alloca", attrs, (), (ptr,), ())
+                with self.subTest(op=op):
+                    self.assertEqual(of_op(op), {Cell("pointers", "alloca", "", "i32")})
+        for bad in [
+            Op("alloca", ("stack",), (), ("ptr",), ()),
+            Op("alloca", ("stack", "f32"), (), ("ptr",), ()),
+            Op("alloca", ("stack", "ptr"), (), ("ptr",), ()),
+            Op("alloca", ("stack", "i32"), ("i32",), ("ptr",), ()),
+            Op("alloca", ("stack", "i32"), (), ("i64",), ()),
+            Op("alloca", ("stack", "i32"), (), (), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)

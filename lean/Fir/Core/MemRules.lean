@@ -1,6 +1,7 @@
 import Fir.Core.FloatArithLaws
 import Fir.Core.FloatOfIntLaws
 import Fir.Core.FloatConvertLaws
+import Fir.Core.Alloca
 import Fir.Core.Lawful
 import Fir.Execution.MemoryRuns
 
@@ -19,19 +20,21 @@ With memory, the core's rules are written for a monad that also has the
 memory effect, over the memories of a run, whose layout entries are `lay`,
 where the run names the core's memory `x` as `ρ x`. An op that touches
 memory reads the entry `lay (ρ x)` of the memory it accesses
-(ADR-2026-11-13-0906). No core op touches memory yet, so each op's rule
-with memory is its rule. The core's semantics with memory runs those rules
-in the state layer over the set monad, op by op; an op with no rule, as
-`call`, has no outcome there, as in the set monad.
+(ADR-2026-11-13-0906). `alloca`'s rule allocates in the memory of its
+result, and is its rule with memory alone: it has no rule in the set monad.
+Every other core op touches no memory, and its rule with memory is its
+rule. The core's semantics with memory runs those rules in the state layer
+over the set monad, op by op; an op with no rule, as `call`, has no outcome
+there, as in the set monad.
 
 Lifting a computation of the set monad into the state layer keeps choice
-and UB, so it maps each core op's rule in the set monad to its rule with
-memory. So each core op is tied: it runs with memory by its rule in the set
-monad and keeps the memories. Each obligation with memory of an op follows
-from that op's own tie and its obligation in the set monad. No theorem asks
-that the whole core dialect lift the set monad: an op that touches memory
-will have no tie, and will meet each obligation with memory by its own
-proof.
+and UB, so it maps each rule in the set monad to the same rule with memory.
+So each core op but `alloca` is tied: it runs with memory by its rule in the
+set monad and keeps the memories. Each obligation with memory of a tied op
+follows from its own tie and its obligation in the set monad, and `alloca`
+meets each by its own proof (the section on the stack allocation
+obligations). No theorem asks that the whole core dialect lift the set
+monad.
 -/
 
 namespace Fir.Core
@@ -106,7 +109,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .udiv _ x, args => ruleOfEv_map φ hk (udivWith x) args
       | .srem _, args => ruleOfEv_map φ hk sremValues args
       | .urem _, args => ruleOfEv_map φ hk uremValues args
-      | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ => hz _
+      | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ | .alloca .., _ => hz _
     exit := fun
       | .br, _ | .ret _, _ => φ.map_pure _
       | .condBr, .cons c .nil => exitOfEv_map φ hk (condBrExit c)
@@ -117,7 +120,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .freeze _, _ | .poison _, _ | .call .., _ | .fconst .., _
       | .fcmp .., _ | .fbin .., _ | .funary .., _ | .fma .., _ | .toBits .., _ | .ofBits .., _
       | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
-      | .ptradd .., _ | .fptosi .., _ | .fptoui .., _ => hz _ }
+      | .ptradd .., _ | .alloca .., _ | .fptosi .., _ | .fptoui .., _ => hz _ }
 
 end
 
@@ -130,12 +133,13 @@ variable {N : Type} {m : Type → Type} [Monad m] [MonadChoice m] [MonadUB m]
 /-- The rule of each core op that is not a terminator, with memory: in any
 monad with choice, UB and the memory effect on the memories of a run whose
 layout entries are `lay`, where the run names the core's memory `x` as
-`ρ x`. No core op touches memory yet, so each op's rule is its rule in
+`ρ x`. `alloca` allocates by its rule; every other op's rule is its rule in
 `Op.denote?`. -/
-def Op.memDenote? (lay : N → MemLayout) (_ : Mem → N) [MonadMemory N (unitsOf lay) m] (op : Op) :
-    Option (HVector toType (Fir.sig (d := CoreDialect) op) →
-      m (HVector toType (Fir.returnTypes (d := CoreDialect) op))) :=
-  op.denote? (m := m)
+def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) [MonadMemory N (unitsOf lay) m] :
+    (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
+      m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
+  | .alloca k t c a n => some fun _ => allocaRule lay ρ k t c a n
+  | op => op.denote? (m := m)
 
 /-- The rule of each core terminator, with memory: its rule in `Op.exit?`,
 since no terminator touches memory. -/
@@ -150,21 +154,33 @@ rule with memory, and `z p` for an op `p` that has none. -/
     (z : {α : Type} → Op → m α) : DialectDenote CoreDialect m :=
   denoteWith (fun op => op.memDenote? lay ρ) (fun op => op.memExit? lay ρ) z
 
-/-- A morphism between two monads with memory that keeps choice and UB maps
-the core's semantics with memory in the one to its semantics with memory in
-the other, op by op, when it maps what an op with no rule does. No core op
-touches memory yet, so each op's rule with memory is its rule; a memory op
-adds its case here, from a morphism that also keeps the memory effect
-(`MonadMorphism.state_load` and its siblings). -/
+/-- A morphism between two monads with memory that keeps choice, UB and
+allocation maps the core's semantics with memory in the one to its
+semantics with memory in the other, op by op, when it maps what an op with
+no rule does: `alloca` by its allocation, and every other op by its rule.
+Lifting through the state layer keeps allocation
+(`MonadMorphism.state_alloc`). -/
 theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ]
     [MonadChoice ν] [MonadUB μ] [MonadUB ν] (lay : N → MemLayout) (ρ : Mem → N)
     [MonadMemory N (unitsOf lay) μ] [MonadMemory N (unitsOf lay) ν] (φ : MonadMorphism μ ν)
-    (hk : φ.KeepsChoiceUB) (zm : {α : Type} → Op → μ α) (zn : {α : Type} → Op → ν α)
+    (hk : φ.KeepsChoiceUB)
+    (ha : ∀ x k size al, φ.map (MonadMemory.alloc (m := μ) x k size al) = MonadMemory.alloc x k size al)
+    (zm : {α : Type} → Op → μ α) (zn : {α : Type} → Op → ν α)
     (hz : ∀ {α : Type} (op : Op), φ.map (zm op : μ α) = zn op) :
     letI := memDenoteIn lay ρ @zm
     letI := memDenoteIn lay ρ @zn
     φ.MapsDenote (d := CoreDialect) :=
-  denoteIn_mapsDenote φ hk @zm @zn hz
+  have h : @MonadMorphism.MapsDenote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm) (denoteIn @zn) :=
+    denoteIn_mapsDenote φ hk @zm @zn hz
+  @MonadMorphism.MapsDenote.mk μ ν _ _ φ CoreDialect _ _ (memDenoteIn lay ρ @zm)
+    (memDenoteIn lay ρ @zn)
+    (fun op args => by
+      cases op with
+      | alloca k t c a n => exact (φ.map_map _ _).trans (congrArg _ (ha _ _ _ _))
+      | _ =>
+        exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
+          (denoteIn @zn) h _ args)
+    (@MonadMorphism.MapsDenote.exit μ ν _ _ φ CoreDialect _ _ (denoteIn @zm) (denoteIn @zn) h)
 
 /-- The core's semantics with memory: in the state layer over the set monad,
 each op runs by its rule with memory, and an op with no rule has no
@@ -186,11 +202,12 @@ instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
 
 namespace Core
 
-/-- No core op touches memory: each runs with memory by its rule in the set
-monad and keeps the memories, at every layout and naming. Lifting into the
-layer keeps choice and UB, and maps an op with no rule to one with no
-outcome. -/
-theorem Op.liftsSetM (op : Op) : OpLiftsSetM (d := CoreDialect) op := by
+/-- Each core op that touches no memory, every core op but `alloca`, runs
+with memory by its rule in the set monad and keeps the memories, at every
+layout and naming. Lifting into the layer keeps choice and UB, and maps an
+op with no rule to one with no outcome. -/
+theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
+    OpLiftsSetM (d := CoreDialect) op := by
   intro N _ lay ρ args
   have h := denoteIn_mapsDenote (MonadMorphism.liftState SetM (Memory.Memories N (unitsOf lay)))
     (MonadMorphism.liftState_keeps _ fun r f => SetM.ub_bind r f) (fun _ _ => False)
@@ -198,7 +215,9 @@ theorem Op.liftsSetM (op : Op) : OpLiftsSetM (d := CoreDialect) op := by
       funext S e
       exact propext ⟨fun h => by rcases h with ⟨_, h, _⟩ | ⟨_, h, _⟩ <;> exact h, False.elim⟩
   obtain ⟨hd, he⟩ := h
-  exact ⟨(hd op args).symm, (he op args).symm⟩
+  cases op with
+  | alloca => cases hm
+  | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
 
 end Core
 

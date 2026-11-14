@@ -4,21 +4,22 @@ import Fir.Execution.Lawful
 /-!
 # Every valid core op instance meets the obligations
 
-The core dialect is lawful: it meets the poison obligations. Each of them
-is proved for every core op instance whose types validation accepts, from
+Each core op that touches no memory meets the poison obligations in the
+set monad, at every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 33 ops that propagate poison does, at every
+* _Propagation._ Each of the 34 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
   bit casts, the conversions from integers, the conversions between
-  formats, the pointer offset and the conversions to integers.
-* _A result on defined operands._ Each of them returns a result on some
-  operand vector with no poison. `poison` does on the empty vector, where
-  its result is poison: the obligation asks for a result, not for a
-  defined one (ADR-2026-10-29-2006). The four divisions do only at a
+  formats, the pointer offset, the conversions to integers and `alloca`,
+  which has no operands.
+* _A result on defined operands._ Each of them but `alloca` returns a
+  result on some operand vector with no poison. `poison` does on the empty
+  vector, where its result is poison: the obligation asks for a result, not
+  for a defined one (ADR-2026-10-29-2006). The four divisions do only at a
   width above zero, and validation accepts `iN` only for N of at least
   1, so they do at every valid width. This is the one obligation that needs the
   instance to be valid (ADR-2026-10-29-2006).
@@ -28,13 +29,15 @@ constant obligations to the branch obligations:
 * _Totality and monotonicity._ Every core terminator and every core op
   with no callee is total and monotone, at every width: every core op but
   `call`, which the obligations leave out, since its meaning is its
-  callee's run (ADR-2026-10-29-2006).
+  callee's run (ADR-2026-10-29-2006), and `alloca`, which is monotone at
+  once but not total, since it has no rule in the set monad.
 
-So every generic theorem that asks for a lawful dialect holds for the core
-dialect. For example, every function of a valid core module has an
-outcome at every budget by the class alone (the section on what the
-lawful class gives), as the section on core functions with calls shows by
-the ops' own obligations.
+So the core dialect as a whole does not meet the lawful class of the set
+monad: `alloca` has no outcome there. Its obligations are those of the
+semantics with memory, which each op meets: an op that touches no memory
+from its tie and what it meets here, and `alloca` by its own rule (the
+sections on the stack allocation obligations and on every valid core
+function, with memory).
 -/
 
 namespace Fir.Core
@@ -72,6 +75,7 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .fpext e m e' m', _ => convertFloat_propagatesPoison e m e' m' true
   | .fptrunc e m e' m', _ => convertFloat_propagatesPoison e m e' m' false
   | .ptradd n w, _ => ptradd_propagatesPoison n w
+  | .alloca k t c a n, _ => alloca_propagatesPoison k t c a n
   | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
   | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
@@ -87,57 +91,44 @@ theorem pos_of_typesValid {op : Op} {w : Nat} (hv : TypesValid (d := CoreDialect
 /-- Each valid core op instance that propagates poison returns a result on
 some operand vector with no poison. The divisions need their width above
 zero, which validation gives. -/
-theorem Op.returnsOnDefined_valid : (op : Op) → TypesValid (d := CoreDialect) op →
-    Fir.poisonClass (d := CoreDialect) op = .propagates → ReturnsOnDefined (d := CoreDialect) op
-  | .const w v, _, _ => const_returnsOnDefined w v
-  | .fconst e m v, _, _ => fconst_returnsOnDefined e m v
-  | .add w f, _, _ => add_returnsOnDefined w f
-  | .sub w f, _, _ => sub_returnsOnDefined w f
-  | .mul w f, _, _ => mul_returnsOnDefined w f
-  | .sdiv w x, hv, _ => sdiv_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self) x
-  | .udiv w x, hv, _ => udiv_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self) x
-  | .srem w, hv, _ => srem_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self)
-  | .urem w, hv, _ => urem_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self)
-  | .and w, _, _ => and_returnsOnDefined w
-  | .or w, _, _ => or_returnsOnDefined w
-  | .xor w, _, _ => xor_returnsOnDefined w
-  | .shl w, _, _ => shl_returnsOnDefined w
-  | .lshr w, _, _ => lshr_returnsOnDefined w
-  | .ashr w, _, _ => ashr_returnsOnDefined w
-  | .icmp p w, _, _ => icmp_returnsOnDefined p w
-  | .fcmp p fl e m, _, _ => fcmp_returnsOnDefined p fl e m
-  | .fbin o fl e m, _, _ => fbin_returnsOnDefined o fl e m
-  | .funary o fl e m, _, _ => funary_returnsOnDefined o fl e m
-  | .fma fl e m, _, _ => fma_returnsOnDefined fl e m
-  | .zext m n, _, _ => zext_returnsOnDefined m n
-  | .sext m n, _, _ => sext_returnsOnDefined m n
-  | .trunc m n, _, _ => trunc_returnsOnDefined m n
-  | .toBits e m, _, _ => toBits_returnsOnDefined e m
-  | .ofBits e m, _, _ => ofBits_returnsOnDefined e m
-  | .sitofp n e m, _, _ => intToFloat_returnsOnDefined n e m true
-  | .uitofp n e m, _, _ => intToFloat_returnsOnDefined n e m false
-  | .fpext e m e' m', _, _ => convertFloat_returnsOnDefined e m e' m' true
-  | .fptrunc e m e' m', _, _ => convertFloat_returnsOnDefined e m e' m' false
-  | .ptradd n w, _, _ => ptradd_returnsOnDefined n w
-  | .fptosi e m n, _, _ => floatToInt_returnsOnDefined e m n true
-  | .fptoui e m n, _, _ => floatToInt_returnsOnDefined e m n false
-  | .poison w, _, _ => poison_returnsOnDefined w
-  | .select _, _, h | .freeze _, _, h | .br, _, h | .condBr, _, h | .ret _, _, h | .unreachable, _, h
-  | .call .., _, h => nomatch h
+theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
+    TypesValid (d := CoreDialect) op → Fir.poisonClass (d := CoreDialect) op = .propagates →
+    ReturnsOnDefined (d := CoreDialect) op
+  | .const w v, _, _, _ => const_returnsOnDefined w v
+  | .fconst e m v, _, _, _ => fconst_returnsOnDefined e m v
+  | .add w f, _, _, _ => add_returnsOnDefined w f
+  | .sub w f, _, _, _ => sub_returnsOnDefined w f
+  | .mul w f, _, _, _ => mul_returnsOnDefined w f
+  | .sdiv w x, _, hv, _ => sdiv_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self) x
+  | .udiv w x, _, hv, _ => udiv_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self) x
+  | .srem w, _, hv, _ => srem_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self)
+  | .urem w, _, hv, _ => urem_returnsOnDefined w (pos_of_typesValid hv List.mem_cons_self)
+  | .and w, _, _, _ => and_returnsOnDefined w
+  | .or w, _, _, _ => or_returnsOnDefined w
+  | .xor w, _, _, _ => xor_returnsOnDefined w
+  | .shl w, _, _, _ => shl_returnsOnDefined w
+  | .lshr w, _, _, _ => lshr_returnsOnDefined w
+  | .ashr w, _, _, _ => ashr_returnsOnDefined w
+  | .icmp p w, _, _, _ => icmp_returnsOnDefined p w
+  | .fcmp p fl e m, _, _, _ => fcmp_returnsOnDefined p fl e m
+  | .fbin o fl e m, _, _, _ => fbin_returnsOnDefined o fl e m
+  | .funary o fl e m, _, _, _ => funary_returnsOnDefined o fl e m
+  | .fma fl e m, _, _, _ => fma_returnsOnDefined fl e m
+  | .zext m n, _, _, _ => zext_returnsOnDefined m n
+  | .sext m n, _, _, _ => sext_returnsOnDefined m n
+  | .trunc m n, _, _, _ => trunc_returnsOnDefined m n
+  | .toBits e m, _, _, _ => toBits_returnsOnDefined e m
+  | .ofBits e m, _, _, _ => ofBits_returnsOnDefined e m
+  | .sitofp n e m, _, _, _ => intToFloat_returnsOnDefined n e m true
+  | .uitofp n e m, _, _, _ => intToFloat_returnsOnDefined n e m false
+  | .fpext e m e' m', _, _, _ => convertFloat_returnsOnDefined e m e' m' true
+  | .fptrunc e m e' m', _, _, _ => convertFloat_returnsOnDefined e m e' m' false
+  | .ptradd n w, _, _, _ => ptradd_returnsOnDefined n w
+  | .fptosi e m n, _, _, _ => floatToInt_returnsOnDefined e m n true
+  | .fptoui e m n, _, _, _ => floatToInt_returnsOnDefined e m n false
+  | .poison w, _, _, _ => poison_returnsOnDefined w
+  | .select _, _, _, h | .freeze _, _, _, h | .br, _, _, h | .condBr, _, _, h | .ret _, _, _, h
+  | .unreachable, _, _, h | .call .., _, _, h => nomatch h
+  | .alloca .., h, _, _ => nomatch h
 
 end Fir.Core
-
-namespace Fir
-
-/-- The core dialect is lawful: every core op instance whose types
-validation accepts meets the poison obligations. -/
-theorem Core.lawfulDialectPoison : LawfulDialectPoison CoreDialect where
-  poison_isRefinedBy _ := Core.Ty.poison_isRefinedBy
-  propagates op _ := Core.Op.propagates_all op
-  returnsOnDefined := Core.Op.returnsOnDefined_valid
-  total op _ := Core.Op.total_all op
-  monotone op _ := Core.Op.monotone_all op
-
-instance : LawfulDialectPoison CoreDialect := Core.lawfulDialectPoison
-
-end Fir

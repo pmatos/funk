@@ -55,7 +55,9 @@ for a valid module.
 namespace Fir.Core
 
 /-- Every core terminator and every core op with no callee is monotone, at
-every width: every core op but `call`. -/
+every width: every core op but `call`. `alloca` has no rule in the set
+monad, so no outcome there, and is monotone in it at once; it is monotone
+with memory by its own rule. -/
 theorem Op.monotone_all : (op : Op) →
     Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
     OpMonotone (d := CoreDialect) op
@@ -99,6 +101,7 @@ theorem Op.monotone_all : (op : Op) →
   | .ret ts, _ => ret_monotone ts
   | .unreachable, _ => unreachable_monotone
   | .call .., h => by rcases h with h | h <;> cases h
+  | .alloca .., _ => fun _ _ _ => ⟨fun _ _ he => he.elim, fun h => nomatch h⟩
 
 /-- Every terminator and every op with no callee of every core function is
 monotone, valid or not. -/

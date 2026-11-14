@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text, checked: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11182523454328524149")
+:::moduleDocs (fingerprint := "10919712492384269602")
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "14600760513435700540")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "17526737526281826231")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section],
@@ -26,7 +26,7 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 40 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers and the pointer offset in three memories among them, with each of the ten
+holds each of the 41 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers, the pointer offset in three memories, and $`\mathsf{alloca}` of each kind, with and without a count and an alignment, of an integer, a pointer and a float type, among them, with each of the ten
 predicates and each of the fourteen float predicates, at widths from 1 to
 128, float constants at `f32`, `f64`, `f16` and
 $`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, the

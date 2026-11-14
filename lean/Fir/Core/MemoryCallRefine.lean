@@ -12,15 +12,13 @@ for no budget for the new callee, in two forms:
 
 * from given memories, for every callee `@g`, whatever its parameter types,
   pointers included, and whatever its new body does to the memories. Every
-  core op has finitely many outcomes with memory: each runs by its rule in
-  the set monad and keeps the memories, and its rule in the set monad is
-  the set of its rule in the tree of choices, whose choices of _w_ bits have
-  2 to the power _w_ options. So congruence with ops of finitely many
-  outcomes applies (#214,
-  `docs/decisions/semantics-refinement.md#congruence-in-the-callee`). No core
-  op touches memory yet; one that does, such as an allocation, has no tie,
-  and must show by its own rule that it has finitely many outcomes, which a
-  deterministic allocation has;
+  core op has finitely many outcomes with memory: each op that touches no
+  memory runs by its rule in the set monad and keeps the memories, and its
+  rule in the set monad is the set of its rule in the tree of choices,
+  whose choices of _w_ bits have 2 to the power _w_ options; `alloca`, which
+  has no tie, has one outcome by its own rule, since an allocation is
+  deterministic. So congruence with ops of finitely many outcomes applies
+  (#214, `docs/decisions/semantics-refinement.md#congruence-in-the-callee`);
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
   memory effect. Its runs then do not depend on the memories, so refinement
@@ -33,12 +31,12 @@ for no budget for the new callee, in two forms:
 
 The core dialect meets what the general theorems ask:
 
-* no core op declares a memory effect, so every function of every core
-  module reaches no memory today. The form with memory still asks it of
-  `@g`, so that it does not depend on every core function reaching none;
-* each core op ignores the memories, since none touches memory. An op that
-  touches memory declares it, so only the ops that declare no memory effect
-  are asked;
+* no core op but `alloca` declares a memory effect, so a function of a
+  core module reaches no memory when no function that its run may reach
+  has an `alloca`. The form with memory asks it of `@g`;
+* each core op that declares no memory effect ignores the memories, since
+  it touches none. `alloca`, the one op that touches memory, declares that
+  it allocates, so it is not asked;
 * the core dialect is lawful in its monotonicity, the refinement of core
   values is reflexive and transitive, and the symbols of a valid module are
   unique.
@@ -54,15 +52,35 @@ stuck path (the section on core functions with memory).
 
 namespace Fir.Core
 
-/-- No core op declares a memory effect. -/
-theorem Op.effects_touchesNoMemory (op : Op) :
+/-- A core op that touches no memory, every core op but `alloca`, declares
+no memory effect. -/
+theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
-  cases op <;> exact ⟨nofun, nofun, nofun⟩
+  cases op with
+  | alloca => cases hm
+  | _ => exact ⟨nofun, nofun, nofun⟩
 
-/-- Every function of every core table reaches no memory: no core op
-declares a memory effect. -/
-theorem reachesNoMemory (t : SymbolTable CoreDialect) (s : Name) : t.ReachesNoMemory s :=
-  fun _ _ _ _ o _ => Op.effects_touchesNoMemory o.op
+/-- A core op that declares no memory effect touches no memory: `alloca`
+declares that it allocates in the memory of its result. -/
+theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
+    op.touchesMemory = false := by
+  cases op with
+  | alloca _ _ _ _ n => exact ((h n).2.2 (List.mem_singleton_self n)).elim
+  | _ => rfl
+
+/-- A function of a core table reaches no memory when no function that its
+run may reach, itself included, has an op that touches memory: every op of
+those functions declares no memory effect. -/
+theorem reachesNoMemory {t : SymbolTable CoreDialect} {s : Name}
+    (h : ∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps,
+      o.op.touchesMemory = false) : t.ReachesNoMemory s :=
+  fun g hg f hf o ho => Op.effects_touchesNoMemory o.op (h g hg f hf o ho)
+
+/-- A function of a core table reaches no memory when no function of the
+table has an op that touches memory. -/
+theorem reachesNoMemory_of_all {t : SymbolTable CoreDialect} (s : Name)
+    (h : ∀ f ∈ t.funcs, ∀ o ∈ f.allOps, o.op.touchesMemory = false) : t.ReachesNoMemory s :=
+  reachesNoMemory fun _ _ f hf => h f (List.mem_of_find?_eq_some hf)
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
   (ρ : DialectEffects.Mem CoreDialect → N)
@@ -72,8 +90,9 @@ at every layout and naming: it runs by its rule in the set monad and keeps
 the memories. -/
 theorem opsIgnoreMemory :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
-    OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ _ =>
-  OwnRuleHas.ofLifts (Op.liftsSetM op) lay ρ (P := IgnoresMemory) IgnoresMemory.lift
+    OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ h =>
+  OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h)) lay ρ (P := IgnoresMemory)
+    IgnoresMemory.lift
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 
@@ -84,9 +103,14 @@ the tree of choices, whose choices of bits have finitely many options. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
     OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by
+  cases hmem : op.touchesMemory with
+  | true =>
+    cases op <;> try cases hmem
+    exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
+  | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl
-  rw [(Op.liftsSetM op lay ρ args).1, (Op.liftsSetM op lay ρ args).2]
+  rw [(Op.liftsSetM op hmem lay ρ args).1, (Op.liftsSetM op hmem lay ρ args).2]
   refine ⟨fun _ => FinitelyMany.lift ?_, fun _ => FinitelyMany.lift ?_⟩
   · rw [← hm.denote op args]
     exact ChoiceTree.toSet_finitelyMany _
