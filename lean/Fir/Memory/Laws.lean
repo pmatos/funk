@@ -210,15 +210,15 @@ theorem store_blocks_ne {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
 allocation. -/
 theorem store_shape {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
     (h : M.store p us = .ok M') (a : AllocId) :
-    (M'.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) =
-      (M.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) := by
+    (M'.blocks[a]?).map Block.shape = (M.blocks[a]?).map Block.shape := by
   obtain ⟨a', b, o, hl, rfl⟩ := store_eq_ok h
   obtain ⟨-, hb, -, h0, hn, rfl⟩ := locate_eq_ok.1 hl
   by_cases e : a' = a
   · subst e
     have hlen : a' < M.blocks.length := (List.getElem?_eq_some_iff.1 hb).1
     rw [List.getElem?_set_self hlen, hb]
-    simp only [Option.map_some, Block.write_length b (by omega : p.offset.toNat + us.length ≤ _)]
+    simp only [Option.map_some, Block.shape,
+      Block.write_length b (by omega : p.offset.toNat + us.length ≤ _)]
     rfl
   · simp [List.getElem?_set_ne e]
 
@@ -233,7 +233,7 @@ theorem locate_store {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
   | some a =>
     have hs := store_shape h a
     simp only [locate]
-    cases h1 : M'.blocks[a]? <;> cases h2 : M.blocks[a]? <;> simp_all [Except.map] <;>
+    cases h1 : M'.blocks[a]? <;> cases h2 : M.blocks[a]? <;> simp_all [Except.map, Block.shape] <;>
       grind
 
 /-- A load after a store, of the same units through the same pointer, gives

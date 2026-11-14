@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12246109993415078616")
+:::moduleDocs (fingerprint := "8050425547938664499")
 :::
 
-:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "16356593750943413546")
+:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "16077720331530795137")
 *Definition: what a memory holds.* For a memory $`M` with the blocks
 $`b_0 \ldots b_{k-1}`:
 
-* its _allocations_ are the kind, alignment, size and liveness of each
-  block, in order:
-  $`\mathrm{allocs}(M) = (b_i.\mathit{kind}, b_i.\mathit{align}, |b_i.\mathit{units}|, b_i.\mathit{live})_{i < k}`;
+* its _allocations_ are the shape of each block, its kind, alignment,
+  size and liveness, in order:
+  $`\mathrm{allocs}(M) = (\mathrm{shape}(b_i))_{i < k}`;
 * its _contents_ are the units of each block, in order:
   $`\mathrm{contents}(M) = (b_i.\mathit{units})_{i < k}`;
 * $`M[a, i]` is the unit at offset $`i` of the allocation $`a`, or

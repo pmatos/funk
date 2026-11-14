@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9040727174539523203")
+:::moduleDocs (fingerprint := "16704095441014245422")
 :::
 
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "17844605018342700448")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "8795274432930579993")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
@@ -25,13 +25,15 @@ $$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = 
 
 So a fragment of a pointer keeps its pointer, and its provenance, in every
 memory that refines it, and units of bits keep their bits. A block $`b'`
-refines $`b` when it has the same kind, alignment, liveness and size, and,
-while $`b` is live, its units refine the units of $`b` one by one. No
-access reaches a freed block, so its units are not compared: a store to a
-block that is then freed may be dropped. A memory refines another when its
-blocks refine the other's one by one, in the order they were made: both
-have the same allocations, each with its kind, alignment, size and
-liveness.
+refines $`b` when it has the same kind, liveness and size, its alignment
+is a multiple of the alignment of $`b`, $`b.\alpha \mid b'.\alpha`, and,
+while $`b` is live, its units refine the units of $`b` one by one. So a
+pass may raise an allocation's alignment, and an access aligned in $`b` is
+aligned in $`b'`. No access reaches a freed block, so its units are not
+compared: a store to a block that is then freed may be dropped. A memory
+refines another when its blocks refine the other's one by one, in the
+order they were made: both have the same allocations, each with its kind,
+size and liveness.
 :::
 
 :::readable Fir.Memory.MemUnit.isRefinedBy_refl Fir.Memory.MemUnit.isRefinedBy_trans Fir.Memory.Block.isRefinedBy_refl Fir.Memory.Block.isRefinedBy_trans Fir.Memory.Memory.isRefinedBy_refl Fir.Memory.Memory.isRefinedBy_trans (fingerprint := "5718639929467021518")

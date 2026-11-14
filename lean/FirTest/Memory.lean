@@ -14,13 +14,13 @@ open Fir.Memory
 
 deriving instance BEq for Except
 
-/-- A memory with one stack allocation of four bytes, aligned to four, and
+/-- A memory with one stack allocation of four bytes, aligned to two, and
 its pointer. -/
-def m1 : Pointer × Memory 8 := Memory.empty.alloc .stack 4 4
+def m1 : Pointer × Memory 8 := Memory.empty.alloc .stack 4 2
 
-/-- `m1` with a heap allocation of two bytes after it, aligned to two, and
+/-- `m1` with a heap allocation of two bytes after it, aligned to eight, and
 its pointer. -/
-def m2 : Pointer × Memory 8 := m1.2.alloc .heap 2 2
+def m2 : Pointer × Memory 8 := m1.2.alloc .heap 2 8
 
 def b1 : MemUnit 8 := .bits 0x2a
 def b2 : MemUnit 8 := .bits 0x07
@@ -29,8 +29,8 @@ def b2 : MemUnit 8 := .bits 0x07
 #guard m1.2.load m1.1 4 == .ok (List.replicate 4 .poison)
 #guard m1.1 == ⟨some 0, 0⟩ && m2.1 == ⟨some 1, 0⟩
 
--- Each allocation records the alignment it was allocated with.
-#guard m2.2.blocks.map (·.align) == [4, 2]
+-- Each allocation records the size and the alignment it was allocated with.
+#guard m2.2.blocks.map (fun b => (b.units.length, b.align)) == [(4, 2), (2, 8)]
 
 -- A store and the load after it, of units in the middle of the block.
 #guard (do

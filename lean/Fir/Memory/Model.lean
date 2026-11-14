@@ -90,14 +90,21 @@ inductive AllocKind where
 /-- An allocation: its kind, its alignment, its units, and whether it is
 still live. The alignment counts units: a block has no address, and the
 alignment is what every address it is given is a multiple of, so that an
-access can be checked against it (#231). A freed block keeps its units, but
-no access may reach them. -/
+access can be checked against it (#231). The ops that allocate give a power
+of two, as the human ruled on 2026-11-11 on #231, and validation rejects
+any other; the model itself takes any number. A freed block keeps its
+units, but no access may reach them. -/
 structure Block (u : Nat) where
   kind : AllocKind
   align : Nat
   units : List (MemUnit u)
   live : Bool
   deriving Repr, DecidableEq
+
+/-- The shape of a block: its kind, its alignment, its size and its
+liveness, everything but what its units hold. -/
+def Block.shape {u : Nat} (b : Block u) : AllocKind × Nat × Nat × Bool :=
+  (b.kind, b.align, b.units.length, b.live)
 
 /-- A memory whose units are `u` bits wide: its allocations, in the order
 they were made, so that the block with id `a` is `blocks[a]`. -/
@@ -128,9 +135,9 @@ def Block.read (b : Block u) (o n : Nat) : List (MemUnit u) :=
   (b.units.drop o).take n
 
 /-- The block with its units from offset `o` on replaced by `us`. Its kind,
-alignment and liveness stay as they were, and so does its size when the units fit in
-it, from `o` to `o + |us|`. A store writes only units that fit, as its
-access checks. -/
+alignment and liveness stay as they were, and so does its size when the
+units fit in it, from `o` to `o + |us|`. A store writes only units that
+fit, as its access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 

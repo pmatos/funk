@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Memory laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14337799631052638016")
+:::moduleDocs (fingerprint := "16193504762057093044")
 :::
 
 :::readable Fir.Memory.Block.write_length (fingerprint := "6572027941022401979")
@@ -111,7 +111,7 @@ gives $`M'`, then $`M'[a] = M[a]` for every allocation $`a` that $`p` has
 no provenance for.
 :::
 
-:::readable Fir.Memory.Memory.store_shape (fingerprint := "4010066907825706953")
+:::readable Fir.Memory.Memory.store_shape (fingerprint := "3355720674628488789")
 *Theorem: a store keeps every allocation's shape.* If a store gives
 $`M'`, then for every $`a`, $`M'[a]` has the kind, alignment, size and
 liveness of $`M[a]`, and $`M'` has a block for $`a` exactly when $`M` has

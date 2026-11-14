@@ -26,8 +26,7 @@ theorem unitAt_eq (M : Memory u) (a i : Nat) :
 /-- Two memories of the same allocations have, at each id, blocks of the
 same kind, alignment, size and liveness. -/
 theorem shape_getElem? {M M' : Memory u} (h : M.allocs = M'.allocs) (a : Nat) :
-    (M.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) =
-      (M'.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) := by
+    (M.blocks[a]?).map Block.shape = (M'.blocks[a]?).map Block.shape := by
   have := congrArg (·[a]?) h
   simpa [Memory.allocs, List.getElem?_map] using this
 
@@ -40,7 +39,8 @@ theorem locate_allocs {M M' : Memory u} (h : M.allocs = M'.allocs) (p : Pointer)
   | none => rfl
   | some a =>
     have k := shape_getElem? h a
-    cases hb : M.blocks[a]? <;> cases hb' : M'.blocks[a]? <;> simp_all [Memory.locate] <;>
+    cases hb : M.blocks[a]? <;> cases hb' : M'.blocks[a]? <;>
+      simp_all [Memory.locate, Block.shape] <;>
       split <;> (try split) <;> rfl
 
 /-- A write inside a block holds the written units from its offset on, and
@@ -89,10 +89,11 @@ theorem store_readsNot (x : Mem) (p : Pointer) (us : List (MemUnit (unit x))) :
         obtain ⟨-, hb', -, -, hn', -⟩ := Memory.locate_eq_ok.1 hm'
         have k := shape_getElem? hm a
         rw [hb, hb'] at k
-        simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at k
+        simp only [Option.map_some, Option.some.injEq, Block.shape, Prod.mk.injEq] at k
         simp only [Memories.set_mem_self, Memory.allocs, List.map_set]
         rw [← Memory.allocs, ← Memory.allocs, hm]
-        simp only [Memory.Block.write, List.length_append, List.length_take, List.length_drop]
+        simp only [Block.shape, Memory.Block.write, List.length_append, List.length_take,
+          List.length_drop]
         congr 1
         simp only [Prod.mk.injEq]
         refine ⟨k.1.symm, k.2.1.symm, by omega, k.2.2.2.symm⟩

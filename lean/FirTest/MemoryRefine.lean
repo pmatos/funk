@@ -34,7 +34,7 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ M' : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok M' → M ⊑ M' := by
   intro M M' h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
+  exact ⟨⟨rfl, Nat.dvd_refl _, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
 
 /-- No access reaches a freed block, so its units are not compared: a store
 to a stack slot that is then freed may be dropped. -/
@@ -42,7 +42,7 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → N.free 0 ⊑ M.free 0 := by
   intro M N h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
+  exact ⟨⟨rfl, Nat.dvd_refl _, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
 
 /-- While the block is live, the store may not be dropped. -/
 example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
@@ -55,9 +55,14 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
 example : ¬ ((Memory.empty : Memory 8) ⊑ ((Memory.empty.alloc .heap 1 1).2 : Memory 8)) :=
   fun h => nomatch h
 
-/-- Nor do two memories whose allocations differ only in their alignment,
-so an access is aligned in both or in neither. -/
-example : ¬ (((Memory.empty.alloc .stack 1 1).2 : Memory 8) ⊑
+/-- A pass may raise an allocation's alignment: an access aligned in the
+first memory is aligned in the second. -/
+example : ((Memory.empty.alloc .stack 1 2).2 : Memory 8) ⊑
+    ((Memory.empty.alloc .stack 1 8).2 : Memory 8) :=
+  ⟨⟨rfl, ⟨4, rfl⟩, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
+
+/-- It may not lower it. -/
+example : ¬ (((Memory.empty.alloc .stack 1 8).2 : Memory 8) ⊑
     ((Memory.empty.alloc .stack 1 2).2 : Memory 8)) :=
   fun h => absurd h.1.2.1 (by decide)
 

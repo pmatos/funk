@@ -62,7 +62,7 @@ variable {u : Nat}
 /-- The allocations of a memory: the kind, the alignment, the size and the
 liveness of each block, in the order they were made. -/
 def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Nat × Bool) :=
-  M.blocks.map fun b => (b.kind, b.align, b.units.length, b.live)
+  M.blocks.map Block.shape
 
 /-- The units of each block of a memory, in the order they were made. -/
 def Memory.contents (M : Memory u) : List (List (MemUnit u)) :=

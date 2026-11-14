@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7692471227007451646")
+:::moduleDocs (fingerprint := "12826542979453477885")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -85,8 +85,17 @@ $`\alpha \in \mathbb{N}`, its units $`\vec{x}`, and whether it is live,
 $`\ell \in \{\mathsf{true}, \mathsf{false}\}`. Its size is $`|\vec{x}|`.
 The alignment counts units. A block has no address; its alignment is what
 every address it is given is a multiple of, so that an op that accesses
-memory can check an access against it (#231). A freed block keeps its
+memory can check an access against it (#231). The ops that allocate give a
+power of two, as the human ruled on 2026-11-11, and validation rejects any
+other. A freed block keeps its
 units, but no access may reach them.
+:::
+
+:::readable Fir.Memory.Block.shape (fingerprint := "2876835036810472392")
+*Definition: a block's shape.* The shape of a block is everything but what
+its units hold: $`\mathrm{shape}(k, \alpha, \vec{x}, \ell) = (k, \alpha, |\vec{x}|, \ell)`.
+Two memories with the same shapes, block by block, have the same
+allocations: an access lands or faults in the same way in both.
 :::
 
 :::readable Fir.Memory.Memory (fingerprint := "3821757417443363225")
