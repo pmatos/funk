@@ -147,15 +147,17 @@ finitely many ways, each with its own budget, and the largest serves. A
 black box's target cannot diverge on an input where its source does not, so
 it has a budget for that input. So congruence with memory asks for no
 budget for the new callee, whatever its parameter types and whatever it does
-to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`,
+to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`, in
+`lean/Fir/Execution/MemoryFiniteReplace.lean`, from the engine
+`Func.memOps_notExhausted_of_finite`, in
 `lean/Fir/Execution/MemoryFiniteDown.lean`). The argument is by budgets and
 needs no infinite path. Every core op has finitely many outcomes
 (`Core.opsFinite`): it is the set of its rule in the tree of choices, whose
 choices of _w_ bits have 2 to the power _w_ options. So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
-pointers and memory included. An op that touches memory, such as an
-allocation, proves the hypothesis by its own rule; nothing asks that every
-core function reach no memory. The hypothesis is passed to the theorems, as
+pointers and memory included. No core op touches memory yet; one that does,
+such as an allocation, will have to show the hypothesis by its own rule.
+Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they
 replace no callee, and keep the engine with a bound of zero. Rejected: an
