@@ -55,9 +55,7 @@ theorem Func.memRunsFrom_isRefinedBy_of_opsFinite {M M' : Module d}
     fun hne hen h => (Func.memRunsFrom_run hne).2 ⟨_, hen, _, h, rfl⟩
   intro t ht
   match t, ht with
-  | .ret o, ht =>
-    exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
-  | .ub r, ht =>
+  | .ret _, ht | .ub _, ht =>
     exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
   | .fuelExhausted, ht =>
     classical
