@@ -24,10 +24,10 @@ theorem unitAt_eq (M : Memory u) (a i : Nat) :
   simp [Memory.unitAt, List.head?_drop]
 
 /-- Two memories of the same allocations have, at each id, blocks of the
-same kind, size and liveness. -/
+same kind, alignment, size and liveness. -/
 theorem shape_getElem? {M M' : Memory u} (h : M.allocs = M'.allocs) (a : Nat) :
-    (M.blocks[a]?).map (fun b => (b.kind, b.units.length, b.live)) =
-      (M'.blocks[a]?).map (fun b => (b.kind, b.units.length, b.live)) := by
+    (M.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) =
+      (M'.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) := by
   have := congrArg (·[a]?) h
   simpa [Memory.allocs, List.getElem?_map] using this
 
@@ -95,7 +95,7 @@ theorem store_readsNot (x : Mem) (p : Pointer) (us : List (MemUnit (unit x))) :
         simp only [Memory.Block.write, List.length_append, List.length_take, List.length_drop]
         congr 1
         simp only [Prod.mk.injEq]
-        refine ⟨k.1.symm, by omega, k.2.2.symm⟩
+        refine ⟨k.1.symm, k.2.1.symm, by omega, k.2.2.2.symm⟩
       · obtain ⟨-, hb, -, h0, hn, rfl⟩ := Memory.locate_eq_ok.1 hs
         obtain ⟨-, hb', -, -, hn', -⟩ := Memory.locate_eq_ok.1 hm'
         simp only [Memories.set_mem_self, unitAt_eq, List.getElem?_set]

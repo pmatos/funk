@@ -125,10 +125,12 @@ memory yet (#231). Memory is a state layer over the way of computing
   memories the units of their entries (`unitsOf lay`). A frame lists the
   stack allocations its call made.
 - `MonadMemory` gives allocating, freeing, loading and storing on a named
-  memory, and a faulting access is UB. `StateT (Memories Mem unit) m` keeps
-  `m`'s choice and UB and gives the memory effect. A stuck path keeps the
-  memories it reached, and a UB path shows none. Monad morphisms lift through
-  the layer.
+  memory, and a faulting access is UB. An allocation records its kind and
+  its alignment in units, which refinement and the effect obligations
+  compare, so an access checked against it agrees in both runs.
+  `StateT (Memories Mem unit) m` keeps `m`'s choice and UB and gives the
+  memory effect. A stuck path keeps the memories it reached, and a UB path
+  shows none. Monad morphisms lift through the layer.
 - `MonadFrame.frame`, in `lean/Fir/Execution/Frame.lean`, runs a computation as
   one call. `Func.runOps` runs each callee in a frame, and `Func.run` runs the
   function it starts with in one, so no op runs outside a frame. In the layer a

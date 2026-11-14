@@ -30,49 +30,56 @@ example (m : Nat) (p : Pointer) (i : Nat) : ¬ ((MemUnit.frag m p i : MemUnit 8)
 
 /-- A fresh allocation holds poison, so a store into it gives memories that
 refine it. -/
-example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
+example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ M' : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok M' → M ⊑ M' := by
   intro M M' h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
+  exact ⟨⟨rfl, rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
 
 /-- No access reaches a freed block, so its units are not compared: a store
 to a stack slot that is then freed may be dropped. -/
-example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
+example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → N.free 0 ⊑ M.free 0 := by
   intro M N h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
+  exact ⟨⟨rfl, rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
 
 /-- While the block is live, the store may not be dropped. -/
-example : let M : Memory 8 := (Memory.empty.alloc .stack 1).2
+example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → ¬ (N ⊑ M) := by
   intro M N h hr
   cases h
-  exact nomatch (hr.1.2.2.2 rfl).1
+  exact nomatch (hr.1.2.2.2.2 rfl).1
 
 /-- Two memories whose allocations differ do not refine each other. -/
-example : ¬ ((Memory.empty : Memory 8) ⊑ ((Memory.empty.alloc .heap 1).2 : Memory 8)) :=
+example : ¬ ((Memory.empty : Memory 8) ⊑ ((Memory.empty.alloc .heap 1 1).2 : Memory 8)) :=
   fun h => nomatch h
+
+/-- Nor do two memories whose allocations differ only in their alignment,
+so an access is aligned in both or in neither. -/
+example : ¬ (((Memory.empty.alloc .stack 1 1).2 : Memory 8) ⊑
+    ((Memory.empty.alloc .stack 1 2).2 : Memory 8)) :=
+  fun h => absurd h.1.2.1 (by decide)
 
 /-! # The alloc dialect is lawful in its monotonicity -/
 
 /-- Allocating in memories that refine others gives the same pointer, and
 memories that refine the others'. -/
 theorem alloc_refines {N : Type} [DecidableEq N] {unit : N → Nat} (x : N) (k : AllocKind)
-    (n : Nat) : StateRefinedBy Eq (MonadMemory.alloc (m := StateT (Memories N unit) SetM) x k n)
-      (MonadMemory.alloc x k n) := by
+    (n al : Nat) :
+    StateRefinedBy Eq (MonadMemory.alloc (m := StateT (Memories N unit) SetM) x k n al)
+      (MonadMemory.alloc x k n al) := by
   intro S S' hS e he
   cases he
-  obtain ⟨hp, hm⟩ := hS.alloc x k n
-  exact ⟨.ok (S.alloc x k n), rfl, hp, hm⟩
+  obtain ⟨hp, hm⟩ := hS.alloc x k n al
+  exact ⟨.ok (S.alloc x k n al), rfl, hp, hm⟩
 
 /-- Each alloc op is monotone with memory, wherever a run names the
 dialect's memory: `alloc` allocates the same unit from memories that refine
 others, and `ret` returns from them. -/
 theorem alloc_memMonotone : ∀ op : AllocOp, MemMonotone (d := AllocDialect) op
   | .alloc => fun _ ρ _ _ _ =>
-    ⟨fun _ => StateRefinedBy.map _ (fun _ => trivial) (alloc_refines (ρ ()) .stack 1),
+    ⟨fun _ => StateRefinedBy.map _ (fun _ => trivial) (alloc_refines (ρ ()) .stack 1 1),
       fun h => (nomatch h)⟩
   | .ret => fun _ _ _ _ _ =>
     ⟨fun h => (nomatch h), fun _ S S' hS e he => by

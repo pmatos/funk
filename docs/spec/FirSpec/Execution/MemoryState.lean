@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16295078963347635802")
+:::moduleDocs (fingerprint := "427441628159677577")
 :::
 
-:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "2883893951779013492")
+:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "8539271766858200714")
 *Definition: the state layer.* Over a monad $`m`, a computation of the
 state layer takes the memories $`S` before it, and is a computation of
 $`m` whose results are pairs $`(a, S')` of a result and the memories
@@ -52,7 +52,7 @@ layer.* When $`\varphi` keeps choice and UB, so does its translation
 through the layer, by the two theorems above.
 :::
 
-:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store (fingerprint := "5667444096861358501")
+:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store (fingerprint := "12127281045085488736")
 *Theorem: a translation through the layer keeps the memory effect.* It
 keeps allocating and freeing, which end at once with a value. It keeps
 loads and stores when $`\varphi` keeps UB, since an access either ends at

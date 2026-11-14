@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (fingerprint := "7317244562869709793")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (fingerprint := "2562990505525076209")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on

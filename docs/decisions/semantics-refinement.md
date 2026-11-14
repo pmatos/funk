@@ -140,7 +140,9 @@ runs at every budget that the spec does not have.
 Runs with memory refine too, whatever their ops do to the memories. A poison
 unit of memory is refined by any unit, and a unit of bits or a pointer's
 fragment only by itself. A block is refined by a block of the same kind,
-liveness and size, whose units refine its own one by one while it is live.
+alignment, liveness and size, whose units refine its own one by one while it
+is live. Both blocks have one alignment, so an access that stage 4e of #231
+checks against it is aligned in both or in neither.
 No access reaches a freed block, so its units are not compared, and a store to
 a block that is then freed may be dropped. Refined memories have the same
 frames and allocations, each memory refined block by block

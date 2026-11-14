@@ -24,15 +24,18 @@ A unit holds one of three things:
   provenance, and is never read back as a pointer of another memory.
 
 The model gives four primitive operations: allocating a block of a given
-size and kind, freeing a block, and loading and storing a run of units. Loads
-and stores are the accesses. An access is immediate UB, a _fault_ below, when
-its pointer has no provenance for an allocation of the memory, when its
-allocation is freed, or when the units it touches are not all inside the
-allocation (ADR-2026-11-09-1542). Allocating and freeing never fault: the
-run frees a call's stack allocations when the call returns
+size, kind and alignment, freeing a block, and loading and storing a run of
+units. Loads and stores are the accesses. An access is immediate UB, a
+_fault_ below, when its pointer has no provenance for an allocation of the
+memory, when its allocation is freed, or when the units it touches are not
+all inside the allocation (ADR-2026-11-09-1542). Allocating and freeing
+never fault: the run frees a call's stack allocations when the call returns
 (ADR-2026-11-09-1548), and a heap allocation is freed by an external call,
-which the world answers. How a value of a type becomes units, and how an op
-reaches these operations, are left to the ops that use them.
+which the world answers. A block records the alignment it was allocated
+with, in units, so that the ops that access memory can check an access
+against it; the accesses of this model do not. How a value of a type
+becomes units, and how an op reaches these operations, are left to the ops
+that use them.
 
 A pointer of this model belongs to one memory, and its allocation id names an
 allocation of that memory alone. Which memory a pointer belongs to is its
@@ -84,10 +87,14 @@ inductive AllocKind where
   | heap
   deriving Repr, DecidableEq
 
-/-- An allocation: its kind, its units, and whether it is still live. A
-freed block keeps its units, but no access may reach them. -/
+/-- An allocation: its kind, its alignment, its units, and whether it is
+still live. The alignment counts units: a block has no address, and the
+alignment is what every address it is given is a multiple of, so that an
+access can be checked against it (#231). A freed block keeps its units, but
+no access may reach them. -/
 structure Block (u : Nat) where
   kind : AllocKind
+  align : Nat
   units : List (MemUnit u)
   live : Bool
   deriving Repr, DecidableEq
@@ -120,14 +127,14 @@ variable {u : Nat}
 def Block.read (b : Block u) (o n : Nat) : List (MemUnit u) :=
   (b.units.drop o).take n
 
-/-- The block with its units from offset `o` on replaced by `us`. Its kind
-and liveness stay as they were, and so does its size when the units fit in
+/-- The block with its units from offset `o` on replaced by `us`. Its kind,
+alignment and liveness stay as they were, and so does its size when the units fit in
 it, from `o` to `o + |us|`. A store writes only units that fit, as its
 access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 
-/-- The block, freed: no longer live, with its kind and its units. -/
+/-- The block, freed: no longer live, with its kind, alignment and units. -/
 def Block.kill (b : Block u) : Block u := { b with live := false }
 
 namespace Memory
@@ -135,11 +142,11 @@ namespace Memory
 /-- The memory before anything is allocated. -/
 def empty : Memory u := ⟨[]⟩
 
-/-- Allocates a block of `n` units of kind `k`. Its units are poison, its id
-is one that no allocation had before, and it gives the pointer to its first
-unit. -/
-def alloc (M : Memory u) (k : AllocKind) (n : Nat) : Pointer × Memory u :=
-  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, List.replicate n .poison, true⟩]⟩)
+/-- Allocates a block of `n` units of kind `k`, aligned to `al` units. Its
+units are poison, its id is one that no allocation had before, and it gives
+the pointer to its first unit. -/
+def alloc (M : Memory u) (k : AllocKind) (n al : Nat) : Pointer × Memory u :=
+  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, al, List.replicate n .poison, true⟩]⟩)
 
 /-- Frees the allocation `a`: it stays in the memory, and no access may
 reach it again. Freeing changes nothing else. It never faults: freeing an

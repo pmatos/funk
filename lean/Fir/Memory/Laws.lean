@@ -16,11 +16,13 @@ declares a write to it changes only what it stores (ADR-2026-11-09-1541).
 * A load after a store, of the same units through the same pointer, gives
   back what was stored.
 * A store changes no other allocation, and no unit of its own allocation
-  outside the units it stores. It leaves every allocation's kind, size and
-  liveness as they were, so it changes which accesses succeed in no way.
-* An allocation leaves every existing allocation as it was, and changes no
-  access through a pointer without provenance for the new allocation. A
-  free changes no other allocation.
+  outside the units it stores. It leaves every allocation's kind,
+  alignment, size and liveness as they were, so it changes which accesses
+  succeed in no way.
+* An allocation adds a block with the alignment it was given, leaves every
+  existing allocation as it was, and changes no access through a pointer
+  without provenance for the new allocation. A free changes no other
+  allocation.
 * After a free, every access to the freed allocation is UB.
 -/
 
@@ -147,43 +149,45 @@ theorem store_eq_ok {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
 
 /-- The pointer that an allocation gives has provenance for the new
 allocation, which no allocation had before, and points at its first unit. -/
-theorem alloc_fst (M : Memory u) (k : AllocKind) (n : Nat) :
-    (M.alloc k n).1 = ⟨some M.blocks.length, 0⟩ := rfl
+theorem alloc_fst (M : Memory u) (k : AllocKind) (n al : Nat) :
+    (M.alloc k n al).1 = ⟨some M.blocks.length, 0⟩ := rfl
 
 /-- An allocation leaves every existing allocation as it was. -/
-theorem alloc_blocks_lt (M : Memory u) (k : AllocKind) (n : Nat) {a : AllocId}
-    (ha : a < M.blocks.length) : (M.alloc k n).2.blocks[a]? = M.blocks[a]? := by
+theorem alloc_blocks_lt (M : Memory u) (k : AllocKind) (n al : Nat) {a : AllocId}
+    (ha : a < M.blocks.length) : (M.alloc k n al).2.blocks[a]? = M.blocks[a]? := by
   simp [alloc, List.getElem?_append_left ha]
 
-/-- An allocation adds one live block of its kind, of poison units. -/
-theorem alloc_blocks_new (M : Memory u) (k : AllocKind) (n : Nat) :
-    (M.alloc k n).2.blocks[M.blocks.length]? = some ⟨k, List.replicate n .poison, true⟩ := by
+/-- An allocation adds one live block of its kind and alignment, of poison
+units. -/
+theorem alloc_blocks_new (M : Memory u) (k : AllocKind) (n al : Nat) :
+    (M.alloc k n al).2.blocks[M.blocks.length]? =
+      some ⟨k, al, List.replicate n .poison, true⟩ := by
   simp [alloc]
 
 /-- An allocation changes no access through a pointer without provenance
 for the new allocation: it lands where it landed before, in the same block,
 or fails for the same reason. -/
-theorem locate_alloc (M : Memory u) (k : AllocKind) (size : Nat) {p : Pointer}
+theorem locate_alloc (M : Memory u) (k : AllocKind) (size al : Nat) {p : Pointer}
     (hp : p.prov ≠ some M.blocks.length) (n : Nat) :
-    (M.alloc k size).2.locate p n = M.locate p n := by
+    (M.alloc k size al).2.locate p n = M.locate p n := by
   obtain ⟨prov, off⟩ := p
   cases prov with
   | none => rfl
   | some a =>
     have ha : a ≠ M.blocks.length := fun e => hp (by simp [e])
-    have hb : (M.alloc k size).2.blocks[a]? = M.blocks[a]? := by
+    have hb : (M.alloc k size al).2.blocks[a]? = M.blocks[a]? := by
       rcases Nat.lt_or_gt_of_ne ha with h | h
-      · exact alloc_blocks_lt M k size h
+      · exact alloc_blocks_lt M k size al h
       · rw [List.getElem?_eq_none (by simp [alloc]; omega),
           List.getElem?_eq_none (by omega)]
     simp only [locate, hb]
 
 /-- Fresh memory holds poison: a load of `n` units in bounds of a new
 allocation gives `n` poisons. -/
-theorem load_alloc (M : Memory u) (k : AllocKind) {size : Nat} {off : Int} {n : Nat}
+theorem load_alloc (M : Memory u) (k : AllocKind) {size al : Nat} {off : Int} {n : Nat}
     (h0 : 0 ≤ off) (hn : off + n ≤ size) :
-    (M.alloc k size).2.load ⟨some M.blocks.length, off⟩ n = .ok (List.replicate n .poison) := by
-  rw [load_of_locate (locate_eq_ok.2 ⟨rfl, alloc_blocks_new M k size, rfl, h0, by simpa using hn,
+    (M.alloc k size al).2.load ⟨some M.blocks.length, off⟩ n = .ok (List.replicate n .poison) := by
+  rw [load_of_locate (locate_eq_ok.2 ⟨rfl, alloc_blocks_new M k size al, rfl, h0, by simpa using hn,
     rfl⟩)]
   simp only [Block.read, List.drop_replicate, List.take_replicate, Except.ok.injEq]
   congr 1
@@ -202,11 +206,12 @@ theorem store_blocks_ne {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
   have : a' ≠ a := fun e => ha (e ▸ hp)
   simp [List.getElem?_set_ne this]
 
-/-- A store keeps the kind, size and liveness of every allocation. -/
+/-- A store keeps the kind, alignment, size and liveness of every
+allocation. -/
 theorem store_shape {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
     (h : M.store p us = .ok M') (a : AllocId) :
-    (M'.blocks[a]?).map (fun b => (b.kind, b.units.length, b.live)) =
-      (M.blocks[a]?).map (fun b => (b.kind, b.units.length, b.live)) := by
+    (M'.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) =
+      (M.blocks[a]?).map (fun b => (b.kind, b.align, b.units.length, b.live)) := by
   obtain ⟨a', b, o, hl, rfl⟩ := store_eq_ok h
   obtain ⟨-, hb, -, h0, hn, rfl⟩ := locate_eq_ok.1 hl
   by_cases e : a' = a

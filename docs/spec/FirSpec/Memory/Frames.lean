@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memories of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11371100963345902637")
+:::moduleDocs (fingerprint := "15509265350138046377")
 :::
 
 :::readable Fir.Memory.Memories (fingerprint := "11688577113277533231")
@@ -84,9 +84,10 @@ of the memory $`x` adds $`(x, a)` to the innermost frame. Outside every
 call there is no frame, and nothing is recorded.
 :::
 
-:::readable Fir.Memory.Memories.alloc (fingerprint := "9668364342418105557")
+:::readable Fir.Memory.Memories.alloc (fingerprint := "2210556411997624409")
 *Definition: allocating in one memory.* Allocating $`n` units of kind
-$`k` in the memory $`x` is the memory model's allocation in
+$`k`, aligned to $`\alpha` units, in the memory $`x` is the memory
+model's allocation in
 $`\mathit{mem}(x)`, which gives the pointer $`(|\mathit{mem}(x)|, 0)` to
 the new allocation. A stack allocation is then recorded in the innermost
 frame, so that it is freed when its call returns; an allocation of

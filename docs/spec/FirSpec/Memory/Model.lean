@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6874093456780205899")
+:::moduleDocs (fingerprint := "7692471227007451646")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -78,11 +78,15 @@ stack,global,heap   \mathsf{stack} \mid \mathsf{global} \mid \mathsf{heap}
 Managed memory can be added as another kind.
 :::
 
-:::readable Fir.Memory.Block (fingerprint := "1929426076441996878")
-*Definition: an allocation's block.* A block is a triple
-$`(k, \vec{x}, \ell)`: its kind $`k`, its units $`\vec{x}`, and whether it
-is live, $`\ell \in \{\mathsf{true}, \mathsf{false}\}`. Its size is
-$`|\vec{x}|`. A freed block keeps its units, but no access may reach them.
+:::readable Fir.Memory.Block (fingerprint := "17161636811744449995")
+*Definition: an allocation's block.* A block is a quadruple
+$`(k, \alpha, \vec{x}, \ell)`: its kind $`k`, its alignment
+$`\alpha \in \mathbb{N}`, its units $`\vec{x}`, and whether it is live,
+$`\ell \in \{\mathsf{true}, \mathsf{false}\}`. Its size is $`|\vec{x}|`.
+The alignment counts units. A block has no address; its alignment is what
+every address it is given is a multiple of, so that an op that accesses
+memory can check an access against it (#231). A freed block keeps its
+units, but no access may reach them.
 :::
 
 :::readable Fir.Memory.Memory (fingerprint := "3821757417443363225")
@@ -112,22 +116,22 @@ outOfBounds    \mathsf{outOfBounds}
 Each has a reason in words, which a run that faults gives for its UB.
 :::
 
-:::readable Fir.Memory.Block.read Fir.Memory.Block.write (fingerprint := "11238998448373888792")
+:::readable Fir.Memory.Block.read Fir.Memory.Block.write (fingerprint := "8008380081929110081")
 *Definition: reading and writing a block.* Reading $`n` units of a block
 from offset $`o` gives $`\vec{x}[o \,..\, o + n]`, its units from $`o` on,
 at most $`n` of them. Writing the units $`\vec{y}` at offset $`o` puts
 them in place of the units from $`o` on:
 
-$$`(k, \vec{x}, \ell)[o := \vec{y}] = (k,~ \vec{x}[0 \,..\, o]~\vec{y}~\vec{x}[o + |\vec{y}| \,..\,],~ \ell)`
+$$`(k, \alpha, \vec{x}, \ell)[o := \vec{y}] = (k,~ \alpha,~ \vec{x}[0 \,..\, o]~\vec{y}~\vec{x}[o + |\vec{y}| \,..\,],~ \ell)`
 
-The kind and the liveness stay as they were, and so does the size when
+The kind, the alignment and the liveness stay as they were, and so does the size when
 the units fit, $`o + |\vec{y}| \le |\vec{x}|`. A store writes only units
 that fit, as its access checks.
 :::
 
-:::readable Fir.Memory.Block.kill (fingerprint := "10408486902089807610")
-*Definition: a freed block.* $`\mathrm{kill}(k, \vec{x}, \ell) = (k, \vec{x}, \mathsf{false})`:
-the block, no longer live, with its kind and its units.
+:::readable Fir.Memory.Block.kill (fingerprint := "6617752579142007983")
+*Definition: a freed block.* $`\mathrm{kill}(k, \alpha, \vec{x}, \ell) = (k, \alpha, \vec{x}, \mathsf{false})`:
+the block, no longer live, with its kind, its alignment and its units.
 :::
 
 :::readable Fir.Memory.Memory.empty (fingerprint := "4566367693092568579")
@@ -135,12 +139,12 @@ the block, no longer live, with its kind and its units.
 no blocks: $`M = \epsilon`.
 :::
 
-:::readable Fir.Memory.Memory.alloc (fingerprint := "6826753237597700476")
-*Definition: allocating.* Allocating $`n` units of kind $`k` in $`M` adds
-one live block of $`n` poisons at the end, and gives the pointer to its
-first unit:
+:::readable Fir.Memory.Memory.alloc (fingerprint := "14967459395614903136")
+*Definition: allocating.* Allocating $`n` units of kind $`k`, aligned to
+$`\alpha` units, in $`M` adds one live block of $`n` poisons at the end,
+and gives the pointer to its first unit:
 
-$$`\mathrm{alloc}_k(M, n) = \big((|M|, 0),~ M~(k, \mathsf{poison}^n, \mathsf{true})\big)`
+$$`\mathrm{alloc}_k(M, n, \alpha) = \big((|M|, 0),~ M~(k, \alpha, \mathsf{poison}^n, \mathsf{true})\big)`
 
 The new allocation's id is $`|M|`, which no allocation had before.
 Provenance comes only from allocations: a pointer has provenance for an
@@ -163,7 +167,7 @@ frees a heap allocation.
 pointer $`(a^?, o)` lands in the allocation $`a`, at offset $`o`, when all
 of these hold; otherwise it faults with the first that fails:
 
-* $`a` is given, and $`M` has a block $`M[a] = (k, \vec{x}, \ell)`;
+* $`a` is given, and $`M` has a block $`M[a] = (k, \alpha, \vec{x}, \ell)`;
   otherwise $`\mathsf{noProvenance}`;
 * the block is live, $`\ell = \mathsf{true}`; otherwise $`\mathsf{freed}`;
 * every unit it touches is inside the block, $`0 \le o` and

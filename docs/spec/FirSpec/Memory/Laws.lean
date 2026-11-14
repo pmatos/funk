@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Memory laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18197862301104135903")
+:::moduleDocs (fingerprint := "14337799631052638016")
 :::
 
 :::readable Fir.Memory.Block.write_length (fingerprint := "6572027941022401979")
@@ -79,27 +79,27 @@ $`M'`, then its access landed in some block $`b` of $`a` at $`o`, and
 $`M'` is $`M` with $`M[a] := b[o := \vec{y}]`.
 :::
 
-:::readable Fir.Memory.Memory.alloc_fst (fingerprint := "17438683236702964508")
+:::readable Fir.Memory.Memory.alloc_fst (fingerprint := "10592011490595922718")
 *Theorem: the pointer an allocation gives.* Allocating in $`M` gives the
 pointer $`(|M|, 0)`: provenance for the new allocation, which no allocation
 had before, and its first unit.
 :::
 
-:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "5419404848170668150")
+:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "920788015735308395")
 *Theorem: an allocation adds one block and changes none.* After an
-allocation of $`n` units of kind $`k`, every allocation $`a < |M|` has the
-block it had, and the new allocation $`|M|` has the live block
-$`(k, \mathsf{poison}^n, \mathsf{true})`.
+allocation of $`n` units of kind $`k`, aligned to $`\alpha`, every
+allocation $`a < |M|` has the block it had, and the new allocation $`|M|`
+has the live block $`(k, \alpha, \mathsf{poison}^n, \mathsf{true})`.
 :::
 
-:::readable Fir.Memory.Memory.locate_alloc (fingerprint := "205433964851235012")
+:::readable Fir.Memory.Memory.locate_alloc (fingerprint := "2186274606770818381")
 *Theorem: an allocation changes no other access.* After allocating in
 $`M`, every access through a pointer without provenance for the new
 allocation $`|M|` lands where it landed before, in the same block, or
 faults for the same reason.
 :::
 
-:::readable Fir.Memory.Memory.load_alloc (fingerprint := "4352129680637838304")
+:::readable Fir.Memory.Memory.load_alloc (fingerprint := "15265651306833201793")
 *Theorem: fresh memory holds poison.* After allocating $`s` units, a load
 of $`n` units through $`(|M|, o)`, with $`0 \le o` and $`o + n \le s`,
 gives $`\mathsf{poison}^n`.
@@ -111,10 +111,11 @@ gives $`M'`, then $`M'[a] = M[a]` for every allocation $`a` that $`p` has
 no provenance for.
 :::
 
-:::readable Fir.Memory.Memory.store_shape (fingerprint := "10336796153857920541")
+:::readable Fir.Memory.Memory.store_shape (fingerprint := "4010066907825706953")
 *Theorem: a store keeps every allocation's shape.* If a store gives
-$`M'`, then for every $`a`, $`M'[a]` has the kind, size and liveness of
-$`M[a]`, and $`M'` has a block for $`a` exactly when $`M` has one.
+$`M'`, then for every $`a`, $`M'[a]` has the kind, alignment, size and
+liveness of $`M[a]`, and $`M'` has a block for $`a` exactly when $`M` has
+one.
 :::
 
 :::readable Fir.Memory.Memory.locate_store (fingerprint := "7904502745175208077")

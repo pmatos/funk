@@ -14,16 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "The memory effect: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1580814651269538647")
+:::moduleDocs (fingerprint := "1309479453290689319")
 :::
 
-:::readable Fir.MonadMemory (fingerprint := "1580814651269538647")
+:::readable Fir.MonadMemory (fingerprint := "1309479453290689319")
 *Definition: the memory effect.* A way of computing has the memory
 effect, on memories named by $`X` whose units are $`u(x)` bits wide, when
 it gives the memory model's four operations, each on a named memory:
 
-* $`\mathrm{alloc}(x, k, n)` allocates $`n` units of kind $`k` in the
-  memory $`x`, and gives the pointer to the first;
+* $`\mathrm{alloc}(x, k, n, \alpha)` allocates $`n` units of kind $`k`,
+  aligned to $`\alpha` units, in the memory $`x`, and gives the pointer
+  to the first;
 * $`\mathrm{free}(x, a)` frees the allocation $`a` of $`x`;
 * $`\mathrm{load}(x, p, n)` loads $`n` units of $`x` through $`p`;
 * $`\mathrm{store}(x, p, \vec{y})` stores the units $`\vec{y}` to $`x`

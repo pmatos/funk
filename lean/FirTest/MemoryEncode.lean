@@ -94,7 +94,7 @@ def layout : DataLayout :=
     (Core.Ty.decode? layout 8 .little (.ptr 2)) : Option (PoisonOr Pointer))) == some (.value p)
 
 -- A value stored to memory and loaded back decodes to itself.
-def m : Pointer × Memory 8 := Memory.empty.alloc .stack 16
+def m : Pointer × Memory 8 := Memory.empty.alloc .stack 16 1
 
 #guard ((m.2.store m.1 (encodeInt 8 .little (.value 0xABCDE#20)) >>= fun M =>
     M.load m.1 3).toOption.map (decodeInt 8 20 .little)) == some (.value 0xABCDE#20)

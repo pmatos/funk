@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10349659386704060188")
+:::moduleDocs (fingerprint := "9040727174539523203")
 :::
 
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "5035405831092213634")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "17844605018342700448")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
@@ -25,12 +25,13 @@ $$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = 
 
 So a fragment of a pointer keeps its pointer, and its provenance, in every
 memory that refines it, and units of bits keep their bits. A block $`b'`
-refines $`b` when it has the same kind, liveness and size, and, while $`b`
-is live, its units refine the units of $`b` one by one. No access reaches a
-freed block, so its units are not compared: a store to a block that is then
-freed may be dropped. A memory refines another when its blocks refine the
-other's one by one, in the order they were made: both have the same
-allocations, each with its kind, size and liveness.
+refines $`b` when it has the same kind, alignment, liveness and size, and,
+while $`b` is live, its units refine the units of $`b` one by one. No
+access reaches a freed block, so its units are not compared: a store to a
+block that is then freed may be dropped. A memory refines another when its
+blocks refine the other's one by one, in the order they were made: both
+have the same allocations, each with its kind, alignment, size and
+liveness.
 :::
 
 :::readable Fir.Memory.MemUnit.isRefinedBy_refl Fir.Memory.MemUnit.isRefinedBy_trans Fir.Memory.Block.isRefinedBy_refl Fir.Memory.Block.isRefinedBy_trans Fir.Memory.Memory.isRefinedBy_refl Fir.Memory.Memory.isRefinedBy_trans (fingerprint := "5718639929467021518")
@@ -42,13 +43,15 @@ units of the first two are compared exactly when those of the last two
 are.
 :::
 
-:::readable Fir.Memory.Block.IsRefinedBy.kill Fir.Memory.Memory.IsRefinedBy.free Fir.Memory.Memory.IsRefinedBy.alloc (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.free) (fingerprint := "16019051067054613619")
+:::readable Fir.Memory.Block.IsRefinedBy.kill Fir.Memory.Memory.IsRefinedBy.free Fir.Memory.Memory.IsRefinedBy.alloc (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.free) (fingerprint := "7642812868179659280")
 *Theorems: allocating and freeing keep refinement.* Let $`M \sqsubseteq M'`.
 Freeing a block keeps refinement, and so does freeing the allocation $`a`
-in both: the freed blocks keep their kinds and sizes, and their units are
-no longer compared. Allocating $`n` units of kind $`k` in both gives the same pointer,
+in both: the freed blocks keep their kinds, alignments and sizes, and
+their units are no longer compared. Allocating $`n` units of kind $`k`,
+aligned to $`\alpha`, in both gives the same pointer,
 $`(|M|, 0) = (|M'|, 0)`, since both have as many allocations, and memories
-$`M \sqsubseteq M'` again: the new block holds $`n` poisons in both.
+$`M \sqsubseteq M'` again: the new block has the alignment $`\alpha` and
+holds $`n` poisons in both.
 :::
 
 :::readable Fir.Memory.Memory.IsRefinedBy.locate Fir.Memory.Memory.IsRefinedBy.load Fir.Memory.Memory.IsRefinedBy.store (pin := Fir.Memory.Memory.locate) (pin := Fir.Memory.Memory.load) (pin := Fir.Memory.Memory.store) (fingerprint := "270640476684629114")
@@ -85,7 +88,7 @@ have the same frames, so both free the allocations of the same innermost
 frame.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "13065134593748014542")
+:::readable Fir.Memory.Memories.IsRefinedBy.alloc Fir.Memory.Memories.IsRefinedBy.load Fir.Memory.Memories.IsRefinedBy.store (fingerprint := "10409863530757732972")
 *Theorems: the memory model's operations keep refinement.* Let
 $`S \sqsubseteq S'`. Allocating in the memory $`x` of both gives the same
 pointer and memories that refine each other; a stack allocation is recorded
