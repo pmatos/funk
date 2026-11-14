@@ -26,6 +26,13 @@ The obligations with memory reject each of them too, run with memory by
 lifting it into the state layer: a dialect that lifts the set monad is
 lawful with memory exactly when the poison obligations hold (the section
 on poison obligations with memory).
+
+The core's own semantics in the set monad does not meet the poison
+obligations either: `alloca` has no rule there, so totality rejects it.
+Its semantics with memory, where `alloca` has its rule, meets the
+obligations with memory (the section on core functions with memory), so
+the semantics below, run with memory, are what the core's semantics with
+memory is set against.
 -/
 
 namespace Fir.Core.Unlawful

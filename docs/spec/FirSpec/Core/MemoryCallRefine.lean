@@ -14,38 +14,47 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a core callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5025490800402394782")
+:::moduleDocs (fingerprint := "11776099395834119705")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.reachesNoMemory (pin := Fir.Core.Op.effects) (fingerprint := "5174992058486414393")
-*Theorems: no core op declares a memory effect, so no core function
-reaches memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
-of every core op read, write and allocate in no memory. So in every core
-symbol table, every function
-{ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory].
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "17722727725292493020")
+*Theorems: a core op declares a memory effect exactly when it touches
+memory, and a core function with no allocation in reach reaches no
+memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
+of every core op that touches no memory, every one but
+$`\mathsf{alloca}`, read, write and allocate in no memory, and an op that
+declares no memory effect touches no memory, since $`\mathsf{alloca}_N`
+declares that it allocates in memory $`N`. So in a core symbol table, the
+function named $`s`
+{ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory]
+when no function that the walk from $`s` reaches, $`s`'s own included, has
+an op that touches memory; and so it does when no function of the table
+has one.
 :::
 
-:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "15851737957615372507")
+:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "8906603344257890118")
 *Theorem: core ops ignore the memories.* At every layout and naming of the
 core's memories, each core op that declares no memory effect ignores the
-memories: each core op is
+memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
-so it runs by its rule in the set monad and keeps the memories. An op that
-touches memory declares it, so it is not asked.
+and runs by its rule in the set monad and keeps the memories.
+$`\mathsf{alloca}`, which touches memory, declares it, so it is not
+asked.
 :::
 
-:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "13006631321432169567")
+:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "8297816828923716502")
 *Theorem: core ops have finitely many outcomes.* At every layout and
 naming of the core's memories, each core op that runs by its own rule has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes]
-with memory. Each core op is
+with memory. Each core op that touches no memory is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 so it runs by its rule in the set monad and keeps the memories. Its rule in
 the set monad is the set of its rule in the
 {ref "The-fir-specification--Memory--The-core-dialect-in-the-tree-of-choices"}[tree of choices],
 by the morphism that keeps choice and UB, and a tree's choice of $`w` bits
-has $`2^w` options. No core op touches memory yet; one that does, as an
-allocation, will have no tie and must show this by its own rule.
+has $`2^w` options. $`\mathsf{alloca}` has no tie, and has
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[one outcome]
+by its own rule.
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "11864989512908111455")
@@ -85,9 +94,9 @@ in either module, its
 {ref "The-fir-specification--Memory--Congruence-in-a-callee-that-touches-no-memory"}[runs from given memories are its runs with memory],
 so the hypothesis gives refinement from given memories and the theorem
 above applies (#214). Until #214 this form asked that $`g` have no pointer
-parameter, as the human ruled on #373 (2026-11-13). Every core function
-reaches no memory today, whatever its body, but the theorem still asks it
-of $`s`, so that it does not depend on that. Its hypothesis is refinement
+parameter, as the human ruled on #373 (2026-11-13). A core function
+reaches no memory when no function in its reach has an $`\mathsf{alloca}`,
+the core op that touches memory. Its hypothesis is refinement
 with memory, from the empty memories, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 

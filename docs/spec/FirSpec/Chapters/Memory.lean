@@ -101,7 +101,13 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryAllocLaws "Allocation in the state layer" FirSpec.Execution.MemoryAllocLaws (level := 1)}
+
+{includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
+
+{includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

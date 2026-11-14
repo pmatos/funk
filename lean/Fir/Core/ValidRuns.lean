@@ -13,9 +13,9 @@ that calls it back, and branches and loops are included.
 
 * _Every core terminator and every core op with no callee is total_:
   these are every core op but `call`, each total by the obligations of its
-  family. `call` needs no rule of its own: its way to go on is its
-  callee's run, which the induction on the budget in the section on
-  progress with calls covers.
+  family, and `alloca` total with memory by its own rule. `call` needs no
+  rule of its own: its way to go on is its callee's run, which the
+  induction on the budget in the section on progress with calls covers.
 * _Every core function valid in the context of a module runs within that
   module_. Validation's rule for `call @g` asks that the module's symbol
   table give `@g` the type of the call, its operand types and its result
@@ -35,13 +35,13 @@ theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect
     ∃ ts rs, op = .call s ts rs := by
   cases op <;> (cases h; try exact ⟨_, _, rfl⟩)
 
-/-- Every core terminator and every core op with no callee is total: every
-core op but `call`. -/
+/-- Every core terminator and every core op with no callee that touches no
+memory is total in the set monad: every core op but `call` and `alloca`. -/
 theorem Op.total_all (op : Op)
-    (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) :
-    OpTotal (d := CoreDialect) op := by
+    (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none)
+    (hm : op.touchesMemory = false) : OpTotal (d := CoreDialect) op := by
   cases hc : op.isCall with
-  | false => exact op.total hc
+  | false => exact op.total hc hm
   | true =>
     cases op <;> try cases hc
     all_goals rcases h with h | h <;> cases h

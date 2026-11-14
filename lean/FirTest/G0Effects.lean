@@ -205,20 +205,21 @@ theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoi
 The core dialect declares a class and a set of effects for each of its ops,
 case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
-`scripts/check_g0.py` fails if a case for the rest comes back. Thirty-three
+`scripts/check_g0.py` fails if a case for the rest comes back. Thirty-four
 ops propagate poison and seven are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 45 of their names, the float constant
-sharing `const`'s and the two bit casts `bitcast`, and the checks below pin both on them. No core op declares an effect on memory or
-is observable, since the core dialect has neither memory nor a trace yet
-(ADR-2026-11-09-1541).
+samples of the core ops name all 46 of their names, the float constant
+sharing `const`'s and the two bit casts `bitcast`, and the checks below pin both on them.
+`alloca` allocates in the memory of its result; no other core op declares
+an effect on memory, and no core op is observable, since the core dialect
+has no trace yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 45
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 46
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
-   "fpext", "fptrunc", "ptradd", "fptosi", "fptoui"]
+   "fpext", "fptrunc", "ptradd", "alloca", "fptosi", "fptoui"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
@@ -247,6 +248,10 @@ is observable, since the core dialect has neither memory nor a trace yet
   fun fl => [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23,
     .fma fl 8 23].all (·.effects == { mayPoison := true })
 #guard Core.samples.all fun o => o.effects.reads == .these [] && o.effects.writes == .these [] &&
-  o.effects.allocates == .these [] && !o.effects.observable
+  !o.effects.observable
+#guard ((Core.samples.filter (·.effects.allocates != .these [])).map Core.Op.name).eraseDups ==
+  ["alloca"]
+#guard (Core.samples.filter (·.touchesMemory)).all fun o =>
+  o.effects == { allocates := .these (o.returnTypes.filterMap Core.Ty.memory) }
 
 end FirTest.G0

@@ -1,5 +1,5 @@
 //! The core types (`lean/Fir/Core/Types.lean`, `Ty.decode` in
-//! `lean/Fir/Core/Text.lean`, `Ty.Valid` in `lean/Fir/Core/Validation.lean`).
+//! `lean/Fir/Core/TypeText.lean`, `Ty.Valid` in `lean/Fir/Core/Validation.lean`).
 //!
 //! `iN` is written `i` and `N` in decimal with no leading zeros. A width above
 //! [`MAX_WIDTH`] does not decode (N3). `i0` decodes, and validation rejects
@@ -81,7 +81,7 @@ pub fn ptr_type(memory: u32) -> Type {
 }
 
 /// The alias of the format `float<e,m>`, if it has one.
-fn alias(e: u32, m: u32) -> Option<&'static str> {
+pub(super) fn alias(e: u32, m: u32) -> Option<&'static str> {
     FLOAT_ALIASES
         .iter()
         .find(|a| (a.1, a.2) == (e, m))

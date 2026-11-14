@@ -147,7 +147,7 @@ theorem pcall_noBlocks_memIsRefinedBy :
       (pcallFn.replaceBody pidFn.name noBlocks).memRuns lay ρ
         (ptrModule.replaceBody pidFn.name noBlocks) :=
   Core.replaceBody_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    noBlocks (reachesNoMemory _ _) (reachesNoMemory _ _) (noBlocks_memIsRefinedBy lay ρ _ _)
+    noBlocks (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ _ _)
     (by simp [ptrModule, Module.funcs])
 
 /-- And `@pcall` is refined with memory by itself in that module, by the
@@ -156,7 +156,7 @@ theorem pcall_noBlocks_callerIsRefinedBy :
     pcallFn.memRuns lay ρ ptrModule ⊑
       pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name noBlocks) :=
   Core.caller_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    noBlocks (reachesNoMemory _ _) (reachesNoMemory _ _) (noBlocks_memIsRefinedBy lay ρ _ _)
+    noBlocks (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ _ _)
     (by simp [ptrModule, Module.funcs]) (by decide)
 
 /-! # Axioms -/

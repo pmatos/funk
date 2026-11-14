@@ -152,12 +152,14 @@ to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`, in
 `Func.memOps_notExhausted_of_finite`, in
 `lean/Fir/Execution/MemoryFiniteDown.lean`). The argument is by budgets and
 needs no infinite path. Every core op has finitely many outcomes
-(`Core.opsFinite`): it is the set of its rule in the tree of choices, whose
-choices of _w_ bits have 2 to the power _w_ options. So
+(`Core.opsFinite`): an op that touches no memory is the set of its rule in
+the tree of choices, whose choices of _w_ bits have 2 to the power _w_
+options, and `alloca` has one outcome by its own rule
+(`Core.alloca_finitelyMany`). So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
 pointers and memory included, and `Core.replaceBody_isRefinedBy` for every
-core callee that reaches no memory, pointers included. No core op touches memory yet; one that does,
-such as an allocation, will have to show the hypothesis by its own rule.
+core callee that reaches no memory, pointers included: one with no
+`alloca` in its reach (`Core.reachesNoMemory`).
 Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they

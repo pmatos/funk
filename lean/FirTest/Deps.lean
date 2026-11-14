@@ -11,7 +11,7 @@ toy dialect by lifting it: an inclusion of the core's types in those of
 
 The spec's theorems on lifts then give the sum's laws with no proof of its
 own: its text is lawful, so its valid modules are well formed and its round
-trip holds, and it meets the poison and effect obligations, since the toy
+trip holds, and it meets the poison and effect obligations with memory, since the toy
 dialect and the bit dialect do. The tests show that the sum reads, prints and validates
 a module that uses all three prefixes, sends each word to its own dialect,
 and that neither smaller sum reads that module.
@@ -68,9 +68,6 @@ theorem coreToyBit_printThenParse : PrintThenParse (d := CoreToyBit) Fir.parse :
 
 /-! # Lawful poison, effects and totality -/
 
-/-- The sum of the core and the toy dialect is lawful. -/
-instance coreToy_lawful : LawfulDialectPoison CoreToy := Dialect.sum.lawfulPoison fun _ h => h
-
 /-- The sum of the core and the toy dialect is lawful in its effects, since
 both are. -/
 instance coreToy_lawfulEffects : LawfulDialectEffects CoreToy :=
@@ -90,12 +87,6 @@ instance coreToy_lawfulMonotone : LawfulDialectMonotone CoreToy :=
 memory, since both are. -/
 instance coreToy_lawfulMemPoison : LawfulDialectMemPoison CoreToy :=
   Dialect.sum.lawfulMemPoison fun _ h => h
-
-/-- The sum of three dialects is lawful: the inclusion of the core's types
-is lawful, and the bit dialect accepts each core type that the core
-accepts. -/
-instance coreToyBit_lawful : LawfulDialectPoison CoreToyBit :=
-  Dialect.lift.sum_lawfulPoison TyIncl.lawful_inl fun _ h => h
 
 /-- The sum of three dialects is lawful in its effects, under the same
 conditions. -/

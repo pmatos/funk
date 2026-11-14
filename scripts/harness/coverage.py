@@ -32,7 +32,7 @@ MATRIX = ROOT / "docs" / "coverage" / "README.md"
 
 class Side(NamedTuple):
     """One side of the matrix: its key, its title, and the widths, float
-    formats and widths of a pointer offset's integer that it has cells at."""
+    formats and widths of a pointer op's integer that it has cells at."""
 
     name: str
     title: str
@@ -125,7 +125,7 @@ def show(cell: Cell) -> str:
     if cell.table in ("casts", "conversions"):
         return f"{cell.op} from {cell.row} to {cell.width}"
     if cell.table == "pointers":
-        return f"{cell.op} by {cell.width}"
+        return f"{cell.op} {'of' if cell.op == 'alloca' else 'by'} {cell.width}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
         words.append("at")
@@ -151,7 +151,7 @@ SECTIONS = {
     "int_to_float": ("Conversions from integers", ("op", "from"), "to "),
     "float_conversions": ("Conversions between formats", ("from",), "to "),
     "float_to_int": ("Conversions to integers", ("op", "from"), "to "),
-    "pointers": ("Pointer offsets", ("op",), "by "),
+    "pointers": ("Pointer ops: ptradd by an integer, alloca of one", ("op",), ""),
     "values": ("Passed and returned values", ("op", "what"), ""),
 }
 

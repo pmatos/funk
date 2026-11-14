@@ -2,10 +2,10 @@ import Fir.Core.Lawful
 import FirTest.RunsCalls
 
 /-!
-Tests of the instance `LawfulDialectPoison CoreDialect` and of the two
-guards of the poison obligations, and the axioms of their proofs.
+Tests of the core ops' poison obligations in the set monad and of the two
+guards of the obligations, and the axioms of their proofs.
 
-* _Valid op instances._ `udiv` at `i8` is one, so the instance gives it a
+* _Valid op instances._ `udiv` at `i8` is one, so its obligations give it a
   result on defined operands. `udiv` at `i0` is not, and it has no such
   result (`Core.div_zero_width`): the guard is what lets the class hold.
   A `call` with an operand of a pointer type whose memory is above
@@ -16,14 +16,16 @@ guards of the poison obligations, and the axioms of their proofs.
   callee, and `ret` as a terminator; `call` does not. In the set monad,
   `call` has no outcome, so it is not total at op level, even at a valid
   instance: the callee guard, not validity, is what lets the class leave
-  it out.
+  it out. `alloca` has no outcome there either, since its rule needs
+  memory, so the core dialect does not meet the lawful class in the set
+  monad: it meets the classes with memory, op by op.
 * _Generic theorems for the core dialect._ Every op of a valid module with
   recursion and mutual recursion is a valid op instance, and a run with
   memory of `@even`, which calls `@odd`, which calls it back, has an outcome
   at every budget by the class of totality with memory alone
   (`Func.memProgress`). The sum of the core
-  dialect and a lawful extension is lawful, as `FirTest.LawfulRefine`
-  shows with the spec's `Dialect.sum.lawfulPoison`.
+  dialect and a lawful extension is lawful in the classes with memory, as
+  `FirTest.LawfulRefine` shows.
 -/
 
 namespace FirTest
@@ -60,9 +62,9 @@ does not leave `call` out of the obligations. -/
 theorem call_typesValid : TypesValid (d := CoreDialect) (.call "f" [] [i 8]) := by
   unfold TypesValid; decide
 
-/-- The instance gives `udiv` at `i8` a result on defined operands. -/
+/-- Its obligations give `udiv` at `i8` a result on defined operands. -/
 theorem udiv8_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.udiv 8 false) :=
-  LawfulDialectPoison.returnsOnDefined _ udiv8_typesValid rfl
+  Op.returnsOnDefined_valid _ rfl udiv8_typesValid rfl
 
 /-- `udiv` at `i0` has none: every divisor is zero. -/
 theorem udiv0_noResult : ¬ ReturnsOnDefined (d := CoreDialect) (.udiv 0 false) :=
@@ -100,11 +102,34 @@ theorem call_not_total : ¬ OpTotal (d := CoreDialect) (.call "f" [] [i 8]) := f
   obtain ⟨_, he⟩ := (h .nil).1 rfl
   exact he
 
-/-- The instance gives totality and monotonicity of `udiv` at `i8`. -/
+/-- `alloca` runs by its own rule: it is not a terminator and calls no
+function. -/
+theorem alloca_byRule :
+    isTerminator (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) = true ∨
+      callee? (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) = none :=
+  .inr rfl
+
+/-- `alloca` is a valid op instance. -/
+theorem alloca_typesValid : TypesValid (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) := by
+  unfold TypesValid; decide
+
+/-- But in the set monad `alloca` has no outcome, since its rule needs
+memory, so it is not total there: the core dialect does not meet the
+lawful class in the set monad. It is total with memory. -/
+theorem alloca_not_total : ¬ OpTotal (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) :=
+  fun h => by
+    obtain ⟨_, he⟩ := (h .nil).1 rfl
+    exact he
+
+/-- `alloca` is total with memory, by its own rule. -/
+example : MemTotal (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) :=
+  LawfulDialectTotal.total _ alloca_typesValid alloca_byRule
+
+/-- The core ops' obligations give totality and monotonicity of `udiv` at
+`i8`. -/
 theorem udiv8_total_monotone :
     OpTotal (d := CoreDialect) (.udiv 8 false) ∧ OpMonotone (d := CoreDialect) (.udiv 8 false) :=
-  ⟨LawfulDialectPoison.total _ udiv8_typesValid (.inr rfl),
-    LawfulDialectPoison.monotone _ udiv8_typesValid (.inr rfl)⟩
+  ⟨Op.total_all _ (.inr rfl) rfl, Op.monotone_all _ (.inr rfl)⟩
 
 /-! # Generic theorems for the core dialect -/
 
@@ -139,8 +164,8 @@ theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2)
 /-- info: 'Fir.Core.Op.returnsOnDefined_valid' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Op.returnsOnDefined_valid
 
-/-- info: 'Fir.Core.lawfulDialectPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Core.lawfulDialectPoison
+/-- info: 'FirTest.alloca_not_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.alloca_not_total
 
 /-- info: 'Fir.Core.Unlawful.add_typesValid' depends on axioms: [propext] -/
 #guard_msgs in #print axioms Fir.Core.Unlawful.add_typesValid

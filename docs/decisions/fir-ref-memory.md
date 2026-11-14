@@ -19,17 +19,19 @@ memory that the layout does not declare gets `MemLayout.default`'s entry,
 8-bit little-endian units.
 Validation rejects every pointer type that names such a memory, but
 `fir-ref run` runs a module without validating it, so an invalid module may
-reach one. No core op names a memory yet, so the entries change no run;
-stage 4e of #231, which brings loads and stores, says what `fir-ref run`
-does with an access to an undeclared memory. The core's semantics in the
+reach one. `alloca` reads the unit and pointer width of the memory it
+allocates in from its entry (stage 4d-2 of #231), and allocates in an
+undeclared memory at the default entry; stage 4e of #231, which brings
+loads and stores, says what `fir-ref run` does with an access to an
+undeclared memory. The core's semantics in the
 layer over the tree, `Core.memTreeDenote lay ρ`, runs each op by its rule
 with memory in that layer, as its semantics with memory, `Core.memDenoteAt
 lay ρ`, runs it in the layer over the set monad (stage 4b-2b of #231, #367).
 Neither is defined as the lift of the rules of a monad with no memory; that
-the second equals such a lift while no core op touches memory is a theorem
-(`Core.Op.liftsSetM`). `Core.memMapsDenote` ties
+the second equals such a lift for every op that touches no memory, every
+core op but `alloca`, is a theorem (`Core.Op.liftsSetM`). `Core.memMapsDenote` ties
 the two at every layout and naming, op by op: `toSet` through the layer
-keeps choice and UB (`Core.memDenoteIn_mapsDenote`). `fir-ref`'s `@[csimp]`
+keeps choice, UB and allocation (`Core.memDenoteIn_mapsDenote`). `fir-ref`'s `@[csimp]`
 theorems hand the machine that same semantics at the module's layout, so
 they hold as before, and every `fir-ref` call of the corpus, the harness and
 `check-fir-ref-run.sh` gives byte-identical output on #367 and on main at

@@ -1,4 +1,5 @@
 import Fir.Core.Signature
+import Fir.Validation.Layout
 import Fir.Validation.Scope
 
 /-!
@@ -6,8 +7,9 @@ The core dialect's part of validation: which core types are valid, which
 symbols core ops refer to, the rules of `ret` and `call`, which read the
 op's context, the width rules of `zext`, `sext` and `trunc`
 (ADR-2026-10-29-2006), the format rules of `fpext` and `fptrunc` (the
-human's ruling of 2026-11-12 on #354), and the rule that no float op
-carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549).
+human's ruling of 2026-11-12 on #354), the rule that no float op
+carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
+and the rules of `alloca` (ADR-2026-11-14-0915).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -38,6 +40,14 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
+/-- An integer type: the types that M1's `alloca` allocates. -/
+def Ty.IsInt : Ty → Prop
+  | .int _ => True
+  | _ => False
+
+instance : DecidablePred Ty.IsInt := fun t => by
+  cases t <;> unfold Ty.IsInt <;> infer_instance
+
 /-- `call` refers to its callee's symbol; no other core op refers to one. -/
 def Op.symbolRefs : Op → List String
   | .call f _ _ => [f]
@@ -63,6 +73,13 @@ The core rules of an op beyond its signature.
 * A float op carries neither `contract` nor `reassoc`. They are reserved
   words, permissions for passes that M2's optimizer decides, not meanings
   of an op (ADR-2026-11-09-1549).
+* `alloca` allocates on the stack, the one kind M1 accepts: `global` and
+  `heap` are hooks in the format, which a later milestone may accept
+  (ADR-2026-11-09-1542). It allocates at least one value, aligned to a
+  power of two of units (the human's ruling of 2026-11-11 on #231), and
+  its type is a valid integer type. Its result names its memory, so the
+  module's data layout checks that the module has that memory
+  (ADR-2026-11-14-0915).
 
 Every other op has no rule beyond its signature.
 -/
@@ -74,6 +91,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fpext e m e' m' => e ≤ e' ∧ m ≤ m' ∧ ¬(e = e' ∧ m = m')
   | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
+  | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, isPowerOfTwo x) ∧ t.IsInt ∧ t.Valid
   | _ => True
 
 end Fir.Core

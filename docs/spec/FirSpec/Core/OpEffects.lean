@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4600089034573004043")
+:::moduleDocs (fingerprint := "6821476366813944941")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -25,10 +25,11 @@ memory of the pointer type $`\mathsf{ptr}\langle N \rangle`
 module has. The module's data layout declares the others by number
 (ADR-2026-11-12-1821;
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
-No core op names a memory in its effects yet.
+$`\mathsf{alloca}` names the memory of its result in its effects; no other
+core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "1616118233858776478")
+:::readable Fir.Core.Op.effects (fingerprint := "17678077309602420160")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -46,6 +47,8 @@ $$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison},\ \mathsf{fpto
 
 $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
+$$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\}`
+
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float ops without $`\mathsf{nnan}` and $`\mathsf{ninf}`
 are pure: a NaN result and a zero of either sign under $`\mathsf{nsz}`
@@ -55,6 +58,9 @@ operand's bits, the two conversions from integers, whose result is never
 a NaN, and the two conversions between formats, whose NaN result is a
 defined value too. The two conversions to integers may produce poison: an
 integer that the width does not hold, an infinity or a NaN gives poison.
+$`\mathsf{alloca}_N` allocates in the memory $`N` of its result, and does
+nothing else that an effect names: it is never UB and gives a defined
+pointer, and the frame of its call frees the allocation.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

@@ -33,7 +33,7 @@ $`\texttt{float}(e, m)` reads back as
 $`\mathsf{float}\langle e,m \rangle`.
 :::
 
-:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "10540823068798290750")
+:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "7758241985654017256")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is

@@ -14,18 +14,20 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3332686157814621961")
+:::moduleDocs (fingerprint := "11889772072530232216")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "6190380837127470919")
-*Definition: the poison class of each core op.* Thirty-three core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "7217504748417581140")
+*Definition: the poison class of each core op.* Thirty-four core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 
+$`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has
+no operands, so it propagates poison whatever its rule.
 The definition lists every op, with no case for the rest, so a new core op
 does not build until it declares its class (ADR-2026-11-03-0600).
 $`\mathsf{cond\_br}` is `condBr` in the Lean. The Lean checks the
@@ -73,4 +75,15 @@ only that each op refine itself, which it does. The theorems hold for every
 semantics because they never look at what the ops compute. Their totality
 and their results on defined operands do depend on it, and are proved with
 their rules, in the sections after the interpreter.
+:::
+
+:::readable Fir.Core.alloca_propagatesPoison (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (fingerprint := "8834273668863875278")
+*Theorem: $`\mathsf{alloca}` propagates poison, whatever the semantics of
+the core ops.* For every kind, type, count, alignment and memory,
+$`\mathsf{alloca}` propagates poison under any meaning that the core ops
+are given in the set monad. Like $`\mathsf{const}`, it has no operands, so
+no operand vector holds a poison, and both clauses hold with nothing to
+check. Its rule needs memory, so its other obligations are those with
+memory, proved by
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[its own rule].
 :::

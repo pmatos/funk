@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7991574293541682519")
+:::moduleDocs (fingerprint := "12056604051585604758")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -36,11 +36,11 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "69673544032050732")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "2834525783278374692")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-40 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+41 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
 written with the name it has in the op set, except six. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
@@ -52,11 +52,11 @@ the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
 the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "10792485943790889439")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "12449450764579874350")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi) &= \mathrm{fmf}(\phi)~\mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi) &= \mathrm{fmf}(\phi)~\mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}) &= \mathtt{round(rne)} \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(\mathsf{alloca}_N~k~t~c~a) &= \mathrm{allocaattrs}(k, t, c, a) \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -75,6 +75,10 @@ $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
 * $`\mathrm{exact}(\mathit{ex})` is the word `exact` when the flag is set,
   and nothing otherwise;
 * $`\mathsf{sym}~f` is the reference to the callee's symbol $`f`;
+* $`\mathrm{allocaattrs}(k, t, c, a)` is the
+  {ref "The-fir-specification--Text-format--Stack-allocation-in-text"}[attributes of an allocation]:
+  the word of its kind, its type as a type is written, its count when it
+  is not 1, and $`\mathtt{align}(a)` when it gives an alignment;
 * $`\mathtt{round(rne)}` is the
   {ref "The-fir-specification--Text-format--Float-arithmetic-in-text"}[rounding attribute],
   and $`\mathrm{attrs}(o)` is it for $`\mathsf{sqrt}` and nothing for
@@ -87,7 +91,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "1381702041029705106")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "6806501748169579672")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -174,6 +178,11 @@ $`\mathsf{i}W` are integer types.
   $`\mathsf{unreachable}`.
 * `call`: from the one attribute $`\mathsf{sym}~f`, at any operand types
   $`t^*` and result types $`r^*`, it is $`\mathsf{call}~f : t^* \to r^*`.
+* `alloca`: from no operands and the one result type
+  $`\mathsf{ptr}\langle N \rangle`, it is the allocation in memory $`N`
+  that its attributes give, as the section on
+  {ref "The-fir-specification--Text-format--Stack-allocation-in-text"}[stack allocation in text]
+  reads them.
 
 Every other name, and every other combination of attributes and types, is
 undefined, and the parser rejects the op at its name. So the core dialect
@@ -181,48 +190,4 @@ reads an op only from the one spelling that it writes, and a type mismatch,
 such as `add` of an `i32` and an `i64`, does not decode. Whether the widths
 are in range, and whether a width change changes the width, are left to
 {ref "The-fir-specification--Validation--Core-rules"}[validation].
-:::
-
-:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "379769461603123496")
-*Definition: the aliases of float formats.* Five float formats have a name
-of their own (ADR-2026-11-09-1549), and $`\mathrm{alias}(e, m)` gives it:
-
-* $`\mathrm{alias}(5, 10)` is `f16`, IEEE binary16;
-* $`\mathrm{alias}(8, 7)` is `bf16`, bfloat16;
-* $`\mathrm{alias}(8, 23)` is `f32`, IEEE binary32;
-* $`\mathrm{alias}(11, 52)` is `f64`, IEEE binary64;
-* $`\mathrm{alias}(15, 112)` is `f128`, IEEE binary128.
-
-Every other format has no alias. $`\mathrm{format}(n)` reads the table the
-other way: the format that the alias $`n` names, if $`n` is one.
-:::
-
-:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.decodePtr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (fingerprint := "17216318851082634470")
-*Definition: how a core type is written, and read back.* The
-{ref "The-fir-specification--Abstract-syntax--Core-types"}[integer type]
-$`\mathsf{i}N` is written $`\mathrm{tyattr}(\mathsf{i}N)`, the word `i`
-followed by $`N` in decimal. The pointer type of the default memory,
-$`\mathsf{ptr}\langle 0 \rangle`, is written as the word `ptr`, and the
-pointer type $`\mathsf{ptr}\langle N \rangle` of another memory as the
-word `ptr` applied to $`N`, as `ptr(1)` (ADR-2026-11-11-1709). A float type $`\mathsf{float}\langle e,m \rangle` is
-written as its alias when it has one, such as `f32`, and otherwise as the
-word `float` applied to $`e` and $`m`, as `float(5, 2)`
-(ADR-2026-11-11-0951).
-
-$`\mathrm{decodety}(a)` reads a type back. It is
-$`\mathsf{ptr}\langle 0 \rangle` when $`a` is the word `ptr`, and
-$`\mathsf{ptr}\langle N \rangle` when $`a` is $`\texttt{ptr}(N)` with
-$`1 \le N \le 16{,}777{,}215`; the Lean calls that reading `decodePtr`.
-It is $`\mathsf{i}N` when $`a` is a word made of `i` and
-the decimal digits of $`N`, with no leading zeros, and
-$`N \le 16{,}777{,}215`, the widest width of the core dialect. It is the
-float type that an alias names when $`a` is that alias. It is
-$`\mathsf{float}\langle e,m \rangle` when $`a` is
-$`\texttt{float}(e, m)` with $`e, m \ge 0`,
-$`1 + e + m \le 16{,}777{,}215`, and no alias for the format; the Lean
-calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
-`u8`, `i16777216`, `f8`, `float(8, 23)`, which is written `f32`, and
-`float(-1, 3)` do not decode, and neither do `ptr(0)`, which is written
-`ptr`, and `ptr(-1)`. `i0`, `float(1, 1)` and `ptr(1)` decode, and
-validation rejects them.
 :::

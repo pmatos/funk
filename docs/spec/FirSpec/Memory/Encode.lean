@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Values in units: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16029578052532037151")
+:::moduleDocs (fingerprint := "18243812407679005324")
 :::
 
 :::readable Fir.ByteOrder.place (fingerprint := "1492561779768503232")
@@ -27,10 +27,12 @@ $$`\mathrm{place}_{\mathsf{little}}(\vec{x}) = x_0 \ldots x_{k-1} \qquad \mathrm
 Placing twice gives the units back, so decoding places them again.
 :::
 
-:::readable Fir.Memory.unitsFor (fingerprint := "3992096574852824627")
+:::readable Fir.Memory.unitsFor Fir.MemLayout.bitsUnits_eq (pin := Fir.MemLayout.bitsUnits) (fingerprint := "8977425149999056970")
 *Definition: how many units.* A value of $`w` bits takes
 $`\lceil w / u \rceil` units of $`u` bits, computed as
-$`\lfloor (w + u - 1) / u \rfloor`.
+$`\lfloor (w + u - 1) / u \rfloor`. It is the number of units that a
+{ref "The-fir-specification--Abstract-syntax--Data-layouts"}[layout entry]
+gives a value of $`w` bits, when $`u` is the entry's unit width.
 :::
 
 :::readable Fir.Memory.digits (fingerprint := "13858458388547642635")

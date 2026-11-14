@@ -1,0 +1,293 @@
+# Must-reject texts of the stack allocation alloca (#231,
+# ADR-2026-11-14-0915). It takes no operands and defines a pointer; its
+# attributes are its kind, its type, its count when it is not 1 and
+# align(A), in that order, separated by spaces. A kind, a type, a count of 0
+# and an alignment decode when they are well formed, and validation says
+# which M1 accepts: the kind stack, a count of at least 1, a power of two
+# and a valid integer type. A result of a memory that the module does not
+# declare is rejected by validation, as for every pointer type.
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca aligns to a power of two of units: align(3) is not one"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 align(3) @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca aligns to a power of two of units: align(0) is not one"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 align(0) @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates at least one value: a count of 0 is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 0 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a count of 1 is not written: alloca stack i32 1 does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 1 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca's count is not negative: -4 does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 -4 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca's count is an integer after its type: a word in its place does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 four @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca's attributes are its kind, its type, its count and align(A), in that order: a count after align does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32 align(4) 2 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca's attributes are separated by spaces: a comma before the count does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i32, 4 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates on the stack in M1: the kind heap decodes and is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca heap i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates on the stack in M1: the kind global decodes and is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca global i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca's kind is stack, global or heap: frame does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca frame i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca writes its kind: an alloca with its type first does not decode"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca defines a pointer: an i64 result does not decode"
+text = '''
+func @f() -> i64 {
+^e:
+  %p: i64 = alloca stack i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "alloca takes no operands: an operand does not decode"
+text = '''
+func @f(%n: i32) -> ptr {
+^e:
+  %p: ptr = alloca stack i32 %n @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates an integer type in M1: f32 is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack f32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates an integer type in M1: ptr is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack ptr @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates a valid integer type: i0 is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i0 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates a valid integer type: i16777216, past the widest, is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack i16777216 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca defines a pointer of a memory that the module has: ptr(1) without memory 1 in the layout is rejected"
+text = '''
+func @f() -> ptr(1) {
+^e:
+  %p: ptr(1) = alloca stack i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

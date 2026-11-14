@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10829226034814001931")
+:::moduleDocs (fingerprint := "2218629604047218007")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "16623925751607787224")
+:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "5988011387878053995")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,8 +28,8 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 33 ops: $`\mathsf{const}` at an integer type and at a float
-type, $`\mathsf{poison}`, $`\mathsf{add}`,
+These are 34 ops: $`\mathsf{const}` at an integer type and at a float
+type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
@@ -40,14 +40,14 @@ $`\mathit{funary}` and $`\mathsf{fma}`, the two bit casts, the two
 conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, the
 two conversions between formats $`\mathsf{fpext}` and
 $`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, and the two
-conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family. The other
+conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family; $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has no operands, so it propagates poison whatever its rule. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 
-:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "3927830666421649206")
+:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "5426421982193435974")
 *Theorems: a valid core op instance with an operand of type
 $`\mathsf{i}N` has $`N > 0`, and each valid core op that propagates poison returns a
 result on defined operands.*
@@ -57,40 +57,19 @@ result on defined operands.*
   its types accepted by validation, and has an operand of type
   $`\mathsf{i}N`, then $`N > 0`: validation accepts $`\mathsf{i}N` only for
   $`1 \leq N \leq 16{,}777{,}215`.
-* Every valid core op instance whose poison class is
-  $`\mathsf{propagates}` returns a result on some operand vector with no
-  poison.
+* Every valid core op instance that touches no memory and whose poison
+  class is $`\mathsf{propagates}` returns a result on some operand vector
+  with no poison.
 
 $`\mathsf{poison}` returns one on the empty vector, where its result is
 poison: the obligation asks for a result, not for a defined one
 (ADR-2026-10-29-2006). The four divisions return one only at a width
 above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
-to be valid (ADR-2026-10-29-2006).
-:::
-
-:::readable Fir.Core.lawfulDialectPoison (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.toType) (fingerprint := "4359772419578251092")
-*Theorem: the core dialect is lawful.* Every core op instance whose types
-validation accepts meets the
-{ref "The-fir-specification--Execution--Poison-classes"}[poison obligations]:
-
-* _Poison is refined by every value_: a poison of $`\mathsf{i}N`, of
-  $`\mathsf{float}\langle e,m \rangle` or of
-  $`\mathsf{ptr}\langle N \rangle` is refined by every value of its
-  type, at every width, format and memory.
-* _Propagation_: each op whose class is $`\mathsf{propagates}` propagates
-  poison.
-* _A result on defined operands_: each such op returns a result on some
-  operand vector with no poison.
-* _Totality_ and _monotonicity_: every terminator and every op with no
-  callee, every core op but $`\mathsf{call}`, is total and monotone, at
-  every width. A call is left out, since its meaning is its callee's run
-  (ADR-2026-10-29-2006).
-
-The core dialect is declared lawful with this proof. So every generic
-theorem that asks for a lawful dialect holds for the core dialect: for
-example, every function of a valid core module has an outcome at every
-budget by the class alone, as the section on
-{ref "The-fir-specification--Execution--What-the-lawful-class-gives"}[what the lawful class gives]
-shows.
+to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}` touches memory: it
+has no rule in the set monad, so no result there. It returns one with
+memory, by its own rule (the
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations]),
+so the core dialect as a whole does not meet the lawful class in the set
+monad, and meets the lawful classes with memory instead.
 :::

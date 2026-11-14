@@ -13,8 +13,9 @@ it gives a value for poison and poison for a value, so it is not
 monotone there (`probe0_not_monotone`). Its poison class is an
 exception, so the poison obligations ask only that it be total and
 monotone at valid instances, and it meets them: the probe dialect is
-lawful, and so is its sum with the core dialect, `CoreProbe`
-(`coreProbe_lawful`).
+lawful, and its sum with the core dialect, `CoreProbe`, is lawful in its
+classes with memory. The core's `alloca` has no rule in the set monad, so
+neither the core nor the sum meets the lawful class there.
 
 The refinement engine once asked monotonicity at every op instance,
 valid or not, which `CoreProbe` does not meet (`coreProbe_not_monotone`).
@@ -26,8 +27,8 @@ memory: under a bound on the new callee's runs (`coreProbe_memReplaceBody`),
 and with no bound for a callee with finitely many argument vectors that
 touches no memory (`coreProbe_replaceBody`). Neither asks that the ops have
 finitely many outcomes, which `CoreProbe` does not prove; these are the
-forms that such a dialect uses. Each op of the sum ignores the memories,
-since each side's op runs by its rule in the set monad
+forms that such a dialect uses. Each op of the sum that declares no memory
+effect ignores the memories, since it runs by its rule in the set monad
 (`coreProbe_opsIgnoreMemory`).
 -/
 
@@ -170,9 +171,6 @@ end Probe
 /-- The sum of the core dialect and the probe dialect. -/
 abbrev CoreProbe : Dialect := CoreSum Probe.Op
 
-/-- The sum is lawful: the probe dialect accepts the core's valid types. -/
-instance coreProbe_lawful : LawfulDialectPoison CoreProbe := Dialect.sum.lawfulPoison fun _ h => h
-
 /-- The sum is lawful in its effects, since both sides are. -/
 instance coreProbe_lawfulEffects : LawfulDialectEffects CoreProbe :=
   Dialect.sum.lawfulEffects fun _ h => h
@@ -242,6 +240,14 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
       List.mem_map_of_mem (mem_argVectors _ a)⟩
   | .inr t :: _, _, _ => t.elim
 
+/-- A core op of the sum that declares no memory effect touches no memory:
+`alloca` declares that it allocates. -/
+theorem core_touchesMemory_false {o : Core.Op}
+    (h : (effects (d := CoreProbe) (.inl o)).TouchesNoMemory) : o.touchesMemory = false := by
+  cases o with
+  | alloca _ _ _ _ n => exact ((h (.inl n)).2.2 (List.mem_singleton_self _)).elim
+  | _ => rfl
+
 /-- Each op of `CoreProbe` ignores the memories, at every layout and
 naming: a core op and a probe op each run by their rule in the set monad and
 keep the memories. -/
@@ -249,8 +255,9 @@ theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLay
     (ρ : DialectEffects.Mem CoreProbe → N) :
     letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ
     OpsIgnoreMemory CoreProbe N (unitsOf lay)
-  | .inl o, _, _ => Dialect.sum.ownRuleHas_inl lay ρ (fun f _ h => IgnoresMemory.map f h)
-      (OwnRuleHas.ofLifts (Core.Op.liftsSetM o) lay _ IgnoresMemory.lift)
+  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ (fun f _ h => IgnoresMemory.map f h)
+      (OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h)) lay _
+        IgnoresMemory.lift)
   | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
       (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ IgnoresMemory.lift)
 

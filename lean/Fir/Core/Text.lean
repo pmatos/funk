@@ -1,4 +1,5 @@
 import Fir.Core.Signature
+import Fir.Core.AllocaText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Text.Grammar
@@ -55,6 +56,10 @@ results, which are written where those values are defined.
 * `ptradd` has no attributes. It takes a pointer and an integer of any
   width, and gives a pointer of the same memory:
   `%q: ptr = ptradd %p, %k @1` (#231).
+* `alloca` has its kind, the type it allocates, its count when it is not
+  1, and `align(A)` when it gives an alignment, and gives a pointer of the
+  memory it allocates in: `%p: ptr = alloca stack i32 4 @1`
+  (ADR-2026-11-14-0915).
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -69,7 +74,9 @@ results, which are written where those values are defined.
   `unreachable @1`.
 * The integer type of width N is written `i` and N in decimal with no
   leading zeros, such as `i32`. A width above 16,777,215, the widest the
-  core dialect has, is a parse error (ADR-2026-10-29-2007).
+  core dialect has, is a parse error where a value's type is written
+  (ADR-2026-10-29-2007). The type that `alloca` carries as an attribute
+  reads back at any width, and validation rejects it.
 * The pointer type of the default memory, `ptr<0>`, is written `ptr`.
   The pointer type `ptr<N>` of another memory is written `ptr(N)`, in the
   applied form of the grammar, such as `ptr(1)`. So each pointer type has
@@ -83,6 +90,9 @@ results, which are written where those values are defined.
   decode, since `f32` writes that format, and neither does a negative
   number or a format wider than 16,777,215 bits in all
   (ADR-2026-11-11-0951). `float(1, 1)` decodes, and validation rejects it.
+
+The section on the core types in text gives how each type is written and
+read back, and the section on stack allocation in text how `alloca` is.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -133,7 +143,8 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd" | .fptosi .. => "fptosi" | .fptoui .. => "fptoui"
+  | .ptradd .. => "ptradd" | .alloca .. => "alloca" | .fptosi .. => "fptosi"
+  | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -159,6 +170,7 @@ def Op.attrs : Op → List Attr
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
+  | .alloca k t c a _ => allocaAttrs k t c a
   | _ => []
 
 /-- Reads the flags of `add`, `sub` or `mul`. -/
@@ -269,63 +281,10 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fpext" => decodeFpext as ts rs
   | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
+  | "alloca" => decodeAlloca as ts rs
   | "fptosi" => decodeFloatToInt true as ts rs
   | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
-
-/-- The alias of the float format `float<e,m>`, if it has one. -/
-def floatAlias : Nat → Nat → Option String
-  | 5, 10 => some "f16"
-  | 8, 7 => some "bf16"
-  | 8, 23 => some "f32"
-  | 11, 52 => some "f64"
-  | 15, 112 => some "f128"
-  | _, _ => none
-
-/-- The float format that an alias names: its exponent and mantissa bits. -/
-def aliasFormat : String → Option (Nat × Nat)
-  | "f16" => some (5, 10)
-  | "bf16" => some (8, 7)
-  | "f32" => some (8, 23)
-  | "f64" => some (11, 52)
-  | "f128" => some (15, 112)
-  | _ => none
-
-/-- How a core type is written. -/
-def Ty.attr : Ty → Attr
-  | .int w => .word ("i" ++ toString w)
-  | .float e m => match floatAlias e m with
-    | some n => .word n
-    | none => .app "float" [.int e, .int m]
-  | .ptr 0 => .word "ptr"
-  | .ptr (n + 1) => .app "ptr" [.int (n + 1)]
-
-/-- Reads `float(e, m)`: a format with no alias, whose numbers are not
-negative and which is no wider than `maxWidth` bits in all. -/
-def decodeFloat (e m : Int) : Option Ty :=
-  if 0 ≤ e ∧ 0 ≤ m ∧ e + m + 1 ≤ maxWidth ∧ floatAlias e.toNat m.toNat = none then
-    some (.float e.toNat m.toNat)
-  else none
-
-/-- Reads `ptr(N)`: the pointer of a memory other than the default one, no
-higher than `maxMemory`. -/
-def decodePtr (n : Int) : Option Ty :=
-  if 1 ≤ n ∧ n ≤ maxMemory then some (.ptr n.toNat) else none
-
-/-- Reads a core type: `ptr` or `ptr(N)`, `i` and a width of at most
-`maxWidth` with no leading zeros, a float format's alias, or
-`float(e, m)`. -/
-def Ty.decode : Attr → Option Ty
-  | .word "ptr" => some (.ptr 0)
-  | .word s => match s.toList with
-    | 'i' :: ds =>
-      let digits := String.ofList ds
-      (digits.toNat?).bind fun w =>
-        if toString w = digits ∧ w ≤ maxWidth then some (.int w) else none
-    | _ => (aliasFormat s).map fun (e, m) => .float e m
-  | .app "float" [.int e, .int m] => decodeFloat e m
-  | .app "ptr" [.int n] => decodePtr n
-  | _ => none
 
 end Fir.Core
 

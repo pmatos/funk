@@ -8,6 +8,7 @@ from check_g0 import (
     CORE_EFFECTS,
     CORE_POISON,
     CORE_TEXT,
+    CORE_TEXT_PARTS,
     ROOT,
     core_words,
     effects_problems,
@@ -327,8 +328,10 @@ class Repository(unittest.TestCase):
     def test_the_core_words_hold_every_core_op(self):
         self.assertLessEqual(set(CORE_OPS), core_words())
         self.assertLessEqual(
-            {"nsw", "nuw", "exact", "slt", "true", "false", "ptr"}, core_words()
+            {"nsw", "nuw", "exact", "slt", "true", "false", "ptr", "stack", "heap"},
+            core_words(),
         )
+        self.assertNotIn("align", core_words())
 
     def test_the_parser_printer_validation_and_interpreter_are_checked(self):
         files = generic_files()
@@ -345,6 +348,8 @@ class Repository(unittest.TestCase):
         ]:
             self.assertIn(want, files)
         self.assertTrue((ROOT / CORE_TEXT).is_file())
+        for part in CORE_TEXT_PARTS:
+            self.assertTrue((ROOT / part).is_file())
 
 
 if __name__ == "__main__":

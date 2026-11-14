@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13960864870049628761")
+:::moduleDocs (fingerprint := "10053808790108493823")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "8766929691435898115")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
-each core op that is not a terminator, other than $`\mathsf{call}`, has the
-rule of its family, which takes its operand values and gives its one
+each core op that is not a terminator, other than $`\mathsf{call}` and
+$`\mathsf{alloca}`, has the rule of its family, which takes its operand values and gives its one
 result:
 
 * $`\mathsf{const}_N~c`, the float constant $`\mathsf{const}_{e,m}~v` and
@@ -66,8 +66,11 @@ result:
 * $`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`: the
   {ref "The-fir-specification--Execution--Integer-conversion-rules"}[integer conversion rules].
 
-$`\mathsf{call}` and the terminators have none here: a call's meaning is
-the run of its callee, and a terminator's rule says where control goes.
+$`\mathsf{call}`, $`\mathsf{alloca}` and the terminators have none here:
+a call's meaning is the run of its callee, $`\mathsf{alloca}` allocates,
+so its rule needs the memory effect and is one of the
+{ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[core's rules with memory],
+and a terminator's rule says where control goes.
 The rules are written once, for every way of computing with these
 effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
@@ -97,17 +100,23 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "9365112240789576787")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "6806789550651722301")
+*Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
+allocates, touches memory, and no other core op does. Its rule needs the
+memory effect, so it has one only in a monad with memory.
+
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
-terminator, or when it calls a function, whose run is its meaning. Every core op
+terminator, when it calls a function, whose run is its meaning, or when it
+touches memory, whose rule is its rule with memory. Every core op
 has rules: tests check one instance of each op, $`\mathsf{add}` with each
 set of flags, $`\mathsf{icmp}` and $`\mathsf{fcmp}` with each of their
 predicates, at a valid format and at one that validation rejects, each
 float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
-them, and
-$`\mathsf{call}` counts through its callee.
+them;
+$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`
+through its rule with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
@@ -133,4 +142,6 @@ unless one of its operand types has no value
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
+$`\mathsf{alloca}` has no rule here either: its meaning in the set monad
+has no outcome, and its rule and its obligations are those with memory.
 :::

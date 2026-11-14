@@ -38,10 +38,12 @@ has neither operands nor attributes, is a cell at each width of its result
   many mantissa bits, and `fptrunc` to every other (#241, the human's
   ruling of 2026-11-12 on #354); `fptosi` and `fptoui`, with no attribute,
   from each float format of the side to each of its widths (#241).
-- The pointer offset `ptradd` is a cell for each width of its integer, at
-  the side's pointer offset widths: every width for interpreter-only
-  tests, and none yet for differential tests, since the backend does not
-  lower pointers until stage 5 of #231.
+- The pointer offset `ptradd` is a cell for each width of its integer, and
+  the stack allocation `alloca` for each width of the integer type it
+  allocates, whatever its kind, count and alignment, at the side's pointer
+  widths: every width for interpreter-only tests, and none yet for
+  differential tests, since the backend does not lower pointers until
+  stage 5 of #231.
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -59,7 +61,8 @@ DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
 FLOAT_DIFFERENTIAL = ("f32", "f64")
 FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
-# The widths of `ptradd`'s integer on each side (#231).
+# The widths of `ptradd`'s integer and of `alloca`'s type on each side
+# (#231).
 POINTER_DIFFERENTIAL: tuple[int, ...] = ()
 POINTER_INTERPRETER = INTERPRETER
 
@@ -147,9 +150,10 @@ FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
 # The conversions from a float to an integer, which have no attributes: a
 # cell for each float format and width of the side.
 FLOAT_TO_INT = ("fptosi", "fptoui")
-# The pointer offsets, which have no attributes: a cell for each width of
-# the integer, at the side's pointer offset widths.
-POINTER_OPS = ("ptradd",)
+# The pointer ops: the pointer offset, which has no attributes, a cell for
+# each width of its integer, and the stack allocation, a cell for each width
+# of the integer type it allocates, at the side's pointer widths.
+POINTER_OPS = ("ptradd", "alloca")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -178,10 +182,10 @@ class Cell(NamedTuple):
     """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers` or
     `values`.
     `row` is a flag set or predicate, the source type of a width change or a
-    conversion, or what a value row passes, and empty for a pointer offset;
+    conversion, or what a value row passes, and empty for a pointer op;
     `width` is a width, a float format, the result type of a width change
-    or a conversion, or the width of a pointer offset's integer, or empty
-    where nothing is passed."""
+    or a conversion, the width of a pointer offset's integer or of the
+    integer an `alloca` allocates, or empty where nothing is passed."""
 
     table: str
     op: str
@@ -471,6 +475,20 @@ def pointer_offset(op: Op) -> Cell:
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
 
 
+def stack_allocation(op: Op) -> Cell:
+    """The cell of an `alloca`: at the width of the integer type it
+    allocates, its second attribute after its kind. Its count and alignment
+    are not part of its cell, as a constant's value is not. The matrix
+    reads canonical modules, which both tools decode, so the rest of its
+    attributes needs no check here."""
+    if len(op.attrs) >= 2 and not op.operands and len(op.results) == 1:
+        element = op.attrs[1]
+        bits = bits_of(element)
+        if is_pointer(op.results[0]) and bits is not None and bits[1]:
+            return Cell("pointers", op.name, "", element)
+    raise CellError(f"{op.name} {' '.join(op.attrs)} to {op.results} is not a cell")
+
+
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
     """The cells of values that `op` passes, returns or gives."""
     if not types:
@@ -494,6 +512,8 @@ def of_op(op: Op) -> set[Cell]:
         return {float_conversion(op)}
     if op.name in FLOAT_TO_INT:
         return {float_to_int(op)}
+    if op.name == "alloca":
+        return {stack_allocation(op)}
     if op.name in POINTER_OPS:
         return {pointer_offset(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):

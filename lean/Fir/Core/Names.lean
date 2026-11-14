@@ -39,6 +39,27 @@ theorem Attr.dialectsAll_append (as bs : List Attr) :
   | nil => rfl
   | cons a as ih => simp [Fir.Attr.dialectsAll, ih]
 
+/-- No core type names a dialect. -/
+theorem tyAttr_bare (t : Ty) : (tyAttr (d := CoreDialect) t).dialects = [] := by
+  cases t with
+  | int w =>
+    simp only [tyAttr, Ty.attr, Attr.dialects, Option.toList_eq_nil_iff]
+    apply wordDialect_eq_none
+    intro h
+    simp only [String.toList_append, List.mem_append] at h
+    rcases h with h | h
+    · exact absurd h (by decide)
+    · simp only [toString, Nat.repr, String.toList_ofList] at h
+      exact absurd (Nat.isDigit_of_mem_toDigits (by decide) (by decide) h) (by decide)
+  | float e m =>
+    cases hn : floatAlias e m with
+    | some n =>
+      simp only [tyAttr, Ty.attr, hn]
+      unfold floatAlias at hn
+      split at hn <;> cases hn <;> decide
+    | none => simp [tyAttr, Ty.attr, hn, Attr.dialects, Attr.dialectsAll, wordDialect]
+  | ptr n => cases n <;> simp [tyAttr, Ty.attr, Attr.dialects, Attr.dialectsAll, wordDialect]
+
 /-- No word of a core op's attributes names a dialect. -/
 theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) = [] := by
   have hp (p : Pred) : wordDialect p.name = none := by
@@ -77,28 +98,14 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]
   | call => simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects]
+  | alloca k t c a =>
+    have hk : '.' ∉ k.word.toList := by cases k <;> decide
+    have ht := tyAttr_bare t
+    simp only [tyAttr] at ht
+    by_cases hc : c = 1 <;> cases a <;>
+      simp [opAttrs, Op.attrs, allocaAttrs, hc, Attr.dialectsAll, Attr.dialects, hk, ht,
+        wordDialect]
   | _ => rfl
-
-/-- No core type names a dialect. -/
-theorem tyAttr_bare (t : Ty) : (tyAttr (d := CoreDialect) t).dialects = [] := by
-  cases t with
-  | int w =>
-    simp only [tyAttr, Ty.attr, Attr.dialects, Option.toList_eq_nil_iff]
-    apply wordDialect_eq_none
-    intro h
-    simp only [String.toList_append, List.mem_append] at h
-    rcases h with h | h
-    · exact absurd h (by decide)
-    · simp only [toString, Nat.repr, String.toList_ofList] at h
-      exact absurd (Nat.isDigit_of_mem_toDigits (by decide) (by decide) h) (by decide)
-  | float e m =>
-    cases hn : floatAlias e m with
-    | some n =>
-      simp only [tyAttr, Ty.attr, hn]
-      unfold floatAlias at hn
-      split at hn <;> cases hn <;> decide
-    | none => simp [tyAttr, Ty.attr, hn, Attr.dialects, Attr.dialectsAll, wordDialect]
-  | ptr n => cases n <;> simp [tyAttr, Ty.attr, Attr.dialects, Attr.dialectsAll, wordDialect]
 
 /-- The core dialect's words name no dialect. -/
 theorem lawfulDialectSet : LawfulDialectSet CoreDialect where

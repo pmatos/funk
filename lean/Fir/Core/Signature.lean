@@ -24,7 +24,7 @@ abbrev i (w : Nat) : Ty := .int w
 
 /-- The operand types of each core op. -/
 def Op.sig : Op → List Ty
-  | .const _ _ | .fconst .. | .poison _ | .br | .unreachable => []
+  | .const _ _ | .fconst .. | .poison _ | .br | .unreachable | .alloca .. => []
   | .add w _ | .sub w _ | .mul w _ | .sdiv w _ | .udiv w _ | .srem w | .urem w
   | .and w | .or w | .xor w | .shl w | .lshr w | .ashr w | .icmp _ w => [i w, i w]
   | .fcmp _ _ e m | .fbin _ _ e m => [.float e m, .float e m]
@@ -54,7 +54,7 @@ def Op.returnTypes : Op → List Ty
   | .ofBits e m => [.float e m]
   | .sitofp _ e m | .uitofp _ e m => [.float e m]
   | .fpext _ _ e' m' | .fptrunc _ _ e' m' => [.float e' m']
-  | .ptradd n _ => [.ptr n]
+  | .ptradd n _ | .alloca _ _ _ _ n => [.ptr n]
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs

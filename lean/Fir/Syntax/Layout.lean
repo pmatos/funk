@@ -24,9 +24,9 @@ validation chapter says which layouts are valid. A run of a module gives
 each of its memories its entry, and the semantics with memory gives each op
 the entry of each memory it names, so an op that loads or stores reads the
 unit, the byte order and the pointer width of the memory it accesses from
-its entry. The ops that read them come with loads and stores (#231).
-This section gives the byte orders, a memory's entry, the layout, and the
-widths and alignments that an entry gives.
+its entry, and an allocation reads the units and the natural alignment of
+its type. This section gives the byte orders, a memory's entry, the
+layout, and the widths and alignments that an entry gives.
 -/
 
 namespace Fir
@@ -133,6 +133,25 @@ def MemLayout.naturalAlign (e : MemLayout) : Nat := e.pointerUnits.nextPowerOfTw
 /-- The alignment of the memory's pointers, in units: the entry's own, or
 the natural one. -/
 def MemLayout.alignment (e : MemLayout) : Nat := e.align.getD e.naturalAlign
+
+/-- How many units a value of `w` bits takes in the memory: `w` over the
+unit's width, rounded up. An integer of `iN` takes `N` bits, so it takes
+`e.bitsUnits N` units, as many as its encoding writes. -/
+def MemLayout.bitsUnits (e : MemLayout) (w : Nat) : Nat := (w + e.unit - 1) / e.unit
+
+/-- The natural alignment of the integer type `iN`, `N = w`, in the memory,
+in units: the least power of two that is at least the units it takes, as
+for pointers. In memory 0, `i8` has 1, `i24` 4, `i32` 4, `i64` 8 and
+`i128` 16 (the human's ruling of 2026-11-14 on #378). -/
+def MemLayout.intAlign (e : MemLayout) (w : Nat) : Nat := (e.bitsUnits w).nextPowerOfTwo
+
+/-- A pointer takes the units of its width. -/
+theorem MemLayout.pointerUnits_eq (e : MemLayout) : e.pointerUnits = e.bitsUnits e.pointer := rfl
+
+/-- The natural alignments of integers in the default memory, from the
+ruling. -/
+example : [1, 8, 24, 32, 64, 128].map MemLayout.default.intAlign = [1, 1, 4, 4, 8, 16] := by
+  decide +kernel
 
 /-- The default memory's pointers take 8 units, aligned to 8. -/
 example : MemLayout.default.pointerUnits = 8 ∧ MemLayout.default.alignment = 8 := by decide +kernel

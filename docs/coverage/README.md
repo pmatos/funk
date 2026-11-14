@@ -15,7 +15,7 @@ empty entry is not a cell: a width change that the spec does not
 allow, a conversion from a format to itself, or a width for a row
 that passes no value.
 
-1499 cells, 1499 with a test.
+1507 cells, 1507 with a test.
 
 ## Differential tests
 
@@ -215,8 +215,8 @@ that passes no value.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 287 | 475 | 338 | 215 | 284 | 465 | 209 | 134 |
-| `add` |  | 12 | 228 | 31 | 28 | 30 | 228 | 28 | 63 |
+| `const` |  | 288 | 475 | 340 | 215 | 284 | 465 | 209 | 134 |
+| `add` |  | 12 | 228 | 33 | 28 | 30 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
 | `add` | `nuw nsw` | 4 | 29 | 8 | 6 | 6 | 29 | 6 | 5 |
@@ -240,7 +240,7 @@ that passes no value.
 | `shl` |  | 7 | 46 | 30 | 29 | 42 | 46 | 29 | 88 |
 | `lshr` |  | 7 | 46 | 30 | 29 | 35 | 51 | 29 | 78 |
 | `ashr` |  | 7 | 46 | 30 | 29 | 38 | 46 | 29 | 82 |
-| `icmp` | `eq` | 11 | 126 | 111 | 17 | 19 | 124 | 17 | 6 |
+| `icmp` | `eq` | 11 | 126 | 113 | 17 | 19 | 124 | 17 | 6 |
 | `icmp` | `ne` | 6 | 29 | 6 | 6 | 8 | 29 | 6 | 4 |
 | `icmp` | `slt` | 6 | 29 | 7 | 6 | 6 | 29 | 6 | 4 |
 | `icmp` | `sle` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 4 |
@@ -407,26 +407,27 @@ that passes no value.
 | `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 | `fptoui` | `f128` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 
-### Pointer offsets (interpreter-only tests)
+### Pointer ops: ptradd by an integer, alloca of one (interpreter-only tests)
 
-| op | by `i1` | by `i7` | by `i8` | by `i16` | by `i32` | by `i33` | by `i64` | by `i128` |
+| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 2 | 2 | 2 | 1 | 4 | 1 |
+| `ptradd` | 1 | 1 | 2 | 2 | 2 | 1 | 7 | 1 |
+| `alloca` | 2 | 1 | 2 | 1 | 3 | 2 | 2 | 4 |
 
 ### Passed and returned values (interpreter-only tests)
 
 | op | what | no value | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `f16` | `bf16` | `f32` | `f64` | `f128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `br` | passes nothing | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `br` | passes values |  | 24 | 81 | 82 | 7 | 9 | 79 | 9 | 7 | 5 | 5 | 7 | 5 | 5 |
-| `cond_br` | a successor passes nothing | 436 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| `br` | passes values |  | 24 | 81 | 84 | 7 | 9 | 79 | 9 | 7 | 5 | 5 | 7 | 5 | 5 |
+| `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2568 | 1583 | 814 | 817 | 906 | 1609 | 816 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2569 | 1583 | 814 | 817 | 906 | 1609 | 816 | 1081 | 825 | 777 | 689 | 588 | 530 |
 | `ret` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `call` | gives one result |  | 73 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
+| `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `func` | returns one value |  | 2568 | 1583 | 815 | 817 | 906 | 1609 | 816 | 1081 | 823 | 775 | 687 | 586 | 528 |
