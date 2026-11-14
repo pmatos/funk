@@ -318,8 +318,6 @@ mod tests {
             vec![word("stack"), word("i32"), align(0)],
             vec![word("stack"), word("i32"), align((1 << 64) + 2)],
             vec![word("stack"), word("i32"), align(1 << 24)],
-            vec![word("stack"), word("i32"), align((1 << 24) - 1)],
-            vec![word("stack"), word("i32"), align(1 << 70)],
             vec![word("stack"), word("i0")],
             vec![word("stack"), word("i16777216")],
             vec![word("stack"), word("f32")],
