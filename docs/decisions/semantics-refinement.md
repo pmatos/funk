@@ -253,11 +253,13 @@ pointer-parameter condition, through
 `Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns`: for a callee
 that reaches no memory before and after, refinement with memory is
 refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
-and congruence with ops of finitely many outcomes applies. No core op
-declares a memory effect, so every core function reaches no memory today
-(`Core.reachesNoMemory`), but the theorems still ask it of `@g`, so that
-they do not depend on that. The human ruled on 2026-11-13 (#373, option C):
-keep the core's unconditional finite-argument congruence, over runs with
+and congruence with ops of finitely many outcomes applies. `alloca`
+declares a memory effect, so a core function reaches no memory only when
+no `alloca` is in its reach (`Core.reachesNoMemory`), and these two
+theorems cover such a `@g`; for the whole core,
+`Core.replaceBody_isRefinedBy_of_from` asks nothing of it
+([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).
+The human ruled on 2026-11-13 (#373, option C): keep the core's unconditional finite-argument congruence, over runs with
 memory, for a callee that touches no memory, and ask a fuel bound only of a
 callee that touches memory (`Core.memReplaceBody_isRefinedBy`), until #214
 removes it. #214 met the ruling. The bound forms of the core went, since

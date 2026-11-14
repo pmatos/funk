@@ -66,6 +66,12 @@ Progress with calls asks totality of every terminator and every op with
 no callee of the module, and the class gives it, since each is a valid op
 instance. No path of such a run is stuck either, whatever its ops do, as
 that section proves.
+
+The core dialect is not lawful in the set monad, since
+$`\mathsf{alloca}` has no rule there, so this theorem does not apply to
+it. Progress for every function of a valid core module is stated with
+memory, in the section on
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory].
 :::
 
 :::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "14711092829804244707")
@@ -83,6 +89,11 @@ callee monotone at valid op instances, so every function of $`M` has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops], and the theorem of
 {ref "The-fir-specification--Execution--Refined-arguments"}[refined arguments]
 applies.
+
+For the core dialect, which is not lawful in the set monad, refined
+arguments for every function of every core module are stated with memory,
+in the section on
+{ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory].
 :::
 
 :::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "2375913733936981657")
@@ -102,4 +113,9 @@ of its function $`s`, as in the section on
 {ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee].
 That section asks monotone ops only of the old module's functions, which
 are valid, so the class gives them, and the new body need not be valid.
+
+For the core dialect, which is not lawful in the set monad, congruence in
+the callee for every callee of a valid core module is stated from given
+memories, in the section on
+{ref "The-fir-specification--Memory--Congruence-in-a-core-callee"}[congruence in a core callee].
 :::

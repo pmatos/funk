@@ -8,7 +8,10 @@ import Fir.Execution.MemoryFiniteReplace
 
 Congruence in the callee for the core dialect is stated over the runs with
 memory of its functions, wherever a run names the core's memories. It asks
-for no budget for the new callee, in two forms:
+for no budget for the new callee, in two forms, the first for every callee
+of a valid module, which is the guarantee for the whole core
+(`docs/decisions/semantics-m1-memory.md#the-cores-guarantees`), and the
+second for a callee that reaches no memory:
 
 * from given memories, for every callee `@g`, whatever its parameter types,
   pointers included, and whatever its new body does to the memories. Every

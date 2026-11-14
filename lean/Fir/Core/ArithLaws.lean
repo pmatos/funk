@@ -12,11 +12,13 @@ value in its place would be UB too, and must return a result on some
 operands with no poison. Every op that runs by a rule of its own, which is
 every core op but `call`, must also be total, with some outcome on every
 operand vector, and monotone, so that refining its operands refines what it
-does. With every obligation met, the core dialect is lawful, and refinement
-is compositional: run on arguments that refine others, every function's
+does. Each proof is about fir's execution rules, read in the set monad, so
+these sections cover the ops that touch no memory: `alloca` has no rule
+there and meets its obligations with memory, by its own rule. With every
+obligation met, the core dialect is lawful with memory, and refinement is
+compositional: run on arguments that refine others, every function's
 behaviour refines its behaviour on those others, calls and recursion
-included, as the section on refinement through core calls proves. Each
-proof is about fir's execution rules, read in the set monad.
+included, as the section on core functions with memory proves.
 
 `const` propagates poison (ADR-2026-10-29-2006), at an integer type and
 at a float type alike. The core poison classes

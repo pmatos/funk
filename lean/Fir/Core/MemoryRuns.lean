@@ -56,6 +56,19 @@ every core module refine its runs with memory on those others, calls and
 recursion included. Congruence in the callee needs no bound for the new
 callee: every core op has finitely many outcomes (the section on congruence
 in a core callee).
+
+These are the core's guarantees, for the whole core dialect, `alloca`
+included: the three lawful classes with memory and the lawful class of its
+effects, progress and no stuck path, refined arguments, and congruence in
+the callee from given memories. The statements without memory cover only
+the code that touches none: the obligations of the core's ops over the set
+monad cover the ops that touch no memory, and congruence with memory for a
+callee that reaches no memory covers such callees. The theorems of the
+lawful class over the set monad do not apply to the core at all. Each new
+op that touches memory keeps every guarantee here holding, with its own
+rule with memory and its own proofs, as `alloca` does. The human ruled
+this on 2026-11-14, on #384
+(`docs/decisions/semantics-m1-memory.md#the-cores-guarantees`).
 -/
 
 namespace Fir

@@ -31,7 +31,7 @@ def MemLayout.problems (e : MemLayout) : List Problem :=
       " bits: a pointer has 1 to 16777215 bits" } ++
   need (e.order = .little)
     { message := at_ ++ " is big-endian: M1 admits only little-endian memories" } ++
-  need (∀ a ∈ e.align, isPowerOfTwo a ∧ a ≤ MemLayout.limit)
+  need (∀ a ∈ e.align, MemLayout.ValidAlign a)
     { message := at_ ++ " aligns its pointers to " ++ toString (e.align.getD 0) ++
       " units: an alignment is a power of two no larger than 16777215" }
 

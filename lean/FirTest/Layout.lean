@@ -90,5 +90,10 @@ example : DataLayout.Declares [{ mem := 5, unit := 8, pointer := 64, order := .l
   decide
 example : (DataLayout.memory? [] 0) = some MemLayout.default := rfl
 example : isPowerOfTwo 16 ∧ !isPowerOfTwo 24 := by decide
+-- The one alignment rule of an entry and of an `alloca`: 2^23 is the
+-- largest valid alignment, 2^24 - 1 is no power of two and 2^24 is too large.
+example : MemLayout.ValidAlign 1 ∧ MemLayout.ValidAlign (2 ^ 23) ∧
+    ¬ MemLayout.ValidAlign 0 ∧ ¬ MemLayout.ValidAlign (2 ^ 24 - 1) ∧
+    ¬ MemLayout.ValidAlign (2 ^ 24) := by decide
 
 end FirTest

@@ -170,7 +170,7 @@ So the four ops break that obligation at width zero. $`\mathsf{i}0` is
 not a {ref "The-fir-specification--Abstract-syntax--Core-types"}[type]:
 validation accepts $`\mathsf{i}N` only for $`N \ge 1`. A
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful dialect]
-asks the obligations only of valid op instances, so the core dialect is
-lawful while division at $`\mathsf{i}0` keeps its rule
+asks the obligations only of valid op instances, so the four divisions
+meet them while division at $`\mathsf{i}0` keeps its rule
 (ADR-2026-10-29-2006). The theorem shows why that restriction is needed.
 :::
