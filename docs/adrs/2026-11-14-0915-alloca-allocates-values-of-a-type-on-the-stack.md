@@ -6,42 +6,36 @@ Tier: direction; area: semantics
 ## Decision
 
 - **The op.** `%p: ptr<N> = alloca KIND TYPE [COUNT] [align(A)]`, with no
-  operands, for example `%p: ptr = alloca stack i32 4` and
-  `%p: ptr(1) = alloca stack i8 12 align(4)`. Its attributes are separated by
-  spaces, as every op's are. The count is written only when it is not 1, and
-  `align(A)` only when the op gives an alignment, so each instance has one
-  spelling. Its memory is the memory of its result.
-- **Its meaning.** It allocates `COUNT` times the units that `TYPE` takes in
-  memory `N`, with kind `KIND`, aligned to `A` units, or to the type's natural
-  alignment when `A` is omitted: the least power of two that is at least the
-  units the type takes (`MemLayout.intAlign`). The result has provenance for
-  the allocation, at offset 0, and its units are poison. A stack allocation
-  is freed when its call returns.
-- **What M1 accepts.** Validation accepts the kind `stack` alone, a count of
-  at least 1, a power of two for `A` no larger than `MemLayout.limit`
-  (2^24 - 1), and a valid integer type. `global` and `heap`
-  decode and are rejected, as hooks in the format (ADR-2026-11-09-1542).
-  The count has no bound: one too large for the machine is a resource
-  error at run time, as a deep recursion is.
-- **Its poison and effects.** It is never UB and its result is never poison.
-  Its effect set is "allocates in memory `N`".
+  operands, for example `%p: ptr(1) = alloca stack i8 12 align(4)`. Its
+  attributes are separated by spaces. The count is written only when it is
+  not 1, and `align(A)` only when given, so each instance has one spelling.
+  Its memory is its result's.
+- **Its meaning.** It allocates `COUNT` times the units of `TYPE` in memory
+  `N`, aligned to `A` units, or to the type's natural alignment
+  (`MemLayout.intAlign`). The result has provenance for the allocation at
+  offset 0, whose units are poison. A stack allocation is freed when its call
+  returns. It is never UB, its result is never poison, and its effect is
+  "allocates in memory `N`".
+- **What M1 accepts.** The kind `stack` alone (`global` and `heap` decode, as
+  hooks: ADR-2026-11-09-1542), a count of at least 1, a power of two `A` no
+  larger than `MemLayout.limit` (2^24 - 1), and a valid integer type. The
+  count has no bound: one too large for the machine is a resource error at
+  run time, as a deep recursion is.
 
 ## Why
 
-The human ruled on 2026-11-14 (#378) that the op takes a type and a constant
-count, that the kind is written and M1 accepts only `stack`, and that the
-natural alignment of `iN` follows the pointer rule. On 2026-11-14 (#382) the
-human confirmed the spaces, which keep one attribute grammar for every
-dialect; kept integer types until float and pointer loads and stores land;
-bounded `A` as the layout line bounds its own alignments and left the count
-unbounded; and kept the G0 check's exemption of `align`
+The human ruled on 2026-11-14 (#378): a type and a constant count, a written
+kind with `stack` alone in M1, and the natural alignment of `iN` by the
+pointer rule. On 2026-11-14 (#382) the human ruled: spaces, one attribute
+grammar for every dialect; integer elements until float and pointer loads and
+stores land; `A` bounded as the layout line bounds its own alignments, the
+count unbounded; and the G0 check's exemption of `align` kept
 (semantics-m1-memory.md).
 
 ## Rejected alternatives
 
-- **Commas between the attributes,** as #378's examples wrote them: a second
-  attribute grammar for one op.
-- **A count of units.** It has no type to give a default alignment.
-- **A run-time count.** It needs may-UB for a poison count; #381 tracks it.
-- **A bound on the count.** It would not keep an allocation within a
-  machine: one `i16777215` takes 2 MiB.
+- **Commas between the attributes:** a second attribute grammar for one op.
+- **A count of units:** no type to give a default alignment.
+- **A run-time count:** it needs may-UB for a poison count (#381).
+- **A bound on the count:** it would not keep an allocation within a
+  machine, since one `i16777215` takes 2 MiB.

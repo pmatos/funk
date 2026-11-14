@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10127504593038420527")
+:::moduleDocs (fingerprint := "267871382322375035")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -23,14 +23,23 @@ $`2`, $`4` and so on, when it is not 0 and has no bit in common with
 $`a - 1`.
 :::
 
-:::readable Fir.MemLayout.Valid (fingerprint := "18387061454187400433")
+:::readable Fir.MemLayout.ValidAlign (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (fingerprint := "14994022144014384239")
+*Definition: a valid alignment.* An alignment $`a` is valid when it is a
+power of two no larger than the limit, $`2^{24} - 1`, so the largest is
+$`2^{23}`. It is the one rule of the alignment that an entry gives its
+pointers and of the alignment that an $`\mathsf{alloca}` writes
+({ref "The-fir-specification--Validation--Core-rules"}[the
+core's rules]).
+:::
+
+:::readable Fir.MemLayout.Valid (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7806627350590008117")
 *Definition: a valid entry.* The entry $`e` of a data layout is valid when
 its memory's number is at most the limit, $`2^{24} - 1`; its unit and its
 pointers each have from 1 to $`2^{24} - 1` bits; its byte order is
-$`\mathsf{little}`; and the alignment it gives, if any, is a power of two
-no larger than the limit:
+$`\mathsf{little}`; and the alignment it gives, if any, is valid, a power
+of two no larger than the limit:
 
-$$`\dfrac{n \le 2^{24}-1 \qquad 1 \le u, p \le 2^{24}-1 \qquad \forall a' \in a^?.\ a'~\text{a power of two} \le 2^{24}-1}{\vdash \{\mathsf{mem}~n, \mathsf{unit}~u, \mathsf{pointer}~p, \mathsf{order}~\mathsf{little}, \mathsf{align}~a^?, \mathsf{nonIntegral}~b\}~\text{valid}}`
+$$`\dfrac{n \le 2^{24}-1 \qquad 1 \le u, p \le 2^{24}-1 \qquad \forall a' \in a^?.\ a'~\text{a valid alignment}}{\vdash \{\mathsf{mem}~n, \mathsf{unit}~u, \mathsf{pointer}~p, \mathsf{order}~\mathsf{little}, \mathsf{align}~a^?, \mathsf{nonIntegral}~b\}~\text{valid}}`
 
 An entry whose order is $`\mathsf{big}` decodes, and is never valid in M1:
 no backend or harness yet uses a big-endian memory (the human's ruling of

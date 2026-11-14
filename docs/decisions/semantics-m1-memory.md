@@ -122,7 +122,8 @@ capping the natural alignment at the pointer's.
   the allocation at offset 0, and its units are poison. The frame of the
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
-  of two for `A` no larger than `MemLayout.limit` and a valid integer type.
+  of two for `A` no larger than `MemLayout.limit` (`MemLayout.ValidAlign`,
+  the layout's own rule) and a valid integer type.
   `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
 - The element is an integer type until float and pointer loads and stores
   land, as the human ruled on 2026-11-14 (#382). Rejected: float and pointer
