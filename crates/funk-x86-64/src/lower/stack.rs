@@ -1,10 +1,14 @@
-//! Stack needs from the calls that lowering emitted, not reconstructed fir.
+//! Stack needs from the calls and stack allocations that lowering emitted,
+//! not reconstructed fir.
 //!
 //! A need includes the function's frame, return address and saved `%rbp`,
-//! plus its deepest call or runtime helper. Calls inside one cycle do not
-//! count; the cycle and every function reaching it are marked recursive.
-//! All arithmetic saturates. Tarjan's traversal keeps its path on the heap,
-//! so a chain of calls takes no native stack per function.
+//! the most that its `alloca`s move `%rsp` down when each runs at most once
+//! per call, plus its deepest call or runtime helper. Calls inside one cycle
+//! do not count; the cycle and every function reaching it are marked
+//! unbounded, as is a function with an `alloca` that may run more than once
+//! per call, and every function reaching it. All arithmetic saturates.
+//! Tarjan's traversal keeps its path on the heap, so a chain of calls, or
+//! of blocks, takes no native stack per function or block.
 //!
 //! See `docs/decisions/x86-64-backend-executable.md#the-figure`.
 
@@ -12,12 +16,14 @@
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Need {
     /// The bytes below the caller's return address: the most that any run
-    /// uses when the function is not recursive, and otherwise the most that
-    /// a run uses when it makes no call within a cycle.
+    /// uses when the function is bounded, and otherwise the most that a run
+    /// uses when it makes no call within a cycle and runs no `alloca` more
+    /// than once.
     pub bytes: u64,
-    /// Whether a cycle of calls is reachable from the function, so that a
-    /// run may need more than `bytes`, as many more as its arguments say.
-    pub recursive: bool,
+    /// Whether a run may need more than `bytes`, as many more as its
+    /// arguments say: a cycle of calls is reachable from the function, or
+    /// an `alloca` that may run more than once per call is.
+    pub unbounded: bool,
 }
 
 /// Emitted stack facts for one function. Call indices address this same
@@ -27,6 +33,11 @@ pub(super) struct Function {
     pub frame: i32,
     pub calls: Vec<Call>,
     pub helper_stack: u64,
+    /// The most that the function's `alloca`s that run at most once per
+    /// call move `%rsp` down, together.
+    pub allocas: u64,
+    /// Whether one of its `alloca`s may run more than once per call.
+    pub unbounded: bool,
 }
 
 /// One emitted call: its callee's index and peak outgoing argument bytes.
@@ -37,21 +48,21 @@ type Call = (usize, u64);
 pub(super) fn needs(functions: &[Function]) -> Vec<Need> {
     let mut out = vec![Need::default(); functions.len()];
     let mut component = vec![0; functions.len()];
+    let edges: Vec<Vec<usize>> = functions
+        .iter()
+        .map(|f| f.calls.iter().map(|&(g, _)| g).collect())
+        .collect();
     // Each component comes after every component that it calls, whose
     // needs are known by then; a call within the component does not count.
-    for (c, members) in components(functions).into_iter().enumerate() {
+    for (c, members) in components(&edges).into_iter().enumerate() {
         for &f in &members {
             component[f] = c + 1;
         }
-        let cycle = members.len() > 1
-            || functions[members[0]]
-                .calls
-                .iter()
-                .any(|&(g, _)| g == members[0]);
+        let cycle = members.len() > 1 || edges[members[0]].contains(&members[0]);
         for &f in &members {
             let mut need = Need {
                 bytes: functions[f].helper_stack,
-                recursive: cycle,
+                unbounded: cycle || functions[f].unbounded,
             };
             for &(g, pushed) in &functions[f].calls {
                 if component[g] == c + 1 {
@@ -59,9 +70,11 @@ pub(super) fn needs(functions: &[Function]) -> Vec<Need> {
                 }
                 let below = out[g];
                 need.bytes = need.bytes.max(pushed.saturating_add(below.bytes));
-                need.recursive |= below.recursive;
+                need.unbounded |= below.unbounded;
             }
-            let own = u64::from(functions[f].frame.unsigned_abs()) + 16;
+            let own = u64::from(functions[f].frame.unsigned_abs())
+                .saturating_add(16)
+                .saturating_add(functions[f].allocas);
             need.bytes = need.bytes.saturating_add(own);
             out[f] = need;
         }
@@ -69,12 +82,13 @@ pub(super) fn needs(functions: &[Function]) -> Vec<Need> {
     out
 }
 
-/// The strongly connected components of the emitted call graph, by
-/// Tarjan's algorithm, each after every component that it calls. A
-/// component is one function, or the functions of a cycle of calls.
-fn components(functions: &[Function]) -> Vec<Vec<usize>> {
+/// The strongly connected components of a graph whose node `n` has an edge
+/// to each node of `edges[n]`, by Tarjan's algorithm, each after every
+/// component that it reaches. A component is one node, or the nodes of a
+/// cycle.
+pub(super) fn components(edges: &[Vec<usize>]) -> Vec<Vec<usize>> {
     const UNSEEN: usize = usize::MAX;
-    let n = functions.len();
+    let n = edges.len();
     let (mut order, mut low) = (vec![UNSEEN; n], vec![0; n]);
     let mut on_path = vec![false; n];
     let (mut path, mut out, mut next) = (Vec::new(), Vec::new(), 0);
@@ -82,14 +96,14 @@ fn components(functions: &[Function]) -> Vec<Vec<usize>> {
         if order[root] != UNSEEN {
             continue;
         }
-        // The functions being visited, each with its next call to follow.
+        // The nodes being visited, each with its next edge to follow.
         let mut work = vec![(root, 0)];
         (order[root], low[root], next) = (next, next, next + 1);
         path.push(root);
         on_path[root] = true;
         while let Some(top) = work.last_mut() {
             let (f, k) = *top;
-            if let Some(&(g, _)) = functions[f].calls.get(k) {
+            if let Some(&g) = edges[f].get(k) {
                 top.1 += 1;
                 if order[g] == UNSEEN {
                     (order[g], low[g], next) = (next, next, next + 1);
@@ -132,11 +146,12 @@ mod tests {
             frame,
             calls: calls.to_vec(),
             helper_stack,
+            ..Function::default()
         }
     }
 
-    fn need(bytes: u64, recursive: bool) -> Need {
-        Need { bytes, recursive }
+    fn need(bytes: u64, unbounded: bool) -> Need {
+        Need { bytes, unbounded }
     }
 
     fn lowered(text: &str) -> Vec<Need> {
@@ -228,6 +243,21 @@ mod tests {
                 need(32, false)
             ]
         );
+    }
+
+    #[test]
+    fn allocas_add_to_their_function_and_a_loop_makes_it_unbounded() {
+        let mut f = function(16, &[(1, 0)], 0);
+        f.allocas = 4096;
+        let mut g = function(16, &[], 0);
+        g.unbounded = true;
+        assert_eq!(
+            needs(&[f, g, function(16, &[(0, 0)], 0)]),
+            [need(4096 + 64, true), need(32, true), need(4096 + 96, true)]
+        );
+        let mut h = function(0, &[], 0);
+        h.allocas = u64::MAX;
+        assert_eq!(needs(&[h]), [need(u64::MAX, false)]);
     }
 
     #[test]

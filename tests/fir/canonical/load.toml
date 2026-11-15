@@ -8,24 +8,24 @@
 # 2026-11-14 on #388): an i32 at its natural alignment, 4, from sixteen i8
 # aligned to 1 is UB even at offset 0, and is not with align(4) on the
 # alloca or align(1) on the load. Punned loads of a pointer's fragments are
-# checked in Lean (FirTest/Load.lean) until pointer stores land (stage 4d-2b
-# of #231). The backend lowers load in stage 5 of #231, so each test is
-# interpreter-only.
+# tested in pointer-store.fir. A test that returns a value or poison runs
+# as native code too (stage 5 of #231), where poison allows any value; a
+# test of UB stays interpreter-only. Loads at widths the backend does not
+# lower are in load-widths.fir.
 tests = [
-  { func = "@fresh", expect = ["poison"] },
-  { func = "@fresh_odd", expect = ["poison"] },
-  { func = "@widths", expect = ["poison", "poison", "poison"] },
-  { func = "@at", args = ["0"], expect = ["poison"] },
-  { func = "@at", args = ["7"], expect = ["poison"] },
+  { func = "@fresh" },
+  { func = "@fresh_odd" },
+  { func = "@at", args = ["0"] },
+  { func = "@at", args = ["7"] },
   { func = "@at", args = ["8"], expect = "ub" },
   { func = "@at", args = ["-1"], expect = "ub" },
   { func = "@at", args = ["poison"], expect = "ub" },
   { func = "@misaligned", expect = "ub" },
-  { func = "@aligned", expect = ["poison"] },
-  { func = "@promised", args = ["0"], expect = ["poison"] },
-  { func = "@promised", args = ["3"], expect = ["poison"] },
+  { func = "@aligned" },
+  { func = "@promised", args = ["0"] },
+  { func = "@promised", args = ["3"] },
   { func = "@promised", args = ["13"], expect = "ub" },
-  { func = "@widest_align", expect = ["poison"] },
+  { func = "@widest_align" },
   { func = "@freed", expect = "ub" },
   { func = "@through", args = ["poison"], expect = "ub" },
 ]

@@ -83,12 +83,16 @@ the stack allocation `alloca` a cell at each width of the integer type it
 allocates, `load` a cell at each width of the integer it loads, and
 `store` a cell at each width of the integer it stores; each of the three
 has one more cell, `ptr`, for a pointer of any memory (stage 4d-2b of
-#231). Only
-the interpreter-only side has their cells: the backend lowers pointers in
-stage 5 of #231, which gives the differential side its widths. A
-run's pointers come from `alloca`, so the tests that fill the `ptradd` cells
-move real pointers, as `tests/fir/canonical/alloca.fir` does, and also pass
-poison through it; its rule on pointers is checked in Lean too, in
+#231). Each side has them at its own widths: the backend lowers
+pointers since stage 5 of #231, so the differential side has `i1` to
+`i128` and `ptr`, filled by `tests/fir/canonical/memory-native.fir` and the
+tests of `load`, `store` and `pointer-store` that return integers. A test
+that returns a pointer stays interpreter-only, since native code returns
+an address, not a pointer of the spec, and so does one with a poison
+pointer argument, which has no stand-in. A run's pointers come from
+`alloca`, so the tests that fill the `ptradd` cells move real pointers, as
+`tests/fir/canonical/memory-native.fir` does, and also pass poison
+through it; its rule on pointers is checked in Lean too, in
 `lean/Fir/Core/Pointer.lean` (#231).
 
 A test exercises each op of the function it runs and of every function it calls,

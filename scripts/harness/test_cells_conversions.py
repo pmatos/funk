@@ -127,7 +127,7 @@ class Tests(unittest.TestCase):
             | {Cell("pointers", op, "", "ptr") for op in ("alloca", "load", "store")},
         )
         self.assertFalse(any(c.table == "pointers" for c in cells.cells((8,))))
-        self.assertEqual(cells.POINTER_DIFFERENTIAL, ())
+        self.assertEqual(cells.POINTER_DIFFERENTIAL, cells.DIFFERENTIAL)
         self.assertEqual(cells.POINTER_INTERPRETER, cells.INTERPRETER)
         for ptr in ("ptr", "ptr(1)"):
             op = Op("ptradd", (), (ptr, "i33"), (ptr,), ())

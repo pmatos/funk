@@ -3,7 +3,9 @@
 This page continues [x86-64-backend.md](x86-64-backend.md). It says what holds
 today for how the naive backend lowers `select`, branches, block arguments,
 `i128` values and the divisions; how it lowers the floats is on
-[x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md). It is the record: when this page
+[x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md), and how
+it lowers pointers and memory on
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md). It is the record: when this page
 and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). Each lowering here builds on spill-everything: an op
 reads its operands from their slots and writes its results to theirs, and

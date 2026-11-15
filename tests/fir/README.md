@@ -93,7 +93,11 @@ differential test holds only functions that the backend lowers: today
 bitwise ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with
 or without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
 `ret`, `unreachable` and `call` at `i1`, `i8`, `i16`, `i32`, `i64` and
-`i128`, with any number of results. A test whose run reaches
+`i128`, with any number of results, the float ops at `f32` and `f64`, and
+`ptradd`, `alloca`, `load` and `store` in a memory of 8-bit units and
+64-bit pointers, such as the default one. A built function takes and
+returns a pointer as its address, so a test that returns a pointer, or
+passes a poison pointer, is interpreter-only. A test whose run reaches
 `unreachable` is interpreter-only, since a native run of UB proves
 nothing. Tests of other widths go in modules whose tests are all
 interpreter-only, such as `tracer-i7.fir` and `widths.fir`.
