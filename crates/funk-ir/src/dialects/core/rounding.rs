@@ -70,6 +70,39 @@ pub(super) fn check_rounding(op: &str, attrs: &[Attr]) -> Result<(), String> {
     }
 }
 
+/// Checks that `spec`, an op that rounds, decodes at the given types with
+/// every mode and that its check accepts `rne` alone.
+#[cfg(test)]
+pub(super) fn assert_every_mode_decodes_and_only_rne_validates(
+    spec: &dyn crate::registry::OpSpec,
+    operands: &[crate::Type],
+    results: &[crate::Type],
+) {
+    use crate::registry::{OpContext, OpShape, OpTypes};
+    let symbols = crate::SymbolTable::of(&[]);
+    let cx = OpContext {
+        symbols: &symbols,
+        func: "f",
+        results: &[],
+    };
+    for mode in ROUNDING_MODES {
+        let attrs = [Attr::App("round".into(), vec![Attr::word(mode)])];
+        let op = OpTypes {
+            attrs: &attrs,
+            operands,
+            results,
+        };
+        assert_eq!(spec.decode(&op), Ok(OpShape::default()), "{mode}");
+        match spec.check(&cx, &op) {
+            Ok(()) => assert_eq!(mode, "rne"),
+            Err(e) => assert!(
+                mode != "rne" && e.contains(&format!("not round({mode})")),
+                "{e}"
+            ),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

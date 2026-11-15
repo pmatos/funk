@@ -137,29 +137,12 @@ mod tests {
 
     #[test]
     fn every_mode_decodes_and_validation_accepts_only_rne() {
-        let symbols = crate::SymbolTable::of(&[]);
-        let cx = OpContext {
-            symbols: &symbols,
-            func: "f",
-            results: &[],
-        };
-        let (i, f) = ([int_type(32)], [float_type(8, 23)]);
         for name in INT_TO_FLOAT_OPS {
-            for mode in crate::dialects::core::ROUNDING_MODES {
-                let attrs = [Attr::App("round".into(), vec![Attr::word(mode)])];
-                assert_eq!(decode(name, &attrs, &i, &f), Ok(OpShape::default()));
-                let op = OpTypes {
-                    attrs: &attrs,
-                    operands: &i,
-                    results: &f,
-                };
-                let got = IntToFloat(name).check(&cx, &op);
-                if mode == "rne" {
-                    assert_eq!(got, Ok(()));
-                } else {
-                    assert!(got.unwrap_err().contains(&format!("not round({mode})")));
-                }
-            }
+            super::super::rounding::assert_every_mode_decodes_and_only_rne_validates(
+                &IntToFloat(name),
+                &[int_type(32)],
+                &[float_type(8, 23)],
+            );
         }
     }
 }

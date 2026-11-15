@@ -111,3 +111,21 @@ impl OpSpec for FloatArith {
         fast_math::effects_of(op.attrs)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dialects::core::float_type;
+
+    #[test]
+    fn every_op_that_rounds_decodes_every_mode_and_validates_only_rne() {
+        for op in FloatArith::all().filter(|op| op.rounds) {
+            let f = float_type(8, 23);
+            super::super::rounding::assert_every_mode_decodes_and_only_rne_validates(
+                &op,
+                &vec![f.clone(); op.operands],
+                &[f],
+            );
+        }
+    }
+}

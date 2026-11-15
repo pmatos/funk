@@ -77,9 +77,7 @@ impl OpSpec for Convert {
         let Some((from, to)) = formats(op) else {
             return Ok(());
         };
-        if !self.exact() {
-            check_rounding(self.0, op.attrs)?;
-        }
+        check_rounding(self.0, op.attrs)?;
         let (valid, rule) = if self.exact() {
             (
                 from != to && holds_every_value(from, to),
@@ -187,25 +185,11 @@ mod tests {
 
     #[test]
     fn fptrunc_decodes_every_mode_and_validation_accepts_only_rne() {
-        let m = Module::new();
-        let symbols = m.symbols();
-        let cx = OpContext {
-            symbols: &symbols,
-            func: "f",
-            results: &[],
-        };
-        let (x, r) = ([float_type(11, 52)], [float_type(8, 23)]);
-        for mode in crate::dialects::core::ROUNDING_MODES {
-            let a = [Attr::App("round".into(), vec![Attr::word(mode)])];
-            let op = types(&a, &x, &r);
-            assert_eq!(Convert("fptrunc").decode(&op), Ok(OpShape::default()));
-            let got = Convert("fptrunc").check(&cx, &op);
-            if mode == "rne" {
-                assert_eq!(got, Ok(()));
-            } else {
-                assert!(got.unwrap_err().contains(&format!("not round({mode})")));
-            }
-        }
+        super::super::rounding::assert_every_mode_decodes_and_only_rne_validates(
+            &Convert("fptrunc"),
+            &[float_type(11, 52)],
+            &[float_type(8, 23)],
+        );
     }
 
     #[test]
