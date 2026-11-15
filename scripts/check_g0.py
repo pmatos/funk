@@ -15,9 +15,10 @@ its command line) and of G0's Lean tests must not:
 * write a word of the core dialect's text as a string: an op name such as
   `"add"`, an attribute such as `"nsw"` or `"true"`, or a type such as
   `"i32"`. The words are those of `lean/Fir/Core/Text.lean` and of the
-  files it writes types, `alloca`, `load` and `store` with,
-  `TypeText.lean`, `AllocaText.lean`, `LoadText.lean` and `StoreText.lean`,
-  but `align`, which the data layout's generic grammar writes too.
+  files it writes types, `alloca`, `load`, `store` and rounding modes
+  with, `TypeText.lean`, `AllocaText.lean`, `LoadText.lean`,
+  `StoreText.lean` and `RoundingText.lean`, but `align`, which the data
+  layout's generic grammar writes too.
 
 The text chapter's example is a core module, so it is not checked. Two
 files of the chapter end with the core dialect's corollaries of their
@@ -35,14 +36,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE_TEXT = "lean/Fir/Core/Text.lean"
-# The files that Text.lean writes types, `alloca`, `load` and `store` with,
-# whose words it writes too, and the words that the generic text writes as
-# well.
+# The files that Text.lean writes types, `alloca`, `load`, `store` and
+# rounding modes with, whose words it writes too, and the words that the
+# generic text writes as well.
 CORE_TEXT_PARTS = (
     "lean/Fir/Core/TypeText.lean",
     "lean/Fir/Core/AllocaText.lean",
     "lean/Fir/Core/LoadText.lean",
     "lean/Fir/Core/StoreText.lean",
+    "lean/Fir/Core/RoundingText.lean",
 )
 SHARED_WORDS = frozenset({"align"})
 CORE_POISON = "lean/Fir/Core/Poison.lean"

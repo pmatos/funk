@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9496280504861189579")
+:::moduleDocs (fingerprint := "10942803160477780711")
 :::
 
 :::readable Fir.Core.nanBits (fingerprint := "1042529435153672994")
@@ -54,7 +54,7 @@ rejects, gives $`\mathrm{anynan}_{e,m}` on every operand and under every
 flag, so that the rule is total.
 :::
 
-:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (pin := Fir.Core.remainder) (fingerprint := "11734426222456348426")
+:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (pin := Fir.Core.remainder) (fingerprint := "6204914280336798625")
 *Definition: what each float op computes in the model.* Each op is an
 operation of Lean's float model on the format $`F`, or, for
 $`\mathsf{frem}` and $`\mathsf{fmod}`, fir's
@@ -65,7 +65,10 @@ $$`\begin{array}{ll} \mathsf{fadd}: \mathrm{add}_F & \mathsf{fneg}: \mathrm{neg}
 
 Each operation of two operands but the remainders, and
 $`\mathrm{sqrt}_F`, rounds its exact result to nearest, ties to even, at
-the format, and an exact result too large for it is an infinity. A
+the format, and an exact result too large for it is an infinity. The
+model has no other mode, so the rule reads every rounding mode an op
+carries as $`\mathsf{rne}`, the one that
+{ref "The-fir-specification--Validation--Core-rules"}[validation] accepts. A
 remainder is exact. $`\mathrm{neg}` and $`\mathrm{abs}` change
 the sign of a number, an infinity or a zero, and give the model's one NaN
 on a NaN.

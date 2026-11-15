@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14313128252265061010")
+:::moduleDocs (fingerprint := "11172029107955384295")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "9749194357709369390")
+:::readable Fir.Core.Op.poisonClass (fingerprint := "1226405602815874595")
 *Definition: the poison class of each core op.* Thirty-six core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:

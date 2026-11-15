@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Dropping fast-math flags: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14123285982004340023")
+:::moduleDocs (fingerprint := "17382605123120894073")
 :::
 
 :::readable Fir.Core.FastMath.le_none (pin := Fir.Core.FastMath.Le) (fingerprint := "1547956872211176349")
@@ -40,9 +40,9 @@ $`\mathsf{i1}` of $`\mathsf{fcmp}` under $`\phi` is refined by its
 $`\mathsf{i1}` under $`\phi'`: it is poison, or the same.
 :::
 
-:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "16824028553297313093")
+:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "1932391872209236585")
 *Theorem: dropping a flag refines the flagged op.* For all flags
-$`\phi' \le \phi`, every format and every operands $`\vec a`,
+$`\phi' \le \phi`, every format, every rounding mode and every operands $`\vec a`,
 
 $$`\mathit{op}_{e,m}~\phi'~(\vec a) \sqsupseteq \mathit{op}_{e,m}~\phi~(\vec a)`
 

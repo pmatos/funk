@@ -112,7 +112,8 @@ AT_WIDTH = {
     "freeze": ("",),
     "poison": ("",),
 }
-# The attribute of a float op that rounds (`roundAttr`).
+# The attribute of a float op that rounds in a valid module (`roundAttr`):
+# every other mode decodes and fails validation, so it is not a cell.
 ROUND = ("round(rne)",)
 # The float ops at a format, in the order of `Op`, with the attributes
 # that are cells.
@@ -400,8 +401,8 @@ def bitcast(op: Op) -> Cell:
 
 def int_to_float(op: Op) -> Cell:
     """The cell of a `sitofp` or `uitofp`: from an integer to a float, with
-    `round(rne)`. Any other text of it does not decode, so it is not a
-    cell."""
+    `round(rne)`. Any other text of it does not decode or does not
+    validate, so it is not a cell."""
     if op.attrs == ROUND and len(op.operands) == len(op.results) == 1:
         [a], [b] = op.operands, op.results
         operand = bits_of(a)

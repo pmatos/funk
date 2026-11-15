@@ -38,7 +38,8 @@ every bit (`lean/Fir/Core/FloatBitcast.lean`).
 
 `sitofp` and `uitofp` convert an integer to a float (stage 3). Each takes one
 value of `iN`, of any width, and gives one of `float<e,m>`, of any format; in
-the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
+the spec they are `sitofp r n e m` and `uitofp r n e m`, with `r` the rounding
+mode, and one rule,
 `intToFloat` (`lean/Fir/Core/FloatOfInt.lean`).
 
 - `sitofp` reads the operand's bits in two's complement and `uitofp` as
@@ -55,9 +56,10 @@ the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
   pattern and the rule chooses nothing (`intToFloat_valid`). Only at a format
   that validation rejects does it choose a NaN, as the arithmetic does, so
   that the rule is total.
-- Each carries `round(rne)`, the one mode M1 has; #229's open question on
-  rounding modes decides no other here. A poison operand gives poison. It is
-  never UB, and it is pure.
+- Each carries its rounding mode, and validation accepts only `round(rne)`,
+  the one mode M1 has (the human's ruling of 2026-11-15 on #229,
+  ADR-2026-11-11-1801). A poison operand gives poison. It is never UB, and it
+  is pure.
 
 Rejected: building the conversion from the arithmetic, such as the sum of the
 integer's bits as powers of two, which rounds more than once; and a rule of
@@ -66,7 +68,8 @@ beside the model's.
 
 `fpext` and `fptrunc` convert a float to another format (stage 2). Each takes
 one value of `float<e,m>` and gives one of `float<e',m'>`; in the spec they are
-`fpext e m e' m'` and `fptrunc e m e' m'`, with one rule, `convertFloat`
+`fpext e m e' m'` and `fptrunc r e m e' m'`, with `r` the rounding mode, and
+one rule, `convertFloat`
 (`lean/Fir/Core/FloatConvert.lean`).
 
 - The human ruled on 2026-11-12 (#354): `fpext` applies only when the target
@@ -109,7 +112,8 @@ the spec they are `fptosi e m n` and `fptoui e m n`, with one rule,
   `convertToIntegerTowardZero` (§5.8), C's `(int)x`, Rust's `as` and LLVM's
   `fptosi` and `fptoui`. Truncation is what the ops mean, so neither carries
   a rounding attribute: `fptosi round(rne)` and `fptoui round(rtz)` do not
-  decode. #229's question on rounding modes decides nothing here. Rejected:
+  decode, since neither rounds: the ruling on rounding modes (#229) covers only
+  the ops that round. Rejected:
   rounding to nearest even with `round(rne)`, as the conversions from
   integers do, which is not what C's and Rust's casts mean.
 - `UnpackedFloat.unpack` reads the operand, and the model's

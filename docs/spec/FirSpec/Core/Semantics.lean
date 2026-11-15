@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6375511786911582533")
+:::moduleDocs (fingerprint := "17144611865154743455")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "8766929691435898115")
+:::readable Fir.Core.Op.denote? (fingerprint := "4904635401474457729")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -46,7 +46,7 @@ result:
 * $`\mathsf{fcmp}_{e,m}~\phi~p`: the
   {ref "The-fir-specification--Execution--Float-comparison-rules"}[float comparison rules];
 * $`\mathit{fbin}_{e,m}~\phi`, $`\mathit{funary}_{e,m}~\phi` and
-  $`\mathsf{fma}_{e,m}~\phi`: the
+  $`\mathsf{fma}_{e,m}~\phi~r`: the
   {ref "The-fir-specification--Execution--Float-arithmetic-rules"}[float arithmetic rules],
   which choose the bits of a NaN result, and the sign of a zero under
   $`\mathsf{nsz}`;
@@ -56,15 +56,18 @@ result:
 * $`\mathsf{bitcast}_{e,m}^{\to \mathsf{i}}` and
   $`\mathsf{bitcast}_{e,m}^{\mathsf{i} \to}`: the
   {ref "The-fir-specification--Execution--Bit-cast-rules"}[bit cast rule];
-* $`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`: the
+* $`\mathsf{sitofp}_{N,e,m}~r` and $`\mathsf{uitofp}_{N,e,m}~r`: the
   {ref "The-fir-specification--Execution--Conversion-rules"}[conversion rules];
-* $`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`: the
+* $`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}~r`: the
   {ref "The-fir-specification--Execution--Format-conversion-rules"}[format conversion rules],
   which choose the bits of a NaN result;
 * $`\mathsf{ptradd}_{N,W}`: the
   {ref "The-fir-specification--Execution--Pointer-offset-rules"}[pointer offset rule];
 * $`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`: the
   {ref "The-fir-specification--Execution--Integer-conversion-rules"}[integer conversion rules].
+
+The rule of an op that rounds reads its mode $`r` as $`\mathsf{rne}`,
+the one mode that validation accepts.
 
 $`\mathsf{call}`, $`\mathsf{alloca}`, $`\mathsf{load}`, $`\mathsf{store}`
 and the terminators have none here: a call's meaning is the run of its
@@ -102,7 +105,7 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "3682158000252393695")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "8109643344099670837")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
