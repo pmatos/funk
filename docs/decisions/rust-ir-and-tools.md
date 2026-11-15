@@ -143,8 +143,9 @@ word in generic code, whatever else it means (ADR-2026-11-03-0600).
 
 The core dialect is `dialects/core/`. Its types are in `types.rs`, and each op
 family has a file of its own, registered in `dialects/core/mod.rs`. The second
-dialect in tree, `gpu`, is `dialects/gpu.rs`; `funk` registers it beside the
-core (ADR-2026-11-09-1545; semantics-m1-dialects.md). A new
+dialect in tree, `gpu`, is `dialects/gpu.rs`. `dialects::in_tree` registers
+both, and `funk`, the corpus tests and the fuzz targets read it
+(ADR-2026-11-09-1545; semantics-m1-dialects.md). A new
 dialect implements `OpSpec` and `TypeSpec` and registers. The IR, parser,
 printer and verifier then do not change; the test dialect in
 `crates/funk-ir/tests/toy.rs` shows it.

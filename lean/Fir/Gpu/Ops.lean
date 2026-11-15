@@ -67,7 +67,8 @@ instance Gpu.instDialectName : DialectName GpuExt := ⟨"gpu"⟩
 /-- The dialect `gpu` over the core: its ops, at the core's types. -/
 abbrev GpuDialect : Dialect := CoreDialect.over GpuExt
 
-/-- The sum of the core and `gpu`: what `funk` and `fir-ref` read. -/
+/-- The sum of the core and `gpu`: what `funk`, `fir-ref fmt` and
+`fir-ref validate` read. -/
 abbrev CoreGpu : Dialect := CoreDialect ⊞ GpuExt
 
 namespace Gpu

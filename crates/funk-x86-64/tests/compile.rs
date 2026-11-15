@@ -43,7 +43,7 @@ fn an_op_without_a_lowering_is_reported_at_the_op() {
     assert_eq!(ds.len(), 1, "{ds:?}");
     assert_eq!(
         ds[0].message,
-        "the x86-64 backend cannot lower the op toy.ret yet"
+        "the x86-64 backend lowers no op of the dialect toy, such as toy.ret"
     );
     assert_eq!(
         (ds[0].func.as_deref(), ds[0].block.as_deref(), ds[0].op),

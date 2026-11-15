@@ -12,7 +12,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use funk_ir::dialects::gpu;
+use funk_ir::dialects;
 use funk_ir::generate::{self, Rng};
 use funk_ir::{Registry, parse, print};
 
@@ -57,9 +57,7 @@ fn run(args: &[String]) -> Result<(), String> {
     };
     let out = Path::new(out);
     std::fs::create_dir_all(out).map_err(|e| format!("cannot create {}: {e}", out.display()))?;
-    let mut reg = Registry::core();
-    reg.register(gpu::dialect())
-        .map_err(|e| format!("gpu does not register: {e:?}"))?;
+    let reg = dialects::in_tree();
     let files = corpus(out, "canonical", &reg)?
         + corpus(out, "noncanonical", &reg)?
         + corpus(out, "llvm", &reg)?;

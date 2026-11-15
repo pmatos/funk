@@ -225,23 +225,49 @@ fn the_generic_modules_write_no_word_of_the_core_dialect() {
     );
 }
 
-#[test]
-fn the_generic_modules_write_no_word_of_the_gpu_dialect() {
+/// Every word of the gpu dialect's text: its ops, from its registration,
+/// and its dimensions.
+fn gpu_words() -> Vec<String> {
     let mut words: Vec<String> = gpu::dialect()
         .ops
         .iter()
         .map(|op| op.name().to_string())
         .collect();
-    assert_eq!(words.len(), gpu::OPS.len());
     words.extend(gpu::DIMENSIONS.iter().map(|d| d.to_string()));
+    words
+}
+
+/// The strings of the code of `src` that are words of the gpu dialect.
+fn gpu_words_written(words: &[String], src: &str) -> Vec<String> {
+    code(&tokens(src))
+        .into_iter()
+        .filter_map(|t| match t {
+            Tok::Str(s) if words.contains(&s) => Some(s),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn a_gpu_word_written_alone_is_found_and_a_message_that_holds_one_is_not() {
+    let words = gpu_words();
+    assert!(words.iter().any(|w| w == "gpu.work_item_id"), "{words:?}");
+    assert!(words.iter().any(|w| w == "gpu.x"), "{words:?}");
+    let written = |src: &str| gpu_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn f(n: &str) -> bool { n == "gpu.work_item_id" || n == "gpu.x" }"#),
+        ["gpu.work_item_id", "gpu.x"]
+    );
+    assert!(written(r#"fn why() -> &'static str { "a gpu.x dimension" }"#).is_empty());
+}
+
+#[test]
+fn the_generic_modules_write_no_word_of_the_gpu_dialect() {
+    let words = gpu_words();
     let mut found = Vec::new();
     for (path, src) in generic_sources() {
-        for t in code(&tokens(&src)) {
-            if let Tok::Str(s) = t
-                && words.contains(&s)
-            {
-                found.push(format!("{path}: \"{s}\""));
-            }
+        for s in gpu_words_written(&words, &src) {
+            found.push(format!("{path}: \"{s}\""));
         }
     }
     assert!(

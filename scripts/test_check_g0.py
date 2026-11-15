@@ -43,6 +43,11 @@ def Op.poisonClass : Op → PoisonClass
 instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
 """
 
+GPU_TEXT_SAMPLE = """
+def Query.name : Query → String
+  | .workItemId => "gpu.work_item_id"
+"""
+
 CORE_EFFECTS_SAMPLE = """
 /-- The effects of each core op. -/
 def Op.effects : Op → Effects Mem
@@ -61,6 +66,7 @@ def tree(case: unittest.TestCase, files: dict[str, str]) -> Path:
         CORE_TEXT: CORE_TEXT_SAMPLE,
         CORE_POISON: CORE_POISON_SAMPLE,
         CORE_EFFECTS: CORE_EFFECTS_SAMPLE,
+        GPU_TEXT: GPU_TEXT_SAMPLE,
     }
     for rel, text in {**samples, **files}.items():
         path = root / rel
@@ -234,7 +240,7 @@ class Rules(unittest.TestCase):
     def test_naming_importing_or_writing_the_gpu_dialect_fails(self):
         # Generic code knows no dialect's ops, the second dialect's included
         # (ADR-2026-11-03-0600, ADR-2026-11-09-1545).
-        gpu = 'def Query.name : Query → String\n  | .workItemId => "gpu.work_item_id"\n'
+        gpu = GPU_TEXT_SAMPLE
         generic = (
             "import Fir.Gpu.Ops\n\ndef d : Dialect := CoreGpu\n"
             'def w := "gpu.work_item_id"\ndef m := "a gpu.work_item_id op"\n'
@@ -256,6 +262,14 @@ class Rules(unittest.TestCase):
         root = tree(self, {})
         (root / CORE_TEXT).write_text("", encoding="utf-8")
         self.assertEqual(len(problems(root)), 1)
+
+    def test_no_gpu_words_fails(self):
+        root = tree(self, {})
+        (root / GPU_TEXT).unlink()
+        self.assertEqual(
+            problems(root),
+            [f"{GPU_TEXT}: no words found, so no gpu word would be checked"],
+        )
 
 
 class PoisonClasses(unittest.TestCase):

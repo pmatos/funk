@@ -98,12 +98,15 @@ of one work-item, work-group memory, and the generic results restated
   the memories of its host's data layout (ADR-2026-11-12-1821), so its
   `alloca`, `load`, `store` and `ptradd` on `ptr(3)` validate when the host
   declares memory 3, and are rejected on both sides when it does not.
-- **The tools.** `funk` registers `gpu` beside the core, and `fir-ref fmt`
-  and `fir-ref validate` read the sum `CoreGpu`. `fir-ref run` reads the
+- **The tools.** `funk` reads the dialects in tree, the core and `gpu`
+  (`funk_ir::dialects::in_tree`, which the corpus tests and the fuzz targets
+  read too), and `fir-ref fmt` and `fir-ref validate` read the sum
+  `CoreGpu`. `fir-ref run` reads the
   core alone until stage 2, so a text that writes a word of `gpu` is a parse
   error there. `funk build` compiles the host's functions and none of a
-  device module's, as for any nested module, and reports a `gpu` op in a
-  top-level function as unsupported: the dialect is terminal.
+  device module's, as for any nested module (#211), and reports a `gpu` op
+  in a top-level function as unsupported: the x86-64 backend lowers no op
+  of a dialect other than the core, and `gpu` is terminal.
 - **The G0 checks so far.** Generic code changed only to register it: the
   dialect's own files, `funk`'s registry and `fir-ref`'s command line name
   it. `scripts/check_g0.py` and `crates/funk-ir/tests/g0.rs` fail on a word

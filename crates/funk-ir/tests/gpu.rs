@@ -5,16 +5,10 @@
 //! prints as itself and verifies; an invalid one parses, prints as itself and
 //! does not verify; a malformed one does not parse.
 
-use funk_ir::dialects::gpu;
+use funk_ir::dialects::in_tree;
 use funk_ir::{Registry, parse, print, verify};
 
 const CASES: &str = include_str!("../../../tests/dialects/gpu.cases");
-
-fn registry() -> Registry {
-    let mut r = Registry::core();
-    r.register(gpu::dialect()).expect("gpu registers");
-    r
-}
 
 struct Case {
     verdict: &'static str,
@@ -48,7 +42,7 @@ fn the_shared_cases_are_all_read() {
 
 #[test]
 fn each_case_gets_its_verdict() {
-    let reg = registry();
+    let reg = in_tree();
     for c in cases() {
         match (parse(c.text, &reg), c.verdict) {
             (Ok(m), "accept" | "invalid") => {
@@ -64,7 +58,7 @@ fn each_case_gets_its_verdict() {
 
 #[test]
 fn each_rejection_names_its_rule() {
-    let reg = registry();
+    let reg = in_tree();
     for (name, needle) in [
         ("an-i64-id", "gives an i32"),
         ("device-module-without-gpu", "the dialect gpu"),

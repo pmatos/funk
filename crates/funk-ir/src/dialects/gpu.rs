@@ -20,7 +20,7 @@
 //! no lowering to core or native backend: it is terminal
 //! (ADR-2026-11-09-1544).
 
-use super::core::{self, int_type, int_width};
+use super::core::{self, int_width};
 use crate::effects::Effects;
 use crate::ir::Attr;
 use crate::registry::{Dialect, OpContext, OpShape, OpSpec, OpTypes};
@@ -62,7 +62,7 @@ impl OpSpec for Query {
     }
 
     fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        if op.results == [int_type(32)] {
+        if matches!(op.results, [r] if int_width(r) == Some(32)) {
             Ok(())
         } else {
             Err(format!("{} gives an i32", self.0))
@@ -88,7 +88,7 @@ pub fn dialect() -> Dialect {
 mod tests {
     use super::*;
     use crate::Type;
-    use crate::dialects::core::ptr_type;
+    use crate::dialects::core::{int_type, ptr_type};
 
     fn decode(attrs: &[Attr], operands: &[Type], results: &[Type]) -> Result<OpShape, String> {
         Query("gpu.work_item_id").decode(&OpTypes {

@@ -294,12 +294,6 @@ def gpu_words(root: Path = ROOT) -> set[str]:
     }
 
 
-def _dialect_of(module: str) -> str:
-    """The dialect that an imported module, which this check leaves out,
-    belongs to."""
-    return "gpu" if module.startswith("Fir.Gpu.") else "core"
-
-
 def _command_line() -> set[str]:
     return {f"lean/FirRef/{m}.lean" for m in FIR_REF_COMMAND_LINE}
 
@@ -385,6 +379,8 @@ def problems(root: Path = ROOT) -> list[str]:
     if not words:
         return [f"{CORE_TEXT}: no words found, so nothing would be checked"]
     gpu = gpu_words(root)
+    if not gpu:
+        return [f"{GPU_TEXT}: no words found, so no gpu word would be checked"]
     found = []
     for rel in generic_files(root):
         toks = tokens((root / rel).read_text(encoding="utf-8"))
@@ -401,7 +397,7 @@ def problems(root: Path = ROOT) -> list[str]:
                 and (CORE_NAMES & set(parts) or (imported and is_left_out(s)))
             ):
                 verb = "imports" if imported else "names"
-                found.append(f"{rel}:{line}: {verb} the {_dialect_of(s)} dialect: {s}")
+                found.append(f"{rel}:{line}: {verb} the core dialect: {s}")
             elif kind == "str" and (s in words or INT_TYPE.fullmatch(s)):
                 found.append(f'{rel}:{line}: writes the core dialect\'s word "{s}"')
             elif kind == "str" and s in gpu:

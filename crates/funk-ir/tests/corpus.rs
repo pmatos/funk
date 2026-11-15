@@ -4,19 +4,13 @@
 mod common;
 
 use common::fir_files;
-use funk_ir::dialects::gpu;
-use funk_ir::{Module, Registry, parse, print, verify};
+use funk_ir::dialects::in_tree;
+use funk_ir::{Module, parse, print, verify};
 
-/// The core and `gpu`, as `funk` registers them.
-fn registry() -> Registry {
-    let mut r = Registry::core();
-    r.register(gpu::dialect()).expect("gpu registers");
-    r
-}
-
-/// Parses with the core and `gpu`, or fails the test.
+/// Parses with the core and `gpu`, or fails the test. `common::parse_ok`
+/// reads the core alone, for the tests of the core's own texts.
 fn parse_ok(text: &str) -> Module {
-    parse(text, &registry()).unwrap_or_else(|e| panic!("{e}\n{text}"))
+    parse(text, &in_tree()).unwrap_or_else(|e| panic!("{e}\n{text}"))
 }
 
 /// The canonical texts: those of `canonical/`, and the modules ported from
@@ -39,7 +33,7 @@ fn canonical_texts_print_back_byte_for_byte() {
 
 #[test]
 fn canonical_texts_are_valid() {
-    let reg = registry();
+    let reg = in_tree();
     for (name, text) in canonical_texts() {
         let ds = verify(&parse_ok(&text), &reg);
         assert!(ds.is_empty(), "{name}: {ds:#?}");
