@@ -19,13 +19,18 @@ from refine import bits_of
 POINTER_OPS = ("ptradd", "alloca", "load")
 
 
+def is_int(t: str) -> bool:
+    """Whether `t` is an integer type `iN`."""
+    bits = bits_of(t)
+    return bits is not None and bits[1]
+
+
 def pointer_offset(op: Op) -> Cell:
     """The cell of a `ptradd`: at the width of its integer. Any other text
     of it does not decode, so it is not a cell."""
     if not op.attrs and len(op.operands) == 2 and op.results == op.operands[:1]:
         pointer, offset = op.operands
-        bits = bits_of(offset)
-        if is_pointer(pointer) and bits is not None and bits[1]:
+        if is_pointer(pointer) and is_int(offset):
             return Cell("pointers", op.name, "", offset)
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
 
@@ -38,8 +43,7 @@ def stack_allocation(op: Op) -> Cell:
     attributes needs no check here."""
     if len(op.attrs) >= 2 and not op.operands and len(op.results) == 1:
         element = op.attrs[1]
-        bits = bits_of(element)
-        if is_pointer(op.results[0]) and bits is not None and bits[1]:
+        if is_pointer(op.results[0]) and is_int(element):
             return Cell("pointers", op.name, "", element)
     raise CellError(f"{op.name} {' '.join(op.attrs)} to {op.results} is not a cell")
 
@@ -51,8 +55,7 @@ def memory_load(op: Op) -> Cell:
     decode, so the rest of its attributes needs no check here."""
     if op.attrs and len(op.operands) == len(op.results) == 1:
         [pointer], [result] = op.operands, op.results
-        bits = bits_of(result)
-        if is_pointer(pointer) and bits is not None and bits[1]:
+        if is_pointer(pointer) and is_int(result):
             return Cell("pointers", op.name, "", result)
     raise CellError(
         f"{op.name} {' '.join(op.attrs)} of {op.operands} to {op.results} is not a cell"
