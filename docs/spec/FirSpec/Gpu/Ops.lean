@@ -38,8 +38,8 @@ and `numWorkGroups`.
 $`\texttt{gpu}`, the word before the $`.` of each of its words. Over the
 core, its ops are used at the core's types, so they give the core's
 integers. The sum of the core and `gpu` holds the ops and types of both,
-and is the dialect that `funk`, `fir-ref fmt` and `fir-ref validate` read
-(`fir-ref run` reads the core alone until a work-item runs): a module that names
+and is the dialect that `funk`, `fir-ref fmt`, `fir-ref validate` and
+`fir-ref run` read: a module that names
 `gpu` in its dialect set may use its ops, and every other module may not.
 :::
 
