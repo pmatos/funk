@@ -55,11 +55,12 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             one ARG per parameter, spelled as a constant of its type: true
             or false at i1, signed decimal at every other width, a float
             literal such as 1.5 or 0x7fc00000 at a float type; or poison,
-            at any integer or float type, for a poison argument. freeze of poison makes a choice. Print one
-            JSON object: the one outcome of the path that the choices name
-            (the values returned, UB, fuel exhausted, or stuck), or with
-            --exhaustive every outcome of the run, or with --seed the one
-            outcome of the path whose choices it draws, and those choices.
+            at any integer or float type, for a poison argument. freeze
+            of poison makes a choice. Print one JSON object: the one
+            outcome of the path that the choices name (the values
+            returned, UB, fuel exhausted, or stuck), or with --exhaustive
+            every outcome of the run, or with --seed the one outcome of
+            the path whose choices it draws, and those choices.
               --fuel N          run at most N steps, one per op (default
                                 1000000)
               --choices C,...   the choices the run makes, in order, each

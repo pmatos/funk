@@ -77,27 +77,24 @@ def dims (opt v : String) : Except String (Gpu.Dim → Nat) :=
     else .error why
   | _ => .error why
 
-/-- The work-item with the numbers `v` of the option `opt` in place. -/
-@[instance_reducible] def setWorkItem (w : Gpu.WorkItem) (opt : String) (v : Gpu.Dim → Nat) : Gpu.WorkItem :=
-  match opt with
-  | "--work-item-id" => { w with itemId := v }
-  | "--work-group-id" => { w with groupId := v }
-  | "--work-group-size" => { w with groupSize := v }
-  | _ => { w with numGroups := v }
-
-/-- The options that give the work-item. -/
-def workItemOptions : List String :=
-  ["--work-item-id", "--work-group-id", "--work-group-size", "--num-work-groups"]
+/-- The options that give the work-item, each with the numbers of the
+work-item that it sets. -/
+def workItemOptions : List (String × (Gpu.WorkItem → (Gpu.Dim → Nat) → Gpu.WorkItem)) :=
+  [("--work-item-id", fun w v => { w with itemId := v }),
+    ("--work-group-id", fun w v => { w with groupId := v }),
+    ("--work-group-size", fun w v => { w with groupSize := v }),
+    ("--num-work-groups", fun w v => { w with numGroups := v })]
 
 /-- Why the work-item is not one of its grid, in the first dimension where
 it is not. -/
 def workItemProblem (w : Gpu.WorkItem) : Option String :=
-  [(Gpu.Dim.x, "x"), (.y, "y"), (.z, "z")].findSome? fun (d, n) =>
-    if w.itemId d ≥ w.groupSize d then
-      some s!"the work-item id {w.itemId d} in {n} is not below the work-group size {w.groupSize d}"
-    else if w.groupId d ≥ w.numGroups d then
-      some s!"the work-group id {w.groupId d} in {n} is not below the number of work-groups {w.numGroups d}"
-    else none
+  if decide w.Valid then none else some <| ([(Gpu.Dim.x, "x"), (.y, "y"), (.z, "z")].findSome?
+    fun (d, n) =>
+      if w.itemId d ≥ w.groupSize d then
+        some s!"the work-item id {w.itemId d} in {n} is not below the work-group size {w.groupSize d}"
+      else if w.groupId d ≥ w.numGroups d then
+        some s!"the work-group id {w.groupId d} in {n} is not below the number of work-groups {w.numGroups d}"
+      else none).getD "the work-item is not one of its grid"
 
 /-- Reads the arguments of `run`. -/
 def runArgs (args : List String) : Except String RunArgs := go true {} [] args
@@ -120,9 +117,9 @@ where
     | a :: rest =>
       if options && a == "--" then go false o pos rest
       else if options && a == "--exhaustive" then go options { o with exhaustive := true } pos rest
-      else if options && workItemOptions.contains a then
+      else if let (some set, true) := (workItemOptions.lookup a, options) then
         match rest with
-        | v :: rest' => do go options { o with workItem := setWorkItem o.workItem a (← dims a v) } pos rest'
+        | v :: rest' => do go options { o with workItem := set o.workItem (← dims a v) } pos rest'
         | [] => .error s!"{a} takes three numbers below 2^32, as X,Y,Z"
       else if options && (a == "--fuel" || a == "--choices" || a == "--choice-bits" ||
           a == "--seed") then

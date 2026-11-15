@@ -55,22 +55,21 @@ runs in: `@f`, a function of `M`'s own table, as text writes its symbol, or
 (`Module.nest`). A symbol as text writes it holds `::` only between quotes,
 so each name has one reading. The loop takes no stack per level. -/
 def findFunc (M : Module d) (func : String) : Option (Module d × Func d) :=
-  go M.table func
+  go M.table func.toSlice
 where
-  go (t : SymbolTable d) (rest : String) : Option (Module d × Func d) :=
-    match t.funcs.find? (Text.printSymbol ·.name == rest) with
+  go (t : SymbolTable d) (rest : String.Slice) : Option (Module d × Func d) :=
+    match t.funcs.find? (fun f => (Text.printSymbol f.name).toSlice == rest) with
     | some f => some (M.nest t, f)
     | none =>
       let inner := t.items.findSome? fun
         | .module n ds is =>
           let head := Text.printSymbol n ++ "::"
-          if head.isPrefixOf rest then
-            some ((⟨ds, is⟩ : SymbolTable d), String.ofList (rest.toList.drop head.length))
+          if rest.startsWith head then some ((⟨ds, is⟩ : SymbolTable d), rest.drop head.length)
           else none
         | _ => none
       match inner with
-      | some (u, r) => if r.length < rest.length then go u r else none
+      | some (u, r) => if r.utf8ByteSize < rest.utf8ByteSize then go u r else none
       | none => none
-  termination_by rest.length
+  termination_by rest.utf8ByteSize
 
 end FirRef

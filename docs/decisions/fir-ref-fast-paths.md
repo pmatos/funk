@@ -179,7 +179,8 @@ for #169, with the swaps added since.
 | `allWritable_eq_writableLoop`, `dialectsAll_eq_dialectsOf` | `AttrWalk` | depth | The spec recurses per level of an applied attribute |
 | `problems_eq_funcProblems`, `problems_eq_dialectItemProblems`, `problems_eq_tableProblems`, `problems_eq_moduleProblems`, `tables_eq_moduleTables` | `Validate`, `Tables` | ordering device | Copies compiled after the depth swaps |
 | `wordDialects_eq_wordDialects`, `wordDialects_eq_itemWordDialects` and the four `setProblems_eq_*` | `Validate` | ordering device | The dialect-set check, compiled after the depth swaps |
-| `scripted_eq_runScripted`, `exhaustive_eq_runExhaustive`, `sampled_eq_runSampled` | `Run` | depth | The machine of [Running](#running) |
+| `scripted_eq_runScripted`, `exhaustive_eq_runExhaustive`, `sampled_eq_runSampled` | `Run` | depth | The machine of [Running](#running), for the core's modes |
+| `gpuScripted_eq_runGpuScripted`, `gpuExhaustive_eq_runGpuExhaustive`, `gpuSampled_eq_runGpuSampled` | `Run` | depth | The machine, for the modes of the core and `gpu` that `fir-ref run` calls (#212) |
 
 The modules of `lean/FirRef/` fall in the same classes:
 
@@ -189,7 +190,8 @@ The modules of `lean/FirRef/` fall in the same classes:
   no swap of its own.
 - **Depth:** the loops of `Bindings` (`zipRev`, `zipRevH`, `zipParams`, `values`), since
   the spec's `Env.bind` and `Func.enter` use `List.zip`; `Machine`,
-  `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `Read/*` but
+  `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `RunText`, whose
+  `findFunc` finds a kernel through its modules in a loop (#212); `Read/*` but
   `Read/Eof`; `Decode` and `Decode/*`; `PrintAttr`, `PrintModule`, `LocTable`,
   `Validate`, `Tables`, `AttrWalk` and `Parse`; `Lex/*` but `Lex/Cursor` and
   `Lex/Eof`, for the position-based `nextTokP`.

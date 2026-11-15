@@ -104,7 +104,7 @@ def count(root: Path) -> dict[str, Counter]:
             for t in m.tests:
                 # A kernel of a nested module runs in its own table, whose
                 # ops the matrix of the core does not read (#212).
-                if "::" in t.func:
+                if corpus.nested(t.func):
                     continue
                 side = "differential" if t.expect is None else "interpreter"
                 if t.func not in functions:

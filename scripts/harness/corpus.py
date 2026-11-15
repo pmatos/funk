@@ -26,6 +26,13 @@ from pathlib import Path
 
 from refine import FUEL_EXHAUSTED, UB
 from sets import Declared
+from signatures import (  # noqa: F401 (the corpus's readers of signatures)
+    closing_paren,
+    param_types,
+    result_types,
+    split_types,
+    symbol_end,
+)
 from tools import PARSE_ERROR, VALIDATION_ERROR
 
 DEFAULT_FUEL = 1_000_000
@@ -364,6 +371,19 @@ def test_problem(t, ported: bool = False) -> str | None:
     return None
 
 
+def nested(func: str) -> bool:
+    """Whether `func` names a function of a nested module, as `@dev::@k`:
+    its first symbol, as text writes it, is followed by `::`. A quoted
+    symbol may hold `::` itself."""
+    if func.startswith('@"'):
+        end = symbol_end(func)
+    else:
+        end = 1
+        while end < len(func) and (func[end].isalnum() or func[end] in "_."):
+            end += 1
+    return func[end:].startswith("::")
+
+
 def work_item_problem(t: dict) -> str | None:
     """Why a test's `work_item`, or its function in a nested module, does not
     fit, if it does not. A function of a nested module, `@dev::@k`, runs on
@@ -371,7 +391,7 @@ def work_item_problem(t: dict) -> str | None:
     and so does a test that gives a work-item. Each key of `work_item` holds
     three numbers below 2^32, one per dimension."""
     item = t.get("work_item")
-    if ("::" in t["func"] or item is not None) and t.get("expect") is None:
+    if (nested(t["func"]) or item is not None) and t.get("expect") is None:
         return "a kernel's test is interpreter-only: it has expect"
     if item is None:
         return None
@@ -390,6 +410,11 @@ def work_item_problem(t: dict) -> str | None:
             )
         ):
             return f"work_item: {key} is three numbers below 2^32, one per dimension"
+    one = [1, 1, 1]
+    for d, name in enumerate("xyz"):
+        for low, high in (("id", "group_size"), ("group_id", "num_groups")):
+            if item.get(low, [0, 0, 0])[d] >= item.get(high, one)[d]:
+                return f"work_item: {low} in {name} is not below {high}"
     return None
 
 
@@ -467,74 +492,3 @@ def text_bytes(text: str | list) -> bytes:
     and raw bytes, for a text that is not UTF-8."""
     pieces = text if isinstance(text, list) else [text]
     return b"".join(p.encode() if isinstance(p, str) else bytes([p]) for p in pieces)
-
-
-def result_types(text: str) -> dict[str, list[str]]:
-    """The result types of each function of a canonical module, by its
-    symbol as text writes it. A canonical module writes each function's
-    signature on one line: `func SYMBOL(PARAMS) -> TYPES {`."""
-    found = {}
-    for line in text.split("\n"):
-        if not line.startswith("func @") or not line.endswith(" {"):
-            continue
-        rest = line[len("func ") : -len(" {")]
-        end = symbol_end(rest)
-        close = closing_paren(rest, end)
-        if close is None:
-            continue
-        tail = rest[close + 1 :]
-        found[rest[:end]] = split_types(tail[4:]) if tail.startswith(" -> ") else []
-    return found
-
-
-def param_types(text: str) -> dict[str, list[str]]:
-    """The parameter types of each function of a canonical module, by its
-    symbol as text writes it, read from the signature line as
-    `result_types` reads its results: `%NAME: TYPE` for each parameter."""
-    found = {}
-    for line in text.split("\n"):
-        if not line.startswith("func @") or not line.endswith(" {"):
-            continue
-        rest = line[len("func ") : -len(" {")]
-        end = symbol_end(rest)
-        close = closing_paren(rest, end)
-        if close is None:
-            continue
-        inside = rest[end + 1 : close]
-        params = split_types(inside) if inside else []
-        found[rest[:end]] = [p.partition(": ")[2] for p in params]
-    return found
-
-
-def symbol_end(s: str) -> int:
-    """The index just past the symbol at the start of `s`."""
-    if not s.startswith('@"'):
-        return s.find("(") if "(" in s else len(s)
-    i = 2
-    while i < len(s) and s[i] != '"':
-        i += 2 if s[i] == "\\" else 1
-    return i + 1
-
-
-def closing_paren(s: str, start: int) -> int | None:
-    """The index of the `)` that closes the `(` at `start`."""
-    if s[start : start + 1] != "(":
-        return None
-    depth = 0
-    for i in range(start, len(s)):
-        depth += {"(": 1, ")": -1}.get(s[i], 0)
-        if depth == 0:
-            return i
-    return None
-
-
-def split_types(s: str) -> list[str]:
-    """Splits `T1, T2` at the commas outside parentheses."""
-    out, depth, start = [], 0, 0
-    for i, ch in enumerate(s):
-        depth += {"(": 1, ")": -1}.get(ch, 0)
-        if ch == "," and depth == 0:
-            out.append(s[start:i].strip())
-            start = i + 1
-    out.append(s[start:].strip())
-    return out

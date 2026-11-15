@@ -341,7 +341,7 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
     | none => { err := s!"fir-ref: {what} has no function {shown func}", status := 2 }
     | some (n, f) =>
       let ts := f.params.map (·.2)
-      let name := Text.printSymbol f.name
+      let name := func
       if ts.length ≠ args.length then
         { err := s!"fir-ref: {shown func} takes {arguments ts.length}, not {args.length}",
           status := 2 }
