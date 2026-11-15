@@ -59,12 +59,19 @@ LLVM's capture tracking (ADR-2026-11-09-1540):
 
 - an external call that gets it as an argument;
 - an inline assembly block whose effect set says observable;
+- an inline assembly block that gets it as a pointer operand and may write
+  escaped memory, when the block runs (ADR-2026-11-09-1541);
 - a volatile store whose stored value is the pointer;
 - `ptr.expose`.
 
-A pointer passed to an inline assembly block without observable does not
-escape, though the block may read and write the memory it points into
-(ADR-2026-11-09-1541, semantics-effects.md).
+A block without a narrower declaration may write escaped memory, so its
+pointer operands escape. A pointer passed to an inline assembly block that is
+not observable and may not write escaped memory does not escape, though the
+block may read and write the allocation it points into and every allocation
+reachable from it through stored pointers (ADR-2026-11-09-1541,
+semantics-effects.md). The human ruled this escape rule on 2026-11-15, on #240.
+Rejected: only observable blocks make memory escape, though such a block could
+store its operand in escaped memory, where outside code could read it.
 
 An `internal` global is observable only once its address escapes by one of
 these ways, even when only an integer from `ptr.expose` holds it. Until then a
@@ -75,10 +82,11 @@ address escapes (ADR-2026-11-09-1540).
 Only live allocations are compared. The contents of an allocation that the
 world has freed are not (ADR-2026-11-09-1540).
 
-Live memory can still hold a pointer into a freed allocation, one the world
-freed or a stack allocation whose call has returned, and the renaming has
-nothing to map it to. Such a pointer in the source's observed memory is poison
-for the comparison, so any value in the target refines it
+A run can still hold a pointer into a freed allocation, one the world freed or
+a stack allocation whose call has returned, and the renaming has nothing to map
+it to. In the comparison of two runs, such a pointer is poison wherever the
+source has it: in observed memory, in returned values and in the arguments of
+an external call, an event of the trace. Any value in the target refines it
 (ADR-2026-11-09-1540). A dangling pointer cannot be used without UB, so nothing
 a program does can depend on its value.
 
@@ -88,12 +96,16 @@ that assembly or a volatile store had already handed out. Rejected too:
 compare a freed allocation as it was just before the free, though no program
 can read it without UB.
 
-The human ruled on 2026-11-15 (#309), option C, that a dangling pointer is
-poison for the comparison. Rejected: every dangling pointer equals every other,
-which still makes a target keep a dangling pointer wherever the source has one.
-Rejected too: compare a dangling pointer by its integer address where the memory
-is integral, and otherwise as dangling, which compares raw addresses that the
-renaming exists to avoid.
+The human ruled on 2026-11-15 (#309), option C, that a dangling pointer in
+observed memory is poison for the comparison. Rejected: every dangling pointer
+equals every other, which still makes a target keep a dangling pointer wherever
+the source has one. Rejected too: compare a dangling pointer by its integer
+address where the memory is integral, and otherwise as dangling, which compares
+raw addresses that the renaming exists to avoid. On 2026-11-15 the human ruled
+on #233 that a dangling pointer is poison in returned values and external-call
+arguments too. Rejected: exact match outside observed memory, so a target would
+keep a dangling pointer in a return or a call that neither side can use without
+UB.
 
 ## The world
 
