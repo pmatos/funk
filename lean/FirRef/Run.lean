@@ -4,6 +4,7 @@ import FirRef.Utf8
 import FirRef.Report
 import FirRef.Sample
 import FirRef.RunModes
+import FirRef.RunText
 
 /-!
 What `fir-ref run` does with a file: it parses it with the dialects in tree,
@@ -51,21 +52,6 @@ poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
 namespace FirRef
 
 open Fir
-
-/-- The default budget of `fir-ref run`: a million steps. -/
-def defaultFuel : Nat := 1000000
-
-/-- The default choice budget of exhaustive mode: 16 bits in all on one
-path, so at most 65,536 paths. -/
-def defaultChoiceBits : Nat := 16
-
-/-- Text from the command line, with each control character shown as
-`\xHH`, so that a message stays on one line. -/
-def shown (s : String) : String :=
-  s.foldl (fun out c =>
-    if c.toNat < 0x20 || c.toNat == 0x7f then
-      out ++ "\\x" ++ (if c.toNat < 0x10 then "0" else "") ++ Text.hex c.toNat
-    else out.push c) ""
 
 /-- A type as text writes it, such as `i8`. -/
 def tyText (t : Core.Ty) : String := t.attr.print
@@ -160,24 +146,10 @@ def readGpuArgs : (ts : List CoreGpu.Ty) → List String → Except String (HVec
   | .inr e :: _, _ :: _ => e.elim
   | ts, as => .error s!"{as.length} arguments are given for {ts.length} parameters"
 
-/-- `n` of a thing, in words: `1 argument`, `2 arguments`. -/
-def count (n : Nat) (thing : String) : String := if n = 1 then s!"1 {thing}" else s!"{n} {thing}s"
-
-/-- `n` arguments, in words. -/
-def arguments (n : Nat) : String := count n "argument"
-
 /-- The JSON object that reports a result of `kind`, with more fields. Its
 strings are escaped as `fir-ref validate`'s are. -/
 def resultJson (kind : String) (more : List (String × String) := []) : String :=
   jsonObject (("kind", jsonString kind) :: more)
-
-/-- What `fir-ref run` writes: its standard output and its standard error,
-each one line or empty, and its exit status. -/
-structure RunReport where
-  out : String := ""
-  err : String := ""
-  status : UInt32
-  deriving DecidableEq, Repr
 
 /-- A leaf of a run's tree, as `fir-ref run` sees it, with the values of
 type `V` that a path returns. -/
@@ -240,11 +212,6 @@ def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunR
           ("sequence", jsonArray (cs.map (jsonString ∘ chosenText)))]),
         status := if stuck then 1 else 0 }
 
-/-- Each element once, in the order it first appears. -/
-def distinct (xs : List String) : List String :=
-  (xs.foldl (fun (seen, out) x => if seen.contains x then (seen, out) else (seen.insert x, out.push x))
-    ((∅ : Std.HashSet String), (#[] : Array String))).2.toList
-
 /-- The report of exhaustive mode on a run of the function whose symbol is
 written `name`, with a choice budget of `budget` bits: every way its paths
 end, each once, or that some path chooses more than the budget. -/
@@ -261,14 +228,54 @@ def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V ×
 /-! # The modes, by the machine
 
 `runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive` and
-`Gpu.sampled`, the modes of the sum of the core and `gpu` at a work-item.
-The theorems here make Lean compile those calls as calls of
+`Gpu.sampled`, the modes of the sum of the core and `gpu` at a work-item;
+the core's own modes, `Core.scripted`, `Core.exhaustive` and
+`Core.sampled`, are what it called before #212. The theorems here make Lean
+compile calls of either as calls of
 `FirRef.Machine`'s walks of the run
 (`docs/decisions/fir-ref-fast-paths.md#running`), which take no stack per step,
 per level of calls or per choice. They name the dialects in tree, so they
 live in `fir-ref`'s command line, not in `FirRef.RunModes` (G0,
 ADR-2026-11-03-0600).
 -/
+
+/-- `Core.scripted`, by the machine, with the core's semantics in the layer
+over the tree that the modes run: each memory with its entry in `M`'s data
+layout, named by its number. -/
+def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
+    (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
+
+@[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
+  funext σ read M f args fuel cs
+  letI := Core.memTreeDenote M.layout.entry id
+  exact (Machine.scripted_eq M read f args fuel cs).symm
+
+/-- `Core.exhaustive`, by the machine. -/
+def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+    Option (List (RunLeaf × Nat)) :=
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
+
+@[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
+  funext M f args fuel budget
+  letI := Core.memTreeDenote M.layout.entry id
+  exact (Machine.exhaustive_eq M f args fuel budget).symm
+
+/-- `Core.sampled`, by the machine. -/
+def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
+    (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+    RunLeaf × List ChoiceTree.Chosen :=
+  letI := Core.memTreeDenote M.layout.entry id
+  Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
+
+@[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
+  funext γ draw M f args fuel g
+  letI := Core.memTreeDenote M.layout.entry id
+  exact (Machine.sampled_eq M draw f args fuel g).symm
 
 /-- `Gpu.scripted`, by the machine, with
 the semantics of the core and `gpu` at the work-item in the layer over the
@@ -317,31 +324,6 @@ inductive Mode where
   | exhaustive (budget : Nat)
   | sampled (seed : Nat)
   deriving DecidableEq, Repr
-
-/-- The function that `func` names in the module `M`, with the module it
-runs in: `@f`, a function of `M`'s own table, as text writes its symbol, or
-`@m::REST`, the function that `REST` names in the module `@m` nested in
-`M`, at any depth, which runs in the module of its table
-(`Module.nest`). A symbol as text writes it holds `::` only between quotes,
-so each name has one reading. The loop takes no stack per level. -/
-def findFunc (M : Module CoreGpu) (func : String) : Option (Module CoreGpu × Func CoreGpu) :=
-  go M.table func
-where
-  go (t : SymbolTable CoreGpu) (rest : String) : Option (Module CoreGpu × Func CoreGpu) :=
-    match t.funcs.find? (Text.printSymbol ·.name == rest) with
-    | some f => some (M.nest t, f)
-    | none =>
-      let inner := t.items.findSome? fun
-        | .module n ds is =>
-          let head := Text.printSymbol n ++ "::"
-          if head.isPrefixOf rest then
-            some ((⟨ds, is⟩ : SymbolTable CoreGpu), String.ofList (rest.toList.drop head.length))
-          else none
-        | _ => none
-      match inner with
-      | some (u, r) => if r.length < rest.length then go u r else none
-      | none => none
-  termination_by rest.length
 
 /-- What `fir-ref run` reports on the bytes of `file`: it runs the function
 that `func` names, a function of the module or a kernel of one of its
