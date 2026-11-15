@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "16709901103502964645")
 :::
 
-:::readable Fir.Core.ptrShape Fir.Core.ptrShape_fst (pin := Fir.Core.allocaShape) (pin := Fir.Core.Ty.defaultAlign) (fingerprint := "9926192335153379077")
+:::readable Fir.Core.ptrShape Fir.Core.ptrShape_fst (pin := Fir.Core.allocaShape) (pin := Fir.Core.Ty.defaultAlign) (fingerprint := "9600153020248372393")
 *Definition: the shape of a pointer access.* An access of a value of
 $`\mathsf{ptr}\langle M \rangle` in the memory $`N`, with the alignment
 $`a` when the op gives one, takes the units and the alignment of an

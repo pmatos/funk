@@ -26,7 +26,7 @@
 //! [`OpSpec::attr_types`]: crate::registry::OpSpec::attr_types
 
 use super::align::{check_align, decode_align};
-use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type};
+use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type, ptr_type};
 use crate::effects::{Effects, MemSet};
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int, Type};
@@ -42,6 +42,11 @@ enum AnyType {
     Int(Int),
     Float,
     Ptr(Int),
+}
+
+/// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
+fn valid_memory(n: &Int) -> Option<u32> {
+    n.as_str().parse::<u32>().ok().filter(|&n| n <= MAX_MEMORY)
 }
 
 /// An integer not negative, from its canonical spelling.
@@ -173,14 +178,13 @@ impl OpSpec for Alloca {
                 .parse::<u32>()
                 .is_ok_and(|w| (1..=MAX_WIDTH).contains(&w))
         };
-        let valid_memory = |n: &Int| n.as_str().parse::<u32>().is_ok_and(|n| n <= MAX_MEMORY);
         match &p.ty {
             AnyType::Int(w) if valid_width(w) => Ok(()),
             AnyType::Int(w) => Err(format!(
                 "alloca allocates a valid integer type, not i{}",
                 w.as_str()
             )),
-            AnyType::Ptr(n) if valid_memory(n) => Ok(()),
+            AnyType::Ptr(n) if valid_memory(n).is_some() => Ok(()),
             AnyType::Ptr(n) => Err(format!(
                 "alloca allocates a valid pointer type, not ptr({})",
                 n.as_str()
@@ -193,15 +197,13 @@ impl OpSpec for Alloca {
         }
     }
 
-    /// The type it allocates values of, when that is a pointer type, whose
-    /// memory the data layout must declare (`Core.Op.attrTypes`). An integer
-    /// type names no memory.
+    /// The type it allocates values of, when that is a valid pointer type,
+    /// whose memory the data layout must declare (`Core.Op.attrTypes`). An
+    /// integer type names no memory, and a type that is not valid breaks
+    /// the op's own rule.
     fn attr_types(&self, attrs: &[Attr]) -> Vec<Type> {
-        match (parts(attrs).map(|p| p.ty), attrs) {
-            (Some(AnyType::Ptr(_)), [_, Attr::Word(w), ..]) => vec![Type::word(w)],
-            (Some(AnyType::Ptr(_)), [_, Attr::App(h, args), ..]) => {
-                vec![Type::app(h, args.clone())]
-            }
+        match parts(attrs).map(|p| p.ty) {
+            Some(AnyType::Ptr(n)) => valid_memory(&n).map(ptr_type).into_iter().collect(),
             _ => Vec::new(),
         }
     }
@@ -383,6 +385,7 @@ mod tests {
         for attrs in [
             vec![word("stack"), word("i32")],
             vec![word("stack"), word("f32")],
+            vec![word("stack"), ptr_attr(1 << 24)],
             vec![word("stack")],
         ] {
             assert_eq!(Alloca.attr_types(&attrs), vec![], "{attrs:?}");

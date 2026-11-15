@@ -70,10 +70,8 @@ alignment there, but for a pointer of the memory `n` itself the alignment
 that its entry gives its pointers (`MemLayout.alignment`), the natural one
 unless the entry writes `align(A)`. -/
 def Ty.defaultAlign (lay : N → MemLayout) (ρ : Mem → N) (n : Nat) (t : Ty) : Nat :=
-  match t with
-  | .ptr m => if m = n then (lay (ρ n)).alignment
-    else t.naturalAlign (lay (ρ n)) fun j => (lay (ρ j)).pointer
-  | _ => t.naturalAlign (lay (ρ n)) fun j => (lay (ρ j)).pointer
+  if t = .ptr n then (lay (ρ n)).alignment
+  else t.naturalAlign (lay (ρ n)) fun j => (lay (ρ j)).pointer
 
 /-- The units and the alignment of an allocation of `c` values of the type
 `t` in the memory `ρ n` of a run whose memories have the entries `lay`,

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5512258812644635922")
+:::moduleDocs (fingerprint := "12657828243829581902")
 :::
 
 :::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "15487003486979289830")
@@ -41,7 +41,7 @@ gives the integer, as the human ruled on 2026-11-14 (#378): in memory 0,
 $`\mathsf{i32}` is aligned to 4 units.
 :::
 
-:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "13266524742309446650")
+:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "5090443110427556766")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`
